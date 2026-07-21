@@ -1,8 +1,10 @@
 import { describe, expect, test } from "bun:test";
 
 import type { TimeWindow } from "./ci-io-api.ts";
+import { renderCiIoMarkdown } from "./ci-io-markdown.ts";
 import type {
   BranchStepIoReport,
+  CiIoReport,
   JobIoReport,
   JobOutcomeReport,
   StepIoReport,
@@ -126,6 +128,14 @@ function gateWindow(
     from: WINDOW.from.toISOString(),
     to: WINDOW.to.toISOString(),
     buildNumbers: [1],
+    selectedBuilds: [
+      {
+        buildNumber: 1,
+        branch: "main",
+        commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        buildUrl: "https://buildkite.com/sjerred/monorepo/builds/1",
+      },
+    ],
     unfinishedBuilds: [],
     jobOutcomes,
     jobs,
@@ -155,6 +165,33 @@ function gateWindow(
     },
     integrityIssues: [],
   };
+}
+
+function distributeGateJobsAcrossTwoBuilds(
+  report: WindowIoReport,
+  buildNumberFor: (laneIndex: number, jobIndex: number) => number,
+): void {
+  report.buildNumbers = [1, 2];
+  report.selectedBuilds.push({
+    buildNumber: 2,
+    branch: "main",
+    commit: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    buildUrl: "https://buildkite.com/sjerred/monorepo/builds/2",
+  });
+  report.summary.buildCount = 2;
+  const jobsById = new Map(report.jobs.map((job) => [job.jobId, job]));
+  report.jobOutcomes.forEach((outcome, index) => {
+    const laneIndex = Math.floor(index / 5);
+    const jobIndex = index % 5;
+    const buildNumber = buildNumberFor(laneIndex, jobIndex);
+    outcome.buildNumber = buildNumber;
+    const job = jobsById.get(outcome.jobId);
+    if (job === undefined) {
+      throw new Error(`fixed-corpus job report ${outcome.jobId} is missing`);
+    }
+    job.buildNumber = buildNumber;
+    job.buildUrl = `https://buildkite.com/sjerred/monorepo/builds/${String(buildNumber)}`;
+  });
 }
 
 function gateLane(report: WindowIoReport, stepKey: string): BranchStepIoReport {
@@ -266,6 +303,111 @@ describe("fixed-corpus impact gate", () => {
       "tofu",
       "verify",
     ]);
+    expect(gate.baselineBuilds[0]?.workloadSignature).toBe(
+      gate.candidateBuilds[0]?.workloadSignature,
+    );
+  });
+
+  test("preserves differing commits for audit without comparing them", () => {
+    const baseline = gateWindow(
+      stepFixture({ writes: 100, duration: 100, network: 100 }),
+    );
+    const candidate = gateWindow(
+      stepFixture({ writes: 50, duration: 100, network: 100 }),
+    );
+    const baselineBuild = baseline.selectedBuilds[0];
+    const candidateBuild = candidate.selectedBuilds[0];
+    if (baselineBuild === undefined || candidateBuild === undefined) {
+      throw new Error("fixed-corpus selected build fixture is missing");
+    }
+    baselineBuild.commit = "baseline-commit";
+    candidateBuild.commit = "candidate-commit";
+
+    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
+    expect(gate.status).toBe("passed");
+    expect(gate.baselineBuilds.map((build) => build.commit)).toEqual([
+      "baseline-commit",
+    ]);
+    expect(gate.candidateBuilds.map((build) => build.commit)).toEqual([
+      "candidate-commit",
+    ]);
+    expect(gate.baselineBuilds[0]?.workloadSignature).toBe(
+      "docker-e2e=5,images=5,resume=5,sjer.red=5,tofu=5,verify=5",
+    );
+    const report: CiIoReport = {
+      schemaVersion: 3,
+      generatedAt: WINDOW.to.toISOString(),
+      metricSource: "recording",
+      organization: "sjerred",
+      pipeline: "monorepo",
+      candidate,
+      baseline,
+      comparison: compareWindows(baseline, candidate),
+    };
+    const markdown = renderCiIoMarkdown(report);
+    expect(markdown).toContain("### Fixed-corpus build identities");
+    expect(markdown).toContain("`baseline-commit`");
+    expect(markdown).toContain("`candidate-commit`");
+    expect(markdown).toContain(
+      "`docker-e2e=5,images=5,resume=5,sjer.red=5,tofu=5,verify=5`",
+    );
+  });
+
+  test("requires matching per-build workload signature multisets", () => {
+    const baseline = gateWindow(
+      stepFixture({ writes: 100, duration: 100, network: 100 }),
+    );
+    const candidate = gateWindow(
+      stepFixture({ writes: 50, duration: 100, network: 100 }),
+    );
+    distributeGateJobsAcrossTwoBuilds(baseline, (_laneIndex, jobIndex) =>
+      jobIndex === 4 ? 2 : 1,
+    );
+    distributeGateJobsAcrossTwoBuilds(candidate, (laneIndex) =>
+      laneIndex < 3 ? 1 : 2,
+    );
+
+    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
+    expect(gate.status).toBe("inconclusive");
+    expect(gate.reasons).toContain(
+      "fixed-corpus per-build workload signature multisets differ between comparison windows",
+    );
+    expect(gate.reasons).not.toContain(
+      "fixed-corpus lane job counts differ between comparison windows",
+    );
+    expect(gate.baselineBuilds.map((build) => build.workloadSignature)).toEqual(
+      [
+        "docker-e2e=4,images=4,resume=4,sjer.red=4,tofu=4,verify=4",
+        "docker-e2e=1,images=1,resume=1,sjer.red=1,tofu=1,verify=1",
+      ],
+    );
+    expect(
+      gate.candidateBuilds.map((build) => build.workloadSignature),
+    ).toEqual(["resume=5,sjer.red=5,verify=5", "docker-e2e=5,images=5,tofu=5"]);
+  });
+
+  test("compares per-build workload signatures as a multiset", () => {
+    const baseline = gateWindow(
+      stepFixture({ writes: 100, duration: 100, network: 100 }),
+    );
+    const candidate = gateWindow(
+      stepFixture({ writes: 50, duration: 100, network: 100 }),
+    );
+    distributeGateJobsAcrossTwoBuilds(baseline, (_laneIndex, jobIndex) =>
+      jobIndex === 4 ? 2 : 1,
+    );
+    distributeGateJobsAcrossTwoBuilds(candidate, (_laneIndex, jobIndex) =>
+      jobIndex === 0 ? 1 : 2,
+    );
+
+    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
+    expect(gate.baselineBuilds[0]?.workloadSignature).not.toBe(
+      gate.candidateBuilds[0]?.workloadSignature,
+    );
+    expect(gate.status).toBe("passed");
+    expect(gate.reasons).not.toContain(
+      "fixed-corpus per-build workload signature multisets differ between comparison windows",
+    );
   });
 
   test("rejects a window that mixes legacy and current lane keys", () => {
@@ -279,6 +421,36 @@ describe("fixed-corpus impact gate", () => {
     const gate = compareWindows(baseline, candidate).fixedCorpusGate;
     expect(gate.status).toBe("inconclusive");
     expect(gate.reasons).toContain(
+      "baseline fixed-corpus window mixes pipeline schemas for logical lanes: main / sjer.red",
+    );
+  });
+
+  test("detects legacy and current physical schemas across branches", () => {
+    const baseline = gateWindow(
+      stepFixture({ writes: 100, duration: 100, network: 100 }),
+      [...LEGACY_FIXED_CORPUS_STEP_KEYS, "playwright-e2e-main"],
+    );
+    const candidate = gateWindow(
+      stepFixture({ writes: 50, duration: 100, network: 100 }),
+    );
+    const legacyAliases = new Set(["e2e", "resume-build", "docker-e2e"]);
+    for (const lane of baseline.branchSteps) {
+      if (legacyAliases.has(lane.stepKey)) {
+        lane.branch = "legacy-branch";
+      }
+    }
+    for (const job of baseline.jobOutcomes) {
+      if (legacyAliases.has(job.stepKey)) {
+        job.branch = "legacy-branch";
+      }
+    }
+
+    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
+    expect(gate.status).toBe("inconclusive");
+    expect(gate.reasons).toContain(
+      "baseline fixed-corpus window mixes legacy and current physical pipeline schemas: legacy aliases docker-e2e, e2e, resume-build and current aliases playwright-e2e-main",
+    );
+    expect(gate.reasons).not.toContain(
       "baseline fixed-corpus window mixes pipeline schemas for logical lanes: main / sjer.red",
     );
   });

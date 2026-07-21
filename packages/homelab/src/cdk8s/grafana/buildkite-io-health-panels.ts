@@ -1,5 +1,8 @@
 import * as dashboard from "@grafana/grafana-foundation-sdk/dashboard";
-import { createTimeseriesPanel } from "./buildkite-dashboard-panels.ts";
+import {
+  createStatPanel,
+  createTimeseriesPanel,
+} from "./buildkite-dashboard-panels.ts";
 import {
   BUILDKITE_ACTIVE_NODES,
   PHYSICAL_DISK_PATTERN,
@@ -171,6 +174,10 @@ clamp_min(
       title: "Controller Query Health",
       targets: [
         {
+          query: 'max(buildkite_monitor_monitor_up{namespace="buildkite"})',
+          legend: "monitor up",
+        },
+        {
           query:
             'sum(rate(buildkite_monitor_job_queries_total{namespace="buildkite"}[5m]))',
           legend: "queries",
@@ -187,7 +194,81 @@ clamp_min(
         },
       ],
       gridPos: { x: 16, y: 81, w: 8, h: 8 },
-      unit: "ops",
+      unit: "short",
+    }),
+  );
+
+  builder.withRow(new dashboard.RowBuilder("CI I/O Observability Cost"));
+
+  builder.withPanel(
+    createStatPanel({
+      title: "CI I/O Recording Series",
+      description:
+        "Active series emitted by the Buildkite CI I/O recording rules. The post-deploy acceptance budget is fewer than 2,000 active series.",
+      query: 'count({__name__=~"buildkite:.*"})',
+      legend: "active series",
+      gridPos: { x: 0, y: 90, w: 6, h: 5 },
+      instant: true,
+      thresholds: [
+        { value: 0, color: "green" },
+        { value: 1500, color: "yellow" },
+        { value: 2000, color: "red" },
+      ],
+    }),
+  );
+
+  builder.withPanel(
+    createStatPanel({
+      title: "CI I/O Rule Evaluation Duration",
+      description:
+        "Maximum duration of the Buildkite CI I/O rule groups. The post-deploy acceptance budget is below one second.",
+      query:
+        'max(prometheus_rule_group_last_duration_seconds{rule_group=~".*buildkite-ci-io-(recording|rollups|alerts).*"})',
+      legend: "max duration",
+      gridPos: { x: 6, y: 90, w: 6, h: 5 },
+      unit: "s",
+      instant: true,
+      thresholds: [
+        { value: 0, color: "green" },
+        { value: 0.5, color: "yellow" },
+        { value: 1, color: "red" },
+      ],
+    }),
+  );
+
+  builder.withPanel(
+    createStatPanel({
+      title: "CI I/O Rule Evaluation Failures",
+      description:
+        "Buildkite CI I/O rule evaluation failures in the last hour. Any failure blocks observability acceptance.",
+      query:
+        'sum(increase(prometheus_rule_evaluation_failures_total{rule_group=~".*buildkite-ci-io-(recording|rollups|alerts).*"}[1h]))',
+      legend: "failures",
+      gridPos: { x: 12, y: 90, w: 6, h: 5 },
+      instant: true,
+      thresholds: [
+        { value: 0, color: "green" },
+        { value: 1, color: "red" },
+      ],
+    }),
+  );
+
+  builder.withPanel(
+    createStatPanel({
+      title: "Prometheus Storage Growth (24h)",
+      description:
+        "Twenty-four-hour change in used bytes for the Prometheus data PVC. This cluster-level diagnostic needs ordinary ingestion and compaction context; unexplained growth above 1 GiB makes CI I/O observability acceptance inconclusive.",
+      query:
+        'max(delta(kubelet_volume_stats_used_bytes{namespace="prometheus", persistentvolumeclaim=~"prometheus-prometheus-kube-prometheus-prometheus.*"}[24h]))',
+      legend: "used-byte delta",
+      gridPos: { x: 18, y: 90, w: 6, h: 5 },
+      unit: "bytes",
+      instant: true,
+      thresholds: [
+        { value: 0, color: "green" },
+        { value: 536_870_912, color: "yellow" },
+        { value: 1_073_741_824, color: "red" },
+      ],
     }),
   );
 }

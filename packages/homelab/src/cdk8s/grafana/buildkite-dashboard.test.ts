@@ -1,6 +1,10 @@
 import { describe, expect, it } from "bun:test";
 import { z } from "zod";
-import { BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/buildkite.ts";
+import {
+  BUILDKITE_JOB_POD_PATTERN,
+  BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC,
+  BUILDKITE_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/buildkite.ts";
 import { createBuildkiteDashboard } from "./buildkite-dashboard.ts";
 
 const TargetSchema = z
@@ -63,6 +67,10 @@ describe("Buildkite CI I/O dashboard", () => {
         "Limiter State",
         "Scheduling Outcomes",
         "Controller Query Health",
+        "CI I/O Recording Series",
+        "CI I/O Rule Evaluation Duration",
+        "CI I/O Rule Evaluation Failures",
+        "Prometheus Storage Growth (24h)",
       ]),
     );
   });
@@ -108,16 +116,22 @@ describe("Buildkite CI I/O dashboard", () => {
     expect(queries).not.toContain("buildkite:pod_parent_fs_writes_bytes_total");
   });
 
-  it("attributes top writers to the stable Buildkite step and job identity", () => {
+  it("aggregates top writers by stable Buildkite step", () => {
     const topWriters = panel("Top Step Write Rates");
     expect(topWriters.targets?.[0]?.expr).toContain(
       "label_ci_sjer_red_step_key",
     );
-    expect(topWriters.targets?.[0]?.expr).toContain(
+    expect(topWriters.targets?.[0]?.expr).not.toContain(
       "label_buildkite_com_job_uuid",
     );
+    expect(topWriters.targets?.[0]?.expr).toContain(
+      BUILDKITE_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC,
+    );
+    expect(topWriters.targets?.[0]?.expr).not.toContain(
+      "rate(buildkite:pod_parent_fs_writes_bytes_total[5m])",
+    );
     expect(topWriters.targets?.[0]?.legendFormat).toBe(
-      "{{label_ci_sjer_red_step_key}} · {{label_buildkite_com_job_uuid}}",
+      "{{label_ci_sjer_red_step_key}}",
     );
   });
 
@@ -125,7 +139,9 @@ describe("Buildkite CI I/O dashboard", () => {
     const coverageQuery = panelQueries("Running Jobs Measured").join("\n");
     expect(coverageQuery).toContain('phase="Running"');
     expect(coverageQuery).toContain("buildkite:pod_parent_sample_present");
-    expect(coverageQuery).toContain("label_buildkite_com_job_uuid");
+    expect(coverageQuery).toContain(`pod=~"${BUILDKITE_JOB_POD_PATTERN}"`);
+    expect(coverageQuery).not.toContain("kube_pod_labels");
+    expect(coverageQuery).not.toContain("label_buildkite_com_job_uuid");
     expect(coverageQuery).not.toContain("vector(1)");
   });
 
@@ -184,5 +200,21 @@ describe("Buildkite CI I/O dashboard", () => {
     expect(queries).toContain("buildkite_limiter_tokens_available");
     expect(queries).toContain("buildkite_scheduler_job_create_errors_total");
     expect(queries).toContain("buildkite_monitor_job_query_errors_total");
+    expect(queries).toContain("buildkite_monitor_monitor_up");
+  });
+
+  it("makes recording-rule cost and failures visible", () => {
+    expect(panelQueries("CI I/O Recording Series").join("\n")).toContain(
+      '__name__=~"buildkite:.*"',
+    );
+    expect(
+      panelQueries("CI I/O Rule Evaluation Duration").join("\n"),
+    ).toContain("prometheus_rule_group_last_duration_seconds");
+    expect(
+      panelQueries("CI I/O Rule Evaluation Failures").join("\n"),
+    ).toContain("prometheus_rule_evaluation_failures_total");
+    expect(
+      panelQueries("Prometheus Storage Growth (24h)").join("\n"),
+    ).toContain("kubelet_volume_stats_used_bytes");
   });
 });

@@ -144,6 +144,8 @@ export function filterPrometheusIoMetrics(
 }
 
 const POD_PATTERN = "buildkite-[0-9a-f-]{36}-[a-z0-9]+";
+export const BUILDKITE_RECORDED_PARENT_WRITES_BY_JOB_METRIC =
+  "buildkite:pod_parent_fs_writes_bytes_by_job_total";
 const RAW_PARENT_SELECTOR = `namespace="buildkite",container="",id=~"/kubepods.*pod[^/]+$",pod=~"${POD_PATTERN}"`;
 const RAW_CHILD_SELECTOR = `namespace="buildkite",container!="",pod=~"${POD_PATTERN}"`;
 const RAW_NETWORK_SELECTOR = `namespace="buildkite",container="",pod=~"${POD_PATTERN}"`;
@@ -181,13 +183,13 @@ function rawQueries(range: string): IoQueries {
 
 function recordingQueries(range: string): IoQueries {
   return {
-    parentMax: `max_over_time(buildkite:pod_parent_fs_writes_bytes_total{${RECORDING_SELECTOR}}[${range}])`,
+    parentMax: `max_over_time(${BUILDKITE_RECORDED_PARENT_WRITES_BY_JOB_METRIC}{${RECORDING_SELECTOR}}[${range}])`,
     parentSamples: `count_over_time(buildkite:pod_parent_sample_present{${RECORDING_SELECTOR}}[${range}])`,
     // Query the underlying cAdvisor series even in recording mode. A
     // recording-rule evaluation timestamp only proves that the rule ran; it
     // does not prove that cAdvisor scraped the final device counter.
     parentLastSample: parentLastSampleQuery(range),
-    parentResets: `resets(buildkite:pod_parent_fs_writes_bytes_total{${RECORDING_SELECTOR}}[${range}])`,
+    parentResets: `resets(${BUILDKITE_RECORDED_PARENT_WRITES_BY_JOB_METRIC}{${RECORDING_SELECTOR}}[${range}])`,
     childMax: `max_over_time(buildkite:container_fs_writes_bytes_total{${RECORDING_SELECTOR},container!=""}[${range}])`,
     networkReceiveMax: `max by (pod,node,interface) (max_over_time(container_network_receive_bytes_total{${RAW_NETWORK_SELECTOR}}[${range}]))`,
     networkTransmitMax: `max by (pod,node,interface) (max_over_time(container_network_transmit_bytes_total{${RAW_NETWORK_SELECTOR}}[${range}]))`,

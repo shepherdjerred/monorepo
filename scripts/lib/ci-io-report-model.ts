@@ -3,9 +3,48 @@ import type { MetricSource } from "./ci-io-prometheus.ts";
 export type GateStatus = "passed" | "failed" | "inconclusive";
 export type Coverage = "complete" | "lower-bound" | "missing";
 
+export type FixedCorpusLaneDefinition = readonly [
+  logicalStepKey: string,
+  conditionalCounterpart: string | null,
+  schemaFamily: "current" | "legacy" | null,
+];
+
+const FIXED_CORPUS_LANE_DEFINITION: ReadonlyMap<
+  string,
+  FixedCorpusLaneDefinition
+> = new Map([
+  ["verify", ["verify", null, null]],
+  ["e2e", ["sjer.red", null, "legacy"]],
+  ["playwright-e2e-pr", ["sjer.red", "playwright-e2e-main", "current"]],
+  ["playwright-e2e-main", ["sjer.red", "playwright-e2e-pr", "current"]],
+  ["resume-build", ["resume", null, "legacy"]],
+  ["resume-build-pr", ["resume", "resume-build-main", "current"]],
+  ["resume-build-main", ["resume", "resume-build-pr", "current"]],
+  ["docker-e2e", ["docker-e2e", null, "legacy"]],
+  ["docker-e2e-pr", ["docker-e2e", "docker-e2e-main", "current"]],
+  ["docker-e2e-main", ["docker-e2e", "docker-e2e-pr", "current"]],
+  ["images-pr", ["images", "images", "current"]],
+  ["images", ["images", "images-pr", null]],
+  ["tofu-plan", ["tofu", "tofu-apply", "current"]],
+  ["tofu-apply", ["tofu", "tofu-plan", null]],
+]);
+
+export function fixedCorpusLaneDefinition(
+  stepKey: string,
+): FixedCorpusLaneDefinition | undefined {
+  return FIXED_CORPUS_LANE_DEFINITION.get(stepKey);
+}
+
 export type BuildCohort = {
   createdFrom: string;
   createdTo: string;
+};
+
+export type SelectedBuildReport = {
+  buildNumber: number;
+  branch: string;
+  commit: string;
+  buildUrl: string;
 };
 
 export type UnfinishedBuildReport = {
@@ -122,6 +161,7 @@ export type WindowIoReport = {
   from: string;
   to: string;
   buildNumbers: number[];
+  selectedBuilds: SelectedBuildReport[];
   unfinishedBuilds: UnfinishedBuildReport[];
   jobOutcomes: JobOutcomeReport[];
   jobs: JobIoReport[];
@@ -137,12 +177,50 @@ export type FixedCorpusLane = {
   jobCount: number;
 };
 
+export type FixedCorpusBuild = SelectedBuildReport & {
+  workloadSignature: string;
+};
+
+export function fixedCorpusWorkloadSignature(
+  jobCounts: ReadonlyMap<string, number>,
+): string {
+  const entries = [...jobCounts.entries()].sort(([left], [right]) =>
+    left.localeCompare(right),
+  );
+  return entries.length === 0
+    ? "(none)"
+    : entries
+        .map(([stepKey, count]) => `${stepKey}=${String(count)}`)
+        .join(",");
+}
+
+export function fixedCorpusWorkloadSignatureMultisetsMatch(
+  baseline: FixedCorpusBuild[],
+  candidate: FixedCorpusBuild[],
+): boolean {
+  const baselineSignatures = baseline
+    .map((build) => build.workloadSignature)
+    .sort();
+  const candidateSignatures = candidate
+    .map((build) => build.workloadSignature)
+    .sort();
+  return (
+    baselineSignatures.length > 0 &&
+    baselineSignatures.length === candidateSignatures.length &&
+    baselineSignatures.every(
+      (signature, index) => signature === candidateSignatures[index],
+    )
+  );
+}
+
 export type FixedCorpusGate = {
   status: GateStatus;
   aggregateWriteReductionPercent: number | null;
   p95DurationChangePercent: number | null;
   baselineLanes: FixedCorpusLane[];
   candidateLanes: FixedCorpusLane[];
+  baselineBuilds: FixedCorpusBuild[];
+  candidateBuilds: FixedCorpusBuild[];
   reasons: string[];
 };
 
@@ -154,7 +232,7 @@ export type WindowComparison = {
 };
 
 export type CiIoReport = {
-  schemaVersion: 2;
+  schemaVersion: 3;
   generatedAt: string;
   metricSource: MetricSource;
   organization: string;

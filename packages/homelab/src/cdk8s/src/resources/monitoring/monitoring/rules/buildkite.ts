@@ -11,6 +11,8 @@ export const BUILDKITE_POD_CHILD_CGROUP_PATTERN =
 export const BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES = 4_398_046_511_104;
 export const BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC =
   "buildkite:pod_parent_fs_writes_bytes:pod_lifetime_max_seen_24h";
+export const BUILDKITE_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC =
+  "buildkite:pod_parent_fs_writes_bytes_by_job_total";
 
 const POD_LABEL_METADATA = [
   "label_buildkite_com_job_uuid",
@@ -49,16 +51,18 @@ function withBuildkitePodMetadata(expression: string): string {
 }
 
 function podParentCounter(metric: string): string {
-  return withBuildkitePodMetadata(
-    `max by (namespace, pod, node, device) (
+  return `max by (namespace, pod, node, device) (
     ${metric}{
       namespace="buildkite",
       pod=~"${BUILDKITE_JOB_POD_PATTERN}",
       container="",
       id=~"${BUILDKITE_POD_PARENT_CGROUP_PATTERN}"
     }
-  )`,
-  );
+  )`;
+}
+
+function attributedPodParentCounter(metric: string): string {
+  return withBuildkitePodMetadata(podParentCounter(metric));
 }
 
 function containerCounter(metric: string): string {
@@ -85,6 +89,14 @@ export function getBuildkiteRuleGroups(): PrometheusRuleSpecGroups[] {
           record: "buildkite:pod_parent_fs_writes_bytes_total",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             podParentCounter("container_fs_writes_bytes_total"),
+          ),
+        },
+        {
+          // Keep aggregate accounting independent of kube-state-metrics while
+          // exposing a separately enriched series for per-job attribution.
+          record: BUILDKITE_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC,
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            attributedPodParentCounter("container_fs_writes_bytes_total"),
           ),
         },
         {
@@ -132,7 +144,7 @@ export function getBuildkiteRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           record: "buildkite:pod_parent_sample_present",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "buildkite:pod_parent_fs_writes_bytes_total * 0 + 1",
+            `${BUILDKITE_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC} * 0 + 1`,
           ),
         },
       ],
@@ -161,18 +173,23 @@ export function getBuildkiteRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "BuildkiteCIIOTelemetryMissing",
           annotations: {
-            summary: "A running Buildkite job has no parent-cgroup I/O samples",
+            summary:
+              "A running Buildkite job pod has no attributed parent-cgroup I/O samples",
             description: escapePrometheusTemplate(
-              "Buildkite job {{ $labels.label_buildkite_com_job_uuid }} (step {{ $labels.label_ci_sjer_red_step_key }}) has been running for more than one minute without a unique pod-parent filesystem sample.",
+              "Buildkite pod {{ $labels.pod }} has been running for more than one minute without a unique, metadata-attributed pod-parent filesystem sample.",
             ),
           },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(`(
+          // Select the running cohort from the pod name itself. Requiring
+          // kube_pod_labels here would make a pod with missing KSM metadata
+          // invisible to the alert that is intended to detect that gap.
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(`
   max by (namespace, pod) (
-    kube_pod_status_phase{namespace="buildkite", phase="Running"} == 1
+    kube_pod_status_phase{
+      namespace="buildkite",
+      pod=~"${BUILDKITE_JOB_POD_PATTERN}",
+      phase="Running"
+    } == 1
   )
-  * on (namespace, pod) group_left(${POD_LABEL_METADATA})
-    ${buildkitePodLabels()}
-)
 unless on (namespace, pod)
   buildkite:pod_parent_sample_present`),
           for: "1m",
@@ -185,9 +202,9 @@ unless on (namespace, pod)
           alert: "BuildkiteCIPodLifetimeWritesSeen24hBudgetExceeded",
           annotations: {
             summary:
-              "Buildkite pod-lifetime writes seen in 24 hours exceeded the cohort budget",
+              "Buildkite pod-lifetime writes seen in 24 hours exceeded the rounded operational budget",
             description: escapePrometheusTemplate(
-              "Buildkite pod/device lifetime maxima seen in the last 24 hours total {{ $value | humanize1024 }}B. Pods crossing the left boundary include earlier writes, and completed pods remain until their last sample ages out. This conservative cohort value is not an exact 24-hour write delta; its post-optimization budget is 4 TiB across every node running CI.",
+              "Buildkite pod/device lifetime maxima seen in the last 24 hours total {{ $value | humanize1024 }}B. Pods crossing the left boundary include earlier writes, and completed pods remain until their last sample ages out. This conservative cohort value is not an exact 24-hour write delta. The rounded 4 TiB operational guardrail across every node running CI is separate from the reporter's exact fixed-corpus 50% acceptance gate.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -203,9 +220,9 @@ unless on (namespace, pod)
         {
           alert: "BuildkiteControllerMetricsMissing",
           annotations: {
-            summary: "Buildkite controller metrics are not reaching Prometheus",
+            summary: "Buildkite controller metrics are missing or unhealthy",
             description:
-              "The Buildkite controller is available, but its native scheduling and cancellation metrics have been absent for five minutes.",
+              "The Buildkite controller is available, but its monitor health metric has been absent or reported unhealthy for five minutes.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(`(
   sum(kube_deployment_status_replicas_available{
@@ -214,7 +231,11 @@ unless on (namespace, pod)
   }) > 0
 )
 and on ()
-  absent(buildkite_monitor_monitor_up{namespace="buildkite"})`),
+  (
+    absent(buildkite_monitor_monitor_up{namespace="buildkite"})
+    or on ()
+    max(buildkite_monitor_monitor_up{namespace="buildkite"}) == 0
+  )`),
           for: "5m",
           labels: {
             severity: "info",

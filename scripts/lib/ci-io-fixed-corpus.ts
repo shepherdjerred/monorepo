@@ -1,7 +1,12 @@
-import type {
-  FixedCorpusGate,
-  FixedCorpusLane,
-  WindowIoReport,
+import {
+  fixedCorpusLaneDefinition,
+  fixedCorpusWorkloadSignature,
+  fixedCorpusWorkloadSignatureMultisetsMatch,
+  type FixedCorpusBuild,
+  type FixedCorpusGate,
+  type FixedCorpusLane,
+  type JobOutcomeReport,
+  type WindowIoReport,
 } from "./ci-io-report-model.ts";
 
 const REQUIRED_LANE_GROUPS = [
@@ -12,36 +17,6 @@ const REQUIRED_LANE_GROUPS = [
   { name: "image", stepKey: "images" },
   { name: "Tofu", stepKey: "tofu" },
 ] as const;
-
-const LOGICAL_LANE_BY_PIPELINE_STEP: ReadonlyMap<string, string> = new Map([
-  ["verify", "verify"],
-  ["e2e", "sjer.red"],
-  ["playwright-e2e-pr", "sjer.red"],
-  ["playwright-e2e-main", "sjer.red"],
-  ["resume-build", "resume"],
-  ["resume-build-pr", "resume"],
-  ["resume-build-main", "resume"],
-  ["docker-e2e", "docker-e2e"],
-  ["docker-e2e-pr", "docker-e2e"],
-  ["docker-e2e-main", "docker-e2e"],
-  ["images-pr", "images"],
-  ["images", "images"],
-  ["tofu-plan", "tofu"],
-  ["tofu-apply", "tofu"],
-]);
-
-const CONDITIONAL_STEP_COUNTERPART: ReadonlyMap<string, string> = new Map([
-  ["playwright-e2e-pr", "playwright-e2e-main"],
-  ["playwright-e2e-main", "playwright-e2e-pr"],
-  ["resume-build-pr", "resume-build-main"],
-  ["resume-build-main", "resume-build-pr"],
-  ["docker-e2e-pr", "docker-e2e-main"],
-  ["docker-e2e-main", "docker-e2e-pr"],
-  ["images-pr", "images"],
-  ["images", "images-pr"],
-  ["tofu-plan", "tofu-apply"],
-  ["tofu-apply", "tofu-plan"],
-]);
 
 type CorpusLane = FixedCorpusLane & {
   p95DurationSeconds: number | null;
@@ -73,7 +48,7 @@ function reductionPercent(change: number | null): number | null {
 function lanes(report: WindowIoReport): CorpusLane[] {
   return report.branchSteps
     .flatMap((lane) => {
-      const logicalStepKey = LOGICAL_LANE_BY_PIPELINE_STEP.get(lane.stepKey);
+      const logicalStepKey = fixedCorpusLaneDefinition(lane.stepKey)?.[0];
       return logicalStepKey === undefined
         ? []
         : [
@@ -93,26 +68,41 @@ function lanes(report: WindowIoReport): CorpusLane[] {
     );
 }
 
-function corpusJobs(report: WindowIoReport): CorpusJob[] {
-  const startedJobs = new Set(
+function startedPhysicalSteps(report: WindowIoReport): ReadonlySet<string> {
+  return new Set(
     report.jobOutcomes
       .filter((job) => job.started)
       .map((job) => JSON.stringify([job.buildNumber, job.stepKey])),
   );
+}
+
+function isInactiveConditionalAlias(
+  job: JobOutcomeReport,
+  startedSteps: ReadonlySet<string>,
+): boolean {
+  const counterpart = fixedCorpusLaneDefinition(job.stepKey)?.[1];
+  return (
+    !job.started &&
+    job.jobState === "broken" &&
+    counterpart !== undefined &&
+    startedSteps.has(JSON.stringify([job.buildNumber, counterpart]))
+  );
+}
+
+function corpusJobs(report: WindowIoReport): CorpusJob[] {
+  const startedSteps = startedPhysicalSteps(report);
   return report.jobOutcomes
     .flatMap((job) => {
-      const logicalStepKey = LOGICAL_LANE_BY_PIPELINE_STEP.get(job.stepKey);
+      const logicalStepKey = fixedCorpusLaneDefinition(job.stepKey)?.[0];
       // Buildkite represents a false step-level `if` as an unstarted broken
       // job. Both PR and main variants are uploaded together, so ignore only
       // an alias whose mutually exclusive counterpart actually started in the
       // same build. A broken active alias and every other unsuccessful terminal
       // state remain visible and make the corpus inconclusive below.
-      const counterpart = CONDITIONAL_STEP_COUNTERPART.get(job.stepKey);
-      const inactiveConditionalAlias =
-        !job.started &&
-        job.jobState === "broken" &&
-        counterpart !== undefined &&
-        startedJobs.has(JSON.stringify([job.buildNumber, counterpart]));
+      const inactiveConditionalAlias = isInactiveConditionalAlias(
+        job,
+        startedSteps,
+      );
       return logicalStepKey === undefined || inactiveConditionalAlias
         ? []
         : [
@@ -131,6 +121,49 @@ function corpusJobs(report: WindowIoReport): CorpusJob[] {
         left.stepKey.localeCompare(right.stepKey) ||
         left.buildNumber - right.buildNumber,
     );
+}
+
+function corpusBuilds(
+  report: WindowIoReport,
+  jobs: CorpusJob[],
+): FixedCorpusBuild[] {
+  const countsByBuild = new Map<number, Map<string, number>>();
+  for (const job of jobs) {
+    const counts =
+      countsByBuild.get(job.buildNumber) ?? new Map<string, number>();
+    counts.set(job.stepKey, (counts.get(job.stepKey) ?? 0) + 1);
+    countsByBuild.set(job.buildNumber, counts);
+  }
+  return report.selectedBuilds.map((build) => ({
+    ...build,
+    workloadSignature: fixedCorpusWorkloadSignature(
+      countsByBuild.get(build.buildNumber) ?? new Map<string, number>(),
+    ),
+  }));
+}
+
+function mixedPhysicalSchemaDescription(report: WindowIoReport): string | null {
+  const startedSteps = startedPhysicalSteps(report);
+  const legacy = new Set<string>();
+  const current = new Set<string>();
+  for (const job of report.jobOutcomes) {
+    if (
+      fixedCorpusLaneDefinition(job.stepKey) === undefined ||
+      isInactiveConditionalAlias(job, startedSteps)
+    ) {
+      continue;
+    }
+    const family = fixedCorpusLaneDefinition(job.stepKey)?.[2];
+    if (family === "legacy") {
+      legacy.add(job.stepKey);
+    } else if (family === "current") {
+      current.add(job.stepKey);
+    }
+  }
+  if (legacy.size === 0 || current.size === 0) {
+    return null;
+  }
+  return `legacy aliases ${[...legacy].sort().join(", ")} and current aliases ${[...current].sort().join(", ")}`;
 }
 
 function laneKey(lane: Pick<FixedCorpusLane, "branch" | "stepKey">): string {
@@ -271,10 +304,6 @@ function hasCompleteTelemetry(report: WindowIoReport): boolean {
   );
 }
 
-function hasUnfinishedBuild(report: WindowIoReport): boolean {
-  return report.unfinishedBuilds.length > 0;
-}
-
 function corpusIntegrityReasons(input: {
   baseline: WindowIoReport;
   candidate: WindowIoReport;
@@ -282,8 +311,22 @@ function corpusIntegrityReasons(input: {
   candidateLanes: CorpusLane[];
   baselineJobs: CorpusJob[];
   candidateJobs: CorpusJob[];
+  baselineBuilds: FixedCorpusBuild[];
+  candidateBuilds: FixedCorpusBuild[];
 }): string[] {
   const reasons: string[] = [];
+  const baselineSchemaMix = mixedPhysicalSchemaDescription(input.baseline);
+  if (baselineSchemaMix !== null) {
+    reasons.push(
+      `baseline fixed-corpus window mixes legacy and current physical pipeline schemas: ${baselineSchemaMix}`,
+    );
+  }
+  const candidateSchemaMix = mixedPhysicalSchemaDescription(input.candidate);
+  if (candidateSchemaMix !== null) {
+    reasons.push(
+      `candidate fixed-corpus window mixes legacy and current physical pipeline schemas: ${candidateSchemaMix}`,
+    );
+  }
   const duplicateBaselineLanes = duplicateLaneDescriptions(input.baselineLanes);
   if (duplicateBaselineLanes.length > 0) {
     reasons.push(
@@ -304,6 +347,16 @@ function corpusIntegrityReasons(input: {
   } else if (!exactLaneJobCounts(input.baselineLanes, input.candidateLanes)) {
     reasons.push(
       "fixed-corpus lane job counts differ between comparison windows",
+    );
+  }
+  if (
+    !fixedCorpusWorkloadSignatureMultisetsMatch(
+      input.baselineBuilds,
+      input.candidateBuilds,
+    )
+  ) {
+    reasons.push(
+      "fixed-corpus per-build workload signature multisets differ between comparison windows",
     );
   }
   const missingBaselineLaneGroups = missingRequiredLaneGroups(
@@ -359,8 +412,8 @@ function corpusIntegrityReasons(input: {
     reasons.push("one or both fixed-corpus windows have incomplete telemetry");
   }
   if (
-    hasUnfinishedBuild(input.baseline) ||
-    hasUnfinishedBuild(input.candidate)
+    input.baseline.unfinishedBuilds.length > 0 ||
+    input.candidate.unfinishedBuilds.length > 0
   ) {
     reasons.push("one or both fixed-corpus cohorts excluded unfinished builds");
   }
@@ -375,6 +428,8 @@ export function fixedCorpusGate(
   const candidateLanes = lanes(candidate);
   const baselineJobs = corpusJobs(baseline);
   const candidateJobs = corpusJobs(candidate);
+  const baselineBuilds = corpusBuilds(baseline, baselineJobs);
+  const candidateBuilds = corpusBuilds(candidate, candidateJobs);
   const baselineCorpusWriteBytes = baselineLanes.reduce(
     (total, lane) => total + lane.totalWriteBytes,
     0,
@@ -403,6 +458,8 @@ export function fixedCorpusGate(
     candidateLanes,
     baselineJobs,
     candidateJobs,
+    baselineBuilds,
+    candidateBuilds,
   });
   const thresholdReasons: string[] = [];
   if (writeReduction === null) {
@@ -440,6 +497,8 @@ export function fixedCorpusGate(
       stepKey,
       jobCount,
     })),
+    baselineBuilds,
+    candidateBuilds,
     reasons: [...inconclusiveReasons, ...thresholdReasons],
   };
 }

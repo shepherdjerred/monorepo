@@ -63,6 +63,7 @@
     "packages/llm-models",
     "packages/llm-observability",
     "packages/monarch",
+    "packages/release-tools",
     "packages/resume",
     "packages/scout-for-lol",
     "packages/scout-for-lol/packages/app",

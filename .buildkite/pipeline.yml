@@ -816,6 +816,7 @@ steps:
         - "bunfig.toml"
         - "package.json"
         - "patches/**"
+        - "scripts/package.json"
         - "turbo.json"
         - "packages/sjer.red/**"
         - "packages/resume/**"
@@ -897,6 +898,7 @@ steps:
         - "release-please-config.json"
         - ".release-please-manifest.json"
         - "scripts/release.ts"
+        - "scripts/package.json"
         - "scripts/lib/**"
         - "turbo.json"
     depends_on: verify
@@ -1236,6 +1238,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
+      bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --production
       bun --no-install scripts/release.ts
     # Safe to retry: release-please upserts its PR and skips already-cut
     # releases; a GitHub GraphQL 500 (build 5809) exits 34 via transient.ts.

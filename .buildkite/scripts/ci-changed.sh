@@ -157,6 +157,7 @@ case "$lane" in
       packages/astro-opengraph-images
       packages/llm-models
       packages/homelab/src/cdk8s/src/versions.ts
+      scripts/package.json
       scripts/scout-site-release.ts
       scripts/lib
     )
@@ -173,6 +174,7 @@ case "$lane" in
       packages/glitter
       packages/scout-for-lol
       packages/llm-models
+      scripts/package.json
       scripts/deploy-site.ts
       scripts/scout-site-release.ts
       scripts/lib/s3-static-site.ts
@@ -185,6 +187,7 @@ case "$lane" in
       packages/astro-opengraph-images
       packages/llm-models
       packages/homelab/src/cdk8s/src/versions.ts
+      scripts/package.json
       scripts/promote-scout.ts
       scripts/lib
     )
@@ -195,6 +198,7 @@ case "$lane" in
       packages/astro-opengraph-images
       packages/llm-models
       packages/homelab/src/cdk8s/src/versions.ts
+      scripts/package.json
       scripts/scout-site-release.ts
       scripts/lib
     )

@@ -380,6 +380,14 @@ export function buildWindowIoReport(
     buildNumbers: input.builds
       .map((build) => build.number)
       .sort((a, b) => a - b),
+    selectedBuilds: input.builds
+      .map((build) => ({
+        buildNumber: build.number,
+        branch: build.branch,
+        commit: build.commit,
+        buildUrl: build.web_url,
+      }))
+      .sort((left, right) => left.buildNumber - right.buildNumber),
     unfinishedBuilds: input.unfinishedBuilds,
     jobOutcomes: outcomes,
     jobs: reports,

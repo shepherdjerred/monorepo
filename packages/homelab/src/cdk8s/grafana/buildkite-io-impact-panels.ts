@@ -1,7 +1,9 @@
 import * as dashboard from "@grafana/grafana-foundation-sdk/dashboard";
 import {
+  BUILDKITE_JOB_POD_PATTERN,
   BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES,
   BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC,
+  BUILDKITE_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/buildkite.ts";
 import {
   createStatPanel,
@@ -21,7 +23,7 @@ export function addBuildkiteIoImpactPanels(
     createStatPanel({
       title: "Pod Lifetime Writes Seen (24h)",
       description:
-        "Conservative sum of each pod/device series' maximum lifetime write counter when that series had a sample in the last 24 hours. Series crossing the left boundary include earlier writes, and completed series remain until their last sample ages out. This is not an exact 24-hour write delta.",
+        "Conservative sum of each pod/device series' maximum lifetime write counter when that series had a sample in the last 24 hours. Series crossing the left boundary include earlier writes, and completed series remain until their last sample ages out. This is not an exact 24-hour write delta; the rounded 4 TiB operational threshold is separate from the reporter's exact fixed-corpus 50% gate.",
       query: BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC,
       legend: "pod/device lifetime maxima",
       gridPos: { x: 0, y: 36, w: 4, h: 4 },
@@ -75,15 +77,25 @@ export function addBuildkiteIoImpactPanels(
     count(
       max by (namespace, pod) (buildkite:pod_parent_sample_present)
       and on (namespace, pod)
-        (kube_pod_status_phase{namespace="buildkite", phase="Running"} == 1)
+        max by (namespace, pod) (
+          kube_pod_status_phase{
+            namespace="buildkite",
+            pod=~"${BUILDKITE_JOB_POD_PATTERN}",
+            phase="Running"
+          } == 1
+        )
     )
     or on() vector(0)
   )
   /
   count(
-    (kube_pod_status_phase{namespace="buildkite", phase="Running"} == 1)
-    and on (namespace, pod)
-      kube_pod_labels{namespace="buildkite", label_buildkite_com_job_uuid!=""}
+    max by (namespace, pod) (
+      kube_pod_status_phase{
+        namespace="buildkite",
+        pod=~"${BUILDKITE_JOB_POD_PATTERN}",
+        phase="Running"
+      } == 1
+    )
   )
 )`,
       legend: "coverage",
@@ -173,9 +185,8 @@ export function addBuildkiteIoImpactPanels(
       title: "Top Step Write Rates",
       targets: [
         {
-          query: `topk(10, sum by (label_ci_sjer_red_step_key, label_buildkite_com_job_uuid) (rate(buildkite:pod_parent_fs_writes_bytes_total[5m])))`,
-          legend:
-            "{{label_ci_sjer_red_step_key}} · {{label_buildkite_com_job_uuid}}",
+          query: `topk(10, sum by (label_ci_sjer_red_step_key) (rate(${BUILDKITE_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC}[5m])))`,
+          legend: "{{label_ci_sjer_red_step_key}}",
         },
       ],
       gridPos: { x: 0, y: 56, w: 14, h: 8 },

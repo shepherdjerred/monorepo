@@ -253,7 +253,7 @@ async function main(): Promise<void> {
     now: startedAt,
   });
   const report: CiIoReport = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     generatedAt: startedAt.toISOString(),
     metricSource: options.metricSource,
     organization,

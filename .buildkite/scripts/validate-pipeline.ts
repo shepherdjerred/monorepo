@@ -212,6 +212,9 @@ for (const lane of [
       fail(`runtime CI selector ${lane} is missing ${dependency}`);
     }
   }
+  if (!block.includes("scripts/package.json")) {
+    fail(`runtime CI selector ${lane} is missing scripts/package.json`);
+  }
 }
 
 const selectImageTargets = await Bun.file(
@@ -343,6 +346,7 @@ const sitesPr = stepBlocks.get("sites-pr");
 for (const dependency of [
   '"packages/astro-opengraph-images/**"',
   '"packages/llm-models/**"',
+  '"scripts/package.json"',
 ]) {
   if (sitesPr === undefined || !sitesPr.includes(dependency)) {
     fail(`sites-pr path gate is missing ${dependency}`);
@@ -355,6 +359,15 @@ if (
   npmPublish.includes("--filter '@shepherdjerred/root-scripts'")
 ) {
   fail("npm-publish restored an unnecessary root-scripts install");
+}
+
+const releasePlease = stepBlocks.get("release-please");
+const releaseInstall =
+  "bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --production";
+if (!hasTrimmedLine(releasePlease, releaseInstall)) {
+  fail(
+    `release-please lane is missing exact filtered install ${releaseInstall}`,
+  );
 }
 
 const jsonHelpers = await Bun.file("scripts/lib/json.ts").text();
@@ -457,6 +470,7 @@ for (const { path, source } of runtimeCommandSources) {
 // runtimes or Bun subcommands that do not execute repository code.
 const automationSources = [
   "scripts/lib/github-auth.ts",
+  "scripts/release.ts",
   "scripts/deploy-site.ts",
   "scripts/scout-site-release.ts",
   "scripts/publish-npm.ts",
@@ -500,6 +514,11 @@ for (const [path, required] of [
     ],
   ],
   ["packages/sjer.red/package.json", ['"bunx --no-install playwright test']],
+  ["scripts/package.json", ['"bunx --no-install eslint']],
+  [
+    "packages/release-tools/package.json",
+    ['"release-please": "17.9.0"', '"release-please": "release-please"'],
+  ],
 ] satisfies ReadonlyArray<readonly [string, readonly string[]]>) {
   const manifest = await Bun.file(path).text();
   for (const token of required) {

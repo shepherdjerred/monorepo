@@ -1,8 +1,10 @@
 import type {
   BranchStepIoReport,
   CiIoReport,
+  FixedCorpusBuild,
   IntegrityIssue,
   JobIoReport,
+  SelectedBuildReport,
   StepIoReport,
   UnfinishedBuildReport,
   WindowIoReport,
@@ -77,6 +79,23 @@ function unfinishedBuildRows(builds: UnfinishedBuildReport[]): string[] {
   );
 }
 
+function selectedBuildRows(builds: SelectedBuildReport[]): string[] {
+  return builds.map(
+    (build) =>
+      `| [#${String(build.buildNumber)}](${build.buildUrl}) | \`${escapeCell(build.branch)}\` | \`${escapeCell(build.commit)}\` |`,
+  );
+}
+
+function fixedCorpusBuildRows(
+  label: string,
+  builds: FixedCorpusBuild[],
+): string[] {
+  return builds.map(
+    (build) =>
+      `| ${label} | [#${String(build.buildNumber)}](${build.buildUrl}) | \`${escapeCell(build.branch)}\` | \`${escapeCell(build.commit)}\` | \`${escapeCell(build.workloadSignature)}\` |`,
+  );
+}
+
 function issueRows(issues: IntegrityIssue[]): string[] {
   return issues.map(
     (currentIssue) =>
@@ -94,6 +113,12 @@ function renderWindow(label: string, report: WindowIoReport): string[] {
       : `Build cohort by \`created_at\`: \`${report.cohort.createdFrom}\` through \`${report.cohort.createdTo}\``,
     "",
     `Metric window: \`${report.from}\` through \`${report.to}\``,
+    "",
+    "### Selected builds",
+    "",
+    "| Build | Branch | Commit |",
+    "| --- | --- | --- |",
+    ...selectedBuildRows(report.selectedBuilds),
     "",
     "| Builds | Unfinished / excluded | Jobs measured / expected | Complete | Lower bounds | Missing | Parent writes | p95 duration | Canceled-build writes | Canceled-job writes | Pod network RX + TX |",
     "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
@@ -153,16 +178,24 @@ function comparisonLines(report: CiIoReport): string[] {
   if (comparison === null) {
     return [];
   }
+  const gate = comparison.fixedCorpusGate;
   return [
     "## Baseline versus candidate",
     "",
     `Aggregate writes: ${formatPercent(comparison.writeBytesChangePercent)} (${formatBytes(comparison.writeBytesChange)}). Normalized per measured job: ${formatPercent(comparison.writeBytesPerJobChangePercent)}.`,
     "",
-    `Fixed-corpus impact gate: **${comparison.fixedCorpusGate.status}**. Aggregate write reduction: ${formatPercent(comparison.fixedCorpusGate.aggregateWriteReductionPercent)}. p95 duration change: ${formatPercent(comparison.fixedCorpusGate.p95DurationChangePercent)}.`,
+    `Fixed-corpus impact gate: **${gate.status}**. Aggregate write reduction: ${formatPercent(gate.aggregateWriteReductionPercent)}. p95 duration change: ${formatPercent(gate.p95DurationChangePercent)}.`,
     "",
-    ...comparison.fixedCorpusGate.reasons.map(
-      (reason) => `- Fixed corpus: ${reason}`,
-    ),
+    "### Fixed-corpus build identities",
+    "",
+    "Commits are retained for audit; gate comparability is determined by the multiset of normalized per-build workload signatures.",
+    "",
+    "| Window | Build | Branch | Commit | Workload signature |",
+    "| --- | --- | --- | --- | --- |",
+    ...fixedCorpusBuildRows("Baseline", gate.baselineBuilds),
+    ...fixedCorpusBuildRows("Candidate", gate.candidateBuilds),
+    "",
+    ...gate.reasons.map((reason) => `- Fixed corpus: ${reason}`),
   ];
 }
 

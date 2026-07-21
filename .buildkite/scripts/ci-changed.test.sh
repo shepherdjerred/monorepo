@@ -123,6 +123,16 @@ for lane in site-scout sites scout-promotion scout-reconcile; do
   expect_status 0 "$lane"
 done
 
+# Every main lane that installs the root-scripts production closure reruns when
+# that workspace manifest changes.
+BASE=$(git -C "$FIXTURE" rev-parse HEAD)
+printf '{"name":"@shepherdjerred/root-scripts"}\n' > "$FIXTURE/scripts/package.json"
+git -C "$FIXTURE" add scripts/package.json
+git -C "$FIXTURE" commit -qm root-scripts-manifest
+for lane in site-scout sites scout-promotion scout-reconcile; do
+  expect_status 0 "$lane"
+done
+
 # An owned source change selects the browser lane.
 BASE=$(git -C "$FIXTURE" rev-parse HEAD)
 printf 'source\n' > "$FIXTURE/packages/sjer.red/src/index.ts"

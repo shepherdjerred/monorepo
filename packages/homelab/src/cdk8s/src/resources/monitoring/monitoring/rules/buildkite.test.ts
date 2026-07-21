@@ -9,6 +9,7 @@ import {
   BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES,
   BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC,
   BUILDKITE_POD_PARENT_CGROUP_PATTERN,
+  BUILDKITE_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC,
   getBuildkiteRuleGroups,
 } from "./buildkite.ts";
 
@@ -63,6 +64,7 @@ describe("Buildkite CI I/O recording rules", () => {
     expect(recordingGroup.interval).toBe("10s");
     expect(rulesForGroup(recordingGroup).map((rule) => rule.record)).toEqual([
       "buildkite:pod_parent_fs_writes_bytes_total",
+      BUILDKITE_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC,
       "buildkite:pod_parent_fs_reads_bytes_total",
       "buildkite:pod_parent_fs_writes_total",
       "buildkite:pod_parent_fs_reads_total",
@@ -88,6 +90,8 @@ describe("Buildkite CI I/O recording rules", () => {
     expect(expression).not.toContain(
       "buildkite:container_fs_writes_bytes_total",
     );
+    expect(expression).not.toContain("kube_pod_labels");
+    expect(expression).not.toContain("kube_pod_annotations");
   });
 
   it("keeps child counters separate for container attribution", () => {
@@ -106,7 +110,9 @@ describe("Buildkite CI I/O recording rules", () => {
   });
 
   it("retains the stable Buildkite identity and link metadata", () => {
-    const rule = recordingRule("buildkite:pod_parent_fs_writes_bytes_total");
+    const rule = recordingRule(
+      BUILDKITE_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC,
+    );
     const expression = ruleExpression(rule);
 
     expect(expression).toContain("label_buildkite_com_job_uuid");
@@ -119,7 +125,9 @@ describe("Buildkite CI I/O recording rules", () => {
   });
 
   it("normalizes metadata to one namespace/pod tuple before joining", () => {
-    const rule = recordingRule("buildkite:pod_parent_fs_writes_bytes_total");
+    const rule = recordingRule(
+      BUILDKITE_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC,
+    );
     const expression = ruleExpression(rule);
 
     expect(expression).toContain(
@@ -133,7 +141,7 @@ describe("Buildkite CI I/O recording rules", () => {
   it("records one sample-presence series from the parent counter only", () => {
     const rule = recordingRule("buildkite:pod_parent_sample_present");
     expect(ruleExpression(rule)).toBe(
-      "buildkite:pod_parent_fs_writes_bytes_total * 0 + 1",
+      `${BUILDKITE_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC} * 0 + 1`,
     );
   });
 
@@ -156,11 +164,12 @@ describe("Buildkite CI I/O informational alerts", () => {
     const rule = alertRule("BuildkiteCIIOTelemetryMissing");
     const expression = ruleExpression(rule);
     expect(expression).toContain('phase="Running"');
+    expect(expression).toContain(`pod=~"${BUILDKITE_JOB_POD_PATTERN}"`);
     expect(expression).toContain("unless on (namespace, pod)");
     expect(expression).toContain("buildkite:pod_parent_sample_present");
-    expect(expression).toContain(
-      "max by (namespace, pod, label_buildkite_com_job_uuid, label_ci_sjer_red_step_key)",
-    );
+    expect(expression).not.toContain("kube_pod_labels");
+    expect(expression).not.toContain("label_buildkite_com_job_uuid");
+    expect(rule.annotations?.["description"]).toContain("$labels.pod");
     expect(rule.for).toBe("1m");
     expect(rule.labels?.["severity"]).toBe("info");
   });
@@ -176,18 +185,24 @@ describe("Buildkite CI I/O informational alerts", () => {
     expect(rule.annotations?.["description"]).toContain(
       "not an exact 24-hour write delta",
     );
+    expect(rule.annotations?.["description"]).toContain(
+      "separate from the reporter's exact fixed-corpus 50% acceptance gate",
+    );
     expect(BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES).toBe(
       4 * 1024 ** 4,
     );
     expect(rule.labels?.["severity"]).toBe("info");
   });
 
-  it("detects a running controller whose metrics target disappeared", () => {
+  it("detects a running controller whose metrics loop is absent or stopped", () => {
     const rule = alertRule("BuildkiteControllerMetricsMissing");
     const expression = ruleExpression(rule);
     expect(expression).toContain('deployment="buildkite-agent-stack-k8s"');
     expect(expression).toContain(
       'absent(buildkite_monitor_monitor_up{namespace="buildkite"})',
+    );
+    expect(expression).toContain(
+      'max(buildkite_monitor_monitor_up{namespace="buildkite"}) == 0',
     );
     expect(rule.for).toBe("5m");
     expect(rule.labels?.["severity"]).toBe("info");

@@ -13,10 +13,10 @@ Ship one PR that reduces aggregate Buildkite pod-parent filesystem writes by at
 least 50% without reducing validation coverage, serializing the heavy PR lanes,
 or moving the same writes to another node or storage layer.
 
-The investigation snapshot attributed 7.81 TiB of pod-parent writes to Buildkite
-over 24 hours, compared with 12.26 TiB of node-level NVMe writes. Across builds
-5777-5876, 410 full Bun installs materialized about 1.82 TiB and 105.2 million
-inodes. The exact report interval and queries are recorded below.
+The frozen investigation snapshot attributed 7.584 TiB of pod-parent writes to
+Buildkite over 24 hours, compared with 12.707 TiB of node-level NVMe writes.
+Across builds 5777-5876, 410 full Bun installs materialized about 1.82 TiB and
+105.2 million inodes. The exact report interval and queries are recorded below.
 
 ## Implementation
 
@@ -65,9 +65,10 @@ inodes. The exact report interval and queries are recorded below.
   regresses by more than 10%.
 - Filtered Bun installs allocate no more than 50% of a full root install and run
   the real consuming command successfully.
-- The Docker candidate reduces every fixture by at least 20% and the geometric
-  mean by at least 30%, with at most 10% wall-time/network regression and
-  identical targets, image contents, digests, and smoke behavior.
+- The now-rejected Docker candidate would only have been retained if it reduced
+  every fixture by at least 20% and the geometric mean by at least 30%, with at
+  most 10% wall-time/network regression and identical targets, image contents,
+  digests, and smoke behavior.
 - Missing samples, ambiguous joins, resets, schema/API failures, or mismatched
   workloads make a benchmark inconclusive rather than passing it.
 
@@ -82,6 +83,10 @@ sum(max_over_time(container_fs_writes_bytes_total{namespace="buildkite",containe
 The primary query returned `8339119546880` bytes (7.584 TiB) across 1,363
 unique pod-parent series. The secondary node query returned 12.515 TiB on
 `nvme0n1` and 0.192 TiB on `nvme1n1`; these device totals are diagnostic only.
+The informational 4 TiB alert is a rounded operational guardrail (a 47.26%
+reduction from this conservative baseline), not the formal acceptance gate.
+Half of this 24-hour baseline is `4169559773440` bytes; the reporter separately
+computes its exact 50% threshold from the selected fixed-corpus baseline.
 
 | Window                   | Commits/builds                  |  Pod-parent writes | Physical writes | Coverage             | Notes                                                   |
 | ------------------------ | ------------------------------- | -----------------: | --------------: | -------------------- | ------------------------------------------------------- |
@@ -104,7 +109,8 @@ long jobs with insufficient samples; none were treated as zero.
 | Closure                  |         Bytes | Entries | Full bytes | Full entries |
 | ------------------------ | ------------: | ------: | ---------: | -----------: |
 | Full root                | 3,753,123,840 | 261,770 |   100.000% |     100.000% |
-| Root scripts production  |    56,119,296 |   4,681 |     1.495% |       1.788% |
+| Root scripts production  |    56,119,296 |   4,659 |     1.495% |       1.780% |
+| Release tools + scripts  |   151,261,184 |   8,673 |     4.030% |       3.313% |
 | sjer.red plus root tools |   785,367,040 |  69,928 |    20.926% |      26.714% |
 | CDK8s development        |   558,800,896 |  37,340 |    14.889% |      14.264% |
 | LLM observability        |   474,165,248 |  35,318 |    12.634% |      13.492% |
@@ -168,6 +174,15 @@ samples per scrape. At 8,640 scrapes per day, it would parse approximately
 controller PodMonitor was added; kube-state-metrics remains on its normal
 cadence.
 
+The retained observability has explicit post-deploy budgets: fewer than 2,000
+active `buildkite:.*` recording series, a maximum Buildkite CI I/O rule-group
+evaluation duration below one second, and zero rule-evaluation failures. The
+active-series cap bounds the 10-second group to 200 output samples per second,
+or 17,280,000 samples per day. More than 1 GiB of unexplained 24-hour
+Prometheus PVC growth after accounting for ordinary ingestion and compaction
+makes the cost check inconclusive. Dedicated dashboard panels expose the
+series count, evaluation duration, and failures.
+
 ### Scanner Traversal Guard
 
 Buildkite build 5980 showed that a repository-wide Trivy traversal was resolving
@@ -220,6 +235,17 @@ stable step key, include canceled builds, and require telemetry coverage before
 accepting a reduction. Node placement and physical-device totals remain
 diagnostic, so moving CI cannot improve the primary result.
 
+At each checkpoint, save the exact query window and capture the dashboard's
+logical write rate, node physical write rate, pod/node I/O pressure, disk write
+latency, and disk queue-depth queries as diagnostics. Run the primary report in
+strict raw mode, then run at least one completed known build in strict
+`--metrics-source recording` mode to prove the recording-rule metadata path.
+Also verify PodMonitor discovery, all Buildkite rule-group evaluations, raw
+versus by-job series coverage, controller `monitor_up`, panel rendering, alert
+state, rule evaluation duration and failures, the added Prometheus series
+count, and the 24-hour Prometheus PVC used-byte delta. Missing or unhealthy
+observability evidence keeps the result inconclusive.
+
 The recurring report-only task below starts checking daily. It must keep the
 schedule active after the 24-hour report, and self-cancel only after the
 seven-day/100-build completion report is delivered.
@@ -241,7 +267,7 @@ seven-day/100-build completion report is delivered.
   "source": {
     "docPath": "packages/docs/plans/2026-07-19_ci-io-optimization.md"
   },
-  "prompt": "Find CI I/O optimization PR #1602 and its merge time. If it is not merged, report pending and keep this schedule active. Once 24 hours have elapsed, use the repository's typed CI I/O reporter with read-only Prometheus and Buildkite access to compare the frozen pre-change cohort against a workload-normalized post-merge cohort by branch and stable step key, including canceled builds. Report pod-parent writes, coverage, duration, network diagnostics, lane presence, and acceptance-gate results; treat node physical writes and node placement as diagnostics only. Keep the schedule active after the 24-hour report. Once at least seven days have elapsed and at least 100 post-merge builds exist, deliver the final comparison, identify any regressions or missing telemetry, and set cancelCron=true only if the completion report is conclusive."
+  "prompt": "Find CI I/O optimization PR #1602 and its merge time. If it is not merged, report pending and keep this schedule active. Once 24 hours have elapsed, use the repository's typed CI I/O reporter with read-only Prometheus and Buildkite access to compare the frozen pre-change cohort against a workload-normalized post-merge cohort by branch and stable step key, including canceled builds. Run the primary report in strict raw mode and at least one completed known build in strict --metrics-source recording mode. Save exact query windows and collect dashboard logical and physical writes, pod and node pressure, disk latency, and queue-depth diagnostics. Verify PodMonitor discovery, all Buildkite rule evaluations, raw versus by-job series coverage, controller monitor_up, panel and alert state, rule duration and failures, added series count, and the 24-hour Prometheus PVC used-byte delta against the documented budgets. Report pod-parent writes, coverage, duration, network diagnostics, lane presence, and acceptance-gate results; treat node physical writes and node placement as diagnostics only. Keep the schedule active after the 24-hour report. Once at least seven days have elapsed and at least 100 post-merge builds exist, deliver the final comparison, identify any regressions or missing telemetry, and set cancelCron=true only if the completion report is conclusive."
 }
 -->
 
@@ -328,6 +354,32 @@ seven-day/100-build completion report is delivered.
   closures explicit, and eliminated a duplicate concurrent typecheck race.
 - Re-ran the full `bun run verify` gate after the scanner and fresh-pod tool
   closure fixes (182 of 182 tasks passed).
+- Audited the observability path end to end: primary write totals no longer
+  depend on optional pod metadata, missing attribution is measured against the
+  running Buildkite pod cohort, the controller alert covers an absent or
+  stopped monitor loop, and top-writer panels aggregate by stable step key.
+- Added explicit observability-cost panels and post-deploy budgets for active
+  recording series, rule evaluation duration and failures, and Prometheus PVC
+  growth; read-only live queries validated the PromQL and current metric/PVC
+  label shapes without changing cluster state.
+- Bumped the reporter schema to version 3, retained selected-build commits in
+  JSON and Markdown output, required matching per-build normalized workload
+  signature multisets, and made cross-branch legacy/current schema mixing
+  inconclusive.
+- Replaced the release lane's implicit `bunx` download with a pinned private
+  `@shepherdjerred/release-tools` workspace and an exact production install.
+  The combined release closure measured 151,261,184 bytes and 8,673 entries
+  (4.030% and 3.313% of the full-root reference), and both the pinned CLI
+  version check and release dry run passed.
+- Closed the root-scripts manifest selector gap for every consuming PR and main
+  lane and added pipeline-validator and behavioral test coverage.
+- Passed 67 focused reporter/observability tests, the complete affected package
+  typecheck/lint/test surface, selector fixtures, pipeline validation, the
+  frozen-lockfile install, and Knip.
+- Passed the final affected verification gate (72 of 72 tasks) and full
+  `bun run verify` gate (182 of 182 tasks) after closing every audit finding.
+- Updated the live `ci-io-post-merge-impact` report-only schedule through the
+  authenticated agent-task API and verified the schedule ID in worker logs.
 
 ### Remaining
 
@@ -343,5 +395,7 @@ seven-day/100-build completion report is delivered.
   samples, not fabricated zeroes.
 - The Docker result is inconclusive because the candidate workload never
   completed; it is not evidence that containerd performs worse.
+- The 4 TiB alert is a rounded 47.26% operational guardrail; only the reporter's
+  exact fixed-corpus comparison decides the 50% acceptance gate.
 - No node placement, filesystem, storage, Kueue, concurrency, or pod-limit
   changes were made.

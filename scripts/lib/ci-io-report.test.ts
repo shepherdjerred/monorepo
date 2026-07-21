@@ -15,6 +15,7 @@ import { parseCliOptions } from "./ci-io-cli.ts";
 import { aggregatePodMetrics } from "./ci-io-aggregate.ts";
 import { renderCiIoMarkdown } from "./ci-io-markdown.ts";
 import {
+  BUILDKITE_RECORDED_PARENT_WRITES_BY_JOB_METRIC,
   buildIoQueries,
   fetchPrometheusIoMetrics,
   filterPrometheusIoMetrics,
@@ -330,7 +331,7 @@ describe("Prometheus query contract", () => {
   test("uses the explicit enriched recording-rule contract", () => {
     const queries = buildIoQueries(WINDOW, "recording");
     expect(queries.parentMax).toContain(
-      "buildkite:pod_parent_fs_writes_bytes_total",
+      BUILDKITE_RECORDED_PARENT_WRITES_BY_JOB_METRIC,
     );
     expect(queries.parentSamples).toContain(
       "buildkite:pod_parent_sample_present",
@@ -701,6 +702,20 @@ describe("window report", () => {
       "container-0": 180,
       dind: 100,
     });
+    expect(report.selectedBuilds).toEqual([
+      {
+        buildNumber: 101,
+        branch: "feature/io",
+        commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        buildUrl: "https://buildkite.com/sjerred/monorepo/builds/101",
+      },
+      {
+        buildNumber: 102,
+        branch: "main",
+        commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        buildUrl: "https://buildkite.com/sjerred/monorepo/builds/102",
+      },
+    ]);
     const fixture = report.steps.find((step) => step.stepKey === "fixture");
     expect(fixture?.totalWriteBytes).toBe(220);
     expect(fixture?.medianWriteBytes).toBe(110);
@@ -971,7 +986,7 @@ describe("outputs and CLI", () => {
       },
     });
     const report: CiIoReport = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       generatedAt: WINDOW.to.toISOString(),
       metricSource: "raw",
       organization: "sjerred",
@@ -984,6 +999,8 @@ describe("outputs and CLI", () => {
     expect(markdown).toContain("Child counters are diagnostic only");
     expect(markdown).toContain("Canceled-build writes");
     expect(markdown).toContain("Build cohort by `created_at`");
+    expect(markdown).toContain("### Selected builds");
+    expect(markdown).toContain("`aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`");
     expect(markdown).toContain("Per-branch step distribution");
     expect(markdown).toContain("| Build | Branch | Step | Nodes |");
     expect(markdown).toContain("feature/io");
