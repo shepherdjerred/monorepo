@@ -140,12 +140,14 @@ cadence.
 ## Remaining
 
 - [x] Run the full `bun run verify` gate after final cleanup.
-- [ ] Publish one draft PR and drive its Buildkite checks green.
+- [x] Publish draft PR #1602.
+- [ ] Drive PR #1602's Buildkite checks green.
 - [ ] Capture post-deploy Grafana evidence for the new recording rules and
       panels.
 - [ ] Run the representative fixed-corpus comparison and determine the 50%
       acceptance-gate result.
-- [ ] Schedule and deliver the 24-hour and seven-day/100-build impact reports.
+- [x] Schedule the recurring report-only post-merge impact task.
+- [ ] Deliver the 24-hour and seven-day/100-build impact reports.
 
 ## Post-Merge Observation
 
@@ -176,7 +178,7 @@ seven-day/100-build completion report is delivered.
   "source": {
     "docPath": "packages/docs/plans/2026-07-19_ci-io-optimization.md"
   },
-  "prompt": "Find the merged CI I/O optimization PR and its merge time. If it is not merged, report pending and keep this schedule active. Once 24 hours have elapsed, use the repository's typed CI I/O reporter with read-only Prometheus and Buildkite access to compare the frozen pre-change cohort against a workload-normalized post-merge cohort by branch and stable step key, including canceled builds. Report pod-parent writes, coverage, duration, network diagnostics, lane presence, and acceptance-gate results; treat node physical writes and node placement as diagnostics only. Keep the schedule active after the 24-hour report. Once at least seven days have elapsed and at least 100 post-merge builds exist, deliver the final comparison, identify any regressions or missing telemetry, and set cancelCron=true only if the completion report is conclusive."
+  "prompt": "Find CI I/O optimization PR #1602 and its merge time. If it is not merged, report pending and keep this schedule active. Once 24 hours have elapsed, use the repository's typed CI I/O reporter with read-only Prometheus and Buildkite access to compare the frozen pre-change cohort against a workload-normalized post-merge cohort by branch and stable step key, including canceled builds. Report pod-parent writes, coverage, duration, network diagnostics, lane presence, and acceptance-gate results; treat node physical writes and node placement as diagnostics only. Keep the schedule active after the 24-hour report. Once at least seven days have elapsed and at least 100 post-merge builds exist, deliver the final comparison, identify any regressions or missing telemetry, and set cancelCron=true only if the completion report is conclusive."
 }
 -->
 
@@ -237,10 +239,14 @@ seven-day/100-build completion report is delivered.
   races without weakening production fallback behavior.
 - Passed `bun run verify -- --affected` (67 of 67 tasks) and the full
   `bun run verify` gate (182 of 182 tasks).
+- Published draft PR #1602 with the frozen baseline, experiment decision,
+  verification evidence, exclusions, and pre-deploy Grafana screenshot.
+- Scheduled and live-log-verified the report-only
+  `ci-io-post-merge-impact` Temporal schedule.
 
 ### Remaining
 
-- Publish the single draft PR and drive Buildkite green.
+- Drive PR #1602's Buildkite checks green.
 - Collect the fixed-corpus, post-deploy dashboard, 24-hour, and
   seven-day/100-build evidence.
 
