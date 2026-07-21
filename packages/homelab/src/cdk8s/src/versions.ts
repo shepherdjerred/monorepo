@@ -69,6 +69,14 @@ const versions = {
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "linuxserver/sonarr":
     "4.0.19@sha256:4b025354d338999e03bf6dbdadcdde94815d39d4a5aba5de3cdc86a56d7d6c51",
+  // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
+  // Bindery (Readarr replacement) — docker hub mirror of ghcr.io/vavallee/bindery
+  "vavallee/bindery":
+    "v1.26.2@sha256:5d898d2b0d2000465b3c5f15fc0aa918458f017558f48f111b772a59b04a819d",
+  // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
+  // Calibre-Web Automated — library + ingest + Send-to-Kindle path
+  "crocodilestick/calibre-web-automated":
+    "v4.0.6@sha256:c31a738b6d5ec6982c050063dd3f063b6943eb1051fc81144789f840d9093a8d",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "timothyjmiller/cloudflare-ddns":
     "latest@sha256:37c99677e997710c1bbe9d74c93f2e3b8de3457a5ca6e28643e251b38ed05311",
