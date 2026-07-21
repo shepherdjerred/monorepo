@@ -126,11 +126,8 @@
     ],
     "defaultMode": "bypassPermissions"
   },
-  "model": "claude-fable-5[1m]",
+  "model": "opus[1m]",
   "hooks": {},
-  "worktree": {
-    "baseRef": "fresh"
-  },
   "enabledPlugins": {
     "gopls-lsp@claude-plugins-official": true,
     "jdtls-lsp@claude-plugins-official": true,
@@ -146,18 +143,12 @@
     "claude-code-setup@claude-plugins-official": true,
     "agent-sdk-dev@claude-plugins-official": true
   },
-  "extraKnownMarketplaces": {},
   "alwaysThinkingEnabled": true,
-  "effortLevel": "high",
-  "autoUpdatesChannel": "stable",
-  "tui": "fullscreen",
+  "effortLevel": "xhigh",
   "skipDangerousModePermissionPrompt": true,
   "skipWorkflowUsageWarning": true,
   "theme": "auto",
   "editorMode": "vim",
-  "switchModelsOnFlag": false,
-  "fileCheckpointingEnabled": false,
-  "remoteControlAtStartup": true,
   "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true,
   "terminalEditorMode": "vim"
