@@ -11,6 +11,7 @@ import {
   SeccompProfileType,
   Secret,
   Service,
+  Volume,
 } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
@@ -78,6 +79,19 @@ export function createShelfbridgeDeployment(chart: Chart) {
         capabilities: { drop: [Capability.ALL] },
         seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
       },
+      volumeMounts: [
+        {
+          // readOnlyRootFilesystem: true — ShelfBridge buffers fetched book
+          // bodies to disk (Go net/http + stdlib temp files) so it needs a
+          // writable /tmp. Mirrors the sibling Bindery deployment.
+          path: "/tmp",
+          volume: Volume.fromEmptyDir(
+            chart,
+            "shelfbridge-tmp",
+            "shelfbridge-tmp",
+          ),
+        },
+      ],
       envVariables: {
         API_KEY: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
