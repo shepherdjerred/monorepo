@@ -1,5 +1,8 @@
 import * as dashboard from "@grafana/grafana-foundation-sdk/dashboard";
-import { BUILDKITE_DAILY_WRITE_BUDGET_BYTES } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/buildkite.ts";
+import {
+  BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES,
+  BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/buildkite.ts";
 import {
   createStatPanel,
   createTimeseriesPanel,
@@ -16,14 +19,20 @@ export function addBuildkiteIoImpactPanels(
 
   builder.withPanel(
     createStatPanel({
-      title: "Logical Writes (24h)",
-      query: `sum(max_over_time(buildkite:pod_parent_fs_writes_bytes_total[24h]))`,
-      legend: "pod-parent writes",
+      title: "Pod Lifetime Writes Seen (24h)",
+      description:
+        "Conservative sum of each pod/device series' maximum lifetime write counter when that series had a sample in the last 24 hours. Series crossing the left boundary include earlier writes, and completed series remain until their last sample ages out. This is not an exact 24-hour write delta.",
+      query: BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC,
+      legend: "pod/device lifetime maxima",
       gridPos: { x: 0, y: 36, w: 4, h: 4 },
       unit: "bytes",
+      instant: true,
       thresholds: [
         { value: 0, color: "green" },
-        { value: BUILDKITE_DAILY_WRITE_BUDGET_BYTES, color: "red" },
+        {
+          value: BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES,
+          color: "red",
+        },
       ],
     }),
   );

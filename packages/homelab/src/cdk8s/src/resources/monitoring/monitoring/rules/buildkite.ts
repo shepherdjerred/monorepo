@@ -8,7 +8,9 @@ export const BUILDKITE_POD_PARENT_CGROUP_PATTERN =
   "/kubepods(/[^/]+)*/pod[^/]+";
 export const BUILDKITE_POD_CHILD_CGROUP_PATTERN =
   "/kubepods(/[^/]+)*/pod[^/]+/.+";
-export const BUILDKITE_DAILY_WRITE_BUDGET_BYTES = 4_398_046_511_104;
+export const BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES = 4_398_046_511_104;
+export const BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC =
+  "buildkite:pod_parent_fs_writes_bytes:pod_lifetime_max_seen_24h";
 
 const POD_LABEL_METADATA = [
   "label_buildkite_com_job_uuid",
@@ -22,14 +24,28 @@ const POD_ANNOTATION_METADATA = [
   "annotation_buildkite_com_pipeline_slug",
 ].join(", ");
 
+function buildkitePodLabels(): string {
+  // Defensively drop scrape-target labels before arithmetic joins so each
+  // namespace/pod/metadata tuple stays unique if scrape topology changes.
+  return `max by (namespace, pod, ${POD_LABEL_METADATA}) (
+  kube_pod_labels{namespace="buildkite", label_buildkite_com_job_uuid!=""}
+)`;
+}
+
+function buildkitePodAnnotations(): string {
+  return `max by (namespace, pod, ${POD_ANNOTATION_METADATA}) (
+  kube_pod_annotations{namespace="buildkite", annotation_buildkite_com_job_url!=""}
+)`;
+}
+
 function withBuildkitePodMetadata(expression: string): string {
   return `(
   ${expression}
 )
 * on (namespace, pod) group_left(${POD_LABEL_METADATA})
-  kube_pod_labels{namespace="buildkite", label_buildkite_com_job_uuid!=""}
+  ${buildkitePodLabels()}
 * on (namespace, pod) group_left(${POD_ANNOTATION_METADATA})
-  kube_pod_annotations{namespace="buildkite", annotation_buildkite_com_job_url!=""}`;
+  ${buildkitePodAnnotations()}`;
 }
 
 function podParentCounter(metric: string): string {
@@ -122,6 +138,23 @@ export function getBuildkiteRuleGroups(): PrometheusRuleSpecGroups[] {
       ],
     },
     {
+      name: "buildkite-ci-io-rollups",
+      interval: "5m",
+      rules: [
+        {
+          // Conservative cohort accounting for ephemeral CI pods: each
+          // pod/device series seen in the last 24 hours contributes its maximum
+          // lifetime counter. A series crossing the left boundary therefore
+          // includes earlier writes, and a completed series remains until its
+          // last sample ages out. This is deliberately not an exact 24h delta.
+          record: BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC,
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "sum(max_over_time(buildkite:pod_parent_fs_writes_bytes_total[24h]))",
+          ),
+        },
+      ],
+    },
+    {
       name: "buildkite-ci-io-alerts",
       interval: "30s",
       rules: [
@@ -138,7 +171,7 @@ export function getBuildkiteRuleGroups(): PrometheusRuleSpecGroups[] {
     kube_pod_status_phase{namespace="buildkite", phase="Running"} == 1
   )
   * on (namespace, pod) group_left(${POD_LABEL_METADATA})
-    kube_pod_labels{namespace="buildkite", label_buildkite_com_job_uuid!=""}
+    ${buildkitePodLabels()}
 )
 unless on (namespace, pod)
   buildkite:pod_parent_sample_present`),
@@ -149,16 +182,16 @@ unless on (namespace, pod)
           },
         },
         {
-          alert: "BuildkiteCIWriteBudgetExceeded",
+          alert: "BuildkiteCIPodLifetimeWritesSeen24hBudgetExceeded",
           annotations: {
             summary:
-              "Buildkite logical writes exceeded the rolling 24-hour budget",
+              "Buildkite pod-lifetime writes seen in 24 hours exceeded the cohort budget",
             description: escapePrometheusTemplate(
-              "Buildkite pod-parent writes were {{ $value | humanize1024 }}B over the last 24 hours. The post-optimization budget is 4 TiB across every node running CI.",
+              "Buildkite pod/device lifetime maxima seen in the last 24 hours total {{ $value | humanize1024 }}B. Pods crossing the left boundary include earlier writes, and completed pods remain until their last sample ages out. This conservative cohort value is not an exact 24-hour write delta; its post-optimization budget is 4 TiB across every node running CI.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `sum(max_over_time(buildkite:pod_parent_fs_writes_bytes_total[24h])) > ${String(BUILDKITE_DAILY_WRITE_BUDGET_BYTES)}`,
+            `${BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC} > ${String(BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES)}`,
           ),
           for: "30m",
           labels: {

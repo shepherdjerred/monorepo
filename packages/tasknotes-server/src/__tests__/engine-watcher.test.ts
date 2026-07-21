@@ -17,9 +17,29 @@ describe("watchVault", () => {
   test("delivers changed .md paths as a debounced batch", async () => {
     const vault = await makeVault();
     const batches: string[][] = [];
+    const observedPaths = new Set<string>();
+    const delivered = Promise.withResolvers<null>();
+    const deliveryTimeout = setTimeout(() => {
+      delivered.reject(
+        new Error(
+          `watcher did not deliver both paths; received ${JSON.stringify([...observedPaths].sort())}`,
+        ),
+      );
+    }, 5000);
     const watcher = watchVault(
       vault,
-      { onChanges: (paths) => batches.push(paths) },
+      {
+        onChanges: (paths) => {
+          batches.push(paths);
+          for (const changedPath of paths) {
+            observedPaths.add(changedPath);
+          }
+          if (observedPaths.has("a.md") && observedPaths.has("b.md")) {
+            clearTimeout(deliveryTimeout);
+            delivered.resolve(null);
+          }
+        },
+      },
       { debounceMs: 50, maxWaitMs: 400, safetyRescanMs: 60_000 },
     );
     try {
@@ -27,11 +47,10 @@ describe("watchVault", () => {
       await writeFile(path.join(vault, "a.md"), "x");
       await sleep(20); // macOS FSEvents can coalesce simultaneous writes
       await writeFile(path.join(vault, "b.md"), "y");
-      await sleep(600);
-      const flat = batches.flat();
-      expect(flat).toContain("a.md");
-      expect(flat).toContain("b.md");
+      await delivered.promise;
+      expect(batches.flat().sort()).toEqual(["a.md", "b.md"]);
     } finally {
+      clearTimeout(deliveryTimeout);
       watcher.close();
     }
   });

@@ -1,9 +1,11 @@
 import type {
+  BranchStepIoReport,
   CiIoReport,
   FixtureGate,
   IntegrityIssue,
   JobIoReport,
   StepIoReport,
+  UnfinishedBuildReport,
   WindowIoReport,
 } from "./ci-io-report-model.ts";
 
@@ -30,6 +32,10 @@ function formatSeconds(value: number | null): string {
   return value === null ? "missing" : `${value.toFixed(1)}s`;
 }
 
+function formatTimestamp(value: string | null): string {
+  return value === null ? "missing" : `\`${value}\``;
+}
+
 function escapeCell(value: string): string {
   return value.replaceAll("|", String.raw`\|`).replaceAll("\n", " ");
 }
@@ -38,6 +44,13 @@ function stepRows(steps: StepIoReport[]): string[] {
   return steps.map(
     (step) =>
       `| \`${escapeCell(step.stepKey)}\` | ${String(step.jobCount)} | ${String(step.measuredJobCount)} | ${formatBytes(step.totalWriteBytes)} | ${formatBytes(step.medianWriteBytes)} | ${formatBytes(step.p95WriteBytes)} | ${formatSeconds(step.medianDurationSeconds)} | ${formatSeconds(step.p95DurationSeconds)} | ${formatBytes(step.medianNetworkBytes)} | ${formatBytes(step.canceledBuildWriteBytes)} |`,
+  );
+}
+
+function branchStepRows(steps: BranchStepIoReport[]): string[] {
+  return steps.map(
+    (step) =>
+      `| \`${escapeCell(step.branch)}\` | \`${escapeCell(step.stepKey)}\` | ${String(step.jobCount)} | ${String(step.measuredJobCount)} | ${formatBytes(step.totalWriteBytes)} | ${formatBytes(step.medianWriteBytes)} | ${formatBytes(step.p95WriteBytes)} | ${formatSeconds(step.p95DurationSeconds)} |`,
   );
 }
 
@@ -54,8 +67,15 @@ function topJobRows(jobs: JobIoReport[]): string[] {
     .slice(0, 25)
     .map(
       (job) =>
-        `| [#${String(job.buildNumber)}](${job.buildUrl}) | [\`${escapeCell(job.stepKey)}\`](${job.jobUrl}) | ${escapeCell(job.jobState)} | ${job.durationSeconds.toFixed(1)}s | ${formatBytes(job.writeBytes)} | ${formatBytes(job.networkReceiveBytes === null || job.networkTransmitBytes === null ? null : job.networkReceiveBytes + job.networkTransmitBytes)} | ${escapeCell(job.coverage)} (${String(job.sampleCount)}) |`,
+        `| [#${String(job.buildNumber)}](${job.buildUrl}) | \`${escapeCell(job.branch)}\` | [\`${escapeCell(job.stepKey)}\`](${job.jobUrl}) | ${escapeCell(job.nodes.join(", ") || "missing")} | ${escapeCell(job.jobState)} | ${job.durationSeconds.toFixed(1)}s | ${formatBytes(job.writeBytes)} | ${formatBytes(job.networkReceiveBytes === null || job.networkTransmitBytes === null ? null : job.networkReceiveBytes + job.networkTransmitBytes)} | ${formatTimestamp(job.lastParentSampleAt)} | ${escapeCell(job.coverage)} (${String(job.sampleCount)}) |`,
     );
+}
+
+function unfinishedBuildRows(builds: UnfinishedBuildReport[]): string[] {
+  return builds.map(
+    (build) =>
+      `| [#${String(build.buildNumber)}](${build.buildUrl}) | \`${escapeCell(build.branch)}\` | ${escapeCell(build.state)} | \`${build.createdAt}\` | ${escapeCell(build.disposition)} |`,
+  );
 }
 
 function issueRows(issues: IntegrityIssue[]): string[] {
@@ -70,17 +90,27 @@ function renderWindow(label: string, report: WindowIoReport): string[] {
   const lines = [
     `## ${label}`,
     "",
-    `Window: \`${report.from}\` through \`${report.to}\``,
+    report.cohort === null
+      ? "Build selection: explicit build numbers"
+      : `Build cohort by \`created_at\`: \`${report.cohort.createdFrom}\` through \`${report.cohort.createdTo}\``,
     "",
-    "| Builds | Jobs measured / expected | Complete | Lower bounds | Missing | Parent writes | Canceled-build writes | Canceled-job writes | Pod network RX + TX |",
-    "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
-    `| ${String(summary.buildCount)} | ${String(summary.measuredJobCount)} / ${String(summary.expectedJobCount)} (${formatPercent(summary.sampleCoveragePercent)}) | ${String(summary.completeJobCount)} | ${String(summary.lowerBoundJobCount)} | ${String(summary.missingJobCount)} | ${formatBytes(summary.totalWriteBytes)} | ${formatBytes(summary.canceledBuildWriteBytes)} | ${formatBytes(summary.canceledJobWriteBytes)} | ${formatBytes(summary.totalNetworkReceiveBytes + summary.totalNetworkTransmitBytes)} |`,
+    `Metric window: \`${report.from}\` through \`${report.to}\``,
+    "",
+    "| Builds | Unfinished / excluded | Jobs measured / expected | Complete | Lower bounds | Missing | Parent writes | p95 duration | Canceled-build writes | Canceled-job writes | Pod network RX + TX |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+    `| ${String(summary.buildCount)} | ${String(summary.unfinishedBuildCount)} / ${String(summary.excludedBuildCount)} | ${String(summary.measuredJobCount)} / ${String(summary.expectedJobCount)} (${formatPercent(summary.sampleCoveragePercent)}) | ${String(summary.completeJobCount)} | ${String(summary.lowerBoundJobCount)} | ${String(summary.missingJobCount)} | ${formatBytes(summary.totalWriteBytes)} | ${formatSeconds(summary.p95DurationSeconds)} | ${formatBytes(summary.canceledBuildWriteBytes)} | ${formatBytes(summary.canceledJobWriteBytes)} | ${formatBytes(summary.totalNetworkReceiveBytes + summary.totalNetworkTransmitBytes)} |`,
     "",
     "### Per-step distribution",
     "",
     "| Step | Jobs | Measured | Total writes | Median writes | p95 writes | Median duration | p95 duration | Median network | Canceled-build writes |",
     "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ...stepRows(report.steps),
+    "",
+    "### Per-branch step distribution",
+    "",
+    "| Branch | Step | Jobs | Measured | Total writes | Median writes | p95 writes | p95 duration |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- |",
+    ...branchStepRows(report.branchSteps),
     "",
     "### Child-container attribution",
     "",
@@ -92,10 +122,20 @@ function renderWindow(label: string, report: WindowIoReport): string[] {
     "",
     "### Top jobs",
     "",
-    "| Build | Step | State | Duration | Parent writes | Network | Coverage (samples) |",
-    "| --- | --- | --- | --- | --- | --- | --- |",
+    "| Build | Branch | Step | Nodes | State | Duration | Parent writes | Network | Last parent sample | Coverage (samples) |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ...topJobRows(report.jobs),
   ];
+  if (report.unfinishedBuilds.length > 0) {
+    lines.push(
+      "",
+      "### Unfinished builds",
+      "",
+      "| Build | Branch | State | Created | Disposition |",
+      "| --- | --- | --- | --- | --- |",
+      ...unfinishedBuildRows(report.unfinishedBuilds),
+    );
+  }
   if (report.integrityIssues.length > 0) {
     lines.push(
       "",
@@ -121,18 +161,30 @@ function comparisonLines(report: CiIoReport): string[] {
   if (comparison === null) {
     return [];
   }
+  const selectedStatus =
+    report.comparisonProfile === "fixed-corpus"
+      ? comparison.fixedCorpusGate.status
+      : comparison.gates.status;
   return [
     "## Baseline versus candidate",
     "",
     `Aggregate writes: ${formatPercent(comparison.writeBytesChangePercent)} (${formatBytes(comparison.writeBytesChange)}). Normalized per measured job: ${formatPercent(comparison.writeBytesPerJobChangePercent)}.`,
     "",
-    `A/B gates: **${comparison.gates.status}**. Geometric-mean write reduction: ${formatPercent(comparison.gates.geometricMeanWriteReductionPercent)}.`,
+    `Selected comparison profile: \`${report.comparisonProfile}\` (**${selectedStatus}**).`,
+    "",
+    `Docker A/B gates: **${comparison.gates.status}**. Geometric-mean write reduction: ${formatPercent(comparison.gates.geometricMeanWriteReductionPercent)}.`,
     "",
     "| Fixture step | Gate | Write reduction | Duration change | Network change | Reasons |",
     "| --- | --- | --- | --- | --- | --- |",
     ...fixtureRows(comparison.gates.fixtures),
     "",
-    ...comparison.gates.reasons.map((reason) => `- ${reason}`),
+    ...comparison.gates.reasons.map((reason) => `- Docker A/B: ${reason}`),
+    "",
+    `Fixed-corpus impact gate: **${comparison.fixedCorpusGate.status}**. Aggregate write reduction: ${formatPercent(comparison.fixedCorpusGate.aggregateWriteReductionPercent)}. p95 duration change: ${formatPercent(comparison.fixedCorpusGate.p95DurationChangePercent)}.`,
+    "",
+    ...comparison.fixedCorpusGate.reasons.map(
+      (reason) => `- Fixed corpus: ${reason}`,
+    ),
   ];
 }
 
@@ -140,7 +192,7 @@ export function renderCiIoMarkdown(report: CiIoReport): string {
   const lines = [
     "# CI I/O report",
     "",
-    `Generated ${report.generatedAt} for \`${escapeCell(report.organization)}/${escapeCell(report.pipeline)}\` using the explicit \`${report.metricSource}\` metric source.`,
+    `Generated ${report.generatedAt} for \`${escapeCell(report.organization)}/${escapeCell(report.pipeline)}\` using the explicit \`${report.metricSource}\` metric source and \`${report.comparisonProfile}\` comparison profile.`,
     "",
     ...comparisonLines(report),
   ];

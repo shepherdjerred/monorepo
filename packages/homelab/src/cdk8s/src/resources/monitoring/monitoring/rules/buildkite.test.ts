@@ -1,9 +1,10 @@
 import { describe, expect, it } from "bun:test";
 import type { PrometheusRuleSpecGroupsRules } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import {
-  BUILDKITE_DAILY_WRITE_BUDGET_BYTES,
   BUILDKITE_JOB_POD_PATTERN,
   BUILDKITE_POD_CHILD_CGROUP_PATTERN,
+  BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES,
+  BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC,
   BUILDKITE_POD_PARENT_CGROUP_PATTERN,
   getBuildkiteRuleGroups,
 } from "./buildkite.ts";
@@ -87,10 +88,36 @@ describe("Buildkite CI I/O recording rules", () => {
     expect(rule.expr).toContain("group_left");
   });
 
+  it("normalizes metadata to one namespace/pod tuple before joining", () => {
+    const rule = recordingRule("buildkite:pod_parent_fs_writes_bytes_total");
+
+    expect(rule.expr).toContain(
+      "max by (namespace, pod, label_buildkite_com_job_uuid, label_ci_sjer_red_step_key)",
+    );
+    expect(rule.expr).toContain(
+      "max by (namespace, pod, annotation_buildkite_com_build_branch, annotation_buildkite_com_build_url, annotation_buildkite_com_job_url, annotation_buildkite_com_pipeline_slug)",
+    );
+  });
+
   it("records one sample-presence series from the parent counter only", () => {
     const rule = recordingRule("buildkite:pod_parent_sample_present");
     expect(rule.expr).toBe(
       "buildkite:pod_parent_fs_writes_bytes_total * 0 + 1",
+    );
+  });
+
+  it("rolls the conservative pod-lifetime cohort total up at a slower cadence", () => {
+    const rollupGroup = groups.find(
+      (group) => group.name === "buildkite-ci-io-rollups",
+    );
+    const rule = recordingRule(BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC);
+
+    expect(rollupGroup?.interval).toBe("5m");
+    expect(BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC).toContain(
+      "pod_lifetime_max_seen_24h",
+    );
+    expect(rule.expr).toBe(
+      "sum(max_over_time(buildkite:pod_parent_fs_writes_bytes_total[24h]))",
     );
   });
 });
@@ -101,16 +128,27 @@ describe("Buildkite CI I/O informational alerts", () => {
     expect(rule.expr).toContain('phase="Running"');
     expect(rule.expr).toContain("unless on (namespace, pod)");
     expect(rule.expr).toContain("buildkite:pod_parent_sample_present");
+    expect(rule.expr).toContain(
+      "max by (namespace, pod, label_buildkite_com_job_uuid, label_ci_sjer_red_step_key)",
+    );
     expect(rule.for).toBe("1m");
     expect(rule.labels?.["severity"]).toBe("info");
   });
 
-  it("uses the accepted 4 TiB rolling write budget across all pods", () => {
-    const rule = alertRule("BuildkiteCIWriteBudgetExceeded");
+  it("uses the accepted 4 TiB pod-lifetime cohort budget across all pods", () => {
+    const rule = alertRule("BuildkiteCIPodLifetimeWritesSeen24hBudgetExceeded");
     expect(rule.expr).toBe(
-      `sum(max_over_time(buildkite:pod_parent_fs_writes_bytes_total[24h])) > ${String(BUILDKITE_DAILY_WRITE_BUDGET_BYTES)}`,
+      `${BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC} > ${String(BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES)}`,
     );
-    expect(BUILDKITE_DAILY_WRITE_BUDGET_BYTES).toBe(4 * 1024 ** 4);
+    expect(rule.annotations?.["description"]).toContain(
+      "Pods crossing the left boundary include earlier writes",
+    );
+    expect(rule.annotations?.["description"]).toContain(
+      "not an exact 24-hour write delta",
+    );
+    expect(BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES).toBe(
+      4 * 1024 ** 4,
+    );
     expect(rule.labels?.["severity"]).toBe("info");
   });
 

@@ -1,14 +1,24 @@
 import type { BuildkiteBuild, BuildkiteJob, TimeWindow } from "./ci-io-api.ts";
 import { aggregatePodMetrics, type PodMeasurement } from "./ci-io-aggregate.ts";
+import {
+  allDevicesHavePostFinishParentSample,
+  measurementIssues,
+} from "./ci-io-integrity.ts";
 import type { PrometheusIoMetrics } from "./ci-io-prometheus.ts";
 import type {
+  BuildCohort,
   Coverage,
   IntegrityIssue,
   JobIoReport,
+  UnfinishedBuildReport,
   WindowIoReport,
   WindowIoSummary,
 } from "./ci-io-report-model.ts";
-import { summarizeSteps } from "./ci-io-statistics.ts";
+import {
+  percentile,
+  summarizeBranchSteps,
+  summarizeSteps,
+} from "./ci-io-statistics.ts";
 
 type JobContext = {
   build: BuildkiteBuild;
@@ -21,6 +31,8 @@ export type BuildWindowReportInput = {
   metrics: PrometheusIoMetrics;
   pipeline: string;
   excludedJobIds: Set<string>;
+  cohort: BuildCohort | null;
+  unfinishedBuilds: UnfinishedBuildReport[];
 };
 
 function issue(
@@ -113,147 +125,27 @@ function sumNetwork(
 function coverageFor(
   measurements: PodMeasurement[],
   sampleCount: number,
+  hasPostFinishParentSample: boolean,
 ): Coverage {
   if (measurements.length === 0) {
     return "missing";
   }
-  if (sampleCount < 2) {
+  if (sampleCount < 2 || !hasPostFinishParentSample) {
     return "lower-bound";
   }
   return "complete";
 }
 
-function metadataIssues(
-  context: JobContext,
-  measurement: PodMeasurement,
-  expectedStepKey: string,
-  pipeline: string,
-): IntegrityIssue[] {
-  const issues: IntegrityIssue[] = measurement.metadataConflicts.map(
-    (message) =>
-      issue("metadata-mismatch", message, context.job.id, measurement.pod),
-  );
-  const metadata = measurement.metadata;
-  if (metadata === null) {
-    return issues;
-  }
-  const matches =
-    metadata.jobUuid === context.job.id &&
-    metadata.stepKey === expectedStepKey &&
-    metadata.branch === context.build.branch &&
-    metadata.buildUrl === context.build.web_url &&
-    metadata.jobUrl === context.job.web_url &&
-    metadata.pipeline === pipeline;
-  if (!matches) {
-    issues.push(
-      issue(
-        "metadata-mismatch",
-        "recording-rule metadata does not match the Buildkite job",
-        context.job.id,
-        measurement.pod,
-      ),
-    );
-  }
-  return issues;
-}
-
-function measurementIssues(input: {
-  context: JobContext;
-  measurements: PodMeasurement[];
-  durationSeconds: number;
-  sampleCount: number;
-  networkReceiveBytes: number | null;
-  networkTransmitBytes: number | null;
-  stepKey: string;
-  pipeline: string;
-  finished: boolean;
-}): IntegrityIssue[] {
-  const issues: IntegrityIssue[] = [];
-  const { context, measurements } = input;
-  if (!input.finished) {
-    issues.push(
-      issue("unfinished-job", "job is unfinished", context.job.id, null),
-    );
-  }
-  if (measurements.length > 1) {
-    issues.push(
-      issue(
-        "ambiguous-job-pods",
-        "multiple pods map to one Buildkite job",
-        context.job.id,
-        null,
-      ),
-    );
-  }
-  if (input.durationSeconds > 30 && measurements.length === 0) {
-    issues.push(
-      issue(
-        "missing-long-job-measurement",
-        "job longer than 30 seconds has no pod-parent measurement",
-        context.job.id,
-        null,
-      ),
-    );
-  } else if (input.durationSeconds > 30 && input.sampleCount < 2) {
-    issues.push(
-      issue(
-        "insufficient-long-job-samples",
-        "job longer than 30 seconds has fewer than two samples",
-        context.job.id,
-        measurements[0]?.pod ?? null,
-      ),
-    );
-  }
-  if (
-    input.durationSeconds > 30 &&
-    measurements.length > 0 &&
-    (input.networkReceiveBytes === null || input.networkTransmitBytes === null)
-  ) {
-    issues.push(
-      issue(
-        "missing-network-measurement",
-        "job longer than 30 seconds is missing pod network metrics",
-        context.job.id,
-        measurements[0]?.pod ?? null,
-      ),
-    );
-  }
+function lastParentSampleAt(measurements: PodMeasurement[]): string | null {
+  let minimum: number | null = null;
   for (const measurement of measurements) {
-    if (measurement.nodes.length !== 1) {
-      issues.push(
-        issue(
-          "multiple-pod-nodes",
-          "pod-parent series report more than one node",
-          context.job.id,
-          measurement.pod,
-        ),
-      );
+    const timestamp = measurement.lastParentSampleTimestampSeconds;
+    if (timestamp === null) {
+      return null;
     }
-    if (measurement.resetCount > 0) {
-      issues.push(
-        issue(
-          "counter-reset",
-          "pod-parent write counter reset during the report window",
-          context.job.id,
-          measurement.pod,
-        ),
-      );
-    }
-    if (measurement.networkResetCount > 0) {
-      issues.push(
-        issue(
-          "network-counter-reset",
-          "pod network counter reset during the report window",
-          context.job.id,
-          measurement.pod,
-        ),
-      );
-    }
-    issues.push(
-      ...metadataIssues(context, measurement, input.stepKey, input.pipeline),
-    );
+    minimum = minimum === null ? timestamp : Math.min(minimum, timestamp);
   }
-  return issues;
+  return minimum === null ? null : new Date(minimum * 1000).toISOString();
 }
 
 function createJobReport(input: {
@@ -270,6 +162,10 @@ function createJobReport(input: {
       : Math.min(...measurements.map((measurement) => measurement.sampleCount));
   const networkReceiveBytes = sumNetwork(measurements, "networkReceiveBytes");
   const networkTransmitBytes = sumNetwork(measurements, "networkTransmitBytes");
+  const hasPostFinishParentSample = allDevicesHavePostFinishParentSample(
+    measurements,
+    context.job,
+  );
   const stepKey = context.job.step_key ?? `unkeyed:${context.job.name}`;
   const report: JobIoReport = {
     buildNumber: context.build.number,
@@ -287,8 +183,9 @@ function createJobReport(input: {
     ].sort(),
     durationSeconds: duration.seconds,
     finished: duration.finished,
-    coverage: coverageFor(measurements, sampleCount),
+    coverage: coverageFor(measurements, sampleCount, hasPostFinishParentSample),
     sampleCount,
+    lastParentSampleAt: lastParentSampleAt(measurements),
     writeBytes:
       measurements.length === 0
         ? null
@@ -305,7 +202,8 @@ function createJobReport(input: {
   return {
     report,
     issues: measurementIssues({
-      context,
+      build: context.build,
+      job: context.job,
       measurements,
       durationSeconds: duration.seconds,
       sampleCount,
@@ -337,6 +235,7 @@ function summarizeWindow(
   builds: BuildkiteBuild[],
   jobs: JobIoReport[],
   unmatchedWriteBytes: number,
+  unfinishedBuilds: UnfinishedBuildReport[],
 ): WindowIoSummary {
   const measured = jobs.filter((job) => job.writeBytes !== null);
   const component = componentSummary(jobs);
@@ -356,8 +255,16 @@ function summarizeWindow(
       (job) =>
         job.networkReceiveBytes !== null && job.networkTransmitBytes !== null,
     ).length,
+    unfinishedBuildCount: unfinishedBuilds.length,
+    excludedBuildCount: unfinishedBuilds.filter(
+      (build) => build.disposition === "excluded",
+    ).length,
     sampleCoveragePercent:
       jobs.length === 0 ? null : (measured.length / jobs.length) * 100,
+    p95DurationSeconds: percentile(
+      jobs.map((job) => job.durationSeconds),
+      0.95,
+    ),
     totalWriteBytes,
     lowerBoundWriteBytes: jobs.reduce(
       (total, job) =>
@@ -444,14 +351,22 @@ export function buildWindowIoReport(
   );
 
   return {
+    cohort: input.cohort,
     from: input.window.from.toISOString(),
     to: input.window.to.toISOString(),
     buildNumbers: input.builds
       .map((build) => build.number)
       .sort((a, b) => a - b),
+    unfinishedBuilds: input.unfinishedBuilds,
     jobs: reports,
     steps: summarizeSteps(reports),
-    summary: summarizeWindow(input.builds, reports, unmatchedWriteBytes),
+    branchSteps: summarizeBranchSteps(reports),
+    summary: summarizeWindow(
+      input.builds,
+      reports,
+      unmatchedWriteBytes,
+      input.unfinishedBuilds,
+    ),
     integrityIssues: issues,
   };
 }

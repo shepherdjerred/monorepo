@@ -48,8 +48,10 @@ RUN set -e; \
     rm -f "/tmp/$asset" /tmp/SHA2-256SUMS "/tmp/$asset.sha256"
 
 # --- Workspace install + build the two dist-resolving fork deps. ---
-# Manifests-only install layer: this ~6 GB `bun install` layer only invalidates
-# when a manifest/lockfile/patch changes, not on every source edit.
+# Manifests-only install layer: install streambot and its complete workspace
+# dependency closure, including the two dist-producing streaming packages built
+# below. This avoids unrelated applications and only invalidates when a
+# manifest/lockfile/patch changes.
 # `--frozen-lockfile` requires every workspace member's package.json present, so
 # the globs enumerate all 47 members (top-level, nested packages/*/packages/*,
 # homelab/src/*, the desktop src-tauri crate, and the `scripts` dir).
@@ -60,7 +62,7 @@ COPY --parents \
   packages/homelab/src/helm-types/package.json \
   packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --filter '@shepherdjerred/streambot'
 
 # Now the sources. node_modules is excluded from context by .dockerignore, so
 # this does not clobber the installed tree.

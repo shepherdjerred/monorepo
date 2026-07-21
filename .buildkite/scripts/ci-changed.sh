@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# Dependency-free main-branch work selector.
+# Dependency-free main-branch work selector. The tiny ci-selector-base step
+# resolves the last green main commit once per build and stores it as Buildkite
+# metadata, so heavyweight runtime images do not need curl or jq just to decide
+# whether they can skip.
 #
 # Exit 0 means the lane is affected and should run. Exit 78 means the lane is
 # unaffected and may skip. Any lookup, API, git, or selector failure fails open
@@ -17,16 +20,14 @@ trap 'status=$?; trap - ERR; echo "WARN: CI change selector failed for ${lane} (
 
 base=${CI_CHANGED_BASE:-}
 if [ -z "$base" ]; then
-  if [ -z "${BUILDKITE_API_TOKEN:-}" ]; then
-    echo "WARN: BUILDKITE_API_TOKEN is unavailable; running ${lane}" >&2
+  if ! base=$(buildkite-agent meta-data get ci-changed-base); then
+    echo "WARN: ci-changed-base metadata is unavailable; running ${lane}" >&2
     exit 0
   fi
-  organization=${BUILDKITE_ORGANIZATION_SLUG:-sjerred}
-  pipeline=${BUILDKITE_PIPELINE_SLUG:-monorepo}
-  response=$(curl -fsS \
-    -H "Authorization: Bearer ${BUILDKITE_API_TOKEN}" \
-    "https://api.buildkite.com/v2/organizations/${organization}/pipelines/${pipeline}/builds?branch=main&state=passed&per_page=1")
-  base=$(printf '%s' "$response" | jq -er '.[0].commit')
+  if [ -z "$base" ]; then
+    echo "WARN: ci-changed-base metadata is empty; running ${lane}" >&2
+    exit 0
+  fi
 fi
 
 if ! git cat-file -e "${base}^{commit}"; then
@@ -67,10 +68,16 @@ case "$lane" in
       packages/eslint-config
       scripts/deploy-site.ts
       scripts/lib/s3-static-site.ts
+      scripts/lib/run.ts
     )
     ;;
   resume)
-    lane_paths=(packages/resume scripts/deploy-site.ts scripts/lib/s3-static-site.ts)
+    lane_paths=(
+      packages/resume
+      scripts/deploy-site.ts
+      scripts/lib/s3-static-site.ts
+      scripts/lib/run.ts
+    )
     ;;
   docker-e2e)
     lane_paths=(packages/llm-observability packages/eslint-config)
@@ -123,25 +130,26 @@ case "$lane" in
       packages/webring
       scripts/deploy-site.ts
       scripts/lib/s3-static-site.ts
+      scripts/lib/run.ts
     )
     ;;
   site-resume)
-    lane_paths=(packages/resume scripts/deploy-site.ts scripts/lib/s3-static-site.ts)
+    lane_paths=(packages/resume scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
     ;;
   site-webring)
-    lane_paths=(packages/webring scripts/deploy-site.ts scripts/lib/s3-static-site.ts)
+    lane_paths=(packages/webring scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
     ;;
   site-cooklang)
-    lane_paths=(packages/cooklang-rich-preview scripts/deploy-site.ts scripts/lib/s3-static-site.ts)
+    lane_paths=(packages/cooklang-rich-preview scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
     ;;
   site-stocks)
-    lane_paths=(packages/stocks-sjer-red scripts/deploy-site.ts scripts/lib/s3-static-site.ts)
+    lane_paths=(packages/stocks-sjer-red scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
     ;;
   site-better-skill-capped)
-    lane_paths=(packages/better-skill-capped scripts/deploy-site.ts scripts/lib/s3-static-site.ts)
+    lane_paths=(packages/better-skill-capped scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
     ;;
   site-glitter)
-    lane_paths=(packages/glitter scripts/deploy-site.ts scripts/lib/s3-static-site.ts)
+    lane_paths=(packages/glitter scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
     ;;
   site-scout)
     lane_paths=(
@@ -165,6 +173,7 @@ case "$lane" in
       scripts/deploy-site.ts
       scripts/scout-site-release.ts
       scripts/lib/s3-static-site.ts
+      scripts/lib/run.ts
     )
     ;;
   scout-promotion)

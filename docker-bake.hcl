@@ -7,6 +7,8 @@
 # VERSION/GIT_SHA/PUSH_CACHE set; local `docker buildx bake <target>` works
 # with the dev defaults (cache is read-only unless PUSH_CACHE=true — writing
 # the ghcr buildcache refs needs a docker-container builder + push creds).
+# Controlled A/B fixtures set READ_CACHE=false so a mutable registry cache
+# cannot change between the baseline and candidate runs.
 # Per-package `docker:build` scripts remain for one-off local builds; target
 # definitions here must stay in sync with them.
 #
@@ -31,10 +33,13 @@ variable "GIT_SHA" {
 variable "PUSH_CACHE" {
   default = "false"
 }
+variable "READ_CACHE" {
+  default = "true"
+}
 
 function "cachefrom" {
   params = [name]
-  result = ["type=registry,ref=${REGISTRY}/${name}:buildcache"]
+  result = equal(READ_CACHE, "true") ? ["type=registry,ref=${REGISTRY}/${name}:buildcache"] : []
 }
 
 function "cacheto" {

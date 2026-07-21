@@ -5,8 +5,10 @@
 FROM oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4 AS base
 WORKDIR /app
 
-# Manifests-only install layer: this ~6 GB `bun install` layer only invalidates
-# when a manifest/lockfile/patch changes, not on every source edit.
+# Manifests-only install layer: install the Scout backend and its complete
+# workspace dependency closure (including data, report, and llm-models), rather
+# than materializing unrelated applications. This layer only invalidates when a
+# manifest/lockfile/patch changes.
 # `--frozen-lockfile` requires every workspace member's package.json present, so
 # the globs enumerate all 47 members (top-level, nested packages/*/packages/*,
 # homelab/src/*, the desktop src-tauri crate, and the `scripts` dir).
@@ -17,7 +19,7 @@ COPY --parents \
   packages/homelab/src/helm-types/package.json \
   packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --filter '@scout-for-lol/backend'
 
 # Now the sources. node_modules is excluded from context by .dockerignore, so
 # this does not clobber the installed tree.

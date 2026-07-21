@@ -78,6 +78,7 @@ export type NetworkMetric = {
 export type IoQueries = {
   parentMax: string;
   parentSamples: string;
+  parentLastSample: string;
   parentResets: string;
   childMax: string;
   networkReceiveMax: string;
@@ -89,6 +90,7 @@ export type IoQueries = {
 export type PrometheusIoMetrics = {
   parentMax: DeviceMetric[];
   parentSamples: DeviceMetric[];
+  parentLastSample: DeviceMetric[];
   parentResets: DeviceMetric[];
   childMax: ChildDeviceMetric[];
   networkReceiveMax: NetworkMetric[];
@@ -115,6 +117,9 @@ export function filterPrometheusIoMetrics(
       podBelongsToJob(metric.pod, jobIds),
     ),
     parentSamples: metrics.parentSamples.filter((metric) =>
+      podBelongsToJob(metric.pod, jobIds),
+    ),
+    parentLastSample: metrics.parentLastSample.filter((metric) =>
       podBelongsToJob(metric.pod, jobIds),
     ),
     parentResets: metrics.parentResets.filter((metric) =>
@@ -144,6 +149,12 @@ const RAW_CHILD_SELECTOR = `namespace="buildkite",container!="",pod=~"${POD_PATT
 const RAW_NETWORK_SELECTOR = `namespace="buildkite",container="",pod=~"${POD_PATTERN}"`;
 const RECORDING_SELECTOR = `namespace="buildkite",pod=~"${POD_PATTERN}"`;
 
+function parentLastSampleQuery(range: string): string {
+  // Pin the subquery to the cAdvisor scrape interval so Prometheus's longer
+  // default evaluation interval cannot step over the final scrape.
+  return `max by (pod,node,device) (max_over_time(timestamp(container_fs_writes_bytes_total{${RAW_PARENT_SELECTOR}})[${range}:10s]))`;
+}
+
 function durationSeconds(window: TimeWindow): number {
   const duration = Math.ceil(
     (window.to.getTime() - window.from.getTime()) / 1000,
@@ -158,6 +169,7 @@ function rawQueries(range: string): IoQueries {
   return {
     parentMax: `max by (pod,node,device) (max_over_time(container_fs_writes_bytes_total{${RAW_PARENT_SELECTOR}}[${range}]))`,
     parentSamples: `max by (pod,node,device) (count_over_time(container_fs_writes_bytes_total{${RAW_PARENT_SELECTOR}}[${range}]))`,
+    parentLastSample: parentLastSampleQuery(range),
     parentResets: `max by (pod,node,device) (resets(container_fs_writes_bytes_total{${RAW_PARENT_SELECTOR}}[${range}]))`,
     childMax: `max by (pod,node,container,device) (max_over_time(container_fs_writes_bytes_total{${RAW_CHILD_SELECTOR}}[${range}]))`,
     networkReceiveMax: `max by (pod,node,interface) (max_over_time(container_network_receive_bytes_total{${RAW_NETWORK_SELECTOR}}[${range}]))`,
@@ -171,6 +183,10 @@ function recordingQueries(range: string): IoQueries {
   return {
     parentMax: `max_over_time(buildkite:pod_parent_fs_writes_bytes_total{${RECORDING_SELECTOR}}[${range}])`,
     parentSamples: `count_over_time(buildkite:pod_parent_sample_present{${RECORDING_SELECTOR}}[${range}])`,
+    // Query the underlying cAdvisor series even in recording mode. A
+    // recording-rule evaluation timestamp only proves that the rule ran; it
+    // does not prove that cAdvisor scraped the final device counter.
+    parentLastSample: parentLastSampleQuery(range),
     parentResets: `resets(buildkite:pod_parent_fs_writes_bytes_total{${RECORDING_SELECTOR}}[${range}])`,
     childMax: `max_over_time(buildkite:container_fs_writes_bytes_total{${RECORDING_SELECTOR},container!=""}[${range}])`,
     networkReceiveMax: `max by (pod,node,interface) (max_over_time(container_network_receive_bytes_total{${RAW_NETWORK_SELECTOR}}[${range}]))`,
@@ -280,6 +296,11 @@ export async function fetchPrometheusIoMetrics(input: {
   const results = await Promise.all([
     queryPrometheusVector(input.client, queries.parentMax, input.window.to),
     queryPrometheusVector(input.client, queries.parentSamples, input.window.to),
+    queryPrometheusVector(
+      input.client,
+      queries.parentLastSample,
+      input.window.to,
+    ),
     queryPrometheusVector(input.client, queries.parentResets, input.window.to),
     queryPrometheusVector(input.client, queries.childMax, input.window.to),
     queryPrometheusVector(
@@ -306,6 +327,7 @@ export async function fetchPrometheusIoMetrics(input: {
   const [
     parentMax,
     parentSamples,
+    parentLastSample,
     parentResets,
     childMax,
     networkReceiveMax,
@@ -316,6 +338,9 @@ export async function fetchPrometheusIoMetrics(input: {
   return {
     parentMax: parseParentMetrics(parentMax, input.source),
     parentSamples: parseParentMetrics(parentSamples, input.source),
+    // The timestamp query intentionally uses raw cAdvisor labels for both
+    // metric modes; enriched recording metadata comes from parentMax.
+    parentLastSample: parseParentMetrics(parentLastSample, "raw"),
     parentResets: parseParentMetrics(parentResets, input.source),
     childMax: parseChildMetrics(childMax, input.source),
     networkReceiveMax: parseNetworkMetrics(networkReceiveMax),

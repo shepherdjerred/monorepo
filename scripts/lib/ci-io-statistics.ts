@@ -1,4 +1,5 @@
 import type {
+  BranchStepIoReport,
   ComparisonGates,
   FixtureGate,
   JobIoReport,
@@ -6,8 +7,9 @@ import type {
   WindowComparison,
   WindowIoReport,
 } from "./ci-io-report-model.ts";
+import { fixedCorpusGate } from "./ci-io-fixed-corpus.ts";
 
-function percentile(values: number[], quantile: number): number | null {
+export function percentile(values: number[], quantile: number): number | null {
   if (values.length === 0) {
     return null;
   }
@@ -58,6 +60,18 @@ function sumWrites(
   }, 0);
 }
 
+function nodeJobCounts(jobs: JobIoReport[]): Record<string, number> {
+  const counts = new Map<string, number>();
+  for (const job of jobs) {
+    const placement =
+      job.nodes.length === 0 ? "<missing>" : job.nodes.join(",");
+    counts.set(placement, (counts.get(placement) ?? 0) + 1);
+  }
+  return Object.fromEntries(
+    [...counts.entries()].sort(([left], [right]) => left.localeCompare(right)),
+  );
+}
+
 function summarizeStep(stepKey: string, jobs: JobIoReport[]): StepIoReport {
   const writes = measuredWrites(jobs);
   const network = measuredNetwork(jobs);
@@ -69,6 +83,7 @@ function summarizeStep(stepKey: string, jobs: JobIoReport[]): StepIoReport {
     lowerBoundJobCount: jobs.filter((job) => job.coverage === "lower-bound")
       .length,
     missingJobCount: jobs.filter((job) => job.coverage === "missing").length,
+    nodeJobCounts: nodeJobCounts(jobs),
     totalWriteBytes: writes.reduce((total, value) => total + value, 0),
     medianWriteBytes: percentile(writes, 0.5),
     p95WriteBytes: percentile(writes, 0.95),
@@ -103,6 +118,38 @@ export function summarizeSteps(jobs: JobIoReport[]): StepIoReport[] {
   return [...grouped.entries()]
     .map(([stepKey, stepJobs]) => summarizeStep(stepKey, stepJobs))
     .sort((left, right) => left.stepKey.localeCompare(right.stepKey));
+}
+
+export function summarizeBranchSteps(
+  jobs: JobIoReport[],
+): BranchStepIoReport[] {
+  const grouped = new Map<
+    string,
+    { branch: string; stepKey: string; jobs: JobIoReport[] }
+  >();
+  for (const job of jobs) {
+    const key = JSON.stringify([job.branch, job.stepKey]);
+    const current = grouped.get(key);
+    if (current === undefined) {
+      grouped.set(key, {
+        branch: job.branch,
+        stepKey: job.stepKey,
+        jobs: [job],
+      });
+    } else {
+      current.jobs.push(job);
+    }
+  }
+  return [...grouped.values()]
+    .map((group) => ({
+      branch: group.branch,
+      ...summarizeStep(group.stepKey, group.jobs),
+    }))
+    .sort(
+      (left, right) =>
+        left.branch.localeCompare(right.branch) ||
+        left.stepKey.localeCompare(right.stepKey),
+    );
 }
 
 function percentChange(candidate: number, baseline: number): number | null {
@@ -140,6 +187,17 @@ function fixtureIntegrityReasons(
     candidate.completeJobCount !== candidate.jobCount
   ) {
     reasons.push("fixture includes missing or lower-bound telemetry");
+  }
+  const placementKeys = new Set([
+    ...Object.keys(baseline.nodeJobCounts),
+    ...Object.keys(candidate.nodeJobCounts),
+  ]);
+  if (
+    [...placementKeys].some(
+      (key) => baseline.nodeJobCounts[key] !== candidate.nodeJobCounts[key],
+    )
+  ) {
+    reasons.push("fixture node placement differs between comparison windows");
   }
   if (changes.write === null) {
     reasons.push("write metrics are missing or have a zero baseline");
@@ -328,5 +386,6 @@ export function compareWindows(
       baselinePerJob,
     ),
     gates: comparisonGates(baseline, candidate, fixtureStepKeys),
+    fixedCorpusGate: fixedCorpusGate(baseline, candidate),
   };
 }

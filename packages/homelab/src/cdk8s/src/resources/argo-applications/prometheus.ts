@@ -113,9 +113,10 @@ export async function createPrometheusApp(chart: Chart) {
       // https://github.com/prometheus-operator/kube-prometheus/issues/718
       enabled: false,
     },
-    // cAdvisor owns the unique pod-parent counters; kube-state-metrics adds
-    // only the Buildkite identity/link metadata used to attribute them. Both
-    // scrape at 10s so short-lived jobs retain useful coverage.
+    // cAdvisor owns the unique 10-second pod-parent counters. The normal
+    // kube-state-metrics scrape adds Buildkite identity/link metadata; missing
+    // joins remain explicit in the rules and CI I/O reporter rather than
+    // accelerating the full cluster-wide metadata endpoint.
     ...BUILDKITE_IO_OBSERVABILITY_VALUES,
     grafana: createGrafanaValues(prometheusSecrets.name),
     nodeExporter: {

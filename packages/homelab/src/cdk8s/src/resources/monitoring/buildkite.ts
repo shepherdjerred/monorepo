@@ -43,6 +43,13 @@ export function createBuildkiteMonitoring(chart: Chart): void {
     },
   });
 
+  // Keep kube-state-metrics on the normal stack cadence. A second 10-second
+  // ServiceMonitor would still download and parse the complete cluster-wide
+  // endpoint before metric relabeling discarded nearly all of it. Short-lived
+  // pods that disappear between metadata scrapes stay explicit: the recording
+  // join emits no attributed series, the running-pod alert detects live gaps,
+  // and the CI I/O reporter marks missing metadata/jobs explicitly and uses
+  // lower-bound coverage where the available samples require it.
   new PrometheusRule(chart, "prometheus-buildkite-rules", {
     metadata: {
       name: "prometheus-buildkite-rules",

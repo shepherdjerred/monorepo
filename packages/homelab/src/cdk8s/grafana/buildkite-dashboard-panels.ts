@@ -11,24 +11,34 @@ const PROMETHEUS_DS = {
 
 export function createStatPanel(options: {
   title: string;
+  description?: string;
   query: string;
   legend: string;
   gridPos: { x: number; y: number; w: number; h: number };
   unit?: string;
+  instant?: boolean;
   thresholds?: { value: number; color: string }[];
 }) {
+  const target = new prometheus.DataqueryBuilder()
+    .expr(options.query)
+    .legendFormat(options.legend);
+
+  if (options.instant === true) {
+    target.instant();
+  }
+
   const panel = new stat.PanelBuilder()
     .title(options.title)
     .datasource(PROMETHEUS_DS)
-    .withTarget(
-      new prometheus.DataqueryBuilder()
-        .expr(options.query)
-        .legendFormat(options.legend),
-    )
+    .withTarget(target)
     .unit(options.unit ?? "short")
     .colorMode(common.BigValueColorMode.Value)
     .graphMode(common.BigValueGraphMode.Area)
     .gridPos(options.gridPos);
+
+  if (options.description !== undefined) {
+    panel.description(options.description);
+  }
 
   if (options.thresholds) {
     panel.thresholds(

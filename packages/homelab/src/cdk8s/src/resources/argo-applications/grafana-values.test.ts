@@ -5,13 +5,13 @@ import {
 } from "./grafana-values.ts";
 
 describe("Buildkite I/O observability Helm values", () => {
-  it("keeps cAdvisor and pod metadata sampling at 10 seconds", () => {
+  it("keeps cAdvisor sampling at 10 seconds without accelerating all kube-state-metrics", () => {
     expect(
       BUILDKITE_IO_OBSERVABILITY_VALUES.kubelet.serviceMonitor.cAdvisorInterval,
     ).toBe("10s");
-    expect(
-      BUILDKITE_KUBE_STATE_METRICS_VALUES.prometheus.monitor.http.interval,
-    ).toBe("10s");
+    expect(BUILDKITE_KUBE_STATE_METRICS_VALUES).not.toHaveProperty(
+      "prometheus",
+    );
   });
 
   it("allowlists only the pod labels needed for CI attribution", () => {

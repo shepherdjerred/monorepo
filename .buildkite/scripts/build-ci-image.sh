@@ -9,15 +9,13 @@ set -euo pipefail
 IMAGE="ghcr.io/shepherdjerred/ci-base"
 SHA="${BUILDKITE_COMMIT:?BUILDKITE_COMMIT is required}"
 
-# Registry cache export needs a docker-container builder — dind's default
-# docker driver can't export cache. image-manifest=true keeps the cache
-# manifest OCI-conformant for ghcr.
-if ! docker buildx inspect ci; then
-  docker buildx create --name ci --driver docker-container
-fi
+# Production defaults to the existing docker-container builder. The selector
+# fails closed before permitting the separately benchmarked containerd-backed
+# Docker driver. image-manifest=true keeps the cache manifest OCI-conformant.
+BUILDX_BUILDER=$(bash .buildkite/scripts/configure-buildx-driver.sh)
 
 docker buildx build \
-  --builder ci \
+  --builder "$BUILDX_BUILDER" \
   --file .buildkite/ci-image/Dockerfile \
   --cache-from "type=registry,ref=${IMAGE}:buildcache" \
   --cache-to "type=registry,ref=${IMAGE}:buildcache,mode=max,image-manifest=true" \

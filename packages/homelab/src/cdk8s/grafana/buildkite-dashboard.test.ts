@@ -1,17 +1,21 @@
 import { describe, expect, it } from "bun:test";
 import { z } from "zod";
+import { BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/buildkite.ts";
 import { createBuildkiteDashboard } from "./buildkite-dashboard.ts";
 
 const TargetSchema = z
   .object({
     expr: z.string(),
     legendFormat: z.string(),
+    instant: z.boolean().optional(),
+    range: z.boolean().optional(),
   })
   .loose();
 
 const PanelSchema = z
   .object({
     title: z.string(),
+    description: z.string().optional(),
     type: z.string(),
     targets: z.array(TargetSchema).optional(),
   })
@@ -43,7 +47,7 @@ describe("Buildkite CI I/O dashboard", () => {
     expect(dashboard.tags).toContain("io");
     expect(dashboard.panels.map((candidate) => candidate.title)).toEqual(
       expect.arrayContaining([
-        "Logical Writes (24h)",
+        "Pod Lifetime Writes Seen (24h)",
         "Physical / Logical Amplification",
         "Running Jobs Measured",
         "CI Logical vs Node Physical Writes",
@@ -65,7 +69,7 @@ describe("Buildkite CI I/O dashboard", () => {
 
   it("uses the unique parent counter for every logical total", () => {
     const queries = [
-      ...panelQueries("Logical Writes (24h)"),
+      ...panelQueries("Pod Lifetime Writes Seen (24h)"),
       ...panelQueries("Logical Write Rate"),
       ...panelQueries("CI Logical vs Node Physical Writes"),
       ...panelQueries("CI Read & Write Throughput"),
@@ -79,6 +83,22 @@ describe("Buildkite CI I/O dashboard", () => {
     expect(queries).toContain("buildkite:pod_parent_fs_reads_total");
     expect(queries).not.toContain("container_fs_writes_bytes_total{");
     expect(queries).not.toContain("buildkite:container_fs_writes_bytes_total");
+  });
+
+  it("reads the precomputed pod-lifetime cohort value with one instant query", () => {
+    expect(panel("Pod Lifetime Writes Seen (24h)").targets?.[0]).toEqual(
+      expect.objectContaining({
+        expr: BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC,
+        instant: true,
+        range: false,
+      }),
+    );
+    expect(panel("Pod Lifetime Writes Seen (24h)").description).toContain(
+      "Series crossing the left boundary include earlier writes",
+    );
+    expect(panel("Pod Lifetime Writes Seen (24h)").description).toContain(
+      "not an exact 24-hour write delta",
+    );
   });
 
   it("keeps child counters confined to the container attribution panel", () => {
@@ -111,7 +131,7 @@ describe("Buildkite CI I/O dashboard", () => {
 
   it("does not render missing primary telemetry as zero savings", () => {
     const primaryQueries = [
-      ...panelQueries("Logical Writes (24h)"),
+      ...panelQueries("Pod Lifetime Writes Seen (24h)"),
       ...panelQueries("Logical Write Rate"),
       ...panelQueries("Node Physical Write Rate"),
       ...panelQueries("Canceled Pods (24h)"),

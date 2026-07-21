@@ -14,26 +14,36 @@ const BuildStateSchema = z.enum([
   "running",
   "scheduled",
   "skipped",
+  "waiting",
+  "waiting_failed",
 ]);
 
 const JobStateSchema = z.enum([
   "accepted",
   "assigned",
   "blocked",
+  "blocked_failed",
   "broken",
   "canceled",
   "canceling",
   "finished",
   "failed",
+  "expired",
   "limiting",
+  "limited",
   "not_run",
+  "pending",
+  "platform_limited",
+  "platform_limiting",
   "passed",
+  "reserved",
   "running",
   "scheduled",
   "skipped",
   "timed_out",
   "timing_out",
   "unblocked",
+  "unblocked_failed",
   "waiting",
   "waiting_failed",
 ]);
@@ -52,6 +62,7 @@ export const BuildkiteJobSchema = z.object({
 export const BuildkiteBuildSchema = z.object({
   id: z.uuid(),
   number: z.number().int().positive(),
+  commit: z.string().min(1),
   state: BuildStateSchema,
   branch: z.string().min(1),
   created_at: IsoTimestampSchema,
@@ -89,6 +100,8 @@ const PrometheusResponseSchema = z.discriminatedUnion("status", [
   PrometheusSuccessSchema,
   PrometheusErrorSchema,
 ]);
+
+const FETCH_TIMEOUT_MILLISECONDS = 30_000;
 
 export type BuildkiteBuild = z.infer<typeof BuildkiteBuildSchema>;
 export type BuildkiteJob = z.infer<typeof BuildkiteJobSchema>;
@@ -132,6 +145,13 @@ function buildkiteHeaders(token: string): Record<string, string> {
   };
 }
 
+function requestInit(headers: Record<string, string>): RequestInit {
+  return {
+    headers,
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MILLISECONDS),
+  };
+}
+
 function pipelineBuildsUrl(config: BuildkiteClientConfig): URL {
   const base = config.apiBaseUrl.endsWith("/")
     ? config.apiBaseUrl
@@ -148,9 +168,11 @@ export async function fetchBuildkiteBuild(
 ): Promise<BuildkiteBuild> {
   const url = pipelineBuildsUrl(config);
   url.pathname = `${url.pathname}/${String(buildNumber)}`;
-  const response = await config.fetcher(url.toString(), {
-    headers: buildkiteHeaders(config.token),
-  });
+  url.searchParams.set("include_retried_jobs", "true");
+  const response = await config.fetcher(
+    url.toString(),
+    requestInit(buildkiteHeaders(config.token)),
+  );
   const body = await readJson(
     response,
     `Buildkite build ${String(buildNumber)}`,
@@ -171,9 +193,11 @@ export async function fetchBuildkiteBuilds(
     url.searchParams.set("created_to", window.to.toISOString());
     url.searchParams.set("per_page", String(perPage));
     url.searchParams.set("page", String(page));
-    const response = await config.fetcher(url.toString(), {
-      headers: buildkiteHeaders(config.token),
-    });
+    url.searchParams.set("include_retried_jobs", "true");
+    const response = await config.fetcher(
+      url.toString(),
+      requestInit(buildkiteHeaders(config.token)),
+    );
     const body = await readJson(
       response,
       `Buildkite builds page ${String(page)}`,
@@ -210,9 +234,10 @@ export async function queryPrometheusVector(
   url.searchParams.set("query", query);
   url.searchParams.set("time", String(time.getTime() / 1000));
 
-  const response = await config.fetcher(url.toString(), {
-    headers: prometheusHeaders(config.bearerToken),
-  });
+  const response = await config.fetcher(
+    url.toString(),
+    requestInit(prometheusHeaders(config.bearerToken)),
+  );
   const body = await readJson(response, "Prometheus query");
   const parsed = PrometheusResponseSchema.parse(body);
   if (parsed.status === "error") {

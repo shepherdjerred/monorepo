@@ -6,9 +6,10 @@ FROM oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf100
 WORKDIR /app
 
 # Manifests-only install layer. Copying just the workspace package.json files
-# (plus the lockfile, bunfig, and patches) BEFORE the source means this ~6 GB
-# `bun install` layer only invalidates when a manifest/lockfile/patch changes —
-# not on every source edit. `--frozen-lockfile` requires every workspace
+# (plus the lockfile, bunfig, and patches) BEFORE the source means this filtered
+# install only invalidates when a manifest/lockfile/patch changes — not on every
+# source edit. The tasknotes-server filter includes tasknotes-types through its
+# workspace dependency closure. `--frozen-lockfile` requires every workspace
 # member's package.json present, so the globs below enumerate all 47 members
 # (top-level, nested `packages/*/packages/*`, homelab/src/*, the desktop
 # src-tauri crate, and the `scripts` dir). The root .dockerignore keeps
@@ -20,7 +21,7 @@ COPY --parents \
   packages/homelab/src/helm-types/package.json \
   packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --filter 'tasknotes-server'
 
 # Now the sources. node_modules is excluded from context by .dockerignore, so
 # this does not clobber the installed tree.

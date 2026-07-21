@@ -3,6 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 SELECTOR="${SCRIPT_DIR}/ci-changed.sh"
+PREPARE_SELECTOR_BASE="${SCRIPT_DIR}/prepare-ci-changed-base.sh"
 FIXTURE=$(mktemp -d)
 trap 'rm -rf "$FIXTURE"' EXIT
 
@@ -33,6 +34,65 @@ printf 'docs-only\n' >> "$FIXTURE/packages/docs/readme.md"
 git -C "$FIXTURE" add packages/docs/readme.md
 git -C "$FIXTURE" commit -qm docs-only
 expect_status 78 playwright
+
+# The small preparation step ignores a passed build of the current commit,
+# publishes the prior green commit once, and runtime selectors can consume the
+# metadata without curl or jq in their own images.
+CURRENT=$(git -C "$FIXTURE" rev-parse HEAD)
+FAKE_BIN="$FIXTURE/fake-bin"
+METADATA="$FIXTURE/ci-changed-base"
+mkdir -p "$FAKE_BIN"
+cat > "$FAKE_BIN/curl" <<'EOF'
+#!/bin/sh
+printf '[{"commit":"%s"},{"commit":"%s"}]\n' "$FAKE_CURRENT" "$FAKE_BASE"
+EOF
+cat > "$FAKE_BIN/buildkite-agent" <<'EOF'
+#!/bin/sh
+if [ "$1" != "meta-data" ]; then
+  echo "unexpected buildkite-agent command: $*" >&2
+  exit 2
+fi
+case "$2" in
+  set)
+    printf '%s\n' "$4" > "$CI_CHANGED_METADATA_PATH"
+    ;;
+  get)
+    cat "$CI_CHANGED_METADATA_PATH"
+    ;;
+  *)
+    echo "unexpected metadata command: $2" >&2
+    exit 2
+    ;;
+esac
+EOF
+chmod +x "$FAKE_BIN/curl" "$FAKE_BIN/buildkite-agent"
+(
+  cd "$FIXTURE"
+  PATH="$FAKE_BIN:$PATH" \
+    FAKE_BASE="$BASE" \
+    FAKE_CURRENT="$CURRENT" \
+    CI_CHANGED_METADATA_PATH="$METADATA" \
+    BUILDKITE_API_TOKEN=test-token \
+    BUILDKITE_COMMIT="$CURRENT" \
+    bash "$PREPARE_SELECTOR_BASE"
+)
+if [ "$(cat "$METADATA")" != "$BASE" ]; then
+  echo "prepare-ci-changed-base did not select the prior green commit" >&2
+  exit 1
+fi
+set +e
+(
+  cd "$FIXTURE"
+  PATH="$FAKE_BIN:$PATH" \
+    CI_CHANGED_METADATA_PATH="$METADATA" \
+    bash "$SELECTOR" playwright
+)
+metadata_status=$?
+set -e
+if [ "$metadata_status" -ne 78 ]; then
+  echo "metadata-backed selector expected exit 78, got ${metadata_status}" >&2
+  exit 1
+fi
 
 # Artifact producers must run whenever their deploy consumer changes; otherwise
 # the main sites lane would try to download an artifact that was never made.

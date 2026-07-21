@@ -17,6 +17,7 @@ export type PodMeasurement = {
   nodes: string[];
   writeBytes: number;
   sampleCount: number;
+  lastParentSampleTimestampSeconds: number | null;
   resetCount: number;
   networkReceiveBytes: number | null;
   networkTransmitBytes: number | null;
@@ -160,6 +161,21 @@ function minSamples(
   }, Number.POSITIVE_INFINITY);
 }
 
+function minLastSampleTimestamp(
+  parents: DeviceMetric[],
+  lastSamples: Map<string, DeviceMetric>,
+): number | null {
+  let minimum = Number.POSITIVE_INFINITY;
+  for (const parent of parents) {
+    const timestamp = lastSamples.get(deviceKey(parent))?.value;
+    if (timestamp === undefined) {
+      return null;
+    }
+    minimum = Math.min(minimum, timestamp);
+  }
+  return Number.isFinite(minimum) ? minimum : null;
+}
+
 function sumResets(
   parents: DeviceMetric[],
   resets: Map<string, DeviceMetric>,
@@ -175,6 +191,10 @@ export function aggregatePodMetrics(
 ): PodMeasurement[] {
   const parents = uniqueDeviceMap(input.parentMax, "parent-write");
   const samples = uniqueDeviceMap(input.parentSamples, "parent-sample");
+  const lastSamples = uniqueDeviceMap(
+    input.parentLastSample,
+    "parent-last-sample",
+  );
   const resets = uniqueDeviceMap(input.parentResets, "parent-reset");
   const children = uniqueChildren(input.childMax);
   const receive = uniqueNetworkMap(input.networkReceiveMax, "network-receive");
@@ -215,6 +235,10 @@ export function aggregatePodMetrics(
           0,
         ),
         sampleCount: minSamples(podParents, samples),
+        lastParentSampleTimestampSeconds: minLastSampleTimestamp(
+          podParents,
+          lastSamples,
+        ),
         resetCount: sumResets(podParents, resets),
         networkReceiveBytes: sumNetwork(receivePods.get(pod) ?? []),
         networkTransmitBytes: sumNetwork(transmitPods.get(pod) ?? []),

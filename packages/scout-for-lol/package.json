@@ -36,7 +36,6 @@
     "@google/generative-ai": "^0.24.1",
     "@tauri-apps/api": "^2.10.1",
     "@tauri-apps/plugin-dialog": "^2.7.0",
-    "autoprefixer": "^10.5.0",
     "openai": "^6.34.0",
     "react": "19.2.7",
     "twisted": "^1.73.0",

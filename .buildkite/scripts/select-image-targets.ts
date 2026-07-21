@@ -39,6 +39,7 @@ const GLOBAL_IMAGE_INPUTS = [
   "bunfig.toml",
   "package.json",
   "patches/",
+  "turbo.json",
 ];
 
 const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> = {
@@ -188,11 +189,18 @@ export async function selectImageTargets(
   return [...selected].sort();
 }
 
-async function changedPathsSince(base: string): Promise<string[]> {
-  const proc = Bun.spawn(["git", "diff", "--name-only", "-z", base, "HEAD"], {
-    stdout: "pipe",
-    stderr: "inherit",
-  });
+export async function changedPathsSince(
+  base: string,
+  repoRoot = process.cwd(),
+): Promise<string[]> {
+  const proc = Bun.spawn(
+    ["git", "diff", "--no-renames", "--name-only", "-z", base, "HEAD"],
+    {
+      cwd: repoRoot,
+      stdout: "pipe",
+      stderr: "inherit",
+    },
+  );
   const stdout = await new Response(proc.stdout).text();
   const exitCode = await proc.exited;
   if (exitCode !== 0) {

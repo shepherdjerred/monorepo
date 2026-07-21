@@ -103,6 +103,30 @@ describe("configure-buildx-driver", () => {
     );
   });
 
+  test("pins the benchmark baseline to Docker's legacy image store", async () => {
+    const result = await configure({
+      CI_BUILDX_REQUIRE_LEGACY_STORE: "true",
+      FAKE_DRIVER_STATUS: '[["driver-type","io.containerd.snapshotter.v1"]]',
+    });
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain(
+      "docker-container baseline requires Docker's legacy image store",
+    );
+    expect(await Bun.file(dockerLog).text()).not.toContain("buildx create");
+  });
+
+  test("accepts the benchmark baseline on Docker's legacy image store", async () => {
+    const result = await configure({
+      CI_BUILDX_REQUIRE_LEGACY_STORE: "true",
+      FAKE_DRIVER_STATUS: "[]",
+    });
+
+    expect(result).toEqual({ exitCode: 0, stderr: "", stdout: "ci\n" });
+    expect(await Bun.file(dockerLog).text()).toContain("info --format");
+  });
+
   test("selects the default builder only with the containerd image store", async () => {
     const result = await configure({
       CI_BUILDX_MODE: "containerd-default",

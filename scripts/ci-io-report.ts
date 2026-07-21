@@ -10,269 +10,34 @@ import {
   type PrometheusClientConfig,
   type TimeWindow,
 } from "./lib/ci-io-api.ts";
+import {
+  CI_IO_USAGE,
+  parseCliOptions,
+  type CliOptions,
+} from "./lib/ci-io-cli.ts";
 import { renderCiIoMarkdown } from "./lib/ci-io-markdown.ts";
 import {
   fetchPrometheusIoMetrics,
   filterPrometheusIoMetrics,
-  MetricSourceSchema,
 } from "./lib/ci-io-prometheus.ts";
 import {
   assertBenchmarkIntegrity,
   buildWindowIoReport,
 } from "./lib/ci-io-report.ts";
 import type { CiIoReport, WindowIoReport } from "./lib/ci-io-report-model.ts";
+import {
+  selectCohortBuilds,
+  selectExplicitBuilds,
+  type BuildSelection,
+} from "./lib/ci-io-selection.ts";
 import { compareWindows } from "./lib/ci-io-statistics.ts";
 
-const CliOptionsSchema = z
-  .object({
-    buildNumbers: z.array(z.number().int().positive()),
-    from: z.iso.datetime({ offset: true }).optional(),
-    to: z.iso.datetime({ offset: true }).optional(),
-    baselineFrom: z.iso.datetime({ offset: true }).optional(),
-    baselineTo: z.iso.datetime({ offset: true }).optional(),
-    organization: z.string().min(1).optional(),
-    pipeline: z.string().min(1).optional(),
-    prometheusUrl: z.url().optional(),
-    buildkiteApiUrl: z.url(),
-    metricSource: MetricSourceSchema,
-    jsonPath: z.string().min(1),
-    markdownPath: z.string().min(1),
-    fixtureSteps: z.array(z.string().min(1)),
-    benchmark: z.boolean(),
-    enforceAbGates: z.boolean(),
-    annotate: z.boolean(),
-    help: z.boolean(),
-  })
-  .superRefine((options, context) => {
-    const hasBuilds = options.buildNumbers.length > 0;
-    const hasWindow = options.from !== undefined || options.to !== undefined;
-    if (hasBuilds === hasWindow && !options.help) {
-      context.addIssue({
-        code: "custom",
-        message: "provide either --build or both --from and --to",
-      });
-    }
-    if (hasWindow && (options.from === undefined || options.to === undefined)) {
-      context.addIssue({
-        code: "custom",
-        message: "--from and --to must be provided together",
-      });
-    }
-    const hasBaseline =
-      options.baselineFrom !== undefined || options.baselineTo !== undefined;
-    if (
-      hasBaseline &&
-      (options.baselineFrom === undefined || options.baselineTo === undefined)
-    ) {
-      context.addIssue({
-        code: "custom",
-        message: "--baseline-from and --baseline-to must be provided together",
-      });
-    }
-    if (options.enforceAbGates && !hasBaseline) {
-      context.addIssue({
-        code: "custom",
-        message: "--enforce-ab-gates requires a baseline window",
-      });
-    }
-    if (options.enforceAbGates && options.fixtureSteps.length === 0) {
-      context.addIssue({
-        code: "custom",
-        message: "--enforce-ab-gates requires at least one --fixture-step",
-      });
-    }
-    if (new Set(options.buildNumbers).size !== options.buildNumbers.length) {
-      context.addIssue({
-        code: "custom",
-        message: "--build numbers must be unique",
-      });
-    }
-    if (new Set(options.fixtureSteps).size !== options.fixtureSteps.length) {
-      context.addIssue({
-        code: "custom",
-        message: "--fixture-step values must be unique",
-      });
-    }
-  });
+const POST_FIXTURE_SCRAPE_GRACE_MILLISECONDS = 20_000;
 
-type CliOptions = z.infer<typeof CliOptionsSchema>;
-
-const USAGE = `Usage:
-  bun scripts/ci-io-report.ts --build <number>[,<number>...] [options]
-  bun scripts/ci-io-report.ts --from <ISO> --to <ISO> [options]
-
-Options:
-  --baseline-from <ISO> --baseline-to <ISO>  Add a comparison window
-  --fixture-step <key>                       Select an A/B fixture (repeatable)
-  --metrics-source raw|recording             Explicit metric contract (default: raw)
-  --organization <slug>                      Defaults to BUILDKITE_ORGANIZATION_SLUG
-  --pipeline <slug>                          Defaults to BUILDKITE_PIPELINE_SLUG
-  --prometheus-url <url>                     Defaults to PROMETHEUS_URL
-  --json <path>                              Default: ci-io.json
-  --markdown <path>                          Default: ci-io.md
-  --benchmark                                Fail on metric-integrity issues
-  --enforce-ab-gates                         Enforce 20%/30%/10% A/B thresholds
-  --annotate                                 Post the Markdown as a Buildkite annotation
-`;
-
-function requiredValue(args: string[], index: number, flag: string): string {
-  const value = args[index + 1];
-  if (value === undefined || value.startsWith("--")) {
-    throw new Error(`${flag} requires a value`);
-  }
-  return value;
-}
-
-function parseBuildNumbers(value: string): number[] {
-  return value
-    .split(",")
-    .map((part) => z.coerce.number().int().positive().parse(part));
-}
-
-type RawCliOptions = {
-  buildNumbers: number[];
-  fixtureSteps: string[];
-  from: string | undefined;
-  to: string | undefined;
-  baselineFrom: string | undefined;
-  baselineTo: string | undefined;
-  organization: string | undefined;
-  pipeline: string | undefined;
-  prometheusUrl: string | undefined;
-  buildkiteApiUrl: string;
-  metricSource: string;
-  jsonPath: string;
-  markdownPath: string;
-  benchmark: boolean;
-  enforceAbGates: boolean;
-  annotate: boolean;
-  help: boolean;
-};
-
-function initialCliOptions(): RawCliOptions {
-  return {
-    buildNumbers: [],
-    fixtureSteps: [],
-    from: undefined,
-    to: undefined,
-    baselineFrom: undefined,
-    baselineTo: undefined,
-    organization: undefined,
-    pipeline: undefined,
-    prometheusUrl: undefined,
-    buildkiteApiUrl: "https://api.buildkite.com/v2/",
-    metricSource: "raw",
-    jsonPath: "ci-io.json",
-    markdownPath: "ci-io.md",
-    benchmark: Bun.env["CI_IO_OBSERVE"] === "true",
-    enforceAbGates: false,
-    annotate: false,
-    help: false,
-  };
-}
-
-function applyValueFlag(
-  options: RawCliOptions,
-  flag: string | undefined,
-  value: string,
-): RawCliOptions {
-  switch (flag) {
-    case "--build":
-      return {
-        ...options,
-        buildNumbers: [...options.buildNumbers, ...parseBuildNumbers(value)],
-      };
-    case "--fixture-step":
-      return {
-        ...options,
-        fixtureSteps: [...options.fixtureSteps, value],
-      };
-    case "--from":
-      return { ...options, from: value };
-    case "--to":
-      return { ...options, to: value };
-    case "--baseline-from":
-      return { ...options, baselineFrom: value };
-    case "--baseline-to":
-      return { ...options, baselineTo: value };
-    case "--organization":
-      return { ...options, organization: value };
-    case "--pipeline":
-      return { ...options, pipeline: value };
-    case "--prometheus-url":
-      return { ...options, prometheusUrl: value };
-    case "--buildkite-api-url":
-      return { ...options, buildkiteApiUrl: value };
-    case "--metrics-source":
-      return { ...options, metricSource: value };
-    case "--json":
-      return { ...options, jsonPath: value };
-    case "--markdown":
-      return { ...options, markdownPath: value };
-    case undefined:
-      throw new Error("option name is missing");
-    default:
-      throw new Error(`unknown option: ${flag}`);
-  }
-}
-
-export function parseCliOptions(args: string[]): CliOptions {
-  let options = initialCliOptions();
-
-  for (let index = 0; index < args.length; index += 1) {
-    const flag = args[index];
-    switch (flag) {
-      case "--benchmark":
-        options = { ...options, benchmark: true };
-        break;
-      case "--enforce-ab-gates":
-        options = { ...options, benchmark: true, enforceAbGates: true };
-        break;
-      case "--annotate":
-        options = { ...options, annotate: true };
-        break;
-      case "--help":
-      case "-h":
-        options = { ...options, help: true };
-        break;
-      case undefined:
-        throw new Error("option name is missing");
-      default: {
-        const value = requiredValue(args, index, flag);
-        index += 1;
-        options = applyValueFlag(options, flag, value);
-      }
-    }
-  }
-
-  return CliOptionsSchema.parse(options);
-}
-
-function explicitBuildWindow(builds: BuildkiteBuild[], now: Date): TimeWindow {
-  if (builds.length === 0) {
-    throw new Error("at least one explicit build is required");
-  }
-  const starts = builds.map((build) => new Date(build.created_at).getTime());
-  const ends = builds.flatMap((build) => [
-    build.finished_at === null
-      ? now.getTime()
-      : new Date(build.finished_at).getTime(),
-    ...build.jobs
-      .filter((job) => job.finished_at !== null)
-      .map((job) => new Date(job.finished_at ?? "").getTime()),
-  ]);
-  const earliest = Math.min(...starts) - 30_000;
-  const latestWithScrape = Math.max(...ends) + 30_000;
-  return {
-    from: new Date(earliest),
-    to: new Date(Math.min(latestWithScrape, now.getTime())),
-  };
-}
-
-function validatedWindow(from: string, to: string): TimeWindow {
+function requestedCohortWindow(from: string, to: string): TimeWindow {
   const window = { from: new Date(from), to: new Date(to) };
   if (window.to.getTime() <= window.from.getTime()) {
-    throw new Error("report window end must be after its start");
+    throw new Error("cohort created_at end must be after its start");
   }
   return window;
 }
@@ -281,27 +46,116 @@ async function candidateSelection(input: {
   options: CliOptions;
   buildkite: BuildkiteClientConfig;
   now: Date;
-}): Promise<{ builds: BuildkiteBuild[]; window: TimeWindow }> {
+}): Promise<BuildSelection> {
   if (input.options.buildNumbers.length > 0) {
-    const builds = await Promise.all(
-      input.options.buildNumbers.map((number) =>
-        fetchBuildkiteBuild(input.buildkite, number),
-      ),
+    return explicitBuildSelection(
+      input.options.buildNumbers,
+      input.buildkite,
+      input.now,
+      input.options.enforceAbGates &&
+        input.options.comparisonProfile === "docker-ab",
     );
-    return { builds, window: explicitBuildWindow(builds, input.now) };
   }
   const from = z.string().parse(input.options.from);
   const to = z.string().parse(input.options.to);
-  const window = validatedWindow(from, to);
-  return {
-    builds: await fetchBuildkiteBuilds(input.buildkite, window),
-    window,
-  };
+  const cohortWindow = requestedCohortWindow(from, to);
+  const builds = await fetchBuildkiteBuilds(input.buildkite, cohortWindow);
+  return selectCohortBuilds(builds, cohortWindow, input.now);
+}
+
+export function postFixtureScrapeWaitMilliseconds(
+  builds: BuildkiteBuild[],
+  fixtureSteps: string[],
+  now: Date,
+): number {
+  const selectedSteps = new Set(fixtureSteps);
+  const finishedAt = builds.flatMap((build) =>
+    build.jobs
+      .filter((job) => job.step_key !== null && selectedSteps.has(job.step_key))
+      .flatMap((job) =>
+        job.finished_at === null ? [] : [new Date(job.finished_at).getTime()],
+      ),
+  );
+  if (finishedAt.length === 0) {
+    return 0;
+  }
+  const latestFinish = Math.max(...finishedAt);
+  const remaining =
+    latestFinish + POST_FIXTURE_SCRAPE_GRACE_MILLISECONDS - now.getTime();
+  return Math.max(
+    0,
+    Math.min(POST_FIXTURE_SCRAPE_GRACE_MILLISECONDS, remaining),
+  );
+}
+
+async function settledCandidateSelection(input: {
+  options: CliOptions;
+  buildkite: BuildkiteClientConfig;
+  now: Date;
+}): Promise<{
+  selection: BuildSelection;
+  observedAt: Date;
+}> {
+  let selection = await candidateSelection(input);
+  if (
+    !input.options.enforceAbGates ||
+    input.options.comparisonProfile !== "docker-ab"
+  ) {
+    return { selection, observedAt: input.now };
+  }
+  const waitMilliseconds = postFixtureScrapeWaitMilliseconds(
+    selection.builds,
+    input.options.fixtureSteps,
+    input.now,
+  );
+  if (waitMilliseconds > 0) {
+    await Bun.sleep(waitMilliseconds);
+  }
+  const observedAt = new Date();
+  selection = await candidateSelection({
+    options: input.options,
+    buildkite: input.buildkite,
+    now: observedAt,
+  });
+  return { selection, observedAt };
+}
+
+async function explicitBuildSelection(
+  buildNumbers: number[],
+  buildkite: BuildkiteClientConfig,
+  now: Date,
+  allowUnfinishedDockerAb: boolean,
+): Promise<BuildSelection> {
+  const builds = await Promise.all(
+    buildNumbers.map((number) => fetchBuildkiteBuild(buildkite, number)),
+  );
+  return selectExplicitBuilds({ builds, now, allowUnfinishedDockerAb });
+}
+
+export function assertEquivalentAbSelections(
+  baseline: BuildkiteBuild[],
+  candidate: BuildkiteBuild[],
+): void {
+  const candidateNumbers = new Set(candidate.map((build) => build.number));
+  if (baseline.some((build) => candidateNumbers.has(build.number))) {
+    throw new Error("CI I/O A/B build selections must be disjoint");
+  }
+  const baselineCommits = new Set(baseline.map((build) => build.commit));
+  const candidateCommits = new Set(candidate.map((build) => build.commit));
+  if (
+    baselineCommits.size !== 1 ||
+    candidateCommits.size !== 1 ||
+    baselineCommits.values().next().value !==
+      candidateCommits.values().next().value
+  ) {
+    throw new Error(
+      "CI I/O A/B builds must use one identical commit in both selections",
+    );
+  }
 }
 
 async function collectWindow(input: {
-  builds: BuildkiteBuild[];
-  window: TimeWindow;
+  selection: BuildSelection;
   prometheus: PrometheusClientConfig;
   options: CliOptions;
   pipeline: string;
@@ -309,18 +163,66 @@ async function collectWindow(input: {
 }): Promise<WindowIoReport> {
   const metrics = await fetchPrometheusIoMetrics({
     client: input.prometheus,
-    window: input.window,
+    window: input.selection.window,
     source: input.options.metricSource,
   });
   const selectedJobIds = new Set(
-    input.builds.flatMap((build) =>
+    input.selection.builds.flatMap((build) =>
       build.jobs.filter((job) => job.started_at !== null).map((job) => job.id),
     ),
   );
   return buildWindowIoReport({
-    builds: input.builds,
-    window: input.window,
+    builds: input.selection.builds,
+    window: input.selection.window,
     metrics: filterPrometheusIoMetrics(metrics, selectedJobIds),
+    pipeline: input.pipeline,
+    excludedJobIds: input.excludedJobIds,
+    cohort: input.selection.cohort,
+    unfinishedBuilds: input.selection.unfinishedBuilds,
+  });
+}
+
+async function collectBaseline(input: {
+  options: CliOptions;
+  buildkite: BuildkiteClientConfig;
+  prometheus: PrometheusClientConfig;
+  candidateBuilds: BuildkiteBuild[];
+  pipeline: string;
+  excludedJobIds: Set<string>;
+  now: Date;
+}): Promise<WindowIoReport | null> {
+  let selection: BuildSelection | null = null;
+  if (input.options.baselineBuildNumbers.length > 0) {
+    selection = await explicitBuildSelection(
+      input.options.baselineBuildNumbers,
+      input.buildkite,
+      input.now,
+      false,
+    );
+  } else if (
+    input.options.baselineFrom !== undefined &&
+    input.options.baselineTo !== undefined
+  ) {
+    const cohortWindow = requestedCohortWindow(
+      input.options.baselineFrom,
+      input.options.baselineTo,
+    );
+    const builds = await fetchBuildkiteBuilds(input.buildkite, cohortWindow);
+    selection = selectCohortBuilds(builds, cohortWindow, input.now);
+  }
+  if (selection === null) {
+    return null;
+  }
+  if (
+    input.options.enforceAbGates &&
+    input.options.comparisonProfile === "docker-ab"
+  ) {
+    assertEquivalentAbSelections(selection.builds, input.candidateBuilds);
+  }
+  return collectWindow({
+    selection,
+    prometheus: input.prometheus,
+    options: input.options,
     pipeline: input.pipeline,
     excludedJobIds: input.excludedJobIds,
   });
@@ -350,12 +252,16 @@ function annotationStyle(report: CiIoReport): string {
   ) {
     return "error";
   }
-  if (report.comparison?.gates.status === "failed") {
+  const gateStatus =
+    report.comparisonProfile === "fixed-corpus"
+      ? report.comparison?.fixedCorpusGate.status
+      : report.comparison?.gates.status;
+  if (gateStatus === "failed") {
     return "error";
   }
   if (
     report.candidate.summary.lowerBoundJobCount > 0 ||
-    report.comparison?.gates.status === "inconclusive"
+    gateStatus === "inconclusive"
   ) {
     return "warning";
   }
@@ -390,7 +296,7 @@ async function postAnnotation(
 async function main(): Promise<void> {
   const options = parseCliOptions(Bun.argv.slice(2));
   if (options.help) {
-    console.log(USAGE);
+    console.log(CI_IO_USAGE);
     return;
   }
   const organization = requiredString(
@@ -421,34 +327,36 @@ async function main(): Promise<void> {
   if (Bun.env["BUILDKITE_JOB_ID"] !== undefined) {
     excludedJobIds.add(Bun.env["BUILDKITE_JOB_ID"]);
   }
-  const now = new Date();
-  const selected = await candidateSelection({ options, buildkite, now });
+  const startedAt = new Date();
+  const settled = await settledCandidateSelection({
+    options,
+    buildkite,
+    now: startedAt,
+  });
+  const selected = settled.selection;
   const candidate = await collectWindow({
-    builds: selected.builds,
-    window: selected.window,
+    selection: selected,
     prometheus,
     options,
     pipeline,
     excludedJobIds,
   });
-  let baseline: WindowIoReport | null = null;
-  if (options.baselineFrom !== undefined && options.baselineTo !== undefined) {
-    const window = validatedWindow(options.baselineFrom, options.baselineTo);
-    baseline = await collectWindow({
-      builds: await fetchBuildkiteBuilds(buildkite, window),
-      window,
-      prometheus,
-      options,
-      pipeline,
-      excludedJobIds,
-    });
-  }
+  const baseline = await collectBaseline({
+    options,
+    buildkite,
+    prometheus,
+    candidateBuilds: selected.builds,
+    pipeline,
+    excludedJobIds,
+    now: settled.observedAt,
+  });
   const fixtureSteps =
     options.fixtureSteps.length === 0 ? null : new Set(options.fixtureSteps);
   const report: CiIoReport = {
-    schemaVersion: 1,
-    generatedAt: now.toISOString(),
+    schemaVersion: 2,
+    generatedAt: settled.observedAt.toISOString(),
     metricSource: options.metricSource,
+    comparisonProfile: options.comparisonProfile,
     organization,
     pipeline,
     candidate,
@@ -475,10 +383,16 @@ async function main(): Promise<void> {
       assertBenchmarkIntegrity(baseline);
     }
   }
-  if (options.enforceAbGates && report.comparison?.gates.status !== "passed") {
-    throw new Error(
-      `CI I/O A/B gates did not pass: ${report.comparison?.gates.status ?? "missing comparison"}`,
-    );
+  if (options.enforceAbGates) {
+    const gateStatus =
+      options.comparisonProfile === "fixed-corpus"
+        ? report.comparison?.fixedCorpusGate.status
+        : report.comparison?.gates.status;
+    if (gateStatus !== "passed") {
+      throw new Error(
+        `CI I/O ${options.comparisonProfile} gates did not pass: ${gateStatus ?? "missing comparison"}`,
+      );
+    }
   }
 }
 

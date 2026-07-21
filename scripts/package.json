@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "lint": "bunx eslint --cache .",
-    "test": "bun test",
+    "test": "bun test . ../.buildkite/scripts/select-image-targets.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

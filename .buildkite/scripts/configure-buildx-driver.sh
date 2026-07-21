@@ -12,9 +12,37 @@ set -euo pipefail
 # The selected builder name is the only stdout output so callers can capture it.
 
 mode="${CI_BUILDX_MODE:-docker-container}"
+require_legacy_store="${CI_BUILDX_REQUIRE_LEGACY_STORE:-false}"
+
+case "$require_legacy_store" in
+  true | false) ;;
+  *)
+    echo "CI_BUILDX_REQUIRE_LEGACY_STORE must be true or false" >&2
+    exit 2
+    ;;
+esac
+
+has_containerd_image_store() {
+  jq -e '
+    type == "array"
+    and any(.[];
+      type == "array"
+      and length == 2
+      and .[0] == "driver-type"
+      and .[1] == "io.containerd.snapshotter.v1"
+    )
+  ' >/dev/null
+}
 
 case "$mode" in
   docker-container)
+    if [ "$require_legacy_store" = true ]; then
+      driver_status=$(docker info --format '{{json .DriverStatus}}')
+      if has_containerd_image_store <<<"$driver_status"; then
+        echo "docker-container baseline requires Docker's legacy image store" >&2
+        exit 1
+      fi
+    fi
     builder_name="${CI_BUILDX_BUILDER_NAME:-ci}"
     builders=$(docker buildx ls --format '{{.Name}}')
     if ! awk -v expected="$builder_name" '$1 == expected { found = 1 } END { exit found ? 0 : 1 }' <<<"$builders"; then
@@ -28,15 +56,7 @@ case "$mode" in
     ;;
   containerd-default)
     driver_status=$(docker info --format '{{json .DriverStatus}}')
-    if ! jq -e '
-      type == "array"
-      and any(.[];
-        type == "array"
-        and length == 2
-        and .[0] == "driver-type"
-        and .[1] == "io.containerd.snapshotter.v1"
-      )
-    ' <<<"$driver_status" >/dev/null; then
+    if ! has_containerd_image_store <<<"$driver_status"; then
       echo "containerd-default requires Docker's containerd image store" >&2
       exit 1
     fi

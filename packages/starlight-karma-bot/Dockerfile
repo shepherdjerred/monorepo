@@ -4,13 +4,14 @@
 # in this package (which passes `-f Dockerfile ../..`).
 #
 # Replaces the old per-package `COPY package.json bun.lock` + `bun install` stage:
-# that world (per-package lockfiles / file: deps) is gone. We now COPY every
-# workspace manifest and run one root `bun install --frozen-lockfile`.
+# that world (per-package lockfiles / file: deps) is gone. We COPY every
+# workspace manifest for frozen-lockfile validation, then install only this app
+# and its workspace dependency closure.
 FROM oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4 AS base
 WORKDIR /app
 
-# Manifests-only install layer: this ~6 GB `bun install` layer only invalidates
-# when a manifest/lockfile/patch changes, not on every source edit.
+# Manifests-only filtered install layer only invalidates when a
+# manifest/lockfile/patch changes, not on every source edit.
 # `--frozen-lockfile` requires every workspace member's package.json present, so
 # the globs enumerate all 47 members (top-level, nested packages/*/packages/*,
 # homelab/src/*, the desktop src-tauri crate, and the `scripts` dir).
@@ -21,7 +22,7 @@ COPY --parents \
   packages/homelab/src/helm-types/package.json \
   packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --filter 'starlight-karma-bot'
 
 # Now the sources. node_modules is excluded from context by .dockerignore, so
 # this does not clobber the installed tree.

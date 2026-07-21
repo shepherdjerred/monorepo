@@ -22,7 +22,8 @@ common:
         podSpecPatch:
           serviceAccountName: buildkite-agent-stack-k8s-controller
           containers:
-            - name: container-0
+            - &privileged_container
+              name: container-0
               image: "ghcr.io/shepherdjerred/ci-base:latest"
               # :latest is mutable and the ci-image refresh step repushes it;
               # the k8s default IfNotPresent pinned pods to a stale node-cached
@@ -91,7 +92,8 @@ common:
           # Steps source .buildkite/scripts/docker-env.sh (CLI bootstrap +
           # daemon wait).
           initContainers:
-            - name: dind
+            - &dind
+              name: dind
               # renovate: datasource=docker depName=docker
               image: "docker:28-dind"
               restartPolicy: Always
@@ -102,6 +104,39 @@ common:
               resources:
                 requests: { cpu: "1", memory: "2Gi" }
                 limits: { cpu: "4", memory: "8Gi" }
+  # Opt-in Buildx A/B pods differ from production only in the daemon feature
+  # selected by the build env. They are ephemeral and have no PVC, hostPath,
+  # cache export, or node-placement override.
+  - pod_buildx_benchmark:
+      kubernetes: &pod_buildx_benchmark_kubernetes
+        checkout:
+          cloneFlags: "--no-tags"
+        podSpecPatch:
+          serviceAccountName: buildkite-agent-stack-k8s-controller
+          containers:
+            - *privileged_container
+          initContainers:
+            - <<: *dind
+              command: ["/bin/sh", "-euc"]
+              args:
+                - |
+                  case "$$CI_IO_BUILDX_BENCHMARK_MODE" in
+                    baseline)
+                      exec dockerd-entrypoint.sh
+                      ;;
+                    candidate)
+                      exec dockerd-entrypoint.sh --feature containerd-snapshotter
+                      ;;
+                    *)
+                      echo "invalid Buildx benchmark mode" >&2
+                      exit 2
+                      ;;
+                  esac
+              env:
+                - name: DOCKER_TLS_CERTDIR
+                  value: ""
+                - name: CI_IO_BUILDX_BENCHMARK_MODE
+                  value: "$CI_IO_BUILDX_BENCHMARK_MODE"
   # Light steps: thin deploy/publish/annotate scripts whose work is seconds
   # even on a cold cache. Small REQUESTS so Kueue admits them alongside the
   # long images job (7.5 CPU / 16Gi namespace quota — build 5644: light steps
@@ -176,13 +211,192 @@ steps:
   #   build.branch != "release-please--branches--main"
   #     || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true"
 
+  # ── Opt-in Buildx I/O A/B corpus ────────────────────────────────────────
+  # Trigger two builds of the same commit and benchmark ID, first baseline and
+  # then candidate. Every ordinary step is disabled in benchmark builds, so
+  # these stable keys are the complete workload seen by the strict reporter.
+  # Benchmarks are restricted to one dedicated, non-PR branch. Otherwise a
+  # benchmark-only pass could poison last-green main selection or publish the
+  # normal required status for a PR without running ordinary validation.
+  - label: ":no_entry: reject unsafe Buildx benchmark"
+    key: buildx-io-reject-unsafe
+    if: build.env("CI_IO_BUILDX_BENCHMARK_MODE") != null && (build.branch != "ci-io-benchmark" || build.pull_request.id != null)
+    command: |
+      echo "Buildx I/O benchmarks require the dedicated non-PR ci-io-benchmark branch" >&2
+      exit 2
+    plugins:
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: buildx-io-reject-unsafe
+
+  - label: ":wrench: prepare Buildx I/O fixtures"
+    key: buildx-io-prepare
+    if: build.env("CI_IO_BUILDX_BENCHMARK_MODE") != null && build.branch == "ci-io-benchmark" && build.pull_request.id == null
+    cancel_on_build_failing: true
+    timeout_in_minutes: 15
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      bun install --frozen-lockfile --filter '@homelab/cdk8s'
+      bun packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts caddyfile.generated
+    artifact_paths: "caddyfile.generated"
+    plugins:
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: buildx-io-prepare
+
+  - label: ":docker: Buildx I/O — tasknotes"
+    key: buildx-io-tasknotes
+    if: build.env("CI_IO_BUILDX_BENCHMARK_MODE") != null && build.branch == "ci-io-benchmark" && build.pull_request.id == null
+    cancel_on_build_failing: true
+    timeout_in_minutes: 90
+    concurrency: 1
+    concurrency_group: monorepo/buildx-io-tasknotes
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      . .buildkite/scripts/docker-env.sh
+      bash .buildkite/scripts/run-buildx-io-fixture.sh tasknotes-server
+    artifact_paths:
+      - "image-build-manifest.json"
+      - "buildx-run-metadata.json"
+    plugins:
+      - kubernetes:
+          <<: *pod_buildx_benchmark_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: buildx-io-tasknotes
+
+  - label: ":docker: Buildx I/O — temporal"
+    key: buildx-io-temporal
+    if: build.env("CI_IO_BUILDX_BENCHMARK_MODE") != null && build.branch == "ci-io-benchmark" && build.pull_request.id == null
+    cancel_on_build_failing: true
+    timeout_in_minutes: 90
+    concurrency: 1
+    concurrency_group: monorepo/buildx-io-temporal
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      . .buildkite/scripts/docker-env.sh
+      bash .buildkite/scripts/run-buildx-io-fixture.sh temporal-worker
+    artifact_paths:
+      - "image-build-manifest.json"
+      - "buildx-run-metadata.json"
+    plugins:
+      - kubernetes:
+          <<: *pod_buildx_benchmark_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: buildx-io-temporal
+
+  - label: ":docker: Buildx I/O — infra"
+    key: buildx-io-infra
+    if: build.env("CI_IO_BUILDX_BENCHMARK_MODE") != null && build.branch == "ci-io-benchmark" && build.pull_request.id == null
+    depends_on: buildx-io-prepare
+    cancel_on_build_failing: true
+    timeout_in_minutes: 90
+    concurrency: 1
+    concurrency_group: monorepo/buildx-io-infra
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      . .buildkite/scripts/docker-env.sh
+      buildkite-agent artifact download "caddyfile.generated" . --step buildx-io-prepare
+      CADDYFILE_SMOKE_PATH="$$PWD/caddyfile.generated" bash .buildkite/scripts/run-buildx-io-fixture.sh infra
+    artifact_paths:
+      - "image-build-manifest.json"
+      - "buildx-run-metadata.json"
+    plugins:
+      - kubernetes:
+          <<: *pod_buildx_benchmark_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: buildx-io-infra
+
+  - label: ":bar_chart: Buildx I/O comparison"
+    key: buildx-io-report
+    if: build.env("CI_IO_BUILDX_BENCHMARK_MODE") == "candidate" && build.branch == "ci-io-benchmark" && build.pull_request.id == null
+    depends_on:
+      - buildx-io-tasknotes
+      - buildx-io-temporal
+      - buildx-io-infra
+    cancel_on_build_failing: true
+    timeout_in_minutes: 15
+    env:
+      PROMETHEUS_URL: "http://prometheus-kube-prometheus-prometheus.prometheus.svc:9090"
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      baseline_number="$${CI_IO_BASELINE_BUILD:?CI_IO_BASELINE_BUILD is required}"
+      if ! [[ "$$baseline_number" =~ ^[0-9]+$$ ]]; then
+        echo "CI_IO_BASELINE_BUILD must be a Buildkite build number" >&2
+        exit 2
+      fi
+      baseline_response=$(curl -fsS --connect-timeout 5 --max-time 20 --retry 2 --retry-delay 1 \
+        -H "Authorization: Bearer $${BUILDKITE_API_TOKEN}" \
+        "https://api.buildkite.com/v2/organizations/sjerred/pipelines/monorepo/builds/$${baseline_number}")
+      baseline_build_id=$(printf '%s' "$$baseline_response" | jq -er '.id | select(type == "string" and length > 0)')
+      bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
+      baseline_metadata=()
+      candidate_metadata=()
+      for step in buildx-io-tasknotes buildx-io-temporal buildx-io-infra; do
+        baseline_dir="/tmp/buildx-baseline/$${step}"
+        candidate_dir="/tmp/buildx-candidate/$${step}"
+        mkdir -p "$$baseline_dir" "$$candidate_dir"
+        buildkite-agent artifact download "image-build-manifest.json" "$$baseline_dir" --build "$$baseline_build_id" --step "$$step"
+        buildkite-agent artifact download "image-build-manifest.json" "$$candidate_dir" --step "$$step"
+        buildkite-agent artifact download "buildx-run-metadata.json" "$$baseline_dir" --build "$$baseline_build_id" --step "$$step"
+        buildkite-agent artifact download "buildx-run-metadata.json" "$$candidate_dir" --step "$$step"
+        baseline_metadata+=(--baseline "$$baseline_dir/buildx-run-metadata.json")
+        candidate_metadata+=(--candidate "$$candidate_dir/buildx-run-metadata.json")
+        bun scripts/compare-image-manifests.ts \
+          "$$baseline_dir/image-build-manifest.json" \
+          "$$candidate_dir/image-build-manifest.json"
+      done
+      bun scripts/compare-buildx-metadata.ts "$${baseline_metadata[@]}" "$${candidate_metadata[@]}"
+      bun scripts/ci-io-report.ts \
+        --baseline-build "$$baseline_number" \
+        --build "$BUILDKITE_BUILD_NUMBER" \
+        --fixture-step buildx-io-tasknotes \
+        --fixture-step buildx-io-temporal \
+        --fixture-step buildx-io-infra \
+        --benchmark \
+        --enforce-ab-gates \
+        --annotate
+    artifact_paths:
+      - "ci-io.json"
+      - "ci-io.md"
+    plugins:
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: buildx-io-report
+
+  # Resolve the last green main commit once in a small toolchain pod. Main
+  # lanes consume the result through Buildkite metadata before they start any
+  # install or heavyweight runtime image. A lookup failure is intentionally a
+  # soft failure: the consumers then fail open and run instead of skipping.
+  - label: ":mag_right: select main CI work"
+    key: ci-selector-base
+    if: build.branch == pipeline.default_branch && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
+    soft_fail: true
+    timeout_in_minutes: 2
+    command: bash .buildkite/scripts/prepare-ci-changed-base.sh
+    plugins:
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: ci-selector-base
+
   # ── Verify: the whole task graph + every repo check ──────────────────────
   # PRs run affected-scoped; main re-verifies EVERYTHING (cheap via cache).
   # The turbo run summary is annotated onto the build either way, without
   # masking verify's exit code.
   - label: ":turborepo: verify"
     key: verify
-    if: build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true"
+    if: (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true") && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
+    depends_on: ci-selector-base
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
@@ -216,7 +430,7 @@ steps:
   # machinery that decides or executes a lane.
   - label: ":performing_arts: playwright e2e (PR)"
     key: playwright-e2e-pr
-    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true") && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     if_changed:
       include:
         - ".buildkite/**"
@@ -266,7 +480,8 @@ steps:
 
   - label: ":performing_arts: playwright e2e (main)"
     key: playwright-e2e-main
-    if: build.branch == pipeline.default_branch
+    if: build.branch == pipeline.default_branch && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
+    depends_on: ci-selector-base
     cancel_on_build_failing: true
     command: |
       if ! bash .buildkite/scripts/ci-changed.sh playwright; then exit 0; fi
@@ -305,7 +520,7 @@ steps:
 
   - label: ":scroll: resume build (PR)"
     key: resume-build-pr
-    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true") && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     if_changed:
       include:
         - ".buildkite/**"
@@ -350,7 +565,8 @@ steps:
 
   - label: ":scroll: resume build (main)"
     key: resume-build-main
-    if: build.branch == pipeline.default_branch
+    if: build.branch == pipeline.default_branch && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
+    depends_on: ci-selector-base
     cancel_on_build_failing: true
     command: |
       if ! bash .buildkite/scripts/ci-changed.sh resume; then exit 0; fi
@@ -393,7 +609,7 @@ steps:
   # implies a green main tree. helm comes from the ci-image's mise toolchain.
   - label: ":helm: helm types drift check"
     key: helm-types-drift-check
-    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true") && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     if_changed:
       include:
         - ".buildkite/**"
@@ -424,7 +640,7 @@ steps:
 
   - label: ":docker: docker e2e (PR)"
     key: docker-e2e-pr
-    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true") && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     if_changed:
       include:
         - ".buildkite/**"
@@ -452,7 +668,8 @@ steps:
 
   - label: ":docker: docker e2e (main)"
     key: docker-e2e-main
-    if: build.branch == pipeline.default_branch
+    if: build.branch == pipeline.default_branch && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
+    depends_on: ci-selector-base
     cancel_on_build_failing: true
     command: |
       if ! bash .buildkite/scripts/ci-changed.sh docker-e2e; then exit 0; fi
@@ -474,15 +691,35 @@ steps:
     key: trivy
     soft_fail:
       - exit_status: 7
-    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true") && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     if_changed:
       include:
         - ".buildkite/**"
         - ".mise.toml"
         - "bun.lock"
+        - "**/bun.lock"
         - "bunfig.toml"
+        - ".trivyignore"
         - "package.json"
         - "packages/**/package.json"
+        - "**/package-lock.json"
+        - "**/pnpm-lock.yaml"
+        - "**/yarn.lock"
+        - "**/go.mod"
+        - "**/go.sum"
+        - "**/Cargo.lock"
+        - "**/Cargo.toml"
+        - "**/Podfile.lock"
+        - "**/Package.resolved"
+        - "**/requirements*.txt"
+        - "**/Pipfile"
+        - "**/Pipfile.lock"
+        - "**/poetry.lock"
+        - "**/uv.lock"
+        - "**/pom.xml"
+        - "**/build.gradle"
+        - "**/build.gradle.kts"
+        - "**/*.csproj"
         - "Dockerfile"
         - "**/Dockerfile"
         - "**/Dockerfile.*"
@@ -522,7 +759,7 @@ steps:
     key: semgrep
     soft_fail:
       - exit_status: 1
-    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true") && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     if_changed:
       include:
         - ".buildkite/**"
@@ -532,17 +769,62 @@ steps:
         - "package.json"
         - "patches/**"
         - "turbo.json"
+        - "Dockerfile"
+        - "**/Dockerfile"
+        - "**/Dockerfile.*"
+        - "**/*.astro"
         - "**/*.c"
+        - "**/*.cjs"
+        - "**/*.clj"
+        - "**/*.cljs"
+        - "**/*.cls"
+        - "**/*.cs"
         - "**/*.cpp"
+        - "**/*.css"
+        - "**/*.dart"
+        - "**/*.ex"
+        - "**/*.exs"
+        - "**/*.h"
+        - "**/*.hcl"
+        - "**/*.hpp"
+        - "**/*.hs"
+        - "**/*.html"
         - "**/*.go"
         - "**/*.java"
+        - "**/*.jl"
         - "**/*.js"
+        - "**/*.json"
+        - "**/*.jsonnet"
         - "**/*.jsx"
         - "**/*.kt"
+        - "**/*.kts"
+        - "**/*.lua"
+        - "**/*.lisp"
+        - "**/*.m"
+        - "**/*.ml"
+        - "**/*.mli"
+        - "**/*.mjs"
+        - "**/*.mm"
+        - "**/*.php"
         - "**/*.py"
+        - "**/*.proto"
+        - "**/*.r"
+        - "**/*.rb"
+        - "**/*.rs"
+        - "**/*.scss"
+        - "**/*.scala"
+        - "**/*.scm"
         - "**/*.sh"
+        - "**/*.sol"
+        - "**/*.svelte"
+        - "**/*.sql"
+        - "**/*.swift"
+        - "**/*.tf"
         - "**/*.ts"
+        - "**/*.cts"
+        - "**/*.mts"
         - "**/*.tsx"
+        - "**/*.vue"
         - "**/*.yaml"
         - "**/*.yml"
     cancel_on_build_failing: true
@@ -597,7 +879,7 @@ steps:
   # unresolved-thread list.
   - label: ":robot_face: greptile review gate"
     key: greptile-review
-    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true") && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
@@ -615,7 +897,7 @@ steps:
   # (the old pipeline's --dryrun plumbing, restored)
   - label: ":terraform: tofu plan"
     key: tofu-plan
-    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true") && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     if_changed:
       include:
         - ".buildkite/**"
@@ -647,7 +929,7 @@ steps:
 
   - label: ":docker: images — build + smoke (PR dry-run)"
     key: images-pr
-    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true") && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     if_changed:
       include:
         - ".buildkite/**"
@@ -703,7 +985,7 @@ steps:
 
   - label: ":rocket: sites (PR dry-run)"
     key: sites-pr
-    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true") && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     if_changed:
       include:
         - ".buildkite/**"
@@ -751,7 +1033,7 @@ steps:
 
   - label: ":helm: helm push (PR dry-run)"
     key: helm-pr
-    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true") && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     if_changed:
       include:
         - ".buildkite/**"
@@ -779,7 +1061,7 @@ steps:
 
   - label: ":package: release (PR dry-run)"
     key: release-pr
-    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true") && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     if_changed:
       include:
         - ".buildkite/**"
@@ -810,7 +1092,7 @@ steps:
   # ── Main-only: images (parallel bake + smoke + push) ─────────────────────
   - label: ":docker: images — build, smoke, push"
     key: images
-    if: build.branch == pipeline.default_branch
+    if: build.branch == pipeline.default_branch && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     depends_on: verify
     cancel_on_build_failing: true
     concurrency: 1
@@ -837,7 +1119,7 @@ steps:
   # ── Main-only: static sites ───────────────────────────────────────────────
   - label: ":rocket: deploy sites"
     key: sites
-    if: build.branch == pipeline.default_branch
+    if: build.branch == pipeline.default_branch && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     depends_on: [verify, playwright-e2e-main, resume-build-main]
     cancel_on_build_failing: true
     concurrency: 1
@@ -880,6 +1162,9 @@ steps:
       if bash .buildkite/scripts/ci-changed.sh site-scout; then
         site_scout=true
         filters+=(--filter '@scout-for-lol/frontend')
+        filters+=(--filter '@scout-for-lol/app')
+        filters+=(--filter astro-opengraph-images)
+        filters+=(--filter '@shepherdjerred/llm-models')
         bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       fi
       if [ "$${#filters[@]}" -gt 0 ]; then
@@ -903,6 +1188,8 @@ steps:
       if $$site_better_skill_capped; then bun scripts/deploy-site.ts better-skill-capped; fi
       if $$site_glitter; then bun scripts/deploy-site.ts glitter; fi
       if $$site_scout; then
+        bun run --cwd packages/llm-models build
+        bun run --cwd packages/astro-opengraph-images build
         bun scripts/scout-site-release.ts archive --version "2.0.0-$BUILDKITE_BUILD_NUMBER"
         bun scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER"
       fi
@@ -924,7 +1211,7 @@ steps:
   # a finally, so a failed dev publish can't leak -dev.N into a later prod run).
   - label: ":npm: publish packages"
     key: npm-publish
-    if: build.branch == pipeline.default_branch
+    if: build.branch == pipeline.default_branch && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     depends_on: verify
     cancel_on_build_failing: true
     command: |
@@ -951,7 +1238,7 @@ steps:
   # ── Main-only: homelab release track ─────────────────────────────────────
   - label: ":helm: helm push"
     key: helm-push
-    if: build.branch == pipeline.default_branch
+    if: build.branch == pipeline.default_branch && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     depends_on: verify
     cancel_on_build_failing: true
     command: |
@@ -970,7 +1257,7 @@ steps:
 
   - label: ":terraform: tofu apply (infra stacks)"
     key: tofu-apply
-    if: build.branch == pipeline.default_branch
+    if: build.branch == pipeline.default_branch && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     depends_on: [verify, helm-push]
     cancel_on_build_failing: true
     command: |
@@ -990,7 +1277,7 @@ steps:
 
   - label: ":terraform: tofu apply (github)"
     key: tofu-github
-    if: build.branch == pipeline.default_branch
+    if: build.branch == pipeline.default_branch && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     depends_on: verify
     cancel_on_build_failing: true
     concurrency: 1
@@ -1011,7 +1298,7 @@ steps:
 
   - label: ":argo: sync + wait"
     key: argocd-sync
-    if: build.branch == pipeline.default_branch
+    if: build.branch == pipeline.default_branch && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     depends_on: [images, helm-push, tofu-apply]
     cancel_on_build_failing: true
     command: |
@@ -1041,7 +1328,7 @@ steps:
   # continuously instead of promotion being a review click.
   - label: ":package: scout promotion PR"
     key: scout-promotion
-    if: build.branch == pipeline.default_branch
+    if: build.branch == pipeline.default_branch && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     depends_on: sites
     cancel_on_build_failing: true
     command: |
@@ -1067,7 +1354,7 @@ steps:
   # site-deploys concurrency group so it never races a beta sync.
   - label: ":rocket: scout prod reconcile"
     key: scout-prod-reconcile
-    if: build.branch == pipeline.default_branch
+    if: build.branch == pipeline.default_branch && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     depends_on: [argocd-sync, sites]
     cancel_on_build_failing: true
     concurrency: 1
@@ -1088,7 +1375,7 @@ steps:
 
   - label: ":terraform: tofu apply (cloudflare, after tunnel gate)"
     key: tofu-cloudflare
-    if: build.branch == pipeline.default_branch
+    if: build.branch == pipeline.default_branch && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     depends_on: argocd-sync
     cancel_on_build_failing: true
     concurrency: 1
@@ -1123,7 +1410,7 @@ steps:
   # pushed image digests — is its own step below, gated on images.
   - label: ":package: release-please"
     key: release-please
-    if: build.branch == pipeline.default_branch
+    if: build.branch == pipeline.default_branch && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     depends_on: verify
     cancel_on_build_failing: true
     command: |
@@ -1147,7 +1434,7 @@ steps:
   # merge redeploys nothing.
   - label: ":package: version commit-back"
     key: version-commit-back
-    if: build.branch == pipeline.default_branch
+    if: build.branch == pipeline.default_branch && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     depends_on: images
     cancel_on_build_failing: true
     command: |
@@ -1168,7 +1455,7 @@ steps:
   # script skips the release cut when the version tag already exists).
   - label: ":knife_fork_plate: cooklang plugin publish"
     key: cooklang-publish
-    if: build.branch == pipeline.default_branch
+    if: build.branch == pipeline.default_branch && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     depends_on: verify
     cancel_on_build_failing: true
     command: |
@@ -1186,7 +1473,7 @@ steps:
   # ── Toolchain image refresh ───────────────────────────────────────────────
   - label: ":docker: ci-image refresh"
     key: ci-image-refresh
-    if: build.branch == pipeline.default_branch
+    if: build.branch == pipeline.default_branch && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     depends_on: verify
     cancel_on_build_failing: true
     command: |
@@ -1205,7 +1492,7 @@ steps:
   # ── Main-only: build summary annotation (runs even when deploys fail) ─────
   - label: ":memo: build summary"
     key: build-summary
-    if: build.branch == pipeline.default_branch
+    if: build.branch == pipeline.default_branch && build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null
     depends_on:
       - verify
       - playwright-e2e-main

@@ -9,6 +9,8 @@ set -euo pipefail
 #                affected, selected without Turbo or node_modules.
 #   --push       main mode: write per-target registry cache and push
 #                :<sha> + :latest for every image after its smoke passes.
+#   --target X   fixed benchmark mode: build and smoke only named bake targets;
+#                repeatable, and deliberately incompatible with --push.
 #
 # Smoke scripts are invoked directly (not through `turbo run smoke`): the
 # images are pre-built by bake, and turbo's smoke/docker:build tasks are
@@ -20,16 +22,36 @@ BUILD_NUMBER="${BUILDKITE_BUILD_NUMBER:?BUILDKITE_BUILD_NUMBER is required}"
 
 AFFECTED_ONLY=false
 PUSH=false
-for arg in "$@"; do
-  case "$arg" in
-    --affected) AFFECTED_ONLY=true ;;
-    --push) PUSH=true ;;
+EXPLICIT_TARGETS=()
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --affected)
+      AFFECTED_ONLY=true
+      shift
+      ;;
+    --push)
+      PUSH=true
+      shift
+      ;;
+    --target)
+      if [ "$#" -lt 2 ]; then
+        echo "--target requires a bake target" >&2
+        exit 2
+      fi
+      EXPLICIT_TARGETS+=("$2")
+      shift 2
+      ;;
     *)
-      echo "unknown argument: $arg" >&2
+      echo "unknown argument: $1" >&2
       exit 2
       ;;
   esac
 done
+
+if [ "${#EXPLICIT_TARGETS[@]}" -gt 0 ] && { [ "$AFFECTED_ONLY" = true ] || [ "$PUSH" = true ]; }; then
+  echo "--target cannot be combined with --affected or --push" >&2
+  exit 2
+fi
 
 # bake target → package dir with the `smoke` script.
 # The four homelab infra images are one unit: the `homelab` package owns all
@@ -61,14 +83,23 @@ push_images=()
 # work, never a silent skip.
 scope="all"
 scope_base=""
-if [ "$AFFECTED_ONLY" = true ]; then
+if [ "${#EXPLICIT_TARGETS[@]}" -gt 0 ]; then
+  scope="explicit"
+  selected_json=$(printf '%s\n' "${EXPLICIT_TARGETS[@]}" | jq -R . | jq -s 'unique | sort')
+  if ! printf '%s' "$selected_json" | jq -e --argjson known "$KNOWN_TARGETS_JSON" \
+    'length > 0 and all(.[]; type == "string" and (. as $target | $known | index($target) != null))' >/dev/null; then
+    echo "--target includes an unknown image target" >&2
+    exit 2
+  fi
+elif [ "$AFFECTED_ONLY" = true ]; then
   if scope_base=$(git merge-base origin/main HEAD); then
     scope="affected"
   else
     echo "WARN: could not resolve merge-base with origin/main — building ALL images"
   fi
 elif [ "$PUSH" = true ]; then
-  if resp=$(curl -fsS -H "Authorization: Bearer ${BUILDKITE_API_TOKEN}" \
+  if resp=$(curl -fsS --connect-timeout 5 --max-time 20 --retry 2 --retry-delay 1 \
+      -H "Authorization: Bearer ${BUILDKITE_API_TOKEN}" \
       "https://api.buildkite.com/v2/organizations/sjerred/pipelines/monorepo/builds?branch=main&state=passed&per_page=1") \
     && last_green=$(printf '%s' "$resp" | jq -r '.[0].commit // empty') \
     && [ -n "$last_green" ] \
@@ -94,35 +125,36 @@ if [ "$scope" = "affected" ]; then
     scope="all"
   fi
 
-  is_selected() {
-    printf '%s' "$selected_json" | jq -e --arg target "$1" \
-      'index($target) != null' >/dev/null
-  }
+fi
 
-  if [ "$scope" = "affected" ]; then
-    for entry in "${APP_TARGETS[@]}"; do
-      target="${entry%%|*}"
-      dir="${entry#*|}"
-      if is_selected "$target"; then
-        bake_targets+=("$target")
-        smoke_dirs+=("$dir")
-        push_images+=("$target")
-      fi
-    done
-    if is_selected "infra"; then
-      bake_targets+=("infra")
-      smoke_dirs+=("packages/homelab")
-      push_images+=("${INFRA_IMAGES[@]}")
+is_selected() {
+  printf '%s' "$selected_json" | jq -e --arg target "$1" \
+    'index($target) != null' >/dev/null
+}
+
+if [ "$scope" = "affected" ] || [ "$scope" = "explicit" ]; then
+  for entry in "${APP_TARGETS[@]}"; do
+    target="${entry%%|*}"
+    dir="${entry#*|}"
+    if is_selected "$target"; then
+      bake_targets+=("$target")
+      smoke_dirs+=("$dir")
+      push_images+=("$target")
     fi
-    if [ "${#bake_targets[@]}" -eq 0 ]; then
-      echo "no image-owning packages affected — nothing to build"
-      jq -n '{selectedBakeTargets: [], images: []}' > image-build-manifest.json
-      if [ "$PUSH" = true ]; then
-        # The version commit-back step reads this unconditionally.
-        jq -n '{}' | buildkite-agent meta-data set image-digests
-      fi
-      exit 0
+  done
+  if is_selected "infra"; then
+    bake_targets+=("infra")
+    smoke_dirs+=("packages/homelab")
+    push_images+=("${INFRA_IMAGES[@]}")
+  fi
+  if [ "${#bake_targets[@]}" -eq 0 ]; then
+    echo "no image-owning packages affected — nothing to build"
+    jq -n '{selectedBakeTargets: [], images: []}' > image-build-manifest.json
+    if [ "$PUSH" = true ]; then
+      # The version commit-back step reads this unconditionally.
+      jq -n '{}' | buildkite-agent meta-data set image-digests
     fi
+    exit 0
   fi
 fi
 
@@ -140,21 +172,45 @@ if [ "$scope" = "all" ]; then
   push_images+=("${INFRA_IMAGES[@]}")
 fi
 
-# Registry cache export needs a docker-container builder — dind's default
-# docker driver can't export cache. Used in both modes so the PR dry-run
-# rehearses exactly what main runs (including the --load transfer).
-if ! docker buildx inspect ci; then
-  docker buildx create --name ci --driver docker-container
+# Production stays on the current docker-container builder. The opt-in
+# benchmark may select Docker's default builder only after the helper verifies
+# that this isolated daemon has the containerd image store enabled.
+BUILDX_BUILDER=$(bash .buildkite/scripts/configure-buildx-driver.sh)
+IMAGE_VERSION="${CI_IMAGE_VERSION:-$BUILD_NUMBER}"
+
+if [ -n "${CI_BUILDX_METADATA_PATH:-}" ]; then
+  docker_version=$(docker version --format '{{json .}}')
+  docker_info=$(docker info --format '{{json .}}')
+  buildx_version=$(docker buildx version)
+  builder_details=$(docker buildx inspect "$BUILDX_BUILDER")
+  jq -n \
+    --arg mode "${CI_BUILDX_MODE:-docker-container}" \
+    --arg builder "$BUILDX_BUILDER" \
+    --arg commit "$SHA" \
+    --arg benchmarkId "${CI_IO_BUILDX_BENCHMARK_ID:-}" \
+    --arg imageVersion "$IMAGE_VERSION" \
+    --arg readCache "${CI_BUILDX_READ_CACHE:-true}" \
+    --arg buildxVersion "$buildx_version" \
+    --arg builderDetails "$builder_details" \
+    --argjson dockerVersion "$docker_version" \
+    --argjson dockerInfo "$docker_info" \
+    '{mode: $mode, builder: $builder, commit: $commit, benchmarkId: $benchmarkId, imageVersion: $imageVersion, readCache: ($readCache == "true"), buildxVersion: $buildxVersion, builderDetails: $builderDetails, dockerVersion: $dockerVersion, dockerInfo: $dockerInfo}' \
+    > "$CI_BUILDX_METADATA_PATH"
 fi
 
 PUSH_CACHE=false
 if [ "$PUSH" = true ]; then
   PUSH_CACHE=true
 fi
+READ_CACHE=${CI_BUILDX_READ_CACHE:-true}
+if [ "$READ_CACHE" != true ] && [ "$READ_CACHE" != false ]; then
+  echo "CI_BUILDX_READ_CACHE must be true or false" >&2
+  exit 2
+fi
 
 echo "--- :docker: bake ${bake_targets[*]}"
-VERSION="$BUILD_NUMBER" GIT_SHA="$SHA" PUSH_CACHE="$PUSH_CACHE" \
-  docker buildx bake --builder ci --load "${bake_targets[@]}"
+VERSION="$IMAGE_VERSION" GIT_SHA="$SHA" PUSH_CACHE="$PUSH_CACHE" READ_CACHE="$READ_CACHE" \
+  docker buildx bake --builder "$BUILDX_BUILDER" --load "${bake_targets[@]}"
 
 # Smoke serially (containers contend on the daemon; assertions are cheap).
 for dir in "${smoke_dirs[@]}"; do
@@ -166,13 +222,24 @@ for dir in "${smoke_dirs[@]}"; do
   fi
 done
 
-# Machine-readable output for CI I/O/driver A-B comparisons. RootFS layer IDs
-# are content identities and stay independent of manifest/config-only changes.
+# Machine-readable output for CI I/O/driver A-B comparisons. The local image ID
+# covers config identity; RootFS layer IDs cover filesystem content. Because
+# this is emitted only after every smoke command succeeds, smokePassed is a
+# fail-closed statement rather than an optimistic status.
 manifest_entries=()
 for name in "${push_images[@]}"; do
   layers=$(docker inspect --format '{{json .RootFS.Layers}}' "${name}:dev" | jq -c .)
-  manifest_entries+=("$(jq -cn --arg target "$name" --arg image "${name}:dev" --argjson rootfsLayers "$layers" \
-    '{target: $target, image: $image, rootfsLayers: $rootfsLayers}')")
+  image_id=$(docker inspect --format '{{.Id}}' "${name}:dev")
+  image_os=$(docker inspect --format '{{.Os}}' "${name}:dev")
+  image_architecture=$(docker inspect --format '{{.Architecture}}' "${name}:dev")
+  manifest_entries+=("$(jq -cn \
+    --arg target "$name" \
+    --arg image "${name}:dev" \
+    --arg imageId "$image_id" \
+    --arg os "$image_os" \
+    --arg architecture "$image_architecture" \
+    --argjson rootfsLayers "$layers" \
+    '{target: $target, image: $image, imageId: $imageId, rootfsLayers: $rootfsLayers, os: $os, architecture: $architecture, smokePassed: true}')")
 done
 printf '%s\n' "${manifest_entries[@]}" | jq -s --argjson selectedBakeTargets "$selected_json" \
   '{selectedBakeTargets: $selectedBakeTargets, images: sort_by(.target)}' > image-build-manifest.json

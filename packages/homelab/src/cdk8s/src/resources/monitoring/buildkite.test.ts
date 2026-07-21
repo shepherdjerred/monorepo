@@ -39,6 +39,12 @@ const PodMonitorSchema = z
   })
   .loose();
 
+const ResourceKindSchema = z
+  .object({
+    kind: z.string(),
+  })
+  .loose();
+
 const PrometheusRuleSchema = z
   .object({
     apiVersion: z.literal("monitoring.coreos.com/v1"),
@@ -88,6 +94,15 @@ describe("Buildkite monitoring manifests", () => {
     ]);
   });
 
+  it("does not add a second kube-state-metrics scrape", () => {
+    const kinds = synthBuildkiteMonitoring().flatMap((manifest) => {
+      const parsed = ResourceKindSchema.safeParse(manifest);
+      return parsed.success ? [parsed.data.kind] : [];
+    });
+
+    expect(kinds).not.toContain("ServiceMonitor");
+  });
+
   it("synthesizes selected recording and alert groups in Buildkite", () => {
     const manifests = synthBuildkiteMonitoring();
     const manifest = manifests.find(
@@ -102,10 +117,12 @@ describe("Buildkite monitoring manifests", () => {
     });
     expect(prometheusRule.spec.groups.map((group) => group.name)).toEqual([
       "buildkite-ci-io-recording",
+      "buildkite-ci-io-rollups",
       "buildkite-ci-io-alerts",
     ]);
     expect(prometheusRule.spec.groups.map((group) => group.interval)).toEqual([
       "10s",
+      "5m",
       "30s",
     ]);
   });

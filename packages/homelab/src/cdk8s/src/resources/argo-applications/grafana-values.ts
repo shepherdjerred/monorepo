@@ -21,36 +21,9 @@ type GrafanaValuesWithStringDashboardLabel = Omit<GrafanaValues, "sidecar"> & {
 type KubeStateMetricsValues = NonNullable<
   KubePrometheusStackValues["kube-state-metrics"]
 >;
-type KubeStateMetricsPrometheusValues = NonNullable<
-  KubeStateMetricsValues["prometheus"]
->;
-type KubeStateMetricsMonitorValues = NonNullable<
-  KubeStateMetricsPrometheusValues["monitor"]
->;
-type KubeStateMetricsHttpEndpointValues = NonNullable<
-  KubeStateMetricsMonitorValues["http"]
->;
-type KubeStateMetricsMonitorWithInterval = Omit<
-  KubeStateMetricsMonitorValues,
-  "http"
-> & {
-  http?: KubeStateMetricsHttpEndpointValues & {
-    interval?: string;
-  };
-};
-type KubeStateMetricsPrometheusWithInterval = Omit<
-  KubeStateMetricsPrometheusValues,
-  "monitor"
-> & {
-  monitor?: KubeStateMetricsMonitorWithInterval;
-};
-type KubeStateMetricsWithBuildkiteMetadata = Omit<
-  KubeStateMetricsValues,
-  "prometheus"
-> & {
+type KubeStateMetricsWithBuildkiteMetadata = KubeStateMetricsValues & {
   metricLabelsAllowlist?: string[];
   metricAnnotationsAllowList?: string[];
-  prometheus?: KubeStateMetricsPrometheusWithInterval;
 };
 
 export type PrometheusValuesWithBlackbox = Omit<
@@ -85,13 +58,6 @@ export const BUILDKITE_KUBE_STATE_METRICS_VALUES = {
   metricAnnotationsAllowList: [
     "pods=[buildkite.com/build-branch,buildkite.com/build-url,buildkite.com/job-url,buildkite.com/pipeline-slug]",
   ],
-  prometheus: {
-    monitor: {
-      http: {
-        interval: "10s",
-      },
-    },
-  },
 } satisfies KubeStateMetricsWithBuildkiteMetadata;
 
 export const BUILDKITE_IO_OBSERVABILITY_VALUES = {

@@ -36,7 +36,8 @@ resource "buildkite_pipeline" "monorepo" {
     steps:
       - label: ":pipeline: Upload pipeline"
         key: pipeline-upload
-        command: buildkite-agent pipeline upload --fetch-diff-base
+        command: sh .buildkite/scripts/upload-pipeline.sh
+        timeout_in_minutes: 5
         agents:
           queue: default
         plugins:

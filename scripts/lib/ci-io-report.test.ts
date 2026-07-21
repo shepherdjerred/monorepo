@@ -1,15 +1,21 @@
 import { describe, expect, test } from "bun:test";
 
-import { parseCliOptions } from "../ci-io-report.ts";
+import {
+  assertEquivalentAbSelections,
+  postFixtureScrapeWaitMilliseconds,
+} from "../ci-io-report.ts";
 import {
   BuildkiteBuildSchema,
+  BuildkiteJobSchema,
   fetchBuildkiteBuild,
+  fetchBuildkiteBuilds,
   queryPrometheusVector,
   type BuildkiteBuild,
   type BuildkiteClientConfig,
   type PrometheusClientConfig,
   type TimeWindow,
 } from "./ci-io-api.ts";
+import { parseCliOptions } from "./ci-io-cli.ts";
 import { aggregatePodMetrics } from "./ci-io-aggregate.ts";
 import { renderCiIoMarkdown } from "./ci-io-markdown.ts";
 import {
@@ -23,7 +29,8 @@ import {
 } from "./ci-io-prometheus.ts";
 import {
   assertBenchmarkIntegrity,
-  buildWindowIoReport,
+  buildWindowIoReport as buildRawWindowIoReport,
+  type BuildWindowReportInput,
 } from "./ci-io-report.ts";
 import type {
   CiIoReport,
@@ -31,6 +38,7 @@ import type {
   WindowIoReport,
 } from "./ci-io-report-model.ts";
 import { compareWindows } from "./ci-io-statistics.ts";
+import { selectCohortBuilds, selectExplicitBuilds } from "./ci-io-selection.ts";
 
 const WINDOW: TimeWindow = {
   from: new Date("2026-07-20T00:00:00.000Z"),
@@ -46,6 +54,20 @@ const IDS = {
   canceledBuild: "20000000-0000-4000-8000-000000000004",
 } as const;
 
+type TestWindowReportInput = Omit<
+  BuildWindowReportInput,
+  "cohort" | "unfinishedBuilds"
+> &
+  Partial<Pick<BuildWindowReportInput, "cohort" | "unfinishedBuilds">>;
+
+function buildWindowIoReport(input: TestWindowReportInput): WindowIoReport {
+  return buildRawWindowIoReport({
+    ...input,
+    cohort: input.cohort ?? null,
+    unfinishedBuilds: input.unfinishedBuilds ?? [],
+  });
+}
+
 function buildFixture(input: {
   id: string;
   number: number;
@@ -56,6 +78,7 @@ function buildFixture(input: {
   return BuildkiteBuildSchema.parse({
     id: input.id,
     number: input.number,
+    commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     state: input.state,
     branch: input.branch,
     created_at: "2026-07-20T00:00:00.000Z",
@@ -91,6 +114,7 @@ function emptyMetrics(): PrometheusIoMetrics {
   return {
     parentMax: [],
     parentSamples: [],
+    parentLastSample: [],
     parentResets: [],
     childMax: [],
     networkReceiveMax: [],
@@ -104,11 +128,12 @@ function parentMetric(input: {
   pod: string;
   device: string | null;
   value: number;
+  node?: string;
   metadata?: MetricMetadata | null;
 }): DeviceMetric {
   return {
     pod: input.pod,
-    node: "ci-node",
+    node: input.node ?? "ci-node",
     device: input.device,
     value: input.value,
     metadata: input.metadata ?? null,
@@ -119,8 +144,9 @@ function networkMetric(
   pod: string,
   networkInterface: string,
   value: number,
+  node = "ci-node",
 ): NetworkMetric {
-  return { pod, node: "ci-node", networkInterface, value };
+  return { pod, node, networkInterface, value };
 }
 
 function addPod(input: {
@@ -132,16 +158,20 @@ function addPod(input: {
   resets?: number;
   receive?: number;
   transmit?: number;
+  node?: string;
+  lastSampleTimestampSeconds?: number;
   container?: string;
   metadata?: MetricMetadata | null;
 }): string {
   const pod = `buildkite-${input.jobId}-${input.suffix ?? "abc12"}`;
   const device = "overlay";
+  const node = input.node ?? "ci-node";
   input.metrics.parentMax.push(
     parentMetric({
       pod,
       device,
       value: input.writes,
+      node,
       metadata: input.metadata ?? null,
     }),
   );
@@ -150,7 +180,16 @@ function addPod(input: {
       pod,
       device,
       value: input.samples,
+      node,
       metadata: input.metadata ?? null,
+    }),
+  );
+  input.metrics.parentLastSample.push(
+    parentMetric({
+      pod,
+      device,
+      value: input.lastSampleTimestampSeconds ?? WINDOW.to.getTime() / 1000,
+      node,
     }),
   );
   input.metrics.parentResets.push(
@@ -158,6 +197,7 @@ function addPod(input: {
       pod,
       device,
       value: input.resets ?? 0,
+      node,
       metadata: input.metadata ?? null,
     }),
   );
@@ -166,18 +206,19 @@ function addPod(input: {
       pod,
       device,
       value: input.writes,
+      node,
       metadata: input.metadata ?? null,
     }),
     container: input.container ?? "container-0",
   });
   input.metrics.networkReceiveMax.push(
-    networkMetric(pod, "eth0", input.receive ?? 10),
+    networkMetric(pod, "eth0", input.receive ?? 10, node),
   );
   input.metrics.networkTransmitMax.push(
-    networkMetric(pod, "eth0", input.transmit ?? 20),
+    networkMetric(pod, "eth0", input.transmit ?? 20, node),
   );
-  input.metrics.networkReceiveResets.push(networkMetric(pod, "eth0", 0));
-  input.metrics.networkTransmitResets.push(networkMetric(pod, "eth0", 0));
+  input.metrics.networkReceiveResets.push(networkMetric(pod, "eth0", 0, node));
+  input.metrics.networkTransmitResets.push(networkMetric(pod, "eth0", 0, node));
   return pod;
 }
 
@@ -222,7 +263,7 @@ function reportBuilds(): BuildkiteBuild[] {
       id: IDS.buildB,
       number: 102,
       state: "canceled",
-      branch: "feature/io",
+      branch: "main",
       jobs: [
         jobFixture({
           id: IDS.canceledBuild,
@@ -254,6 +295,13 @@ function reportMetrics(): PrometheusIoMetrics {
   metrics.parentSamples.push(
     parentMetric({ pod: longPod, device: "cache", value: 5 }),
   );
+  metrics.parentLastSample.push(
+    parentMetric({
+      pod: longPod,
+      device: "cache",
+      value: WINDOW.to.getTime() / 1000,
+    }),
+  );
   metrics.parentResets.push(
     parentMetric({ pod: longPod, device: "cache", value: 0 }),
   );
@@ -277,6 +325,10 @@ describe("Prometheus query contract", () => {
     expect(queries.parentMax).toContain('container=""');
     expect(queries.parentMax).toContain('id=~"/kubepods.*pod[^/]+$"');
     expect(queries.parentMax).toContain("max by (pod,node,device)");
+    expect(queries.parentLastSample).toContain(
+      "max_over_time(timestamp(container_fs_writes_bytes_total",
+    );
+    expect(queries.parentLastSample).toContain("})[600s:10s])");
     expect(queries.childMax).toContain('container!=""');
     expect(queries.networkReceiveMax).toContain(
       "container_network_receive_bytes_total",
@@ -290,6 +342,9 @@ describe("Prometheus query contract", () => {
     );
     expect(queries.parentSamples).toContain(
       "buildkite:pod_parent_sample_present",
+    );
+    expect(queries.parentLastSample).toContain(
+      "timestamp(container_fs_writes_bytes_total",
     );
     expect(queries.childMax).toContain(
       "buildkite:container_fs_writes_bytes_total",
@@ -385,20 +440,100 @@ describe("validated API clients", () => {
       throw new Error("fixture build missing");
     }
     let requestedUrl = "";
+    let requestedInit: RequestInit | undefined;
     const config: BuildkiteClientConfig = {
       apiBaseUrl: "https://api.buildkite.com/v2/",
       organization: "sjerred",
       pipeline: "monorepo",
       token: "secret-token",
-      fetcher: (url) => {
+      fetcher: (url, init) => {
         requestedUrl = url;
+        requestedInit = init;
         return Promise.resolve(Response.json(build));
       },
     };
     const parsed = await fetchBuildkiteBuild(config, 101);
     expect(parsed.number).toBe(101);
-    expect(requestedUrl).toEndWith("/builds/101");
+    const url = new URL(requestedUrl);
+    expect(url.pathname).toEndWith("/builds/101");
+    expect(url.searchParams.get("include_retried_jobs")).toBe("true");
+    expect(requestedInit?.signal).toBeInstanceOf(AbortSignal);
     expect(JSON.stringify(parsed)).not.toContain("secret-token");
+  });
+
+  test("lists a created_at cohort with retries and a request deadline", async () => {
+    const build = reportBuilds()[0];
+    if (build === undefined) {
+      throw new Error("fixture build missing");
+    }
+    let requestedUrl = "";
+    let requestedInit: RequestInit | undefined;
+    const config: BuildkiteClientConfig = {
+      apiBaseUrl: "https://api.buildkite.com/v2/",
+      organization: "sjerred",
+      pipeline: "monorepo",
+      token: "secret-token",
+      fetcher: (url, init) => {
+        requestedUrl = url;
+        requestedInit = init;
+        return Promise.resolve(Response.json([build]));
+      },
+    };
+    const builds = await fetchBuildkiteBuilds(config, WINDOW);
+    expect(builds.map((current) => current.number)).toEqual([101]);
+    const url = new URL(requestedUrl);
+    expect(url.searchParams.get("created_from")).toBe(
+      WINDOW.from.toISOString(),
+    );
+    expect(url.searchParams.get("created_to")).toBe(WINDOW.to.toISOString());
+    expect(url.searchParams.get("include_retried_jobs")).toBe("true");
+    expect(requestedInit?.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  test("accepts every documented Buildkite job state", () => {
+    const states = [
+      "pending",
+      "waiting",
+      "waiting_failed",
+      "blocked",
+      "blocked_failed",
+      "unblocked",
+      "unblocked_failed",
+      "limiting",
+      "limited",
+      "scheduled",
+      "reserved",
+      "assigned",
+      "accepted",
+      "running",
+      "finished",
+      "passed",
+      "failed",
+      "canceling",
+      "canceled",
+      "expired",
+      "timing_out",
+      "timed_out",
+      "skipped",
+      "broken",
+      "platform_limiting",
+      "platform_limited",
+    ];
+    for (const state of states) {
+      expect(() =>
+        BuildkiteJobSchema.parse(
+          jobFixture({
+            id: IDS.long,
+            buildNumber: 101,
+            name: "state fixture",
+            stepKey: "state-fixture",
+            state,
+            startedAt: "2026-07-20T00:01:00.000Z",
+            finishedAt: "2026-07-20T00:02:00.000Z",
+          }),
+        ),
+      ).not.toThrow();
+    }
   });
 
   test("rejects Buildkite schema drift", async () => {
@@ -414,10 +549,12 @@ describe("validated API clients", () => {
   });
 
   test("validates Prometheus vectors and surfaces API errors", async () => {
+    let requestedInit: RequestInit | undefined;
     const success: PrometheusClientConfig = {
       apiBaseUrl: "http://prometheus:9090/",
-      fetcher: () =>
-        Promise.resolve(
+      fetcher: (_url, init) => {
+        requestedInit = init;
+        return Promise.resolve(
           Response.json({
             status: "success",
             data: {
@@ -425,10 +562,12 @@ describe("validated API clients", () => {
               result: [{ metric: { pod: "pod" }, value: [1, "42"] }],
             },
           }),
-        ),
+        );
+      },
     };
     const vector = await queryPrometheusVector(success, "up", WINDOW.to);
     expect(vector[0]?.value[1]).toBe("42");
+    expect(requestedInit?.signal).toBeInstanceOf(AbortSignal);
 
     const failed: PrometheusClientConfig = {
       apiBaseUrl: "http://prometheus:9090/",
@@ -444,6 +583,73 @@ describe("validated API clients", () => {
     await expect(
       queryPrometheusVector(failed, "up", WINDOW.to),
     ).rejects.toThrow("Prometheus API error: bad_data");
+  });
+});
+
+describe("build selection windows", () => {
+  test("uses a created_at cohort to select finished builds and derive metrics", () => {
+    const finished = reportBuilds()[0];
+    const unfinishedSource = reportBuilds()[1];
+    if (finished === undefined || unfinishedSource === undefined) {
+      throw new Error("selection fixture builds missing");
+    }
+    const unfinished = BuildkiteBuildSchema.parse({
+      ...unfinishedSource,
+      state: "running",
+      finished_at: null,
+    });
+    const selection = selectCohortBuilds(
+      [finished, unfinished],
+      WINDOW,
+      WINDOW.to,
+    );
+    expect(selection.builds.map((build) => build.number)).toEqual([101]);
+    expect(selection.cohort).toEqual({
+      createdFrom: WINDOW.from.toISOString(),
+      createdTo: WINDOW.to.toISOString(),
+    });
+    expect(selection.window).toEqual({
+      from: new Date("2026-07-19T23:59:30.000Z"),
+      to: new Date("2026-07-20T00:09:30.000Z"),
+    });
+    expect(selection.unfinishedBuilds).toEqual([
+      {
+        buildNumber: 102,
+        branch: "main",
+        state: "running",
+        createdAt: "2026-07-20T00:00:00.000Z",
+        buildUrl: "https://buildkite.com/sjerred/monorepo/builds/102",
+        disposition: "excluded",
+      },
+    ]);
+  });
+
+  test("labels the unfinished current build allowed by Docker A/B", () => {
+    const source = reportBuilds()[0];
+    if (source === undefined) {
+      throw new Error("selection fixture build missing");
+    }
+    const unfinished = BuildkiteBuildSchema.parse({
+      ...source,
+      state: "running",
+      finished_at: null,
+    });
+    const selection = selectExplicitBuilds({
+      builds: [unfinished],
+      now: WINDOW.to,
+      allowUnfinishedDockerAb: true,
+    });
+    expect(selection.builds.map((build) => build.number)).toEqual([101]);
+    expect(selection.unfinishedBuilds[0]?.disposition).toBe(
+      "included-docker-ab",
+    );
+    expect(() =>
+      selectExplicitBuilds({
+        builds: [unfinished],
+        now: WINDOW.to,
+        allowUnfinishedDockerAb: false,
+      }),
+    ).toThrow("explicit build selection has no finished builds");
   });
 });
 
@@ -470,6 +676,9 @@ describe("pod aggregation", () => {
       dind: 100,
     });
     expect(measurement?.sampleCount).toBe(5);
+    expect(measurement?.lastParentSampleTimestampSeconds).toBe(
+      WINDOW.to.getTime() / 1000,
+    );
     expect(measurement?.networkReceiveBytes).toBe(20);
     expect(measurement?.networkTransmitBytes).toBe(30);
   });
@@ -495,6 +704,10 @@ describe("window report", () => {
       metrics: reportMetrics(),
       pipeline: "monorepo",
       excludedJobIds: new Set(),
+      cohort: {
+        createdFrom: WINDOW.from.toISOString(),
+        createdTo: WINDOW.to.toISOString(),
+      },
     });
     expect(report.summary.totalWriteBytes).toBe(280);
     expect(report.summary.lowerBoundWriteBytes).toBe(60);
@@ -510,6 +723,15 @@ describe("window report", () => {
     expect(fixture?.totalWriteBytes).toBe(220);
     expect(fixture?.medianWriteBytes).toBe(110);
     expect(fixture?.p95WriteBytes).toBe(146);
+    expect(fixture?.nodeJobCounts).toEqual({ "ci-node": 2 });
+    expect(
+      report.branchSteps
+        .filter((step) => step.stepKey === "fixture")
+        .map((step) => ({ branch: step.branch, writes: step.totalWriteBytes })),
+    ).toEqual([
+      { branch: "feature/io", writes: 150 },
+      { branch: "main", writes: 70 },
+    ]);
     expect(report.integrityIssues).toEqual([
       {
         code: "insufficient-long-job-samples",
@@ -567,6 +789,71 @@ describe("window report", () => {
     });
     const shortJob = report.jobs.find((job) => job.jobId === IDS.short);
     expect(shortJob?.coverage).toBe("complete");
+  });
+});
+
+describe("window report integrity", () => {
+  test("requires every parent device to be scraped after job completion", () => {
+    const metrics = reportMetrics();
+    const staleSample = metrics.parentLastSample.find(
+      (metric) => metric.pod.includes(IDS.long) && metric.device === "cache",
+    );
+    if (staleSample === undefined) {
+      throw new Error("cache final-sample fixture missing");
+    }
+    staleSample.value = new Date("2026-07-20T00:01:59.000Z").getTime() / 1000;
+    const firstBuild = reportBuilds()[0];
+    if (firstBuild === undefined) {
+      throw new Error("fixture build missing");
+    }
+    const report = buildWindowIoReport({
+      builds: [firstBuild],
+      window: WINDOW,
+      metrics: filterPrometheusIoMetrics(
+        metrics,
+        new Set([IDS.long, IDS.short, IDS.canceled]),
+      ),
+      pipeline: "monorepo",
+      excludedJobIds: new Set([IDS.short, IDS.canceled]),
+    });
+    const job = report.jobs[0];
+    expect(job?.coverage).toBe("lower-bound");
+    expect(job?.lastParentSampleAt).toBe("2026-07-20T00:01:59.000Z");
+    expect(report.integrityIssues).toEqual([
+      {
+        code: "missing-post-finish-parent-sample",
+        message:
+          "pod-parent devices do not all have a sample at or after Buildkite finished_at 2026-07-20T00:02:00.000Z",
+        jobId: IDS.long,
+        pod: `buildkite-${IDS.long}-abc12`,
+      },
+    ]);
+  });
+
+  test("reports a missing last sample for any parent device", () => {
+    const metrics = reportMetrics();
+    metrics.parentLastSample = metrics.parentLastSample.filter(
+      (metric) => !(metric.pod.includes(IDS.long) && metric.device === "cache"),
+    );
+    const firstBuild = reportBuilds()[0];
+    if (firstBuild === undefined) {
+      throw new Error("fixture build missing");
+    }
+    const report = buildWindowIoReport({
+      builds: [firstBuild],
+      window: WINDOW,
+      metrics: filterPrometheusIoMetrics(
+        metrics,
+        new Set([IDS.long, IDS.short, IDS.canceled]),
+      ),
+      pipeline: "monorepo",
+      excludedJobIds: new Set([IDS.short, IDS.canceled]),
+    });
+    expect(report.jobs[0]?.coverage).toBe("lower-bound");
+    expect(report.jobs[0]?.lastParentSampleAt).toBeNull();
+    expect(report.integrityIssues.map((current) => current.code)).toEqual([
+      "missing-post-finish-parent-sample",
+    ]);
   });
 
   test("fails strict mode when a long job has no measurement", () => {
@@ -660,6 +947,7 @@ function stepFixture(input: {
     completeJobCount: input.writes === null ? 0 : 5,
     lowerBoundJobCount: 0,
     missingJobCount: input.writes === null ? 5 : 0,
+    nodeJobCounts: { torvalds: 5 },
     totalWriteBytes: input.writes === null ? 0 : input.writes * 5,
     medianWriteBytes: input.writes,
     p95WriteBytes: input.writes,
@@ -674,11 +962,14 @@ function stepFixture(input: {
 
 function gateWindow(step: StepIoReport): WindowIoReport {
   return {
+    cohort: null,
     from: WINDOW.from.toISOString(),
     to: WINDOW.to.toISOString(),
     buildNumbers: [1],
+    unfinishedBuilds: [],
     jobs: [],
     steps: [step],
+    branchSteps: [{ branch: "main", ...step }],
     summary: {
       buildCount: 1,
       expectedJobCount: 5,
@@ -687,7 +978,10 @@ function gateWindow(step: StepIoReport): WindowIoReport {
       lowerBoundJobCount: 0,
       missingJobCount: 0,
       networkMeasuredJobCount: 5,
+      unfinishedBuildCount: 0,
+      excludedBuildCount: 0,
       sampleCoveragePercent: 100,
+      p95DurationSeconds: step.p95DurationSeconds,
       totalWriteBytes: step.totalWriteBytes,
       lowerBoundWriteBytes: 0,
       unmatchedWriteBytes: 0,
@@ -789,6 +1083,113 @@ describe("A/B comparison gates", () => {
       "fixture job counts differ between comparison windows",
     );
   });
+
+  test("marks fixture placement changes inconclusive", () => {
+    const baseline = gateWindow(
+      stepFixture({ writes: 100, duration: 100, network: 100 }),
+    );
+    const candidateStep = stepFixture({
+      writes: 60,
+      duration: 100,
+      network: 100,
+    });
+    candidateStep.nodeJobCounts = { grace: 1, torvalds: 4 };
+    const comparison = compareWindows(
+      baseline,
+      gateWindow(candidateStep),
+      new Set(["image-fixture"]),
+    );
+    expect(comparison.gates.status).toBe("inconclusive");
+    expect(comparison.gates.fixtures[0]?.reasons).toContain(
+      "fixture node placement differs between comparison windows",
+    );
+  });
+});
+
+describe("fixed-corpus impact gate", () => {
+  test("passes 50% aggregate write reduction with at most 10% p95 regression", () => {
+    const baseline = gateWindow(
+      stepFixture({ writes: 100, duration: 100, network: 100 }),
+    );
+    const candidate = gateWindow(
+      stepFixture({ writes: 50, duration: 110, network: 100 }),
+    );
+    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
+    expect(gate.status).toBe("passed");
+    expect(gate.aggregateWriteReductionPercent).toBe(50);
+    expect(gate.p95DurationChangePercent).toBeCloseTo(10);
+    expect(gate.baselineLanes).toEqual([
+      { branch: "main", stepKey: "image-fixture", jobCount: 5 },
+    ]);
+  });
+
+  test("fails fixed-corpus write and p95 duration thresholds", () => {
+    const baseline = gateWindow(
+      stepFixture({ writes: 100, duration: 100, network: 100 }),
+    );
+    const candidate = gateWindow(
+      stepFixture({ writes: 51, duration: 111, network: 100 }),
+    );
+    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
+    expect(gate.status).toBe("failed");
+    expect(gate.reasons).toEqual([
+      "aggregate write reduction is below 50%",
+      "p95 duration regression exceeds 10%",
+    ]);
+  });
+
+  test("requires exact lanes, counts, and complete telemetry", () => {
+    const baseline = gateWindow(
+      stepFixture({ writes: 100, duration: 100, network: 100 }),
+    );
+    const missingLane = gateWindow(
+      stepFixture({ writes: 50, duration: 100, network: 100 }),
+    );
+    missingLane.branchSteps = [];
+    expect(
+      compareWindows(baseline, missingLane).fixedCorpusGate.reasons,
+    ).toContain("fixed-corpus lanes differ between comparison windows");
+
+    const wrongCount = gateWindow(
+      stepFixture({ writes: 50, duration: 100, network: 100 }),
+    );
+    const candidateLane = wrongCount.branchSteps[0];
+    if (candidateLane === undefined) {
+      throw new Error("fixed-corpus lane fixture missing");
+    }
+    candidateLane.jobCount = 4;
+    expect(
+      compareWindows(baseline, wrongCount).fixedCorpusGate.reasons,
+    ).toContain(
+      "fixed-corpus lane job counts differ between comparison windows",
+    );
+
+    const incomplete = gateWindow(
+      stepFixture({ writes: 50, duration: 100, network: 100 }),
+    );
+    incomplete.summary.completeJobCount = 4;
+    incomplete.summary.lowerBoundJobCount = 1;
+    incomplete.summary.unfinishedBuildCount = 1;
+    incomplete.summary.excludedBuildCount = 1;
+    incomplete.unfinishedBuilds = [
+      {
+        buildNumber: 2,
+        branch: "main",
+        state: "running",
+        createdAt: WINDOW.from.toISOString(),
+        buildUrl: "https://buildkite.com/sjerred/monorepo/builds/2",
+        disposition: "excluded",
+      },
+    ];
+    const gate = compareWindows(baseline, incomplete).fixedCorpusGate;
+    expect(gate.status).toBe("inconclusive");
+    expect(gate.reasons).toContain(
+      "one or both fixed-corpus windows have incomplete telemetry",
+    );
+    expect(gate.reasons).toContain(
+      "one or both fixed-corpus cohorts excluded unfinished builds",
+    );
+  });
 });
 
 describe("outputs and CLI", () => {
@@ -799,11 +1200,16 @@ describe("outputs and CLI", () => {
       metrics: reportMetrics(),
       pipeline: "monorepo",
       excludedJobIds: new Set(),
+      cohort: {
+        createdFrom: WINDOW.from.toISOString(),
+        createdTo: WINDOW.to.toISOString(),
+      },
     });
     const report: CiIoReport = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       generatedAt: WINDOW.to.toISOString(),
       metricSource: "raw",
+      comparisonProfile: "docker-ab",
       organization: "sjerred",
       pipeline: "monorepo",
       candidate,
@@ -813,7 +1219,47 @@ describe("outputs and CLI", () => {
     const markdown = renderCiIoMarkdown(report);
     expect(markdown).toContain("Child counters are diagnostic only");
     expect(markdown).toContain("Canceled-build writes");
+    expect(markdown).toContain("Build cohort by `created_at`");
+    expect(markdown).toContain("Per-branch step distribution");
+    expect(markdown).toContain("| Build | Branch | Step | Nodes |");
+    expect(markdown).toContain("feature/io");
+    expect(markdown).toContain("main");
+    expect(markdown).toContain("Last parent sample");
+    expect(markdown).toContain("ci-node");
+    expect(markdown).toContain("2026-07-20T00:10:00.000Z");
     expect(markdown).not.toContain("secret-token");
+  });
+
+  test("bounds the enforced A/B post-fixture scrape grace", () => {
+    const builds = reportBuilds();
+    expect(
+      postFixtureScrapeWaitMilliseconds(
+        builds,
+        ["fixture"],
+        new Date("2026-07-20T00:04:50.000Z"),
+      ),
+    ).toBe(20_000);
+    expect(
+      postFixtureScrapeWaitMilliseconds(
+        builds,
+        ["fixture"],
+        new Date("2026-07-20T00:05:05.000Z"),
+      ),
+    ).toBe(15_000);
+    expect(
+      postFixtureScrapeWaitMilliseconds(
+        builds,
+        ["fixture"],
+        new Date("2026-07-20T00:05:20.000Z"),
+      ),
+    ).toBe(0);
+    expect(
+      postFixtureScrapeWaitMilliseconds(
+        builds,
+        ["missing-step"],
+        new Date("2026-07-20T00:05:05.000Z"),
+      ),
+    ).toBe(0);
   });
 
   test("parses explicit builds and requires explicit fixtures for A/B gates", () => {
@@ -826,6 +1272,29 @@ describe("outputs and CLI", () => {
     ]);
     expect(parsed.buildNumbers).toEqual([101, 102]);
     expect(parsed.benchmark).toBe(true);
+    expect(parsed.comparisonProfile).toBe("docker-ab");
+    const exactAb = parseCliOptions([
+      "--build",
+      "102",
+      "--baseline-build",
+      "101",
+      "--fixture-step",
+      "image-fixture",
+      "--enforce-ab-gates",
+    ]);
+    expect(exactAb.baselineBuildNumbers).toEqual([101]);
+    expect(exactAb.enforceAbGates).toBe(true);
+    const fixedCorpus = parseCliOptions([
+      "--build",
+      "102",
+      "--baseline-build",
+      "101",
+      "--comparison-profile",
+      "fixed-corpus",
+      "--enforce-ab-gates",
+    ]);
+    expect(fixedCorpus.comparisonProfile).toBe("fixed-corpus");
+    expect(fixedCorpus.fixtureSteps).toEqual([]);
     expect(() =>
       parseCliOptions([
         "--from",
@@ -834,6 +1303,51 @@ describe("outputs and CLI", () => {
         WINDOW.to.toISOString(),
         "--enforce-ab-gates",
       ]),
-    ).toThrow("--enforce-ab-gates requires a baseline window");
+    ).toThrow("--enforce-ab-gates requires a baseline selection");
+    expect(() =>
+      parseCliOptions([
+        "--build",
+        "102",
+        "--baseline-build",
+        "101",
+        "--baseline-from",
+        WINDOW.from.toISOString(),
+        "--baseline-to",
+        WINDOW.to.toISOString(),
+      ]),
+    ).toThrow("provide either --baseline-build or a baseline time window");
+    expect(() =>
+      parseCliOptions([
+        "--build",
+        "102",
+        "--comparison-profile",
+        "fixed-corpus",
+      ]),
+    ).toThrow("fixed-corpus requires a baseline selection");
+    expect(() =>
+      parseCliOptions(["--build", "102", "--comparison-profile", "unknown"]),
+    ).toThrow();
+  });
+
+  test("requires A/B selections to use one identical commit", () => {
+    const baseline = reportBuilds().map((build) => ({
+      ...build,
+      number: build.number + 100,
+    }));
+    const candidate = reportBuilds();
+    expect(() =>
+      assertEquivalentAbSelections(baseline, candidate),
+    ).not.toThrow();
+    const firstCandidate = candidate[0];
+    if (firstCandidate === undefined) {
+      throw new Error("candidate fixture is missing");
+    }
+    firstCandidate.commit = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+    expect(() => assertEquivalentAbSelections(baseline, candidate)).toThrow(
+      "A/B builds must use one identical commit",
+    );
+    expect(() => assertEquivalentAbSelections(candidate, candidate)).toThrow(
+      "A/B build selections must be disjoint",
+    );
   });
 });
