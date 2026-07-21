@@ -153,9 +153,52 @@ if [ "$PUSH" = true ]; then
   PUSH_CACHE=true
 fi
 
-echo "--- :docker: bake ${bake_targets[*]}"
-VERSION="$BUILD_NUMBER" GIT_SHA="$SHA" PUSH_CACHE="$PUSH_CACHE" \
-  docker buildx bake --builder ci --load "${bake_targets[@]}"
+# Bake with bounded retry + exponential backoff. Image builds do a lot of
+# network I/O with no retry of their own — most notably `bun install` runs
+# `@lng2004/node-datachannel`'s `prebuild-install`, which pulls a prebuilt
+# binary from the GitHub-release CDN and, on a timeout, falls back to an `npm`
+# source build the bun-base images can't do (exit 127). A single slow CDN
+# response would otherwise sink the whole step and wait for a human to click
+# "retry" (build 5967). buildx is idempotent — a retry re-uses cached layers and
+# only re-attempts the failed one. A failure that STILL matches a transient
+# signature after the in-script retries exits 34 (EXIT_TRANSIENT, matching
+# scripts/lib/transient.ts) so the pipeline's `retry: *retry` anchor re-runs the
+# step on a fresh agent; a non-transient build error fails fast (exit 1).
+#
+# Two guards against retrying a real error (bake runs targets in PARALLEL into
+# one interleaved log): (1) the signatures are error-only — no bare
+# `prebuild-install`, which appears in a *successful* target's normal output;
+# only phrases that mean an operation actually errored. (2) we scan just the
+# FAILURE TAIL: on a target failure buildx cancels the rest and prints that
+# target's error at the end, so the tail is the failing target's output, not a
+# sibling's benign mid-build noise. So a deterministic failure (e.g. a missing
+# COPY source) in one target isn't masked as transient by another target's text.
+transient_re='Request timed out|i/o timeout|TLS handshake|remote error: tls|connection reset|connection refused|net/http:|failed to do request|dial tcp|temporary failure in name resolution|Internal Server Error|Bad Gateway|Service Unavailable|Gateway Timeout|blob unknown|failed to resolve source metadata|unexpected EOF|context deadline exceeded|error: failed to download'
+bake_attempt=1
+bake_max=3
+while :; do
+  echo "--- :docker: bake ${bake_targets[*]} (attempt ${bake_attempt}/${bake_max})"
+  bake_log="$(mktemp)"
+  if VERSION="$BUILD_NUMBER" GIT_SHA="$SHA" PUSH_CACHE="$PUSH_CACHE" \
+      docker buildx bake --builder ci --load "${bake_targets[@]}" 2>&1 | tee "$bake_log"; then
+    rm -f "$bake_log"
+    break
+  fi
+  if ! tail -n 120 "$bake_log" | grep -qiE "$transient_re"; then
+    echo "^^^ +++ bake failed with a non-transient error — failing fast."
+    rm -f "$bake_log"
+    exit 1
+  fi
+  rm -f "$bake_log"
+  if [ "$bake_attempt" -ge "$bake_max" ]; then
+    echo "^^^ +++ bake still failing on a transient network error after ${bake_max} attempts — exiting 34 for a step-level retry."
+    exit 34
+  fi
+  bake_backoff=$((bake_attempt * bake_attempt * 15))
+  echo "^^^ +++ bake hit a transient network error; backing off ${bake_backoff}s then retrying."
+  sleep "$bake_backoff"
+  bake_attempt=$((bake_attempt + 1))
+done
 
 # Smoke serially (containers contend on the daemon; assertions are cheap).
 for dir in "${smoke_dirs[@]}"; do
