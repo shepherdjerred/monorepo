@@ -60,6 +60,18 @@
       "depNameTemplate": "redlib-source",
       "packageNameTemplate": "https://github.com/redlib-org/redlib",
       "currentValueTemplate": "main"
+    },
+    {
+      "customType": "regex",
+      "description": "shelfbridge source pin — track upstream main HEAD for the image build (ARG SHELFBRIDGE_SOURCE_REF)",
+      "managerFilePatterns": ["packages/homelab/images/shelfbridge/Dockerfile"],
+      "matchStrings": [
+        "# renovate: datasource=git-refs depName=shelfbridge-source branch=main\\nARG SHELFBRIDGE_SOURCE_REF=(?<currentDigest>[a-f0-9]{40})"
+      ],
+      "datasourceTemplate": "git-refs",
+      "depNameTemplate": "shelfbridge-source",
+      "packageNameTemplate": "https://github.com/selmant/shelfbridge",
+      "currentValueTemplate": "main"
     }
   ],
   "customDatasources": {

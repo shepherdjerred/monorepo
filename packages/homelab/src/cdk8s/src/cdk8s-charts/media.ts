@@ -16,6 +16,7 @@ import { createRecyclarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/res
 import { createWhisperbridgeDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/whisperbridge.ts";
 import { createStreambotDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/streambot.ts";
 import { createBinderyDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/bindery.ts";
+import { createShelfbridgeDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/shelfbridge.ts";
 import { createCalibreWebAutomatedDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/media/calibre-web-automated.ts";
 import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 
@@ -80,6 +81,9 @@ export async function createMediaChart(app: App) {
   createCalibreWebAutomatedDeployment(chart, {
     books: booksVolume.claim,
   });
+  // Torznab bridge for direct-download book sources (LibGen/AA/Z-Lib) — registered
+  // directly in Bindery as an indexer; qBittorrent pulls webseed grabs through it.
+  createShelfbridgeDeployment(chart);
 
   // streambot (packages/streambot) lives here so it can read-only mount the movies/tv libraries.
   createStreambotDeployment(chart, {

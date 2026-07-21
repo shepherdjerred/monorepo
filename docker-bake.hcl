@@ -143,7 +143,7 @@ target "discord-plays-mario-kart" {
 
 # ── Homelab infra images: self-contained contexts, no VERSION/GIT_SHA ───────
 group "infra" {
-  targets = ["caddy-s3proxy", "obsidian-headless", "mcp-gateway", "redlib"]
+  targets = ["caddy-s3proxy", "obsidian-headless", "mcp-gateway", "redlib", "shelfbridge"]
 }
 
 target "caddy-s3proxy" {
@@ -172,4 +172,11 @@ target "redlib" {
   tags       = ["redlib:dev"]
   cache-from = cachefrom("redlib")
   cache-to   = cacheto("redlib")
+}
+
+target "shelfbridge" {
+  context    = "packages/homelab/images/shelfbridge"
+  tags       = ["shelfbridge:dev"]
+  cache-from = cachefrom("shelfbridge")
+  cache-to   = cacheto("shelfbridge")
 }
