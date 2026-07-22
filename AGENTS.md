@@ -80,6 +80,14 @@ sandbox/                        # Personal scratch (not shipped, excluded from m
 
 **Rule of thumb:** if the design itself is the artifact, it's a plan. If you just need a journal of what happened, it's a log.
 
+### Session location and durable context
+
+- Start every session by creating its log or plan in the main checkout under `packages/docs/`, before creating a worktree.
+- If the task moves to a worktree, move every agent-created write, including the session log or plan, into that worktree immediately. Do not leave duplicate or partial agent work in the main checkout.
+- The primary artifact for a code-changing session is a pull request. Create a draft PR from the worktree as soon as it contains a coherent first commit, and promote it to ready for review only after verification is complete.
+- Assume the chat may end immediately after the draft or final PR is created. Record unfinished work and handoff context in `packages/docs/`, the PR description, or an explicit final response to the user.
+- These instructions apply to all agents. Repository lifecycle hooks are scoped to local CLI runtimes and must exit immediately in hosted or web environments.
+
 ### Mirroring harness plans
 
 When plan mode is used, copy the approved plan from `~/.claude/plans/<slug>.md` into `packages/docs/plans/` using the dated naming convention before beginning implementation.
@@ -298,7 +306,7 @@ files a build needs.
 
 After PR merge: run `git-spice repo sync` to delete merged branches and retarget the rest of the stack, then `git worktree remove .claude/worktrees/<feature-slug>` and `git branch -d feature/<slug>` from the main checkout. Run `git worktree prune` to clean up stale entries.
 
-See the `worktree-workflow` skill for the full workflow. `claude -w <slug>` creates and enters a worktree at launch; for Codex, create the worktree first and start it with `codex -C <dir>`. A `SessionStart` hook (`.claude/hooks/worktree-reminder.sh`, wired for both Claude Code and Codex) also reminds you whenever a session opens in the main checkout.
+See the `worktree-workflow` skill for the full workflow. `claude -w <slug>` creates and enters a worktree at launch; for Codex, create the worktree first and start it with `codex -C <dir>`.
 
 **If you were started in a worktree, stay in that worktree.** Keep every command, search, and file operation scoped to the worktree path you were launched in. Do not `cd` into, read from, or write to the main checkout (the parent of the `.claude/worktrees/` directory you are in) — the worktree is a complete checkout with the same files, so there is no reason to reach outside it. The main checkout may hold the user's own in-progress work; only touch it when the user explicitly asks.
 

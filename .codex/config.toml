@@ -1,18 +1,10 @@
-# Repo-scoped Codex config. Minimal on purpose: it ONLY registers the
-# SessionStart worktree-reminder hook (the same script Claude Code's hook runs).
-#
-# This project layer merges on top of ~/.codex/config.toml, so do NOT set model,
-# sandbox, or approval here — that would override the user's global settings.
-#
-# Loading project-local hooks requires this .codex/ layer to be trusted; Codex
-# prompts once per machine. The `hooks` feature is stable/enabled by default.
-# The hook only nudges when a session opens in the MAIN checkout — see
-# .claude/hooks/worktree-reminder.sh (shared with Claude Code).
-
+# Repository-local Codex CLI hook. The shared script suppresses itself in hosted
+# Codex task environments, so cloud sessions never run worktree setup logic.
 [[hooks.SessionStart]]
 
 [[hooks.SessionStart.hooks]]
 type = "command"
 command = 'bash "$(git rev-parse --show-toplevel)/.claude/hooks/worktree-reminder.sh" --tool=codex'
+async = true
 timeout = 10
 statusMessage = "Worktree reminder"
