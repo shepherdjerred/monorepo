@@ -11,7 +11,9 @@
 {{- if stat (joinPath .chezmoi.homeDir "git/opencode-kimi-full") }}
     {{ joinPath .chezmoi.homeDir "git/opencode-kimi-full" | toJson }},
 {{- end }}
-    "@slkiser/opencode-quota@3.11.2",
+{{- if stat (joinPath .chezmoi.homeDir "git/opencode-quota/dist/index.js") }}
+    {{ printf "file://%s" (joinPath .chezmoi.homeDir "git/opencode-quota/dist/index.js") | toJson }},
+{{- end }}
   ],
   "permission": {
     "bash": {
