@@ -41,8 +41,13 @@ if [ -n "${GH_TOKEN:-}" ]; then
   ghcr_login_deferred=1
 fi
 
-# Bounded wait for the dind sidecar to come up.
-for _ in $(seq 1 60); do
+# Bounded wait for the dind sidecar to come up. 180s, not 60s: on a loaded
+# single-node cluster the sidecar can take well over a minute to start, and a
+# too-tight cap fails the step before the daemon is even up (build 5996). If it
+# still isn't ready, exit 34 (EXIT_TRANSIENT, matching scripts/lib/transient.ts)
+# so the pipeline's `retry: *retry` anchor re-runs the step on a fresh pod —
+# a never-starting sidecar is an infra transient, not a build error.
+for _ in $(seq 1 180); do
   if docker info >/dev/null 2>&1; then
     exit_ready=1
     break
@@ -50,9 +55,10 @@ for _ in $(seq 1 60); do
   sleep 1
 done
 if [ "${exit_ready:-0}" != "1" ]; then
-  echo "docker daemon did not become ready within 60s" >&2
-  docker info
-  exit 1
+  echo "docker daemon did not become ready within 180s — exiting 34 for a fresh-pod retry" >&2
+  # Print the connection error for diagnostics; its (expected) failure is handled
+  # by exiting 34, not swallowed.
+  docker info || exit 34
 fi
 
 if [ "${ghcr_login_deferred:-0}" = "1" ]; then
