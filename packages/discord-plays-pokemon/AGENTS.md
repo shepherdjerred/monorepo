@@ -4,6 +4,24 @@ Headless Pokémon Emerald (pokeemerald-wasm, ottohg fork with the C m4a audio en
 
 The tracing/metrics wiring, loopback audio transport, Go-Live streamer base class, web server, and bot entrypoint are shared with discord-plays-mario-kart in **`@shepherdjerred/discord-plays-core`** (`packages/discord-plays-core`, source-only, subpath imports) — see its `AGENTS.md`. This backend supplies the Pokémon-specific pieces: the emulator, `PokemonGameDriver`, the goal system, `copyMs` + game-event/notification metrics, the socket dispatch, and the llm-observability span-processor wrap passed to `bootGameBot`.
 
+## Generated data (species/map tables)
+
+`packages/backend/src/game/events/generated/species.ts` and
+`packages/backend/src/game/spatial/generated/map-names.ts` are committed
+generator output — never hand-edit. `scripts/generate-species-data.ts` and
+`scripts/generate-map-names.ts` fetch from `ottohg/pokeemerald-wasm` at the
+`OTTOHG_SHA` pin in `scripts/build-wasm.sh` (single source of truth, read via
+`scripts/lib/pokeemerald-pin.ts`; Renovate advances the pin plus the
+Dockerfile's `ENV` copy). Freshness:
+
+- `build-wasm.sh` re-runs both generators after every wasm build, so a manual
+  wasm refresh can't leave the tables stale.
+- The `dpp-pokeemerald-data-daily` Temporal schedule (04:30 PT,
+  `packages/temporal/src/activities/dpp-pokeemerald-data-refresh.ts`)
+  regenerates against the current pin and opens a PR on drift — the follow-up
+  to a merged Renovate pin bump (hosted Renovate can't run the generators in
+  its own PR).
+
 ## Reading live game state from the wasm
 
 The notifier polls emulator memory (~2×/s) for faints/badges/evolutions/catches. Read-side modules: `packages/backend/src/emulator/{memory,symbols}.ts`, `src/game/events/`; debug with `packages/backend/scripts/probe-memory.ts`.
