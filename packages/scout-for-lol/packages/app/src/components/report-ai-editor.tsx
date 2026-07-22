@@ -227,7 +227,7 @@ export function ReportAiEditor(props: {
             type="button"
             size="sm"
             variant="outline"
-            disabled={finalDraft === null || preview === null}
+            disabled={finalDraft === null}
             onClick={applyDraft}
           >
             <Check />
