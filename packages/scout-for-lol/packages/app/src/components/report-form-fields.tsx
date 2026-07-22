@@ -1,11 +1,6 @@
 import { lazy, Suspense, type Dispatch, type SetStateAction } from "react";
 import { Link } from "react-router-dom";
-import {
-  DEFAULT_REPORT_CRON,
-  REPORT_MAX_LOOKBACK_DAYS,
-  REPORT_MAX_ROWS_LIMIT,
-} from "@scout-for-lol/data";
-import { CronPresets } from "@scout-for-lol/data/model/competition-cron.ts";
+import { DEFAULT_REPORT_CRON } from "@scout-for-lol/data";
 import { Button } from "#src/components/ui/button.tsx";
 import { Input } from "#src/components/ui/input.tsx";
 import { Label } from "#src/components/ui/label.tsx";
@@ -17,6 +12,7 @@ import {
   SelectValue,
 } from "#src/components/ui/select.tsx";
 import { ReportQueryDocs } from "#src/components/report-query-docs.tsx";
+import { ReportScheduleFields } from "#src/components/report-schedule-fields.tsx";
 
 // Lazy so Monaco is split out of the main bundle and only loaded with this form.
 const ReportQueryEditor = lazy(
@@ -28,9 +24,8 @@ export type ReportFormState = {
   description: string;
   channelId: string;
   queryText: string;
-  lookbackDays: string;
-  maxRows: string;
   cronExpression: string;
+  scheduleTimezone: string;
 };
 
 export const EMPTY_REPORT_STATE: ReportFormState = {
@@ -38,9 +33,8 @@ export const EMPTY_REPORT_STATE: ReportFormState = {
   description: "",
   channelId: "",
   queryText: "",
-  lookbackDays: "30",
-  maxRows: "10",
   cronExpression: DEFAULT_REPORT_CRON,
+  scheduleTimezone: "UTC",
 };
 
 export type ReportPayload = {
@@ -48,9 +42,8 @@ export type ReportPayload = {
   description: string | null;
   channelId: string;
   queryText: string;
-  lookbackDays: number;
-  maxRows: number;
   cronExpression: string;
+  scheduleTimezone: string;
 };
 
 /**
@@ -65,14 +58,6 @@ export function buildReportPayload(
   if (state.queryText.trim() === "") {
     return { ok: false, message: "Query is required." };
   }
-  const lookbackDays = Number(state.lookbackDays);
-  const maxRows = Number(state.maxRows);
-  if (!Number.isInteger(lookbackDays) || !Number.isInteger(maxRows)) {
-    return {
-      ok: false,
-      message: "Lookback days and max rows must be whole numbers.",
-    };
-  }
   return {
     ok: true,
     payload: {
@@ -80,9 +65,8 @@ export function buildReportPayload(
       description: state.description.trim() === "" ? null : state.description,
       channelId: state.channelId,
       queryText: state.queryText,
-      lookbackDays,
-      maxRows,
       cronExpression: state.cronExpression,
+      scheduleTimezone: state.scheduleTimezone,
     },
   };
 }
@@ -176,71 +160,21 @@ export function ReportFormFields(props: {
             Query reference
           </summary>
           <div className="border-t border-border p-3">
-            <ReportQueryDocs
-              onUseExample={(query) => {
-                setState((prev) => ({ ...prev, queryText: query }));
-              }}
-            />
+            <ReportQueryDocs />
           </div>
         </details>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="report-cron">Schedule</Label>
-        <Select
-          value={state.cronExpression}
-          onValueChange={(next) => {
-            setState((prev) => ({ ...prev, cronExpression: next }));
-          }}
-        >
-          <SelectTrigger id="report-cron">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {CronPresets.map((preset) => (
-              <SelectItem key={preset.value} value={preset.value}>
-                {preset.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="report-lookback">
-            Lookback days (max {REPORT_MAX_LOOKBACK_DAYS})
-          </Label>
-          <Input
-            id="report-lookback"
-            type="number"
-            min={1}
-            max={REPORT_MAX_LOOKBACK_DAYS}
-            value={state.lookbackDays}
-            onChange={(event) => {
-              setState((prev) => ({
-                ...prev,
-                lookbackDays: event.target.value,
-              }));
-            }}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="report-max-rows">
-            Max rows (max {REPORT_MAX_ROWS_LIMIT})
-          </Label>
-          <Input
-            id="report-max-rows"
-            type="number"
-            min={1}
-            max={REPORT_MAX_ROWS_LIMIT}
-            value={state.maxRows}
-            onChange={(event) => {
-              setState((prev) => ({ ...prev, maxRows: event.target.value }));
-            }}
-          />
-        </div>
-      </div>
+      <ReportScheduleFields
+        cronExpression={state.cronExpression}
+        scheduleTimezone={state.scheduleTimezone}
+        onCronChange={(cronExpression) => {
+          setState((prev) => ({ ...prev, cronExpression }));
+        }}
+        onTimezoneChange={(scheduleTimezone) => {
+          setState((prev) => ({ ...prev, scheduleTimezone }));
+        }}
+      />
     </div>
   );
 }

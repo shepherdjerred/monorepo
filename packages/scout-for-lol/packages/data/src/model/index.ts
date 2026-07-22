@@ -25,6 +25,8 @@ export * from "./report-query-format.ts";
 export * from "./report-query-lint.ts";
 export * from "./report-query-metrics.ts";
 export * from "./report-query-complete.ts";
+export * from "./report-query-champions.ts";
+export * from "./report-result-format.ts";
 export * from "./roster.ts";
 export * from "./state.ts";
 export * from "./subscription-filter.ts";

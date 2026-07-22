@@ -68,6 +68,15 @@ function formatWhereClause(clause: ReportWhereClause): string {
       (value) => `champion_id = ${value.value.toString()}`,
     )
     .with(
+      { kind: "champion" },
+      (value) => `champion_id = champion(${quote(value.name)})`,
+    )
+    .with(
+      { kind: "lookback" },
+      (value) =>
+        `${value.field} >= CURRENT_TIMESTAMP - INTERVAL '${value.days.toString()} days'`,
+    )
+    .with(
       { kind: "min_games" },
       (value) => `games >= ${value.value.toString()}`,
     )
@@ -83,6 +92,11 @@ function formatWhereClause(clause: ReportWhereClause): string {
     })
     .with({ kind: "unsupported" }, (value) => value.text)
     .exhaustive();
+}
+
+function quote(value: string): string {
+  const quoteCharacter = value.includes("'") ? '"' : "'";
+  return `${quoteCharacter}${value}${quoteCharacter}`;
 }
 
 function formatFilterValue(value: string | number | boolean): string {

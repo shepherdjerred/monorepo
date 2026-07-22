@@ -76,7 +76,9 @@ export async function handleReportAiRoute(
     );
   }
 
-  const ticket = tryStartReportAiRun(authResult.identity);
+  const ticket = tryStartReportAiRun(authResult.identity, Date.now(), {
+    exempt: status.exempt,
+  });
   if (!ticket.allowed) {
     scoutReportAiRunsTotal.inc({ status: "rate_limited" });
     return jsonError(ticket.reason, 429, corsHeaders, {
@@ -131,7 +133,9 @@ export async function handleReportAiRoute(
             type: "final",
             draft,
             formattedQueryText: draft.queryText,
-            quota: getReportAiQuotaStatus(authResult.identity).quota,
+            quota: getReportAiQuotaStatus(authResult.identity, Date.now(), {
+              exempt: status.exempt,
+            }).quota,
           });
         } catch (error) {
           runStatus = abortController.signal.aborted ? "cancelled" : "error";
@@ -139,7 +143,9 @@ export async function handleReportAiRoute(
             type: "error",
             message: errorMessage(error),
             retryAfterSeconds: null,
-            quota: getReportAiQuotaStatus(authResult.identity).quota,
+            quota: getReportAiQuotaStatus(authResult.identity, Date.now(), {
+              exempt: status.exempt,
+            }).quota,
           });
         } finally {
           clearTimeout(timeout);

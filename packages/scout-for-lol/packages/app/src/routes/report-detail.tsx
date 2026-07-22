@@ -17,9 +17,8 @@ import { ReportQueryViewer } from "#src/components/report-query-viewer.tsx";
 type ReportRow = {
   description: string | null;
   channelId: string;
-  lookbackDays: number;
-  maxRows: number;
   cronExpression: string;
+  scheduleTimezone: string;
   isEnabled: boolean;
   queryText: string;
   sourceCompetitionId: number | null;
@@ -93,12 +92,9 @@ function ReportDefinitionCards(props: {
             {channelLabel(channels, report.channelId)}
           </p>
           <p>
-            <span className="text-muted-foreground">Lookback:</span>{" "}
-            {report.lookbackDays} days · max {report.maxRows} rows
-          </p>
-          <p>
             <span className="text-muted-foreground">Schedule:</span>{" "}
             <span className="font-mono text-xs">{report.cronExpression}</span> ·{" "}
+            {report.scheduleTimezone} ·{" "}
             {report.isEnabled ? "enabled" : "disabled"}
           </p>
           {report.sourceCompetitionId !== null && (

@@ -69,6 +69,11 @@ export const Asc = keyword("Asc", "asc");
 export const Desc = keyword("Desc", "desc");
 export const Render = keyword("Render", "render");
 export const With = keyword("With", "with");
+export const CurrentTimestamp = keyword(
+  "CurrentTimestamp",
+  "current_timestamp",
+);
+export const Interval = keyword("Interval", "interval");
 export const Having = keyword("Having", "having");
 
 // Order matters: multi-char operators before single, keywords before Identifier.
@@ -98,6 +103,8 @@ export const reportQueryTokenTypes: TokenType[] = [
   By,
   Limit,
   And,
+  CurrentTimestamp,
+  Interval,
   In,
   Asc,
   Desc,

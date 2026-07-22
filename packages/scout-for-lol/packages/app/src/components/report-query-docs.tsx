@@ -1,5 +1,4 @@
 import {
-  REPORT_EXAMPLES,
   REPORT_FILTERS,
   REPORT_FUNCTIONS,
   REPORT_GROUP_BYS,
@@ -16,7 +15,6 @@ import {
   CardHeader,
   CardTitle,
 } from "#src/components/ui/card.tsx";
-import { Button } from "#src/components/ui/button.tsx";
 
 const GRAMMAR =
   "SELECT <metric|expression [AS alias]>, … FROM <source> [WHERE <row filter> AND …] GROUP BY <field>[, <field>] [HAVING <output> <operator> <value>] [ORDER BY <output|label> ASC|DESC] [LIMIT <n>] [RENDER <kind> [WITH (<options>)]]";
@@ -52,10 +50,7 @@ function DocsSection(props: { title: string; items: DefinitionItem[] }) {
   );
 }
 
-export function ReportQueryDocs(props: {
-  onUseExample?: (query: string) => void;
-}) {
-  const { onUseExample } = props;
+export function ReportQueryDocs() {
   return (
     <div className="space-y-3">
       <Card>
@@ -146,36 +141,6 @@ export function ReportQueryDocs(props: {
           description: queue.label,
         }))}
       />
-
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Examples</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {REPORT_EXAMPLES.map((example) => (
-            <div key={example.title} className="space-y-1">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-medium">{example.title}</span>
-                {onUseExample !== undefined && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      onUseExample(example.query);
-                    }}
-                  >
-                    Use
-                  </Button>
-                )}
-              </div>
-              <pre className="overflow-auto whitespace-pre-wrap rounded-md bg-muted/50 p-2 text-xs">
-                {example.query}
-              </pre>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
     </div>
   );
 }

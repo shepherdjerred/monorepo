@@ -86,8 +86,7 @@ export function rowsFromAggregates(
 }
 
 export function cappedLimit(plan: ReportQueryPlan, maxRows: number): number {
-  const limit = Math.min(plan.limit ?? maxRows, maxRows);
-  return Math.min(limit, REPORT_MAX_ROWS_LIMIT);
+  return Math.min(plan.limit, maxRows, REPORT_MAX_ROWS_LIMIT);
 }
 
 export function sortedAggregates(

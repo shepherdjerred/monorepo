@@ -88,8 +88,6 @@ describe("executeReportQuery", () => {
         ORDER BY surrender_rate DESC
         LIMIT 10
       `,
-      lookbackDays: 30,
-      maxRows: 10,
       now,
     });
 
@@ -109,7 +107,7 @@ describe("executeReportQuery", () => {
     ]);
   });
 
-  test("caps query limit to requested max rows", async () => {
+  test("uses the row limit declared in ScoutQL", async () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
@@ -146,9 +144,7 @@ describe("executeReportQuery", () => {
       prisma,
       serverId,
       queryText:
-        "SELECT player, games, kills FROM match_participants GROUP BY player ORDER BY kills DESC LIMIT 50",
-      lookbackDays: 30,
-      maxRows: 1,
+        "SELECT player, games, kills FROM match_participants GROUP BY player ORDER BY kills DESC LIMIT 1",
       now,
     });
 
@@ -196,8 +192,6 @@ describe("executeReportQuery", () => {
       serverId,
       queryText:
         "SELECT pair, games, wins, win_rate FROM player_pairs WHERE queue IN ('solo') GROUP BY pair ORDER BY win_rate DESC LIMIT 10",
-      lookbackDays: 30,
-      maxRows: 10,
       now,
     });
 
@@ -230,8 +224,6 @@ describe("executeReportQuery", () => {
       serverId,
       queryText:
         "SELECT player, prematches FROM prematch_participants WHERE queue IN ('solo') GROUP BY player ORDER BY prematches DESC",
-      lookbackDays: 30,
-      maxRows: 10,
       now,
     });
 
@@ -278,8 +270,6 @@ describe("executeReportQuery player groups", () => {
     const base = {
       prisma,
       serverId,
-      lookbackDays: 30,
-      maxRows: 10,
       now,
     };
     const legacy = await executeReportQuery({
@@ -321,8 +311,6 @@ describe("executeReportQuery player groups", () => {
       serverId,
       queryText:
         "SELECT group, games, wins FROM player_groups GROUP BY group(all) ORDER BY label ASC",
-      lookbackDays: 30,
-      maxRows: 10,
       now,
     });
 
@@ -373,8 +361,6 @@ describe("executeReportQuery player groups", () => {
       serverId,
       queryText:
         "SELECT group, games, wins FROM player_groups WHERE queue IN ('arena') GROUP BY group(all) ORDER BY label ASC",
-      lookbackDays: 30,
-      maxRows: 10,
       now,
     });
 
@@ -458,8 +444,6 @@ describe("executeReportQuery competition rank reports", () => {
       prisma,
       serverId,
       queryText: `SELECT player, score FROM competition_rank WHERE competition_id = ${competition.id.toString()} GROUP BY player ORDER BY score DESC`,
-      lookbackDays: 30,
-      maxRows: 10,
       sourceCompetitionId: competition.id,
       now: new Date("2026-06-01T00:00:00Z"),
     });

@@ -3,6 +3,7 @@ import { parseAndCompile } from "#src/model/report-query-compile.ts";
 import { parseReportQuery } from "#src/model/report-query-parser.ts";
 import { lintReportQuery } from "#src/model/report-query-lint.ts";
 import { completeReportQuery } from "#src/model/report-query-complete.ts";
+import { reportChampionLiteral } from "#src/model/report-query-champions.ts";
 
 describe("parseAndCompile", () => {
   test("parses a leaderboard aggregate query", () => {
@@ -25,6 +26,7 @@ describe("parseAndCompile", () => {
       "surrender_rate",
     ]);
     expect(plan.queueFilter).toEqual(["solo", "flex"]);
+    expect(plan.lookbackDays).toBe(30);
     expect(plan.orderBy).toBe("surrender_rate");
     expect(plan.orderDirection).toBe("desc");
     expect(plan.limit).toBe(10);
@@ -92,7 +94,7 @@ describe("parseAndCompile", () => {
 
     expect(plan.orderBy).toBe("games");
     expect(plan.orderDirection).toBe("desc");
-    expect(plan.limit).toBeUndefined();
+    expect(plan.limit).toBe(10);
   });
 
   test("parses typed row filters", () => {
@@ -126,6 +128,60 @@ describe("parseAndCompile", () => {
     expect(plan.queueFilter).toEqual(["arena"]);
     expect(plan.championId).toBe(22);
     expect(plan.minGames).toBe(5);
+  });
+
+  test("resolves a validated champion name to its numeric id", () => {
+    const plan = parseAndCompile(
+      "SELECT games FROM match_participants WHERE champion_id = champion('Lux') GROUP BY player",
+    );
+
+    expect(plan.championId).toBe(99);
+  });
+
+  test("supports champion display names containing apostrophes", () => {
+    const plan = parseAndCompile(
+      `SELECT games FROM match_participants WHERE champion_id = champion("Kai'Sa") GROUP BY player`,
+    );
+
+    expect(plan.championId).toBe(145);
+  });
+
+  test("reportChampionLiteral double-quotes apostrophe names and round-trips", () => {
+    // Kai'Sa (145) has an apostrophe: a single-quoted literal would break the
+    // lexer, so reportChampionLiteral must switch to double quotes. Lux (99)
+    // has none and stays single-quoted.
+    expect(reportChampionLiteral(145)).toBe(`"Kai'Sa"`);
+    expect(reportChampionLiteral(99)).toBe(`'Lux'`);
+
+    const plan = parseAndCompile(
+      `SELECT games FROM match_participants WHERE champion_id = champion(${reportChampionLiteral(145)}) GROUP BY player`,
+    );
+    expect(plan.championId).toBe(145);
+  });
+
+  test("rejects unknown champion names with a suggestion", () => {
+    expect(() =>
+      parseAndCompile(
+        "SELECT games FROM match_participants WHERE champion_id = champion('Luxx') GROUP BY player",
+      ),
+    ).toThrow('Did you mean "Lux"?');
+  });
+
+  test("compiles SQL-style lookback predicates", () => {
+    const plan = parseAndCompile(
+      "SELECT games FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '14 days' GROUP BY player LIMIT 5",
+    );
+
+    expect(plan.lookbackDays).toBe(14);
+    expect(plan.limit).toBe(5);
+  });
+
+  test("requires the source-specific timestamp field", () => {
+    expect(() =>
+      parseAndCompile(
+        "SELECT prematches FROM prematch_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '14 days' GROUP BY player",
+      ),
+    ).toThrow("uses observed_at");
   });
 
   test("compiles calculated outputs, aliases, two dimensions, and HAVING", () => {

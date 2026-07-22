@@ -1,5 +1,7 @@
 import {
   REPORT_METRICS,
+  formatReportDisplayValue,
+  reportResultColumns,
   type ReportOutputFormat,
   type ReportRenderSpec,
 } from "@scout-for-lol/data";
@@ -84,51 +86,55 @@ function formatTextReport(
 
   if (kind === "LIST") {
     return `**${title}**\n${result.rows
-      .map((row) => `- ${row.label}: ${formatValues(row)}`)
+      .map((row) => `- ${row.label}: ${formatValues(result, row)}`)
       .join("\n")}`;
   }
 
   return `**${title}**\n${result.rows
     .map(
       (row, index) =>
-        `${(index + 1).toString()}. ${row.label} — ${formatValues(row)}`,
+        `${(index + 1).toString()}. ${row.label} — ${formatValues(result, row)}`,
     )
     .join("\n")}`;
 }
 
 function formatTable(result: ReportQueryResult): string {
-  const header = result.columns.join(" | ");
-  const separator = result.columns.map(() => "---").join(" | ");
+  const columns = reportResultColumns(result.plan, result.columns);
+  const header = columns.map((column) => column.label).join(" | ");
+  const separator = columns.map(() => "---").join(" | ");
   const body = result.rows
     .map((row) =>
-      [
-        row.label,
-        ...row.values.map((value) => formatReportValue(value.value)),
-      ].join(" | "),
+      columns
+        .map((column) => {
+          if (column.key === "label") {
+            return row.label;
+          }
+          const value = row.values.find(
+            (entry) => entry.column === column.key,
+          )?.value;
+          return value === undefined || value === null
+            ? "—"
+            : formatReportDisplayValue(column, value);
+        })
+        .join(" | "),
     )
     .join("\n");
   return `\`\`\`\n${header}\n${separator}\n${body}\n\`\`\``;
 }
 
-function formatValues(row: ReportResultRow): string {
+function formatValues(result: ReportQueryResult, row: ReportResultRow): string {
+  const columns = reportResultColumns(result.plan, result.columns);
   return row.values
-    .map((value) => `${value.column}: ${formatReportValue(value.value)}`)
+    .map((value) => {
+      const column = columns.find((entry) => entry.key === value.column);
+      if (column === undefined) {
+        throw new Error(`Missing report column ${value.column}`);
+      }
+      return value.value === null
+        ? `${column.label}: —`
+        : `${column.label}: ${formatReportDisplayValue(column, value.value)}`;
+    })
     .join(", ");
-}
-
-function formatReportValue(value: number | string | null): string {
-  if (value === null) {
-    return "—";
-  }
-  if (typeof value === "string") {
-    return value;
-  }
-
-  if (Number.isInteger(value)) {
-    return value.toString();
-  }
-
-  return value.toFixed(2);
 }
 
 type MetricDisplay = { label: string; percent: boolean };

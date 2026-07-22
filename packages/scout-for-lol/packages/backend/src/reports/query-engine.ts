@@ -1,6 +1,7 @@
 import type { DiscordGuildId, ReportQueryPlan } from "@scout-for-lol/data";
 import {
   CompetitionIdSchema,
+  REPORT_MAX_ROWS_LIMIT,
   RankSchema,
   parseAndCompile,
   parseCompetition,
@@ -39,8 +40,6 @@ type ExecuteReportQueryParams = {
   prisma: ExtendedPrismaClient;
   serverId: DiscordGuildId;
   queryText: string;
-  lookbackDays: number;
-  maxRows: number;
   sourceCompetitionId?: number | null;
   now?: Date;
 };
@@ -73,7 +72,7 @@ export async function executeReportQuery(
     throw new Error("player_groups reports must GROUP BY group(...).");
   }
 
-  const { startDate, endDate } = lookbackRange(params);
+  const { startDate, endDate } = lookbackRange(plan, params.now);
   const result = await runLakeAggregation({
     plan,
     serverId: params.serverId,
@@ -84,7 +83,7 @@ export async function executeReportQuery(
     plan,
     sortedAggregates(plan, result.aggregates),
     result.rowsScanned,
-    params.maxRows,
+    REPORT_MAX_ROWS_LIMIT,
   );
 }
 
@@ -110,7 +109,11 @@ async function executeCompetitionMatchParticipantReport(
     },
     select: { playerId: true },
   });
-  const { startDate, endDate } = competitionRange(competition, params);
+  const { startDate, endDate } = competitionRange(
+    competition,
+    plan,
+    params.now,
+  );
   const result = await runLakeAggregation({
     plan,
     serverId: params.serverId,
@@ -122,7 +125,7 @@ async function executeCompetitionMatchParticipantReport(
     plan,
     sortedAggregates(plan, result.aggregates),
     result.rowsScanned,
-    params.maxRows,
+    REPORT_MAX_ROWS_LIMIT,
   );
 }
 
@@ -142,7 +145,7 @@ async function executeCompetitionRankReport(
   }
 
   const leaderboard = await calculateLeaderboard(params.prisma, competition);
-  const limit = cappedLimit(plan, params.maxRows);
+  const limit = cappedLimit(plan, REPORT_MAX_ROWS_LIMIT);
   const isHighestRankReport = competition.criteria.type === "HIGHEST_RANK";
   const reportColumnForMetric = (metric: string): string =>
     isHighestRankReport && metric === "score" ? "rank" : metric;
@@ -171,14 +174,17 @@ async function executeCompetitionRankReport(
   };
 }
 
-function lookbackRange(params: ExecuteReportQueryParams): {
+function lookbackRange(
+  plan: ReportQueryPlan,
+  now: Date | undefined,
+): {
   startDate: Date;
   endDate: Date;
 } {
-  const endDate = params.now ?? new Date();
+  const endDate = now ?? new Date();
   return {
     startDate: new Date(
-      endDate.getTime() - params.lookbackDays * 24 * 60 * 60 * 1000,
+      endDate.getTime() - plan.lookbackDays * 24 * 60 * 60 * 1000,
     ),
     endDate,
   };
@@ -186,10 +192,11 @@ function lookbackRange(params: ExecuteReportQueryParams): {
 
 function competitionRange(
   competition: { startDate: Date | null; endDate: Date | null },
-  params: ExecuteReportQueryParams,
+  plan: ReportQueryPlan,
+  nowInput: Date | undefined,
 ): { startDate: Date; endDate: Date } {
-  const fallback = lookbackRange(params);
-  const now = params.now ?? new Date();
+  const fallback = lookbackRange(plan, nowInput);
+  const now = nowInput ?? new Date();
   const configuredEnd = competition.endDate ?? now;
   return {
     startDate: competition.startDate ?? fallback.startDate,

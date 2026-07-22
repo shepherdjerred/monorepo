@@ -14,6 +14,7 @@ import {
   REPORT_MAX_ROWS_LIMIT,
   getCompetitionStatus,
   parseCompetition,
+  reportChampionLiteral,
 } from "@scout-for-lol/data";
 import {
   DEFAULT_COMPETITION_CRON,
@@ -37,11 +38,10 @@ type SystemReportDefinition = {
   title: string;
   description: string | null;
   queryText: string;
-  lookbackDays: number;
-  maxRows: number;
   systemSource: "COMPETITION";
   sourceCompetitionId: CompetitionId | null;
   cronExpression: string;
+  scheduleTimezone: string;
   nextScheduledRunAt: Date;
 };
 
@@ -108,15 +108,14 @@ async function competitionReportDefinitions(
         queryText: `${competitionReportQuery(
           competition.id,
           competition.criteria,
-        )} ${renderClauseFor(renderKind)}`,
-        lookbackDays: 30,
-        maxRows: competitionReportMaxRows(
+        )} LIMIT ${competitionReportMaxRows(
           competition.maxParticipants,
           renderKind,
-        ),
+        ).toString()} ${renderClauseFor(renderKind)}`,
         systemSource: "COMPETITION",
         sourceCompetitionId: CompetitionIdSchema.parse(competition.id),
         cronExpression,
+        scheduleTimezone: "UTC",
         nextScheduledRunAt:
           competition.nextScheduledUpdateAt ??
           computeNextScheduledUpdateAt(cronExpression, now),
@@ -132,7 +131,7 @@ function competitionReportQuery(
     return [
       "SELECT player, score",
       "FROM competition_rank",
-      `WHERE competition_id = ${competitionId.toString()}`,
+      `WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days' AND competition_id = ${competitionId.toString()}`,
       "GROUP BY player",
       "ORDER BY score DESC",
     ].join(" ");
@@ -163,7 +162,9 @@ function competitionReportQuery(
           : queueWhereClause(criteria.queue),
       metrics: "games, wins",
       orderBy: "wins",
-      extraFilters: [`champion_id = ${criteria.championId.toString()}`],
+      extraFilters: [
+        `champion_id = champion(${reportChampionLiteral(criteria.championId)})`,
+      ],
     });
   }
   return competitionMatchQuery({
@@ -183,6 +184,7 @@ function competitionMatchQuery(params: {
   extraFilters?: string[];
 }): string {
   const filters = [
+    "game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days'",
     `competition_id = ${params.competitionId.toString()}`,
     ...(params.queueClause === undefined ? [] : [params.queueClause]),
     ...(params.extraFilters ?? []),

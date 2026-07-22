@@ -72,8 +72,6 @@ export async function executeReportCreate(
     description: interaction.options.getString("description"),
     channelId: channel.id,
     queryText: interaction.options.getString("query", true),
-    lookbackDays: interaction.options.getInteger("lookback-days") ?? undefined,
-    maxRows: interaction.options.getInteger("max-rows") ?? undefined,
     cronExpression: interaction.options.getString("schedule-cron", true),
   });
   parseAndCompile(input.queryText);
@@ -87,14 +85,14 @@ export async function executeReportCreate(
       title: input.title,
       description: input.description,
       queryText: input.queryText,
-      lookbackDays: input.lookbackDays,
-      maxRows: input.maxRows,
       isEnabled: input.isEnabled,
       isSystemManaged: false,
       cronExpression: input.cronExpression,
+      scheduleTimezone: input.scheduleTimezone,
       nextScheduledRunAt: computeNextScheduledUpdateAt(
         input.cronExpression,
         now,
+        input.scheduleTimezone,
       ),
       createdTime: now,
       updatedTime: now,

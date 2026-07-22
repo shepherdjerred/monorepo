@@ -10,17 +10,18 @@ import type {
 } from "#src/model/report-query-spec.ts";
 import {
   And,
-  By,
   Comma,
+  CurrentTimestamp,
   Equals,
   From,
   GreaterEqual,
   Greater,
-  Group,
   Having,
   In,
+  Interval,
   Limit,
   LParen,
+  Minus,
   NumberLiteral,
   Less,
   LessEqual,
@@ -29,10 +30,24 @@ import {
   Render,
   RParen,
   Select,
+  StringLiteral,
   tokenizeReportQuery,
   tokenSpan,
   Where,
 } from "#src/model/report-query-lexer.ts";
+import {
+  firstPositive,
+  indexOfGroupBy,
+  indexOfType,
+  joinItem,
+  normalize,
+  normalizeQueueValue,
+  parseItems,
+  sliceSpan,
+  sliceText,
+  tokenItem,
+  wholeSpan,
+} from "#src/model/report-query-parser-helpers.ts";
 
 const INVALID_QUERY_MESSAGE =
   "Invalid report query. Expected: SELECT <metrics> FROM <source> [WHERE queue IN (...)] GROUP BY <field> [ORDER BY <metric> DESC] [LIMIT n]";
@@ -313,6 +328,14 @@ function matchComparisonClause(
   slice: IToken[],
   span: ReportQuerySpan,
 ): ReportWhereClause | undefined {
+  const champion = matchChampionClause(slice, span);
+  if (champion !== undefined) {
+    return champion;
+  }
+  const lookback = matchLookbackClause(slice, span);
+  if (lookback !== undefined) {
+    return lookback;
+  }
   if (slice.length !== 3) {
     return undefined;
   }
@@ -365,139 +388,59 @@ function comparisonOperator(token: IToken): string | undefined {
   return undefined;
 }
 
+function matchChampionClause(
+  slice: IToken[],
+  span: ReportQuerySpan,
+): ReportWhereClause | undefined {
+  if (
+    normalize(slice[0]?.image ?? "") !== "champion_id" ||
+    slice[1]?.tokenType !== Equals ||
+    normalize(slice[2]?.image ?? "") !== "champion" ||
+    slice[3]?.tokenType !== LParen ||
+    slice[4]?.tokenType !== StringLiteral ||
+    slice[5]?.tokenType !== RParen ||
+    slice.length !== 6
+  ) {
+    return undefined;
+  }
+  return { kind: "champion", name: unquote(slice[4].image), span };
+}
+
+function matchLookbackClause(
+  slice: IToken[],
+  span: ReportQuerySpan,
+): ReportWhereClause | undefined {
+  const field = normalize(slice[0]?.image ?? "");
+  if (
+    (field !== "game_creation_at" && field !== "observed_at") ||
+    slice[1]?.tokenType !== GreaterEqual ||
+    slice[2]?.tokenType !== CurrentTimestamp ||
+    slice[3]?.tokenType !== Minus ||
+    slice[4]?.tokenType !== Interval ||
+    slice[5]?.tokenType !== StringLiteral ||
+    slice.length !== 6
+  ) {
+    return undefined;
+  }
+  const interval = unquote(slice[5].image).trim().toLowerCase();
+  const intervalMatch = /^(?<days>\d+)\s+days?$/u.exec(interval);
+  const days = Number(intervalMatch?.groups?.["days"] ?? Number.NaN);
+  if (!Number.isInteger(days)) {
+    return undefined;
+  }
+  return { kind: "lookback", field, days, span };
+}
+
+function unquote(value: string): string {
+  return value.slice(1, -1);
+}
+
 function parseFilterValue(token: IToken): ReportFilterValue {
   if (token.tokenType === NumberLiteral) return Number(token.image);
   const value = normalizeQueueValue(token.image);
   if (value === "true") return true;
   if (value === "false") return false;
   return value;
-}
-
-// ── token helpers ────────────────────────────────────────────────────────────
-
-function indexOfType(tokens: IToken[], type: TokenType, from: number): number {
-  for (let index = Math.max(from, 0); index < tokens.length; index++) {
-    if (tokens[index]?.tokenType === type) {
-      return index;
-    }
-  }
-  return -1;
-}
-
-// Finds a two-word keyword pair (e.g. GROUP BY / ORDER BY): the lead keyword
-// immediately followed by BY.
-function indexOfGroupBy(
-  tokens: IToken[],
-  from: number,
-  lead: TokenType = Group,
-): number {
-  for (let index = Math.max(from, 0); index < tokens.length - 1; index++) {
-    if (
-      tokens[index]?.tokenType === lead &&
-      tokens[index + 1]?.tokenType === By
-    ) {
-      return index;
-    }
-  }
-  return -1;
-}
-
-function firstPositive(candidates: number[], fallback: number): number {
-  const present = candidates.filter((value) => value !== -1);
-  return present.length === 0 ? fallback : Math.min(...present);
-}
-
-function parseItems(
-  tokens: IToken[],
-  start: number,
-  end: number,
-): ReportQueryItem[] {
-  const items: ReportQueryItem[] = [];
-  let itemStart = start;
-  let depth = 0;
-  for (let index = start; index <= end; index++) {
-    const token = tokens[index];
-    if (token?.tokenType === LParen) depth++;
-    if (token?.tokenType === RParen) depth--;
-    const atBoundary =
-      index === end || (token?.tokenType === Comma && depth === 0);
-    if (!atBoundary) {
-      continue;
-    }
-    const item = joinItem(tokens, itemStart, index);
-    if (item !== undefined) {
-      items.push(item);
-    }
-    itemStart = index + 1;
-  }
-  return items;
-}
-
-// Joins a token range into a single lowercased item with a covering span,
-// mirroring the original parser's whitespace-collapsing normalization.
-function joinItem(
-  tokens: IToken[],
-  start: number,
-  end: number,
-): ReportQueryItem | undefined {
-  if (start >= end || start < 0) {
-    return undefined;
-  }
-  const slice = tokens.slice(start, end);
-  if (slice.length === 0) {
-    return undefined;
-  }
-  return { value: sliceText(slice), span: sliceSpan(tokens, start, end) };
-}
-
-function tokenItem(token: IToken | undefined): ReportQueryItem | undefined {
-  if (token === undefined) {
-    return undefined;
-  }
-  return { value: normalize(token.image), span: tokenSpan(token) };
-}
-
-function sliceText(slice: IToken[]): string {
-  return normalize(slice.map((token) => token.image).join(" "));
-}
-
-function sliceSpan(
-  tokens: IToken[],
-  start: number,
-  end: number,
-): ReportQuerySpan {
-  const first = tokens[start];
-  const last = tokens[end - 1];
-  if (first === undefined || last === undefined) {
-    return { start: 0, end: 0 };
-  }
-  return { start: first.startOffset, end: tokenSpan(last).end };
-}
-
-function wholeSpan(text: string, tokens: IToken[]): ReportQuerySpan {
-  const first = tokens[0];
-  const last = tokens.at(-1);
-  if (first === undefined || last === undefined) {
-    return { start: 0, end: text.length };
-  }
-  return { start: first.startOffset, end: tokenSpan(last).end };
-}
-
-function normalize(value: string): string {
-  return value.trim().toLowerCase();
-}
-
-function normalizeQueueValue(value: string): string {
-  const normalized = normalize(value);
-  const first = normalized.at(0);
-  const last = normalized.at(-1);
-  if (
-    normalized.length >= 2 &&
-    ((first === "'" && last === "'") || (first === '"' && last === '"'))
-  ) {
-    return normalized.slice(1, -1);
-  }
-  return normalized;
 }
 
 export { INVALID_QUERY_MESSAGE, UNSUPPORTED_WHERE_MESSAGE };

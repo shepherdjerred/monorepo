@@ -72,8 +72,6 @@ export async function runReport(
       prisma: params.prisma,
       serverId: params.report.serverId,
       queryText: params.report.queryText,
-      lookbackDays: params.report.lookbackDays,
-      maxRows: params.report.maxRows,
       sourceCompetitionId: params.report.sourceCompetitionId,
       now: startedAt,
     });

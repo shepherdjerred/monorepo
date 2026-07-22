@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { CompetitionCronSchema } from "#src/model/competition-cron.ts";
+import {
+  CompetitionCronSchema,
+  DEFAULT_SCHEDULE_TIMEZONE,
+  ReportScheduleTimezoneSchema,
+} from "#src/model/competition-cron.ts";
 import type { CompetitionId } from "#src/model/competition.ts";
 import type {
   DiscordAccountId,
@@ -236,15 +240,15 @@ export type Report = {
   title: string;
   description: string | null;
   queryText: string;
-  lookbackDays: number;
-  maxRows: number;
   isEnabled: boolean;
   isSystemManaged: boolean;
   systemSource: ReportSystemSource | null;
   sourceCompetitionId: CompetitionId | null;
   cronExpression: string;
+  scheduleTimezone: string;
   nextScheduledRunAt: Date | null;
   lastScheduledRunAt: Date | null;
+  lastScheduledLocalDate: string | null;
   lastRunStatus: ReportRunStatus | null;
   lastRunError: string | null;
   createdTime: Date;
@@ -275,9 +279,10 @@ export const ReportCreateInputSchema = z.object({
   // BAD_REQUEST thrown from the handler. See discord.ts DiscordChannelIdSchema.
   channelId: DiscordChannelIdSchema,
   queryText: ReportQueryTextSchema,
-  lookbackDays: ReportLookbackDaysSchema,
-  maxRows: ReportMaxRowsSchema,
   cronExpression: CompetitionCronSchema.default(DEFAULT_REPORT_CRON),
+  scheduleTimezone: ReportScheduleTimezoneSchema.default(
+    DEFAULT_SCHEDULE_TIMEZONE,
+  ),
   isEnabled: z.boolean().default(true),
 });
 
@@ -310,10 +315,6 @@ export const ReportAiEditRequestSchema = z
     currentQueryText: ReportAiCurrentQueryTextSchema.default(null),
     currentTitle: z.string().trim().max(100).nullable().default(null),
     currentDescription: z.string().trim().max(500).nullable().default(null),
-    lookbackDays: ReportLookbackDaysSchema.default(
-      REPORT_DEFAULT_LOOKBACK_DAYS,
-    ),
-    maxRows: ReportMaxRowsSchema.default(REPORT_DEFAULT_MAX_ROWS),
     sourceCompetitionId: z.number().int().positive().nullable().default(null),
   })
   .strict();
@@ -362,12 +363,30 @@ export const ReportAiQuotaSnapshotSchema = z
 
 export type ReportAiQuotaSnapshot = z.infer<typeof ReportAiQuotaSnapshotSchema>;
 
+export const ReportValueFormatSchema = z.enum([
+  "text",
+  "integer",
+  "decimal",
+  "percent",
+]);
+export type ReportValueFormat = z.infer<typeof ReportValueFormatSchema>;
+
+export const ReportResultColumnSchema = z
+  .object({
+    key: z.string().min(1),
+    label: z.string().min(1),
+    format: ReportValueFormatSchema,
+  })
+  .strict();
+export type ReportResultColumn = z.infer<typeof ReportResultColumnSchema>;
+
 export const ReportAiEditStatusSchema = z
   .object({
     enabled: z.boolean(),
     disabledReason: z.string().trim().min(1).max(300).nullable(),
     model: z.string().trim().min(1),
-    quota: z.array(ReportAiQuotaSnapshotSchema).min(1),
+    exempt: z.boolean(),
+    quota: z.array(ReportAiQuotaSnapshotSchema),
     activeRun: z.boolean(),
   })
   .strict();
@@ -376,7 +395,7 @@ export type ReportAiEditStatus = z.infer<typeof ReportAiEditStatusSchema>;
 
 export const ReportAiPreviewSummarySchema = z
   .object({
-    columns: z.array(z.string()).max(20),
+    columns: z.array(ReportResultColumnSchema).max(20),
     rows: z
       .array(
         z
@@ -448,7 +467,7 @@ export const ReportAiStreamEventSchema = z.discriminatedUnion("type", [
       type: z.literal("final"),
       draft: ReportAiFinalDraftSchema,
       formattedQueryText: ReportQueryTextSchema,
-      quota: z.array(ReportAiQuotaSnapshotSchema).min(1),
+      quota: z.array(ReportAiQuotaSnapshotSchema),
     })
     .strict(),
   z
@@ -456,11 +475,7 @@ export const ReportAiStreamEventSchema = z.discriminatedUnion("type", [
       type: z.literal("error"),
       message: z.string().trim().min(1).max(1000),
       retryAfterSeconds: z.number().int().positive().nullable().default(null),
-      quota: z
-        .array(ReportAiQuotaSnapshotSchema)
-        .min(1)
-        .nullable()
-        .default(null),
+      quota: z.array(ReportAiQuotaSnapshotSchema).nullable().default(null),
     })
     .strict(),
   z.object({ type: z.literal("done") }).strict(),
@@ -472,7 +487,7 @@ export const ReportAiHttpErrorSchema = z
   .object({
     error: z.string().trim().min(1).max(1000),
     retryAfterSeconds: z.number().int().positive().nullable().default(null),
-    quota: z.array(ReportAiQuotaSnapshotSchema).min(1).nullable().default(null),
+    quota: z.array(ReportAiQuotaSnapshotSchema).nullable().default(null),
   })
   .strict();
 

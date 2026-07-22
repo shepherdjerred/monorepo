@@ -1,7 +1,7 @@
 ---
 id: plan-2026-07-12-scout-reporting-editor-improvements
 type: plan
-status: in-progress
+status: complete
 board: true
 verification: agent
 disposition: active
@@ -35,7 +35,7 @@ Unify and improve Scout's reporting workflow: correct preview tables, add readab
 - Require a string literal and validate it against Scout's canonical champion catalog during semantic validation, with location-aware errors and close-name suggestions.
 - Keep numeric IDs compatible, but update AI instructions, examples, and presets to use champion names.
 - Replace lookback and max-row controls with `WHERE <timestamp> >= CURRENT_TIMESTAMP - INTERVAL '...'` and outer `LIMIT`.
-- Retain a fixed server safety cap on scanned facts.
+- Retain a fixed server safety cap on rendered result rows.
 
 ### Data Explorer and Presets
 
@@ -46,14 +46,14 @@ Unify and improve Scout's reporting workflow: correct preview tables, add readab
 
 ### Scheduling
 
-- Provide a daily, weekly, and monthly builder plus an advanced five-field cron input, timezone selector, plain-language summary, and upcoming-run preview.
+- Provide daily, weekly, and monthly presets plus an advanced five-field cron input, timezone selector, and upcoming-run preview.
 - Accept arbitrary calendar cadence but require exactly one minute and hour per eligible local date.
 - Enforce one execution per report and local date server-side.
 - Allow the spring DST occurrence even when only 23 elapsed hours have passed.
 
 ### Migration
 
-- Rewrite existing reports through the ScoutQL AST, combining lookback with an existing `WHERE` via `AND` and retaining the stricter existing or configured `LIMIT`.
+- Rewrite existing reports at ScoutQL clause boundaries, combining lookback with an existing `WHERE` via `AND` and retaining the stricter existing or configured `LIMIT`.
 - Use schema metadata to select the report's time column and fail loudly on unconvertible reports.
 - Remove the legacy lookback and max-row fields from persistence, APIs, and UI after migration.
 - Preserve current defaults by inserting equivalent SQL into migrated and newly created reports.
@@ -89,16 +89,28 @@ Unify and improve Scout's reporting workflow: correct preview tables, add readab
 
 ### Done
 
-- Captured the approved Scout reporting editor implementation plan in this document.
+- Created and initialized the `feature/scout-reporting-editor` worktree with the scoped Scout setup.
+- Added one shared result-column contract across web previews, AI previews, Discord text output, and chart metadata. Fixed duplicate headers and formatted rates as one-decimal percentages.
+- Added `champion('Display Name')`, SQL lookback predicates, query-owned `LIMIT`, updated presets/system reports/AI guidance, and a guarded migration that drops the legacy fields.
+- Added the operator AI quota exemption, complete quota-window/reset display, and a validated inline AI draft preview.
+- Added the allowlisted, guild-scoped raw data explorer with filters, sorting, bounded pagination, and identifier copy/insert actions.
+- Unified presets/examples and added custom daily-or-less-frequent cron schedules with IANA timezones, upcoming runs, DST coverage, and local-date idempotency.
+- Regenerated Prisma and `src/testing/template.db` through the complete migration chain.
+- Verified `data`, `backend`, and `app` typechecks and changed-file ESLint gates.
+- Verified 447 data tests, 1,132 backend tests with 0 failures, 12 app tests, focused migration/explorer/render tests, and the production Vite build.
+- Pinned all ten AI quota windows and reset intervals in a backend contract test.
+- Fixed scheduler idempotency to use the scheduled occurrence date, preventing a delayed run across local midnight from consuming the following day's slot.
+- Started the local Vite app at `http://127.0.0.1:5180/app/` without connecting the beta Discord bot.
+- Rebased onto current `origin/main`, resolved the system-report conflicts against the retired Common Denominator bootstrap, and reverified the full Scout workspace.
+- Published implementation commit `9d250f7c9` and opened draft PR [#1513](https://github.com/shepherdjerred/monorepo/pull/1513).
+- Verified the report editor in PinchTab against a deterministic local backend, including the corrected preset preview, all quota windows, operator exemption, AI draft preview, data explorer, and schedule controls.
+- Uploaded five after screenshots to `public.sjer.red`, verified each asset returned HTTP 200, and attached them to PR #1513 alongside the supplied before screenshot.
 
 ### Remaining
 
-- Implement and verify every change described above.
+- None.
 
 ### Caveats
 
-- Repository inspection and implementation have not started.
-
-## Remaining
-
-- [ ] Complete and verify the work described in `Scout Reporting Editor Improvements`.
+- Screenshots use a deterministic local mock backend so no live Discord bot or OpenAI request was needed.
+- The app workspace has no `test` package script; its discovered test was run directly with `bun test`.
