@@ -150,3 +150,24 @@ The completeness gate + rebuild-parity + reports/comps validation run on **beta 
 
 - PR-A ships the 7 tables present-but-unwritten. Do not run PR-B until the beta+prod completeness gate reports 0 match/prematch gaps.
 - Prematch `observed_at`/`month` now derives from S3 `LastModified` (a documented behavior change vs the dropped column) — the parity script reports the near-midnight drift; total counts stay identical.
+
+## Session Log — 2026-07-12 (PR-B built — destructive drop, DRAFT)
+
+### Done
+
+- **Schema drop** — `schema.prisma` removes all 7 report-store models (`StoredMatch`, `StoredMatchTimeline`, `StoredPrematch`, `MatchParticipantFact`, `PrematchParticipantFact`, `ReportStoreImportProgress`, `ReportStoreImportFailure`); Prisma-generated migration `20260712000000_drop_report_store_match_tables` (7× `DROP TABLE`, via `migrate diff` — not hand-written); client + `template.db` regenerated (all migrations incl. the drop apply cleanly). Fixed a stale `SummonerIndex` doc-comment that referenced the dropped `PrematchParticipantFact`.
+- **SQLite rebuild path removed** — deleted `populateMatchesFromSqlite`/`populatePrematchFromSqlite` + the `RebuildSource`/`REBUILD_PAGE_SIZE`/`ExtendedPrismaClient` plumbing from `report-lake/rebuild-sources.ts`; dropped `runReportLakeRebuildFromSqlite` and the `source === "sqlite"` branch from `compactor.ts` (`rebuildLocked` is now S3-only).
+- **Gate scripts deleted** — `backend/scripts/backfill-report-store-to-s3.ts` + `backend/scripts/report-lake-rebuild-parity.ts` (they read the now-dropped `Stored*` tables; their job is done once the beta+prod gate passes).
+- **Tests** — `report-lake.integration.test.ts` reworked to seed the full rebuild from an **in-memory S3 mock** (`aws-sdk-client-mock`: ListObjectsV2 per-prefix + GetObject `transformToString` body) instead of `Stored*` + `runReportLakeRebuildFromSqlite` — this also lands the S3-rebuild coverage deferred in PR-A. `query-engine.integration.test.ts` cleanup drops the fact/`Stored*` `deleteMany` calls (it already seeds via `writeTestLake`).
+- **Docs** — scout `AGENTS.md` ScoutQL section now says the nightly rebuild enumerates raw JSON from **S3**; `todos/scout-report-lake-fact-table-drop.md` rewritten for the S3-canonical drop + gating.
+- Verified: backend `tsc` clean, `eslint` 0 errors (2 benign dup-helper warnings), **1098 pass / 6 skip / 0 fail**.
+
+### Remaining
+
+- **DO NOT MERGE** until PR-A's completeness gate reports 0 match/prematch gaps on **beta AND prod** (scout auto-applies migrations on deploy). Opened as a DRAFT stacked on the engine branch.
+- After PR-A merges to main, rebase this branch onto main and flip PR-B out of draft only once the gate is green.
+
+### Caveats
+
+- The drop is irreversible on deploy (`prisma migrate deploy`). The safety net is entirely PR-A's gate: every historical match/prematch must be in S3 first.
+- `template.db` is committed with the 7 tables absent — expected (it's the migrated test fixture).

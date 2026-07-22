@@ -461,9 +461,6 @@ async function cleanup(): Promise<void> {
   await deleteIfExists(() => prisma.competitionSnapshot.deleteMany());
   await deleteIfExists(() => prisma.competitionParticipant.deleteMany());
   await deleteIfExists(() => prisma.competition.deleteMany());
-  await deleteIfExists(() => prisma.prematchParticipantFact.deleteMany());
-  await deleteIfExists(() => prisma.storedPrematch.deleteMany());
-  await deleteIfExists(() => prisma.matchParticipantFact.deleteMany());
   await deleteIfExists(() => prisma.account.deleteMany());
   await deleteIfExists(() => prisma.player.deleteMany());
 }
