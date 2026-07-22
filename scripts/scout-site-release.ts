@@ -129,12 +129,12 @@ async function buildSite(
   console.log(`+++ build (${flavor} flavor, release ${version})`);
   if (dryRun) {
     console.log(
-      `DRYRUN: would run \`bun run scripts/build-bucket.ts\` in ${SITE_PACKAGE_DIR} ` +
+      `DRYRUN: would run \`bun --no-install run scripts/build-bucket.ts\` in ${SITE_PACKAGE_DIR} ` +
         `with env ${Object.keys(buildEnv).join(", ")}`,
     );
     return;
   }
-  await run(["bun", "run", "scripts/build-bucket.ts"], {
+  await run(["bun", "--no-install", "run", "scripts/build-bucket.ts"], {
     cwd: `${repoRoot()}/${SITE_PACKAGE_DIR}`,
     env: buildEnv,
   });

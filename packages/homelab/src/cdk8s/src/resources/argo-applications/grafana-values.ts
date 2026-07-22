@@ -18,11 +18,20 @@ type GrafanaValuesWithStringDashboardLabel = Omit<GrafanaValues, "sidecar"> & {
   };
 };
 
+type KubeStateMetricsValues = NonNullable<
+  KubePrometheusStackValues["kube-state-metrics"]
+>;
+type KubeStateMetricsWithBuildkiteMetadata = KubeStateMetricsValues & {
+  metricLabelsAllowlist?: string[];
+  metricAnnotationsAllowList?: string[];
+};
+
 export type PrometheusValuesWithBlackbox = Omit<
   KubePrometheusStackValues,
-  "grafana"
+  "grafana" | "kube-state-metrics"
 > & {
   grafana?: GrafanaValuesWithStringDashboardLabel;
+  "kube-state-metrics"?: KubeStateMetricsWithBuildkiteMetadata;
   "prometheus-blackbox-exporter"?: {
     enabled?: boolean;
     config?: {
@@ -43,6 +52,25 @@ export type PrometheusValuesWithBlackbox = Omit<
     };
   };
 };
+
+export const BUILDKITE_KUBE_STATE_METRICS_VALUES = {
+  metricLabelsAllowlist: ["pods=[buildkite.com/job-uuid,ci.sjer.red/step-key]"],
+  metricAnnotationsAllowList: [
+    "pods=[buildkite.com/build-branch,buildkite.com/build-url,buildkite.com/job-url,buildkite.com/pipeline-slug]",
+  ],
+} satisfies KubeStateMetricsWithBuildkiteMetadata;
+
+export const BUILDKITE_IO_OBSERVABILITY_VALUES = {
+  kubelet: {
+    serviceMonitor: {
+      cAdvisorInterval: "10s",
+    },
+  },
+  "kube-state-metrics": BUILDKITE_KUBE_STATE_METRICS_VALUES,
+} satisfies Pick<
+  PrometheusValuesWithBlackbox,
+  "kubelet" | "kube-state-metrics"
+>;
 
 export function createGrafanaValues(
   rendererSecretName: string,

@@ -1,71 +1,11 @@
 import * as dashboard from "@grafana/grafana-foundation-sdk/dashboard";
-import * as common from "@grafana/grafana-foundation-sdk/common";
-import * as timeseries from "@grafana/grafana-foundation-sdk/timeseries";
-import * as stat from "@grafana/grafana-foundation-sdk/stat";
-import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
 import { exportDashboardWithHelmEscaping } from "./dashboard-export.ts";
-
-const PROMETHEUS_DS = {
-  type: "prometheus",
-  uid: "Prometheus",
-};
-
-function createStatPanel(options: {
-  title: string;
-  query: string;
-  legend: string;
-  gridPos: { x: number; y: number; w: number; h: number };
-  unit?: string;
-  thresholds?: { value: number; color: string }[];
-}) {
-  const panel = new stat.PanelBuilder()
-    .title(options.title)
-    .datasource(PROMETHEUS_DS)
-    .withTarget(
-      new prometheus.DataqueryBuilder()
-        .expr(options.query)
-        .legendFormat(options.legend),
-    )
-    .unit(options.unit ?? "short")
-    .colorMode(common.BigValueColorMode.Value)
-    .graphMode(common.BigValueGraphMode.Area)
-    .gridPos(options.gridPos);
-
-  if (options.thresholds) {
-    panel.thresholds(
-      new dashboard.ThresholdsConfigBuilder()
-        .mode(dashboard.ThresholdsMode.Absolute)
-        .steps(options.thresholds),
-    );
-  }
-
-  return panel;
-}
-
-function createTimeseriesPanel(options: {
-  title: string;
-  targets: { query: string; legend: string }[];
-  gridPos: { x: number; y: number; w: number; h: number };
-  unit?: string;
-}) {
-  const panel = new timeseries.PanelBuilder()
-    .title(options.title)
-    .datasource(PROMETHEUS_DS)
-    .unit(options.unit ?? "short")
-    .lineWidth(2)
-    .fillOpacity(10)
-    .gridPos(options.gridPos);
-
-  for (const target of options.targets) {
-    panel.withTarget(
-      new prometheus.DataqueryBuilder()
-        .expr(target.query)
-        .legendFormat(target.legend),
-    );
-  }
-
-  return panel;
-}
+import {
+  createStatPanel,
+  createTimeseriesPanel,
+} from "./buildkite-dashboard-panels.ts";
+import { addBuildkiteIoHealthPanels } from "./buildkite-io-health-panels.ts";
+import { addBuildkiteIoImpactPanels } from "./buildkite-io-impact-panels.ts";
 
 /**
  * Creates a Grafana dashboard for Buildkite CI resource monitoring.
@@ -74,10 +14,12 @@ function createTimeseriesPanel(options: {
  * and concurrency metrics to help detect wrong-sized jobs.
  */
 export function createBuildkiteDashboard() {
-  const builder = new dashboard.DashboardBuilder("Buildkite — CI Resources")
+  const builder = new dashboard.DashboardBuilder(
+    "Buildkite — CI Resources & I/O",
+  )
     .uid("buildkite-ci-dashboard")
-    .tags(["buildkite", "ci", "resources"])
-    .time({ from: "now-6h", to: "now" })
+    .tags(["buildkite", "ci", "resources", "io"])
+    .time({ from: "now-24h", to: "now" })
     .refresh("30s")
     .timezone("browser")
     .editable();
@@ -257,11 +199,11 @@ export function createBuildkiteDashboard() {
       title: "Running Pods",
       targets: [
         {
-          query: `count(kube_pod_status_phase{namespace="buildkite", phase="Running"})`,
+          query: `count(kube_pod_status_phase{namespace="buildkite", phase="Running"} == 1)`,
           legend: "running",
         },
         {
-          query: `count(kube_pod_status_phase{namespace="buildkite", phase="Pending"})`,
+          query: `count(kube_pod_status_phase{namespace="buildkite", phase="Pending"} == 1)`,
           legend: "pending",
         },
       ],
@@ -282,6 +224,9 @@ export function createBuildkiteDashboard() {
       unit: "short",
     }),
   );
+
+  addBuildkiteIoImpactPanels(builder);
+  addBuildkiteIoHealthPanels(builder);
 
   return builder.build();
 }

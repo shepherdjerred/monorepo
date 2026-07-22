@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeAll } from "bun:test";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import path from "node:path";
@@ -188,9 +190,8 @@ type HelmTemplateResult = {
 };
 
 async function helmTemplate(chart: ExternalChart): Promise<HelmTemplateResult> {
-  const tempDir = path.join(
-    import.meta.dir,
-    `../.argocd-test-${chart.appName}-${String(Date.now())}`,
+  const tempDir = await mkdtemp(
+    path.join(tmpdir(), `argocd-test-${chart.appName}-`),
   );
 
   try {
@@ -266,11 +267,7 @@ async function helmTemplate(chart: ExternalChart): Promise<HelmTemplateResult> {
 
     return lastResult;
   } finally {
-    // Clean up temp dir
-    const proc = Bun.spawnSync(["rm", "-rf", tempDir]);
-    if (proc.exitCode !== 0) {
-      console.warn(`Failed to clean up ${tempDir}`);
-    }
+    await rm(tempDir, { force: true, recursive: true });
   }
 }
 

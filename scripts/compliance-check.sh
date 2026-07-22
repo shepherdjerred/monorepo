@@ -53,6 +53,10 @@ packages/scout-for-lol:lint
 packages/scout-for-lol:typecheck
 packages/home-assistant:build
 packages/sjer.red:test
+packages/release-tools:build
+packages/release-tools:test
+packages/release-tools:lint
+packages/release-tools:typecheck
 packages/temporal:build
 packages/homelab:build
 packages/homelab:test
@@ -77,6 +81,9 @@ packages/discord-plays-mario-kart/packages/backend:build
 #   the workspace migration; consumers import TS sources via workspace symlink).
 # sjer.red:test — Playwright only; lives in test:e2e outside the default chain
 #   (needs installed browsers; the old CI ran it in a Playwright container).
+# release-tools — dependency-only private workspace that pins the production
+#   release-please CLI; the pipeline validator and release dry run exercise its
+#   manifest and executable, and there is no package source to build or lint.
 # temporal / dpp-backend / dpmk-backend :build — tsconfig is noEmit, so build
 #   was a typecheck duplicate; Bun-runtime services run from source.
 # homelab (parent) — anchor package: children (@homelab/cdk8s,

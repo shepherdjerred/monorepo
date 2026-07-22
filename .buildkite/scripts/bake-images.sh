@@ -5,9 +5,8 @@ set -euo pipefail
 # buildx bake` (docker-bake.hcl at the repo root) — targets build in PARALLEL
 # on one BuildKit daemon, replacing the old serial per-image loop.
 #
-#   --affected   PR mode: only bake targets whose owning turbo package is
-#                affected (plus the three families turbo's nested --affected
-#                under-selects — same workaround as the native shims).
+#   --affected   PR mode: only bake targets whose owned workspace closure is
+#                affected, selected without Turbo or node_modules.
 #   --push       main mode: write per-target registry cache and push
 #                :<sha> + :latest for every image after its smoke passes.
 #
@@ -32,31 +31,29 @@ for arg in "$@"; do
   esac
 done
 
-# bake target → owning turbo package → package dir with the `smoke` script.
+# bake target → package dir with the `smoke` script.
 # The homelab infra images are one unit: the `homelab` package owns all
 # of them and its smoke script asserts on all of them.
 APP_TARGETS=(
-  "birmel|@shepherdjerred/birmel|packages/birmel"
-  "tasknotes-server|tasknotes-server|packages/tasknotes-server"
-  "starlight-karma-bot|starlight-karma-bot|packages/starlight-karma-bot"
-  "streambot|@shepherdjerred/streambot|packages/streambot"
-  "temporal-worker|@shepherdjerred/temporal|packages/temporal"
-  "trmnl-dashboard|@shepherdjerred/trmnl-dashboard|packages/trmnl-dashboard"
-  "scout-for-lol|@scout-for-lol/backend|packages/scout-for-lol/packages/backend"
-  "discord-plays-pokemon|@discord-plays-pokemon/backend|packages/discord-plays-pokemon/packages/backend"
-  "discord-plays-mario-kart|@discord-plays-mario-kart/backend|packages/discord-plays-mario-kart/packages/backend"
+  "birmel|packages/birmel"
+  "tasknotes-server|packages/tasknotes-server"
+  "starlight-karma-bot|packages/starlight-karma-bot"
+  "streambot|packages/streambot"
+  "temporal-worker|packages/temporal"
+  "trmnl-dashboard|packages/trmnl-dashboard"
+  "scout-for-lol|packages/scout-for-lol/packages/backend"
+  "discord-plays-pokemon|packages/discord-plays-pokemon/packages/backend"
+  "discord-plays-mario-kart|packages/discord-plays-mario-kart/packages/backend"
 )
-# turbo's nested --affected under-selects these families (documented in the
-# old PR dry-run step); they always build on PRs until that bug is fixed.
-ALWAYS_ON_TARGETS=(scout-for-lol discord-plays-pokemon discord-plays-mario-kart)
 INFRA_IMAGES=(caddy-s3proxy obsidian-headless mcp-gateway redlib shelfbridge)
+KNOWN_TARGETS_JSON=$(printf '%s\n' "${APP_TARGETS[@]%%|*}" infra | jq -R . | jq -s 'sort')
 
 bake_targets=()
 smoke_dirs=()
 push_images=()
 
-# Scope selection. PRs diff against origin/main (TURBO_SCM_BASE from the
-# pipeline env). Main diffs against the LAST GREEN MAIN BUILD's commit: every
+# Scope selection. PRs diff against their merge-base with origin/main. Main
+# diffs against the LAST GREEN MAIN BUILD's commit: every
 # image validated+pushed at that commit is guaranteed output-identical here
 # (digests are content-gated), so rebuilding it moves gigabytes through an
 # ephemeral BuildKit for a no-op — most merges touch no image-owning package
@@ -65,9 +62,14 @@ push_images=()
 scope="all"
 scope_base=""
 if [ "$AFFECTED_ONLY" = true ]; then
-  scope="affected"
+  if scope_base=$(git merge-base origin/main HEAD); then
+    scope="affected"
+  else
+    echo "WARN: could not resolve merge-base with origin/main — building ALL images"
+  fi
 elif [ "$PUSH" = true ]; then
-  if resp=$(curl -fsS -H "Authorization: Bearer ${BUILDKITE_API_TOKEN}" \
+  if resp=$(curl -fsS --connect-timeout 5 --max-time 20 --retry 2 --retry-delay 1 \
+      -H "Authorization: Bearer ${BUILDKITE_API_TOKEN}" \
       "https://api.buildkite.com/v2/organizations/sjerred/pipelines/monorepo/builds?branch=main&state=passed&per_page=1") \
     && last_green=$(printf '%s' "$resp" | jq -r '.[0].commit // empty') \
     && [ -n "$last_green" ] \
@@ -81,40 +83,36 @@ elif [ "$PUSH" = true ]; then
 fi
 
 if [ "$scope" = "affected" ]; then
-  # Fail loud if turbo ls breaks or changes shape — a tool error must never
-  # read as "nothing affected".
-  if [ -n "$scope_base" ]; then
-    affected_json=$(TURBO_SCM_BASE="$scope_base" bunx turbo ls --affected --output=json)
+  # The dependency-free selector returns a deterministic JSON target list.
+  # Any selector/tool/schema failure builds everything: selection can only
+  # save work, never omit a required image.
+  if selected_json=$(bun --no-install .buildkite/scripts/select-image-targets.ts --base "$scope_base") \
+    && printf '%s' "$selected_json" | jq -e --argjson known "$KNOWN_TARGETS_JSON" \
+      'type == "array" and all(.[]; type == "string" and (. as $target | $known | index($target) != null))' >/dev/null; then
+    echo "selected image targets: $selected_json"
   else
-    affected_json=$(bunx turbo ls --affected --output=json)
+    echo "WARN: image selector failed — building ALL images"
+    scope="all"
   fi
-  echo "$affected_json" | jq -e '.packages.items' >/dev/null
 
-  is_affected() {
-    echo "$affected_json" | jq -e --arg n "$1" \
-      '.packages.items[] | select(.name == $n)' >/dev/null
-  }
+fi
 
+is_selected() {
+  printf '%s' "$selected_json" | jq -e --arg target "$1" \
+    'index($target) != null' >/dev/null
+}
+
+if [ "$scope" = "affected" ]; then
   for entry in "${APP_TARGETS[@]}"; do
     target="${entry%%|*}"
-    rest="${entry#*|}"
-    pkg="${rest%%|*}"
-    dir="${rest#*|}"
-    always=false
-    for a in "${ALWAYS_ON_TARGETS[@]}"; do
-      if [ "$a" = "$target" ]; then always=true; fi
-    done
-    # The always-on families cover turbo's nested --affected under-selection
-    # bug, which applies to ANY diff base — main included. They cost three
-    # image rebuilds per merge until that bug is fixed; a silent skip of a
-    # changed image would cost a stale deploy.
-    if [ "$always" = true ] || is_affected "$pkg"; then
+    dir="${entry#*|}"
+    if is_selected "$target"; then
       bake_targets+=("$target")
       smoke_dirs+=("$dir")
       push_images+=("$target")
     fi
   done
-  if is_affected "homelab"; then
+  if is_selected "infra"; then
     bake_targets+=("infra")
     smoke_dirs+=("packages/homelab")
     push_images+=("${INFRA_IMAGES[@]}")
@@ -127,11 +125,13 @@ if [ "$scope" = "affected" ]; then
     fi
     exit 0
   fi
-else
+fi
+
+if [ "$scope" = "all" ]; then
+  selected_json=$KNOWN_TARGETS_JSON
   for entry in "${APP_TARGETS[@]}"; do
     target="${entry%%|*}"
-    rest="${entry#*|}"
-    dir="${rest#*|}"
+    dir="${entry#*|}"
     bake_targets+=("$target")
     smoke_dirs+=("$dir")
     push_images+=("$target")
@@ -142,8 +142,8 @@ else
 fi
 
 # Registry cache export needs a docker-container builder — dind's default
-# docker driver can't export cache. Used in both modes so the PR dry-run
-# rehearses exactly what main runs (including the --load transfer).
+# docker driver cannot export cache. Used in both modes so the PR dry-run
+# rehearses exactly what main runs, including the --load transfer.
 if ! docker buildx inspect ci; then
   docker buildx create --name ci --driver docker-container
 fi
@@ -203,7 +203,15 @@ done
 # Smoke serially (containers contend on the daemon; assertions are cheap).
 for dir in "${smoke_dirs[@]}"; do
   echo "--- :fire: smoke ${dir}"
-  bun run --cwd "$dir" smoke
+  smoke_script="scripts/smoke.ts"
+  if [ "$dir" = "packages/homelab" ]; then
+    smoke_script="scripts/smoke-images.ts"
+  fi
+  if [ -n "${CADDYFILE_SMOKE_PATH:-}" ]; then
+    CADDYFILE_SMOKE_PATH="$CADDYFILE_SMOKE_PATH" bun --no-install --cwd "$dir" "$smoke_script"
+  else
+    bun --no-install --cwd "$dir" "$smoke_script"
+  fi
 done
 
 if [ "$PUSH" = true ]; then

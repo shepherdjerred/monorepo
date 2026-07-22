@@ -21,6 +21,8 @@
  * broken severity mapping, or Helm-escaping artifacts (`{{ "{{" }}`).
  */
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
@@ -74,6 +76,7 @@ type AmResult = { id: string; output: string; error: string };
 
 /** Path to the compiled amrender helper binary (set in beforeAll). */
 let amrenderBin = "";
+let amrenderTempDir = "";
 
 /** Memoize the (slow) `helm template apps` render so both describe blocks share one pass. */
 let cachedAppsRender: Promise<string> | undefined;
@@ -85,10 +88,7 @@ function renderApps(): Promise<string> {
 /** Render one Helm chart from `dist/<chart>.k8s.yaml`, mirroring the ArgoCD flow. */
 async function helmTemplate(chartName: string): Promise<string> {
   const manifestPath = path.join(DIST_DIR, `${chartName}.k8s.yaml`);
-  const tempDir = path.join(
-    CDK8S_DIR,
-    `.pd-helm-${chartName}-${String(Date.now())}`,
-  );
+  const tempDir = await mkdtemp(path.join(tmpdir(), `pd-helm-${chartName}-`));
   try {
     const chartYaml = await Bun.file(
       path.join(HELM_DIR, chartName, "Chart.yaml"),
@@ -119,7 +119,7 @@ async function helmTemplate(chartName: string): Promise<string> {
     }
     return stdout;
   } finally {
-    Bun.spawnSync(["rm", "-rf", tempDir]);
+    await rm(tempDir, { force: true, recursive: true });
   }
 }
 
@@ -149,9 +149,10 @@ function findPagerDutyConfig(rendered: string): PagerDutyReceiver {
   return PagerDutyReceiverSchema.parse(found[0]);
 }
 
-/** Compile the amrender helper once (cold `go build`), returning the binary path. */
-async function buildAmRender(): Promise<string> {
-  const binPath = path.join(CDK8S_DIR, `.amrender-bin-${String(Date.now())}`);
+/** Compile the amrender helper once (cold `go build`) under OS temp space. */
+async function buildAmRender(): Promise<{ binPath: string; tempDir: string }> {
+  const tempDir = await mkdtemp(path.join(tmpdir(), "amrender-"));
+  const binPath = path.join(tempDir, "amrender");
   // -buildvcs=false: the helper never reads its VCS stamp, and stamping makes
   // the build depend on git state (a CI step container whose checkout had
   // unresolvable alternates failed with `error obtaining VCS status: 128`).
@@ -171,11 +172,12 @@ async function buildAmRender(): Promise<string> {
     proc.exited,
   ]);
   if (exitCode !== 0) {
+    await rm(tempDir, { force: true, recursive: true });
     throw new Error(
       `go build amrender failed (${String(exitCode)}): ${stderr}`,
     );
   }
-  return binPath;
+  return { binPath, tempDir };
 }
 
 /** Execute a batch of (template, data) jobs through the real Go text/template engine. */
@@ -241,13 +243,18 @@ describe("PagerDuty alert rendering (high-fidelity, real Go template engine)", (
 
   beforeAll(async () => {
     // Render Helm + compile the Go renderer once (both are slow cold operations).
-    const [rendered, bin] = await Promise.all([renderApps(), buildAmRender()]);
+    const renderPromise = renderApps();
+    const build = await buildAmRender();
+    amrenderBin = build.binPath;
+    amrenderTempDir = build.tempDir;
+    const rendered = await renderPromise;
     pd = findPagerDutyConfig(rendered);
-    amrenderBin = bin;
   }, 120_000);
 
-  afterAll(() => {
-    if (amrenderBin) Bun.spawnSync(["rm", "-f", amrenderBin]);
+  afterAll(async () => {
+    if (amrenderTempDir) {
+      await rm(amrenderTempDir, { force: true, recursive: true });
+    }
   });
 
   it("renders a clean single-line title for a multi-PVC Velero group (was a 260-char blob)", async () => {

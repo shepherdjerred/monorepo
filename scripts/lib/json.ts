@@ -1,20 +1,28 @@
 /**
- * Small Zod-based helpers for narrowing untrusted JSON (registry/API/file
- * bodies) without type-guard functions, which the repo's
- * `custom-rules/no-type-guards` ESLint rule bans.
+ * Dependency-free helpers for narrowing untrusted JSON (registry/API/file
+ * bodies) without type-guard functions or assertions. Keeping this boundary
+ * on platform primitives lets tiny release steps parse JSON without silently
+ * auto-installing the root scripts workspace.
  */
-
-import { z } from "zod";
-
-const RecordSchema = z.record(z.string(), z.unknown());
 
 /**
  * Return `value` as a string-keyed record, or null if it is not an object.
  * Use instead of a `value is Record<...>` type guard.
  */
 export function asRecord(value: unknown): Record<string, unknown> | null {
-  const parsed = RecordSchema.safeParse(value);
-  return parsed.success ? parsed.data : null;
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return null;
+  }
+  const record: Record<string, unknown> = {};
+  for (const key of Object.keys(value)) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (descriptor === undefined || !("value" in descriptor)) {
+      return null;
+    }
+    const propertyValue: unknown = descriptor.value;
+    record[key] = propertyValue;
+  }
+  return record;
 }
 
 /**

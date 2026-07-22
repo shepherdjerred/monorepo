@@ -70,10 +70,12 @@ async function ensureSynth(root: string, dryRun: boolean): Promise<void> {
   }
   console.log("+++ cdk8s synth (dist missing)");
   if (dryRun) {
-    console.log("DRYRUN: would run `bun run build` in src/cdk8s");
+    console.log("DRYRUN: would run `bun --no-install run build` in src/cdk8s");
     return;
   }
-  await run(["bun", "run", "build"], { cwd: `${root}/${CDK8S_DIR_REL}` });
+  await run(["bun", "--no-install", "run", "build"], {
+    cwd: `${root}/${CDK8S_DIR_REL}`,
+  });
 }
 
 function readdirSyncSafe(dir: string): string[] {
