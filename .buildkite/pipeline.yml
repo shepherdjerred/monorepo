@@ -37,7 +37,12 @@ common:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
               resources:
-                requests: { cpu: "2", memory: "4Gi" }
+                # Requests right-sized to measured p90 usage (step container
+                # p90 0.96 CPU / 1.5Gi over 7d, 2026-07-22); limits stay high
+                # so a cold-cache burst still gets real CPU. Halving requests
+                # (was 2/4Gi) is what lets Kueue admit ~6 heavy pods at once
+                # instead of 2 — see kueue-config.ts and the analysis log.
+                requests: { cpu: "1", memory: "2Gi" }
                 limits: { cpu: "7", memory: "12Gi" }
               volumeMounts:
                 # Checkouts are mirror-backed (default-checkout-params.gitMirrors):
@@ -68,7 +73,9 @@ common:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
               resources:
-                requests: { cpu: "2", memory: "6Gi" }
+                # Right-sized to measured p90 (see the base pod above). Was
+                # 2/6Gi; the dind sidecar below adds its own request.
+                requests: { cpu: "1", memory: "2Gi" }
                 limits: { cpu: "7", memory: "14Gi" }
               volumeMounts:
                 # Checkouts are mirror-backed (default-checkout-params.gitMirrors):
@@ -101,7 +108,9 @@ common:
                 - name: DOCKER_TLS_CERTDIR
                   value: ""
               resources:
-                requests: { cpu: "1", memory: "2Gi" }
+                # Right-sized to measured dind p90 (1.35 CPU / 1.1Gi over 7d);
+                # was 1/2Gi. Limits stay high for cold image builds.
+                requests: { cpu: "750m", memory: "1536Mi" }
                 limits: { cpu: "4", memory: "8Gi" }
   # Light steps: thin deploy/publish/annotate scripts whose work is seconds
   # even on a cold cache. Small REQUESTS so Kueue admits them alongside the
@@ -123,7 +132,7 @@ common:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
               resources:
-                requests: { cpu: "500m", memory: "1Gi" }
+                requests: { cpu: "250m", memory: "512Mi" }
                 limits: { cpu: "7", memory: "12Gi" }
               volumeMounts:
                 # Checkouts are mirror-backed (default-checkout-params.gitMirrors):
