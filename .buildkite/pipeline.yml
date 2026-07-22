@@ -1067,7 +1067,11 @@ steps:
     command: |
       if ! bash .buildkite/scripts/ci-changed.sh helm; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      buildkite-agent artifact download "packages/homelab/src/cdk8s/dist/**/*" . --step verify
+      # cdk8s synth output is flat (`dist/<chart>.k8s.yaml`), so `dist/*` matches
+      # it. The former `dist/**/*` download failed fatally here: buildkite-agent's
+      # `**/*` needs a subdirectory segment, matches none of the flat files, and
+      # treats "no artifacts found" as fatal — killing the step before this
+      # `dist/*` download (which does match) ever ran (build 6007).
       buildkite-agent artifact download "packages/homelab/src/cdk8s/dist/*" . --step verify
       bun --no-install packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER"
     retry: *retry
