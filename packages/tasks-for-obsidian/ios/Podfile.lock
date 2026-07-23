@@ -1,5 +1,5 @@
 PODS:
-  - AsyncStorage (3.0.2):
+  - AsyncStorage (3.1.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1529,7 +1529,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-safe-area-context (5.7.0):
+  - react-native-safe-area-context (5.8.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1541,8 +1541,8 @@ PODS:
     - React-graphics
     - React-ImageManager
     - React-jsi
-    - react-native-safe-area-context/common (= 5.7.0)
-    - react-native-safe-area-context/fabric (= 5.7.0)
+    - react-native-safe-area-context/common (= 5.8.0)
+    - react-native-safe-area-context/fabric (= 5.8.0)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-renderercss
@@ -1553,7 +1553,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-safe-area-context/common (5.7.0):
+  - react-native-safe-area-context/common (5.8.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1575,7 +1575,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-safe-area-context/fabric (5.7.0):
+  - react-native-safe-area-context/fabric (5.8.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1598,7 +1598,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-vector-icons-feather (13.1.0)
+  - react-native-vector-icons-feather (13.1.2)
   - React-NativeModulesApple (0.85.3):
     - hermes-engine
     - React-callinvoker
@@ -2050,7 +2050,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNReanimated (4.3.0):
+  - RNReanimated (4.5.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2072,11 +2072,12 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNReanimated/apple (= 4.3.0)
-    - RNReanimated/common (= 4.3.0)
+    - RNReanimated/apple (= 4.5.1)
+    - RNReanimated/common (= 4.5.1)
+    - RNReanimated/view (= 4.5.1)
     - RNWorklets
     - Yoga
-  - RNReanimated/apple (4.3.0):
+  - RNReanimated/apple (4.5.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2100,7 +2101,31 @@ PODS:
     - ReactNativeDependencies
     - RNWorklets
     - Yoga
-  - RNReanimated/common (4.3.0):
+  - RNReanimated/common (4.5.1):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - RNWorklets
+    - Yoga
+  - RNReanimated/view (4.5.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2171,7 +2196,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNSentry (8.8.0):
+  - RNSentry (8.17.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2193,7 +2218,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - Sentry (= 9.10.0)
+    - Sentry (= 9.19.1)
     - Yoga
   - RNSound (0.13.0):
     - hermes-engine
@@ -2217,7 +2242,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNWorklets (0.8.1):
+  - RNWorklets (0.10.2):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2239,33 +2264,10 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNWorklets/apple (= 0.8.1)
-    - RNWorklets/common (= 0.8.1)
+    - RNWorklets/apple (= 0.10.2)
+    - RNWorklets/common (= 0.10.2)
     - Yoga
-  - RNWorklets/apple (0.8.1):
-    - hermes-engine
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-Core-prebuilt
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-hermes
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - ReactNativeDependencies
-    - Yoga
-  - RNWorklets/common (0.8.1):
+  - RNWorklets/apple (0.10.2):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2288,9 +2290,32 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - Sentry (9.10.0):
-    - Sentry/Core (= 9.10.0)
-  - Sentry/Core (9.10.0)
+  - RNWorklets/common (0.10.2):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
+  - Sentry (9.19.1):
+    - Sentry/Core (= 9.19.1)
+  - Sentry/Core (9.19.1)
   - Yoga (0.0.0)
 
 DEPENDENCIES:
@@ -2574,12 +2599,12 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  AsyncStorage: 857a13f3c66a30d6b02efa09babba3d457e8e8ca
+  AsyncStorage: 163ab23f6aa37a58b7f2379d0b4ee7ac84d6655c
   ComputableLayout: c50faffac4ed9f8f05b0ce5e6f3a60df1f6042c8
   ContextMenuAuxiliaryPreview: 20be0be795b783b68f8792732eed4bed9f202c1c
   DGSwiftUtilities: 567f8d5ee618f0b7afb185b17aa45ff356315a0f
   FBLazyVector: 24e62c765683b8d89006a88a2c8f5cf019f0074d
-  hermes-engine: 8ee0e572aba1151e24e34edfd2e0ce083d59e2b3
+  hermes-engine: fdacd83fa6af34a26608d1902fb4e2c40a167588
   RCTDeprecation: a4c521821fab57cbb125b36effe84d897d0dfa12
   RCTRequired: 9f3a7e5645d4bc3f551593de7550bb66ab6e42bc
   RCTSwiftUI: 239ed2eb9e73de5a6f518810630f0c95e01c8702
@@ -2588,7 +2613,7 @@ SPEC CHECKSUMS:
   React: e2dc35338068bbd299c66f043ae0d7f25de8499e
   React-callinvoker: 28b25d21b124c26cebaea713ba7d801b9351dc48
   React-Core: 02ed7d2ffb70437bdf2aba074a13078a7b0b9ff0
-  React-Core-prebuilt: eb1b857e1d2c3afc946870d993d8db07cf7ef9b6
+  React-Core-prebuilt: ccb83ea19321ccd8ad402d67f64eb639f764a13c
   React-CoreModules: b3a5a42dadcde3b5d47b325bd912eb2ced89e146
   React-cxxreact: fe8f88dda044e5905e99a00f41b7a874c3908716
   React-debug: 92944dc4d89f56d640e75498266cbde557a48189
@@ -2621,8 +2646,8 @@ SPEC CHECKSUMS:
   react-native-ios-utilities: d1449ddce250f84a81a46db70439beed498f1e69
   react-native-menu: cef8fb263b5fbc4a748de65494fe768b7527c135
   react-native-netinfo: 2f906d5d9a639090ed1c079135d6485a95f749f1
-  react-native-safe-area-context: 6b4966397ada0f7dd481e4486a2ef936834861a1
-  react-native-vector-icons-feather: 1fbb59649729339f015448d52ff981e3d3fe4abf
+  react-native-safe-area-context: fb5c8ee9f6dd62ef710611b3d370c501f42a4ac0
+  react-native-vector-icons-feather: 57093d5a5c8ff48c34032e03313103ef306e2d49
   React-NativeModulesApple: deba264b03bd79c6bd61014fa30e40321b5e443a
   React-networking: 35e6070b084f435429f85c5db40b4d5b38652fe9
   React-oscompat: 64a0c7ef5441855dc6e2a6afe8ba8f92aa05075e
@@ -2654,20 +2679,20 @@ SPEC CHECKSUMS:
   React-utils: ccc01da318979af773259c4f6cdb1876f6f86f1a
   React-webperformancenativemodule: f8b97c2cb6cfa94e92a503c09ad6d491c50a1390
   ReactAppDependencyProvider: 25c9c516839be2c5e3d3344f95dc7da5f7e63fc2
-  ReactCodegen: c8f81e6c6f762dcf442a6203a1fb58f7dafc8014
+  ReactCodegen: 9666c83697c57b914a4f816c1571cc74f48108ea
   ReactCommon: 7dfc3250793bf36cf221096ff59e1179e13eef7f
-  ReactNativeDependencies: 4e100263bbec009933d138cfaa56bee1ad3b9075
+  ReactNativeDependencies: cc418c035988364511b805a252f41e7081c4d091
   RNGestureHandler: 187c5c7936abf427bc4d22d6c3b1ac80ad1f63c0
   RNKeychain: 6778b35b5bd067c322f8479526ac09b1d61f31d0
   RNReactNativeHapticFeedback: 16e5f7fd37e2acc5a33ea14f48bfd88ff43776ee
-  RNReanimated: c4e6659e58b793885ae6da476cb514fc913e7b85
+  RNReanimated: d114858466de241845f9fd2128124376b3978b05
   RNScreens: 991cc417cd396602a6cf59a42139e5a9d91462a9
-  RNSentry: 8ef716ec49ba17278756b281697bec3bf93d1bc0
+  RNSentry: 049ea299a7e08ba7d752e24854b9ab9b59f9dbe8
   RNSound: aaaaffafd901cb54ba1d9b89d603700c55c44601
-  RNWorklets: dd3b2cb0750090d78d85cd3b3ec0fdbeab5ce118
-  Sentry: 4e85b40e4b0235853f40f959d315a6b28e3148d8
+  RNWorklets: 4720b921ca1b3febb96f7c9b6782cc34b1d89848
+  Sentry: e4588d62ac3fd3c82652bb7c8a215ec8c3de776b
   Yoga: 77dfa8673de2874e1855002ae59c68b8be9b007b
 
 PODFILE CHECKSUM: 1794145ff5cbae32ea2a3372a866bf755395d91b
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.17.0
