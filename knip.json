@@ -265,6 +265,7 @@
     "packages/dotfiles/**",
     "packages/fonts/**",
     "packages/anki/**",
+    "packages/release-tools/**",
     "packages/webring/example/**",
     "packages/cooklang-for-obsidian/**",
     "packages/tasks-for-obsidian/**",
