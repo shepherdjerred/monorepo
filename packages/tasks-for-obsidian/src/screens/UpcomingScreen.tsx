@@ -11,6 +11,8 @@ import {
   applySort,
 } from "../domain/filters";
 import { useTaskListScreen } from "../hooks/use-task-list-screen";
+import { useSelection } from "../hooks/use-selection";
+import { BulkActionBar } from "../components/task/BulkActionBar";
 import { getDateGroup } from "../lib/dates";
 import { TaskList } from "../components/task/TaskList";
 import { FilterSortBar } from "../components/input/FilterSortBar";
@@ -35,7 +37,18 @@ export function UpcomingScreen({ navigation }: Props) {
     handleRefresh,
     handleSchedule,
     handleFabPress,
+    handleBulkComplete,
+    handleBulkDelete,
+    handleBulkSchedule,
+    handleBulkPriority,
   } = useTaskListScreen(navigation);
+  const {
+    selectionMode,
+    selected,
+    enterSelection,
+    exitSelection,
+    toggleSelected,
+  } = useSelection();
   const [filter, setFilter] = useState(EMPTY_FILTER);
   const [sort, setSort] = useState(DEFAULT_SORT);
 
@@ -60,6 +73,8 @@ export function UpcomingScreen({ navigation }: Props) {
         availableProjects={projectNames}
         availableContexts={contextNames}
         availableTags={tagNames}
+        selectionMode={selectionMode}
+        onToggleSelection={selectionMode ? exitSelection : enterSelection}
       />
       <TaskList
         tasks={displayTasks}
@@ -68,13 +83,39 @@ export function UpcomingScreen({ navigation }: Props) {
         onTaskDelete={handleDelete}
         onTaskSchedule={handleSchedule}
         dayCounts={dayCounts}
+        selectionMode={selectionMode}
+        selectedIds={selected}
+        onToggleSelect={toggleSelected}
         onRefresh={handleRefresh}
         refreshing={refreshing}
         emptyTitle="No upcoming tasks"
         emptySubtitle="Tasks with future due dates appear here"
         sectionBy={sectionBy}
       />
-      <Fab onPress={handleFabPress} />
+      {selectionMode ? (
+        <BulkActionBar
+          count={selected.size}
+          dayCounts={dayCounts}
+          onSchedule={(field, value) => {
+            handleBulkSchedule([...selected], field, value);
+            exitSelection();
+          }}
+          onComplete={() => {
+            handleBulkComplete([...selected]);
+            exitSelection();
+          }}
+          onDelete={() => {
+            handleBulkDelete([...selected], exitSelection);
+          }}
+          onSetPriority={(priority) => {
+            handleBulkPriority([...selected], priority);
+            exitSelection();
+          }}
+          onDone={exitSelection}
+        />
+      ) : (
+        <Fab onPress={handleFabPress} />
+      )}
     </View>
   );
 }

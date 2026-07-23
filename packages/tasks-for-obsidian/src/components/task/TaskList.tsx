@@ -29,6 +29,9 @@ type TaskListProps = {
     | ((id: TaskId, field: ScheduleField, value: string | null) => void)
     | undefined;
   dayCounts?: ReadonlyMap<string, number> | undefined;
+  selectionMode?: boolean | undefined;
+  selectedIds?: ReadonlySet<TaskId> | undefined;
+  onToggleSelect?: ((id: TaskId) => void) | undefined;
   onRefresh?: (() => void) | undefined;
   refreshing?: boolean | undefined;
   emptyTitle?: string | undefined;
@@ -45,6 +48,9 @@ export function TaskList({
   onTaskSetPriority,
   onTaskSchedule,
   dayCounts,
+  selectionMode = false,
+  selectedIds,
+  onToggleSelect,
   onRefresh,
   refreshing,
   emptyTitle = "No tasks",
@@ -99,8 +105,13 @@ export function TaskList({
         swipeableRef?.close();
       };
 
+      const select = (): void => {
+        onToggleSelect?.(item.id);
+      };
+
       return (
         <ReanimatedSwipeable
+          enabled={!selectionMode}
           renderLeftActions={renderLeft}
           renderRightActions={renderRight}
           leftThreshold={ACTION_WIDTH}
@@ -111,12 +122,22 @@ export function TaskList({
         >
           <TaskRow
             task={item}
-            onPress={() => {
-              onTaskPress(item.id);
-            }}
-            onToggle={() => {
-              onTaskToggle(item.id);
-            }}
+            selectionMode={selectionMode}
+            selected={selectedIds?.has(item.id) ?? false}
+            onPress={
+              selectionMode
+                ? select
+                : () => {
+                    onTaskPress(item.id);
+                  }
+            }
+            onToggle={
+              selectionMode
+                ? select
+                : () => {
+                    onTaskToggle(item.id);
+                  }
+            }
             onSchedule={
               onTaskSchedule
                 ? () => {
@@ -152,6 +173,9 @@ export function TaskList({
       onTaskEdit,
       onTaskSetPriority,
       onTaskSchedule,
+      selectionMode,
+      selectedIds,
+      onToggleSelect,
     ],
   );
 

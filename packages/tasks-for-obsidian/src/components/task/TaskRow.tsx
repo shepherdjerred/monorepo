@@ -14,6 +14,7 @@ import { isOverdue } from "../../lib/dates";
 import { formatRelativeDate } from "../../lib/dates";
 import { useSettings } from "../../hooks/use-settings";
 import { typography } from "../../styles/typography";
+import { AppIcon } from "../common/AppIcon";
 import { TaskCheckbox } from "./TaskCheckbox";
 
 const PRIORITY_SF_ICONS: Record<Priority, string> = {
@@ -33,7 +34,24 @@ type TaskRowProps = {
   onEdit?: (() => void) | undefined;
   onDelete?: (() => void) | undefined;
   onSetPriority?: ((priority: Priority) => void) | undefined;
+  /** Multi-select mode: rows toggle selection and the context menu is off. */
+  selectionMode?: boolean | undefined;
+  selected?: boolean | undefined;
 };
+
+function rowAccessibilityLabel(
+  task: Task,
+  completed: boolean,
+  overdue: boolean,
+): string {
+  const parts = [`Task: ${task.title}`];
+  if (completed) parts.push("completed");
+  if (overdue) parts.push("overdue");
+  if (task.due) parts.push(`due ${formatRelativeDate(task.due)}`);
+  const project = task.projects[0];
+  if (project !== undefined) parts.push(`project ${String(project)}`);
+  return parts.join(", ");
+}
 
 export const TaskRow = React.memo(function TaskRow({
   task,
@@ -43,6 +61,8 @@ export const TaskRow = React.memo(function TaskRow({
   onEdit,
   onDelete,
   onSetPriority,
+  selectionMode = false,
+  selected = false,
 }: TaskRowProps) {
   const { colors } = useSettings();
   // Recurring tasks read the state of the occurrence a tap would target
@@ -54,52 +74,46 @@ export const TaskRow = React.memo(function TaskRow({
   );
   const overdue = isOverdue(task.due);
 
+  const row = (
+    <Pressable
+      style={[styles.row, { borderBottomColor: colors.borderLight }]}
+      onPress={onPress}
+      testID="task-row"
+      accessibilityRole={selectionMode ? "checkbox" : "button"}
+      {...(selectionMode ? { accessibilityState: { checked: selected } } : {})}
+      accessibilityLabel={rowAccessibilityLabel(task, completed, overdue)}
+    >
+      {selectionMode ? (
+        <View testID="task-row-selection-mark">
+          <AppIcon
+            name={selected ? "check-circle" : "circle"}
+            size={22}
+            color={selected ? colors.primary : colors.textTertiary}
+          />
+        </View>
+      ) : (
+        <TaskCheckbox
+          status={task.status}
+          priority={task.priority}
+          onToggle={onToggle}
+        />
+      )}
+      <RowContent
+        task={task}
+        completed={completed}
+        overdue={overdue}
+        colors={colors}
+      />
+    </Pressable>
+  );
+
+  // The native context menu owns long-press; in selection mode the row is
+  // a plain pressable so taps toggle selection without menu interference.
+  if (selectionMode) return row;
+
   return (
     <ContextMenu.Root>
-      <ContextMenu.Trigger>
-        <Pressable
-          style={[styles.row, { borderBottomColor: colors.borderLight }]}
-          onPress={onPress}
-          testID="task-row"
-          accessibilityRole="button"
-          accessibilityLabel={`Task: ${task.title}${completed ? ", completed" : ""}${overdue ? ", overdue" : ""}${task.due ? `, due ${formatRelativeDate(task.due)}` : ""}${task.projects.length > 0 && task.projects[0] !== undefined ? `, project ${String(task.projects[0])}` : ""}`}
-        >
-          <TaskCheckbox
-            status={task.status}
-            priority={task.priority}
-            onToggle={onToggle}
-          />
-          <View style={styles.content}>
-            <Text
-              style={[
-                typography.body,
-                { color: colors.text },
-                completed && styles.completedText,
-              ]}
-              numberOfLines={1}
-            >
-              {task.title}
-            </Text>
-            <View style={styles.badges}>
-              {task.due ? (
-                <Text
-                  style={[
-                    typography.caption,
-                    { color: overdue ? colors.error : colors.textSecondary },
-                  ]}
-                >
-                  {formatRelativeDate(task.due)}
-                </Text>
-              ) : null}
-              {task.projects.length > 0 ? (
-                <Text style={[typography.caption, { color: colors.primary }]}>
-                  {task.projects[0]}
-                </Text>
-              ) : null}
-            </View>
-          </View>
-        </Pressable>
-      </ContextMenu.Trigger>
+      <ContextMenu.Trigger>{row}</ContextMenu.Trigger>
       <ContextMenu.Content>
         <ContextMenu.Item key="toggle" onSelect={onToggle}>
           <ContextMenu.ItemTitle>
@@ -158,6 +172,55 @@ export const TaskRow = React.memo(function TaskRow({
     </ContextMenu.Root>
   );
 });
+
+function RowContent({
+  task,
+  completed,
+  overdue,
+  colors,
+}: {
+  task: Task;
+  completed: boolean;
+  overdue: boolean;
+  colors: {
+    text: string;
+    error: string;
+    textSecondary: string;
+    primary: string;
+  };
+}) {
+  return (
+    <View style={styles.content}>
+      <Text
+        style={[
+          typography.body,
+          { color: colors.text },
+          completed && styles.completedText,
+        ]}
+        numberOfLines={1}
+      >
+        {task.title}
+      </Text>
+      <View style={styles.badges}>
+        {task.due ? (
+          <Text
+            style={[
+              typography.caption,
+              { color: overdue ? colors.error : colors.textSecondary },
+            ]}
+          >
+            {formatRelativeDate(task.due)}
+          </Text>
+        ) : null}
+        {task.projects.length > 0 ? (
+          <Text style={[typography.caption, { color: colors.primary }]}>
+            {task.projects[0]}
+          </Text>
+        ) : null}
+      </View>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   row: {
