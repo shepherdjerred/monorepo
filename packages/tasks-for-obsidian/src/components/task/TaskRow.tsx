@@ -37,6 +37,8 @@ type TaskRowProps = {
   /** Multi-select mode: rows toggle selection and the context menu is off. */
   selectionMode?: boolean | undefined;
   selected?: boolean | undefined;
+  /** Has unsynced pending changes — renders a quiet dot by the title. */
+  pending?: boolean | undefined;
 };
 
 function rowAccessibilityLabel(
@@ -63,6 +65,7 @@ export const TaskRow = React.memo(function TaskRow({
   onSetPriority,
   selectionMode = false,
   selected = false,
+  pending = false,
 }: TaskRowProps) {
   const { colors } = useSettings();
   // Recurring tasks read the state of the occurrence a tap would target
@@ -104,6 +107,13 @@ export const TaskRow = React.memo(function TaskRow({
         overdue={overdue}
         colors={colors}
       />
+      {pending ? (
+        <View
+          style={[styles.pendingDot, { backgroundColor: colors.textTertiary }]}
+          testID="task-row-pending-dot"
+          accessibilityLabel="Waiting to sync"
+        />
+      ) : null}
     </Pressable>
   );
 
@@ -242,5 +252,10 @@ const styles = StyleSheet.create({
   completedText: {
     textDecorationLine: "line-through",
     opacity: 0.5,
+  },
+  pendingDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
 });

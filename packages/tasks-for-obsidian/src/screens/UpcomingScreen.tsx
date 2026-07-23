@@ -31,6 +31,7 @@ export function UpcomingScreen({ navigation }: Props) {
     tagNames,
     refreshing,
     dayCounts,
+    pendingTaskIds,
     handlePress,
     handleToggle,
     handleDelete,
@@ -86,6 +87,7 @@ export function UpcomingScreen({ navigation }: Props) {
         selectionMode={selectionMode}
         selectedIds={selected}
         onToggleSelect={toggleSelected}
+        pendingIds={pendingTaskIds}
         onRefresh={handleRefresh}
         refreshing={refreshing}
         emptyTitle="No upcoming tasks"

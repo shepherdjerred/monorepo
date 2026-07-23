@@ -14,6 +14,7 @@ import {
   type Clock,
   type Command,
   applyCommand,
+  commandTarget,
   makeCommandIdFactory,
   makeTempId,
 } from "../sync/commands";
@@ -35,6 +36,8 @@ import {
 export type TaskStoreSnapshot = {
   readonly tasks: ReadonlyMap<TaskId, Task>;
   readonly pendingCount: number;
+  /** Tasks with at least one unsynced pending command (quiet trust signal). */
+  readonly pendingTaskIds: ReadonlySet<TaskId>;
   readonly deadLetters: readonly DeadLetterEntry[];
   readonly lastSyncTime: number | null;
 };
@@ -228,12 +231,15 @@ export class TaskStore {
 
   private buildSnapshot(): TaskStoreSnapshot {
     let view = new Map<TaskId, Task>(this.base);
+    const pendingTaskIds = new Set<TaskId>();
     for (const command of this.queue.pending) {
       view = applyCommand(command, view);
+      pendingTaskIds.add(commandTarget(command));
     }
     return {
       tasks: view,
       pendingCount: this.queue.pending.length,
+      pendingTaskIds,
       deadLetters: this.queue.deadLetters,
       lastSyncTime: this.lastSyncTime,
     };

@@ -41,6 +41,7 @@ type TaskContextValue = {
   isLoading: boolean;
   error: AppError | null;
   pendingMutationCount: number;
+  pendingTaskIds: ReadonlySet<TaskId>;
   deadLetters: readonly DeadLetterEntry[];
   syncStatus: SyncStatus;
   lastSyncTime: number | null;
@@ -255,6 +256,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       isLoading: syncStatus.state === "syncing",
       error: syncStatus.lastError,
       pendingMutationCount: snapshot.pendingCount,
+      pendingTaskIds: snapshot.pendingTaskIds,
       deadLetters: snapshot.deadLetters,
       syncStatus,
       lastSyncTime: snapshot.lastSyncTime,

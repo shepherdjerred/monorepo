@@ -5,10 +5,12 @@ import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeabl
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { SwipeDirection } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { Task, TaskId } from "../../domain/types";
+import type { FeatherIconName } from "@react-native-vector-icons/feather";
 import type { Priority } from "../../domain/priority";
 import { useSettings } from "../../hooks/use-settings";
 import { typography } from "../../styles/typography";
 import { groupBy } from "../../lib/utils";
+import { feedbackSelection } from "../../lib/feedback";
 import { TaskRow } from "./TaskRow";
 import { EmptyState } from "../common/EmptyState";
 import { ScheduleSheet, type ScheduleField } from "../input/ScheduleSheet";
@@ -32,10 +34,13 @@ type TaskListProps = {
   selectionMode?: boolean | undefined;
   selectedIds?: ReadonlySet<TaskId> | undefined;
   onToggleSelect?: ((id: TaskId) => void) | undefined;
+  pendingIds?: ReadonlySet<TaskId> | undefined;
   onRefresh?: (() => void) | undefined;
   refreshing?: boolean | undefined;
   emptyTitle?: string | undefined;
   emptySubtitle?: string | undefined;
+  emptyIcon?: FeatherIconName | undefined;
+  emptyCelebrate?: boolean | undefined;
   sectionBy?: ((task: Task) => string) | undefined;
 };
 
@@ -51,10 +56,13 @@ export function TaskList({
   selectionMode = false,
   selectedIds,
   onToggleSelect,
+  pendingIds,
   onRefresh,
   refreshing,
   emptyTitle = "No tasks",
   emptySubtitle,
+  emptyIcon,
+  emptyCelebrate,
   sectionBy,
 }: TaskListProps) {
   const { colors } = useSettings();
@@ -91,6 +99,11 @@ export function TaskList({
         return <RightSwipeActions progress={progress} />;
       };
 
+      // Haptic detent the moment the swipe passes its commit threshold.
+      const handleWillOpen = () => {
+        feedbackSelection();
+      };
+
       const handleOpen = (direction: SwipeDirection) => {
         if (openRowRef.current && openRowRef.current !== swipeableRef) {
           openRowRef.current.close();
@@ -118,12 +131,14 @@ export function TaskList({
           rightThreshold={ACTION_WIDTH}
           overshootLeft={false}
           overshootRight={false}
+          onSwipeableWillOpen={handleWillOpen}
           onSwipeableOpen={handleOpen}
         >
           <TaskRow
             task={item}
             selectionMode={selectionMode}
             selected={selectedIds?.has(item.id) ?? false}
+            pending={pendingIds?.has(item.id) ?? false}
             onPress={
               selectionMode
                 ? select
@@ -176,6 +191,7 @@ export function TaskList({
       selectionMode,
       selectedIds,
       onToggleSelect,
+      pendingIds,
     ],
   );
 
@@ -213,7 +229,12 @@ export function TaskList({
   if (tasks.length === 0) {
     return (
       <>
-        <EmptyState title={emptyTitle} subtitle={emptySubtitle} />
+        <EmptyState
+          title={emptyTitle}
+          subtitle={emptySubtitle}
+          icon={emptyIcon}
+          celebrate={emptyCelebrate}
+        />
         {scheduleSheet}
       </>
     );

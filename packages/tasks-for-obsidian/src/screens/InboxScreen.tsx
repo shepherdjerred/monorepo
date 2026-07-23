@@ -32,6 +32,7 @@ export function InboxScreen({ navigation }: Props) {
     tagNames,
     refreshing,
     dayCounts,
+    pendingTaskIds,
     handlePress,
     handleToggle,
     handleDelete,
@@ -82,6 +83,7 @@ export function InboxScreen({ navigation }: Props) {
         selectionMode={selectionMode}
         selectedIds={selected}
         onToggleSelect={toggleSelected}
+        pendingIds={pendingTaskIds}
         onRefresh={handleRefresh}
         refreshing={refreshing}
         emptyTitle="Inbox is empty"

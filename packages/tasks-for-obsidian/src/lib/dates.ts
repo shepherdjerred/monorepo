@@ -115,3 +115,12 @@ export function formatDate(dateStr: string): string {
   const day = date.getDate();
   return `${month} ${day}`;
 }
+
+/** "Tuesday, July 22" — the Today screen's date heading. */
+export function formatDayHeading(date = new Date()): string {
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+}
