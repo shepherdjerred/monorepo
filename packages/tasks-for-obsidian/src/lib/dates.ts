@@ -27,6 +27,34 @@ function parseDate(dateStr: string): Date {
   return parseLocalDate(dateStr);
 }
 
+/** Format a local Date as YYYY-MM-DD. */
+export function toISODate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+/**
+ * The upcoming Saturday as YYYY-MM-DD — Todoist's "this weekend". On a
+ * Saturday this is today, matching how "this weekend" reads mid-weekend.
+ */
+export function nextSaturday(from = new Date()): string {
+  const d = toStartOfDay(from);
+  d.setDate(d.getDate() + ((6 - d.getDay() + 7) % 7));
+  return toISODate(d);
+}
+
+/**
+ * The next Monday as YYYY-MM-DD, always strictly in the future — Todoist's
+ * "next week" (never +7 days: on a Wednesday it's 5 days out, not 7).
+ */
+export function nextMonday(from = new Date()): string {
+  const d = toStartOfDay(from);
+  d.setDate(d.getDate() + ((1 - d.getDay() + 7) % 7 || 7));
+  return toISODate(d);
+}
+
 export function isToday(dateStr?: string): boolean {
   if (!dateStr) return false;
   const date = toStartOfDay(parseDate(dateStr));
@@ -45,9 +73,11 @@ export function isUpcoming(dateStr?: string, days = 7): boolean {
   if (!dateStr) return false;
   const date = toStartOfDay(parseDate(dateStr));
   const today = toStartOfDay(new Date());
+  if (date.getTime() <= today.getTime()) return false;
+  if (!Number.isFinite(days)) return true;
   const future = new Date(today);
   future.setDate(future.getDate() + days);
-  return date.getTime() > today.getTime() && date.getTime() <= future.getTime();
+  return date.getTime() <= future.getTime();
 }
 
 export function getDateGroup(dateStr: string): string {

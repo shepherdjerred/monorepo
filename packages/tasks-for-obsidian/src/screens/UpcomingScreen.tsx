@@ -28,10 +28,12 @@ export function UpcomingScreen({ navigation }: Props) {
     contextNames,
     tagNames,
     refreshing,
+    dayCounts,
     handlePress,
     handleToggle,
     handleDelete,
     handleRefresh,
+    handleSchedule,
     handleFabPress,
   } = useTaskListScreen(navigation);
   const [filter, setFilter] = useState(EMPTY_FILTER);
@@ -64,6 +66,8 @@ export function UpcomingScreen({ navigation }: Props) {
         onTaskPress={handlePress}
         onTaskToggle={handleToggle}
         onTaskDelete={handleDelete}
+        onTaskSchedule={handleSchedule}
+        dayCounts={dayCounts}
         onRefresh={handleRefresh}
         refreshing={refreshing}
         emptyTitle="No upcoming tasks"

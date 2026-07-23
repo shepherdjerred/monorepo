@@ -4,40 +4,8 @@ import type { TaskId } from "../domain/types";
 import { isActiveStatus } from "../domain/status";
 import { isRecurring, localTodayYmd, occursOn } from "../domain/recurrence";
 import { projectDisplayName, projectPath } from "tasknotes-types/v2";
-import { parseLocalDate } from "../lib/dates";
+import { isOverdue, isToday, isUpcoming } from "../lib/dates";
 import { useTaskContext } from "../state/TaskContext";
-
-// Date-only strings ("YYYY-MM-DD") are parsed as LOCAL dates. new Date() would
-// treat them as UTC midnight, shifting Today/Overdue/Upcoming buckets by a day
-// for negative-UTC users (a task due today classifies as overdue).
-function isToday(dateStr?: string): boolean {
-  if (!dateStr) return false;
-  const today = new Date();
-  const date = parseLocalDate(dateStr);
-  return (
-    date.getFullYear() === today.getFullYear() &&
-    date.getMonth() === today.getMonth() &&
-    date.getDate() === today.getDate()
-  );
-}
-
-function isOverdue(dateStr?: string): boolean {
-  if (!dateStr) return false;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const date = parseLocalDate(dateStr);
-  date.setHours(0, 0, 0, 0);
-  return date < today;
-}
-
-function isUpcoming(dateStr?: string): boolean {
-  if (!dateStr) return false;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const date = parseLocalDate(dateStr);
-  date.setHours(0, 0, 0, 0);
-  return date > today;
-}
 
 export function useTasks() {
   const ctx = useTaskContext();
@@ -85,7 +53,10 @@ export function useTasks() {
           return (
             isActiveStatus(t.status) && horizon.some((day) => occursOn(t, day))
           );
-        return isActiveStatus(t.status) && isUpcoming(t.due);
+        return (
+          isActiveStatus(t.status) &&
+          isUpcoming(t.due, Number.POSITIVE_INFINITY)
+        );
       })
       .sort((a, b) => {
         // Recurring tasks surface via occursOn and are often scheduled-only
@@ -131,6 +102,20 @@ export function useTasks() {
     return [...names].sort();
   }, [taskList]);
 
+  // Active-task count per YYYY-MM-DD (due + scheduled), for the schedule
+  // sheet's calendar dots — a glanceable per-day load indicator.
+  const dayCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const t of taskList) {
+      if (!isActiveStatus(t.status)) continue;
+      const days = new Set<string>();
+      if (t.due) days.add(t.due.slice(0, 10));
+      if (t.scheduled) days.add(t.scheduled.slice(0, 10));
+      for (const d of days) counts.set(d, (counts.get(d) ?? 0) + 1);
+    }
+    return counts;
+  }, [taskList]);
+
   const toggleTask = useCallback((id: TaskId) => ctx.toggleStatus(id), [ctx]);
 
   const getTask = useCallback(
@@ -156,6 +141,7 @@ export function useTasks() {
     projectNames,
     tagNames,
     contextNames,
+    dayCounts,
     toggleTask,
     getTask,
     refresh,

@@ -29,6 +29,7 @@ type TaskRowProps = {
   task: Task;
   onPress: () => void;
   onToggle: () => void;
+  onSchedule?: (() => void) | undefined;
   onEdit?: (() => void) | undefined;
   onDelete?: (() => void) | undefined;
   onSetPriority?: ((priority: Priority) => void) | undefined;
@@ -38,6 +39,7 @@ export const TaskRow = React.memo(function TaskRow({
   task,
   onPress,
   onToggle,
+  onSchedule,
   onEdit,
   onDelete,
   onSetPriority,
@@ -111,6 +113,12 @@ export const TaskRow = React.memo(function TaskRow({
             }}
           />
         </ContextMenu.Item>
+        {onSchedule ? (
+          <ContextMenu.Item key="schedule" onSelect={onSchedule}>
+            <ContextMenu.ItemTitle>Schedule</ContextMenu.ItemTitle>
+            <ContextMenu.ItemIcon ios={{ name: "calendar" }} />
+          </ContextMenu.Item>
+        ) : null}
         {onEdit ? (
           <ContextMenu.Item key="edit" onSelect={onEdit}>
             <ContextMenu.ItemTitle>Edit</ContextMenu.ItemTitle>

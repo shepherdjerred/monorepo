@@ -240,3 +240,41 @@ describe("classify", () => {
     expect(classify(new ApiError("unprocessable", 422))).toBe("permanent");
   });
 });
+
+describe("applyCommand — null clears the optimistic field", () => {
+  test("clearing due removes the key instead of assigning null", () => {
+    const id = taskId("TaskNotes/Tasks/a.md");
+    const tasks = new Map<TaskId, Task>([
+      [id, makeTask({ due: "2026-07-28", scheduled: "2026-07-25" })],
+    ]);
+    const cmd: Command = {
+      id: "m1",
+      createdAt: 0,
+      type: "update",
+      taskId: id,
+      payload: { due: null },
+    };
+    const result = applyCommand(cmd, tasks).get(id);
+    expect(result).toBeDefined();
+    expect(result?.due).toBeUndefined();
+    expect(Object.keys(result ?? {})).not.toContain("due");
+    expect(result?.scheduled).toBe("2026-07-25");
+  });
+
+  test("clearing and setting in one payload both apply", () => {
+    const id = taskId("TaskNotes/Tasks/b.md");
+    const tasks = new Map<TaskId, Task>([
+      [id, makeTask({ due: "2026-07-28" })],
+    ]);
+    const cmd: Command = {
+      id: "m2",
+      createdAt: 0,
+      type: "update",
+      taskId: id,
+      payload: { due: null, scheduled: "2026-08-01" },
+    };
+    const result = applyCommand(cmd, tasks).get(id);
+    expect(result?.due).toBeUndefined();
+    expect(result?.scheduled).toBe("2026-08-01");
+  });
+});

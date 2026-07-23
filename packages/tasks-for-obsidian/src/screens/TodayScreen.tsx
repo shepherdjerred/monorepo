@@ -27,10 +27,12 @@ export function TodayScreen({ navigation }: Props) {
     contextNames,
     tagNames,
     refreshing,
+    dayCounts,
     handlePress,
     handleToggle,
     handleDelete,
     handleRefresh,
+    handleSchedule,
     handleFabPress,
   } = useTaskListScreen(navigation);
   const [filter, setFilter] = useState(EMPTY_FILTER);
@@ -57,6 +59,8 @@ export function TodayScreen({ navigation }: Props) {
         onTaskPress={handlePress}
         onTaskToggle={handleToggle}
         onTaskDelete={handleDelete}
+        onTaskSchedule={handleSchedule}
+        dayCounts={dayCounts}
         onRefresh={handleRefresh}
         refreshing={refreshing}
         emptyTitle="Nothing due today"

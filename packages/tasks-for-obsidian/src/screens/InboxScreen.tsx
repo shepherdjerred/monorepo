@@ -29,10 +29,12 @@ export function InboxScreen({ navigation }: Props) {
     contextNames,
     tagNames,
     refreshing,
+    dayCounts,
     handlePress,
     handleToggle,
     handleDelete,
     handleRefresh,
+    handleSchedule,
     handleFabPress,
   } = useTaskListScreen(navigation);
   const swipeTip = useTip("swipe-actions");
@@ -60,6 +62,8 @@ export function InboxScreen({ navigation }: Props) {
         onTaskPress={handlePress}
         onTaskToggle={handleToggle}
         onTaskDelete={handleDelete}
+        onTaskSchedule={handleSchedule}
+        dayCounts={dayCounts}
         onRefresh={handleRefresh}
         refreshing={refreshing}
         emptyTitle="Inbox is empty"
