@@ -197,6 +197,12 @@ const versions = {
   // renovate: datasource=docker registryUrl=https://registry.k8s.io versioning=semver packageName=kueue/charts/kueue
   kueue:
     "0.18.2@sha256:156fbc8c6752b08cf66a2324fed33e269e0a64e54dd8d70d51118065bca651af",
+  // Persistent BuildKit daemon backing CI image builds (bounded-GC cache on a
+  // compressed ZFS PVC, replacing the per-run throwaway builder inside dind —
+  // moves the build-layer write storm off the xfs /var system disk).
+  // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
+  "moby/buildkit":
+    "v0.28.1@sha256:a82d1ab899cda51aade6fe818d71e4b58c4079e047a0cf29dbb93b2b0465ea69",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "library/python":
     "3.14-alpine@sha256:26730869004e2b9c4b9ad09cab8625e81d256d1ce97e72df5520e806b1709f92",
