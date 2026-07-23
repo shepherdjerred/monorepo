@@ -52,6 +52,11 @@ type TaskContextValue = {
   ) => Promise<Result<Task, AppError>>;
   deleteTask: (id: TaskId) => Promise<Result<void, AppError>>;
   toggleStatus: (id: TaskId) => Promise<Result<Task, AppError>>;
+  setInstanceComplete: (
+    id: TaskId,
+    date: string,
+    completed: boolean,
+  ) => Promise<Result<Task, AppError>>;
   refreshTasks: () => Promise<Result<void, AppError>>;
   retryDeadLetter: (commandId: string) => Promise<void>;
   discardDeadLetter: (commandId: string) => Promise<void>;
@@ -202,6 +207,31 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     [store],
   );
 
+  // Absolute per-instance completion — the undo path for a recurring
+  // completion must resend the ORIGINAL target date with completed:false;
+  // re-toggling would recompute the date (wrong after the server advances
+  // `scheduled`, or after midnight).
+  const setInstanceComplete = useCallback(
+    async (
+      id: TaskId,
+      date: string,
+      completed: boolean,
+    ): Promise<Result<Task, AppError>> => {
+      const target = store.resolveTaskId(id);
+      const updated = await store.dispatch({
+        type: "set_instance_complete",
+        taskId: target,
+        date,
+        completed,
+      });
+      if (updated === undefined) {
+        return err(new NotFoundError("Task", String(id)));
+      }
+      return ok(updated);
+    },
+    [store],
+  );
+
   const refreshTasks = useCallback(() => engine.syncNow(), [engine]);
 
   const retryDeadLetter = useCallback(
@@ -233,6 +263,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       updateTask,
       deleteTask,
       toggleStatus,
+      setInstanceComplete,
       refreshTasks,
       retryDeadLetter,
       discardDeadLetter,
@@ -245,6 +276,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       updateTask,
       deleteTask,
       toggleStatus,
+      setInstanceComplete,
       refreshTasks,
       retryDeadLetter,
       discardDeadLetter,

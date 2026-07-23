@@ -2,13 +2,23 @@ import { useCallback, useMemo, useState } from "react";
 
 import type { TaskId } from "../domain/types";
 import { isActiveStatus } from "../domain/status";
-import { isRecurring, localTodayYmd, occursOn } from "../domain/recurrence";
+import {
+  completionTargetDate,
+  isRecurring,
+  localTodayYmd,
+  nextOccurrenceAfter,
+  occursOn,
+} from "../domain/recurrence";
+import { useUndo } from "../state/UndoContext";
+import { feedbackTaskUncomplete } from "../lib/feedback";
+import { formatDate } from "../lib/dates";
 import { projectDisplayName, projectPath } from "tasknotes-types/v2";
 import { isOverdue, isToday, isUpcoming } from "../lib/dates";
 import { useTaskContext } from "../state/TaskContext";
 
 export function useTasks() {
   const ctx = useTaskContext();
+  const { showUndo } = useUndo();
   const [refreshing, setRefreshing] = useState(false);
 
   // v2 lists include archived tasks (upstream parity) — filter client-side.
@@ -116,7 +126,37 @@ export function useTasks() {
     return counts;
   }, [taskList]);
 
-  const toggleTask = useCallback((id: TaskId) => ctx.toggleStatus(id), [ctx]);
+  // Completing a recurring task offers a transient Undo: the occurrence
+  // date it targets is invisible in the UI and the server may advance
+  // `scheduled` on completion, so this is the one tap that's hard to
+  // reverse by hand. Undo resends the SAME date with completed:false
+  // (idempotent set-semantics both sides).
+  const toggleTask = useCallback(
+    async (id: TaskId) => {
+      const task = ctx.tasks.get(ctx.resolveTaskId(id));
+      const date =
+        task !== undefined && isRecurring(task)
+          ? completionTargetDate(task)
+          : undefined;
+      const completing =
+        task !== undefined &&
+        date !== undefined &&
+        !task.completeInstances.includes(date);
+      const result = await ctx.toggleStatus(id);
+      if (result.ok && task !== undefined && date !== undefined && completing) {
+        const next = nextOccurrenceAfter(task, date);
+        showUndo({
+          message: next ? `Completed · Next: ${formatDate(next)}` : "Completed",
+          onUndo: () => {
+            feedbackTaskUncomplete();
+            void ctx.setInstanceComplete(id, date, false);
+          },
+        });
+      }
+      return result;
+    },
+    [ctx, showUndo],
+  );
 
   const getTask = useCallback(
     (id: TaskId) => ctx.tasks.get(id) ?? null,
