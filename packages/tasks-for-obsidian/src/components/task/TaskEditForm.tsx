@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from "react";
 import {
+  View,
   Text,
   TextInput,
   ScrollView,
@@ -15,7 +16,9 @@ import { typography } from "../../styles/typography";
 import { formatDate, formatRelativeDate } from "../../lib/dates";
 import { PriorityPicker } from "../input/PriorityPicker";
 import { ScheduleSheet, type ScheduleField } from "../input/ScheduleSheet";
+import { MultiSelectSection, toggleInArray } from "../input/MultiSelectSection";
 import { AppIcon } from "../common/AppIcon";
+import { projectDisplayName, projectMatches } from "tasknotes-types/v2";
 
 const FIELD_LABELS: Record<ScheduleField, string> = {
   due: "Due Date",
@@ -25,6 +28,9 @@ const FIELD_LABELS: Record<ScheduleField, string> = {
 type Props = {
   task: Task;
   dayCounts?: ReadonlyMap<string, number> | undefined;
+  availableProjects: readonly string[];
+  availableContexts: readonly string[];
+  availableTags: readonly string[];
   onSave: (patch: UpdateTaskRequest) => void;
   onCancel: () => void;
 };
@@ -34,12 +40,23 @@ type Props = {
  * update on Save. Date picks stage locally too (via the schedule sheet)
  * and only persist with the rest of the form.
  */
-export function TaskEditForm({ task, dayCounts, onSave, onCancel }: Props) {
+export function TaskEditForm({
+  task,
+  dayCounts,
+  availableProjects,
+  availableContexts,
+  availableTags,
+  onSave,
+  onCancel,
+}: Props) {
   const { colors } = useSettings();
   const [title, setTitle] = useState(task.title);
   const [priority, setPriority] = useState<Priority>(task.priority);
   const [due, setDue] = useState(task.due);
   const [scheduled, setScheduled] = useState(task.scheduled);
+  const [projects, setProjects] = useState<string[]>(task.projects.map(String));
+  const [contexts, setContexts] = useState<string[]>(task.contexts.map(String));
+  const [tags, setTags] = useState<string[]>(task.tags.map(String));
   const [details, setDetails] = useState(task.details ?? "");
   const [sheetField, setSheetField] = useState<ScheduleField | null>(null);
 
@@ -49,9 +66,33 @@ export function TaskEditForm({ task, dayCounts, onSave, onCancel }: Props) {
       priority,
       due: due ?? null,
       scheduled: scheduled ?? null,
-      details,
+      projects,
+      contexts,
+      tags,
+      // Empty details clears the note body (null drops it server-side).
+      details: details.trim().length > 0 ? details : null,
     });
-  }, [onSave, title, priority, due, scheduled, details]);
+  }, [
+    onSave,
+    title,
+    priority,
+    due,
+    scheduled,
+    projects,
+    contexts,
+    tags,
+    details,
+  ]);
+
+  // A selected wikilink spelling ("[[Projects/Foo|alias]]") covers its
+  // display-name item, so toggling either one removes the selection.
+  const handleProjectToggle = useCallback((item: string) => {
+    setProjects((prev) => {
+      const covered = prev.find((p) => projectMatches(p, item));
+      if (covered !== undefined) return prev.filter((p) => p !== covered);
+      return [...prev, item];
+    });
+  }, []);
 
   const handleSheetApply = useCallback(
     (field: ScheduleField, value: string | null) => {
@@ -141,6 +182,58 @@ export function TaskEditForm({ task, dayCounts, onSave, onCancel }: Props) {
             </React.Fragment>
           );
         })}
+
+        <View style={styles.sectionLabel}>
+          <MultiSelectSection
+            title="Projects"
+            items={availableProjects}
+            selected={projects}
+            labelFn={(p) => projectDisplayName(p)}
+            matches={(sel, item) => projectMatches(sel, item)}
+            onToggle={handleProjectToggle}
+            onCreate={(value) => {
+              setProjects((prev) =>
+                prev.some((p) => projectMatches(p, value))
+                  ? prev
+                  : [...prev, value],
+              );
+            }}
+            createPlaceholder="Add project…"
+            testIDPrefix="task-detail-projects"
+          />
+          <MultiSelectSection
+            title="Contexts"
+            items={availableContexts}
+            selected={contexts}
+            labelFn={(c) => `@${c}`}
+            onToggle={(c) => {
+              setContexts((prev) => toggleInArray(prev, c));
+            }}
+            onCreate={(value) => {
+              setContexts((prev) =>
+                prev.includes(value) ? prev : [...prev, value],
+              );
+            }}
+            createPlaceholder="Add context…"
+            testIDPrefix="task-detail-contexts"
+          />
+          <MultiSelectSection
+            title="Tags"
+            items={availableTags}
+            selected={tags}
+            labelFn={(t) => `#${t}`}
+            onToggle={(t) => {
+              setTags((prev) => toggleInArray(prev, t));
+            }}
+            onCreate={(value) => {
+              setTags((prev) =>
+                prev.includes(value) ? prev : [...prev, value],
+              );
+            }}
+            createPlaceholder="Add tag…"
+            testIDPrefix="task-detail-tags"
+          />
+        </View>
 
         <Text
           style={[

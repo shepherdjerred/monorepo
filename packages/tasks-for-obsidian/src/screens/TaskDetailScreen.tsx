@@ -36,7 +36,16 @@ type Props = NativeStackScreenProps<RootStackParamList, "TaskDetail">;
 export function TaskDetailScreen({ route, navigation }: Props) {
   const { taskId } = route.params;
   const { colors } = useSettings();
-  const { getTask, updateTask, deleteTask, toggleTask, dayCounts } = useTasks();
+  const {
+    getTask,
+    updateTask,
+    deleteTask,
+    toggleTask,
+    dayCounts,
+    projectNames,
+    contextNames,
+    tagNames,
+  } = useTasks();
   const task = getTask(taskId);
 
   const [editing, setEditing] = useState(false);
@@ -93,6 +102,9 @@ export function TaskDetailScreen({ route, navigation }: Props) {
       <TaskEditForm
         task={task}
         dayCounts={dayCounts}
+        availableProjects={projectNames}
+        availableContexts={contextNames}
+        availableTags={tagNames}
         onSave={handleSave}
         onCancel={() => {
           setEditing(false);

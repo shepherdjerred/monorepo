@@ -114,7 +114,8 @@ export type CreateTaskRequest = z.infer<typeof CreateTaskRequestSchema>;
 
 export const UpdateTaskRequestSchema = z.object({
   title: z.string().min(1).optional(),
-  details: z.string().optional(),
+  // null clears the note body (wire passes it through; server drops it)
+  details: z.string().nullable().optional(),
   status: TaskStatusSchema.optional(),
   priority: PrioritySchema.optional(),
   due: z.string().nullable().optional(),

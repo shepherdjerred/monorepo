@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { AppIcon } from "../common/AppIcon";
+import { MultiSelectSection, toggleInArray } from "./MultiSelectSection";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSettings } from "../../hooks/use-settings";
 import type { FilterConfig } from "../../domain/filters";
@@ -33,79 +34,6 @@ const ALL_STATUSES: TaskStatus[] = [
   "waiting",
   "delegated",
 ];
-
-function toggleInArray<T>(arr: readonly T[] | undefined, item: T): T[] {
-  const current = arr ?? [];
-  return current.includes(item)
-    ? current.filter((x) => x !== item)
-    : [...current, item];
-}
-
-function MultiSelectSection<T extends string>({
-  title,
-  items,
-  selected,
-  labelFn,
-  onToggle,
-  colors,
-}: {
-  title: string;
-  items: readonly T[];
-  selected: readonly T[] | undefined;
-  labelFn: (item: T) => string;
-  onToggle: (item: T) => void;
-  colors: {
-    text: string;
-    textSecondary: string;
-    primary: string;
-    surface: string;
-    border: string;
-    borderLight: string;
-  };
-}) {
-  if (items.length === 0) return null;
-  return (
-    <View style={sectionStyles.section}>
-      <Text
-        style={[sectionStyles.sectionTitle, { color: colors.textSecondary }]}
-      >
-        {title}
-      </Text>
-      <View style={sectionStyles.chips}>
-        {items.map((item) => {
-          const isSelected = selected?.includes(item) ?? false;
-          return (
-            <Pressable
-              key={item}
-              style={[
-                sectionStyles.chip,
-                {
-                  backgroundColor: isSelected ? colors.primary : colors.surface,
-                  borderColor: isSelected ? colors.primary : colors.border,
-                },
-              ]}
-              onPress={() => {
-                onToggle(item);
-              }}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: isSelected }}
-              accessibilityLabel={labelFn(item)}
-            >
-              <Text
-                style={[
-                  sectionStyles.chipText,
-                  { color: isSelected ? "#ffffff" : colors.text },
-                ]}
-              >
-                {labelFn(item)}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-    </View>
-  );
-}
 
 export function FilterModal({
   visible,
@@ -186,7 +114,6 @@ export function FilterModal({
                 projects: toggleInArray(prev.projects, p),
               }));
             }}
-            colors={colors}
           />
           <MultiSelectSection
             title="Contexts"
@@ -199,7 +126,6 @@ export function FilterModal({
                 contexts: toggleInArray(prev.contexts, c),
               }));
             }}
-            colors={colors}
           />
           <MultiSelectSection
             title="Tags"
@@ -212,7 +138,6 @@ export function FilterModal({
                 tags: toggleInArray(prev.tags, t),
               }));
             }}
-            colors={colors}
           />
           <MultiSelectSection
             title="Status"
@@ -225,7 +150,6 @@ export function FilterModal({
                 statuses: toggleInArray(prev.statuses, s),
               }));
             }}
-            colors={colors}
           />
           <MultiSelectSection
             title="Priority"
@@ -238,7 +162,6 @@ export function FilterModal({
                 priorities: toggleInArray(prev.priorities, p),
               }));
             }}
-            colors={colors}
           />
         </ScrollView>
 
@@ -254,34 +177,6 @@ export function FilterModal({
     </Modal>
   );
 }
-
-const sectionStyles = StyleSheet.create({
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-  chips: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-  },
-  chipText: {
-    fontSize: 13,
-    fontWeight: "500",
-  },
-});
 
 const styles = StyleSheet.create({
   backdrop: {
