@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { SectionList, View, Text, StyleSheet } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -11,6 +11,7 @@ import { typography } from "../../styles/typography";
 import { groupBy } from "../../lib/utils";
 import { TaskRow } from "./TaskRow";
 import { EmptyState } from "../common/EmptyState";
+import { ScheduleSheet, type ScheduleField } from "../input/ScheduleSheet";
 import {
   LeftSwipeActions,
   RightSwipeActions,
@@ -24,6 +25,10 @@ type TaskListProps = {
   onTaskDelete: (id: TaskId) => void;
   onTaskEdit?: ((id: TaskId) => void) | undefined;
   onTaskSetPriority?: ((id: TaskId, priority: Priority) => void) | undefined;
+  onTaskSchedule?:
+    | ((id: TaskId, field: ScheduleField, value: string | null) => void)
+    | undefined;
+  dayCounts?: ReadonlyMap<string, number> | undefined;
   onRefresh?: (() => void) | undefined;
   refreshing?: boolean | undefined;
   emptyTitle?: string | undefined;
@@ -38,6 +43,8 @@ export function TaskList({
   onTaskDelete,
   onTaskEdit,
   onTaskSetPriority,
+  onTaskSchedule,
+  dayCounts,
   onRefresh,
   refreshing,
   emptyTitle = "No tasks",
@@ -46,6 +53,7 @@ export function TaskList({
 }: TaskListProps) {
   const { colors } = useSettings();
   const openRowRef = useRef<SwipeableMethods | null>(null);
+  const [scheduleTask, setScheduleTask] = useState<Task | null>(null);
 
   const sections = useMemo(() => {
     if (!sectionBy) {
@@ -109,6 +117,13 @@ export function TaskList({
             onToggle={() => {
               onTaskToggle(item.id);
             }}
+            onSchedule={
+              onTaskSchedule
+                ? () => {
+                    setScheduleTask(item);
+                  }
+                : undefined
+            }
             onEdit={
               onTaskEdit
                 ? () => {
@@ -130,7 +145,14 @@ export function TaskList({
         </ReanimatedSwipeable>
       );
     },
-    [onTaskPress, onTaskToggle, onTaskDelete, onTaskEdit, onTaskSetPriority],
+    [
+      onTaskPress,
+      onTaskToggle,
+      onTaskDelete,
+      onTaskEdit,
+      onTaskSetPriority,
+      onTaskSchedule,
+    ],
   );
 
   const renderSectionHeader = useCallback(
@@ -149,24 +171,47 @@ export function TaskList({
     [colors],
   );
 
+  const scheduleSheet = onTaskSchedule ? (
+    <ScheduleSheet
+      visible={scheduleTask !== null}
+      due={scheduleTask?.due}
+      scheduled={scheduleTask?.scheduled}
+      dayCounts={dayCounts}
+      onClose={() => {
+        setScheduleTask(null);
+      }}
+      onApply={(field, value) => {
+        if (scheduleTask) onTaskSchedule(scheduleTask.id, field, value);
+      }}
+    />
+  ) : null;
+
   if (tasks.length === 0) {
-    return <EmptyState title={emptyTitle} subtitle={emptySubtitle} />;
+    return (
+      <>
+        <EmptyState title={emptyTitle} subtitle={emptySubtitle} />
+        {scheduleSheet}
+      </>
+    );
   }
 
   return (
-    <SectionList
-      sections={sections}
-      keyExtractor={(item) => item.id}
-      renderItem={renderItem}
-      renderSectionHeader={renderSectionHeader}
-      onRefresh={onRefresh}
-      refreshing={refreshing ?? false}
-      stickySectionHeadersEnabled
-      removeClippedSubviews={true}
-      windowSize={10}
-      maxToRenderPerBatch={15}
-      initialNumToRender={20}
-    />
+    <>
+      <SectionList
+        sections={sections}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        renderSectionHeader={renderSectionHeader}
+        onRefresh={onRefresh}
+        refreshing={refreshing ?? false}
+        stickySectionHeadersEnabled
+        removeClippedSubviews={true}
+        windowSize={10}
+        maxToRenderPerBatch={15}
+        initialNumToRender={20}
+      />
+      {scheduleSheet}
+    </>
   );
 }
 

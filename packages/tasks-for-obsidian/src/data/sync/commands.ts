@@ -208,13 +208,19 @@ export function applyCommand(
     case "update": {
       const existing = next.get(cmd.taskId);
       if (existing === undefined) return next;
+      // null means "clear this field" (the wire passes it through; the server
+      // drops the frontmatter key). The optimistic Task must drop the key the
+      // same way — Task types these fields `string | undefined`, never null.
       const updates: Partial<Task> = {};
+      const cleared: string[] = [];
       for (const [key, value] of Object.entries(cmd.payload)) {
-        if (value !== undefined) {
-          Object.assign(updates, { [key]: value });
-        }
+        if (value === undefined) continue;
+        if (value === null) cleared.push(key);
+        else Object.assign(updates, { [key]: value });
       }
-      next.set(cmd.taskId, { ...existing, ...updates });
+      const merged = { ...existing, ...updates };
+      for (const key of cleared) Reflect.deleteProperty(merged, key);
+      next.set(cmd.taskId, merged);
       return next;
     }
     case "delete": {

@@ -2,7 +2,9 @@ import { useCallback } from "react";
 import { Alert } from "react-native";
 
 import type { TaskId } from "../domain/types";
+import type { ScheduleField } from "../components/input/ScheduleSheet";
 import { useTasks } from "./use-tasks";
+import { showResultError } from "../lib/errors";
 import { feedbackTaskDelete } from "../lib/feedback";
 
 type NavigateFn = {
@@ -21,7 +23,10 @@ export function useTaskListScreen(navigation: NavigateFn) {
 
   const handleToggle = useCallback(
     (id: TaskId) => {
-      void tasks.toggleTask(id);
+      void (async () => {
+        const result = await tasks.toggleTask(id);
+        showResultError(result, "Toggle Failed");
+      })();
     },
     [tasks.toggleTask],
   );
@@ -47,6 +52,16 @@ export function useTaskListScreen(navigation: NavigateFn) {
     void tasks.refresh();
   }, [tasks.refresh]);
 
+  const handleSchedule = useCallback(
+    (id: TaskId, field: ScheduleField, value: string | null) => {
+      void tasks.updateTask(
+        id,
+        field === "due" ? { due: value } : { scheduled: value },
+      );
+    },
+    [tasks.updateTask],
+  );
+
   const handleFabPress = useCallback(() => {
     navigation.navigate("QuickAdd");
   }, [navigation]);
@@ -57,6 +72,7 @@ export function useTaskListScreen(navigation: NavigateFn) {
     handleToggle,
     handleDelete,
     handleRefresh,
+    handleSchedule,
     handleFabPress,
   };
 }
