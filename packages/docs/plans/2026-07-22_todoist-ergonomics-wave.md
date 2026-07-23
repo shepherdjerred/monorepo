@@ -13,7 +13,7 @@ disposition: active
 
 The docs-grounded comparison (`packages/docs/guides/2026-07-22_todoist-feature-comparison.md`) found the app's core sync/data layer is first-class but its editing ergonomics lag Todoist: a 3-preset date picker (with wrong "next week" semantics), no way to edit `scheduled`/projects/tags/contexts after creation, a thin NLP grammar, no bulk edit, and no undo on the riskiest tap (recurring completion). Data-layer exploration confirmed **zero blockers**: `PUT /api/tasks/:id` already updates every needed field (`scheduled`, `due`, `projects`, `tags`, `contexts`, `priority`) with `null`-as-clear for dates and `[]`-as-clear for arrays (`src/domain/base-schemas.ts:115`, `wire.ts:120`, server `task-repository.ts:414`).
 
-Scope: 5 stacked PRs (one worktree, git-spice). Items deliberately in backlog at the end. Ops canary is a standalone piece.
+Scope: **ONE PR** (user decision 2026-07-22, superseding the original 5-stacked-PRs structure) — all phases below land together in PR #1611. Items deliberately in backlog at the end.
 
 ## Feel & quality standards (every PR)
 
@@ -104,9 +104,43 @@ User-defined saved views + board layout (would retire hardcoded `JobSearchKanban
 
 ## Remaining
 
-- [ ] PR1 — reschedule sheet + scheduled/due editing + quality ratchet
-- [ ] PR2 — org editing in TaskDetail + NLP expansion + autocomplete
-- [ ] PR3 — recurring-completion undo toast
-- [ ] PR4 — multi-select bulk edit
-- [ ] PR5 — delight & polish pass
-- [ ] Ops canary on engine-status skippedFiles (Temporal report-only cron)
+- [x] Phase 1 — reschedule sheet + scheduled/due editing + quality ratchet
+- [x] Phase 2 — org editing in TaskDetail + NLP expansion + autocomplete
+- [x] Phase 3 — recurring-completion undo toast
+- [x] Phase 4 — multi-select bulk edit
+- [x] Phase 5 — delight & polish pass (ConnectionBanner collapse deliberately dropped — previously-abandoned animation, unverifiable without a simulator session)
+- [x] Ops canary doc + temporal-agent-task block (`guides/2026-07-23_tasknotes-skipped-files-canary.md`); scheduling = operator step
+- [ ] Pre-merge verification gate: Maestro e2e run + per-scenario simulator media on PR #1611, then promote from draft
+- [ ] Operator: run the canary schedule script from packages/temporal
+
+## Session Log — 2026-07-23
+
+### Done
+
+- All five phases implemented in worktree `todoist-ergonomics`, branch
+  `feature/reschedule-sheet`, as ONE draft PR #1611 (stack consolidated from
+  three PRs after user direction; #1612/#1613 closed).
+- Commits: reschedule sheet (7cbe07e9e), org editing + NLP + autocomplete
+  (7fdac62d5), undo toast (0e7b4df03), bulk edit (5ee982b47), delight pass
+  (199292592), plus docs.
+- Fixed a latent phantom dep: `babel.config.js` used
+  `@babel/plugin-transform-export-namespace-from` undeclared — broke the
+  Release Metro bundle under the isolated linker; now declared (^7.27.1).
+- Every commit passed the pre-commit `verify --affected` gate (typecheck,
+  301 unit tests, 18-test contract suite, lint, bundle guard run manually).
+
+### Remaining
+
+- Maestro e2e (`bun run e2e`) + simulator screenshots/videos per scenario,
+  then un-draft #1611. Needs a booted simulator + `bun run pod-install`.
+
+### Caveats
+
+- `useTaskListScreen` now surfaces toggle errors uniformly (was silent on
+  3 tab screens, alerting on detail screens).
+- "next week" NLP semantics changed +7d → next Monday (Todoist parity).
+- Bulk complete skips already-completed tasks; bulk actions dispatch N
+  sequential commands (single-flight engine coalesces the drain).
+- Home-screen quick actions are static plist items routed in
+  SceneDelegate; verify on-device (simulator supports long-press via
+  pointer).
