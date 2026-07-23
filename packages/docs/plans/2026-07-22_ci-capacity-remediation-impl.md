@@ -190,15 +190,37 @@ Course-corrections found during implementation:
   edit to the existing classes. Since the caches are Track 3, this is folded
   into T3.1 and only lands with a consumer (no orphan StorageClass).
 
-Remaining (need care / live validation — see chat handoff):
+- **T3.1 (persistent buildkitd) — service LANDED (groundwork); CI cutover is a
+  deliberate follow-up.** Committed: the `zfs-ssd-lz4` StorageClass, the
+  buildkitd Deployment/PVC/ConfigMap/Service, and the chart + ArgoCD app wiring
+  (`src/resources/buildkitd.ts`, `src/cdk8s-charts/buildkitd.ts`,
+  `src/resources/argo-applications/buildkitd.ts`, `helm/buildkitd/`). All synth
+  - homelab tests green. It deploys idle and harmless until CI points at it.
+    `bake-images.sh` is intentionally **not** changed yet — see the cutover
+    ordering below.
 
-- **T3.1 (persistent buildkitd)** — the biggest write + latency win, but a new
-  privileged in-cluster service on the single-node prod box, and the
-  `bake-images.sh` remote-driver rewrite touches main's image-push critical
-  path. Synth/helm-render tests can gate the manifests, but the remote-builder
-  behavior cannot be validated without a live build. Recommend implementing with
-  those tests as the gate and validating on the cluster (or a scratch build)
-  before marking the PR ready — not merging synth-only.
+### buildkitd CI cutover (the follow-up, do NOT bundle atomically)
+
+The `images` step runs BEFORE `argocd-sync` in the pipeline, so a single-PR
+atomic cutover would run the first post-merge build's image bake against a
+buildkitd that ArgoCD hasn't synced yet → hard failure. Correct sequence:
+
+1. Merge this PR. ArgoCD syncs the `buildkitd` app; confirm the pod is Ready and
+   the 150Gi `buildkitd-cache` PVC is Bound (`kubectl -n buildkitd get pod,pvc`).
+2. Then a one-line follow-up in `.buildkite/scripts/bake-images.sh:147-149`:
+   replace `docker buildx create --name ci --driver docker-container` with
+   `docker buildx create --name ci --driver remote tcp://buildkitd.buildkitd.svc.cluster.local:1234`.
+   Keep the ghcr registry cache-from/to as-is; `--load` still pulls the final
+   image into dind for smoke. Validate on one real main image build (watch the
+   `images` step succeed + `ci-io-report.ts` show dind writes drop) before
+   trusting it.
+
+Security note carried forward: buildkitd's gRPC is plaintext tcp, cluster-
+internal only (no tailnet/tunnel ingress). A NetworkPolicy restricting :1234
+ingress to the `buildkite` namespace is a sensible hardening follow-up.
+
+Remaining (lower priority, deferred):
+
 - **T2.1 (consolidate PR micro-lanes)** and **T2.2 (digest-pin ci-base)** —
   pure pipeline-shape optimizations; real regression surface (step attribution
   invariant in `validate-pipeline.ts`; the `:latest`+`Always` guard exists for a
@@ -207,3 +229,36 @@ Remaining (need care / live validation — see chat handoff):
   already content-gated (skips digest-unchanged entries), so the loop only fires
   on real image-content changes; debouncing trades deploy latency for fewer
   builds and adds state to the release path.
+
+## Session Log — 2026-07-22
+
+### Done
+
+- **Track 1** (commit `5a0cf8d0b`): `BUILDKITE_MAX_IN_FLIGHT` 10→20, Kueue quota
+  12 CPU / 20 Gi, right-sized pod requests to measured p90. ~6 concurrent heavy
+  pods vs 2. `verify --affected` green.
+- **Track 2.5** (commit `891fbd2f9`): ephemeral-storage limits on all heavy pod
+  anchors (dind 80Gi) — runaway-fill / freeze protection.
+- **Track 3.1 groundwork** (commit `d8fb2a67e`): persistent buildkitd service +
+  `zfs-ssd-lz4` StorageClass + chart/app wiring. Synth + homelab tests green.
+- Draft PR #1610 with all of the above + the analysis log and plans.
+
+### Remaining
+
+- **buildkitd CI cutover** — one-line `bake-images.sh` change, AFTER merge +
+  ArgoCD confirms buildkitd healthy (recipe above). This is what actually
+  realizes the write/latency win; the service alone is inert.
+- **T2.1 / T2.2 / T2.4** — pipeline-shape optimizations, deferred.
+- **T3.2 (shared bun cache)** — descoped as unsafe (oven-sh/bun#12917); needs a
+  real concurrent-write validation before any attempt.
+
+### Caveats
+
+- buildkitd remote-driver behavior is **not** live-validated (GitOps means it
+  can only be exercised post-merge). The manifests pass synth/helm/talos; the
+  runtime build path must be watched on the first main build after cutover.
+- Track 1 is the immediate relief and is fully verified. Watch the freeze
+  canaries (node MemAvailable > 8Gi, zero evictions, `ZfsArcHitRateLow` silent)
+  for a week; the quota constant is a one-line back-off if any fire.
+- buildkitd gRPC is plaintext tcp (cluster-internal); add a NetworkPolicy as
+  hardening.
