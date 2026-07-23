@@ -124,7 +124,7 @@ common:
                 limits: { cpu: "4", memory: "8Gi", ephemeral-storage: "80Gi" }
   # Light steps: thin deploy/publish/annotate scripts whose work is seconds
   # even on a cold cache. Small REQUESTS so Kueue admits them alongside the
-  # long images job (7.5 CPU / 16Gi namespace quota — build 5644: light steps
+  # long images job (12 CPU / 20Gi namespace quota — build 5644: light steps
   # sat runnable 3-66 min behind it); limits stay high so a cold-cache burst
   # still gets real CPU. Steps that do heavy work when cold (verify, e2e,
   # images, site builds' turbo graph) keep the full-size pod.

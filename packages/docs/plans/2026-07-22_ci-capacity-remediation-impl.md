@@ -157,3 +157,53 @@ Build incrementally in a worktree: Track 1 first (lands the relief and is the
 low-risk core), then Track 2, then Track 3; open one PR with all of it. Watch
 the freeze canaries through the whole rollout; if any fire, the quota constant is
 a one-line back-off.
+
+## Implementation status & course-corrections (2026-07-22)
+
+Draft PR #1610. Committed:
+
+- **Track 1 — DONE, fully verified.** `BUILDKITE_MAX_IN_FLIGHT` 10→20, Kueue
+  quota 12 CPU / 20 Gi, right-sized pod requests. `bun run verify --affected`
+  green (kueue lockstep test, homelab typecheck/test, check:talos). This is the
+  immediate-relief core: ~6 concurrent heavy pods vs 2.
+- **Track 1 item 4 — already present.** `skip_intermediate_builds` /
+  `cancel_intermediate_builds` are already `true` in
+  `src/tofu/buildkite/pipeline.tf:28-29`. No change needed.
+- **Track 2.5 — DONE, verified.** Ephemeral-storage requests/limits on all
+  heavy pod anchors (dind capped at 80Gi) — caps a runaway build filling the
+  xfs `/var`.
+
+Course-corrections found during implementation:
+
+- **T3.2 (shared bun cache) — DESCOPED as specified; unsafe.** A shared RWX bun
+  cache across the now-~6 concurrent install pods is the exact configuration the
+  root `CLAUDE.md` bans: parallel CI installs against a shared bun store hit
+  oven-sh/bun#12917 (corruption), which is why `globalStore` is deliberately not
+  committed. `BUN_INSTALL_CACHE_DIR` (the tarball download cache, content-
+  addressed) _may_ be concurrency-safe where the global store is not, but this
+  is precisely the area the repo has been burned by, so it needs a real
+  concurrent-write validation before shipping — not a synth-only change. Left as
+  a follow-up, not implemented.
+- **T2.3 (ZFS lz4) — approach changed.** A k8s StorageClass's `parameters` are
+  immutable; ArgoCD cannot mutate `zfs-ssd`/`zfs-hdd` in place. The correct move
+  is a NEW `zfs-ssd-lz4` StorageClass consumed by the Track 3 cache PVCs, not an
+  edit to the existing classes. Since the caches are Track 3, this is folded
+  into T3.1 and only lands with a consumer (no orphan StorageClass).
+
+Remaining (need care / live validation — see chat handoff):
+
+- **T3.1 (persistent buildkitd)** — the biggest write + latency win, but a new
+  privileged in-cluster service on the single-node prod box, and the
+  `bake-images.sh` remote-driver rewrite touches main's image-push critical
+  path. Synth/helm-render tests can gate the manifests, but the remote-builder
+  behavior cannot be validated without a live build. Recommend implementing with
+  those tests as the gate and validating on the cluster (or a scratch build)
+  before marking the PR ready — not merging synth-only.
+- **T2.1 (consolidate PR micro-lanes)** and **T2.2 (digest-pin ci-base)** —
+  pure pipeline-shape optimizations; real regression surface (step attribution
+  invariant in `validate-pipeline.ts`; the `:latest`+`Always` guard exists for a
+  reason — build 5648). Lower priority than the concurrency fix already landed.
+- **T2.4 (debounce version-bump loop)** — bounded value: the commit-back is
+  already content-gated (skips digest-unchanged entries), so the loop only fires
+  on real image-content changes; debouncing trades deploy latency for fewer
+  builds and adds state to the release path.
