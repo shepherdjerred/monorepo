@@ -110,7 +110,9 @@ User-defined saved views + board layout (would retire hardcoded `JobSearchKanban
 - [x] Phase 4 — multi-select bulk edit
 - [x] Phase 5 — delight & polish pass (ConnectionBanner collapse deliberately dropped — previously-abandoned animation, unverifiable without a simulator session)
 - [x] Ops canary doc + temporal-agent-task block (`guides/2026-07-23_tasknotes-skipped-files-canary.md`); scheduling = operator step
-- [ ] Pre-merge verification gate: Maestro e2e run + per-scenario simulator media on PR #1611, then promote from draft
+- [x] Pre-merge verification gate: Maestro e2e 7/7 green (2026-07-23, after
+      fixing the reanimated/worklets pod incompatibility); 6 per-scenario
+      screenshots + demo video posted to #1611; PR promoted from draft
 - [ ] Operator: run the canary schedule script from packages/temporal
 
 ## Session Log — 2026-07-23
@@ -131,8 +133,10 @@ User-defined saved views + board layout (would retire hardcoded `JobSearchKanban
 
 ### Remaining
 
-- Maestro e2e (`bun run e2e`) + simulator screenshots/videos per scenario,
-  then un-draft #1611. Needs a booted simulator + `bun run pod-install`.
+- Merge #1611 when review passes; then `git-spice repo sync`, remove the
+  worktree, archive this plan to `packages/docs/archive/completed/`.
+- Operator: schedule the skipped-files canary from packages/temporal.
+- TestFlight build (user-side) after merge.
 
 ### Caveats
 
@@ -144,3 +148,12 @@ User-defined saved views + board layout (would retire hardcoded `JobSearchKanban
 - Home-screen quick actions are static plist items routed in
   SceneDelegate; verify on-device (simulator supports long-press via
   pointer).
+- 2026-07-23: e2e initially failed — the root lockfile had floated
+  reanimated to 4.5.1 while `react-native-worklets` sat at 0.8.x (caret cap),
+  an incompatible pod pair nobody had pod-installed since. Fixed forward to
+  worklets ^0.10.0 + `pod update Sentry`. Also allowlisted `ios/Pods/` in
+  `.gitleaks.toml` (Apple code-signature hash manifests in the RN 0.85
+  prebuilt xcframeworks false-positive as generic-api-key; Pods/ is
+  gitignored build output).
+- Media captured in light theme only (dark-mode Switch has no testID; all
+  new surfaces use the shared palette).
