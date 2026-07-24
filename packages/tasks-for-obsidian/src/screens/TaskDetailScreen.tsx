@@ -16,6 +16,7 @@ import { useTasks } from "../hooks/use-tasks";
 import { useSettings } from "../hooks/use-settings";
 import { typography } from "../styles/typography";
 import { formatRelativeDate } from "../lib/dates";
+import { showResultError } from "../lib/errors";
 import {
   ScheduleSheet,
   type ScheduleField,
@@ -54,7 +55,10 @@ export function TaskDetailScreen({ route, navigation }: Props) {
   const handleSave = useCallback(
     (patch: UpdateTaskRequest) => {
       feedbackTaskCreate();
-      void updateTask(taskId, patch);
+      void (async () => {
+        const result = await updateTask(taskId, patch);
+        showResultError(result, "Save Failed");
+      })();
       setEditing(false);
     },
     [taskId, updateTask],
@@ -79,10 +83,13 @@ export function TaskDetailScreen({ route, navigation }: Props) {
   // "just push this out" without entering the edit form.
   const handleSheetApply = useCallback(
     (field: ScheduleField, value: string | null) => {
-      void updateTask(
-        taskId,
-        field === "due" ? { due: value } : { scheduled: value },
-      );
+      void (async () => {
+        const result = await updateTask(
+          taskId,
+          field === "due" ? { due: value } : { scheduled: value },
+        );
+        showResultError(result, "Reschedule Failed");
+      })();
     },
     [taskId, updateTask],
   );
