@@ -10,6 +10,9 @@ paths = [
   '''\.claude/worktrees/''',
   # Lock files — contain hashes, not secrets
   '''\.lock$''',
+  # CocoaPods build output (gitignored, never committed) — Apple code-signature
+  # hash manifests inside the RN 0.85 prebuilt xcframeworks flag as generic-api-key
+  '''ios/Pods/''',
   '''Podfile\.lock$''',
   '''Manifest\.lock$''',
   # Generated/vendored code

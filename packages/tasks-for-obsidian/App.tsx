@@ -10,6 +10,7 @@ import { SettingsProvider } from "./src/state/SettingsContext";
 import { SyncProvider } from "./src/state/SyncContext";
 import { TaskProvider } from "./src/state/TaskContext";
 import { TimeTrackingProvider } from "./src/state/TimeTrackingContext";
+import { UndoProvider } from "./src/state/UndoContext";
 import { useSettings } from "./src/hooks/use-settings";
 import { useSyncContext } from "./src/state/SyncContext";
 import { useAppState } from "./src/hooks/use-app-state";
@@ -68,7 +69,9 @@ function App() {
                 <TaskProvider>
                   <SyncProvider>
                     <TimeTrackingProvider>
-                      <ThemedApp />
+                      <UndoProvider>
+                        <ThemedApp />
+                      </UndoProvider>
                     </TimeTrackingProvider>
                   </SyncProvider>
                 </TaskProvider>

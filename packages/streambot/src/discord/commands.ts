@@ -1,4 +1,7 @@
-import { SlashCommandBuilder } from "discord.js";
+import {
+  SlashCommandBuilder,
+  type RESTPostAPIChatInputApplicationCommandsJSONBody,
+} from "discord.js";
 
 /**
  * Slash command definitions. A single top-level `/stream` command with subcommands
@@ -214,6 +217,5 @@ export const commandDefinitions = [
     ),
 ];
 
-export const commandJson = commandDefinitions.map((command) =>
-  command.toJSON(),
-);
+export const commandJson: RESTPostAPIChatInputApplicationCommandsJSONBody[] =
+  commandDefinitions.map((command) => command.toJSON());

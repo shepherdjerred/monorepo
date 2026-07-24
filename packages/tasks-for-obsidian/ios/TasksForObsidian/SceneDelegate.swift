@@ -42,6 +42,30 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
       _ = RCTLinkingManager.application(
         UIApplication.shared, continue: activity, restorationHandler: { _ in })
     }
+    if let shortcutItem = connectionOptions.shortcutItem {
+      _ = handleShortcut(shortcutItem)
+    }
+  }
+
+  /// Home Screen quick actions (long-press app icon) → deep links.
+  /// Types are declared in Info.plist under UIApplicationShortcutItems.
+  private func handleShortcut(_ item: UIApplicationShortcutItem) -> Bool {
+    let urlByType = [
+      "red.sjer.tasksforobsidian.quick-add": "tasknotes://quick-add",
+      "red.sjer.tasksforobsidian.today": "tasknotes://today"
+    ]
+    guard let urlString = urlByType[item.type], let url = URL(string: urlString)
+    else { return false }
+    return RCTLinkingManager.application(
+      UIApplication.shared, open: url, options: [:])
+  }
+
+  func windowScene(
+    _ windowScene: UIWindowScene,
+    performActionFor shortcutItem: UIApplicationShortcutItem,
+    completionHandler: @escaping (Bool) -> Void
+  ) {
+    completionHandler(handleShortcut(shortcutItem))
   }
 
   func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
