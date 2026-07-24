@@ -866,7 +866,7 @@ steps:
       bun --no-install scripts/scout-site-release.ts archive --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
       bun --no-install scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
       bun --no-install scripts/scout-site-release.ts reconcile-prod --dry-run
-      bun --no-install scripts/promote-scout.ts --ci --site-version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
+      bun --no-install scripts/promote-scout.ts --ci --dry-run
     retry: *retry
     plugins:
       - kubernetes:
@@ -1182,9 +1182,10 @@ steps:
       if ! bash .buildkite/scripts/ci-changed.sh scout-promotion; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
-      # SeaweedFS creds: reads archive manifests to gate on real scout changes.
+      # SeaweedFS creds: reads the beta bucket marker (the promotion target) and
+      # archive manifests to gate on real scout changes.
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
-      bun --no-install scripts/promote-scout.ts --ci --site-version "2.0.0-$BUILDKITE_BUILD_NUMBER"
+      bun --no-install scripts/promote-scout.ts --ci
     plugins:
       - kubernetes:
           <<: *pod_light_kubernetes
