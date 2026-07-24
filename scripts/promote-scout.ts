@@ -15,14 +15,15 @@
  *     number may lag the site version; that is correct (identical content).
  *
  * CI mode (the normal path — runs on every main build):
- *   bun scripts/promote-scout.ts --ci --site-version 2.0.0-<build> [--dry-run]
+ *   bun scripts/promote-scout.ts --ci [--dry-run]
  *
  *   Maintains the standing `scout-promote-pending` branch/PR: whenever beta
  *   has something prod doesn't — prod still unpromoted, the backend image
  *   line changed, or the scout package changed since the promoted site
  *   version's commit — the PR is opened/refreshed to move both pins to what
- *   beta currently serves (the committed beta image pin + this build's
- *   archived site). When prod is already up to date, any stale open PR is
+ *   beta currently serves (the committed beta image pin + the site version
+ *   named by the beta bucket's `.release-version` marker, which is always a
+ *   fully-archived version). When prod is already up to date, any stale open PR is
  *   closed. MERGING THE PR IS THE PROMOTION — versions.ts drives everything
  *   downstream (ArgoCD for the backend, scout-prod-reconcile for the site).
  *   Auto-merge is deliberately NOT enabled: turning it on would make prod
@@ -34,11 +35,12 @@
  *   AWS_PROFILE=seaweedfs bun scripts/promote-scout.ts --version 2.0.0-<n>
  *       [--auto] [--force] [--allow-pending-bump]
  *
- *   Promotes an explicit archived version (defaults to what beta serves via
- *   the public beta `.release-version` marker). Targets older than the beta
- *   image pin require --force — that is the rollback path. Uses the
- *   operator's own gh auth; edits happen in a temporary git worktree so the
- *   operator's checkout is never touched.
+ *   Promotes an explicit archived version (defaults to what beta serves, read
+ *   from the beta bucket's `.release-version` marker — needs the SeaweedFS
+ *   creds the AWS_PROFILE supplies, same as the assertArchived check).
+ *   Targets older than the beta image pin require --force — that is the
+ *   rollback path. Uses the operator's own gh auth; edits happen in a temporary
+ *   git worktree so the operator's checkout is never touched.
  */
 
 import { z } from "zod";
@@ -53,7 +55,9 @@ const MONOREPO_REPO = "shepherdjerred/monorepo";
 const MONOREPO_WRITE_URL = `https://github.com/${MONOREPO_REPO}.git`;
 const VERSIONS_TS = "packages/homelab/src/cdk8s/src/versions.ts";
 const RELEASES_BUCKET = "scout-site-releases";
-const BETA_MARKER_URL = "https://beta.scout-for-lol.com/.release-version";
+const BETA_BUCKET = "scout-frontend-beta";
+/** Beta bucket's `.release-version` marker — the version beta currently serves. */
+const BETA_MARKER_KEY = ".release-version";
 const VERSION_BUMP_BRANCH = "chore/version-bump-pending";
 const PROMOTE_BRANCH = "scout-promote-pending";
 const SITE_PIN_KEY = "scout-for-lol-site/prod";
@@ -95,6 +99,17 @@ function extractPin(content: string, key: string): string {
   return value;
 }
 
+/**
+ * `aws s3 cp <s3Uri> -` (stream to stdout) against SeaweedFS. Returns the CLI
+ * result so callers decide how to treat a non-zero exit (missing object).
+ */
+function s3CpToStdout(s3Uri: string) {
+  return runAllowExit(
+    ["aws", "s3", "cp", s3Uri, "-", "--endpoint-url", SEAWEEDFS_ENDPOINT],
+    { env: SEAWEEDFS_AWS_ENV, capture: true },
+  );
+}
+
 /** The archived artifact must exist (manifest is the completeness certificate). */
 async function assertArchived(version: string): Promise<void> {
   const head = await runAllowExit(
@@ -126,23 +141,35 @@ async function assertArchived(version: string): Promise<void> {
  * changed" — the safe direction for a promotion gate).
  */
 async function manifestGitSha(version: string): Promise<string | null> {
-  const result = await runAllowExit(
-    [
-      "aws",
-      "s3",
-      "cp",
-      `s3://${RELEASES_BUCKET}/${version}.json`,
-      "-",
-      "--endpoint-url",
-      SEAWEEDFS_ENDPOINT,
-    ],
-    { env: SEAWEEDFS_AWS_ENV, capture: true },
-  );
+  const result = await s3CpToStdout(`s3://${RELEASES_BUCKET}/${version}.json`);
   if (result.exitCode !== 0) {
     return null;
   }
   const parsed = ManifestSchema.safeParse(JSON.parse(result.stdout));
   return parsed.success ? parsed.data.gitSha : null;
+}
+
+/**
+ * The site version beta currently serves, read from the beta bucket's
+ * `.release-version` marker (written by `scout-site-release.ts deploy-beta`
+ * only after a successful archive+sync). Returns null when the marker is
+ * missing/unreadable/malformed — i.e. beta has never had a site deployed.
+ *
+ * This is the authoritative "what beta serves" and the correct promotion
+ * target: whatever the marker names was archived first (the archive uploads its
+ * `<version>.json` manifest LAST, before deploy-beta writes this marker), so
+ * `assertArchived` on it can never fail. It replaces the old `2.0.0-<build>`
+ * target, which wrongly assumed *this* build archived the site — false on any
+ * build whose only relevant change is `versions.ts` (the `sites` lane, and thus
+ * the archive, does not watch `versions.ts`, but `scout-promotion` does).
+ */
+async function betaServedVersion(): Promise<string | null> {
+  const result = await s3CpToStdout(`s3://${BETA_BUCKET}/${BETA_MARKER_KEY}`);
+  if (result.exitCode !== 0) {
+    return null;
+  }
+  const version = result.stdout.trim();
+  return VERSION_PATTERN.test(version) ? version : null;
 }
 
 /** Body of the promotion PR (shared by both modes). */
@@ -256,15 +283,31 @@ async function promotionReason(opts: {
   return null;
 }
 
-async function ciPromote(siteVersion: string, dryRun: boolean): Promise<void> {
-  console.log(`--- scout promotion PR (target site ${siteVersion})`);
+async function ciPromote(dryRun: boolean): Promise<void> {
   if (dryRun) {
+    // Dry-run mints no GitHub App token and clones nothing.
     console.log(
-      `DRYRUN: would compare prod pins against beta and open/refresh/close the ` +
-        `${PROMOTE_BRANCH} PR accordingly (no clone, no GitHub App token minted).`,
+      `--- scout promotion PR (dry-run): resolves the target from the`,
+    );
+    console.log(
+      `beta marker (s3://${BETA_BUCKET}/${BETA_MARKER_KEY}), then opens/`,
+    );
+    console.log(`refreshes/closes the ${PROMOTE_BRANCH} PR.`);
+    return;
+  }
+
+  // The version beta serves IS the promotion target — never the current build
+  // number. Beta only serves fully-archived versions, so this can't fail the
+  // assertArchived gate below (which the build-number target did whenever the
+  // build skipped the archive — every versions.ts-only bump).
+  const siteVersion = await betaServedVersion();
+  if (siteVersion === null) {
+    console.log(
+      `no readable beta marker in s3://${BETA_BUCKET}/ — nothing to do`,
     );
     return;
   }
+  console.log(`--- scout promotion PR (target site ${siteVersion}, from beta)`);
 
   const root = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
   const auth = await setupGitAuth(root);
@@ -409,24 +452,6 @@ async function ciPromote(siteVersion: string, dryRun: boolean): Promise<void> {
 // Operator mode — explicit target / rollback
 // ---------------------------------------------------------------------------
 
-/** Default target: the version beta is serving right now (public marker). */
-async function betaMarkerVersion(): Promise<string> {
-  const response = await fetch(BETA_MARKER_URL);
-  if (!response.ok) {
-    fail(
-      `GET ${BETA_MARKER_URL} -> ${response.status.toString()} — pass --version explicitly`,
-    );
-  }
-  const markerText = await response.text();
-  const version = markerText.trim();
-  if (!VERSION_PATTERN.test(version)) {
-    fail(
-      `beta marker at ${BETA_MARKER_URL} is not a version (${version}) — pass --version explicitly`,
-    );
-  }
-  return version;
-}
-
 /**
  * Refuse to promote while an open version-bump PR touches the scout beta
  * image line: the just-pushed image it carries is not yet in versions.ts, so
@@ -461,7 +486,13 @@ async function operatorPromote(args: string[]): Promise<void> {
   // gh auth early: every guard and the PR itself need it.
   await run(["gh", "auth", "status"]);
 
-  const version = explicitVersion ?? (await betaMarkerVersion());
+  // Default target = the version beta serves right now (its bucket marker).
+  const version =
+    explicitVersion ??
+    (await betaServedVersion()) ??
+    fail(
+      `beta bucket has no readable ${BETA_MARKER_KEY} marker — pass --version explicitly`,
+    );
   if (!VERSION_PATTERN.test(version)) {
     fail(`--version must match ${VERSION_PATTERN.toString()}, got: ${version}`);
   }
@@ -575,12 +606,9 @@ async function operatorPromote(args: string[]): Promise<void> {
 async function main(): Promise<void> {
   const args = Bun.argv.slice(2);
   if (args.includes("--ci")) {
-    const flag = args.indexOf("--site-version");
-    const siteVersion = flag === -1 ? undefined : args[flag + 1];
-    if (siteVersion === undefined || !VERSION_PATTERN.test(siteVersion)) {
-      fail("--ci requires --site-version 2.0.0-<build>");
-    }
-    await ciPromote(siteVersion, args.includes("--dry-run"));
+    // CI mode takes no target: it promotes whatever version beta serves (the
+    // beta bucket marker), resolved inside ciPromote.
+    await ciPromote(args.includes("--dry-run"));
     return;
   }
   await operatorPromote(args);
