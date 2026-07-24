@@ -60,23 +60,26 @@ export function ScheduleSheet({
   const [field, setField] = useState<ScheduleField>(initialField ?? "due");
   const selected = field === "due" ? due : scheduled;
   const [month, setMonth] = useState<CalendarMonth>(currentMonth());
+  // Captured per open (not per render): a sheet opened after midnight in a
+  // long-lived app must not offer yesterday's Today/Tomorrow/weekend dates.
+  const [today, setToday] = useState(localTodayYmd());
 
   const handleShow = useCallback(() => {
     const f = initialField ?? "due";
     setField(f);
+    setToday(localTodayYmd());
     const value = f === "due" ? due : scheduled;
     setMonth(value ? monthOf(value) : currentMonth());
   }, [initialField, due, scheduled]);
-
-  const today = localTodayYmd();
   const presets = useMemo(() => {
-    const tomorrow = new Date();
+    const base = parseLocalDate(today);
+    const tomorrow = new Date(base);
     tomorrow.setDate(tomorrow.getDate() + 1);
     return [
       { key: "today", label: "Today", value: today },
       { key: "tomorrow", label: "Tomorrow", value: toISODate(tomorrow) },
-      { key: "weekend", label: "This weekend", value: nextSaturday() },
-      { key: "next-week", label: "Next week", value: nextMonday() },
+      { key: "weekend", label: "This weekend", value: nextSaturday(base) },
+      { key: "next-week", label: "Next week", value: nextMonday(base) },
     ];
   }, [today]);
 

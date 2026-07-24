@@ -17,17 +17,23 @@ Goal frame (from `plans/2026-07-03_tasknotes-first-in-class.md`): the app =
 Todoist ergonomics (instant capture, trustworthy today view, full offline);
 Obsidian = power interface. Collaboration/assignee features are out of scope.
 
+> **Snapshot note:** the "Our app" column describes the app **before** the
+> ergonomics wave (PR #1611), which was planned from this comparison and
+> closed gap-list items 1–5 and 7 (reschedule sheet with correct semantics,
+> `scheduled`+`due` editing, org editing, NLP expansion + autocomplete,
+> recurring-completion undo, bulk edit). Rows below are the pre-wave state.
+
 ## Scheduling & rescheduling
 
-| Capability            | Todoist                                                                                                                                | Our app                                                                            |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Reschedule picker     | NL text field + monthly calendar grid + Time + No Date + per-day task counts                                                           | 3 fixed presets (Today / Tomorrow / +7d) + None (`DatePicker.tsx`)                 |
-| Quick reschedule      | Swipe (configurable "Schedule" action), right-click menu (Tomorrow / Next Week), drag-to-date in Upcoming, overdue "Reschedule" button | None (date editing only inside TaskDetail)                                         |
-| "Next week" semantics | Next **Monday** (configurable); "this weekend" = Saturday                                                                              | Literal +7 days                                                                    |
-| Date fields           | **Three**: Date (when to work), Deadline `{}` (hard cutoff, Pro+, added Jan 2025), Duration (`for 1h`, Pro+)                           | Model has `scheduled` + `due` (≈ Date + Deadline!) but the UI edits **only `due`** |
-| Due times             | Yes (`tomorrow at 4pm`), drives auto-reminders                                                                                         | No (date-only format fields)                                                       |
-| Recurrence authoring  | Rich NL grammar; `every` (calendar-fixed) vs `every!` (completion-based); "Complete forever"                                           | None by design (Obsidian authors rrules); display + per-occurrence completion work |
-| Reminders             | Auto 30-min-before, custom/multiple (`!30m`, `!1hb`), recurring, location (Pro+)                                                       | None (plan-deferred)                                                               |
+| Capability            | Todoist                                                                                                                                | Our app                                                                                                             |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Reschedule picker     | NL text field + monthly calendar grid + Time + No Date + per-day task counts                                                           | 3 fixed presets (Today / Tomorrow / +7d) + None (`DatePicker.tsx`)                                                  |
+| Quick reschedule      | Swipe (configurable "Schedule" action), right-click menu (Tomorrow / Next Week), drag-to-date in Upcoming, overdue "Reschedule" button | None (date editing only inside TaskDetail)                                                                          |
+| "Next week" semantics | Next **Monday** (configurable); "this weekend" = Saturday                                                                              | Literal +7 days                                                                                                     |
+| Date fields           | **Three**: Date (when to work), Deadline `{}` (hard cutoff, Pro+, added Jan 2025), Duration (`for 1h`, Pro+)                           | Model has `scheduled` + `due` (≈ Date + Deadline); pre-wave the UI edited only `due` — both editable since PR #1611 |
+| Due times             | Yes (`tomorrow at 4pm`), drives auto-reminders                                                                                         | No (date-only format fields)                                                                                        |
+| Recurrence authoring  | Rich NL grammar; `every` (calendar-fixed) vs `every!` (completion-based); "Complete forever"                                           | None by design (Obsidian authors rrules); display + per-occurrence completion work                                  |
+| Reminders             | Auto 30-min-before, custom/multiple (`!30m`, `!1hb`), recurring, location (Pro+)                                                       | None (plan-deferred)                                                                                                |
 
 Stale-memory correction: Todoist's 2016 "Smart Schedule" AI rescheduling is
 absent from current docs; only a generic Reschedule button on overdue sections

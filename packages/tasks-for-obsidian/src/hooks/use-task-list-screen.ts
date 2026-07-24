@@ -14,6 +14,20 @@ import { useTasks } from "./use-tasks";
 import { showResultError } from "../lib/errors";
 import { feedbackTaskComplete, feedbackTaskDelete } from "../lib/feedback";
 
+// One aggregated alert per bulk action — per-task alerts would stack N deep.
+function alertBulkFailures(
+  title: string,
+  results: readonly { ok: boolean }[],
+  total: number,
+): void {
+  const failed = results.filter((r) => !r.ok).length;
+  if (failed === 0) return;
+  Alert.alert(
+    title,
+    `${String(failed)} of ${String(total)} task${total === 1 ? "" : "s"} could not be updated. They may have been renamed or deleted in Obsidian.`,
+  );
+}
+
 type NavigateFn = {
   navigate: (screen: string, params?: Record<string, unknown>) => void;
 };
@@ -61,10 +75,13 @@ export function useTaskListScreen(navigation: NavigateFn) {
 
   const handleSchedule = useCallback(
     (id: TaskId, field: ScheduleField, value: string | null) => {
-      void tasks.updateTask(
-        id,
-        field === "due" ? { due: value } : { scheduled: value },
-      );
+      void (async () => {
+        const result = await tasks.updateTask(
+          id,
+          field === "due" ? { due: value } : { scheduled: value },
+        );
+        showResultError(result, "Reschedule Failed");
+      })();
     },
     [tasks.updateTask],
   );
@@ -79,15 +96,20 @@ export function useTaskListScreen(navigation: NavigateFn) {
   const handleBulkComplete = useCallback(
     (ids: readonly TaskId[]) => {
       feedbackTaskComplete();
-      for (const id of ids) {
-        const task = tasks.getTask(id);
-        if (!task) continue;
-        const day = isRecurring(task)
-          ? completionTargetDate(task)
-          : localTodayYmd();
-        if (isCompletedOn(task, day)) continue;
-        void tasks.toggleTask(id);
-      }
+      void (async () => {
+        const targets = ids.filter((id) => {
+          const task = tasks.getTask(id);
+          if (!task) return false;
+          const day = isRecurring(task)
+            ? completionTargetDate(task)
+            : localTodayYmd();
+          return !isCompletedOn(task, day);
+        });
+        const results = await Promise.all(
+          targets.map((id) => tasks.toggleTask(id)),
+        );
+        alertBulkFailures("Complete Failed", results, targets.length);
+      })();
     },
     [tasks.getTask, tasks.toggleTask],
   );
@@ -104,7 +126,12 @@ export function useTaskListScreen(navigation: NavigateFn) {
             style: "destructive",
             onPress: () => {
               feedbackTaskDelete();
-              for (const id of ids) void tasks.deleteTask(id);
+              void (async () => {
+                const results = await Promise.all(
+                  ids.map((id) => tasks.deleteTask(id)),
+                );
+                alertBulkFailures("Delete Failed", results, ids.length);
+              })();
               onDeleted?.();
             },
           },
@@ -116,21 +143,29 @@ export function useTaskListScreen(navigation: NavigateFn) {
 
   const handleBulkSchedule = useCallback(
     (ids: readonly TaskId[], field: ScheduleField, value: string | null) => {
-      for (const id of ids) {
-        void tasks.updateTask(
-          id,
-          field === "due" ? { due: value } : { scheduled: value },
+      void (async () => {
+        const results = await Promise.all(
+          ids.map((id) =>
+            tasks.updateTask(
+              id,
+              field === "due" ? { due: value } : { scheduled: value },
+            ),
+          ),
         );
-      }
+        alertBulkFailures("Reschedule Failed", results, ids.length);
+      })();
     },
     [tasks.updateTask],
   );
 
   const handleBulkPriority = useCallback(
     (ids: readonly TaskId[], priority: Priority) => {
-      for (const id of ids) {
-        void tasks.updateTask(id, { priority });
-      }
+      void (async () => {
+        const results = await Promise.all(
+          ids.map((id) => tasks.updateTask(id, { priority })),
+        );
+        alertBulkFailures("Priority Failed", results, ids.length);
+      })();
     },
     [tasks.updateTask],
   );
