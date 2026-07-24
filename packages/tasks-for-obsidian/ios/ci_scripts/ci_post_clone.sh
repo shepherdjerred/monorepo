@@ -42,16 +42,25 @@ fi
 # dir dependency's own transitive deps into the consumer, so Metro resolves
 # "@tasknotes/model" from packages/tasknotes-types/node_modules. That directory
 # must be populated on the worker, or the bundle fails with UnableToResolveError.
+# --ignore-scripts: `bun install` in any workspace member resolves the WHOLE root
+# workspace, so it would run the native install scripts of unrelated trusted
+# packages (root package.json trustedDependencies: node-av, sharp,
+# node-datachannel, @sentry/profiling-node, …). node-av needs a prebuilt binary
+# or a system FFmpeg, neither of which exists on the Xcode Cloud worker, so its
+# install script exits 1 and fails the whole bootstrap (build #61). None of these
+# native Node addons are needed here: the iOS app's native code comes from
+# CocoaPods (pod install below) and Metro only needs JS resolution + a hoisted
+# node_modules tree. So skip lifecycle scripts on both installs.
 TYPES_DIR="$REPO_ROOT/packages/tasknotes-types"
 echo "[ci_post_clone] Installing tasknotes-types dependencies in $TYPES_DIR (needed for Metro to resolve @tasknotes/model)"
 cd "$TYPES_DIR"
-bun install --frozen-lockfile --linker hoisted
+bun install --frozen-lockfile --linker hoisted --ignore-scripts
 
 echo "[ci_post_clone] Installing JS dependencies in $PKG_DIR"
 cd "$PKG_DIR"
 # React Native + CocoaPods expect a physical node_modules tree.
 # Bun's isolated linker can omit it on clean CI workers, so force hoisted mode.
-bun install --frozen-lockfile --linker hoisted
+bun install --frozen-lockfile --linker hoisted --ignore-scripts
 
 echo "[ci_post_clone] Installing CocoaPods dependencies"
 cd "$PKG_DIR/ios"
