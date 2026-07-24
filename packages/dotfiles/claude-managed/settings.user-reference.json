@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions"
+  },
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "high",
+  "skipDangerousModePermissionPrompt": true,
+  "skipWorkflowUsageWarning": true,
+  "skipAutoPermissionPrompt": true,
+  "agentPushNotifEnabled": true,
+  "editorMode": "vim",
+  "terminalEditorMode": "vim",
+  "theme": "auto",
+  "model": "opus[1m]"
+}
