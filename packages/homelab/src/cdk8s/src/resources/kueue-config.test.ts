@@ -62,6 +62,21 @@ describe("kueue-config", () => {
     expect(group?.coveredResources).toContain("memory");
   });
 
+  it("covers ephemeral-storage (pods request it — omitting it freezes CI)", () => {
+    // Every .buildkite/pipeline.yml step/dind container sets an
+    // ephemeral-storage request. Kueue refuses to admit a workload that
+    // requests a resource the ClusterQueue does not cover, so if this drifts
+    // out every build sits Pending forever. Regression guard for the
+    // 2026-07-24 freeze.
+    const clusterQueue = synthKueueClusterQueue();
+    const group = clusterQueue.spec.resourceGroups[0];
+    expect(group?.coveredResources).toContain("ephemeral-storage");
+    const flavor = group?.flavors[0];
+    const eph = flavor?.resources.find((r) => r.name === "ephemeral-storage");
+    expect(eph).toBeDefined();
+    expect(eph?.nominalQuota).toBe("100Gi");
+  });
+
   it("pods nominalQuota stays in lockstep with Buildkite's max-in-flight", () => {
     const clusterQueue = synthKueueClusterQueue();
     const flavor = clusterQueue.spec.resourceGroups[0]?.flavors[0];
