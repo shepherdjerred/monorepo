@@ -106,7 +106,7 @@ export function useTaskListScreen(navigation: NavigateFn) {
           return !isCompletedOn(task, day);
         });
         const results = await Promise.all(
-          targets.map((id) => tasks.toggleTask(id)),
+          targets.map((id) => tasks.toggleTask(id, { suppressUndo: true })),
         );
         alertBulkFailures("Complete Failed", results, targets.length);
       })();

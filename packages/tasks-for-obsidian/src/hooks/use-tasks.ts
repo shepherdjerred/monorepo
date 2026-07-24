@@ -130,9 +130,11 @@ export function useTasks() {
   // date it targets is invisible in the UI and the server may advance
   // `scheduled` on completion, so this is the one tap that's hard to
   // reverse by hand. Undo resends the SAME date with completed:false
-  // (idempotent set-semantics both sides).
+  // (idempotent set-semantics both sides). Bulk callers pass suppressUndo:
+  // one toast per task would overwrite each other, leaving N-1 completions
+  // silently un-undoable while implying otherwise.
   const toggleTask = useCallback(
-    async (id: TaskId) => {
+    async (id: TaskId, options?: { suppressUndo?: boolean }) => {
       const task = ctx.tasks.get(ctx.resolveTaskId(id));
       const date =
         task !== undefined && isRecurring(task)
@@ -143,7 +145,13 @@ export function useTasks() {
         date !== undefined &&
         !task.completeInstances.includes(date);
       const result = await ctx.toggleStatus(id);
-      if (result.ok && task !== undefined && date !== undefined && completing) {
+      if (
+        result.ok &&
+        task !== undefined &&
+        date !== undefined &&
+        completing &&
+        options?.suppressUndo !== true
+      ) {
         const next = nextOccurrenceAfter(task, date);
         showUndo({
           message: next ? `Completed · Next: ${formatDate(next)}` : "Completed",
