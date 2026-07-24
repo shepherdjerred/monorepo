@@ -21,7 +21,8 @@
         "src/cli/*.ts",
         "vite.config.ts"
       ],
-      "project": ["src/**/*.{ts,tsx}", "vite.config.ts"]
+      "project": ["src/**/*.{ts,tsx}", "vite.config.ts"],
+      "ignoreDependencies": ["shadcn"]
     },
     "packages/discord-plays-core": {
       "entry": ["src/index.ts", "src/entry.ts"],
