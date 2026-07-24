@@ -39,6 +39,13 @@ resource "asuswrt_dhcp_static_lease" "test" {
 }`,
 				Check: resource.TestCheckResourceAttr("asuswrt_dhcp_static_lease.test", "ip", "192.168.1.200"),
 			},
+			// Import by MAC and verify state matches.
+			{
+				ResourceName:      "asuswrt_dhcp_static_lease.test",
+				ImportState:       true,
+				ImportStateId:     "AA:BB:CC:DD:EE:FF",
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

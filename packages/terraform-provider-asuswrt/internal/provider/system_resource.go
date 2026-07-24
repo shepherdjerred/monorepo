@@ -3,18 +3,23 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/shepherdjerred/monorepo/packages/terraform-provider-asuswrt/internal/client"
 )
 
 var (
-	_ resource.Resource              = &systemResource{}
-	_ resource.ResourceWithConfigure = &systemResource{}
+	_ resource.Resource                = &systemResource{}
+	_ resource.ResourceWithConfigure   = &systemResource{}
+	_ resource.ResourceWithImportState = &systemResource{}
 )
 
 type systemResource struct {
@@ -45,22 +50,29 @@ func (r *systemResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"id": schema.StringAttribute{
 				Description: "Resource identifier (always 'system').",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"hostname": schema.StringAttribute{
-				Description: "Router hostname (NVRAM: computer_name).",
+				Description: "Router host name / Device Name (NVRAM: lan_hostname). Note: this is NOT computer_name, which is the Samba/NetBIOS name.",
 				Optional:    true,
+				Computed:    true,
 			},
 			"timezone": schema.StringAttribute{
 				Description: "Timezone string (NVRAM: time_zone), e.g. EST5EDT,M3.2.0,M11.1.0.",
 				Optional:    true,
+				Computed:    true,
 			},
 			"ntp_server_0": schema.StringAttribute{
 				Description: "Primary NTP server (NVRAM: ntp_server0).",
 				Optional:    true,
+				Computed:    true,
 			},
 			"ntp_server_1": schema.StringAttribute{
 				Description: "Secondary NTP server (NVRAM: ntp_server1).",
 				Optional:    true,
+				Computed:    true,
 			},
 		},
 	}
@@ -107,7 +119,7 @@ func (r *systemResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	keys := []string{"computer_name", "time_zone", "ntp_server0", "ntp_server1"}
+	keys := []string{"lan_hostname", "time_zone", "ntp_server0", "ntp_server1"}
 
 	result, err := r.client.NvramGet(ctx, keys)
 	if err != nil {
@@ -116,7 +128,7 @@ func (r *systemResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	readOptionalString(&state.Hostname, result, "computer_name")
+	readOptionalString(&state.Hostname, result, "lan_hostname")
 	readOptionalString(&state.Timezone, result, "time_zone")
 	readOptionalString(&state.NTPServer0, result, "ntp_server0")
 	readOptionalString(&state.NTPServer1, result, "ntp_server1")
@@ -146,41 +158,61 @@ func (r *systemResource) Delete(_ context.Context, _ resource.DeleteRequest, _ *
 	// System settings cannot be truly deleted; this is a no-op.
 }
 
-// readOptionalString updates the target only if the NVRAM key is present and the attribute is managed.
+// ImportState imports the singleton system resource. The import ID is ignored
+// (always "system"); Read then populates all fields from the router.
+func (r *systemResource) ImportState(ctx context.Context, _ resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), "system")...)
+}
+
+// readOptionalString populates the target when the NVRAM key holds a non-empty
+// value. It intentionally does NOT gate on the target being non-null (which
+// would block import) but skips empty values so an unset NVRAM key leaves the
+// attribute null rather than introducing a spurious "" != null diff.
 func readOptionalString(target *types.String, result map[string]string, key string) {
-	if v, ok := result[key]; ok && !target.IsNull() {
+	if v, ok := result[key]; ok && v != "" {
 		*target = types.StringValue(v)
 	}
 }
 
-// systemNvramMapping maps model fields to NVRAM keys and whether they trigger a time restart.
+// systemNvramMapping maps a model field to its NVRAM key and the rc_service that
+// must run for the change to take effect (empty = no restart needed).
 type systemNvramMapping struct {
-	value       types.String
-	nvramKey    string
-	timeRestart bool
+	value    types.String
+	nvramKey string
+	service  string
 }
 
-// applySystem writes the system NVRAM values and triggers appropriate service restarts.
+// applySystem writes the system NVRAM values and triggers the union of the
+// required service restarts (semicolon-joined, matching how the web UI issues
+// multiple services in one apply).
 func (r *systemResource) applySystem(ctx context.Context, plan *systemResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	mappings := []systemNvramMapping{
-		{value: plan.Hostname, nvramKey: "computer_name", timeRestart: false},
-		{value: plan.Timezone, nvramKey: "time_zone", timeRestart: true},
-		{value: plan.NTPServer0, nvramKey: "ntp_server0", timeRestart: true},
-		{value: plan.NTPServer1, nvramKey: "ntp_server1", timeRestart: true},
+		// lan_hostname is the router host name (the LAN page restarts net_and_phy).
+		{value: plan.Hostname, nvramKey: "lan_hostname", service: client.ServiceNetAndPhy},
+		{value: plan.Timezone, nvramKey: "time_zone", service: client.ServiceTime},
+		{value: plan.NTPServer0, nvramKey: "ntp_server0", service: client.ServiceTime},
+		{value: plan.NTPServer1, nvramKey: "ntp_server1", service: client.ServiceTime},
 	}
 
 	values := map[string]string{}
-	needTimeRestart := false
+
+	var services []string
+
+	seen := map[string]bool{}
 
 	for _, m := range mappings {
-		if !m.value.IsNull() && !m.value.IsUnknown() {
-			values[m.nvramKey] = m.value.ValueString()
+		if m.value.IsNull() || m.value.IsUnknown() {
+			continue
+		}
 
-			if m.timeRestart {
-				needTimeRestart = true
-			}
+		values[m.nvramKey] = m.value.ValueString()
+
+		if m.service != "" && !seen[m.service] {
+			seen[m.service] = true
+
+			services = append(services, m.service)
 		}
 	}
 
@@ -188,12 +220,7 @@ func (r *systemResource) applySystem(ctx context.Context, plan *systemResourceMo
 		return diags
 	}
 
-	rcService := ""
-	if needTimeRestart {
-		rcService = client.ServiceTime
-	}
-
-	if err := r.client.NvramSet(ctx, values, rcService); err != nil {
+	if err := r.client.NvramSet(ctx, values, strings.Join(services, ";")); err != nil {
 		diags.AddError("Failed to apply system settings", err.Error())
 
 		return diags

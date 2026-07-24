@@ -62,6 +62,13 @@ resource "asuswrt_system" "test" {
 					resource.TestCheckResourceAttr("asuswrt_system.test", "ntp_server_1", "time.nist.gov"),
 				),
 			},
+			// Import the singleton and verify state matches (clean round-trip).
+			{
+				ResourceName:      "asuswrt_system.test",
+				ImportState:       true,
+				ImportStateId:     "system",
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
