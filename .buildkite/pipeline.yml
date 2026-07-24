@@ -37,8 +37,18 @@ common:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
               resources:
-                requests: { cpu: "2", memory: "4Gi" }
-                limits: { cpu: "7", memory: "12Gi" }
+                # Requests right-sized to measured p90 usage (step container
+                # p90 0.96 CPU / 1.5Gi over 7d, 2026-07-22); limits stay high
+                # so a cold-cache burst still gets real CPU. Halving requests
+                # (was 2/4Gi) is what lets Kueue admit ~6 heavy pods at once
+                # instead of 2 — see kueue-config.ts and the analysis log.
+                # ephemeral-storage limit caps the pod's writable layer +
+                # emptyDir on the Talos xfs /var so a runaway build is evicted
+                # rather than filling the system disk and wedging the node
+                # (the 2026-07 freeze failure mode; 40Gi is well above the
+                # 20-58GiB/pod measured, but bounded).
+                requests: { cpu: "1", memory: "2Gi", ephemeral-storage: "2Gi" }
+                limits: { cpu: "7", memory: "12Gi", ephemeral-storage: "40Gi" }
               volumeMounts:
                 # Checkouts are mirror-backed (default-checkout-params.gitMirrors):
                 # .git/objects/info/alternates points into this volume, so every
@@ -68,8 +78,10 @@ common:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
               resources:
-                requests: { cpu: "2", memory: "6Gi" }
-                limits: { cpu: "7", memory: "14Gi" }
+                # Right-sized to measured p90 (see the base pod above). Was
+                # 2/6Gi; the dind sidecar below adds its own request.
+                requests: { cpu: "1", memory: "2Gi", ephemeral-storage: "2Gi" }
+                limits: { cpu: "7", memory: "14Gi", ephemeral-storage: "40Gi" }
               volumeMounts:
                 # Checkouts are mirror-backed (default-checkout-params.gitMirrors):
                 # .git/objects/info/alternates points into this volume, so every
@@ -101,11 +113,18 @@ common:
                 - name: DOCKER_TLS_CERTDIR
                   value: ""
               resources:
-                requests: { cpu: "1", memory: "2Gi" }
-                limits: { cpu: "4", memory: "8Gi" }
+                # Right-sized to measured dind p90 (1.35 CPU / 1.1Gi over 7d);
+                # was 1/2Gi. Limits stay high for cold image builds. dind's
+                # /var/lib/docker (the image build graph — the single largest
+                # writer, ~3.8 TiB/wk) lives on this container's ephemeral
+                # storage, so its limit is the real cap on a runaway build
+                # filling the xfs /var; 80Gi bounds it well above observed.
+                requests:
+                  { cpu: "750m", memory: "1536Mi", ephemeral-storage: "4Gi" }
+                limits: { cpu: "4", memory: "8Gi", ephemeral-storage: "80Gi" }
   # Light steps: thin deploy/publish/annotate scripts whose work is seconds
   # even on a cold cache. Small REQUESTS so Kueue admits them alongside the
-  # long images job (7.5 CPU / 16Gi namespace quota — build 5644: light steps
+  # long images job (12 CPU / 20Gi namespace quota — build 5644: light steps
   # sat runnable 3-66 min behind it); limits stay high so a cold-cache burst
   # still gets real CPU. Steps that do heavy work when cold (verify, e2e,
   # images, site builds' turbo graph) keep the full-size pod.
@@ -123,8 +142,9 @@ common:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
               resources:
-                requests: { cpu: "500m", memory: "1Gi" }
-                limits: { cpu: "7", memory: "12Gi" }
+                requests:
+                  { cpu: "250m", memory: "512Mi", ephemeral-storage: "1Gi" }
+                limits: { cpu: "7", memory: "12Gi", ephemeral-storage: "20Gi" }
               volumeMounts:
                 # Checkouts are mirror-backed (default-checkout-params.gitMirrors):
                 # .git/objects/info/alternates points into this volume, so every
