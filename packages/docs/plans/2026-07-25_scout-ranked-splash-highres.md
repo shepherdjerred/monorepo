@@ -88,17 +88,23 @@ Non-ranked / loading-screen / arena reports are untouched (keep loading art).
   `verify --affected` (49 tasks) green. Committed `d7d9c0d56`, pushed to PR #924.
 - Posted before/after PR media (banner full + 1:1 zoom, square hero band) to
   PR #924 as a comment.
-- Grade-letter centering (final `e9543c7a3`): the cap glyph sits ~7% **above**
-  the diamond's middle in the real layout, fixed with `paddingTop = 0.45·fontSize`
-  in `shared/grade-diamond.tsx`. **Hard-won calibration lesson:** isolated
-  single-`GradeDiamond` renders do NOT reproduce the offset (they measure the
-  letter _low_); only the real report layout shows it _high_. The first two
-  attempts (`paddingBottom 0.08` then `0.035`, commits `c3cf5e3ab`/`e9543…`
-  predecessors) were calibrated on isolated renders and had the direction wrong,
-  pushing the letters further up. Calibrate pixel-level type nudges ONLY on the
-  real `matchToSvg`→`svgToPng` output, measuring the letter bbox vs the
-  rotated-border bbox with separable debug colors. Residual ~1.6% between banner
-  and square is rasterization noise (different canvas positions). Snapshots
+- Grade-letter centering (final `c025fb0da`): **root cause** — the flex-centered
+  letter was always perfectly box-centered; satori/resvg rasterizes the
+  `transform: rotate(45deg)` **diamond div's** bbox off-center by several px in a
+  **layout-dependent direction** (+11px right in the banner squad row, −7px left
+  in the square card — opposite signs), so the letter only _looked_ off, and no
+  single padding could fix both designs. **Fix:** draw the diamond as an inline
+  **SVG polygon** (`data:image/svg+xml` background on an axis-aligned div sized to
+  `size·√2`, offset to overflow symmetrically); SVG rasterizes symmetrically so
+  the box-centered letter aligns with no padding. Removed the earlier
+  paddingTop/paddingBottom hacks.
+- **Dead ends (don't repeat):** the first three attempts (`paddingBottom 0.08` →
+  `0.035` → `paddingTop 0.45`, commits `c3cf5e3ab`/`e9543c7a3`) were calibrated on
+  **isolated single-`GradeDiamond` renders**, which do NOT reproduce the layout
+  offset — they gave the wrong direction and couldn't fix horizontal at all.
+  Diagnosis that cracked it: a `#00ffff` box-center marker + separable debug
+  colors (border `#ff0000`, letter `#ff00ff`) on the real `matchToSvg`→`svgToPng`
+  output showed the letter on box-center and the _diamond_ off. Snapshots
   regenerated each iteration.
 - Merged `origin/main` (`3ada892d5`), which brought in **#1640 "stop downloading
   unused champion skins"** (removed `champion-skins.json`, `skinNum` /
