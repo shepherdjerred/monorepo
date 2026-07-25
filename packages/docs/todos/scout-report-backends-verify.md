@@ -1,13 +1,17 @@
 ---
 id: scout-report-backends-verify
-status: waiting-on-verification
+type: todo
+status: awaiting-human
+board: true
+verification: human
+disposition: active
 origin: packages/docs/logs/2026-06-13_new-todos-batch.md
 source_marker: false
 ---
 
 # Test and confirm the Scout for LoL report backends work end-to-end
 
-## Verification (2026-06-28) — dispatcher healthy, but 4 weekly reports have NEVER fired
+## Human Verification
 
 scout-prod logs show the `scheduled_reports` cron running every minute and completing
 (`✅ scheduled_reports completed in ~70ms`), so the dispatcher loop is healthy. **However**,

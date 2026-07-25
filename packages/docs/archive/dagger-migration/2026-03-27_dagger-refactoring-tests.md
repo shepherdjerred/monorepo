@@ -1,3 +1,10 @@
+---
+id: reference-dagger-migration-2026-03-27-dagger-refactoring-tests
+type: reference
+status: complete
+board: false
+---
+
 # Dagger Pipeline Refactoring Plan
 
 ## Context

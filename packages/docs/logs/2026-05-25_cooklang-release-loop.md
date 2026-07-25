@@ -1,8 +1,11 @@
+---
+id: log-2026-05-25-cooklang-release-loop
+type: log
+status: complete
+board: false
+---
+
 # Cooklang Release Loop
-
-## Status
-
-Partially Complete
 
 ## Summary
 

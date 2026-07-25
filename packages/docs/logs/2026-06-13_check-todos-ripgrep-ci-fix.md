@@ -1,11 +1,13 @@
 ---
+id: log-2026-06-13-check-todos-ripgrep-ci-fix
+type: log
+status: complete
+board: false
 date: 2026-06-13
 slug: check-todos-ripgrep-ci-fix
 ---
 
-## Status
-
-Complete
+# Check Todos Ripgrep Ci Fix
 
 ## Context
 

@@ -1,8 +1,11 @@
+---
+id: log-2026-05-24-stocks-sjer-red
+type: log
+status: complete
+board: false
+---
+
 # stocks.sjer.red — initial build
-
-## Status
-
-Complete
 
 ## Goal
 

@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-09-renovate-coverage-audit
+type: reference
+status: complete
+board: false
+---
+
 # Plan: Close all Renovate / dependency-pinning gaps
-
-## Status
-
-Complete
 
 ## Context
 

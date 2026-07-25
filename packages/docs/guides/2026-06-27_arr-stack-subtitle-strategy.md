@@ -1,6 +1,13 @@
+---
+id: guide-2026-06-27-arr-stack-subtitle-strategy
+type: guide
+status: complete
+board: false
+---
+
 # \*arr Stack Subtitle Strategy (Bazarr): Forced-EN, EN, EN+Simplified-Chinese, Simplified-Chinese
 
-## Status
+## Status Notes (Historical)
 
 Reference — research complete (2026-06-27)
 

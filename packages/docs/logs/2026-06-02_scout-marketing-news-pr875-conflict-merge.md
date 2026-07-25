@@ -1,8 +1,11 @@
+---
+id: log-2026-06-02-scout-marketing-news-pr875-conflict-merge
+type: log
+status: complete
+board: false
+---
+
 # Resolve PR #875 merge conflicts (scout marketing news)
-
-## Status
-
-Complete
 
 ## Context
 

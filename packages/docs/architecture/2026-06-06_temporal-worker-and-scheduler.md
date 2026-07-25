@@ -1,3 +1,10 @@
+---
+id: architecture-2026-06-06-temporal-worker-and-scheduler
+type: architecture
+status: complete
+board: false
+---
+
 # Temporal Worker & Agent-Task Scheduler
 
 A single Bun process that runs the monorepo's Temporal worker fleet — durable scheduled jobs (replacing K8s CronJobs), Home Assistant automations, the PR review/summary bot, and a generic report-only "agent task" scheduler with an authenticated HTTP API.

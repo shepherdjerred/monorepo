@@ -1,5 +1,5 @@
-# Shared by all image builds: Dockerfiles COPY the workspace and run one
-# root `bun install --frozen-lockfile` (turbo prune is banned — it corrupts
+# Shared by all image builds: Dockerfiles copy the workspace manifests needed
+# for a filtered root install (turbo prune is banned because it corrupts
 # bun.lock). Keep the build context to tracked-ish sources.
 .git
 .turbo

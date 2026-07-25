@@ -27,6 +27,7 @@ import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepasswor
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createTemporalWorkerAuditRbac } from "./audit-rbac.ts";
+import { createTemporalWorkerCrdReaderRbac } from "./crd-rbac.ts";
 import {
   createAgentTaskApiService,
   createTemporalWorkerGithubWebhookService,
@@ -288,6 +289,9 @@ export function createTemporalWorkerDeployment(
   // Cluster-wide read-only RBAC for the homelab-audit-daily workflow. See
   // ./audit-rbac.ts for the full rule set.
   createTemporalWorkerAuditRbac(chart, serviceAccount);
+
+  // Read-only CRD access for homelab-crd-imports-daily. See ./crd-rbac.ts.
+  createTemporalWorkerCrdReaderRbac(chart, serviceAccount);
 
   const deployment = new Deployment(chart, "temporal-worker", {
     replicas: 1,

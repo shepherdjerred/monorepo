@@ -1,8 +1,11 @@
+---
+id: log-2026-06-07-birmel-ytdlp-rate-limit-fix
+type: log
+status: complete
+board: false
+---
+
 # Birmel yt-dlp install — GitHub API rate-limit fix
-
-## Status
-
-Complete
 
 ## Problem
 

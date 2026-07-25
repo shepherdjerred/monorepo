@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import {
   completionTargetDate,
+  nextOccurrenceAfter,
   isCompletedOn,
   isRecurring,
   localTodayYmd,
@@ -209,5 +210,28 @@ describe("model-driven per-day semantics (P5)", () => {
     expect(() => isCompletedOn(weekly, "not-a-date")).toThrow(
       /invalid YYYY-MM-DD string/,
     );
+  });
+});
+
+describe("nextOccurrenceAfter", () => {
+  test("weekly recurrence finds the next week's occurrence", () => {
+    const task = makeTask({
+      recurrence: "DTSTART:20260508;FREQ=WEEKLY",
+      scheduled: "2026-07-24",
+    });
+    // 2026-05-08 is a Friday → weekly Fridays
+    expect(nextOccurrenceAfter(task, "2026-07-24")).toBe("2026-07-31");
+  });
+
+  test("monthly recurrence skips to next month", () => {
+    const task = makeTask({
+      recurrence: "DTSTART:20260301;FREQ=MONTHLY;BYMONTHDAY=1",
+      scheduled: "2026-08-01",
+    });
+    expect(nextOccurrenceAfter(task, "2026-08-01")).toBe("2026-09-01");
+  });
+
+  test("non-recurring tasks have no next occurrence", () => {
+    expect(nextOccurrenceAfter(makeTask(), "2026-07-24")).toBeUndefined();
   });
 });

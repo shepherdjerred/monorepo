@@ -1,8 +1,11 @@
+---
+id: log-2026-06-19-better-skill-capped-bugsink-triage
+type: log
+status: complete
+board: false
+---
+
 # Better Skill Capped — Bugsink Triage
-
-## Status
-
-Complete (triage only — no code changes)
 
 ## Context
 

@@ -1,12 +1,22 @@
 ---
 import { Button } from "#src/components/ui/button.tsx";
 import { Icon } from "astro-icon/components";
+import { PUBLIC_APP_VERSION, PUBLIC_GIT_SHA } from "astro:env/client";
 
 interface Props {
   variant?: "default" | "homepage";
 }
 
 const { variant = "default" } = Astro.props;
+
+// Build identity injected by the site-release build (absent locally, where
+// the footer omits the version line entirely).
+const versionLine =
+  PUBLIC_APP_VERSION === undefined
+    ? ""
+    : PUBLIC_GIT_SHA === undefined
+      ? ` · v${PUBLIC_APP_VERSION}`
+      : ` · v${PUBLIC_APP_VERSION} (${PUBLIC_GIT_SHA.slice(0, 7)})`;
 ---
 
 {
@@ -48,6 +58,7 @@ const { variant = "default" } = Astro.props;
         <div class="mt-8 md:order-1 md:mt-0">
           <p class="text-center text-xs/5 text-gray-500 dark:text-gray-400">
             &copy; {new Date().getFullYear()} Scout for League of Legends.
+            {versionLine}
           </p>
         </div>
       </div>
@@ -86,6 +97,7 @@ const { variant = "default" } = Astro.props;
           </p>
           <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">
             © {new Date().getFullYear()} Scout for League of Legends.
+            {versionLine}
           </p>
         </div>
       </div>

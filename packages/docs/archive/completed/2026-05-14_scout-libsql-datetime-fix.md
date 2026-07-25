@@ -1,6 +1,13 @@
+---
+id: reference-completed-2026-05-14-scout-libsql-datetime-fix
+type: reference
+status: complete
+board: false
+---
+
 # Scout-for-LoL — libsql adapter DateTime drift: investigation + long-term fix
 
-## Status
+## Status Notes (Historical)
 
 Complete — shipped via PR #817 (libsql fix), PR #819 (post-merge prettier hotfix), PR #818 (auto version-bump), PR #821 (prod promotion). Verified end-to-end on both Beta and Prod: every DateTime column is INTEGER, the four wrongly-ended competitions (Beta 9 + 10, Prod 3 + 9) are resurrected with `endProcessedAt = NULL`, the dispatcher fired and posted leaderboards immediately after pod restart, and the post-fix lifecycle ticks all report "No competitions to end".
 

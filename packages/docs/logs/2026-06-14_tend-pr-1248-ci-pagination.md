@@ -1,8 +1,11 @@
+---
+id: log-2026-06-14-tend-pr-1248-ci-pagination
+type: log
+status: complete
+board: false
+---
+
 # Tend PR #1248: fix(ci) paginate getLastSuccessfulCommit + emergency override
-
-## Status
-
-Complete
 
 ## What was done
 

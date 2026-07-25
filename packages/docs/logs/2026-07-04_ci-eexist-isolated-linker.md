@@ -1,8 +1,11 @@
+---
+id: log-2026-07-04-ci-eexist-isolated-linker
+type: log
+status: complete
+board: false
+---
+
 # CI-wide EEXIST failures — bun isolated-linker race (post-outage remediation)
-
-## Status
-
-Complete
 
 ## Symptom
 

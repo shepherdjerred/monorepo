@@ -1,8 +1,11 @@
+---
+id: log-2026-06-06-ci-main-failure-eslint-trivy
+type: log
+status: complete
+board: false
+---
+
 # 2026-06-06 — Fix failing CI on `main` (ESLint max-lines + broken Trivy invocation)
-
-## Status
-
-Complete
 
 ## Context
 

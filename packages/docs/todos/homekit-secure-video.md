@@ -1,17 +1,15 @@
 ---
 id: homekit-secure-video
-status: blocked
+type: todo
+status: planned
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/logs/2026-06-13_new-todos-batch.md
 source_marker: false
 ---
 
 # HomeKit Secure Video — remaining steps
-
-## Status
-
-**Blocked on one step: the HomeKit pairing must happen from an Apple device on the
-Seattle home LAN.** Owner is in Atlanta; server + doorbell are in Seattle. Everything
-deployable is done and live. After pairing, the rest is a few clicks + cleanup.
 
 ## Where it stands (2026-06-26)
 
@@ -57,20 +55,20 @@ Apple device **physically on the Seattle LAN**.
    is flaky. Not recommended for a one-time pairing.
 4. **Wait until back in Seattle** — ~2-minute job on home Wi-Fi.
 
-## Remaining steps (in order)
+## Remaining
 
-1. _(optional, off-LAN now)_ In Scrypted, confirm the Reolink device's **Doorbell** toggle
-   is on (so HomeKit treats it as a doorbell → ring/visitor notifications).
-2. **Pair** the camera in Apple Home — open the **camera device → HomeKit** section in
-   Scrypted, scan **that camera's QR** (NOT the HomeKit _plugin_ QR — that's the bridge for
-   non-camera devices). Requires a Seattle-LAN Apple device (see options above).
-3. In Apple Home: camera → Settings → **Stream & Recording → Stream & Allow Recording**;
-   set **Record: Any Motion**, **Notifications: A person is detected** (record everything,
-   only ping for people — Apple's Home Hub classifies clips for free). Needs Home Hub +
-   iCloud+ (50 GB tier covers 1 camera; HKSV clips don't count against the quota).
-4. Verify HKSV end-to-end (below).
-5. The old "Front Door" tile in Apple Home will now show **"No Response"** (its HA bridge
-   was removed) — remove that stale accessory from the Home app.
+- [ ] _(optional, off-LAN now)_ In Scrypted, confirm the Reolink device's **Doorbell** toggle
+      is on (so HomeKit treats it as a doorbell → ring/visitor notifications).
+- [ ] **Pair** the camera in Apple Home — open the **camera device → HomeKit** section in
+      Scrypted, scan **that camera's QR** (NOT the HomeKit _plugin_ QR — that's the bridge for
+      non-camera devices). Requires a Seattle-LAN Apple device (see options above).
+- [ ] In Apple Home: camera → Settings → **Stream & Recording → Stream & Allow Recording**;
+      set **Record: Any Motion**, **Notifications: A person is detected** (record everything,
+      only ping for people — Apple's Home Hub classifies clips for free). Needs Home Hub +
+      iCloud+ (50 GB tier covers 1 camera; HKSV clips don't count against the quota).
+- [ ] Verify HKSV end-to-end (below).
+- [ ] The old "Front Door" tile in Apple Home will now show **"No Response"** (its HA bridge
+      was removed) — remove that stale accessory from the Home app.
 
 ## Cleanup
 

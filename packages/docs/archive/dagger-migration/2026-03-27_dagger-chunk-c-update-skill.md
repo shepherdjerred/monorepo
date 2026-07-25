@@ -1,3 +1,10 @@
+---
+id: reference-dagger-migration-2026-03-27-dagger-chunk-c-update-skill
+type: reference
+status: complete
+board: false
+---
+
 # Chunk C: Update dagger-helper Claude Skill
 
 **Wave:** 1 (parallel with R, A, B)

@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-07-09-ha-registry-cleanup
+type: reference
+status: complete
+board: false
+---
+
 # HA Great Refresh — Registry Cleanup, Naming Consistency, HomeKit Finalization
-
-## Status
-
-Complete — shipped 2026-07-09. All phases executed and verified (final sweep: 71 accessories / 12 canonical rooms / zero unreachable / zero collisions). Deliberate leftovers (vendor-app renames, HKSV re-verify after the camera re-pair incident, floor-preheat first-run check) tracked in `packages/docs/todos/homekit-refresh-followups.md`.
 
 ## Goal / bar
 

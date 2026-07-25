@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-19-alert-remediation-throttle-daily
+type: reference
+status: complete
+board: false
+---
+
 # Throttle alert-remediation: hourly → once a day
-
-## Status
-
-Complete — shipped in PR #1279. Underlying claude -p hang tracked separately.
 
 ## Context
 

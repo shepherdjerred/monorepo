@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-27-seaweedfs-static-site-caching-hardening
+type: reference
+status: complete
+board: false
+---
+
 # Plan: fix static-site caching gaps (SeaweedFS / Caddy / Cloudflare)
-
-## Status
-
-Complete — shipped in PR #1328 (post-deploy curl checks operational).
 
 ## Context
 

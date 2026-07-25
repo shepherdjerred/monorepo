@@ -1,8 +1,11 @@
+---
+id: log-2026-06-12-scale-pokemon-to-zero
+type: log
+status: complete
+board: false
+---
+
 # Scale Discord Plays Pokemon to 0 replicas
-
-## Status
-
-Complete
 
 ## Context
 

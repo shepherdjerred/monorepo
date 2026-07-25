@@ -1,8 +1,11 @@
+---
+id: log-2026-07-15-merge-rip-setup-conflicts
+type: log
+status: complete
+board: false
+---
+
 # Merge conflicts between feature/rip-setup and main — conflict resolution
-
-## Status
-
-Complete
 
 ## Context
 

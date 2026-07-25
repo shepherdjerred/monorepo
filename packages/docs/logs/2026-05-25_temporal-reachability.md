@@ -1,8 +1,11 @@
+---
+id: log-2026-05-25-temporal-reachability
+type: log
+status: complete
+board: false
+---
+
 # Temporal Reachability Check
-
-## Status
-
-Complete
 
 ## Summary
 

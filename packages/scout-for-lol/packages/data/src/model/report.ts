@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { CompetitionCronSchema } from "#src/model/competition-cron.ts";
+import {
+  CompetitionCronSchema,
+  DEFAULT_SCHEDULE_TIMEZONE,
+  ReportScheduleTimezoneSchema,
+} from "#src/model/competition-cron.ts";
 import type { CompetitionId } from "#src/model/competition.ts";
 import type {
   DiscordAccountId,
@@ -44,6 +48,13 @@ export const ReportOutputFormatSchema = z.enum([
   "LEADERBOARD",
   "BAR_CHART",
   "LINE_CHART",
+  "STACKED_BAR",
+  "AREA_CHART",
+  "DONUT_CHART",
+  "SCATTER_CHART",
+  "HEATMAP",
+  "RADAR_CHART",
+  "KPI_CARD",
 ]);
 
 /**
@@ -57,15 +68,68 @@ export type ReportRenderChannel = z.infer<typeof ReportRenderChannelSchema>;
 export const ReportRenderChannelSchema = z
   .object({
     x: z.string().min(1).optional(),
-    y: z.string().min(1).optional(),
+    y: z
+      .union([z.string().min(1), z.array(z.string().min(1)).min(1).max(8)])
+      .optional(),
+    series: z.string().min(1).optional(),
+    size: z.string().min(1).optional(),
+    value: z.string().min(1).optional(),
   })
   .strict();
+
+export const ReportChartThemeSchema = z.enum([
+  "lol_dark",
+  "lol_light",
+  "minimal_dark",
+  "minimal_light",
+]);
+export type ReportChartTheme = z.infer<typeof ReportChartThemeSchema>;
+export const ReportChartPaletteSchema = z.enum([
+  "ranked",
+  "categorical",
+  "team",
+  "gold",
+  "colorblind",
+]);
+export type ReportChartPalette = z.infer<typeof ReportChartPaletteSchema>;
+export const ReportChartOrientationSchema = z.enum(["horizontal", "vertical"]);
+export const ReportChartLabelsSchema = z.enum([
+  "auto",
+  "show",
+  "hide",
+  "value",
+  "percent",
+]);
+export type ReportChartLabels = z.infer<typeof ReportChartLabelsSchema>;
+export const ReportChartLegendSchema = z.enum([
+  "auto",
+  "none",
+  "top",
+  "right",
+  "bottom",
+]);
+export type ReportChartLegend = z.infer<typeof ReportChartLegendSchema>;
+export type ReportChartOrientation = z.infer<
+  typeof ReportChartOrientationSchema
+>;
+export const ReportChartSortSchema = z.enum(["query", "asc", "desc"]);
+export const ReportHexColorSchema = z.string().regex(/^#[0-9a-f]{6}$/iu);
 
 export type ReportChartOptions = z.infer<typeof ReportChartOptionsSchema>;
 export const ReportChartOptionsSchema = z
   .object({
     title: z.string().min(1).optional(),
+    subtitle: z.string().min(1).optional(),
+    xAxisLabel: z.string().min(1).optional(),
     yAxisLabel: z.string().min(1).optional(),
+    theme: ReportChartThemeSchema.optional(),
+    palette: ReportChartPaletteSchema.optional(),
+    colors: z.array(ReportHexColorSchema).min(1).max(8).optional(),
+    orientation: ReportChartOrientationSchema.optional(),
+    labels: ReportChartLabelsSchema.optional(),
+    legend: ReportChartLegendSchema.optional(),
+    sort: ReportChartSortSchema.optional(),
+    smooth: z.boolean().optional(),
   })
   .strict();
 
@@ -87,6 +151,41 @@ export const ReportRenderSpecSchema = z.discriminatedUnion("kind", [
   }),
   z.object({
     kind: z.literal("LINE_CHART"),
+    encoding: ReportRenderChannelSchema.default({}),
+    options: ReportChartOptionsSchema.default({}),
+  }),
+  z.object({
+    kind: z.literal("STACKED_BAR"),
+    encoding: ReportRenderChannelSchema.default({}),
+    options: ReportChartOptionsSchema.default({}),
+  }),
+  z.object({
+    kind: z.literal("AREA_CHART"),
+    encoding: ReportRenderChannelSchema.default({}),
+    options: ReportChartOptionsSchema.default({}),
+  }),
+  z.object({
+    kind: z.literal("DONUT_CHART"),
+    encoding: ReportRenderChannelSchema.default({}),
+    options: ReportChartOptionsSchema.default({}),
+  }),
+  z.object({
+    kind: z.literal("SCATTER_CHART"),
+    encoding: ReportRenderChannelSchema.default({}),
+    options: ReportChartOptionsSchema.default({}),
+  }),
+  z.object({
+    kind: z.literal("HEATMAP"),
+    encoding: ReportRenderChannelSchema.default({}),
+    options: ReportChartOptionsSchema.default({}),
+  }),
+  z.object({
+    kind: z.literal("RADAR_CHART"),
+    encoding: ReportRenderChannelSchema.default({}),
+    options: ReportChartOptionsSchema.default({}),
+  }),
+  z.object({
+    kind: z.literal("KPI_CARD"),
     encoding: ReportRenderChannelSchema.default({}),
     options: ReportChartOptionsSchema.default({}),
   }),
@@ -141,15 +240,15 @@ export type Report = {
   title: string;
   description: string | null;
   queryText: string;
-  lookbackDays: number;
-  maxRows: number;
   isEnabled: boolean;
   isSystemManaged: boolean;
   systemSource: ReportSystemSource | null;
   sourceCompetitionId: CompetitionId | null;
   cronExpression: string;
+  scheduleTimezone: string;
   nextScheduledRunAt: Date | null;
   lastScheduledRunAt: Date | null;
+  lastScheduledLocalDate: string | null;
   lastRunStatus: ReportRunStatus | null;
   lastRunError: string | null;
   createdTime: Date;
@@ -180,9 +279,10 @@ export const ReportCreateInputSchema = z.object({
   // BAD_REQUEST thrown from the handler. See discord.ts DiscordChannelIdSchema.
   channelId: DiscordChannelIdSchema,
   queryText: ReportQueryTextSchema,
-  lookbackDays: ReportLookbackDaysSchema,
-  maxRows: ReportMaxRowsSchema,
   cronExpression: CompetitionCronSchema.default(DEFAULT_REPORT_CRON),
+  scheduleTimezone: ReportScheduleTimezoneSchema.default(
+    DEFAULT_SCHEDULE_TIMEZONE,
+  ),
   isEnabled: z.boolean().default(true),
 });
 
@@ -215,10 +315,6 @@ export const ReportAiEditRequestSchema = z
     currentQueryText: ReportAiCurrentQueryTextSchema.default(null),
     currentTitle: z.string().trim().max(100).nullable().default(null),
     currentDescription: z.string().trim().max(500).nullable().default(null),
-    lookbackDays: ReportLookbackDaysSchema.default(
-      REPORT_DEFAULT_LOOKBACK_DAYS,
-    ),
-    maxRows: ReportMaxRowsSchema.default(REPORT_DEFAULT_MAX_ROWS),
     sourceCompetitionId: z.number().int().positive().nullable().default(null),
   })
   .strict();
@@ -267,12 +363,30 @@ export const ReportAiQuotaSnapshotSchema = z
 
 export type ReportAiQuotaSnapshot = z.infer<typeof ReportAiQuotaSnapshotSchema>;
 
+export const ReportValueFormatSchema = z.enum([
+  "text",
+  "integer",
+  "decimal",
+  "percent",
+]);
+export type ReportValueFormat = z.infer<typeof ReportValueFormatSchema>;
+
+export const ReportResultColumnSchema = z
+  .object({
+    key: z.string().min(1),
+    label: z.string().min(1),
+    format: ReportValueFormatSchema,
+  })
+  .strict();
+export type ReportResultColumn = z.infer<typeof ReportResultColumnSchema>;
+
 export const ReportAiEditStatusSchema = z
   .object({
     enabled: z.boolean(),
     disabledReason: z.string().trim().min(1).max(300).nullable(),
     model: z.string().trim().min(1),
-    quota: z.array(ReportAiQuotaSnapshotSchema).min(1),
+    exempt: z.boolean(),
+    quota: z.array(ReportAiQuotaSnapshotSchema),
     activeRun: z.boolean(),
   })
   .strict();
@@ -281,7 +395,7 @@ export type ReportAiEditStatus = z.infer<typeof ReportAiEditStatusSchema>;
 
 export const ReportAiPreviewSummarySchema = z
   .object({
-    columns: z.array(z.string()).max(20),
+    columns: z.array(ReportResultColumnSchema).max(20),
     rows: z
       .array(
         z
@@ -353,7 +467,7 @@ export const ReportAiStreamEventSchema = z.discriminatedUnion("type", [
       type: z.literal("final"),
       draft: ReportAiFinalDraftSchema,
       formattedQueryText: ReportQueryTextSchema,
-      quota: z.array(ReportAiQuotaSnapshotSchema).min(1),
+      quota: z.array(ReportAiQuotaSnapshotSchema),
     })
     .strict(),
   z
@@ -361,11 +475,7 @@ export const ReportAiStreamEventSchema = z.discriminatedUnion("type", [
       type: z.literal("error"),
       message: z.string().trim().min(1).max(1000),
       retryAfterSeconds: z.number().int().positive().nullable().default(null),
-      quota: z
-        .array(ReportAiQuotaSnapshotSchema)
-        .min(1)
-        .nullable()
-        .default(null),
+      quota: z.array(ReportAiQuotaSnapshotSchema).nullable().default(null),
     })
     .strict(),
   z.object({ type: z.literal("done") }).strict(),
@@ -377,7 +487,7 @@ export const ReportAiHttpErrorSchema = z
   .object({
     error: z.string().trim().min(1).max(1000),
     retryAfterSeconds: z.number().int().positive().nullable().default(null),
-    quota: z.array(ReportAiQuotaSnapshotSchema).min(1).nullable().default(null),
+    quota: z.array(ReportAiQuotaSnapshotSchema).nullable().default(null),
   })
   .strict();
 

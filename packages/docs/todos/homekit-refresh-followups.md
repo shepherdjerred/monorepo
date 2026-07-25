@@ -1,6 +1,10 @@
 ---
 id: homekit-refresh-followups
-status: active
+type: todo
+status: in-progress
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/plans/2026-07-09_ha-registry-cleanup.md
 source_marker: false
 ---
@@ -55,3 +59,7 @@ These are the deliberate leftovers.
 - [ ] **Unexplained HA restart at 2026-07-09 17:38 PT** — predates all session
       changes and took down econet/roborock/one Z-Wave node. Never attributed;
       check deploy/ArgoCD/node history if it recurs.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `HomeKit great-refresh follow-ups (2026-07-09)`.

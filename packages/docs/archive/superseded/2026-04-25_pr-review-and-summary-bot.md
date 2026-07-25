@@ -1,8 +1,11 @@
+---
+id: reference-superseded-2026-04-25-pr-review-and-summary-bot
+type: reference
+status: complete
+board: false
+---
+
 # PR Review and Summary Bot
-
-## Status
-
-Not Started
 
 ## Context
 

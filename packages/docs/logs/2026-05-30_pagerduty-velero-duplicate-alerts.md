@@ -1,8 +1,11 @@
+---
+id: log-2026-05-30-pagerduty-velero-duplicate-alerts
+type: log
+status: complete
+board: false
+---
+
 # PagerDuty — Velero "Large PVC" duplicate/garbled alerts
-
-## Status
-
-Complete (code fix); post-deploy verification deferred — see [todos/pagerduty-velero-alert-formatting](../todos/pagerduty-velero-alert-formatting.md).
 
 ## Context
 

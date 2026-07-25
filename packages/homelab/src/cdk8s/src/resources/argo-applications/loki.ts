@@ -201,6 +201,8 @@ export function createLokiApp(chart: Chart) {
     service: "loki",
     port: 3100,
     hosts: ["loki"],
+    // Loki returns 404 at "/"; its readiness endpoint is /ready.
+    probePath: "/ready",
   });
 
   // Create ConfigMap for Loki alert rules

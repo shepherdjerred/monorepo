@@ -44,13 +44,13 @@ auto-pauses or auto-unpauses anything. This is intentional — pause is the one 
 everything else about a schedule lives in source. Don't add a declarative `enabled` flag, it
 would fight the UI.
 
-| To stop…             | Pause schedule id(s)                                                                                 |
-| -------------------- | ---------------------------------------------------------------------------------------------------- |
-| Floor preheat        | `good-morning-weekday-preheat`, `good-morning-weekend-preheat`                                       |
-| Wake-up (heat)       | `good-morning-weekday-wake`, `good-morning-weekend-wake`                                             |
-| Get-up (volume ramp) | `good-morning-weekday-up`, `good-morning-weekend-up`                                                 |
-| Vacuum               | `vacuum-9am`, `vacuum-12pm`, `vacuum-5pm`                                                            |
-| LoL / Scout data     | `scout-data-dragon-version-check`, `scout-data-dragon-weekly-refresh`, `scout-season-refresh-weekly` |
+| To stop…             | Pause schedule id(s)                                                                                                                  |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Floor preheat        | `good-morning-weekday-preheat`, `good-morning-weekend-preheat`                                                                        |
+| Wake-up (heat)       | `good-morning-weekday-wake`, `good-morning-weekend-wake`                                                                              |
+| Get-up (volume ramp) | `good-morning-weekday-up`, `good-morning-weekend-up`                                                                                  |
+| Vacuum               | `vacuum-9am`, `vacuum-12pm`, `vacuum-5pm`                                                                                             |
+| LoL / Scout data     | `scout-data-dragon-version-check`, `scout-data-dragon-weekly-refresh`, `scout-season-refresh-weekly`, `scout-showcase-refresh-weekly` |
 
 ### Catchup window (missed-run replay after a SERVER outage)
 
@@ -224,9 +224,9 @@ Set `RUNBOOK_PATH=packages/docs/guides/2026-04-04_homelab-audit-runbook.md` in `
 There are **two** Temporal scheduling patterns — don't conflate them:
 
 - **Report-only agent-tasks** (`agentTaskWorkflow`, above) email reports and **cannot** open PRs/issues or edit files — `mode` is only `"report-only"` and the prompt forbids mutation.
-- **Deterministic PR-creating workflows** (e.g. `src/activities/data-dragon.ts`, `pokeemerald-wasm.ts`, `readme-refresh.ts`) regenerate artifacts then `git push --force-with-lease` + `gh pr create`, authed by a GitHub App installation token (`src/lib/github-app-token.ts` `createGitHubAppInstallationToken()`, env `GITHUB_APP_ID`/`GITHUB_APP_INSTALLATION_ID`/`GITHUB_APP_PRIVATE_KEY`). scout-for-lol's data-dragon refresh is the canonical example.
+- **Deterministic PR-creating workflows** (e.g. `src/activities/data-dragon.ts`, `readme-refresh.ts`, `llm-catalog-refresh.ts`, `homelab-crd-imports-refresh.ts`) regenerate artifacts then `git push --force-with-lease` + `gh pr create`, authed by a GitHub App installation token (`src/lib/github-app-token.ts` `createGitHubAppInstallationToken()`, env `GITHUB_APP_ID`/`GITHUB_APP_INSTALLATION_ID`/`GITHUB_APP_PRIVATE_KEY`). scout-for-lol's data-dragon refresh is the canonical example.
 
-To add a "weekly: regenerate X, open a PR if it changed" job, mirror `data-dragon.ts`: a deterministic activity (no Claude), GitHub App token, path-scoped `git add`, plus a thin workflow, an export in `src/workflows/index.ts`, and a `SCHEDULES` entry (cron, `America/Los_Angeles`, `TASK_QUEUES.DEFAULT`). The worker pod has bun/git/gh but **not** helm — add tools to the worker image build (`Dockerfile`) if the job needs them (`bunx turbo run smoke --filter=temporal` builds + smoke-tests the image; CI builds/smokes/pushes it on merge to main).
+To add a "regenerate X on a schedule, open a PR if it changed" job, mirror `data-dragon.ts`: a deterministic activity (no Claude), GitHub App token, path-scoped `git add`, plus a thin workflow, an export in `src/workflows/index.ts`, and a `SCHEDULES` entry (cron, `America/Los_Angeles`, `TASK_QUEUES.DEFAULT`). The worker pod has bun/git/gh/kubectl (in-cluster SA — `homelab-crd-imports-daily` runs `kubectl get crds` with the read-only `temporal-worker-crd-reader` ClusterRole) but **not** helm — add tools to the worker image build (`Dockerfile`) if the job needs them (`bunx turbo run smoke --filter=temporal` builds + smoke-tests the image; CI builds/smokes/pushes it on merge to main). CLIs a job needs from the repo itself (e.g. `cdk8s` for the CRD imports) come from the bot clone's workspace install via a package devDependency, not the image.
 
 ### Bot-clone environment — use `bot-clone.ts`, never hand-rolled installs
 

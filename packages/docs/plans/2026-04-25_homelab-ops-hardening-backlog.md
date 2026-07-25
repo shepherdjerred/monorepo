@@ -1,8 +1,13 @@
+---
+id: plan-2026-04-25-homelab-ops-hardening-backlog
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Homelab Ops Hardening Backlog
-
-## Status
-
-Active. Extracted from the archived 2026-04-05 homelab ops audit after several findings became stale or partially fixed.
 
 ## Current Focus
 
@@ -20,3 +25,7 @@ Active. Extracted from the archived 2026-04-05 homelab ops audit after several f
 
 - Each implementation PR references one narrow backlog item.
 - Any completed item is verified against the current cdk8s/OpenTofu source before being marked done.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Homelab Ops Hardening Backlog`.

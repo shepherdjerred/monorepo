@@ -233,6 +233,58 @@ resource "terraform_data" "llm_archive_lifecycle" {
   }
 }
 
+# Versioned scout-for-lol site artifacts — one prod-flavored build of the
+# marketing site + SPA per main build, under `2.0.0-<build>/` with a sibling
+# `2.0.0-<build>.json` manifest. Written by the CI sites step
+# (scripts/scout-site-release.ts archive); the prod bucket is synced from a
+# pinned version here at promotion time (reconcile-prod), so prod site content
+# always matches the promoted backend image. This bucket MUST exist via Tofu
+# before the first archive sync runs — SeaweedFS auto-creates buckets on first
+# PutObject, which would force the stocks-style import-block adoption dance.
+# 365-day retention: promotion cadence is far shorter, and the reconcile no-op
+# path (marker == pin) needs no archive at all.
+#
+# The resource landed on main (#5847) without this import block, and its build
+# was canceled mid-apply — SeaweedFS had already auto-created the bucket on the
+# first archive PutObject, so every subsequent `tofu apply` hit
+# `BucketAlreadyExists` (build 5864). This is exactly the stocks-style adoption
+# dance the resource comment anticipated: the bucket already exists, so adopt it
+# into state on the next apply instead of letting Tofu CreateBucket over it.
+# Safe because the import + resource land together; a no-op once in state, and
+# may be removed after the first successful apply.
+import {
+  to = aws_s3_bucket.scout_site_releases
+  id = "scout-site-releases"
+}
+
+resource "aws_s3_bucket" "scout_site_releases" {
+  bucket = "scout-site-releases"
+}
+
+resource "terraform_data" "scout_site_releases_lifecycle" {
+  input = {
+    bucket       = aws_s3_bucket.scout_site_releases.id
+    expire_days  = 365
+    endpoint_url = "https://seaweedfs-s3.tailnet-1a49.ts.net"
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      aws s3api put-bucket-lifecycle-configuration \
+        --bucket "${self.input.bucket}" \
+        --endpoint-url "${self.input.endpoint_url}" \
+        --lifecycle-configuration '{
+          "Rules": [{
+            "ID": "expire-scout-site-releases",
+            "Status": "Enabled",
+            "Filter": {"Prefix": ""},
+            "Expiration": {"Days": ${self.input.expire_days}}
+          }]
+        }'
+    EOT
+  }
+}
+
 # OpenTofu state backend for all modules
 resource "aws_s3_bucket" "homelab_tofu_state" {
   bucket = "homelab-tofu-state"

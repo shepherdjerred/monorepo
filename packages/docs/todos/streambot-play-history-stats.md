@@ -1,6 +1,10 @@
 ---
 id: streambot-play-history-stats
-status: active
+type: todo
+status: in-progress
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/logs/2026-06-13_new-todos-batch.md
 source_marker: false
 ---
@@ -21,10 +25,10 @@ Current state:
   `packages/streambot/src/observability/metrics.ts` /
   `stream-observer.ts` (ffmpeg speed, frametime, hardware fallback, codec info).
 
-## Done when
+## Remaining
 
-- A persistent store records timestamped play events:
-  `{ userId/requesterId, title, sourceKind (file|url|search), playedAt,
+- [ ] A persistent store records timestamped play events:
+      `{ userId/requesterId, title, sourceKind (file|url|search), playedAt,
 durationSeconds, completed }`.
-- History/stats are queryable (e.g. a `/stream history` command, per-user and
-  per-title play counts).
+- [ ] History/stats are queryable (e.g. a `/stream history` command, per-user and
+      per-title play counts).

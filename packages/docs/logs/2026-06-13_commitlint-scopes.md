@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-commitlint-scopes
+type: log
+status: complete
+board: false
+---
+
 # Commitlint scopes & types — review and tune
-
-## Status
-
-Complete
 
 ## Context
 

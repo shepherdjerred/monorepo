@@ -265,14 +265,14 @@ export async function getLaneIconBase64(lane: Lane): Promise<string> {
 
 export async function validateChampionLoadingImage(
   championName: string,
-  skinNum: number,
 ): Promise<void> {
   const normalized = normalizeChampionName(championName);
-  const relativePath = `./assets/img/champion-loading/${normalized}_${skinNum.toString()}.jpg`;
+  // Only the base skin (skin 0) is downloaded + shipped.
+  const relativePath = `./assets/img/champion-loading/${normalized}_0.jpg`;
   const absolutePath = getAbsolutePath(relativePath);
   await validateImageExists(
     absolutePath,
-    `Champion loading image for ${normalized} skin ${skinNum.toString()}`,
+    `Champion loading image for ${normalized}`,
   );
 }
 
@@ -284,42 +284,17 @@ export function getChampionLoadingImageUrl(
   return `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${normalized}_${skinNum.toString()}.jpg`;
 }
 
-/**
- * Fired by `getChampionLoadingImageBase64` when the requested skin's JPG is
- * not on disk and we fall back to the base skin (skin 0). The caller is
- * expected to log/meter — this is expected (not exceptional) behaviour for
- * the small window between Riot releasing a new skin and the next
- * `update-data-dragon` run.
- */
-export type SkinFallbackEvent = {
-  championName: string;
-  requestedSkin: number;
-};
-
 export async function getChampionLoadingImageBase64(
   championName: string,
-  skinNum = 0,
-  onSkinFallback?: (event: SkinFallbackEvent) => void,
 ): Promise<string> {
   const normalized = normalizeChampionName(championName);
-  const requested = `./assets/img/champion-loading/${normalized}_${skinNum.toString()}.jpg`;
+  // Only the base skin (skin 0) is ever rendered, so it's the only loading
+  // screen art we download + ship (see update-data-dragon.ts).
+  const requested = `./assets/img/champion-loading/${normalized}_0.jpg`;
   const requestedAbs = getAbsolutePath(requested);
 
   if (await Bun.file(requestedAbs).exists()) {
     return loadImageAsBase64(requested, "image/jpeg");
-  }
-
-  // Defense-in-depth: with the update-data-dragon CommunityDragon fallback
-  // in place this should be rare — only triggers when Riot ships a new skin
-  // between asset refreshes. When it fires we still post a real image
-  // (default skin) instead of the text-only fallback embed; the metric in
-  // the backend tells us to refresh the asset cache.
-  if (skinNum !== 0) {
-    onSkinFallback?.({ championName: normalized, requestedSkin: skinNum });
-    return loadImageAsBase64(
-      `./assets/img/champion-loading/${normalized}_0.jpg`,
-      "image/jpeg",
-    );
   }
 
   throw new Error(
@@ -334,14 +309,14 @@ export async function getChampionLoadingImageBase64(
 
 export async function validateChampionSplashImage(
   championName: string,
-  skinNum: number,
 ): Promise<void> {
   const normalized = normalizeChampionName(championName);
-  const relativePath = `./assets/img/champion-splash/${normalized}_${skinNum.toString()}.jpg`;
+  // Only the base skin (skin 0) is downloaded + shipped.
+  const relativePath = `./assets/img/champion-splash/${normalized}_0.jpg`;
   const absolutePath = getAbsolutePath(relativePath);
   await validateImageExists(
     absolutePath,
-    `Champion splash image for ${normalized} skin ${skinNum.toString()}`,
+    `Champion splash image for ${normalized}`,
   );
 }
 
@@ -355,26 +330,15 @@ export function getChampionSplashImageUrl(
 
 export async function getChampionSplashImageBase64(
   championName: string,
-  skinNum = 0,
-  onSkinFallback?: (event: SkinFallbackEvent) => void,
 ): Promise<string> {
   const normalized = normalizeChampionName(championName);
-  const requested = `./assets/img/champion-splash/${normalized}_${skinNum.toString()}.jpg`;
+  // Only the base skin (skin 0) is ever rendered, so it's the only splash art
+  // we download + ship (see update-data-dragon.ts).
+  const requested = `./assets/img/champion-splash/${normalized}_0.jpg`;
   const requestedAbs = getAbsolutePath(requested);
 
   if (await Bun.file(requestedAbs).exists()) {
     return loadImageAsBase64(requested, "image/jpeg");
-  }
-
-  // Only base skin 0 splash art is cached (the ranked designs render skin 0), so
-  // a non-zero skin request falls back to the base art instead of failing the
-  // render. Callers may pass `onSkinFallback` to log/meter these.
-  if (skinNum !== 0) {
-    onSkinFallback?.({ championName: normalized, requestedSkin: skinNum });
-    return loadImageAsBase64(
-      `./assets/img/champion-splash/${normalized}_0.jpg`,
-      "image/jpeg",
-    );
   }
 
   throw new Error(

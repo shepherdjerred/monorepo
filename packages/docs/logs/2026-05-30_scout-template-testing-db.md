@@ -1,8 +1,11 @@
+---
+id: log-2026-05-30-scout-template-testing-db
+type: log
+status: complete
+board: false
+---
+
 # Scout Template Testing DB
-
-## Status
-
-Complete
 
 ## Summary
 

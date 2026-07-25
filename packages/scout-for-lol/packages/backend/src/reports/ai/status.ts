@@ -16,6 +16,10 @@ export function getReportAiEditStatus(params: {
     server: params.guildId,
     user: params.userId,
   });
+  const exempt = getFlag("ai_reports_unlimited", {
+    server: params.guildId,
+    user: params.userId,
+  });
   const hasRequiredProviderKey =
     !model.startsWith("openai/") || configuration.openaiApiKey !== undefined;
   const disabledReason = featureEnabled
@@ -23,12 +27,13 @@ export function getReportAiEditStatus(params: {
       ? null
       : "OPENAI_API_KEY is not configured."
     : "AI report editing is not enabled for this server.";
-  const quota = getReportAiQuotaStatus(params);
+  const quota = getReportAiQuotaStatus(params, Date.now(), { exempt });
 
   return ReportAiEditStatusSchema.parse({
     enabled: featureEnabled && hasRequiredProviderKey,
     disabledReason,
     model,
+    exempt,
     quota: quota.quota,
     activeRun: quota.activeRun,
   });

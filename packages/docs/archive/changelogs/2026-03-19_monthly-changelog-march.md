@@ -1,3 +1,10 @@
+---
+id: reference-changelogs-2026-03-19-monthly-changelog-march
+type: reference
+status: complete
+board: false
+---
+
 # Monthly Changelog: Feb 19 – Mar 19, 2026
 
 Summary of major changes across the monorepo over the last month.

@@ -1,5 +1,6 @@
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { createS3Client } from "#src/storage/s3-client.ts";
+import { validateS3Metadata } from "#src/storage/s3-metadata.ts";
 import { createLogger } from "#src/logger.ts";
 import configuration from "#src/configuration.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
@@ -182,13 +183,13 @@ export async function saveCachedPairingStats(
       Key: key,
       Body: body,
       ContentType: "application/json",
-      Metadata: {
+      Metadata: validateS3Metadata({
         serverId: stats.serverId,
         year: year.toString(),
         weekNumber: weekNumber.toString(),
         matchesAnalyzed: stats.totalMatchesAnalyzed.toString(),
         pairingsCount: stats.pairings.length.toString(),
-      },
+      }),
     });
 
     await client.send(command);

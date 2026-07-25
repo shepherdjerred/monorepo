@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-mk64-prisma-skip-generate-crashloop
+type: log
+status: complete
+board: false
+---
+
 # MK64 prod crashloop — Prisma 7 `db push --skip-generate` + smoke-test gap
-
-## Status
-
-Complete (live service restored; permanent fix in PR)
 
 ## Symptom
 

@@ -1,8 +1,11 @@
+---
+id: log-2026-07-03-asuswrt-provider-real-router-smoke
+type: log
+status: complete
+board: false
+---
+
 # AsusWRT provider — non-destructive real-router validation
-
-## Status
-
-Complete (investigation) — found a real bug; no code changes made.
 
 ## Question
 

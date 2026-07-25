@@ -1,8 +1,11 @@
+---
+id: log-2026-06-25-ssd-price-outlook-12mo
+type: log
+status: complete
+board: false
+---
+
 # SSD Price Outlook — Next 12 Months (research Q&A)
-
-## Status
-
-Complete
 
 ## Question
 

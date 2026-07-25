@@ -79,3 +79,54 @@ export async function installScoutWorkspace(repoDir: string): Promise<void> {
     env: { BUN_INSTALL_CACHE_DIR: botCloneCacheDir(repoDir) },
   });
 }
+
+/**
+ * Forcibly disarm any git hooks armed in this ephemeral clone, regardless of
+ * how they got armed. `rootInstallWithoutHooks`'s `--ignore-scripts` only
+ * prevents ITS OWN call from arming hooks — it can't un-arm hooks a prior,
+ * uncontrolled subprocess already installed (e.g. an agentic `claude -p` /
+ * `codex exec` session with Bash access running a plain `bun install` on its
+ * own initiative before this point, which is what broke
+ * `scout-season-refresh-weekly` on 2026-07-12: Claude has Bash access and
+ * `packages/scout-for-lol/CLAUDE.md` documents "run `bun install` to re-copy
+ * stale deps" — correct advice for a human dev checkout, but it arms lefthook
+ * when followed inside a bot clone). Call this immediately before any
+ * bot-style `git commit` in a bot clone, as a mechanism-agnostic safety net —
+ * it doesn't matter what armed the hooks, only that they're gone before the
+ * commit that must not trigger them.
+ *
+ * Deleting files under `.git/hooks` only helps if hooks actually live there.
+ * `lefthook install` points `core.hooksPath` at `.git/hooks` in this repo
+ * today, but that's a lefthook default, not a guarantee — a global
+ * `~/.gitconfig` or a differently configured lefthook could point
+ * `core.hooksPath` at an arbitrary directory outside `.git/hooks`, in which
+ * case the delete above silently misses every hook file and this "disarm"
+ * would do nothing.
+ *
+ * `git config --get core.hooksPath` reads the *effective* value (local, then
+ * global, then system), but a plain `git config --unset-all core.hooksPath`
+ * writes to the *local* file only. That mismatch makes an unset-based
+ * approach unsafe two ways, confirmed empirically against a repo with a
+ * global `core.hooksPath`: (1) if the value is inherited from global/system
+ * with no local override, there is nothing local to unset and `--unset-all`
+ * exits non-zero, which trips `runCommand`'s fail-fast throw and aborts the
+ * bot commit entirely; (2) if a local override coexists with a global value,
+ * unsetting the local override doesn't touch the global one, so Git falls
+ * back to the still-configured global hooks path and the disarm is a no-op.
+ *
+ * Instead, force the *local* `core.hooksPath` to point at `.git/hooks` (now
+ * emptied by the delete above). Git config precedence is local > global >
+ * system, so this local value always wins over any inherited hooksPath —
+ * there is nothing to detect or unset, and the destination directory is
+ * guaranteed empty.
+ */
+export async function disarmGitHooks(repoDir: string): Promise<void> {
+  await runCommand(
+    ["find", ".git/hooks", "-type", "f", "!", "-name", "*.sample", "-delete"],
+    { cwd: repoDir },
+  );
+  await runCommand(
+    ["git", "config", "--local", "core.hooksPath", ".git/hooks"],
+    { cwd: repoDir },
+  );
+}

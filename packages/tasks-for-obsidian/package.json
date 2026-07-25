@@ -13,6 +13,7 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
     "check:ios-native-deps": "bun scripts/check-ios-native-deps.ts",
+    "check:release-bundle": "bun scripts/check-release-bundle.ts",
     "pod-install": "cd ios && pod install",
     "clean:ios": "bash scripts/clean-ios.sh",
     "ios:logs": "bash scripts/ios-logs.sh",
@@ -39,13 +40,14 @@
     "react-native-safe-area-context": "^5.7.0",
     "react-native-screens": "4.25.2",
     "react-native-sound": "^0.13.0",
-    "react-native-worklets": "^0.8.1",
+    "react-native-worklets": "^0.10.0",
     "tasknotes-types": "workspace:*",
     "zeego": "^3.0.6",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
+    "@babel/plugin-transform-export-namespace-from": "^7.27.1",
     "@babel/preset-env": "^7.29.2",
     "@babel/runtime": "^7.29.2",
     "@react-native-community/cli": "^20.1.3",

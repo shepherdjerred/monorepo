@@ -1,8 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import {
   CompetitionCronSchema,
+  computeUpcomingSchedule,
   computeNextScheduledUpdateAt,
   DEFAULT_COMPETITION_CRON,
+  ReportScheduleTimezoneSchema,
 } from "#src/model/competition-cron.ts";
 
 describe("CompetitionCronSchema", () => {
@@ -50,6 +52,15 @@ describe("CompetitionCronSchema", () => {
       expect(result.data).toBe("0 0 * * *");
     }
   });
+
+  test("validates IANA schedule timezones", () => {
+    expect(
+      ReportScheduleTimezoneSchema.safeParse("America/Los_Angeles").success,
+    ).toBe(true);
+    expect(ReportScheduleTimezoneSchema.safeParse("Mars/Olympus").success).toBe(
+      false,
+    );
+  });
 });
 
 describe("computeNextScheduledUpdateAt", () => {
@@ -76,5 +87,22 @@ describe("computeNextScheduledUpdateAt", () => {
       reference,
     );
     expect(next.getTime()).toBeGreaterThan(reference.getTime());
+  });
+
+  test("keeps one local-time run across the spring DST transition", () => {
+    const dates = computeUpcomingSchedule(
+      "0 9 * * *",
+      new Date("2026-03-07T16:00:00.000Z"),
+      "America/Los_Angeles",
+      2,
+    );
+    const first = dates[0];
+    const second = dates[1];
+    expect(first).toBeDefined();
+    expect(second).toBeDefined();
+    if (first === undefined || second === undefined) {
+      throw new Error("Missing DST schedule fixtures");
+    }
+    expect(second.getTime() - first.getTime()).toBe(23 * 60 * 60 * 1000);
   });
 });

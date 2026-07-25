@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-fix-temporal-worker-ffmpeg-static
+type: log
+status: complete
+board: false
+---
+
 # Fix: temporal-worker docker build ffmpeg-static resolution failure
-
-## Status
-
-Complete
 
 ## Context
 

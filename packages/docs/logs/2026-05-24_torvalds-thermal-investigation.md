@@ -1,6 +1,13 @@
+---
+id: log-2026-05-24-torvalds-thermal-investigation
+type: log
+status: complete
+board: false
+---
+
 # Torvalds thermal investigation
 
-## Status
+## Status Notes (Historical)
 
 Partially Complete — CPU solved (AIO cooler + RAPL cap, verified under heavy CI). Both NVMes now have dedicated cooling (active cooler on the OS disk, heatsink on the ZFS drive) and peak ≤ 65 °C NAND on light days. Talos install disk now pinned by serial. Remaining: Grafana thermal alert rules; re-verify NVMe temps on the next heavy CI day.
 

@@ -13,10 +13,7 @@ import {
 } from "#src/components/report-form-fields.tsx";
 import { ReportCommonPresets } from "#src/components/report-common-presets.tsx";
 import { ReportAiEditor } from "#src/components/report-ai-editor.tsx";
-
-function numberOr(value: string, fallback: number): number {
-  return Number(value) || fallback;
-}
+import { ReportDataExplorer } from "#src/components/report-data-explorer.tsx";
 
 function previewTitle(title: string): string {
   return title === "" ? "Preview" : title;
@@ -60,9 +57,8 @@ export function ReportForm() {
       description: existing.description ?? "",
       channelId: existing.channelId,
       queryText: existing.queryText,
-      lookbackDays: existing.lookbackDays.toString(),
-      maxRows: existing.maxRows.toString(),
       cronExpression: existing.cronExpression,
+      scheduleTimezone: existing.scheduleTimezone,
     });
     setPrefilled(true);
   }, [existing, prefilled]);
@@ -139,8 +135,6 @@ export function ReportForm() {
                     title: preset.title,
                     description: preset.description,
                     queryText: preset.query,
-                    lookbackDays: preset.lookbackDays.toString(),
-                    maxRows: preset.maxRows.toString(),
                   }));
                 }}
               />
@@ -177,10 +171,20 @@ export function ReportForm() {
           guildId={guildId}
           queryText={state.queryText}
           title={previewTitle(state.title)}
-          lookbackDays={numberOr(state.lookbackDays, 30)}
-          maxRows={numberOr(state.maxRows, 10)}
         />
       </form>
+      <ReportDataExplorer
+        guildId={guildId}
+        onInsertIdentifier={(identifier) => {
+          setState((current) => ({
+            ...current,
+            queryText:
+              current.queryText.trim().length === 0
+                ? identifier
+                : `${current.queryText} ${identifier}`,
+          }));
+        }}
+      />
     </div>
   );
 }

@@ -1,7 +1,11 @@
 ---
 id: protobufjs-v8-watch
-status: waiting-on-verification
-origin: PR #1227 / commit acc7320dc
+type: todo
+status: awaiting-human
+board: true
+verification: human
+disposition: active
+origin: PR
 source_marker: false
 ---
 
@@ -15,7 +19,7 @@ A `renovate.json` packageRule (`allowedVersions: "<8"`) now stops Renovate from 
 
 The agent task below polls `https://registry.npmjs.org/@temporalio/proto/latest` weekly and emails only when the pin moves off `7.x`.
 
-## Done when
+## Human Verification
 
 - Email arrives with subject `protobufjs v8 unblocked` (or an out-of-band heads-up that upstream shipped a release widening the pin).
 - The override in `packages/temporal/package.json` and the Renovate `<8` rule in `renovate.json` are both removed in a single PR, lockfile regenerated, smoke-tested locally that the worker boots and signs a workflow into Temporal cleanly.

@@ -75,7 +75,7 @@ export async function setupGitAuth(repoRoot: string): Promise<GitAuth> {
   const scriptPath = `${repoRoot}/${GITHUB_APP_TOKEN_SCRIPT_REL}`;
   // secret: the stdout IS the token — it must never be echoed into CI logs
   // (build 5656 printed it in cleartext).
-  const minted = await run(["bun", scriptPath], {
+  const minted = await run(["bun", "--no-install", scriptPath], {
     capture: true,
     secret: true,
   });

@@ -1,8 +1,11 @@
+---
+id: log-2026-06-28-claude-effectiveness-audit
+type: log
+status: complete
+board: false
+---
+
 # Claude Conversation Audit → Effectiveness Fixes
-
-## Status
-
-Complete
 
 ## Context
 

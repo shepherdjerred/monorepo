@@ -1,8 +1,11 @@
+---
+id: log-2026-06-12-alloy-psa-argocd-drift
+type: log
+status: complete
+board: false
+---
+
 # Cluster health check → alloy PSA fix + minecraft Application drift fix
-
-## Status
-
-Complete (pending PR merge + chart publish)
 
 ## Context
 

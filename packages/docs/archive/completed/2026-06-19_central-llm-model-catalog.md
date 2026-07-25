@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-19-central-llm-model-catalog
+type: reference
+status: complete
+board: false
+---
+
 # Central LLM model catalog (`@shepherdjerred/llm-models`) + cross-checked auto-refresh
-
-## Status
-
-Complete — all phases delivered in one PR (#1281) on `feature/llm-models-catalog`. Supersedes PR #1272 (its pricing fixes are subsumed by the catalog).
 
 ## Context
 

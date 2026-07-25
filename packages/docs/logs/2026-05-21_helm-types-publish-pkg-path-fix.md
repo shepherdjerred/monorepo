@@ -1,12 +1,11 @@
 ---
-status: Complete
+id: log-2026-05-21-helm-types-publish-pkg-path-fix
+type: log
+status: complete
+board: false
 ---
 
 # helm-types npm publish — fix `file:` dep resolution in Dagger container
-
-## Status
-
-Complete
 
 ## Context
 

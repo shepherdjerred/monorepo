@@ -1,3 +1,10 @@
+---
+id: reference-completed-2026-04-04-pv-expansion
+type: reference
+status: complete
+board: false
+---
+
 # PV Expansion — 2026-04-04
 
 ## Motivation

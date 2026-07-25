@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.13.1",
+  "version": "16.14.1",
   "data": {
     "XinZhao": {
       "id": "XinZhao",
@@ -369,6 +369,54 @@
           "name": "Trials of Twilight Xin Zhao (Rose Quartz)",
           "chromas": false,
           "parentSkin": 47
+        },
+        {
+          "id": "5053",
+          "num": 53,
+          "name": "T1 Xin Zhao",
+          "chromas": false
+        },
+        {
+          "id": "5054",
+          "num": 54,
+          "name": "T1 Xin Zhao (Elite)",
+          "chromas": true,
+          "parentSkin": 53
+        },
+        {
+          "id": "5055",
+          "num": 55,
+          "name": "T1 Xin Zhao (Pearl)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "5056",
+          "num": 56,
+          "name": "T1 Xin Zhao (Ruby)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "5057",
+          "num": 57,
+          "name": "T1 Xin Zhao (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "5058",
+          "num": 58,
+          "name": "T1 Xin Zhao (Catseye)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "5059",
+          "num": 59,
+          "name": "T1 Xin Zhao (Sapphire)",
+          "chromas": false,
+          "parentSkin": 53
         }
       ],
       "lore": "Xin Zhao is a resolute warrior loyal to the ruling Lightshield dynasty. Once condemned to the fighting pits of Noxus, he survived countless gladiatorial bouts, but after being freed by Demacian forces, he swore his life and allegiance to these brave liberators. Armed with his favored three-talon spear, Xin Zhao now fights for his adopted kingdom, audaciously challenging any foe, no matter the odds.",

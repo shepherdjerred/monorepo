@@ -1,8 +1,7 @@
-import React, { useCallback, useMemo, useState } from "react";
-import { View, Pressable, Alert, StyleSheet } from "react-native";
+import React, { useMemo, useState } from "react";
+import { View, Pressable, StyleSheet } from "react-native";
 import { AppIcon } from "../components/common/AppIcon";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { TaskId } from "../domain/types";
 import type { RootStackParamList } from "../navigation/types";
 import {
   EMPTY_FILTER,
@@ -12,9 +11,7 @@ import {
 } from "../domain/filters";
 import { DEFAULT_SAVED_VIEWS } from "../domain/saved-views";
 import { isActiveStatus } from "../domain/status";
-import { useTasks } from "../hooks/use-tasks";
-import { showResultError } from "../lib/errors";
-import { feedbackTaskDelete } from "../lib/feedback";
+import { useTaskListScreen } from "../hooks/use-task-list-screen";
 import { useSettings } from "../hooks/use-settings";
 import { TaskList } from "../components/task/TaskList";
 import { FilterSortBar } from "../components/input/FilterSortBar";
@@ -26,12 +23,15 @@ export function SavedViewScreen({ route, navigation }: Props) {
   const view = DEFAULT_SAVED_VIEWS.find((v) => v.id === viewId);
   const {
     taskList,
-    toggleTask,
-    deleteTask,
     projectNames,
     contextNames,
     tagNames,
-  } = useTasks();
+    dayCounts,
+    handlePress,
+    handleToggle,
+    handleDelete,
+    handleSchedule,
+  } = useTaskListScreen(navigation);
   const { colors } = useSettings();
   const [filter, setFilter] = useState(EMPTY_FILTER);
   const [sort, setSort] = useState(DEFAULT_SORT);
@@ -71,40 +71,6 @@ export function SavedViewScreen({ route, navigation }: Props) {
     [baseTasks, filter, sort],
   );
 
-  const handlePress = useCallback(
-    (id: TaskId) => {
-      navigation.navigate("TaskDetail", { taskId: id });
-    },
-    [navigation],
-  );
-
-  const handleToggle = useCallback(
-    (id: TaskId) => {
-      void (async () => {
-        const result = await toggleTask(id);
-        showResultError(result, "Toggle Failed");
-      })();
-    },
-    [toggleTask],
-  );
-
-  const handleDelete = useCallback(
-    (id: TaskId) => {
-      Alert.alert("Delete Task", "Are you sure you want to delete this task?", [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            feedbackTaskDelete();
-            void deleteTask(id);
-          },
-        },
-      ]);
-    },
-    [deleteTask],
-  );
-
   if (!view) return null;
 
   return (
@@ -123,6 +89,8 @@ export function SavedViewScreen({ route, navigation }: Props) {
         onTaskPress={handlePress}
         onTaskToggle={handleToggle}
         onTaskDelete={handleDelete}
+        onTaskSchedule={handleSchedule}
+        dayCounts={dayCounts}
         emptyTitle={`No tasks in ${view.name}`}
       />
     </View>

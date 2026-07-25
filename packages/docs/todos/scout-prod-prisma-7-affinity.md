@@ -1,6 +1,10 @@
 ---
 id: scout-prod-prisma-7-affinity
-status: waiting-on-verification
+type: todo
+status: awaiting-human
+board: true
+verification: human
+disposition: active
 origin: packages/docs/logs/2026-05-13_scout-beta-missing-daily-update.md
 source_marker: false
 ---
@@ -24,11 +28,11 @@ is why this stays `waiting-on-verification`:
 - ✅ Regression test: the "libsql affinity regression" case in `lifecycle.integration.test.ts`.
 - ⏳ Prod-data inspection/repair (below) — needs a live `scout-prod` DB check, not visible in the repo.
 
-## Done when
+## Human Verification
 
 - Prod `db.sqlite` `Competition` rows inspected: any active competition whose `endProcessedAt` was set on `2026-05-12T07:45*` (or any post-deploy lifecycle tick) and whose `endDate > now` is either repaired (`endProcessedAt`, `endNotifiedAt`, `endNotificationMessageId` nulled; `nextScheduledUpdateAt` re-seeded) or confirmed not present.
-- ✅ Long-term fix landed (migration `20260514120000_revert_libsql_datetime_to_unixepoch`).
-- ✅ Regression test added (`lifecycle.integration.test.ts` "libsql affinity regression").
+- Long-term fix landed (migration `20260514120000_revert_libsql_datetime_to_unixepoch`).
+- Regression test added (`lifecycle.integration.test.ts` "libsql affinity regression").
 
 ## References
 

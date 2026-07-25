@@ -1,8 +1,11 @@
+---
+id: log-2026-05-16-monarch-classifier-package-check
+type: log
+status: complete
+board: false
+---
+
 # Monarch Classifier Package Check
-
-## Status
-
-Complete
 
 ## Summary
 

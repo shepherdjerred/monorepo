@@ -1,3 +1,10 @@
+---
+id: decision-2026-04-04-unified-versioning-strategy
+type: decision
+status: complete
+board: false
+---
+
 # Unified Versioning Strategy
 
 **Date:** 2026-04-04

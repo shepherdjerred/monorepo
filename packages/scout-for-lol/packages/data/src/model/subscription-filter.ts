@@ -107,11 +107,19 @@ export function serializeSubscriptionFilters(
   return SerializedSubscriptionFiltersSchema.parse(JSON.stringify(spec));
 }
 
-/** The queues a spec allows (empty = no queue constraint / notify all). */
+/**
+ * The queues a spec allows (empty = no queue constraint / notify all).
+ *
+ * Accepts `undefined` in addition to `null`: callers render tRPC responses
+ * from an independently deployed backend, and an older backend that predates
+ * the `filters` field omits it entirely. That version skew is a real system
+ * boundary (network input), not a caller-contract bug — treat a missing spec
+ * the same as an explicit "no filters".
+ */
 export function subscriptionFilterQueues(
-  spec: SubscriptionFilterSpec | null,
+  spec: SubscriptionFilterSpec | null | undefined,
 ): QueueType[] {
-  if (spec === null) {
+  if (spec == null) {
     return [];
   }
   return spec.filters.flatMap((filter) =>
@@ -123,7 +131,7 @@ export function subscriptionFilterQueues(
 
 /** Short human-readable summary of a filter spec (e.g. for UI / replies). */
 export function describeSubscriptionFilters(
-  spec: SubscriptionFilterSpec | null,
+  spec: SubscriptionFilterSpec | null | undefined,
 ): string {
   const queues = subscriptionFilterQueues(spec);
   if (queues.length === 0) {

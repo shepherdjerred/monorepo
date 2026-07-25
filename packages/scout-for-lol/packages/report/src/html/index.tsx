@@ -54,9 +54,7 @@ export async function matchToSvg(
   if (isRankedQueue(match.queueType) && match.players.length > 0) {
     const design = options.designOverride ?? pickRankedDesign(match);
     const hero = heroPlayer(match.players);
-    await preloadChampionSplashImages([
-      { championName: hero.champion.championName, skinNum: 0 },
-    ]);
+    await preloadChampionSplashImages([hero.champion.championName]);
 
     if (design === "banner") {
       return satori(<RankedBannerReport match={match} />, {

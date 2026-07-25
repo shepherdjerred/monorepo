@@ -1,6 +1,10 @@
 ---
 id: tasks-for-obsidian-e2e
-status: active
+type: todo
+status: in-progress
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/logs/2026-06-13_new-todos-batch.md
 source_marker: false
 ---
@@ -28,12 +32,12 @@ Why e2e is hard today:
 Depends on `packages/tasknotes-server` (Hono API over the vault) and
 `packages/tasknotes-types`.
 
-## Done when
+## Remaining
 
-- An agent can build + launch the app and exercise core flows automatically
-  (likely Maestro or Detox).
-- The main bugs (build flakiness, sync edge cases) are fixed.
-- E2e covers task CRUD + sync against a running `tasknotes-server`.
+- [ ] An agent can build + launch the app and exercise core flows automatically
+      (likely Maestro or Detox).
+- [ ] The main bugs (build flakiness, sync edge cases) are fixed.
+- [ ] E2e covers task CRUD + sync against a running `tasknotes-server`.
 
 ## References
 

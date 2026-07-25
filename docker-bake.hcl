@@ -3,7 +3,7 @@
 # identical workspace bun-install layer the app images share — replacing the
 # serial per-image loop (45-52 min images step, build 5644/5656).
 #
-# CI (.buildkite/scripts/build-smoke-push-all.sh) invokes this with
+# CI (.buildkite/scripts/bake-images.sh) invokes this with
 # VERSION/GIT_SHA/PUSH_CACHE set; local `docker buildx bake <target>` works
 # with the dev defaults (cache is read-only unless PUSH_CACHE=true — writing
 # the ghcr buildcache refs needs a docker-container builder + push creds).
@@ -25,13 +25,19 @@ variable "VERSION" {
 variable "GIT_SHA" {
   default = "unknown"
 }
+# Deterministic hash of the scout tRPC contract sources (computed by
+# packages/scout-for-lol/scripts/contract-hash.ts). Baked only into the
+# scout-for-lol image; the SPA build stamps the same hash so the app can
+# detect frontend↔backend contract skew at runtime.
+variable "CONTRACT_HASH" {
+  default = "dev"
+}
 
 # "true" on main: export per-target registry cache (mode=max). PRs and local
 # builds read cache but never write it.
 variable "PUSH_CACHE" {
   default = "false"
 }
-
 function "cachefrom" {
   params = [name]
   result = ["type=registry,ref=${REGISTRY}/${name}:buildcache"]
@@ -121,6 +127,11 @@ target "scout-for-lol" {
   inherits   = ["_app"]
   dockerfile = "packages/scout-for-lol/packages/backend/Dockerfile"
   tags       = ["scout-for-lol:dev"]
+  args = {
+    VERSION       = VERSION
+    GIT_SHA       = GIT_SHA
+    CONTRACT_HASH = CONTRACT_HASH
+  }
   cache-from = cachefrom("scout-for-lol")
   cache-to   = cacheto("scout-for-lol")
 }
@@ -143,7 +154,7 @@ target "discord-plays-mario-kart" {
 
 # ── Homelab infra images: self-contained contexts, no VERSION/GIT_SHA ───────
 group "infra" {
-  targets = ["caddy-s3proxy", "obsidian-headless", "mcp-gateway", "redlib"]
+  targets = ["caddy-s3proxy", "obsidian-headless", "mcp-gateway", "redlib", "shelfbridge"]
 }
 
 target "caddy-s3proxy" {
@@ -172,4 +183,11 @@ target "redlib" {
   tags       = ["redlib:dev"]
   cache-from = cachefrom("redlib")
   cache-to   = cacheto("redlib")
+}
+
+target "shelfbridge" {
+  context    = "packages/homelab/images/shelfbridge"
+  tags       = ["shelfbridge:dev"]
+  cache-from = cachefrom("shelfbridge")
+  cache-to   = cacheto("shelfbridge")
 }

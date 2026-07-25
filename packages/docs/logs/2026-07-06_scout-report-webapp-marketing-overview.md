@@ -1,10 +1,11 @@
+---
+id: log-2026-07-06-scout-report-webapp-marketing-overview
+type: log
+status: complete
+board: false
+---
+
 # Scout for LoL — Report / Web App / Marketing Overview
-
-## Status
-
-Complete
-
-Read-only architectural walkthrough of three Scout-for-LoL areas, requested for orientation. No code changed.
 
 ## Report generation — `packages/scout-for-lol/packages/report`
 

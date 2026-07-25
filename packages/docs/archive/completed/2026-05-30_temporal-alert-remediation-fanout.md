@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-30-temporal-alert-remediation-fanout
+type: reference
+status: complete
+board: false
+---
+
 # Temporal Alert Remediation Fan-Out
-
-## Status
-
-Complete
 
 ## Summary
 

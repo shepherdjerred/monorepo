@@ -1,10 +1,11 @@
+---
+id: guide-2026-06-28-vendoring-package-checklist
+type: guide
+status: complete
+board: false
+---
+
 # Vendoring a Third-Party Package into `packages/`
-
-## Status
-
-Complete
-
-Vendoring a third-party lib into `packages/<x>` (consumed via a `file:` dep) requires updating MANY wiring/exclusion lists, or pre-commit/CI fails. Learned vendoring `@dank074/discord-video-stream` → `@shepherdjerred/discord-video-stream`.
 
 ## Package shape (bun source + declaration-only dist)
 

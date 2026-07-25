@@ -1,14 +1,14 @@
 ---
+id: log-2026-07-03-anthropic-sdk-0100-bump
+type: log
+status: complete
+board: false
 date: 2026-07-03
 slug: anthropic-sdk-0100-bump
 pr: "1368"
 ---
 
 # PR #1368: @anthropic-ai/sdk bump to v0.100.1
-
-## Status
-
-In Progress (Build #4942 running)
 
 ## Context
 

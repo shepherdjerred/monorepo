@@ -57,6 +57,35 @@ export async function runDueReports(
   let earlyFailures = 0;
 
   for (const report of reports) {
+    const scheduledAt = report.nextScheduledRunAt ?? now;
+    const localDate = scheduledLocalDate(scheduledAt, report.scheduleTimezone);
+    const claim = await params.prisma.report.updateMany({
+      where: {
+        id: report.id,
+        OR: [
+          { lastScheduledLocalDate: null },
+          { lastScheduledLocalDate: { not: localDate } },
+        ],
+      },
+      data: { lastScheduledLocalDate: localDate },
+    });
+    if (claim.count === 0) {
+      logger.warn(
+        `[ReportScheduler] Suppressed duplicate local-date run for report ${report.id.toString()} on ${localDate}`,
+      );
+      await params.prisma.report.update({
+        where: { id: report.id },
+        data: {
+          nextScheduledRunAt: computeNextScheduledUpdateAt(
+            report.cronExpression,
+            now,
+            report.scheduleTimezone,
+          ),
+          updatedTime: new Date(),
+        },
+      });
+      continue;
+    }
     try {
       const result = await runReport({
         prisma: params.prisma,
@@ -83,6 +112,7 @@ export async function runDueReports(
       const nextScheduledRunAt = computeNextScheduledUpdateAt(
         report.cronExpression,
         now,
+        report.scheduleTimezone,
       );
       // Always set `lastScheduledRunAt = now` even if `runReport` threw
       // before reaching `runner.ts`'s success/failure branches — that's
@@ -115,4 +145,20 @@ export async function runDueReports(
   }
 
   return dispatched;
+}
+
+export function scheduledLocalDate(now: Date, timezone: string): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const day = parts.find((part) => part.type === "day")?.value;
+  if (year === undefined || month === undefined || day === undefined) {
+    throw new Error(`Unable to resolve scheduled date in ${timezone}`);
+  }
+  return `${year}-${month}-${day}`;
 }

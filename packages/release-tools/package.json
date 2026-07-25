@@ -1,0 +1,11 @@
+{
+  "name": "@shepherdjerred/release-tools",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "release-please": "release-please"
+  },
+  "dependencies": {
+    "release-please": "17.9.0"
+  }
+}

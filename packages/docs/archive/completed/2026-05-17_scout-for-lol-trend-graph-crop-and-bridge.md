@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-17-scout-for-lol-trend-graph-crop-and-bridge
+type: reference
+status: complete
+board: false
+---
+
 # scout-for-lol — fix trend graph empty + gap regions
-
-## Status
-
-Complete
 
 ## Context
 

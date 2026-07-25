@@ -1,8 +1,11 @@
+---
+id: log-2026-05-30-temporal-worker-observability-flags
+type: log
+status: complete
+board: false
+---
+
 # Temporal Worker Observability Flags
-
-## Status
-
-Complete
 
 ## Summary
 

@@ -23,8 +23,11 @@ import { getZfsMaintenanceRuleGroups } from "./rules/zfs-maintenance.ts";
 import { getTemporalRuleGroups } from "./rules/temporal.ts";
 import { getPrReviewBotRuleGroups } from "./rules/pr-review-bot.ts";
 import { getStreambotRuleGroups } from "./rules/streambot.ts";
+import { createBuildkiteMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkite.ts";
 
 export function createPrometheusMonitoring(chart: Chart) {
+  createBuildkiteMonitoring(chart);
+
   // Create Home Assistant rules
   new PrometheusRule(chart, "prometheus-homeassistant-rules", {
     metadata: {

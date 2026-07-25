@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-fix-greptile-p1-asset-exit-code
+type: log
+status: complete
+board: false
+---
+
 # Fix Greptile P1: Asset-check exit code silently discarded
-
-## Status
-
-Complete
 
 ## Context
 

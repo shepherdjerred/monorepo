@@ -1,6 +1,10 @@
 ---
 id: pagerduty-migration
-status: active
+type: todo
+status: in-progress
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/logs/2026-06-13_new-todos-batch.md
 source_marker: false
 ---
@@ -31,14 +35,14 @@ PagerDuty is wired into alert routing, the CLI, a Temporal activity (homelab
 audit), the TRMNL dashboard, and a POC. A migration must replace each
 integration, not just the Alertmanager receiver.
 
-## Done when
+## Remaining
 
-- Alert routing, on-call schedules/escalation, and incident query are all served
-  by the chosen platform.
-- All 7 integration points above migrated (or retired). (An 8th, the Temporal
-  alert-remediation incident collection, was retired outright — the workflow was
-  removed; see logs/2026-07-02_gut-alert-remediation.md.)
-- PagerDuty decommissioned and its token removed from 1Password.
+- [ ] Alert routing, on-call schedules/escalation, and incident query are all served
+      by the chosen platform.
+- [ ] All 7 integration points above migrated (or retired). (An 8th, the Temporal
+      alert-remediation incident collection, was retired outright — the workflow was
+      removed; see logs/2026-07-02_gut-alert-remediation.md.)
+- [ ] PagerDuty decommissioned and its token removed from 1Password.
 
 ## Related
 

@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-07-mk64-screenshot-transparency-stream-color
+type: reference
+status: complete
+board: false
+---
+
 # MK64 — fix `/screenshot` transparency + stream red/blue swap
-
-## Status
-
-Complete — bgra pix_fmt + RGB (colour-type-2) PNG fixes on main.
 
 ## Context
 

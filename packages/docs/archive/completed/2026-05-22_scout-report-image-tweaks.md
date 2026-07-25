@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-22-scout-report-image-tweaks
+type: reference
+status: complete
+board: false
+---
+
 # Scout Report Image Tweaks
-
-## Status
-
-Complete
 
 ## Summary
 

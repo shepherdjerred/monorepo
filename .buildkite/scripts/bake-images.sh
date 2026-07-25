@@ -5,9 +5,8 @@ set -euo pipefail
 # buildx bake` (docker-bake.hcl at the repo root) — targets build in PARALLEL
 # on one BuildKit daemon, replacing the old serial per-image loop.
 #
-#   --affected   PR mode: only bake targets whose owning turbo package is
-#                affected (plus the three families turbo's nested --affected
-#                under-selects — same workaround as the native shims).
+#   --affected   PR mode: only bake targets whose owned workspace closure is
+#                affected, selected without Turbo or node_modules.
 #   --push       main mode: write per-target registry cache and push
 #                :<sha> + :latest for every image after its smoke passes.
 #
@@ -32,31 +31,29 @@ for arg in "$@"; do
   esac
 done
 
-# bake target → owning turbo package → package dir with the `smoke` script.
-# The four homelab infra images are one unit: the `homelab` package owns all
-# of them and its smoke script asserts on all four.
+# bake target → package dir with the `smoke` script.
+# The homelab infra images are one unit: the `homelab` package owns all
+# of them and its smoke script asserts on all of them.
 APP_TARGETS=(
-  "birmel|@shepherdjerred/birmel|packages/birmel"
-  "tasknotes-server|tasknotes-server|packages/tasknotes-server"
-  "starlight-karma-bot|starlight-karma-bot|packages/starlight-karma-bot"
-  "streambot|@shepherdjerred/streambot|packages/streambot"
-  "temporal-worker|@shepherdjerred/temporal|packages/temporal"
-  "trmnl-dashboard|@shepherdjerred/trmnl-dashboard|packages/trmnl-dashboard"
-  "scout-for-lol|@scout-for-lol/backend|packages/scout-for-lol/packages/backend"
-  "discord-plays-pokemon|@discord-plays-pokemon/backend|packages/discord-plays-pokemon/packages/backend"
-  "discord-plays-mario-kart|@discord-plays-mario-kart/backend|packages/discord-plays-mario-kart/packages/backend"
+  "birmel|packages/birmel"
+  "tasknotes-server|packages/tasknotes-server"
+  "starlight-karma-bot|packages/starlight-karma-bot"
+  "streambot|packages/streambot"
+  "temporal-worker|packages/temporal"
+  "trmnl-dashboard|packages/trmnl-dashboard"
+  "scout-for-lol|packages/scout-for-lol/packages/backend"
+  "discord-plays-pokemon|packages/discord-plays-pokemon/packages/backend"
+  "discord-plays-mario-kart|packages/discord-plays-mario-kart/packages/backend"
 )
-# turbo's nested --affected under-selects these families (documented in the
-# old PR dry-run step); they always build on PRs until that bug is fixed.
-ALWAYS_ON_TARGETS=(scout-for-lol discord-plays-pokemon discord-plays-mario-kart)
-INFRA_IMAGES=(caddy-s3proxy obsidian-headless mcp-gateway redlib)
+INFRA_IMAGES=(caddy-s3proxy obsidian-headless mcp-gateway redlib shelfbridge)
+KNOWN_TARGETS_JSON=$(printf '%s\n' "${APP_TARGETS[@]%%|*}" infra | jq -R . | jq -s 'sort')
 
 bake_targets=()
 smoke_dirs=()
 push_images=()
 
-# Scope selection. PRs diff against origin/main (TURBO_SCM_BASE from the
-# pipeline env). Main diffs against the LAST GREEN MAIN BUILD's commit: every
+# Scope selection. PRs diff against their merge-base with origin/main. Main
+# diffs against the LAST GREEN MAIN BUILD's commit: every
 # image validated+pushed at that commit is guaranteed output-identical here
 # (digests are content-gated), so rebuilding it moves gigabytes through an
 # ephemeral BuildKit for a no-op — most merges touch no image-owning package
@@ -65,9 +62,14 @@ push_images=()
 scope="all"
 scope_base=""
 if [ "$AFFECTED_ONLY" = true ]; then
-  scope="affected"
+  if scope_base=$(git merge-base origin/main HEAD); then
+    scope="affected"
+  else
+    echo "WARN: could not resolve merge-base with origin/main — building ALL images"
+  fi
 elif [ "$PUSH" = true ]; then
-  if resp=$(curl -fsS -H "Authorization: Bearer ${BUILDKITE_API_TOKEN}" \
+  if resp=$(curl -fsS --connect-timeout 5 --max-time 20 --retry 2 --retry-delay 1 \
+      -H "Authorization: Bearer ${BUILDKITE_API_TOKEN}" \
       "https://api.buildkite.com/v2/organizations/sjerred/pipelines/monorepo/builds?branch=main&state=passed&per_page=1") \
     && last_green=$(printf '%s' "$resp" | jq -r '.[0].commit // empty') \
     && [ -n "$last_green" ] \
@@ -81,40 +83,36 @@ elif [ "$PUSH" = true ]; then
 fi
 
 if [ "$scope" = "affected" ]; then
-  # Fail loud if turbo ls breaks or changes shape — a tool error must never
-  # read as "nothing affected".
-  if [ -n "$scope_base" ]; then
-    affected_json=$(TURBO_SCM_BASE="$scope_base" bunx turbo ls --affected --output=json)
+  # The dependency-free selector returns a deterministic JSON target list.
+  # Any selector/tool/schema failure builds everything: selection can only
+  # save work, never omit a required image.
+  if selected_json=$(bun --no-install .buildkite/scripts/select-image-targets.ts --base "$scope_base") \
+    && printf '%s' "$selected_json" | jq -e --argjson known "$KNOWN_TARGETS_JSON" \
+      'type == "array" and all(.[]; type == "string" and (. as $target | $known | index($target) != null))' >/dev/null; then
+    echo "selected image targets: $selected_json"
   else
-    affected_json=$(bunx turbo ls --affected --output=json)
+    echo "WARN: image selector failed — building ALL images"
+    scope="all"
   fi
-  echo "$affected_json" | jq -e '.packages.items' >/dev/null
 
-  is_affected() {
-    echo "$affected_json" | jq -e --arg n "$1" \
-      '.packages.items[] | select(.name == $n)' >/dev/null
-  }
+fi
 
+is_selected() {
+  printf '%s' "$selected_json" | jq -e --arg target "$1" \
+    'index($target) != null' >/dev/null
+}
+
+if [ "$scope" = "affected" ]; then
   for entry in "${APP_TARGETS[@]}"; do
     target="${entry%%|*}"
-    rest="${entry#*|}"
-    pkg="${rest%%|*}"
-    dir="${rest#*|}"
-    always=false
-    for a in "${ALWAYS_ON_TARGETS[@]}"; do
-      if [ "$a" = "$target" ]; then always=true; fi
-    done
-    # The always-on families cover turbo's nested --affected under-selection
-    # bug, which applies to ANY diff base — main included. They cost three
-    # image rebuilds per merge until that bug is fixed; a silent skip of a
-    # changed image would cost a stale deploy.
-    if [ "$always" = true ] || is_affected "$pkg"; then
+    dir="${entry#*|}"
+    if is_selected "$target"; then
       bake_targets+=("$target")
       smoke_dirs+=("$dir")
       push_images+=("$target")
     fi
   done
-  if is_affected "homelab"; then
+  if is_selected "infra"; then
     bake_targets+=("infra")
     smoke_dirs+=("packages/homelab")
     push_images+=("${INFRA_IMAGES[@]}")
@@ -127,11 +125,13 @@ if [ "$scope" = "affected" ]; then
     fi
     exit 0
   fi
-else
+fi
+
+if [ "$scope" = "all" ]; then
+  selected_json=$KNOWN_TARGETS_JSON
   for entry in "${APP_TARGETS[@]}"; do
     target="${entry%%|*}"
-    rest="${entry#*|}"
-    dir="${rest#*|}"
+    dir="${entry#*|}"
     bake_targets+=("$target")
     smoke_dirs+=("$dir")
     push_images+=("$target")
@@ -142,8 +142,8 @@ else
 fi
 
 # Registry cache export needs a docker-container builder — dind's default
-# docker driver can't export cache. Used in both modes so the PR dry-run
-# rehearses exactly what main runs (including the --load transfer).
+# docker driver cannot export cache. Used in both modes so the PR dry-run
+# rehearses exactly what main runs, including the --load transfer.
 if ! docker buildx inspect ci; then
   docker buildx create --name ci --driver docker-container
 fi
@@ -153,18 +153,83 @@ if [ "$PUSH" = true ]; then
   PUSH_CACHE=true
 fi
 
-echo "--- :docker: bake ${bake_targets[*]}"
-VERSION="$BUILD_NUMBER" GIT_SHA="$SHA" PUSH_CACHE="$PUSH_CACHE" \
-  docker buildx bake --builder ci --load "${bake_targets[@]}"
+# Bake with bounded retry + exponential backoff. Image builds do a lot of
+# network I/O with no retry of their own — most notably `bun install` runs
+# `@lng2004/node-datachannel`'s `prebuild-install`, which pulls a prebuilt
+# binary from the GitHub-release CDN and, on a timeout, falls back to an `npm`
+# source build the bun-base images can't do (exit 127). A single slow CDN
+# response would otherwise sink the whole step and wait for a human to click
+# "retry" (build 5967). buildx is idempotent — a retry re-uses cached layers and
+# only re-attempts the failed one. A failure that STILL matches a transient
+# signature after the in-script retries exits 34 (EXIT_TRANSIENT, matching
+# scripts/lib/transient.ts) so the pipeline's `retry: *retry` anchor re-runs the
+# step on a fresh agent; a non-transient build error fails fast (exit 1).
+#
+# Two guards against retrying a real error (bake runs targets in PARALLEL into
+# one interleaved log): (1) the signatures are error-only — no bare
+# `prebuild-install`, which appears in a *successful* target's normal output;
+# only phrases that mean an operation actually errored. (2) we scan just the
+# FAILURE TAIL: on a target failure buildx cancels the rest and prints that
+# target's error at the end, so the tail is the failing target's output, not a
+# sibling's benign mid-build noise. So a deterministic failure (e.g. a missing
+# COPY source) in one target isn't masked as transient by another target's text.
+transient_re='Request timed out|i/o timeout|TLS handshake|remote error: tls|connection reset|connection refused|net/http:|failed to do request|dial tcp|temporary failure in name resolution|Internal Server Error|Bad Gateway|Service Unavailable|Gateway Timeout|blob unknown|failed to resolve source metadata|unexpected EOF|context deadline exceeded|error: failed to download'
+
+# Contract-source hash baked into the scout image (ENV CONTRACT_HASH) and
+# stamped into the SPA bundle by the sites step — equal hashes at runtime
+# mean the deployed frontend/backend pair shares a tRPC contract. The script
+# is dependency-free, so it runs before any workspace install.
+CONTRACT_HASH=$(bun --no-install packages/scout-for-lol/scripts/contract-hash.ts)
+bake_attempt=1
+bake_max=3
+while :; do
+  echo "--- :docker: bake ${bake_targets[*]} (attempt ${bake_attempt}/${bake_max})"
+  bake_log="$(mktemp)"
+  if VERSION="$BUILD_NUMBER" GIT_SHA="$SHA" CONTRACT_HASH="$CONTRACT_HASH" PUSH_CACHE="$PUSH_CACHE" \
+      docker buildx bake --builder ci --load "${bake_targets[@]}" 2>&1 | tee "$bake_log"; then
+    rm -f "$bake_log"
+    break
+  fi
+  if ! tail -n 120 "$bake_log" | grep -qiE "$transient_re"; then
+    echo "^^^ +++ bake failed with a non-transient error — failing fast."
+    rm -f "$bake_log"
+    exit 1
+  fi
+  rm -f "$bake_log"
+  if [ "$bake_attempt" -ge "$bake_max" ]; then
+    echo "^^^ +++ bake still failing on a transient network error after ${bake_max} attempts — exiting 34 for a step-level retry."
+    exit 34
+  fi
+  bake_backoff=$((bake_attempt * bake_attempt * 15))
+  echo "^^^ +++ bake hit a transient network error; backing off ${bake_backoff}s then retrying."
+  sleep "$bake_backoff"
+  bake_attempt=$((bake_attempt + 1))
+done
 
 # Smoke serially (containers contend on the daemon; assertions are cheap).
 for dir in "${smoke_dirs[@]}"; do
   echo "--- :fire: smoke ${dir}"
-  bun run --cwd "$dir" smoke
+  smoke_script="scripts/smoke.ts"
+  if [ "$dir" = "packages/homelab" ]; then
+    smoke_script="scripts/smoke-images.ts"
+  fi
+  if [ -n "${CADDYFILE_SMOKE_PATH:-}" ]; then
+    CADDYFILE_SMOKE_PATH="$CADDYFILE_SMOKE_PATH" bun --no-install --cwd "$dir" "$smoke_script"
+  else
+    bun --no-install --cwd "$dir" "$smoke_script"
+  fi
 done
 
 if [ "$PUSH" = true ]; then
   VERSIONS_TS="packages/homelab/src/cdk8s/src/versions.ts"
+  # Images whose /prod pin in versions.ts is Renovate-managed (docker
+  # datasource): Renovate can only offer tags that exist in the registry, so
+  # push a versioned tag whenever a content change records a digest — the same
+  # 2.0.0-<build> the version commit-back writes to the beta pin.
+  # scout-for-lol is deliberately absent: its versioned tag is the atomic
+  # backend+site release pair, minted by the scout-tag-release step only after
+  # the paired site archive exists.
+  VERSIONED_TAG_IMAGES=(starlight-karma-bot)
   digest_args=()
   for name in "${push_images[@]}"; do
     echo "--- :arrow_up: push ${name}"
@@ -200,9 +265,15 @@ if [ "$PUSH" = true ]; then
     if [ -n "$pinned" ]; then
       # imagetools failure (e.g. a placeholder pin that was never pushed)
       # counts as changed — the safe direction is an extra bump, never a
-      # skipped one.
-      if old_layers=$(docker buildx imagetools inspect "${REGISTRY}/${name}@${pinned}" --format '{{json .Image.RootFS.Layers}}'); then
-        new_layers=$(docker inspect --format '{{json .RootFS.Layers}}' "${name}:dev")
+      # skipped one. These images are single-platform (bake runs with --load,
+      # which only supports one platform), so a pinned digest always resolves
+      # to an image manifest: .Image is populated and .Image.RootFS.DiffIDs is
+      # a real array, never the `null` that a multi-platform manifest-list
+      # index would yield.
+      if old_layers=$(docker buildx imagetools inspect "${REGISTRY}/${name}@${pinned}" --format '{{json .Image.RootFS.DiffIDs}}' | jq -c .); then
+        # imagetools pretty-prints its JSON while docker inspect emits compact
+        # JSON, so normalize both before comparing the same uncompressed IDs.
+        new_layers=$(docker inspect --format '{{json .RootFS.Layers}}' "${name}:dev" | jq -c .)
         if [ "$old_layers" = "$new_layers" ]; then
           echo "content unchanged vs pinned ${pinned} (identical rootfs) — no version bump for ${name}"
           continue
@@ -214,6 +285,12 @@ if [ "$PUSH" = true ]; then
     else
       echo "no existing versions.ts pin found for ${name} — will bump"
     fi
+    for versioned in "${VERSIONED_TAG_IMAGES[@]}"; do
+      if [ "$name" = "$versioned" ]; then
+        docker tag "${name}:dev" "${REGISTRY}/${name}:2.0.0-${BUILD_NUMBER}"
+        docker push "${REGISTRY}/${name}:2.0.0-${BUILD_NUMBER}"
+      fi
+    done
     digest_args+=(--arg "shepherdjerred/${name}" "$digest")
   done
   # One JSON object {"shepherdjerred/<image>": "sha256:..."} via build

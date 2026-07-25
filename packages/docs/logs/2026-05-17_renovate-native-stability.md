@@ -1,8 +1,11 @@
+---
+id: log-2026-05-17-renovate-native-stability
+type: log
+status: complete
+board: false
+---
+
 # Renovate Native Stability Gating
-
-## Status
-
-Complete
 
 ## Summary
 

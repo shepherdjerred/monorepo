@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-10-ci-disk-write-reduction
+type: reference
+status: complete
+board: false
+---
+
 # CI Disk Write Reduction — Bake `setup-tools.sh` Installs Into `ci-base`
-
-## Status
-
-**Implemented** — `ci-base:406` deployed to all CI pods 2026-05-10. Impact analysis pending T+24h and T+7d data.
 
 ## Context
 

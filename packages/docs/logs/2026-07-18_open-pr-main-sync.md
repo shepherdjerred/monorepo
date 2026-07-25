@@ -1,8 +1,11 @@
+---
+id: log-2026-07-18-open-pr-main-sync
+type: log
+status: complete
+board: false
+---
+
 # Open-PR sweep — merge latest main into every open PR
-
-## Status
-
-Complete
 
 ## Second sweep (later the same day)
 

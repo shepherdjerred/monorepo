@@ -1,8 +1,11 @@
+---
+id: log-2026-06-19-imagen4-discontinuation-impact-check
+type: log
+status: complete
+board: false
+---
+
 # Imagen 4 discontinuation — impact check
-
-## Status
-
-Complete
 
 ## Context
 

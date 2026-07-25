@@ -1,6 +1,10 @@
 ---
 id: turbo-cache-rollout
-status: waiting-on-verification
+type: todo
+status: awaiting-human
+board: true
+verification: human
+disposition: active
 origin: packages/docs/plans/2026-07-13_ci-parity-implementation.md
 ---
 
@@ -40,3 +44,7 @@ Remaining:
    build's turbo summary for `REMOTE` hits.
 3. Consider enabling artifact signing (`remoteCache.signature: true` in
    `turbo.json` + `TURBO_REMOTE_CACHE_SIGNATURE_KEY` on clients and server).
+
+## Human Verification
+
+- Verify `Roll out the turbo remote-cache server` in its intended environment and record evidence in the Comment Log.

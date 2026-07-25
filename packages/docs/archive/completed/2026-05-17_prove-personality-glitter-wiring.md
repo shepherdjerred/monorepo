@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-17-prove-personality-glitter-wiring
+type: reference
+status: complete
+board: false
+---
+
 # Prove personality + glitter-timeline wiring (scout-for-lol & birmel)
-
-## Status
-
-Complete
 
 ## Context
 

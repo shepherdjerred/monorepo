@@ -1,8 +1,11 @@
+---
+id: log-2026-06-12-mariokart-input-lag-investigation
+type: log
+status: complete
+board: false
+---
+
 # mariokart.sjer.red — "massive input lag" during multiplayer session investigated
-
-## Status
-
-Complete (diagnosis + glass-to-glass measurement overlay shipped)
 
 ## Report
 

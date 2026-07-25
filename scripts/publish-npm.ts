@@ -231,9 +231,11 @@ async function main(): Promise<void> {
     // Build from source before publishing (matches the old helper).
     console.log("+++ build");
     if (dryRun) {
-      console.log(`DRYRUN: would run \`bun run build\` in ${pkgDir}`);
+      console.log(
+        `DRYRUN: would run \`bun --no-install run build\` in ${pkgDir}`,
+      );
     } else {
-      await run(["bun", "run", "build"], { cwd: pkgDir });
+      await run(["bun", "--no-install", "run", "build"], { cwd: pkgDir });
     }
 
     if (dryRun) {

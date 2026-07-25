@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-14-bun-lock-drift-gate
+type: reference
+status: complete
+board: false
+---
+
 # Per-package `bun.lock` drift gate
-
-## Status
-
-Complete — shipped in PR #1222.
 
 ## Context
 

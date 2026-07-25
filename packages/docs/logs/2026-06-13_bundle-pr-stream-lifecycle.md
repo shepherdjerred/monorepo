@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-bundle-pr-stream-lifecycle
+type: log
+status: complete
+board: false
+---
+
 # Bundle working-tree changes into one PR
-
-## Status
-
-Complete
 
 ## Context
 

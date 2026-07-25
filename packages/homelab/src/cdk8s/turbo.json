@@ -11,10 +11,9 @@
         "onepassword-vault-snapshot.json"
       ]
     },
-    // Generate the S3-static-sites Caddyfile and validate it with the CUSTOM
-    // caddy-s3proxy binary (stock caddy can't parse the `s3proxy` directive).
-    // cache:false because correctness depends on the caddy-s3proxy:dev docker
-    // image, which lives outside turbo's input hash.
+    // Generate the S3-static-sites Caddyfile without materializing an image in
+    // root verify. The separately path-gated infra image smoke runs `caddy
+    // validate` with the freshly built custom caddy-s3proxy binary.
     "check:caddyfile": {
       "inputs": [
         "scripts/generate-caddyfile.ts",
@@ -22,8 +21,7 @@
         "src/misc/s3-static-site.ts",
         "src/misc/common.ts",
         "src/resources/s3-static-sites/sites.ts"
-      ],
-      "cache": false
+      ]
     },
     "build": {
       "dependsOn": ["^build"],

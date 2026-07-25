@@ -1,8 +1,11 @@
+---
+id: log-2026-05-13-chezmoi-update
+type: log
+status: complete
+board: false
+---
+
 # Chezmoi update — sync source to live
-
-## Status
-
-Complete
 
 ## Context
 

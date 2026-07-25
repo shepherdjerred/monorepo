@@ -1,10 +1,11 @@
+---
+id: guide-2026-06-28-smoke-test-discord-flaky
+type: guide
+status: complete
+board: false
+---
+
 # Smoke tests flake on transient Discord network errors
-
-## Status
-
-Reference (guide).
-
-The shared Dagger `runSmokeTest` (`.dagger/src/misc.ts`) boots a bot with dummy creds for 30s and passes only if the output contains an auth-failure pattern (`401`/`TokenInvalid`/`Unauthorized`/`Invalid token`), the process exits 0, or it hits the 30s timeout (exit 124). It backs `smoke-scout-for-lol`, `smoke-test-streambot`, and birmel's smoke test.
 
 ## Failure mode
 

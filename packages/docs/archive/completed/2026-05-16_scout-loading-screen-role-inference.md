@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-16-scout-loading-screen-role-inference
+type: reference
+status: complete
+board: false
+---
+
 # Scout Loading Screen Role Inference
-
-## Status
-
-Complete
 
 ## Goal
 

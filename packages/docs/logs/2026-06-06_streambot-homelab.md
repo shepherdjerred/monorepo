@@ -1,8 +1,11 @@
+---
+id: log-2026-06-06-streambot-homelab
+type: log
+status: complete
+board: false
+---
+
 # StreamBot Homelab Setup
-
-## Status
-
-Complete
 
 ## Context
 

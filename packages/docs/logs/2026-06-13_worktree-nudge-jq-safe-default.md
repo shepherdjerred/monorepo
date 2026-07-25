@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-worktree-nudge-jq-safe-default
+type: log
+status: complete
+board: false
+---
+
 # Fix: worktree-reminder.sh jq safe-default
-
-## Status
-
-Complete
 
 ## Context
 

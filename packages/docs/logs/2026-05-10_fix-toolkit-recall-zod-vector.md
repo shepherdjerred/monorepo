@@ -1,8 +1,11 @@
+---
+id: log-2026-05-10-fix-toolkit-recall-zod-vector
+type: log
+status: complete
+board: false
+---
+
 # Fix `toolkit recall search` Zod crash
-
-## Status
-
-Complete
 
 ## Context
 

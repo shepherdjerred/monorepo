@@ -1,8 +1,11 @@
+---
+id: log-2026-05-24-scout-app-imagepullbackoff
+type: log
+status: complete
+board: false
+---
+
 # Scout-app ImagePullBackOff — root cause
-
-## Status
-
-Complete — fix shipped via [2026-05-24_scout-app-s3-caddy-migration.md](../plans/2026-05-24_scout-app-s3-caddy-migration.md) (option 2: remove the Deployment and serve the SPA from the shared `s3-static-sites` Caddy + bucket pattern).
 
 ## Summary
 

@@ -1,8 +1,11 @@
+---
+id: log-2026-05-30-temporal-workflow-checkin
+type: log
+status: complete
+board: false
+---
+
 # Temporal Workflow Check-In — 2026-05-30
-
-## Status
-
-Complete
 
 ## Scope
 

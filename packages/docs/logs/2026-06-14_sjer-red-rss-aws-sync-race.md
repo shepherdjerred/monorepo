@@ -1,8 +1,11 @@
+---
+id: log-2026-06-14-sjer-red-rss-aws-sync-race
+type: log
+status: complete
+board: false
+---
+
 # sjer.red `/rss.xml` 404 — AWS CLI sync upload/delete race
-
-## Status
-
-Complete
 
 ## Symptom
 

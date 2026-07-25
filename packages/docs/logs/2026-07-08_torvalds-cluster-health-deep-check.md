@@ -1,8 +1,11 @@
+---
+id: log-2026-07-08-torvalds-cluster-health-deep-check
+type: log
+status: complete
+board: false
+---
+
 # Torvalds Cluster Health — Deep Check
-
-## Status
-
-Complete
 
 ## Summary
 

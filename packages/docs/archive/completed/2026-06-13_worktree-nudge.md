@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-13-worktree-nudge
+type: reference
+status: complete
+board: false
+---
+
 # Make agents actually create worktrees: reword AGENTS.md + SessionStart nudge
-
-## Status
-
-Complete — shipped (.claude/hooks/worktree-reminder.sh + Codex wiring).
 
 ## Context
 

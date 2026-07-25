@@ -456,6 +456,10 @@ export function createPostalDeployment(
     service: webService.name,
     port: 5000,
     hosts: ["postal"],
+    // The Rails web UI 403s every path when addressed by the in-cluster
+    // service DNS name (host allowlist), so no HTTP path can pass from the
+    // blackbox exporter — TCP connect is the strongest verifiable signal.
+    probeModule: "tcp_connect",
   });
 
   // Create ServiceMonitor for Prometheus metrics (targets worker which exposes /metrics)

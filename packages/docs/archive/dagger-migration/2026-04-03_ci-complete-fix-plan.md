@@ -1,3 +1,10 @@
+---
+id: reference-dagger-migration-2026-04-03-ci-complete-fix-plan
+type: reference
+status: complete
+board: false
+---
+
 # Dagger, BuildKite & CI — Complete Fix Plan
 
 ## Status: In Progress

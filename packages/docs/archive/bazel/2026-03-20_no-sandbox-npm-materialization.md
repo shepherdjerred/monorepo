@@ -1,3 +1,10 @@
+---
+id: reference-bazel-2026-03-20-no-sandbox-npm-materialization
+type: reference
+status: complete
+board: false
+---
+
 # No-Sandbox npm Materialization
 
 ## Decision

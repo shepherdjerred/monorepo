@@ -1,8 +1,13 @@
+---
+id: plan-2026-04-07-move-scripts-to-packages
+type: plan
+status: planned
+board: true
+verification: agent
+disposition: active
+---
+
 # Plan: Move `scripts/` to `packages/`
-
-## Status
-
-Not Started. Root `scripts/` still exists; `packages/ci/` and `packages/scripts/` do not.
 
 ## Context
 
@@ -142,3 +147,7 @@ Plus `quality-gate.sh`: `PYTHONPATH=scripts/ci/src ... --project scripts/ci` -> 
 
 - The 15 `.buildkite/scripts/*.sh` files that invoke `python -m ci.*` reference Python modules that **don't exist** in `scripts/ci/src/ci/`. These are dead code. The path update (`cd scripts/ci` -> `cd packages/ci`) is still correct for consistency, but these scripts will fail at runtime regardless. Out of scope for this PR but worth noting.
 - Package-local `scripts/` directories (e.g., `packages/homelab/src/cdk8s/scripts/`) are unrelated and should NOT be changed.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Plan: Move scripts/ to packages/`.

@@ -63,6 +63,10 @@ function computeConfiguration() {
   const config = {
     version: getRequiredEnvVar("VERSION"),
     gitSha: getRequiredEnvVar("GIT_SHA"),
+    // Hash of the tRPC contract sources, baked into the image (see
+    // packages/scout-for-lol/scripts/contract-hash.ts). Served by
+    // /api/version; the SPA compares it against its own baked hash.
+    contractHash: getRequiredEnvVar("CONTRACT_HASH"),
     sentryDsn: getOptionalEnvVar("SENTRY_DSN"),
     environment: resolveEnvironment(),
     discordToken: getRequiredEnvVar("DISCORD_TOKEN"),
@@ -141,6 +145,9 @@ const configuration: Configuration = {
   },
   get gitSha() {
     return getConfiguration().gitSha;
+  },
+  get contractHash() {
+    return getConfiguration().contractHash;
   },
   get sentryDsn() {
     return getConfiguration().sentryDsn;

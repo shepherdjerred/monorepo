@@ -1,8 +1,13 @@
+---
+id: plan-2026-06-13-scout-desktop-windows-ci-release
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Scout Desktop — CI build + upload + release of Windows x64 binaries
-
-## Status
-
-In Progress (planning — not yet implemented)
 
 ## Context
 
@@ -176,3 +181,7 @@ export --path /tmp/out` → installer present.
   repo — the spike gates the rest of the work. Fallback (Windows BK agent or GitHub Actions +
   tauri-action) is a user-facing infra decision, not to be taken silently.
 - Installer ships **unsigned** (SmartScreen warning) until a code-signing cert is procured.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Scout Desktop — CI build + upload + release of Windows x64 binaries`.

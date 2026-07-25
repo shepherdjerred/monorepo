@@ -1,3 +1,10 @@
+---
+id: reference-completed-2026-02-26-tasks-for-obsidian-ios-audit
+type: reference
+status: complete
+board: false
+---
+
 # iOS/RN Best Practices Audit: Tasks for Obsidian
 
 ## Status: Mostly Complete — Xcode config remaining

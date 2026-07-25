@@ -1,3 +1,10 @@
+---
+id: reference-dagger-migration-2026-03-27-dagger-chunk-g-pipeline-generator
+type: reference
+status: complete
+board: false
+---
+
 # Chunk G: TypeScript Pipeline Generator
 
 **Wave:** 3 (sequential — after D+E+F)

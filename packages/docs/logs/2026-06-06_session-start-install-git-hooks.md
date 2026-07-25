@@ -1,8 +1,11 @@
+---
+id: log-2026-06-06-session-start-install-git-hooks
+type: log
+status: complete
+board: false
+---
+
 # SessionStart hook: install Lefthook git hooks on new worktrees/sessions
-
-## Status
-
-Complete
 
 ## Goal
 

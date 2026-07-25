@@ -8,7 +8,6 @@ import {
   ItemSchema,
   ChampionListSchema,
   ArenaAugmentsApiResponseSchema,
-  ChampionDetailSkinsSchema,
   CDragonChampionSchema,
   rarityNumberToString,
   type SummonerData,
@@ -621,67 +620,35 @@ async function retryFailedLoadingScreens(
 }
 
 /**
- * Download champion loading screen art for all skins (excluding chromas) and
- * generate `champion-skins.json` mapping champion → valid skin numbers.
+ * Download champion loading screen art — base skin (skin 0) only.
  *
- * Two-tier source resolution per skin:
+ * Only skin 0 is ever rendered: every report path resolves to the base skin,
+ * so we no longer download the ~1,900 non-zero skins (or emit a champion→skin
+ * map). Two-tier source resolution per champion:
  *   1. Data Dragon (`ddragon.leagueoflegends.com/cdn/img/champion/loading/...`)
  *   2. CommunityDragon (mirrors Riot's internal `lol-game-data` assets)
  *
- * If both sources fail, the skin is **excluded** from `baseSkins` (so the
- * runtime never tries to load it) and a loud per-champion warning is printed.
- * The function then exits non-zero so CI catches it — silent data drift is
- * exactly what caused the original "no picture" bug.
+ * If both sources fail for a champion, a loud warning is printed and the
+ * function exits non-zero so CI catches it — silent data drift is exactly
+ * what caused the original "no picture" bug.
  */
 async function downloadChampionLoadingImages(
   championList: ChampionListData,
-): Promise<{ imageCount: number; skinMapCount: number }> {
-  console.log("\nDownloading champion loading screen images...");
+): Promise<{ imageCount: number }> {
+  console.log("\nDownloading champion loading screen images (skin 0 only)...");
 
   const championEntries = Object.entries(championList.data);
 
-  // baseSkins: champion → skin nums whose loading-screen JPG is on disk
-  const baseSkins: Record<string, number[]> = {};
-  // chromaToParent: champion → { chromaNum → parentSkinNum }
-  const chromaToParent: Record<string, Record<string, number>> = {};
   // Per-source counters for the summary
   let ddragonCount = 0;
   let cdragonCount = 0;
-  // championName → list of skinNums sourced from CDragon (for the summary)
-  const cdragonByChampion: Record<string, number[]> = {};
-  // Skins that failed BOTH sources on the first pass — retried below (fresh
+  // Champions whose base skin was sourced from CDragon (for the summary)
+  const cdragonChampions: string[] = [];
+  // Champions that failed BOTH sources on the first pass — retried below (fresh
   // patches lag both CDNs) before any of them count as a hard failure.
   const failedSkins: LoadingScreenFailure[] = [];
 
   for (const [championName, listEntry] of championEntries) {
-    let intendedSkins: number[] = [];
-    const chromaMap: Record<string, number> = {};
-
-    try {
-      const championFilePath = `${ASSETS_DIR}/champion/${championName}.json`;
-      const fileContent = await Bun.file(championFilePath).text();
-      const data = ChampionDetailSkinsSchema.parse(JSON.parse(fileContent));
-      const championData = data.data[championName];
-      if (!championData) {
-        console.warn(
-          `  ⚠ No champion data found for ${championName} in detail JSON`,
-        );
-        continue;
-      }
-      for (const skin of championData.skins) {
-        if (skin.parentSkin === undefined) {
-          intendedSkins.push(skin.num);
-        } else {
-          chromaMap[String(skin.num)] = skin.parentSkin;
-        }
-      }
-    } catch (error) {
-      console.warn(
-        `  ⚠ Failed to parse skins for ${championName}: ${String(error)} — falling back to skin 0 only`,
-      );
-      intendedSkins = [0];
-    }
-
     const championId = Number(listEntry.key);
     if (!Number.isFinite(championId)) {
       console.warn(
@@ -690,69 +657,34 @@ async function downloadChampionLoadingImages(
       continue;
     }
 
-    const downloadedSkins: number[] = [];
-    for (const skinNum of intendedSkins) {
-      const result = await downloadLoadingScreenSkin(
-        championName,
-        championId,
-        skinNum,
-      );
-      if (result.status === "success") {
-        downloadedSkins.push(skinNum);
-        if (result.source === "ddragon") {
-          ddragonCount++;
-        } else {
-          cdragonCount++;
-          (cdragonByChampion[championName] ??= []).push(skinNum);
-        }
+    const result = await downloadLoadingScreenSkin(championName, championId, 0);
+    if (result.status === "success") {
+      if (result.source === "ddragon") {
+        ddragonCount++;
       } else {
-        failedSkins.push({ championName, championId, skinNum });
+        cdragonCount++;
+        cdragonChampions.push(championName);
       }
-    }
-
-    baseSkins[championName] = downloadedSkins;
-    if (Object.keys(chromaMap).length > 0) {
-      chromaToParent[championName] = chromaMap;
+    } else {
+      failedSkins.push({ championName, championId, skinNum: 0 });
     }
   }
 
-  // Propagation-lag retry: give freshly-released skins a few more chances on
-  // both CDNs before declaring them permanently missing. Successes are folded
-  // back into baseSkins + the per-source counters; whatever is still missing
-  // afterward is a real failure that hard-throws below.
-  const retriedChampions = new Set<string>();
+  // Propagation-lag retry: give freshly-released champions a few more chances
+  // on both CDNs before declaring them permanently missing. Whatever is still
+  // missing afterward is a real failure that hard-throws below.
   const stillMissing = await retryFailedLoadingScreens(
     failedSkins,
     (failure, source) => {
-      (baseSkins[failure.championName] ??= []).push(failure.skinNum);
-      retriedChampions.add(failure.championName);
       if (source === "ddragon") {
         ddragonCount++;
       } else {
         cdragonCount++;
-        (cdragonByChampion[failure.championName] ??= []).push(failure.skinNum);
+        cdragonChampions.push(failure.championName);
       }
     },
   );
-  // Restore ascending skin order for champions that gained late retries.
-  for (const championName of retriedChampions) {
-    baseSkins[championName] = (baseSkins[championName] ?? []).toSorted(
-      (a, b) => a - b,
-    );
-  }
   const failedCount = stillMissing.length;
-  const failedByChampion: Record<string, number[]> = {};
-  for (const failure of stillMissing) {
-    (failedByChampion[failure.championName] ??= []).push(failure.skinNum);
-  }
-
-  // Write champion-skins.json — contents reflect what's actually on disk
-  const skinsData = { baseSkins, chromaToParent };
-  await Bun.write(
-    `${ASSETS_DIR}/champion-skins.json`,
-    JSON.stringify(skinsData, null, 2),
-  );
-  console.log(`✓ Written champion-skins.json`);
 
   // Summary
   console.log("");
@@ -763,13 +695,13 @@ async function downloadChampionLoadingImages(
   );
   console.log(`  failed:  ${failedCount.toString().padStart(5)} skins`);
 
-  if (Object.keys(cdragonByChampion).length > 0) {
+  if (cdragonChampions.length > 0) {
     console.log("");
     console.log(
       "CommunityDragon-sourced loading screens (Data Dragon CDN missing):",
     );
-    for (const [champion, skinNums] of Object.entries(cdragonByChampion)) {
-      console.log(`  ${champion}: skins [${skinNums.join(",")}]`);
+    for (const champion of cdragonChampions) {
+      console.log(`  ${champion}`);
     }
   }
 
@@ -778,8 +710,8 @@ async function downloadChampionLoadingImages(
     console.error(
       "❌ Loading screens that failed BOTH sources (will not be on disk):",
     );
-    for (const [champion, skinNums] of Object.entries(failedByChampion)) {
-      console.error(`  ${champion}: skins [${skinNums.join(",")}]`);
+    for (const failure of stillMissing) {
+      console.error(`  ${failure.championName}`);
     }
     console.error(
       `\n❌ ${failedCount.toString()} loading screen(s) could not be downloaded from either Data Dragon or CommunityDragon. Investigate before deploying.`,
@@ -793,7 +725,7 @@ async function downloadChampionLoadingImages(
   console.log(
     `✓ Downloaded ${imageCount.toString()} champion loading images across ${championEntries.length.toString()} champions`,
   );
-  return { imageCount, skinMapCount: championEntries.length };
+  return { imageCount };
 }
 
 type SplashSource = "cdragon" | "ddragon";
@@ -1353,7 +1285,7 @@ async function main(): Promise<void> {
       communityDragonPositionsUrl,
     );
 
-    // Download champion loading screen images (all skins) — must run after champion data
+    // Download champion loading screen images (skin 0 only) — must run after champion data
     const { imageCount: loadingImagesCount } =
       await downloadChampionLoadingImages(championList);
 

@@ -1,8 +1,13 @@
+---
+id: plan-2026-06-27-bazarr-subtitles-chinese-gating
+type: plan
+status: planned
+board: true
+verification: agent
+disposition: active
+---
+
 # Bazarr subtitle fix + per-Seerr-user Chinese gating
-
-## Status
-
-Proposed (plan mode — not yet approved/implemented)
 
 ## Context
 
@@ -182,3 +187,7 @@ no match → default profile.
 
 - Plan not yet approved (ExitPlanMode was declined pending the Lingarr decision).
 - Live Bazarr/Seerr config changes are not version-controlled — this doc is the record.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Bazarr subtitle fix + per-Seerr-user Chinese gating`.

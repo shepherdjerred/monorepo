@@ -1,13 +1,17 @@
 ---
 id: pagerduty-velero-alert-formatting
-status: waiting-on-verification
+type: todo
+status: awaiting-human
+board: true
+verification: human
+disposition: active
 origin: packages/docs/logs/2026-05-30_pagerduty-velero-duplicate-alerts.md
 source_marker: false
 ---
 
 # Verify PagerDuty alert description formatting after deploy
 
-## Verification (2026-06-28) — can't confirm yet; no post-fix velero alert has fired
+## Human Verification
 
 The fix (real-newline template + `.Annotations.message` fallback) is on `main` with a
 `helm-template.test.ts` assertion. But a live confirmation needs a velero alert to actually fire,

@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-11-competition-cron-schedule
+type: reference
+status: complete
+board: false
+---
+
 # Per-competition CRON schedule for leaderboard updates
-
-## Status
-
-Complete
 
 ## Context
 

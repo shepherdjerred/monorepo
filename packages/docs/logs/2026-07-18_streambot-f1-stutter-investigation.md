@@ -1,8 +1,11 @@
+---
+id: log-2026-07-18-streambot-f1-stutter-investigation
+type: log
+status: complete
+board: false
+---
+
 # Streambot F1-night stutter investigation (2026-07-17 evening)
-
-## Status
-
-Complete — root cause found, fixed in PR #1542, verified live in-cluster
 
 ## What the user saw
 

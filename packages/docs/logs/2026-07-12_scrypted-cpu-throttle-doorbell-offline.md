@@ -1,8 +1,11 @@
+---
+id: log-2026-07-12-scrypted-cpu-throttle-doorbell-offline
+type: log
+status: complete
+board: false
+---
+
 # Scrypted CPU Throttle — Reolink Doorbell Offline in HomeKit
-
-## Status
-
-Complete (fix shipped in PR #1500; live-effect verification after merge/ArgoCD sync is a follow-up)
 
 ## Context
 

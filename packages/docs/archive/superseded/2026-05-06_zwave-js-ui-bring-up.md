@@ -1,10 +1,13 @@
+---
+id: reference-superseded-2026-05-06-zwave-js-ui-bring-up
+type: reference
+status: complete
+board: false
+---
+
 # zwave-js-ui Bring-up
 
 Post-deploy checklist for wiring the Zooz ZST39 800-series Z-Wave stick into the homelab. Completed 2026-05-06.
-
-## Status
-
-**Complete.** Stick plugged into `torvalds`, pod scheduled, HA integration connected, first device (ZEN76 lightswitch) paired.
 
 ## Final shape
 

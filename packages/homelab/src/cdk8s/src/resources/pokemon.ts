@@ -27,9 +27,11 @@ import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/user
 // Headless Discord Plays Pokemon: pokeemerald-wasm runs in Bun, renders frames
 // in software, and streams to a Discord voice channel via the voice UDP path.
 // No GPU, desktop, Firefox, or Selkies — just a plain Bun service. The app runs
-// from the inner-monorepo root (/workspace/packages/discord-plays-pokemon), so
-// config.toml / wasm / saves resolve relative to that CWD.
-const APP_ROOT = "/workspace/packages/discord-plays-pokemon";
+// from the inner-monorepo root (/app/packages/discord-plays-pokemon — the image
+// WORKDIR since the #1517 Dockerfile rewrite), so config.toml / wasm / saves
+// resolve relative to that CWD. APP_ROOT must match the Dockerfile's final
+// WORKDIR (enforced by app-root-matches-dockerfile.test.ts).
+export const APP_ROOT = "/app/packages/discord-plays-pokemon";
 const WEB_PORT = 8081;
 
 export function createPokemonDeployment(chart: Chart) {
@@ -104,6 +106,12 @@ export function createPokemonDeployment(chart: Chart) {
       image: `ghcr.io/shepherdjerred/discord-plays-pokemon:${versions["shepherdjerred/discord-plays-pokemon"]}`,
       envVariables: {
         NODE_ENV: EnvValue.fromValue("production"),
+        // The image has no /home/bun for uid 1000 and APP_ROOT is root-owned;
+        // goal mode's tool downloads and bun's cache need writable TMPDIR/HOME.
+        // Backed by the emptyDir mounts below (codifies the 2026-07-06 live
+        // hotfix so ArgoCD owns it).
+        TMPDIR: EnvValue.fromValue("/tmp"),
+        HOME: EnvValue.fromValue("/home/bun"),
         // Peer userbot Discord user IDs (Glitter Kart + Streambot) so the channel-handler
         // excludes them from the "real viewers" count and leaves an otherwise-empty VC.
         // Sourced from the canonical map in resources/userbot-ids.ts.
@@ -235,6 +243,15 @@ export function createPokemonDeployment(chart: Chart) {
             "pokemon-goal-bin",
             "pokemon-goal-bin",
           ),
+        },
+        // Writable scratch for TMPDIR and HOME (see envVariables above).
+        {
+          path: "/tmp",
+          volume: Volume.fromEmptyDir(chart, "pokemon-tmp", "pokemon-tmp"),
+        },
+        {
+          path: "/home/bun",
+          volume: Volume.fromEmptyDir(chart, "pokemon-home", "pokemon-home"),
         },
       ],
     }),

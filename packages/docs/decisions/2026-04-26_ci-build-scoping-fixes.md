@@ -1,3 +1,10 @@
+---
+id: decision-2026-04-26-ci-build-scoping-fixes
+type: decision
+status: complete
+board: false
+---
+
 # CI Build Scoping: Three Over-Building Bugs Fixed
 
 **Date:** 2026-04-26

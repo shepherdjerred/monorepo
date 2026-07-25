@@ -1,9 +1,11 @@
+---
+id: reference-dagger-migration-2026-07-03-dagger-disk-full-root-cause-and-fixes
+type: reference
+status: complete
+board: false
+---
+
 # Dagger Engine Disk-Full — Root-Cause Correction & Durable Fixes
-
-## Status
-
-Complete (code + docs shipped in the fixes PR; three user-run ops pending — see
-runbook checklist)
 
 ## Context
 

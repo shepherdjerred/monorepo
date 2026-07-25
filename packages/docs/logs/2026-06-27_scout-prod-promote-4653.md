@@ -1,8 +1,11 @@
+---
+id: log-2026-06-27-scout-prod-promote-4653
+type: log
+status: complete
+board: false
+---
+
 # Scout prod promotion to 2.0.0-4653
-
-## Status
-
-Complete
 
 ## Summary
 

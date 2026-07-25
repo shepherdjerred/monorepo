@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-12-talos-k8s-upgrade
+type: reference
+status: complete
+board: false
+---
+
 # Update Talos + Kubernetes on `torvalds`
-
-## Status
-
-Complete (with one follow-up: Kubernetes is on v1.36.0 instead of v1.36.1 — Sidero kubelet image for v1.36.1 was not yet published at upgrade time; run `talosctl --nodes 192.168.1.81 upgrade-k8s --to 1.36.1` once `ghcr.io/siderolabs/kubelet:v1.36.1` is available on GHCR)
 
 ## Context
 

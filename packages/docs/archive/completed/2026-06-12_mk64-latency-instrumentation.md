@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-12-mk64-latency-instrumentation
+type: reference
+status: complete
+board: false
+---
+
 # MK64 end-to-end latency instrumentation
-
-## Status
-
-Complete — shipped in PR #1128.
 
 ## Context
 

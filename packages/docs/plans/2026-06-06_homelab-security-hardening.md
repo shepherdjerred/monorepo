@@ -1,3 +1,12 @@
+---
+id: plan-2026-06-06-homelab-security-hardening
+type: plan
+status: planned
+board: true
+verification: agent
+disposition: active
+---
+
 # Homelab security hardening — GitHub, AI/LLM, tailnet
 
 ## Status: Partially Complete
@@ -27,9 +36,9 @@ A read-only, owner-authorized security assessment of the homelab (Kubernetes `to
 
 ## Remaining
 
-- **Tailnet ACLs (OpenTofu)** — new `packages/homelab/src/tofu/tailscale/` module, phased: (A) import current allow-all as `tailscale_acl` (zero-diff, IaC + drift detection), (B) add `tagOwners`/tags + ACL `tests`, (C) least-privilege grants restricting sensitive surfaces (argocd, temporal, seaweedfs, grafana, mcp-gateway, k8s API, Talos) to admin devices. Guardrail: never strip the CI/operator/admin path to the k8s API or `seaweedfs-s3.tailnet` (tofu state). Separate PR(s).
-- **Buildkite webhook secret** — console/IaC step (prefer the Buildkite GitHub App / signed webhooks). Not a code change here.
-- **alert-remediation (flagged, owner decision)** — `packages/temporal/src/activities/alert-remediation-command.ts` runs `Bash`+`Write`+push fed raw Bugsink/PagerDuty text hourly. Not addressed pending scope confirmation.
+- [ ] **Tailnet ACLs (OpenTofu)** — new `packages/homelab/src/tofu/tailscale/` module, phased: (A) import current allow-all as `tailscale_acl` (zero-diff, IaC + drift detection), (B) add `tagOwners`/tags + ACL `tests`, (C) least-privilege grants restricting sensitive surfaces (argocd, temporal, seaweedfs, grafana, mcp-gateway, k8s API, Talos) to admin devices. Guardrail: never strip the CI/operator/admin path to the k8s API or `seaweedfs-s3.tailnet` (tofu state). Separate PR(s).
+- [ ] **Buildkite webhook secret** — console/IaC step (prefer the Buildkite GitHub App / signed webhooks). Not a code change here.
+- [ ] **alert-remediation (flagged, owner decision)** — `packages/temporal/src/activities/alert-remediation-command.ts` runs `Bash`+`Write`+push fed raw Bugsink/PagerDuty text hourly. Not addressed pending scope confirmation.
 
 ## Session Log — 2026-06-06
 

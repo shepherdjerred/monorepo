@@ -29,6 +29,21 @@ resource "buildkite_pipeline" "monorepo" {
   cancel_intermediate_builds = true
 
   # Exact upload step the pipeline currently runs (queue: default keeps the
-  # bootstrap step on the cluster's default queue).
-  steps = "steps:\n    - label: \":pipeline: Upload pipeline\"\n      command: buildkite-agent pipeline upload\n      agents:\n        queue: default"
+  # bootstrap step on the cluster's default queue). The stable key and pod
+  # label keep this first command pod in the same I/O attribution contract as
+  # every command loaded by the static pipeline.
+  steps = <<-YAML
+    steps:
+      - label: ":pipeline: Upload pipeline"
+        key: pipeline-upload
+        command: sh .buildkite/scripts/upload-pipeline.sh
+        timeout_in_minutes: 5
+        agents:
+          queue: default
+        plugins:
+          - kubernetes:
+              metadata:
+                labels:
+                  ci.sjer.red/step-key: pipeline-upload
+  YAML
 }

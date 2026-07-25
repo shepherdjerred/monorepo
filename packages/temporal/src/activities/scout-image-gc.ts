@@ -22,6 +22,48 @@ const DELETE_BATCH_SIZE = 1000;
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
+// The marketing-showcase manifest references specific report/loading-screen
+// images that the scout-showcase-refresh-weekly job re-reads indefinitely —
+// pruning them breaks the refresh permanently (rare queue types may never
+// produce a replacement; learned 2026-07-19 when a month of GC had eaten 60%
+// of the manifest's sources). Fetch the manifest from main and exempt every
+// referenced key. Scoped to scout-prod — the manifest is curated against prod.
+const SHOWCASE_MANIFEST_URL =
+  "https://raw.githubusercontent.com/shepherdjerred/monorepo/main/packages/scout-for-lol/showcase/marketing-showcase.manifest.json";
+const SHOWCASE_EXEMPT_BUCKET = "scout-prod";
+
+const ShowcaseManifestKeysSchema = z.object({
+  entries: z.array(
+    z.looseObject({
+      imageKey: z.string().optional(),
+      dataKey: z.string().optional(),
+    }),
+  ),
+});
+
+/**
+ * Fetch the showcase manifest and return every S3 key it references. Fails
+ * loudly (activity failure → Temporal retry) rather than pruning without the
+ * exemption list — a GC run that can't see the manifest must not delete.
+ */
+export async function fetchShowcaseExemptKeys(
+  url: string = SHOWCASE_MANIFEST_URL,
+): Promise<Set<string>> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(
+      `[scout-image-gc] failed to fetch showcase manifest (${String(response.status)}) — refusing to prune without the exemption list`,
+    );
+  }
+  const manifest = ShowcaseManifestKeysSchema.parse(await response.json());
+  const keys = new Set<string>();
+  for (const entry of manifest.entries) {
+    if (entry.imageKey !== undefined) keys.add(entry.imageKey);
+    if (entry.dataKey !== undefined) keys.add(entry.dataKey);
+  }
+  return keys;
+}
+
 const InputSchema = z.object({
   retentionDays: z.number().int().positive().default(30),
   // When true, list + count what WOULD be deleted but issue no DeleteObjects
@@ -56,8 +98,16 @@ export function isPrunableImage(
   key: string,
   lastModified: Date | undefined,
   cutoff: Date,
-  suffixes: readonly string[] = IMAGE_SUFFIXES,
+  options?: {
+    suffixes?: readonly string[];
+    exemptKeys?: ReadonlySet<string>;
+  },
 ): boolean {
+  const suffixes = options?.suffixes ?? IMAGE_SUFFIXES;
+  const exemptKeys = options?.exemptKeys ?? new Set<string>();
+  if (exemptKeys.has(key)) {
+    return false;
+  }
   if (lastModified === undefined) {
     return false;
   }
@@ -124,13 +174,14 @@ type PruneContext = {
   bucket: string;
   cutoff: Date;
   dryRun: boolean;
+  exemptKeys: ReadonlySet<string>;
 };
 
 async function prunePrefix(
   ctx: PruneContext,
   prefix: string,
 ): Promise<BucketPruneResult> {
-  const { client, bucket, cutoff, dryRun } = ctx;
+  const { client, bucket, cutoff, dryRun, exemptKeys } = ctx;
   let scanned = 0;
   let matched = 0;
   let deleted = 0;
@@ -166,7 +217,7 @@ async function prunePrefix(
       const key = object.Key;
       if (
         key !== undefined &&
-        isPrunableImage(key, object.LastModified, cutoff)
+        isPrunableImage(key, object.LastModified, cutoff, { exemptKeys })
       ) {
         matched += 1;
         bytesReclaimed += object.Size ?? 0;
@@ -185,20 +236,14 @@ async function prunePrefix(
   return { bucket, scanned, matched, deleted, bytesReclaimed };
 }
 
-async function pruneBucket(
-  client: S3Client,
-  bucket: string,
-  cutoff: Date,
-  dryRun: boolean,
-): Promise<BucketPruneResult> {
+async function pruneBucket(ctx: PruneContext): Promise<BucketPruneResult> {
   const total: BucketPruneResult = {
-    bucket,
+    bucket: ctx.bucket,
     scanned: 0,
     matched: 0,
     deleted: 0,
     bytesReclaimed: 0,
   };
-  const ctx: PruneContext = { client, bucket, cutoff, dryRun };
   for (const prefix of PREFIXES) {
     const part = await prunePrefix(ctx, prefix);
     total.scanned += part.scanned;
@@ -218,10 +263,21 @@ export const scoutImageGcActivities = {
     const { retentionDays, dryRun } = InputSchema.parse(rawInput);
     const cutoff = new Date(Date.now() - retentionDays * MS_PER_DAY);
     const client = createScoutS3Client();
+    const showcaseExemptKeys = await fetchShowcaseExemptKeys();
 
     const buckets: BucketPruneResult[] = [];
     for (const bucket of BUCKETS) {
-      const result = await pruneBucket(client, bucket, cutoff, dryRun);
+      const exemptKeys =
+        bucket === SHOWCASE_EXEMPT_BUCKET
+          ? showcaseExemptKeys
+          : new Set<string>();
+      const result = await pruneBucket({
+        client,
+        bucket,
+        cutoff,
+        dryRun,
+        exemptKeys,
+      });
       buckets.push(result);
       console.warn(
         `[scout-image-gc] ${bucket}: scanned=${String(result.scanned)} matched=${String(result.matched)} deleted=${String(result.deleted)} bytes=${String(result.bytesReclaimed)}${dryRun ? " (dry-run)" : ""}`,

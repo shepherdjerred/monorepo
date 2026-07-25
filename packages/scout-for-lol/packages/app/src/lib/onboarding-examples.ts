@@ -34,7 +34,7 @@ export const REPORT_EXAMPLES: ReportExample[] = [
       title: "Best teammate groups",
       channelId,
       queryText:
-        "select group, games, win_rate from player_groups where games >= 5 group by group(all) order by win_rate desc render leaderboard",
+        "select group, games, win_rate from player_groups where game_creation_at >= current_timestamp - interval '30 days' and games >= 5 group by group(all) order by win_rate desc limit 10 render leaderboard",
     }),
   },
   {
@@ -45,7 +45,7 @@ export const REPORT_EXAMPLES: ReportExample[] = [
       title: "Highest surrender %",
       channelId,
       queryText:
-        "select player, games, surrender_rate from match_participants group by player order by surrender_rate desc render leaderboard",
+        "select player, games, surrender_rate from match_participants where game_creation_at >= current_timestamp - interval '30 days' group by player order by surrender_rate desc limit 10 render leaderboard",
     }),
   },
   {
@@ -56,7 +56,7 @@ export const REPORT_EXAMPLES: ReportExample[] = [
       title: "Most games played",
       channelId,
       queryText:
-        "select player, games from match_participants group by player order by games desc render leaderboard",
+        "select player, games from match_participants where game_creation_at >= current_timestamp - interval '30 days' group by player order by games desc limit 10 render leaderboard",
     }),
   },
 ];

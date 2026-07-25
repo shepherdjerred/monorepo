@@ -3,6 +3,7 @@ import { parseAndCompile } from "#src/model/report-query-compile.ts";
 import { parseReportQuery } from "#src/model/report-query-parser.ts";
 import { lintReportQuery } from "#src/model/report-query-lint.ts";
 import { completeReportQuery } from "#src/model/report-query-complete.ts";
+import { reportChampionLiteral } from "#src/model/report-query-champions.ts";
 
 describe("parseAndCompile", () => {
   test("parses a leaderboard aggregate query", () => {
@@ -15,19 +16,22 @@ describe("parseAndCompile", () => {
       LIMIT 10
     `);
 
-    expect(plan).toEqual({
-      source: "match_participants",
-      groupBy: "player",
-      metrics: ["games", "surrenders", "surrender_rate"],
-      queueFilter: ["solo", "flex"],
-      championId: undefined,
-      minGames: undefined,
-      competitionId: undefined,
-      orderBy: "surrender_rate",
-      orderDirection: "desc",
-      limit: 10,
-      render: { kind: "TABLE" },
-    });
+    expect(plan.source).toBe("match_participants");
+    expect(plan.groupBy).toBe("player");
+    expect(plan.groupBys).toEqual(["player"]);
+    expect(plan.metrics).toEqual(["games", "surrenders", "surrender_rate"]);
+    expect(plan.selectItems.map((item) => item.key)).toEqual([
+      "games",
+      "surrenders",
+      "surrender_rate",
+    ]);
+    expect(plan.queueFilter).toEqual(["solo", "flex"]);
+    expect(plan.lookbackDays).toBe(30);
+    expect(plan.orderBy).toBe("surrender_rate");
+    expect(plan.orderDirection).toBe("desc");
+    expect(plan.limit).toBe(10);
+    expect(plan.having).toEqual([]);
+    expect(plan.render).toEqual({ kind: "TABLE" });
   });
 
   test("compiles group(N) queries to a structured group plan", () => {
@@ -90,15 +94,25 @@ describe("parseAndCompile", () => {
 
     expect(plan.orderBy).toBe("games");
     expect(plan.orderDirection).toBe("desc");
-    expect(plan.limit).toBeUndefined();
+    expect(plan.limit).toBe(10);
   });
 
-  test("rejects unsupported where clauses", () => {
+  test("parses typed row filters", () => {
+    const plan = parseAndCompile(
+      "SELECT player, games FROM match_participants WHERE kills > 5 AND role IN ('solo', 'support') GROUP BY player",
+    );
+    expect(plan.filters).toEqual([
+      { field: "kills", operator: ">", values: [5] },
+      { field: "role", operator: "in", values: ["solo", "support"] },
+    ]);
+  });
+
+  test("rejects unknown filter fields", () => {
     expect(() =>
       parseAndCompile(
-        "SELECT player, games FROM match_participants WHERE kills > 5 GROUP BY player",
+        "SELECT player, games FROM match_participants WHERE secret_stat > 5 GROUP BY player",
       ),
-    ).toThrow("Unsupported report WHERE clause");
+    ).toThrow();
   });
 
   test("parses additional bounded filters", () => {
@@ -114,6 +128,89 @@ describe("parseAndCompile", () => {
     expect(plan.queueFilter).toEqual(["arena"]);
     expect(plan.championId).toBe(22);
     expect(plan.minGames).toBe(5);
+  });
+
+  test("resolves a validated champion name to its numeric id", () => {
+    const plan = parseAndCompile(
+      "SELECT games FROM match_participants WHERE champion_id = champion('Lux') GROUP BY player",
+    );
+
+    expect(plan.championId).toBe(99);
+  });
+
+  test("supports champion display names containing apostrophes", () => {
+    const plan = parseAndCompile(
+      `SELECT games FROM match_participants WHERE champion_id = champion("Kai'Sa") GROUP BY player`,
+    );
+
+    expect(plan.championId).toBe(145);
+  });
+
+  test("reportChampionLiteral double-quotes apostrophe names and round-trips", () => {
+    // Kai'Sa (145) has an apostrophe: a single-quoted literal would break the
+    // lexer, so reportChampionLiteral must switch to double quotes. Lux (99)
+    // has none and stays single-quoted.
+    expect(reportChampionLiteral(145)).toBe(`"Kai'Sa"`);
+    expect(reportChampionLiteral(99)).toBe(`'Lux'`);
+
+    const plan = parseAndCompile(
+      `SELECT games FROM match_participants WHERE champion_id = champion(${reportChampionLiteral(145)}) GROUP BY player`,
+    );
+    expect(plan.championId).toBe(145);
+  });
+
+  test("rejects unknown champion names with a suggestion", () => {
+    expect(() =>
+      parseAndCompile(
+        "SELECT games FROM match_participants WHERE champion_id = champion('Luxx') GROUP BY player",
+      ),
+    ).toThrow('Did you mean "Lux"?');
+  });
+
+  test("compiles SQL-style lookback predicates", () => {
+    const plan = parseAndCompile(
+      "SELECT games FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '14 days' GROUP BY player LIMIT 5",
+    );
+
+    expect(plan.lookbackDays).toBe(14);
+    expect(plan.limit).toBe(5);
+  });
+
+  test("requires the source-specific timestamp field", () => {
+    expect(() =>
+      parseAndCompile(
+        "SELECT prematches FROM prematch_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '14 days' GROUP BY player",
+      ),
+    ).toThrow("uses observed_at");
+  });
+
+  test("compiles calculated outputs, aliases, two dimensions, and HAVING", () => {
+    const plan = parseAndCompile(
+      "SELECT games, round((kills + assists) / games, 2) AS participation FROM match_participants GROUP BY champion, team_position HAVING games >= 5 AND participation > 3 ORDER BY participation DESC",
+    );
+    expect(plan.groupBys).toEqual(["champion", "team_position"]);
+    expect(plan.metrics).toEqual(["games", "kills", "assists"]);
+    expect(plan.selectItems.map((item) => item.key)).toEqual([
+      "games",
+      "participation",
+    ]);
+    expect(plan.having).toEqual([
+      { key: "games", operator: ">=", value: 5 },
+      { key: "participation", operator: ">", value: 3 },
+    ]);
+  });
+
+  test("supports UTC temporal buckets and aggregate-all reports", () => {
+    expect(
+      parseAndCompile(
+        "SELECT games FROM match_participants GROUP BY month ORDER BY label ASC",
+      ).groupBys,
+    ).toEqual(["month"]);
+    expect(
+      parseAndCompile(
+        "SELECT games, win_rate FROM match_participants GROUP BY all RENDER kpi_card WITH (y = (games, win_rate))",
+      ).groupBys,
+    ).toEqual(["all"]);
   });
 
   test("rejects unknown source", () => {
@@ -157,6 +254,40 @@ describe("RENDER clause", () => {
       encoding: { x: "label", y: "win_rate" },
       options: { title: "Win %", yAxisLabel: "Rate" },
     });
+  });
+
+  test("parses multi-series appearance options and custom colors", () => {
+    const plan = parseAndCompile(
+      'SELECT games, wins, losses FROM match_participants GROUP BY week RENDER stacked_bar WITH (y = (wins, losses), theme = minimal_light, palette = colorblind, colors = (#112233, #abcdef), orientation = vertical, labels = value, legend = top, sort = asc, smooth = true, subtitle = "Weekly")',
+    );
+    expect(plan.render).toEqual({
+      kind: "STACKED_BAR",
+      encoding: { y: ["wins", "losses"] },
+      options: {
+        theme: "minimal_light",
+        palette: "colorblind",
+        colors: ["#112233", "#abcdef"],
+        orientation: "vertical",
+        labels: "value",
+        legend: "top",
+        sort: "asc",
+        smooth: true,
+        subtitle: "Weekly",
+      },
+    });
+  });
+
+  test("rejects chart shapes that cannot render", () => {
+    expect(() =>
+      parseAndCompile(
+        "SELECT games, wins FROM match_participants GROUP BY player RENDER radar_chart WITH (y = (games, wins))",
+      ),
+    ).toThrow("between three and eight");
+    expect(() =>
+      parseAndCompile(
+        "SELECT games FROM match_participants GROUP BY champion RENDER heatmap WITH (value = games)",
+      ),
+    ).toThrow("exactly two GROUP BY");
   });
 
   test("parses a text render kind without a WITH clause", () => {
@@ -265,6 +396,18 @@ describe("lintReportQuery", () => {
       expect(diagnostics).toHaveLength(0);
     }
   });
+
+  test("positions invalid HAVING diagnostics", () => {
+    const text =
+      "select games from match_participants group by player having missing > 2";
+    const diagnostic = lintReportQuery(text).find((entry) =>
+      entry.message.includes("HAVING target"),
+    );
+    expect(diagnostic?.severity).toBe("error");
+    expect(text.slice(diagnostic?.span.start, diagnostic?.span.end)).toBe(
+      "missing > 2",
+    );
+  });
 });
 
 describe("completeReportQuery", () => {
@@ -281,6 +424,13 @@ describe("completeReportQuery", () => {
     const text = "select ";
     const items = completeReportQuery(text, text.length);
     expect(items.some((item) => item.label === "win_rate")).toBe(true);
+    expect(items.some((item) => item.label === "per_game")).toBe(true);
+  });
+
+  test("suggests aggregate outputs after HAVING", () => {
+    const text = "select games from match_participants group by player having ";
+    const items = completeReportQuery(text, text.length);
+    expect(items.some((item) => item.label === "games")).toBe(true);
   });
 
   test("suggests queue values inside queue IN (...)", () => {

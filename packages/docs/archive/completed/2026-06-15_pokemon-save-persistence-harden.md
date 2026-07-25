@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-15-pokemon-save-persistence-harden
+type: reference
+status: complete
+board: false
+---
+
 # Pokémon — in-game save persistence: verify + harden
-
-## Status
-
-Complete
 
 ## Context
 

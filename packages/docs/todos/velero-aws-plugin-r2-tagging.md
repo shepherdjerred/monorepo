@@ -1,6 +1,10 @@
 ---
 id: velero-aws-plugin-r2-tagging
-status: active
+type: todo
+status: in-progress
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/plans/2026-06-28_velero-r2-tagging-outage.md
 source_marker: false
 ---
@@ -57,3 +61,7 @@ StatusCode: 501 ... NotImplemented: Header 'x-amz-tagging' with value '' not imp
 - The openebs ZFS plugin uses a separate uploader (no tagging header), so volume _data_
   still lands in `zfspv-incr/` even while metadata fails — which is why R2 kept growing
   ~9 GiB/day with unrestorable data during the outage.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Unpin velero-plugin-for-aws once R2 stops rejecting x-amz-tagging`.

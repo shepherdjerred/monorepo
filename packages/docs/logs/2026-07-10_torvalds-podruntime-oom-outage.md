@@ -1,8 +1,11 @@
+---
+id: log-2026-07-10-torvalds-podruntime-oom-outage
+type: log
+status: complete
+board: false
+---
+
 # torvalds /podruntime 2Gi ceiling → control-plane OOM loop + watchdog reboot
-
-## Status
-
-Complete
 
 ## Summary
 

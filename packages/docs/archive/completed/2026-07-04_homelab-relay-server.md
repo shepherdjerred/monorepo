@@ -1,10 +1,11 @@
+---
+id: reference-completed-2026-07-04-homelab-relay-server
+type: reference
+status: complete
+board: false
+---
+
 # Plan: Self-hosted Obsidian + Relay for couple collaboration
-
-## Status
-
-Complete (deployed live) — Relay Server running on the cluster at `https://relay.sjer.red`,
-backed by SeaweedFS. Bootstrapped via `kubectl apply` ahead of CI; PR pending for GitOps
-adoption. Client-side setup (vault + plugin + registration) is the only remaining user step.
 
 ## Context
 

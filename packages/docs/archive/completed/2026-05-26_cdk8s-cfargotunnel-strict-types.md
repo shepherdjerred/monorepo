@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-26-cdk8s-cfargotunnel-strict-types
+type: reference
+status: complete
+board: false
+---
+
 # Tighten CDK8s types for `networking.cfargotunnel.com` (and fix the bugs that surface)
-
-## Status
-
-Complete
 
 ## Context
 

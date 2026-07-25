@@ -1,8 +1,11 @@
+---
+id: log-2026-07-18-seerr-tv-request-quota-corruption
+type: log
+status: complete
+board: false
+---
+
 # Seerr: users can request movies but not TV — corrupted quota columns
-
-## Status
-
-Complete
 
 ## Report
 

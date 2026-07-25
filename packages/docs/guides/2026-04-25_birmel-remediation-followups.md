@@ -1,3 +1,10 @@
+---
+id: guide-2026-04-25-birmel-remediation-followups
+type: guide
+status: complete
+board: false
+---
+
 # Birmel Remediation Follow-ups (2026-04-25)
 
 Tracking doc for the post-deploy verification and remaining cleanups from the

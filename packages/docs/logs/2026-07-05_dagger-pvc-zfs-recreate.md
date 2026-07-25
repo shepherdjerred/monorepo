@@ -1,8 +1,11 @@
+---
+id: log-2026-07-05-dagger-pvc-zfs-recreate
+type: log
+status: complete
+board: false
+---
+
 # Dagger PV/PVC and ZFS recreation
-
-## Status
-
-Complete.
 
 ## Summary
 

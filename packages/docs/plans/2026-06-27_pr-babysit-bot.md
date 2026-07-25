@@ -1,6 +1,15 @@
+---
+id: plan-2026-06-27-pr-babysit-bot
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # PR Babysitter Bot — GitHub-native "get this green" automation
 
-## Status
+## Status Notes (Historical)
 
 In Progress — **Phases 0–3 implemented**, all in one PR (#1334), the whole
 feature landing **dormant** behind `PR_BABYSIT_ENABLED` (default off):
@@ -344,3 +353,7 @@ per-iteration + cumulative `$` — those numbers set the Phase-4 budget defaults
 - `@shepherdjerred/llm-models` is a `file:` dep copied into `node_modules` without its (gitignored)
   `dist`; a fresh worktree needs `bun run --filter=./packages/llm-models build` + `bun install` in
   temporal or typecheck fails to resolve it (pre-existing; surfaced here).
+
+## Remaining
+
+- [ ] Complete and verify the work described in `PR Babysitter Bot — GitHub-native "get this green" automation`.

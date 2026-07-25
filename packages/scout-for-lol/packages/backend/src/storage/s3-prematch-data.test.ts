@@ -136,7 +136,7 @@ describe("savePrematchDataToS3", () => {
     expect(durationMetric.values.length > 0).toBe(true);
   });
 
-  test("returns error without throwing when upload fails", async () => {
+  test("throws after retries when upload fails", async () => {
     const gameInfo = makeGameInfo();
     const metricsBefore = await getMetrics();
     const errorBefore = getCounterValue(
@@ -151,13 +151,14 @@ describe("savePrematchDataToS3", () => {
 
     s3Mock.on(PutObjectCommand).rejects(new Error("upload failed"));
 
-    const result = await savePrematchDataToS3(gameInfo.gameId, gameInfo, [
-      "Player",
-    ]);
+    // S3 is now authoritative: a failed write throws (it no longer returns an
+    // "error" status) so the ingest path can fail loud and not lose the game.
+    await expect(
+      savePrematchDataToS3(gameInfo.gameId, gameInfo, ["Player"]),
+    ).rejects.toThrow("upload failed");
 
-    expect(result.status).toBe("error");
-    expect(typeof result.durationSeconds).toBe("number");
-    expect(s3Mock.calls()).toHaveLength(1);
+    // Retried MAX_PUT_ATTEMPTS (3) times before throwing.
+    expect(s3Mock.calls()).toHaveLength(3);
 
     const metricsAfter = await getMetrics();
     expect(

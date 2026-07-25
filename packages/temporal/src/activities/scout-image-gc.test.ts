@@ -57,10 +57,29 @@ describe("isPrunableImage", () => {
 
   test("respects a custom suffix set", () => {
     expect(
-      isPrunableImage("games/2026/05/01/M1/report.png", old, cutoff, [".svg"]),
+      isPrunableImage("games/2026/05/01/M1/report.png", old, cutoff, {
+        suffixes: [".svg"],
+      }),
     ).toBe(false);
     expect(
-      isPrunableImage("games/2026/05/01/M1/report.svg", old, cutoff, [".svg"]),
+      isPrunableImage("games/2026/05/01/M1/report.svg", old, cutoff, {
+        suffixes: [".svg"],
+      }),
+    ).toBe(true);
+  });
+
+  test("keeps a showcase-exempt key regardless of age", () => {
+    const exemptKeys = new Set(["games/2026/05/01/M1/report.png"]);
+    expect(
+      isPrunableImage("games/2026/05/01/M1/report.png", old, cutoff, {
+        exemptKeys,
+      }),
+    ).toBe(false);
+    // A sibling that is NOT in the manifest still prunes.
+    expect(
+      isPrunableImage("games/2026/05/01/M1/report.svg", old, cutoff, {
+        exemptKeys,
+      }),
     ).toBe(true);
   });
 });

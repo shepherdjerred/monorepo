@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-07-mariokart-react-version-skew
+type: reference
+status: complete
+board: false
+---
+
 # mariokart.sjer.red — React "Incompatible React versions" skew
-
-## Status
-
-Complete
 
 ## Context
 

@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-06-bugsink-cleanup-pinterest-birmel
+type: reference
+status: complete
+board: false
+---
+
 # Bugsink cleanup: silence Pinterest noise + fix Birmel OTel logger recursion
-
-## Status
-
-Complete (code shipped via PR; Bugsink resolutions partly post-deploy)
 
 ## Context
 

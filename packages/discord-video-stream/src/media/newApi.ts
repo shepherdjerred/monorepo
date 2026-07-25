@@ -18,7 +18,10 @@ import Log from "debug-level";
 // the bundler cannot statically pre-resolve (and therefore eagerly load) it. Previously a committed
 // bun patch in the consumer packages; baked into source here.
 const __require = __createRequire(import.meta.url);
-type SharpFactory = typeof import("sharp");
+// sharp 0.35 ships ESM-first types: the callable factory is the DEFAULT export
+// of the module type, while the CJS require() below still returns the callable
+// directly at runtime.
+type SharpFactory = (typeof import("sharp"))["default"];
 let __sharpModule: SharpFactory | undefined;
 const __sharpName = ["sh", "arp"].join("");
 const sharp = ((...args: Parameters<SharpFactory>): ReturnType<SharpFactory> => {

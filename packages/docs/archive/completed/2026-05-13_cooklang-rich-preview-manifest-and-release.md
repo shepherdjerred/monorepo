@@ -1,6 +1,13 @@
+---
+id: reference-completed-2026-05-13-cooklang-rich-preview-manifest-and-release
+type: reference
+status: complete
+board: false
+---
+
 # Cooklang Rich Preview — Manifest Fix + Automated Versioned Releases
 
-## Status
+## Status Notes (Historical)
 
 **Complete** — all plan-scoped work verified shipped to `main` during the 2026-06-06 docs groom; archived to `archive/completed/`. Original tracking status preserved below.
 

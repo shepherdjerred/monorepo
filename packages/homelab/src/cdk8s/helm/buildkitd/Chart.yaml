@@ -1,0 +1,6 @@
+apiVersion: v2
+name: buildkitd
+description: Persistent BuildKit daemon for CI image builds (bounded-GC cache on compressed ZFS)
+type: application
+version: "$version"
+appVersion: "$appVersion"

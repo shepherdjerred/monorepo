@@ -1,27 +1,29 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
-  TextInput,
   ScrollView,
   Pressable,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   StyleSheet,
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation/types";
-import type { Priority } from "../domain/priority";
+import type { UpdateTaskRequest } from "../domain/types";
 import { PRIORITY_LABELS } from "../domain/priority";
 import { STATUS_LABELS } from "../domain/status";
 import { useTasks } from "../hooks/use-tasks";
 import { useSettings } from "../hooks/use-settings";
 import { typography } from "../styles/typography";
 import { formatRelativeDate } from "../lib/dates";
-import { PriorityPicker } from "../components/input/PriorityPicker";
-import { DatePicker } from "../components/input/DatePicker";
+import { showResultError } from "../lib/errors";
+import {
+  ScheduleSheet,
+  type ScheduleField,
+} from "../components/input/ScheduleSheet";
+import { TaskEditForm } from "../components/task/TaskEditForm";
 import { MarkdownView } from "../components/common/MarkdownView";
+import { AppIcon } from "../components/common/AppIcon";
 import { isCompletedStatus } from "../domain/status";
 import {
   feedbackTaskComplete,
@@ -35,36 +37,32 @@ type Props = NativeStackScreenProps<RootStackParamList, "TaskDetail">;
 export function TaskDetailScreen({ route, navigation }: Props) {
   const { taskId } = route.params;
   const { colors } = useSettings();
-  const { getTask, updateTask, deleteTask, toggleTask } = useTasks();
+  const {
+    getTask,
+    updateTask,
+    deleteTask,
+    toggleTask,
+    dayCounts,
+    projectNames,
+    contextNames,
+    tagNames,
+  } = useTasks();
   const task = getTask(taskId);
 
   const [editing, setEditing] = useState(false);
-  const [title, setTitle] = useState(task?.title ?? "");
-  const [priority, setPriority] = useState<Priority>(
-    task?.priority ?? "normal",
+  const [sheetField, setSheetField] = useState<ScheduleField | null>(null);
+
+  const handleSave = useCallback(
+    (patch: UpdateTaskRequest) => {
+      feedbackTaskCreate();
+      void (async () => {
+        const result = await updateTask(taskId, patch);
+        showResultError(result, "Save Failed");
+      })();
+      setEditing(false);
+    },
+    [taskId, updateTask],
   );
-  const [due, setDue] = useState(task?.due);
-  const [details, setDetails] = useState(task?.details ?? "");
-
-  useEffect(() => {
-    if (task) {
-      setTitle(task.title);
-      setPriority(task.priority);
-      setDue(task.due);
-      setDetails(task.details ?? "");
-    }
-  }, [task]);
-
-  const handleSave = useCallback(() => {
-    feedbackTaskCreate();
-    void updateTask(taskId, {
-      title,
-      priority,
-      due: due ?? null,
-      details,
-    });
-    setEditing(false);
-  }, [taskId, title, priority, due, details, updateTask]);
 
   const handleDelete = useCallback(() => {
     Alert.alert("Delete Task", "Are you sure?", [
@@ -81,6 +79,21 @@ export function TaskDetailScreen({ route, navigation }: Props) {
     ]);
   }, [taskId, deleteTask, navigation]);
 
+  // Read-mode picks reschedule immediately — the fast path for
+  // "just push this out" without entering the edit form.
+  const handleSheetApply = useCallback(
+    (field: ScheduleField, value: string | null) => {
+      void (async () => {
+        const result = await updateTask(
+          taskId,
+          field === "due" ? { due: value } : { scheduled: value },
+        );
+        showResultError(result, "Reschedule Failed");
+      })();
+    },
+    [taskId, updateTask],
+  );
+
   if (!task) {
     return (
       <View style={[styles.container, styles.center]}>
@@ -93,218 +106,159 @@ export function TaskDetailScreen({ route, navigation }: Props) {
 
   if (editing) {
     return (
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-        <ScrollView contentContainerStyle={styles.content}>
-          <Text style={[typography.label, { color: colors.textSecondary }]}>
-            Title
-          </Text>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                color: colors.text,
-                borderColor: colors.border,
-                backgroundColor: colors.surface,
-              },
-            ]}
-            value={title}
-            onChangeText={setTitle}
-            testID="task-detail-title-input"
-            accessibilityLabel="Task title"
-          />
-
-          <Text
-            style={[
-              typography.label,
-              { color: colors.textSecondary },
-              styles.sectionLabel,
-            ]}
-          >
-            Priority
-          </Text>
-          <PriorityPicker value={priority} onChange={setPriority} />
-
-          <Text
-            style={[
-              typography.label,
-              { color: colors.textSecondary },
-              styles.sectionLabel,
-            ]}
-          >
-            Due Date
-          </Text>
-          <DatePicker value={due} onChange={setDue} />
-
-          <Text
-            style={[
-              typography.label,
-              { color: colors.textSecondary },
-              styles.sectionLabel,
-            ]}
-          >
-            Details
-          </Text>
-          <TextInput
-            style={[
-              styles.input,
-              styles.detailsInput,
-              {
-                color: colors.text,
-                borderColor: colors.border,
-                backgroundColor: colors.surface,
-              },
-            ]}
-            value={details}
-            onChangeText={setDetails}
-            placeholder="Add details (markdown supported)"
-            placeholderTextColor={colors.textTertiary}
-            multiline
-            textAlignVertical="top"
-          />
-
-          <View style={styles.actions}>
-            <Pressable
-              style={[styles.button, { backgroundColor: colors.primary }]}
-              onPress={handleSave}
-              accessibilityRole="button"
-              accessibilityLabel="Save changes"
-              testID="task-detail-save"
-            >
-              <Text style={styles.buttonText}>Save</Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.button,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                  borderWidth: 1,
-                },
-              ]}
-              onPress={() => {
-                setEditing(false);
-              }}
-              accessibilityRole="button"
-              accessibilityLabel="Cancel editing"
-            >
-              <Text style={[styles.buttonText, { color: colors.text }]}>
-                Cancel
-              </Text>
-            </Pressable>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+      <TaskEditForm
+        task={task}
+        dayCounts={dayCounts}
+        availableProjects={projectNames}
+        availableContexts={contextNames}
+        availableTags={tagNames}
+        onSave={handleSave}
+        onCancel={() => {
+          setEditing(false);
+        }}
+      />
     );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={[typography.heading, { color: colors.text }]}>
-        {task.title}
-      </Text>
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text style={[typography.heading, { color: colors.text }]}>
+          {task.title}
+        </Text>
 
-      <View style={styles.meta}>
-        <MetaRow
-          label="Status"
-          value={STATUS_LABELS[task.status]}
-          colors={colors}
-        />
-        <MetaRow
-          label="Priority"
-          value={PRIORITY_LABELS[task.priority]}
-          colors={colors}
-        />
-        {task.due ? (
+        <View style={styles.meta}>
+          <MetaRow
+            label="Status"
+            value={STATUS_LABELS[task.status]}
+            colors={colors}
+          />
+          <MetaRow
+            label="Priority"
+            value={PRIORITY_LABELS[task.priority]}
+            colors={colors}
+          />
           <MetaRow
             label="Due"
-            value={formatRelativeDate(task.due)}
+            value={task.due ? formatRelativeDate(task.due) : "None"}
             colors={colors}
+            onPress={() => {
+              setSheetField("due");
+            }}
+            testID="task-detail-due-meta"
           />
-        ) : null}
-        {task.recurrence ? (
-          <MetaRow label="Recurrence" value={task.recurrence} colors={colors} />
-        ) : null}
-        {task.projects.length > 0 ? (
           <MetaRow
-            label="Projects"
-            value={task.projects.join(", ")}
+            label="Scheduled"
+            value={task.scheduled ? formatRelativeDate(task.scheduled) : "None"}
             colors={colors}
+            onPress={() => {
+              setSheetField("scheduled");
+            }}
+            testID="task-detail-scheduled-meta"
           />
-        ) : null}
-        {task.contexts.length > 0 ? (
-          <MetaRow
-            label="Contexts"
-            value={task.contexts.join(", ")}
-            colors={colors}
-          />
-        ) : null}
-        {task.tags.length > 0 ? (
-          <MetaRow label="Tags" value={task.tags.join(", ")} colors={colors} />
-        ) : null}
-      </View>
-
-      {task.details && task.details.length > 0 ? (
-        <View style={styles.detailsSection}>
-          <Text style={[typography.label, { color: colors.textSecondary }]}>
-            Details
-          </Text>
-          <MarkdownView content={task.details} />
+          {task.recurrence ? (
+            <MetaRow
+              label="Recurrence"
+              value={task.recurrence}
+              colors={colors}
+            />
+          ) : null}
+          {task.projects.length > 0 ? (
+            <MetaRow
+              label="Projects"
+              value={task.projects.join(", ")}
+              colors={colors}
+            />
+          ) : null}
+          {task.contexts.length > 0 ? (
+            <MetaRow
+              label="Contexts"
+              value={task.contexts.join(", ")}
+              colors={colors}
+            />
+          ) : null}
+          {task.tags.length > 0 ? (
+            <MetaRow
+              label="Tags"
+              value={task.tags.join(", ")}
+              colors={colors}
+            />
+          ) : null}
         </View>
-      ) : null}
 
-      <View style={styles.actions}>
-        <Pressable
-          style={[styles.button, { backgroundColor: colors.primary }]}
-          onPress={() => {
-            if (isCompletedStatus(task.status)) {
-              feedbackTaskUncomplete();
-            } else {
-              feedbackTaskComplete();
+        {task.details && task.details.length > 0 ? (
+          <View style={styles.detailsSection}>
+            <Text style={[typography.label, { color: colors.textSecondary }]}>
+              Details
+            </Text>
+            <MarkdownView content={task.details} />
+          </View>
+        ) : null}
+
+        <View style={styles.actions}>
+          <Pressable
+            style={[styles.button, { backgroundColor: colors.primary }]}
+            onPress={() => {
+              if (isCompletedStatus(task.status)) {
+                feedbackTaskUncomplete();
+              } else {
+                feedbackTaskComplete();
+              }
+              void toggleTask(taskId);
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={
+              isCompletedStatus(task.status)
+                ? "Mark as incomplete"
+                : "Mark as complete"
             }
-            void toggleTask(taskId);
-          }}
-          accessibilityRole="button"
-          accessibilityLabel={
-            isCompletedStatus(task.status)
-              ? "Mark as incomplete"
-              : "Mark as complete"
-          }
-          testID="task-detail-toggle"
-        >
-          <Text style={styles.buttonText}>Toggle Status</Text>
-        </Pressable>
-        <Pressable
-          style={[
-            styles.button,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-              borderWidth: 1,
-            },
-          ]}
-          onPress={() => {
-            setEditing(true);
-          }}
-          accessibilityRole="button"
-          accessibilityLabel="Edit task"
-          testID="task-detail-edit"
-        >
-          <Text style={[styles.buttonText, { color: colors.text }]}>Edit</Text>
-        </Pressable>
-        <Pressable
-          style={[styles.button, { backgroundColor: colors.error }]}
-          onPress={handleDelete}
-          accessibilityRole="button"
-          accessibilityLabel="Delete task"
-          testID="task-detail-delete"
-        >
-          <Text style={styles.buttonText}>Delete</Text>
-        </Pressable>
-      </View>
-    </ScrollView>
+            testID="task-detail-toggle"
+          >
+            <Text style={styles.buttonText}>Toggle Status</Text>
+          </Pressable>
+          <Pressable
+            style={[
+              styles.button,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                borderWidth: 1,
+              },
+            ]}
+            onPress={() => {
+              setEditing(true);
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Edit task"
+            testID="task-detail-edit"
+          >
+            <Text style={[styles.buttonText, { color: colors.text }]}>
+              Edit
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[styles.button, { backgroundColor: colors.error }]}
+            onPress={handleDelete}
+            accessibilityRole="button"
+            accessibilityLabel="Delete task"
+            testID="task-detail-delete"
+          >
+            <Text style={styles.buttonText}>Delete</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+      <ScheduleSheet
+        visible={sheetField !== null}
+        initialField={sheetField ?? "due"}
+        due={task.due}
+        scheduled={task.scheduled}
+        dayCounts={dayCounts}
+        onClose={() => {
+          setSheetField(null);
+        }}
+        onApply={handleSheetApply}
+      />
+    </View>
   );
 }
 
@@ -312,20 +266,55 @@ function MetaRow({
   label,
   value,
   colors,
+  onPress,
+  testID,
 }: {
   label: string;
   value: string;
-  colors: { textSecondary: string; text: string; borderLight: string };
+  colors: {
+    textSecondary: string;
+    text: string;
+    borderLight: string;
+  };
+  onPress?: (() => void) | undefined;
+  testID?: string | undefined;
 }) {
-  return (
-    <View style={[metaStyles.row, { borderBottomColor: colors.borderLight }]}>
+  const content = (
+    <>
       <Text style={[typography.caption, { color: colors.textSecondary }]}>
         {label}
       </Text>
-      <Text style={[typography.bodySmall, { color: colors.text }]}>
-        {value}
-      </Text>
-    </View>
+      <View style={metaStyles.value}>
+        <Text style={[typography.bodySmall, { color: colors.text }]}>
+          {value}
+        </Text>
+        {onPress ? (
+          <AppIcon
+            name="chevron-right"
+            size={14}
+            color={colors.textSecondary}
+          />
+        ) : null}
+      </View>
+    </>
+  );
+  if (!onPress) {
+    return (
+      <View style={[metaStyles.row, { borderBottomColor: colors.borderLight }]}>
+        {content}
+      </View>
+    );
+  }
+  return (
+    <Pressable
+      style={[metaStyles.row, { borderBottomColor: colors.borderLight }]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${label}: ${value}. Opens schedule sheet`}
+      testID={testID}
+    >
+      {content}
+    </Pressable>
   );
 }
 
@@ -336,6 +325,11 @@ const metaStyles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  value: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
 });
 
@@ -356,19 +350,6 @@ const styles = StyleSheet.create({
   detailsSection: {
     marginTop: 20,
     gap: 8,
-  },
-  detailsInput: {
-    minHeight: 120,
-  },
-  sectionLabel: {
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  input: {
-    fontSize: 16,
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
   },
   actions: {
     marginTop: 24,

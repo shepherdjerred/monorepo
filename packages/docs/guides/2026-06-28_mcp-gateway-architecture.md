@@ -1,8 +1,11 @@
+---
+id: guide-2026-06-28-mcp-gateway-architecture
+type: guide
+status: complete
+board: false
+---
+
 # mcp-gateway Architecture
-
-## Status
-
-Complete (current as of PR #1155).
 
 ## What it is
 

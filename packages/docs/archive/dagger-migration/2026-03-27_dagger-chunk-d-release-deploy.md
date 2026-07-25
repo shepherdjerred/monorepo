@@ -1,3 +1,10 @@
+---
+id: reference-dagger-migration-2026-03-27-dagger-chunk-d-release-deploy
+type: reference
+status: complete
+board: false
+---
+
 # Chunk D: Release/Deploy Dagger Functions
 
 **Wave:** 2 (parallel with E, F)

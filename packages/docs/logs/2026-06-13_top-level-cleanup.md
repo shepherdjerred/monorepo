@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-top-level-cleanup
+type: log
+status: complete
+board: false
+---
+
 # Top-level repo cleanup
-
-## Status
-
-Complete (committed to `feature/top-level-cleanup`; not yet pushed/PR'd)
 
 ## Goal
 

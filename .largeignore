@@ -15,3 +15,8 @@ packages/discord-plays-pokemon/packages/backend/assets/pokeemerald.wasm
 
 # Webring RSS test fixture — large feed used to exercise the parser.
 packages/webring/src/testdata/rss-3.xml
+
+# cdk8s CRD imports — raw `cdk8s import` output committed as the source of
+# truth (linguist-generated; refreshed by the homelab-crd-imports-daily
+# Temporal schedule). kube-prometheus-stack's CRDs alone exceed the 5MB cap.
+packages/homelab/src/cdk8s/generated/imports/monitoring.coreos.com.ts

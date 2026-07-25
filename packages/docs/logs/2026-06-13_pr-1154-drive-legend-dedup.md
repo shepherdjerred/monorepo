@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-pr-1154-drive-legend-dedup
+type: log
+status: complete
+board: false
+---
+
 # PR #1154 — Deduplicate DRIVE_LEGEND (Greptile P2)
-
-## Status
-
-Complete
 
 ## Context
 

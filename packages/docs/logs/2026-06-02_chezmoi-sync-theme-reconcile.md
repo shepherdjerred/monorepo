@@ -1,8 +1,11 @@
+---
+id: log-2026-06-02-chezmoi-sync-theme-reconcile
+type: log
+status: complete
+board: false
+---
+
 # Chezmoi Source ↔ Live Reconciliation (auto-theme)
-
-## Status
-
-Complete
 
 ## Context
 

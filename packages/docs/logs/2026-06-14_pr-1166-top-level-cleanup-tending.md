@@ -1,8 +1,11 @@
+---
+id: log-2026-06-14-pr-1166-top-level-cleanup-tending
+type: log
+status: complete
+board: false
+---
+
 # PR #1166 Tending — Merge main conflict resolution
-
-## Status
-
-Complete
 
 ## Context
 

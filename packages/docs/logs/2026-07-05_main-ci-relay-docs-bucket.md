@@ -1,8 +1,11 @@
+---
+id: log-2026-07-05-main-ci-relay-docs-bucket
+type: log
+status: complete
+board: false
+---
+
 # Main CI failure - relay-docs bucket already exists
-
-## Status
-
-Complete
 
 ## Summary
 

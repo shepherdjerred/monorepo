@@ -21,6 +21,7 @@ import type {
 } from "@scout-for-lol/data/index.ts";
 import { saveToS3 } from "#src/storage/s3-helpers.ts";
 import { createLogger } from "#src/logger.ts";
+import { trackedPlayerCountMetadata } from "#src/storage/s3-metadata.ts";
 
 const logger = createLogger("pipeline-s3");
 
@@ -71,7 +72,7 @@ async function saveStageTrace(params: {
       matchId,
       type: `pipeline-${stageName}`,
       queueType,
-      trackedPlayers: trackedPlayerAliases.join(", "),
+      ...trackedPlayerCountMetadata(trackedPlayerAliases),
       model: trace.model.model,
       durationMs: trace.durationMs.toString(),
     },
@@ -118,7 +119,7 @@ async function saveImageGenerationTrace(params: {
       matchId,
       type: "pipeline-image-generation",
       queueType,
-      trackedPlayers: trackedPlayerAliases.join(", "),
+      ...trackedPlayerCountMetadata(trackedPlayerAliases),
       model: trace.model,
       durationMs: trace.durationMs.toString(),
       imageGenerated: trace.response.imageGenerated.toString(),
@@ -159,11 +160,8 @@ async function saveFinalReview(params: {
       matchId,
       type: "pipeline-final-review",
       queueType,
-      trackedPlayers: trackedPlayerAliases.join(", "),
-      reviewerName: context.reviewerName,
-      playerName: context.playerName,
+      ...trackedPlayerCountMetadata(trackedPlayerAliases),
       playerIndex: context.playerIndex.toString(),
-      personalityName: context.personality.name,
     },
     logEmoji: "📝",
     logMessage: "Saving final review text",
@@ -206,7 +204,7 @@ async function saveFinalImage(params: {
       matchId,
       type: "pipeline-final-image",
       queueType,
-      trackedPlayers: trackedPlayerAliases.join(", "),
+      ...trackedPlayerCountMetadata(trackedPlayerAliases),
       imageSizeBytes: bytes.length.toString(),
     },
     logEmoji: "✨",
@@ -452,9 +450,7 @@ export async function savePipelineDebugToS3(params: {
       matchId,
       type: "pipeline-debug",
       queueType,
-      trackedPlayers: trackedPlayerAliases.join(", "),
-      reviewerName: output.context.reviewerName,
-      playerName: output.context.playerName,
+      ...trackedPlayerCountMetadata(trackedPlayerAliases),
     },
     logEmoji: "🔍",
     logMessage: "Saving pipeline debug data",

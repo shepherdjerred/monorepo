@@ -134,7 +134,11 @@ type FlagConfig = {
   overrides: FlagOverride[];
 };
 
-export type FlagName = "ai_reports_enabled" | "ai_reviews_enabled" | "debug";
+export type FlagName =
+  | "ai_reports_enabled"
+  | "ai_reports_unlimited"
+  | "ai_reviews_enabled"
+  | "debug";
 
 /**
  * Central registry for all boolean flags
@@ -148,6 +152,10 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
         attributes: { server: MY_SERVER },
       },
     ],
+  },
+  ai_reports_unlimited: {
+    default: false,
+    overrides: [{ value: true, attributes: { user: ME } }],
   },
   ai_reviews_enabled: {
     default: false,

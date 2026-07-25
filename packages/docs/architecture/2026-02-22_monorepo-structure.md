@@ -1,3 +1,10 @@
+---
+id: architecture-2026-02-22-monorepo-structure
+type: architecture
+status: complete
+board: false
+---
+
 # Monorepo Structure
 
 Bun-first monorepo. All JavaScript/TypeScript commands use `bun` (never npm/yarn/pnpm).

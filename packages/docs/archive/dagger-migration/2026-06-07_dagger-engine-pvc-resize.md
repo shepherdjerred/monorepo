@@ -1,8 +1,11 @@
+---
+id: reference-dagger-migration-2026-06-07-dagger-engine-pvc-resize
+type: reference
+status: complete
+board: false
+---
+
 # Runbook: Dagger Engine Cache Disk — Resize, Recovery & Maintenance Ops
-
-## Status
-
-Complete (living runbook)
 
 ## When to use
 

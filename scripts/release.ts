@@ -3,8 +3,8 @@
  * Run release-please to create release PRs and cut GitHub releases.
  *
  * Ported from the old CI's `releasePleaseHelper` (.dagger/src/release.ts).
- * Runs the release-please CLI via `bunx`, authed by the GitHub App token minted
- * from env creds.
+ * Runs the package-owned release-please CLI, authed by the GitHub App token
+ * minted from env creds.
  *
  * Pipeline order (matches the old helper): release-pr → refine → github-release.
  * The refine step runs a Claude agent (prompt: scripts/prompts/refine-release-please.md,
@@ -22,10 +22,9 @@
 
 import { run } from "./lib/run.ts";
 import { setupGitAuth } from "./lib/github-auth.ts";
+import { runMain } from "./lib/transient.ts";
 
 const MONOREPO_REPO = "shepherdjerred/monorepo";
-// Pinned in the old .dagger/src/constants.ts.
-const RELEASE_PLEASE_VERSION = "17.9.0";
 
 /** Repo root = one level up from scripts/. */
 function repoRoot(): string {
@@ -64,8 +63,13 @@ async function main(): Promise<void> {
     const releasePlease = (subcommand: string) =>
       run(
         [
-          "bunx",
-          `release-please@${RELEASE_PLEASE_VERSION}`,
+          "bun",
+          "--no-install",
+          "run",
+          "--cwd",
+          "packages/release-tools",
+          "release-please",
+          "--",
           subcommand,
           `--token=${auth.token}`,
           `--repo-url=${MONOREPO_REPO}`,
@@ -125,4 +129,4 @@ async function main(): Promise<void> {
   }
 }
 
-await main();
+await runMain(main);

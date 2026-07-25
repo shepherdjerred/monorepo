@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * Smoke tests for the four homelab infra images.
+ * Smoke tests for the homelab infra images.
  *
  * Boots each freshly-built `<name>:dev` image and asserts on startup behavior,
  * translating the old Dagger smoke tests (smokeTestCaddyS3Proxy,
@@ -19,9 +19,13 @@ type SmokeResult = { image: string; ok: boolean; detail: string };
 /** Run a command to completion, capturing stdout/stderr and the exit code. */
 async function run(
   cmd: string[],
-  opts: { timeoutMs?: number } = {},
+  opts: { timeoutMs?: number; stdin?: Blob } = {},
 ): Promise<{ stdout: string; stderr: string; exitCode: number | null }> {
-  const proc = Bun.spawn(cmd, { stdout: "pipe", stderr: "pipe" });
+  const proc = Bun.spawn(cmd, {
+    stdin: opts.stdin,
+    stdout: "pipe",
+    stderr: "pipe",
+  });
 
   let timedOut = false;
   const timer = opts.timeoutMs
@@ -49,13 +53,45 @@ async function forceRemove(name: string): Promise<void> {
 /**
  * Smoke test caddy-s3proxy.
  * Verifies: the custom Caddy binary reports its version, the s3proxy module is
- * compiled in, and Caddy can validate a trivial config (binary is functional).
+ * compiled in, and the freshly built binary accepts the generated production
+ * Caddyfile (including every s3proxy/reverse-proxy directive).
  */
 async function smokeCaddyS3Proxy(): Promise<SmokeResult> {
   const image = "caddy-s3proxy:dev";
   const name = "smoke-caddy-s3proxy";
   await forceRemove(name);
   try {
+    let caddyfile: Blob;
+    const providedCaddyfile = process.env["CADDYFILE_SMOKE_PATH"];
+    if (providedCaddyfile === undefined) {
+      // Local smoke runs have cdk8s dependencies installed, so generate the
+      // same config inline. CI passes verify's artifact to keep this image lane
+      // free of a workspace install.
+      const generator = new URL(
+        "../src/cdk8s/scripts/generate-caddyfile.ts",
+        import.meta.url,
+      ).pathname;
+      const generated = await run(["bun", "--no-install", "run", generator]);
+      if (generated.exitCode !== 0) {
+        return {
+          image,
+          ok: false,
+          detail: `Caddyfile generation failed (exit ${String(generated.exitCode)})\n${generated.stderr}`,
+        };
+      }
+      caddyfile = new Blob([generated.stdout]);
+    } else {
+      const provided = Bun.file(providedCaddyfile);
+      if (!(await provided.exists())) {
+        return {
+          image,
+          ok: false,
+          detail: `generated Caddyfile artifact is missing: ${providedCaddyfile}`,
+        };
+      }
+      caddyfile = provided;
+    }
+
     const version = await run([
       "docker",
       "run",
@@ -94,19 +130,24 @@ async function smokeCaddyS3Proxy(): Promise<SmokeResult> {
       };
     }
 
-    // Validate a trivial static config: proves the binary parses + loads modules.
-    const validate = await run([
-      "docker",
-      "run",
-      "--rm",
-      "--name",
-      `${name}-val`,
-      "--entrypoint",
-      "sh",
-      image,
-      "-c",
-      "printf ':2015 {\\n  respond \"ok\"\\n}\\n' > /tmp/Caddyfile && caddy validate --config /tmp/Caddyfile --adapter caddyfile",
-    ]);
+    // Stream the real generated config: the dind daemon cannot bind-mount a
+    // path from the Buildkite command container.
+    const validate = await run(
+      [
+        "docker",
+        "run",
+        "--rm",
+        "-i",
+        "--name",
+        `${name}-val`,
+        "--entrypoint",
+        "sh",
+        image,
+        "-c",
+        "cat > /tmp/Caddyfile && caddy validate --config /tmp/Caddyfile --adapter caddyfile",
+      ],
+      { stdin: caddyfile },
+    );
     if (validate.exitCode !== 0) {
       return {
         image,
@@ -118,7 +159,7 @@ async function smokeCaddyS3Proxy(): Promise<SmokeResult> {
     return {
       image,
       ok: true,
-      detail: `version=${version.stdout.trim()}; s3proxy module present; config validates`,
+      detail: `version=${version.stdout.trim()}; s3proxy module present; generated production config validates`,
     };
   } finally {
     await forceRemove(name);
@@ -392,12 +433,100 @@ async function smokeRedlib(): Promise<SmokeResult> {
   }
 }
 
+/**
+ * Smoke test shelfbridge.
+ * Verifies: the binary boots with a minimal env (fails fast without API_KEY),
+ * serves /health, and answers a Torznab caps query authenticated by the
+ * configured API key — the exact endpoint Prowlarr/Bindery will hit.
+ */
+async function smokeShelfbridge(): Promise<SmokeResult> {
+  const image = "shelfbridge:dev";
+  const name = "smoke-shelfbridge";
+  const port = 18787;
+  const apiKey = "smoke-test-key";
+  await forceRemove(name);
+  try {
+    const start = await run([
+      "docker",
+      "run",
+      "-d",
+      "--name",
+      name,
+      "-p",
+      `${String(port)}:8787`,
+      "-e",
+      `API_KEY=${apiKey}`,
+      "-e",
+      "SOURCE_LIBGEN=false",
+      "-e",
+      "SOURCE_ANNAS=false",
+      "-e",
+      "SOURCE_ZLIB=false",
+      image,
+    ]);
+    if (start.exitCode !== 0) {
+      return {
+        image,
+        ok: false,
+        detail: `docker run failed (exit ${String(start.exitCode)})\n${start.stderr}`,
+      };
+    }
+
+    const deadline = Date.now() + 30_000;
+    let healthy = false;
+    let lastErr = "";
+    while (Date.now() < deadline) {
+      try {
+        const res = await fetch(`http://127.0.0.1:${String(port)}/health`, {
+          signal: AbortSignal.timeout(2000),
+        });
+        healthy = res.ok;
+        if (healthy) break;
+      } catch (err) {
+        lastErr = err instanceof Error ? err.message : String(err);
+      }
+      await Bun.sleep(1000);
+    }
+
+    if (!healthy) {
+      const logs = await run(["docker", "logs", name]);
+      return {
+        image,
+        ok: false,
+        detail: `shelfbridge /health did not answer on :${String(port)} within 30s (last error: ${lastErr})\n${logs.stdout}\n${logs.stderr}`,
+      };
+    }
+
+    const caps = await fetch(
+      `http://127.0.0.1:${String(port)}/torznab/api?t=caps&apikey=${apiKey}`,
+      { signal: AbortSignal.timeout(5000) },
+    );
+    const capsBody = await caps.text();
+    if (!caps.ok || !capsBody.includes("<caps")) {
+      return {
+        image,
+        ok: false,
+        detail: `torznab caps query failed (status ${String(caps.status)})\n${capsBody}`,
+      };
+    }
+
+    return {
+      image,
+      ok: true,
+      detail: `shelfbridge booted, /health OK, torznab caps served on :${String(port)}`,
+    };
+  } finally {
+    await forceRemove(name);
+  }
+}
+
 async function main(): Promise<void> {
   const checks: Array<{ label: string; fn: () => Promise<SmokeResult> }> = [
     { label: "caddy-s3proxy", fn: smokeCaddyS3Proxy },
     { label: "obsidian-headless", fn: smokeObsidianHeadless },
     { label: "mcp-gateway", fn: smokeMcpGateway },
     { label: "redlib", fn: smokeRedlib },
+    { label: "shelfbridge", fn: smokeShelfbridge },
   ];
 
   const results: SmokeResult[] = [];

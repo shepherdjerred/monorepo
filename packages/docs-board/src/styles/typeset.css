@@ -1,0 +1,99 @@
+@layer components {
+  .typeset {
+    color: var(--foreground);
+    font-size: 0.9375rem;
+    line-height: 1.72;
+  }
+
+  .typeset > :first-child {
+    margin-top: 0;
+  }
+  .typeset > :last-child {
+    margin-bottom: 0;
+  }
+  .typeset h1,
+  .typeset h2,
+  .typeset h3,
+  .typeset h4 {
+    color: var(--foreground);
+    font-weight: 620;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    margin: 1.75em 0 0.65em;
+  }
+  .typeset h1 {
+    font-size: 1.75rem;
+  }
+  .typeset h2 {
+    border-bottom: 1px solid var(--border);
+    font-size: 1.3rem;
+    padding-bottom: 0.35rem;
+  }
+  .typeset h3 {
+    font-size: 1.08rem;
+  }
+  .typeset p,
+  .typeset ul,
+  .typeset ol,
+  .typeset pre,
+  .typeset blockquote,
+  .typeset table {
+    margin: 0.85em 0;
+  }
+  .typeset ul,
+  .typeset ol {
+    padding-left: 1.45rem;
+  }
+  .typeset ul {
+    list-style: disc;
+  }
+  .typeset ol {
+    list-style: decimal;
+  }
+  .typeset li {
+    margin: 0.3em 0;
+  }
+  .typeset a {
+    color: var(--foreground);
+    font-weight: 550;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .typeset code {
+    background: var(--muted);
+    border-radius: 0.3rem;
+    font-size: 0.85em;
+    padding: 0.12em 0.35em;
+  }
+  .typeset pre {
+    background: var(--foreground);
+    border-radius: var(--radius);
+    color: var(--background);
+    overflow-x: auto;
+    padding: 1rem;
+  }
+  .typeset pre code {
+    background: transparent;
+    padding: 0;
+  }
+  .typeset blockquote {
+    border-left: 3px solid var(--border);
+    color: var(--muted-foreground);
+    padding-left: 1rem;
+  }
+  .typeset table {
+    border-collapse: collapse;
+    display: block;
+    overflow-x: auto;
+    width: 100%;
+  }
+  .typeset th,
+  .typeset td {
+    border: 1px solid var(--border);
+    padding: 0.45rem 0.65rem;
+    text-align: left;
+  }
+  .typeset input[type="checkbox"] {
+    margin-right: 0.45rem;
+  }
+}

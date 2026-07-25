@@ -1,3 +1,10 @@
+---
+id: reference-homelab-audits-2026-04-06-homelab-health-audit
+type: reference
+status: complete
+board: false
+---
+
 # Homelab Health Audit — 2026-04-06
 
 Comprehensive audit of the `torvalds` cluster using the [audit runbook](../../guides/2026-04-04_homelab-audit-runbook.md). Run with 6 parallel agents covering Talos, K8s workloads, ArgoCD/storage, monitoring/alerts/PagerDuty, hardware/network, and Bugsink.

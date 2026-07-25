@@ -1,8 +1,11 @@
+---
+id: log-2026-07-10-fix-discord-stream-lifecycle-ci
+type: log
+status: complete
+board: false
+---
+
 # Fix discord-stream-lifecycle CI failure (discord.js unresolvable at runtime)
-
-## Status
-
-Complete
 
 ## Summary
 

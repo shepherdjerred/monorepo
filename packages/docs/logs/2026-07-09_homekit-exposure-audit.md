@@ -1,8 +1,11 @@
+---
+id: log-2026-07-09-homekit-exposure-audit
+type: log
+status: complete
+board: false
+---
+
 # HomeKit Exposure Audit
-
-## Status
-
-Complete (pending PR merge)
 
 ## Context
 

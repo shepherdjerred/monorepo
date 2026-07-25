@@ -4,90 +4,50 @@ import type {
   RawTimeline,
 } from "@scout-for-lol/data";
 import * as Sentry from "@sentry/bun";
-import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { reportStoreIngestTotal } from "#src/metrics/report-store.ts";
 import {
-  reportStoreIngestFactsTotal,
-  reportStoreIngestTotal,
-} from "#src/metrics/report-store.ts";
-import {
-  upsertStoredMatchWithFacts,
-  upsertStoredPrematchWithFacts,
-  upsertStoredTimeline,
+  ingestMatch,
+  ingestPrematch,
+  ingestTimeline,
 } from "#src/report-store/store.ts";
 import { createLogger } from "#src/logger.ts";
-import { getErrorMessage } from "#src/utils/errors.ts";
 
 const logger = createLogger("report-store-live-ingest");
 
 type PayloadType = "match" | "timeline" | "prematch";
-type ErrorMode = "continue" | "throw";
 
-type IngestOptions = {
-  prisma: ExtendedPrismaClient;
-  source: string;
-  s3Key?: string;
-  importedFromS3?: boolean;
-  onError?: ErrorMode;
-};
-
-type MatchIngestOptions = IngestOptions & {
+type MatchIngestOptions = {
   match: RawMatch;
+  source: string;
+  trackedPlayerAliases: string[];
 };
 
-type TimelineIngestOptions = IngestOptions & {
+type TimelineIngestOptions = {
   timeline: RawTimeline;
+  source: string;
+  trackedPlayerAliases: string[];
 };
 
-type PrematchIngestOptions = IngestOptions & {
+type PrematchIngestOptions = {
   gameInfo: RawCurrentGameInfo;
   observedAt: Date;
+  source: string;
+  trackedPlayerAliases: string[];
 };
 
-export type ReportStoreIngestResult =
-  | {
-      status: "stored";
-      factCount: number;
-    }
-  | {
-      status: "failed";
-      errorMessage: string;
-    };
-
-function importedFromS3(options: IngestOptions): boolean {
-  return options.importedFromS3 ?? false;
-}
-
-function onError(options: IngestOptions): ErrorMode {
-  return options.onError ?? "continue";
-}
-
-function recordSuccess(
-  payloadType: PayloadType,
-  source: string,
-  factCount: number,
-): void {
+function recordSuccess(payloadType: PayloadType, source: string): void {
   reportStoreIngestTotal.inc({
     payload_type: payloadType,
     source,
     status: "stored",
   });
-  if (factCount > 0) {
-    reportStoreIngestFactsTotal.inc(
-      {
-        payload_type: payloadType,
-        source,
-      },
-      factCount,
-    );
-  }
 }
 
 function recordFailure(
   payloadType: PayloadType,
   source: string,
   error: unknown,
-): ReportStoreIngestResult {
-  const errorMessage = getErrorMessage(error);
+): void {
   reportStoreIngestTotal.inc({
     payload_type: payloadType,
     source,
@@ -104,80 +64,59 @@ function recordFailure(
       payloadType,
     },
   });
-  return { status: "failed", errorMessage };
 }
+
+/**
+ * Thin metric wrappers over the S3-authoritative ingest. On failure they record
+ * the failure metric and RE-THROW — the caller (e.g. the polling cursor gate)
+ * decides how to react. A swallowed failure would silently lose the match.
+ */
 
 export async function recordMatchForReportStore(
   options: MatchIngestOptions,
-): Promise<ReportStoreIngestResult> {
+): Promise<void> {
   try {
-    const result = await upsertStoredMatchWithFacts(
-      options.prisma,
-      options.match,
-      {
-        ...(options.s3Key === undefined ? {} : { s3Key: options.s3Key }),
-        importedFromS3: importedFromS3(options),
-      },
-    );
-    recordSuccess("match", options.source, result.factCount);
+    await ingestMatch(options.match, options.trackedPlayerAliases);
+    recordSuccess("match", options.source);
     logger.info(
-      `[ReportStoreIngest] Stored match ${options.match.metadata.matchId} from ${options.source} with ${result.factCount.toString()} fact(s)`,
+      `[ReportStoreIngest] Stored match ${options.match.metadata.matchId} from ${options.source}`,
     );
-    return { status: "stored", factCount: result.factCount };
   } catch (error) {
-    const failure = recordFailure("match", options.source, error);
-    if (onError(options) === "throw") {
-      throw error;
-    }
-    return failure;
+    recordFailure("match", options.source, error);
+    throw error;
   }
 }
 
 export async function recordTimelineForReportStore(
   options: TimelineIngestOptions,
-): Promise<ReportStoreIngestResult> {
+): Promise<void> {
   try {
-    await upsertStoredTimeline(options.prisma, options.timeline, {
-      ...(options.s3Key === undefined ? {} : { s3Key: options.s3Key }),
-      importedFromS3: importedFromS3(options),
-    });
-    recordSuccess("timeline", options.source, 0);
+    await ingestTimeline(options.timeline, options.trackedPlayerAliases);
+    recordSuccess("timeline", options.source);
     logger.info(
       `[ReportStoreIngest] Stored timeline ${options.timeline.metadata.matchId} from ${options.source}`,
     );
-    return { status: "stored", factCount: 0 };
   } catch (error) {
-    const failure = recordFailure("timeline", options.source, error);
-    if (onError(options) === "throw") {
-      throw error;
-    }
-    return failure;
+    recordFailure("timeline", options.source, error);
+    throw error;
   }
 }
 
 export async function recordPrematchForReportStore(
   options: PrematchIngestOptions,
-): Promise<ReportStoreIngestResult> {
+): Promise<void> {
   try {
-    const result = await upsertStoredPrematchWithFacts(
-      options.prisma,
+    await ingestPrematch(
       options.gameInfo,
       options.observedAt,
-      {
-        ...(options.s3Key === undefined ? {} : { s3Key: options.s3Key }),
-        importedFromS3: importedFromS3(options),
-      },
+      options.trackedPlayerAliases,
     );
-    recordSuccess("prematch", options.source, result.factCount);
+    recordSuccess("prematch", options.source);
     logger.info(
-      `[ReportStoreIngest] Stored prematch ${options.gameInfo.gameId.toString()} from ${options.source} with ${result.factCount.toString()} fact(s)`,
+      `[ReportStoreIngest] Stored prematch ${options.gameInfo.gameId.toString()} from ${options.source}`,
     );
-    return { status: "stored", factCount: result.factCount };
   } catch (error) {
-    const failure = recordFailure("prematch", options.source, error);
-    if (onError(options) === "throw") {
-      throw error;
-    }
-    return failure;
+    recordFailure("prematch", options.source, error);
+    throw error;
   }
 }

@@ -1,6 +1,13 @@
+---
+id: log-2026-07-10-scout-homelab-jscpd-extractions
+type: log
+status: complete
+board: false
+---
+
 # Scout + Homelab jscpd Duplication Extractions
 
-## Status
+## Status Notes (Historical)
 
 Complete
 

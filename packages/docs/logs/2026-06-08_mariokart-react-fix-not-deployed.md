@@ -1,8 +1,11 @@
+---
+id: log-2026-06-08-mariokart-react-fix-not-deployed
+type: log
+status: complete
+board: false
+---
+
 # mariokart.sjer.red — React fix built but never deployed (chart/image version lag)
-
-## Status
-
-Complete (diagnosis only — no remediation, by user request)
 
 ## Summary
 

@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-13-real-e2e-mk64-audio
+type: reference
+status: complete
+board: false
+---
+
 # Real end-to-end test for MK64 audio streaming
-
-## Status
-
-Complete (in-scope work shipped; live-Discord follow-up tracked in Step 4)
 
 ## Context
 

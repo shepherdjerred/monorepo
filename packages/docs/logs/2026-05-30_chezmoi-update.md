@@ -1,10 +1,11 @@
+---
+id: log-2026-05-30-chezmoi-update
+type: log
+status: complete
+board: false
+---
+
 # Chezmoi update — auto theme switching with create\_ guards, untrack codex
-
-## Status
-
-In Progress (awaiting PR merge, then post-merge live cleanup)
-
-> **2026-05-30 revision:** Initial plan was to pin everything to latte and delete sync-theme.sh. User reverted that direction — they want auto switching as much as possible. Updated approach below.
 
 ## Context
 

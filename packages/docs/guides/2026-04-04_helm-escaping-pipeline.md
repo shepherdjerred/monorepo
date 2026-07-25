@@ -1,3 +1,10 @@
+---
+id: guide-2026-04-04-helm-escaping-pipeline
+type: guide
+status: complete
+board: false
+---
+
 # Helm Escaping Pipeline
 
 How template-bearing content survives the multi-engine rendering pipeline in the homelab infrastructure.

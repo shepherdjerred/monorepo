@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-15-pokemon-goal-spatial-prompt
+type: reference
+status: complete
+board: false
+---
+
 # Pokemon goal-mode: spatial state + rich prompt rewrite
-
-## Status
-
-Complete — shipped in PR #1261.
 
 ## Context
 

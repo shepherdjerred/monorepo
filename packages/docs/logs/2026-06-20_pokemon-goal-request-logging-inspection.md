@@ -1,8 +1,11 @@
+---
+id: log-2026-06-20-pokemon-goal-request-logging-inspection
+type: log
+status: complete
+board: false
+---
+
 # Pokemon goal request-logging inspection
-
-## Status
-
-Complete
 
 ## Context
 

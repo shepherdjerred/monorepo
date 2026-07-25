@@ -1,8 +1,13 @@
+---
+id: plan-2026-04-25-shared-glitter-context-package
+type: plan
+status: planned
+board: true
+verification: agent
+disposition: active
+---
+
 # Shared Glitter-Context Package
-
-## Status
-
-**Not Started.** Tracking the eventual extraction of duplicated friend-group context (style cards + new lore files) into a single workspace package.
 
 ## Motivation
 
@@ -66,3 +71,7 @@ packages/glitter-context/
 **Style-card generator to consider rewiring:**
 
 - `packages/scout-for-lol/packages/analysis/ai_analyze_llm.py` — Python script writing to `analysis/llm-out/`
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Shared Glitter-Context Package`.

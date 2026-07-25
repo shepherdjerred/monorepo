@@ -1,10 +1,11 @@
+---
+id: reference-completed-2026-05-17-birmel-tool-reliability
+type: reference
+status: complete
+board: false
+---
+
 # Birmel Tool-Reliability Fixes (2026-05-17)
-
-## Status
-
-**Complete** — work verified shipped to `main` during the 2026-06-06 docs groom (pass 2); archived to `archive/completed/`. Original tracking status preserved below.
-
-Complete (Tier 1+2+3 shipped; deploy + behavior verification still TBD)
 
 ## Context
 

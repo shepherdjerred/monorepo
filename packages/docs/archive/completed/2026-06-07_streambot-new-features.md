@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-07-streambot-new-features
+type: reference
+status: complete
+board: false
+---
+
 # Streambot — New Features
-
-## Status
-
-Complete — filename normalization + chapters + TMDB posters shipped to main.
 
 ## Context
 

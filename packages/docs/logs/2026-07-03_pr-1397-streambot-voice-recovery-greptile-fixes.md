@@ -1,8 +1,11 @@
+---
+id: log-2026-07-03-pr-1397-streambot-voice-recovery-greptile-fixes
+type: log
+status: complete
+board: false
+---
+
 # PR #1397 — streambot voice-recovery Greptile review fixes
-
-## Status
-
-In Progress
 
 ## Context
 

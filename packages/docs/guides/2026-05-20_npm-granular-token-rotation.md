@@ -1,3 +1,10 @@
+---
+id: guide-2026-05-20-npm-granular-token-rotation
+type: guide
+status: complete
+board: false
+---
+
 # npm granular token rotation (NPM_TOKEN for CI publishes)
 
 ## Status: Reference

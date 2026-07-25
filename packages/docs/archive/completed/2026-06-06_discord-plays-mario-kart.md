@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-06-discord-plays-mario-kart
+type: reference
+status: complete
+board: false
+---
+
 # Discord Plays Mario Kart 64 — build-out plan
-
-## Status
-
-Complete — package shipped & deployed (CI catalog + cdk8s mario-kart chart/argo app; on-demand /play in #1251).
 
 ## Context
 

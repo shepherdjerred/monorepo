@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-07-pr-asset-public
+type: reference
+status: complete
+board: false
+---
+
 # Plan: `public.sjer.red` PR-asset image host
-
-## Status
-
-Complete — public.sjer.red bucket + static site + toolkit pr asset shipped and in active use.
 
 ## Context
 

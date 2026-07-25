@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-17-temporal-agent-task-scheduler
+type: reference
+status: complete
+board: false
+---
+
 # Temporal Agent Task Scheduler
-
-## Status
-
-Complete — scheduler shipped and deployed; homelab-audit-daily registered on agentTaskWorkflow; pattern in active use.
 
 ## Summary
 

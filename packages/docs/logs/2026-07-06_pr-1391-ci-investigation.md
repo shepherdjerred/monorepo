@@ -1,8 +1,11 @@
+---
+id: log-2026-07-06-pr-1391-ci-investigation
+type: log
+status: complete
+board: false
+---
+
 # PR 1391 CI Investigation
-
-## Status
-
-Complete
 
 ## Summary
 

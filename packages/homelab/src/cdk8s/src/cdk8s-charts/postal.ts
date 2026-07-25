@@ -50,6 +50,15 @@ export function createPostalChart(app: App) {
                 matchLabels: { "kubernetes.io/metadata.name": "birmel" },
               },
             },
+            {
+              // CWA Kindle Auto-Send only (not every media pod)
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "media" },
+              },
+              podSelector: {
+                matchLabels: { app: "cwa" },
+              },
+            },
           ],
           ports: [{ port: IntOrString.fromNumber(25), protocol: "TCP" }],
         },

@@ -1,11 +1,11 @@
+---
+id: log-2026-05-30-ha-routine-tweaks
+type: log
+status: complete
+board: false
+---
+
 # Home Assistant routine tweaks (Temporal)
-
-## Status
-
-Complete
-
-Adjustments to the four Temporal-driven Home Assistant routines in
-`packages/temporal/src/workflows/ha/`, per user request.
 
 ## Changes
 

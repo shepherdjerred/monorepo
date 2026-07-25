@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-07-10-torvalds-memory-rightsize
+type: reference
+status: complete
+board: false
+---
+
 # Right-size torvalds memory budget: ARC 48→16Gi, allocatable 59→91Gi
-
-## Status
-
-Complete
 
 ## Context
 

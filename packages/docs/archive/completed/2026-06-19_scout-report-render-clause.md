@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-19-scout-report-render-clause
+type: reference
+status: complete
+board: false
+---
+
 # Scout reports — declarative display layer (`RENDER` clause) + drop `outputFormat`
-
-## Status
-
-Complete — shipped in PR #1277.
 
 ## Context
 

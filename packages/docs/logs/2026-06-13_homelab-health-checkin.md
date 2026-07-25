@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-homelab-health-checkin
+type: log
+status: complete
+board: false
+---
+
 # Homelab Health Check-in — 2026-06-13
-
-## Status
-
-Complete
 
 ## Summary
 

@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-03-scout-subscription-filters
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Scout — Extensible Per-Subscription Notification Filters (queues first)
-
-## Status
-
-In Progress — implementation complete and verified (typecheck + full test suites + lint + build all green on branch `feature/subscription-filters`). Not yet PR'd; live `dev:web` e2e + screenshots outstanding.
 
 ## Context
 
@@ -139,7 +144,7 @@ open, (3) edit-filters dialog, (4) "set filters for a channel" bulk dialog. Thro
 
 ## Remaining
 
-- Merge PR from `feature/subscription-filters`.
+- [ ] Merge PR from `feature/subscription-filters`.
 
 ## Session Log — 2026-07-03
 

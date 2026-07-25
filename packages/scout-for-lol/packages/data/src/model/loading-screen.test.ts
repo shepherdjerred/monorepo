@@ -83,7 +83,6 @@ describe("LoadingScreenParticipantSchema", () => {
     championId: LoadingScreenChampionIdSchema.parse(266),
     championName: "Aatrox",
     championDisplayName: "Aatrox",
-    skinNum: 0,
     team: "blue",
     spell1Id: SummonerSpellIdSchema.parse(4),
     spell2Id: SummonerSpellIdSchema.parse(14),
@@ -166,15 +165,6 @@ describe("LoadingScreenParticipantSchema", () => {
     expect(result.team).toEqual({ arenaTeam: null });
   });
 
-  test("rejects negative skin number", () => {
-    expect(() =>
-      LoadingScreenParticipantSchema.parse({
-        ...validParticipant,
-        skinNum: -1,
-      }),
-    ).toThrow();
-  });
-
   test("rejects empty summonerName", () => {
     expect(() =>
       LoadingScreenParticipantSchema.parse({
@@ -227,7 +217,6 @@ function makeNonStandardParticipant(puuid: string, team: "blue" | "red") {
     championId: LoadingScreenChampionIdSchema.parse(266),
     championName: "Aatrox",
     championDisplayName: "Aatrox",
-    skinNum: 0,
     team,
     spell1Id: SummonerSpellIdSchema.parse(4),
     spell2Id: SummonerSpellIdSchema.parse(14),
@@ -339,7 +328,6 @@ describe("LoadingScreenDataSchema", () => {
           championId: LoadingScreenChampionIdSchema.parse(266),
           championName: "Aatrox",
           championDisplayName: "Aatrox",
-          skinNum: 0,
           team: {
             arenaTeam: i < 8 ? ArenaTeamIdSchema.parse((i % 8) + 1) : null,
           },

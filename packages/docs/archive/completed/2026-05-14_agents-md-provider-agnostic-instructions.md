@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-14-agents-md-provider-agnostic-instructions
+type: reference
+status: complete
+board: false
+---
+
 # Provider-Agnostic Agent Instructions With Symlinks
-
-## Status
-
-Complete
 
 ## Summary
 

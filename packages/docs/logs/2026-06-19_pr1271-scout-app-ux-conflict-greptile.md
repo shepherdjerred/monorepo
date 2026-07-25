@@ -1,11 +1,11 @@
+---
+id: log-2026-06-19-pr1271-scout-app-ux-conflict-greptile
+type: log
+status: complete
+board: false
+---
+
 # PR #1271 — Scout web app UX: merge conflict + lockfile + greptile fixes
-
-## Status
-
-Complete (pending final CI green)
-
-PR: shepherdjerred/monorepo#1271 — branch `feature/scout-app-ux`
-Title: "Scout web app: names, pagination, inline management & OP.GG Riot ID search"
 
 ## Context
 

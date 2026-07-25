@@ -1,6 +1,13 @@
+---
+id: guide-2026-06-28-scout-app-monaco-csp
+type: guide
+status: complete
+board: false
+---
+
 # Embedding Monaco (or any worker-using lib) in the Scout Web App under Strict CSP
 
-## Status
+## Status Notes (Historical)
 
 Complete (reference)
 

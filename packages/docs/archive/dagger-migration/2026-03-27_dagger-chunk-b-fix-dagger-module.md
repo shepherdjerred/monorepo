@@ -1,3 +1,10 @@
+---
+id: reference-dagger-migration-2026-03-27-dagger-chunk-b-fix-dagger-module
+type: reference
+status: complete
+board: false
+---
+
 # Chunk B: Fix Dagger Module
 
 **Wave:** 1 (parallel with R, A, C)

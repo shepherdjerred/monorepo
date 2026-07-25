@@ -7,11 +7,13 @@
           {
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/trust-mise.sh\"",
+            "async": true,
             "statusMessage": "Trusting mise configs"
           },
           {
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/worktree-reminder.sh\"",
+            "async": true,
             "statusMessage": "Worktree reminder"
           }
         ]

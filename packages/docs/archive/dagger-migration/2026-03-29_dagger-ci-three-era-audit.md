@@ -1,3 +1,10 @@
+---
+id: reference-dagger-migration-2026-03-29-dagger-ci-three-era-audit
+type: reference
+status: complete
+board: false
+---
+
 # Dagger CI Audit: Three-Era Comparison
 
 Comprehensive audit comparing Dagger CI/CD implementations across three eras:

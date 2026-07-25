@@ -1,10 +1,11 @@
+---
+id: reference-completed-2026-05-12-renovate-481-fixes-and-ci-gap
+type: reference
+status: complete
+board: false
+---
+
 # Unbreak `main` and close the renovate-481 CI gap
-
-## Status
-
-**Complete** — all plan-scoped work verified shipped to `main` during the 2026-06-06 docs groom; archived to `archive/completed/`. Original tracking status preserved below.
-
-In Progress
 
 ## Context
 

@@ -1,8 +1,11 @@
+---
+id: log-2026-06-07-mario-kart-input-not-reaching-game
+type: log
+status: complete
+board: false
+---
+
 # Mario Kart 64 — web controller input never reached the game
-
-## Status
-
-Complete (fix committed; needs image rebuild + redeploy to take effect in prod)
 
 ## Symptom
 

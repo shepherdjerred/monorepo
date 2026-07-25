@@ -18,14 +18,22 @@
  *                even after the (1) fix, because that second install wasn't
  *                isolated from the pod's shared, persistent Bun cache. See
  *                packages/docs/plans/2026-07-12_fix-data-dragon-shared-cache.md.
- *  3. hooks    — the hook-free root install arms no git hooks (lefthook was
- *                removed from the repo 2026-07; this canary catches it or any
- *                other prepare-script hook sneaking back in), prettier
- *                (with plugins) formats the season changelog byte-stably, and
- *                a bot-style `git commit` of a scout file succeeds without any
- *                pre-commit hook running (scout-season-refresh-weekly).
+ *  3. hooks    — the hook-free root install leaves no git hooks, a simulated
+ *                agentic plain `bun install` arms none either (the root
+ *                `prepare` script that armed lefthook in the 2026-07-12
+ *                scout-season-refresh-weekly recurrence is gone; this leg
+ *                catches it sneaking back in), a simulated agentic
+ *                `bunx lefthook install` (what AGENTS.md tells every dev
+ *                session to run) arms them, `disarmGitHooks` removes them
+ *                again, prettier (with plugins) formats the season changelog
+ *                byte-stably, and a bot-style `git commit` of a scout file
+ *                succeeds without any pre-commit hook running
+ *                (scout-season-refresh-weekly).
  *  4. cog      — the readme-refresh COG_TARGETS exist, still contain `[[[cog`
  *                blocks, and the `cog` binary is present (readme-refresh-weekly).
+ *  5. crd-imports — the cdk8s bin resolves from the cdk8s package's
+ *                cdk8s-cli devDependency after the hook-free install, and the
+ *                update-imports script exists (homelab-crd-imports-daily).
  *
  * Deliberately NOT rehearsed: asset downloads, Claude/Codex calls, and the
  * full `cog -r` regeneration (needs blobless git history + Codex for new
@@ -37,6 +45,7 @@
  */
 import {
   botCloneCacheDir,
+  disarmGitHooks,
   installScoutWorkspace,
   rootInstallWithoutHooks,
 } from "#activities/bot-clone.ts";
@@ -115,22 +124,72 @@ async function rehearseSnapshotRefresh(repoDir: string): Promise<void> {
   console.error("[rehearsal] snapshot: install-refresh + snapshot test OK");
 }
 
+async function armedHookNames(repoDir: string): Promise<string[]> {
+  const hooksDir = `${repoDir}/.git/hooks`;
+  const hookList = await runCommand(["ls", hooksDir], { cwd: repoDir });
+  return hookList
+    .split("\n")
+    .filter((name) => name !== "" && !name.endsWith(".sample"));
+}
+
 async function rehearseHookFreeCommit(repoDir: string): Promise<void> {
   console.error("[rehearsal] hooks: rootInstallWithoutHooks");
   await rootInstallWithoutHooks(repoDir);
 
-  const hooksDir = `${repoDir}/.git/hooks`;
-  const hookList = await runCommand(["ls", hooksDir], { cwd: repoDir });
-  const armed = hookList
-    .split("\n")
-    .filter((name) => name !== "" && !name.endsWith(".sample"));
-  if (armed.length > 0) {
+  const armedAfterInstall = await armedHookNames(repoDir);
+  if (armedAfterInstall.length > 0) {
     throw new Error(
-      `hook-free install still armed git hooks: ${armed.join(", ")} — ` +
+      `hook-free install still armed git hooks: ${armedAfterInstall.join(", ")} — ` +
         "did a root `prepare` script run? Bot commits must stay hook-free.",
     );
   }
   console.error("[rehearsal] hooks: no git hooks armed");
+
+  // Simulate an agentic Claude/Codex step (which runs between the pre-install
+  // and the final commit in scout-season-refresh.ts / readme-refresh.ts)
+  // deciding on its own to run a plain `bun install`. In the 2026-07-12
+  // scout-season-refresh-weekly failure this armed lefthook via the root
+  // `prepare` script; that script is gone, so today the install must arm
+  // NOTHING — this leg catches any prepare/postinstall hook sneaking back in.
+  console.error(
+    "[rehearsal] hooks: simulating an agentic step's plain `bun install`",
+  );
+  await runCommand(["bun", "install", "--frozen-lockfile"], { cwd: repoDir });
+  const armedAfterPlainInstall = await armedHookNames(repoDir);
+  if (armedAfterPlainInstall.length > 0) {
+    throw new Error(
+      `plain \`bun install\` armed git hooks: ${armedAfterPlainInstall.join(", ")} — ` +
+        "did a root `prepare`/`postinstall` script sneak back in? Bot commits must stay hook-free.",
+    );
+  }
+
+  // An agentic step can still arm hooks explicitly — AGENTS.md tells every dev
+  // session to run `bunx lefthook install` — so arm them the way an agent
+  // would and prove disarmGitHooks undoes it before the bot-style commit.
+  console.error(
+    "[rehearsal] hooks: simulating an agentic step's `bunx lefthook install`",
+  );
+  await runCommand(["bunx", "lefthook", "install"], { cwd: repoDir });
+  const armedAfterLefthookInstall = await armedHookNames(repoDir);
+  if (armedAfterLefthookInstall.length === 0) {
+    throw new Error(
+      "expected `bunx lefthook install` to arm git hooks — if lefthook no " +
+        "longer arms hooks, the canary's premise is stale and needs " +
+        "re-deriving from the real bug.",
+    );
+  }
+  console.error(
+    `[rehearsal] hooks: confirmed armed (${armedAfterLefthookInstall.join(", ")}) — now disarming`,
+  );
+
+  await disarmGitHooks(repoDir);
+  const armedAfterDisarm = await armedHookNames(repoDir);
+  if (armedAfterDisarm.length > 0) {
+    throw new Error(
+      `disarmGitHooks left hooks armed: ${armedAfterDisarm.join(", ")}`,
+    );
+  }
+  console.error("[rehearsal] hooks: disarmGitHooks removed the armed hooks");
 
   console.error("[rehearsal] hooks: prettier --write on the season changelog");
   await runCommand(["bunx", "prettier", "--write", CHANGELOG_FILE], {
@@ -161,6 +220,31 @@ async function rehearseHookFreeCommit(repoDir: string): Promise<void> {
   console.error("[rehearsal] hooks: commit succeeded without pre-commit hooks");
 }
 
+async function rehearseCrdImportsEnvironment(repoDir: string): Promise<void> {
+  // homelab-crd-imports-daily runs `bun run update-imports` in the cdk8s
+  // package, which spawns the bare `cdk8s` bin — it must resolve from the
+  // package's cdk8s-cli devDependency after the hook-free root install
+  // (isolated linker → per-package node_modules/.bin). The import itself is
+  // deliberately NOT rehearsed (needs network + cluster CRDs).
+  console.error("[rehearsal] crd-imports: cdk8s bin resolves in the clone");
+  const cdk8sBin = `${repoDir}/packages/homelab/src/cdk8s/node_modules/.bin/cdk8s`;
+  if (!(await Bun.file(cdk8sBin).exists())) {
+    throw new Error(
+      `cdk8s bin missing at ${cdk8sBin} — did the cdk8s-cli devDependency ` +
+        "leave packages/homelab/src/cdk8s? homelab-crd-imports-daily's " +
+        "update-imports spawn would fail with ENOENT.",
+    );
+  }
+  const updateImportsScript = `${repoDir}/packages/homelab/src/cdk8s/scripts/update-imports.ts`;
+  if (!(await Bun.file(updateImportsScript).exists())) {
+    throw new Error(
+      `update-imports script missing at ${updateImportsScript} — ` +
+        "homelab-crd-imports-daily's `bun run update-imports` would fail.",
+    );
+  }
+  console.error("[rehearsal] crd-imports: environment OK");
+}
+
 async function rehearseCogTargets(repoDir: string): Promise<void> {
   console.error("[rehearsal] cog: verifying binary + targets");
   // cogapp has no --version long flag; -v prints the version.
@@ -182,6 +266,61 @@ async function rehearseCogTargets(repoDir: string): Promise<void> {
   console.error(`[rehearsal] cog: ${String(COG_TARGETS.length)} targets OK`);
 }
 
+async function rehearsePokeemeraldDataEnvironment(
+  repoDir: string,
+): Promise<void> {
+  // dpp-pokeemerald-data-daily runs the two generators, which read the
+  // OTTOHG_SHA pin out of build-wasm.sh and write the committed data tables.
+  // Assert the pin parses and every path the activity touches exists. The
+  // network fetch itself is deliberately NOT rehearsed.
+  console.error("[rehearsal] dpp-data: pin + generator + output paths");
+  const dppRoot = `${repoDir}/packages/discord-plays-pokemon`;
+  const buildWasm = await Bun.file(`${dppRoot}/scripts/build-wasm.sh`).text();
+  if (!/^OTTOHG_SHA="[0-9a-f]{40}"$/m.test(buildWasm)) {
+    throw new Error(
+      "OTTOHG_SHA pin not found in packages/discord-plays-pokemon/scripts/" +
+        "build-wasm.sh — the dpp-pokeemerald-data-daily generators read the " +
+        "pin from that line and would throw.",
+    );
+  }
+  const requiredPaths = [
+    `${dppRoot}/scripts/generate-species-data.ts`,
+    `${dppRoot}/scripts/generate-map-names.ts`,
+    `${dppRoot}/packages/backend/src/game/events/generated/species.ts`,
+    `${dppRoot}/packages/backend/src/game/spatial/generated/map-names.ts`,
+  ];
+  for (const path of requiredPaths) {
+    if (!(await Bun.file(path).exists())) {
+      throw new Error(
+        `dpp-pokeemerald-data-daily path missing in the tree: ${path}`,
+      );
+    }
+  }
+  console.error("[rehearsal] dpp-data: environment OK");
+}
+
+async function rehearseShowcaseEnvironment(repoDir: string): Promise<void> {
+  // scout-showcase-refresh-weekly runs generate-marketing-showcase.ts in the
+  // scout backend against the curated manifest. installScoutWorkspace is
+  // already rehearsed (leg 1); assert the manifest and generator paths the
+  // activity hard-codes still exist. The S3 reads are deliberately NOT
+  // rehearsed (need live scout-prod).
+  console.error("[rehearsal] showcase: manifest + generator paths");
+  const requiredPaths = [
+    `${repoDir}/packages/scout-for-lol/showcase/marketing-showcase.manifest.json`,
+    `${repoDir}/packages/scout-for-lol/packages/backend/scripts/generate-marketing-showcase.ts`,
+    `${repoDir}/packages/scout-for-lol/packages/frontend/src/data/generated/scout-showcase-assets.json`,
+  ];
+  for (const path of requiredPaths) {
+    if (!(await Bun.file(path).exists())) {
+      throw new Error(
+        `scout-showcase-refresh-weekly path missing in the tree: ${path}`,
+      );
+    }
+  }
+  console.error("[rehearsal] showcase: environment OK");
+}
+
 async function main(): Promise<void> {
   const repoDir = parseRepoArg(process.argv.slice(2));
   await ensureScratchGitRepo(repoDir);
@@ -189,6 +328,9 @@ async function main(): Promise<void> {
   await rehearseSnapshotRefresh(repoDir);
   await rehearseHookFreeCommit(repoDir);
   await rehearseCogTargets(repoDir);
+  await rehearseCrdImportsEnvironment(repoDir);
+  await rehearsePokeemeraldDataEnvironment(repoDir);
+  await rehearseShowcaseEnvironment(repoDir);
   console.error("[rehearsal] all canaries passed");
 }
 

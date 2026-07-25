@@ -1,6 +1,10 @@
 ---
 id: karma-bot-rich-leaderboards
-status: active
+type: todo
+status: in-progress
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/logs/2026-06-13_new-todos-batch.md
 source_marker: false
 ---
@@ -28,9 +32,9 @@ Reuse the proven render stack from `packages/scout-for-lol/packages/report/`:
 leaderboard / karma-over-time as an image and send it as a Discord embed
 attachment. Scout's `competition-chart` color/palette logic is a good reference.
 
-## Done when
+## Remaining
 
-- Leaderboard rendered as an image/chart embed (not plain text).
-- Karma-over-time graphs and richer history views.
-- Tests added (replace the `"true"` test script with real coverage of the karma
-  tally + render path).
+- [ ] Leaderboard rendered as an image/chart embed (not plain text).
+- [ ] Karma-over-time graphs and richer history views.
+- [ ] Tests added (replace the `"true"` test script with real coverage of the karma
+      tally + render path).

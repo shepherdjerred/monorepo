@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-mcp-gateway-fastmail-official
+type: log
+status: complete
+board: false
+---
+
 # mcp-gateway: official Fastmail MCP + downstream hardening — 2026-06-13
-
-## Status
-
-Complete (PR [#1155](https://github.com/shepherdjerred/monorepo/pull/1155)) — pending merge → ArgoCD deploy. Follow-up: swap the Gmail MCP server.
 
 ## Context
 

@@ -1,6 +1,10 @@
 ---
 id: agent-task-workflow-broken
-status: active
+type: todo
+status: in-progress
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/logs/2026-06-14_protobufjs-v8-pr-1227.md
 source_marker: false
 ---
@@ -55,13 +59,13 @@ Non-LLM workflows (`syncGolinks`, `runDnsAudit`, `runBugsinkHousekeepingWorkflow
 
 The current worker pod (`temporal-temporal-worker-77f44bf844-dx7vr`, started ~3 h before #1230 merged) does **not** yet have the fix. The next deploy + the next `homelab-audit-daily` firing on cron (~13 h after this todo was filed) is the first live signal. This todo tracks that verification rather than declaring success.
 
-## Done when
+## Remaining
 
-- The post-#1230 worker pod is the running revision (check image SHA on the pod).
-- The next `agentTaskWorkflow` execution (`homelab-audit-daily`) either Completes, OR fails with a now-explicit reason captured in heartbeat logs (`lastStderrLine`, `idleMs`, soft-kill record). Both outcomes count — the goal is to end silent failure.
-- The Grafana "Agent subprocesses" row populates with real homelab-audit subprocess data inside one run. (The former "Alert remediation" row was removed with that workflow — see logs/2026-07-02_gut-alert-remediation.md.)
-- `prReview` + `prSummary` either show non-zero recent counts on a real PR, or are explicitly confirmed disabled (separately tracked — PR #1230 doesn't address the webhook bridge).
-- The next several `homelab-audit-daily` runs either Complete or fail with an explicit, metrics-visible reason (no silent `agentTaskWorkflow` failures).
+- [ ] The post-#1230 worker pod is the running revision (check image SHA on the pod).
+- [ ] The next `agentTaskWorkflow` execution (`homelab-audit-daily`) either Completes, OR fails with a now-explicit reason captured in heartbeat logs (`lastStderrLine`, `idleMs`, soft-kill record). Both outcomes count — the goal is to end silent failure.
+- [ ] The Grafana "Agent subprocesses" row populates with real homelab-audit subprocess data inside one run. (The former "Alert remediation" row was removed with that workflow — see logs/2026-07-02_gut-alert-remediation.md.)
+- [ ] `prReview` + `prSummary` either show non-zero recent counts on a real PR, or are explicitly confirmed disabled (separately tracked — PR #1230 doesn't address the webhook bridge).
+- [ ] The next several `homelab-audit-daily` runs either Complete or fail with an explicit, metrics-visible reason (no silent `agentTaskWorkflow` failures).
 
 ## Pointers
 

@@ -1,8 +1,11 @@
+---
+id: guide-2026-04-25-minecraft-server-ops
+type: guide
+status: complete
+board: false
+---
+
 # Minecraft Server Ops
-
-## Status
-
-Active operational reference. Extracted from the archived March 2026 modpack recommendation research.
 
 ## Deployed Servers
 

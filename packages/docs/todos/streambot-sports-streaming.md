@@ -1,6 +1,10 @@
 ---
 id: streambot-sports-streaming
-status: deferred
+type: todo
+status: planned
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/logs/2026-06-13_new-todos-batch.md
 source_marker: false
 ---
@@ -27,7 +31,7 @@ This is net-new: a sports source requires live-event discovery (provider APIs,
 not yt-dlp passthrough), live-status metadata (teams, score, live/over), and
 new ranking/search to surface current events. None of that exists.
 
-## Done when
+## Remaining
 
-- A new source kind / provider lets a user find and stream a live sports event,
-  with status embeds reflecting live state.
+- [ ] A new source kind / provider lets a user find and stream a live sports event,
+      with status embeds reflecting live state.

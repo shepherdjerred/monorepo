@@ -1,9 +1,21 @@
+---
+id: plan-2026-07-25-scout-ranked-splash-highres
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # High-res centered splash art for scout-for-lol ranked report designs
 
-## Status
+Shipped on PR #924 (`claude/peaceful-driscoll-2a021a`): high-res centered splash
+art + grade-letter centering. PR itself remains deferred pending owner review of
+the designs.
 
-Complete — shipped on PR #924 (`claude/peaceful-driscoll-2a021a`, commit
-`d7d9c0d56`). PR itself remains deferred pending owner review of the designs.
+## Remaining
+
+- [ ] PR #924 un-deferred and merged (design review by owner)
 
 ## Context
 

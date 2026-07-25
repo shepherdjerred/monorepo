@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.13.1",
+  "version": "16.14.1",
   "data": {
     "Yunara": {
       "id": "Yunara",
@@ -85,6 +85,54 @@
           "name": "Spirit Blossom Springs Yunara (Pearl)",
           "chromas": false,
           "parentSkin": 1
+        },
+        {
+          "id": "804010",
+          "num": 10,
+          "name": "T1 Yunara",
+          "chromas": true
+        },
+        {
+          "id": "804011",
+          "num": 11,
+          "name": "T1 Yunara (Elite)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "804012",
+          "num": 12,
+          "name": "T1 Yunara (Pearl)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "804013",
+          "num": 13,
+          "name": "T1 Yunara (Ruby)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "804014",
+          "num": 14,
+          "name": "T1 Yunara (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "804015",
+          "num": 15,
+          "name": "T1 Yunara (Catseye)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "804016",
+          "num": 16,
+          "name": "T1 Yunara (Sapphire)",
+          "chromas": false,
+          "parentSkin": 10
         }
       ],
       "lore": "Unwavering in her devotion to Ionia, Yunara has spent centuries cloistered away in the spirit realm honing her skills with the Aion Er'na, a legendary Kinkou relic. Despite all she has sacrificed, Yunara's vow to rid the land of disharmony and strife remains unbroken, as does her faith. But the world that now awaits her—and the shadow of an ancient threat risen once more—will test every ounce of her resolve.",

@@ -1,10 +1,11 @@
+---
+id: reference-completed-2026-06-06-mk64-headless-render-spike
+type: reference
+status: complete
+board: false
+---
+
 # MK64 headless software-render spike (discord-plays, N64)
-
-## Status
-
-Complete (feasibility resolved). No production code yet — this is a go/no-go spike.
-Branch: `claude/mk64-discord-stream`. Scratch harness under `spike/` (gitignored
-ROM/build artifacts).
 
 ## Question
 

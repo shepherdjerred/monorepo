@@ -1,10 +1,13 @@
+---
+id: plan-2026-07-03-scout-ai-review-context
+type: plan
+status: awaiting-human
+board: true
+verification: human
+disposition: active
+---
+
 # Scout for LoL — Richer AI Reviews: Patch Notes + Player History
-
-## Status
-
-Complete (implemented on branch `feature/scout-ai-review-context`, not yet merged). All
-typecheck / lint / tests green across data, backend, temporal, and frontend. See the Session
-Log at the bottom for the exact files and follow-ups.
 
 ## Context
 
@@ -323,30 +326,30 @@ Add to Writing Style:
 
 ---
 
-## Verification
+## Human Verification
 
-1. **Unit tests (pure):**
-   - `player-history.test.ts` — feed synthetic fact/rank/co-tracked rows to
-     `computePlayerHistorySignals`; assert loss/win-streak, last-10 record, gamesToday/thisWeek,
-     rank-N-games-ago, champion-pool ordering + off-pool flag, main-lane mode + off-role flag,
-     duo winrates; then `formatPlayerHistory` snapshot + empty-input → `""`.
-   - `patch-notes.test.ts` — changeset asset parses (Zod); `selectRelevantPatchChanges` keeps
-     only changes matching given champs/lane/items and drops the rest; `formatPatchNotes`
-     snapshot; no-match → `overview` + `summary` fallback; ranks major changes first;
-     missing changeset → `""`.
-   - `patch-analysis.test.ts` — the structured-extraction parser validates a sample notes page
-     into the changeset schema (off-spec output fails validation).
-2. **Typecheck/lint:** `bun run typecheck` + `bunx eslint .` in `data` and `backend`
-   (watch `max-params`, `no-type-assertions`, Zod-naming). Run `bun install` at scout root first.
-3. **End-to-end (review tool):** use the frontend review tool
-   (`packages/frontend/src/lib/review-tool/`) or `dev:web` to generate a review and eyeball that
-   the history/patch context appears in the Stage-2 trace and influences the text. Optionally add
-   temporary textareas in the review tool to inject sample history/patch strings.
-4. **Backend smoke:** run the postmatch path against a tracked player with existing
-   `MatchParticipantFact` rows; confirm `prompts.playerHistory` is populated (S3 trace) and the
-   `<PLAYER HISTORY>` placeholder is fully replaced (not leaked).
-5. **PR media:** include a before/after of a generated review showing a history/patch callout
-   (per repo PR-media convention).
+- **Unit tests (pure):**
+  - `player-history.test.ts` — feed synthetic fact/rank/co-tracked rows to
+    `computePlayerHistorySignals`; assert loss/win-streak, last-10 record, gamesToday/thisWeek,
+    rank-N-games-ago, champion-pool ordering + off-pool flag, main-lane mode + off-role flag,
+    duo winrates; then `formatPlayerHistory` snapshot + empty-input → `""`.
+  - `patch-notes.test.ts` — changeset asset parses (Zod); `selectRelevantPatchChanges` keeps
+    only changes matching given champs/lane/items and drops the rest; `formatPatchNotes`
+    snapshot; no-match → `overview` + `summary` fallback; ranks major changes first;
+    missing changeset → `""`.
+  - `patch-analysis.test.ts` — the structured-extraction parser validates a sample notes page
+    into the changeset schema (off-spec output fails validation).
+- **Typecheck/lint:** `bun run typecheck` + `bunx eslint .` in `data` and `backend`
+  (watch `max-params`, `no-type-assertions`, Zod-naming). Run `bun install` at scout root first.
+- **End-to-end (review tool):** use the frontend review tool
+  (`packages/frontend/src/lib/review-tool/`) or `dev:web` to generate a review and eyeball that
+  the history/patch context appears in the Stage-2 trace and influences the text. Optionally add
+  temporary textareas in the review tool to inject sample history/patch strings.
+- **Backend smoke:** run the postmatch path against a tracked player with existing
+  `MatchParticipantFact` rows; confirm `prompts.playerHistory` is populated (S3 trace) and the
+  `<PLAYER HISTORY>` placeholder is fully replaced (not leaked).
+- **PR media:** include a before/after of a generated review showing a history/patch callout
+  (per repo PR-media convention).
 
 ## Out of scope / follow-ups
 

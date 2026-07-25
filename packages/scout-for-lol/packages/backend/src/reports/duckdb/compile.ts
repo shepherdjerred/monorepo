@@ -1,4 +1,9 @@
-import type { ReportGroupBy, ReportQueryPlan } from "@scout-for-lol/data";
+import type {
+  ReportFilter,
+  ReportFilterField,
+  ReportGroupBy,
+  ReportQueryPlan,
+} from "@scout-for-lol/data";
 import { match } from "ts-pattern";
 import {
   buildAccountsSource,
@@ -56,25 +61,65 @@ export type LakeQueryInput = {
 type Grouping = {
   labelExpr: string;
   discordExpr: string;
-  groupExpr: string;
+  groupExprs: string[];
 };
 
-function matchGrouping(groupBy: ReportGroupBy): Grouping {
+function singleMatchGrouping(groupBy: ReportGroupBy): Grouping {
   return match(groupBy)
     .with("player", () => ({
       labelExpr: "any_value(player_alias)",
       discordExpr: "any_value(discord_id)",
-      groupExpr: "player_id",
+      groupExprs: ["player_id"],
     }))
     .with("champion", () => ({
       labelExpr: "any_value(champion_name)",
       discordExpr: "NULL::VARCHAR",
-      groupExpr: "champion_id",
+      groupExprs: ["champion_id"],
     }))
     .with("queue", () => ({
       labelExpr: "COALESCE(queue, 'unknown')",
       discordExpr: "NULL::VARCHAR",
-      groupExpr: "COALESCE(queue, 'unknown')",
+      groupExprs: ["COALESCE(queue, 'unknown')"],
+    }))
+    .with("team_position", () => textGrouping("team_position"))
+    .with("individual_position", () => textGrouping("individual_position"))
+    .with("lane", () => textGrouping("lane"))
+    .with("role", () => textGrouping("role"))
+    .with("game_mode", () => textGrouping("game_mode"))
+    .with("game_type", () => textGrouping("game_type"))
+    .with("patch", () => ({
+      labelExpr: String.raw`regexp_extract(any_value(game_version), '^[0-9]+\.[0-9]+')`,
+      discordExpr: "NULL::VARCHAR",
+      groupExprs: [String.raw`regexp_extract(game_version, '^[0-9]+\.[0-9]+')`],
+    }))
+    .with("map", () => ({
+      labelExpr: "any_value(map_id)::VARCHAR",
+      discordExpr: "NULL::VARCHAR",
+      groupExprs: ["map_id"],
+    }))
+    .with("outcome", () => ({
+      labelExpr: "CASE WHEN win THEN 'Win' ELSE 'Loss' END",
+      discordExpr: "NULL::VARCHAR",
+      groupExprs: ["win"],
+    }))
+    .with("surrender_state", () => ({
+      labelExpr:
+        "CASE WHEN early_surrendered THEN 'Early surrender' WHEN surrendered THEN 'Surrender' ELSE 'Played out' END",
+      discordExpr: "NULL::VARCHAR",
+      groupExprs: ["early_surrendered", "surrendered"],
+    }))
+    .with("arena_placement", () => ({
+      labelExpr: "COALESCE(placement::VARCHAR, 'Not Arena')",
+      discordExpr: "NULL::VARCHAR",
+      groupExprs: ["placement"],
+    }))
+    .with("day", () => timeGrouping("day", "%Y-%m-%d"))
+    .with("week", () => timeGrouping("week", "%Y-%m-%d"))
+    .with("month", () => timeGrouping("month", "%Y-%m"))
+    .with("all", () => ({
+      labelExpr: "'All'",
+      discordExpr: "NULL::VARCHAR",
+      groupExprs: [],
     }))
     .with("group", () => {
       throw new Error("group grouping uses compileGroupFactsQuery");
@@ -82,9 +127,45 @@ function matchGrouping(groupBy: ReportGroupBy): Grouping {
     .exhaustive();
 }
 
+function textGrouping(column: string): Grouping {
+  const expression = `COALESCE(${column}, 'unknown')`;
+  return {
+    labelExpr: `any_value(${expression})`,
+    discordExpr: "NULL::VARCHAR",
+    groupExprs: [expression],
+  };
+}
+
+function timeGrouping(
+  unit: "day" | "week" | "month",
+  format: string,
+): Grouping {
+  const expression = `date_trunc('${unit}', game_creation_at)`;
+  return {
+    labelExpr: `strftime(any_value(${expression}), '${format}')`,
+    discordExpr: "NULL::VARCHAR",
+    groupExprs: [expression],
+  };
+}
+
+function matchGrouping(groupBys: ReportGroupBy[]): Grouping {
+  const groupings = groupBys.map((groupBy) => singleMatchGrouping(groupBy));
+  const labels = groupings.map((grouping) => grouping.labelExpr);
+  return {
+    labelExpr:
+      labels.length === 1
+        ? (labels[0] ?? "'All'")
+        : `concat_ws(' • ', ${labels.join(", ")})`,
+    discordExpr: groupBys.includes("player")
+      ? "any_value(discord_id)"
+      : "NULL::VARCHAR",
+    groupExprs: groupings.flatMap((grouping) => grouping.groupExprs),
+  };
+}
+
 /** Prematch rows have no champion_name column; label by id, like the fact engine. */
 function prematchGrouping(groupBy: ReportGroupBy): Grouping {
-  const base = matchGrouping(groupBy);
+  const base = singleMatchGrouping(groupBy);
   if (groupBy === "champion") {
     return { ...base, labelExpr: "any_value(champion_id::VARCHAR)" };
   }
@@ -127,14 +208,99 @@ function championPredicate(championId: number | undefined): SqlFragment {
   return { sql: "champion_id = ?", params: [scalarParam(championId)] };
 }
 
+function filterColumn(field: ReportFilterField): string {
+  return match(field)
+    .with("player", () => "player_alias")
+    .with("champion_id", () => "champion_id")
+    .with("queue", () => "queue")
+    .with("team_position", () => "team_position")
+    .with("individual_position", () => "individual_position")
+    .with("lane", () => "lane")
+    .with("role", () => "role")
+    .with("game_mode", () => "game_mode")
+    .with("game_type", () => "game_type")
+    .with("game_version", () => "game_version")
+    .with("map_id", () => "map_id")
+    .with("win", () => "win")
+    .with("surrendered", () => "surrendered")
+    .with("early_surrendered", () => "early_surrendered")
+    .with("first_blood_kill", () => "first_blood_kill")
+    .with("game_duration_seconds", () => "game_duration_seconds")
+    .with("placement", () => "placement")
+    .with("kills", () => "kills")
+    .with("deaths", () => "deaths")
+    .with("assists", () => "assists")
+    .with("creep_score", () => "creep_score")
+    .with("gold_earned", () => "gold_earned")
+    .with("gold_spent", () => "gold_spent")
+    .with("damage_to_champions", () => "total_damage_dealt_to_champions")
+    .with("vision_score", () => "vision_score")
+    .exhaustive();
+}
+
+function genericPredicate(
+  filters: ReportFilter[],
+  includePlayer: boolean,
+): SqlFragment {
+  const fragments = filters
+    .filter((filter) => (filter.field === "player") === includePlayer)
+    .map((filter): SqlFragment => {
+      const rawColumn = filterColumn(filter.field);
+      const isString = typeof filter.values[0] === "string";
+      const column = isString ? `lower(${rawColumn})` : rawColumn;
+      if (filter.operator === "in") {
+        const values = filter.values;
+        if (values.every((value) => typeof value === "string")) {
+          return {
+            sql: `${column} IN (SELECT unnest(?))`,
+            params: [listParam(values)],
+          };
+        }
+        if (values.every((value) => typeof value === "number")) {
+          return {
+            sql: `${column} IN (SELECT unnest(?))`,
+            params: [listParam(values)],
+          };
+        }
+        if (values.every((value) => typeof value === "boolean")) {
+          return {
+            sql: `(${values.map(() => `${column} = ?`).join(" OR ")})`,
+            params: values.map((value) => scalarParam(value)),
+          };
+        }
+        throw new Error(`Filter ${filter.field} has mixed value types.`);
+      }
+      const value = filter.values[0];
+      if (value === undefined) {
+        throw new Error(`Filter ${filter.field} has no value.`);
+      }
+      return {
+        sql: `${column} ${filter.operator} ?`,
+        params: [scalarParam(value)],
+      };
+    });
+  return combinePredicates(fragments);
+}
+
 const MATCH_FACT_COLUMNS =
   "a.player_id, a.player_alias, a.discord_id, m.match_id, m.team_id, " +
   "m.player_subteam_id, m.puuid, " +
-  "m.champion_id, m.champion_name, m.queue, m.win, m.surrendered, m.kills, " +
+  "m.champion_id, m.champion_name, m.queue, m.team_position, " +
+  "m.individual_position, m.lane, m.role, m.game_mode, m.game_type, " +
+  "m.game_version, m.map_id, m.game_creation_at, m.win, m.surrendered, " +
+  "m.early_surrendered, m.kills, " +
   "m.deaths, m.assists, m.creep_score, m.total_damage_dealt_to_champions, " +
   "m.gold_earned, m.vision_score, m.total_damage_taken, m.total_damage_dealt, " +
   "m.wards_placed, m.double_kills, m.triple_kills, m.quadra_kills, " +
-  "m.penta_kills, m.game_duration_seconds, m.time_played";
+  "m.penta_kills, m.game_duration_seconds, m.time_played, " +
+  "m.total_minions_killed, m.neutral_minions_killed, m.gold_spent, " +
+  "m.damage_self_mitigated, m.damage_dealt_to_objectives, " +
+  "m.damage_dealt_to_turrets, m.total_heal, m.total_heals_on_teammates, " +
+  "m.wards_killed, m.vision_wards_bought_in_game, m.detector_wards_placed, " +
+  "m.largest_multi_kill, m.killing_sprees, m.first_blood_kill, " +
+  "m.champ_level, m.champ_experience, m.total_time_spent_dead, " +
+  "m.longest_time_spent_living, m.time_ccing_others, m.turret_kills, " +
+  "m.inhibitor_kills, m.dragon_kills, m.baron_kills, m.placement";
 
 type FactsCte = SqlFragment;
 
@@ -147,23 +313,22 @@ function buildMatchFactsCte(
     input.serverId,
   );
   const emptyScope: SqlFragment = { sql: "", params: [] };
-  const playerScope: SqlFragment =
+  const playerIdScope: SqlFragment =
     input.playerIds === undefined
       ? emptyScope
       : {
-          sql: " WHERE a.player_id IN (SELECT unnest(?))",
+          sql: "a.player_id IN (SELECT unnest(?))",
           params: [listParam(input.playerIds)],
         };
+  const playerFilter = genericPredicate(input.plan.filters, true);
+  const factScope = combinePredicates([playerIdScope, playerFilter]);
+  const factWhere = factScope.sql.length === 0 ? "" : ` WHERE ${factScope.sql}`;
   return {
     sql:
       `WITH accounts AS (${accounts.sql}), ` +
       `facts AS (SELECT ${MATCH_FACT_COLUMNS} FROM (${matchesSource.sql}) m ` +
-      `JOIN accounts a ON a.puuid = m.puuid${playerScope.sql})`,
-    params: [
-      ...accounts.params,
-      ...matchesSource.params,
-      ...playerScope.params,
-    ],
+      `JOIN accounts a ON a.puuid = m.puuid${factWhere})`,
+    params: [...accounts.params, ...matchesSource.params, ...factScope.params],
   };
 }
 
@@ -194,6 +359,7 @@ export function compileMatchQuery(
     timePredicate("game_creation_at", input.startMs, input.endMs),
     queuePredicate(input.plan.queueFilter),
     championPredicate(input.plan.championId),
+    genericPredicate(input.plan.filters, false),
   ]);
   const matchesSource = buildMatchesSource(input.files, predicate);
   if (
@@ -203,12 +369,16 @@ export function compileMatchQuery(
     return undefined;
   }
   const facts = buildMatchFactsCte(input, matchesSource);
-  const grouping = matchGrouping(input.plan.groupBy);
+  const grouping = matchGrouping(input.plan.groupBys);
+  const groupBySql =
+    grouping.groupExprs.length === 0
+      ? " HAVING COUNT(*) > 0"
+      : ` GROUP BY ${grouping.groupExprs.join(", ")}`;
   return {
     aggregateSql:
       `${facts.sql} SELECT ${grouping.labelExpr} AS label, ` +
       `${grouping.discordExpr} AS discord_id, ${matchAggregateSelect()} ` +
-      `FROM facts GROUP BY ${grouping.groupExpr}`,
+      `FROM facts${groupBySql}`,
     aggregateParams: facts.params,
     ...scannedStatement(facts),
   };
@@ -230,6 +400,7 @@ export function compileGroupFactsQuery(
     timePredicate("game_creation_at", input.startMs, input.endMs),
     queuePredicate(input.plan.queueFilter),
     championPredicate(input.plan.championId),
+    genericPredicate(input.plan.filters, false),
   ]);
   const matchesSource = buildMatchesSource(input.files, predicate);
   if (
@@ -266,6 +437,7 @@ export function compilePrematchQuery(
   const predicate = combinePredicates([
     timePredicate("observed_at", input.startMs, input.endMs),
     queuePredicate(input.plan.queueFilter),
+    genericPredicate(input.plan.filters, false),
   ]);
   const prematchSource = buildPrematchSource(input.files, predicate);
   if (
@@ -289,11 +461,15 @@ export function compilePrematchQuery(
   const aggregateWhere =
     champion.sql.length > 0 ? ` WHERE ${champion.sql}` : "";
   const grouping = prematchGrouping(input.plan.groupBy);
+  const groupBySql =
+    grouping.groupExprs.length === 0
+      ? " HAVING COUNT(*) > 0"
+      : ` GROUP BY ${grouping.groupExprs.join(", ")}`;
   return {
     aggregateSql:
       `${factsSql} SELECT ${grouping.labelExpr} AS label, ` +
       `${grouping.discordExpr} AS discord_id, ${prematchAggregateSelect()} ` +
-      `FROM facts${aggregateWhere} GROUP BY ${grouping.groupExpr}`,
+      `FROM facts${aggregateWhere}${groupBySql}`,
     aggregateParams: [...factsParams, ...champion.params],
     scannedSql: `${factsSql} SELECT COUNT(*)::BIGINT AS scanned FROM facts`,
     scannedParams: factsParams,

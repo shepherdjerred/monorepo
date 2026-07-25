@@ -247,7 +247,8 @@ describe("saveImageToS3 - Error Handling", () => {
       saveImageToS3(matchId, imageBuffer, queueType, []),
     ).rejects.toThrow("Failed to save PNG NA1_ERROR_CASE to S3");
 
-    expect(s3Mock.calls().length).toBe(1);
+    // Retried MAX_PUT_ATTEMPTS (3) times before throwing.
+    expect(s3Mock.calls().length).toBe(3);
   });
 
   test("throws error with match ID in error message", async () => {

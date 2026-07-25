@@ -12,9 +12,10 @@ import {
   prematchSpectatorPayloadSavesTotal,
   prematchSpectatorPayloadSaveDurationSeconds,
 } from "#src/metrics/index.ts";
+import { trackedPlayerCountMetadata } from "#src/storage/s3-metadata.ts";
 
 export type PrematchPayloadSaveResult = {
-  status: "saved" | "skipped_no_bucket" | "error";
+  status: "saved" | "skipped_no_bucket";
   durationSeconds?: number;
 };
 
@@ -50,7 +51,7 @@ export async function saveMatchToS3(
       map: match.info.mapId.toString(),
       dataVersion: match.metadata.dataVersion,
       gameType: match.info.gameType,
-      trackedPlayers: trackedPlayerAliases.join(", "),
+      ...trackedPlayerCountMetadata(trackedPlayerAliases),
     },
     logEmoji: "💾",
     logMessage: "Saving match to S3",
@@ -89,7 +90,7 @@ export async function saveImageToS3(
       matchId: matchId,
       queueType: queueType,
       format: "png",
-      trackedPlayers: trackedPlayerAliases.join(", "),
+      ...trackedPlayerCountMetadata(trackedPlayerAliases),
     },
     logEmoji: "🖼️",
     logMessage: "Saving PNG to S3",
@@ -125,7 +126,7 @@ export async function saveSvgToS3(
       matchId: matchId,
       queueType: queueType,
       format: "svg",
-      trackedPlayers: trackedPlayerAliases.join(", "),
+      ...trackedPlayerCountMetadata(trackedPlayerAliases),
     },
     logEmoji: "📄",
     logMessage: "Saving SVG to S3",
@@ -138,7 +139,11 @@ export async function saveSvgToS3(
 }
 
 /**
- * Save raw spectator API payload to S3 for debugging/replay.
+ * Persist the raw spectator API payload to S3. S3 is the canonical prematch
+ * store, so a failed upload is a hard error: record the failure metric and
+ * re-throw so the ingest path fails loud (the caller retries next poll). The
+ * missing-bucket path stays a graceful no-op for dev/test — a boot-time guard
+ * (src/index.ts) prevents that from ever happening in beta/prod.
  */
 export async function savePrematchDataToS3(
   gameId: number,
@@ -165,7 +170,7 @@ export async function savePrematchDataToS3(
         gameMode: gameInfo.gameMode,
         queueId: gameInfo.gameQueueConfigId.toString(),
         participantCount: gameInfo.participants.length.toString(),
-        trackedPlayers: trackedPlayerAliases.join(", "),
+        ...trackedPlayerCountMetadata(trackedPlayerAliases),
       },
       logEmoji: "📡",
       logMessage: "Saving spectator data to S3",
@@ -176,11 +181,11 @@ export async function savePrematchDataToS3(
     prematchSpectatorPayloadSaveDurationSeconds.observe(durationSeconds);
     prematchSpectatorPayloadSavesTotal.inc({ status: "saved" });
     return { status: "saved", durationSeconds };
-  } catch {
+  } catch (error) {
     const durationSeconds = (Date.now() - startTime) / 1000;
     prematchSpectatorPayloadSaveDurationSeconds.observe(durationSeconds);
     prematchSpectatorPayloadSavesTotal.inc({ status: "error" });
-    return { status: "error", durationSeconds };
+    throw error;
   }
 }
 
@@ -203,7 +208,7 @@ export async function savePrematchImageToS3(
       gameId: gameId.toString(),
       queueType,
       format: "png",
-      trackedPlayers: trackedPlayerAliases.join(", "),
+      ...trackedPlayerCountMetadata(trackedPlayerAliases),
     },
     logEmoji: "🖼️",
     logMessage: "Saving loading screen PNG to S3",
@@ -231,7 +236,7 @@ export async function savePrematchSvgToS3(
       gameId: gameId.toString(),
       queueType,
       format: "svg",
-      trackedPlayers: trackedPlayerAliases.join(", "),
+      ...trackedPlayerCountMetadata(trackedPlayerAliases),
     },
     logEmoji: "📄",
     logMessage: "Saving loading screen SVG to S3",
@@ -264,7 +269,7 @@ export async function saveTimelineToS3(
       frameCount: timeline.info.frames.length.toString(),
       frameInterval: timeline.info.frameInterval.toString(),
       dataVersion: timeline.metadata.dataVersion,
-      trackedPlayers: trackedPlayerAliases.join(", "),
+      ...trackedPlayerCountMetadata(trackedPlayerAliases),
     },
     logEmoji: "📊",
     logMessage: "Saving timeline to S3",

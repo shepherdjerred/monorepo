@@ -12,7 +12,11 @@
 const MAX_BYTES = 5 * 1_048_576;
 
 const assetCheck = Bun.spawnSync(
-  ["bun", "packages/scout-for-lol/scripts/check-asset-sizes.ts"],
+  [
+    "bun",
+    "--no-install",
+    "packages/scout-for-lol/scripts/check-asset-sizes.ts",
+  ],
   { stdout: "inherit", stderr: "inherit" },
 );
 

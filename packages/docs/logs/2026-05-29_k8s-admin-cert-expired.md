@@ -1,8 +1,11 @@
+---
+id: log-2026-05-29-k8s-admin-cert-expired
+type: log
+status: complete
+board: false
+---
+
 # k8s not working — expired admin client certificate
-
-## Status
-
-Complete (diagnosis); remediation is on the operator (talosctl not available in this checkout).
 
 ## Symptom
 

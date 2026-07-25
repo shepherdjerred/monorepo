@@ -188,7 +188,8 @@ describe("saveSvgToS3 - Error Handling", () => {
       saveSvgToS3(matchId, svgContent, queueType, []),
     ).rejects.toThrow("Failed to save SVG NA1_ERROR to S3");
 
-    expect(s3Mock.calls().length).toBe(1);
+    // Retried MAX_PUT_ATTEMPTS (3) times before throwing.
+    expect(s3Mock.calls().length).toBe(3);
   });
 
   test("throws error with match ID in error message", async () => {

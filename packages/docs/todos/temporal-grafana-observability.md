@@ -1,6 +1,10 @@
 ---
 id: temporal-grafana-observability
-status: active
+type: todo
+status: in-progress
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/logs/2026-06-13_new-todos-batch.md
 source_marker: false
 ---
@@ -38,12 +42,12 @@ Add golden-signal coverage:
 - Corresponding alerts: high task latency, growing backlog, persistence errors,
   worker saturation.
 
-## Done when
+## Remaining
 
-- Dashboard panels cover Temporal server + SDK golden signals (not just business
-  metrics).
-- Alerts fire on the key SLO breaches above.
-- "etc." — optional Loki log panels / runbook links wired into the dashboard.
+- [ ] Dashboard panels cover Temporal server + SDK golden signals (not just business
+      metrics).
+- [ ] Alerts fire on the key SLO breaches above.
+- [ ] "etc." — optional Loki log panels / runbook links wired into the dashboard.
 
 ## References
 

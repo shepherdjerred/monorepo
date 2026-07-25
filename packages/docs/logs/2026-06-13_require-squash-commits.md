@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-require-squash-commits
+type: log
+status: complete
+board: false
+---
+
 # Require squash commits on the monorepo
-
-## Status
-
-Complete (pending merge/apply)
 
 ## Context
 

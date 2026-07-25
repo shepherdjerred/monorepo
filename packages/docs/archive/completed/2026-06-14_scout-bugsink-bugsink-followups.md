@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-14-scout-bugsink-bugsink-followups
+type: reference
+status: complete
+board: false
+---
+
 # Scout-for-LoL Bugsink follow-ups
-
-## Status
-
-Complete (PR #1223)
 
 ## Session Log — 2026-06-14
 

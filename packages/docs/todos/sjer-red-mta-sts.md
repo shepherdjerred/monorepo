@@ -1,6 +1,10 @@
 ---
 id: sjer-red-mta-sts
-status: deferred
+type: todo
+status: planned
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/archive/completed/2026-05-25_sjer-red-hardening.md
 ---
 
@@ -58,3 +62,7 @@ Three mail-receiving zones (`sjer.red`, `shepherdjerred.com`, `ts-mc.net`). For 
 - **Caddy reverse-proxy.** The existing `S3StaticSites` chart serves the bucket root via Caddy; verify it serves `/.well-known/mta-sts.txt` correctly without rewrites (no `reverseProxies` or `spaFallbacks` needed for this hostname).
 - **Single bucket option.** All three zones could share one bucket since the policy content is identical — but each hostname still needs its own static-site binding because RFC 8461 mandates per-zone `mta-sts.<zone>` hostnames. The bucket-sharing optimization is a minor savings; per-zone buckets are simpler to reason about.
 - **`id` rotation discipline.** Every policy change (mode flip, MX update) needs the TXT record `id` bumped or senders will keep using the cached policy until the previous `max_age` expires. Use an ISO-8601-style timestamp (`20260525T000000Z`).
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Publish MTA-STS policies for mail-receiving zones`.

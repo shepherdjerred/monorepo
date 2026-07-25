@@ -1,6 +1,15 @@
+---
+id: plan-2026-07-03-tasknotes-first-in-class
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # TaskNotes System — First-in-Class Reliability Plan
 
-## Status
+## Status Notes (Historical)
 
 In Progress — P1 merged (#1379); P0 in review; P2 next.
 
@@ -259,3 +268,7 @@ On `feature/tasknotes-p5` (stacked on P3), in `packages/tasks-for-obsidian` + `p
 
 - The app keeps CLOSED status/priority enums: a plugin-side custom workflow status fails response validation loudly rather than being remapped — acceptable for a single-user vault whose post-P4 statuses are the defaults; open-workflow support would be a future phase.
 - v2 `/legacy` surface is now unused by this branch's app but stays for the P4 rollout window (P2 app in production until this ships).
+
+## Remaining
+
+- [ ] Complete and verify the work described in `TaskNotes System — First-in-Class Reliability Plan`.

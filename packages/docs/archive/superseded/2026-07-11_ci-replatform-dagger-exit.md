@@ -1,6 +1,13 @@
+---
+id: reference-superseded-2026-07-11-ci-replatform-dagger-exit
+type: reference
+status: complete
+board: false
+---
+
 # CI Replatform v2: Dagger Exit — Plain Buildkite Steps + buildx + Stateless Caches
 
-## Status
+## Status Notes (Historical)
 
 Abandoned — **superseded 2026-07-12 (owner decision)** by a full CI strip: instead of
 replatforming onto plain Buildkite steps, ALL CI was removed from the repo with no

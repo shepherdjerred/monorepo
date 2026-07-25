@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-pinchtab-alternatives
+type: log
+status: complete
+board: false
+---
+
 # PinchTab Alternatives — Q&A
-
-## Status
-
-Complete
 
 ## Question
 

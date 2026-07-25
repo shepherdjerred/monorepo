@@ -1,8 +1,11 @@
+---
+id: log-2026-05-13-scout-beta-missing-daily-update
+type: log
+status: complete
+board: false
+---
+
 # Scout Beta — missing daily competition update
-
-## Status
-
-Complete (diagnosis only; no fix applied)
 
 ## TL;DR
 

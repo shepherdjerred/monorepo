@@ -1,8 +1,11 @@
+---
+id: log-2026-06-20-fix-flaky-ci-main
+type: log
+status: complete
+board: false
+---
+
 # Fix flaky CI on main (birmel retry + pokemon goal-state race)
-
-## Status
-
-Complete
 
 ## Context
 

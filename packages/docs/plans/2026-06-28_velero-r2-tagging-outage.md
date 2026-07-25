@@ -1,10 +1,13 @@
+---
+id: plan-2026-06-28-velero-r2-tagging-outage
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Velero R2 backup outage — pin plugin, block Renovate, reclaim R2
-
-## Status
-
-Partially Complete — Phase 1 shipped; Phase 3 reclaim done (2026-07-02). Remaining: plugin
-unpin (blocked on upstream), R2 lifecycle backstop (Phase 3 #3), and the Phase 2 tracking
-issue (optional).
 
 ## Context
 
@@ -109,3 +112,7 @@ PD #5858 (SSD write volume), #5857 (HA entities unavailable), #5838 (scout repor
 - Phase 3 #1 was satisfied by a **data-presence** check (all live backups `Completed` + their `zfspv-incr` data present), **not a full restore drill**. No backup was test-restored.
 - The prune credentials came from the `velero` namespace `cloud-credentials` secret; the R2 endpoint is `https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com`, bucket `homelab`.
 - R2 will re-accumulate orphans until the lifecycle backstop lands — do not treat the prune as a permanent fix.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Velero R2 backup outage — pin plugin, block Renovate, reclaim R2`.

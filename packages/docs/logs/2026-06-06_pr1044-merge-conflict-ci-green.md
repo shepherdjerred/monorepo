@@ -1,11 +1,11 @@
+---
+id: log-2026-06-06-pr1044-merge-conflict-ci-green
+type: log
+status: complete
+board: false
+---
+
 # PR #1044 — Get to green (merge conflict + CI)
-
-## Status
-
-Complete
-
-PR: <https://github.com/shepherdjerred/monorepo/pull/1044> — feat(homelab): add edstem, gradescope, discord MCP servers to gateway
-Branch: `claude/add-mcp-gateway-servers`
 
 ## Goal
 

@@ -1,9 +1,11 @@
+---
+id: log-2026-07-16-turbo-cache-rollout
+type: log
+status: complete
+board: false
+---
+
 # Turbo remote cache rollout (local + CI)
-
-## Status
-
-Complete — code, secrets, and R2 bucket all in place; PR #1526 open.
-Remaining post-merge verification tracked in `todos/turbo-cache-rollout.md`.
 
 ## What happened
 

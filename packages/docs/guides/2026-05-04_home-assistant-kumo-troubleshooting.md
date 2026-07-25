@@ -1,3 +1,10 @@
+---
+id: guide-2026-05-04-home-assistant-kumo-troubleshooting
+type: guide
+status: complete
+board: false
+---
+
 # Home Assistant — Kumo Integration Troubleshooting (2026-05-04)
 
 > _Heads up: this guide was investigated and drafted with help from an AI agent. Every diagnostic command and the working fix have been run against the live HA pod and verified to work in this homelab. Treat the upstream-version claims, MAC OUIs, and code-path references as a starting point if you're applying this elsewhere — re-verify against current upstream before relying on them._

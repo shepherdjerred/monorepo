@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-06-pagerduty-alert-denoise
+type: reference
+status: complete
+board: false
+---
+
 # Plan: Fix / de-noise four PagerDuty homelab alerts
-
-## Status
-
-Complete (pending CI + deploy)
 
 ## Context
 

@@ -1,8 +1,11 @@
+---
+id: guide-2026-06-28-homelab-tofu-stack-addition
+type: guide
+status: complete
+board: false
+---
+
 # Adding a Homelab OpenTofu Stack
-
-## Status
-
-Complete (pattern from PR #1343: buildkite, arr, pagerduty).
 
 ## CI auto-applies on main — import first
 

@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-mario-kart-scale-1
+type: log
+status: complete
+board: false
+---
+
 # Scale discord-plays-mario-kart to 1 replica
-
-## Status
-
-Complete (PR open, awaiting merge)
 
 ## Context
 

@@ -1,3 +1,10 @@
+---
+id: log-2026-06-13-tailscale-acl-import-reconcile
+type: log
+status: complete
+board: false
+---
+
 # Tailscale ACL (PR #1045) — import, reconcile, validate
 
 ## Status: In Progress (module reconciled & validated; not yet applied / not yet in CI)

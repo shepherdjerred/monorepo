@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.13.1",
+  "version": "16.14.1",
   "data": {
     "Seraphine": {
       "id": "Seraphine",
@@ -481,6 +481,54 @@
           "name": "Firecracker Seraphine (Pearl)",
           "chromas": false,
           "parentSkin": 59
+        },
+        {
+          "id": "147068",
+          "num": 68,
+          "name": "T1 Seraphine",
+          "chromas": true
+        },
+        {
+          "id": "147070",
+          "num": 70,
+          "name": "T1 Seraphine (Elite)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
+          "id": "147071",
+          "num": 71,
+          "name": "T1 Seraphine (Pearl)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
+          "id": "147072",
+          "num": 72,
+          "name": "T1 Seraphine (Ruby)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
+          "id": "147073",
+          "num": 73,
+          "name": "T1 Seraphine (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
+          "id": "147074",
+          "num": 74,
+          "name": "T1 Seraphine (Catseye)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
+          "id": "147075",
+          "num": 75,
+          "name": "T1 Seraphine (Sapphire)",
+          "chromas": false,
+          "parentSkin": 68
         }
       ],
       "lore": "Born in Piltover to Zaunite parents, Seraphine can hear the souls of others—the world sings to her, and she sings back. Though these sounds overwhelmed her in her youth, she now draws on them for inspiration, turning the chaos into a symphony. She performs for the sister cities to remind their citizens that they're not alone, that they're stronger together, and that, in her eyes, their potential is limitless.",

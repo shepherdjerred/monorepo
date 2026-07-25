@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-03-mac-mini-buildkite-agent
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Mac Mini → Buildkite CI agent
-
-## Status
-
-In Progress
 
 ## Goal
 
@@ -78,3 +83,7 @@ Linux/Dagger in-cluster; there is no macOS runner.
 - No `.swiftlint.yml` in `ios/` — first real `--strict` run may fail; add a
   config or start `soft_fail: true`.
 - Native execution has no ephemeral-pod isolation; Tart is the later upgrade.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Mac Mini → Buildkite CI agent`.

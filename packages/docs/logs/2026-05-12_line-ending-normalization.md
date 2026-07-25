@@ -1,8 +1,11 @@
+---
+id: log-2026-05-12-line-ending-normalization
+type: log
+status: complete
+board: false
+---
+
 # Line-ending normalization sweep
-
-## Status
-
-Complete
 
 ## Context
 

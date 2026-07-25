@@ -1,9 +1,11 @@
 import {
-  REPORT_EXAMPLES,
   REPORT_FILTERS,
+  REPORT_FUNCTIONS,
   REPORT_GROUP_BYS,
   REPORT_KEYWORDS,
   REPORT_METRICS,
+  REPORT_RENDER_KINDS,
+  REPORT_RENDER_OPTIONS,
   REPORT_SOURCES,
   reportQueueValues,
 } from "@scout-for-lol/data";
@@ -13,10 +15,9 @@ import {
   CardHeader,
   CardTitle,
 } from "#src/components/ui/card.tsx";
-import { Button } from "#src/components/ui/button.tsx";
 
 const GRAMMAR =
-  "SELECT <metrics> FROM <source> [WHERE <filter> AND …] GROUP BY <field> [ORDER BY <metric|label> ASC|DESC] [LIMIT <n>]";
+  "SELECT <metric|expression [AS alias]>, … FROM <source> [WHERE <row filter> AND …] GROUP BY <field>[, <field>] [HAVING <output> <operator> <value>] [ORDER BY <output|label> ASC|DESC] [LIMIT <n>] [RENDER <kind> [WITH (<options>)]]";
 
 type DefinitionItem = { term: string; description: string };
 
@@ -49,10 +50,7 @@ function DocsSection(props: { title: string; items: DefinitionItem[] }) {
   );
 }
 
-export function ReportQueryDocs(props: {
-  onUseExample?: (query: string) => void;
-}) {
-  const { onUseExample } = props;
+export function ReportQueryDocs() {
   return (
     <div className="space-y-3">
       <Card>
@@ -64,8 +62,10 @@ export function ReportQueryDocs(props: {
             {GRAMMAR}
           </pre>
           <p className="mt-2 text-xs text-muted-foreground">
-            Keywords are case-insensitive. WHERE clauses are AND-joined. ORDER
-            BY defaults to <span className="font-mono">games DESC</span>.
+            Keywords are case-insensitive. WHERE filters raw rows; HAVING
+            filters aggregates and aliases. Arithmetic supports parentheses and
+            <span className="font-mono"> + − × ÷</span>. Temporal grouping uses
+            UTC day, week, and month buckets.
           </p>
         </CardContent>
       </Card>
@@ -87,6 +87,14 @@ export function ReportQueryDocs(props: {
       />
 
       <DocsSection
+        title="Calculated outputs"
+        items={REPORT_FUNCTIONS.map((fn) => ({
+          term: fn.syntax,
+          description: fn.description,
+        }))}
+      />
+
+      <DocsSection
         title="Group by"
         items={REPORT_GROUP_BYS.map((groupBy) => ({
           term: groupBy.id,
@@ -99,6 +107,22 @@ export function ReportQueryDocs(props: {
         items={REPORT_FILTERS.map((filter) => ({
           term: filter.syntax,
           description: filter.description,
+        }))}
+      />
+
+      <DocsSection
+        title="Render kinds"
+        items={REPORT_RENDER_KINDS.map((kind) => ({
+          term: kind.id,
+          description: kind.description,
+        }))}
+      />
+
+      <DocsSection
+        title="Render options (WITH)"
+        items={REPORT_RENDER_OPTIONS.map((option) => ({
+          term: option.syntax,
+          description: option.description,
         }))}
       />
 
@@ -117,36 +141,6 @@ export function ReportQueryDocs(props: {
           description: queue.label,
         }))}
       />
-
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Examples</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {REPORT_EXAMPLES.map((example) => (
-            <div key={example.title} className="space-y-1">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-medium">{example.title}</span>
-                {onUseExample !== undefined && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      onUseExample(example.query);
-                    }}
-                  >
-                    Use
-                  </Button>
-                )}
-              </div>
-              <pre className="overflow-auto whitespace-pre-wrap rounded-md bg-muted/50 p-2 text-xs">
-                {example.query}
-              </pre>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
     </div>
   );
 }

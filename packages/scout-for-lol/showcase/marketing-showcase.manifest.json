@@ -20,8 +20,8 @@
       "queue": "draft pick",
       "playerCount": 1,
       "kind": "s3-image",
-      "imageKey": "games/2026/06/19/NA1_5584777006/report.png",
-      "dataKey": "games/2026/06/19/NA1_5584777006/match.json"
+      "imageKey": "games/2026/07/19/NA1_5604592049/report.png",
+      "dataKey": "games/2026/07/19/NA1_5604592049/match.json"
     },
     {
       "id": "ranked-solo-1-prematch",
@@ -31,8 +31,8 @@
       "queue": "solo",
       "playerCount": 1,
       "kind": "s3-image",
-      "imageKey": "prematch/2026/06/19/8265530852/loading-screen.png",
-      "dataKey": "prematch/2026/06/19/8265530852/spectator-data.json"
+      "imageKey": "prematch/2026/07/19/7923587531/loading-screen.png",
+      "dataKey": "prematch/2026/07/19/7923587531/spectator-data.json"
     },
     {
       "id": "ranked-solo-1-postmatch",
@@ -42,8 +42,8 @@
       "queue": "solo",
       "playerCount": 1,
       "kind": "s3-image",
-      "imageKey": "games/2026/06/19/SG2_159780129/report.png",
-      "dataKey": "games/2026/06/19/SG2_159780129/match.json"
+      "imageKey": "games/2026/07/19/NA1_5604726742/report.png",
+      "dataKey": "games/2026/07/19/NA1_5604726742/match.json"
     },
     {
       "id": "ranked-solo-2-prematch",
@@ -53,8 +53,8 @@
       "queue": "solo",
       "playerCount": 2,
       "kind": "s3-image",
-      "imageKey": "prematch/2026/06/09/8252677004/loading-screen.png",
-      "dataKey": "prematch/2026/06/09/8252677004/spectator-data.json"
+      "imageKey": "prematch/2026/07/19/7923708071/loading-screen.png",
+      "dataKey": "prematch/2026/07/19/7923708071/spectator-data.json"
     },
     {
       "id": "ranked-solo-2-postmatch",
@@ -75,8 +75,8 @@
       "queue": "flex",
       "playerCount": 1,
       "kind": "s3-image",
-      "imageKey": "prematch/2026/06/19/3253854232/loading-screen.png",
-      "dataKey": "prematch/2026/06/19/3253854232/spectator-data.json"
+      "imageKey": "prematch/2026/07/19/7923487464/loading-screen.png",
+      "dataKey": "prematch/2026/07/19/7923487464/spectator-data.json"
     },
     {
       "id": "ranked-flex-1-postmatch",
@@ -86,8 +86,8 @@
       "queue": "flex",
       "playerCount": 1,
       "kind": "s3-image",
-      "imageKey": "games/2026/06/19/BR1_3253854232/report.png",
-      "dataKey": "games/2026/06/19/BR1_3253854232/match.json"
+      "imageKey": "games/2026/07/19/EUW1_7923487464/report.png",
+      "dataKey": "games/2026/07/19/EUW1_7923487464/match.json"
     },
     {
       "id": "ranked-flex-2-prematch",
@@ -225,8 +225,8 @@
       "queue": "aram mayhem",
       "playerCount": 1,
       "kind": "s3-image",
-      "imageKey": "prematch/2026/06/19/7892744393/loading-screen.png",
-      "dataKey": "prematch/2026/06/19/7892744393/spectator-data.json"
+      "imageKey": "prematch/2026/07/19/7923661660/loading-screen.png",
+      "dataKey": "prematch/2026/07/19/7923661660/spectator-data.json"
     },
     {
       "id": "aram-mayhem-postmatch",
@@ -293,8 +293,8 @@
       "queue": "solo",
       "playerCount": 1,
       "kind": "discord-screenshot",
-      "imageKey": "games/2026/06/19/SG2_159780129/report.png",
-      "dataKey": "games/2026/06/19/SG2_159780129/match.json",
+      "imageKey": "games/2026/07/19/NA1_5604726742/report.png",
+      "dataKey": "games/2026/07/19/NA1_5604726742/match.json",
       "timestamp": "11:48 PM",
       "appName": "Scout for LoL",
       "appNameColor": "#ff5a1f",
@@ -406,18 +406,18 @@
       "description": "Damage to champions across your group's recent games.",
       "kind": "report-graph",
       "matchKeys": [
-        "games/2026/06/19/SG2_159780129/match.json",
-        "games/2026/06/19/NA1_5585223425/match.json",
-        "games/2026/06/19/NA1_5585136555/match.json",
-        "games/2026/06/19/NA1_5585117341/match.json",
-        "games/2026/06/19/NA1_5584777006/match.json",
-        "games/2026/06/19/KR_8265530852/match.json",
-        "games/2026/06/19/KR_8265455467/match.json",
-        "games/2026/06/19/KR_8265419481/match.json",
-        "games/2026/06/19/KR_8265390134/match.json",
-        "games/2026/06/19/KR_8265351671/match.json",
-        "games/2026/06/19/KR_8265281667/match.json",
-        "games/2026/06/19/KR_8265247249/match.json"
+        "games/2026/07/19/NA1_5604726742/match.json",
+        "games/2026/07/19/NA1_5604719445/match.json",
+        "games/2026/07/19/NA1_5604670462/match.json",
+        "games/2026/07/19/NA1_5604657119/match.json",
+        "games/2026/07/19/NA1_5604642441/match.json",
+        "games/2026/07/19/NA1_5604633084/match.json",
+        "games/2026/07/19/NA1_5604626966/match.json",
+        "games/2026/07/19/NA1_5604592049/match.json",
+        "games/2026/07/19/NA1_5604585537/match.json",
+        "games/2026/07/19/NA1_5604581118/match.json",
+        "games/2026/07/19/NA1_5604569082/match.json",
+        "games/2026/07/19/KR_8306233326/match.json"
       ],
       "metric": "damage_to_champions",
       "yAxisLabel": "Damage to Champions"

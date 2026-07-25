@@ -1,4 +1,4 @@
-import { watch, type FSWatcher } from "node:fs";
+import { watch } from "node:fs";
 import { isVaultMarkdownPath } from "./vault-files.ts";
 
 /**
@@ -29,10 +29,29 @@ export type WatcherOptions = {
   maxWaitMs?: number;
   safetyRescanMs?: number;
   rearmDelayMs?: number;
+  watchSource?: VaultWatchSource;
 };
 
 export type VaultWatcher = {
   close: () => void;
+};
+
+type WatchHandle = {
+  close: () => void;
+};
+
+export type VaultWatchSource = (
+  vaultPath: string,
+  onChange: (filename: string | null) => void,
+  onError: (error: unknown) => void,
+) => WatchHandle;
+
+const nodeWatchSource: VaultWatchSource = (vaultPath, onChange, onError) => {
+  const watcher = watch(vaultPath, { recursive: true }, (_event, filename) => {
+    onChange(filename);
+  });
+  watcher.on("error", onError);
+  return watcher;
 };
 
 export function watchVault(
@@ -44,8 +63,9 @@ export function watchVault(
   const maxWaitMs = options.maxWaitMs ?? 1000;
   const safetyRescanMs = options.safetyRescanMs ?? 10 * 60 * 1000;
   const rearmDelayMs = options.rearmDelayMs ?? 1000;
+  const watchSource = options.watchSource ?? nodeWatchSource;
 
-  let watcher: FSWatcher | null = null;
+  let watcher: WatchHandle | null = null;
   let closed = false;
   let pending = new Set<string>();
   let needsFullRescan = false;
@@ -73,29 +93,32 @@ export function watchVault(
   function arm(): void {
     if (closed) return;
     try {
-      watcher = watch(vaultPath, { recursive: true }, (_event, filename) => {
-        if (filename === null) {
+      watcher = watchSource(
+        vaultPath,
+        (filename) => {
+          if (filename === null) {
+            needsFullRescan = true;
+            schedule();
+            return;
+          }
+          const relPath = filename.split("\\").join("/");
+          // Same eligibility rule as the full rescan: skip non-.md files and
+          // anything under a dot/underscore directory at ANY depth (the old
+          // first-character check missed nested hidden dirs).
+          if (!isVaultMarkdownPath(relPath)) return;
+          pending.add(relPath);
+          schedule();
+        },
+        (error) => {
+          events.onError?.(error);
+          watcher?.close();
+          watcher = null;
+          // The watch itself may have missed events while broken.
           needsFullRescan = true;
           schedule();
-          return;
-        }
-        const relPath = filename.split("\\").join("/");
-        // Same eligibility rule as the full rescan: skip non-.md files and
-        // anything under a dot/underscore directory at ANY depth (the old
-        // first-character check missed nested hidden dirs).
-        if (!isVaultMarkdownPath(relPath)) return;
-        pending.add(relPath);
-        schedule();
-      });
-      watcher.on("error", (error) => {
-        events.onError?.(error);
-        watcher?.close();
-        watcher = null;
-        // The watch itself may have missed events while broken.
-        needsFullRescan = true;
-        schedule();
-        setTimeout(arm, rearmDelayMs);
-      });
+          setTimeout(arm, rearmDelayMs);
+        },
+      );
     } catch (error) {
       events.onError?.(error);
       setTimeout(arm, rearmDelayMs);

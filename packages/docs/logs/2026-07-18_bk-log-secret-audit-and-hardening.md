@@ -1,8 +1,11 @@
+---
+id: log-2026-07-18-bk-log-secret-audit-and-hardening
+type: log
+status: complete
+board: false
+---
+
 # Buildkite log secret audit + leak-prevention hardening
-
-## Status
-
-In Progress
 
 ## Context
 

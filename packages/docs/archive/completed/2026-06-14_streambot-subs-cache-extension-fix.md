@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-14-streambot-subs-cache-extension-fix
+type: reference
+status: complete
+board: false
+---
+
 # Fix streambot embedded-subtitle extraction (broken cache filename)
-
-## Status
-
-Complete — shipped in PR #1242.
 
 ## Context
 

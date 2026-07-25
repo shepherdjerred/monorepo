@@ -1,3 +1,5 @@
+import { disarmGitHooks } from "./bot-clone.ts";
+
 export type GitRunOptions = {
   cwd: string;
   env?: Record<string, string | undefined>;
@@ -67,6 +69,17 @@ export async function writeGitAskpass(tempDir: string): Promise<string> {
   return path;
 }
 
+// Porcelain v1 lines are `XY<space>PATH` — a 2-char status field plus one
+// space, so the path always starts at index 3. Do NOT trim first: a
+// worktree-modified file is ` M path` (leading space), and trimming would
+// shift the slice one character into the path.
+export function parsePorcelainPaths(status: string): string[] {
+  return status
+    .split("\n")
+    .filter((line) => line.trim() !== "")
+    .map((line) => line.slice(3));
+}
+
 export async function changedFilesInPaths(
   repoDir: string,
   paths: readonly string[],
@@ -75,11 +88,7 @@ export async function changedFilesInPaths(
     ["git", "status", "--porcelain", "--", ...paths],
     { cwd: repoDir },
   );
-  return status
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line !== "")
-    .map((line) => line.slice(3));
+  return parsePorcelainPaths(status);
 }
 
 export async function getUnifiedDiff(
@@ -131,6 +140,10 @@ export async function openSeasonRefreshPr(
   await runCommand(["git", "add", "--", ...input.files], {
     cwd: input.repoDir,
   });
+  // Disarm hooks right before the commit, not just via rootInstallWithoutHooks
+  // earlier — an agentic Claude/Codex step upstream of this call may have
+  // armed them on its own initiative (e.g. running a plain `bun install`).
+  await disarmGitHooks(input.repoDir);
   await runCommand(["git", "commit", "-m", input.title], {
     cwd: input.repoDir,
   });

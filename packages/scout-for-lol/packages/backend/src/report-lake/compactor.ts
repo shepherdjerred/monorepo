@@ -1,6 +1,5 @@
 import { copyFile, link, mkdir, readdir, unlink } from "node:fs/promises";
 import path from "node:path";
-import { RawCurrentGameInfoSchema, RawMatchSchema } from "@scout-for-lol/data";
 import { prisma as defaultPrisma } from "#src/database/index.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -9,11 +8,17 @@ import {
   reportLakeCompactionSkippedTotal,
   reportLakeLastPublishTimestamp,
 } from "#src/metrics/report-lake.ts";
+import { accountToLakeRow } from "#src/report-lake/flatten.ts";
+import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
+import configuration from "#src/configuration.ts";
+import { createS3Client } from "#src/storage/s3-client.ts";
 import {
-  accountToLakeRow,
-  flattenMatch,
-  flattenPrematch,
-} from "#src/report-lake/flatten.ts";
+  populateMatchesFromS3,
+  populateMatchesFromSqlite,
+  populatePrematchFromS3,
+  populatePrematchFromSqlite,
+  type RebuildSource,
+} from "#src/report-lake/rebuild-sources.ts";
 import {
   buildDirPath,
   ensureLakeScaffold,
@@ -34,16 +39,15 @@ import {
 import {
   listStagingFiles,
   removeFoldedStagingFiles,
-  stagingIdForMatch,
-  stagingIdForPrematch,
 } from "#src/report-lake/staging.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 
 const logger = createLogger("report-lake-compactor");
 
 const GC_KEEP_BUILDS = 2;
-const REBUILD_PAGE_SIZE = 500;
-const COMPACTION_TIMEOUT_MS = 10 * 60 * 1000;
+// A full-history rebuild now enumerates + fetches every raw object from S3,
+// which is slower than the old local SQLite scan — give it a generous ceiling.
+const COMPACTION_TIMEOUT_MS = 30 * 60 * 1000;
 
 export type CompactionSummary = {
   buildId: string;
@@ -95,38 +99,6 @@ async function linkTreeContents(srcDir: string, dstDir: string): Promise<void> {
     } catch {
       await copyFile(src, dst);
     }
-  }
-}
-
-class NdjsonFileWriter {
-  private readonly writer: Bun.FileSink;
-  private buffered: string[] = [];
-  rows = 0;
-
-  constructor(readonly filePath: string) {
-    this.writer = Bun.file(filePath).writer();
-  }
-
-  write(row: object): void {
-    this.buffered.push(JSON.stringify(row));
-    this.rows += 1;
-    if (this.buffered.length >= 2000) {
-      this.flush();
-    }
-  }
-
-  private flush(): void {
-    if (this.buffered.length > 0) {
-      // FileSink.write buffers internally and only returns a promise under
-      // backpressure; end() in close() flushes everything either way.
-      void this.writer.write(this.buffered.join("\n") + "\n");
-      this.buffered = [];
-    }
-  }
-
-  async close(): Promise<void> {
-    this.flush();
-    await this.writer.end();
   }
 }
 
@@ -248,7 +220,7 @@ async function readStagingRows(
     }
     if (!fileOk) {
       // Leave the file for the nightly rebuild path, which re-derives the
-      // same data from the Stored* tables; count it so drift is visible.
+      // same data from S3; count it so drift is visible.
       reportLakeCompactionSkippedTotal.inc({ table });
       skipped += 1;
       logger.warn(`Staging file failed validation, leaving for rebuild`, {
@@ -320,7 +292,7 @@ export async function runReportLakeFold(
     const currentDir = await readCurrentBuildDir(lakeDir);
     if (currentDir === undefined) {
       logger.info("No published build yet; folding via full rebuild");
-      return await rebuildLocked(prisma, lakeDir, startedAt);
+      return await rebuildLocked(prisma, lakeDir, startedAt, "s3");
     }
 
     const buildId = newBuildId();
@@ -368,9 +340,9 @@ export async function runReportLakeFold(
 }
 
 /**
- * Tier 2 — full rebuild from the Stored* tables. The recovery and
- * consolidation path: picks up schema changes, squashes fold-file
- * fragmentation, and re-derives everything from canonical raw JSON.
+ * Tier 2 — full rebuild by enumerating the canonical raw JSON from S3. The
+ * recovery and consolidation path: picks up schema changes, squashes fold-file
+ * fragmentation, and re-derives the entire lake from scratch.
  */
 export async function runReportLakeRebuild(
   options: CompactionOptions = {},
@@ -379,7 +351,25 @@ export async function runReportLakeRebuild(
     const prisma = options.prisma ?? defaultPrisma;
     const lakeDir = options.lakeDir ?? resolveLakeDir();
     await ensureLakeScaffold(lakeDir);
-    return await rebuildLocked(prisma, lakeDir, Date.now());
+    return await rebuildLocked(prisma, lakeDir, Date.now(), "s3");
+  });
+}
+
+/**
+ * Rebuild the lake from the legacy SQLite Stored* tables instead of S3. Kept
+ * ONLY for the rebuild-parity script (`scripts/report-lake-rebuild-parity.ts`),
+ * which diffs a SQLite-sourced rebuild against an S3-sourced one before the
+ * destructive table drop (PR-B). Not wired into any cron; removed with the
+ * tables in PR-B.
+ */
+export async function runReportLakeRebuildFromSqlite(
+  options: CompactionOptions = {},
+): Promise<CompactionSummary | null> {
+  return await withCompactionLock(async () => {
+    const prisma = options.prisma ?? defaultPrisma;
+    const lakeDir = options.lakeDir ?? resolveLakeDir();
+    await ensureLakeScaffold(lakeDir);
+    return await rebuildLocked(prisma, lakeDir, Date.now(), "sqlite");
   });
 }
 
@@ -387,91 +377,54 @@ async function rebuildLocked(
   prisma: ExtendedPrismaClient,
   lakeDir: string,
   startedAt: number,
+  source: RebuildSource,
 ): Promise<CompactionSummary> {
   const buildId = newBuildId();
   const buildDir = buildDirPath(lakeDir, buildId);
   await mkdir(buildDir, { recursive: true });
 
-  // --- Matches ---
   const matchesTmp = path.join(buildDir, "matches.ndjson.tmp");
   const matchWriter = new NdjsonFileWriter(matchesTmp);
   const foldedMatchIds = new Set<string>();
-  let skippedMatches = 0;
-  let matchCursor: string | undefined;
-  for (;;) {
-    const page = await prisma.storedMatch.findMany({
-      take: REBUILD_PAGE_SIZE,
-      ...(matchCursor === undefined
-        ? {}
-        : { cursor: { matchId: matchCursor }, skip: 1 }),
-      orderBy: { matchId: "asc" },
-      select: { matchId: true, rawJson: true },
-    });
-    if (page.length === 0) {
-      break;
-    }
-    matchCursor = page.at(-1)?.matchId;
-    for (const stored of page) {
-      const rawParsed: unknown = JSON.parse(stored.rawJson);
-      const parsed = RawMatchSchema.safeParse(rawParsed);
-      if (!parsed.success) {
-        skippedMatches += 1;
-        reportLakeCompactionSkippedTotal.inc({ table: "matches" });
-        logger.warn(
-          `Skipping stored match ${stored.matchId}: rawJson failed validation`,
-          {
-            issue: parsed.error.issues[0],
-          },
-        );
-        continue;
-      }
-      for (const row of flattenMatch(parsed.data)) {
-        matchWriter.write(row);
-      }
-      foldedMatchIds.add(stagingIdForMatch(stored.matchId));
-    }
-  }
-  await matchWriter.close();
-
-  // --- Prematches ---
   const prematchTmp = path.join(buildDir, "prematch.ndjson.tmp");
   const prematchWriter = new NdjsonFileWriter(prematchTmp);
   const foldedPrematchIds = new Set<string>();
-  let skippedPrematches = 0;
-  let prematchCursor: number | undefined;
-  for (;;) {
-    const page = await prisma.storedPrematch.findMany({
-      take: REBUILD_PAGE_SIZE,
-      ...(prematchCursor === undefined
-        ? {}
-        : { cursor: { id: prematchCursor }, skip: 1 }),
-      orderBy: { id: "asc" },
-      select: { id: true, dedupeKey: true, observedAt: true, rawJson: true },
-    });
-    if (page.length === 0) {
-      break;
+
+  let skippedMatches: number;
+  let skippedPrematches: number;
+  if (source === "sqlite") {
+    skippedMatches = await populateMatchesFromSqlite(
+      prisma,
+      matchWriter,
+      foldedMatchIds,
+    );
+    skippedPrematches = await populatePrematchFromSqlite(
+      prisma,
+      prematchWriter,
+      foldedPrematchIds,
+    );
+  } else {
+    const bucket = configuration.s3BucketName;
+    if (bucket === undefined) {
+      throw new Error(
+        "S3_BUCKET_NAME not configured — cannot rebuild the report lake from S3.",
+      );
     }
-    prematchCursor = page.at(-1)?.id;
-    for (const stored of page) {
-      const rawParsed: unknown = JSON.parse(stored.rawJson);
-      const parsed = RawCurrentGameInfoSchema.safeParse(rawParsed);
-      if (!parsed.success) {
-        skippedPrematches += 1;
-        reportLakeCompactionSkippedTotal.inc({ table: "prematch" });
-        logger.warn(
-          `Skipping stored prematch ${stored.dedupeKey}: rawJson failed validation`,
-          {
-            issue: parsed.error.issues[0],
-          },
-        );
-        continue;
-      }
-      for (const row of flattenPrematch(parsed.data, stored.observedAt)) {
-        prematchWriter.write(row);
-      }
-      foldedPrematchIds.add(stagingIdForPrematch(stored.dedupeKey));
-    }
+    const client = createS3Client();
+    skippedMatches = await populateMatchesFromS3(
+      client,
+      bucket,
+      matchWriter,
+      foldedMatchIds,
+    );
+    skippedPrematches = await populatePrematchFromS3(
+      client,
+      bucket,
+      prematchWriter,
+      foldedPrematchIds,
+    );
   }
+  await matchWriter.close();
   await prematchWriter.close();
 
   // --- NDJSON -> partitioned parquet ---
@@ -518,7 +471,7 @@ async function rebuildLocked(
 
   const durationMs = Date.now() - startedAt;
   logger.info(
-    `Rebuild published build ${buildId} (${matchWriter.rows.toString()} match rows, ${prematchWriter.rows.toString()} prematch rows, ${skippedMatches.toString()} skipped) in ${durationMs.toString()}ms`,
+    `Rebuild (${source}) published build ${buildId} (${matchWriter.rows.toString()} match rows, ${prematchWriter.rows.toString()} prematch rows, ${skippedMatches.toString()} skipped) in ${durationMs.toString()}ms`,
   );
   return { ...summary, durationMs };
 }

@@ -1,6 +1,13 @@
+---
+id: reference-completed-2026-05-20-fix-sjer-red-rss-head-405
+type: reference
+status: complete
+board: false
+---
+
 # Fix `https://sjer.red/rss.xml` reported as "page not found" — proper s3proxy patch
 
-## Status
+## Status Notes (Historical)
 
 **Complete** — all plan-scoped work verified shipped to `main` during the 2026-06-06 docs groom; archived to `archive/completed/`. Original tracking status preserved below.
 

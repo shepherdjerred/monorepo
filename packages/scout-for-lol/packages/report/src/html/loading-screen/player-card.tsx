@@ -173,10 +173,7 @@ export function PlayerCard({
   variant?: PlayerCardVariant;
 }) {
   const sizing = PLAYER_CARD_SIZING[variant];
-  const splashArt = getChampionLoadingImage(
-    participant.championName,
-    participant.skinNum,
-  );
+  const splashArt = getChampionLoadingImage(participant.championName);
 
   const borderColor = participant.isTrackedPlayer
     ? palette.gold.bright

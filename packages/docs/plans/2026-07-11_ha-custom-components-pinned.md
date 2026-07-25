@@ -1,9 +1,13 @@
+---
+id: plan-2026-07-11-ha-custom-components-pinned
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Generalize HA custom-component installs to the pinned-tarball model; patch-file eufy_security and Mysa (no forks)
-
-## Status
-
-Partially Complete — implementation done, tested, and PR opened. Deploy verification (post-merge) and
-manual `shepherdjerred/Mysa_HA` repo deletion are outstanding.
 
 ## Context
 
@@ -276,3 +280,7 @@ shepherdjerred/Mysa_HA` → repository no longer resolves.
 - Did not verify the `frontend: extra_module_url:` + `default_config:` interaction against a real running
   HA instance (only inferred from HA docs); flagged in the plan as worth confirming post-deploy if the
   icon pack doesn't render.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Generalize HA custom-component installs to the pinned-tarball model; patch-file eufy_security and Mysa (no forks)`.

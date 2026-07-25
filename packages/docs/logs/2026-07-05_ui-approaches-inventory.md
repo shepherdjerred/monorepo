@@ -1,8 +1,11 @@
+---
+id: log-2026-07-05-ui-approaches-inventory
+type: log
+status: complete
+board: false
+---
+
 # UI Approaches Inventory
-
-## Status
-
-Complete
 
 ## Summary
 

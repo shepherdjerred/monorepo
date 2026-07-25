@@ -1,7 +1,6 @@
-import React, { useCallback, useMemo, useState } from "react";
-import { View, Alert, StyleSheet } from "react-native";
+import React, { useMemo, useState } from "react";
+import { View, StyleSheet } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { TaskId } from "../domain/types";
 import type { RootStackParamList } from "../navigation/types";
 import {
   EMPTY_FILTER,
@@ -11,8 +10,7 @@ import {
 } from "../domain/filters";
 import { projectDisplayName, projectMatches } from "tasknotes-types/v2";
 
-import { useTasks } from "../hooks/use-tasks";
-import { feedbackTaskDelete } from "../lib/feedback";
+import { useTaskListScreen } from "../hooks/use-task-list-screen";
 import { TaskList } from "../components/task/TaskList";
 import { FilterSortBar } from "../components/input/FilterSortBar";
 
@@ -22,12 +20,15 @@ export function ProjectDetailScreen({ route, navigation }: Props) {
   const { projectName } = route.params;
   const {
     taskList,
-    toggleTask,
-    deleteTask,
     projectNames,
     contextNames,
     tagNames,
-  } = useTasks();
+    dayCounts,
+    handlePress,
+    handleToggle,
+    handleDelete,
+    handleSchedule,
+  } = useTaskListScreen(navigation);
   const [filter, setFilter] = useState(EMPTY_FILTER);
   const [sort, setSort] = useState(DEFAULT_SORT);
 
@@ -42,37 +43,6 @@ export function ProjectDetailScreen({ route, navigation }: Props) {
   const displayTasks = useMemo(
     () => applySort(applyFilter(projectTasks, filter), sort),
     [projectTasks, filter, sort],
-  );
-
-  const handlePress = useCallback(
-    (id: TaskId) => {
-      navigation.navigate("TaskDetail", { taskId: id });
-    },
-    [navigation],
-  );
-
-  const handleToggle = useCallback(
-    (id: TaskId) => {
-      void toggleTask(id);
-    },
-    [toggleTask],
-  );
-
-  const handleDelete = useCallback(
-    (id: TaskId) => {
-      Alert.alert("Delete Task", "Are you sure you want to delete this task?", [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            feedbackTaskDelete();
-            void deleteTask(id);
-          },
-        },
-      ]);
-    },
-    [deleteTask],
   );
 
   React.useEffect(() => {
@@ -95,6 +65,8 @@ export function ProjectDetailScreen({ route, navigation }: Props) {
         onTaskPress={handlePress}
         onTaskToggle={handleToggle}
         onTaskDelete={handleDelete}
+        onTaskSchedule={handleSchedule}
+        dayCounts={dayCounts}
         emptyTitle="No tasks in this project"
       />
     </View>

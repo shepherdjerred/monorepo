@@ -1,8 +1,11 @@
+---
+id: log-2026-07-10-qbittorrent-startup-probe-crashloop
+type: log
+status: complete
+board: false
+---
+
 # qbittorrent CrashLoopBackOff — startup probe too aggressive
-
-## Status
-
-Partially Complete
 
 ## What happened
 

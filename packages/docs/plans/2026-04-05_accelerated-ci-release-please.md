@@ -1,3 +1,12 @@
+---
+id: plan-2026-04-05-accelerated-ci-release-please
+type: plan
+status: planned
+board: true
+verification: agent
+disposition: active
+---
+
 # Accelerated CI for Release-Please and Version Commit-Back PRs
 
 **Date:** 2026-04-05
@@ -45,3 +54,7 @@ In `scripts/ci/src/pipeline-builder.ts`, when `accelerated`:
 - release-please PRs may also touch `Cargo.toml` for Rust packages
 - version-commit-back PRs only touch `versions.ts`
 - The accelerated pipeline should still run release-please itself (to ensure the PR is up to date)
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Accelerated CI for Release-Please and Version Commit-Back PRs`.

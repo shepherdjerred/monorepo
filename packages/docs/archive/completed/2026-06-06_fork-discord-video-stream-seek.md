@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-06-fork-discord-video-stream-seek
+type: reference
+status: complete
+board: false
+---
+
 # Fork `@dank074/discord-video-stream` → `@shepherdjerred/discord-video-stream` and add seamless seek
-
-## Status
-
-Complete — merged to main; streambot /stream seek via the forked @shepherdjerred/discord-video-stream.
 
 ## Context
 

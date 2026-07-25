@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.13.1",
+  "version": "16.14.1",
   "data": {
     "Shyvana": {
       "id": "Shyvana",
@@ -792,7 +792,7 @@
         "name": "Scalemail",
         "description": "Takedowns on enemy champions, large minions, and large monsters grant Shyvana Scalemail stacks, improving her defenses.",
         "image": {
-          "full": "Shyvana_Passive.Shyvana_Rework.png",
+          "full": "Shyvana_Passive.png",
           "sprite": "passive4.png",
           "group": "passive",
           "x": 96,

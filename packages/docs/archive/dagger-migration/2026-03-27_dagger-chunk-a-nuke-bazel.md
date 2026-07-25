@@ -1,3 +1,10 @@
+---
+id: reference-dagger-migration-2026-03-27-dagger-chunk-a-nuke-bazel
+type: reference
+status: complete
+board: false
+---
+
 # Chunk A: Nuke Bazel
 
 **Wave:** 1 (parallel with R, B, C)

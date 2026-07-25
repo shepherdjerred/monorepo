@@ -1,3 +1,10 @@
+---
+id: reference-bazel-2026-02-22-buildkite
+type: reference
+status: complete
+board: false
+---
+
 # Plan: Buildkite Dynamic Pipeline for Granular Dagger CI Visibility
 
 ## Status: Implemented (Python-based, 2026-03-19)

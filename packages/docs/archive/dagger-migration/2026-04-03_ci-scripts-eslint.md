@@ -1,3 +1,10 @@
+---
+id: reference-dagger-migration-2026-04-03-ci-scripts-eslint
+type: reference
+status: complete
+board: false
+---
+
 # Add ESLint Linting to `scripts/ci/`
 
 **Date:** 2026-04-03

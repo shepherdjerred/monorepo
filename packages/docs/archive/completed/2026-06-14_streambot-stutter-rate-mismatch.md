@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-14-streambot-stutter-rate-mismatch
+type: reference
+status: complete
+board: false
+---
+
 # Streambot 1-second freezes every few seconds
-
-## Status
-
-Complete — shipped in PR #1196.
 
 ## Context
 

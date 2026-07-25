@@ -1,8 +1,11 @@
+---
+id: log-2026-07-03-pr-1371-monaco-editor-bump
+type: log
+status: complete
+board: false
+---
+
 # PR #1371 — monaco-editor 0.52 → 0.55 fix-forward
-
-## Status
-
-In Progress
 
 ## Context
 

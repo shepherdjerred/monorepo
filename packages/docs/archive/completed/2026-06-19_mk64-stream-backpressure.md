@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-19-mk64-stream-backpressure
+type: reference
+status: complete
+board: false
+---
+
 # MK64 unplayable input lag (~20s) — root cause & fix
-
-## Status
-
-Complete — shipped in PR #1274. Worker-thread follow-up deferred (todos/mk64-emulator-worker-thread.md).
 
 ## Context
 

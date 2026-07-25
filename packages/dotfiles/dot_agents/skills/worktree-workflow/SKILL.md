@@ -7,6 +7,8 @@ description: |
 
 # Git Worktree Workflow Agent
 
+> **Branch & PR management in `shepherdjerred/monorepo` uses git-spice — every PR is a stacked PR, and a worktree holds one stack.** Load the `git-spice-helper` skill first (it's authoritative); create/update PRs with `git-spice branch/stack submit` — a single PR is a stack of one. The `gh pr create` and manual-`git rebase` examples below are the generic fallback for repos without git-spice.
+
 ## What's New in Git Worktree & AI Agents (2025)
 
 - **AI Agent Integration**: 4-5 parallel Claude Code agents working independently on different features

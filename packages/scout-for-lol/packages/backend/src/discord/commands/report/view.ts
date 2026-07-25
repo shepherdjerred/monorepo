@@ -53,16 +53,17 @@ export async function executeReportView(
       ? "none"
       : truncateDiscordMessage(report.lastRunError, 400);
   const renderKind = safeRenderKind(report.queryText);
+  const plan = parseAndCompile(report.queryText);
   await interaction.reply({
     content: [
       `#${report.id.toString()} **${report.title}**`,
       `Enabled: ${report.isEnabled ? "yes" : "no"}`,
       `Channel: <#${report.channelId}>`,
-      `Schedule: \`${report.cronExpression}\``,
+      `Schedule: \`${report.cronExpression}\` (${report.scheduleTimezone})`,
       `Next run: ${report.nextScheduledRunAt?.toISOString() ?? "not scheduled"}`,
       `Last status: ${status}`,
       `Last error: ${lastError}`,
-      `Display: ${renderKind}, lookback: ${report.lookbackDays.toString()} day(s), max rows: ${report.maxRows.toString()}`,
+      `Display: ${renderKind}, lookback: ${plan.lookbackDays.toString()} day(s), max rows: ${plan.limit.toString()}`,
       "Query:",
       `\`\`\`sql\n${truncateDiscordMessage(report.queryText, 1200)}\n\`\`\``,
     ].join("\n"),

@@ -1,8 +1,11 @@
+---
+id: log-2026-07-05-talos-selinux-audit-fix
+type: log
+status: complete
+board: false
+---
+
 # Talos SELinux Audit Log Fix
-
-## Status
-
-Partially Complete
 
 ## Summary
 

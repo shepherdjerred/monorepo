@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-10-pr-review-bot-cluster-key
+type: reference
+status: complete
+board: false
+---
+
 # PR Review Bot — Cluster-Key Utility (Phase 3 Prep)
-
-## Status
-
-Complete
 
 ## Context
 

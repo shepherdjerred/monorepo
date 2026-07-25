@@ -1,6 +1,13 @@
+---
+id: reference-completed-2026-06-14-pokebot-mk64-pool-refactor
+type: reference
+status: complete
+board: false
+---
+
 # Pokebot + MK64: on-demand `/play`, userbot pool, multi-tenant
 
-## Status
+## Status Notes (Historical)
 
 **Complete** (pending manual e2e verification) — branch `feature/pokebot-mk64-pool`, PR #1251.
 

@@ -4,6 +4,7 @@ import {
   By,
   From,
   Group,
+  Having,
   In,
   Limit,
   LParen,
@@ -17,19 +18,21 @@ import {
 } from "#src/model/report-query-lexer.ts";
 import {
   REPORT_FILTERS,
+  REPORT_FUNCTIONS,
   REPORT_GROUP_BYS,
   REPORT_KEYWORDS,
-  REPORT_METRICS,
   REPORT_RENDER_KINDS,
   REPORT_SOURCES,
   reportQueueValues,
 } from "#src/model/report-query-registry.ts";
+import { REPORT_METRICS } from "#src/model/report-query-metrics.ts";
 
 export type ReportCompletionKind =
   | "keyword"
   | "source"
   | "metric"
   | "field"
+  | "function"
   | "queue";
 
 export type ReportCompletionItem = {
@@ -46,6 +49,7 @@ type Region =
   | "where"
   | "queueValues"
   | "groupBy"
+  | "having"
   | "orderBy"
   | "limit"
   | "render";
@@ -59,11 +63,26 @@ export function completeReportQuery(
   const { tokens } = tokenizeReportQuery(text);
   return match(currentRegion(tokens, offset))
     .with("start", () => [keywordItem("SELECT")])
-    .with("select", () => [...metricItems(), labelItem(), keywordItem("FROM")])
+    .with("select", () => [
+      ...metricItems(),
+      ...functionItems(),
+      labelItem(),
+      keywordItem("FROM"),
+    ])
     .with("source", () => sourceItems())
     .with("where", () => whereStarterItems())
     .with("queueValues", () => queueItems())
-    .with("groupBy", () => [...fieldItems(), keywordItem("RENDER")])
+    .with("groupBy", () => [
+      ...fieldItems(),
+      keywordItem("HAVING"),
+      keywordItem("ORDER BY"),
+      keywordItem("RENDER"),
+    ])
+    .with("having", () => [
+      ...metricItems(),
+      keywordItem("ORDER BY"),
+      keywordItem("RENDER"),
+    ])
     .with("orderBy", () => [
       ...metricItems(),
       labelItem(),
@@ -85,6 +104,7 @@ function currentRegion(tokens: IToken[], offset: number): Region {
     ["source", keywordEnd(tokens, From)],
     ["where", keywordEnd(tokens, Where)],
     ["groupBy", twoWordKeywordEnd(tokens, Group)],
+    ["having", keywordEnd(tokens, Having)],
     ["orderBy", twoWordKeywordEnd(tokens, Order)],
     ["limit", keywordEnd(tokens, Limit)],
     ["render", keywordEnd(tokens, Render)],
@@ -139,6 +159,15 @@ function metricItems(): ReportCompletionItem[] {
     insertText: metric.id,
     detail: metric.label,
     kind: "metric",
+  }));
+}
+
+function functionItems(): ReportCompletionItem[] {
+  return REPORT_FUNCTIONS.map((fn) => ({
+    label: fn.id,
+    insertText: `${fn.id}(`,
+    detail: fn.syntax,
+    kind: "function",
   }));
 }
 

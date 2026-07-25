@@ -1,3 +1,10 @@
+---
+id: reference-dagger-migration-2026-03-27-dagger-chunk-f-java-latex-security
+type: reference
+status: complete
+board: false
+---
+
 # Chunk F: Java + LaTeX + Security Functions
 
 **Wave:** 2 (parallel with D, E)

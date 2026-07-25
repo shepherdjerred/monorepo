@@ -1,8 +1,11 @@
+---
+id: log-2026-06-14-pr-1212-claude-agent-sdk-0-3
+type: log
+status: complete
+board: false
+---
+
 # PR #1212 — @anthropic-ai/claude-agent-sdk ^0.3.0 tending
-
-## Status
-
-Complete
 
 ## Summary
 

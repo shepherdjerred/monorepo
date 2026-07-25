@@ -1,3 +1,10 @@
+---
+id: reference-homelab-audits-2026-05-02-homelab-health-audit
+type: reference
+status: complete
+board: false
+---
+
 # Homelab Health Audit - 2026-05-02
 
 Runbook: `guides/2026-04-04_homelab-audit-runbook.md`

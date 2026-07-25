@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-23-scout-marketing-news-update
+type: reference
+status: complete
+board: false
+---
+
 # Scout Marketing News Update
-
-## Status
-
-Complete
 
 ## Summary
 

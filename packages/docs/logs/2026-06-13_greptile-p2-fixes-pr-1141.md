@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-greptile-p2-fixes-pr-1141
+type: log
+status: complete
+board: false
+---
+
 # Greptile P2 Fixes — PR #1141 (helm-types-hygiene)
-
-## Status
-
-Partially Complete
 
 ## Context
 

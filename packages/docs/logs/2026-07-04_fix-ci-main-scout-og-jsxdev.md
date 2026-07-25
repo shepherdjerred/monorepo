@@ -1,8 +1,11 @@
+---
+id: log-2026-07-04-fix-ci-main-scout-og-jsxdev
+type: log
+status: complete
+board: false
+---
+
 # Fix CI on main — scout-for-lol OG template `jsxDEV` deploy failure
-
-## Status
-
-Complete (blocker fixed; soft-fail advisories triaged out of scope)
 
 ## Context
 

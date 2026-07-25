@@ -1,6 +1,13 @@
+---
+id: log-2026-06-13-suppressions-ignore-inventory
+type: log
+status: complete
+board: false
+---
+
 # Suppression & Ignore-Config Inventory — 2026-06-13
 
-## Status
+## Status Notes (Historical)
 
 Complete (findings doc). Scope: first-party `packages/`, `scripts/`, `.dagger/`, `tools/`, root config. Excludes `archive/`,
 `practice/`, `poc/`, `obsidian/`, generated/dist/target. `discord-video-stream` counted separately. Remediation tracked in

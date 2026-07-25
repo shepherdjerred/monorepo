@@ -1,3 +1,10 @@
+---
+id: reference-bazel-2026-03-20-rules-bun2-architecture
+type: reference
+status: complete
+board: false
+---
+
 # rules_bun2: Monolithic bun install for Bazel
 
 Date: 2026-03-20

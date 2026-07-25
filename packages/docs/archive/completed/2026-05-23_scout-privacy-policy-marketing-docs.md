@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-23-scout-privacy-policy-marketing-docs
+type: reference
+status: complete
+board: false
+---
+
 # Scout Privacy Policy Marketing and Documentation Use
-
-## Status
-
-Complete
 
 ## Summary
 

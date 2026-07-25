@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-12-torvalds-cpu-performance-restore
+type: reference
+status: complete
+board: false
+---
+
 # Restore CPU performance on torvalds (RAPL cap → stock, drop perf-limiting kernel args)
-
-## Status
-
-Complete — repo/config changes shipped (RAPL 125/253 + schematic); the node reboot was an out-of-repo operator handoff.
 
 ## Context
 

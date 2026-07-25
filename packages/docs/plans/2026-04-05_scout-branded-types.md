@@ -1,8 +1,13 @@
+---
+id: plan-2026-04-05-scout-branded-types
+type: plan
+status: planned
+board: true
+verification: agent
+disposition: active
+---
+
 # Add Missing Branded Types to scout-for-lol
-
-## Status
-
-Not Started. Loading-screen-specific branded IDs exist, but this broader domain branding plan remains open.
 
 ## Context
 
@@ -107,3 +112,7 @@ After each step:
 1. `cd packages/scout-for-lol && bun run typecheck` — catch cascading type errors
 2. `cd packages/scout-for-lol && bun run test` — ensure no runtime failures
 3. `cd packages/scout-for-lol/packages/data && bunx eslint . --fix` — lint clean
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Add Missing Branded Types to scout-for-lol`.

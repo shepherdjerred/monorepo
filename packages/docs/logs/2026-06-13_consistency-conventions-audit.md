@@ -1,6 +1,13 @@
+---
+id: log-2026-06-13-consistency-conventions-audit
+type: log
+status: complete
+board: false
+---
+
 # Consistency & Conventions Audit — 2026-06-13
 
-## Status
+## Status Notes (Historical)
 
 Complete (findings doc). Scope: first-party `packages/`, `scripts/`, `.dagger/`. Excludes `archive/`, `practice/`, `poc/`,
 `packages/discord-video-stream/`, generated/build output. Remediation tracked in `plans/2026-06-13_code-quality-remediation.md` (§3/§9).

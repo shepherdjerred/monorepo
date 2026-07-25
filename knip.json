@@ -13,6 +13,17 @@
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]
     },
+    "packages/docs-board": {
+      "entry": [
+        "src/client/main.tsx",
+        "src/server/index.ts",
+        "src/dev.ts",
+        "src/cli/*.ts",
+        "vite.config.ts"
+      ],
+      "project": ["src/**/*.{ts,tsx}", "vite.config.ts"],
+      "ignoreDependencies": ["shadcn"]
+    },
     "packages/discord-plays-core": {
       "entry": ["src/index.ts", "src/entry.ts"],
       "project": ["src/**/*.ts"]
@@ -57,7 +68,8 @@
     },
     "packages/homelab/src/cdk8s": {
       "entry": ["src/app.ts", "src/**/*.ts", "scripts/**/*.ts"],
-      "project": ["src/**/*.ts", "scripts/**/*.ts"]
+      "project": ["src/**/*.ts", "scripts/**/*.ts"],
+      "ignoreDependencies": ["cdk8s-cli"]
     },
     "packages/homelab/src/helm-types": {
       "entry": ["src/**/*.ts"],
@@ -254,6 +266,7 @@
     "packages/dotfiles/**",
     "packages/fonts/**",
     "packages/anki/**",
+    "packages/release-tools/**",
     "packages/webring/example/**",
     "packages/cooklang-for-obsidian/**",
     "packages/tasks-for-obsidian/**",
@@ -278,8 +291,8 @@
     "@iconify-json/carbon",
     "@iconify-json/heroicons",
     "@iconify-json/mdi",
+    "@iconify-json/ph",
     "@iconify-json/simple-icons",
-    "@iconify/json",
     "@libsql/client",
     "@opentelemetry/core",
     "@opentelemetry/sdk-node",

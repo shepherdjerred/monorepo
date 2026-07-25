@@ -1,8 +1,13 @@
+---
+id: plan-2026-05-10-firmware-update-runbook
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # NVMe Firmware Update — `torvalds` (Samsung 990 PRO 4 TB × 2)
-
-## Status
-
-In Progress — pre-flight not yet run; awaiting approval to execute.
 
 ## Goal
 
@@ -136,3 +141,7 @@ After Phase 4 all-pass:
 - All workloads running, all PVCs bound
 - One full Buildkite Job has succeeded post-reboot
 - `nvme_percentage_used_ratio` unchanged (firmware update doesn't reset this)
+
+## Remaining
+
+- [ ] Complete and verify the work described in `NVMe Firmware Update — torvalds (Samsung 990 PRO 4 TB × 2)`.

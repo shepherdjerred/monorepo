@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { beforeAll, describe, expect, it } from "bun:test";
 import { App } from "cdk8s";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
@@ -75,14 +75,16 @@ function parseSynthesizedDocuments(yamlContent: string): unknown[] {
     .map((document): unknown => parseYaml(document));
 }
 
-function synthMediaDocuments(): unknown[] {
+async function synthMediaDocuments(): Promise<unknown[]> {
   const app = new App({ outdir: ".test-synth-streambot-media" });
-  createMediaChart(app);
+  await createMediaChart(app);
   return parseSynthesizedDocuments(app.synthYaml());
 }
 
-function getStreambotDeployment(): z.infer<typeof DeploymentSchema> {
-  for (const document of synthMediaDocuments()) {
+async function getStreambotDeployment(): Promise<
+  z.infer<typeof DeploymentSchema>
+> {
+  for (const document of await synthMediaDocuments()) {
     const result = DeploymentSchema.safeParse(document);
     if (result.success && result.data.metadata?.name === "media-streambot") {
       return result.data;
@@ -93,8 +95,8 @@ function getStreambotDeployment(): z.infer<typeof DeploymentSchema> {
   );
 }
 
-function getStatePvc(): z.infer<typeof PvcSchema> {
-  for (const document of synthMediaDocuments()) {
+async function getStatePvc(): Promise<z.infer<typeof PvcSchema>> {
+  for (const document of await synthMediaDocuments()) {
     const result = PvcSchema.safeParse(document);
     if (
       result.success &&
@@ -111,8 +113,13 @@ function getStatePvc(): z.infer<typeof PvcSchema> {
 const STREAMBOT_STATE = "/state";
 
 describe("streambot deployment (media namespace)", () => {
-  const deployment = getStreambotDeployment();
-  const container = deployment.spec.template.spec.containers[0];
+  let deployment: z.infer<typeof DeploymentSchema>;
+  let container: z.infer<typeof ContainerSchema> | undefined;
+
+  beforeAll(async () => {
+    deployment = await getStreambotDeployment();
+    container = deployment.spec.template.spec.containers[0];
+  });
 
   it("uses the first-party ghcr image", () => {
     expect(container?.image).toStartWith("ghcr.io/shepherdjerred/streambot:");
@@ -171,8 +178,8 @@ describe("streambot deployment (media namespace)", () => {
     expect(parsed.valueFrom.secretKeyRef.optional).toBeUndefined();
   });
 
-  it("provisions a ReadWriteOnce state PVC", () => {
-    const pvc = getStatePvc();
+  it("provisions a ReadWriteOnce state PVC", async () => {
+    const pvc = await getStatePvc();
     expect(pvc.spec?.accessModes).toEqual(["ReadWriteOnce"]);
   });
 

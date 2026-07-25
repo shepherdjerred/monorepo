@@ -1,13 +1,12 @@
 ---
-status: Complete
-pr: "https://github.com/shepherdjerred/monorepo/pull/1175"
+id: log-2026-06-13-mk64-pin-3993-pr-merge-prep
+type: log
+status: complete
+board: false
+pr: https://github.com/shepherdjerred/monorepo/pull/1175
 ---
 
 # PR #1175 — mk64-pin-3993 merge prep
-
-## Status
-
-Complete
 
 ## What happened
 

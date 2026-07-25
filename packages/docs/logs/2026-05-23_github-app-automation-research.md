@@ -1,8 +1,11 @@
+---
+id: log-2026-05-23-github-app-automation-research
+type: log
+status: complete
+board: false
+---
+
 # GitHub App Automation Research
-
-## Status
-
-Complete
 
 ## Summary
 

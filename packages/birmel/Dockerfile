@@ -36,10 +36,11 @@ RUN set -e; \
     node --version; python3 --version
 
 # --- Workspace install + prisma generate ---
-# Manifests-only install layer: this ~6 GB `bun install` layer only invalidates
-# when a manifest/lockfile/patch changes, not on every source edit.
+# Manifests-only install layer: install birmel and its workspace dependency
+# closure, rather than materializing every unrelated workspace package. This
+# layer only invalidates when a manifest/lockfile/patch changes.
 # `--frozen-lockfile` requires every workspace member's package.json present, so
-# the globs enumerate all 47 members (top-level, nested packages/*/packages/*,
+# the globs enumerate every member (top-level, nested packages/*/packages/*,
 # homelab/src/*, the desktop src-tauri crate, and the `scripts` dir).
 COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \
@@ -48,7 +49,7 @@ COPY --parents \
   packages/homelab/src/helm-types/package.json \
   packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --filter '@shepherdjerred/birmel'
 
 # youtube-dl-exec resolves its binary at node_modules/youtube-dl-exec/bin/yt-dlp,
 # but its own postinstall fetches that UNAUTHENTICATED from api.github.com and

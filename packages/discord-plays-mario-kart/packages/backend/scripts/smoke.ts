@@ -6,7 +6,9 @@
  * REAL container entrypoint (including the `prisma db push` prelude) so a broken
  * migration command can't sail through. The emulator is disabled (no ROM in CI);
  * the stream is enabled so the selfbot login runs and rejects with the expected
- * token error. A clean exit or timeout-kill also counts.
+ * token error. Bugsink is disabled inside the smoke container so that
+ * deliberate failure remains local to CI. A clean exit or timeout-kill also
+ * counts.
  *
  * The config is written to a host temp file and bind-mounted at the path
  * getConfig() reads (inner-root/config.toml). Dependency-free: Bun.spawn +
@@ -111,6 +113,8 @@ async function main(configPath: string): Promise<void> {
     "create",
     "--name",
     CONTAINER,
+    "-e",
+    "SENTRY_DSN=",
     // Writable SQLite target for the `prisma db push` prelude (prod uses a PVC;
     // here any writable path works).
     "-e",

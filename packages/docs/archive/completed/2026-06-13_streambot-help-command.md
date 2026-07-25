@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-13-streambot-help-command
+type: reference
+status: complete
+board: false
+---
+
 # Streambot — `/stream help` command + document supported sources
-
-## Status
-
-Complete
 
 ## Context
 

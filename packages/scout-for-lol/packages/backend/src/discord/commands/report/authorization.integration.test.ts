@@ -120,8 +120,6 @@ async function createReport(params: {
       description: null,
       queryText:
         "SELECT player, games FROM match_participants GROUP BY player LIMIT 10",
-      lookbackDays: 30,
-      maxRows: 10,
       isEnabled: params.isEnabled ?? true,
       isSystemManaged: params.isSystemManaged ?? false,
       systemSource:

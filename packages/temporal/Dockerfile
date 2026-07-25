@@ -203,9 +203,11 @@ RUN set -e; \
     cog -v
 
 # --- Manifests-first install layer (CLI layers above cache independently) ---
-# This ~6 GB `bun install` layer only invalidates when a manifest/lockfile/patch
-# changes, not on every source edit. `--frozen-lockfile` requires every
-# workspace member's package.json present, so the globs enumerate all 47 members
+# Install the Temporal worker plus the toolkit package compiled into this image;
+# each filter includes its complete workspace dependency closure (including
+# llm-models). This layer only invalidates when a manifest/lockfile/patch changes.
+# `--frozen-lockfile` requires every
+# workspace member's package.json present, so the globs enumerate every member
 # (top-level, nested packages/*/packages/*, homelab/src/*, the desktop src-tauri
 # crate, and the `scripts` dir). node_modules/dist are excluded from the build
 # context by the root .dockerignore, so the later `COPY . .` can't clobber the
@@ -217,7 +219,9 @@ COPY --parents \
   packages/homelab/src/helm-types/package.json \
   packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile \
+  --filter '@shepherdjerred/temporal' \
+  --filter '@shepherdjerred/toolkit'
 
 # Now the sources (source COPY last so a code-only edit keeps the install layer
 # cached).

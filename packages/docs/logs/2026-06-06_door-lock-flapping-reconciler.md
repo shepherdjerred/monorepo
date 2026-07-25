@@ -1,8 +1,11 @@
+---
+id: log-2026-06-06-door-lock-flapping-reconciler
+type: log
+status: complete
+board: false
+---
+
 # Door lock flapping → debounced reconciler
-
-## Status
-
-Complete
 
 ## Problem
 

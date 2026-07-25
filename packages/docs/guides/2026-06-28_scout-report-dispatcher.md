@@ -1,10 +1,11 @@
+---
+id: guide-2026-06-28-scout-report-dispatcher
+type: guide
+status: complete
+board: false
+---
+
 # Scout Scheduled-Report Dispatcher
-
-## Status
-
-Complete (reference)
-
-scout-for-lol's `runScheduledReportDispatch` runs every minute and calls `syncSystemReports` THEN `runDueReports`.
 
 ## 1. Schedule state belongs to the scheduler, not the sync
 

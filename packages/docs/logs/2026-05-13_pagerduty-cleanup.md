@@ -1,8 +1,11 @@
+---
+id: log-2026-05-13-pagerduty-cleanup
+type: log
+status: complete
+board: false
+---
+
 # PagerDuty Cleanup
-
-## Status
-
-Complete
 
 ## Context
 

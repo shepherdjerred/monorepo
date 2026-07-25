@@ -14,7 +14,7 @@ import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testAccountId, testGuildId } from "#src/testing/test-ids.ts";
 import {
   runReportLakeFold,
-  runReportLakeRebuild,
+  runReportLakeRebuildFromSqlite,
 } from "#src/report-lake/compactor.ts";
 import { flattenMatch, flattenPrematch } from "#src/report-lake/flatten.ts";
 import { readCurrentBuildDir } from "#src/report-lake/paths.ts";
@@ -211,7 +211,7 @@ describe("compactor", () => {
 
     const lakeDir = await makeLakeDir();
     try {
-      const summary = await runReportLakeRebuild({ prisma, lakeDir });
+      const summary = await runReportLakeRebuildFromSqlite({ prisma, lakeDir });
       expect(summary).not.toBeNull();
       expect(summary?.tier).toBe("rebuild");
       expect(summary?.matchRows).toBe(match.info.participants.length);
@@ -260,7 +260,7 @@ describe("compactor", () => {
 
     const lakeDir = await makeLakeDir();
     try {
-      const summary = await runReportLakeRebuild({ prisma, lakeDir });
+      const summary = await runReportLakeRebuildFromSqlite({ prisma, lakeDir });
       expect(summary?.skippedMatches).toBe(1);
       expect(summary?.matchRows).toBe(0);
       expect(await readCurrentBuildDir(lakeDir)).toBeDefined();
@@ -274,7 +274,7 @@ describe("compactor", () => {
     const lakeDir = await makeLakeDir();
     try {
       // Build 1: empty rebuild (no stored matches).
-      const first = await runReportLakeRebuild({ prisma, lakeDir });
+      const first = await runReportLakeRebuildFromSqlite({ prisma, lakeDir });
       expect(first?.tier).toBe("rebuild");
 
       // Stage one match, then fold it in.
@@ -312,7 +312,7 @@ describe("compactor", () => {
     const match = await loadMatchFixture();
     const lakeDir = await makeLakeDir();
     try {
-      const first = await runReportLakeRebuild({ prisma, lakeDir });
+      const first = await runReportLakeRebuildFromSqlite({ prisma, lakeDir });
       expect(first?.tier).toBe("rebuild");
 
       const staged = await writeMatchStagingFile(lakeDir, match);

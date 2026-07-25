@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-07-discord-plays-hw-encoding-observability
+type: reference
+status: complete
+board: false
+---
+
 # Discord Plays — VAAPI HW encoding + 16:9 + full observability
-
-## Status
-
-Complete — shipped in PR #1101 (VAAPI + 16:9 letterbox + metrics/traces + Pyroscope/Alloy); deployed.
 
 ## Context
 

@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-pr-1164-porcelain-trim-fix
+type: log
+status: complete
+board: false
+---
+
 # PR #1164: Fix porcelain stdout trimming in readme-refresh
-
-## Status
-
-Complete
 
 ## Problem
 

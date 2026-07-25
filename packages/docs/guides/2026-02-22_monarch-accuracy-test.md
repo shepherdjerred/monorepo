@@ -1,3 +1,10 @@
+---
+id: guide-2026-02-22-monarch-accuracy-test
+type: guide
+status: complete
+board: false
+---
+
 # Monarch Accuracy Test: Black-Box Ground Truth Comparison
 
 ## Overview

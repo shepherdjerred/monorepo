@@ -4,6 +4,7 @@ import configuration from "#src/configuration.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 import { z } from "zod";
+import { validateS3Metadata } from "#src/storage/s3-metadata.ts";
 
 // Mirrors the not-found shape handled in s3-leaderboard.ts.
 const AwsS3NotFoundErrorSchema = z.object({
@@ -49,11 +50,11 @@ export async function saveReportRunImage(
         Key: key,
         Body: png,
         ContentType: "image/png",
-        Metadata: {
+        Metadata: validateS3Metadata({
           reportId: reportId.toString(),
           runId: runId.toString(),
           uploadedAt: new Date().toISOString(),
-        },
+        }),
       }),
     );
   } catch (error) {

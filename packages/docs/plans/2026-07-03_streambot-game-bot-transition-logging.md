@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-03-streambot-game-bot-transition-logging
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # State-machine transition logging (streambot + game bots)
-
-## Status
-
-In Progress (implemented on `feature/xstate-transition-logging`; pending PR/merge — will move to `Complete` and archive once merged to `main`)
 
 ## Context
 
@@ -104,3 +109,7 @@ A single machine-agnostic inspector lives in the shared package and is consumed 
 - An unrelated stale `file:` copy of `@shepherdjerred/llm-models` in the pokemon backend was also
   refreshed via rsync to get a clean typecheck; not part of this change.
 - The 5 streambot integration-test failures are pre-existing/environmental (real ffmpeg/libass).
+
+## Remaining
+
+- [ ] Complete and verify the work described in `State-machine transition logging (streambot + game bots)`.

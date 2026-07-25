@@ -16,6 +16,10 @@ export type ReportAiQuotaStatus = {
   activeRun: boolean;
 };
 
+type ReportAiRateLimitOptions = {
+  exempt?: boolean;
+};
+
 export type ReportAiRateLimitRejection = {
   allowed: false;
   quota: ReportAiQuotaSnapshot[];
@@ -73,10 +77,14 @@ let activeGlobalRuns = 0;
 export function getReportAiQuotaStatus(
   identity: ReportAiRateLimitIdentity,
   now = Date.now(),
+  options: ReportAiRateLimitOptions = {},
 ): ReportAiQuotaStatus {
   const rules = keyedRules(identity);
   return {
-    quota: rules.map((rule) => quotaSnapshot(rule, now, 0)),
+    quota:
+      options.exempt === true
+        ? []
+        : rules.map((rule) => quotaSnapshot(rule, now, 0)),
     activeRun: activeUserGuildRuns.has(userGuildActiveKey(identity)),
   };
 }
@@ -84,9 +92,13 @@ export function getReportAiQuotaStatus(
 export function tryStartReportAiRun(
   identity: ReportAiRateLimitIdentity,
   now = Date.now(),
+  options: ReportAiRateLimitOptions = {},
 ): ReportAiRateLimitTicket | ReportAiRateLimitRejection {
   const rules = keyedRules(identity);
-  const quota = rules.map((rule) => quotaSnapshot(rule, now, 0));
+  const quota =
+    options.exempt === true
+      ? []
+      : rules.map((rule) => quotaSnapshot(rule, now, 0));
   const activeKey = userGuildActiveKey(identity);
 
   if (activeUserGuildRuns.has(activeKey)) {
@@ -117,9 +129,11 @@ export function tryStartReportAiRun(
     };
   }
 
-  for (const rule of rules) {
-    const bucket = currentBucket(rule, now);
-    bucket.used++;
+  if (options.exempt !== true) {
+    for (const rule of rules) {
+      const bucket = currentBucket(rule, now);
+      bucket.used++;
+    }
   }
 
   activeUserGuildRuns.add(activeKey);
@@ -129,7 +143,10 @@ export function tryStartReportAiRun(
   return {
     allowed: true,
     runId: globalThis.crypto.randomUUID(),
-    quota: rules.map((rule) => quotaSnapshot(rule, now, 0)),
+    quota:
+      options.exempt === true
+        ? []
+        : rules.map((rule) => quotaSnapshot(rule, now, 0)),
     finish: () => {
       if (finished) {
         return;

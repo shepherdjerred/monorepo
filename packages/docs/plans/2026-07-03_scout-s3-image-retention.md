@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-03-scout-s3-image-retention
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Scout-for-LoL S3 image retention (30-day GC)
-
-## Status
-
-Partially Complete — code built, tested, and validated against live data; awaiting PR merge + post-deploy one-time reclaim (Phase 3).
 
 ## Problem
 
@@ -94,3 +99,17 @@ Phase 0 showed the worker's existing `scout` identity already has Admin on both 
 - **Irreversible deletion.** Mitigated by dry-run-first on the initial run and the fact that images aren't served from S3.
 - SeaweedFS volume GC is async (`garbageThreshold: 0.3`) — disk space frees after its own GC pass, not instantly on delete.
 - First run lists ~110k objects across two buckets; ensure the activity paginates and the workflow timeout covers it.
+- **Marketing-showcase interaction (found 2026-07-19).** The showcase manifest
+  (`packages/scout-for-lol/showcase/marketing-showcase.manifest.json`)
+  references specific `report.png`/`loading-screen.png` keys that the
+  `scout-showcase-refresh-weekly` job re-reads indefinitely; a month of GC had
+  pruned ~60% of them (rare queue types never produce replacements). Fixed by
+  a showcase exemption in `scout-image-gc.ts`: the activity fetches the
+  manifest from `main` before pruning and never deletes a referenced key
+  (fails loudly if the manifest can't be fetched). The pruned sources were
+  restored byte-identically from the committed showcase PNGs (the generator
+  copies S3 bytes verbatim for `s3-image` entries).
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Scout-for-LoL S3 image retention (30-day GC)`.

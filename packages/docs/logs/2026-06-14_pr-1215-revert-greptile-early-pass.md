@@ -1,8 +1,11 @@
+---
+id: log-2026-06-14-pr-1215-revert-greptile-early-pass
+type: log
+status: complete
+board: false
+---
+
 # PR #1215 — revert wait-for-greptile early-pass
-
-## Status
-
-Complete
 
 ## Context
 

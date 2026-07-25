@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-14-cooklang-release-gate-tightening
+type: reference
+status: complete
+board: false
+---
+
 # Tighten the cooklang plugin-release gate
-
-## Status
-
-Complete — shipped in PR #1221.
 
 ## Context
 

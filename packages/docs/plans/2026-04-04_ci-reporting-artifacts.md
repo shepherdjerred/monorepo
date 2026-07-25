@@ -1,10 +1,13 @@
+---
+id: plan-2026-04-04-ci-reporting-artifacts
+type: plan
+status: planned
+board: true
+verification: agent
+disposition: active
+---
+
 # CI Reporting & Artifact Collection
-
-## Status
-
-Planned. This is an implementation plan for structured CI reports and artifacts.
-
-Date: 2026-04-04
 
 ## Current State
 
@@ -138,3 +141,7 @@ Same `annotatedScanCmd` wrapping as Phase 3, applied to typecheck steps.
 1. `cd scripts/ci && bun run src/main.ts` — pipeline JSON is valid
 2. `bun run typecheck` — type correctness
 3. Push branch, check Buildkite for: JUnit artifacts, Test Analytics, coverage annotation, lint annotations
+
+## Remaining
+
+- [ ] Complete and verify the work described in `CI Reporting & Artifact Collection`.

@@ -1,8 +1,11 @@
+---
+id: log-2026-05-25-scout-web-ui-domain
+type: log
+status: complete
+board: false
+---
+
 # Scout Web UI Domain Lookup
-
-## Status
-
-Superseded
 
 ## Session Log — 2026-05-25
 

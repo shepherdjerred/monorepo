@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-23-greptile-config
+type: reference
+status: complete
+board: false
+---
+
 # Plan: Root `.greptile/` for the monorepo
-
-## Status
-
-Complete
 
 ## Context
 

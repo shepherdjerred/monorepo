@@ -30,12 +30,17 @@ function formatAst(ast: ReportQueryAst): string | null {
     `FROM ${ast.source.value}`,
     formatWhere(ast.where),
     `GROUP BY ${ast.groupBy.value}`,
+    formatHaving(ast.having),
     formatOrderBy(ast.orderBy),
     formatLimit(ast.limit),
     formatRender(ast.render),
   ];
 
   return clauses.filter((clause) => clause !== null).join("\n");
+}
+
+function formatHaving(having: ReportQueryItem | undefined): string | null {
+  return having === undefined ? null : `HAVING ${having.value}`;
 }
 
 function formatSelect(items: ReportQueryItem[]): string {
@@ -63,6 +68,15 @@ function formatWhereClause(clause: ReportWhereClause): string {
       (value) => `champion_id = ${value.value.toString()}`,
     )
     .with(
+      { kind: "champion" },
+      (value) => `champion_id = champion(${quote(value.name)})`,
+    )
+    .with(
+      { kind: "lookback" },
+      (value) =>
+        `${value.field} >= CURRENT_TIMESTAMP - INTERVAL '${value.days.toString()} days'`,
+    )
+    .with(
       { kind: "min_games" },
       (value) => `games >= ${value.value.toString()}`,
     )
@@ -70,8 +84,25 @@ function formatWhereClause(clause: ReportWhereClause): string {
       { kind: "competition_id" },
       (value) => `competition_id = ${value.value.toString()}`,
     )
+    .with({ kind: "field" }, (value) => {
+      if (value.operator === "in") {
+        return `${value.field} IN (${value.values.map((item) => formatFilterValue(item)).join(", ")})`;
+      }
+      return `${value.field} ${value.operator} ${formatFilterValue(value.values[0] ?? "")}`;
+    })
     .with({ kind: "unsupported" }, (value) => value.text)
     .exhaustive();
+}
+
+function quote(value: string): string {
+  const quoteCharacter = value.includes("'") ? '"' : "'";
+  return `${quoteCharacter}${value}${quoteCharacter}`;
+}
+
+function formatFilterValue(value: string | number | boolean): string {
+  return typeof value === "string"
+    ? `'${value.replaceAll("'", "''")}'`
+    : String(value);
 }
 
 function formatOrderBy(orderBy: ReportQueryAst["orderBy"]): string | null {

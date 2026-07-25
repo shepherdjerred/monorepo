@@ -1,8 +1,11 @@
+---
+id: log-2026-07-16-fix-main-ci-verify-failures
+type: log
+status: complete
+board: false
+---
+
 # Fix main CI: four verify failures (build 5611)
-
-## Status
-
-In Progress
 
 ## Context
 

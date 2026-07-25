@@ -1,6 +1,13 @@
+---
+id: log-2026-07-18-ci-parity-gap-audit
+type: log
+status: complete
+board: false
+---
+
 # CI Parity Gap Audit — BK+Dagger → BK-only
 
-## Status
+## Status Notes (Historical)
 
 Complete
 

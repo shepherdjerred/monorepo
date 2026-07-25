@@ -1,3 +1,10 @@
+---
+id: decision-2026-05-05-zfs-fragmentation-acceptance
+type: decision
+status: complete
+board: false
+---
+
 # ZFS Pool Fragmentation — Accepted Tradeoff on SSD Pools
 
 **Date:** 2026-05-05

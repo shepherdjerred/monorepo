@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-13-helm-types-ci-gate
+type: reference
+status: complete
+board: false
+---
+
 # Helm-types freshness: CI gate replaces the weekly Temporal refresh
-
-## Status
-
-Complete — shipped in PR #1168.
 
 ## Context
 

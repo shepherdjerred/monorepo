@@ -1,3 +1,10 @@
+---
+id: reference-bazel-2026-03-19-rules-bun-v2-implementation-status
+type: reference
+status: complete
+board: false
+---
+
 # rules_bun v2 Implementation Status
 
 Implementation progress for the hermetic framework rules migration described in `2026-03-17_rules-bun-v2-link-first-materialization.md` and `2026-03-18_rules-bun-v2-hermetic-framework-rules.md`.

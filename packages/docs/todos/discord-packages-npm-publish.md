@@ -1,6 +1,10 @@
 ---
 id: discord-packages-npm-publish
-status: active
+type: todo
+status: in-progress
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/logs/2026-06-13_new-todos-batch.md
 source_marker: false
 ---
@@ -21,19 +25,19 @@ discord-plays + streambot work:
    lifecycle machines (`createRawGoLiveMachine`, `createDesiredStreamMachine`)
    that sit above discord-video-stream.
 
-## Status
+## Status Notes (Historical)
 
 Unblocked as of 2026-06-28 — `discord-stream-lifecycle` **is now on `main`**
 (`packages/discord-stream-lifecycle`, shipped in PR #1146 and consumed by streambot).
 Both packages are still `private: true` and unpublished, so this is now plain `active`
 publish work, not blocked.
 
-## Done when
+## Remaining
 
-- `discord-stream-lifecycle` merged to main.
-- Both packages have `private: true` removed and a `publishConfig` set, with
-  release wiring (Renovate/release-please as appropriate).
-- Both published to NPM under the `@shepherdjerred` scope.
+- [ ] `discord-stream-lifecycle` merged to main.
+- [ ] Both packages have `private: true` removed and a `publishConfig` set, with
+      release wiring (Renovate/release-please as appropriate).
+- [ ] Both published to NPM under the `@shepherdjerred` scope.
 
 ## Notes
 

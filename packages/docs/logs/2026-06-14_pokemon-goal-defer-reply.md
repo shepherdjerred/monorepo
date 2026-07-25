@@ -1,8 +1,11 @@
+---
+id: log-2026-06-14-pokemon-goal-defer-reply
+type: log
+status: complete
+board: false
+---
+
 # /goal slash command timing out — defer the reply
-
-## Status
-
-Complete
 
 ## Symptom
 

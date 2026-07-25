@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-06-pinchtab-in-cluster
+type: reference
+status: complete
+board: false
+---
+
 # Plan: Birmel pinchtab outage — P0 unblock, P1 in-cluster pinchtab
-
-## Status
-
-Complete — pinchtab deployed in-cluster (resources/pinchtab, cdk8s + argo app, helm chart); birmel rewired to the shared 1Password token.
 
 ## Context
 

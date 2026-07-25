@@ -1,8 +1,11 @@
+---
+id: guide-2026-06-14-streambot-autonomous-perf-debug-runbook
+type: guide
+status: complete
+board: false
+---
+
 # Streambot autonomous perf-debug runbook
-
-## Status
-
-Reference — captures what an agent can do end-to-end against prod streambot, and the small set of operator approvals required to unblock it. Companion to `2026-06-14_streambot-stutter-rate-mismatch.md` (a specific incident); this doc is the general loop.
 
 ## Why this works for streambot
 

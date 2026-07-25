@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { parseAndCompile } from "#src/model/report-query-compile.ts";
 import { formatReportQuery } from "#src/model/report-query-format.ts";
-import { REPORT_COMMON_PRESETS } from "#src/model/report-query-registry.ts";
+import { REPORT_COMMON_PRESETS } from "#src/model/report-query-presets.ts";
 
 describe("formatReportQuery", () => {
   test("formats a valid ScoutQL query by clause", () => {
@@ -29,9 +29,24 @@ describe("formatReportQuery", () => {
 });
 
 describe("REPORT_COMMON_PRESETS", () => {
-  test("offers a bounded list of common report presets", () => {
-    expect(REPORT_COMMON_PRESETS.length).toBeGreaterThanOrEqual(5);
-    expect(REPORT_COMMON_PRESETS.length).toBeLessThanOrEqual(10);
+  test("offers the original examples plus fourteen analytics presets", () => {
+    expect(REPORT_COMMON_PRESETS).toHaveLength(23);
+    expect(
+      new Set(REPORT_COMMON_PRESETS.map((preset) => preset.category)),
+    ).toEqual(
+      new Set([
+        "Arena",
+        "Behavior",
+        "Champions",
+        "Combat",
+        "Economy",
+        "Groups",
+        "Leaderboards",
+        "Objectives",
+        "Overview",
+        "Trends",
+      ]),
+    );
   });
 
   test("contains valid report queries", () => {

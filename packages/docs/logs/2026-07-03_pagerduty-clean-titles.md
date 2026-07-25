@@ -1,8 +1,11 @@
+---
+id: log-2026-07-03-pagerduty-clean-titles
+type: log
+status: complete
+board: false
+---
+
 # PagerDuty — clean, correct incident titles
-
-## Status
-
-In Progress (code complete; awaiting deploy + live verification)
 
 ## Context
 

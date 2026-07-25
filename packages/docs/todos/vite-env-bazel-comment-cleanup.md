@@ -1,6 +1,10 @@
 ---
 id: vite-env-bazel-comment-cleanup
-status: blocked
+type: todo
+status: planned
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/logs/2026-07-12_rm-sccache-bazel-cache-buckets.md
 source_marker: false
 ---
@@ -47,14 +51,14 @@ export (`.../debug/transition-logger`) does not resolve locally (single-segment
 subpaths like `/types` do). So the hook can't go green in a worktree, and we
 won't `--no-verify`.
 
-## How to unblock
+## Remaining
 
-1. Fix the worktree setup gap (see the log's Workflow Friction): add
-   `discord-stream-lifecycle` to the `setup.ts` shared-producer build list and
-   make its export map / `moduleResolution` resolve nested subpaths, so
-   dpp/mk64 typecheck cleanly in a fresh worktree.
-2. Then delete the fallback block in both `vite-env.d.ts` files, confirm
-   `bun run typecheck` is green in each frontend, and commit.
+- [ ] Fix the worktree setup gap (see the log's Workflow Friction): add
+      `discord-stream-lifecycle` to the `setup.ts` shared-producer build list and
+      make its export map / `moduleResolution` resolve nested subpaths, so
+      dpp/mk64 typecheck cleanly in a fresh worktree.
+- [ ] Then delete the fallback block in both `vite-env.d.ts` files, confirm
+      `bun run typecheck` is green in each frontend, and commit.
 
 (Alternatively, land it on a checkout where dpp/mk64 already typecheck — the
 edit itself is trivial and CI validates it.)

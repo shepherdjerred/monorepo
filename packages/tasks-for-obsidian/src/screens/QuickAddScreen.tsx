@@ -15,7 +15,7 @@ type Props = NativeStackScreenProps<RootStackParamList, "QuickAdd">;
 export function QuickAddScreen({ route, navigation }: Props) {
   const initialText = route.params?.initialText ?? "";
   const [text, setText] = useState(initialText);
-  const { createTask } = useTasks();
+  const { createTask, projectNames, contextNames, tagNames } = useTasks();
   const { colors } = useSettings();
   const nlpTip = useTip("natural-language");
 
@@ -46,6 +46,9 @@ export function QuickAddScreen({ route, navigation }: Props) {
         value={text}
         onChange={setText}
         parsedResult={parsed}
+        availableProjects={projectNames}
+        availableContexts={contextNames}
+        availableTags={tagNames}
         testID="quick-add-input"
       />
       <Pressable

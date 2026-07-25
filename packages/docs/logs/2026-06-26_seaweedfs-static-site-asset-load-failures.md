@@ -1,8 +1,11 @@
+---
+id: log-2026-06-26-seaweedfs-static-site-asset-load-failures
+type: log
+status: complete
+board: false
+---
+
 # SeaweedFS static-site intermittent asset-load failures (scout-for-lol + others)
-
-## Status
-
-Complete — fix implemented (branch `fix/seaweedfs-asset-loading`)
 
 ## Symptom
 

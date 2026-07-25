@@ -1,0 +1,20 @@
+{
+  "$schema": "https:\/\/schema.linearmouse.app\/0.10.4",
+  "schemes": [
+    {
+      "if": {
+        "device": {
+          "category": "mouse",
+          "productID": "0xc548",
+          "productName": "USB Receiver",
+          "vendorID": "0x46d"
+        }
+      },
+      "scrolling": {
+        "reverse": {
+          "vertical": true
+        }
+      }
+    }
+  ]
+}

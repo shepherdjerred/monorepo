@@ -10,6 +10,9 @@ describe("CriticalSystemLoad alert", () => {
     if (cpuGroup === undefined) {
       throw new Error("expected resource-security-monitoring rule group");
     }
+    if (cpuGroup.rules === undefined) {
+      throw new Error("expected resource-security-monitoring rules");
+    }
 
     const alert = cpuGroup.rules.find(
       (rule) => rule.alert === "CriticalSystemLoad",
@@ -18,7 +21,8 @@ describe("CriticalSystemLoad alert", () => {
       throw new Error("expected CriticalSystemLoad alert");
     }
 
-    expect(alert.expr).toBe(
+    // expr is the generated IntOrString wrapper class; toJson unwraps .value.
+    expect(alert.expr.value).toBe(
       'node_load1 > 8 * count by (instance) (node_cpu_seconds_total{mode="idle"})',
     );
     expect(alert.for).toBe("2m");
@@ -32,6 +36,9 @@ describe("CriticalSystemLoad alert", () => {
     );
     if (cpuGroup === undefined) {
       throw new Error("expected resource-security-monitoring rule group");
+    }
+    if (cpuGroup.rules === undefined) {
+      throw new Error("expected resource-security-monitoring rules");
     }
 
     const alert = cpuGroup.rules.find(

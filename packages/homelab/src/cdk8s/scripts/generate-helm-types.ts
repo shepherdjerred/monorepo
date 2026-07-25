@@ -9,9 +9,10 @@
  *              `src/versions.ts`.
  *   --check    Regenerate into a throwaway dir and FAIL (exit 1) if the result
  *              differs from the committed `generated/helm/` tree — without
- *              mutating it. Formerly the CI freshness gate that replaced the
- *              weekly helm-types-refresh Temporal workflow; run it manually
- *              now that CI is removed.
+ *              mutating it. Runs in CI as the `helm-types-drift-check`
+ *              Buildkite step (PR-only, self-scoped to generator-input
+ *              changes), so a versions.ts chart bump that wasn't regenerated
+ *              fails its PR instead of drifting silently.
  */
 
 // Using string concatenation instead of node:path
@@ -138,16 +139,23 @@ async function generateHelmTypes(outputDir: string) {
   }
 
   if (indexFiles.length > 0) {
-    // Format with the workspace's pinned prettier — the SAME prettier (and
-    // .prettierrc + plugins) that pre-commit and CI enforce, since the
-    // generated dir is covered by prettier (not excluded). This MUST succeed:
-    // leaving the raw interface generator output (which wraps differently)
-    // would commit files that fail the prettier gate and churn against the
-    // committed tree. Fail the run rather than continuing with unformatted
-    // output.
+    // Format with the package-owned pinned Prettier. The root config only adds
+    // Astro parsing, so TypeScript output is intentionally formatted with
+    // --no-config and remains identical to the repository formatting gate.
+    // This MUST succeed: leaving the raw interface generator output (which
+    // wraps differently) would commit files that fail the prettier gate and
+    // churn against the committed tree.
     console.log("\n🎨 Running prettier on generated files...");
     const prettierProc = Bun.spawn(
-      ["bun", "x", "prettier", "--write", outputDir],
+      [
+        "bun",
+        "--no-install",
+        "run",
+        "format:generated-helm",
+        "--",
+        "--write",
+        outputDir,
+      ],
       {
         stdio: ["inherit", "inherit", "inherit"],
       },
@@ -173,7 +181,7 @@ async function generateHelmTypes(outputDir: string) {
       [
         "sh",
         "-c",
-        `bun x tsc --noEmit --skipLibCheck --ignoreConfig "${outputDir}"/*.types.ts`,
+        `bun x --no-install tsc --noEmit --skipLibCheck --ignoreConfig "${outputDir}"/*.types.ts`,
       ],
       { stdio: ["inherit", "inherit", "inherit"] },
     );

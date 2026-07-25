@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-12-streambot-gpu-subs-hdr
+type: reference
+status: complete
+board: false
+---
+
 # Streambot: fix subtitle selection, HDR tonemapping — full-GPU pipeline
-
-## Status
-
-Complete (PR open; post-deploy verification pending — see Session Log)
 
 ## Context
 

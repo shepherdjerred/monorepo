@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-12-pr-media-demo-artifacts
+type: reference
+status: complete
+board: false
+---
+
 # PR Media & Demo Artifacts — extend `toolkit pr asset` + guidance
-
-## Status
-
-Complete — shipped in PR #1133.
 
 ## Context
 

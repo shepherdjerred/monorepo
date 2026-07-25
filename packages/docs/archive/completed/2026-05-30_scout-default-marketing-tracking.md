@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-30-scout-default-marketing-tracking
+type: reference
+status: complete
+board: false
+---
+
 # Scout Default Marketing Tracking
-
-## Status
-
-Complete
 
 ## Summary
 

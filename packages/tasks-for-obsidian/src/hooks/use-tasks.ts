@@ -2,45 +2,23 @@ import { useCallback, useMemo, useState } from "react";
 
 import type { TaskId } from "../domain/types";
 import { isActiveStatus } from "../domain/status";
-import { isRecurring, localTodayYmd, occursOn } from "../domain/recurrence";
+import {
+  completionTargetDate,
+  isRecurring,
+  localTodayYmd,
+  nextOccurrenceAfter,
+  occursOn,
+} from "../domain/recurrence";
+import { useUndo } from "../state/UndoContext";
+import { feedbackTaskUncomplete } from "../lib/feedback";
+import { formatDate } from "../lib/dates";
 import { projectDisplayName, projectPath } from "tasknotes-types/v2";
-import { parseLocalDate } from "../lib/dates";
+import { isOverdue, isToday, isUpcoming } from "../lib/dates";
 import { useTaskContext } from "../state/TaskContext";
-
-// Date-only strings ("YYYY-MM-DD") are parsed as LOCAL dates. new Date() would
-// treat them as UTC midnight, shifting Today/Overdue/Upcoming buckets by a day
-// for negative-UTC users (a task due today classifies as overdue).
-function isToday(dateStr?: string): boolean {
-  if (!dateStr) return false;
-  const today = new Date();
-  const date = parseLocalDate(dateStr);
-  return (
-    date.getFullYear() === today.getFullYear() &&
-    date.getMonth() === today.getMonth() &&
-    date.getDate() === today.getDate()
-  );
-}
-
-function isOverdue(dateStr?: string): boolean {
-  if (!dateStr) return false;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const date = parseLocalDate(dateStr);
-  date.setHours(0, 0, 0, 0);
-  return date < today;
-}
-
-function isUpcoming(dateStr?: string): boolean {
-  if (!dateStr) return false;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const date = parseLocalDate(dateStr);
-  date.setHours(0, 0, 0, 0);
-  return date > today;
-}
 
 export function useTasks() {
   const ctx = useTaskContext();
+  const { showUndo } = useUndo();
   const [refreshing, setRefreshing] = useState(false);
 
   // v2 lists include archived tasks (upstream parity) — filter client-side.
@@ -85,7 +63,10 @@ export function useTasks() {
           return (
             isActiveStatus(t.status) && horizon.some((day) => occursOn(t, day))
           );
-        return isActiveStatus(t.status) && isUpcoming(t.due);
+        return (
+          isActiveStatus(t.status) &&
+          isUpcoming(t.due, Number.POSITIVE_INFINITY)
+        );
       })
       .sort((a, b) => {
         // Recurring tasks surface via occursOn and are often scheduled-only
@@ -131,7 +112,59 @@ export function useTasks() {
     return [...names].sort();
   }, [taskList]);
 
-  const toggleTask = useCallback((id: TaskId) => ctx.toggleStatus(id), [ctx]);
+  // Active-task count per YYYY-MM-DD (due + scheduled), for the schedule
+  // sheet's calendar dots — a glanceable per-day load indicator.
+  const dayCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const t of taskList) {
+      if (!isActiveStatus(t.status)) continue;
+      const days = new Set<string>();
+      if (t.due) days.add(t.due.slice(0, 10));
+      if (t.scheduled) days.add(t.scheduled.slice(0, 10));
+      for (const d of days) counts.set(d, (counts.get(d) ?? 0) + 1);
+    }
+    return counts;
+  }, [taskList]);
+
+  // Completing a recurring task offers a transient Undo: the occurrence
+  // date it targets is invisible in the UI and the server may advance
+  // `scheduled` on completion, so this is the one tap that's hard to
+  // reverse by hand. Undo resends the SAME date with completed:false
+  // (idempotent set-semantics both sides). Bulk callers pass suppressUndo:
+  // one toast per task would overwrite each other, leaving N-1 completions
+  // silently un-undoable while implying otherwise.
+  const toggleTask = useCallback(
+    async (id: TaskId, options?: { suppressUndo?: boolean }) => {
+      const task = ctx.tasks.get(ctx.resolveTaskId(id));
+      const date =
+        task !== undefined && isRecurring(task)
+          ? completionTargetDate(task)
+          : undefined;
+      const completing =
+        task !== undefined &&
+        date !== undefined &&
+        !task.completeInstances.includes(date);
+      const result = await ctx.toggleStatus(id);
+      if (
+        result.ok &&
+        task !== undefined &&
+        date !== undefined &&
+        completing &&
+        options?.suppressUndo !== true
+      ) {
+        const next = nextOccurrenceAfter(task, date);
+        showUndo({
+          message: next ? `Completed · Next: ${formatDate(next)}` : "Completed",
+          onUndo: () => {
+            feedbackTaskUncomplete();
+            void ctx.setInstanceComplete(id, date, false);
+          },
+        });
+      }
+      return result;
+    },
+    [ctx, showUndo],
+  );
 
   const getTask = useCallback(
     (id: TaskId) => ctx.tasks.get(id) ?? null,
@@ -156,6 +189,7 @@ export function useTasks() {
     projectNames,
     tagNames,
     contextNames,
+    dayCounts,
     toggleTask,
     getTask,
     refresh,

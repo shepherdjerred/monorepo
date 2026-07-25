@@ -1,9 +1,13 @@
+---
+id: plan-2026-07-11-qbittorrent-hitandrun-seeding
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Per-torrent Hit & Run–compliant seeding for qBittorrent
-
-## Status
-
-Partially Complete — code, tests, and the one-time backfill are done and merged into this branch;
-the live on-add hook itself only takes effect after this PR deploys via ArgoCD (see Remaining).
 
 ## Context
 
@@ -180,3 +184,7 @@ already correctly defer torrent removal to qBittorrent's own seeding state.
   design, since it's a one-off remediation of already-seeding torrents, not ongoing config.
 - No Grafana/Prometheus alerting exists yet for "seeding limit never got set" — the exporter
   doesn't expose per-torrent fields to build one on.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Per-torrent Hit & Run–compliant seeding for qBittorrent`.

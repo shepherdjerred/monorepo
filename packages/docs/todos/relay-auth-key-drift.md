@@ -1,6 +1,10 @@
 ---
 id: relay-auth-key-drift
-status: active
+type: todo
+status: in-progress
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/archive/completed/2026-07-04_homelab-relay-server.md
 source_marker: true
 ---
@@ -43,3 +47,7 @@ Add a test/CI check that renders the image's `/app/relay.toml` and asserts our
 ConfigMap `[[auth]]` blocks match, so drift fails the build instead of the
 runtime. Not done now because it requires authenticated pull access to the
 private `docker.system3.md` registry in CI.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Relay auth public keys must stay in sync with the image on every upgrade`.

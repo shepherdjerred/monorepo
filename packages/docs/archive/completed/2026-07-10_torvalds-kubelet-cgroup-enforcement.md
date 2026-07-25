@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-07-10-torvalds-kubelet-cgroup-enforcement
+type: reference
+status: complete
+board: false
+---
+
 # torvalds — Re-enable Real Kubelet Reserved-Resource Cgroup Enforcement
-
-## Status
-
-Complete
 
 ## Context
 

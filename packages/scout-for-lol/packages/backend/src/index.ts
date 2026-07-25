@@ -16,6 +16,20 @@ logger.info(`🔧 Environment: ${configuration.environment}`);
 logger.info(`🌐 Git SHA: ${configuration.gitSha}`);
 logger.info(`🔌 Port: ${configuration.port.toString()}`);
 
+// S3 (SeaweedFS) is the canonical raw match/prematch/timeline store — a missing
+// bucket in beta/prod means every ingest silently no-ops and loses data
+// forever. Fail fast at boot rather than at notification time. The per-call
+// helpers keep their graceful no-op so dev/test still run without a bucket.
+if (
+  (configuration.environment === "beta" ||
+    configuration.environment === "prod") &&
+  configuration.s3BucketName === undefined
+) {
+  throw new Error(
+    `S3_BUCKET_NAME is required in ${configuration.environment} — S3 is the canonical raw store; refusing to start without it.`,
+  );
+}
+
 if (
   configuration.sentryDsn !== undefined &&
   configuration.sentryDsn.length > 0

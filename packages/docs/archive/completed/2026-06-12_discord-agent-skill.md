@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-12-discord-agent-skill
+type: reference
+status: complete
+board: false
+---
+
 # `discord` skill — let AI agents interact with Discord via TypeScript scripts
-
-## Status
-
-Complete
 
 ## Context
 

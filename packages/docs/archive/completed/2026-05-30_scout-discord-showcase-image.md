@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-30-scout-discord-showcase-image
+type: reference
+status: complete
+board: false
+---
+
 # Scout Discord Showcase Image
-
-## Status
-
-Complete
 
 ## Summary
 

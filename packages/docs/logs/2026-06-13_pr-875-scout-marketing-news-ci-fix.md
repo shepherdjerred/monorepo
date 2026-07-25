@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-pr-875-scout-marketing-news-ci-fix
+type: log
+status: complete
+board: false
+---
+
 # PR #875 CI Fix — Scout Marketing News
-
-## Status
-
-In Progress
 
 ## Context
 

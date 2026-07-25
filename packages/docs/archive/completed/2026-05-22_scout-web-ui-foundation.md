@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-22-scout-web-ui-foundation
+type: reference
+status: complete
+board: false
+---
+
 # Scout for LoL — Web UI Foundation (`scout-for-lol.com/app/`)
-
-## Status
-
-Complete (initial implementation; awaiting 1Password secrets + image-build CI wiring before deploy)
 
 ## Context
 

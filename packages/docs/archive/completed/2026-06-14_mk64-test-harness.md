@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-14-mk64-test-harness
+type: reference
+status: complete
+board: false
+---
+
 # Make `e2e-perf-browser.ts` the fix-validation harness for mario-kart streaming
-
-## Status
-
-Complete — shipped in PR #1202; live-cluster verify optional.
 
 ## Context
 

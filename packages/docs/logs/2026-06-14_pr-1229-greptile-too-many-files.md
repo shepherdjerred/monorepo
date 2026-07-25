@@ -1,8 +1,11 @@
+---
+id: log-2026-06-14-pr-1229-greptile-too-many-files
+type: log
+status: complete
+board: false
+---
+
 # PR #1229 — wait-for-greptile: handle "too many files changed"
-
-## Status
-
-In Progress
 
 ## Context
 

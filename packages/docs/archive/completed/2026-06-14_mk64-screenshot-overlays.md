@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-14-mk64-screenshot-overlays
+type: reference
+status: complete
+board: false
+---
+
 # MK64 screenshot — burn names in, shrink the timer overlay, ensure 4:3
-
-## Status
-
-Complete — PR #1182
 
 ## Context
 

@@ -1,10 +1,11 @@
+---
+id: reference-completed-2026-05-22-scout-report-data-ingress-fix
+type: reference
+status: complete
+board: false
+---
+
 # Scout Report Data Ingress Fix
-
-## Status
-
-**Complete** — work verified shipped to `main` during the 2026-06-06 docs groom (pass 2); archived to `archive/completed/`. Original tracking status preserved below.
-
-Partially Complete
 
 ## Summary
 

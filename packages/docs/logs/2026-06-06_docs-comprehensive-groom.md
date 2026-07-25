@@ -1,8 +1,11 @@
+---
+id: log-2026-06-06-docs-comprehensive-groom
+type: log
+status: complete
+board: false
+---
+
 # Comprehensive docs groom — 2026-06-06
-
-## Status
-
-Complete
 
 ## Context
 

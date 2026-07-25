@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-14-scout-report-miss-alert
+type: reference
+status: complete
+board: false
+---
+
 # Scout for LoL — Fix silent scheduled-report skip + add miss-schedule alert
-
-## Status
-
-Complete — shipped in PR #1228.
 
 ## Context
 

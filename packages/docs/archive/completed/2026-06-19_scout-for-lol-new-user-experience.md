@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-19-scout-for-lol-new-user-experience
+type: reference
+status: complete
+board: false
+---
+
 # Scout for LoL — Guided New-User Experience (Web App)
-
-## Status
-
-Complete — squash-merged in PR #1278.
 
 ## Context
 

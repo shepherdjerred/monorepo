@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-07-streambot-vaapi-gpu-scale
+type: reference
+status: complete
+board: false
+---
+
 # Streambot: full-GPU VAAPI pipeline (fix 4K stutter)
-
-## Status
-
-Complete — full-GPU VAAPI pipeline (hwPipeline) shipped in PR #1085 and deployed.
 
 ## Context
 

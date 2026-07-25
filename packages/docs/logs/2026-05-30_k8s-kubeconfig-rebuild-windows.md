@@ -1,8 +1,11 @@
+---
+id: log-2026-05-30-k8s-kubeconfig-rebuild-windows
+type: log
+status: complete
+board: false
+---
+
 # Rebuild Windows k8s/talos creds after cert rotation
-
-## Status
-
-Complete
 
 ## Context
 

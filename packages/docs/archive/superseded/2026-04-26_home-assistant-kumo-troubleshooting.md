@@ -1,3 +1,10 @@
+---
+id: reference-superseded-2026-04-26-home-assistant-kumo-troubleshooting
+type: reference
+status: complete
+board: false
+---
+
 # Home Assistant — Kumo Integration Troubleshooting
 
 > **Superseded.** The diagnosis in this doc (dongle-side password drift requiring physical re-pair / factory reset) was wrong. A follow-up debugging session on 2026-05-04 found the actual root cause was a stale serial→IP mapping in `kumo_cache.json` after a DHCP shuffle, with no hardware action needed. See [2026-05-04 Kumo troubleshooting](../../guides/2026-05-04_home-assistant-kumo-troubleshooting.md) for the corrected understanding and working fix recipe. Body retained below for searchability.

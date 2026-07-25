@@ -1,9 +1,11 @@
+---
+id: log-2026-06-27-qbittorrent-seeding-and-exporter-user-fix
+type: log
+status: complete
+board: false
+---
+
 # qBittorrent seeding verification + exporter username fix
-
-## Status
-
-Complete — seeding loop verified already-correct; 2 live qBit global tweaks applied;
-exporter username fix shipped in this PR.
 
 ## Context
 

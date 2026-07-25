@@ -1,3 +1,10 @@
+---
+id: reference-dagger-migration-2026-03-27-dagger-migration-phases-2-4
+type: reference
+status: complete
+board: false
+---
+
 # Plan: Dagger Migration Phases 2-4 (Complete CI Rebuild)
 
 ## Context

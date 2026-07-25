@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-12-mk64-leaderboards
+type: reference
+status: complete
+board: false
+---
+
 # Mario Kart 64 Leaderboards
-
-## Status
-
-Complete — shipped in PR #1177.
 
 ## Context
 

@@ -1,8 +1,11 @@
+---
+id: log-2026-06-14-tend-pr-1223-scout-bugsink
+type: log
+status: complete
+board: false
+---
+
 # Tend PR #1223 — fix(scout-for-lol): improve cron + prematch Bugsink signal
-
-## Status
-
-Complete
 
 ## Session Log — 2026-06-14
 

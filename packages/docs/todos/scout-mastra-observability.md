@@ -1,6 +1,10 @@
 ---
 id: scout-mastra-observability
-status: active
+type: todo
+status: in-progress
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/plans/2026-07-04_llm-observability-gaps.md
 ---
 
@@ -20,3 +24,7 @@ pipeline, so spans reach Tempo but bypass scout's `LlmArchiveSpanProcessor` —
 no S3 body archival. Options: accept Tempo-only for this low-volume route, or
 wrap the stream with `traceTextStream` instead (like birmel) to get archival
 without Mastra observability.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Trace scout's Mastra report-query agent`.

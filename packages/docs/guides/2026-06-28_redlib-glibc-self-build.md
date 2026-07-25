@@ -1,8 +1,11 @@
+---
+id: guide-2026-06-28-redlib-glibc-self-build
+type: guide
+status: complete
+board: false
+---
+
 # Why the Homelab Self-Builds redlib (glibc Image)
-
-## Status
-
-Complete (PR #1147, 2026-06-13).
 
 ## Problem
 

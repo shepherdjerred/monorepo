@@ -1,8 +1,11 @@
+---
+id: log-2026-07-03-streambot-mid-movie-death-investigation
+type: log
+status: complete
+board: false
+---
+
 # Streambot mid-movie deaths + resume failure — investigation
-
-## Status
-
-Complete (investigation only; no code changes)
 
 ## Symptom
 

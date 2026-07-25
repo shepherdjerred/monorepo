@@ -1,3 +1,10 @@
+---
+id: reference-dagger-migration-2026-04-03-dagger-source-vs-plain-steps
+type: reference
+status: complete
+board: false
+---
+
 # Decision: Dagger `--source .` Cost vs Plain Step Isolation Loss
 
 **Date:** 2026-04-03

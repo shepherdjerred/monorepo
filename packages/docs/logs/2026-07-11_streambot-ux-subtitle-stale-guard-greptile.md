@@ -1,8 +1,11 @@
+---
+id: log-2026-07-11-streambot-ux-subtitle-stale-guard-greptile
+type: log
+status: complete
+board: false
+---
+
 # Streambot subtitle-picker stale-guard fix (PR #1463 greptile P1)
-
-## Status
-
-Complete
 
 ## Context
 

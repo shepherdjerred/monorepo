@@ -1,8 +1,11 @@
+---
+id: log-2026-06-14-temporal-health-check
+type: log
+status: complete
+board: false
+---
+
 # Temporal health check — 2026-06-14
-
-## Status
-
-Complete
 
 ## Goal
 

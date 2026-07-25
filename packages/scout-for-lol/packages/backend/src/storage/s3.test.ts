@@ -205,7 +205,7 @@ describe("S3 Match Storage", () => {
       .on(PutObjectCommand)
       .resolves({ $metadata: { httpStatusCode: 200 } });
 
-    await saveMatchToS3(match, ["TrackedPlayer"]);
+    await saveMatchToS3(match, ["Lord ARKΞV", "H6 Hadès"]);
 
     expect(s3Mock.calls().length).toBe(1);
     const command = getValidatedPutCommand(0);
@@ -218,7 +218,8 @@ describe("S3 Match Storage", () => {
     );
     expect(command.input.Metadata?.["matchId"]).toBe(matchId);
     expect(command.input.Metadata?.["gameMode"]).toBe(match.info.gameMode);
-    expect(command.input.Metadata?.["trackedPlayers"]).toBe("TrackedPlayer");
+    expect(command.input.Metadata?.["trackedPlayerCount"]).toBe("2");
+    expect(command.input.Metadata).not.toHaveProperty("trackedPlayers");
 
     // saveToS3 encodes string bodies to a Uint8Array before upload; decode it
     // back and confirm it round-trips to the original match JSON.
@@ -252,7 +253,8 @@ describe("S3 Match Storage", () => {
     await expect(saveMatchToS3(match, [])).rejects.toThrow(
       `Failed to save match ${match.metadata.matchId} to S3`,
     );
-    expect(s3Mock.calls().length).toBe(1);
+    // A network-shaped error is retried MAX_PUT_ATTEMPTS (3) times before throwing.
+    expect(s3Mock.calls().length).toBe(3);
   });
 });
 
@@ -315,7 +317,9 @@ describe("S3 Image Storage", () => {
     await expect(
       saveImageToS3(matchId, imageBuffer, "solo", []),
     ).rejects.toThrow(`Failed to save PNG ${matchId} to S3`);
-    expect(s3Mock.calls().length).toBe(1);
+    // "Access Denied" here is a raw Error (no 4xx metadata) → treated as
+    // transient and retried MAX_PUT_ATTEMPTS (3) times before throwing.
+    expect(s3Mock.calls().length).toBe(3);
   });
 
   test("saveImageToS3 handles different queue types in metadata", async () => {

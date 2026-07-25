@@ -1,8 +1,11 @@
+---
+id: log-2026-07-03-typeorm-v1-migration
+type: log
+status: complete
+board: false
+---
+
 # typeorm v1 Migration — starlight-karma-bot
-
-## Status
-
-In Progress
 
 ## Context
 

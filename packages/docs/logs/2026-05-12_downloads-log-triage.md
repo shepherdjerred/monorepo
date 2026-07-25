@@ -1,6 +1,11 @@
-## Status
+---
+id: log-2026-05-12-downloads-log-triage
+type: log
+status: complete
+board: false
+---
 
-Complete
+# Downloads Log Triage
 
 ## Summary
 

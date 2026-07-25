@@ -1,8 +1,11 @@
+---
+id: log-2026-06-06-pr1056-greptile-fixes
+type: log
+status: complete
+board: false
+---
+
 # PR #1056 Greptile Code-Review Fixes
-
-## Status
-
-Complete
 
 ## Context
 

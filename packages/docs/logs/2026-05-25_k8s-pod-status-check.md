@@ -1,8 +1,11 @@
+---
+id: log-2026-05-25-k8s-pod-status-check
+type: log
+status: complete
+board: false
+---
+
 # K8s Pod Status Check
-
-## Status
-
-Partially Complete
 
 ## Context
 

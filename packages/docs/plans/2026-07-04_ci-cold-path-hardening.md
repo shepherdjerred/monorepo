@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-04-ci-cold-path-hardening
+type: plan
+status: planned
+board: true
+verification: agent
+disposition: active
+---
+
 # CI cold-path hardening — follow-ups from the 2026-07-04 remediation
-
-## Status
-
-Not Started
 
 ## Context
 
@@ -149,3 +154,7 @@ assumptions; both had neighbors already using the right patterns (injected
   criteria.
 - General CI speed work beyond the items above; warm-path performance was and
   is fine.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `CI cold-path hardening — follow-ups from the 2026-07-04 remediation`.

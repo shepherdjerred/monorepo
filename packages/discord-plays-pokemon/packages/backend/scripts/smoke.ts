@@ -5,8 +5,9 @@
  * Translated from the old Dagger `smokeTestDiscordPlaysPokemonHelper`: the app
  * boots from the inner-monorepo root, loads a minimal `config.toml` that passes
  * Zod validation with dummy tokens, and attempts a Discord login that fails with
- * the expected token error. A clean exit or timeout-kill also counts (startup
- * ran without an unexpected crash).
+ * the expected token error. Bugsink is disabled inside the smoke container so
+ * that deliberate failure remains local to CI. A clean exit or timeout-kill
+ * also counts (startup ran without an unexpected crash).
  *
  * The config is written to a host temp file and bind-mounted into the container
  * at the path getConfig() reads (CWD/config.toml). Dependency-free: Bun.spawn +
@@ -124,7 +125,15 @@ async function main(configPath: string): Promise<void> {
   // bind mount — in CI the daemon is a dind sidecar that cannot see this
   // container's filesystem, so a -v mount silently materializes as an empty
   // directory and getConfig() fails.
-  const create = await sh(["docker", "create", "--name", CONTAINER, IMAGE]);
+  const create = await sh([
+    "docker",
+    "create",
+    "--name",
+    CONTAINER,
+    "-e",
+    "SENTRY_DSN=",
+    IMAGE,
+  ]);
   if (create.code !== 0) {
     throw new Error(`docker create failed:\n${create.stderr}`);
   }

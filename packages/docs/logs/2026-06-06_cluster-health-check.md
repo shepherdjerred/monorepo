@@ -1,8 +1,11 @@
+---
+id: log-2026-06-06-cluster-health-check
+type: log
+status: complete
+board: false
+---
+
 # Cluster Health Check — ArgoCD / K8s / Talos
-
-## Status
-
-Complete
 
 ## Summary
 

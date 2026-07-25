@@ -1,9 +1,13 @@
+---
+id: plan-2026-07-03-pr-babysit-live-test-fixes
+type: plan
+status: awaiting-human
+board: true
+verification: human
+disposition: active
+---
+
 # PR Babysitter — live-test fixes (heartbeat blocker + gate + bot login)
-
-## Status
-
-Complete — implemented on `fix/babysit-heartbeat`; pending merge + post-deploy live re-test
-(todo `babysit-phase4-live-retest`).
 
 ## Context
 
@@ -61,7 +65,7 @@ left as `@temporal-worker` (user-facing command token, works as a literal match)
 - `github.test.ts` — mocks `capture` to assert the union defers to rulesets on a classic 403 and
   still fails closed on a non-permission classic error.
 
-## Verification
+## Human Verification
 
 - `packages/temporal`: `bun run typecheck` ✅, `bun test src/activities/pr-babysit/ src/workflows/bundle.test.ts` (8 pass) ✅, eslint clean ✅.
 - `packages/homelab`: `bun run typecheck` ✅.

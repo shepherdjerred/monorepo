@@ -1,8 +1,11 @@
+---
+id: log-2026-06-12-nvme-temperature-check
+type: log
+status: complete
+board: false
+---
+
 # NVMe Temperature Check — 2026-06-12
-
-## Status
-
-Complete
 
 ## Snapshot
 

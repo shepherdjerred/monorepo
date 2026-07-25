@@ -1,6 +1,13 @@
+---
+id: reference-dagger-migration-2026-04-21-dagger-ci-infra-fixes
+type: reference
+status: complete
+board: false
+---
+
 # Dagger CI Infrastructure Fixes
 
-## Status
+## Status Notes (Historical)
 
 **Not started (2026-04-21).** Punch list for a dedicated CI-infra PR. These bugs exist on `main` at commit `4b77c05f` independent of any dep updates; they make `dagger call ci-all --source .` unrunnable end-to-end locally. Documented while cleaning up Renovate Dashboard #481 — see `2026-04-21_renovate-dashboard-cleanup.md`.
 

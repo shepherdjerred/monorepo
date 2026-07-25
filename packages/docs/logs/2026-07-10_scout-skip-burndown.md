@@ -1,8 +1,11 @@
+---
+id: log-2026-07-10-scout-skip-burndown
+type: log
+status: complete
+board: false
+---
+
 # Scout-for-LoL Skip & Weak-Assertion Burndown
-
-## Status
-
-Complete
 
 ## Scope
 

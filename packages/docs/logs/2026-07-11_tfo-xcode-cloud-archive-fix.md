@@ -1,8 +1,11 @@
+---
+id: log-2026-07-11-tfo-xcode-cloud-archive-fix
+type: log
+status: complete
+board: false
+---
+
 # Tasks for Obsidian — Xcode Cloud Archive failure (build #49)
-
-## Status
-
-Complete
 
 ## Summary
 

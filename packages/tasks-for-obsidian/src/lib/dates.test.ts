@@ -7,7 +7,10 @@ import {
   isOverdue,
   isToday,
   isUpcoming,
+  nextMonday,
+  nextSaturday,
   parseLocalDate,
+  toISODate,
 } from "./dates";
 
 // Helper: format a Date as YYYY-MM-DD
@@ -184,5 +187,52 @@ describe("parseLocalDate — timezone correctness", () => {
   test("full timestamps are parsed as-is", () => {
     const d = parseLocalDate("2026-07-10T15:30:00Z");
     expect(d.getTime()).toBe(new Date("2026-07-10T15:30:00Z").getTime());
+  });
+});
+
+describe("isUpcoming — unbounded horizon", () => {
+  test("far-future dates are upcoming with an infinite horizon", () => {
+    expect(isUpcoming(daysFromNow(400), Number.POSITIVE_INFINITY)).toBe(true);
+  });
+
+  test("today and the past stay excluded with an infinite horizon", () => {
+    expect(isUpcoming(toISO(new Date()), Number.POSITIVE_INFINITY)).toBe(false);
+    expect(isUpcoming(daysFromNow(-30), Number.POSITIVE_INFINITY)).toBe(false);
+  });
+});
+
+describe("toISODate", () => {
+  test("pads month and day", () => {
+    expect(toISODate(new Date(2026, 0, 5))).toBe("2026-01-05");
+  });
+});
+
+describe("nextSaturday — Todoist 'this weekend'", () => {
+  test("midweek resolves to the upcoming Saturday", () => {
+    // 2026-07-22 is a Wednesday
+    expect(nextSaturday(new Date(2026, 6, 22))).toBe("2026-07-25");
+  });
+
+  test("on a Saturday resolves to today", () => {
+    expect(nextSaturday(new Date(2026, 6, 25))).toBe("2026-07-25");
+  });
+
+  test("on a Sunday resolves to the following Saturday", () => {
+    expect(nextSaturday(new Date(2026, 6, 26))).toBe("2026-08-01");
+  });
+});
+
+describe("nextMonday — Todoist 'next week'", () => {
+  test("midweek resolves to the coming Monday, not +7 days", () => {
+    // 2026-07-22 is a Wednesday → Monday 2026-07-27 (5 days out)
+    expect(nextMonday(new Date(2026, 6, 22))).toBe("2026-07-27");
+  });
+
+  test("on a Monday resolves strictly to the NEXT Monday", () => {
+    expect(nextMonday(new Date(2026, 6, 27))).toBe("2026-08-03");
+  });
+
+  test("on a Sunday resolves to tomorrow", () => {
+    expect(nextMonday(new Date(2026, 6, 26))).toBe("2026-07-27");
   });
 });

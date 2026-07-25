@@ -1,8 +1,11 @@
+---
+id: log-2026-05-22-scout-metrics-endpoint-check
+type: log
+status: complete
+board: false
+---
+
 # Scout Metrics Endpoint Check
-
-## Status
-
-Complete
 
 ## Summary
 

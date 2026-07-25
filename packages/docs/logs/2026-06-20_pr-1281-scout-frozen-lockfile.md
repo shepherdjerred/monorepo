@@ -1,8 +1,11 @@
+---
+id: log-2026-06-20-pr-1281-scout-frozen-lockfile
+type: log
+status: complete
+board: false
+---
+
 # PR #1281 — scout-for-lol frozen-lockfile failure (bun 1.3.14 file: dep bug)
-
-## Status
-
-Complete (fix pushed; CI re-running)
 
 ## Context
 

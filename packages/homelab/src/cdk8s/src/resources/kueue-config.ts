@@ -5,19 +5,29 @@ import { BUILDKITE_MAX_IN_FLIGHT } from "@shepherdjerred/homelab/cdk8s/src/resou
 /**
  * Creates Kueue resource management configuration for the Buildkite namespace.
  *
- * Caps the buildkite namespace at 7.5 CPU / 16Gi of requests (node is 32c/128Gi, but CPU requests
- * from other namespaces leave only ~2.5 cores of schedulable headroom — raising this further just
- * converts Kueue-suspended jobs into unschedulable Pending pods).
- * Jobs exceeding the quota are suspended (not rejected), eliminating FailedCreate event storms.
+ * Caps the buildkite namespace at 12 CPU / 20Gi of requests. Sized to measured
+ * headroom on 2026-07-22: non-buildkite namespaces commit only 13.2 CPU / 45Gi
+ * of the node's 27 CPU / 73Gi allocatable, leaving ~13.8 CPU / 28Gi schedulable
+ * for CI. 12 CPU / 20Gi stays comfortably inside that with margin against the
+ * 8Gi soft-eviction floor (the freeze incidents earned that caution). Combined
+ * with the right-sized per-step requests in .buildkite/pipeline.yml (a heavy
+ * privileged pod costs ~1.75 CPU / 3.5Gi, vs 3 CPU / 8Gi before), this admits
+ * ~6 concurrent heavy pods instead of 2 — the fix for the admission starvation
+ * that made CI p50 22m / p90 124m in the two weeks before this change (see
+ * packages/docs/logs/2026-07-22_ci-capacity-analysis.md). Raising further is a
+ * one-line bump once the freeze canaries (node MemAvailable, ZfsArcHitRateLow,
+ * eviction events) stay quiet under the new load.
  *
- * 2026-07 CI-freeze hardening: `pods` added as a covered resource, capped at
- * `BUILDKITE_MAX_IN_FLIGHT`. Buildkite's `max-in-flight` is the real, primary
- * concurrency control (see the long comment on it in buildkite.ts); this is a
- * cheap, independent second enforcement point at the K8s admission layer in
- * case that setting ever regresses (e.g. a future Helm-values typo). No
- * change to the CPU/memory nominal quota — Kueue admission accounting is
- * always requests-based, and 7.5 CPU / 16Gi remains correctly scoped against
- * the small per-step requests regardless of the pods cap.
+ * Jobs exceeding the quota are suspended (not rejected), eliminating
+ * FailedCreate event storms.
+ *
+ * The `pods` covered resource is capped at `BUILDKITE_MAX_IN_FLIGHT`.
+ * Buildkite's `max-in-flight` is the real, primary concurrency control (see the
+ * long comment on it in buildkite.ts); this is a cheap, independent second
+ * enforcement point at the K8s admission layer in case that setting ever
+ * regresses (e.g. a future Helm-values typo). Kueue admission accounting is
+ * always requests-based, so the CPU/memory nominal quota is scoped against the
+ * per-step requests regardless of the pods cap.
  */
 export function createKueueConfig(chart: Chart) {
   new ApiObject(chart, "kueue-resource-flavor", {
@@ -46,22 +56,45 @@ export function createKueueConfig(chart: Chart) {
       },
       resourceGroups: [
         {
-          coveredResources: ["cpu", "memory", "pods"],
+          // ephemeral-storage MUST be covered here: .buildkite/pipeline.yml sets
+          // an ephemeral-storage *request* on every step/dind container, and
+          // Kueue refuses to admit a workload that requests a resource its
+          // ClusterQueue does not cover ("resource ephemeral-storage unavailable
+          // in ClusterQueue"). Omitting it froze CI completely — every workload
+          // sat Pending and no build could run (which also blocked the
+          // argocd-sync that would have shipped this very fix). See
+          // packages/docs/logs/2026-07-24_ci-main-kueue-ephemeral-storage-freeze.md.
+          coveredResources: ["cpu", "memory", "pods", "ephemeral-storage"],
           flavors: [
             {
               name: "default",
               resources: [
                 {
                   name: "cpu",
-                  nominalQuota: "7500m",
+                  // Canonical "12", NOT "12000m": Kueue/Kubernetes normalises
+                  // the stored Quantity to "12", and ArgoCD diffs the raw string
+                  // — "12000m" in the chart vs "12" live is a permanent phantom
+                  // OutOfSync that wedges the app-of-apps sync (it never reaches
+                  // Synced, so every argocd-sync CI step then fails). Keep this
+                  // in the form the API server stores.
+                  nominalQuota: "12",
                 },
                 {
                   name: "memory",
-                  nominalQuota: "16Gi",
+                  nominalQuota: "20Gi",
                 },
                 {
                   name: "pods",
                   nominalQuota: String(BUILDKITE_MAX_IN_FLIGHT),
+                },
+                {
+                  // Generous headroom, deliberately NOT a binding constraint:
+                  // CPU/memory gate concurrency first (~6 heavy pods at 6Gi eph
+                  // request each ≈ 36Gi). 100Gi leaves ~2x margin and sits far
+                  // under the node's multi-TiB ephemeral capacity — it exists
+                  // only so Kueue can account for the pods' eph requests.
+                  name: "ephemeral-storage",
+                  nominalQuota: "100Gi",
                 },
               ],
             },

@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-12-helm-types-and-resources-hygiene
+type: reference
+status: complete
+board: false
+---
+
 # Helm-values typing + container-resources hygiene (follow-up PR)
-
-## Status
-
-Complete — shipped in PR #1135.
 
 ## Context
 

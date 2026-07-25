@@ -1,8 +1,11 @@
+---
+id: log-2026-05-23-scout-version-commit-back-check
+type: log
+status: complete
+board: false
+---
+
 # Scout Version Commit-Back Check
-
-## Status
-
-Complete
 
 ## Summary
 

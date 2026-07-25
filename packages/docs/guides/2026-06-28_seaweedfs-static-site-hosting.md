@@ -1,3 +1,10 @@
+---
+id: guide-2026-06-28-seaweedfs-static-site-hosting
+type: guide
+status: complete
+board: false
+---
+
 # SeaweedFS Static-Site Hosting
 
 How `*.sjer.red` web apps are served, and the recurring SeaweedFS gotchas behind broken deploys and flaky asset loads.

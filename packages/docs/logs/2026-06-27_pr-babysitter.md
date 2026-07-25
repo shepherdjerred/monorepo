@@ -1,8 +1,11 @@
+---
+id: log-2026-06-27-pr-babysitter
+type: log
+status: complete
+board: false
+---
+
 # PR Babysitter — 2026-06-27
-
-## Status
-
-In Progress
 
 ## Goal
 

@@ -26,17 +26,11 @@ import {
   loadingScreenToImage,
   loadingScreenToSvg,
 } from "@scout-for-lol/report";
-import {
-  savePrematchDataToS3,
-  savePrematchImageToS3,
-  savePrematchSvgToS3,
-} from "#src/storage/s3.ts";
+import { savePrematchImageToS3, savePrematchSvgToS3 } from "#src/storage/s3.ts";
 import {
   prematchLoadingScreenGeneratedTotal,
   prematchLoadingScreenDurationSeconds,
-  prematchLoadingScreenSkinFallbackTotal,
 } from "#src/metrics/index.ts";
-import type { SkinFallbackEvent } from "@scout-for-lol/data/index.ts";
 
 const logger = createLogger("prematch-notification");
 
@@ -138,20 +132,9 @@ export async function sendPrematchNotification(
     `[sendPrematchNotification] 📢 Sending notification for game ${gameId} with ${trackedPlayers.length.toString()} tracked player(s)`,
   );
 
-  const prematchPayloadSave = await savePrematchDataToS3(
-    gameInfo.gameId,
-    gameInfo,
-    aliases,
-  );
-  if (prematchPayloadSave.status === "error") {
-    logger.warn(
-      `[sendPrematchNotification] ⚠️  Failed to persist spectator payload to S3 for game ${gameId}; continuing with notification delivery`,
-    );
-  } else if (prematchPayloadSave.status === "skipped_no_bucket") {
-    logger.info(
-      `[sendPrematchNotification] ℹ️  S3 disabled; spectator payload not persisted for game ${gameId}`,
-    );
-  }
+  // The authoritative raw spectator payload is written to S3 upstream by the
+  // detection ingest (recordPrematchForReportStore in active-game-detection.ts)
+  // before this runs, so there is no spectator-data S3 write here.
 
   const puuids: LeaguePuuid[] = trackedPlayers.map(
     (p) => p.league.leagueAccount.puuid,
@@ -215,25 +198,9 @@ export async function sendPrematchNotification(
       region,
     );
 
-    // Observability hook for the runtime defense-in-depth fallback in
-    // getChampionLoadingImageBase64: log + meter when a participant's
-    // requested skin JPG is missing on disk and we silently render with
-    // skin 0 instead. Logged at warn (not Sentry) because it's an expected
-    // condition during the small window between Riot shipping a new skin
-    // and the next `update-data-dragon` run.
-    const onSkinFallback = (event: SkinFallbackEvent): void => {
-      prematchLoadingScreenSkinFallbackTotal.inc({
-        champion: event.championName,
-        requested_skin: event.requestedSkin.toString(),
-      });
-      logger.warn(
-        `[sendPrematchNotification] 🎨 Skin fallback for ${event.championName} skin ${event.requestedSkin.toString()} (game ${gameId}) — using base skin art instead. Run update-data-dragon to refresh.`,
-      );
-    };
-
     const [image, svg] = await Promise.all([
-      loadingScreenToImage(loadingScreenData, { onSkinFallback }),
-      loadingScreenToSvg(loadingScreenData, { onSkinFallback }),
+      loadingScreenToImage(loadingScreenData),
+      loadingScreenToSvg(loadingScreenData),
     ]);
 
     const attachmentName = `loading-screen-${gameId}.png`;

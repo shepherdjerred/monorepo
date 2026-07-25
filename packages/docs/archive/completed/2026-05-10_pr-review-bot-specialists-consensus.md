@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-10-pr-review-bot-specialists-consensus
+type: reference
+status: complete
+board: false
+---
+
 # PR Review Bot — Phase 3 (Specialists × Consensus Voting)
-
-## Status
-
-Complete
 
 ## Context
 

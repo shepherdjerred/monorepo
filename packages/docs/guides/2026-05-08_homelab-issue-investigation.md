@@ -1,3 +1,10 @@
+---
+id: guide-2026-05-08-homelab-issue-investigation
+type: guide
+status: complete
+board: false
+---
+
 # Homelab Issue Investigation — 2026-05-08
 
 Companion to [2026-05-08 Homelab Health Audit](2026-05-08_homelab-health-audit.md). Root-cause-level deep dive on every Yellow row, every open PD incident, and every notable Bugsink issue from the audit. Five investigation agents ran in parallel; this is the consolidated finding set.

@@ -1,6 +1,10 @@
 ---
 id: scout-report-lake-fact-table-drop
-status: waiting-on-verification
+type: todo
+status: awaiting-human
+board: true
+verification: human
+disposition: active
 origin: packages/docs/plans/2026-07-04_scout-report-lake-duckdb.md
 ---
 
@@ -38,3 +42,7 @@ raw), `ReportStoreImportProgress/Failure`, `SummonerIndex`,
 
 Rollback story: facts are regenerable at any time by restoring the old code
 and re-running the S3 importer — raw data is never touched.
+
+## Human Verification
+
+- Verify `Drop the scout fact tables after the report-lake soak` in its intended environment and record evidence in the Comment Log.

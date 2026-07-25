@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-16-data-dragon-image-only-pr-suppression
+type: reference
+status: complete
+board: false
+---
+
 # Data Dragon Image-Only PR Suppression
-
-## Status
-
-Complete
 
 ## Summary
 

@@ -1,9 +1,5 @@
 import { type Augment } from "@scout-for-lol/data";
 
-// Arena participant data does not currently carry per-player skinNum; we
-// render every player against the default skin until ingestion is extended.
-export const ARENA_DEFAULT_SKIN_NUM = 0;
-
 const DUO_TEAM_CARD_WIDTH = 480;
 const TRIO_TEAM_CARD_WIDTH = 640;
 

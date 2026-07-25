@@ -1,3 +1,10 @@
+---
+id: reference-bazel-2026-03-15-hermetic-builds-cacheable-oci
+type: reference
+status: complete
+board: false
+---
+
 # Plan: Hermetic Vite/Astro Build Rules + Cacheable OCI Images
 
 ## Status: ~90% Complete (2026-03-19)

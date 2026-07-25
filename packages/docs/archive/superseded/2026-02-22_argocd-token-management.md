@@ -1,3 +1,10 @@
+---
+id: reference-superseded-2026-02-22-argocd-token-management
+type: reference
+status: complete
+board: false
+---
+
 # Plan: ArgoCD Token Management via OpenTofu + 1Password
 
 ## Status: Implementation Complete, Manual Steps Remaining

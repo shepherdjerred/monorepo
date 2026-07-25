@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-13-scout-competitions-reports-ui
+type: reference
+status: complete
+board: false
+---
+
 # Scout for LoL — Competition & Report Management in the Web App
-
-## Status
-
-Complete — shipped in PR #1170.
 
 ## Context
 

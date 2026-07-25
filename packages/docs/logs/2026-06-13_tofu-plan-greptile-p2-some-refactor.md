@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-tofu-plan-greptile-p2-some-refactor
+type: log
+status: complete
+board: false
+---
+
 # Greptile P2: Refactor checkTofuChanges to .some() expression
-
-## Status
-
-Complete
 
 ## Context
 

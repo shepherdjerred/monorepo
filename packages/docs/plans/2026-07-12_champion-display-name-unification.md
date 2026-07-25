@@ -1,3 +1,12 @@
+---
+id: plan-2026-07-12-champion-display-name-unification
+type: plan
+status: planned
+board: true
+verification: agent
+disposition: active
+---
+
 # Unify champion name display across Scout for LoL
 
 ## Status: Complete
@@ -78,3 +87,7 @@ A lookup table from the bundled `champion.json`'s `name` field (twisted-free, re
 
 - `packages/llm-observability` is not installed under `--group=scout` scoped setup (`bun run scripts/setup.ts --group=scout`), so `bun run typecheck` in `backend`/`app` always shows `@opentelemetry/*` module-not-found errors — confirmed pre-existing via `git stash` comparison, unrelated to this change.
 - The `report` package's `bun test` (default glob) does not include the heavier `*.integration.test.ts` files (arena, loading-screen); those were run explicitly and pass.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Unify champion name display across Scout for LoL`.

@@ -18,7 +18,9 @@
  *   TAILSCALE_OAUTH_CLIENT_ID, TAILSCALE_OAUTH_CLIENT_SECRET,
  *   TF_VAR_BUILDKITE_API_TOKEN, TF_VAR_RADARR_API_KEY, TF_VAR_SONARR_API_KEY,
  *   TF_VAR_PROWLARR_API_KEY, TF_VAR_QBITTORRENT_PASSWORD,
- *   TF_VAR_PRIVATEHD_PASSWORD, TF_VAR_PRIVATEHD_PID, TF_VAR_PAGERDUTY_TOKEN
+ *   TF_VAR_PRIVATEHD_PASSWORD, TF_VAR_PRIVATEHD_PID, TF_VAR_AVISTAZ_PASSWORD,
+ *   TF_VAR_AVISTAZ_PID, TF_VAR_ANIMEZ_PASSWORD, TF_VAR_ANIMEZ_PID,
+ *   TF_VAR_PAGERDUTY_TOKEN
  */
 
 import { existsSync } from "node:fs";
@@ -28,6 +30,7 @@ import {
   requireEnv,
   optionalEnv,
 } from "../../../scripts/lib/run.ts";
+import { runMain } from "../../../scripts/lib/transient.ts";
 
 /** homelab package root = two levels up from this script (packages/homelab). */
 function homelabRoot(): string {
@@ -61,6 +64,10 @@ const OPTIONAL_SECRET_ENV: readonly [source: string, target: string][] = [
   ["QBITTORRENT_PASSWORD", "TF_VAR_qbittorrent_password"],
   ["PRIVATEHD_PASSWORD", "TF_VAR_privatehd_password"],
   ["PRIVATEHD_PID", "TF_VAR_privatehd_pid"],
+  ["AVISTAZ_PASSWORD", "TF_VAR_avistaz_password"],
+  ["AVISTAZ_PID", "TF_VAR_avistaz_pid"],
+  ["ANIMEZ_PASSWORD", "TF_VAR_animez_password"],
+  ["ANIMEZ_PID", "TF_VAR_animez_pid"],
   ["PAGERDUTY_TOKEN", "TF_VAR_pagerduty_token"],
 ];
 
@@ -184,4 +191,4 @@ async function main(): Promise<void> {
   console.log(`--- applied: ${stack}`);
 }
 
-await main();
+await runMain(main);

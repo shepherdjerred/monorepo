@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-14-pr-merge-conflict-check
+type: reference
+status: complete
+board: false
+---
+
 # PR Merge-Conflict Check on Push to Main
-
-## Status
-
-Complete — shipped in PR #1252 (ci/merge-conflict required check).
 
 ## Context
 

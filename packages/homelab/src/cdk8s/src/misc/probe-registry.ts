@@ -5,6 +5,12 @@ export type BackendProbeDescriptor = {
   serviceName: string;
   port: number;
   module: ProbeModule;
+  /**
+   * URL path the in-cluster HTTP probe requests (e.g. "/ready"). Only
+   * meaningful for HTTP modules — a `tcp_connect` probe ignores it. Defaults
+   * to "/".
+   */
+  path: string;
 };
 
 export type PublicProbeDescriptor = {
@@ -42,27 +48,46 @@ function backendKey(
  *
  * Idempotent by design: a service reachable via both Tailscale and a
  * Cloudflare Tunnel registers the identical {namespace, serviceName, port}
- * from both call sites (confirmed at every overlap site in this repo), and
- * the second registration is a silent no-op rather than a duplicate Probe.
+ * from both call sites, and the second registration is a no-op rather than a
+ * duplicate Probe. A re-registration whose module or path DIFFERS from the
+ * stored one throws: silently keeping whichever call site happened to run
+ * first would leave one of the two call sites' probe intent unapplied.
  */
 export function registerBackendProbe(descriptor: {
   namespace: string;
   serviceName: string;
   port: number;
   module?: ProbeModule;
+  path?: string;
 }): void {
   const key = backendKey(
     descriptor.namespace,
     descriptor.serviceName,
     descriptor.port,
   );
-  if (backendProbes.has(key)) return;
-  backendProbes.set(key, {
+  const resolved: BackendProbeDescriptor = {
     namespace: descriptor.namespace,
     serviceName: descriptor.serviceName,
     port: descriptor.port,
     module: descriptor.module ?? "http_2xx",
-  });
+    path: descriptor.path ?? "/",
+  };
+  const existing = backendProbes.get(key);
+  if (existing !== undefined) {
+    if (
+      existing.module !== resolved.module ||
+      existing.path !== resolved.path
+    ) {
+      throw new Error(
+        `registerBackendProbe(${key}): conflicting duplicate registration — ` +
+          `already registered with module "${existing.module}" path "${existing.path}", ` +
+          `re-registered with module "${resolved.module}" path "${resolved.path}". ` +
+          `Pass identical probeModule/probePath at every call site for this service.`,
+      );
+    }
+    return;
+  }
+  backendProbes.set(key, resolved);
 }
 
 /**

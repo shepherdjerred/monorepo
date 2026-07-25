@@ -1,8 +1,4 @@
 import { SlashCommandBuilder } from "discord.js";
-import {
-  REPORT_MAX_LOOKBACK_DAYS,
-  REPORT_MAX_ROWS_LIMIT,
-} from "@scout-for-lol/data";
 
 export const reportCommand = new SlashCommandBuilder()
   .setName("report")
@@ -39,22 +35,6 @@ export const reportCommand = new SlashCommandBuilder()
           .setDescription("Report schedule (CRON, UTC, min 1/day)")
           .setRequired(true)
           .setAutocomplete(true),
-      )
-      .addIntegerOption((option) =>
-        option
-          .setName("lookback-days")
-          .setDescription("Days of SQLite facts to scan")
-          .setRequired(false)
-          .setMinValue(1)
-          .setMaxValue(REPORT_MAX_LOOKBACK_DAYS),
-      )
-      .addIntegerOption((option) =>
-        option
-          .setName("max-rows")
-          .setDescription("Maximum rows to post")
-          .setRequired(false)
-          .setMinValue(1)
-          .setMaxValue(REPORT_MAX_ROWS_LIMIT),
       )
       .addStringOption((option) =>
         option
@@ -103,22 +83,6 @@ export const reportCommand = new SlashCommandBuilder()
           .setDescription("Report schedule (CRON, UTC, min 1/day)")
           .setRequired(false)
           .setAutocomplete(true),
-      )
-      .addIntegerOption((option) =>
-        option
-          .setName("lookback-days")
-          .setDescription("Days of SQLite facts to scan")
-          .setRequired(false)
-          .setMinValue(1)
-          .setMaxValue(REPORT_MAX_LOOKBACK_DAYS),
-      )
-      .addIntegerOption((option) =>
-        option
-          .setName("max-rows")
-          .setDescription("Maximum rows to post")
-          .setRequired(false)
-          .setMinValue(1)
-          .setMaxValue(REPORT_MAX_ROWS_LIMIT),
       )
       .addBooleanOption((option) =>
         option

@@ -1,8 +1,11 @@
+---
+id: log-2026-05-29-pr-962-tunnel-dns-coverage-trailing-comma
+type: log
+status: complete
+board: false
+---
+
 # PR #962 — address open review feedback (trailing-comma robustness)
-
-## Status
-
-Complete
 
 ## Context
 

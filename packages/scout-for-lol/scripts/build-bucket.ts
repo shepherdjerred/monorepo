@@ -19,8 +19,8 @@
 
 import { $ } from "bun";
 
-await $`bun run --filter='./packages/frontend' build`;
-await $`bun run --filter='./packages/app' build`;
+await $`bun --no-install run --filter='./packages/frontend' build`;
+await $`bun --no-install run --filter='./packages/app' build`;
 
 const appDist = "packages/app/dist";
 const frontendDist = "packages/frontend/dist";

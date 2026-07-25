@@ -5,6 +5,9 @@ export function createAppsApp(chart: Chart) {
   return new Application(chart, "apps-app", {
     metadata: {
       name: "apps",
+      // The apps chart manages the root Application itself. Exclude that one
+      // self-reference while child Application health is aggregated into root.
+      annotations: { "argocd.argoproj.io/ignore-healthcheck": "true" },
     },
     spec: {
       revisionHistoryLimit: 5,

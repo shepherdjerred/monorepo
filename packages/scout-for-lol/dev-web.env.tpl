@@ -11,6 +11,7 @@
 # ── Build / process identity ──────────────────────────────────────────
 VERSION=local-dev
 GIT_SHA=local-dev
+CONTRACT_HASH=local-dev
 ENVIRONMENT=dev
 PORT=3000
 

@@ -18,6 +18,9 @@ type Props = {
   availableProjects: readonly string[];
   availableContexts: readonly string[];
   availableTags: readonly string[];
+  /** When provided, renders a right-aligned Select/Done toggle. */
+  selectionMode?: boolean | undefined;
+  onToggleSelection?: (() => void) | undefined;
 };
 
 export function FilterSortBar({
@@ -28,6 +31,8 @@ export function FilterSortBar({
   availableProjects,
   availableContexts,
   availableTags,
+  selectionMode = false,
+  onToggleSelection,
 }: Props) {
   const { colors } = useSettings();
   const [showFilter, setShowFilter] = useState(false);
@@ -84,6 +89,44 @@ export function FilterSortBar({
             </View>
           ) : null}
         </Pressable>
+        {onToggleSelection ? (
+          <>
+            <View style={styles.spacer} />
+            <Pressable
+              style={[
+                styles.button,
+                {
+                  backgroundColor: selectionMode
+                    ? colors.primary
+                    : colors.surface,
+                  borderColor: selectionMode ? colors.primary : colors.border,
+                },
+              ]}
+              onPress={onToggleSelection}
+              accessibilityRole="button"
+              accessibilityLabel={
+                selectionMode ? "Done selecting" : "Select tasks"
+              }
+              testID="select-mode-toggle"
+            >
+              <AppIcon
+                name="check-square"
+                size={14}
+                color={selectionMode ? "#ffffff" : colors.textSecondary}
+              />
+              <Text
+                style={[
+                  styles.buttonText,
+                  {
+                    color: selectionMode ? "#ffffff" : colors.textSecondary,
+                  },
+                ]}
+              >
+                {selectionMode ? "Done" : "Select"}
+              </Text>
+            </Pressable>
+          </>
+        ) : null}
       </View>
 
       <FilterModal
@@ -108,6 +151,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     gap: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  spacer: {
+    flex: 1,
   },
   button: {
     flexDirection: "row",

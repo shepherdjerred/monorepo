@@ -1,8 +1,13 @@
+---
+id: plan-2026-06-28-scout-whatsnew-auto
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Auto-update Scout "What's New" on new patches & seasons
-
-## Status
-
-In Progress (implemented + verified locally; PR pending)
 
 ## Context
 
@@ -132,3 +137,7 @@ links straight to the official patch notes.
   and link are never LLM-controlled.
 - Season prettier step assumes Claude ran `bun install`; the explicit
   `--frozen-lockfile` install before prettier covers the no-install case.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Auto-update Scout "What's New" on new patches & seasons`.

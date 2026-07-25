@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-07-streambot-observability
+type: reference
+status: complete
+board: false
+---
+
 # Streambot Observability
-
-## Status
-
-Complete (PR #1105 merged 2026-06-08; post-merge Grafana verification still outstanding)
 
 ## Context
 

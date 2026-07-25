@@ -1,6 +1,13 @@
+---
+id: log-2026-06-13-error-handling-audit
+type: log
+status: complete
+board: false
+---
+
 # Error-Handling / Fail-Fast Audit — 2026-06-13
 
-## Status
+## Status Notes (Historical)
 
 Complete (findings doc). Scope: first-party `packages/`, `scripts/`, `.dagger/`. Excludes `archive/`, `practice/`, `poc/`,
 `packages/discord-video-stream/`, generated/target. Remediation tracked in `plans/2026-06-13_code-quality-remediation.md` (§9).

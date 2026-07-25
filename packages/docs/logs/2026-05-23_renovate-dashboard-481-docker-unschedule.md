@@ -1,8 +1,11 @@
+---
+id: log-2026-05-23-renovate-dashboard-481-docker-unschedule
+type: log
+status: complete
+board: false
+---
+
 # Renovate Dashboard #481 Docker Unschedule
-
-## Status
-
-Complete
 
 ## Context
 

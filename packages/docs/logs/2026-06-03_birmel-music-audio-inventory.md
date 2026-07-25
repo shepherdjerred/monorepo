@@ -1,8 +1,11 @@
+---
+id: log-2026-06-03-birmel-music-audio-inventory
+type: log
+status: complete
+board: false
+---
+
 # Birmel Music / Audio Inventory
-
-## Status
-
-Complete
 
 ## Summary
 

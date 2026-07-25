@@ -1,6 +1,13 @@
+---
+id: log-2026-05-22-pr-751-keep-overseerr
+type: log
+status: complete
+board: false
+---
+
 # PR 751 — Keep Overseerr Alongside Seerr
 
-## Status
+## Status Notes (Historical)
 
 Complete — 2026-07-03 the 8 users + 156 requests were migrated into Seerr and an
 edge redirect `overseerr.sjer.red → seerr.sjer.red` went live. Overseerr removal

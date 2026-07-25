@@ -1,8 +1,11 @@
+---
+id: log-2026-07-02-tasknotes-system-review
+type: log
+status: complete
+board: false
+---
+
 # TaskNotes System Review — server, types, app, and Obsidian integration surface
-
-## Status
-
-Complete
 
 ## Scope
 

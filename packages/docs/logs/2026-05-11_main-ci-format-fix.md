@@ -1,8 +1,11 @@
+---
+id: log-2026-05-11-main-ci-format-fix
+type: log
+status: complete
+board: false
+---
+
 # Main CI Format Fix
-
-## Status
-
-Complete
 
 ## Summary
 

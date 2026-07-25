@@ -18,16 +18,14 @@ export function Splash({
   championName,
   width,
   height,
-  skinNum = 0,
   vignette = "left",
 }: {
   championName: string;
   width: number;
   height: number;
-  skinNum?: number;
   vignette?: "left" | "bottom" | "both";
 }) {
-  const src = getChampionSplashImage(championName, skinNum);
+  const src = getChampionSplashImage(championName);
   const dark = palette.grey[6];
 
   const overlay =

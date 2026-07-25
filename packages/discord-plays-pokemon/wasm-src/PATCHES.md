@@ -8,8 +8,9 @@ commit and patched at build time.
 
 Unlike `discord-plays-mario-kart` (which vendors its upstream C tree under
 `wasm-src/code`), pokeemerald's decomp source is far too large to vendor, so we
-clone it at build time via Dagger's content-addressed native git source
-(`dag.git().commit().tree()`). Only the patch series lives here.
+clone it at build time — locally by `scripts/build-wasm.sh`, in the image build
+by the `wasm-builder` stage of `packages/discord-plays-pokemon/Dockerfile`.
+Only the patch series lives here.
 
 ```
 wasm-src/
@@ -20,14 +21,21 @@ wasm-src/
 ## Pin
 
 - **Upstream:** https://github.com/ottohg/pokeemerald-wasm (default branch `master`)
-- **Pinned commit:** `POKEEMERALD_SOURCE_REF` in `.dagger/src/constants.ts` — the
-  single source of truth. The local `scripts/build-wasm.sh` reads this value
-  directly (no separate pin to keep in sync), and the CI build
-  (`buildPokeemeraldWasm` in `.dagger/src/image.ts`) imports the same constant.
-- Renovate's `git-refs` custom manager (`renovate.json`) advances the pin as
-  `master` moves and opens a review PR; the in-image verification gate (below)
-  re-runs on each bump. Because both build paths derive from the one constant, a
-  Renovate bump can never leave the local script building a stale emulator.
+- **Pinned commit:** `OTTOHG_SHA` in `scripts/build-wasm.sh` — the source of
+  truth. The Dockerfile `wasm-builder` stage carries a second copy
+  (`ENV OTTOHG_SHA=…`); Renovate's `git-refs` custom manager (`renovate.json`)
+  matches BOTH forms and advances them together, so the two can't drift.
+- The committed species/map data tables
+  (`packages/backend/src/game/events/generated/species.ts`,
+  `packages/backend/src/game/spatial/generated/map-names.ts`) are generated
+  from the same pin: the generators read `OTTOHG_SHA` via
+  `scripts/lib/pokeemerald-pin.ts`, and `build-wasm.sh` re-runs them after
+  every wasm build. A Renovate pin bump therefore needs a follow-up regen of
+  those tables (hosted Renovate can't run the generators itself) — the
+  `--check`-style drift is caught the next morning by the daily Temporal
+  refresh once that schedule ships, or immediately by running `build-wasm.sh`.
+- Renovate opens a review PR as `master` moves; the in-image verification gate
+  (below) re-runs on each bump.
 
 ## Patches (`patches/`)
 
@@ -41,11 +49,13 @@ Applied in order with `patch -p1` (paths are `a/… b/…`):
 
 - **Local:** `scripts/build-wasm.sh` (needs homebrew LLVM — clang w/ wasm32
   target + `wasm-ld` — plus `libpng`/`zlib` and `uv`). Clones the pin, applies
-  `patches/`, drives mapjson, runs `make wasm`, and stages the binary at
-  `packages/backend/assets/pokeemerald.wasm` (gitignored).
-- **CI:** `buildPokeemeraldWasm` in `.dagger/src/image.ts` does the same in a
-  `debian:trixie-slim` (clang-19) Dagger stage and copies the result into the
-  backend image. The build uses clang `wasm32-unknown-unknown` + `wasm-ld`, **not
+  `patches/`, drives mapjson, runs `make wasm`, stages the binary at
+  `packages/backend/assets/pokeemerald.wasm` (gitignored), and regenerates the
+  committed species/map data tables from the same pin.
+- **Image build:** the `wasm-builder` stage in
+  `packages/discord-plays-pokemon/Dockerfile` does the same in a
+  `debian:trixie-slim` (clang-19) stage and copies the result into the backend
+  image. The build uses clang `wasm32-unknown-unknown` + `wasm-ld`, **not
   emscripten**; bookworm's clang-14 links a wasm Bun/JSC rejects, so the
   toolchain image is pinned to trixie.
 
@@ -64,13 +74,16 @@ checkout); they run for real in the image build and locally after
 
 ## Updating upstream
 
-A Renovate PR will normally bump the pin for you. To do it by hand:
+A Renovate PR will normally bump the pin for you (both `build-wasm.sh` and the
+Dockerfile copy). To do it by hand:
 
-1. Set `POKEEMERALD_SOURCE_REF` (`.dagger/src/constants.ts`) to the new commit.
-   `scripts/build-wasm.sh` reads that constant automatically, so there is no
-   second pin to touch.
+1. Set `OTTOHG_SHA` in `scripts/build-wasm.sh` AND the matching
+   `ENV OTTOHG_SHA=` in `packages/discord-plays-pokemon/Dockerfile` to the new
+   commit (Renovate manages both; hand edits must keep them equal).
 2. `scripts/build-wasm.sh` — if a patch no longer applies, `patch` stops and
-   names it; re-base that `.patch` against the new source.
+   names it; re-base that `.patch` against the new source. The script ends by
+   regenerating the committed species/map data tables from the new pin —
+   commit those alongside the pin bump.
 3. Run the verification tests (or let the image build / Renovate PR run them):
    `cd packages/backend && bun test src/emulator/emulator-symbols.integration.test.ts src/emulator/audio/audio-fingerprint.test.ts`.
 4. If the audio intentionally changed, regenerate the baseline with

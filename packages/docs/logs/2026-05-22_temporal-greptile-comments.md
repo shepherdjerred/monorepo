@@ -1,8 +1,11 @@
+---
+id: log-2026-05-22-temporal-greptile-comments
+type: log
+status: complete
+board: false
+---
+
 # Temporal Greptile Comment Fixes
-
-## Status
-
-Complete
 
 ## Session Log — 2026-05-22
 

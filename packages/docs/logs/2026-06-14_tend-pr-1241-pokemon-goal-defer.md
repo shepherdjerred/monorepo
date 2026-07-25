@@ -1,8 +1,11 @@
+---
+id: log-2026-06-14-tend-pr-1241-pokemon-goal-defer
+type: log
+status: complete
+board: false
+---
+
 # PR #1241 — fix(discord-plays-pokemon): defer /goal reply so Discord doesn't time out
-
-## Status
-
-Complete (follow-up: PR #1250, PR #1254)
 
 ## Context
 

@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-10-update-docker-helm-images-round2
+type: reference
+status: complete
+board: false
+---
+
 # Update docker / helm / infra-tool pins (round 2)
-
-## Status
-
-Complete
 
 ## Intent
 

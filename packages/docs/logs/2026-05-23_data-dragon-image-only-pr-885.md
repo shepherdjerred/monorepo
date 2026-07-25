@@ -1,8 +1,11 @@
+---
+id: log-2026-05-23-data-dragon-image-only-pr-885
+type: log
+status: complete
+board: false
+---
+
 # Data Dragon Image-Only PR 885 Check
-
-## Status
-
-Complete
 
 ## Summary
 

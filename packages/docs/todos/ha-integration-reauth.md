@@ -1,6 +1,10 @@
 ---
 id: ha-integration-reauth
-status: blocked
+type: todo
+status: planned
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/plans/2026-07-09_ha-registry-cleanup.md
 source_marker: false
 ---
@@ -23,10 +27,10 @@ source_marker: false
   consistent now; a plain HA restart fixes it. Reload alone cannot (the stale
   compiled module is cached in the running process).
 
-## Remaining steps
+## Remaining
 
-1. Restart HA → roborock loads, Q7 Max returns to HomeKit.
-2. Watch home-assistant/core#172228 / Rheem for the econet chain fix; re-check the
-   water heater after any Rheem-side change.
-3. After econet recovers: check whether the doubled `Heat Pump Water Heater_*`
-   friendly names self-heal; fix if not.
+- [ ] Restart HA → roborock loads, Q7 Max returns to HomeKit.
+- [ ] Watch home-assistant/core#172228 / Rheem for the econet chain fix; re-check the
+      water heater after any Rheem-side change.
+- [ ] After econet recovers: check whether the doubled `Heat Pump Water Heater_*`
+      friendly names self-heal; fix if not.

@@ -18,7 +18,11 @@ import {
   updateLanePriors,
   type LanePriorUpdateConfig,
 } from "./data-dragon-lane-priors.ts";
-import { botCloneCacheDir, installScoutWorkspace } from "./bot-clone.ts";
+import {
+  botCloneCacheDir,
+  disarmGitHooks,
+  installScoutWorkspace,
+} from "./bot-clone.ts";
 import { recordRun } from "./data-dragon-metrics.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import {
@@ -360,6 +364,10 @@ export const dataDragonActivities = {
       await runCommand(["git", "add", "--", ...GENERATED_PATHS], {
         cwd: repoDir,
       });
+      // Defense-in-depth, consistent with openSeasonRefreshPr: no agentic
+      // step runs before this commit today, but disarm anyway so this
+      // activity stays safe if one is ever added.
+      await disarmGitHooks(repoDir);
       await runCommand(["git", "commit", "-m", title], { cwd: repoDir });
       const commitHash = await runCommand(["git", "rev-parse", "HEAD"], {
         cwd: repoDir,

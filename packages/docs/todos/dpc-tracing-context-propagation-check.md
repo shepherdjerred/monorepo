@@ -1,6 +1,10 @@
 ---
 id: dpc-tracing-context-propagation-check
-status: waiting-on-verification
+type: todo
+status: awaiting-human
+board: true
+verification: human
+disposition: active
 origin: packages/docs/plans/2026-07-10_quality-waves-2-3.md
 source_marker: false
 ---
@@ -25,3 +29,7 @@ containing discord-plays-core:
 If propagation broke, the fix is in
 `packages/discord-plays-core/src/observability/tracing.ts` (context-manager
 registration), not in mk64.
+
+## Human Verification
+
+- Verify `Verify mario-kart span-context propagation after discord-plays-core deploy` in its intended environment and record evidence in the Comment Log.

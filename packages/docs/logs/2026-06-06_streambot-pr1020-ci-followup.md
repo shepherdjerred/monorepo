@@ -1,8 +1,11 @@
+---
+id: log-2026-06-06-streambot-pr1020-ci-followup
+type: log
+status: complete
+board: false
+---
+
 # StreamBot PR 1020 CI Follow-up
-
-## Status
-
-Complete
 
 ## Context
 

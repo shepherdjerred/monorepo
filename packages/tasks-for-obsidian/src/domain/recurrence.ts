@@ -130,3 +130,23 @@ function localDate(day: string): Date {
   }
   return new Date(y, m - 1, d);
 }
+
+/**
+ * The next occurrence STRICTLY AFTER `afterYmd`, scanning up to
+ * `horizonDays` ahead. Used for the "Completed · Next: <date>" undo toast.
+ */
+export function nextOccurrenceAfter(
+  task: Task,
+  afterYmd: string,
+  horizonDays = 366,
+): string | undefined {
+  if (!isRecurring(task)) return undefined;
+  const start = localDate(afterYmd);
+  for (let i = 1; i <= horizonDays; i += 1) {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    const ymd = localTodayYmd(d);
+    if (occursOn(task, ymd)) return ymd;
+  }
+  return undefined;
+}

@@ -1,8 +1,11 @@
+---
+id: log-2026-06-06-pinchtab-birmel-mcp-gateway-health
+type: log
+status: complete
+board: false
+---
+
 # pinchtab / birmel / mcp-gateway health check
-
-## Status
-
-Partially Complete — pinchtab fixed (cluster + PR pending); mcp-gateway blocked on 1Password fields
 
 ## Context
 

@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-07-streambot-playback-resume
+type: reference
+status: complete
+board: false
+---
+
 # Streambot: Full Playback Resume Across Restarts
-
-## Status
-
-Complete — position-level resume across restarts shipped to main.
 
 ## Context
 

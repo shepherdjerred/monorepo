@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.13.1",
+  "version": "16.14.1",
   "data": {
     "Ambessa": {
       "id": "Ambessa",
@@ -71,6 +71,54 @@
           "name": "Chosen of the Wolf Ambessa (Pearl)",
           "chromas": false,
           "parentSkin": 1
+        },
+        {
+          "id": "799008",
+          "num": 8,
+          "name": "T1 Ambessa",
+          "chromas": true
+        },
+        {
+          "id": "799009",
+          "num": 9,
+          "name": "T1 Ambessa (Elite)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "799010",
+          "num": 10,
+          "name": "T1 Ambessa (Pearl)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "799011",
+          "num": 11,
+          "name": "T1 Ambessa (Ruby)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "799012",
+          "num": 12,
+          "name": "T1 Ambessa (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "799013",
+          "num": 13,
+          "name": "T1 Ambessa (Catseye)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "799014",
+          "num": 14,
+          "name": "T1 Ambessa (Sapphire)",
+          "chromas": false,
+          "parentSkin": 8
         }
       ],
       "lore": "All who know the name Medarda respect and fear the family's leader, Ambessa. As a Noxian general, she embodies a deadly combination of ruthless strength and fearless resolve in battle. Her role as matriarch is no different, requiring great cunning to empower the Medardas while leaving no room for failure or compassion. Embracing the merciless ways of the Wolf, Ambessa will do whatever it takes to protect her family's legacy, even at the cost of her own children's love.",

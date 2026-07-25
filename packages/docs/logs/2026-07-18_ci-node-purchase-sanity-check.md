@@ -1,6 +1,13 @@
+---
+id: log-2026-07-18-ci-node-purchase-sanity-check
+type: log
+status: complete
+board: false
+---
+
 # CI Node Purchase Sanity Check — Skill Issue or Hardware?
 
-## Status
+## Status Notes (Historical)
 
 Complete
 

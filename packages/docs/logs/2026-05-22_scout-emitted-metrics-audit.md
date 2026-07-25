@@ -1,8 +1,11 @@
+---
+id: log-2026-05-22-scout-emitted-metrics-audit
+type: log
+status: complete
+board: false
+---
+
 # Scout Emitted Metrics Audit
-
-## Status
-
-Complete
 
 ## Summary
 

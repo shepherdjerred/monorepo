@@ -1,3 +1,10 @@
+---
+id: reference-superseded-2026-05-05-homelab-health-audit
+type: reference
+status: complete
+board: false
+---
+
 # Homelab Infrastructure Health Audit — 2026-05-05
 
 Produced by running the [Homelab Audit Runbook](../../guides/2026-04-04_homelab-audit-runbook.md) across 8 parallel agents (Sections 1–13). All checks were read-only; no remediation has been applied.

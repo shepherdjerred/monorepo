@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-14-status-sjer-red-teardown
+type: reference
+status: complete
+board: false
+---
+
 # status.sjer.red — full teardown
-
-## Status
-
-Complete
 
 ## Context
 

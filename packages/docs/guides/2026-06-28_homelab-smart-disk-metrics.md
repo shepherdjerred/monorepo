@@ -1,8 +1,11 @@
+---
+id: guide-2026-06-28-homelab-smart-disk-metrics
+type: guide
+status: complete
+board: false
+---
+
 # Homelab SMART / NVMe Disk Metrics
-
-## Status
-
-Complete (serial-stability fix shipped in PR #1154, 2026-06-13).
 
 ## How metrics are emitted
 

@@ -1,12 +1,14 @@
 ---
-title: PR #1152 Greptile Comment Fixes (mk64 backend)
+id: log-2026-06-13-pr-1152-greptile-fixes
+type: log
+status: complete
+board: false
+title: PR
 date: 2026-06-13
-pr: "https://github.com/shepherdjerred/monorepo/pull/1152"
+pr: https://github.com/shepherdjerred/monorepo/pull/1152
 ---
 
-## Status
-
-Complete
+# Pr 1152 Greptile Fixes
 
 ## Context
 

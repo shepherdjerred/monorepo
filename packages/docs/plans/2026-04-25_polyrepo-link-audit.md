@@ -1,10 +1,13 @@
+---
+id: plan-2026-04-25-polyrepo-link-audit
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Polyrepo → Monorepo Link Audit
-
-## Status
-
-Partially Complete — the polyrepo→monorepo link rewrites are effectively done (only out-of-scope
-gist/testdata/OCI-label refs remain); the lychee CI link-check gate (`lychee.toml` +
-`.buildkite/scripts/lychee.sh` + `lycheeStep`) is still not implemented.
 
 ## Context
 
@@ -294,3 +297,7 @@ bunx eslint . --fix  # in modified packages
 # 4. Go checks (after section 7b)
 cd packages/terraform-provider-asuswrt && go mod tidy && go build ./... && go test ./...
 ```
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Polyrepo → Monorepo Link Audit`.

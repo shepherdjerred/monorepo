@@ -1,8 +1,11 @@
+---
+id: log-2026-05-10-fix-trmnl-dashboard-helm-chart
+type: log
+status: complete
+board: false
+---
+
 # Fix trmnl-dashboard helm chart skeleton
-
-## Status
-
-Complete
 
 ## Problem
 

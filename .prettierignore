@@ -75,6 +75,11 @@ packages/discord-plays-pokemon/packages/frontend/public/emulatorjs/
 # Vendored Data Dragon snapshot (League of Legends static data)
 packages/scout-for-lol/packages/data/src/data-dragon/assets/
 
+# Raw scraped patch-notes HTML snapshots (third-party pages archived verbatim
+# by scripts/update-data-dragon.ts); prettier's HTML parser cannot cleanly
+# parse them (DFT_PARSE_ERROR_LIMIT).
+packages/scout-for-lol/packages/data/patch-notes-archive/
+
 # Prometheus exposition-format fixture captured from the live mario-kart pod;
 # prettier has no parser for `.txt` and the snapshot must stay byte-for-byte.
 packages/discord-plays-mario-kart/packages/backend/scripts/__fixtures__/

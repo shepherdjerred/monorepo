@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-19-streambot-youtube-subtitle-cleanup
+type: reference
+status: complete
+board: false
+---
+
 # Fix YouTube auto-caption "rolling" subtitle artifact in streambot
-
-## Status
-
-Complete — shipped in PR #1275.
 
 ## Context
 

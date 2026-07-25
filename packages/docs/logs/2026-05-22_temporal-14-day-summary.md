@@ -1,8 +1,11 @@
+---
+id: log-2026-05-22-temporal-14-day-summary
+type: log
+status: complete
+board: false
+---
+
 # Temporal 14-Day Summary Q&A
-
-## Status
-
-Complete
 
 ## Context
 

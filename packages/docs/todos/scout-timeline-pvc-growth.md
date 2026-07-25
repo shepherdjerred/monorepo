@@ -1,6 +1,10 @@
 ---
 id: scout-timeline-pvc-growth
-status: active
+type: todo
+status: in-progress
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/plans/2026-07-04_scout-report-lake-duckdb.md
 ---
 
@@ -31,3 +35,7 @@ Options (pick one before scale grows):
 
 Note: SQLite does not return freed pages without `VACUUM`; plan a one-off
 `VACUUM` (needs ~2x transient space or an offline copy) when option 1 lands.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Scout SQLite timeline mirror will exhaust the PVC well before 10x scale`.

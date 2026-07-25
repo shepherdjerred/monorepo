@@ -1,8 +1,11 @@
+---
+id: log-2026-05-25-scout-beta-domain-cutover
+type: log
+status: complete
+board: false
+---
+
 # Scout Beta Domain Cutover
-
-## Status
-
-Complete
 
 ## Session Log — 2026-05-25
 

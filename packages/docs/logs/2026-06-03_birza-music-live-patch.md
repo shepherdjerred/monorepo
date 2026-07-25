@@ -1,8 +1,11 @@
+---
+id: log-2026-06-03-birza-music-live-patch
+type: log
+status: complete
+board: false
+---
+
 # Birza Music Live Patch
-
-## Status
-
-Complete
 
 ## Summary
 

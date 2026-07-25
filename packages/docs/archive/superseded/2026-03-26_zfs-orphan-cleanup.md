@@ -1,3 +1,10 @@
+---
+id: reference-superseded-2026-03-26-zfs-orphan-cleanup
+type: reference
+status: complete
+board: false
+---
+
 # Plan: Clean Up Orphaned ZFS Datasets
 
 ## Context

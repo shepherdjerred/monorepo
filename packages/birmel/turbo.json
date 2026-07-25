@@ -12,6 +12,13 @@
     // generate-prisma.ts evaluates the database config module.
     "generate": {
       "env": ["DATABASE_URL", "DATABASE_PATH", "LOG_LEVEL"]
+    },
+    // Typed lint (projectService) resolves the generated Prisma client; root's
+    // lint task only depends on ^build, so on a cold container lint races
+    // generate and generated-client accesses become error types (the scout
+    // backend hit exactly this in build 5789).
+    "lint": {
+      "dependsOn": ["^build", "generate"]
     }
   }
 }

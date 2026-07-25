@@ -8,10 +8,7 @@ import {
   preloadChampionLoadingImages,
   preloadAugmentIcons,
 } from "#src/dataDragon/image-cache.ts";
-import {
-  ARENA_DEFAULT_SKIN_NUM,
-  getArenaTeamCardWidth,
-} from "#src/html/arena/utils.ts";
+import { getArenaTeamCardWidth } from "#src/html/arena/utils.ts";
 
 const BASE_HEIGHT = 1090;
 const PAGE_PADDING = 48;
@@ -45,16 +42,11 @@ function getCanvasDimensions(match: ArenaMatch): {
 export async function arenaMatchToSvg(match: ArenaMatch) {
   const trackedTeams = getTrackedTeams(match);
 
-  const loadingImageEntries: { championName: string; skinNum: number }[] = [];
   const championNames: string[] = [];
   const augmentIconPaths: string[] = [];
 
   for (const team of trackedTeams) {
     for (const player of team.players) {
-      loadingImageEntries.push({
-        championName: player.championName,
-        skinNum: ARENA_DEFAULT_SKIN_NUM,
-      });
       championNames.push(player.championName);
       for (const augment of player.augments) {
         if (augment.type === "full" && augment.iconLarge) {
@@ -66,7 +58,7 @@ export async function arenaMatchToSvg(match: ArenaMatch) {
 
   await Promise.all([
     preloadChampionImages(championNames),
-    preloadChampionLoadingImages(loadingImageEntries),
+    preloadChampionLoadingImages(championNames),
     preloadAugmentIcons(augmentIconPaths),
   ]);
 

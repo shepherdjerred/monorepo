@@ -1,8 +1,11 @@
+---
+id: log-2026-06-19-bugsink-temporal-checkin-alert-remediation-hang
+type: log
+status: complete
+board: false
+---
+
 # Bugsink check-in: Temporal alert-remediation `claude -p` hang
-
-## Status
-
-Complete (investigation only — no code changed)
 
 ## Ask
 

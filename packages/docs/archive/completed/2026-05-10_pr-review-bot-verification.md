@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-10-pr-review-bot-verification
+type: reference
+status: complete
+board: false
+---
+
 # PR Review Bot — Phase 4 (Empirical Verification Layer)
-
-## Status
-
-Complete
 
 ## Context
 

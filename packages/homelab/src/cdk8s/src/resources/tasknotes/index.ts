@@ -226,5 +226,8 @@ export function createTasknotesDeployment(chart: Chart) {
   new TailscaleIngress(chart, "tasknotes-ingress", {
     service: apiService,
     host: "tasknotes",
+    // "/" is AUTH_TOKEN-gated (401); /api/health is the unauthenticated
+    // health endpoint (same one the container's k8s probes use).
+    probePath: "/api/health",
   });
 }

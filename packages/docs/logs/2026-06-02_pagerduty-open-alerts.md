@@ -1,11 +1,13 @@
 ---
+id: log-2026-06-02-pagerduty-open-alerts
+type: log
+status: complete
+board: false
 title: PagerDuty Open Alerts
 date: 2026-06-02
 ---
 
-## Status
-
-Partially Complete
+# Pagerduty Open Alerts
 
 ## Summary
 

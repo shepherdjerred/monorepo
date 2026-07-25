@@ -1,10 +1,11 @@
+---
+id: reference-completed-2026-05-11-scout-highest-rank-chart-fix
+type: reference
+status: complete
+board: false
+---
+
 # Fix scout-for-lol HIGHEST_RANK chart drops-to-0
-
-## Status
-
-**Complete** — work verified shipped to `main` during the 2026-06-06 docs groom (pass 2); archived to `archive/completed/`. Original tracking status preserved below.
-
-Partially Complete — code changes ready (branch `fix/scout-highest-rank-iron-iv`, unmerged); S3 cleanup applied to beta + prod.
 
 ## Context
 

@@ -1,8 +1,11 @@
+---
+id: log-2026-05-30-ci-main-release-please-root-trivy
+type: log
+status: complete
+board: false
+---
+
 # CI red on main — release-please root guard + Trivy CVEs
-
-## Status
-
-Complete (pending CI verification on the PR)
 
 ## Symptom
 

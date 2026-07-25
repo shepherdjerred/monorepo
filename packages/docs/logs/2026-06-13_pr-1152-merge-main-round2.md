@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-pr-1152-merge-main-round2
+type: log
+status: complete
+board: false
+---
+
 # PR #1152 — Second Merge of origin/main
-
-## Status
-
-Complete
 
 ## Context
 

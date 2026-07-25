@@ -1,8 +1,11 @@
+---
+id: log-2026-07-05-relay-docs-bucket-deleted-by-tofu
+type: log
+status: complete
+board: false
+---
+
 # Relay crashloop — `relay-docs` S3 bucket deleted by cross-checkout `tofu apply`
-
-## Status
-
-Complete
 
 ## Summary
 

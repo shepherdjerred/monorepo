@@ -56,11 +56,13 @@ RUN set -e; \
 
 WORKDIR /app
 
-# Manifests-only install layer: this ~6 GB `bun install` layer only invalidates
-# when a manifest/lockfile/patch changes, not on every source edit.
+# Manifests-only install layer: install the Mario Kart backend, common package,
+# frontend, and their complete workspace dependency closure. This keeps the
+# later Prisma/frontend/producer builds available without installing unrelated
+# applications, and only invalidates on manifest/lockfile/patch changes.
 # trustedDependencies (node-datachannel, node-av, sharp) run their native
 # postinstalls during the frozen install. `--frozen-lockfile` requires every
-# workspace member's package.json present, so the globs enumerate all 47 members
+# workspace member's package.json present, so the globs enumerate every member
 # (top-level, nested packages/*/packages/*, homelab/src/*, the desktop src-tauri
 # crate, and the `scripts` dir).
 COPY --parents \
@@ -70,7 +72,7 @@ COPY --parents \
   packages/homelab/src/helm-types/package.json \
   packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --filter '@discord-plays-mario-kart/*'
 
 # Now the sources. node_modules is excluded from context by .dockerignore, so
 # this does not clobber the installed tree.

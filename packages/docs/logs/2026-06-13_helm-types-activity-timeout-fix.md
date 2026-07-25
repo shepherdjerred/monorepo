@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-helm-types-activity-timeout-fix
+type: log
+status: complete
+board: false
+---
+
 # helm-types activity timeout fix
-
-## Status
-
-Complete
 
 ## Context
 

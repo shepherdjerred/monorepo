@@ -15,6 +15,7 @@ import {
   discordScreenshotEntry,
 } from "#src/showcase/discord-templates.ts";
 import { readS3JsonOptional } from "#src/showcase/s3.ts";
+import { getTrackedPlayerCount } from "#src/storage/s3-metadata.ts";
 
 const CliFlagNameSchema = z.enum([
   "bucket",
@@ -155,14 +156,6 @@ async function objectMetadata(params: {
   );
 }
 
-function trackedPlayerCount(metadata: Map<string, string>): number {
-  const trackedPlayers = metadata.get("trackedplayers") ?? "";
-  return trackedPlayers
-    .split(",")
-    .map((player) => player.trim())
-    .filter((player) => player.length > 0).length;
-}
-
 function queueType(metadata: Map<string, string>): string | undefined {
   return metadata.get("queuetype") ?? metadata.get("queueid");
 }
@@ -217,7 +210,7 @@ async function discoverImageCandidates(params: {
       continue;
     }
 
-    const tracked = trackedPlayerCount(metadata);
+    const tracked = getTrackedPlayerCount(metadata);
     candidates.push({
       key,
       dataKey:

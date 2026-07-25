@@ -12,8 +12,8 @@ import "#src/styles/global.css";
 // (2.0.0-<build>). Guard the untyped env access so `release` stays
 // `string | undefined`, never `any`.
 const sentryRelease =
-  typeof import.meta.env["VITE_SENTRY_RELEASE"] === "string"
-    ? import.meta.env["VITE_SENTRY_RELEASE"]
+  typeof import.meta.env.VITE_SENTRY_RELEASE === "string"
+    ? import.meta.env.VITE_SENTRY_RELEASE
     : undefined;
 
 Sentry.init({

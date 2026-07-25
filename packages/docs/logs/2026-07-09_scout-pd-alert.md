@@ -1,8 +1,11 @@
+---
+id: log-2026-07-09-scout-pd-alert
+type: log
+status: complete
+board: false
+---
+
 # Scout `ScoutScheduledReportMissedWeekly` PagerDuty investigation & fix
-
-## Status
-
-Complete
 
 ## Summary
 

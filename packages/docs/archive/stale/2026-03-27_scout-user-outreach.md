@@ -1,3 +1,10 @@
+---
+id: reference-stale-2026-03-27-scout-user-outreach
+type: reference
+status: complete
+board: false
+---
+
 # Scout User Outreach Plan — 2026-03-27
 
 ## Context

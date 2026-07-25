@@ -1,3 +1,10 @@
+---
+id: reference-bazel-2026-03-17-rules-bun-v2-link-first-materialization
+type: reference
+status: complete
+board: false
+---
+
 # Plan: `rules_bun` v2 — Link-First Prepared Trees + First-Class Vite/Astro
 
 ## Context

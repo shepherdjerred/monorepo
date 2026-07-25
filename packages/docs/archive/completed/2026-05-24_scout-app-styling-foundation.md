@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-24-scout-app-styling-foundation
+type: reference
+status: complete
+board: false
+---
+
 # Scout App Styling Foundation
-
-## Status
-
-Complete
 
 ## Summary
 

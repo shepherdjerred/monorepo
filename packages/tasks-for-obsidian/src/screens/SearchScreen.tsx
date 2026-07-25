@@ -1,19 +1,16 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   TextInput,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   StyleSheet,
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { TaskId } from "../domain/types";
 import type { RootStackParamList } from "../navigation/types";
-import { useTasks } from "../hooks/use-tasks";
+import { useTaskListScreen } from "../hooks/use-task-list-screen";
 import { useSettings } from "../hooks/use-settings";
 import { useDebounce } from "../hooks/use-debounce";
-import { feedbackTaskDelete } from "../lib/feedback";
 import { TaskList } from "../components/task/TaskList";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Search">;
@@ -21,7 +18,14 @@ type Props = NativeStackScreenProps<RootStackParamList, "Search">;
 export function SearchScreen({ navigation }: Props) {
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 300);
-  const { taskList, toggleTask, deleteTask } = useTasks();
+  const {
+    taskList,
+    dayCounts,
+    handlePress,
+    handleToggle,
+    handleDelete,
+    handleSchedule,
+  } = useTaskListScreen(navigation);
   const { colors } = useSettings();
 
   const filtered = useMemo(() => {
@@ -35,37 +39,6 @@ export function SearchScreen({ navigation }: Props) {
         t.tags.some((tag: string) => tag.toLowerCase().includes(lower)),
     );
   }, [taskList, debouncedQuery]);
-
-  const handlePress = useCallback(
-    (id: TaskId) => {
-      navigation.navigate("TaskDetail", { taskId: id });
-    },
-    [navigation],
-  );
-
-  const handleToggle = useCallback(
-    (id: TaskId) => {
-      void toggleTask(id);
-    },
-    [toggleTask],
-  );
-
-  const handleDelete = useCallback(
-    (id: TaskId) => {
-      Alert.alert("Delete Task", "Are you sure you want to delete this task?", [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            feedbackTaskDelete();
-            void deleteTask(id);
-          },
-        },
-      ]);
-    },
-    [deleteTask],
-  );
 
   return (
     <KeyboardAvoidingView
@@ -97,6 +70,8 @@ export function SearchScreen({ navigation }: Props) {
         onTaskPress={handlePress}
         onTaskToggle={handleToggle}
         onTaskDelete={handleDelete}
+        onTaskSchedule={handleSchedule}
+        dayCounts={dayCounts}
         emptyTitle={
           debouncedQuery.trim() ? "No results" : "Start typing to search"
         }

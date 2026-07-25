@@ -1,8 +1,11 @@
+---
+id: log-2026-07-04-bun-workspace-setup-investigation
+type: log
+status: complete
+board: false
+---
+
 # Bun Workspace Setup Investigation
-
-## Status
-
-Complete
 
 ## Question
 

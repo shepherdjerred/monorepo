@@ -1,11 +1,11 @@
+---
+id: reference-completed-2026-06-13-helm-types-codegen-reliability
+type: reference
+status: complete
+board: false
+---
+
 # Plan: helm-types codegen reliability
-
-## Status
-
-Resolved — core reliability shipped via #1165 + #1168; residual parallelism/--chart micro-opts dropped.
-
-> **Update (2026-06-13):** `generate-helm-types` now has a `--check` mode and is run as a fail-fast Buildkite
-> `helm-types-drift-check` gate (replacing the weekly Temporal refresh). See `2026-06-13_helm-types-ci-gate.md`.
 
 ## Background
 

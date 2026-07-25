@@ -1,8 +1,11 @@
+---
+id: log-2026-05-25-grafana-reachability
+type: log
+status: complete
+board: false
+---
+
 # Grafana Reachability Check
-
-## Status
-
-Complete
 
 ## Context
 

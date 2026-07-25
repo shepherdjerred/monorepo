@@ -1,3 +1,10 @@
+---
+id: reference-dagger-migration-2026-03-27-ci-readiness
+type: reference
+status: complete
+board: false
+---
+
 # Plan: CI Readiness — From Code to Green CI
 
 ## Context

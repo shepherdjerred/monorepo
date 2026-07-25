@@ -1,13 +1,17 @@
 ---
 id: grafana-trace-log-prod-verification
-status: waiting-on-verification
+type: todo
+status: awaiting-human
+board: true
+verification: human
+disposition: active
 origin: packages/docs/logs/2026-05-19_grafana-trace-log-correlation.md
 source_marker: false
 ---
 
 # Phase 5: production click-path verification for "Logs for this span"
 
-## Verification (2026-06-28) — wiring confirmed, live click still pending
+## Human Verification
 
 The Tempo datasource on the live Grafana (`grafana.tailnet-1a49.ts.net`) carries the correct
 `tracesToLogsV2` config: `datasourceUid: loki`, `filterByTraceID: true`, span time shifts ±5m,

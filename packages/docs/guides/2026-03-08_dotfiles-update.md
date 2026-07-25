@@ -1,3 +1,10 @@
+---
+id: guide-2026-03-08-dotfiles-update
+type: guide
+status: complete
+board: false
+---
+
 # Dotfiles Update Script
 
 ## Overview

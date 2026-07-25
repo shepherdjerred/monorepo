@@ -1,8 +1,11 @@
+---
+id: log-2026-06-06-streambot-mariokart-k8s-fix
+type: log
+status: complete
+board: false
+---
+
 # Streambot + Mario Kart k8s deploy fixes
-
-## Status
-
-Complete (mario-kart code; streambot was an infra/visibility fix). ROM copy still pending for mario-kart.
 
 ## Context
 

@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-13-ci-parity-implementation
+type: plan
+status: awaiting-human
+board: true
+verification: human
+disposition: active
+---
+
 # Full CI Parity, Turbo-Native — Implementation Plan
-
-## Status
-
-Complete (pending review) — branch `feature/ci-parity` (stacked on `spike/workspace-taskgraph`, PR #1518). Single-PR delivery per user direction. Final verify: **177/177 tasks green** (gap closure added check:caddyfile, test:contract, check:rehearsal).
 
 ## Context
 
@@ -174,11 +179,11 @@ scripts (interactive), tasks-for-obsidian Maestro e2e + `check:release-bundle`
   Cloud owns the iOS release path), `snapshot-1password-vault.ts` (biometric op
   access).
 
-## Verification (end of plan)
+## Human Verification
 
-1. Parity checklist in the mirrored plan doc fully checked, each row linking evidence (run output/PR).
-2. One end-to-end rehearsal on a throwaway branch: PR build (verify only) and a main-style dry run of the deploy DAG (`tofu plan`, `helm package` without push, image build+smoke without push).
-3. Benchmark tables filled with old-vs-new numbers.
+- Parity checklist in the mirrored plan doc fully checked, each row linking evidence (run output/PR).
+- One end-to-end rehearsal on a throwaway branch: PR build (verify only) and a main-style dry run of the deploy DAG (`tofu plan`, `helm package` without push, image build+smoke without push).
+- Benchmark tables filled with old-vs-new numbers.
 
 ## Out of scope
 
