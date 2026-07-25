@@ -7,11 +7,15 @@ import {
   useParams,
 } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 import type { Permission } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { cn } from "#src/lib/cn.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import { ForbiddenPanel } from "#src/components/forbidden-panel.tsx";
+import {
+  ForbiddenPanel,
+  permissionLabel,
+} from "#src/components/forbidden-panel.tsx";
 
 const NAV_ITEMS: {
   to: string;
@@ -175,4 +179,32 @@ export function GuildSectionIndex() {
     );
   }
   return <Navigate to={first.to} replace />;
+}
+
+/** Block a mutation-only child route unless the caller holds its action. */
+export function GuildPermissionGate(props: {
+  permission: Permission;
+  children: ReactNode;
+}) {
+  const { guildId } = useParams();
+  const { perms, isLoading } = usePermissions(guildId);
+
+  if (guildId === undefined) {
+    return (
+      <ForbiddenPanel
+        title="Missing guild id"
+        message="This permission-gated route requires a guild."
+      />
+    );
+  }
+  if (isLoading) return null;
+  if (perms.cannot(props.permission.resource, props.permission.action)) {
+    return (
+      <ForbiddenPanel
+        title="Action not permitted"
+        message={`You need “${permissionLabel(props.permission)}” to open this page.`}
+      />
+    );
+  }
+  return props.children;
 }

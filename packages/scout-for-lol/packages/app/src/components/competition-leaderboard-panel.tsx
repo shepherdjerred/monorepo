@@ -8,6 +8,7 @@ import {
 } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { formatDate } from "#src/lib/format.ts";
+import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import { ChartImage } from "#src/components/chart-image.tsx";
 import { Section } from "#src/components/section.tsx";
@@ -38,6 +39,7 @@ export function CompetitionLeaderboardPanel(props: {
 }) {
   const { guildId, competitionId, status } = props;
   const trpc = useTRPC();
+  const { perms } = usePermissions(guildId);
   const queryClient = useQueryClient();
   const [chartBust, setChartBust] = useState(0);
 
@@ -61,7 +63,7 @@ export function CompetitionLeaderboardPanel(props: {
   );
 
   const refreshButton =
-    status === "ACTIVE" ? (
+    status === "ACTIVE" && perms.can("competitions", "refresh") ? (
       <Button
         type="button"
         size="sm"

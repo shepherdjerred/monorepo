@@ -5,6 +5,7 @@ import { GuildSubscriptions } from "#src/routes/guild-subscriptions.tsx";
 import { GuildAudit } from "#src/routes/guild-audit.tsx";
 import { GuildAccess } from "#src/routes/guild-access.tsx";
 import {
+  GuildPermissionGate,
   GuildSectionIndex,
   GuildWorkspace,
 } from "#src/routes/guild-workspace.tsx";
@@ -42,20 +43,53 @@ export function App() {
               <Route path="players" element={<PlayerList />} />
               <Route path="players/:alias" element={<PlayerDetail />} />
               <Route path="competitions" element={<CompetitionList />} />
-              <Route path="competitions/new" element={<CompetitionForm />} />
+              <Route
+                path="competitions/new"
+                element={
+                  <GuildPermissionGate
+                    permission={{ resource: "competitions", action: "create" }}
+                  >
+                    <CompetitionForm />
+                  </GuildPermissionGate>
+                }
+              />
               <Route
                 path="competitions/:competitionId"
                 element={<CompetitionDetail />}
               />
               <Route
                 path="competitions/:competitionId/edit"
-                element={<CompetitionForm />}
+                element={
+                  <GuildPermissionGate
+                    permission={{ resource: "competitions", action: "update" }}
+                  >
+                    <CompetitionForm />
+                  </GuildPermissionGate>
+                }
               />
               <Route path="reports" element={<ReportList />} />
               <Route path="reports/help" element={<ReportHelp />} />
-              <Route path="reports/new" element={<ReportForm />} />
+              <Route
+                path="reports/new"
+                element={
+                  <GuildPermissionGate
+                    permission={{ resource: "reports", action: "create" }}
+                  >
+                    <ReportForm />
+                  </GuildPermissionGate>
+                }
+              />
               <Route path="reports/:reportId" element={<ReportDetail />} />
-              <Route path="reports/:reportId/edit" element={<ReportForm />} />
+              <Route
+                path="reports/:reportId/edit"
+                element={
+                  <GuildPermissionGate
+                    permission={{ resource: "reports", action: "update" }}
+                  >
+                    <ReportForm />
+                  </GuildPermissionGate>
+                }
+              />
               <Route path="audit" element={<GuildAudit />} />
               <Route path="access" element={<GuildAccess />} />
             </Route>

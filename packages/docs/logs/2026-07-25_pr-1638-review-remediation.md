@@ -12,8 +12,9 @@ board: false
 - Branch: `feature/scout-rbac`
 - Pull request: #1638
 - Direct conflict check: clean against `origin/main`
-- Current hard gate: the Buildkite Greptile step timed out because no Greptile
-  check started; Codex review-harness comments are the active review oracle.
+- Buildkite build 6184 failed during repository checkout before the branch
+  pipeline ran; PR #1629 build 6185 failed at the same point with the same
+  container exit.
 
 ## Session Log — 2026-07-25
 
@@ -29,15 +30,30 @@ board: false
 - Gated Scout workspace routes and report actions by the caller's permissions.
 - Added focused role, image-route, and AI-route regression coverage.
 - Passed the focused backend tests plus app/backend typecheck and lint tasks.
+- Inspected the exact Buildkite logs for builds 6184 and 6185. Both agents
+  stopped communicating at roughly 98% of `git clone` with exit status `-7`
+  and the same unknown-container-exit/OOM diagnostic, before
+  `.buildkite/scripts/upload-pipeline.sh` ran.
+- Replied to and resolved all four prior P1/P2 Codex review threads after
+  verifying the pushed code and regression tests addressed them.
+- Ran a replacement Codex review and fixed its three frontend consistency
+  findings: mutation-route and control gating, custom-permission editing, and
+  effective-permission cache invalidation after role changes.
+- Passed scoped app lint, typecheck, test dependencies, and production build.
 
 ### Remaining
 
-- Buildkite and the review oracle must evaluate the newly submitted commit.
+- Buildkite must evaluate the newly submitted commit once its checkout
+  infrastructure is healthy.
 
 ### Caveats
 
+- Buildkite build 6184 contains no branch execution evidence because its
+  checkout container died before the pipeline upload script started. The same
+  failure on unrelated PR #1629 build 6185 makes this a shared agent/container
+  blocker rather than a branch defect.
 - Greptile is out of credits, so its required Buildkite gate cannot presently
-  observe a fresh Greptile check. The active findings were posted by the Codex
-  review harness under the repository owner account.
+  observe a fresh Greptile check. Codex review is the replacement review
+  oracle for this cycle.
 - Per the controller instruction, this session submits one fix commit and does
   not wait for the resulting CI run.
