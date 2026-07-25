@@ -94,6 +94,29 @@ function repoRoot(): string {
   return new URL("..", import.meta.url).pathname.replace(/\/$/, "");
 }
 
+/** Commit this build is producing artifacts for. */
+async function resolveGitSha(): Promise<string> {
+  const fromCi = optionalEnv("BUILDKITE_COMMIT");
+  if (fromCi !== null) {
+    return fromCi;
+  }
+  const revParse = await run(["git", "rev-parse", "HEAD"], { capture: true });
+  return revParse.stdout.trim();
+}
+
+/**
+ * Hash of the tRPC contract sources (same script the images step bakes into
+ * the backend as ENV CONTRACT_HASH). Stamped into the SPA bundle so the app
+ * can compare its contract against the running backend's at runtime.
+ */
+async function contractHash(): Promise<string> {
+  const result = await run(
+    ["bun", "--no-install", "packages/scout-for-lol/scripts/contract-hash.ts"],
+    { cwd: repoRoot(), capture: true },
+  );
+  return result.stdout.trim();
+}
+
 function haveCreds(): boolean {
   return (
     optionalEnv("AWS_ACCESS_KEY_ID") !== null &&
@@ -121,9 +144,17 @@ async function buildSite(
   version: string,
   dryRun: boolean,
 ): Promise<void> {
+  const gitSha = await resolveGitSha();
   const buildEnv: Record<string, string> = {
     VITE_SENTRY_RELEASE: version,
     PUBLIC_SENTRY_RELEASE: version,
+    // Build identity shown in the SPA footer / marketing footer, plus the
+    // contract hash the SPA compares against GET /api/version at runtime.
+    VITE_APP_VERSION: version,
+    VITE_GIT_SHA: gitSha,
+    VITE_CONTRACT_HASH: await contractHash(),
+    PUBLIC_APP_VERSION: version,
+    PUBLIC_GIT_SHA: gitSha,
   };
   if (flavor === "prod") {
     for (const name of PROD_PIXEL_ENV_VARS) {
@@ -264,11 +295,7 @@ async function archive(version: string, dryRun: boolean): Promise<void> {
   );
 
   // Manifest LAST: its existence certifies the archive above is complete.
-  let gitSha = optionalEnv("BUILDKITE_COMMIT");
-  if (gitSha === null) {
-    const revParse = await run(["git", "rev-parse", "HEAD"], { capture: true });
-    gitSha = revParse.stdout.trim();
-  }
+  const gitSha = await resolveGitSha();
   const manifestFile = `${tmpBase()}/scout-site-manifest-${process.pid.toString()}.json`;
   await Bun.write(
     manifestFile,

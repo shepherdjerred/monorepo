@@ -25,6 +25,13 @@ variable "VERSION" {
 variable "GIT_SHA" {
   default = "unknown"
 }
+# Deterministic hash of the scout tRPC contract sources (computed by
+# packages/scout-for-lol/scripts/contract-hash.ts). Baked only into the
+# scout-for-lol image; the SPA build stamps the same hash so the app can
+# detect frontend↔backend contract skew at runtime.
+variable "CONTRACT_HASH" {
+  default = "dev"
+}
 
 # "true" on main: export per-target registry cache (mode=max). PRs and local
 # builds read cache but never write it.
@@ -120,6 +127,11 @@ target "scout-for-lol" {
   inherits   = ["_app"]
   dockerfile = "packages/scout-for-lol/packages/backend/Dockerfile"
   tags       = ["scout-for-lol:dev"]
+  args = {
+    VERSION       = VERSION
+    GIT_SHA       = GIT_SHA
+    CONTRACT_HASH = CONTRACT_HASH
+  }
   cache-from = cachefrom("scout-for-lol")
   cache-to   = cacheto("scout-for-lol")
 }

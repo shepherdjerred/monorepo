@@ -51,6 +51,18 @@ export default defineConfig({
         access: "public",
         optional: true,
       }),
+      // Build identity for the footer version line (2.0.0-<build> + commit
+      // SHA). Optional: unset in local/dev builds, where the footer omits it.
+      PUBLIC_APP_VERSION: envField.string({
+        context: "client",
+        access: "public",
+        optional: true,
+      }),
+      PUBLIC_GIT_SHA: envField.string({
+        context: "client",
+        access: "public",
+        optional: true,
+      }),
     },
   },
   integrations: [
