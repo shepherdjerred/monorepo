@@ -59,16 +59,23 @@ all worktrees active:** git gc is worktree-aware — it treats every worktree's 
 prunes objects unreachable from _all_ of them, so it can't delete anything a worktree needs and never touches working
 directories or uncommitted/staged changes.
 
-## Blast radius (read before Phase 1) — worktrees are safe; open PRs rebase
+## Blast radius (read before Phase 1) — worktrees are safe; open PRs restack; every ref must move together
 
 The rewrite runs in an **isolated throwaway clone** (`git clone` → `filter-repo` → force-push). `filter-repo` never
 modifies your real `.git`, any worktree's files, or any uncommitted work — the 13 worktrees are physically untouched.
-The only shared thing that moves is `origin/main`. After the force-push nothing _breaks_ locally (the old objects still
-exist in the shared `.git`, so every worktree keeps building), but every open feature branch is now based on an
-old-main that's been replaced.
+What moves is **every ref filter-repo rewrote** — this repo currently has **18 heads + 311 tags**, all rewritten in
+the same pass (see Phase 2) — not just `origin/main`. Publishing only `main` and leaving the rest "as needed" is not
+safe: any un-force-pushed branch or tag keeps the pre-rewrite blobs (including already-deleted content) reachable on
+GitHub, and can merge that old graph straight back into `main` later; see Phase 3 for the explicit all-refs publish
+step. After a correct publish, nothing _breaks_ locally (the old objects still exist in the shared `.git`, so every
+worktree keeps building), but every open feature branch is now based on an old `main` that's been replaced.
 
-The real cost is narrow: **each open PR must, at some point, `git-spice repo sync --restack` onto the new main +
-force-push (CI re-runs)** — the same mechanical step as any time main advances, **no work lost**, doable lazily.
+The real cost is narrow: **each open PR eventually needs its stack restacked onto the new main + resubmitted
+(CI re-runs)** — see Phase 3 for the exact sequence. This is **not** a `git-spice repo sync --restack` freebie: that
+flag only rebases branches whose _parent branch_ was merged/deleted by that same sync, and does nothing when trunk
+itself is force-updated to an unrelated history out from under branches based directly on it — it'll report nothing
+to do and silently leave the stack on the old, bloated objects. No work is lost either way (the old commits stay
+reachable locally until a `git gc`), but the mechanical step is a real per-stack `stack restack`, not a passive sync.
 The bloat blobs are ancestors of _every_ current branch, so no partial rewrite can leave the open branches' base
 untouched — **timing is the only way to make it zero-touch.** Trade: rewrite anytime → 13 routine restacks; or wait
 for a low-PR window → nothing to rebase.
@@ -83,7 +90,11 @@ for a low-PR window → nothing to rebase.
 
 ## Phase 2 — the rewrite (`git-filter-repo`, installed)
 
-Work in a fresh **working** clone of `main` (not the mirror — we need to re-add files):
+Work in a fresh **working** clone of `main` (not the mirror — we need to re-add files). A plain `git clone` still
+fetches every branch and tag from `origin`, and `git filter-repo`'s default run (no `--partial`, no `--refs`) does its
+own mirror-like fetch of **all** refs before filtering and remaps `refs/remotes/origin/*` to local `refs/heads/*` —
+this one pass rewrites the repo's full **18 heads + 311 tags**, not just the checked-out branch. Do not pass
+`--refs`/`--partial`, which would limit the rewrite to a subset and leave the rest holding the pre-rewrite blobs.
 
 1. Copy the current collapse-target dirs aside (`champion-loading/`, `scout-showcase/`, the report `__snapshots__/`).
 2. Run one `git filter-repo --invert-paths` pass listing **all** targets — both the `delete` paths and the `collapse`
@@ -113,11 +124,38 @@ Work in a fresh **working** clone of `main` (not the mirror — we need to re-ad
 ## Phase 3 — publish + recover downstream
 
 - [ ] Verify (see below) on the rewritten clone BEFORE pushing.
-- [ ] Force-push the rewritten `main`; re-push/prune remote branches as needed.
-- [ ] In the main checkout: `git fetch origin && git reset --hard origin/main` (or re-clone). Worktrees keep working as
-      is — they don't need recreating.
-- [ ] Per open stack, when convenient: `git-spice repo sync --restack` rebases it onto the new main + resubmit
-      (CI re-runs). The rewrite invalidates local `refs/spice/data`, so `git-spice repo init` once after the reset.
+- [ ] `filter-repo` removes the `origin` remote as a safety net — re-add it
+      (`git remote add origin git@github.com:shepherdjerred/monorepo.git`), then force-push **every** rewritten ref in
+      one shot, not just `main`: `git push --force origin 'refs/heads/*:refs/heads/*' 'refs/tags/*:refs/tags/*'`
+      (covers all 18 heads + 311 tags — see Phase 2). Explicitly delete any ref you intend to retire
+      (`git push origin --delete refs/heads/<name>` / `refs/tags/<name>`) instead of silently omitting it: an
+      un-pushed ref keeps its pre-rewrite blobs — including already-deleted content, e.g. old release tags that still
+      point at the pre-`demo.mp4`-removal commit — reachable on GitHub, and any branch that never gets force-updated
+      can merge that old graph straight back into `main`.
+- [ ] Verify the publish actually took, before declaring the rewrite effective: `git ls-remote origin` ref count and
+      SHAs match the rewritten clone, **and** a fresh `git clone` into a new directory (no reused `.git`) confirms
+      both the smaller size and that retired paths are gone from `git log --all -- <path>`.
+- [ ] Before touching any local state, back up `refs/spice/data`
+      (`git for-each-ref refs/spice/data > /tmp/spice-data-backup.txt`, or copy `.git/refs/spice/`). A remote-side
+      history rewrite does **not** invalidate
+      this ref — it's purely local and someone else's force-push can't touch it — and it holds the old base commit
+      git-spice needs, per tracked branch, to replay that branch's commits across the pre-/post-rewrite split (the
+      old base commit stays reachable locally via the feature branch's own ancestry, so it survives even a later
+      `git gc`). Do **not** run `git-spice repo init` to "reset" the store after the reset below — that was this
+      plan's original (wrong) instinct, and it throws away exactly the base pointers the restack step depends on.
+- [ ] In the main checkout: `git fetch origin && git reset --hard origin/main` (or re-clone). Worktrees keep working
+      as is — they don't need recreating.
+- [ ] Per open stack, restack for real: `git-spice stack restack` (or `git-spice upstack restack --branch <name>` to
+      move one branch + its upstack), then `git-spice stack submit --update-only` to force-push the rebased branches
+      to their existing PRs (CI re-runs). This is **not** `git-spice repo sync --restack`: that flag only rebases the
+      upstacks of branches whose _parent branch_ was merged/deleted during that same sync — a merged-PR cleanup. When
+      trunk itself is force-updated to an unrelated history out from under branches based directly on it, `repo sync`
+      finds no merged branch to clean up, does nothing, and exits — leaving every open stack silently un-rebased on
+      the old (bloated) objects with no error to notice.
+- [ ] Rehearse the restack sequence above in a disposable clone (with a copy of `refs/spice/data` and one
+      representative stack) before running it against real stacks. Resolve conflicts with `git-spice rebase continue`
+      / `git-spice rebase abort` per the normal conflict flow; if a stack's history is too tangled to replay
+      automatically, abort and fall back to `git cherry-pick` of that branch's own commits onto the new `main`.
 - [ ] Once no branch references the old objects, a local `git gc --prune=now` reclaims the rewritten history on disk.
 
 ## Phase 4 — GitHub server-side (set expectations)
@@ -139,8 +177,11 @@ The rewrite must change **history weight only, never working-tree content**:
 
 ## Rollback
 
-The Phase-1 mirror backup is the anchor: `git push --force` it back to restore the pre-rewrite history. Keep it until
-CI + a couple of fresh clones are confirmed good.
+The Phase-1 mirror backup (`git clone --mirror`, which captured every head and tag) is the anchor: restore with the
+same all-refs push used in Phase 3 — `git push --force <backup-path-or-remote> 'refs/heads/*:refs/heads/*'
+'refs/tags/*:refs/tags/*'` back to `origin` — never a `main`-only push, or the rollback leaves the rewritten
+(slimmed) refs live everywhere except `main` and the repo ends up in a worse mixed state than either version alone.
+Keep the backup until CI + a couple of fresh clones are confirmed good.
 
 ## Supersedes
 
@@ -168,3 +209,29 @@ now one target within this aggressive pass. That todo is updated to point here.
 - Rewrite is destructive and coordination-heavy; do not run it opportunistically. The tip-tree-identity check is the
   guardrail that the working tree is unchanged.
 - GitHub won't reclaim server-side space without its own GC / a support request.
+
+## Session Log — 2026-07-25 (P1 review fixes)
+
+### Done
+
+- Fixed 2 P1 findings from a Codex substitute review (Greptile credit-paused): (1) Phase 3's publish step now
+  force-pushes **every** rewritten ref (`refs/heads/*` + `refs/tags/*`, 18 heads + 311 tags), not just `main`, with
+  explicit deletion of retired refs and a `git ls-remote` + fresh-clone verification step; the Rollback section
+  mirrors the same all-refs push. (2) Phase 3's restack step no longer relies on `git-spice repo sync --restack`
+  (confirmed via `git-spice-helper`'s command reference that it only rebases upstacks of merged/deleted branches,
+  not branches based directly on a force-updated trunk) — replaced with backing up `refs/spice/data` (not
+  `repo init`, which would destroy the base pointers needed to replay commits across the rewrite), then
+  `git-spice stack restack` / `upstack restack --branch` per stack + `stack submit --update-only`, rehearsed in a
+  disposable clone first. Also confirmed via `git-filter-repo --help` that its default (non-`--partial`) run already
+  does a mirror-like fetch of all refs, so Phase 2's existing single-clone approach didn't need restructuring — only
+  a clarifying note.
+
+### Remaining
+
+- Execute Phases 0–4 (unchanged from before this fix — still deferred; needs #1640 merged + quiescent worktrees).
+
+### Caveats
+
+- The `robot-face-greptile-review-gate` check will stay red on this PR regardless of these fixes — it's a billing
+  gate (credits paused), not a content gate; see `reference_greptile_gate_merge_skip` in the reviewer's memory for
+  the known Greptile-gate quirks.
