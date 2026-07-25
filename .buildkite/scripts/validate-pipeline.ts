@@ -197,12 +197,7 @@ function selectorLane(lane: string): string {
   return ciChanged.slice(blockStart, blockEnd);
 }
 
-for (const lane of [
-  "site-scout",
-  "sites",
-  "scout-promotion",
-  "scout-reconcile",
-]) {
+for (const lane of ["site-scout", "sites", "scout-reconcile"]) {
   const block = selectorLane(lane);
   for (const dependency of [
     "packages/astro-opengraph-images",

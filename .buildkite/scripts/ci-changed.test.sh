@@ -103,14 +103,14 @@ git -C "$FIXTURE" commit -qm deploy-script
 expect_status 0 playwright
 expect_status 0 resume
 
-# Scout's deploy, promotion, and reconciliation lanes include the workspace
+# Scout's deploy and reconciliation lanes include the workspace
 # packages they build transitively, not only paths under packages/scout-for-lol.
 BASE=$(git -C "$FIXTURE" rev-parse HEAD)
 mkdir -p "$FIXTURE/packages/llm-models/src"
 printf 'model\n' > "$FIXTURE/packages/llm-models/src/models.ts"
 git -C "$FIXTURE" add packages/llm-models/src/models.ts
 git -C "$FIXTURE" commit -qm llm-model
-for lane in site-scout sites scout-promotion scout-reconcile; do
+for lane in site-scout sites scout-reconcile; do
   expect_status 0 "$lane"
 done
 
@@ -119,7 +119,7 @@ mkdir -p "$FIXTURE/packages/astro-opengraph-images/src"
 printf 'og\n' > "$FIXTURE/packages/astro-opengraph-images/src/image.ts"
 git -C "$FIXTURE" add packages/astro-opengraph-images/src/image.ts
 git -C "$FIXTURE" commit -qm astro-opengraph
-for lane in site-scout sites scout-promotion scout-reconcile; do
+for lane in site-scout sites scout-reconcile; do
   expect_status 0 "$lane"
 done
 
@@ -129,7 +129,7 @@ BASE=$(git -C "$FIXTURE" rev-parse HEAD)
 printf '{"name":"@shepherdjerred/root-scripts"}\n' > "$FIXTURE/scripts/package.json"
 git -C "$FIXTURE" add scripts/package.json
 git -C "$FIXTURE" commit -qm root-scripts-manifest
-for lane in site-scout sites scout-promotion scout-reconcile; do
+for lane in site-scout sites scout-reconcile; do
   expect_status 0 "$lane"
 done
 
