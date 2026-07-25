@@ -152,8 +152,8 @@ export function createMinecraftShuxinApp(chart: Chart) {
     },
     persistence: {
       storageClass: NVME_STORAGE_CLASS,
-      // Note: persistence.labels doesn't work in this Helm chart (not templated to VCT)
-      // Use Kyverno policy to add velero labels if needed
+      // Note: persistence.labels doesn't work in this Helm chart (not templated to
+      // the PVC), so this volume is not enrolled in Velero backups.
       dataDir: {
         Size: Size.gibibytes(32).asString(),
         enabled: true,
