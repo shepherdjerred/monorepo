@@ -48,16 +48,32 @@ board: false
 
 ### Done
 
-- Confirmed and approved the implementation direction.
+- Replaced Scout's Unicode `trackedPlayers` writes with the ASCII decimal
+  `trackedPlayerCount`, retained a legacy metadata reader, and removed
+  unconsumed display names from S3 headers.
+- Added printable-ASCII validation to Scout's direct S3 metadata writes and
+  covered the contract with storage tests, including Unicode aliases and
+  legacy objects.
+- Disabled Bugsink only inside the Pokemon and Mario Kart image smoke
+  containers while preserving their expected dummy-token authentication
+  failures.
+- Passed 126 Scout storage tests, Scout typecheck and lint, both game-package
+  typecheck and lint tasks, and the affected repository verification surface.
+- Built both production Docker images locally and passed their real container
+  smoke tests.
+- Published commit `17cbcb657` and draft PR #1633.
 
 ### Remaining
 
-- [ ] Implement the Scout metadata contract and compatibility reader.
-- [ ] Disable Bugsink in both Docker smoke tests.
-- [ ] Complete local verification and publish the draft PR.
 - [ ] Perform post-deploy beta and Bugsink verification.
+- [ ] Promote the lockstep Scout backend/site release only after beta drains the
+      affected matches.
+- [ ] Resolve the historical Bugsink groups after the deployed fixes produce no
+      recurrences.
 
 ### Caveats
 
 - Production promotion follows Scout's existing lockstep promotion workflow and
   must wait for a clean beta verification.
+- No live deployment, production restart, credential rotation, or Bugsink issue
+  mutation was performed in this session.
