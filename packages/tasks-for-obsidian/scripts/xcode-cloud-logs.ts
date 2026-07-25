@@ -14,10 +14,21 @@
  * Nothing secret is baked into this file; the key never touches disk in the repo.
  *
  * Usage:
- *   bun scripts/xcode-cloud-logs.ts runs                 # list recent build runs (newest first)
- *   bun scripts/xcode-cloud-logs.ts logs <buildRunId>    # download every action's logs
- *   bun scripts/xcode-cloud-logs.ts logs latest-failed   # resolve + download the newest FAILED run
- *   bun scripts/xcode-cloud-logs.ts logs <id> ./out-dir  # custom output directory
+ *   bun scripts/xcode-cloud-logs.ts runs                 # list recent runs; in-progress ones expand per-action
+ *   bun scripts/xcode-cloud-logs.ts status               # per-action breakdown of the newest run (no downloads)
+ *   bun scripts/xcode-cloud-logs.ts status <sel>         # ...of a specific run (see selectors below)
+ *   bun scripts/xcode-cloud-logs.ts logs <sel>           # download every action's logs + artifacts
+ *   bun scripts/xcode-cloud-logs.ts logs <sel> ./out-dir # custom output directory
+ *
+ * A run <sel>ector is any of: a build number (`62` or `#62`), a build-run UUID,
+ * `latest` (newest run), or `latest-failed` (newest FAILED run).
+ *
+ * A build run has two actions — Archive (compile/bundle/sign) then TestFlight
+ * (upload/distribute). The overall run stays "RUNNING" until BOTH finish, so a
+ * green Archive can look stuck when it's really the TestFlight step waiting on
+ * App Store Connect. `status` (and the auto-expanded in-progress rows in `runs`)
+ * shows each action separately so that's obvious. `status` needs no downloads;
+ * `logs` pulls the LOG_BUNDLE/RESULT_BUNDLE/exported .ipa artifacts (tens of MB).
  *
  * The default output directory is ./xcode-cloud-logs/<buildRunId>/ (gitignored scratch).
  */
@@ -139,20 +150,21 @@ const BuildRunsSchema = z.object({
   ),
 });
 
-const ActionsSchema = z.object({
-  data: z.array(
-    z.object({
-      id: z.string(),
-      attributes: z.object({
-        name: z.string().nullish(),
-        actionType: z.string().nullish(),
-        completionStatus: z.string().nullish(),
-        startedDate: z.string().nullish(),
-        finishedDate: z.string().nullish(),
-      }),
-    }),
-  ),
+const ActionSchema = z.object({
+  id: z.string(),
+  attributes: z.object({
+    name: z.string().nullish(),
+    actionType: z.string().nullish(),
+    executionProgress: z.string().nullish(),
+    completionStatus: z.string().nullish(),
+    startedDate: z.string().nullish(),
+    finishedDate: z.string().nullish(),
+  }),
 });
+type Action = z.infer<typeof ActionSchema>;
+const ActionsSchema = z.object({ data: z.array(ActionSchema) });
+
+type BuildRun = z.infer<typeof BuildRunsSchema>["data"][number];
 
 const ArtifactsSchema = z.object({
   data: z.array(
@@ -168,6 +180,112 @@ const ArtifactsSchema = z.object({
   ),
 });
 
+/** Compact human duration: "45s", "12m", "4h32m". */
+function formatDuration(ms: number): string {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  if (hours > 0) return `${String(hours)}h${String(minutes)}m`;
+  if (minutes > 0) return `${String(minutes)}m`;
+  return `${String(totalSeconds)}s`;
+}
+
+/** "4h32m ago" for an ISO timestamp, or "?" if absent/unparseable. */
+function ageSince(iso: string | null | undefined): string {
+  if (!iso) return "?";
+  const then = Date.parse(iso);
+  if (Number.isNaN(then)) return "?";
+  return `${formatDuration(Date.now() - then)} ago`;
+}
+
+/** A glyph that reads at a glance for a completion/progress state. */
+function statusGlyph(status: string): string {
+  switch (status) {
+    case "SUCCEEDED":
+    case "COMPLETE":
+      return "✓";
+    case "FAILED":
+    case "ERRORED":
+      return "✗";
+    case "CANCELED":
+      return "⊘";
+    case "SKIPPED":
+      return "–";
+    case "RUNNING":
+      return "▶";
+    case "PENDING":
+      return "…";
+    default:
+      return "?";
+  }
+}
+
+/**
+ * The one status that best describes a run/action: its final completionStatus
+ * once set, otherwise its live executionProgress (RUNNING/PENDING). This is why
+ * a build reads "RUNNING" until every action reports a completionStatus.
+ */
+function overallStatus(a: {
+  completionStatus?: string | null;
+  executionProgress?: string | null;
+}): string {
+  return a.completionStatus ?? a.executionProgress ?? "?";
+}
+
+async function fetchActions(
+  creds: Creds,
+  buildRunId: string,
+): Promise<Action[]> {
+  return ActionsSchema.parse(
+    await api(
+      creds,
+      `/v1/ciBuildRuns/${buildRunId}/actions?limit=50&fields[ciBuildActions]=name,actionType,executionProgress,completionStatus,startedDate,finishedDate`,
+    ),
+  ).data;
+}
+
+/** Print one indented line per action: glyph, name, type, status, and elapsed time. */
+function printActions(actions: Action[]): void {
+  for (const action of actions) {
+    const a = action.attributes;
+    const status = overallStatus(a);
+    let timing = "";
+    if (a.startedDate) {
+      const started = Date.parse(a.startedDate);
+      const ended = a.finishedDate ? Date.parse(a.finishedDate) : Date.now();
+      if (!Number.isNaN(started) && !Number.isNaN(ended)) {
+        timing = ` (${formatDuration(ended - started)}${a.finishedDate ? "" : " so far"})`;
+      }
+    }
+    console.log(
+      `  ${statusGlyph(status)} ${a.name ?? "?"} [${a.actionType ?? "?"}] -> ${status}${timing}`,
+    );
+  }
+}
+
+/** True while a run has not reached a terminal completionStatus. */
+function isInProgress(run: BuildRun): boolean {
+  return (
+    !run.attributes.completionStatus &&
+    run.attributes.executionProgress !== "COMPLETE"
+  );
+}
+
+/** Resolve a run selector (`62`, `#62`, UUID, `latest`, `latest-failed`) against a fetched list. */
+function pickRun(
+  runs: BuildRun[],
+  selector: string | undefined,
+): BuildRun | undefined {
+  if (!selector || selector === "latest") return runs[0];
+  if (selector === "latest-failed") {
+    return runs.find((r) => r.attributes.completionStatus === "FAILED");
+  }
+  const asNumber = selector.replace(/^#/, "");
+  return runs.find(
+    (r) => r.id === selector || String(r.attributes.number) === asNumber,
+  );
+}
+
 async function listRuns(creds: Creds) {
   const data = BuildRunsSchema.parse(
     await api(
@@ -178,34 +296,33 @@ async function listRuns(creds: Creds) {
   return data.data;
 }
 
-async function resolveBuildRunId(creds: Creds, arg: string): Promise<string> {
-  if (arg !== "latest-failed") return arg;
+async function resolveBuildRunId(
+  creds: Creds,
+  selector: string,
+): Promise<string> {
+  // A raw build-run UUID resolves without a list call.
+  if (/^[0-9a-f-]{36}$/i.test(selector)) return selector;
   const runs = await listRuns(creds);
-  const failed = runs.find((r) => r.attributes.completionStatus === "FAILED");
-  if (!failed)
-    throw new Error("No FAILED build run found in the last 20 runs.");
+  const target = pickRun(runs, selector);
+  if (!target) {
+    throw new Error(
+      `Could not resolve build run for "${selector}" among the last ${String(runs.length)} runs.`,
+    );
+  }
   console.log(
-    `Resolved latest-failed -> build #${String(failed.attributes.number)} (${failed.id})`,
+    `Resolved ${selector} -> build #${String(target.attributes.number)} (${target.id})`,
   );
-  return failed.id;
+  return target.id;
 }
 
 async function downloadLogs(creds: Creds, buildRunId: string, outDir: string) {
   mkdirSync(outDir, { recursive: true });
-  const actions = ActionsSchema.parse(
-    await api(
-      creds,
-      `/v1/ciBuildRuns/${buildRunId}/actions?limit=50&fields[ciBuildActions]=name,actionType,completionStatus,startedDate,finishedDate`,
-    ),
-  ).data;
+  const actions = await fetchActions(creds, buildRunId);
 
-  console.log(`Build run ${buildRunId} has ${actions.length} action(s):`);
-  for (const a of actions) {
-    const { name, actionType, completionStatus } = a.attributes;
-    console.log(
-      `  - ${name ?? "?"} [${actionType ?? "?"}] -> ${completionStatus ?? "?"}`,
-    );
-  }
+  console.log(
+    `Build run ${buildRunId} has ${String(actions.length)} action(s):`,
+  );
+  printActions(actions);
 
   for (const action of actions) {
     const artifacts = ArtifactsSchema.parse(
@@ -258,17 +375,43 @@ async function main() {
     const runs = await listRuns(creds);
     for (const r of runs) {
       const a = r.attributes;
-      const status = a.completionStatus ?? a.executionProgress ?? "?";
       console.log(
-        `#${String(a.number)}\t${status}\t${a.createdDate ?? "?"}\t${r.id}`,
+        `#${String(a.number)}\t${overallStatus(a)}\t${ageSince(a.createdDate)}\t${r.id}`,
       );
+      // Expand still-running builds so it's clear which action is the holdup
+      // (e.g. Archive done, TestFlight uploading) rather than a bare "RUNNING".
+      if (isInProgress(r)) {
+        printActions(await fetchActions(creds, r.id));
+      }
     }
+    return;
+  }
+
+  if (cmd === "status") {
+    const runs = await listRuns(creds);
+    const target = pickRun(runs, arg);
+    const buildRunId = target?.id ?? arg;
+    if (!buildRunId)
+      throw new Error(
+        "Usage: status <#number | buildRunId | latest | latest-failed>",
+      );
+    if (target) {
+      const a = target.attributes;
+      console.log(
+        `#${String(a.number)}  ${overallStatus(a)}  started ${ageSince(a.createdDate)}  ${target.id}`,
+      );
+    } else {
+      console.log(`Build run ${buildRunId}`);
+    }
+    printActions(await fetchActions(creds, buildRunId));
     return;
   }
 
   if (cmd === "logs") {
     if (!arg)
-      throw new Error("Usage: logs <buildRunId | latest-failed> [outDir]");
+      throw new Error(
+        "Usage: logs <#number | buildRunId | latest | latest-failed> [outDir]",
+      );
     const buildRunId = await resolveBuildRunId(creds, arg);
     const outDir = arg2 ?? `./xcode-cloud-logs/${buildRunId}`;
     await downloadLogs(creds, buildRunId, outDir);
@@ -279,7 +422,8 @@ async function main() {
     `Unknown command: ${cmd ?? "(none)"}\n` +
       "Usage:\n" +
       "  bun scripts/xcode-cloud-logs.ts runs\n" +
-      "  bun scripts/xcode-cloud-logs.ts logs <buildRunId | latest-failed> [outDir]",
+      "  bun scripts/xcode-cloud-logs.ts status [#number | buildRunId | latest | latest-failed]\n" +
+      "  bun scripts/xcode-cloud-logs.ts logs <#number | buildRunId | latest | latest-failed> [outDir]",
   );
 }
 
