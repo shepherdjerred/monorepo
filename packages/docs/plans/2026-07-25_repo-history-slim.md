@@ -63,12 +63,15 @@ directories or uncommitted/staged changes.
 
 The rewrite runs in an **isolated throwaway clone** (`git clone` → `filter-repo` → force-push). `filter-repo` never
 modifies your real `.git`, any worktree's files, or any uncommitted work — the 13 worktrees are physically untouched.
-What moves is **every ref filter-repo rewrote** — this repo currently has **18 heads + 311 tags**, all rewritten in
-the same pass (see Phase 2) — not just `origin/main`. Publishing only `main` and leaving the rest "as needed" is not
-safe: any un-force-pushed branch or tag keeps the pre-rewrite blobs (including already-deleted content) reachable on
-GitHub, and can merge that old graph straight back into `main` later; see Phase 3 for the explicit all-refs publish
-step. After a correct publish, nothing _breaks_ locally (the old objects still exist in the shared `.git`, so every
-worktree keeps building), but every open feature branch is now based on an old `main` that's been replaced.
+What moves is **every operator-controlled ref filter-repo rewrote** — this repo currently has **18 heads + 311 tags**
+plus `refs/renovate/branches/renovate/pin-dependencies`, all rewritten in the same pass (see Phase 2) — not just
+`origin/main`. Publishing only `main` and leaving the rest "as needed" is not safe: any un-force-pushed branch, tag,
+or custom ref keeps the pre-rewrite blobs (including already-deleted content) reachable on GitHub, and a branch can
+merge that old graph straight back into `main` later; see Phase 3 for the explicit controlled-ref publish step.
+GitHub also advertises service-owned `refs/pull/*`; those cannot be force-pushed or deleted by an operator and must be
+listed separately for the GitHub Support cleanup in Phase 4. After a correct publish, nothing _breaks_ locally (the
+old objects still exist in the shared `.git`, so every worktree keeps building), but every local feature branch is
+now based on an old `main` that's been replaced.
 
 The real cost is narrow: **each open PR eventually needs its stack restacked onto the new main + resubmitted
 (CI re-runs)** — see Phase 3 for the exact sequence. This is **not** a `git-spice repo sync --restack` freebie: that
@@ -87,16 +90,28 @@ for a low-PR window → nothing to rebase.
 - [ ] **Pick a low-PR window** (see Blast radius): the fewer open PRs, the fewer restacks afterward. Worktrees need not
       be deleted — only their open PRs eventually restack onto the new main.
 - [ ] **Full backup**: `git clone --mirror` the current remote to a safe location before any force-push (rollback anchor).
+- [ ] **Freeze writers and classify refs**: pause Renovate and every other branch/tag publisher, then capture
+      `git ls-remote origin` to an external manifest. Partition it into operator-controlled refs (`refs/heads/*`,
+      `refs/tags/*`, and custom namespaces such as `refs/renovate/*`) versus GitHub-owned refs (`refs/pull/*`).
+      Decide explicitly whether each controlled ref is retained or retired; no writer may republish an old ref during
+      the rewrite.
+- [ ] **Record tip-tree oracles outside the rewrite clone**: save `<ref> <ref^{tree}>` for `main` and every retained
+      head. A retained head whose target paths differ from `main` needs its own saved target-directory contents; a
+      stale head that still contains content intentionally being purged must be retired or its retained size must be
+      accepted and removed from the reclaim estimate.
 
 ## Phase 2 — the rewrite (`git-filter-repo`, installed)
 
-Work in a fresh **working** clone of `main` (not the mirror — we need to re-add files). A plain `git clone` still
+Work in a fresh **working** clone of `main` (not the backup mirror — we need to re-add files). A plain `git clone`
 fetches every branch and tag from `origin`, and `git filter-repo`'s default run (no `--partial`, no `--refs`) does its
-own mirror-like fetch of **all** refs before filtering and remaps `refs/remotes/origin/*` to local `refs/heads/*` —
-this one pass rewrites the repo's full **18 heads + 311 tags**, not just the checked-out branch. Do not pass
-`--refs`/`--partial`, which would limit the rewrite to a subset and leave the rest holding the pre-rewrite blobs.
+own mirror-like fetch of those refs before filtering and remaps `refs/remotes/origin/*` to local `refs/heads/*`.
+Explicitly fetch each operator-controlled custom namespace from the Phase-1 manifest before filtering; today that is
+`git fetch origin '+refs/renovate/*:refs/renovate/*'`. Do not fetch GitHub-owned `refs/pull/*` into the rewrite set:
+operators cannot publish their rewritten values back. Do not pass `--refs`/`--partial`, which would limit the rewrite
+to a subset and leave the rest holding the pre-rewrite blobs.
 
-1. Copy the current collapse-target dirs aside (`champion-loading/`, `scout-showcase/`, the report `__snapshots__/`).
+1. Copy the collapse-target dirs aside for `main` and every retained head, keyed by ref. Deduplicate identical
+   directory trees, but do not assume all branch tips carry the same version.
 2. Run one `git filter-repo --invert-paths` pass listing **all** targets — both the `delete` paths and the `collapse`
    dirs (this strips the collapse dirs from tip too; step 4 restores them):
 
@@ -118,23 +133,31 @@ this one pass rewrites the repo's full **18 heads + 311 tags**, not just the che
    `--paths-from-file` keeps it maintainable. Keep `champion-loading/*_0.jpg` OUT of the delete set — they come back in step 4.)
 
 3. Enumerate any other big deleted-at-tip blobs from the analysis and add them to the list.
-4. Copy the saved current generated dirs back in, `git add <those paths>`, and commit:
+4. On `main`, copy its saved generated dirs back in, `git add <those paths>`, and commit:
    `chore(root): re-add current generated artifacts after history slim`.
+5. For every other retained head, restore that head's saved generated dirs and commit the restoration on that head
+   before publishing. Verify its resulting tree hash equals the external pre-filter `<ref^{tree}>` oracle. Retire
+   obsolete heads instead of publishing a silently altered tip. This may retain one copy per distinct live branch-tip
+   version; that is the cost of preserving retained refs, and the measured size delta must include it.
 
 ## Phase 3 — publish + recover downstream
 
 - [ ] Verify (see below) on the rewritten clone BEFORE pushing.
 - [ ] `filter-repo` removes the `origin` remote as a safety net — re-add it
-      (`git remote add origin git@github.com:shepherdjerred/monorepo.git`), then force-push **every** rewritten ref in
-      one shot, not just `main`: `git push --force origin 'refs/heads/*:refs/heads/*' 'refs/tags/*:refs/tags/*'`
-      (covers all 18 heads + 311 tags — see Phase 2). Explicitly delete any ref you intend to retire
-      (`git push origin --delete refs/heads/<name>` / `refs/tags/<name>`) instead of silently omitting it: an
-      un-pushed ref keeps its pre-rewrite blobs — including already-deleted content, e.g. old release tags that still
-      point at the pre-`demo.mp4`-removal commit — reachable on GitHub, and any branch that never gets force-updated
-      can merge that old graph straight back into `main`.
-- [ ] Verify the publish actually took, before declaring the rewrite effective: `git ls-remote origin` ref count and
-      SHAs match the rewritten clone, **and** a fresh `git clone` into a new directory (no reused `.git`) confirms
-      both the smaller size and that retired paths are gone from `git log --all -- <path>`.
+      (`git remote add origin git@github.com:shepherdjerred/monorepo.git`), then force-push **every retained
+      operator-controlled ref**, not just `main`: `git push --force origin
+'refs/heads/*:refs/heads/*' 'refs/tags/*:refs/tags/*'
+'refs/renovate/*:refs/renovate/*'`. The owner account must intentionally exercise its current ruleset bypass
+      for the protected, non-fast-forward `main` update. Explicitly delete every controlled ref marked retired in the
+      Phase-1 manifest (`git push origin --delete <full-ref>`) instead of silently omitting it: an un-pushed ref keeps
+      its pre-rewrite blobs — including already-deleted content, e.g. old release tags that still point at the
+      pre-`demo.mp4`-removal commit — reachable on GitHub, and any branch that never gets force-updated can merge that
+      old graph straight back into `main`.
+- [ ] Verify the publish actually took before declaring the rewrite effective: compare the controlled namespaces from
+      `git ls-remote origin` against the rewritten clone and the Phase-1 retained/retired manifest, **and** use a fresh
+      `git clone` into a new directory (no reused `.git`) to confirm both the smaller size and that retired paths are
+      gone from `git log --all -- <path>`. Do not require GitHub-owned `refs/pull/*` to match the clone; record their
+      count and hand them to GitHub Support in Phase 4 because operators cannot rewrite or delete them.
 - [ ] Before touching any local state, back up `refs/spice/data`
       (`git for-each-ref refs/spice/data > /tmp/spice-data-backup.txt`, or copy `.git/refs/spice/`). A remote-side
       history rewrite does **not** invalidate
@@ -143,8 +166,12 @@ this one pass rewrites the repo's full **18 heads + 311 tags**, not just the che
       old base commit stays reachable locally via the feature branch's own ancestry, so it survives even a later
       `git gc`). Do **not** run `git-spice repo init` to "reset" the store after the reset below — that was this
       plan's original (wrong) instinct, and it throws away exactly the base pointers the restack step depends on.
-- [ ] In the main checkout: `git fetch origin && git reset --hard origin/main` (or re-clone). Worktrees keep working
-      as is — they don't need recreating.
+- [ ] Recover local trunk only from a **clean, explicitly checked** main checkout:
+      `test -z "$(git status --porcelain=v1 --untracked-files=all)"` must pass before
+      `git fetch origin && git reset --hard origin/main`. If it is not clean, abort the recovery and first
+      commit/push the work through its owning branch; do not stash or reset it. A separate re-clone is safe for
+      inspection, but it does not contain this clone's `refs/spice/data`, so use the clean original clone for the
+      per-stack restacks. Other clean worktrees keep working as is and do not need recreating.
 - [ ] Per open stack, restack for real: `git-spice stack restack` (or `git-spice upstack restack --branch <name>` to
       move one branch + its upstack), then `git-spice stack submit --update-only` to force-push the rebased branches
       to their existing PRs (CI re-runs). This is **not** `git-spice repo sync --restack`: that flag only rebases the
@@ -160,28 +187,33 @@ this one pass rewrites the repo's full **18 heads + 311 tags**, not just the che
 
 ## Phase 4 — GitHub server-side (set expectations)
 
-GitHub does **not** GC on force-push — the remote repo stays ~1 GB until GitHub's own maintenance runs. Options:
-open a GitHub Support request to force server-side `git gc` (fastest), or accept that only fresh clones shrink once
-their GC eventually reclaims the unreachable blobs. Local `.git` shrinks after our own `git gc --prune=now`.
+GitHub does **not** GC on force-push, and its service-owned `refs/pull/*` continue to retain historical PR commits that
+operators cannot rewrite or delete. Open a GitHub Support request to remove/repack the obsolete PR refs and force
+server-side `git gc`; until that completes, the remote repository may stay ~1 GB even though normal fresh clones no
+longer fetch the retired operator-controlled graph. Local `.git` shrinks after our own `git gc --prune=now`.
 
 ## Verification
 
 The rewrite must change **history weight only, never working-tree content**:
 
-1. **Tip-tree identity (primary oracle):** `git diff <old-main-HEAD-tree> <new-HEAD-tree>` must be **empty** — the
-   re-added generated dirs are byte-identical and the deleted paths were already absent at tip. Any non-empty diff = a
-   mistargeted path; abort and fix.
+1. **Tip-tree identity (primary oracle):** before filtering, write the tree hashes for `main` and every retained head
+   to an external manifest (outside the disposable clone). After all per-head restorations, require
+   `git rev-parse <ref>^{tree}` to equal the recorded hash for each retained head. Comparing hashes remains executable
+   after `filter-repo` expires reflogs and garbage-collects old objects; a `git diff <old-commit> <new-commit>` inside
+   the rewritten clone does not. Any mismatch means a mistargeted path or missing per-head restore; abort and fix.
 2. **Build/verify green** on the rewritten clone: `bun install --frozen-lockfile && bunx turbo run generate && bun run verify`.
 3. **Size delta measured:** rerun the analysis (`scratchpad/analyze-git.sh` pattern) → reachable should drop ~250 MB.
 4. **Backup retained** until the rewritten remote is confirmed healthy for a few days.
 
 ## Rollback
 
-The Phase-1 mirror backup (`git clone --mirror`, which captured every head and tag) is the anchor: restore with the
-same all-refs push used in Phase 3 — `git push --force <backup-path-or-remote> 'refs/heads/*:refs/heads/*'
-'refs/tags/*:refs/tags/*'` back to `origin` — never a `main`-only push, or the rollback leaves the rewritten
-(slimmed) refs live everywhere except `main` and the repo ends up in a worse mixed state than either version alone.
-Keep the backup until CI + a couple of fresh clones are confirmed good.
+The Phase-1 mirror backup is the anchor. Run the rollback **from that backup**, with GitHub as the destination:
+`cd <backup>.git && git push --force git@github.com:shepherdjerred/monorepo.git
+'refs/heads/*:refs/heads/*' 'refs/tags/*:refs/tags/*' 'refs/renovate/*:refs/renovate/*'`. Delete any
+operator-controlled refs that exist only in the rewritten remote, using the Phase-1 manifest. Never put
+`<backup-path>` in the destination position of `git push`: that would overwrite the rollback anchor rather than
+restore GitHub. Never do a `main`-only rollback, or the repo ends up in a mixed state worse than either complete
+version. Keep the backup until CI + a couple of fresh clones are confirmed good.
 
 ## Supersedes
 
@@ -235,3 +267,23 @@ now one target within this aggressive pass. That todo is updated to point here.
 - The `robot-face-greptile-review-gate` check will stay red on this PR regardless of these fixes — it's a billing
   gate (credits paused), not a content gate; see `reference_greptile_gate_merge_skip` in the reviewer's memory for
   the known Greptile-gate quirks.
+
+## Session Log — 2026-07-25 (Codex replacement review)
+
+### Done
+
+- Addressed the replacement review's 4 P1 findings: retained heads now preserve their own generated-directory tip
+  trees, local trunk recovery requires a clean checkout, rollback runs from the mirror backup toward GitHub, and
+  pre-filter tree hashes are recorded externally for an executable post-filter identity check.
+- Addressed its P2 finding by inventorying custom refs, explicitly rewriting the current `refs/renovate/*` namespace,
+  and separating GitHub-owned `refs/pull/*` for Support-assisted cleanup.
+
+### Remaining
+
+- Execute Phases 0–4 in a coordinated low-PR window after all writers are frozen and every controlled ref is
+  classified as retained or retired.
+
+### Caveats
+
+- The Buildkite aggregate remains hard-red solely because its Greptile gate timed out after 1,200 seconds with no
+  Greptile check started; affected verification and every other substantive PR job passed.
