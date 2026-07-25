@@ -85,8 +85,6 @@ export const BaseLoadingScreenParticipantSchema = z.strictObject({
   championName: z.string().min(1),
   /** Human-readable champion name (e.g., "Lee Sin") */
   championDisplayName: z.string().min(1),
-  /** Skin number for loading screen art (0 = default) */
-  skinNum: z.number().int().nonnegative(),
   /** Team assignment (discriminated by layout) */
   team: LoadingScreenTeamSchema,
   /** Summoner spell 1 ID (e.g., 4=Flash) */

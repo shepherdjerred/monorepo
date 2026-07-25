@@ -11,7 +11,6 @@
       "summonerName": "Player01#NA1",
       "championName": "Aatrox",
       "championDisplayName": "Aatrox",
-      "skinNum": 0,
       "team": {
         "arenaTeam": 1
       },
@@ -27,7 +26,6 @@
       "summonerName": "Player02#NA1",
       "championName": "Ahri",
       "championDisplayName": "Ahri",
-      "skinNum": 0,
       "team": {
         "arenaTeam": 1
       },
@@ -43,7 +41,6 @@
       "summonerName": "Player03#NA1",
       "championName": "Akali",
       "championDisplayName": "Akali",
-      "skinNum": 0,
       "team": {
         "arenaTeam": 1
       },
@@ -59,7 +56,6 @@
       "summonerName": "Player04#NA1",
       "championName": "Annie",
       "championDisplayName": "Annie",
-      "skinNum": 0,
       "team": {
         "arenaTeam": 2
       },
@@ -75,7 +71,6 @@
       "summonerName": "Player05#NA1",
       "championName": "Ashe",
       "championDisplayName": "Ashe",
-      "skinNum": 0,
       "team": {
         "arenaTeam": 2
       },
@@ -91,7 +86,6 @@
       "summonerName": "Player06#NA1",
       "championName": "Braum",
       "championDisplayName": "Braum",
-      "skinNum": 0,
       "team": {
         "arenaTeam": 2
       },
@@ -107,7 +101,6 @@
       "summonerName": "Player07#NA1",
       "championName": "Caitlyn",
       "championDisplayName": "Caitlyn",
-      "skinNum": 0,
       "team": {
         "arenaTeam": 3
       },
@@ -123,7 +116,6 @@
       "summonerName": "Player08#NA1",
       "championName": "Darius",
       "championDisplayName": "Darius",
-      "skinNum": 0,
       "team": {
         "arenaTeam": 3
       },
@@ -139,7 +131,6 @@
       "summonerName": "Player09#NA1",
       "championName": "Ekko",
       "championDisplayName": "Ekko",
-      "skinNum": 0,
       "team": {
         "arenaTeam": 3
       },
@@ -155,7 +146,6 @@
       "summonerName": "Player10#NA1",
       "championName": "Ezreal",
       "championDisplayName": "Ezreal",
-      "skinNum": 0,
       "team": {
         "arenaTeam": 4
       },
@@ -171,7 +161,6 @@
       "summonerName": "Player11#NA1",
       "championName": "Garen",
       "championDisplayName": "Garen",
-      "skinNum": 0,
       "team": {
         "arenaTeam": 4
       },
@@ -187,7 +176,6 @@
       "summonerName": "Player12#NA1",
       "championName": "Jinx",
       "championDisplayName": "Jinx",
-      "skinNum": 0,
       "team": {
         "arenaTeam": 4
       },
@@ -203,7 +191,6 @@
       "summonerName": "Player13#NA1",
       "championName": "Kaisa",
       "championDisplayName": "Kaisa",
-      "skinNum": 0,
       "team": {
         "arenaTeam": 5
       },
@@ -219,7 +206,6 @@
       "summonerName": "Player14#NA1",
       "championName": "Leona",
       "championDisplayName": "Leona",
-      "skinNum": 0,
       "team": {
         "arenaTeam": 5
       },
@@ -235,7 +221,6 @@
       "summonerName": "Player15#NA1",
       "championName": "Lux",
       "championDisplayName": "Lux",
-      "skinNum": 0,
       "team": {
         "arenaTeam": 5
       },
@@ -251,7 +236,6 @@
       "summonerName": "Player16#NA1",
       "championName": "Morgana",
       "championDisplayName": "Morgana",
-      "skinNum": 0,
       "team": {
         "arenaTeam": 6
       },
@@ -267,7 +251,6 @@
       "summonerName": "Player17#NA1",
       "championName": "Teemo",
       "championDisplayName": "Teemo",
-      "skinNum": 0,
       "team": {
         "arenaTeam": 6
       },
@@ -283,7 +266,6 @@
       "summonerName": "Player18#NA1",
       "championName": "Yasuo",
       "championDisplayName": "Yasuo",
-      "skinNum": 0,
       "team": {
         "arenaTeam": 6
       },

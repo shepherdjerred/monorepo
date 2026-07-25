@@ -39,7 +39,6 @@ const logger = createLogger("prematch-loading-screen-builder");
 const RANKED_SOLO_QUEUE_ID = 420;
 const RANKED_FLEX_QUEUE_ID = 440;
 const RANKED_5S_QUEUE_ID = 710;
-const DEFAULT_LOADING_SCREEN_SKIN_NUM = 0;
 
 export class RecoverableLoadingScreenDataError extends Error {
   constructor(message: string) {
@@ -170,7 +169,6 @@ function buildParticipant(
     championId: LoadingScreenChampionIdSchema.parse(participant.championId),
     championName,
     championDisplayName,
-    skinNum: DEFAULT_LOADING_SCREEN_SKIN_NUM,
     team: resolveTeam(participant, context.layout),
     spell1Id: SummonerSpellIdSchema.parse(participant.spell1Id),
     spell2Id: SummonerSpellIdSchema.parse(participant.spell2Id),

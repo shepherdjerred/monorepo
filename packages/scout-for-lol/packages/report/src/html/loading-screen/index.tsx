@@ -1,5 +1,5 @@
 import satori from "satori";
-import type { LoadingScreenData, SkinFallbackEvent } from "@scout-for-lol/data";
+import type { LoadingScreenData } from "@scout-for-lol/data";
 import { LoadingScreen } from "#src/html/loading-screen/loading-screen.tsx";
 import { bunBeaufortFonts, bunSpiegelFonts } from "#src/assets/index.ts";
 import {
@@ -93,32 +93,17 @@ export function getLoadingScreenCanvasDimensions(
   return { width: STANDARD_WIDTH, height: STANDARD_HEIGHT };
 }
 
-/**
- * Optional observability hook fired when a participant's requested skin
- * loading-screen JPG isn't on disk and we fall back to skin 0. Backend
- * callers wire this to a Prometheus counter + structured log.
- */
-export type LoadingScreenOptions = {
-  onSkinFallback?: (event: SkinFallbackEvent) => void;
-};
-
 async function preloadLoadingScreenImages(
   data: LoadingScreenData,
-  options: LoadingScreenOptions = {},
 ): Promise<void> {
   const participantsToRender =
     data.layout === "arena"
       ? data.participants.filter((participant) => participant.isTrackedPlayer)
       : data.participants;
 
-  // Preload champion loading screen art for rendered participants.
-  const loadingImageEntries = participantsToRender.map((p) => ({
-    championName: p.championName,
-    skinNum: p.skinNum,
-  }));
+  // Preload champion loading screen art (base skin) for rendered participants.
   await preloadChampionLoadingImages(
-    loadingImageEntries,
-    options.onSkinFallback,
+    participantsToRender.map((p) => p.championName),
   );
 
   // Preload small champion square portraits for bans
@@ -130,9 +115,8 @@ async function preloadLoadingScreenImages(
 
 export async function loadingScreenToSvg(
   data: LoadingScreenData,
-  options: LoadingScreenOptions = {},
 ): Promise<string> {
-  await preloadLoadingScreenImages(data, options);
+  await preloadLoadingScreenImages(data);
 
   const fonts = [...(await bunBeaufortFonts()), ...(await bunSpiegelFonts())];
   const { width, height } = getLoadingScreenCanvasDimensions(data);
@@ -147,9 +131,8 @@ export async function loadingScreenToSvg(
 
 export async function loadingScreenToImage(
   data: LoadingScreenData,
-  options: LoadingScreenOptions = {},
 ): Promise<Uint8Array> {
-  const svg = await loadingScreenToSvg(data, options);
+  const svg = await loadingScreenToSvg(data);
   const png = await svgToPng(svg);
   return png;
 }

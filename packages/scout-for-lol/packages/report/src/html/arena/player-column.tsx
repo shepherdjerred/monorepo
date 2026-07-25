@@ -8,7 +8,6 @@ import { getChampionLoadingImage } from "#src/dataDragon/image-cache.ts";
 import { Damage } from "#src/html/arena/damage.tsx";
 import { ItemsRow } from "#src/html/arena/items-row.tsx";
 import { AugmentsDisplay } from "#src/html/arena/augments-display.tsx";
-import { ARENA_DEFAULT_SKIN_NUM } from "#src/html/arena/utils.ts";
 import { round } from "remeda";
 
 const SPLASH_HEIGHT = 320;
@@ -44,10 +43,7 @@ export function PlayerColumn({
     player.damage,
     totalTeamDamage,
   );
-  const splash = getChampionLoadingImage(
-    player.championName,
-    ARENA_DEFAULT_SKIN_NUM,
-  );
+  const splash = getChampionLoadingImage(player.championName);
 
   return (
     <div

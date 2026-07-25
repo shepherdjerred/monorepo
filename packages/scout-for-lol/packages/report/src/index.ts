@@ -24,7 +24,6 @@ export { arenaMatchToImage, arenaMatchToSvg } from "./html/arena/index.tsx";
 export {
   loadingScreenToSvg,
   loadingScreenToImage,
-  type LoadingScreenOptions,
 } from "./html/loading-screen/index.tsx";
 export {
   setItemMissHandler,

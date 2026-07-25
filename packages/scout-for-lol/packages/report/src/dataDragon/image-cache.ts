@@ -7,7 +7,6 @@ import {
   normalizeChampionName,
   summoner,
   items,
-  type SkinFallbackEvent,
 } from "@scout-for-lol/data";
 
 // Centralized image cache for Satori rendering
@@ -25,7 +24,7 @@ const spellImageCache = new Map<string, string>();
 // Augment icon cache
 const augmentIconCache = new Map<string, string>();
 
-// Champion loading screen image cache (key: "{ChampionName}_{skinNum}").
+// Champion loading screen image cache (key: normalized champion name).
 // Pre-loaded into a sync-accessible Map because satori renders JSX
 // synchronously — it cannot do async file reads during render.
 const championLoadingImageCache = new Map<string, string>();
@@ -166,13 +165,10 @@ export async function preloadAugmentIcons(iconPaths: string[]): Promise<void> {
 }
 
 // Get champion loading screen image from cache (must be pre-loaded).
-// Normalizes the champion-name component of the cache key so casing
-// variants resolve to the canonical entry.
-export function getChampionLoadingImage(
-  championName: string,
-  skinNum: number,
-): string {
-  const key = `${normalizeChampionName(championName)}_${skinNum.toString()}`;
+// Normalizes the champion name so casing variants resolve to the canonical
+// entry. Only the base skin (skin 0) is ever rendered.
+export function getChampionLoadingImage(championName: string): string {
+  const key = normalizeChampionName(championName);
   const cached = championLoadingImageCache.get(key);
   if (cached !== undefined && cached.length > 0) {
     return cached;
@@ -183,45 +179,21 @@ export function getChampionLoadingImage(
   );
 }
 
-// Pre-load champion loading screen images for a list of champion/skin combos.
-// Chromas are resolved to their parent skin via resolveLoadingSkinNum at the
-// caller. If a requested skin's JPG is missing on disk (e.g. Riot just shipped
-// a new skin and we haven't refreshed assets), the loader silently falls back
-// to skin 0; pass `onSkinFallback` to log/meter those events.
-//
-// The fallback base64 is cached under the *requested* `${champion}_${skinNum}`
-// key so repeat renders within the same run hit the cache instead of doing
-// the FS-existence check again.
+// Pre-load champion loading screen images (base skin only) for a list of
+// champion names, keyed by normalized champion name.
 export async function preloadChampionLoadingImages(
-  entries: { championName: string; skinNum: number }[],
-  onSkinFallback?: (event: SkinFallbackEvent) => void,
+  championNames: string[],
 ): Promise<void> {
-  const seen = new Set<string>();
-  const uniqueEntries = entries
-    .map(({ championName, skinNum }) => ({
-      championName: normalizeChampionName(championName),
-      skinNum,
-    }))
-    .filter((entry) => {
-      const key = `${entry.championName}_${entry.skinNum.toString()}`;
-      if (seen.has(key)) {
-        return false;
-      }
-      seen.add(key);
-      return true;
-    });
+  const uniqueKeys = [
+    ...new Set(championNames.map((name) => normalizeChampionName(name))),
+  ];
 
   await Promise.all(
-    uniqueEntries.map(async ({ championName, skinNum }) => {
-      const key = `${championName}_${skinNum.toString()}`;
+    uniqueKeys.map(async (key) => {
       if (championLoadingImageCache.has(key)) {
         return;
       }
-      const base64 = await getChampionLoadingImageBase64(
-        championName,
-        skinNum,
-        onSkinFallback,
-      );
+      const base64 = await getChampionLoadingImageBase64(key);
       championLoadingImageCache.set(key, base64);
     }),
   );

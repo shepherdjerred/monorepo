@@ -47,27 +47,21 @@ describe("image-cache", () => {
   });
 
   test("preload + get champion loading image for RekSai", async () => {
-    await preloadChampionLoadingImages([
-      { championName: "RekSai", skinNum: 0 },
-    ]);
-    const dataUri = getChampionLoadingImage("RekSai", 0);
+    await preloadChampionLoadingImages(["RekSai"]);
+    const dataUri = getChampionLoadingImage("RekSai");
     expect(dataUri).toStartWith("data:image/jpeg;base64,");
     expect(dataUri.length).toBeGreaterThan(200);
   });
 
   test("preload + get champion loading image for KSante", async () => {
-    await preloadChampionLoadingImages([
-      { championName: "KSante", skinNum: 0 },
-    ]);
-    const dataUri = getChampionLoadingImage("KSante", 0);
+    await preloadChampionLoadingImages(["KSante"]);
+    const dataUri = getChampionLoadingImage("KSante");
     expect(dataUri).toStartWith("data:image/jpeg;base64,");
   });
 
   test("preload + get champion loading image for JarvanIV", async () => {
-    await preloadChampionLoadingImages([
-      { championName: "JarvanIV", skinNum: 0 },
-    ]);
-    const dataUri = getChampionLoadingImage("JarvanIV", 0);
+    await preloadChampionLoadingImages(["JarvanIV"]);
+    const dataUri = getChampionLoadingImage("JarvanIV");
     expect(dataUri).toStartWith("data:image/jpeg;base64,");
   });
 
@@ -79,7 +73,7 @@ describe("image-cache", () => {
 
   test("getChampionLoadingImage throws when not pre-loaded", () => {
     expect(() =>
-      getChampionLoadingImage("AZZZThisIsDefinitelyNotCached", 99),
+      getChampionLoadingImage("AZZZThisIsDefinitelyNotCached"),
     ).toThrow(/not found in cache/);
   });
 

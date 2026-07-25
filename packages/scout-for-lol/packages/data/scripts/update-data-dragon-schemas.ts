@@ -80,30 +80,6 @@ export function rarityNumberToString(
 }
 
 /**
- * Schema for parsing champion detail JSON to extract skins array.
- * Used by the loading screen art downloader.
- */
-export const ChampionDetailSkinsSchema = z.object({
-  data: z.record(
-    z.string(),
-    z.object({
-      skins: z.array(
-        z.object({
-          id: z.string(),
-          num: z.number(),
-          name: z.string(),
-          chromas: z.boolean(),
-          /** Present on chroma variants — points to the parent skin num */
-          parentSkin: z.number().optional(),
-        }),
-      ),
-    }),
-  ),
-});
-
-export type ChampionDetailSkins = z.infer<typeof ChampionDetailSkinsSchema>;
-
-/**
  * Subset of CommunityDragon's per-champion JSON we consume for fallback
  * loading-screen art when Riot's Data Dragon CDN doesn't host a skin's JPG
  * (newer "tier" skins like Praetorian/Star Nemesis return 403 from Data
