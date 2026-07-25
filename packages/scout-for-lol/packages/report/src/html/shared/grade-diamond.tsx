@@ -20,11 +20,11 @@ export function GradeDiamond({
   const accent =
     grade === "S+" || grade === "S" ? palette.gold[4] : palette.gold[1];
   const fontSize = grade === "S+" ? size * 0.45 : size * 0.55;
-  // Beaufort's line-box seats capital glyphs ~2% of the box too low when
-  // flex-centered, so the letter reads as sitting below the diamond's middle.
-  // Padding the bottom grows the (centered) span downward, lifting the glyph by
-  // half the padding; 0.08·fontSize zeroes the offset (measured empirically).
-  const centeringPadBottom = fontSize * 0.08;
+  // Beaufort's line-box seats capital glyphs a hair (~1% of the diamond) below
+  // the geometric center when flex-centered. Padding the bottom grows the
+  // (centered) span downward, lifting the glyph by half the padding;
+  // 0.035·fontSize zeroes the offset (measured on the real svgToPng render).
+  const centeringPadBottom = fontSize * 0.035;
 
   return (
     <div

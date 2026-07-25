@@ -1,9 +1,9 @@
 // Bun Snapshot v1, https://bun.sh/docs/test/snapshots
 
-exports[`square — solo victory with commentary 1`] = `"1cdbe84c4282d247284a8e7eaaf1ace1251fab1bb2761adc1c01a059f3f6e50a"`;
+exports[`square — solo victory with commentary 1`] = `"0adb07aafa119d7ab9c35788bde9cb5892d20b349902e2377876e1c201d0e4cb"`;
 
-exports[`square — solo defeat without commentary 1`] = `"1bc3a9e357190646d657a6273a4af22da990b773d3a196c239daa526085a6fe0"`;
+exports[`square — solo defeat without commentary 1`] = `"e145a525620b012ac5117e60c6b7d7f3a2cff8f0c903e07f4b7db1ade727a2d3"`;
 
-exports[`square — 5-player squad with commentary 1`] = `"669156dd3757688409e5e447beebeac75e22143d6e6c35564abd562ae0a66908"`;
+exports[`square — 5-player squad with commentary 1`] = `"dafbe39503bfa77691acf5c9a249cdac7d13c630a990e7e187acd9b7d981c9d0"`;
 
-exports[`square — 3-player squad 1`] = `"3e7a69c01f09c430f8facd171cfa8848c373d060ade5a56bd41b298492b90d6d"`;
+exports[`square — 3-player squad 1`] = `"a2d4229584dec0ac29b7af70d2bbe5999e1fdfedb4671babb013734b1bd97a6c"`;
