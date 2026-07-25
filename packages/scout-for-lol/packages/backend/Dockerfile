@@ -45,8 +45,12 @@ ENV NODE_ENV=production
 # keep a plain `docker run` bootable.
 ARG VERSION=dev
 ARG GIT_SHA=unknown
+# Contract-source hash (packages/scout-for-lol/scripts/contract-hash.ts),
+# served by /api/version so the SPA can detect contract skew.
+ARG CONTRACT_HASH=dev
 ENV VERSION=${VERSION}
 ENV GIT_SHA=${GIT_SHA}
+ENV CONTRACT_HASH=${CONTRACT_HASH}
 
 # scout serves an HTTP health/metrics server on PORT (default 3000).
 EXPOSE 3000

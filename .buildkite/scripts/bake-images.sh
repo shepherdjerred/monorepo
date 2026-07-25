@@ -174,12 +174,18 @@ fi
 # sibling's benign mid-build noise. So a deterministic failure (e.g. a missing
 # COPY source) in one target isn't masked as transient by another target's text.
 transient_re='Request timed out|i/o timeout|TLS handshake|remote error: tls|connection reset|connection refused|net/http:|failed to do request|dial tcp|temporary failure in name resolution|Internal Server Error|Bad Gateway|Service Unavailable|Gateway Timeout|blob unknown|failed to resolve source metadata|unexpected EOF|context deadline exceeded|error: failed to download'
+
+# Contract-source hash baked into the scout image (ENV CONTRACT_HASH) and
+# stamped into the SPA bundle by the sites step — equal hashes at runtime
+# mean the deployed frontend/backend pair shares a tRPC contract. The script
+# is dependency-free, so it runs before any workspace install.
+CONTRACT_HASH=$(bun --no-install packages/scout-for-lol/scripts/contract-hash.ts)
 bake_attempt=1
 bake_max=3
 while :; do
   echo "--- :docker: bake ${bake_targets[*]} (attempt ${bake_attempt}/${bake_max})"
   bake_log="$(mktemp)"
-  if VERSION="$BUILD_NUMBER" GIT_SHA="$SHA" PUSH_CACHE="$PUSH_CACHE" \
+  if VERSION="$BUILD_NUMBER" GIT_SHA="$SHA" CONTRACT_HASH="$CONTRACT_HASH" PUSH_CACHE="$PUSH_CACHE" \
       docker buildx bake --builder ci --load "${bake_targets[@]}" 2>&1 | tee "$bake_log"; then
     rm -f "$bake_log"
     break

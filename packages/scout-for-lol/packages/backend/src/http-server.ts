@@ -13,6 +13,7 @@ import {
 } from "#src/trpc/auth-web.ts";
 import { handleImageRoute } from "#src/trpc/image-routes.ts";
 import { handleReportAiRoute } from "#src/reports/ai/http-route.ts";
+import { handleVersion } from "#src/http/version.ts";
 
 const logger = createLogger("http-server");
 
@@ -188,6 +189,11 @@ const server = Bun.serve({
     // Readiness probe - checks Riot API health
     if (url.pathname === "/healthz") {
       return handleHealthz(request);
+    }
+
+    // Build/deploy identity: version, git SHA, tRPC contract hash
+    if (url.pathname === "/api/version") {
+      return handleVersion(corsHeadersFor(request));
     }
 
     // Metrics endpoint for Prometheus

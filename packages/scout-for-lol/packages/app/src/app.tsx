@@ -16,41 +16,49 @@ import { ReportHelp } from "#src/routes/report-help.tsx";
 import { OnboardingWizard } from "#src/routes/onboarding-wizard.tsx";
 import { InstallLanding } from "#src/routes/install-landing.tsx";
 import { RequireSession } from "#src/routes/require-session.tsx";
+import {
+  ContractMismatchBanner,
+  VersionFooter,
+} from "#src/components/version-info.tsx";
 
 export function App() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route element={<RequireSession />}>
-          <Route path="/" element={<GuildPicker />} />
-          <Route path="/welcome" element={<OnboardingWizard />} />
-          <Route path="/installed" element={<InstallLanding />} />
-          <Route path="/g/:guildId" element={<GuildWorkspace />}>
-            <Route index element={<Navigate to="subscriptions" replace />} />
-            <Route path="subscriptions" element={<GuildSubscriptions />} />
-            <Route path="players" element={<PlayerList />} />
-            <Route path="players/:alias" element={<PlayerDetail />} />
-            <Route path="competitions" element={<CompetitionList />} />
-            <Route path="competitions/new" element={<CompetitionForm />} />
-            <Route
-              path="competitions/:competitionId"
-              element={<CompetitionDetail />}
-            />
-            <Route
-              path="competitions/:competitionId/edit"
-              element={<CompetitionForm />}
-            />
-            <Route path="reports" element={<ReportList />} />
-            <Route path="reports/help" element={<ReportHelp />} />
-            <Route path="reports/new" element={<ReportForm />} />
-            <Route path="reports/:reportId" element={<ReportDetail />} />
-            <Route path="reports/:reportId/edit" element={<ReportForm />} />
-            <Route path="audit" element={<GuildAudit />} />
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <ContractMismatchBanner />
+      <div className="flex-1">
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route element={<RequireSession />}>
+            <Route path="/" element={<GuildPicker />} />
+            <Route path="/welcome" element={<OnboardingWizard />} />
+            <Route path="/installed" element={<InstallLanding />} />
+            <Route path="/g/:guildId" element={<GuildWorkspace />}>
+              <Route index element={<Navigate to="subscriptions" replace />} />
+              <Route path="subscriptions" element={<GuildSubscriptions />} />
+              <Route path="players" element={<PlayerList />} />
+              <Route path="players/:alias" element={<PlayerDetail />} />
+              <Route path="competitions" element={<CompetitionList />} />
+              <Route path="competitions/new" element={<CompetitionForm />} />
+              <Route
+                path="competitions/:competitionId"
+                element={<CompetitionDetail />}
+              />
+              <Route
+                path="competitions/:competitionId/edit"
+                element={<CompetitionForm />}
+              />
+              <Route path="reports" element={<ReportList />} />
+              <Route path="reports/help" element={<ReportHelp />} />
+              <Route path="reports/new" element={<ReportForm />} />
+              <Route path="reports/:reportId" element={<ReportDetail />} />
+              <Route path="reports/:reportId/edit" element={<ReportForm />} />
+              <Route path="audit" element={<GuildAudit />} />
+            </Route>
           </Route>
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
+      <VersionFooter />
     </div>
   );
 }

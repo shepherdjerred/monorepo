@@ -40,6 +40,10 @@ const EXCLUDED_FILES = [
   ".quality-baseline.json",
   "packages/better-skill-capped/src/components/app.tsx",
   "packages/better-skill-capped/src/components/router.tsx",
+  // Intentional: vite/client ImportMetaEnv declaration merging requires
+  // `interface` (same suppression as better-skill-capped's vite-env.d.ts,
+  // which predates this check; both are in the quality-ratchet baseline).
+  "packages/scout-for-lol/packages/app/src/vite-env.d.ts",
   // Intentional: discord-player-youtubei types incompatible without --preserveSymlinks
   "packages/birmel/src/music/extractors.ts",
   // Intentional: Zod-validated discord.js Channel stub (60+ properties impractical to mock)
