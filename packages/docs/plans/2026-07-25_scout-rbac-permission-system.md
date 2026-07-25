@@ -101,13 +101,58 @@ One atomic PR (lockstep contract), 3 commits: data → backend → app.
 
 ## Remaining
 
-- [ ] Data package: catalog + permission-set + roles + tests
-- [ ] Prisma indexes + legacy-key migration + regen
-- [ ] Backend: guard, resolver conversion, errorFormatter, listManageable, roles router, bridge, tests
-- [ ] Frontend: hook, gating, forbidden panel, Access tab
-- [ ] Verify (scoped) + e2e smoke + draft PR with screenshots
+- [x] Data package: catalog + permission-set + roles + tests
+- [x] Prisma indexes + legacy-key migration + regen
+- [x] Backend: guard, resolver conversion, errorFormatter, listManageable, roles router, bridge, tests
+- [x] Frontend: hook, gating, forbidden panel, Access tab
+- [x] Verify (scoped typecheck/test/lint across data/backend/app — green)
+- [ ] Manual browser e2e + PR screenshots (needs `op signin` + Discord OAuth; not runnable headless)
 
 ## Full design reference
 
 See the approved plan for the complete procedure→permission table, code sketches, and
 verification detail: `~/.claude/plans/could-we-begin-work-peppy-fairy.md` (copied here in summary).
+
+## Session Log — 2026-07-25
+
+### Done
+
+- **PR #1638** on `feature/scout-rbac` — 3 commits (data → backend → app), each
+  through the full `bun run verify -- --affected` pre-commit gate.
+- **Data** (`packages/data/src/model/permissions/`): `catalog.ts`, `permission-set.ts`,
+  `roles.ts` + `permissions.test.ts` (15 tests). **31 permissions** across 8 resources
+  (the design said 29 — miscount; the real matrix sums to 31).
+- **Prisma**: `ServerPermission` gains two indexes; migration
+  `20260725000000_rbac_permission_keys` rewrites legacy keys; unbranded the
+  `permission` field in `scripts/brand-prisma-types.ts` (now stores catalog keys).
+- **Backend**: `trpc/guild-permission.ts` (`resolveGuildPermissions` +
+  `guildProcedure`/`guildMutationProcedure`); converted every guild resolver off
+  `assertGuildAdmin`/`assertAdmin` (subscription/player/competition/report/guild/riot/discord);
+  `errorFormatter` adds `missingPermission`; `guild.listManageable` enrichment +
+  `guild.myPermissions`; new `roles` router (list/set/clear) + `ROLE_GRANT`/`ROLE_REVOKE`
+  audit + self-lockout; `discord.searchMembers` → `players:read`; Discord `canCreate*`
+  bridge. Offline harness gains `setMembership`; new `rbac.router.test.ts` (9 tests).
+- **App**: `hooks/use-permissions.ts`, `components/forbidden-panel.tsx`,
+  `routes/guild-access.tsx` (Access tab) + route; nav filtering + access guard in
+  `guild-workspace.tsx`; gated create/manage buttons in subscriptions/competitions/reports.
+
+### Remaining
+
+- Manual browser e2e via `bun run dev:web` (needs `op signin` + Discord OAuth) and PR
+  screenshots (grant a second account Viewer → confirm read-only dashboard, hidden
+  Audit/Access tabs, Forbidden panel on forced mutation). Not runnable headless here.
+- Optional polish: gate remaining per-row/detail mutating controls (subscription
+  remove/add-channel/move, player-detail actions, competition-detail actions,
+  report-detail). The server already enforces all of these; this is UX-only.
+- Promote PR from draft → ready once screenshots are attached.
+
+### Caveats
+
+- **Membership model unchanged**: a Discord admin/owner is Scout root/sudo (all
+  permissions, the only Discord signal); non-admins need a Scout grant AND current
+  guild membership. Admin/membership still lags up to 5 min (the existing
+  `fetchUserGuilds` cache); grant changes are immediate.
+- Prisma generated client + `template.db` are gitignored/reproduced by codegen, so
+  the `permission`-field unbrand shows only as the `brand-prisma-types.ts` diff.
+- The `<Can>` component from the plan was dropped — the `usePermissions` hook covers
+  every call site; keeping an unused component tripped `knip`.
