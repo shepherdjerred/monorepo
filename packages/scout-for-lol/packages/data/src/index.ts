@@ -155,6 +155,8 @@ export {
   getLaneIconBase64,
   getChampionLoadingImageBase64,
   getChampionLoadingImageUrl,
+  getChampionSplashImageBase64,
+  getChampionSplashImageUrl,
   // Validation functions (async)
   validateChampionImage,
   validateItemImage,
@@ -163,6 +165,7 @@ export {
   validateAugmentIcon,
   validateLaneIcon,
   validateChampionLoadingImage,
+  validateChampionSplashImage,
   normalizeChampionName,
   getChampionKeyById,
   championNameToDisplayName,

@@ -1,18 +1,18 @@
-import { getChampionLoadingImage } from "#src/dataDragon/image-cache.ts";
+import { getChampionSplashImage } from "#src/dataDragon/image-cache.ts";
 import { palette } from "#src/assets/colors.ts";
 
 /**
- * Full-bleed champion loading-screen art used as the hero background for the
- * ranked-banner and ranked-square designs. Renders an absolutely-positioned
- * image with a dark vignette gradient over it so content laid on top stays
- * legible.
+ * Full-bleed champion splash art (high-res ≈1280×720 centered art) used as the
+ * hero background for the ranked-banner and ranked-square designs. Renders an
+ * absolutely-positioned image with a dark vignette gradient over it so content
+ * laid on top stays legible.
  *
  * Must be the first child of a flex container with `position: "relative"`.
  * Caller must pass the parent's pixel dimensions because Satori resolves
  * positioned-image width/height against numeric parent extents, not nested
  * percentages.
  *
- * Caller must preload the loading image via `preloadChampionLoadingImages`.
+ * Caller must preload the splash image via `preloadChampionSplashImages`.
  */
 export function Splash({
   championName,
@@ -27,7 +27,7 @@ export function Splash({
   skinNum?: number;
   vignette?: "left" | "bottom" | "both";
 }) {
-  const src = getChampionLoadingImage(championName, skinNum);
+  const src = getChampionSplashImage(championName, skinNum);
   const dark = palette.grey[6];
 
   const overlay =

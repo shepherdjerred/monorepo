@@ -1,6 +1,7 @@
 import {
   getChampionImageBase64,
   getChampionLoadingImageBase64,
+  getChampionSplashImageBase64,
   getItemImageBase64,
   getSpellImageBase64,
   getAugmentIconBase64,
@@ -29,6 +30,10 @@ const augmentIconCache = new Map<string, string>();
 // Pre-loaded into a sync-accessible Map because satori renders JSX
 // synchronously — it cannot do async file reads during render.
 const championLoadingImageCache = new Map<string, string>();
+
+// Champion splash-art image cache (key: "{ChampionName}_{skinNum}"). High-res
+// landscape art used by the ranked report designs' full-bleed hero background.
+const championSplashImageCache = new Map<string, string>();
 
 // Pre-load spell images at module load time (static set)
 if (typeof Bun !== "undefined") {
@@ -192,7 +197,17 @@ export function getChampionLoadingImage(
 // The fallback base64 is cached under the *requested* `${champion}_${skinNum}`
 // key so repeat renders within the same run hit the cache instead of doing
 // the FS-existence check again.
-export async function preloadChampionLoadingImages(
+// Shared preload driver for the tall (loading) and wide (splash) champion-art
+// caches — both dedupe on the normalized `${champion}_${skinNum}` key, skip
+// already-cached keys, and cache the base64 under the *requested* key so a
+// skin-fallback result still hits the cache on repeat renders.
+async function preloadChampionArt(
+  cache: Map<string, string>,
+  loadBase64: (
+    championName: string,
+    skinNum: number,
+    onSkinFallback?: (event: SkinFallbackEvent) => void,
+  ) => Promise<string>,
   entries: { championName: string; skinNum: number }[],
   onSkinFallback?: (event: SkinFallbackEvent) => void,
 ): Promise<void> {
@@ -214,15 +229,57 @@ export async function preloadChampionLoadingImages(
   await Promise.all(
     uniqueEntries.map(async ({ championName, skinNum }) => {
       const key = `${championName}_${skinNum.toString()}`;
-      if (championLoadingImageCache.has(key)) {
+      if (cache.has(key)) {
         return;
       }
-      const base64 = await getChampionLoadingImageBase64(
-        championName,
-        skinNum,
-        onSkinFallback,
-      );
-      championLoadingImageCache.set(key, base64);
+      const base64 = await loadBase64(championName, skinNum, onSkinFallback);
+      cache.set(key, base64);
     }),
+  );
+}
+
+export async function preloadChampionLoadingImages(
+  entries: { championName: string; skinNum: number }[],
+  onSkinFallback?: (event: SkinFallbackEvent) => void,
+): Promise<void> {
+  await preloadChampionArt(
+    championLoadingImageCache,
+    getChampionLoadingImageBase64,
+    entries,
+    onSkinFallback,
+  );
+}
+
+// Get champion splash-art image from cache (must be pre-loaded via
+// preloadChampionSplashImages). Normalizes the champion-name component of the
+// cache key so casing variants resolve to the canonical entry.
+export function getChampionSplashImage(
+  championName: string,
+  skinNum: number,
+): string {
+  const key = `${normalizeChampionName(championName)}_${skinNum.toString()}`;
+  const cached = championSplashImageCache.get(key);
+  if (cached !== undefined && cached.length > 0) {
+    return cached;
+  }
+
+  throw new Error(
+    `Champion splash image for ${key} not found in cache. Call preloadChampionSplashImages() before rendering.`,
+  );
+}
+
+// Pre-load champion splash-art images for a list of champion/skin combos. Only
+// base skin 0 is cached on disk (see getChampionSplashImageBase64), so a
+// non-zero skin's base64 falls back to skin 0 and is cached under the
+// *requested* key so repeat renders within the same run hit the cache.
+export async function preloadChampionSplashImages(
+  entries: { championName: string; skinNum: number }[],
+  onSkinFallback?: (event: SkinFallbackEvent) => void,
+): Promise<void> {
+  await preloadChampionArt(
+    championSplashImageCache,
+    getChampionSplashImageBase64,
+    entries,
+    onSkinFallback,
   );
 }

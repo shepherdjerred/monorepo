@@ -326,3 +326,58 @@ export async function getChampionLoadingImageBase64(
     `Image not found at ${requestedAbs}. Run 'bun run update-data-dragon' in packages/data to cache latest assets.`,
   );
 }
+
+// Champion splash art (high-res landscape art, ≈1280×720) used as the full-bleed
+// hero background for the ranked-banner / ranked-square report designs. Sourced
+// **base skin 0 only** by update-data-dragon (CommunityDragon centered splash →
+// Data Dragon splash fallback), so non-zero skin requests fall back to skin 0.
+
+export async function validateChampionSplashImage(
+  championName: string,
+  skinNum: number,
+): Promise<void> {
+  const normalized = normalizeChampionName(championName);
+  const relativePath = `./assets/img/champion-splash/${normalized}_${skinNum.toString()}.jpg`;
+  const absolutePath = getAbsolutePath(relativePath);
+  await validateImageExists(
+    absolutePath,
+    `Champion splash image for ${normalized} skin ${skinNum.toString()}`,
+  );
+}
+
+export function getChampionSplashImageUrl(
+  championName: string,
+  skinNum = 0,
+): string {
+  const normalized = normalizeChampionName(championName);
+  return `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${normalized}_${skinNum.toString()}.jpg`;
+}
+
+export async function getChampionSplashImageBase64(
+  championName: string,
+  skinNum = 0,
+  onSkinFallback?: (event: SkinFallbackEvent) => void,
+): Promise<string> {
+  const normalized = normalizeChampionName(championName);
+  const requested = `./assets/img/champion-splash/${normalized}_${skinNum.toString()}.jpg`;
+  const requestedAbs = getAbsolutePath(requested);
+
+  if (await Bun.file(requestedAbs).exists()) {
+    return loadImageAsBase64(requested, "image/jpeg");
+  }
+
+  // Only base skin 0 splash art is cached (the ranked designs render skin 0), so
+  // a non-zero skin request falls back to the base art instead of failing the
+  // render. Callers may pass `onSkinFallback` to log/meter these.
+  if (skinNum !== 0) {
+    onSkinFallback?.({ championName: normalized, requestedSkin: skinNum });
+    return loadImageAsBase64(
+      `./assets/img/champion-splash/${normalized}_0.jpg`,
+      "image/jpeg",
+    );
+  }
+
+  throw new Error(
+    `Image not found at ${requestedAbs}. Run 'bun run update-data-dragon' in packages/data to cache latest assets.`,
+  );
+}

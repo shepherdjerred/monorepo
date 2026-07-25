@@ -20,7 +20,7 @@ import { heroPlayer } from "#src/html/shared/grade.ts";
 import { bunBeaufortFonts, bunSpiegelFonts } from "#src/assets/index.ts";
 import {
   preloadChampionImages,
-  preloadChampionLoadingImages,
+  preloadChampionSplashImages,
 } from "#src/dataDragon/image-cache.ts";
 
 export type MatchRenderOptions = {
@@ -54,7 +54,7 @@ export async function matchToSvg(
   if (isRankedQueue(match.queueType) && match.players.length > 0) {
     const design = options.designOverride ?? pickRankedDesign(match);
     const hero = heroPlayer(match.players);
-    await preloadChampionLoadingImages([
+    await preloadChampionSplashImages([
       { championName: hero.champion.championName, skinNum: 0 },
     ]);
 
