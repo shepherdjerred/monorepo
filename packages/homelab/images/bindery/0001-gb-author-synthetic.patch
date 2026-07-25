@@ -1,5 +1,5 @@
 diff --git a/internal/api/authors.go b/internal/api/authors.go
-index d84ebf7..dc11911 100644
+index d84ebf7..d109796 100644
 --- a/internal/api/authors.go
 +++ b/internal/api/authors.go
 @@ -2279,10 +2279,27 @@ func (h *AuthorHandler) AddBook(w http.ResponseWriter, r *http.Request) {
@@ -34,11 +34,35 @@ index d84ebf7..dc11911 100644
  		}
  	}
  
+@@ -2301,11 +2318,22 @@ func (h *AuthorHandler) AddBook(w http.ResponseWriter, r *http.Request) {
+ 		}
+ 		fetched, err := h.meta.GetAuthor(ctx, req.ForeignAuthorID)
+ 		if err != nil || fetched == nil {
++			// Default unresolved authors to the long-standing openlibrary
++			// convention, but stamp gb:author: synthetics (minted above from a
++			// Google Books name-only pick) with their real provider so the stored
++			// record is internally consistent — AuthorProviderFromForeignID("gb:…")
++			// is "googlebooks", and a metadata refresh routes by the ID prefix. A
++			// mismatched "openlibrary" provider on a gb:author: row would send the
++			// refresh to the wrong provider.
++			provider := "openlibrary"
++			if strings.HasPrefix(req.ForeignAuthorID, "gb:author:") {
++				provider = "googlebooks"
++			}
+ 			fetched = &models.Author{
+ 				ForeignID:        req.ForeignAuthorID,
+ 				Name:             name,
+ 				SortName:         sortName(name),
+-				MetadataProvider: "openlibrary",
++				MetadataProvider: provider,
+ 			}
+ 		}
+ 		fetched.Monitored = false
 diff --git a/internal/api/authors_test.go b/internal/api/authors_test.go
-index 9c8efc9..94fcd2c 100644
+index 9c8efc9..9410119 100644
 --- a/internal/api/authors_test.go
 +++ b/internal/api/authors_test.go
-@@ -3771,6 +3771,75 @@ func TestAddBook_DirectInsertCoversAlternateAuthorIdentifier(t *testing.T) {
+@@ -3771,6 +3771,89 @@ func TestAddBook_DirectInsertCoversAlternateAuthorIdentifier(t *testing.T) {
  	}
  }
  
@@ -109,8 +133,43 @@ index 9c8efc9..94fcd2c 100644
 +	if got.AuthorID != authors[0].ID {
 +		t.Fatalf("book author_id = %d, want synthetic author %d", got.AuthorID, authors[0].ID)
 +	}
++	// The synthetic row must be internally consistent: a gb:author: id implies
++	// the googlebooks provider (AuthorProviderFromForeignID), not the default
++	// openlibrary — otherwise a later metadata refresh routes to the wrong
++	// provider.
++	if authors[0].MetadataProvider != "googlebooks" {
++		t.Fatalf("author MetadataProvider = %q, want googlebooks for a gb:author: synthetic", authors[0].MetadataProvider)
++	}
++	// The synthetic carries no canonical upstream identity, so the normal relink
++	// / metadata-upgrade flow must be allowed to promote a real
++	// OpenLibrary/Hardcover id later (canRelinkAuthorToUpstream gates both the
++	// add-flow auto-upgrade and the RelinkAuthor handler on this predicate).
++	if !models.CanReplaceAuthorIdentity(&authors[0]) {
++		t.Fatalf("CanReplaceAuthorIdentity(%+v) = false, want true so the gb:author: synthetic stays relinkable", authors[0])
++	}
 +}
 +
  // TestAddBook_InvalidMediaTypeRejected pins the request validation for the
  // optional mediaType field (#1397): anything outside ebook/audiobook/both
  // fails fast with a 400 before any author/book work happens.
+diff --git a/internal/models/author.go b/internal/models/author.go
+index ec9fda6..4cb442f 100644
+--- a/internal/models/author.go
++++ b/internal/models/author.go
+@@ -92,9 +92,16 @@ func CanReplaceAuthorIdentity(author *Author) bool {
+ 	}
+ 	provider := strings.TrimSpace(strings.ToLower(author.MetadataProvider))
+ 	foreignID := strings.TrimSpace(strings.ToLower(author.ForeignID))
++	// gb:author: is Bindery's library-local synthetic namespace minted from a
++	// Google Books name-only pick (see AddBook): Google Books never resolves an
++	// author by ID (GetAuthor is unsupported), so these carry no canonical
++	// upstream identity. Treat them like abs:/calibre: synthetics so the normal
++	// relink / metadata-upgrade flow can promote a real OpenLibrary/Hardcover ID
++	// once one becomes available, instead of the author being permanently pinned.
+ 	return foreignID == "" ||
+ 		strings.HasPrefix(foreignID, "abs:") ||
+ 		strings.HasPrefix(foreignID, "calibre:") ||
++		strings.HasPrefix(foreignID, "gb:author:") ||
+ 		provider == "audiobookshelf" ||
+ 		provider == "calibre"
+ }

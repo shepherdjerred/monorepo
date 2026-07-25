@@ -139,6 +139,11 @@
       "schedule": ["at any time"]
     },
     {
+      "description": "bindery-source tracks upstream vavallee/bindery main HEAD (a rolling git ref, not a tagged release), and merging a BINDERY_SOURCE_REF bump rebuilds + auto-deploys the self-built image to prod. The Dockerfile's build-time go-test gate only covers the Chinese Google Books add patch — it does NOT catch unrelated upstream API/schema/data-migration regressions that ship on an arbitrary main commit. Require manual review of each bump so a random upstream commit can't automerge into prod. (Note: shelfbridge-source, redlib-source, and pokeemerald-source share this rolling-main + inherited-automerge shape; out of scope here.)",
+      "matchDepNames": ["bindery-source"],
+      "automerge": false
+    },
+    {
       "description": "Disable updates for archived and practice projects",
       "matchFileNames": ["sandbox/archive/**", "sandbox/practice/**"],
       "enabled": false

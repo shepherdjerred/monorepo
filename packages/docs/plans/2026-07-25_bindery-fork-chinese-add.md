@@ -192,3 +192,42 @@ bindery:dev` succeeds; `bun packages/homelab/scripts/smoke-images.ts bindery`
 - Unrelated open threads from this session (not part of this plan): CWA
   SMTP/Auto-Send to Kindle (blocked on the Kindle-account decision) and deleting
   the defunct `bitterlake-homeassistant` GCP project.
+
+## Comment Log
+
+### 2026-07-25 — PR #1643 review response (Codex substitute review #4780355657)
+
+- **[P2] Synthetic identity relinkability — FIXED in the patch.** Confirmed
+  against upstream source at the pinned ref (`27e9049`): `CanReplaceAuthorIdentity`
+  (`internal/models/author.go`) only treated empty/`abs:`/`calibre:` IDs (or
+  audiobookshelf/calibre providers) as replaceable, so a `gb:author:` synthetic
+  was permanently pinned — both relink call sites (the add-flow auto-upgrade at
+  `authors.go:371` and the `RelinkAuthor` auto-lookup at `authors.go:1017`, which
+  returned 409 "already linked") gate on that predicate. Patch now (a) adds
+  `gb:author:` to `CanReplaceAuthorIdentity`, and (b) stamps the synthetic's
+  `MetadataProvider` as `"googlebooks"` (not the default `"openlibrary"`) so the
+  stored row is internally consistent with `AuthorProviderFromForeignID`. Safe
+  because Google Books `GetAuthor` is always unsupported (no real `gb:author:`
+  identities exist) and GB book IDs are `gb:<volumeID>`, never `gb:author:`.
+  `TestAddBook_AuthorlessGoogleBooks` (the Dockerfile build-gate test) extended to
+  assert provider `googlebooks` + `CanReplaceAuthorIdentity == true`. All
+  `internal/api`, `internal/models`, `internal/abs` Go tests pass; patch applies
+  cleanly to `27e9049`.
+- **[P2] Renovate auto-deploy of every upstream main commit — FIXED.** Added an
+  `automerge: false` package rule for `bindery-source` in `renovate.json` (kept
+  the deliberate "track `main`" design documented in the Dockerfile; the
+  build-time go-test gate only covers the Chinese-add patch, not unrelated
+  upstream regressions, so each `BINDERY_SOURCE_REF` bump now needs manual
+  review). Note the same rolling-main + inherited-automerge shape exists for
+  `shelfbridge-source`/`redlib-source`/`pokeemerald-source` (left out of scope).
+- **[P1] Placeholder seed digest — ESCALATED, not merged.** Confirmed the pipeline
+  claim: `argocd-sync` depends on `[images, helm-push, tofu-apply]` (not
+  `version-commit-back`), so the merge build syncs the Helm chart with the
+  all-zero placeholder digest → `ImagePullBackOff` (plus the new GHCR package is
+  private). This is the same pattern shelfbridge (PR #1587) shipped, but bindery
+  differs: it already runs the upstream `vavallee/bindery` image, so — unlike
+  greenfield shelfbridge — a two-PR split (publish the patched image first, keep
+  serving upstream; switch the deployment only after the real digest is seeded and
+  the GHCR package is public) avoids any undeployable window. That fix needs
+  operator actions (image push, GHCR visibility flip) and a PR restructure, so it
+  is escalated to the owner rather than merged as-is.
