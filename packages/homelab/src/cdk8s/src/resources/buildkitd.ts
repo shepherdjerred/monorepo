@@ -60,10 +60,10 @@ debug = false
 `;
 
 export function createBuildkitdDeployment(chart: Chart) {
-  // Own namespace, NOT the Kueue-managed `buildkite` namespace: a long-running
-  // Deployment there would be intercepted by Kueue admission (which is for
-  // batch jobs, not services). PSA `privileged` because rootful buildkitd needs
-  // it. CI reaches this at
+  // Own namespace, separate from `buildkite`: this is a long-running service,
+  // not a CI batch job, and keeping it out of the CI namespace keeps that
+  // separation obvious. PSA `privileged` because rootful buildkitd needs it.
+  // CI reaches this at
   // buildkitd-buildkitd-service.buildkitd.svc.cluster.local:1234 (the Service
   // construct id is "buildkitd-service" under the "buildkitd" chart, and
   // resource-name hashes are disabled — the chart id is the prefix).
@@ -125,7 +125,7 @@ export function createBuildkitdDeployment(chart: Chart) {
       resources: {
         cpu: {
           // Requests small so it costs little while idle; limit high so a real
-          // parallel bake gets CPU. Not Kueue-managed (own namespace).
+          // parallel bake gets CPU.
           request: Cpu.millis(500),
           limit: Cpu.units(8),
         },

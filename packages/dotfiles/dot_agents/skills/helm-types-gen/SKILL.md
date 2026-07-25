@@ -103,7 +103,7 @@ every chart in `versions.ts`. Behavior (post-PR #1150):
   byte-clean, no manual `prettier --write` needed afterward.
 - **Recovery:** if generated types go missing/wrong, `git restore packages/homelab/src/cdk8s/generated/helm/`
   (the whole dir) — never re-run the generator to "fix" them.
-- **OCI charts** (kueue, agent-stack-k8s) use `datasource=docker` in `versions.ts`
+- **OCI charts** (agent-stack-k8s) use `datasource=docker` in `versions.ts`
   (renovate models OCI as docker); they're pulled via `helm pull oci://…` and tracked by the
   `OCI_CHART_KEYS` allowlist in `parse-helm-charts.ts`.
 - **Commented-out config keys** (e.g. buildkite `config.{queue,…}`)

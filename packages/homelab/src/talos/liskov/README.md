@@ -84,9 +84,10 @@ committed).
    on liskov first.
 
 6. **Watchdog**: run the verification in `patches/watchdog.yaml`, then apply it.
-7. **Merge the join PR** (Buildkite pinning + tolerations). Then recreate the
-   git-mirrors PVC on liskov (it is a node-local ZFS volume currently bound
-   on torvalds; step pods pinned to liskov cannot mount it):
+7. **Merge the join PR** (Buildkite pinning + tolerations + Kueue removal —
+   they land in one ArgoCD sync by design). Then recreate the git-mirrors
+   PVC on liskov (it is a node-local ZFS volume currently bound on
+   torvalds; step pods pinned to liskov cannot mount it):
 
    ```bash
    kubectl delete pvc buildkite-git-mirrors -n buildkite
@@ -94,11 +95,15 @@ committed).
    ```
 
 8. **Confirm**: first builds run on liskov (`kubectl get pods -n buildkite
--o wide`); Grafana node dashboards show both nodes; smartctl/nvme/zfs
-   collector pods present on liskov.
+-o wide`); new buildkite Jobs are NOT `suspend: true` and the kueue-system
+   namespace is gone (cancel/retry any build whose Job was left suspended by
+   the Kueue teardown — nothing will ever unsuspend it); Grafana node
+   dashboards show both nodes; smartctl/nvme/zfs collector pods present on
+   liskov.
 
 ## After a week of soak
 
 Right-size `systemReserved` from Prometheus slab/ARC data, relax torvalds
 (its 40Gi reservation was sized for the CI storm that now lives here), and
-raise the Kueue quota — see the plan doc, Phase 3.
+revisit `BUILDKITE_MAX_IN_FLIGHT` (the sole CI concurrency cap since the
+Kueue removal) — see the plan doc, Phase 3.

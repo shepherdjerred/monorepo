@@ -63,7 +63,7 @@ silently skip liskov):**
 | ---------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Buildkite step-pod placement | `argo-applications/buildkite.ts:150-199` `pod-spec-patch` | add toleration `ci=only` + nodeSelector `kubernetes.io/hostname: liskov`                                                                                                                                                                                                            |
 | Buildkite git-mirrors PVC    | `buildkite.ts:91-98`                                      | zfs PVCs are node-local; the existing PVC is bound on torvalds — must be recreated on liskov at cutover or CI pods wedge on volume affinity                                                                                                                                         |
-| Kueue quota                  | `resources/kueue-config.ts`                               | raise once CI is liskov-only: propose cpu `24`, memory `80Gi`, pods = `BUILDKITE_MAX_IN_FLIGHT` (keep 20 initially; lockstep test enforced), eph-storage headroom re-check                                                                                                          |
+| Kueue quota                  | `resources/kueue-config.ts`                               | ~~raise once CI is liskov-only~~ superseded 2026-07-25: **Kueue removed entirely** (same PR); `BUILDKITE_MAX_IN_FLIGHT` is the sole concurrency cap                                                                                                                                 |
 | Storage classes              | `misc/storage-classes.ts:22-72`                           | create liskov ZFS pool on the 2TB drive **named `zfspv-pool-nvme`** (same as torvalds) so `zfs-ssd`/`zfs-ssd-lz4` work unchanged; taints+WaitForFirstConsumer handle placement. CI cache PVCs (bun cache, buildkitd from remediation Track 3) provision on liskov via pod placement |
 | CPU alert thresholds         | `rules/resource-monitoring.ts:20-38`                      | `HighCPUUsageSustained`/`VeryHighCPUUsage` will chronically fire on a saturated CI node — exclude liskov instance or raise per-node                                                                                                                                                 |
 | CPU temp alerts              | `rules/resource-monitoring.ts:260-289`                    | `coretemp` is Intel-only ⇒ silently never fires on liskov; add `k10temp` variant                                                                                                                                                                                                    |
@@ -74,11 +74,13 @@ silently skip liskov):**
 
 ## Phases (simplified 2026-07-25 — one join PR, one runbook, one later PR)
 
-Scope trims agreed with user: **defer the Kueue quota raise** (CI runs at
-today's 12CPU/20Gi from liskov day one; raise later, informed by soak, so it
-also can't race `plans/2026-07-22_ci-capacity-remediation-impl.md`); **skip
-the NFD toleration** (its only consumer is the Intel-GPU rule — useless on
-liskov); **skip ZFS alert re-tuning** (liskov starts at the same 16Gi ARC).
+Scope trims agreed with user: ~~defer the Kueue quota raise~~ **superseded
+2026-07-25 — Kueue is removed entirely in this same PR** (see
+`plans/2026-07-25_kueue-removal-node-symmetry.md`; the nodeSelector and the
+Kueue teardown land in one ArgoCD sync, so no unthrottled-on-torvalds or
+throttled-on-liskov window exists); **skip the NFD toleration** (its only
+consumer is the Intel-GPU rule — useless on liskov); **skip ZFS alert
+re-tuning** (liskov starts at the same 16Gi ARC).
 Standalone-agent architecture (non-K8s CI box) considered and **rejected**
 (would re-replatform the 3-week-old agent-stack-k8s pipeline).
 
@@ -103,16 +105,18 @@ the runbook.
 3. Verify: node Ready + taint present; `sp5100_tco` watchdog live-verify
    then arm; tailscale up.
 4. Create `zfspv-pool-nvme` on the 2TB drive; verify openebs zfsNode runs.
-5. Merge the Phase 1 PR; recreate git-mirrors PVC on liskov; watch first
-   builds land there.
+5. Merge the Phase 1 PR (now also removes Kueue); recreate git-mirrors PVC
+   on liskov; watch first builds land there. Verify new buildkite Jobs are
+   NOT suspended (`kubectl get jobs -n buildkite`) and kueue-system is gone;
+   cancel/retry any builds whose Jobs were left suspended by the transition.
 6. Confirm monitoring (node-exporter/alloy/smartctl/nvme/zfs collectors on
    liskov; Grafana node dashboards show both nodes).
 
-**Phase 3 — torvalds relaxation + Kueue raise (separate PR, after ≥1 week
-quiet canaries — `ZfsArcHitRateLow`, node MemAvailable, zero evictions):**
-`systemReserved.memory` 40Gi → ~24Gi (slab pressure left with CI); Kueue
-quota raise sized from real liskov soak data; keep watchdog/pids/eviction
-armor; optionally revisit RAPL PL1.
+**Phase 3 — torvalds relaxation (separate PR, after ≥1 week quiet
+canaries — `ZfsArcHitRateLow`, node MemAvailable, zero evictions):**
+`systemReserved.memory` 40Gi → ~24Gi (slab pressure left with CI); revisit
+`BUILDKITE_MAX_IN_FLIGHT` (sole CI concurrency cap post-Kueue) from liskov
+soak data; keep watchdog/pids/eviction armor; optionally revisit RAPL PL1.
 
 ## Open items
 

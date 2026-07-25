@@ -9,7 +9,7 @@ description: |
 
 # BuildKite Helper
 
-> **⚠️ This monorepo's Buildkite pipeline was removed 2026-07.** The `.buildkite/` directory, the `scripts/ci/` pipeline generator, and the Dagger module are gone — nothing runs on commit/push/PR anymore; verification is manual. The Buildkite org and the homelab agent-stack (`buildkite` namespace, kueue) still exist pending a separate manual teardown. Monorepo-specific notes below are **historical**; the general Buildkite reference material remains valid for other uses.
+> **⚠️ Partially stale.** The monorepo runs a **static** Buildkite pipeline (`.buildkite/pipeline.yml`, replatformed 2026-07 — the Dagger module and dynamic generator are gone) on the homelab agent-stack (`buildkite` namespace). CI runs on the dedicated `liskov` node; **Kueue was removed 2026-07** (`BUILDKITE_MAX_IN_FLIGHT` is the sole concurrency cap). Dagger/dynamic-pipeline notes below are historical; the general Buildkite reference material remains valid.
 
 ## Overview
 
@@ -272,7 +272,6 @@ Everything in this section describes the pipeline as it existed before removal. 
 - All CI work via `dagger call` (lint, typecheck, test, push-image, helm-package, etc.)
 - Resource tiers: heavy (1000m/2Gi), medium (500m/1Gi), default (250m/512Mi)
 - Dagger engine: remote `tcp://dagger-engine.dagger.svc.cluster.local:8080`
-- Kueue: ClusterQueue with 16 CPU/64Gi quota, FIFO ordering, no preemption
 - Agent: agent-stack-k8s Helm, max-in-flight=20, git mirrors, batch-low priority
 - **Soft-fail gates** — `trivy-scan`, `knip-check`, and `semgrep-scan` are soft failures that do **not** block the quality gate. When the goal is "get CI green," focus on real build/test/lint/typecheck/deploy failures; don't burn time adding CVEs to `.trivyignore` or chasing knip findings.
 - **Pushes to `main` cancel the running build** — Buildkite supersedes/cancels the in-flight `main` build on every new push, so a fix being validated at step 92/175 never gets a result. Batch small fixes into one commit and wait for the current build to reach the relevant steps before pushing again; don't push for formatting/trivial churn.
@@ -285,5 +284,5 @@ Everything in this section describes the pipeline as it existed before removal. 
 - **`references/pipeline-yaml-full.md`** — Complete step type fields, matrix builds, notifications, retry, conditionals, concurrency
 - **`references/plugins-and-hooks.md`** — Plugin syntax, all 13 hooks with execution order, artifact patterns
 - **`references/api-reference.md`** — REST API, GraphQL API, bk CLI, agent CLI
-- **`references/kubernetes-agent-stack.md`** — Pod spec patching, git mirrors, secrets, Kueue, container build strategies
+- **`references/kubernetes-agent-stack.md`** — Pod spec patching, git mirrors, secrets, container build strategies
 - **`references/advanced-features.md`** — Test Engine, Packages, Clusters, Security, 2025-2026 features
