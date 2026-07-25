@@ -1,14 +1,11 @@
 import {
-  callServiceUnchecked,
   everyoneAway,
-  getEntityStateUnchecked,
   sendNotification,
   setOutcome,
-  shouldStartVacuum,
+  startEligibleVacuums,
+  VACUUMS,
   verifyState,
 } from "./util.ts";
-
-const ROOMBA = "vacuum.roomba" as const;
 
 export async function runVacuumIfNotHome(): Promise<void> {
   if (!(await everyoneAway())) {
@@ -17,23 +14,34 @@ export async function runVacuumIfNotHome(): Promise<void> {
     return;
   }
 
-  const roomba = await getEntityStateUnchecked(ROOMBA);
-  if (!shouldStartVacuum(roomba.state)) {
-    console.warn(`Vacuum is ${roomba.state}, skipping`);
-    await setOutcome("skipped", `vacuum-state-${roomba.state}`);
+  const started = await startEligibleVacuums();
+
+  if (started.length === 0) {
+    // Nothing to start — every unit is already cleaning/returning. This is a
+    // benign gate skip: the "all-units-active" reason is allow-listed for this
+    // workflow in the monitoring rules (temporal.ts) so it never pages.
+    console.warn("All vacuums already active, skipping");
+    await setOutcome("skipped", "all-units-active");
     return;
   }
 
   await sendNotification(
     "Vacuum Started",
-    "The Roomba has started cleaning since no one is home.",
+    `The vacuums have started cleaning since no one is home (${String(started.length)} of ${String(VACUUMS.length)} floors).`,
   );
-  await callServiceUnchecked("vacuum", "start", { entity_id: ROOMBA });
 
-  await verifyState(
-    ROOMBA,
-    (state) => state === "cleaning" || state === "returning",
-    { delaySeconds: 3 * 60, retries: 3, retryDelaySeconds: 60 },
+  // Verify the started units concurrently. A sequential 3× verify (~18 min of
+  // sleep) would exceed the schedules' 15-minute workflowExecutionTimeout and
+  // break register-schedules.test.ts (WORKFLOW_MAX_SLEEP_MS = 7m); running them
+  // in parallel keeps the total sleep budget at ~one unit's worth (~6 min).
+  await Promise.all(
+    started.map((vacuum) =>
+      verifyState(
+        vacuum,
+        (state) => state === "cleaning" || state === "returning",
+        { delaySeconds: 3 * 60, retries: 3, retryDelaySeconds: 60 },
+      ),
+    ),
   );
   await setOutcome("executed", "started");
 }

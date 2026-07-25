@@ -124,6 +124,23 @@ export async function getEntitiesInDomain(
   return activities.getEntitiesInDomain(domain);
 }
 
+/**
+ * The Roborock Saros 10R fleet — one unit per floor. Declared once here (a pure
+ * string-literal array, bundle-safe) and imported by every workflow that touches
+ * the vacuums (`runVacuumIfNotHome`, `leavingHome`, `welcomeHome`). Keeping the
+ * list in one place is deliberate: it used to be re-declared per workflow, which
+ * is how `runVacuumIfNotHome` drifted to a single hard-coded unit.
+ *
+ * Entity IDs are the floor-renamed ones (see the HA entity registry). If HA is
+ * rebuilt/restored and the rename reverts, these become dead references — the
+ * mapping is recorded in the migration plan/session log.
+ */
+export const VACUUMS = [
+  "vacuum.1st_floor",
+  "vacuum.2nd_floor",
+  "vacuum.3rd_floor",
+] as const;
+
 export const VACUUM_START_STATES = new Set([
   "idle",
   "docked",
@@ -139,6 +156,24 @@ export function shouldStartVacuum(state: string): boolean {
 
 export function shouldStopVacuum(state: string): boolean {
   return VACUUM_STOP_STATES.has(state);
+}
+
+/**
+ * Starts every fleet unit currently eligible to start (idle/docked/charging/
+ * paused); a unit already cleaning or returning is left as-is. Returns the entity
+ * IDs actually commanded to start. Shared by `runVacuumIfNotHome` and `leavingHome`
+ * so the fleet-start loop lives in exactly one place.
+ */
+export async function startEligibleVacuums(): Promise<string[]> {
+  const started: string[] = [];
+  for (const vacuum of VACUUMS) {
+    const state = await getEntityStateUnchecked(vacuum);
+    if (shouldStartVacuum(state.state)) {
+      await callServiceUnchecked("vacuum", "start", { entity_id: vacuum });
+      started.push(vacuum);
+    }
+  }
+  return started;
 }
 
 /**
