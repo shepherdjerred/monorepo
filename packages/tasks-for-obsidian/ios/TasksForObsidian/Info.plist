@@ -26,6 +26,12 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<!-- The app uses only standard, exempt encryption (HTTPS/TLS to the TaskNotes
+	     server). Declaring this here auto-answers App Store Connect's export
+	     compliance question, so every TestFlight build clears "Missing Compliance"
+	     and distributes to internal testers with no manual step. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
