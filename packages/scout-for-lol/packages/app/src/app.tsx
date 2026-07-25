@@ -3,6 +3,7 @@ import { Login } from "#src/routes/login.tsx";
 import { GuildPicker } from "#src/routes/guild-picker.tsx";
 import { GuildSubscriptions } from "#src/routes/guild-subscriptions.tsx";
 import { GuildAudit } from "#src/routes/guild-audit.tsx";
+import { GuildAccess } from "#src/routes/guild-access.tsx";
 import { GuildWorkspace } from "#src/routes/guild-workspace.tsx";
 import { PlayerList } from "#src/routes/player-list.tsx";
 import { PlayerDetail } from "#src/routes/player-detail.tsx";
@@ -53,6 +54,7 @@ export function App() {
               <Route path="reports/:reportId" element={<ReportDetail />} />
               <Route path="reports/:reportId/edit" element={<ReportForm />} />
               <Route path="audit" element={<GuildAudit />} />
+              <Route path="access" element={<GuildAccess />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

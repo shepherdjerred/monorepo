@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ReportIdSchema } from "@scout-for-lol/data";
 import { CronPresets } from "@scout-for-lol/data/model/competition-cron.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import { Badge } from "#src/components/ui/badge.tsx";
 import { ReportRunStatusBadge } from "#src/components/status-badge.tsx";
@@ -25,6 +26,8 @@ export function ReportList() {
   const { guildId } = useParams();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const { perms } = usePermissions(guildId);
+  const canManageReports = perms.can("reports", "update");
   // Default to hiding disabled reports; the toggle shows all.
   const [enabledOnly, setEnabledOnly] = useState(true);
   const safeGuildId = guildId ?? "";
@@ -68,9 +71,11 @@ export function ReportList() {
           >
             {enabledOnly ? "Enabled only" : "All"}
           </Button>
-          <Button asChild size="sm">
-            <Link to={`/g/${guildId}/reports/new`}>+ New report</Link>
-          </Button>
+          {perms.can("reports", "create") && (
+            <Button asChild size="sm">
+              <Link to={`/g/${guildId}/reports/new`}>+ New report</Link>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -132,7 +137,9 @@ export function ReportList() {
                       variant="ghost"
                       size="sm"
                       disabled={
-                        report.isSystemManaged || setEnabledMutation.isPending
+                        report.isSystemManaged ||
+                        !canManageReports ||
+                        setEnabledMutation.isPending
                       }
                       onClick={() => {
                         setEnabledMutation.mutate({

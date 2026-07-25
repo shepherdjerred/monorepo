@@ -1,15 +1,47 @@
 import { Link, NavLink, Outlet, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import type { Permission } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { cn } from "#src/lib/cn.ts";
+import { usePermissions } from "#src/hooks/use-permissions.ts";
+import { ForbiddenPanel } from "#src/components/forbidden-panel.tsx";
 
-const NAV_ITEMS = [
-  { to: "subscriptions", label: "Subscriptions" },
-  { to: "players", label: "Players" },
-  { to: "competitions", label: "Competitions" },
-  { to: "reports", label: "Reports" },
-  { to: "audit", label: "Audit" },
-] as const;
+const NAV_ITEMS: {
+  to: string;
+  label: string;
+  permission: Permission;
+}[] = [
+  {
+    to: "subscriptions",
+    label: "Subscriptions",
+    permission: { resource: "subscriptions", action: "read" },
+  },
+  {
+    to: "players",
+    label: "Players",
+    permission: { resource: "players", action: "read" },
+  },
+  {
+    to: "competitions",
+    label: "Competitions",
+    permission: { resource: "competitions", action: "read" },
+  },
+  {
+    to: "reports",
+    label: "Reports",
+    permission: { resource: "reports", action: "read" },
+  },
+  {
+    to: "audit",
+    label: "Audit",
+    permission: { resource: "audit", action: "read" },
+  },
+  {
+    to: "access",
+    label: "Access",
+    permission: { resource: "roles", action: "read" },
+  },
+];
 
 export function GuildWorkspace() {
   const { guildId } = useParams();
@@ -18,6 +50,7 @@ export function GuildWorkspace() {
   // served from cache; auto-fetches if the user deep-linked here).
   const { data: guilds } = useQuery(trpc.guild.listManageable.queryOptions());
   const guild = guilds?.find((g) => g.id === guildId);
+  const { perms, isLoading, hasAccess } = usePermissions(guildId);
 
   if (guildId === undefined) {
     return (
@@ -26,6 +59,10 @@ export function GuildWorkspace() {
       </main>
     );
   }
+
+  const visibleNav = NAV_ITEMS.filter((item) =>
+    perms.can(item.permission.resource, item.permission.action),
+  );
 
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:py-12">
@@ -54,27 +91,36 @@ export function GuildWorkspace() {
             </NavLink>
           </div>
         </div>
-        <nav className="flex flex-wrap gap-2 border-b border-border pb-2">
-          {NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                cn(
-                  "rounded-md px-3 py-2 text-sm font-medium",
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                )
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
+        {visibleNav.length > 0 && (
+          <nav className="flex flex-wrap gap-2 border-b border-border pb-2">
+            {visibleNav.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  cn(
+                    "rounded-md px-3 py-2 text-sm font-medium",
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                  )
+                }
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+        )}
       </div>
 
-      <Outlet />
+      {!isLoading && !hasAccess ? (
+        <ForbiddenPanel
+          title="No access to this server"
+          message="You aren't a member of this server, or a Scout admin hasn't granted you access yet."
+        />
+      ) : (
+        <Outlet />
+      )}
     </main>
   );
 }

@@ -7,6 +7,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { AddSubscriptionDialog } from "#src/components/add-subscription-dialog.tsx";
 import {
   SubscriptionChannelDialog,
@@ -46,6 +47,8 @@ export function GuildSubscriptions() {
   const { guildId } = useParams();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const { perms } = usePermissions(guildId);
+  const canManageSubs = perms.can("subscriptions", "create");
   const [isAddOpen, setAddOpen] = useState(false);
   const [channelAction, setChannelAction] =
     useState<SubscriptionChannelAction | null>(null);
@@ -143,25 +146,29 @@ export function GuildSubscriptions() {
       <div className="flex items-baseline justify-between">
         <h2 className="text-xl font-semibold tracking-tight">Subscriptions</h2>
         <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              setFilterAction({ kind: "bulk" });
-            }}
-          >
-            Set filters for a channel
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            onClick={() => {
-              setAddOpen(true);
-            }}
-          >
-            + Add subscription
-          </Button>
+          {perms.can("subscriptions", "update") && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setFilterAction({ kind: "bulk" });
+              }}
+            >
+              Set filters for a channel
+            </Button>
+          )}
+          {canManageSubs && (
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                setAddOpen(true);
+              }}
+            >
+              + Add subscription
+            </Button>
+          )}
         </div>
       </div>
 
