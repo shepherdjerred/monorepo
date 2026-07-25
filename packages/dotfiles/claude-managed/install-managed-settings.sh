@@ -35,6 +35,11 @@ if [[ ! -f "${SRC}" ]]; then
   exit 1
 fi
 
+if ! command -v python3 &>/dev/null; then
+  echo "error: python3 not found on PATH (required for strict JSON validation)" >&2
+  exit 1
+fi
+
 # Validate the JSON before writing it to an authoritative, un-overridable path,
 # so a syntax error stops here instead of shipping a broken policy that could
 # block every permission. Use python3's STRICT parser, not `plutil` — plutil is
