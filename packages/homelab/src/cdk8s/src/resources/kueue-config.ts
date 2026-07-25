@@ -71,7 +71,13 @@ export function createKueueConfig(chart: Chart) {
               resources: [
                 {
                   name: "cpu",
-                  nominalQuota: "12000m",
+                  // Canonical "12", NOT "12000m": Kueue/Kubernetes normalises
+                  // the stored Quantity to "12", and ArgoCD diffs the raw string
+                  // — "12000m" in the chart vs "12" live is a permanent phantom
+                  // OutOfSync that wedges the app-of-apps sync (it never reaches
+                  // Synced, so every argocd-sync CI step then fails). Keep this
+                  // in the form the API server stores.
+                  nominalQuota: "12",
                 },
                 {
                   name: "memory",
