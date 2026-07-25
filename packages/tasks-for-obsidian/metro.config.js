@@ -32,6 +32,22 @@ const config = {
     nodeModulesPaths,
     extraNodeModules,
     unstable_enableSymlinks: true,
+    // Force a single copy of React into the bundle. Under Bun's hoisted linker
+    // (used for Release/Archive on Xcode Cloud) the monorepo root can hold a
+    // different React (e.g. 19.2.7, pulled by another workspace package) than the
+    // one React Native 0.85 requires (19.2.3). Metro would otherwise bundle both,
+    // crashing at launch with "Cannot read property 'useEffect' of null" or
+    // "Incompatible React versions: react vs react-native-renderer". Always
+    // resolve react (and its subpaths) from THIS package's node_modules.
+    resolveRequest: (context, moduleName, platform) => {
+      if (moduleName === "react" || moduleName.startsWith("react/")) {
+        return {
+          type: "sourceFile",
+          filePath: require.resolve(moduleName, { paths: [localNodeModules] }),
+        };
+      }
+      return context.resolveRequest(context, moduleName, platform);
+    },
   },
   transformer: {
     getTransformOptions: async () => ({
