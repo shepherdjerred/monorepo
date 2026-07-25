@@ -14,6 +14,26 @@
         "scripts/check-ios-native-deps.ts"
       ]
     },
+    // Runs the exact Release Metro bundle Xcode Cloud runs during Archive (pure
+    // JS — no macOS), then asserts no singleton (react/react-native/scheduler)
+    // was bundled twice. Catches both unresolvable imports and the duplicate-React
+    // launch crash (build #62) before they reach Xcode Cloud. Like test:contract,
+    // the tasknotes-types source coupling is expressed as a task dependency since
+    // turbo `inputs` cannot reach outside the package.
+    "check:release-bundle": {
+      "dependsOn": ["tasknotes-types#typecheck"],
+      "inputs": [
+        "package.json",
+        "index.js",
+        "App.tsx",
+        "app.json",
+        "metro.config.js",
+        "babel.config.js",
+        "src/**",
+        "assets/**",
+        "scripts/check-release-bundle.ts"
+      ]
+    },
     // swiftlint --strict, same as the old CI swift-lint step. Needs the
     // swiftlint binary (mise optional tool set / CI toolchain image).
     "lint:swift": {
