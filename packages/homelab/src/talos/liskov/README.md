@@ -53,16 +53,35 @@ committed).
 4. **Verify join**: node `Ready`; `kubectl describe node liskov` shows the
    `ci=only:NoSchedule` taint; tailscale up; SecureBoot on
    (`talosctl -n liskov get securitystate`).
-5. **Create the cache pool** on the 2TB disk (device name from
-   `talosctl -n liskov disks`):
+5. **Create the cache pool** on the 2TB disk. The openebs zfs-localpv node pod
+   already runs on liskov (it tolerates the taint) and carries the `zpool`/`zfs`
+   binaries with host disk access, so create the pool through it — the same
+   exec path the repo uses for every other on-node ZFS op (see
+   `packages/docs/guides/2026-05-05_velero-orphan-snapshot-remediation.md`).
 
    ```bash
-   talosctl -n liskov ... # zpool create zfspv-pool-nvme /dev/disk/by-id/<990pro-2tb>
+   NODE_POD=$(kubectl -n openebs get pod -l role=openebs-zfs,app=openebs-zfs-node \
+     --field-selector spec.nodeName=liskov -o jsonpath='{.items[0].metadata.name}')
+
+   # Confirm the stable by-id path of the 2TB 990 Pro (NEVER the 1TB OS disk)
+   # before touching it — model+serial are printed so you can eyeball the size:
+   kubectl -n openebs exec "$NODE_POD" -c openebs-zfs-plugin -- \
+     ls -l /dev/disk/by-id/ | grep 990_PRO
+
+   # Create the pool: single vdev, same layout as torvalds (ashift=12, autotrim
+   # on, atime off; no root-level compression — openebs sets per-dataset
+   # compression via the zfs-ssd-lz4 class). The by-id path pins the command to
+   # the exact 2TB drive by model+serial, so it cannot hit the 1TB OS disk.
+   kubectl -n openebs exec "$NODE_POD" -c openebs-zfs-plugin -- \
+     zpool create -f -o ashift=12 -o autotrim=on \
+       -O atime=off -O compression=off -O mountpoint=none \
+       zfspv-pool-nvme /dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_<serial>
    ```
 
    Same pool name as torvalds so the `zfs-ssd`/`zfs-ssd-lz4` storage classes
-   work unchanged (WaitForFirstConsumer + the taint decide placement).
-   Verify the openebs `zfsNode` DaemonSet pod appears on liskov.
+   work unchanged (WaitForFirstConsumer + the taint decide placement). If the
+   node pod isn't up yet, wait for the openebs `zfsNode` DaemonSet pod to appear
+   on liskov first.
 
 6. **Watchdog**: run the verification in `patches/watchdog.yaml`, then apply it.
 7. **Merge the join PR** (Buildkite pinning + tolerations). Then recreate the
