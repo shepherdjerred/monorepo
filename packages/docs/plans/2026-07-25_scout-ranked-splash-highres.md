@@ -76,6 +76,11 @@ Non-ranked / loading-screen / arena reports are untouched (keep loading art).
   `verify --affected` (49 tasks) green. Committed `d7d9c0d56`, pushed to PR #924.
 - Posted before/after PR media (banner full + 1:1 zoom, square hero band) to
   PR #924 as a comment.
+- Follow-up fix (`c3cf5e3ab`): grade letters in `shared/grade-diamond.tsx` sat
+  ~2% low in the diamond (Beaufort line-box seats caps low when flex-centered).
+  Corrected with `paddingBottom = 0.08·fontSize` on the letter (measured to zero
+  the glyph-bbox-vs-box-center offset; scales with the S+ 0.45× and normal 0.55×
+  sizes). Regenerated the 8 snapshots; posted a before/after to the PR.
 
 ### Remaining
 
