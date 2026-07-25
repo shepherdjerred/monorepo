@@ -11,11 +11,10 @@ disposition: active
 
 ## Remaining
 
-- [ ] PR 1 (#1630) merged: versioned tag minting (scout `tag-release` step + starlight bake tags)
-- [ ] Post-PR-1 check: `docker buildx imagetools inspect ghcr.io/shepherdjerred/scout-for-lol:2.0.0-<merge build>` resolves and matches the beta pin digest
-- [ ] PR 2 (#1632, draft, stacked on #1630) merged: Renovate annotation on the prod pin, site pin deleted, promote-scout removed, docs updated. Merging it promotes prod 2.0.0-6017/5991 → 2.0.0-6088 (the beta pair at authoring time)
-- [ ] Close the stale `scout-promote-pending` PR (#1617 or successor) and delete its branch after PR 2 merges
-- [ ] `chezmoi apply` after PR 2 merges (version-management skill changed in dotfiles)
+- [ ] PR #1630 merged (single PR — tag minting + cutover were folded together 2026-07-25). Merging it promotes prod 2.0.0-6017/5991 → 2.0.0-6088 (the beta pair at authoring time)
+- [ ] Post-merge check: `docker buildx imagetools inspect ghcr.io/shepherdjerred/scout-for-lol:2.0.0-<merge build>` resolves and matches the beta pin digest; `curl https://scout-for-lol.com/.release-version` → 2.0.0-6088
+- [ ] Close the stale `scout-promote-pending` PR (#1617 or successor) and delete its branch after #1630 merges
+- [ ] `chezmoi apply` after #1630 merges (version-management skill changed in dotfiles)
 - [ ] Renovate PR observed for `shepherdjerred/scout-for-lol/prod` after the next beta-advancing build; merge = promotion verified via `/.release-version`
 
 ## Context
@@ -30,7 +29,7 @@ User decisions (already made): include starlight ✔; rollback = `git revert` / 
 
 ## PR structure
 
-Two PRs — real sequencing reason: PR 2's cutover pin must reference a tag that PR 1's merge produces.
+**Shipped as ONE PR (#1630).** The plan below was originally split in two on the theory that the cutover pin must reference an already-minted tag; implementation showed that constraint is soft — the prod reconcile consumes the site _archive_ (which exists for the cutover version) and Kubernetes pulls the image by digest, so the GHCR tag is only needed for _future_ Renovate offers, and the combined PR's own merge build mints the first one. The two-PR framing below is kept for design context.
 
 | PR  | What                                                                                           | Effect on prod                                                                               |
 | --- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
@@ -106,3 +105,7 @@ Verify after merge: `docker buildx imagetools inspect ghcr.io/shepherdjerred/sco
 - The `2.0.0-6088` GHCR tag does not exist yet (tags mint only from PR 1's merge build onward) — merging #1632 is still safe because reconcile needs the site archive (which exists), not the tag; the pin's digest handles the image pull. Renovate offers the first minted tag as soon as one exists.
 - Renovate `versioning=semver` orders `2.0.0-<n>` prereleases numerically and permits prerelease→prerelease bumps only within `2.0.0`; if the release base ever moves off `2.0.0-`, the pin needs one manual edit (noted in versions.ts).
 - The staleness guard skips minting for a build when the committed beta pin is content-stale vs `:latest` (pending commit-back); that build's version is simply never promotable — converges next build.
+
+### Addendum — folded to one PR (2026-07-25)
+
+Per user feedback, the two stacked PRs were collapsed: `git-spice branch fold` merged `feature/scout-renovate-cutover` into `feature/scout-renovate-promotion`, PR #1632 was closed (branch deleted), and #1630 now carries the whole change — tag minting, Renovate cutover, promote-scout removal, and docs. Merging #1630 is itself the first promotion (→ 2.0.0-6088).
