@@ -106,6 +106,12 @@ export function createBuildkitdDeployment(chart: Chart) {
       securityContext: {
         // Rootful buildkitd needs privileged for the OCI worker.
         privileged: true,
+        // MUST be true here: cdk8s-plus defaults allowPrivilegeEscalation to
+        // false, and the API server rejects a Deployment that sets it false
+        // while privileged is true ("cannot set allowPrivilegeEscalation to
+        // false and privileged to true") — which left the buildkitd Deployment
+        // permanently invalid and its ArgoCD app unhealthy.
+        allowPrivilegeEscalation: true,
         ensureNonRoot: false,
         readOnlyRootFilesystem: false,
       },
