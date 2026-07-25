@@ -20,11 +20,14 @@ export function GradeDiamond({
   const accent =
     grade === "S+" || grade === "S" ? palette.gold[4] : palette.gold[1];
   const fontSize = grade === "S+" ? size * 0.45 : size * 0.55;
-  // Beaufort's line-box seats capital glyphs a hair (~1% of the diamond) below
-  // the geometric center when flex-centered. Padding the bottom grows the
-  // (centered) span downward, lifting the glyph by half the padding;
-  // 0.035·fontSize zeroes the offset (measured on the real svgToPng render).
-  const centeringPadBottom = fontSize * 0.035;
+  // With `lineHeight: 1` Beaufort's cap glyph sits high in the flex-centered
+  // line box, so the letter reads ~7% above the diamond's middle. Padding the
+  // top grows the (centered) span upward, dropping the glyph by half the
+  // padding; 0.45·fontSize centers it (measured on the real svgToPng render —
+  // letter bbox vs the rotated-border bbox — for both the banner and square
+  // layouts). NB: isolated single-diamond renders do NOT reproduce the offset;
+  // it only appears in the real report layout, so calibrate there.
+  const centeringPadTop = fontSize * 0.45;
 
   return (
     <div
@@ -59,7 +62,7 @@ export function GradeDiamond({
           lineHeight: 1,
           display: "flex",
           position: "relative",
-          paddingBottom: `${centeringPadBottom.toString()}rem`,
+          paddingTop: `${centeringPadTop.toString()}rem`,
         }}
       >
         {grade}
