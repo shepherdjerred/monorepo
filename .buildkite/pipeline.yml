@@ -807,12 +807,20 @@ steps:
       if bash .buildkite/scripts/ci-changed.sh helm-types; then
         bun --no-install run --cwd packages/homelab/src/cdk8s generate-helm-types --check
       fi
-      # Tofu plans — the only expensive section; gated on tofu inputs.
+      # Tofu plans — the only expensive section; gated on tofu inputs. The
+      # SeaweedFS creds (tofu's S3 state backend) are confined to a subshell so
+      # they DON'T leak into the deploy-site/scout dry-run rehearsals below:
+      # with creds present, deploy-site's --dry-run runs a real
+      # `aws s3 sync --dryrun` against a dist/ that was never built (the build
+      # is stubbed in dry-run), which fails "path does not exist". These lanes
+      # used to be separate pods; merging them into one made the leak possible.
       if bash .buildkite/scripts/ci-changed.sh tofu; then
-        export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
-        for stack in seaweedfs tailscale buildkite arr pagerduty github cloudflare; do
-          bun --no-install packages/homelab/scripts/tofu-stack.ts "$$stack" plan
-        done
+        (
+          export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
+          for stack in seaweedfs tailscale buildkite arr pagerduty github cloudflare; do
+            bun --no-install packages/homelab/scripts/tofu-stack.ts "$$stack" plan
+          done
+        )
       fi
       # Print-only rehearsals (seconds each): sites catalog, the versioned
       # scout release path, helm chart push, and release-please.
