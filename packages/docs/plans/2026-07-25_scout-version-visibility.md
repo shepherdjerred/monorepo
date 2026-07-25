@@ -102,3 +102,22 @@ where `gitSha` = `BUILDKITE_COMMIT` ?? `git rev-parse HEAD` (same resolution `ar
 ## Out of scope (accepted by user)
 
 Rollout-window skew, open-tab staleness beyond the reload nudge, hand-edit enforcement, marketing-site contract hash, toast infrastructure.
+
+## Session Log — 2026-07-25
+
+### Done
+
+- Shipped as PR [#1637](https://github.com/shepherdjerred/monorepo/pull/1637) (single commit on `feature/scout-version-visibility`, rebased onto main after #1630 squash-merged mid-session).
+- `packages/scout-for-lol/scripts/contract-hash.ts` (dependency-free; verified deterministic, contract-sensitive, and insensitive to non-contract edits), bake/Dockerfile/bake-images.sh plumbing, `GET /api/version`, `configuration.contractHash`, site-build env stamping, SPA footer + mismatch banner (+ pure-logic tests), marketing footer via `astro:env/client`.
+- Visual verification via Vite dev + stubbed `/api/version` + headless browser; both states screenshotted and attached to the PR (healthy pair with differing version labels → footer only; differing hash → reload banner).
+- Suppression governance: the one new `eslint-disable` (vite-env.d.ts interface merging) registered in `.quality-baseline.json` and `scripts/check-suppressions.ts` EXCLUDED_FILES with rationale.
+- Post-#1630-merge cleanup done this session: stale `scout-promote-pending` PR #1617 closed + branch deleted.
+
+### Remaining
+
+- See `## Remaining` above. Additionally: #1630's merge build had not yet minted the first release-pair tag at session end (GHCR shows only pre-replatform `2.0.0-5xxx` tags, which are inert — Renovate only offers upgrades past the 6017 pin). Verify after the build finishes.
+
+### Caveats
+
+- Old `2.0.0-5xxx` GHCR tags predate the pair guarantee; they are below the current prod pin so Renovate will never offer them, but don't hand-pin them.
+- The backend's baked VERSION label legitimately differs from the site's in a healthy pair — any future tooling must compare contract hashes, not versions.
