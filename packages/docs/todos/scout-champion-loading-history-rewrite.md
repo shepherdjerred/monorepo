@@ -23,6 +23,13 @@ This is the **deferred, coordinated** history rewrite from that plan. It was
 intentionally split out because it force-pushes a rewritten `main` and strands
 in-flight work.
 
+> **Superseded / absorbed** by
+> [`plans/2026-07-25_repo-history-slim.md`](../plans/2026-07-25_repo-history-slim.md).
+> That plan runs the same rewrite but with an **aggressive** scope — champion-loading
+> is now just one target alongside scout-showcase, report snapshots, and ~124 MB of
+> already-deleted dead content. Execute via that plan, not this todo alone; this file
+> remains only as the champion-loading-specific record.
+
 ## Blast radius (read before running)
 
 - Rewrites **every commit SHA from `2f721e34f` forward** (the first
