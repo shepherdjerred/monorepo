@@ -72,3 +72,80 @@ step — error propagation preserved.
 ### Caveats
 
 - The real `aws s3 sync --dryrun` path in `s3SyncStaticSite` is only meaningful when a `dist/` exists (real deploys / `--prebuilt`). In these PR rehearsals the build is intentionally stubbed, so print-only is the correct behavior — do not "fix" this by building sites in the dry-run lane.
+
+## Codex substitute-review findings (2026-07-25, review #4780326327)
+
+Greptile is credit-paused, so Codex (gpt-5.6-sol) reviewed head `8df970cff` and
+posted 3 findings. Two were real and fixed; one was a false positive.
+
+### [P1] checkout-container tmpfs OOM — FALSE POSITIVE
+
+Claim: agent-stack-k8s v0.45.0 clones in a dedicated `checkout` container that
+gets only the `buildkite-default-resources` LimitRange (64Mi request / 768Mi
+limit), and the tmpfs `workspace-volume` (this PR's cutover) would push a ~1Gi
+checkout over that limit and OOM the writer before the command runs.
+
+Evidence it doesn't hold:
+
+- The monorepo **working tree is 56M** (`git ls-files | xargs du -ch` → 56M
+  total; no submodules, no LFS). The "~1Gi" conflates the **964MB `.git`** with
+  the checkout.
+- With git mirrors configured (`default-checkout-params.gitMirrors`,
+  buildkite.ts:130-139; restored 2026-07-18), the checkout is a **reference
+  clone** — `.git` objects live on the 20Gi `buildkite-git-mirrors` PVC via
+  alternates, NOT on the tmpfs workspace. So the checkout container writes only
+  the ~56M working tree to tmpfs.
+- 56M sits inside the 768Mi checkout-container limit with >13× headroom. No OOM.
+- Residual dependency: this holds because git mirrors are configured. If the
+  mirror PVC were removed and full clones resumed, 964MB `.git` on tmpfs would
+  reintroduce the risk — but mirrors are deliberately in place.
+
+No code change. (The command container's own tmpfs write sizing — node_modules /
+turbo scratch charged to container-0 — is the PR author's separate, claimed-sized
+concern, not this finding.)
+
+### [P2] shared retry can skip Cooklang commit-back — FIXED
+
+`packages/cooklang-for-obsidian/scripts/publish.ts`: the publisher returned early
+when the built artifacts matched the latest release, BEFORE `cooklangCommitBack`.
+Under the merged publish lane's shared `retry: *retry`, an interruption after the
+GitHub release is cut but before commit-back lands would, on retry, hit that gate
+and return — leaving `packages/cooklang-for-obsidian/manifest.json` permanently
+stale (the cooklang change gate won't revisit it).
+
+Fix: `builtArtifactsMatchLatestRelease` → `matchingLatestReleaseTag` (returns the
+tag `string | null`); the early-return path now compares the built
+`manifestVersion` to the matched tag and, when the manifest is behind, resumes
+`cooklangCommitBack(matchedTag, …)` before returning. `cooklangCommitBack` is
+idempotent (no push / no PR when nothing differs) and the guard skips the
+monorepo clone on the common in-sync build, so no infinite-loop regression and no
+per-build cost. Verified: cooklang typecheck + lint pass.
+
+### [P2] lockfile format fields missing from the image fingerprint — FIXED
+
+`.buildkite/scripts/select-image-targets.ts`: `parseLockfile` accepts
+`lockfileVersion` and `configVersion` (both in `KNOWN_LOCK_KEYS`) but the
+`sentinel` omitted them, so a bun format-only bump left every closure fingerprint
+equal → selected NO images, and the schema-drift canary stayed green.
+
+Fix: folded `raw["lockfileVersion"]` and `raw["configVersion"]` into the
+`sentinel` array, so a format bump flips every fingerprint (fails open to all
+targets). Added a regression test ("a lockfile format bump flips the fingerprint
+even with no dep change"). Verified: 20/20 select-image-targets tests pass.
+
+## Session Log — 2026-07-25 (findings pass)
+
+### Done
+
+- Fixed [P2] cooklang commit-back resume (`packages/cooklang-for-obsidian/scripts/publish.ts`).
+- Fixed [P2] lockfile format fields in the image-selection sentinel (`.buildkite/scripts/select-image-targets.ts`) + regression test (`.buildkite/scripts/select-image-targets.test.ts`).
+- Investigated [P1] checkout-container tmpfs OOM and determined it is a false positive (working tree 56M, `.git` on the git-mirror PVC via alternates) — no change.
+- Verified: cooklang typecheck/lint pass; root-scripts typecheck/lint/test pass (fresh, `--force`); prettier clean; no banned automation patterns.
+
+### Remaining
+
+- Push and let Buildkite re-run. Greptile gate stays red while credit-paused (out of scope).
+
+### Caveats
+
+- The [P1] false-positive verdict depends on git mirrors staying configured; if the mirror PVC is ever removed, revisit the checkout-container memory limit before enabling tmpfs.

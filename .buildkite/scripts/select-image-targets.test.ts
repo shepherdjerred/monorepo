@@ -153,6 +153,32 @@ describe("lockfile attribution", () => {
     expect(after).not.toEqual(before);
   });
 
+  test("a lockfile format bump flips the fingerprint even with no dep change", () => {
+    // configVersion/lockfileVersion carry no dep spec, but a bun format bump can
+    // change resolution semantics, so it must fail selection open to all targets
+    // rather than leave every closure fingerprint equal (which selects none).
+    const before = closureFingerprint(
+      ["packages/a"],
+      parseLockfile(syntheticLock),
+    );
+    const configBumped = syntheticLock.replace(
+      '"configVersion":1',
+      '"configVersion":2',
+    );
+    expect(configBumped).not.toEqual(syntheticLock);
+    expect(
+      closureFingerprint(["packages/a"], parseLockfile(configBumped)),
+    ).not.toEqual(before);
+    const lockBumped = syntheticLock.replace(
+      '"lockfileVersion":1',
+      '"lockfileVersion":2',
+    );
+    expect(lockBumped).not.toEqual(syntheticLock);
+    expect(
+      closureFingerprint(["packages/a"], parseLockfile(lockBumped)),
+    ).not.toEqual(before);
+  });
+
   test("unknown lockfile keys are rejected (fail-open trigger)", () => {
     expect(() =>
       parseLockfile(JSON.stringify({ lockfileVersion: 1, mystery: {} })),

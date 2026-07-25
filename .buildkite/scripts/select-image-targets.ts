@@ -272,7 +272,7 @@ interface Lockfile {
     string,
     { id: string; integrity: string; meta: Record<string, unknown> }
   >;
-  /** Global resolution shapers (overrides/catalogs/patches/trusted). */
+  /** Lockfile format identity + global resolution shapers (versions/overrides/catalogs/patches/trusted). */
   sentinel: string;
 }
 
@@ -337,7 +337,15 @@ export function parseLockfile(text: string): Lockfile {
     packages.set(key, { id, integrity, meta });
   }
 
+  // Lockfile format identity (lockfileVersion/configVersion) leads the global
+  // resolution shapers. A bun format bump can rewrite resolution semantics
+  // without changing any single dep spec, so folding both into the sentinel
+  // flips EVERY closure fingerprint on a format change — image selection fails
+  // open to all targets instead of silently selecting none. Both are in
+  // KNOWN_LOCK_KEYS.
   const sentinel = JSON.stringify([
+    raw["lockfileVersion"] ?? null,
+    raw["configVersion"] ?? null,
     raw["patchedDependencies"] ?? null,
     raw["overrides"] ?? null,
     raw["catalog"] ?? null,
