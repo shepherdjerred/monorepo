@@ -22,14 +22,11 @@ const CHECK_AND_SKIP_WORKFLOWS: {
 }[] = [
   {
     workflow: "runVacuumIfNotHome",
-    // someone-home = expected presence gate; cleaning/returning = the vacuum is
-    // already running. error/unavailable/unknown vacuum states are anomalous and
-    // intentionally still page.
-    benignSkipReasons: [
-      "someone-home",
-      "vacuum-state-cleaning",
-      "vacuum-state-returning",
-    ],
+    // someone-home = expected presence gate; all-units-active = every floor unit
+    // is already cleaning/returning so there was nothing to start. Both are normal
+    // operation. (These are the only two skip reasons the fleet workflow emits;
+    // keep them in sync with run-vacuum-if-not-home.ts.)
+    benignSkipReasons: ["someone-home", "all-units-active"],
   },
   // goodMorning* skip when no one is home to wake — the expected gate.
   { workflow: "goodMorningPreheat", benignSkipReasons: ["no-one-home"] },

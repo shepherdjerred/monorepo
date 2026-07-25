@@ -65,6 +65,26 @@ export async function createHomeAssistantDeployment(chart: Chart) {
   config.addDirectory(`${import.meta.dir}/../../../config/homeassistant`);
   const configVolume = Volume.fromConfigMap(chart, "ha-cm-volume", config);
 
+  // Pod-template annotation so a config change triggers a rollout. The config
+  // files are mounted via subPath (below), which K8s never hot-reloads, and the
+  // cluster runs no config-reloader controller — so without this the pod serves
+  // stale config until a manual `kubectl rollout restart`. Deterministic over the
+  // sorted file contents, so an unchanged config yields the same hash (no spurious
+  // rollout or ArgoCD drift).
+  const configHasher = new Bun.CryptoHasher("sha256");
+  for (const file of [...files].sort()) {
+    configHasher.update(file);
+    configHasher.update(
+      await Bun.file(
+        `${import.meta.dir}/../../../config/homeassistant/${file}`,
+      ).text(),
+    );
+  }
+  deployment.podMetadata.addAnnotation(
+    "config-hash",
+    configHasher.digest("hex").slice(0, 12),
+  );
+
   // Every HA custom_components/www-community entry on this PVC is pinned in
   // git (see ha-custom-components.ts) — nothing installs or updates through
   // HACS anymore. The prune container removes HACS itself and anything not
