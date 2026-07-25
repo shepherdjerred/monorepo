@@ -5,24 +5,38 @@
  */
 
 import { initTRPC, TRPCError } from "@trpc/server";
-import { PermissionDeniedCauseSchema } from "@scout-for-lol/data";
+import {
+  type Permission,
+  PermissionDeniedCauseSchema,
+} from "@scout-for-lol/data";
 import type { Context } from "#src/trpc/context.ts";
 import configuration from "#src/configuration.ts";
 
+/**
+ * Find the missing `{ resource, action }` a FORBIDDEN carries. The
+ * guild-permission gate throws it as the error `cause`, but tRPC re-wraps
+ * middleware errors, so the payload can sit a few links down the cause chain —
+ * walk it rather than reading `error.cause` directly.
+ */
+function findMissingPermission(error: unknown, depth = 0): Permission | null {
+  if (depth > 6 || error === null || typeof error !== "object") return null;
+  const parsed = PermissionDeniedCauseSchema.safeParse(error);
+  if (parsed.success) return parsed.data.missingPermission;
+  if ("cause" in error) return findMissingPermission(error.cause, depth + 1);
+  return null;
+}
+
 const t = initTRPC.context<Context>().create({
   errorFormatter({ shape, error }) {
-    // A FORBIDDEN raised by the guild-permission gate carries the missing
-    // `{ resource, action }` as its cause so the SPA can name the exact scope.
-    const denied = PermissionDeniedCauseSchema.safeParse(error.cause);
     return {
       ...shape,
       data: {
         ...shape.data,
         // Include Zod validation errors in response
         zodError: error.cause instanceof Error ? error.cause.message : null,
-        missingPermission: denied.success
-          ? denied.data.missingPermission
-          : null,
+        // A FORBIDDEN from the guild-permission gate carries the missing
+        // `{ resource, action }` so the SPA can name the exact scope.
+        missingPermission: findMissingPermission(error),
       },
     };
   },
