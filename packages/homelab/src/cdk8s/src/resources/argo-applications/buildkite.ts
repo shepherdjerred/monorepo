@@ -10,6 +10,10 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import {
+  CI_NODE_HOSTNAME,
+  CI_NODE_TOLERATION,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/ci-node.ts";
 
 // Exported so kueue-config.ts's `pods` nominalQuota can be asserted equal to
 // this in a test — the two are independent enforcement layers for the same
@@ -165,6 +169,13 @@ export function createBuildkiteApp(chart: Chart) {
               // written `$$VAR` (runtime shell expansion).
               "pod-spec-patch": {
                 priorityClassName: "batch-low",
+                // CI step pods run ONLY on the dedicated CI node (liskov):
+                // the toleration lets them onto its ci=only:NoSchedule taint,
+                // and the nodeSelector keeps them off torvalds. If liskov is
+                // down, CI pods stay Pending — deliberate: CI never falls
+                // back onto the prod node. Rollback = remove these two keys.
+                nodeSelector: { "kubernetes.io/hostname": CI_NODE_HOSTNAME },
+                tolerations: [CI_NODE_TOLERATION],
                 serviceAccountName: "buildkite-agent-stack-k8s-controller",
                 automountServiceAccountToken: true,
                 containers: [

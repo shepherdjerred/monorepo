@@ -1,0 +1,10 @@
+# Kernel sysctls — same two as torvalds (../patches/sysctls.yaml, see its
+# comments for the full rationale):
+# - kptr_restrict=1: lets the privileged alloy eBPF profiler (which runs on
+#   this node via its ci=only toleration) symbolize kernel stacks.
+# - panic_on_rcu_stall=1: cheap bonus freeze signal; the hardware watchdog
+#   (patches/watchdog.yaml) is the primary auto-recovery mechanism.
+machine:
+  sysctls:
+    kernel.kptr_restrict: "1"
+    kernel.panic_on_rcu_stall: "1"

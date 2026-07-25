@@ -9,6 +9,7 @@ import {
   Probe,
 } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { ciNodeTaintedNode } from "@shepherdjerred/homelab/cdk8s/src/misc/ci-node.ts";
 
 export async function createSmartctlMonitoring(chart: Chart) {
   // Create ServiceAccount for the DaemonSet
@@ -60,6 +61,9 @@ export async function createSmartctlMonitoring(chart: Chart) {
       fsGroup: 0,
     },
   });
+
+  // Disk monitoring must cover the CI-only node too.
+  smartctlDaemonSet.scheduling.tolerate(ciNodeTaintedNode());
 
   // Configure the container
   const container = smartctlDaemonSet.addContainer({

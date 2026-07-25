@@ -4,10 +4,11 @@ This directory contains Talos machine configuration patches and tooling for the 
 
 ## Directory Structure
 
-- `patches/` - Machine configuration patches
+- `patches/` - Machine configuration patches (**torvalds**, the control-plane node)
+- `liskov/` - The CI-only worker node: its Image Factory schematic (`liskov/image.yaml`), patches (`liskov/patches/`), and join runbook (`liskov/README.md`)
 - `pods/` - Static pod definitions
-- `image.yaml` - Talos image configuration
-- `update-image-id.ts` - Script to update Talos image versions
+- `image.yaml` - Talos image configuration (torvalds schematic)
+- `update-image-id.ts` - Script to check/update the pinned installer references for **all** nodes (torvalds + liskov); `bun run check:talos` runs it in `--check` mode
 
 ## Patches
 

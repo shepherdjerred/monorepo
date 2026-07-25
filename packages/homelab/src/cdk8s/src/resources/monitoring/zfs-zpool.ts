@@ -11,6 +11,7 @@ import {
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { ciNodeTaintedNode } from "@shepherdjerred/homelab/cdk8s/src/misc/ci-node.ts";
 
 const CURRENT_FILENAME = fileURLToPath(import.meta.url);
 const CURRENT_DIRNAME = path.dirname(CURRENT_FILENAME);
@@ -70,6 +71,9 @@ export async function createZfsZpoolMonitoring(chart: Chart) {
       fsGroup: 0,
     },
   });
+
+  // liskov has its own ZFS pool (CI caches) that needs pool health metrics.
+  zfsZpoolDaemonSet.scheduling.tolerate(ciNodeTaintedNode());
 
   // Configure the container
   const container = zfsZpoolDaemonSet.addContainer({

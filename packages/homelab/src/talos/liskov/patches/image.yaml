@@ -1,0 +1,42 @@
+# liskov machine identity: install target, hostname, CI-only taint, ZFS tuning.
+machine:
+  install:
+    # https://factory.talos.dev/ — schematic source: ../image.yaml (SecureBoot,
+    # amd-ucode). The schematic hash + digest are kept in sync by
+    # src/talos/update-image-id.ts (`bun run check:talos` fails on drift);
+    # Renovate tracks the trailing :vX.Y.Z (regex manager in renovate.json).
+    image: factory.talos.dev/metal-installer-secureboot/d953d04c966642907c1061252288cdc30189c2973f083de93355faac1e9d54cb:v1.13.6@sha256:1f5a3170a179f47bf58c69a9df644f81b04ede643ca389c64b5354b055d9db43
+    # Select the install disk by serial, never by /dev path (torvalds lesson:
+    # identical NVMes get nvme0n1/nvme1n1 assigned randomly per boot, and with
+    # wipe:true a path selector can destroy the data disk). liskov: the 990 Pro
+    # 1TB is the OS disk; the 990 Pro 2TB holds the zfspv-pool-nvme CI cache
+    # pool and must NEVER match this selector.
+    #
+    # Placeholder until first boot — read the real serial in maintenance mode:
+    #   talosctl -n <maintenance-ip> disks --insecure
+    # An unmatched selector fails the install; it cannot wipe the wrong disk.
+    diskSelector:
+      serial: REPLACE-WITH-LISKOV-990PRO-1TB-SERIAL
+    wipe: true
+  network:
+    hostname: liskov
+  # CI-only isolation: present from the node's first second, so nothing can
+  # sneak on during boot. Only workloads that explicitly tolerate ci=only run
+  # here (monitoring collectors, CSI node plugin, and the Buildkite step pods,
+  # which also nodeSelector onto this host). See
+  # packages/homelab/src/cdk8s/src/misc/ci-node.ts and
+  # packages/docs/plans/2026-07-25_liskov-cluster-join.md.
+  nodeTaints:
+    ci: only:NoSchedule
+  sysfs:
+    # ZFS ARC for the CI cache pool (2TB 990 Pro, zfspv-pool-nvme): same
+    # 16 GiB cap / 8 GiB floor as torvalds — must stay BELOW the kubelet
+    # systemReserved.memory (patches/kubelet.yaml) so ARC + pod allocatable
+    # can never oversubscribe physical RAM (the torvalds CI-freeze lesson).
+    module.zfs.parameters.zfs_arc_max: "17179869184"
+    module.zfs.parameters.zfs_arc_min: "8589934592"
+    # Compressed ARC: effectively more cache per reserved byte.
+    module.zfs.parameters.zfs_compressed_arc_enabled: "1"
+  kernel:
+    modules:
+      - name: zfs
