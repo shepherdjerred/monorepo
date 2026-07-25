@@ -162,3 +162,36 @@ pod=~<job-pod-pattern>, phase="Running"} == 1)`. Every Buildkite step pod is
   nodeSelector). A miner running _concurrently_ with a real build is not
   caught by this rule; it targets the sustained-idle attack the reviewer
   flagged. If CI ever runs off-liskov, revisit the gate.
+
+## Session Log — 2026-07-25 (liskov install day)
+
+### Done
+
+- User burned the SecureBoot Talos v1.13.6 ISO to the installer USB and booted
+  liskov into Talos maintenance mode at `192.168.1.3`.
+- Verified the exact disks through the maintenance API: the install target is
+  the 1 TB Samsung 990 Pro, serial `S7LANL0L414099Z`; the separate 2 TB Samsung
+  990 Pro, serial `S7L9NJ0L312632A`, remains reserved for `zfspv-pool-nvme`.
+- Replaced the liskov installer `diskSelector.serial` placeholder with the
+  verified 1 TB serial. `bun run check:talos` in `packages/homelab` confirms
+  the pinned liskov v1.13.6 SecureBoot installer still matches the schematic.
+- Read the live control-plane configuration without persisting it: cluster
+  name `tailscale`, API endpoint `https://192.168.1.81:6443`.
+
+### Remaining
+
+- Provide the existing cluster `secrets.yaml` securely in this worktree so the
+  worker configuration can be generated; it must be the original bundle, not
+  regenerated.
+- Create the gitignored per-node Tailscale patch, generate and apply the worker
+  configuration, then verify Ready, Secure Boot, and the `ci=only:NoSchedule`
+  taint.
+- Create `zfspv-pool-nvme` only on the verified 2 TB disk; do not merge PR
+  #1629 until both the node and pool are ready.
+
+### Caveats
+
+- `patches/watchdog.yaml` remains deliberately excluded pending its live
+  hardware-module verification.
+- The installer will wipe only the 1 TB disk selected by serial; the 2 TB cache
+  disk must not be touched during installation.

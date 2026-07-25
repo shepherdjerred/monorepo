@@ -16,7 +16,7 @@ machine:
     #   talosctl -n <maintenance-ip> disks --insecure
     # An unmatched selector fails the install; it cannot wipe the wrong disk.
     diskSelector:
-      serial: REPLACE-WITH-LISKOV-990PRO-1TB-SERIAL
+      serial: S7LANL0L414099Z
     wipe: true
   network:
     hostname: liskov
