@@ -14,6 +14,13 @@ export type BabysitResumeState = {
   recentSignatures: string[];
   /** Original loop start (epoch ms) — survives continueAsNew for wall-clock budget. */
   startedAtEpochMs: number;
+  /**
+   * Consecutive assess/act activity failures (e.g. a worker restart wiped the
+   * workdir mid-run). Carried across continueAsNew so a redeploy landing on the
+   * iteration boundary can't silently reset the stand-down bound. Reset to 0 on
+   * any healthy pass.
+   */
+  consecutiveFailures?: number;
 };
 
 export type PrBabysitWorkflowInput = PrBabysitInput & {
