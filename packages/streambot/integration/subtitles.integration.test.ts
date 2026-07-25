@@ -240,7 +240,11 @@ beforeAll(async () => {
     "bt2020nc",
     hdrClip,
   ]);
-});
+  // Generous hook timeout: this builds six clips with sequential real-ffmpeg
+  // encodes. They finish in ~1-2s idle, but bun's default 5s hook timeout is
+  // easily blown when the CI node is CPU-contended (the runner then SIGTERMs
+  // the in-flight ffmpeg — exit 143 — and the suite flakes).
+}, 120_000);
 
 afterAll(async () => {
   await sweepSubtitleTempDir();
