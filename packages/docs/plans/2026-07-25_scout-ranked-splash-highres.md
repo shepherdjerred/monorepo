@@ -2,7 +2,8 @@
 
 ## Status
 
-In progress — extending PR #924 (`claude/peaceful-driscoll-2a021a`).
+Complete — shipped on PR #924 (`claude/peaceful-driscoll-2a021a`, commit
+`d7d9c0d56`). PR itself remains deferred pending owner review of the designs.
 
 ## Context
 
@@ -52,3 +53,44 @@ Non-ranked / loading-screen / arena reports are untouched (keep loading art).
 4. Eyeball regenerated ranked `__snapshots__/*.svg` PNGs.
 5. Attach before/after PR media via `toolkit pr asset 924 …`.
 6. `bun run verify -- --affected`.
+
+## Session Log — 2026-07-25
+
+### Done
+
+- `data/scripts/update-data-dragon.ts` — added `getCDragonCenteredSplashUrl`,
+  `downloadSplashSkin` (centered CDragon by id → ddragon `champion/splash/`
+  fallback), `downloadChampionSplashImages` (base skin-0 only) + `retryFailedSplashes`,
+  `MAX_SPLASH_IMAGE_BYTES`, `champion-splash/` dir, and the `main()` call + summary.
+- `data/src/data-dragon/images.ts` — `getChampionSplashImageBase64` /
+  `getChampionSplashImageUrl` / `validateChampionSplashImage`; exported from `src/index.ts`.
+- `report/src/dataDragon/image-cache.ts` — `championSplashImageCache`,
+  `getChampionSplashImage`, `preloadChampionSplashImages`; extracted a shared
+  `preloadChampionArt` driver so the loading + splash preloaders don't duplicate
+  (cleared the `no-code-duplication` warning without suppression).
+- `report/src/html/shared/splash.tsx` → `getChampionSplashImage`;
+  `report/src/html/index.tsx` ranked preload → `preloadChampionSplashImages`.
+- Generated 173 base-skin-0 splashes (all from CommunityDragon centered, 1280×720,
+  ~16 MB) into `champion-splash/`; regenerated the 8 ranked snapshot fixtures.
+- Verified: typecheck + eslint clean, 10 ranked/pick-design tests pass, pre-push
+  `verify --affected` (49 tasks) green. Committed `d7d9c0d56`, pushed to PR #924.
+- Posted before/after PR media (banner full + 1:1 zoom, square hero band) to
+  PR #924 as a comment.
+
+### Remaining
+
+- PR #924 stays **deferred** — owner still needs to review the two designs before
+  un-deferring. This change removes the low-res blocker the user cited.
+
+### Caveats
+
+- Splash art is **base skin 0 only** by design (~15 MB vs ~180 MB for all skins);
+  the ranked designs only render the hero at skin 0. Non-zero skins fall back to
+  `_0` via `getChampionSplashImageBase64`. Extending to skin-aware art = iterate
+  more skins in `downloadChampionSplashImages`.
+- Assets were generated with a throwaway scratch script using the **same URLs** as
+  the new pipeline (byte-identical output); a full `bun run update-data-dragon`
+  would also refresh every other asset to the latest patch, which we deliberately
+  avoided to keep the diff to `champion-splash/` only.
+- The large empty lower region of the ranked-**square** design is **pre-existing**
+  (visible in the before render); unrelated to this splash change. Flagged on the PR.
