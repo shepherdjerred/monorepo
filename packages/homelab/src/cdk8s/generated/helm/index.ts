@@ -21,7 +21,6 @@ export * from "./openebs.types.ts";
 export * from "./agent-stack-k8s.types.ts";
 export * from "./kueue.types.ts";
 export * from "./velero.types.ts";
-export * from "./kyverno.types.ts";
 export * from "./postgres-operator.types.ts";
 export * from "./redis.types.ts";
 export * from "./seaweedfs.types.ts";

@@ -61,8 +61,6 @@ import { createS3StaticSitesApp } from "@shepherdjerred/homelab/cdk8s/src/resour
 import { createKueueApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/kueue.ts";
 import { createKueueConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
 import { createCpuPowerCap } from "@shepherdjerred/homelab/cdk8s/src/resources/cpu-power-cap.ts";
-import { createKyvernoApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/kyverno.ts";
-import { createKyvernoPoliciesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/kyverno-policies.ts";
 import { createMcpGatewayApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/mcp-gateway.ts";
 import { createBugsinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/bugsink.ts";
 import { createTasknotesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/tasknotes.ts";
@@ -139,8 +137,6 @@ export async function createAppsChart(app: App) {
   // See packages/docs/logs/2026-05-24_torvalds-thermal-investigation.md.
   createCpuPowerCap(chart, { pl1Watts: 125, pl2Watts: 253 });
   createVeleroApp(chart);
-  createKyvernoApp(chart);
-  createKyvernoPoliciesApp(chart);
   createPostgresOperatorApp(chart);
   createSeaweedfsApp(chart);
   // Create all Grafana dashboards (gitckup, ha-workflow, scout, smartctl, velero, zfs)

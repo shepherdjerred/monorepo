@@ -209,8 +209,6 @@ const versions = {
     "1.33.4@sha256:ed0b31a0508da84ee655c5c6e01bd3897fc56ad6cf69debb27fa1893a06d2246",
   // renovate: datasource=helm registryUrl=https://vmware-tanzu.github.io/helm-charts versioning=semver
   velero: "12.1.0",
-  // renovate: datasource=helm registryUrl=https://kyverno.github.io/kyverno versioning=semver
-  kyverno: "3.8.1",
   // PINNED to v1.14.0 (last release that works on Cloudflare R2). The plugin always sets an
   // (often empty) `Tagging` field on PutObject; v1.14.1's dependency bump pulled a newer
   // aws-sdk-go-v2 that started emitting an empty `x-amz-tagging` header on the wire, which R2

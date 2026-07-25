@@ -55,7 +55,19 @@ export function createPostgresOperatorApp(chart: Chart) {
         chart: "postgres-operator",
         targetRevision: versions["postgres-operator"],
         helm: {
-          valuesObject: postgresOperatorValues,
+          // `inherited_labels` is a valid postgres-operator config key, but the chart
+          // ships it commented-out in values.yaml, so the generated
+          // HelmValuesForChart<"postgres-operator"> type omits it. Merge it in at the
+          // untyped ArgoCD valuesObject boundary (no type assertion). The operator then
+          // copies `velero.io/backup` from each Postgresql CR's metadata.labels onto its
+          // pgdata PVC — replacing the removed Kyverno velero-label mutation.
+          valuesObject: {
+            ...postgresOperatorValues,
+            configKubernetes: {
+              ...postgresOperatorValues.configKubernetes,
+              inherited_labels: ["velero.io/backup"],
+            },
+          },
         },
       },
       destination: {
