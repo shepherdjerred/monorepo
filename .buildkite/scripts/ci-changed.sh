@@ -152,6 +152,10 @@ case "$lane" in
     lane_paths=(packages/glitter scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
     ;;
   site-scout)
+    # docker-bake.hcl and .dockerignore are scout image-content inputs: a bake
+    # config change can alter the backend image without touching the scout
+    # tree, and the release-pair tag mint (scout-tag-release) requires a fresh
+    # site archive in the same build to pair with.
     lane_paths=(
       packages/scout-for-lol
       packages/astro-opengraph-images
@@ -160,6 +164,8 @@ case "$lane" in
       scripts/package.json
       scripts/scout-site-release.ts
       scripts/lib
+      docker-bake.hcl
+      .dockerignore
     )
     ;;
   sites)
@@ -179,6 +185,8 @@ case "$lane" in
       scripts/scout-site-release.ts
       scripts/lib/s3-static-site.ts
       scripts/lib/run.ts
+      docker-bake.hcl
+      .dockerignore
     )
     ;;
   scout-promotion)

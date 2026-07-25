@@ -216,6 +216,14 @@ done
 
 if [ "$PUSH" = true ]; then
   VERSIONS_TS="packages/homelab/src/cdk8s/src/versions.ts"
+  # Images whose /prod pin in versions.ts is Renovate-managed (docker
+  # datasource): Renovate can only offer tags that exist in the registry, so
+  # push a versioned tag whenever a content change records a digest — the same
+  # 2.0.0-<build> the version commit-back writes to the beta pin.
+  # scout-for-lol is deliberately absent: its versioned tag is the atomic
+  # backend+site release pair, minted by the scout-tag-release step only after
+  # the paired site archive exists.
+  VERSIONED_TAG_IMAGES=(starlight-karma-bot)
   digest_args=()
   for name in "${push_images[@]}"; do
     echo "--- :arrow_up: push ${name}"
@@ -271,6 +279,12 @@ if [ "$PUSH" = true ]; then
     else
       echo "no existing versions.ts pin found for ${name} — will bump"
     fi
+    for versioned in "${VERSIONED_TAG_IMAGES[@]}"; do
+      if [ "$name" = "$versioned" ]; then
+        docker tag "${name}:dev" "${REGISTRY}/${name}:2.0.0-${BUILD_NUMBER}"
+        docker push "${REGISTRY}/${name}:2.0.0-${BUILD_NUMBER}"
+      fi
+    done
     digest_args+=(--arg "shepherdjerred/${name}" "$digest")
   done
   # One JSON object {"shepherdjerred/<image>": "sha256:..."} via build

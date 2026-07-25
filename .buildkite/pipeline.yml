@@ -866,6 +866,7 @@ steps:
       bun --no-install scripts/scout-site-release.ts archive --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
       bun --no-install scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
       bun --no-install scripts/scout-site-release.ts reconcile-prod --dry-run
+      bun --no-install scripts/scout-site-release.ts tag-release --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
       bun --no-install scripts/promote-scout.ts --ci --dry-run
     retry: *retry
     plugins:
@@ -1192,6 +1193,43 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: scout-promotion
+
+  # Mint the versioned release-pair tag: after this build archived site
+  # version 2.0.0-<build> and deployed it to beta, retag the paired backend
+  # digest as ghcr.io/shepherdjerred/scout-for-lol:2.0.0-<build>. The tag is
+  # what the Renovate-managed prod pin discovers — tag name = archived site
+  # version, tag target = the backend content beta serves that site against —
+  # so every tag Renovate can offer is a complete, promotable pair. Ordered
+  # after images (paired digest known) AND sites (archive manifest uploaded);
+  # imagetools talks straight to the registry, so no dind sidecar is needed.
+  - label: ":label: scout tag release"
+    key: scout-tag-release
+    if: build.branch == pipeline.default_branch
+    depends_on: [images, sites]
+    cancel_on_build_failing: true
+    command: |
+      if ! bash .buildkite/scripts/ci-changed.sh site-scout; then
+        # No site archived this build. If the images step still recorded a
+        # scout digest (a backend-closure change outside the site lane), the
+        # mint is deferred: the commit-back merge touches versions.ts, which
+        # IS in the site lane, so the next build archives + mints the pair.
+        exit 0
+      fi
+      . .buildkite/scripts/toolchain.sh
+      bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
+      # SeaweedFS creds: asserts the version's archive manifest exists before
+      # minting (only archived versions may become promotable tags).
+      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
+      printf '%s' "$$GH_TOKEN" | docker login ghcr.io -u shepherdjerred --password-stdin
+      scout_digest=$$(buildkite-agent meta-data get image-digests | jq -r '."shepherdjerred/scout-for-lol" // empty')
+      bun --no-install scripts/scout-site-release.ts tag-release --version "2.0.0-$BUILDKITE_BUILD_NUMBER" $${scout_digest:+--digest "$$scout_digest"}
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: scout-tag-release
 
   # Reconcile the prod scout site to its versions.ts pin. Usually a no-op
   # (bucket marker == pin); after a promotion merge it syncs the archived
