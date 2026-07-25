@@ -9,7 +9,7 @@ Purpose and design: `packages/docs/plans/2026-07-25_liskov-cluster-join.md`
 `packages/docs/logs/2026-07-18_ci-node-purchase-sanity-check.md` (why the
 node exists: CI/prod failure-domain isolation). The node is tainted
 `ci=only:NoSchedule` from first boot; the K8s side of the contract lives in
-`src/cdk8s/src/misc/ci-node.ts`.
+`src/cdk8s/src/misc/nodes.ts`.
 
 ## Patches
 

@@ -3,7 +3,7 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Namespace } from "cdk8s-plus-31";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
-import { CI_NODE_TOLERATION } from "@shepherdjerred/homelab/cdk8s/src/misc/ci-node.ts";
+import { CI_NODE_TOLERATION } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 export function createOpenEBSApp(chart: Chart) {
   new Namespace(chart, `openebs-namespace`, {
     metadata: {

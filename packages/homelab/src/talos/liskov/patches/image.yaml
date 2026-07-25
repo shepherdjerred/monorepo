@@ -24,7 +24,7 @@ machine:
   # sneak on during boot. Only workloads that explicitly tolerate ci=only run
   # here (monitoring collectors, CSI node plugin, and the Buildkite step pods,
   # which also nodeSelector onto this host). See
-  # packages/homelab/src/cdk8s/src/misc/ci-node.ts and
+  # packages/homelab/src/cdk8s/src/misc/nodes.ts and
   # packages/docs/plans/2026-07-25_liskov-cluster-join.md.
   nodeTaints:
     ci: only:NoSchedule

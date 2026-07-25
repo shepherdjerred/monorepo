@@ -93,6 +93,9 @@ export function createVeleroApp(chart: Chart) {
           bucket: "homelab",
           default: true,
           provider: "aws",
+          // Deliberately a literal, NOT misc/nodes.ts's PROD_NODE_HOSTNAME:
+          // this is a historical R2 object prefix (cluster-global in
+          // practice), and renaming it would orphan existing backups.
           prefix: "torvalds/backups/",
           config: {
             region: "auto", // Cloudflare R2 uses "auto" region

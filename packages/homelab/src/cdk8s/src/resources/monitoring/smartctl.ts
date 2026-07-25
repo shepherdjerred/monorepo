@@ -9,7 +9,7 @@ import {
   Probe,
 } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
-import { ciNodeTaintedNode } from "@shepherdjerred/homelab/cdk8s/src/misc/ci-node.ts";
+import { ciNodeTaintedNode } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 
 export async function createSmartctlMonitoring(chart: Chart) {
   // Create ServiceAccount for the DaemonSet

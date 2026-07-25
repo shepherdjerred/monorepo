@@ -125,7 +125,7 @@ armor; optionally revisit RAPL PL1.
 
 ## Implementation notes (Phase 1, 2026-07-25)
 
-- Shared contract in `src/cdk8s/src/misc/ci-node.ts` (hostname, taint
+- Shared contract in `src/cdk8s/src/misc/nodes.ts` (hostname, taint
   key/value, toleration in both raw-k8s and cdk8s-plus forms).
 - Tolerations added: smartctl, nvme-metrics, zfs-zpool, zfs-snapshots
   (cdk8s-plus `scheduling.tolerate`), alloy (`controller.tolerations`),

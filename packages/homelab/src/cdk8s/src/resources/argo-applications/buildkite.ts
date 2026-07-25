@@ -13,7 +13,7 @@ import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/
 import {
   CI_NODE_HOSTNAME,
   CI_NODE_TOLERATION,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/ci-node.ts";
+} from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 
 // Exported so kueue-config.ts's `pods` nominalQuota can be asserted equal to
 // this in a test — the two are independent enforcement layers for the same

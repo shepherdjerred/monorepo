@@ -11,8 +11,8 @@ const readmeFile = join(scriptDir, "../../README.md");
 const NODES = [
   {
     name: "torvalds",
-    schematicFile: join(scriptDir, "image.yaml"),
-    patchFile: join(scriptDir, "patches/image.yaml"),
+    schematicFile: join(scriptDir, "torvalds/image.yaml"),
+    patchFile: join(scriptDir, "torvalds/patches/image.yaml"),
   },
   {
     name: "liskov",

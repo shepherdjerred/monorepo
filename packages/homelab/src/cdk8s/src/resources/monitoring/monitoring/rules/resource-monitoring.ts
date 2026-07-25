@@ -2,7 +2,7 @@ import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/gen
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "./shared.ts";
 import { getSystemHealthRuleGroups } from "./resource-monitoring-system.ts";
-import { CI_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/ci-node.ts";
+import { CI_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { BUILDKITE_JOB_POD_PATTERN } from "./buildkite.ts";
 
 // The dedicated CI node runs at high CPU by design (that's its job), so
@@ -399,7 +399,8 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
             description: escapePrometheusTemplate(
               "CI node {{ $labels.instance }} shows potential crypto mining activity: sustained high CPU with unusual network egress while no Buildkite job is running",
             ),
-            summary: "Potential crypto mining activity on the CI node while idle",
+            summary:
+              "Potential crypto mining activity on the CI node while idle",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             `((100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle", ${CI_NODE_ONLY}}[5m])) * 100)) > 90 and rate(node_network_transmit_bytes_total{${CI_NODE_ONLY}}[5m]) > 1048576) and on () ${NO_BUILDKITE_JOB_RUNNING}`,

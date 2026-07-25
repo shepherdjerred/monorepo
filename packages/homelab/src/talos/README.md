@@ -4,11 +4,13 @@ This directory contains Talos machine configuration patches and tooling for the 
 
 ## Directory Structure
 
-- `patches/` - Machine configuration patches (**torvalds**, the control-plane node)
-- `liskov/` - The CI-only worker node: its Image Factory schematic (`liskov/image.yaml`), patches (`liskov/patches/`), and join runbook (`liskov/README.md`)
-- `pods/` - Static pod definitions
-- `image.yaml` - Talos image configuration (torvalds schematic)
-- `update-image-id.ts` - Script to check/update the pinned installer references for **all** nodes (torvalds + liskov); `bun run check:talos` runs it in `--check` mode
+Each node owns a symmetric directory — `<node>/image.yaml` (Image Factory
+schematic) + `<node>/patches/` (machine config patches):
+
+- `torvalds/` - Control-plane node (Intel 14900K; runs all prod)
+- `liskov/` - CI-only worker node (AMD 9950X; join runbook in `liskov/README.md`)
+- `pods/` - Static pod definitions (shared)
+- `update-image-id.ts` - Script to check/update the pinned installer references for **all** nodes; `bun run check:talos` runs it in `--check` mode
 
 ## Patches
 
@@ -84,11 +86,11 @@ Patches are typically applied during cluster initialization or updates. To apply
 ```bash
 # Apply all patches
 talosctl patch machineconfig \
-  --patch @src/talos/patches/kubelet.yaml \
-  --patch @src/talos/patches/zfs.yaml \
-  --patch @src/talos/patches/interface.yaml \
-  --patch @src/talos/patches/scheduling.yaml \
-  --patch @src/talos/patches/tailscale.yaml
+  --patch @src/talos/torvalds/patches/kubelet.yaml \
+  --patch @src/talos/torvalds/patches/zfs.yaml \
+  --patch @src/talos/torvalds/patches/interface.yaml \
+  --patch @src/talos/torvalds/patches/scheduling.yaml \
+  --patch @src/talos/torvalds/patches/tailscale.yaml
 
 # Reboot to apply changes
 talosctl reboot

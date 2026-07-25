@@ -141,7 +141,7 @@ NanoKVM console works via plain EFI framebuffer).
 - Fix (commit 310a2fcc): added `PotentialCryptoMiningCiNode` to
   `resource-monitoring.ts` — same CPU + egress thresholds scoped to
   `node="liskov"`, gated on `absent(kube_pod_status_phase{namespace="buildkite",
-  pod=~<job-pod-pattern>, phase="Running"} == 1)`. Every Buildkite step pod is
+pod=~<job-pod-pattern>, phase="Running"} == 1)`. Every Buildkite step pod is
   pinned to liskov, so "no job running" = CI node should be idle; sustained
   mining-like load for 30m in that window pages critical. Distinguishes
   legitimate CI from an attacker instead of blanket-excluding the node.
@@ -159,6 +159,6 @@ NanoKVM console works via plain EFI framebuffer).
 ### Caveats
 
 - The idle-gate assumes all Buildkite job pods run on liskov (true today via
-  nodeSelector). A miner running *concurrently* with a real build is not
+  nodeSelector). A miner running _concurrently_ with a real build is not
   caught by this rule; it targets the sustained-idle attack the reviewer
   flagged. If CI ever runs off-liskov, revisit the gate.

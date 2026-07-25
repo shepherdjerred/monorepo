@@ -137,7 +137,7 @@ When adding a new Kubernetes service/chart, you MUST complete ALL of these steps
 The Talos cluster has **two nodes** with strictly separated roles:
 
 - **torvalds** — the control-plane node and the ONLY node running prod (media, home automation, monitoring, storage for all prod PVCs). Its ZFS PVCs are node-local, so prod stateful workloads cannot move.
-- **liskov** — a CI-only worker (Ryzen 9950X), tainted `ci=only:NoSchedule` from its Talos machine config (`src/talos/liskov/`). Only Buildkite step pods (which also nodeSelector onto it) and per-node system/observability DaemonSets (via tolerations) run there. Shared constants: `src/cdk8s/src/misc/ci-node.ts`.
+- **liskov** — a CI-only worker (Ryzen 9950X), tainted `ci=only:NoSchedule` from its Talos machine config (`src/talos/liskov/`). Only Buildkite step pods (which also nodeSelector onto it) and per-node system/observability DaemonSets (via tolerations) run there. Shared constants: `src/cdk8s/src/misc/nodes.ts`.
 
 Implications when debugging or testing in-cluster:
 

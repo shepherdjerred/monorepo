@@ -11,7 +11,7 @@ import {
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
-import { ciNodeTaintedNode } from "@shepherdjerred/homelab/cdk8s/src/misc/ci-node.ts";
+import { ciNodeTaintedNode } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 
 const CURRENT_FILENAME = fileURLToPath(import.meta.url);
 const CURRENT_DIRNAME = path.dirname(CURRENT_FILENAME);
