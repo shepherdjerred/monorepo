@@ -224,21 +224,6 @@ export const prematchLoadingScreenGeneratedTotal = new Counter({
 });
 
 /**
- * Loading-screen images that fell back to base skin (skin 0) because the
- * requested skin's JPG was missing on disk. Most commonly triggered when
- * Riot ships a new skin between `update-data-dragon` runs.
- *
- * A non-zero rate is informational, not an error. Sustained or rapidly
- * climbing rate means it's time to refresh assets.
- */
-export const prematchLoadingScreenSkinFallbackTotal = new Counter({
-  name: "prematch_loading_screen_skin_fallback_total",
-  help: "Loading-screen images that fell back to base skin (skin 0) because the requested skin's JPG was missing on disk.",
-  labelNames: ["champion", "requested_skin"] as const,
-  registers: [registry],
-});
-
-/**
  * Loading screen generation duration in seconds
  */
 export const prematchLoadingScreenDurationSeconds = new Histogram({
@@ -469,8 +454,7 @@ export const reportsFailedTotal = new Counter({
  * `setItemMissHandler`.
  *
  * A non-zero rate is informational, not an error. Sustained or rapidly
- * climbing rate means it's time to refresh assets — mirrors the
- * `prematch_loading_screen_skin_fallback_total` pattern.
+ * climbing rate means it's time to refresh assets.
  */
 export const scoutItemCacheMissTotal = new Counter({
   name: "scout_item_cache_miss_total",

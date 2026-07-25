@@ -30,9 +30,7 @@ import { savePrematchImageToS3, savePrematchSvgToS3 } from "#src/storage/s3.ts";
 import {
   prematchLoadingScreenGeneratedTotal,
   prematchLoadingScreenDurationSeconds,
-  prematchLoadingScreenSkinFallbackTotal,
 } from "#src/metrics/index.ts";
-import type { SkinFallbackEvent } from "@scout-for-lol/data/index.ts";
 
 const logger = createLogger("prematch-notification");
 
@@ -200,25 +198,9 @@ export async function sendPrematchNotification(
       region,
     );
 
-    // Observability hook for the runtime defense-in-depth fallback in
-    // getChampionLoadingImageBase64: log + meter when a participant's
-    // requested skin JPG is missing on disk and we silently render with
-    // skin 0 instead. Logged at warn (not Sentry) because it's an expected
-    // condition during the small window between Riot shipping a new skin
-    // and the next `update-data-dragon` run.
-    const onSkinFallback = (event: SkinFallbackEvent): void => {
-      prematchLoadingScreenSkinFallbackTotal.inc({
-        champion: event.championName,
-        requested_skin: event.requestedSkin.toString(),
-      });
-      logger.warn(
-        `[sendPrematchNotification] 🎨 Skin fallback for ${event.championName} skin ${event.requestedSkin.toString()} (game ${gameId}) — using base skin art instead. Run update-data-dragon to refresh.`,
-      );
-    };
-
     const [image, svg] = await Promise.all([
-      loadingScreenToImage(loadingScreenData, { onSkinFallback }),
-      loadingScreenToSvg(loadingScreenData, { onSkinFallback }),
+      loadingScreenToImage(loadingScreenData),
+      loadingScreenToSvg(loadingScreenData),
     ]);
 
     const attachmentName = `loading-screen-${gameId}.png`;

@@ -40,7 +40,7 @@ export async function validateChampionAssets(): Promise<void> {
     }
 
     try {
-      await validateChampionLoadingImage(key, 0);
+      await validateChampionLoadingImage(key);
     } catch (error) {
       failures.push(error instanceof Error ? error : new Error(String(error)));
     }
@@ -54,7 +54,7 @@ export async function validateChampionAssets(): Promise<void> {
     }
 
     try {
-      await validateChampionLoadingImage(id, 0);
+      await validateChampionLoadingImage(id);
     } catch (error) {
       failures.push(error instanceof Error ? error : new Error(String(error)));
     }

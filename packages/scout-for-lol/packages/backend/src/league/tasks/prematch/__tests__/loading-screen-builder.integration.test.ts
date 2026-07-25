@@ -113,11 +113,6 @@ describe("buildLoadingScreenData with real spectator payload", () => {
     // Check bans (9 valid bans, 1 with championId=-1 filtered out)
     expect(parsed.bans.length).toBeGreaterThanOrEqual(9);
 
-    // Prematch loading screens intentionally use default champion skins.
-    expect(parsed.participants.map((p) => p.skinNum)).toEqual(
-      Array.from({ length: parsed.participants.length }, () => 0),
-    );
-
     // Snapshot the full structure
     expect(parsed).toMatchSnapshot();
   });
