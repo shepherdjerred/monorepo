@@ -364,7 +364,7 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
             summary: "Potential crypto mining activity detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            '(100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 90 and rate(node_network_transmit_bytes_total[5m]) > 1048576', // High CPU + network activity
+            `(100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle", ${NOT_CI_NODE}}[5m])) * 100)) > 90 and rate(node_network_transmit_bytes_total{${NOT_CI_NODE}}[5m]) > 1048576`, // High CPU + network activity (CI node excluded — it runs hot by design)
           ),
           for: "30m",
           labels: { severity: "critical" },
