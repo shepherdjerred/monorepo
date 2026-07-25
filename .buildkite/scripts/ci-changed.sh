@@ -189,17 +189,6 @@ case "$lane" in
       .dockerignore
     )
     ;;
-  scout-promotion)
-    lane_paths=(
-      packages/scout-for-lol
-      packages/astro-opengraph-images
-      packages/llm-models
-      packages/homelab/src/cdk8s/src/versions.ts
-      scripts/package.json
-      scripts/promote-scout.ts
-      scripts/lib
-    )
-    ;;
   scout-reconcile)
     lane_paths=(
       packages/scout-for-lol

@@ -21,14 +21,14 @@
  *                                    the live beta bucket (beta stays
  *                                    continuous — it is the canary), then
  *                                    write the `.release-version` marker.
- *   reconcile-prod                   Compare the `scout-for-lol-site/prod` pin
- *                                    in versions.ts against the prod bucket's
+ *   reconcile-prod                   Compare the site version derived from the
+ *                                    `shepherdjerred/scout-for-lol/prod` pin's
+ *                                    tag portion against the prod bucket's
  *                                    `.release-version` marker; on mismatch,
  *                                    sync the pinned archived artifact to the
  *                                    prod bucket (no rebuild — byte-identical
  *                                    to what beta validated). No-op when the
- *                                    marker matches or the pin is the
- *                                    "unpromoted" rollout sentinel.
+ *                                    marker matches.
  *   tag-release --version 2.0.0-<n>  Mint the versioned GHCR tag
  *                                    ghcr.io/shepherdjerred/scout-for-lol:<n>
  *                                    pointing at the paired backend digest
@@ -40,9 +40,10 @@
  *                                    archive manifest exists, so every
  *                                    discoverable tag is promotable.
  *
- * Promotion = scripts/promote-scout.ts (one PR moving the site pin AND the
- * backend image pin together). Rollback = git-revert the promotion commit; the
- * next main build reconciles the bucket back.
+ * Promotion = merging the Renovate PR that bumps the prod image pin (each
+ * minted 2.0.0-<n> tag is an atomic backend+site pair — see tag-release).
+ * Rollback = git-revert the promotion commit, or hand-pin any older minted
+ * tag; the next main build reconciles the bucket back.
  *
  * All subcommands accept --dry-run (deploy-site.ts semantics: print the plan;
  * run `aws --dryrun` only when credentials are present).
@@ -87,8 +88,6 @@ const PROD_PIXEL_ENV_VARS = [
   "PUBLIC_REDDIT_PIXEL_ID",
 ];
 const VERSION_PATTERN = /^2\.0\.0-\d+$/;
-/** Pre-first-promotion sentinel value of the site pin (see versions.ts). */
-const UNPROMOTED_SENTINEL = "unpromoted";
 
 /** Repo root = two levels up from this file (scripts/scout-site-release.ts). */
 function repoRoot(): string {
@@ -328,19 +327,17 @@ async function deployBeta(version: string, dryRun: boolean): Promise<void> {
 // ---------------------------------------------------------------------------
 
 async function reconcileProd(dryRun: boolean): Promise<void> {
-  const pin = versions["scout-for-lol-site/prod"];
-  console.log(`--- reconcile-prod (pin: ${pin})`);
+  // The prod site version is the tag portion of the Renovate-managed prod
+  // image pin: minted tags are atomic backend+site pairs, so one pin moves
+  // both stages' halves together.
+  const imagePin = versions["shepherdjerred/scout-for-lol/prod"];
+  const pin = imagePin.split("@")[0];
+  console.log(`--- reconcile-prod (pin: ${pin ?? "<empty>"})`);
 
-  if (pin === UNPROMOTED_SENTINEL) {
-    console.log(
-      "site pin is the pre-first-promotion sentinel — leaving the prod bucket untouched. " +
-        "Run scripts/promote-scout.ts to promote a beta-validated version.",
-    );
-    return;
-  }
-  if (!VERSION_PATTERN.test(pin)) {
+  if (pin === undefined || !VERSION_PATTERN.test(pin)) {
     throw new Error(
-      `scout-for-lol-site/prod pin ${pin} matches neither ${VERSION_PATTERN.toString()} nor "${UNPROMOTED_SENTINEL}"`,
+      `shepherdjerred/scout-for-lol/prod pin "${imagePin}" has no tag matching ${VERSION_PATTERN.toString()} — ` +
+        `pin a minted release tag (tag-release) so the site version can be derived`,
     );
   }
   requireCredsForLiveRun(dryRun);

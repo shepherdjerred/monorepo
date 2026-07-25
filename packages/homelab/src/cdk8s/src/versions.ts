@@ -152,18 +152,16 @@ const versions = {
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
     "2.0.0-6088@sha256:cb3a267d297995e3bfdf106eb48d9f43afdedca1d3ff8d1211dae95f5ecfbd0e",
-  // not managed by renovate — promoted with scripts/promote-scout.ts, in
-  // lockstep with scout-for-lol-site/prod (a Renovate bump here would move the
-  // prod backend without the matching site content and reintroduce tRPC
-  // contract skew).
+  // Prod promotion = merging the Renovate PR for this pin. Each 2.0.0-<n>
+  // tag is minted by the scout-tag-release CI step only after site version
+  // <n> is archived, pointing at the backend digest beta serves it against —
+  // so every tag Renovate can offer is a complete backend+site pair. The
+  // scout-prod-reconcile step derives the prod site version from this pin's
+  // tag portion. Only ever pin a minted tag (semver caveat: if the release
+  // base moves off 2.0.0-, this pin needs one manual edit).
+  // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
-    "2.0.0-5991@sha256:e95d14b56b0b2a7369b3aaebb98c812f3fb285d79d63895997b9c3cf10333e81",
-  // not managed by renovate — promoted with scripts/promote-scout.ts, in
-  // lockstep with shepherdjerred/scout-for-lol/prod. Version of the archived
-  // site artifact (scout-site-releases bucket) the prod bucket is synced from
-  // by the scout-prod-reconcile CI step. "unpromoted" = pre-first-promotion
-  // sentinel: reconcile logs and exits without touching the prod bucket.
-  "scout-for-lol-site/prod": "2.0.0-6017",
+    "2.0.0-6088@sha256:cb3a267d297995e3bfdf106eb48d9f43afdedca1d3ff8d1211dae95f5ecfbd0e",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
     "2.0.0-6088@sha256:b8cd61a0783daa1cccaecc10978986ece26fa0c181f7a8cc23837600a64fa0a1",

@@ -1,13 +1,21 @@
 ---
 id: plan-2026-07-19-scout-lockstep-stage-deploys
 type: plan
-status: in-progress
+status: complete
 board: true
 verification: agent
 disposition: active
 ---
 
 # Scout-for-LoL: Lockstep (In-Step) Stage Deploys
+
+> **Superseded (2026-07-25):** the promotion mechanism described here
+> (`scripts/promote-scout.ts` + the standing `scout-promote-pending` PR) was
+> replaced by Renovate-managed promotion over CI-minted release-pair tags —
+> see `packages/docs/plans/2026-07-25_scout-prod-renovate-promotion.md`. The
+> rest of the lockstep model (archive / deploy-beta / reconcile-prod, the
+> beta marker, the manifest completeness certificate) shipped and remains in
+> force.
 
 ## Context
 
@@ -190,4 +198,4 @@ undefined-safe (`data/src/model/subscription-filter.ts:111`, `=== null` →
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `Scout-for-LoL: Lockstep (In-Step) Stage Deploys`.
+- [x] Complete and verify the work described in `Scout-for-LoL: Lockstep (In-Step) Stage Deploys`. (Shipped in PR #1567; the promotion mechanism was later replaced — see the supersession note at the top.)
