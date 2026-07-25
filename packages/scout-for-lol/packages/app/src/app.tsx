@@ -4,7 +4,10 @@ import { GuildPicker } from "#src/routes/guild-picker.tsx";
 import { GuildSubscriptions } from "#src/routes/guild-subscriptions.tsx";
 import { GuildAudit } from "#src/routes/guild-audit.tsx";
 import { GuildAccess } from "#src/routes/guild-access.tsx";
-import { GuildWorkspace } from "#src/routes/guild-workspace.tsx";
+import {
+  GuildSectionIndex,
+  GuildWorkspace,
+} from "#src/routes/guild-workspace.tsx";
 import { PlayerList } from "#src/routes/player-list.tsx";
 import { PlayerDetail } from "#src/routes/player-detail.tsx";
 import { CompetitionList } from "#src/routes/competition-list.tsx";
@@ -34,7 +37,7 @@ export function App() {
             <Route path="/welcome" element={<OnboardingWizard />} />
             <Route path="/installed" element={<InstallLanding />} />
             <Route path="/g/:guildId" element={<GuildWorkspace />}>
-              <Route index element={<Navigate to="subscriptions" replace />} />
+              <Route index element={<GuildSectionIndex />} />
               <Route path="subscriptions" element={<GuildSubscriptions />} />
               <Route path="players" element={<PlayerList />} />
               <Route path="players/:alias" element={<PlayerDetail />} />

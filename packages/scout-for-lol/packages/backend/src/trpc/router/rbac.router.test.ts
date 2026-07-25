@@ -192,7 +192,91 @@ describe("RBAC guild-permission gate", () => {
     });
     expect(audits).toHaveLength(1);
   });
+});
 
+describe("roles.set privilege boundaries", () => {
+  test("roles.set: non-root cannot self-escalate beyond permissions they hold", async () => {
+    await reset();
+    asMember();
+    // A caller holding ONLY roles:grant must not be able to hand themselves the
+    // Admin bundle (privilege escalation).
+    await seedGrants(member, [{ resource: "roles", action: "grant" }]);
+    const caller = trpc.authedCaller(member);
+    await expect(
+      caller.roles.set({
+        guildId,
+        discordUserId: member,
+        permissions: permissionsForRole("admin"),
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    // Nothing escalated: they still hold only the single grant.
+    const rows = await trpc.prisma.serverPermission.findMany({
+      where: { serverId: guildId, discordUserId: member },
+    });
+    expect(rows.map((r) => r.permission)).toEqual([
+      permissionKey({ resource: "roles", action: "grant" }),
+    ]);
+  });
+
+  test("roles.set: non-root without roles:revoke cannot strip another member's grants", async () => {
+    await reset();
+    asMember();
+    await seedGrants(member, [{ resource: "roles", action: "grant" }]);
+    await seedGrants(target, [{ resource: "subscriptions", action: "read" }]);
+    const caller = trpc.authedCaller(member);
+    await expect(
+      caller.roles.set({ guildId, discordUserId: target, permissions: [] }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    // The target's grant survives.
+    const rows = await trpc.prisma.serverPermission.findMany({
+      where: { serverId: guildId, discordUserId: target },
+    });
+    expect(rows).toHaveLength(1);
+  });
+
+  test("roles.set: actor may delegate a held permission, then revoke it with roles:revoke", async () => {
+    await reset();
+    asMember();
+    await seedGrants(member, [
+      { resource: "roles", action: "grant" },
+      { resource: "roles", action: "revoke" },
+      { resource: "subscriptions", action: "read" },
+    ]);
+    const caller = trpc.authedCaller(member);
+
+    // Grant a permission the actor holds → allowed.
+    await caller.roles.set({
+      guildId,
+      discordUserId: target,
+      permissions: [{ resource: "subscriptions", action: "read" }],
+    });
+    let rows = await trpc.prisma.serverPermission.findMany({
+      where: { serverId: guildId, discordUserId: target },
+    });
+    expect(rows.map((r) => r.permission)).toEqual([
+      permissionKey({ resource: "subscriptions", action: "read" }),
+    ]);
+
+    // Remove it → allowed because the actor holds roles:revoke.
+    await caller.roles.set({ guildId, discordUserId: target, permissions: [] });
+    rows = await trpc.prisma.serverPermission.findMany({
+      where: { serverId: guildId, discordUserId: target },
+    });
+    expect(rows).toHaveLength(0);
+
+    // Grant + revoke were audited distinctly.
+    const grants = await trpc.prisma.auditLog.findMany({
+      where: { serverId: guildId, action: "ROLE_GRANT" },
+    });
+    const revokes = await trpc.prisma.auditLog.findMany({
+      where: { serverId: guildId, action: "ROLE_REVOKE" },
+    });
+    expect(grants).toHaveLength(1);
+    expect(revokes).toHaveLength(1);
+  });
+});
+
+describe("RBAC guard invariants", () => {
   test("self-lockout: last role-admin cannot clear their own grant", async () => {
     await reset();
     asMember();

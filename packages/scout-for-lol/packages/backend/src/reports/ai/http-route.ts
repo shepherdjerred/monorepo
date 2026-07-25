@@ -12,7 +12,7 @@ import {
 } from "@scout-for-lol/data";
 import configuration from "#src/configuration.ts";
 import { createContext, type Context } from "#src/trpc/context.ts";
-import { assertGuildAdmin } from "#src/trpc/guild-guard.ts";
+import { resolveGuildPermissions } from "#src/trpc/guild-permission.ts";
 import { streamReportQueryAgent } from "#src/reports/ai/report-query-agent.ts";
 import {
   getReportAiQuotaStatus,
@@ -208,7 +208,17 @@ async function authenticateReportAiRequest(
     const ctx = await createContext(request);
     const web = readWebCsrfContext(ctx);
     assertWebCsrf(web.webSession);
-    await assertGuildAdmin({ user: web.user, guildId: input.guildId });
+    // The AI editor drafts/edits a report query, so gate it on reports:create —
+    // the same capability the ReportForm draft flow requires. Using
+    // assertGuildAdmin here would 403 every delegated Manager the query claims
+    // can use the editor.
+    const permissions = await resolveGuildPermissions(web.user, input.guildId);
+    if (permissions.cannot("reports", "create")) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Missing permission reports:create",
+      });
+    }
     return {
       ok: true,
       identity: {

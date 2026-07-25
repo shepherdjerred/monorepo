@@ -108,9 +108,23 @@ export const rolesRouter = router({
     }),
 
   /**
-   * Replace a member's Scout grants with `permissions` (idempotent "set role").
-   * The client expands a preset via `permissionsForRole`, or sends a hand-picked
+   * Set a member's Scout grants to `permissions` (idempotent "set role"). The
+   * client expands a preset via `permissionsForRole`, or sends a hand-picked
    * ("custom") set.
+   *
+   * The requested set is diffed against the target's current grants inside the
+   * transaction, and each side is bounded so `roles:grant` alone cannot escalate
+   * privileges or silently revoke:
+   *
+   * - **Additions** — a non-root actor may only grant permissions they hold
+   *   themselves. This closes self-escalation (a `roles:grant`-only caller
+   *   cannot hand themselves — or anyone — the Admin bundle).
+   * - **Removals** — require `roles:revoke` for a non-root actor. Dropping a
+   *   member to Viewer/`[]` is a revoke, not a grant.
+   * - **Root** (Discord admin/owner) may delegate or redact any permission.
+   *
+   * Grants and revocations are audited as distinct `ROLE_GRANT` / `ROLE_REVOKE`
+   * entries.
    */
   set: guildMutationProcedure("roles", "grant")
     .input(
@@ -120,49 +134,118 @@ export const rolesRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Dedupe to canonical keys.
-      const keys = [...new Set(input.permissions.map((p) => permissionKey(p)))];
+      // Dedupe the requested set to canonical keys (preserving the Permission
+      // objects for authorization/audit).
+      const desired = new Map<string, Permission>();
+      for (const p of input.permissions) desired.set(permissionKey(p), p);
+      const desiredKeys = new Set(desired.keys());
+
       await assertNotSelfLockout({
         isRoot: ctx.permissions.isRoot,
         guildId: input.guildId,
         actorDiscordId: ctx.user.discordId,
         targetDiscordId: input.discordUserId,
-        keepsGrant: keys.includes(GRANT_KEY),
+        keepsGrant: desiredKeys.has(GRANT_KEY),
       });
+
       const now = new Date();
       await prisma.$transaction(async (tx) => {
-        await tx.serverPermission.deleteMany({
+        // Read current grants inside the txn for a consistent diff.
+        const currentRows = await tx.serverPermission.findMany({
           where: {
             serverId: input.guildId,
             discordUserId: input.discordUserId,
           },
+          select: { permission: true },
         });
-        if (keys.length > 0) {
-          await tx.serverPermission.createMany({
-            data: keys.map((key) => ({
+        const currentKeys = new Set(currentRows.map((r) => r.permission));
+
+        const additions = [...desired.values()].filter(
+          (p) => !currentKeys.has(permissionKey(p)),
+        );
+        const removalKeys = [...currentKeys].filter(
+          (key) => !desiredKeys.has(key),
+        );
+
+        // Privilege & revoke boundaries (root bypasses — it holds everything).
+        if (!ctx.permissions.isRoot) {
+          const escalating = additions.filter((p) =>
+            ctx.permissions.cannot(p.resource, p.action),
+          );
+          if (escalating.length > 0) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: `You can only grant permissions you hold yourself: ${escalating
+                .map((p) => permissionKey(p))
+                .join(", ")}`,
+            });
+          }
+          if (
+            removalKeys.length > 0 &&
+            ctx.permissions.cannot("roles", "revoke")
+          ) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message:
+                "Removing a member's grants requires the roles:revoke permission.",
+            });
+          }
+        }
+
+        if (removalKeys.length > 0) {
+          await tx.serverPermission.deleteMany({
+            where: {
               serverId: input.guildId,
               discordUserId: input.discordUserId,
-              permission: key,
+              permission: { in: removalKeys },
+            },
+          });
+        }
+        if (additions.length > 0) {
+          await tx.serverPermission.createMany({
+            data: additions.map((p) => ({
+              serverId: input.guildId,
+              discordUserId: input.discordUserId,
+              permission: permissionKey(p),
               grantedBy: ctx.user.discordId,
               grantedAt: now,
             })),
           });
         }
-        await recordAudit(
-          {
-            action: "ROLE_GRANT",
-            actorDiscordId: ctx.user.discordId,
-            serverId: input.guildId,
-            payload: {
-              targetUserId: input.discordUserId,
-              role: deriveRole(createPermissionSet(input.permissions)),
-              permissions: keys,
+
+        if (additions.length > 0) {
+          await recordAudit(
+            {
+              action: "ROLE_GRANT",
+              actorDiscordId: ctx.user.discordId,
+              serverId: input.guildId,
+              payload: {
+                targetUserId: input.discordUserId,
+                role: deriveRole(createPermissionSet([...desired.values()])),
+                permissions: additions.map((p) => permissionKey(p)),
+              },
+              ipAddress: ctx.webSession.ipAddress,
+              userAgent: ctx.webSession.userAgent,
             },
-            ipAddress: ctx.webSession.ipAddress,
-            userAgent: ctx.webSession.userAgent,
-          },
-          tx,
-        );
+            tx,
+          );
+        }
+        if (removalKeys.length > 0) {
+          await recordAudit(
+            {
+              action: "ROLE_REVOKE",
+              actorDiscordId: ctx.user.discordId,
+              serverId: input.guildId,
+              payload: {
+                targetUserId: input.discordUserId,
+                permissions: removalKeys,
+              },
+              ipAddress: ctx.webSession.ipAddress,
+              userAgent: ctx.webSession.userAgent,
+            },
+            tx,
+          );
+        }
       });
       return { ok: true } as const;
     }),
