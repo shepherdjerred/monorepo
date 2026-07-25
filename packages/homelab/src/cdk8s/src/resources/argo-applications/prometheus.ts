@@ -304,6 +304,16 @@ export async function createPrometheusApp(chart: Chart) {
               ],
             },
             {
+              // Silence KubeJobFailed for Buildkite CI jobs — a failed PR build is a
+              // normal outcome, already surfaced in Buildkite and as a GitHub commit
+              // status. Job failures in every other namespace still page.
+              receiver: "null",
+              matchers: [
+                'alertname = "KubeJobFailed"',
+                'namespace = "buildkite"',
+              ],
+            },
+            {
               // Route critical and warning alerts to PagerDuty
               receiver: "pagerduty",
               matchers: ['severity =~ "critical|warning"'],
