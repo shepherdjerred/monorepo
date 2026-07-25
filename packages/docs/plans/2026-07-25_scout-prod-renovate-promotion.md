@@ -11,9 +11,9 @@ disposition: active
 
 ## Remaining
 
-- [ ] PR 1 merged: versioned tag minting (scout `tag-release` step + starlight bake tags)
+- [ ] PR 1 (#1630) merged: versioned tag minting (scout `tag-release` step + starlight bake tags)
 - [ ] Post-PR-1 check: `docker buildx imagetools inspect ghcr.io/shepherdjerred/scout-for-lol:2.0.0-<merge build>` resolves and matches the beta pin digest
-- [ ] PR 2 merged: Renovate annotation on the prod pin, site pin deleted, promote-scout removed, docs updated
+- [ ] PR 2 (#1632, draft, stacked on #1630) merged: Renovate annotation on the prod pin, site pin deleted, promote-scout removed, docs updated. Merging it promotes prod 2.0.0-6017/5991 → 2.0.0-6088 (the beta pair at authoring time)
 - [ ] Close the stale `scout-promote-pending` PR (#1617 or successor) and delete its branch after PR 2 merges
 - [ ] `chezmoi apply` after PR 2 merges (version-management skill changed in dotfiles)
 - [ ] Renovate PR observed for `shepherdjerred/scout-for-lol/prod` after the next beta-advancing build; merge = promotion verified via `/.release-version`
@@ -88,3 +88,21 @@ Verify after merge: `docker buildx imagetools inspect ghcr.io/shepherdjerred/sco
 2. PR 2 merge → Dependency Dashboard lists the dep; after next beta-advancing build, Renovate PR appears (`2.0.0-A@sha → 2.0.0-B@sha`).
 3. Merge the Renovate PR → pod image digest updates via ArgoCD; `curl https://scout-for-lol.com/.release-version` equals the promoted tag and matches beta's value as of that build. Starlight: Renovate PR appears for its prod pin once a content-changed build pushes a tag.
 4. `bun run verify -- --affected` green on both PRs.
+
+## Session Log — 2026-07-25
+
+### Done
+
+- PR 1 [#1630](https://github.com/shepherdjerred/monorepo/pull/1630) (`feature/scout-renovate-promotion`): `tag-release` subcommand in `scripts/scout-site-release.ts` (archive-gated mint of `ghcr.io/shepherdjerred/scout-for-lol:2.0.0-<build>` with a rootfs-layer content-currency guard on the beta-pin fallback), `scout-tag-release` pipeline step, `docker-bake.hcl`/`.dockerignore` added to the `sites`/`site-scout` lanes, versioned starlight tag push in `bake-images.sh`, `sites-pr` dry-run rehearsal.
+- PR 2 [#1632](https://github.com/shepherdjerred/monorepo/pull/1632) (draft, stacked): Renovate annotation restored on `shepherdjerred/scout-for-lol/prod` (cutover value = beta pair `2.0.0-6088`), `scout-for-lol-site/prod` pin deleted (reconcile derives the site version from the image pin's tag), `scripts/promote-scout.ts` + `scout-promotion` step/lane/tests/validator entry deleted, scout AGENTS.md + version-management skill rewritten (live `~/.agents/skills` copy synced), lockstep plan archived to `archive/superseded/` with path refs fixed, renovate.json rule description updated.
+- `bun run verify -- --affected` green on both branches; pre-commit hooks passed on both commits.
+
+### Remaining
+
+- See `## Remaining` above (post-merge verification: first minted tag, Renovate PR appearing, promotion via merge, closing stale #1617, `chezmoi apply`).
+
+### Caveats
+
+- The `2.0.0-6088` GHCR tag does not exist yet (tags mint only from PR 1's merge build onward) — merging #1632 is still safe because reconcile needs the site archive (which exists), not the tag; the pin's digest handles the image pull. Renovate offers the first minted tag as soon as one exists.
+- Renovate `versioning=semver` orders `2.0.0-<n>` prereleases numerically and permits prerelease→prerelease bumps only within `2.0.0`; if the release base ever moves off `2.0.0-`, the pin needs one manual edit (noted in versions.ts).
+- The staleness guard skips minting for a build when the committed beta pin is content-stale vs `:latest` (pending commit-back); that build's version is simply never promotable — converges next build.
