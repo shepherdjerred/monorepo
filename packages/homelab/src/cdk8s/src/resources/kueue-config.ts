@@ -5,18 +5,20 @@ import { BUILDKITE_MAX_IN_FLIGHT } from "@shepherdjerred/homelab/cdk8s/src/resou
 /**
  * Creates Kueue resource management configuration for the Buildkite namespace.
  *
- * Caps the buildkite namespace at 12 CPU / 20Gi of requests. Sized to measured
+ * Caps the buildkite namespace at 12 CPU / 28Gi of requests. Sized to measured
  * headroom on 2026-07-22: non-buildkite namespaces commit only 13.2 CPU / 45Gi
  * of the node's 27 CPU / 73Gi allocatable, leaving ~13.8 CPU / 28Gi schedulable
- * for CI. 12 CPU / 20Gi stays comfortably inside that with margin against the
- * 8Gi soft-eviction floor (the freeze incidents earned that caution). Combined
- * with the right-sized per-step requests in .buildkite/pipeline.yml (a heavy
- * privileged pod costs ~1.75 CPU / 3.5Gi, vs 3 CPU / 8Gi before), this admits
- * ~6 concurrent heavy pods instead of 2 — the fix for the admission starvation
- * that made CI p50 22m / p90 124m in the two weeks before this change (see
- * packages/docs/logs/2026-07-22_ci-capacity-analysis.md). Raising further is a
- * one-line bump once the freeze canaries (node MemAvailable, ZfsArcHitRateLow,
- * eviction events) stay quiet under the new load.
+ * for CI. Memory sits at the full 28Gi headroom because the CI workspace
+ * volume is memory-backed now (agent-stack `workspace-volume` tmpfs — see
+ * argo-applications/buildkite.ts): per-pod requests grew to absorb checkout +
+ * install bytes as RAM (verify 7Gi + dind 1.5Gi; other privileged 3Gi + 1.5Gi;
+ * light 1.5Gi), trading admission width for near-zero NVMe writes from those
+ * pods. This still admits verify plus ~3-4 other heavy pods concurrently, vs
+ * the pre-2026-07-22 starvation of 2 (see
+ * packages/docs/logs/2026-07-22_ci-capacity-analysis.md). The 8Gi
+ * soft-eviction floor stays armed (the freeze incidents earned that caution);
+ * if the canaries (node MemAvailable, ZfsArcHitRateLow, eviction events) fire,
+ * the quota and the workspace sizeLimit are one-line back-offs.
  *
  * Jobs exceeding the quota are suspended (not rejected), eliminating
  * FailedCreate event storms.
@@ -81,7 +83,7 @@ export function createKueueConfig(chart: Chart) {
                 },
                 {
                   name: "memory",
-                  nominalQuota: "20Gi",
+                  nominalQuota: "28Gi",
                 },
                 {
                   name: "pods",

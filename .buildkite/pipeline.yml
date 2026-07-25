@@ -37,17 +37,15 @@ common:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
               resources:
-                # Requests right-sized to measured p90 usage (step container
-                # p90 0.96 CPU / 1.5Gi over 7d, 2026-07-22); limits stay high
-                # so a cold-cache burst still gets real CPU. Halving requests
-                # (was 2/4Gi) is what lets Kueue admit ~6 heavy pods at once
-                # instead of 2 — see kueue-config.ts and the analysis log.
+                # Requests sized to measured p90 usage PLUS the memory-backed
+                # workspace (the agent-stack `workspace-volume` is tmpfs now —
+                # checkout ~1Gi lands in RAM, counted against this container).
+                # Limits stay high so a cold-cache burst still gets real CPU.
                 # ephemeral-storage limit caps the pod's writable layer +
-                # emptyDir on the Talos xfs /var so a runaway build is evicted
-                # rather than filling the system disk and wedging the node
-                # (the 2026-07 freeze failure mode; 40Gi is well above the
-                # 20-58GiB/pod measured, but bounded).
-                requests: { cpu: "1", memory: "2Gi", ephemeral-storage: "2Gi" }
+                # non-workspace emptyDirs on the Talos xfs /var so a runaway
+                # build is evicted rather than filling the system disk and
+                # wedging the node (the 2026-07 freeze failure mode).
+                requests: { cpu: "1", memory: "3Gi", ephemeral-storage: "2Gi" }
                 limits: { cpu: "7", memory: "12Gi", ephemeral-storage: "40Gi" }
               volumeMounts:
                 # Checkouts are mirror-backed (default-checkout-params.gitMirrors):
@@ -78,9 +76,11 @@ common:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
               resources:
-                # Right-sized to measured p90 (see the base pod above). Was
-                # 2/6Gi; the dind sidecar below adds its own request.
-                requests: { cpu: "1", memory: "2Gi", ephemeral-storage: "2Gi" }
+                # Measured p90 plus the tmpfs workspace (checkout + filtered
+                # install ~2Gi for the images/docker-e2e lanes — verify has its
+                # own bigger anchor below). The dind sidecar adds its own
+                # request.
+                requests: { cpu: "1", memory: "3Gi", ephemeral-storage: "2Gi" }
                 limits: { cpu: "7", memory: "14Gi", ephemeral-storage: "40Gi" }
               volumeMounts:
                 # Checkouts are mirror-backed (default-checkout-params.gitMirrors):
@@ -122,6 +122,53 @@ common:
                 requests:
                   { cpu: "750m", memory: "1536Mi", ephemeral-storage: "4Gi" }
                 limits: { cpu: "4", memory: "8Gi", ephemeral-storage: "80Gi" }
+  # Verify's pod: identical to pod_privileged except the memory request. The
+  # full-root install + turbo scratch put ~5-6Gi into the memory-backed
+  # workspace (node_modules 3.75Gi alone), on top of the ~1.5Gi p90 process
+  # RSS — request 7Gi so Kueue admission accounts for the tmpfs honestly.
+  # Only verify pays this; the other privileged lanes stay at 3Gi.
+  - pod_verify: &pod_verify
+      kubernetes: &pod_verify_kubernetes
+        checkout:
+          cloneFlags: "--no-tags"
+        podSpecPatch:
+          serviceAccountName: buildkite-agent-stack-k8s-controller
+          containers:
+            - name: container-0
+              image: "ghcr.io/shepherdjerred/ci-base:latest"
+              # Same stale-:latest guard as the base pod above.
+              imagePullPolicy: Always
+              env:
+                - name: DOCKER_HOST
+                  value: "tcp://127.0.0.1:2375"
+                # Same dash-vs-bash guard as the base pod above (build 5651).
+                - name: BUILDKITE_SHELL
+                  value: "/bin/bash -e -c"
+              resources:
+                requests: { cpu: "1", memory: "7Gi", ephemeral-storage: "2Gi" }
+                limits: { cpu: "7", memory: "14Gi", ephemeral-storage: "40Gi" }
+              volumeMounts:
+                # Mirror-backed checkouts: see the base pod anchor above.
+                - name: buildkite-git-mirrors
+                  mountPath: /buildkite/git-mirrors
+                  readOnly: true
+              envFrom:
+                - secretRef: { name: buildkite-ci-secrets }
+          # Same native-sidecar dind as pod_privileged (verify's docker tasks:
+          # check:caddyfile, llm-observability unit surface).
+          initContainers:
+            - name: dind
+              # renovate: datasource=docker depName=docker
+              image: "docker:28-dind"
+              restartPolicy: Always
+              securityContext: { privileged: true }
+              env:
+                - name: DOCKER_TLS_CERTDIR
+                  value: ""
+              resources:
+                requests:
+                  { cpu: "750m", memory: "1536Mi", ephemeral-storage: "4Gi" }
+                limits: { cpu: "4", memory: "8Gi", ephemeral-storage: "80Gi" }
   # Light steps: thin deploy/publish/annotate scripts whose work is seconds
   # even on a cold cache. Small REQUESTS so Kueue admits them alongside the
   # long images job (12 CPU / 20Gi namespace quota — build 5644: light steps
@@ -142,8 +189,10 @@ common:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
               resources:
+                # 1536Mi: the ~1Gi checkout now lands in the memory-backed
+                # workspace and is charged to this container.
                 requests:
-                  { cpu: "250m", memory: "512Mi", ephemeral-storage: "1Gi" }
+                  { cpu: "250m", memory: "1536Mi", ephemeral-storage: "1Gi" }
                 limits: { cpu: "7", memory: "12Gi", ephemeral-storage: "20Gi" }
               volumeMounts:
                 # Checkouts are mirror-backed (default-checkout-params.gitMirrors):
@@ -245,7 +294,7 @@ steps:
     retry: *retry
     plugins:
       - kubernetes:
-          <<: *pod_privileged_kubernetes
+          <<: *pod_verify_kubernetes
           metadata:
             labels:
               ci.sjer.red/step-key: verify
@@ -292,7 +341,7 @@ steps:
                 # renovate: datasource=docker depName=mcr.microsoft.com/playwright
                 image: "mcr.microsoft.com/playwright:v1.61.1-noble"
                 resources:
-                  requests: { cpu: "2", memory: "4Gi" }
+                  requests: { cpu: "2", memory: "6Gi" }
                   limits: { cpu: "4", memory: "8Gi" }
                 volumeMounts:
                   # Mirror-backed checkouts: see the container-0 mounts in the
@@ -334,7 +383,7 @@ steps:
                 # renovate: datasource=docker depName=mcr.microsoft.com/playwright
                 image: "mcr.microsoft.com/playwright:v1.61.1-noble"
                 resources:
-                  requests: { cpu: "2", memory: "4Gi" }
+                  requests: { cpu: "2", memory: "6Gi" }
                   limits: { cpu: "4", memory: "8Gi" }
                 volumeMounts:
                   - name: buildkite-git-mirrors
@@ -377,7 +426,7 @@ steps:
                 # renovate: datasource=docker depName=texlive/texlive
                 image: "texlive/texlive:TL2024-historic"
                 resources:
-                  requests: { cpu: "1", memory: "2Gi" }
+                  requests: { cpu: "1", memory: "3Gi" }
                   limits: { cpu: "2", memory: "4Gi" }
                 volumeMounts:
                   # Mirror-backed checkouts: see the container-0 mounts in the
@@ -414,7 +463,7 @@ steps:
                 # renovate: datasource=docker depName=texlive/texlive
                 image: "texlive/texlive:TL2024-historic"
                 resources:
-                  requests: { cpu: "1", memory: "2Gi" }
+                  requests: { cpu: "1", memory: "3Gi" }
                   limits: { cpu: "2", memory: "4Gi" }
                 volumeMounts:
                   - name: buildkite-git-mirrors
@@ -586,8 +635,16 @@ steps:
                   - name: BUILDKITE_SHELL
                     value: "/bin/sh -e -c"
                 resources:
-                  requests: { cpu: "500m", memory: "1Gi" }
+                  requests: { cpu: "500m", memory: "2Gi" }
                   limits: { cpu: "2", memory: "4Gi" }
+                volumeMounts:
+                  # Mirror-backed checkouts (same as semgrep below): without
+                  # this mount the trivy pod's checkout cannot resolve the
+                  # alternates path and pays a full ~1 GB cold clone on every
+                  # lockfile-touching PR.
+                  - name: buildkite-git-mirrors
+                    mountPath: /buildkite/git-mirrors
+                    readOnly: true
 
   - label: ":mag: semgrep"
     key: semgrep
@@ -700,7 +757,7 @@ steps:
                 securityContext:
                   allowPrivilegeEscalation: false
                 resources:
-                  requests: { cpu: "500m", memory: "1Gi" }
+                  requests: { cpu: "500m", memory: "2Gi" }
                   limits: { cpu: "2", memory: "4Gi" }
                 volumeMounts:
                   - name: buildkite-git-mirrors

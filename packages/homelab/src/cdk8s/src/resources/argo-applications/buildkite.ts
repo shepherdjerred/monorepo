@@ -138,6 +138,22 @@ export function createBuildkiteApp(chart: Chart) {
                   lockTimeout: 300,
                 },
               },
+              // Memory-backed build workspace for EVERY job pod: the checkout
+              // working tree, per-pod bun installs, and turbo scratch are
+              // written once and discarded, so backing the controller's
+              // default disk emptyDir with tmpfs keeps those writes (the
+              // largest per-pod NVMe write class after the image graph —
+              // 20-58 GiB/heavy pod measured pre-#1602) off the xfs /var
+              // entirely. tmpfs pages count against each container's memory
+              // limit; the pipeline pod anchors' memory REQUESTS are sized to
+              // cover expected workspace usage so Kueue admission stays
+              // honest (see .buildkite/pipeline.yml). sizeLimit evicts a
+              // runaway build (kubelet, fail-fast + step retry) instead of
+              // letting it eat the node's RAM.
+              "workspace-volume": {
+                name: "workspace",
+                emptyDir: { medium: "Memory", sizeLimit: "16Gi" },
+              },
               // SECURITY: no envFrom on the agent container. It previously
               // injected buildkite-ci-secrets into EVERY pod's agent
               // container — including the pipeline-upload pod, where
