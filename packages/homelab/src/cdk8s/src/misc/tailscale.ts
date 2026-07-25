@@ -29,6 +29,12 @@ export class TailscaleIngress extends Construct {
       /** Blackbox probe module override. Defaults to "http_2xx". */
       probeModule?: ProbeModule;
       /**
+       * URL path the in-cluster HTTP probe requests (e.g. "/ready"). Point
+       * this at a real health endpoint when the service doesn't return 2xx
+       * at "/". Ignored by a `tcp_connect` probeModule. Defaults to "/".
+       */
+      probePath?: string;
+      /**
        * Skip auto-registering a blackbox probe for this service. Rare — must
        * carry a comment at the call site explaining why (e.g. the service
        * can't meaningfully be health-checked over HTTP/TCP).
@@ -65,6 +71,7 @@ export class TailscaleIngress extends Construct {
         serviceName: props.service.name,
         port: props.port ?? props.service.port,
         module: props.probeModule,
+        path: props.probePath,
       });
     }
   }
@@ -80,6 +87,12 @@ export function createIngress(
     hosts: string[];
     /** Blackbox probe module override. Defaults to "http_2xx". */
     probeModule?: ProbeModule;
+    /**
+     * URL path the in-cluster HTTP probe requests (e.g. "/ready"). Point
+     * this at a real health endpoint when the service doesn't return 2xx
+     * at "/". Ignored by a `tcp_connect` probeModule. Defaults to "/".
+     */
+    probePath?: string;
     /** Rare escape hatch — must carry a comment explaining why. */
     disableProbe?: boolean;
   },
@@ -112,6 +125,7 @@ export function createIngress(
       serviceName: options.service,
       port: options.port,
       module: options.probeModule,
+      path: options.probePath,
     });
   }
 

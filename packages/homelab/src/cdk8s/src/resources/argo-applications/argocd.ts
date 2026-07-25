@@ -40,6 +40,10 @@ export function createArgoCdApp(chart: Chart) {
     protocol: "https",
     noTlsVerify: true,
     port: 443,
+    // Must match the createIngress registration above — both register the
+    // same backend probe, and argocd-server's self-signed cert needs the
+    // TLS-skip module.
+    probeModule: "https_2xx_insecure",
   });
 
   const argoCdValues: HelmValuesForChart<"argo-cd"> = {

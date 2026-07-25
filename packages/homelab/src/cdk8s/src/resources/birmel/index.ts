@@ -263,14 +263,20 @@ export function createBirmelDeployment(chart: Chart) {
     ports: [{ port: 4112, name: "oauth" }],
   });
 
+  // "/" has no route (404); /health is the OAuth server's health check
+  // (packages/birmel/src/editor/oauth-server.ts). Both registrations below
+  // share the same backend probe, so probePath must be identical.
   new TailscaleIngress(chart, "birmel-oauth-ingress", {
     service: oauthService,
     host: "birmel-oauth",
+    probePath: "/health",
   });
 
   createCloudflareTunnelBinding(chart, "birmel-oauth-cf-tunnel", {
     serviceName: oauthService.name,
     subdomain: "birmel-oauth",
     port: 4112,
+    probePath: "/health",
+    publicProbePath: "/health",
   });
 }

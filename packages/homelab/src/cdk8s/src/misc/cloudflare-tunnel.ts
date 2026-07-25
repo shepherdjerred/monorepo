@@ -34,6 +34,12 @@ export function createCloudflareTunnelBinding(
     port: number;
     /** Blackbox module override for the backend (in-cluster) probe. Defaults to "http_2xx". */
     probeModule?: ProbeModule;
+    /**
+     * URL path the backend (in-cluster) HTTP probe requests, e.g. "/ready".
+     * Point this at a real health endpoint when the service doesn't return
+     * 2xx at "/". Ignored by a `tcp_connect` probeModule. Defaults to "/".
+     */
+    probePath?: string;
     /** Blackbox module override for the public (Cloudflare-hostname) probe. Defaults to "http_2xx". */
     publicProbeModule?: ProbeModule;
     /**
@@ -97,6 +103,7 @@ export function createCloudflareTunnelBinding(
       serviceName: props.serviceName,
       port: props.port,
       module: props.probeModule,
+      path: props.probePath,
     });
     registerPublicProbe({
       namespace,

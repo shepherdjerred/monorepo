@@ -320,5 +320,9 @@ export async function createMcpGatewayDeployment(chart: Chart) {
   new TailscaleIngress(chart, "mcp-gateway-ingress", {
     service: service,
     host: "mcp-gateway",
+    // Every mcp-proxy route is Authorization-token-gated (404/401 without
+    // one; no unauthenticated health route) — TCP connect matches the
+    // container's own TCP-socket k8s probes.
+    probeModule: "tcp_connect",
   });
 }

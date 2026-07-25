@@ -285,6 +285,10 @@ export function createRelayDeployment(chart: Chart) {
     serviceName: service.name,
     fqdn: "relay.sjer.red",
     port: 8080,
+    // "/" has no route (404); /ready is y-sweet's unauthenticated readiness
+    // endpoint (verified live 2026-07-24, in-cluster and through Cloudflare).
+    probePath: "/ready",
+    publicProbePath: "/ready",
   });
 
   return { deployment, service, seaweedfsCreds, config };
