@@ -161,7 +161,7 @@ const versions = {
   // base moves off 2.0.0-, this pin needs one manual edit).
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
-    "2.0.0-6088@sha256:cb3a267d297995e3bfdf106eb48d9f43afdedca1d3ff8d1211dae95f5ecfbd0e",
+    "2.0.0-6017@sha256:e95d14b56b0b2a7369b3aaebb98c812f3fb285d79d63895997b9c3cf10333e81",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
     "2.0.0-6088@sha256:b8cd61a0783daa1cccaecc10978986ece26fa0c181f7a8cc23837600a64fa0a1",
