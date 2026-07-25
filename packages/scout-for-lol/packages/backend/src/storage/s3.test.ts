@@ -205,7 +205,7 @@ describe("S3 Match Storage", () => {
       .on(PutObjectCommand)
       .resolves({ $metadata: { httpStatusCode: 200 } });
 
-    await saveMatchToS3(match, ["TrackedPlayer"]);
+    await saveMatchToS3(match, ["Lord ARKΞV", "H6 Hadès"]);
 
     expect(s3Mock.calls().length).toBe(1);
     const command = getValidatedPutCommand(0);
@@ -218,7 +218,8 @@ describe("S3 Match Storage", () => {
     );
     expect(command.input.Metadata?.["matchId"]).toBe(matchId);
     expect(command.input.Metadata?.["gameMode"]).toBe(match.info.gameMode);
-    expect(command.input.Metadata?.["trackedPlayers"]).toBe("TrackedPlayer");
+    expect(command.input.Metadata?.["trackedPlayerCount"]).toBe("2");
+    expect(command.input.Metadata).not.toHaveProperty("trackedPlayers");
 
     // saveToS3 encodes string bodies to a Uint8Array before upload; decode it
     // back and confirm it round-trips to the original match JSON.

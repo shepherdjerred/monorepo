@@ -7,6 +7,7 @@ import type { MatchId } from "@scout-for-lol/data/index.ts";
 import { format } from "date-fns";
 import { createLogger } from "#src/logger.ts";
 import { sendPutWithRetry } from "#src/storage/s3-put-retry.ts";
+import { validateS3Metadata } from "#src/storage/s3-metadata.ts";
 
 const logger = createLogger("storage-s3-helpers");
 
@@ -104,10 +105,10 @@ export async function saveToS3(
       Key: key,
       Body: bodyBuffer,
       ContentType: contentType,
-      Metadata: {
+      Metadata: validateS3Metadata({
         ...metadata,
         uploadedAt: new Date().toISOString(),
-      },
+      }),
     });
 
     await sendPutWithRetry(client, command, `${errorContext} ${matchId}`);
@@ -190,7 +191,7 @@ export async function saveFailedPayloadToS3(
       Key: key,
       Body: bodyBuffer,
       ContentType: "application/json",
-      Metadata: {
+      Metadata: validateS3Metadata({
         matchId: matchId,
         assetType: assetType,
         validationStatus: "failed",
@@ -198,7 +199,7 @@ export async function saveFailedPayloadToS3(
         firstIssuePath: firstIssues[0]?.path ?? "unknown",
         firstIssueMessage: firstIssues[0]?.message ?? "unknown",
         uploadedAt: new Date().toISOString(),
-      },
+      }),
     });
 
     await client.send(command);

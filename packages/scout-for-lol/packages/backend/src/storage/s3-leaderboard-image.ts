@@ -3,6 +3,7 @@ import { createS3Client } from "#src/storage/s3-client.ts";
 import configuration from "#src/configuration.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
+import { validateS3Metadata } from "#src/storage/s3-metadata.ts";
 import { z } from "zod";
 
 // Mirrors the not-found shape handled in s3-leaderboard.ts.
@@ -67,11 +68,11 @@ export async function saveLeaderboardImage(
     competitionId,
     calculatedAt,
   );
-  const metadata = {
+  const metadata = validateS3Metadata({
     competitionId: competitionId.toString(),
     calculatedAt: calculatedAt.toISOString(),
     uploadedAt: new Date().toISOString(),
-  };
+  });
 
   await client.send(
     new PutObjectCommand({
