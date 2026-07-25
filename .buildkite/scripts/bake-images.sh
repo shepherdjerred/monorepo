@@ -45,7 +45,7 @@ APP_TARGETS=(
   "discord-plays-pokemon|packages/discord-plays-pokemon/packages/backend"
   "discord-plays-mario-kart|packages/discord-plays-mario-kart/packages/backend"
 )
-INFRA_IMAGES=(caddy-s3proxy obsidian-headless mcp-gateway redlib shelfbridge)
+INFRA_IMAGES=(bindery caddy-s3proxy obsidian-headless mcp-gateway redlib shelfbridge)
 KNOWN_TARGETS_JSON=$(printf '%s\n' "${APP_TARGETS[@]%%|*}" infra | jq -R . | jq -s 'sort')
 
 bake_targets=()

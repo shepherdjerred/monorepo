@@ -154,7 +154,14 @@ target "discord-plays-mario-kart" {
 
 # ── Homelab infra images: self-contained contexts, no VERSION/GIT_SHA ───────
 group "infra" {
-  targets = ["caddy-s3proxy", "obsidian-headless", "mcp-gateway", "redlib", "shelfbridge"]
+  targets = ["bindery", "caddy-s3proxy", "obsidian-headless", "mcp-gateway", "redlib", "shelfbridge"]
+}
+
+target "bindery" {
+  context    = "packages/homelab/images/bindery"
+  tags       = ["bindery:dev"]
+  cache-from = cachefrom("bindery")
+  cache-to   = cacheto("bindery")
 }
 
 target "caddy-s3proxy" {

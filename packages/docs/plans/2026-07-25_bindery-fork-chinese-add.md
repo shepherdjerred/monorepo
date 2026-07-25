@@ -1,0 +1,194 @@
+---
+id: plan-2026-07-25-bindery-fork-chinese-add
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
+# Self-built Bindery fork: fix Simplified-Chinese book adds
+
+## Context
+
+The homelab ebook stack (Bindery → qBit → CWA → Kindle) is meant to acquire
+简体中文 books the US Kindle Store doesn't carry. This session already fixed
+Bindery's **metadata search** for Chinese by wiring a Google Books API key
+(`googlebooks.apiKey` setting → "google books enrichment enabled"), so
+searching 原子习惯 now returns results in the Add Book dialog.
+
+But **adding** a Google Books result fails with HTTP 422 on
+`POST /api/v1/author/book`:
+`"Author metadata unavailable for this result. Add the author manually first…"`.
+
+Root cause (confirmed in upstream source): Bindery is author-centric
+(Author→Book). Google Books returns a book with a **Chinese author name and no
+author ID**. The add handler resolves the author by name — either an existing
+library author or OpenLibrary's canonical record — and **both fail for Chinese
+names** (OpenLibrary only knows "James Clear", not "詹姆斯•克利爾"; name-match is
+exact-key so cross-script never matches). Proven: adding James Clear (OL) first
+and retrying still 422s. There is **no config/data workaround** — it needs a
+code change.
+
+Bindery is MIT/Go and self-hostable. The homelab already self-builds an
+ebook-stack image (`shelfbridge`) with an established pattern, so we fork
+Bindery the same way. **Decision: in-monorepo patch file (no separate fork
+repo); self-host only (no upstream PR).**
+
+## The patch (tiny, idiomatic)
+
+Bindery already has the exact machinery needed — synthetic authors
+(`dnb:…`, `calibre:author:N`) and a `resolvedByName`/`directInsertNeeded`
+direct-insert path **built specifically for Google Books picks**
+(`internal/api/authors.go`). The handler just **422s instead of minting a
+synthetic author** when name-resolution fails.
+
+**File:** `internal/api/authors.go` — the nested `if req.ForeignAuthorID == ""`
+guard (~line 2280) inside the `AddBook` handler. Replace the 422-return with:
+
+```go
+if req.ForeignAuthorID == "" {
+    if key := metadata.CanonicalAuthorKey(req.AuthorName); key != "" {
+        // No canonical identity anywhere (Google Books Chinese result: author
+        // name only, no provider ID, no ISBN edition). Mint a synthetic
+        // library-local author keyed by name — mirrors the dnb:/calibre:author
+        // synthetic precedent — so the pick can be added and its indexer search
+        // can run. resolvedByName drives the existing direct-insert path.
+        req.ForeignAuthorID = "gb:author:" + key
+        resolvedByName = true
+    } else {
+        writeJSON(w, http.StatusUnprocessableEntity, map[string]string{
+            "error": "Author metadata unavailable for this result. Add the author manually first (Authors → Add Author by name), then try again.",
+        })
+        return
+    }
+}
+```
+
+Downstream needs **no change** — it already handles this: `GetAuthor("gb:author:…")`
+fails → falls back to `&models.Author{ForeignID, Name, …}` → `CreateForUser` →
+`authorWasJustCreated=true`; because `resolvedByName` it skips the catalogue
+flood; `directInsertNeeded=true` inserts the single picked `gb:` book as Wanted,
+which then triggers the ShelfBridge indexer search.
+
+- **Reuse:** `metadata.CanonicalAuthorKey` (already used by
+  `findLibraryAuthorByName` in the same file; `metadata` is already imported).
+- **Idempotent / groups correctly:** the key is deterministic, so re-adding the
+  same author's books reuses one synthetic author (via `GetByForeignIDForUser`,
+  and `findLibraryAuthorByName` now matches its Name on later adds).
+- **Optional nicety:** where the fallback author hardcodes
+  `MetadataProvider: "openlibrary"` (~line 2307), set `"googlebooks"` when the
+  ID has the `gb:author:` prefix. Cosmetic; can skip.
+- **Test (in the patch):** add `TestAddBook_AuthorlessGoogleBooks` to
+  `internal/api/authors_test.go` (mirror existing cases) asserting an authorless
+  `gb:` book → 201, author created with a `gb:author:` ID, book status Wanted.
+
+The whole change (patch + test) lives in
+`packages/homelab/images/bindery/0001-gb-author-synthetic.patch`.
+
+## Homelab self-build wiring (mirror `shelfbridge`)
+
+1. **`packages/homelab/images/bindery/Dockerfile`** — mirror upstream's 3-stage
+   build (`node:26-alpine` frontend → `golang:1.26.5-alpine` binary →
+   `gcr.io/distroless/static-debian12:nonroot`), but **source from a pinned
+   upstream commit + apply our patch** instead of a repo-root `COPY .`:
+   - Add a `git`-capable stage that
+     `git init && git fetch --depth 1 origin "$BINDERY_SOURCE_REF" && git checkout FETCH_HEAD`
+     from `https://github.com/vavallee/bindery.git`, then
+     `COPY 0001-gb-author-synthetic.patch . && git apply` it.
+   - Global `ARG BINDERY_SOURCE_REF=<sha>` with a
+     `# renovate: datasource=git-refs depName=bindery-source branch=main` comment
+     (mirror the shelfbridge block).
+   - Recommended **build-time gate:** a stage that runs
+     `go test ./internal/api/ -run TestAddBook_AuthorlessGoogleBooks` so the
+     build fails loudly if upstream drift breaks the patch.
+   - Digest-pin all base images with inline `# renovate: datasource=docker`
+     comments (copy upstream's pinned digests as the starting point).
+   - Self-contained: build context is the image dir.
+2. **`packages/homelab/images/bindery/0001-gb-author-synthetic.patch`** — the
+   patch above (handler change + Go test).
+3. **`docker-bake.hcl`** — add `"bindery"` to `group "infra"` (line ~145) and a
+   `target "bindery" { context = "packages/homelab/images/bindery"; tags = ["bindery:dev"]; cache-from/to = … }`.
+4. **`.buildkite/scripts/bake-images.sh`** — add `bindery` to `INFRA_IMAGES`
+   (line 48).
+5. **`packages/homelab/scripts/smoke-images.ts`** — add `smokeBindery()` (boot
+   `bindery:dev`, wait `/api/v1/health` → 200) and a `{ label: "bindery", fn:
+smokeBindery }` entry in `checks` (~line 524).
+6. **`packages/homelab/src/cdk8s/src/versions.ts`** — remove the
+   `"vavallee/bindery"` entry **and its `renovate:` annotation** (lines 79-82);
+   add a self-built seed entry with a `// not managed by renovate …` comment:
+   `"shepherdjerred/bindery": "2.0.0-0@sha256:<placeholder>"`.
+7. **`packages/homelab/src/cdk8s/src/resources/torrents/bindery.ts:110`** —
+   change image ref to
+   `` `ghcr.io/shepherdjerred/bindery:${versions["shepherdjerred/bindery"]}` ``.
+   No other change to the deployment (env/ports/probes/mounts stay; `/config`
+   PVC persists all our runtime config across the swap).
+8. **`renovate.json`** — add a `customManagers` git-refs entry (mirror the
+   shelfbridge block, lines 64-75) for
+   `packages/homelab/images/bindery/Dockerfile` → `BINDERY_SOURCE_REF` tracking
+   upstream `main`.
+
+## Rollout / operator steps
+
+1. Create a worktree (`.claude/worktrees/bindery-fork`), do all edits there,
+   open a **draft PR** early (per repo conventions), run `bun run verify --
+--affected`.
+2. Merge → CI `images` step builds+pushes `ghcr.io/shepherdjerred/bindery` →
+   `version-commit-back` opens a follow-up auto-merge PR that rewrites the
+   placeholder digest to the real `2.0.0-<build>@sha256:…`.
+3. **⚠ First-push gotcha (known):** a brand-new `shepherdjerred/*` GHCR package
+   defaults to **private** → `ImagePullBackOff` → `media` app Degraded → CI on
+   main red. **After the first push, flip the package to public** in GHCR
+   settings (same fix as `logs/2026-07-22_ci-main-shelfbridge-private-image.md`),
+   then delete the stuck pod to force a re-pull.
+4. Argo syncs `media`; the new Bindery pod keeps its `/config` PVC, so the admin
+   account, indexers, and `googlebooks.apiKey` all persist.
+
+## Remaining
+
+Code is implemented and locally verified (patch `go test` green, image builds +
+boots, `bun run verify -- --affected` green). Left to do post-merge:
+
+- [ ] Merge the PR; on the first `main` `images` build, **flip the new
+      `ghcr.io/shepherdjerred/bindery` GHCR package to public** — new packages
+      default to private → `ImagePullBackOff` → `media` Degraded (same as the
+      shelfbridge first-push incident).
+- [ ] Merge the `version-commit-back` follow-up PR that rewrites the all-zero
+      seed digest to the real `2.0.0-<build>@sha256:…`.
+- [ ] Post-deploy E2E: `POST /api/v1/author/book` with the 原子習慣 Google Books
+      result → expect **201** (was 422); confirm Wanted → ShelfBridge grab →
+      qBit → `/ingest` → CWA.
+- [ ] Confirm the Bindery UI Add Book dialog no longer 422s on Chinese picks.
+
+## Verification (end-to-end)
+
+- **Patch, pre-image:** in the worktree, clone upstream at the pinned ref, apply
+  the patch, `go test ./internal/api/ -run TestAddBook_AuthorlessGoogleBooks`
+  → passes. (Also enforced by the Dockerfile test stage.)
+- **Image, pre-deploy:** `docker buildx build packages/homelab/images/bindery -t
+bindery:dev` succeeds; `bun packages/homelab/scripts/smoke-images.ts bindery`
+  (or the smoke check) boots and `/api/v1/health` → 200.
+- **E2E, post-deploy (the real proof):** against
+  `https://bindery.tailnet-1a49.ts.net` with `X-Api-Key`, replay the exact
+  earlier failure — `POST /api/v1/author/book` with the 原子習慣 Google Books
+  search result → expect **201** (was 422); confirm the book appears in Wanted;
+  confirm a ShelfBridge indexer search fires (`/api/v1/queue` or history) and the
+  grab lands in qBit → `/ingest` → CWA. Then repeat from the Bindery **UI** Add
+  Book dialog to confirm the 422s in the browser console are gone.
+
+## Caveats / out of scope
+
+- **Traditional vs Simplified:** Google Books' metadata title for this book is
+  Traditional (原子習慣); Bindery searches indexers by that title, so the grabbed
+  edition may be Traditional. Anna's Archive has both. Edition-language
+  preference is a **separate refinement** (Bindery language filtering / manual
+  release pick), not part of this fix.
+- **Results with no author at all** (the greyed-out row in the screenshot) stay
+  unaddable — the patch only helps when an author _name_ is present.
+- **No upstream PR** (per decision): we carry `images/bindery/` + the patch
+  indefinitely; Renovate advances `BINDERY_SOURCE_REF` and the build-time
+  `go test` gate flags any drift that breaks the patch (rebase the `.patch`
+  then).
+- Unrelated open threads from this session (not part of this plan): CWA
+  SMTP/Auto-Send to Kindle (blocked on the Kindle-account decision) and deleting
+  the defunct `bitterlake-homeassistant` GCP project.

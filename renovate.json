@@ -72,6 +72,18 @@
       "depNameTemplate": "shelfbridge-source",
       "packageNameTemplate": "https://github.com/selmant/shelfbridge",
       "currentValueTemplate": "main"
+    },
+    {
+      "customType": "regex",
+      "description": "bindery source pin — track upstream main HEAD for the patched image build (ARG BINDERY_SOURCE_REF)",
+      "managerFilePatterns": ["packages/homelab/images/bindery/Dockerfile"],
+      "matchStrings": [
+        "# renovate: datasource=git-refs depName=bindery-source branch=main\\nARG BINDERY_SOURCE_REF=(?<currentDigest>[a-f0-9]{40})"
+      ],
+      "datasourceTemplate": "git-refs",
+      "depNameTemplate": "bindery-source",
+      "packageNameTemplate": "https://github.com/vavallee/bindery",
+      "currentValueTemplate": "main"
     }
   ],
   "customDatasources": {

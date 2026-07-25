@@ -1,0 +1,116 @@
+diff --git a/internal/api/authors.go b/internal/api/authors.go
+index d84ebf7..dc11911 100644
+--- a/internal/api/authors.go
++++ b/internal/api/authors.go
+@@ -2279,10 +2279,27 @@ func (h *AuthorHandler) AddBook(w http.ResponseWriter, r *http.Request) {
+ 			resolvedByName = req.ForeignAuthorID != ""
+ 		}
+ 		if req.ForeignAuthorID == "" {
+-			writeJSON(w, http.StatusUnprocessableEntity, map[string]string{
+-				"error": "Author metadata unavailable for this result. Add the author manually first (Authors → Add Author by name), then try again.",
+-			})
+-			return
++			if key := metadata.CanonicalAuthorKey(req.AuthorName); key != "" {
++				// Google Books returns Chinese (and other non-Latin) results with
++				// an author NAME but no provider author ID and no ISBN edition, so
++				// neither the library nor OpenLibrary can resolve a canonical ID.
++				// Mint a deterministic library-local synthetic author ID from the
++				// name — the same idea as the dnb:author:/calibre:author:
++				// synthetics, but keyed off CanonicalAuthorKey rather than slug()
++				// (slug() strips all non-ASCII and would collapse every CJK author
++				// onto one empty-slug row). resolvedByName drives the existing
++				// direct-insert path below; later picks by the same author reuse
++				// this row via findLibraryAuthorByName (name) and
++				// GetByForeignIDForUser (id). GetAuthor for a gb:author: id always
++				// fails, so the author is created from req.AuthorName.
++				req.ForeignAuthorID = "gb:author:" + strings.ReplaceAll(key, " ", "-")
++				resolvedByName = true
++			} else {
++				writeJSON(w, http.StatusUnprocessableEntity, map[string]string{
++					"error": "Author metadata unavailable for this result. Add the author manually first (Authors → Add Author by name), then try again.",
++				})
++				return
++			}
+ 		}
+ 	}
+ 
+diff --git a/internal/api/authors_test.go b/internal/api/authors_test.go
+index 9c8efc9..94fcd2c 100644
+--- a/internal/api/authors_test.go
++++ b/internal/api/authors_test.go
+@@ -3771,6 +3771,75 @@ func TestAddBook_DirectInsertCoversAlternateAuthorIdentifier(t *testing.T) {
+ 	}
+ }
+ 
++// TestAddBook_AuthorlessGoogleBooks pins the Simplified-Chinese fix: a Google
++// Books pick carries an author NAME but no author ID and no ISBN edition, so
++// neither the library nor OpenLibrary resolves a canonical author ID. AddBook
++// must mint a deterministic "gb:author:" synthetic author from the name
++// (instead of 422ing "Author metadata unavailable") and direct-insert the
++// picked book as Wanted under it.
++func TestAddBook_AuthorlessGoogleBooks(t *testing.T) {
++	database, err := db.OpenMemory()
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer database.Close()
++	database.SetMaxOpenConns(1)
++
++	ctx := context.Background()
++	authorRepo := db.NewAuthorRepo(database)
++	bookRepo := db.NewBookRepo(database)
++	profileRepo := db.NewMetadataProfileRepo(database)
++
++	primary := &models.Book{
++		ForeignID:        "gb:ST-ZDwAAQBAJ",
++		Title:            "原子習慣",
++		SortTitle:        "原子習慣",
++		Status:           models.BookStatusWanted,
++		Genres:           []string{},
++		Language:         "zh-CN",
++		MetadataProvider: "googlebooks",
++	}
++	provider := &stubMetaProvider{
++		name: "googlebooks",
++		getBookByID: map[string]*models.Book{
++			"gb:ST-ZDwAAQBAJ": primary,
++		},
++	}
++	h := NewAuthorHandler(authorRepo, nil, bookRepo, nil, metadata.NewAggregator(provider), nil, profileRepo, nil)
++	body, _ := json.Marshal(map[string]any{
++		"foreignBookId":   "gb:ST-ZDwAAQBAJ",
++		"foreignAuthorId": "",
++		"authorName":      "詹姆斯•克利爾",
++	})
++	parent, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
++	defer cancel()
++	req := httptest.NewRequest(http.MethodPost, "/api/v1/author/book", bytes.NewReader(body)).WithContext(parent)
++	rec := httptest.NewRecorder()
++
++	h.AddBook(rec, req)
++
++	if rec.Code != http.StatusCreated {
++		t.Fatalf("expected 201, got %d: %s", rec.Code, rec.Body.String())
++	}
++	got, err := bookRepo.GetByForeignID(ctx, "gb:ST-ZDwAAQBAJ")
++	if err != nil || got == nil {
++		t.Fatalf("book after AddBook = %+v err=%v, want persisted", got, err)
++	}
++	authors, err := authorRepo.List(ctx)
++	if err != nil {
++		t.Fatalf("List authors: %v", err)
++	}
++	if len(authors) != 1 {
++		t.Fatalf("authors = %d, want one synthetic author", len(authors))
++	}
++	if !strings.HasPrefix(authors[0].ForeignID, "gb:author:") {
++		t.Fatalf("author ForeignID = %q, want a gb:author: synthetic id", authors[0].ForeignID)
++	}
++	if got.AuthorID != authors[0].ID {
++		t.Fatalf("book author_id = %d, want synthetic author %d", got.AuthorID, authors[0].ID)
++	}
++}
++
+ // TestAddBook_InvalidMediaTypeRejected pins the request validation for the
+ // optional mediaType field (#1397): anything outside ebook/audiobook/both
+ // fails fast with a 400 before any author/book work happens.
