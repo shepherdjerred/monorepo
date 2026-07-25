@@ -15,6 +15,12 @@ agents:
 # Steps that run repo tasks start with `. .buildkite/scripts/toolchain.sh`
 # — a fast no-op on a current image, a runtime mise bootstrap on a stale one.
 common:
+  - checkout_container: &checkout_container
+      name: checkout
+      resources:
+        # The checkout writes the tracked tree into the memory-backed workspace.
+        requests: { cpu: "50m", memory: "1Gi" }
+        limits: { cpu: "400m", memory: "2Gi" }
   - pod: &pod
       kubernetes: &pod_kubernetes
         checkout:
@@ -23,6 +29,7 @@ common:
         podSpecPatch:
           serviceAccountName: buildkite-agent-stack-k8s-controller
           containers:
+            - *checkout_container
             - name: container-0
               image: "ghcr.io/shepherdjerred/ci-base:latest"
               # :latest is mutable and the ci-image refresh step repushes it;
@@ -37,15 +44,15 @@ common:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
               resources:
-                # Requests sized to measured p90 usage PLUS the memory-backed
-                # workspace (the agent-stack `workspace-volume` is tmpfs now —
-                # checkout ~1Gi lands in RAM, counted against this container).
+                # Requests sized to measured p90 usage plus the post-checkout
+                # memory-backed workspace. The checkout's ~1Gi tmpfs charge now
+                # has an explicit request on the generated checkout container.
                 # Limits stay high so a cold-cache burst still gets real CPU.
                 # ephemeral-storage limit caps the pod's writable layer +
                 # non-workspace emptyDirs on the Talos xfs /var so a runaway
                 # build is evicted rather than filling the system disk and
                 # wedging the node (the 2026-07 freeze failure mode).
-                requests: { cpu: "1", memory: "3Gi", ephemeral-storage: "2Gi" }
+                requests: { cpu: "1", memory: "2Gi", ephemeral-storage: "2Gi" }
                 limits: { cpu: "7", memory: "12Gi", ephemeral-storage: "40Gi" }
               volumeMounts:
                 # Checkouts are mirror-backed (default-checkout-params.gitMirrors):
@@ -65,6 +72,7 @@ common:
         podSpecPatch:
           serviceAccountName: buildkite-agent-stack-k8s-controller
           containers:
+            - *checkout_container
             - name: container-0
               image: "ghcr.io/shepherdjerred/ci-base:latest"
               # Same stale-:latest guard as the base pod above.
@@ -76,11 +84,11 @@ common:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
               resources:
-                # Measured p90 plus the tmpfs workspace (checkout + filtered
-                # install ~2Gi for the images/docker-e2e lanes — verify has its
-                # own bigger anchor below). The dind sidecar adds its own
-                # request.
-                requests: { cpu: "1", memory: "3Gi", ephemeral-storage: "2Gi" }
+                # Measured p90 plus the post-checkout tmpfs workspace (filtered
+                # install ~1Gi for the images/docker-e2e lanes — verify has its
+                # own bigger anchor below). Checkout and dind add their own
+                # requests.
+                requests: { cpu: "1", memory: "2Gi", ephemeral-storage: "2Gi" }
                 limits: { cpu: "7", memory: "14Gi", ephemeral-storage: "40Gi" }
               volumeMounts:
                 # Checkouts are mirror-backed (default-checkout-params.gitMirrors):
@@ -125,8 +133,9 @@ common:
   # Verify's pod: identical to pod_privileged except the memory request. The
   # full-root install + turbo scratch put ~5-6Gi into the memory-backed
   # workspace (node_modules 3.75Gi alone), on top of the ~1.5Gi p90 process
-  # RSS — request 7Gi so Kueue admission accounts for the tmpfs honestly.
-  # Only verify pays this; the other privileged lanes stay at 3Gi.
+  # RSS. Checkout now requests its 1Gi separately, so request 6Gi here and keep
+  # the pod's total Kueue accounting unchanged.
+  # Only verify pays this; the other privileged lanes stay at 2Gi.
   - pod_verify: &pod_verify
       kubernetes: &pod_verify_kubernetes
         checkout:
@@ -134,6 +143,7 @@ common:
         podSpecPatch:
           serviceAccountName: buildkite-agent-stack-k8s-controller
           containers:
+            - *checkout_container
             - name: container-0
               image: "ghcr.io/shepherdjerred/ci-base:latest"
               # Same stale-:latest guard as the base pod above.
@@ -145,7 +155,7 @@ common:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
               resources:
-                requests: { cpu: "1", memory: "7Gi", ephemeral-storage: "2Gi" }
+                requests: { cpu: "1", memory: "6Gi", ephemeral-storage: "2Gi" }
                 limits: { cpu: "7", memory: "14Gi", ephemeral-storage: "40Gi" }
               volumeMounts:
                 # Mirror-backed checkouts: see the base pod anchor above.
@@ -182,6 +192,7 @@ common:
         podSpecPatch:
           serviceAccountName: buildkite-agent-stack-k8s-controller
           containers:
+            - *checkout_container
             - name: container-0
               image: "ghcr.io/shepherdjerred/ci-base:latest"
               imagePullPolicy: Always
@@ -189,10 +200,10 @@ common:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
               resources:
-                # 1536Mi: the ~1Gi checkout now lands in the memory-backed
-                # workspace and is charged to this container.
+                # The checkout container requests its own 1Gi tmpfs charge;
+                # 512Mi covers these thin command containers.
                 requests:
-                  { cpu: "250m", memory: "1536Mi", ephemeral-storage: "1Gi" }
+                  { cpu: "250m", memory: "512Mi", ephemeral-storage: "1Gi" }
                 limits: { cpu: "7", memory: "12Gi", ephemeral-storage: "20Gi" }
               volumeMounts:
                 # Checkouts are mirror-backed (default-checkout-params.gitMirrors):
@@ -337,11 +348,13 @@ steps:
           podSpecPatch:
             serviceAccountName: buildkite-agent-stack-k8s-controller
             containers:
+              - *checkout_container
               - name: container-0
                 # renovate: datasource=docker depName=mcr.microsoft.com/playwright
                 image: "mcr.microsoft.com/playwright:v1.61.1-noble"
                 resources:
-                  requests: { cpu: "2", memory: "6Gi" }
+                  # The checkout container separately requests its 1Gi tmpfs charge.
+                  requests: { cpu: "2", memory: "5Gi" }
                   limits: { cpu: "4", memory: "8Gi" }
                 volumeMounts:
                   # Mirror-backed checkouts: see the container-0 mounts in the
@@ -379,11 +392,13 @@ steps:
           podSpecPatch:
             serviceAccountName: buildkite-agent-stack-k8s-controller
             containers:
+              - *checkout_container
               - name: container-0
                 # renovate: datasource=docker depName=mcr.microsoft.com/playwright
                 image: "mcr.microsoft.com/playwright:v1.61.1-noble"
                 resources:
-                  requests: { cpu: "2", memory: "6Gi" }
+                  # The checkout container separately requests its 1Gi tmpfs charge.
+                  requests: { cpu: "2", memory: "5Gi" }
                   limits: { cpu: "4", memory: "8Gi" }
                 volumeMounts:
                   - name: buildkite-git-mirrors
@@ -422,11 +437,13 @@ steps:
           podSpecPatch:
             serviceAccountName: buildkite-agent-stack-k8s-controller
             containers:
+              - *checkout_container
               - name: container-0
                 # renovate: datasource=docker depName=texlive/texlive
                 image: "texlive/texlive:TL2024-historic"
                 resources:
-                  requests: { cpu: "1", memory: "3Gi" }
+                  # The checkout container separately requests its 1Gi tmpfs charge.
+                  requests: { cpu: "1", memory: "2Gi" }
                   limits: { cpu: "2", memory: "4Gi" }
                 volumeMounts:
                   # Mirror-backed checkouts: see the container-0 mounts in the
@@ -459,11 +476,13 @@ steps:
           podSpecPatch:
             serviceAccountName: buildkite-agent-stack-k8s-controller
             containers:
+              - *checkout_container
               - name: container-0
                 # renovate: datasource=docker depName=texlive/texlive
                 image: "texlive/texlive:TL2024-historic"
                 resources:
-                  requests: { cpu: "1", memory: "3Gi" }
+                  # The checkout container separately requests its 1Gi tmpfs charge.
+                  requests: { cpu: "1", memory: "2Gi" }
                   limits: { cpu: "2", memory: "4Gi" }
                 volumeMounts:
                   - name: buildkite-git-mirrors
@@ -576,6 +595,7 @@ steps:
             cloneFlags: "--no-tags"
           podSpecPatch:
             containers:
+              - *checkout_container
               # The shell is taken from the AGENT container's registration
               # env (container-0-level BUILDKITE_SHELL is ignored — the
               # build-5651 lesson). This image has no bash; use sh.
@@ -594,7 +614,8 @@ steps:
                   - name: BUILDKITE_SHELL
                     value: "/bin/sh -e -c"
                 resources:
-                  requests: { cpu: "500m", memory: "2Gi" }
+                  # The checkout container separately requests its 1Gi tmpfs charge.
+                  requests: { cpu: "500m", memory: "1Gi" }
                   limits: { cpu: "2", memory: "4Gi" }
                 volumeMounts:
                   # Mirror-backed checkouts (same as semgrep below): without
@@ -703,6 +724,7 @@ steps:
             cloneFlags: "--no-tags"
           podSpecPatch:
             containers:
+              - *checkout_container
               # The shell is taken from the AGENT container's registration
               # env (container-0-level BUILDKITE_SHELL is ignored — the
               # build-5651 lesson). This image has no bash; use sh.
@@ -716,7 +738,8 @@ steps:
                 securityContext:
                   allowPrivilegeEscalation: false
                 resources:
-                  requests: { cpu: "500m", memory: "2Gi" }
+                  # The checkout container separately requests its 1Gi tmpfs charge.
+                  requests: { cpu: "500m", memory: "1Gi" }
                   limits: { cpu: "2", memory: "4Gi" }
                 volumeMounts:
                   - name: buildkite-git-mirrors

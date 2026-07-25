@@ -52,14 +52,14 @@ export function createBuildkiteApp(chart: Chart) {
     },
   });
 
-  // Default resource requests/limits for sidecar containers (e.g. Buildkite agent,
-  // checkout) that don't set their own resources. This ensures Kueue can account for
-  // sidecar CPU/memory when making admission decisions.
+  // Default resource requests/limits for any generated sidecar that doesn't set its
+  // own resources. The known agent and checkout containers are patched explicitly
+  // below so Kueue accounts for their different workloads; this LimitRange remains a
+  // fail-safe for new containers introduced by the controller.
   //
   // 2026-07 CI-freeze hardening: `default` (limits) added alongside the existing
-  // `defaultRequest`. Explicit-tier step containers now set their own limits and
-  // aren't affected by this; this backstops anything that doesn't. Values match the
-  // LIGHT tier used elsewhere in CI.
+  // `defaultRequest`. Explicit-tier step containers and the controller's known
+  // auxiliary containers set their own resources and aren't affected by this.
   // See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md.
   new KubeLimitRange(chart, "buildkite-limit-range", {
     metadata: { name: "buildkite-default-resources", namespace: "buildkite" },
@@ -170,6 +170,10 @@ export function createBuildkiteApp(chart: Chart) {
                 containers: [
                   {
                     name: "agent",
+                    resources: {
+                      requests: { cpu: "50m", memory: "64Mi" },
+                      limits: { cpu: "400m", memory: "768Mi" },
+                    },
                     env: [
                       {
                         // kubernetes-bootstrap imposes the AGENT's shell
@@ -210,6 +214,20 @@ export function createBuildkiteApp(chart: Chart) {
                         ].join(","),
                       },
                     ],
+                  },
+                  {
+                    // The checkout writes the tracked working tree into the
+                    // memory-backed workspace. Build #6179 proved that the former
+                    // 768Mi LimitRange default was below the clone's real peak:
+                    // four concurrent checkout containers were OOMKilled while
+                    // materializing the ~573Mi tracked tree. Request the 1Gi
+                    // already budgeted in every pipeline pod tier on the container
+                    // that owns those tmpfs pages, with 2Gi of bounded burst room.
+                    name: "checkout",
+                    resources: {
+                      requests: { cpu: "50m", memory: "1Gi" },
+                      limits: { cpu: "400m", memory: "2Gi" },
+                    },
                   },
                 ],
               },

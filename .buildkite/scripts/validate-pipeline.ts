@@ -27,6 +27,13 @@ const PATH_GATED_PR_KEYS = new Set([
   "images-pr",
   "pr-dryrun",
 ]);
+const SHARED_POD_ANCHORS = [
+  "pod_kubernetes",
+  "pod_privileged_kubernetes",
+  "pod_verify_kubernetes",
+  "pod_light_kubernetes",
+] as const;
+const CHECKOUT_CONTAINER_ALIAS = "- *checkout_container";
 
 function fail(message: string): never {
   throw new Error(`[validate-pipeline] ${message}`);
@@ -52,6 +59,41 @@ function hasTrimmedLine(block: string | undefined, expected: string): boolean {
 
 const pipeline = await Bun.file(PIPELINE_PATH).text();
 const lines = pipeline.split("\n");
+
+const checkoutContainerDefinition = [
+  "  - checkout_container: &checkout_container",
+  "      name: checkout",
+  "      resources:",
+  "        # The checkout writes the tracked tree into the memory-backed workspace.",
+  '        requests: { cpu: "50m", memory: "1Gi" }',
+  '        limits: { cpu: "400m", memory: "2Gi" }',
+].join("\n");
+if (!pipeline.includes(checkoutContainerDefinition)) {
+  fail(
+    "checkout container anchor must define the tested CPU and memory budget",
+  );
+}
+
+function sharedPodAnchorBlock(anchorName: string): string {
+  const marker = `      kubernetes: &${anchorName}\n`;
+  const start = pipeline.indexOf(marker);
+  if (start === -1) {
+    fail(`pipeline is missing shared pod anchor ${anchorName}`);
+  }
+  const end = pipeline.indexOf("\n  - ", start);
+  if (end === -1) {
+    fail(`shared pod anchor ${anchorName} has no boundary`);
+  }
+  return pipeline.slice(start, end);
+}
+
+for (const anchorName of SHARED_POD_ANCHORS) {
+  const anchorBlock = sharedPodAnchorBlock(anchorName);
+  if (!hasTrimmedLine(anchorBlock, CHECKOUT_CONTAINER_ALIAS)) {
+    fail(`shared pod anchor ${anchorName} does not patch checkout resources`);
+  }
+}
+
 const stepStarts = lines
   .map((line, index) => (/^  - label:/.test(line) ? index : -1))
   .filter((index) => index !== -1);
@@ -91,6 +133,14 @@ for (const [position, start] of stepStarts.entries()) {
     fail(
       `step ${key} must have exactly one ci.sjer.red/step-key label equal to its key`,
     );
+  }
+
+  const inheritedCheckoutPatch = SHARED_POD_ANCHORS.some((anchorName) =>
+    block.includes(`<<: *${anchorName}`),
+  );
+  const directCheckoutPatch = hasTrimmedLine(block, CHECKOUT_CONTAINER_ALIAS);
+  if (!inheritedCheckoutPatch && !directCheckoutPatch) {
+    fail(`step ${key} does not patch checkout to 1Gi/2Gi`);
   }
 
   if (PATH_GATED_PR_KEYS.has(key)) {
@@ -319,6 +369,26 @@ function containerBlock(
     blockStart,
     nextContainer === -1 ? step.length : nextContainer,
   );
+}
+
+for (const [stepKey, expectedRequests] of [
+  ["playwright-e2e-pr", 'requests: { cpu: "2", memory: "5Gi" }'],
+  ["playwright-e2e-main", 'requests: { cpu: "2", memory: "5Gi" }'],
+  ["resume-build-pr", 'requests: { cpu: "1", memory: "2Gi" }'],
+  ["resume-build-main", 'requests: { cpu: "1", memory: "2Gi" }'],
+  ["trivy", 'requests: { cpu: "500m", memory: "1Gi" }'],
+  ["semgrep", 'requests: { cpu: "500m", memory: "1Gi" }'],
+] satisfies ReadonlyArray<readonly [string, string]>) {
+  const commandContainer = containerBlock(
+    stepKey,
+    stepBlocks.get(stepKey),
+    "container-0",
+  );
+  if (!commandContainer.includes(expectedRequests)) {
+    fail(
+      `${stepKey} must transfer the checkout tmpfs memory request to the checkout container`,
+    );
+  }
 }
 
 for (const [stepKey, step] of [
