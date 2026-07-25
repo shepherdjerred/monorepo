@@ -69,3 +69,31 @@ second node.
    buildkitd PVC/GC behavior, `ci-io-report.ts --enforce-impact-gates`.
 3. Rollback per component is a one-line revert (cutover line, workspace-volume
    value, selector fail-open already defaults to ALL).
+
+## Session Log — 2026-07-25
+
+### Done
+
+- Components A–D + F implemented, verified, and pushed as PR #1639 (six
+  commits: buildkitd cutover + NetworkPolicy `bf4a6ebd7`, lockfile-aware
+  selector `cefcda52e`, tmpfs workspaces + trivy mount `7de71812c`, docs
+  `e04104dbf`, lane merges `beca7eb3f`, descope docs). All local gates green:
+  validate-pipeline (27 steps), selector suite (19 tests incl. real-lockfile
+  schema-drift canary), ci-changed + upload-pipeline suites, shellcheck,
+  cdk8s typecheck/test/lint, `verify -- --affected` (31/31).
+
+### Remaining
+
+- Drive #1639 green (its own build is the e2e for the remote-driver bake —
+  first bake warms the cold buildkitd cache, expect a long images-pr step),
+  promote from draft, merge; then the post-merge watch items in ## Remaining.
+
+### Caveats
+
+- tmpfs workspace + Kueue quota are chart config → activate only after merge
+  - ArgoCD sync; the PR build still runs on disk-backed workspaces.
+- Component E (ci-base digest pin) descoped to todos/ci-base-digest-pin.md.
+- The design-check subagent never reported back; its three risk areas were
+  each resolved independently (selector proven against the real lockfile,
+  tmpfs via the chart's first-class workspace-volume key, validator updated
+  and green).
