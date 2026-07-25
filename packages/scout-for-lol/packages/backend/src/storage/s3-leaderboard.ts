@@ -18,6 +18,7 @@ import {
   leaderboardSnapshotFetchDurationSeconds,
 } from "#src/metrics/index.ts";
 import { z } from "zod";
+import { validateS3Metadata } from "#src/storage/s3-metadata.ts";
 
 // Schema for AWS S3 "not found" errors
 const AwsS3NotFoundErrorSchema = z.object({
@@ -111,13 +112,13 @@ export async function saveCachedLeaderboard(
       Key: currentKey,
       Body: body,
       ContentType: "application/json",
-      Metadata: {
+      Metadata: validateS3Metadata({
         competitionId: leaderboard.competitionId.toString(),
         version: leaderboard.version,
         calculatedAt: leaderboard.calculatedAt,
         entryCount: leaderboard.entries.length.toString(),
         uploadedAt: new Date().toISOString(),
-      },
+      }),
     });
 
     await client.send(currentCommand);
@@ -128,13 +129,13 @@ export async function saveCachedLeaderboard(
       Key: snapshotKey,
       Body: body,
       ContentType: "application/json",
-      Metadata: {
+      Metadata: validateS3Metadata({
         competitionId: leaderboard.competitionId.toString(),
         version: leaderboard.version,
         calculatedAt: leaderboard.calculatedAt,
         entryCount: leaderboard.entries.length.toString(),
         uploadedAt: new Date().toISOString(),
-      },
+      }),
     });
 
     await client.send(snapshotCommand);

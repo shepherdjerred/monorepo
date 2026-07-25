@@ -6,6 +6,7 @@ import { getErrorMessage } from "#src/utils/errors.ts";
 import { format } from "date-fns";
 import { createLogger } from "#src/logger.ts";
 import { sendPutWithRetry } from "#src/storage/s3-put-retry.ts";
+import { validateS3Metadata } from "#src/storage/s3-metadata.ts";
 
 const logger = createLogger("storage-s3-prematch");
 
@@ -91,10 +92,10 @@ export async function savePrematchToS3(
       Key: key,
       Body: bodyBuffer,
       ContentType: contentType,
-      Metadata: {
+      Metadata: validateS3Metadata({
         ...metadata,
         uploadedAt: new Date().toISOString(),
-      },
+      }),
     });
 
     await sendPutWithRetry(
