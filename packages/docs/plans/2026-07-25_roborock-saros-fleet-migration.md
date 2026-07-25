@@ -78,9 +78,56 @@ take effect only after the config reload.
 
 ## Remaining
 
-- [ ] Phase B — HomeKit config + Reloader
-- [ ] Phase C — Temporal fleet retarget
-- [ ] Phase D — Prometheus alerts + template sensors
-- [ ] Phase E — docs reconciliation
-- [ ] Verify + draft PR
-- [ ] Phase A — live rename + enum/polarity validation (coordinate with merge)
+- [x] Phase B — HomeKit config + config-hash rollout
+- [x] Phase C — Temporal fleet retarget
+- [x] Phase D — Prometheus alerts + template sensors
+- [x] Phase E — docs reconciliation
+- [x] Verify + draft PR (#1645)
+- [x] Phase A — live HA entity rename (done 2026-07-25; 98 entities)
+- [ ] Post-deploy: full alert dry-run + hkctl before/after (after PR merges + HA rolls)
+
+## Session Log — 2026-07-25
+
+### Done
+
+- **Draft PR #1645** (`feature/roborock-saros-fleet`).
+- **Temporal** (`workflows/ha/`): shared `VACUUMS` + `startEligibleVacuums()` in
+  util.ts; `run-vacuum-if-not-home` iterates the fleet with concurrent verify;
+  leaving/welcome-home use the shared helper; `all-units-active` skip reason +
+  `temporal.ts` benignSkipReasons synced. 628 tests green.
+- **HomeKit/config**: dropped the `vacuum` domain from HA1; deleted dead roomba
+  lines; glob-excluded Saros diagnostics; 3 `*_vacuum_problem` template
+  binary_sensors (enum→boolean, values verified live); deterministic config-hash
+  pod annotation for auto-rollout.
+- **Alerts**: `homeassistant-roborock` group (stuck/dock/battery/consumables);
+  removed dead Roomba + `ha_workflow_*` rules; fixed the general battery exclusion.
+  241 cdk8s tests green; rendering confirmed.
+- **Docs**: this plan, `ha-workflow-metrics-orphan` todo, HAMH plan superseded,
+  reauth todo updated.
+- **Phase A — live HA entity rename (done):** platform-scoped
+  (`platform === "roborock"`) so it caught BOTH the vacuum device AND its separate
+  dock device — device-scoping had missed the dock's `*_dock_*` entities. 98
+  entities renamed: `office_* → 1st_floor_*`, `living_room_* → 2nd_floor_*`
+  (3rd_floor already correct). Verified: all alert-referenced IDs resolve; old IDs
+  gone; friendly names intact; the `sensor.office_energy/_power` energy monitor
+  (different integration) untouched.
+
+### Remaining
+
+- **Post-deploy (after PR merges → ArgoCD → HA rolls via the config-hash annotation):**
+  - Full alert dry-run: drive each `*_vacuum_problem` template sensor + the 4
+    dock/water binary_sensors to a fault; confirm the metric flips to 1.
+  - `hkctl` before/after: the 3 duplicate bridged tiles + Litter Box gone; the 3
+    native Matter tiles remain.
+- **Optional:** hkctl tidy (move native tiles out of "Office", normalize names).
+
+### Caveats
+
+- The rename lives in HA `.storage`, NOT git — an HA rebuild/PVC-restore reverts the
+  entity IDs and silently breaks the D2 rules (empty matches). Mapping: every
+  Roborock `office_*` → `1st_floor_*`, `living_room_*` → `2nd_floor_*` (vacuum +
+  dock devices).
+- Rename→deploy gap: until this PR deploys, the still-live `vacuum` domain
+  re-bridges the renamed units as duplicate switch tiles in Apple Home (cosmetic).
+- Broader `ha_workflow_*` orphan (non-vacuum rules + dashboard) deferred to
+  `ha-workflow-metrics-orphan`.
