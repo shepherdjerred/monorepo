@@ -129,3 +129,36 @@ NanoKVM console works via plain EFI framebuffer).
   boot loop).
 - The liskov `diskSelector.serial` is a placeholder; an unmatched selector
   fails safe (cannot wipe the wrong disk).
+
+## Session Log — 2026-07-25 (PR #1629 babysit: crypto-mining security review)
+
+### Done
+
+- Addressed Greptile P1 security thread `PRRT_kwDOHf4r4c6Tx_Db` ("CI miner
+  bypasses detection"). The prior fix excluded liskov from the only
+  `PotentialCryptoMining` rule via `node!="liskov"` on both operands, which
+  removed the CI execution node from crypto-mining detection entirely.
+- Fix (commit 310a2fcc): added `PotentialCryptoMiningCiNode` to
+  `resource-monitoring.ts` — same CPU + egress thresholds scoped to
+  `node="liskov"`, gated on `absent(kube_pod_status_phase{namespace="buildkite",
+  pod=~<job-pod-pattern>, phase="Running"} == 1)`. Every Buildkite step pod is
+  pinned to liskov, so "no job running" = CI node should be idle; sustained
+  mining-like load for 30m in that window pages critical. Distinguishes
+  legitimate CI from an attacker instead of blanket-excluding the node.
+- Added two tests in `resource-monitoring.test.ts` locking (a) the generic
+  rule keeps `node!="liskov"` and (b) the CI-node rule is liskov-scoped and
+  idle-gated. Typecheck + eslint + tests green; replied to and resolved the
+  Greptile thread.
+
+### Remaining
+
+- Orchestrator pushes the commit; re-run of `robot-face-greptile-review-gate`
+  should pass now that the only P1 thread is resolved. (Unchanged: join-day
+  runbook + merge gate still block actual merge.)
+
+### Caveats
+
+- The idle-gate assumes all Buildkite job pods run on liskov (true today via
+  nodeSelector). A miner running *concurrently* with a real build is not
+  caught by this rule; it targets the sustained-idle attack the reviewer
+  flagged. If CI ever runs off-liskov, revisit the gate.
