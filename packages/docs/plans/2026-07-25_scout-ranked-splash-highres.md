@@ -76,11 +76,15 @@ Non-ranked / loading-screen / arena reports are untouched (keep loading art).
   `verify --affected` (49 tasks) green. Committed `d7d9c0d56`, pushed to PR #924.
 - Posted before/after PR media (banner full + 1:1 zoom, square hero band) to
   PR #924 as a comment.
-- Follow-up fix (`c3cf5e3ab`): grade letters in `shared/grade-diamond.tsx` sat
-  ~2% low in the diamond (Beaufort line-box seats caps low when flex-centered).
-  Corrected with `paddingBottom = 0.08·fontSize` on the letter (measured to zero
-  the glyph-bbox-vs-box-center offset; scales with the S+ 0.45× and normal 0.55×
-  sizes). Regenerated the 8 snapshots; posted a before/after to the PR.
+- Follow-up fix (final `7d1aefe24`): grade letters in `shared/grade-diamond.tsx`
+  sat ~1% low in the diamond (Beaufort line-box seats caps low when
+  flex-centered). Corrected with `paddingBottom = 0.035·fontSize` on the letter
+  (scales with the S+ 0.45× and normal 0.55× sizes). **Calibration caveat:** an
+  isolated satori render mis-measures the offset vs the real `svgToPng` pipeline
+  — the first attempt (`0.08`, commit `c3cf5e3ab`) overshot and lifted the
+  letters too high. The correct value was measured on the actual banner render
+  (magenta glyph vs a centerline at the diamond's true middle). Regenerated the
+  8 snapshots each time.
 
 ### Remaining
 
