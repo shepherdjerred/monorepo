@@ -99,3 +99,33 @@ NanoKVM console works via plain EFI framebuffer).
 - The 2026-07-22 remediation impl plan (`status: in-progress`) tracks the
   torvalds-side Kueue/persistence work separately; liskov changes should
   compose with it, not race it.
+
+## Session Log — 2026-07-25 (continued: build done, join PR authored)
+
+### Done
+
+- Hardware assembled + BIOS updated (user). SecureBoot decision recorded.
+- Full port/adapt/skip audit of everything per-node on torvalds → plan doc
+  `packages/docs/plans/2026-07-25_liskov-cluster-join.md`.
+- **Draft PR #1629** (branch `feature/liskov-join`, worktree
+  `.claude/worktrees/liskov-join`): liskov Talos config, taint, tolerations
+  for all observability + CSI DaemonSets, Buildkite pinning, AMD k10temp
+  alerts, `update-image-id.ts` multi-node, AGENTS.md topology update.
+  `bun run verify -- --affected` green. **Draft until join day** — the
+  nodeSelector strands CI if merged before the node is Ready.
+
+### Remaining
+
+- User: RAM burn-in (memtest86 ×4 + TM5) inside the eBay return window;
+  NanoKVM; boot the SecureBoot ISO.
+- Join day: runbook at `packages/homelab/src/talos/liskov/README.md`
+  (serial → config → apply → pool → merge #1629 → recreate git-mirrors PVC).
+- Post-soak: torvalds relaxation + Kueue raise PR (plan Phase 3).
+
+### Caveats
+
+- `sp5100_tco` watchdog is NOT live-verified on the B650 board — the patch
+  file mandates verification before arming (`nowayout=1` + unpetted =
+  boot loop).
+- The liskov `diskSelector.serial` is a placeholder; an unmatched selector
+  fails safe (cannot wipe the wrong disk).
