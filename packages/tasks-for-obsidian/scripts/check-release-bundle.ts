@@ -17,7 +17,8 @@
  * `ios/ci_scripts/ci_post_clone.sh` and the `xcode-cloud-debug` skill.
  *
  * Runs the same bundle for every source-only dependency the app imports — any new
- * unresolvable import fails here regardless of which package introduced it.
+ * unresolvable import fails here regardless of which package introduced it. It
+ * also asserts each React singleton is bundled exactly once (see below).
  */
 import { spawnSync } from "node:child_process";
 import {
@@ -45,14 +46,18 @@ const MIN_BUNDLE_BYTES = 1_000_000;
 const SINGLETON_PACKAGES = ["react", "react-native", "scheduler"] as const;
 
 /**
- * Given a Metro sourcemap's `sources` list, return the distinct on-disk package
- * roots each singleton resolved to. More than one root = a duplicate copy in the
- * bundle. Pure + exported so it can be unit-tested without a full bundle.
+ * Given a Metro sourcemap's `sources` list, return, for each singleton, the
+ * distinct on-disk package roots it resolved to. Each MUST resolve to exactly
+ * one root: `> 1` is a duplicate copy (the launch crash), and `0` means the
+ * matcher found nothing — a bundled singleton is always present, so zero means
+ * the sourcemap path format changed and this guard can no longer see
+ * duplicates. Both are violations. Pure + exported so it can be unit-tested
+ * without a full bundle.
  */
-export function findDuplicatePackages(
+export function findSingletonViolations(
   sources: string[],
 ): { pkg: string; roots: string[] }[] {
-  const duplicates: { pkg: string; roots: string[] }[] = [];
+  const violations: { pkg: string; roots: string[] }[] = [];
   for (const pkg of SINGLETON_PACKAGES) {
     // Match `.../node_modules/<pkg>/` — the trailing slash keeps `react` from
     // matching `react-native` / `react-dom`, and `react-native` from matching
@@ -63,9 +68,9 @@ export function findDuplicatePackages(
       const idx = source.lastIndexOf(marker);
       if (idx !== -1) roots.add(source.slice(0, idx + marker.length - 1));
     }
-    if (roots.size > 1) duplicates.push({ pkg, roots: [...roots].sort() });
+    if (roots.size !== 1) violations.push({ pkg, roots: [...roots].sort() });
   }
-  return duplicates;
+  return violations;
 }
 
 const SourcemapSchema = z.object({ sources: z.array(z.string()) });
@@ -75,104 +80,117 @@ function assertSingletons(sourcemapPath: string): void {
     JSON.parse(readFileSync(sourcemapPath, "utf8")),
   );
   if (!parsed.success) {
-    console.error(`Sourcemap ${sourcemapPath} has no usable "sources" array.`);
-    process.exit(1);
-  }
-  const duplicates = findDuplicatePackages(parsed.data.sources);
-  if (duplicates.length > 0) {
-    console.error(
-      "\nRelease bundle contains DUPLICATE copies of a singleton package. " +
-        "This ships an app that crashes at launch (e.g. two `react` copies -> " +
-        "\"Cannot read property 'useEffect' of null\"). Align the version so the " +
-        "monorepo resolves one copy, or dedupe it in metro.config.js " +
-        "(resolver.resolveRequest). See " +
-        "packages/docs/logs/2026-07-24_ios-duplicate-react-startup-crash.md.",
+    throw new Error(
+      `Sourcemap ${sourcemapPath} has no usable "sources" array.`,
     );
-    for (const { pkg, roots } of duplicates) {
-      console.error(`\n  ${pkg}: ${String(roots.length)} copies`);
-      for (const root of roots) console.error(`    - ${root}`);
-    }
-    process.exit(1);
+  }
+  const violations = findSingletonViolations(parsed.data.sources);
+  if (violations.length > 0) {
+    const details = violations
+      .map(({ pkg, roots }) =>
+        roots.length > 1
+          ? `  ${pkg}: ${String(roots.length)} copies bundled (must be 1):\n` +
+            roots.map((r) => `    - ${r}`).join("\n")
+          : `  ${pkg}: not found in the bundle (expected exactly 1). The ` +
+            "sourcemap path format likely changed; update SINGLETON_PACKAGES " +
+            "detection in this script.",
+      )
+      .join("\n\n");
+    throw new Error(
+      "\nRelease bundle failed the singleton check. A duplicate copy of a " +
+        "singleton ships an app that crashes at launch (e.g. two `react` copies " +
+        "-> \"Cannot read property 'useEffect' of null\"). Align the version so " +
+        "the monorepo resolves one copy, or dedupe it in metro.config.js " +
+        "(resolver.resolveRequest). See " +
+        "packages/docs/logs/2026-07-24_ios-duplicate-react-startup-crash.md.\n\n" +
+        details,
+    );
   }
   console.log(
-    `Singleton check OK (${SINGLETON_PACKAGES.join(", ")} each appear once).`,
+    `Singleton check OK (${SINGLETON_PACKAGES.join(", ")} each bundled exactly once).`,
   );
 }
 
-function main(): void {
-  const workDir = mkdtempSync(path.join(tmpdir(), "tfo-release-bundle-"));
+/** Produce the Release bundle + sourcemap and run all assertions. Throws on any
+ * failure so the caller's `finally` can clean up the temp dir. */
+function runChecks(workDir: string): void {
   const bundleOutput = path.join(workDir, "main.jsbundle");
   const sourcemapOutput = path.join(workDir, "main.jsbundle.map");
   const assetsDest = path.join(workDir, "assets");
 
-  try {
-    const result = spawnSync(
-      "bun",
-      [
-        "node_modules/react-native/scripts/bundle.js",
-        "bundle",
-        "--config-cmd",
-        "bun node_modules/.bin/react-native config",
-        "--entry-file",
-        "index.js",
-        "--platform",
-        "ios",
-        "--dev",
-        "false",
-        "--reset-cache",
-        "--bundle-output",
-        bundleOutput,
-        "--sourcemap-output",
-        sourcemapOutput,
-        "--assets-dest",
-        assetsDest,
-        "--minify",
-        "false",
-      ],
-      { stdio: "inherit" },
+  const result = spawnSync(
+    "bun",
+    [
+      "node_modules/react-native/scripts/bundle.js",
+      "bundle",
+      "--config-cmd",
+      "bun node_modules/.bin/react-native config",
+      "--entry-file",
+      "index.js",
+      "--platform",
+      "ios",
+      "--dev",
+      "false",
+      "--reset-cache",
+      "--bundle-output",
+      bundleOutput,
+      "--sourcemap-output",
+      sourcemapOutput,
+      "--assets-dest",
+      assetsDest,
+      "--minify",
+      "false",
+    ],
+    { stdio: "inherit" },
+  );
+
+  if (result.status !== 0) {
+    throw new Error(
+      `\nRelease Metro bundle failed (exit ${String(result.status ?? "unknown")}). ` +
+        "This is the same bundle Xcode Cloud runs during Archive — an " +
+        "UnableToResolveError above means a dependency is not installed where " +
+        "Metro looks. If it names a package from a source-only `file:` workspace " +
+        "dep (e.g. tasknotes-types), install that dep's node_modules in " +
+        "ios/ci_scripts/ci_post_clone.sh (see the xcode-cloud-debug skill).",
     );
+  }
 
-    if (result.status !== 0) {
-      console.error(
-        `\nRelease Metro bundle failed (exit ${String(result.status ?? "unknown")}). ` +
-          "This is the same bundle Xcode Cloud runs during Archive — an " +
-          "UnableToResolveError above means a dependency is not installed where " +
-          "Metro looks. If it names a package from a source-only `file:` workspace " +
-          "dep (e.g. tasknotes-types), install that dep's node_modules in " +
-          "ios/ci_scripts/ci_post_clone.sh (see the xcode-cloud-debug skill).",
-      );
-      process.exit(1);
-    }
+  if (!existsSync(bundleOutput)) {
+    throw new Error(
+      `Release bundle reported success but ${bundleOutput} is missing.`,
+    );
+  }
 
-    if (!existsSync(bundleOutput)) {
-      console.error(
-        `Release bundle reported success but ${bundleOutput} is missing.`,
-      );
-      process.exit(1);
-    }
+  const size = statSync(bundleOutput).size;
+  if (size < MIN_BUNDLE_BYTES) {
+    throw new Error(
+      `Release bundle is only ${String(size)} bytes (< ${String(MIN_BUNDLE_BYTES)}); expected the full graph.`,
+    );
+  }
+  console.log(`Release Metro bundle OK (${String(size)} bytes).`);
 
-    const size = statSync(bundleOutput).size;
-    if (size < MIN_BUNDLE_BYTES) {
-      console.error(
-        `Release bundle is only ${String(size)} bytes (< ${String(MIN_BUNDLE_BYTES)}); expected the full graph.`,
-      );
-      process.exit(1);
-    }
+  if (!existsSync(sourcemapOutput)) {
+    throw new Error(
+      `Release bundle succeeded but ${sourcemapOutput} is missing; cannot check for duplicate packages.`,
+    );
+  }
+  assertSingletons(sourcemapOutput);
+}
 
-    console.log(`Release Metro bundle OK (${String(size)} bytes).`);
-
-    if (!existsSync(sourcemapOutput)) {
-      console.error(
-        `Release bundle succeeded but ${sourcemapOutput} is missing; cannot check for duplicate packages.`,
-      );
-      process.exit(1);
-    }
-    assertSingletons(sourcemapOutput);
+function main(): void {
+  const workDir = mkdtempSync(path.join(tmpdir(), "tfo-release-bundle-"));
+  try {
+    runChecks(workDir);
   } finally {
     rmSync(workDir, { recursive: true, force: true });
   }
 }
 
 if (import.meta.main) {
-  main();
+  try {
+    main();
+  } catch (error: unknown) {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  }
 }
