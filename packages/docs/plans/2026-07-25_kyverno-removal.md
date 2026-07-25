@@ -74,18 +74,83 @@ Render check confirmed: the 3 target CRs + alertmanager PVC carry the label,
 
 ## Phase C — Live-cluster cleanup (POST-MERGE, operator-run)
 
-Removing kyverno from GitOps prunes its Deployment, but its self-managed
-`Validating`/`MutatingWebhookConfiguration` objects are `failurePolicy: Fail` — if
-they outlive the pods they block every matched write cluster-wide with no backend.
-So, as an explicit operator step after the PR merges and Argo begins pruning:
+**GitOps does NOT auto-remove kyverno after merge.** The `apps` Application and
+both kyverno child Applications use `syncPolicy.automated: {}` — auto-sync with
+**prune disabled** (see `packages/docs/todos/argocd-apps-prune-policy.md`), and the
+CI sync (`packages/homelab/scripts/argocd.ts sync`) POSTs no `prune` flag. So when
+this PR removes the kyverno manifests, Argo does **not** delete anything: the
+`kyverno` and `kyverno-policies` child Applications linger as `requiresPruning`,
+keep reconciling kyverno from their own Helm sources (`ServerSideApply`), and the
+admission controller keeps its `failurePolicy: Fail` webhooks alive — the
+cluster-wide write blocker persists indefinitely. (Flipping global prune on `apps`
+is out of scope here — that TODO shows it would also delete the whole Dagger stack
+in one shot; this teardown is fully explicit instead.)
 
-1. Delete the webhook configs **first**:
-   `kubectl delete validatingwebhookconfiguration,mutatingwebhookconfiguration -l webhook.kyverno.io/managed-by=kyverno`
-   (verify names first).
-2. Confirm the `kyverno` Application + namespace are pruned; delete orphans if not.
-3. Delete leftover `PolicyReports`/`ClusterPolicyReports`, then the `*.kyverno.io`
-   and `wgpolicyk8s.io` CRDs (no other consumer). `kubectl delete crd` is
-   permission-prompted.
+Teardown is therefore a **deterministic, unconditional operator sequence** run
+after merge. Order matters: it must (a) stop reconciliation so nothing revives
+kyverno, (b) remove the fail-closed webhooks **without** ever leaving one pointing
+at a dead backend, (c) cascade-delete the namespaced **and** cluster-scoped
+resources, and (d) verify cluster-scoped cleanup. `automated:` here has
+`selfHeal` off, so Argo will not re-create resources you delete by hand once its
+Applications are gone — only kyverno's own admission controller re-creates
+webhooks, which step 3 stops.
+
+1. **Stop GitOps management** — delete the two orphaned child Applications
+   **non-cascade** so Argo stops re-syncing kyverno from its Helm source (these
+   Applications carry no `resources-finalizer.argocd.argoproj.io`, so this leaves
+   the live resources in place for the controlled teardown below; it also clears
+   the `requiresPruning` orphans):
+
+   ```
+   kubectl -n argocd delete application kyverno kyverno-policies --cascade=orphan
+   ```
+
+2. **Remove the webhooks while the backend is still alive** (no dead-backend
+   window — the pods are Running, so deleting the webhooks simply unblocks writes;
+   kyverno just stops intercepting). Verify names/labels first (kyverno labels its
+   configs `webhook.kyverno.io/managed-by=kyverno`; also catch any by `kyverno-`
+   name prefix):
+
+   ```
+   kubectl delete validatingwebhookconfiguration,mutatingwebhookconfiguration \
+     -l webhook.kyverno.io/managed-by=kyverno
+   ```
+
+3. **Immediately scale all kyverno controllers to 0** so the admission controller
+   cannot re-create the webhooks it manages:
+
+   ```
+   kubectl -n kyverno scale deploy --all --replicas=0
+   ```
+
+4. **Re-check and re-delete** any webhook the controller may have re-created in the
+   gap between steps 2 and 3, then confirm zero remain (controllers are now at 0,
+   so none come back):
+
+   ```
+   kubectl get validatingwebhookconfiguration,mutatingwebhookconfiguration | grep -i kyverno   # expect none
+   ```
+
+5. **Cascade-delete the rest — namespaced and cluster-scoped.** Deleting the
+   namespace only removes namespaced objects; kyverno's cluster-scoped RBAC (~16
+   ClusterRoles + ~7 ClusterRoleBindings) and any `ClusterPolicy` objects must be
+   deleted explicitly (verify the selector; fall back to the `kyverno` name prefix):
+
+   ```
+   kubectl delete namespace kyverno
+   kubectl delete clusterrole,clusterrolebinding -l app.kubernetes.io/part-of=kyverno
+   kubectl delete clusterpolicy --all
+   ```
+
+6. **Delete reports, then CRDs** — leftover `PolicyReports`/`ClusterPolicyReports`,
+   then the `*.kyverno.io` and `wgpolicyk8s.io` CRDs (no other consumer; deleting
+   the CRDs garbage-collects any remaining CRs). `kubectl delete crd` is
+   permission-prompted:
+
+   ```
+   kubectl delete policyreports,clusterpolicyreports --all -A
+   kubectl delete crd -l app.kubernetes.io/part-of=kyverno   # *.kyverno.io + wgpolicyk8s.io; verify list first
+   ```
 
 ## Verification
 
@@ -98,8 +163,13 @@ So, as an explicit operator step after the PR merges and Argo begins pruning:
 - `kubectl get pvc -A -l velero.io/backup=enabled` still lists all 6 target PVCs.
 - Manual backup includes them: `velero backup create verify-kyverno-removal --wait`
   then `velero backup describe … --details`.
-- Kyverno fully gone: no pods in `kyverno` ns, no `*.kyverno.io` CRDs, no kyverno
-  webhook configs.
+- Kyverno fully gone — check **cluster-scoped**, not just the namespace:
+  - `kubectl get ns kyverno` → `NotFound`; no kyverno pods anywhere.
+  - `kubectl -n argocd get application kyverno kyverno-policies` → both `NotFound`
+    (the `requiresPruning` orphans are cleared).
+  - `kubectl get validatingwebhookconfiguration,mutatingwebhookconfiguration | grep -i kyverno` → empty.
+  - `kubectl get clusterrole,clusterrolebinding | grep -i kyverno` → empty.
+  - `kubectl get crd | grep -E 'kyverno\.io|wgpolicyk8s\.io'` → empty.
 - A previously-blocked Deployment write succeeds immediately; cloudflare-operator
   `FailedApplying*` events stop.
 
@@ -119,7 +189,9 @@ and unaffected; this removal only takes kyverno off the critical path.
 ### Remaining
 
 - Open draft PR; promote to ready after review.
-- Phase C live-cluster cleanup (operator-run, post-merge) — webhook configs + CRDs.
+- Phase C live-cluster cleanup (operator-run, post-merge) — now a deterministic,
+  prune-independent teardown: stop the child Applications, remove webhooks before
+  scaling controllers to 0, then cascade-delete namespaced + cluster-scoped RBAC + CRDs.
 - Update kyverno mentions in health-audit runbooks/guides; resolve
   `packages/docs/todos/torvalds-controller-restart-churn.md`.
 
@@ -129,3 +201,21 @@ and unaffected; this removal only takes kyverno off the critical path.
   omits it (commented-out upstream) — intentional, not a regen gap.
 - The upstream etcd latency that caused kyverno's crashloops is a separate, unfixed
   issue tracked in the diagnosis log; this PR only removes kyverno as an amplifier.
+
+### Addendum — 2026-07-25 (Phase C hardening)
+
+Corrected a wrong premise in Phase C: it claimed "removing kyverno from GitOps
+prunes its Deployment." It does **not** — `apps` and both kyverno child
+Applications run `automated: {}` with prune **off** and the CI sync sends no prune
+flag (`packages/docs/todos/argocd-apps-prune-policy.md`), so post-merge the child
+Applications linger as `requiresPruning`, keep re-syncing kyverno, and the
+admission controller keeps its fail-closed webhooks alive. Rewrote Phase C as a
+deterministic teardown that (1) deletes the orphaned `kyverno`/`kyverno-policies`
+Applications non-cascade to stop reconciliation, (2) deletes the webhooks while
+the backend is still Running (no dead-backend window), (3) scales the controllers
+to 0 so they can't re-create webhooks, (4) re-verifies no webhooks remain, then
+(5–6) cascade-deletes namespaced + cluster-scoped RBAC (~16 ClusterRoles / ~7
+ClusterRoleBindings), ClusterPolicies, reports, and CRDs. Verification now checks
+cluster-scoped objects and the orphaned Applications, not just the namespace/CRDs.
+Enabling global prune on `apps` was rejected as out of scope (it would also delete
+the Dagger stack). No source code changed — runbook only.
