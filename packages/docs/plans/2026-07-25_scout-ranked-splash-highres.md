@@ -88,15 +88,26 @@ Non-ranked / loading-screen / arena reports are untouched (keep loading art).
   `verify --affected` (49 tasks) green. Committed `d7d9c0d56`, pushed to PR #924.
 - Posted before/after PR media (banner full + 1:1 zoom, square hero band) to
   PR #924 as a comment.
-- Follow-up fix (final `7d1aefe24`): grade letters in `shared/grade-diamond.tsx`
-  sat ~1% low in the diamond (Beaufort line-box seats caps low when
-  flex-centered). Corrected with `paddingBottom = 0.035·fontSize` on the letter
-  (scales with the S+ 0.45× and normal 0.55× sizes). **Calibration caveat:** an
-  isolated satori render mis-measures the offset vs the real `svgToPng` pipeline
-  — the first attempt (`0.08`, commit `c3cf5e3ab`) overshot and lifted the
-  letters too high. The correct value was measured on the actual banner render
-  (magenta glyph vs a centerline at the diamond's true middle). Regenerated the
-  8 snapshots each time.
+- Grade-letter centering (final `e9543c7a3`): the cap glyph sits ~7% **above**
+  the diamond's middle in the real layout, fixed with `paddingTop = 0.45·fontSize`
+  in `shared/grade-diamond.tsx`. **Hard-won calibration lesson:** isolated
+  single-`GradeDiamond` renders do NOT reproduce the offset (they measure the
+  letter _low_); only the real report layout shows it _high_. The first two
+  attempts (`paddingBottom 0.08` then `0.035`, commits `c3cf5e3ab`/`e9543…`
+  predecessors) were calibrated on isolated renders and had the direction wrong,
+  pushing the letters further up. Calibrate pixel-level type nudges ONLY on the
+  real `matchToSvg`→`svgToPng` output, measuring the letter bbox vs the
+  rotated-border bbox with separable debug colors. Residual ~1.6% between banner
+  and square is rasterization noise (different canvas positions). Snapshots
+  regenerated each iteration.
+- Merged `origin/main` (`3ada892d5`), which brought in **#1640 "stop downloading
+  unused champion skins"** (removed `champion-skins.json`, `skinNum` /
+  `SkinFallbackEvent` plumbing, `ChampionDetailSkinsSchema`). Reconciled the
+  splash code to main's skin-0-only, name-keyed shape: dropped `skinNum` /
+  `SkinFallbackEvent` from `getChampionSplashImageBase64` /
+  `validateChampionSplashImage` / `getChampionSplashImage` /
+  `preloadChampionSplashImages` and the `Splash` component; folded the three
+  preloaders (portrait/loading/splash) into one shared `preloadChampionArt`.
 
 ### Remaining
 
