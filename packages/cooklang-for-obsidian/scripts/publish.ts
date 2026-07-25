@@ -100,15 +100,17 @@ function usage(): never {
 }
 
 /**
- * True when the freshly-built plugin artifacts are byte-identical to the
- * latest release's assets (manifest.json excluded — it embeds the version).
- * A repo with no releases yet returns false so the first release still cuts.
+ * The latest release's tag when the freshly-built plugin artifacts are
+ * byte-identical to its assets (manifest.json excluded — it embeds the
+ * version), else null. A repo with no releases yet returns null so the first
+ * release still cuts. Returning the tag (not just a bool) lets the caller
+ * resume an interrupted commit-back for exactly the published version.
  */
-async function builtArtifactsMatchLatestRelease(
+async function matchingLatestReleaseTag(
   pkgRoot: string,
   pluginRepo: string,
   env: Record<string, string>,
-): Promise<boolean> {
+): Promise<string | null> {
   const latest = await runAllowExit(
     [
       "gh",
@@ -125,7 +127,7 @@ async function builtArtifactsMatchLatestRelease(
   );
   const tag = latest.stdout.trim();
   if (latest.exitCode !== 0 || tag === "") {
-    return false;
+    return null;
   }
 
   const downloadDir = `${tmpBase()}/cooklang-latest-release-${Date.now().toString()}`;
@@ -151,7 +153,7 @@ async function builtArtifactsMatchLatestRelease(
       const built = Bun.file(`${pkgRoot}/${name}`);
       const released = Bun.file(`${downloadDir}/${name}`);
       if (!(await built.exists()) || !(await released.exists())) {
-        return false;
+        return null;
       }
       const [builtBytes, releasedBytes] = await Promise.all([
         built.bytes(),
@@ -161,11 +163,11 @@ async function builtArtifactsMatchLatestRelease(
         builtBytes.length !== releasedBytes.length ||
         Buffer.compare(builtBytes, releasedBytes) !== 0
       ) {
-        return false;
+        return null;
       }
     }
     console.log(`latest release ${tag} matches the built artifacts`);
-    return true;
+    return tag;
   } finally {
     // rm -rf is a no-op on a nonexistent dir (Bun.file().exists() is
     // file-only and would never fire for a directory).
@@ -224,9 +226,34 @@ async function main(): Promise<void> {
     // all byte-identical). The build is deterministic (verified: consecutive
     // releases' assets are byte-identical), so skip when the built artifacts
     // match the latest release's.
-    if (await builtArtifactsMatchLatestRelease(pkgRoot, pluginRepo, env)) {
+    const matchedTag = await matchingLatestReleaseTag(pkgRoot, pluginRepo, env);
+    if (matchedTag !== null) {
+      // The publish lane runs under the pipeline's shared retry anchor. A
+      // retryable interruption AFTER the release is cut but BEFORE the
+      // monorepo manifest commit-back lands would, on retry, hit this gate and
+      // return — leaving the manifest permanently stale. So resume the
+      // commit-back for the published tag before returning. Only act when the
+      // manifest is actually behind (the common case is in sync, and this
+      // avoids cloning the monorepo on every no-op build); cooklangCommitBack
+      // is itself idempotent (no push / no PR when nothing differs).
+      if (manifestVersion === matchedTag) {
+        console.log(
+          `--- built plugin is byte-identical to the latest release ${matchedTag} and the manifest already tracks it; nothing to publish`,
+        );
+        return;
+      }
       console.log(
-        "--- built plugin is byte-identical to the latest release; nothing to publish",
+        `--- built plugin matches release ${matchedTag} but the monorepo manifest is at ${manifestVersion}; resuming the commit-back`,
+      );
+      const builtManifest = asRecord(await Bun.file(manifestPath).json());
+      const minAppVersion =
+        builtManifest !== null &&
+        typeof builtManifest["minAppVersion"] === "string"
+          ? builtManifest["minAppVersion"]
+          : "0.0.0";
+      await cooklangCommitBack(matchedTag, minAppVersion, env);
+      console.log(
+        `--- resumed cooklang commit-back to v${matchedTag}; nothing new to publish`,
       );
       return;
     }

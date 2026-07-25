@@ -14,6 +14,10 @@ import {
   Volume,
 } from "cdk8s-plus-31";
 import {
+  KubeNetworkPolicy,
+  IntOrString,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
   setRevisionHistoryLimit,
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
@@ -23,8 +27,8 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 // Plaintext gRPC port. BuildKit serves the build API here; the buildx `remote`
 // driver in CI connects to it in-cluster. No TLS/mTLS: the endpoint is a
 // ClusterIP Service reachable only inside the cluster (never a Tailscale/tunnel
-// ingress), on a single-tenant homelab. A NetworkPolicy restricting ingress to
-// the buildkite namespace is a sensible follow-up hardening.
+// ingress), on a single-tenant homelab. The NetworkPolicy below restricts
+// ingress to the buildkite namespace.
 const PORT = 1234;
 
 // Keep the on-disk build cache bounded well under the PVC size so BuildKit's GC
@@ -59,7 +63,10 @@ export function createBuildkitdDeployment(chart: Chart) {
   // Own namespace, NOT the Kueue-managed `buildkite` namespace: a long-running
   // Deployment there would be intercepted by Kueue admission (which is for
   // batch jobs, not services). PSA `privileged` because rootful buildkitd needs
-  // it. CI reaches this at buildkitd.buildkitd.svc.cluster.local:1234.
+  // it. CI reaches this at
+  // buildkitd-buildkitd-service.buildkitd.svc.cluster.local:1234 (the Service
+  // construct id is "buildkitd-service" under the "buildkitd" chart, and
+  // resource-name hashes are disabled — the chart id is the prefix).
   new Namespace(chart, "buildkitd-namespace", {
     metadata: {
       name: "buildkitd",
@@ -156,6 +163,30 @@ export function createBuildkitdDeployment(chart: Chart) {
   const service = new Service(chart, "buildkitd-service", {
     selector: deployment,
     ports: [{ port: PORT, name: "buildkit" }],
+  });
+
+  // The gRPC endpoint is plaintext and privileged — restrict ingress to the
+  // CI job pods (buildkite namespace) so nothing else in the cluster can drive
+  // builds through it. Egress stays open: buildkitd pulls base images and
+  // pushes to ghcr.
+  new KubeNetworkPolicy(chart, "buildkitd-ingress-netpol", {
+    metadata: { name: "buildkitd-ingress-netpol" },
+    spec: {
+      podSelector: {},
+      policyTypes: ["Ingress"],
+      ingress: [
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "buildkite" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(PORT), protocol: "TCP" }],
+        },
+      ],
+    },
   });
 
   return { deployment, service, config, cache };

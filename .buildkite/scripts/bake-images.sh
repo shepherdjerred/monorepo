@@ -141,11 +141,16 @@ if [ "$scope" = "all" ]; then
   push_images+=("${INFRA_IMAGES[@]}")
 fi
 
-# Registry cache export needs a docker-container builder — dind's default
-# docker driver cannot export cache. Used in both modes so the PR dry-run
-# rehearses exactly what main runs, including the --load transfer.
+# Builds run on the persistent in-cluster buildkitd (150Gi zfs-ssd-lz4 PVC,
+# GC-bounded at 100Gi) instead of a per-run docker-container builder inside
+# this pod's dind: layer writes land once, compressed, on the shared store
+# rather than tens of GiB of ephemeral dind graph per images pod, and warm
+# layers are cache hits with no registry-cache download. The ghcr buildcache
+# export stays as the cross-store fallback, and `--load` still imports the
+# finished images into this pod's dind for smoke + the digest gate. Used in
+# both modes so the PR dry-run rehearses exactly what main runs.
 if ! docker buildx inspect ci; then
-  docker buildx create --name ci --driver docker-container
+  docker buildx create --name ci --driver remote tcp://buildkitd-buildkitd-service.buildkitd.svc.cluster.local:1234
 fi
 
 PUSH_CACHE=false
