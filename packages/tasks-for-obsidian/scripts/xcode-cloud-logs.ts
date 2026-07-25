@@ -388,12 +388,19 @@ async function main() {
   }
 
   if (cmd === "status") {
-    const runs = await listRuns(creds);
-    const target = pickRun(runs, arg);
-    const buildRunId = target?.id ?? arg;
+    const selector = arg ?? "latest";
+    // A raw build-run UUID is used directly (no list call). Any other selector
+    // (latest / latest-failed / a build number) MUST resolve via pickRun —
+    // falling back to the literal string would send e.g. "latest-failed" as a
+    // build-run id and produce a confusing API error.
+    const isUuid = /^[0-9a-f-]{36}$/i.test(selector);
+    const runs = isUuid ? [] : await listRuns(creds);
+    const target = isUuid ? undefined : pickRun(runs, selector);
+    const buildRunId = target?.id ?? (isUuid ? selector : undefined);
     if (!buildRunId)
       throw new Error(
-        "Usage: status <#number | buildRunId | latest | latest-failed>",
+        `Could not resolve build run for "${selector}" among the last ${String(runs.length)} runs. ` +
+          "Pass a build number (62 / #62), a build-run UUID, latest, or latest-failed.",
       );
     if (target) {
       const a = target.attributes;
