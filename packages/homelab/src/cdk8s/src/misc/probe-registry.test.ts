@@ -25,6 +25,7 @@ describe("registerBackendProbe", () => {
         serviceName: "scrypted",
         port: 11_080,
         module: "http_2xx",
+        path: "/",
       },
     ]);
   });
@@ -78,6 +79,75 @@ describe("registerBackendProbe", () => {
     });
 
     expect(getRegisteredBackendProbes()[0]?.module).toBe("tcp_connect");
+  });
+
+  test("defaults path to / when omitted", () => {
+    registerBackendProbe({ namespace: "home", serviceName: "svc", port: 80 });
+
+    expect(getRegisteredBackendProbes()[0]?.path).toBe("/");
+  });
+
+  test("honors an explicit path override (e.g. an origin health endpoint)", () => {
+    registerBackendProbe({
+      namespace: "loki",
+      serviceName: "loki",
+      port: 3100,
+      path: "/ready",
+    });
+
+    expect(getRegisteredBackendProbes()[0]?.path).toBe("/ready");
+  });
+
+  test("dedupes an identical duplicate registration including matching path — the TailscaleIngress + createCloudflareTunnelBinding overlap case", () => {
+    registerBackendProbe({
+      namespace: "media",
+      serviceName: "plex-service",
+      port: 32_400,
+      path: "/identity",
+    });
+    registerBackendProbe({
+      namespace: "media",
+      serviceName: "plex-service",
+      port: 32_400,
+      path: "/identity",
+    });
+
+    expect(getRegisteredBackendProbes()).toHaveLength(1);
+  });
+
+  test("throws on a duplicate registration with a conflicting path", () => {
+    registerBackendProbe({
+      namespace: "media",
+      serviceName: "plex-service",
+      port: 32_400,
+      path: "/identity",
+    });
+
+    expect(() => {
+      registerBackendProbe({
+        namespace: "media",
+        serviceName: "plex-service",
+        port: 32_400,
+      });
+    }).toThrow(/conflicting duplicate registration/);
+  });
+
+  test("throws on a duplicate registration with a conflicting module", () => {
+    registerBackendProbe({
+      namespace: "postal",
+      serviceName: "postal-web-service",
+      port: 5000,
+      module: "tcp_connect",
+    });
+
+    expect(() => {
+      registerBackendProbe({
+        namespace: "postal",
+        serviceName: "postal-web-service",
+        port: 5000,
+        module: "http_2xx",
+      });
+    }).toThrow(/conflicting duplicate registration/);
   });
 });
 

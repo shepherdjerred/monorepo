@@ -128,6 +128,9 @@ export function createTurboCacheDeployment(chart: Chart) {
   new TailscaleIngress(chart, "turbo-cache-tailscale-ingress", {
     service,
     host: "turbo-cache",
+    // "/" has no route (404); /v8/artifacts/status answers 200 without a
+    // token (verified live 2026-07-24).
+    probePath: "/v8/artifacts/status",
   });
 
   return { deployment, service, secrets };

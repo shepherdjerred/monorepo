@@ -57,6 +57,9 @@ export function createSeaweedfsApp(chart: Chart) {
     service: "seaweedfs-s3",
     port: 8333,
     hosts: ["seaweedfs-s3"],
+    // Anonymous "/" is a denied S3 ListBuckets (403); /status is the S3
+    // gateway's unauthenticated health endpoint.
+    probePath: "/status",
   });
 
   // ClusterIP service for Filer UI (the helm chart creates a headless service which doesn't work with Tailscale ingress)

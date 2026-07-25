@@ -181,6 +181,10 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
     serviceName: service.name,
     fqdn: "trmnl.sjer.red",
     port: 3000,
+    // "/" is auth-gated (401); /livez is the unauthenticated liveness
+    // endpoint (same one the container's k8s liveness probe uses).
+    probePath: "/livez",
+    publicProbePath: "/livez",
   });
 
   return { deployment, service };

@@ -11,10 +11,11 @@ function buildTargetUrl(
   module: ProbeModule,
   host: string,
   port: number,
+  path: string,
 ): string {
   if (module === "tcp_connect") return `${host}:${String(port)}`;
   const scheme = module === "https_2xx_insecure" ? "https" : "http";
-  return `${scheme}://${host}:${String(port)}/`;
+  return `${scheme}://${host}:${String(port)}${path}`;
 }
 
 /**
@@ -44,6 +45,7 @@ export function createServiceProbesChart(app: App) {
         probe.module,
         `${probe.serviceName}.${probe.namespace}.svc.cluster.local`,
         probe.port,
+        probe.path,
       ),
       module: probe.module,
       labels: {

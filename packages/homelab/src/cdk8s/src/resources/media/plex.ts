@@ -242,15 +242,21 @@ export function createPlexDeployment(
     ports: [{ port: 9000, name: "metrics" }],
   });
 
+  // "/" requires X-Plex-Token (401); /identity is Plex's unauthenticated
+  // health/identity endpoint. Both registrations below share the same
+  // backend probe, so probePath must be identical at both call sites.
   new TailscaleIngress(chart, "plex-tailscale-ingress", {
     service,
     host: "plex",
+    probePath: "/identity",
   });
 
   createCloudflareTunnelBinding(chart, "plex-cf-tunnel", {
     serviceName: service.name,
     subdomain: "plex",
     port: 32_400,
+    probePath: "/identity",
+    publicProbePath: "/identity",
   });
 
   ApiObject.of(deployment).addJsonPatch(
