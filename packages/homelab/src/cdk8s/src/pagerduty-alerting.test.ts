@@ -606,6 +606,34 @@ describe("Xcode Cloud alert routing guard", () => {
   });
 });
 
+describe("Buildkite CI job failure routing guard", () => {
+  let route: RouteNode;
+
+  beforeAll(async () => {
+    route = findAlertmanagerRoute(await renderApps());
+  }, 120_000);
+
+  it("routes KubeJobFailed in the buildkite namespace to null (CI failures must not page)", () => {
+    expect(
+      resolveReceiver(route, {
+        alertname: "KubeJobFailed",
+        severity: "warning",
+        namespace: "buildkite",
+      }),
+    ).toBe("null");
+  });
+
+  it("still routes KubeJobFailed in any other namespace to pagerduty", () => {
+    expect(
+      resolveReceiver(route, {
+        alertname: "KubeJobFailed",
+        severity: "warning",
+        namespace: "velero",
+      }),
+    ).toBe("pagerduty");
+  });
+});
+
 describe("Service probe alert routing guard", () => {
   let route: RouteNode;
 
