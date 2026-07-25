@@ -46,7 +46,7 @@ export function createGolinkDeployment(chart: Chart) {
       // Deliberately BestEffort (no requests/limits) — negligible or
       // non-critical usage; see the 2026-06-12 right-sizing plan.
       resources: {},
-      image: `ghcr.io/shepherdjerred/golink:${versions["shepherdjerred/golink"]}`,
+      image: `ghcr.io/tailscale/golink:${versions["tailscale/golink"]}`,
       envVariables: {
         TS_AUTHKEY: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(chart, "tailscale-auth-key", item.name),

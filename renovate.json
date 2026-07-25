@@ -127,10 +127,6 @@
       "schedule": ["at any time"]
     },
     {
-      "matchPackageNames": ["ghcr.io/shepherdjerred/dotfiles"],
-      "minimumReleaseAge": "0 days"
-    },
-    {
       "description": "Disable updates for archived and practice projects",
       "matchFileNames": ["sandbox/archive/**", "sandbox/practice/**"],
       "enabled": false
