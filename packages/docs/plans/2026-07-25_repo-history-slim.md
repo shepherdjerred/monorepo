@@ -54,15 +54,31 @@ Expected result: **644 MB → ~390 MB reachable** (fresh clones ~40% smaller), p
 ## Phase 0 — free, no rewrite (do first, low risk)
 
 `git gc --prune=now` in the main checkout reclaims the ~360 MB of unreachable objects on local disk. Does **not**
-change any SHA, does **not** shrink clone size, does **not** touch GitHub — pure local maintenance. Safe to run
-anytime; run it once the in-flight worktrees are idle (gc operates on the shared object store).
+change any SHA, does **not** shrink clone size, does **not** touch GitHub — pure local maintenance. **Safe to run with
+all worktrees active:** git gc is worktree-aware — it treats every worktree's HEAD, index, and reflog as roots and only
+prunes objects unreachable from _all_ of them, so it can't delete anything a worktree needs and never touches working
+directories or uncommitted/staged changes.
+
+## Blast radius (read before Phase 1) — worktrees are safe; open PRs rebase
+
+The rewrite runs in an **isolated throwaway clone** (`git clone` → `filter-repo` → force-push). `filter-repo` never
+modifies your real `.git`, any worktree's files, or any uncommitted work — the 13 worktrees are physically untouched.
+The only shared thing that moves is `origin/main`. After the force-push nothing _breaks_ locally (the old objects still
+exist in the shared `.git`, so every worktree keeps building), but every open feature branch is now based on an
+old-main that's been replaced.
+
+The real cost is narrow: **each open PR must, at some point, `git-spice repo sync --restack` onto the new main +
+force-push (CI re-runs)** — the same mechanical step as any time main advances, **no work lost**, doable lazily.
+The bloat blobs are ancestors of _every_ current branch, so no partial rewrite can leave the open branches' base
+untouched — **timing is the only way to make it zero-touch.** Trade: rewrite anytime → 13 routine restacks; or wait
+for a low-PR window → nothing to rebase.
 
 ## Phase 1 — prerequisites (the rewrite is destructive; stage carefully)
 
-- [ ] **Merge PR #1640 first** (skins cleanup) so champion-loading's tip is just the 173 `*_0.jpg` — otherwise the
-      collapse re-adds 104 MB instead of 9 MB.
-- [ ] **Quiesce every worktree + open PR.** A rewrite rewrites every SHA from the first targeted commit forward, so all
-      13 active worktrees / open feature branches get stranded. Land or park them; note which must be re-created.
+- [x] **Merge PR #1640** (skins cleanup) so champion-loading's tip is just the 173 `*_0.jpg` — otherwise the collapse
+      re-adds 104 MB instead of 9 MB. _(Merged 2026-07-25.)_
+- [ ] **Pick a low-PR window** (see Blast radius): the fewer open PRs, the fewer restacks afterward. Worktrees need not
+      be deleted — only their open PRs eventually restack onto the new main.
 - [ ] **Full backup**: `git clone --mirror` the current remote to a safe location before any force-push (rollback anchor).
 
 ## Phase 2 — the rewrite (`git-filter-repo`, installed)
@@ -98,9 +114,11 @@ Work in a fresh **working** clone of `main` (not the mirror — we need to re-ad
 
 - [ ] Verify (see below) on the rewritten clone BEFORE pushing.
 - [ ] Force-push the rewritten `main`; re-push/prune remote branches as needed.
-- [ ] Everyone re-clones (or resets). Locally: fresh clone, `git-spice repo init` (rewrite invalidates the local
-      `refs/spice/data` stack state), re-create any surviving stacks off the new `main`.
-- [ ] `git worktree prune` / recreate worktrees against the new history.
+- [ ] In the main checkout: `git fetch origin && git reset --hard origin/main` (or re-clone). Worktrees keep working as
+      is — they don't need recreating.
+- [ ] Per open stack, when convenient: `git-spice repo sync --restack` rebases it onto the new main + resubmit
+      (CI re-runs). The rewrite invalidates local `refs/spice/data`, so `git-spice repo init` once after the reset.
+- [ ] Once no branch references the old objects, a local `git gc --prune=now` reclaims the rewritten history on disk.
 
 ## Phase 4 — GitHub server-side (set expectations)
 
