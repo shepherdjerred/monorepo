@@ -266,6 +266,39 @@ async function rehearseCogTargets(repoDir: string): Promise<void> {
   console.error(`[rehearsal] cog: ${String(COG_TARGETS.length)} targets OK`);
 }
 
+async function rehearsePokeemeraldDataEnvironment(
+  repoDir: string,
+): Promise<void> {
+  // dpp-pokeemerald-data-daily runs the two generators, which read the
+  // OTTOHG_SHA pin out of build-wasm.sh and write the committed data tables.
+  // Assert the pin parses and every path the activity touches exists. The
+  // network fetch itself is deliberately NOT rehearsed.
+  console.error("[rehearsal] dpp-data: pin + generator + output paths");
+  const dppRoot = `${repoDir}/packages/discord-plays-pokemon`;
+  const buildWasm = await Bun.file(`${dppRoot}/scripts/build-wasm.sh`).text();
+  if (!/^OTTOHG_SHA="[0-9a-f]{40}"$/m.test(buildWasm)) {
+    throw new Error(
+      "OTTOHG_SHA pin not found in packages/discord-plays-pokemon/scripts/" +
+        "build-wasm.sh — the dpp-pokeemerald-data-daily generators read the " +
+        "pin from that line and would throw.",
+    );
+  }
+  const requiredPaths = [
+    `${dppRoot}/scripts/generate-species-data.ts`,
+    `${dppRoot}/scripts/generate-map-names.ts`,
+    `${dppRoot}/packages/backend/src/game/events/generated/species.ts`,
+    `${dppRoot}/packages/backend/src/game/spatial/generated/map-names.ts`,
+  ];
+  for (const path of requiredPaths) {
+    if (!(await Bun.file(path).exists())) {
+      throw new Error(
+        `dpp-pokeemerald-data-daily path missing in the tree: ${path}`,
+      );
+    }
+  }
+  console.error("[rehearsal] dpp-data: environment OK");
+}
+
 async function rehearseShowcaseEnvironment(repoDir: string): Promise<void> {
   // scout-showcase-refresh-weekly runs generate-marketing-showcase.ts in the
   // scout backend against the curated manifest. installScoutWorkspace is
@@ -296,6 +329,7 @@ async function main(): Promise<void> {
   await rehearseHookFreeCommit(repoDir);
   await rehearseCogTargets(repoDir);
   await rehearseCrdImportsEnvironment(repoDir);
+  await rehearsePokeemeraldDataEnvironment(repoDir);
   await rehearseShowcaseEnvironment(repoDir);
   console.error("[rehearsal] all canaries passed");
 }

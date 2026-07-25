@@ -195,6 +195,20 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Daily cdk8s CRD-import refresh — regenerates generated/imports from the live cluster CRDs and opens a PR on drift",
   },
   {
+    id: "dpp-pokeemerald-data-daily",
+    workflowType: "runPokeemeraldDataRefresh",
+    args: [],
+    // 04:30 PT — between scout-image-gc (04:00) and fetcher/golink (05:00).
+    // Steady state is no-diff; the job exists to open the regen PR the
+    // morning after a Renovate OTTOHG_SHA bump merges (hosted Renovate
+    // cannot run the generators inside its own PR).
+    cronExpression: "30 4 * * *",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
+    memo: "Daily pokeemerald data-table refresh — regenerates the committed species/map tables from the wasm source pin, opens a PR on drift",
+  },
+  {
     id: "homelab-audit-daily",
     workflowType: "agentTaskWorkflow",
     args: [HOMELAB_AUDIT_AGENT_TASK],

@@ -34,6 +34,8 @@ import { runLlmCatalogRefresh as _runLlmCatalogRefresh } from "./llm-catalog-ref
 import type { LlmCatalogRefreshResult } from "#activities/llm-catalog-refresh.ts";
 import { runHomelabCrdImportsRefresh as _runHomelabCrdImportsRefresh } from "./homelab-crd-imports-refresh.ts";
 import type { HomelabCrdImportsRefreshResult } from "#activities/homelab-crd-imports-refresh.ts";
+import { runPokeemeraldDataRefresh as _runPokeemeraldDataRefresh } from "./dpp-pokeemerald-data-refresh.ts";
+import type { PokeemeraldDataRefreshResult } from "#activities/dpp-pokeemerald-data-refresh.ts";
 import { runScoutShowcaseRefresh as _runScoutShowcaseRefresh } from "./scout-showcase-refresh.ts";
 import type { ScoutShowcaseRefreshResult } from "#activities/scout-showcase-refresh.ts";
 import { runScoutSeasonRefreshWorkflow as _runScoutSeasonRefreshWorkflow } from "./scout-season-refresh.ts";
@@ -152,6 +154,10 @@ export async function runLlmCatalogRefresh(): Promise<LlmCatalogRefreshResult> {
 
 export async function runHomelabCrdImportsRefresh(): Promise<HomelabCrdImportsRefreshResult> {
   return _runHomelabCrdImportsRefresh();
+}
+
+export async function runPokeemeraldDataRefresh(): Promise<PokeemeraldDataRefreshResult> {
+  return _runPokeemeraldDataRefresh();
 }
 
 export async function runScoutShowcaseRefresh(): Promise<ScoutShowcaseRefreshResult> {

@@ -66,6 +66,10 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // + PR on drift). No workflow-level sleeps; the activity carries its own
   // startToCloseTimeout + retry budget.
   "runHomelabCrdImportsRefresh",
+  // Awaits a single refreshPokeemeraldData activity (clone + four raw
+  // fetches + PR on drift). No workflow-level sleeps; the activity carries
+  // its own startToCloseTimeout + retry budget.
+  "runPokeemeraldDataRefresh",
   // Awaits a single refreshScoutShowcase activity (clone + scout install +
   // S3 downloads + PR on drift). No workflow-level sleeps; the activity
   // carries its own startToCloseTimeout + retry budget.
