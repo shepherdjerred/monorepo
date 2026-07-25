@@ -11,8 +11,9 @@ disposition: active
 
 ## Remaining
 
-- [ ] PR #1630 merged (single PR — tag minting + cutover were folded together 2026-07-25). Merging it promotes prod 2.0.0-6017/5991 → 2.0.0-6088 (the beta pair at authoring time)
-- [ ] Post-merge check: `docker buildx imagetools inspect ghcr.io/shepherdjerred/scout-for-lol:2.0.0-<merge build>` resolves and matches the beta pin digest; `curl https://scout-for-lol.com/.release-version` → 2.0.0-6088
+- [ ] PR #1630 merged (single PR — tag minting + cutover folded together 2026-07-25). **Prod is unchanged by the merge**: the pin keeps the current prod digest, relabeled to its true site pair 2.0.0-6017, so ArgoCD and reconcile both no-op
+- [ ] Post-merge check: `docker buildx imagetools inspect ghcr.io/shepherdjerred/scout-for-lol:2.0.0-<merge build>` resolves and matches the beta pin digest; `curl https://scout-for-lol.com/.release-version` still 2.0.0-6017
+- [ ] First promotion = first Renovate PR for the scout prod pin (user merges when ready)
 - [ ] Close the stale `scout-promote-pending` PR (#1617 or successor) and delete its branch after #1630 merges
 - [ ] `chezmoi apply` after #1630 merges (version-management skill changed in dotfiles)
 - [ ] Renovate PR observed for `shepherdjerred/scout-for-lol/prod` after the next beta-advancing build; merge = promotion verified via `/.release-version`
@@ -109,3 +110,7 @@ Verify after merge: `docker buildx imagetools inspect ghcr.io/shepherdjerred/sco
 ### Addendum — folded to one PR (2026-07-25)
 
 Per user feedback, the two stacked PRs were collapsed: `git-spice branch fold` merged `feature/scout-renovate-cutover` into `feature/scout-renovate-promotion`, PR #1632 was closed (branch deleted), and #1630 now carries the whole change — tag minting, Renovate cutover, promote-scout removal, and docs. Merging #1630 is itself the first promotion (→ 2.0.0-6088).
+
+### Addendum — no bundled promotion (2026-07-25)
+
+User feedback: the migration must not change what prod serves. The cutover pin now keeps the exact current prod digest (`e95d…`) relabeled to `2.0.0-6017` — its true site pair (promotion #1603 shipped site 6017 with this digest; the old `2.0.0-5991` label was cosmetic because promote-scout copied the beta image line verbatim). Merge → ArgoCD no-op + reconcile no-op. The first promotion is the first Renovate PR the user merges.
