@@ -41,12 +41,23 @@ import type { ExtendedPrismaClient } from "#src/database/index.ts";
 // Type-only import — erased at runtime, so it does NOT load the router before
 // the mocks are installed.
 import type { AppRouter } from "#src/trpc/router/index.ts";
+import type { PartialGuild } from "#src/lib/discord-rest.ts";
 import * as databaseModule from "#src/database/index.ts";
+import * as discordRestModule from "#src/lib/discord-rest.ts";
 import configuration from "#src/configuration.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testAccountId } from "#src/testing/test-ids.ts";
 
 type TrpcCaller = ReturnType<AppRouter["createCaller"]>;
+
+/**
+ * Controls what the RBAC guard (`resolveGuildPermissions`) sees for Discord
+ * membership/admin. Default: the actor is an admin/owner of every guild (root),
+ * so tests that don't care about RBAC keep full access. Downgrade to a plain
+ * member with `setMembership` and seed `ServerPermission` rows to drive
+ * per-permission gating.
+ */
+type MembershipConfig = "root" | { guildId: string; asAdmin: boolean }[];
 
 // test-ids requires a digits-only identifier (it builds a snowflake).
 const DEFAULT_ACTOR = testAccountId("900000001");
@@ -83,7 +94,31 @@ export type OfflineTrpcHarness = {
   ) => TrpcCaller;
   /** A caller with no session — use to assert unauthenticated rejection. */
   anonCaller: () => TrpcCaller;
+  /**
+   * Set what the RBAC guard sees. `"root"` (default) makes the actor a Discord
+   * admin/owner of every guild; an explicit list makes them a member (admin or
+   * not) of only those guilds, so seeded grants decide access.
+   */
+  setMembership: (config: MembershipConfig) => void;
 };
+
+// An array whose `.find()` always yields an admin guild, so the actor is
+// treated as admin/owner of whatever guildId the middleware looks up (root mode).
+function rootMembership(): PartialGuild[] {
+  const adminGuild: PartialGuild = {
+    id: "root",
+    name: "test-guild",
+    icon: null,
+    owner: true,
+    permissions: "8",
+  };
+  const guilds: PartialGuild[] = [adminGuild];
+  Object.defineProperty(guilds, "find", {
+    value: () => adminGuild,
+    configurable: true,
+  });
+  return guilds;
+}
 
 /**
  * Build an offline tRPC harness backed by an isolated test DB, with the Discord
@@ -94,6 +129,23 @@ export async function createOfflineTrpcHarness(
 ): Promise<OfflineTrpcHarness> {
   const { prisma, dbPath } = createTestDatabase(testName);
 
+  // Membership/admin state the RBAC guard reads (mutable via setMembership).
+  const state: { membership: MembershipConfig } = { membership: "root" };
+  const toPartialGuilds = (): PartialGuild[] =>
+    state.membership === "root"
+      ? rootMembership()
+      : state.membership.map((m) => ({
+          id: m.guildId,
+          name: "test-guild",
+          icon: null,
+          owner: m.asAdmin,
+          permissions: m.asAdmin ? "8" : "0",
+        }));
+  const installedGuildIds = (): Set<string> =>
+    state.membership === "root"
+      ? new Set()
+      : new Set(state.membership.map((m) => m.guildId));
+
   void mock.module("#src/trpc/guild-guard.ts", () => ({
     assertGuildAdmin: () => Promise.resolve(),
     assertChannelInGuild: () => {
@@ -103,6 +155,29 @@ export async function createOfflineTrpcHarness(
   void mock.module("#src/database/index.ts", () => ({
     ...databaseModule,
     prisma,
+  }));
+  // The RBAC guard resolves membership/admin via fetchUserGuilds + the bot's
+  // guild cache. Stub those two seams so the REAL resolveGuildPermissions runs
+  // against seeded ServerPermission rows.
+  void mock.module("#src/lib/discord-rest.ts", () => ({
+    ...discordRestModule,
+    fetchUserGuilds: () => Promise.resolve(toPartialGuilds()),
+  }));
+  void mock.module("#src/discord/client.ts", () => ({
+    client: {
+      guilds: {
+        cache: {
+          has: (id: string) =>
+            state.membership === "root" || installedGuildIds().has(id),
+          // `get` is only used by listChannels, which these tests don't exercise.
+          get: (): undefined => {
+            return;
+          },
+          map: <T>(fn: (g: { id: string }) => T): T[] =>
+            [...installedGuildIds()].map((id) => fn({ id })),
+        },
+      },
+    },
   }));
 
   const { appRouter } = await import("#src/trpc/router/index.ts");
@@ -134,5 +209,16 @@ export async function createOfflineTrpcHarness(
       requestId: "offline-trpc-harness-anon",
     });
 
-  return { prisma, dbPath, appRouter, authedCaller, anonCaller };
+  const setMembership = (config: MembershipConfig) => {
+    state.membership = config;
+  };
+
+  return {
+    prisma,
+    dbPath,
+    appRouter,
+    authedCaller,
+    anonCaller,
+    setMembership,
+  };
 }

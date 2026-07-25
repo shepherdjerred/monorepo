@@ -5,17 +5,24 @@
  */
 
 import { initTRPC, TRPCError } from "@trpc/server";
+import { PermissionDeniedCauseSchema } from "@scout-for-lol/data";
 import type { Context } from "#src/trpc/context.ts";
 import configuration from "#src/configuration.ts";
 
 const t = initTRPC.context<Context>().create({
   errorFormatter({ shape, error }) {
+    // A FORBIDDEN raised by the guild-permission gate carries the missing
+    // `{ resource, action }` as its cause so the SPA can name the exact scope.
+    const denied = PermissionDeniedCauseSchema.safeParse(error.cause);
     return {
       ...shape,
       data: {
         ...shape.data,
         // Include Zod validation errors in response
         zodError: error.cause instanceof Error ? error.cause.message : null,
+        missingPermission: denied.success
+          ? denied.data.missingPermission
+          : null,
       },
     };
   },

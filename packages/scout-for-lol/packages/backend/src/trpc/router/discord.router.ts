@@ -5,6 +5,7 @@
 
 import { z } from "zod";
 import { router, webProcedure } from "#src/trpc/trpc.ts";
+import { guildProcedure } from "#src/trpc/guild-permission.ts";
 import {
   MAX_IDS_PER_RESOLVE,
   resolveDiscordUsers,
@@ -19,17 +20,18 @@ export const discordRouter = router({
    * Resolve Discord IDs to `{ username, displayName, avatar }`. Session-only
    * gating is acceptable: Discord usernames/avatars are public and the caller
    * can only resolve IDs it already holds (all of which came from
-   * guild-admin-gated reads).
+   * permission-gated reads). No `guildId`, so this stays session-only.
    */
   resolveUsers: webProcedure
     .input(z.object({ ids: z.array(z.string()).max(MAX_IDS_PER_RESOLVE) }))
     .query(async ({ input }) => resolveDiscordUsers(input.ids)),
 
   /**
-   * Typeahead search for members of a guild (add/invite flows). Guild-admin
-   * gated; returns [] on failure so the form degrades gracefully.
+   * Typeahead search for members of a guild (add/invite/role flows). Gated on
+   * `players:read` (it exposes the guild roster); returns [] on failure so the
+   * form degrades gracefully.
    */
-  searchMembers: webProcedure
+  searchMembers: guildProcedure("players", "read")
     .input(SearchMembersInputSchema)
-    .query(async ({ ctx, input }) => searchGuildMembers(ctx.user, input)),
+    .query(async ({ input }) => searchGuildMembers(input)),
 });

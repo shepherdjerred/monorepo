@@ -1,4 +1,8 @@
-import { router, webProcedure, webMutationProcedure } from "#src/trpc/trpc.ts";
+import { router } from "#src/trpc/trpc.ts";
+import {
+  guildProcedure,
+  guildMutationProcedure,
+} from "#src/trpc/guild-permission.ts";
 import {
   GuildIdInput,
   PlayerLookupInput,
@@ -32,51 +36,51 @@ import {
 } from "#src/lib/player-admin/player-mutations.ts";
 
 export const playerRouter = router({
-  listPlayers: webProcedure
+  listPlayers: guildProcedure("players", "read")
     .input(ListPlayersInput)
-    .query(async ({ ctx, input }) => listPlayers(ctx, input)),
+    .query(async ({ input }) => listPlayers(input)),
 
-  getPlayer: webProcedure
+  getPlayer: guildProcedure("players", "read")
     .input(PlayerLookupInput)
-    .query(async ({ ctx, input }) => getPlayer(ctx, input)),
+    .query(async ({ input }) => getPlayer(input)),
 
-  getCurrentLinkedPlayer: webProcedure
+  getCurrentLinkedPlayer: guildProcedure("players", "read")
     .input(GuildIdInput)
     .query(async ({ ctx, input }) => getCurrentLinkedPlayer(ctx, input)),
 
-  renamePlayer: webMutationProcedure
+  renamePlayer: guildMutationProcedure("players", "update")
     .input(RenamePlayerInput)
     .mutation(async ({ ctx, input }) => renamePlayer(ctx, input)),
 
-  deletePlayer: webMutationProcedure
+  deletePlayer: guildMutationProcedure("players", "delete")
     .input(PlayerLookupInput)
     .mutation(async ({ ctx, input }) => deletePlayer(ctx, input)),
 
-  mergePlayers: webMutationProcedure
+  mergePlayers: guildMutationProcedure("players", "merge")
     .input(MergePlayersInput)
     .mutation(async ({ ctx, input }) => mergePlayers(ctx, input)),
 
-  linkDiscord: webMutationProcedure
+  linkDiscord: guildMutationProcedure("players", "link")
     .input(LinkDiscordInput)
     .mutation(async ({ ctx, input }) => linkDiscord(ctx, input)),
 
-  unlinkDiscord: webMutationProcedure
+  unlinkDiscord: guildMutationProcedure("players", "link")
     .input(UnlinkDiscordInput)
     .mutation(async ({ ctx, input }) => unlinkDiscord(ctx, input)),
 
-  addAccount: webMutationProcedure
+  addAccount: guildMutationProcedure("accounts", "create")
     .input(AddAccountInput)
     .mutation(async ({ ctx, input }) => addAccount(ctx, input)),
 
-  deleteAccount: webMutationProcedure
+  deleteAccount: guildMutationProcedure("accounts", "delete")
     .input(RiotAccountInput)
     .mutation(async ({ ctx, input }) => deleteAccount(ctx, input)),
 
-  transferAccount: webMutationProcedure
+  transferAccount: guildMutationProcedure("accounts", "transfer")
     .input(TransferAccountInput)
     .mutation(async ({ ctx, input }) => transferAccount(ctx, input)),
 
-  updateAccount: webMutationProcedure
+  updateAccount: guildMutationProcedure("accounts", "update")
     .input(UpdateAccountInput)
     .mutation(async ({ ctx, input }) => updateAccount(ctx, input)),
 });

@@ -18,11 +18,12 @@ import {
   DiscordAccountIdSchema,
   SubscriptionFilterSpecSchema,
 } from "@scout-for-lol/data";
-import { router, webProcedure, webMutationProcedure } from "#src/trpc/trpc.ts";
+import { router } from "#src/trpc/trpc.ts";
+import { assertChannelInGuild } from "#src/trpc/guild-guard.ts";
 import {
-  assertChannelInGuild,
-  assertGuildAdmin,
-} from "#src/trpc/guild-guard.ts";
+  guildProcedure,
+  guildMutationProcedure,
+} from "#src/trpc/guild-permission.ts";
 import { prisma } from "#src/database/index.ts";
 import {
   addSubscription,
@@ -46,22 +47,18 @@ import { runAuditedMutation } from "#src/lib/audit/audited-mutation.ts";
 const GuildIdInput = z.object({ guildId: DiscordGuildIdSchema });
 
 export const subscriptionRouter = router({
-  list: webProcedure
+  list: guildProcedure("subscriptions", "read")
     .input(ListSubscriptionsInputSchema)
-    .query(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
-      return listSubscriptions(input);
-    }),
+    .query(({ input }) => listSubscriptions(input)),
 
-  listAuditLog: webProcedure
+  listAuditLog: guildProcedure("audit", "read")
     .input(
       GuildIdInput.extend({
         limit: z.number().int().min(1).max(500).default(50),
         cursor: z.number().int().min(1).optional(),
       }),
     )
-    .query(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+    .query(async ({ input }) => {
       const rows = await prisma.auditLog.findMany({
         where: { serverId: input.guildId },
         // `id desc` is the stable tiebreaker for cursor pagination.
@@ -98,7 +95,7 @@ export const subscriptionRouter = router({
       return { items, nextCursor: hasMore ? (page.at(-1)?.id ?? null) : null };
     }),
 
-  add: webMutationProcedure
+  add: guildMutationProcedure("subscriptions", "create")
     .input(
       z.object({
         guildId: DiscordGuildIdSchema,
@@ -111,7 +108,6 @@ export const subscriptionRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
       assertChannelInGuild({
         guildId: input.guildId,
         channelId: input.channelId,
@@ -191,7 +187,7 @@ export const subscriptionRouter = router({
       return result;
     }),
 
-  remove: webMutationProcedure
+  remove: guildMutationProcedure("subscriptions", "delete")
     .input(
       z.object({
         guildId: DiscordGuildIdSchema,
@@ -200,7 +196,6 @@ export const subscriptionRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
       const actorDiscordId = ctx.user.discordId;
 
       return runAuditedMutation(
@@ -230,7 +225,7 @@ export const subscriptionRouter = router({
       );
     }),
 
-  addChannel: webMutationProcedure
+  addChannel: guildMutationProcedure("subscriptions", "create")
     .input(
       z.object({
         guildId: DiscordGuildIdSchema,
@@ -239,7 +234,6 @@ export const subscriptionRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
       assertChannelInGuild({
         guildId: input.guildId,
         channelId: input.channelId,
@@ -270,7 +264,7 @@ export const subscriptionRouter = router({
       );
     }),
 
-  move: webMutationProcedure
+  move: guildMutationProcedure("subscriptions", "update")
     .input(
       z.object({
         guildId: DiscordGuildIdSchema,
@@ -280,7 +274,6 @@ export const subscriptionRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
       assertChannelInGuild({
         guildId: input.guildId,
         channelId: input.fromChannelId,
@@ -326,7 +319,7 @@ export const subscriptionRouter = router({
       );
     }),
 
-  setFilters: webMutationProcedure
+  setFilters: guildMutationProcedure("subscriptions", "update")
     .input(
       z.object({
         guildId: DiscordGuildIdSchema,
@@ -336,7 +329,6 @@ export const subscriptionRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
       assertChannelInGuild({
         guildId: input.guildId,
         channelId: input.channelId,
@@ -368,7 +360,7 @@ export const subscriptionRouter = router({
       );
     }),
 
-  setMuted: webMutationProcedure
+  setMuted: guildMutationProcedure("subscriptions", "update")
     .input(
       z.object({
         guildId: DiscordGuildIdSchema,
@@ -378,7 +370,6 @@ export const subscriptionRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
       assertChannelInGuild({
         guildId: input.guildId,
         channelId: input.channelId,
@@ -416,7 +407,7 @@ export const subscriptionRouter = router({
       });
     }),
 
-  setChannelFilters: webMutationProcedure
+  setChannelFilters: guildMutationProcedure("subscriptions", "update")
     .input(
       z.object({
         guildId: DiscordGuildIdSchema,
@@ -425,7 +416,6 @@ export const subscriptionRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
       assertChannelInGuild({
         guildId: input.guildId,
         channelId: input.channelId,

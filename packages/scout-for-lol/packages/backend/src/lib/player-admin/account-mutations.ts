@@ -14,7 +14,6 @@ import { backfillLastMatchTime } from "#src/league/api/backfill-match-history.ts
 import { getRiotIdByPuuid } from "#src/lib/riot/account-riot-id.ts";
 import {
   AliasSchema,
-  assertAdmin,
   conflict,
   GuildIdInput,
   getPlayerOrThrow,
@@ -54,7 +53,6 @@ async function resolvePuuidOrThrow(
 }
 
 export async function addAccount(ctx: WebCtx, input: AddAccountInputData) {
-  await assertAdmin(ctx, input.guildId);
   const player = await getPlayerOrThrow({
     guildId: input.guildId,
     alias: input.playerAlias,
@@ -134,7 +132,6 @@ export async function addAccount(ctx: WebCtx, input: AddAccountInputData) {
 }
 
 export async function deleteAccount(ctx: WebCtx, input: RiotAccountInputData) {
-  await assertAdmin(ctx, input.guildId);
   const puuid = await resolvePuuidOrThrow(input);
 
   const deleted = await prisma.$transaction(async (tx) => {
@@ -185,7 +182,6 @@ export async function transferAccount(
   ctx: WebCtx,
   input: TransferAccountInputData,
 ) {
-  await assertAdmin(ctx, input.guildId);
   const puuid = await resolvePuuidOrThrow(input);
 
   const now = new Date();
@@ -262,7 +258,6 @@ export async function updateAccount(
   ctx: WebCtx,
   input: UpdateAccountInputData,
 ) {
-  await assertAdmin(ctx, input.guildId);
   const account = await prisma.account.findUnique({
     where: { id: input.accountId },
     include: { player: true },

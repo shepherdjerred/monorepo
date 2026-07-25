@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { prisma } from "#src/database/index.ts";
 import {
-  assertAdmin,
   GuildIdInput,
   getPlayerOrThrow,
   playerDetailInclude,
@@ -144,8 +143,7 @@ export function serializePlayerDetail(
   };
 }
 
-export async function listPlayers(ctx: WebCtx, input: ListPlayersInputData) {
-  await assertAdmin(ctx, input.guildId);
+export async function listPlayers(input: ListPlayersInputData) {
   const rows = await prisma.player.findMany({
     where: {
       serverId: input.guildId,
@@ -210,8 +208,7 @@ async function serializePlayerDetailWithRiotRefresh(
   return serializePlayerDetail({ ...player, accounts }, names);
 }
 
-export async function getPlayer(ctx: WebCtx, input: PlayerLookupInputData) {
-  await assertAdmin(ctx, input.guildId);
+export async function getPlayer(input: PlayerLookupInputData) {
   const player = await getPlayerOrThrow(input);
   return serializePlayerDetailWithRiotRefresh(player);
 }
@@ -220,7 +217,6 @@ export async function getCurrentLinkedPlayer(
   ctx: WebCtx,
   input: z.infer<typeof GuildIdInput>,
 ) {
-  await assertAdmin(ctx, input.guildId);
   const player = await prisma.player.findFirst({
     where: { serverId: input.guildId, discordId: ctx.user.discordId },
     include: playerDetailInclude,

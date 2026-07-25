@@ -4,8 +4,8 @@
 
 import { z } from "zod";
 import { DiscordGuildIdSchema, RegionSchema } from "@scout-for-lol/data";
-import { router, webProcedure } from "#src/trpc/trpc.ts";
-import { assertGuildAdmin } from "#src/trpc/guild-guard.ts";
+import { router } from "#src/trpc/trpc.ts";
+import { guildProcedure } from "#src/trpc/guild-permission.ts";
 import {
   ResolveRiotIdInput,
   resolveRiotIdExact,
@@ -14,16 +14,16 @@ import { searchSummoners } from "#src/lib/riot/summoner-search.ts";
 
 export const riotRouter = router({
   /** Exact Riot ID → PUUID/canonical name. Read-only; debounce on the client. */
-  resolveRiotId: webProcedure
+  resolveRiotId: guildProcedure("accounts", "read")
     .input(ResolveRiotIdInput)
-    .query(async ({ ctx, input }) => resolveRiotIdExact(ctx, input)),
+    .query(async ({ input }) => resolveRiotIdExact(input)),
 
   /**
    * Partial-name summoner suggestions for the add flow: our own summoner index
    * first, then OP.GG. Unverified — the picked Riot ID is confirmed via Riot's
    * official API before it's stored.
    */
-  searchSummoners: webProcedure
+  searchSummoners: guildProcedure("accounts", "read")
     .input(
       z.object({
         guildId: DiscordGuildIdSchema,
@@ -31,8 +31,5 @@ export const riotRouter = router({
         region: RegionSchema.optional(),
       }),
     )
-    .query(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
-      return searchSummoners(input.query, input.region);
-    }),
+    .query(async ({ input }) => searchSummoners(input.query, input.region)),
 });
