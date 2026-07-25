@@ -29,6 +29,16 @@
  *                                    to what beta validated). No-op when the
  *                                    marker matches or the pin is the
  *                                    "unpromoted" rollout sentinel.
+ *   tag-release --version 2.0.0-<n>  Mint the versioned GHCR tag
+ *                                    ghcr.io/shepherdjerred/scout-for-lol:<n>
+ *                                    pointing at the paired backend digest
+ *                                    (this build's pushed digest via --digest,
+ *                                    else the committed beta pin). The tag is
+ *                                    the atomic backend+site release pair that
+ *                                    Renovate discovers for prod promotion; it
+ *                                    is minted only after the version's site
+ *                                    archive manifest exists, so every
+ *                                    discoverable tag is promotable.
  *
  * Promotion = scripts/promote-scout.ts (one PR moving the site pin AND the
  * backend image pin together). Rollback = git-revert the promotion commit; the
@@ -418,6 +428,141 @@ async function reconcileProd(dryRun: boolean): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// tag-release
+// ---------------------------------------------------------------------------
+
+const IMAGE_REPO = "ghcr.io/shepherdjerred/scout-for-lol";
+const DIGEST_PATTERN = /^sha256:[a-f0-9]{64}$/;
+
+function parseDigestArg(args: string[]): string | null {
+  const index = args.indexOf("--digest");
+  if (index === -1) {
+    return null;
+  }
+  const digest = args[index + 1];
+  if (digest === undefined || !DIGEST_PATTERN.test(digest)) {
+    throw new Error(
+      `--digest must match ${DIGEST_PATTERN.toString()}, got: ${digest ?? "<missing>"}`,
+    );
+  }
+  return digest;
+}
+
+/**
+ * The archived artifact for a version must exist before its tag is minted
+ * (the manifest is the completeness certificate — same gate reconcile-prod
+ * applies before syncing).
+ */
+async function assertArchived(version: string): Promise<void> {
+  const head = await runAllowExit(
+    [
+      "aws",
+      "s3api",
+      "head-object",
+      "--bucket",
+      RELEASES_BUCKET,
+      "--key",
+      `${version}.json`,
+      "--endpoint-url",
+      SEAWEEDFS_ENDPOINT,
+    ],
+    { env: SEAWEEDFS_AWS_ENV, capture: true },
+  );
+  if (head.exitCode !== 0) {
+    throw new Error(
+      `no archive manifest for ${version} in s3://${RELEASES_BUCKET}/ — refusing to mint ` +
+        `${IMAGE_REPO}:${version}: only archived site versions may become promotable tags.`,
+    );
+  }
+}
+
+/**
+ * Uncompressed rootfs layer chain (DiffIDs) of an image ref — the content
+ * identity the images step's version gate uses (config-only rebuilds keep
+ * identical layers, so digests may differ while content matches).
+ */
+async function imageLayers(ref: string): Promise<string> {
+  const result = await run(
+    [
+      "docker",
+      "buildx",
+      "imagetools",
+      "inspect",
+      ref,
+      "--format",
+      "{{json .Image.RootFS.DiffIDs}}",
+    ],
+    { capture: true },
+  );
+  return result.stdout.trim();
+}
+
+/**
+ * Mint `ghcr.io/shepherdjerred/scout-for-lol:<version>` pointing at the paired
+ * backend digest. The tag is the atomic release pair the Renovate-managed
+ * `shepherdjerred/scout-for-lol/prod` pin promotes: tag name = archived site
+ * version, tag target = the backend image content beta serves that site
+ * against. Requires a prior `docker login ghcr.io` (the pipeline step does it).
+ */
+async function tagRelease(
+  version: string,
+  digestArg: string | null,
+  dryRun: boolean,
+): Promise<void> {
+  console.log(`--- tag-release ${version} (${IMAGE_REPO})`);
+  if (dryRun) {
+    console.log(
+      `DRYRUN: would assert s3://${RELEASES_BUCKET}/${version}.json exists, resolve the ` +
+        `paired backend digest (${digestArg ?? "committed beta pin + content-currency guard"}), ` +
+        `then \`docker buildx imagetools create --tag ${IMAGE_REPO}:${version} ${IMAGE_REPO}@<digest>\``,
+    );
+    return;
+  }
+  requireCredsForLiveRun(dryRun);
+  await assertArchived(version);
+
+  let digest = digestArg;
+  if (digest === null) {
+    const betaPin = versions["shepherdjerred/scout-for-lol/beta"];
+    const pinnedDigest = betaPin.split("@")[1];
+    if (pinnedDigest === undefined || !DIGEST_PATTERN.test(pinnedDigest)) {
+      throw new Error(
+        `beta pin "${betaPin}" carries no @sha256 digest to pair with ${version}`,
+      );
+    }
+    // Content-currency guard: the committed beta pin lags one build behind
+    // whenever the images step pushed new scout content this cycle (the
+    // auto-merge version commit-back PR hasn't landed yet). Pairing the NEW
+    // site with the OLD backend digest is the exact tRPC skew the release
+    // pair exists to prevent, so compare rootfs layers of the pin vs :latest
+    // and skip minting when they differ — the commit-back merge fires the
+    // site lane again and mints a correctly paired release next build.
+    const pinnedLayers = await imageLayers(`${IMAGE_REPO}@${pinnedDigest}`);
+    const latestLayers = await imageLayers(`${IMAGE_REPO}:latest`);
+    if (pinnedLayers !== latestLayers) {
+      console.log(
+        `beta pin ${pinnedDigest} is content-stale vs ${IMAGE_REPO}:latest (version ` +
+          `commit-back pending) — not minting ${version}; the commit-back merge build ` +
+          `will archive and mint the correctly paired release.`,
+      );
+      return;
+    }
+    digest = pinnedDigest;
+  }
+
+  await run([
+    "docker",
+    "buildx",
+    "imagetools",
+    "create",
+    "--tag",
+    `${IMAGE_REPO}:${version}`,
+    `${IMAGE_REPO}@${digest}`,
+  ]);
+  console.log(`--- minted ${IMAGE_REPO}:${version} -> ${digest}`);
+}
+
+// ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
 
@@ -426,9 +571,11 @@ function usage(): never {
     "Usage:\n" +
       "  bun scripts/scout-site-release.ts archive --version 2.0.0-<build> [--dry-run]\n" +
       "  bun scripts/scout-site-release.ts deploy-beta --version 2.0.0-<build> [--dry-run]\n" +
-      "  bun scripts/scout-site-release.ts reconcile-prod [--dry-run]\n\n" +
+      "  bun scripts/scout-site-release.ts reconcile-prod [--dry-run]\n" +
+      "  bun scripts/scout-site-release.ts tag-release --version 2.0.0-<build> [--digest sha256:<hex>] [--dry-run]\n\n" +
       "Env: AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY (SeaweedFS); archive also\n" +
-      "needs PUBLIC_PINTEREST_TAG_ID/PUBLIC_REDDIT_PIXEL_ID (prod flavor).",
+      "needs PUBLIC_PINTEREST_TAG_ID/PUBLIC_REDDIT_PIXEL_ID (prod flavor);\n" +
+      "tag-release needs a prior `docker login ghcr.io`.",
   );
   process.exit(1);
 }
@@ -452,6 +599,9 @@ async function main(): Promise<void> {
       break;
     case "reconcile-prod":
       await reconcileProd(dryRun);
+      break;
+    case "tag-release":
+      await tagRelease(parseVersionArg(args), parseDigestArg(args), dryRun);
       break;
     default:
       usage();
