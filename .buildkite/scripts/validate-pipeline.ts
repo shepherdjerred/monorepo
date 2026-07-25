@@ -21,15 +21,11 @@ const GLOBAL_IF_CHANGED = [
 const PATH_GATED_PR_KEYS = new Set([
   "playwright-e2e-pr",
   "resume-build-pr",
-  "helm-types-drift-check",
   "docker-e2e-pr",
   "trivy",
   "semgrep",
-  "tofu-plan",
   "images-pr",
-  "sites-pr",
-  "helm-pr",
-  "release-pr",
+  "pr-dryrun",
 ]);
 
 function fail(message: string): never {
@@ -149,17 +145,29 @@ for (const key of ["playwright-e2e-pr", "playwright-e2e-main"]) {
   }
 }
 
-const helmTypesDrift = stepBlocks.get("helm-types-drift-check");
-const helmInstall = "bun install --frozen-lockfile --filter '@homelab/cdk8s'";
-if (!hasTrimmedLine(helmTypesDrift, helmInstall)) {
-  fail(`Helm types lane is missing exact filtered install ${helmInstall}`);
+// The merged PR dry-run lane owns the helm-types drift gate, the tofu plans,
+// and the print-only deploy rehearsals. Its install must stay the exact
+// union of the sections' tool closures, and the two real-work sections must
+// stay internally gated on their ci-changed lanes.
+const prDryrun = stepBlocks.get("pr-dryrun");
+const prDryrunInstall =
+  "bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter '@homelab/cdk8s'";
+if (!hasTrimmedLine(prDryrun, prDryrunInstall)) {
+  fail(`pr-dryrun is missing exact filtered install ${prDryrunInstall}`);
 }
 for (const required of [
-  '- "packages/homelab/src/cdk8s/package.json"',
-  "bun --no-install run generate-helm-types --check",
+  '- "packages/homelab/src/cdk8s/**"',
+  '- "packages/homelab/src/helm-types/**"',
+  "generate-helm-types --check",
+  "ci-changed.sh helm-types",
+  "ci-changed.sh tofu",
+  "scripts/deploy-site.ts",
+  "scripts/scout-site-release.ts",
+  "helm-push.ts",
+  "scripts/release.ts --dry-run",
 ]) {
-  if (helmTypesDrift === undefined || !helmTypesDrift.includes(required)) {
-    fail(`Helm types lane is missing explicit tool closure ${required}`);
+  if (prDryrun === undefined || !prDryrun.includes(required)) {
+    fail(`pr-dryrun is missing section content ${required}`);
   }
 }
 
@@ -337,23 +345,27 @@ for (const required of [
   }
 }
 
-const sitesPr = stepBlocks.get("sites-pr");
 for (const dependency of [
   '"packages/astro-opengraph-images/**"',
   '"packages/llm-models/**"',
   '"scripts/package.json"',
 ]) {
-  if (sitesPr === undefined || !sitesPr.includes(dependency)) {
-    fail(`sites-pr path gate is missing ${dependency}`);
+  if (prDryrun === undefined || !prDryrun.includes(dependency)) {
+    fail(`pr-dryrun path gate is missing ${dependency}`);
   }
 }
 
-const npmPublish = stepBlocks.get("npm-publish");
+const publish = stepBlocks.get("publish");
 if (
-  npmPublish === undefined ||
-  npmPublish.includes("--filter '@shepherdjerred/root-scripts'")
+  publish === undefined ||
+  publish.includes("--filter '@shepherdjerred/root-scripts'")
 ) {
-  fail("npm-publish restored an unnecessary root-scripts install");
+  fail("publish restored an unnecessary root-scripts install");
+}
+for (const required of ["ci-changed.sh npm", "ci-changed.sh cooklang"]) {
+  if (publish === undefined || !publish.includes(required)) {
+    fail(`publish is missing section gate ${required}`);
+  }
 }
 
 const releasePlease = stepBlocks.get("release-please");
