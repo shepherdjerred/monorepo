@@ -61,7 +61,7 @@ Reviewed all open (unresolved, unmuted) Bugsink issues across every project: 8 i
 - **#0 bots down / #1 userbot tokens** — user is handling in a separate work item.
 - **#2 spectator upstream** — leave as-is; expected circuit-breaker signal.
 - **#3 OpenAI flagged prompt** — leave alone; rare.
-- **#4 filters skew** — treated as resolved per-incident; systemic fix planned in [2026-07-19_scout-lockstep-stage-deploys](../plans/2026-07-19_scout-lockstep-stage-deploys.md) (deploy marketing site, backend, and web app in-step per stage).
+- **#4 filters skew** — treated as resolved per-incident; systemic fix planned in [2026-07-19_scout-lockstep-stage-deploys](../archive/superseded/2026-07-19_scout-lockstep-stage-deploys.md) (deploy marketing site, backend, and web app in-step per stage).
 - **#5 Load failed (Pinterest pixel)** — ignore.
 - **#6 streambot interaction errors** — confirmed bug; fix not yet scheduled.
 

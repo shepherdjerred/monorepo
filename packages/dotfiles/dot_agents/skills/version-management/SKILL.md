@@ -192,20 +192,27 @@ App images publish to a **single** GHCR package (e.g. `ghcr.io/shepherdjerred/sc
 
 The catalog's `versionKey` (used in `--tags ghcr.io/{versionKey}:…`) must **not** carry a `/beta`|`/prod` suffix; only the `versions.ts` entries and the cdk8s resources that read them use the stage suffixes to deploy a different version per stage.
 
-### Scout prod is promoted, not bumped
+### First-party prod pins are Renovate promotions (minted release tags)
 
-`"shepherdjerred/scout-for-lol/prod"` and `"scout-for-lol-site/prod"` move
-**together, only** via the standing `scout-promote-pending` PR that CI
-maintains (the `scout promotion PR` pipeline step runs
-`scripts/promote-scout.ts --ci` on every main build: it opens/refreshes the PR
-when beta is ahead of prod and closes it when prod catches up). **Merging that
-PR is the promotion.** The beta image line is copied verbatim; the site pin
-selects the archived artifact the `scout-prod-reconcile` CI step syncs into
-the prod bucket. Operator mode (`bun scripts/promote-scout.ts --version …
---force`) exists for rollbacks/explicit targets. Never edit these two pins by
-hand and never add Renovate annotations to them — a lone backend bump
-reintroduces the frontend↔backend tRPC skew the lockstep model exists to
-prevent. See `packages/scout-for-lol/AGENTS.md` § Stage deploys.
+`shepherdjerred/scout-for-lol/prod` and `shepherdjerred/starlight-karma-bot/prod`
+carry Renovate annotations (docker datasource) and are promoted by **merging
+the Renovate PR** — the "Prod images" packageRule pins them to
+`automerge: false`. Renovate can only offer tags CI minted:
+
+- **scout:** the `scout-tag-release` pipeline step mints
+  `ghcr.io/shepherdjerred/scout-for-lol:2.0.0-<n>` only after site version
+  `<n>` is archived, pointing at the backend digest beta serves it against —
+  each tag is an atomic backend+site release pair. There is **no separate
+  site pin**: `scout-prod-reconcile` derives the prod site version from the
+  pin's tag portion, so one pin moves both halves in lockstep (the tRPC-skew
+  guarantee lives in the tag mint, not in paired pins).
+- **starlight-karma-bot:** `bake-images.sh` pushes a `2.0.0-<build>` tag
+  whenever a content change records a digest.
+
+Rollback = `git revert` the promotion merge, or hand-edit the pin to any
+older **minted** tag@digest. Never pin a tag CI didn't mint or hand-pair a
+tag with a different digest. See `packages/scout-for-lol/AGENTS.md` § Stage
+deploys.
 
 ## Renovate Configuration
 

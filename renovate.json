@@ -110,7 +110,7 @@
       "pinDigests": false
     },
     {
-      "description": "Prod images - no delay, no automerge",
+      "description": "First-party prod promotions: merging the Renovate PR IS the prod deploy (tags minted by CI as complete release pairs) - no delay, never automerge",
       "matchPackageNames": [
         "shepherdjerred/scout-for-lol/prod",
         "shepherdjerred/starlight-karma-bot/prod"

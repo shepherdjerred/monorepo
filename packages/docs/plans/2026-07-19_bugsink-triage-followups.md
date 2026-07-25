@@ -13,7 +13,7 @@ disposition: active
 
 Today's Bugsink triage session root-caused all 8 open issues (6 distinct causes; full analysis in `packages/docs/logs/2026-07-19_bugsink-open-issues-root-cause.md`). The user dispositioned each item; this plan covers everything actionable that remains:
 
-- **Part A — Scout lockstep stage deploys** (user-confirmed design: prod gets a version pin for the marketing site + SPA; beta stays continuous). Detailed plan already written to `packages/docs/plans/2026-07-19_scout-lockstep-stage-deploys.md`; summarized below.
+- **Part A — Scout lockstep stage deploys** (user-confirmed design: prod gets a version pin for the marketing site + SPA; beta stays continuous). Detailed plan already written to `packages/docs/archive/superseded/2026-07-19_scout-lockstep-stage-deploys.md`; summarized below.
 - **Part B — Two small bug fixes**: streambot interaction double-ack/late-ack (confirmed bug), and the undefined-safe `subscriptionFilterQueues` quick win (defense-in-depth for Part A's rollout window).
 
 Out of scope per user dispositions: bots-down `/app`-vs-`/workspace` outage + userbot token rotation (separate work item), spectator circuit-breaker events (expected signal), OpenAI flagged-prompt (rare), "Load failed" Pinterest-pixel noise (ignore).
@@ -45,7 +45,7 @@ User said to ignore the "Load failed" issue itself; this optional one-liner only
 
 ## Part A — Scout lockstep stage deploys (confirmed design)
 
-Full detail with verified file:line anchors, idempotency table, risks: `packages/docs/plans/2026-07-19_scout-lockstep-stage-deploys.md`. Summary:
+Full detail with verified file:line anchors, idempotency table, risks: `packages/docs/archive/superseded/2026-07-19_scout-lockstep-stage-deploys.md`. Summary:
 
 1. **PR 1 (infra)**: new SeaweedFS bucket `scout-site-releases` + 365d lifecycle in `packages/homelab/src/tofu/seaweedfs/buckets.tf` (copy `public_sjer_red_lifecycle` shape, buckets.tf:148-170). Must land + tofu-apply before PR 2 (SeaweedFS auto-creates buckets on first put → tofu import dance otherwise).
 2. **PR 2 (scripts + pipeline + pins + docs)**:

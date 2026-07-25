@@ -66,7 +66,7 @@ Verify after merge: `docker buildx imagetools inspect ghcr.io/shepherdjerred/sco
 - **Docs**
   - `packages/scout-for-lol/AGENTS.md` §Stage deploys (~130-137): promotion = merge the Renovate PR; site version derived from the image tag; invert the line-136 "never via Renovate" prohibition (hand-edits to non-minted tags stay prohibited). `CLAUDE.md` is a symlink — no separate edit.
   - `packages/dotfiles/dot_agents/skills/version-management/SKILL.md` (~186-208 "Scout prod is promoted, not bumped"): rewrite; per dual-edit rule also update the live copy at `~/.claude/skills/version-management/SKILL.md`.
-  - `packages/docs/plans/2026-07-19_scout-lockstep-stage-deploys.md`: mark superseded (frontmatter) with pointer; fix the passing mention in `2026-07-19_bugsink-triage-followups.md`.
+  - `packages/docs/archive/superseded/2026-07-19_scout-lockstep-stage-deploys.md`: mark superseded (frontmatter) with pointer; fix the passing mention in `2026-07-19_bugsink-triage-followups.md`.
 
 ## Renovate versioning: `semver`
 

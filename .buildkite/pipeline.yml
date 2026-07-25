@@ -851,7 +851,6 @@ steps:
         - "packages/homelab/src/cdk8s/src/versions.ts"
         - "scripts/deploy-site.ts"
         - "scripts/scout-site-release.ts"
-        - "scripts/promote-scout.ts"
         - "scripts/lib/**"
     depends_on: verify
     cancel_on_build_failing: true
@@ -867,7 +866,6 @@ steps:
       bun --no-install scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
       bun --no-install scripts/scout-site-release.ts reconcile-prod --dry-run
       bun --no-install scripts/scout-site-release.ts tag-release --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
-      bun --no-install scripts/promote-scout.ts --ci --dry-run
     retry: *retry
     plugins:
       - kubernetes:
@@ -1165,34 +1163,6 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: argocd-sync
-
-  # Standing promotion PR: whenever beta has something prod doesn't (prod
-  # never promoted, backend image line changed, or the scout package changed
-  # since the promoted site version's commit), open/refresh the
-  # scout-promote-pending PR moving BOTH prod pins in versions.ts to what beta
-  # serves; close it when prod is caught up. Merging that PR IS the promotion —
-  # ArgoCD (backend) and scout-prod-reconcile (site) act on the pin change.
-  # Auto-merge is deliberately not enabled: that would make prod track beta
-  # continuously instead of promotion being a review click.
-  - label: ":package: scout promotion PR"
-    key: scout-promotion
-    if: build.branch == pipeline.default_branch
-    depends_on: sites
-    cancel_on_build_failing: true
-    command: |
-      if ! bash .buildkite/scripts/ci-changed.sh scout-promotion; then exit 0; fi
-      . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
-      # SeaweedFS creds: reads the beta bucket marker (the promotion target) and
-      # archive manifests to gate on real scout changes.
-      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
-      bun --no-install scripts/promote-scout.ts --ci
-    plugins:
-      - kubernetes:
-          <<: *pod_light_kubernetes
-          metadata:
-            labels:
-              ci.sjer.red/step-key: scout-promotion
 
   # Mint the versioned release-pair tag: after this build archived site
   # version 2.0.0-<build> and deployed it to beta, retag the paired backend
