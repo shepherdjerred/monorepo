@@ -42,6 +42,17 @@ describe("catalog", () => {
     expect(parsePermissionKey("channels:delete")).toBeUndefined();
   });
 
+  test("keys with extra or missing segments are rejected, not truncated", () => {
+    // A valid resource:action prefix followed by junk must NOT be accepted —
+    // `split(":", 2)` would have parsed this as a valid `reports:create`.
+    expect(parsePermissionKey("reports:create:unexpected")).toBeUndefined();
+    expect(parsePermissionKey("reports:create:")).toBeUndefined();
+    expect(parsePermissionKey("subscriptions:read:extra")).toBeUndefined();
+    // Single-segment (no colon) is likewise not a canonical key.
+    expect(parsePermissionKey("reports")).toBeUndefined();
+    expect(parsePermissionKey("")).toBeUndefined();
+  });
+
   test("PermissionSchema rejects action/resource mismatches", () => {
     expect(
       PermissionSchema.safeParse({ resource: "channels", action: "delete" })

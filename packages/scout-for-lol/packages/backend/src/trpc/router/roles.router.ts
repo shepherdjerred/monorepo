@@ -18,7 +18,7 @@ import {
   PermissionSchema,
   createPermissionSet,
   deriveRole,
-  parsePermissionKey,
+  parseStoredPermissionKey,
   permissionKey,
 } from "@scout-for-lol/data";
 import { router } from "#src/trpc/trpc.ts";
@@ -80,7 +80,7 @@ export const rolesRouter = router({
         { permissions: Permission[]; grantedBy: string; grantedAt: Date }
       >();
       for (const row of rows) {
-        const permission = parsePermissionKey(row.permission);
+        const permission = parseStoredPermissionKey(row.permission);
         if (permission === undefined) continue;
         const entry = byUser.get(row.discordUserId) ?? {
           permissions: [],

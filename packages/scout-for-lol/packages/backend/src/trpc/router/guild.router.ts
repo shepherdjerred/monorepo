@@ -15,7 +15,7 @@ import {
   type Permission,
   ALL_PERMISSIONS,
   DiscordGuildIdSchema,
-  parsePermissionKey,
+  parseStoredPermissionKey,
 } from "@scout-for-lol/data";
 import {
   ChannelType,
@@ -55,7 +55,7 @@ export const guildRouter = router({
     });
     const grantsByGuild = new Map<string, Permission[]>();
     for (const row of grantRows) {
-      const permission = parsePermissionKey(row.permission);
+      const permission = parseStoredPermissionKey(row.permission);
       if (permission === undefined) continue;
       const list = grantsByGuild.get(row.serverId) ?? [];
       list.push(permission);

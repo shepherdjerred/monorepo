@@ -156,3 +156,46 @@ verification detail: `~/.claude/plans/could-we-begin-work-peppy-fairy.md` (copie
   the `permission`-field unbrand shows only as the `brand-prisma-types.ts` diff.
 - The `<Can>` component from the plan was dropped — the `usePermissions` hook covers
   every call site; keeping an unused component tripped `knip`.
+
+### Greptile review remediation — 2026-07-25
+
+Follow-up session to clear three Greptile findings on PR #1638.
+
+#### Done
+
+- **Legacy Discord grants now round-trip through the RBAC readers (P1).** The
+  `/competition grant-permission` Discord command persists the raw legacy
+  `PermissionType` enum (`CREATE_COMPETITION` / `CREATE_REPORT`), not a
+  canonical `"resource:action"` key. All three readers of stored
+  `ServerPermission` rows dropped those via `parsePermissionKey`, so a
+  freshly-issued Discord grant was invisible to the web RBAC surface. Added
+  `LEGACY_PERMISSION_KEYS` + `parseStoredPermissionKey` in
+  `packages/data/src/model/permissions/catalog.ts` (bridges the two legacy
+  strings; `parsePermissionKey` stays strict) and switched the three readers to
+  it: `trpc/guild-permission.ts` (`resolveGuildPermissions`),
+  `trpc/router/guild.router.ts` (`listManageable`), and
+  `trpc/router/roles.router.ts` (`list` / Access tab). New scoped test in
+  `trpc/router/rbac.router.test.ts` seeds a raw `CREATE_COMPETITION` row and
+  asserts `guild.listManageable` surfaces `competitions:create`.
+- **Malformed permission keys are rejected, not truncated (P2).**
+  `parsePermissionKey` used `split(":", 2)`, which accepted
+  `"reports:create:unexpected"` as `"reports:create"`. Now splits without a
+  limit and requires exactly two segments; extended `permissions.test.ts` with
+  extra-segment and missing-segment cases.
+- **Session Log (P2).** The dated `## Session Log — 2026-07-25` with Done /
+  Remaining / Caveats already landed via the `docs(scout-for-lol): RBAC plan
+session log` commit; this subsection records the remediation session.
+
+#### Remaining
+
+- Same as the parent session: manual browser e2e + PR screenshots; promote from
+  draft once attached.
+
+#### Caveats
+
+- The Discord grant **write** path still emits the legacy enum by design — the
+  read-side bridge (`parseStoredPermissionKey`) is the single normalization
+  point, mirroring the existing dual-read bridge in
+  `database/competition/permissions.ts` (`hasPermissionKey` + `hasPermission`).
+  Changing the write path instead would have broken the legacy grant/`hasPermission`
+  symmetry that the competition permission tests depend on.

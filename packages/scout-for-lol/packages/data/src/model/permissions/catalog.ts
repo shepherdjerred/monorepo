@@ -188,9 +188,39 @@ export function permissionKey(permission: Permission): string {
  * instead of throwing.
  */
 export function parsePermissionKey(key: string): Permission | undefined {
-  const [resource, action] = key.split(":", 2);
+  // Require exactly two segments. `split(":", 2)` would silently accept a
+  // malformed key like `"reports:create:unexpected"` by truncating the tail to
+  // `"reports:create"`; splitting without a limit and length-checking rejects
+  // any non-canonical shape (extra segments, or a bare single-segment string).
+  const parts = key.split(":");
+  if (parts.length !== 2) return undefined;
+  const [resource, action] = parts;
   const parsed = PermissionSchema.safeParse({ resource, action });
   return parsed.success ? parsed.data : undefined;
+}
+
+/**
+ * The two legacy Discord `/competition grant-permission` strings and their
+ * canonical catalog permissions. That command persists the raw
+ * `PermissionType` enum (`CREATE_COMPETITION` / `CREATE_REPORT`) rather than a
+ * `"resource:action"` key, so a grant it issues is not a canonical key. RBAC
+ * readers must bridge these so a Discord-issued grant is honored; new code
+ * should grant canonical keys directly.
+ */
+export const LEGACY_PERMISSION_KEYS: Record<string, Permission> = {
+  CREATE_COMPETITION: P("competitions", "create"),
+  CREATE_REPORT: P("reports", "create"),
+};
+
+/**
+ * Parse a stored `ServerPermission.permission` value into a {@link Permission},
+ * tolerating the legacy Discord-command grant strings ({@link
+ * LEGACY_PERMISSION_KEYS}). Use this — not {@link parsePermissionKey}, which
+ * stays strict — when reading grant rows, so a Discord-issued grant is not
+ * silently dropped. Returns `undefined` for genuinely unknown/stale values.
+ */
+export function parseStoredPermissionKey(key: string): Permission | undefined {
+  return parsePermissionKey(key) ?? LEGACY_PERMISSION_KEYS[key];
 }
 
 /** Every valid permission, derived from the catalog. */

@@ -20,7 +20,7 @@ import {
   DiscordGuildIdSchema,
   P,
   createPermissionSet,
-  parsePermissionKey,
+  parseStoredPermissionKey,
   rootPermissions,
 } from "@scout-for-lol/data";
 import type { User } from "#generated/prisma/client/index.js";
@@ -70,7 +70,7 @@ export async function resolveGuildPermissions(
     select: { permission: true },
   });
   const granted = rows.flatMap((r) => {
-    const permission = parsePermissionKey(r.permission);
+    const permission = parseStoredPermissionKey(r.permission);
     return permission ? [permission] : [];
   });
   return createPermissionSet(granted);

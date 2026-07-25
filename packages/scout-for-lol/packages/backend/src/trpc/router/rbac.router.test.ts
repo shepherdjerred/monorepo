@@ -142,6 +142,33 @@ describe("RBAC guild-permission gate", () => {
     });
   });
 
+  test("legacy Discord grant (CREATE_COMPETITION) is honored by the RBAC reader", async () => {
+    await reset();
+    asMember();
+    // The `/competition grant-permission` Discord command persists the raw
+    // legacy PermissionType enum, not a canonical `competitions:create` key.
+    // The web RBAC reader must still surface it — otherwise a freshly-issued
+    // grant is dropped and access is silently denied.
+    await trpc.prisma.serverPermission.create({
+      data: {
+        serverId: guildId,
+        discordUserId: member,
+        permission: "CREATE_COMPETITION",
+        grantedBy: member,
+        grantedAt: new Date(),
+      },
+    });
+    const caller = trpc.authedCaller(member);
+
+    const manageable = await caller.guild.listManageable();
+    const entry = manageable.find((g) => g.id === guildId);
+    expect(entry).toBeDefined();
+    expect(entry?.permissions).toContainEqual({
+      resource: "competitions",
+      action: "create",
+    });
+  });
+
   test("roles.set writes rows + a ROLE_GRANT audit entry", async () => {
     await reset();
     trpc.setMembership("root"); // an admin grants a viewer
