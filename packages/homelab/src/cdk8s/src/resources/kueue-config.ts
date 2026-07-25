@@ -56,7 +56,15 @@ export function createKueueConfig(chart: Chart) {
       },
       resourceGroups: [
         {
-          coveredResources: ["cpu", "memory", "pods"],
+          // ephemeral-storage MUST be covered here: .buildkite/pipeline.yml sets
+          // an ephemeral-storage *request* on every step/dind container, and
+          // Kueue refuses to admit a workload that requests a resource its
+          // ClusterQueue does not cover ("resource ephemeral-storage unavailable
+          // in ClusterQueue"). Omitting it froze CI completely — every workload
+          // sat Pending and no build could run (which also blocked the
+          // argocd-sync that would have shipped this very fix). See
+          // packages/docs/logs/2026-07-24_ci-main-kueue-ephemeral-storage-freeze.md.
+          coveredResources: ["cpu", "memory", "pods", "ephemeral-storage"],
           flavors: [
             {
               name: "default",
@@ -72,6 +80,15 @@ export function createKueueConfig(chart: Chart) {
                 {
                   name: "pods",
                   nominalQuota: String(BUILDKITE_MAX_IN_FLIGHT),
+                },
+                {
+                  // Generous headroom, deliberately NOT a binding constraint:
+                  // CPU/memory gate concurrency first (~6 heavy pods at 6Gi eph
+                  // request each ≈ 36Gi). 100Gi leaves ~2x margin and sits far
+                  // under the node's multi-TiB ephemeral capacity — it exists
+                  // only so Kueue can account for the pods' eph requests.
+                  name: "ephemeral-storage",
+                  nominalQuota: "100Gi",
                 },
               ],
             },
