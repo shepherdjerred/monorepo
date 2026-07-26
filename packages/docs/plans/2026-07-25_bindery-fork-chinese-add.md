@@ -89,7 +89,7 @@ The whole change (patch + test) lives in
 ## Homelab self-build wiring (mirror `shelfbridge`)
 
 1. **`packages/homelab/images/bindery/Dockerfile`** — mirror upstream's 3-stage
-   build (`node:26-alpine` frontend → `golang:1.26.5-alpine` binary →
+   build (`oven/bun:1.3.14` frontend → `golang:1.26-alpine` binary →
    `gcr.io/distroless/static-debian12:nonroot`), but **source from a pinned
    upstream commit + apply our patch** instead of a repo-root `COPY .`:
    - Add a `git`-capable stage that
@@ -114,15 +114,16 @@ The whole change (patch + test) lives in
 5. **`packages/homelab/scripts/smoke-images.ts`** — add `smokeBindery()` (boot
    `bindery:dev`, wait `/api/v1/health` → 200) and a `{ label: "bindery", fn:
 smokeBindery }` entry in `checks` (~line 524).
-6. **`packages/homelab/src/cdk8s/src/versions.ts`** — remove the
-   `"vavallee/bindery"` entry **and its `renovate:` annotation** (lines 79-82);
-   add a self-built seed entry with a `// not managed by renovate …` comment:
-   `"shepherdjerred/bindery": "2.0.0-0@sha256:<placeholder>"`.
+6. **`packages/homelab/src/cdk8s/src/versions.ts`** — retain the deployed
+   `"vavallee/bindery"` entry and add an unused publication-stage entry:
+   `"shepherdjerred/bindery": "2.0.0-0@sha256:<placeholder>"`. Main CI's
+   version commit-back can seed the real digest without changing a workload.
 7. **`packages/homelab/src/cdk8s/src/resources/torrents/bindery.ts:110`** —
-   change image ref to
-   `` `ghcr.io/shepherdjerred/bindery:${versions["shepherdjerred/bindery"]}` ``.
-   No other change to the deployment (env/ports/probes/mounts stay; `/config`
-   PVC persists all our runtime config across the swap).
+   keep the deployment on
+   `` `docker.io/vavallee/bindery:${versions["vavallee/bindery"]}` `` in this
+   publication PR. A follow-up switches to the first-party key only after its
+   digest resolves anonymously. The `/config` PVC then preserves the admin
+   account and runtime configuration across the image swap.
 8. **`renovate.json`** — add a `customManagers` git-refs entry (mirror the
    shelfbridge block, lines 64-75) for
    `packages/homelab/images/bindery/Dockerfile` → `BINDERY_SOURCE_REF` tracking
@@ -133,28 +134,32 @@ smokeBindery }` entry in `checks` (~line 524).
 1. Create a worktree (`.claude/worktrees/bindery-fork`), do all edits there,
    open a **draft PR** early (per repo conventions), run `bun run verify --
 --affected`.
-2. Merge → CI `images` step builds+pushes `ghcr.io/shepherdjerred/bindery` →
-   `version-commit-back` opens a follow-up auto-merge PR that rewrites the
-   placeholder digest to the real `2.0.0-<build>@sha256:…`.
-3. **⚠ First-push gotcha (known):** a brand-new `shepherdjerred/*` GHCR package
-   defaults to **private** → `ImagePullBackOff` → `media` app Degraded → CI on
-   main red. **After the first push, flip the package to public** in GHCR
-   settings (same fix as `logs/2026-07-22_ci-main-shelfbridge-private-image.md`),
-   then delete the stuck pod to force a re-pull.
-4. Argo syncs `media`; the new Bindery pod keeps its `/config` PVC, so the admin
-   account, indexers, and `googlebooks.apiKey` all persist.
+2. Merge the publication PR. Main CI's `images` step builds, tests, smokes, and
+   pushes `ghcr.io/shepherdjerred/bindery`; the media Deployment keeps serving
+   `docker.io/vavallee/bindery`.
+3. Merge the version commit-back PR that rewrites the unused seed to the real
+   `2.0.0-<build>@sha256:…`.
+4. A new GHCR package defaults to private. Flip it to public in GHCR settings,
+   then verify an anonymous manifest request for the pinned digest succeeds.
+   The cluster has no image pull secret.
+5. Open a follow-up deployment-switch PR replacing the upstream image reference
+   with the verified `shepherdjerred/bindery` pin. Argo then rolls Bindery while
+   preserving `/config`, including the admin account, indexers, and
+   `googlebooks.apiKey`.
 
 ## Remaining
 
 Code is implemented and locally verified (patch `go test` green, image builds +
 boots, `bun run verify -- --affected` green). Left to do post-merge:
 
-- [ ] Merge the PR; on the first `main` `images` build, **flip the new
-      `ghcr.io/shepherdjerred/bindery` GHCR package to public** — new packages
-      default to private → `ImagePullBackOff` → `media` Degraded (same as the
-      shelfbridge first-push incident).
+- [ ] Merge the publication PR; the currently deployed upstream Bindery remains
+      available while main CI publishes the patched image.
 - [ ] Merge the `version-commit-back` follow-up PR that rewrites the all-zero
       seed digest to the real `2.0.0-<build>@sha256:…`.
+- [ ] Flip `ghcr.io/shepherdjerred/bindery` to public and verify the seeded
+      digest can be pulled anonymously.
+- [ ] Open and merge the deployment-switch follow-up only after the digest and
+      visibility gates pass.
 - [ ] Post-deploy E2E: `POST /api/v1/author/book` with the 原子習慣 Google Books
       result → expect **201** (was 422); confirm Wanted → ShelfBridge grab →
       qBit → `/ingest` → CWA.
@@ -220,7 +225,7 @@ bindery:dev` succeeds; `bun packages/homelab/scripts/smoke-images.ts bindery`
   upstream regressions, so each `BINDERY_SOURCE_REF` bump now needs manual
   review). Note the same rolling-main + inherited-automerge shape exists for
   `shelfbridge-source`/`redlib-source`/`pokeemerald-source` (left out of scope).
-- **[P1] Placeholder seed digest — ESCALATED, not merged.** Confirmed the pipeline
+- **[P1] Placeholder seed digest — RESOLVED by staged rollout.** Confirmed the pipeline
   claim: `argocd-sync` depends on `[images, helm-push, tofu-apply]` (not
   `version-commit-back`), so the merge build syncs the Helm chart with the
   all-zero placeholder digest → `ImagePullBackOff` (plus the new GHCR package is
@@ -228,6 +233,18 @@ bindery:dev` succeeds; `bun packages/homelab/scripts/smoke-images.ts bindery`
   differs: it already runs the upstream `vavallee/bindery` image, so — unlike
   greenfield shelfbridge — a two-PR split (publish the patched image first, keep
   serving upstream; switch the deployment only after the real digest is seeded and
-  the GHCR package is public) avoids any undeployable window. That fix needs
-  operator actions (image push, GHCR visibility flip) and a PR restructure, so it
-  is escalated to the owner rather than merged as-is.
+  the GHCR package is public) avoids any undeployable window. PR #1643 now takes
+  that publication-only first stage; the first-party seed is unused by any
+  workload until the follow-up switch.
+
+### 2026-07-25 — Hosted Codex review of 15b6d29ac
+
+- **[P1] Frontend package manager — FIXED.** The frontend stage now uses the
+  repository-pinned `oven/bun:1.3.14` image, `bun install --frozen-lockfile`,
+  and `bun run build`.
+- **[P2] Release metadata — FIXED.** The Bindery Bake target maps CI's
+  `VERSION` and `GIT_SHA` values to the Dockerfile's `VERSION` and `COMMIT`
+  arguments.
+- **[P1] Canonical guide — FIXED.** The ebook-stack operator guide now records
+  the patched-image code map, staged publication, visibility check, digest
+  gate, and later deployment switch.

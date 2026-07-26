@@ -6,7 +6,7 @@
 # but no author ID and no ISBN edition — be added to the wanted list instead of
 # 422ing "Author metadata unavailable". See packages/docs/plans for the rationale.
 #
-# The build mirrors upstream's own Dockerfile (node frontend → cross-compiled Go
+# The build mirrors upstream's own Dockerfile (Bun frontend → cross-compiled Go
 # binary → distroless/static runtime); the only additions are the source fetch +
 # `git apply`, and a go-test stage that gates the build on the patch's behaviour.
 #
@@ -43,13 +43,13 @@ RUN set -e \
 ########################
 ## frontend build (native arch — output is arch-agnostic JS)
 ########################
-# renovate: datasource=docker depName=node
-FROM --platform=$BUILDPLATFORM node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66 AS frontend
+# renovate: datasource=docker depName=oven/bun
+FROM --platform=$BUILDPLATFORM oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4 AS frontend
 WORKDIR /app/web
 COPY --from=source /src/web/package*.json ./
-RUN npm ci
+RUN bun install --frozen-lockfile
 COPY --from=source /src/web/ .
-RUN npm run build
+RUN bun run build
 
 ########################
 ## Go builder (native on BUILDPLATFORM, cross-compile to TARGETOS/TARGETARCH)

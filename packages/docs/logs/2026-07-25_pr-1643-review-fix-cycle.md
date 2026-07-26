@@ -12,6 +12,9 @@ board: false
 - Inspect current PR health and direct mergeability.
 - Replace the unavailable Greptile review with `codex review --base origin/main`.
 - Address at most the top real P3+ defect while preserving the accepted placeholder-digest decision.
+- Resume against the hosted Codex review on commit `15b6d29ac`, address all
+  four current-head findings, and use the hosted threads as the sole review
+  oracle for the follow-up.
 
 ## Review result
 
@@ -23,6 +26,13 @@ Codex also found one independent P2 defect: the package-local
 `docker:build` aggregate omitted Bindery, so Turbo's `smoke` dependency could
 exercise a missing or stale `bindery:dev` image. Added
 `docker:build:bindery` and included it in the aggregate.
+
+The hosted follow-up review correctly rejected deploying the all-zero seed.
+PR #1643 now publishes the patched image without switching the workload:
+`vavallee/bindery` remains the rendered media image while main CI seeds the
+unused first-party pin. The switch is a later change, gated on a real digest
+and anonymous GHCR access. The same follow-up moved the frontend build to Bun,
+forwarded release metadata through Bake, and updated the canonical ebook guide.
 
 ## Verification
 
@@ -37,6 +47,17 @@ exercise a missing or stale `bindery:dev` image. Added
   `/api/v1/health`; the runner does not accept a target filter and also attempted
   four sibling images that were not materialized in this focused cycle.
 - `bun run verify -- --affected`: passed (25 tasks).
+- `bun run docker:build:bindery`: passed with Bun frontend install/build and
+  the patched Go test.
+- `VERSION=1643 GIT_SHA=15b6d29ac8b4025c755655d1e8f34413b3299606
+docker buildx bake bindery --load`: passed; build log showed both values in
+  the Go linker flags.
+- Bindery container smoke: `/api/v1/health` returned
+  `{"status":"ok","version":"1643"}`.
+- CDK8s `typecheck`, `lint`, and `build`: passed; rendered
+  `media.k8s.yaml` uses the real upstream digest and does not consume the
+  all-zero staging pin.
+- Targeted Markdown lint, Prettier, and Docker image digest validation: passed.
 
 ## Session Log — 2026-07-25
 
@@ -46,17 +67,24 @@ exercise a missing or stale `bindery:dev` image. Added
 - Replaced the unavailable Greptile review with the Codex CLI review.
 - Fixed the package-local Bindery image-build omission in
   `packages/homelab/package.json`.
-- Preserved the owner's accepted placeholder-digest and first-push visibility
-  risk.
+- Addressed all four hosted Codex findings on commit `15b6d29ac`.
+- Converted the Bindery frontend stage from npm/Node to Bun.
+- Passed CI release metadata into the Bindery binary through Bake.
+- Restructured PR #1643 as publication-only so the placeholder cannot reach a
+  workload.
+- Updated the canonical ebook-stack guide and implementation plan with the
+  staged rollout.
 
 ### Remaining
 
-- Let Buildkite evaluate the pushed fix; do not treat the Greptile credit
-  timeout as a code failure.
+- Let fresh Buildkite checks evaluate the pushed commit.
+- After merge, let main CI publish the image and seed its real digest, make the
+  package public, verify anonymous pull, then open the deployment-switch
+  follow-up.
 
 ### Caveats
 
-- The Greptile-named gate remains externally blocked while Greptile is out of
-  credits.
-- The first main build still requires the documented GHCR visibility operator
-  step and version commit-back follow-up.
+- `ghcr.io/shepherdjerred/bindery` does not exist before the first main image
+  push; the staging pin is deliberately unused by the Deployment.
+- The Chinese-add behavior cannot be exercised in the live Bindery UI until
+  the post-publication switch is merged.

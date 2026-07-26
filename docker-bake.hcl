@@ -152,7 +152,7 @@ target "discord-plays-mario-kart" {
   cache-to   = cacheto("discord-plays-mario-kart")
 }
 
-# ── Homelab infra images: self-contained contexts, no VERSION/GIT_SHA ───────
+# ── Homelab infra images: self-contained contexts ────────────────────────────
 group "infra" {
   targets = ["bindery", "caddy-s3proxy", "obsidian-headless", "mcp-gateway", "redlib", "shelfbridge"]
 }
@@ -160,6 +160,10 @@ group "infra" {
 target "bindery" {
   context    = "packages/homelab/images/bindery"
   tags       = ["bindery:dev"]
+  args = {
+    VERSION = VERSION
+    COMMIT  = GIT_SHA
+  }
   cache-from = cachefrom("bindery")
   cache-to   = cacheto("bindery")
 }
