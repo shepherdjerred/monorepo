@@ -147,10 +147,19 @@ export async function ensureDevServer(
 
   const stop = async () => {
     proc.kill();
+    // Clear the loser of the race: if the process exits promptly, an
+    // un-cleared 5s timer would keep Bun's event loop (and thus the CLI)
+    // alive for the full 5s after cleanup.
+    let killTimer: ReturnType<typeof setTimeout> | undefined;
     await Promise.race([
       proc.exited,
-      new Promise((resolve) => setTimeout(resolve, 5000)),
+      new Promise((resolve) => {
+        killTimer = setTimeout(resolve, 5000);
+      }),
     ]);
+    if (killTimer !== undefined) {
+      clearTimeout(killTimer);
+    }
   };
 
   if (boundUrl === undefined) {

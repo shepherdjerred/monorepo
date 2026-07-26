@@ -167,16 +167,37 @@ export async function captureScreenshot(
     "pinchtab session create",
   );
 
+  // A Ctrl-C (or SIGTERM) during navigation/selector-wait would otherwise
+  // terminate the process before the catch below runs, leaking this session
+  // and its tab in the persistent browser. Revoke on the signal, then
+  // re-raise it so the exit code stays signal-correct.
+  function onSignal(signal: "SIGINT" | "SIGTERM"): void {
+    process.removeListener("SIGINT", onSignal);
+    process.removeListener("SIGTERM", onSignal);
+    void (async () => {
+      await revokeSession(session.id);
+      process.kill(process.pid, signal);
+    })();
+  }
+  process.once("SIGINT", onSignal);
+  process.once("SIGTERM", onSignal);
+  const removeSignalHandlers = () => {
+    process.removeListener("SIGINT", onSignal);
+    process.removeListener("SIGTERM", onSignal);
+  };
+
   let capture: { path: string };
   try {
     capture = await runCapture(session, options);
   } catch (error) {
+    removeSignalHandlers();
     // Still release the isolated session on failure, but let the original
     // capture error win — a cleanup failure here must not mask it.
     await revokeSession(session.id);
     throw error;
   }
 
+  removeSignalHandlers();
   // Happy path: revoking the session is the documented isolation guarantee, so
   // a nonzero revoke is a real failure, not something to swallow.
   unwrap(await revokeSession(session.id), "pinchtab session revoke");
