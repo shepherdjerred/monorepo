@@ -9,11 +9,10 @@ set -euo pipefail
 IMAGE="ghcr.io/shepherdjerred/ci-base"
 SHA="${BUILDKITE_COMMIT:?BUILDKITE_COMMIT is required}"
 
-# Registry cache export needs a docker-container builder — dind's default
-# docker driver cannot export cache. image-manifest=true keeps the cache
-# manifest OCI-conformant for ghcr.
+# The shared BuildKit daemon writes the cache once to its bounded PVC and
+# pushes directly to GHCR. No local Docker daemon is required.
 if ! docker buildx inspect ci; then
-  docker buildx create --name ci --driver docker-container
+  docker buildx create --name ci --driver remote tcp://buildkitd-buildkitd-service.buildkitd.svc.cluster.local:1234
 fi
 
 docker buildx build \

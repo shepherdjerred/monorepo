@@ -25,6 +25,12 @@ if ! bake_failure_is_transient "$FIXTURE/eof.log"; then
   exit 1
 fi
 
+printf 'target birmel: failed to receive status: rpc error: code = Unavailable desc = error reading from server: EOF\n' > "$FIXTURE/remote-driver-drop.log"
+if ! bake_failure_is_transient "$FIXTURE/remote-driver-drop.log"; then
+  echo "remote BuildKit driver drop was not classified as transient" >&2
+  exit 1
+fi
+
 printf 'failed to solve: missing COPY source\n' > "$FIXTURE/build-error.log"
 if bake_failure_is_transient "$FIXTURE/build-error.log"; then
   echo "deterministic build error was classified as transient" >&2

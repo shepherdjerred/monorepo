@@ -20,8 +20,15 @@ FROM caddy:2.11.4-builder-alpine@sha256:8e89605351333ad2cc2f3bcc95275a2ccc427f88
 RUN xcaddy build --with github.com/lindenlab/caddy-s3-proxy=github.com/shepherdjerred/caddy-s3-proxy@v0.5.7-head2
 
 # renovate: datasource=docker depName=caddy
-FROM caddy:2.11.4-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648
+FROM caddy:2.11.4-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648 AS runtime
 
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
 
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
+
+FROM runtime AS smoke
+RUN caddy version && caddy list-modules | grep -F "http.handlers.s3proxy"
+RUN --mount=type=secret,id=caddyfile \
+  caddy adapt --config /run/secrets/caddyfile --adapter caddyfile >/dev/null
+
+FROM runtime AS image

@@ -60,3 +60,20 @@ LABEL org.opencontainers.image.source="https://github.com/selmant/shelfbridge"
 LABEL org.opencontainers.image.revision.shelfbridge="${SHELFBRIDGE_SOURCE_REF}"
 
 ENTRYPOINT ["/usr/local/bin/shelfbridge"]
+
+FROM release AS smoke
+RUN API_KEY=smoke-test-key SOURCE_LIBGEN=false SOURCE_ANNAS=false SOURCE_ZLIB=false \
+  shelfbridge >/tmp/shelfbridge-smoke.log 2>&1 & \
+  pid=$!; \
+  trap 'if kill -0 $pid; then kill $pid; if wait $pid; then :; else cleanup_status=$?; [ $cleanup_status -eq 143 ] || exit $cleanup_status; fi; fi' EXIT; \
+  for _ in $(seq 1 30); do \
+    if wget -qO /tmp/caps "http://127.0.0.1:8787/torznab/api?t=caps&apikey=smoke-test-key" \
+      && grep -Fq '<caps' /tmp/caps \
+      && wget --spider -q http://127.0.0.1:8787/health; then exit 0; fi; \
+    if ! kill -0 $pid; then cat /tmp/shelfbridge-smoke.log; exit 1; fi; \
+    sleep 1; \
+  done; \
+  cat /tmp/shelfbridge-smoke.log; \
+  exit 1
+
+FROM release AS image

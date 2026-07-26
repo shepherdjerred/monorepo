@@ -5,9 +5,15 @@ import {
   Deployment,
   DeploymentStrategy,
   EnvValue,
+  Node,
+  NodeLabelQuery,
+  PersistentVolumeAccessMode,
+  PersistentVolumeClaim,
+  PersistentVolumeMode,
   Probe,
   Secret,
   Service,
+  Volume,
 } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
@@ -17,35 +23,29 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import { NVME_STORAGE_CLASS_LZ4 } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import {
+  CI_NODE_HOSTNAME,
+  ciNodeTaintedNode,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 
 // ducktors/turborepo-remote-cache listens on 3000 by default (PORT env).
 const PORT = 3000;
-
-// Cloudflare R2 exposes an S3-compatible endpoint at
-// https://<account-id>.r2.cloudflarestorage.com. This is the same account that
-// backs the Velero R2 bucket (see argo-applications/velero.ts) — the account id
-// is not a secret, so it stays a plain literal; only the S3 keypair and the
-// shared TURBO_TOKEN come from 1Password.
-const R2_ACCOUNT_ID = "48948ed6cd40d73e34d27f0cc10e595f";
-const R2_ENDPOINT = `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
+const CACHE_PVC_SIZE = Size.gibibytes(256);
 
 export function createTurboCacheDeployment(chart: Chart) {
-  // 1Password item `turbo-cache-r2` (Homelab (Kubernetes) vault). Fields:
-  //   - S3_ACCESS_KEY / S3_SECRET_KEY: R2 S3 keypair. Reuses the account-wide
-  //     "CloudFlare R2" token (operator decision 2026-07-16 — reuse over
-  //     minting a bucket-scoped token; see docs/todos/turbo-cache-rollout.md)
-  //   - TURBO_TOKEN: shared bearer token turbo clients present via
-  //     `turbo --token` / TURBO_TOKEN to authenticate against this cache;
-  //     the same value lives in the `buildkite-ci-secrets` item for CI
-  // The R2 bucket itself is provisioned by tofu (src/tofu/cloudflare/turbo-cache.tf);
-  // the S3 keypair cannot be minted by the tofu provider, so it is managed in the
-  // R2 dashboard and stored here manually.
+  // The local cache only needs the shared Turbo bearer token. Its contents are
+  // derived build artifacts, so the claim is deliberately unbacked-up and
+  // rebuildable after node loss.
   const secrets = new OnePasswordItem(chart, "turbo-cache-secrets", {
     spec: {
-      itemPath: vaultItemPath("turbo-cache-r2"),
+      // vaultItemPath takes the 1Password item *ID*, not its title. This is the
+      // shared `buildkite-ci-secrets` item (same ID buildkite.ts references) —
+      // we only need its TURBO_TOKEN field for the remote cache bearer token.
+      itemPath: vaultItemPath("rzk3lawpk4yspyyu5rxlz44ssi"),
     },
     metadata: {
-      name: "turbo-cache-r2",
+      name: "buildkite-ci-secrets",
     },
   });
   const secretRef = Secret.fromSecretName(
@@ -54,10 +54,28 @@ export function createTurboCacheDeployment(chart: Chart) {
     secrets.name,
   );
 
+  const cache = new PersistentVolumeClaim(chart, "turbo-cache-liskov", {
+    storageClassName: NVME_STORAGE_CLASS_LZ4,
+    accessModes: [PersistentVolumeAccessMode.READ_WRITE_ONCE],
+    volumeMode: PersistentVolumeMode.FILE_SYSTEM,
+    storage: CACHE_PVC_SIZE,
+    metadata: {
+      name: "turbo-cache-liskov",
+      labels: {
+        "velero.io/backup": "disabled",
+        "velero.io/exclude-from-backup": "true",
+      },
+    },
+  });
+
   const deployment = new Deployment(chart, "turbo-cache", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
   });
+  deployment.scheduling.attract(
+    Node.labeled(NodeLabelQuery.is("kubernetes.io/hostname", CI_NODE_HOSTNAME)),
+  );
+  deployment.scheduling.tolerate(ciNodeTaintedNode());
 
   deployment.addContainer(
     withCommonProps({
@@ -67,22 +85,12 @@ export function createTurboCacheDeployment(chart: Chart) {
       envVariables: {
         PORT: EnvValue.fromValue(String(PORT)),
         NODE_ENV: EnvValue.fromValue("production"),
-        // S3-compatible backend (Cloudflare R2). Non-sensitive config is
-        // inlined; STORAGE_PATH is the bucket name.
-        STORAGE_PROVIDER: EnvValue.fromValue("s3"),
-        STORAGE_PATH: EnvValue.fromValue("turbo-cache"),
-        S3_ENDPOINT: EnvValue.fromValue(R2_ENDPOINT),
-        // R2 ignores the region but the S3 client requires one; "auto" is
-        // Cloudflare's documented value.
-        S3_REGION: EnvValue.fromValue("auto"),
-        S3_ACCESS_KEY: EnvValue.fromSecretValue({
-          secret: secretRef,
-          key: "S3_ACCESS_KEY",
-        }),
-        S3_SECRET_KEY: EnvValue.fromSecretValue({
-          secret: secretRef,
-          key: "S3_SECRET_KEY",
-        }),
+        // The cache server calls its persistent filesystem backend `local`.
+        // Disable its default `/tmp` prefix so the PVC, rather than the
+        // container root filesystem, owns every artifact.
+        STORAGE_PROVIDER: EnvValue.fromValue("local"),
+        STORAGE_PATH: EnvValue.fromValue("/cache"),
+        STORAGE_PATH_USE_TMP_FOLDER: EnvValue.fromValue("false"),
         TURBO_TOKEN: EnvValue.fromSecretValue({
           secret: secretRef,
           key: "TURBO_TOKEN",
@@ -102,6 +110,16 @@ export function createTurboCacheDeployment(chart: Chart) {
           limit: Size.mebibytes(512),
         },
       },
+      volumeMounts: [
+        {
+          path: "/cache",
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "turbo-cache-volume",
+            cache,
+          ),
+        },
+      ],
       liveness: Probe.fromTcpSocket({
         port: PORT,
         initialDelaySeconds: Duration.seconds(10),
@@ -133,5 +151,5 @@ export function createTurboCacheDeployment(chart: Chart) {
     probePath: "/v8/artifacts/status",
   });
 
-  return { deployment, service, secrets };
+  return { deployment, service, secrets, cache };
 }

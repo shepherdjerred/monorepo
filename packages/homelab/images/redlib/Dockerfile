@@ -51,6 +51,14 @@ RUN cargo build --release --locked --bin redlib \
 # renovate: datasource=docker depName=ubuntu
 FROM ubuntu:noble@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90 AS release
 
+# wget powers both the HEALTHCHECK below and the in-image `smoke` stage's
+# /settings probe. ubuntu:noble does not ship wget, so install it (upstream's
+# Dockerfile.ubuntu relies on the base having a probe tool; the minimal noble
+# image does not). Without this the smoke solve fails with `wget: not found`.
+RUN apt-get update \
+  && apt-get -y install --no-install-recommends wget \
+  && rm -rf /var/lib/apt/lists/*
+
 # Import redlib binary from builder.
 COPY --from=builder /redlib/target/release/redlib /usr/local/bin/redlib
 
@@ -71,3 +79,17 @@ LABEL org.opencontainers.image.source="https://github.com/redlib-org/redlib"
 LABEL org.opencontainers.image.revision.redlib="a4d36e954cf1bd64f209cd8868c5a29edc81b374"
 
 CMD ["redlib"]
+
+FROM release AS smoke
+RUN redlib >/tmp/redlib-smoke.log 2>&1 & \
+  pid=$!; \
+  trap 'if kill -0 $pid; then kill $pid; if wait $pid; then :; else cleanup_status=$?; [ $cleanup_status -eq 143 ] || exit $cleanup_status; fi; fi' EXIT; \
+  for _ in $(seq 1 30); do \
+    if wget --spider -q http://127.0.0.1:8080/settings; then exit 0; fi; \
+    if ! kill -0 $pid; then cat /tmp/redlib-smoke.log; exit 1; fi; \
+    sleep 1; \
+  done; \
+  cat /tmp/redlib-smoke.log; \
+  exit 1
+
+FROM release AS image
