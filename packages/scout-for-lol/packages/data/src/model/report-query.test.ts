@@ -362,6 +362,17 @@ describe("RENDER clause", () => {
     }
   });
 
+  test("rejects an empty leaderboard WITH option list", () => {
+    for (const query of [
+      "SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard WITH ()",
+      "SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard WITH ( , )",
+    ]) {
+      expect(() => parseAndCompile(query)).toThrow(
+        "RENDER leaderboard WITH (...) requires an option",
+      );
+    }
+  });
+
   test("ignores keywords inside a quoted render title", () => {
     const plan = parseAndCompile(
       'SELECT player, games FROM match_participants GROUP BY player ORDER BY games DESC LIMIT 3 RENDER bar_chart WITH (title = "no limit here")',

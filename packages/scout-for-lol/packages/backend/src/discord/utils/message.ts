@@ -208,8 +208,16 @@ function splitFencedCodeBlock(
         "Discord message limit cannot accommodate the fenced code block.",
       );
     }
-    const boundary = body.lastIndexOf("\n", available);
-    const splitAt = boundary > 0 ? boundary : available;
+    // When the remaining body already fits, take all of it: otherwise
+    // `lastIndexOf` would still cut at its final newline and emit a needless
+    // trailing chunk holding only the last row.
+    let splitAt: number;
+    if (body.length <= available) {
+      splitAt = body.length;
+    } else {
+      const boundary = body.lastIndexOf("\n", available);
+      splitAt = boundary > 0 ? boundary : available;
+    }
     const chunkBody = body.slice(0, splitAt);
     chunks.push(
       `${prefix}${parts.openingFence}${chunkBody}${parts.closingFence}`,

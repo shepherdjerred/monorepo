@@ -113,7 +113,16 @@ function parseLeaderboardRenderWith(
     );
   }
   const body = withMatch.groups["body"] ?? "";
-  for (const pair of splitRenderPairs(body)) {
+  const pairs = splitRenderPairs(body);
+  if (pairs.length === 0) {
+    // `WITH ()` or a comma-only body supplied a clause but no option. Reject it
+    // instead of silently falling back to the default top-three mentions, which
+    // would ping players the author never intended to configure.
+    throw new Error(
+      "RENDER leaderboard WITH (...) requires an option, e.g. WITH (mentions = 3).",
+    );
+  }
+  for (const pair of pairs) {
     const { key, value } = RenderPairSchema.parse(pair);
     if (normalizeToken(key) !== "mentions") {
       throw new Error(

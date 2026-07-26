@@ -170,7 +170,11 @@ async function executeCompetitionRankReport(
       dimensions: [entry.playerName],
       mentionIdentity: {
         kind: "player",
-        playerId: null,
+        // Preserve the leaderboard's player id so the live playerDiscordIds map
+        // stays authoritative: a player who unlinks between leaderboard
+        // calculation and map load falls back to the alias instead of pinging
+        // the stale snapshot discordId (same handling as lake-backed reports).
+        playerId: entry.playerId,
         alias: entry.playerName,
         discordId: entry.discordId ?? null,
       },
