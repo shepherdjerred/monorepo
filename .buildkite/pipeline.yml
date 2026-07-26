@@ -1166,7 +1166,7 @@ steps:
       # Kueue was a child Application without a resources finalizer. Delete it
       # explicitly with foreground cascading before pruning the root-owned
       # queues and namespace; otherwise its Helm resources are orphaned.
-      bun --no-install packages/homelab/scripts/argocd.ts delete-application kueue --timeout 300
+      bun --no-install packages/homelab/scripts/argocd.ts delete-application kueue --project default --timeout 300
       bun --no-install packages/homelab/scripts/argocd.ts sync apps --prune
       bun --no-install packages/homelab/scripts/argocd.ts tree-health-wait apps --timeout 300
     retry: *retry

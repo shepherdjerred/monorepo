@@ -33,6 +33,9 @@ type safety, or any other quality gate.
 - Merged Argo DELETE content-type PR
   [#1654](https://github.com/shepherdjerred/monorepo/pull/1654)
 - Replacement `main` build `#6235`
+- Merged Kueue lookup RBAC PR
+  [#1658](https://github.com/shepherdjerred/monorepo/pull/1658)
+- Replacement `main` build `#6246`
 - Build `#6212` proved checkout, verify, Playwright, resume, Docker E2E, and the
   image dry-run run on Liskov. Its Trivy gate found three newly published
   dependency advisories after downloading a fresh vulnerability database.
@@ -56,6 +59,8 @@ type safety, or any other quality gate.
 - [x] Land the Argo CD Application DELETE content-type follow-up.
 - [x] Grant the Buildkite account the `get` authorization required by Argo
       CD's delete handler before it checks `delete`.
+- [x] Fully scope the Application deletion request to project `default` so
+      Argo CD can return HTTP 404 for an already-absent Application.
 - [ ] Confirm the resulting `main` Buildkite build is green.
 
 ## Session Log — 2026-07-25
@@ -196,10 +201,28 @@ type safety, or any other quality gate.
   extended the exact synthesized-policy regression test.
 - Passed the focused policy test, CDK8s typecheck/lint/build, Markdown lint, and
   `bun run verify -- --affected` (25/25).
+- Landed PR [#1658](https://github.com/shepherdjerred/monorepo/pull/1658) as
+  `fa391b034f727e4a5f5d0a76cc11f80ddd4931a0`.
+- Followed replacement build `#6246`: all 16 upstream executable jobs passed,
+  including verification, browser and Docker E2E tests, image
+  build/smoke/push, publishing, both OpenTofu lanes, release automation, and
+  CI-image refresh.
+- Confirmed the new lookup grant is live and the effective Buildkite token can
+  both get and delete `default/kueue`.
+- Traced the remaining HTTP 403 to Argo CD v3.4.5's deliberate
+  existence-hiding behavior for unscoped Application requests. A live DELETE
+  with `project=default` returned the intended HTTP 404 for the absent Kueue
+  Application.
+- Added a required `--project` argument to `delete-application`, scoped both
+  the DELETE and disappearance GET requests, updated the pipeline invocation,
+  and expanded the HTTP-contract regression coverage.
+- Passed both focused HTTP-contract tests, pipeline validation, CDK8s
+  build/typecheck/lint, the full CDK8s suite (244 pass, 13 skip, 0 fail),
+  GPU-resource verification, and `bun run verify -- --affected` (33/33).
 
 ### Remaining
 
-- Land the narrow Argo CD Kueue lookup grant.
+- Land the project-scoped Argo CD Application deletion follow-up.
 - Run the next replacement `main` build through Argo CD sync, downstream
   reconciliation, version commit-back, and summary.
 - Verify post-sync Buildkite job placement on `liskov` and current cluster
