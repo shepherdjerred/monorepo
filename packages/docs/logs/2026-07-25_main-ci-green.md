@@ -19,6 +19,9 @@ type safety, or any other quality gate.
 - Merged PR [#1644](https://github.com/shepherdjerred/monorepo/pull/1644)
 - Follow-up PR [#1647](https://github.com/shepherdjerred/monorepo/pull/1647)
 - Replacement `main` build `#6179`
+- Merged checkout-memory fix PR
+  [#1647](https://github.com/shepherdjerred/monorepo/pull/1647)
+- Current `main` build `#6207`
 - The only hard-failing job is `:turborepo: verify`
   (`019f9b73-ee64-4356-9a55-7cc12cec1bf5`, exit status 1).
 - The failing package is `@shepherdjerred/temporal`. Bun reports an unhandled
@@ -34,7 +37,8 @@ type safety, or any other quality gate.
       workflow.
 - [x] Correct the Buildkite checkout container's tmpfs memory accounting exposed
       by build `#6179`.
-- [ ] Publish and land the resource fix.
+- [x] Publish and land the resource fix.
+- [ ] Land the Buildx import retry-classification fix exposed by build `#6207`.
 - [ ] Confirm the resulting `main` Buildkite build is green.
 
 ## Session Log — 2026-07-25
@@ -100,14 +104,30 @@ type safety, or any other quality gate.
   E2E, and Semgrep jobs passed with no hard failure.
 - Passed the combined pending change set through the pipeline validator and
   `bun run verify -- --affected` (25/25).
+- Landed PR
+  [#1647](https://github.com/shepherdjerred/monorepo/pull/1647) as
+  `93792ecfaa11fe72577df81a4544625b0cc04dd3`.
+- Removed all nine bootstrap Argo CD Helm parameters after the merged values
+  were live; the Application is Synced/Healthy with no parameter overrides.
+- Followed current-main build `#6207`: verify, Playwright, resume, Docker E2E,
+  npm publish, Helm push, GitHub OpenTofu, and CI-image refresh passed.
+- Diagnosed its image-lane failure as Buildx's Docker-import
+  `unexpected EOF` followed by `panic: send on closed channel`. The long Go
+  stack displaced `unexpected EOF` beyond the classifier's 120-line window,
+  so the script incorrectly treated the transport crash as deterministic.
+- Extracted the bounded-tail classifier into `bake-retry.sh`, added the exact
+  Buildx panic signature without accepting arbitrary panics, and added direct
+  positive and negative shell regression tests.
+- Passed the focused classifier test, ShellCheck, pipeline validation, and the
+  root-scripts test suite (97 Bun tests plus all shell suites).
 
 ### Remaining
 
-- Push the fix-cycle commit to PR
-  [#1647](https://github.com/shepherdjerred/monorepo/pull/1647).
-- Finish build `#6192`, push the fix-cycle commit, land the PR, remove the
-  temporary ArgoCD Helm parameter overrides after the merged values are live,
-  and confirm the replacement `main` build.
+- Publish and land the Buildx retry-classification follow-up.
+- Run the replacement `main` build through image publishing, OpenTofu, Argo CD
+  sync, version commit-back, and summary.
+- Verify post-sync Buildkite job placement on `liskov` and current cluster
+  readiness.
 
 ### Caveats
 
@@ -116,10 +136,11 @@ type safety, or any other quality gate.
 - Build `#6179` proves the Temporal fix, but remains red because its replacement
   `release-please` job lost the checkout container to OOM before running the
   release command.
-- The live Buildkite Application currently carries nine explicit Helm parameter
-  overrides matching the branch's agent and checkout resource values. Remove
-  them after the merged Application values are synced so Git remains the only
-  long-term source of truth.
+- The temporary Argo CD Helm parameters are removed; Git and the
+  OpenTofu-managed static uploader are the durable resource sources.
 - The first package-script test attempt expanded to the entire CDK8s suite and
   exposed a local Go compiler/cache version mismatch. The focused test and all
   TypeScript/synthesis checks passed.
+- Build `#6207` began before the liskov Application chart was synced, so its
+  command pods ran on torvalds. The replacement build must prove the intended
+  liskov selector/toleration after deployment completes.

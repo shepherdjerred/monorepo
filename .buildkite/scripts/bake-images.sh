@@ -14,6 +14,10 @@ set -euo pipefail
 # images are pre-built by bake, and turbo's smoke/docker:build tasks are
 # cache:false, so no turbo caching is lost by bypassing the task graph.
 
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+# shellcheck source=.buildkite/scripts/bake-retry.sh
+source "${SCRIPT_DIR}/bake-retry.sh"
+
 REGISTRY="ghcr.io/shepherdjerred"
 SHA="${BUILDKITE_COMMIT:?BUILDKITE_COMMIT is required}"
 BUILD_NUMBER="${BUILDKITE_BUILD_NUMBER:?BUILDKITE_BUILD_NUMBER is required}"
@@ -178,7 +182,8 @@ fi
 # target's error at the end, so the tail is the failing target's output, not a
 # sibling's benign mid-build noise. So a deterministic failure (e.g. a missing
 # COPY source) in one target isn't masked as transient by another target's text.
-transient_re='Request timed out|i/o timeout|TLS handshake|remote error: tls|connection reset|connection refused|net/http:|failed to do request|dial tcp|temporary failure in name resolution|Internal Server Error|Bad Gateway|Service Unavailable|Gateway Timeout|blob unknown|failed to resolve source metadata|unexpected EOF|context deadline exceeded|error: failed to download'
+# The classifier lives in bake-retry.sh so its bounded-tail behavior has direct
+# regression coverage.
 
 # Contract-source hash baked into the scout image (ENV CONTRACT_HASH) and
 # stamped into the SPA bundle by the sites step — equal hashes at runtime
@@ -195,7 +200,7 @@ while :; do
     rm -f "$bake_log"
     break
   fi
-  if ! tail -n 120 "$bake_log" | grep -qiE "$transient_re"; then
+  if ! bake_failure_is_transient "$bake_log"; then
     echo "^^^ +++ bake failed with a non-transient error — failing fast."
     rm -f "$bake_log"
     exit 1
