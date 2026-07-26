@@ -4,6 +4,7 @@ import {
   CurrentMessageSchema,
   type CorpusObservation,
   type CurrentMessage,
+  type DiscordAttachment,
 } from "./glitter-corpus.ts";
 
 export function sha256(value: string | Uint8Array): string {
@@ -17,12 +18,44 @@ export function compareSnowflakes(left: string, right: string): number {
   return left.localeCompare(right);
 }
 
-function observationVersionTimestamp(observation: CorpusObservation): string {
-  return observation.editedTimestamp ?? observation.timestamp;
+function instantMilliseconds(value: string): number {
+  const milliseconds = Date.parse(value);
+  if (!Number.isFinite(milliseconds)) {
+    throw new TypeError(`invalid ISO timestamp: ${value}`);
+  }
+  return milliseconds;
+}
+
+function observationVersionTimestamp(observation: CorpusObservation): number {
+  return instantMilliseconds(
+    observation.editedTimestamp ?? observation.timestamp,
+  );
 }
 
 function rawChecksum(observation: CorpusObservation): string {
   return sha256(JSON.stringify(observation.raw));
+}
+
+function stableAttachments(attachments: readonly DiscordAttachment[]): {
+  id: string;
+  filename: string;
+  size: number;
+  contentType: string | null;
+  height: number | null;
+  width: number | null;
+  description: string | null;
+  ephemeral: boolean;
+}[] {
+  return attachments.map((attachment) => ({
+    id: attachment.id,
+    filename: attachment.filename,
+    size: attachment.size,
+    contentType: attachment.contentType,
+    height: attachment.height,
+    width: attachment.width,
+    description: attachment.description,
+    ephemeral: attachment.ephemeral,
+  }));
 }
 
 function equivalentImmutableMessageVersion(
@@ -36,16 +69,51 @@ function equivalentImmutableMessageVersion(
     left.guildSlug === right.guildSlug &&
     left.channelId === right.channelId &&
     left.messageId === right.messageId &&
-    JSON.stringify(left.author) === JSON.stringify(right.author) &&
+    left.author.id === right.author.id &&
+    left.author.bot === right.author.bot &&
     left.content === right.content &&
-    left.timestamp === right.timestamp &&
-    left.editedTimestamp === right.editedTimestamp &&
+    instantMilliseconds(left.timestamp) ===
+      instantMilliseconds(right.timestamp) &&
+    (left.editedTimestamp === null
+      ? right.editedTimestamp === null
+      : right.editedTimestamp !== null &&
+        instantMilliseconds(left.editedTimestamp) ===
+          instantMilliseconds(right.editedTimestamp)) &&
     left.type === right.type &&
     left.flags === right.flags &&
     left.tts === right.tts &&
-    JSON.stringify(left.attachments) === JSON.stringify(right.attachments) &&
+    JSON.stringify(stableAttachments(left.attachments)) ===
+      JSON.stringify(stableAttachments(right.attachments)) &&
     left.referencedMessageId === right.referencedMessageId
   );
+}
+
+function observationPreference(
+  candidate: CorpusObservation,
+  selected: CorpusObservation,
+): number {
+  const observedAtComparison =
+    instantMilliseconds(candidate.observedAt) -
+    instantMilliseconds(selected.observedAt);
+  if (observedAtComparison !== 0) {
+    return observedAtComparison;
+  }
+  if (candidate.source !== selected.source) {
+    return candidate.source === "discord-rest" ? 1 : -1;
+  }
+  const sourceKeyComparison = selected.sourceKey.localeCompare(
+    candidate.sourceKey,
+  );
+  if (sourceKeyComparison !== 0) {
+    return sourceKeyComparison;
+  }
+  return selectedRawChecksum(selected).localeCompare(
+    selectedRawChecksum(candidate),
+  );
+}
+
+function selectedRawChecksum(observation: CorpusObservation): string {
+  return rawChecksum(observation);
 }
 
 export function selectCurrentObservation(
@@ -75,9 +143,9 @@ export function selectCurrentObservation(
       );
     }
 
-    const versionComparison = observationVersionTimestamp(
-      candidate,
-    ).localeCompare(observationVersionTimestamp(selected));
+    const versionComparison =
+      observationVersionTimestamp(candidate) -
+      observationVersionTimestamp(selected);
     if (versionComparison > 0) {
       selected = candidate;
       continue;
@@ -88,17 +156,11 @@ export function selectCurrentObservation(
 
     if (!equivalentImmutableMessageVersion(candidate, selected)) {
       throw new Error(
-        `conflicting payloads for message ${first.messageId} at version ${observationVersionTimestamp(candidate)}`,
+        `conflicting payloads for message ${first.messageId} at version ${candidate.editedTimestamp ?? candidate.timestamp}`,
       );
     }
 
-    if (
-      candidate.observedAt > selected.observedAt ||
-      (candidate.observedAt === selected.observedAt &&
-        ((candidate.source === "discord-rest" && selected.source === "seed") ||
-          (candidate.source === selected.source &&
-            candidate.sourceKey.localeCompare(selected.sourceKey) < 0)))
-    ) {
+    if (observationPreference(candidate, selected) > 0) {
       selected = candidate;
     }
   }
@@ -170,33 +232,60 @@ export function projectionChecksum(
   return sha256(serializeProjection(projection));
 }
 
-function currentVersionTimestamp(message: CurrentMessage): string {
-  return message.editedTimestamp ?? message.timestamp;
+function currentVersionTimestamp(message: CurrentMessage): number {
+  return instantMilliseconds(message.editedTimestamp ?? message.timestamp);
 }
 
 function equivalentImmutableCurrentMessage(
   left: CurrentMessage,
   right: CurrentMessage,
 ): boolean {
-  const comparableLeft = {
-    ...left,
-    pinned: false,
-    source: "seed",
-    guildId: null,
-    selectedObservationKey: "",
-    selectedObservedAt: "",
-    rawSha256: "",
-  };
-  const comparableRight = {
-    ...right,
-    pinned: false,
-    source: "seed",
-    guildId: null,
-    selectedObservationKey: "",
-    selectedObservedAt: "",
-    rawSha256: "",
-  };
-  return JSON.stringify(comparableLeft) === JSON.stringify(comparableRight);
+  return (
+    (left.guildId === right.guildId ||
+      left.guildId === null ||
+      right.guildId === null) &&
+    left.guildSlug === right.guildSlug &&
+    left.channelId === right.channelId &&
+    left.messageId === right.messageId &&
+    left.author.id === right.author.id &&
+    left.author.bot === right.author.bot &&
+    left.content === right.content &&
+    instantMilliseconds(left.timestamp) ===
+      instantMilliseconds(right.timestamp) &&
+    (left.editedTimestamp === null
+      ? right.editedTimestamp === null
+      : right.editedTimestamp !== null &&
+        instantMilliseconds(left.editedTimestamp) ===
+          instantMilliseconds(right.editedTimestamp)) &&
+    left.type === right.type &&
+    left.flags === right.flags &&
+    left.tts === right.tts &&
+    JSON.stringify(stableAttachments(left.attachments)) ===
+      JSON.stringify(stableAttachments(right.attachments)) &&
+    left.referencedMessageId === right.referencedMessageId
+  );
+}
+
+function currentMessagePreference(
+  candidate: CurrentMessage,
+  selected: CurrentMessage,
+): number {
+  const observedAtComparison =
+    instantMilliseconds(candidate.selectedObservedAt) -
+    instantMilliseconds(selected.selectedObservedAt);
+  if (observedAtComparison !== 0) {
+    return observedAtComparison;
+  }
+  if (candidate.source !== selected.source) {
+    return candidate.source === "discord-rest" ? 1 : -1;
+  }
+  const sourceKeyComparison = selected.selectedObservationKey.localeCompare(
+    candidate.selectedObservationKey,
+  );
+  if (sourceKeyComparison !== 0) {
+    return sourceKeyComparison;
+  }
+  return selected.rawSha256.localeCompare(candidate.rawSha256);
 }
 
 export function mergeCurrentProjection(
@@ -229,9 +318,8 @@ export function mergeCurrentProjection(
         `projection identity conflict for message ${message.messageId}`,
       );
     }
-    const comparison = currentVersionTimestamp(message).localeCompare(
-      currentVersionTimestamp(existing),
-    );
+    const comparison =
+      currentVersionTimestamp(message) - currentVersionTimestamp(existing);
     if (comparison > 0) {
       byId.set(message.messageId, message);
       continue;
@@ -241,16 +329,10 @@ export function mergeCurrentProjection(
       !equivalentImmutableCurrentMessage(message, existing)
     ) {
       throw new Error(
-        `projection has conflicting payloads for message ${message.messageId} at ${currentVersionTimestamp(message)}`,
+        `projection has conflicting payloads for message ${message.messageId} at ${message.editedTimestamp ?? message.timestamp}`,
       );
     }
-    if (
-      comparison === 0 &&
-      (message.selectedObservedAt > existing.selectedObservedAt ||
-        (message.selectedObservedAt === existing.selectedObservedAt &&
-          message.source === "discord-rest" &&
-          existing.source === "seed"))
-    ) {
+    if (comparison === 0 && currentMessagePreference(message, existing) > 0) {
       byId.set(message.messageId, message);
     }
   }

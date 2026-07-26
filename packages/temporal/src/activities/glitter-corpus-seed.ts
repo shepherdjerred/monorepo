@@ -1,4 +1,4 @@
-import { mkdir, stat } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import nodePath from "node:path";
 import { parse } from "csv-parse/sync";
 import { unzipSync } from "fflate";
@@ -208,7 +208,7 @@ function guildSlugForEntry(entryPath: string): string {
 export function importSeedArchive(input: {
   archiveBytes: Uint8Array;
   archivePath: string;
-  importedAt: string;
+  importedAt?: string;
   guildMap?: GuildMap;
   expectedUniqueMessages?: number;
 }): SeedImportResult {
@@ -269,9 +269,10 @@ export function importSeedArchive(input: {
   }
 
   const projectionNdjson = serializeProjection(projection);
+  const importedAt = input.importedAt ?? lastTimestamp;
   const manifest = SeedImportManifestSchema.parse({
     schemaVersion: 1,
-    importedAt: input.importedAt,
+    importedAt,
     archivePath: input.archivePath,
     archiveSha256,
     csvFileCount: csvPaths.length,
@@ -327,15 +328,16 @@ export async function runSeedImporter(argv: readonly string[]): Promise<void> {
   const archiveBytes = new Uint8Array(
     await Bun.file(archivePath).arrayBuffer(),
   );
-  const archiveStat = await stat(archivePath);
-  const importedAt =
-    parseArg(argv, "imported-at", false) ?? archiveStat.mtime.toISOString();
+  const explicitImportedAt = parseArg(argv, "imported-at", false);
   const result = importSeedArchive({
     archiveBytes,
     archivePath: nodePath.basename(archivePath),
-    importedAt,
+    ...(explicitImportedAt === undefined
+      ? {}
+      : { importedAt: explicitImportedAt }),
     guildMap,
   });
+  const importedAt = result.manifest.importedAt;
   await mkdir(outputDirectory, { recursive: true });
   await Bun.write(
     `${outputDirectory}/observations.ndjson`,

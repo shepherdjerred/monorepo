@@ -64,9 +64,16 @@ worker 1Password item:
 | `GLITTER_DISCORD_GUILD_ID`             | Glitter Boys guild snowflake                         |
 | `GLITTER_DISCORD_GUILD_SLUG`           | `glitter-boys`                                       |
 | `GLITTER_DISCORD_DENYLIST_CHANNEL_IDS` | Comma-separated channel IDs or a present blank field |
+| `GLITTER_CORPUS_S3_ENDPOINT`           | SeaweedFS S3 endpoint                                |
+| `GLITTER_CORPUS_S3_BUCKET`             | Private SeaweedFS corpus bucket                      |
+| `GLITTER_CORPUS_S3_ACCESS_KEY_ID`      | Bucket-scoped SeaweedFS access key                   |
+| `GLITTER_CORPUS_S3_SECRET_ACCESS_KEY`  | Bucket-scoped SeaweedFS secret key                   |
+| `GLITTER_CORPUS_S3_REGION`             | Optional; defaults to `us-east-1`                    |
 | `GLITTER_CORPUS_R2_ENDPOINT`           | Account-specific R2 S3 endpoint                      |
+| `GLITTER_CORPUS_R2_BUCKET`             | Private Cloudflare R2 corpus bucket                  |
 | `GLITTER_CORPUS_R2_ACCESS_KEY_ID`      | Bucket-scoped R2 access key                          |
 | `GLITTER_CORPUS_R2_SECRET_ACCESS_KEY`  | Bucket-scoped R2 secret key                          |
+| `GLITTER_CORPUS_R2_REGION`             | Optional; defaults to `auto`                         |
 
 The bot must have only View Channel and Read Message History where archival is
 approved. Enable the Message Content privileged intent. Missing secret fields

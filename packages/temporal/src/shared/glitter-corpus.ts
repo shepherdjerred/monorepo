@@ -196,9 +196,41 @@ export const TraversalProofSchema = z
     direction: z.enum(["backward", "forward"]),
     pageManifestKeys: z.array(z.string().min(1)).min(1),
     terminalPageManifestKey: z.string().min(1),
-    terminalResponseCount: z.literal(0),
+    terminalResponseCount: z.number().int().min(0).max(100),
+    terminalReason: z.enum(["empty-channel", "reached-upper-bound"]),
+    upperBoundMessageId: DiscordSnowflakeSchema.nullable(),
   })
-  .strict();
+  .strict()
+  .superRefine((value, context) => {
+    if (
+      value.terminalReason === "empty-channel" &&
+      value.terminalResponseCount !== 0
+    ) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "empty-channel traversal proof requires an empty terminal page",
+      });
+    }
+    if (
+      value.terminalReason === "reached-upper-bound" &&
+      (value.direction !== "forward" ||
+        value.terminalResponseCount === 0 ||
+        value.upperBoundMessageId === null)
+    ) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "reached-upper-bound requires a non-empty forward page and a frozen upper bound",
+      });
+    }
+    if (value.direction === "backward" && value.upperBoundMessageId !== null) {
+      context.addIssue({
+        code: "custom",
+        message: "backward traversal proof cannot set an upper bound",
+      });
+    }
+  });
 export type TraversalProof = z.infer<typeof TraversalProofSchema>;
 
 function validateProjectionBounds(

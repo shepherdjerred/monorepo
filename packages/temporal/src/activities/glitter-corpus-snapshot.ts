@@ -7,6 +7,7 @@ import {
 import { compareSnowflakes } from "#shared/glitter-corpus-projection.ts";
 import {
   glitterCorpusLastSnapshotTimestampSeconds,
+  glitterCorpusSnapshotMetricsConfigured,
   glitterCorpusSnapshotMessages,
 } from "#observability/metrics.ts";
 import {
@@ -27,6 +28,58 @@ import {
   readMirroredObject,
   readVerifiedMirroredObject,
 } from "./glitter-corpus-storage.ts";
+import { verifyGlitterCorpusSnapshotGraph } from "./glitter-corpus-recovery.ts";
+
+const SNAPSHOT_METRICS_ENVIRONMENT = [
+  "GLITTER_DISCORD_GUILD_ID",
+  "GLITTER_CORPUS_S3_ENDPOINT",
+  "GLITTER_CORPUS_S3_BUCKET",
+  "GLITTER_CORPUS_S3_ACCESS_KEY_ID",
+  "GLITTER_CORPUS_S3_SECRET_ACCESS_KEY",
+  "GLITTER_CORPUS_R2_ENDPOINT",
+  "GLITTER_CORPUS_R2_BUCKET",
+  "GLITTER_CORPUS_R2_ACCESS_KEY_ID",
+  "GLITTER_CORPUS_R2_SECRET_ACCESS_KEY",
+] as const;
+
+export async function restoreGlitterCorpusSnapshotMetrics(): Promise<void> {
+  const configured = SNAPSHOT_METRICS_ENVIRONMENT.every((name) => {
+    const value = Bun.env[name];
+    return value !== undefined && value !== "";
+  });
+  glitterCorpusSnapshotMetricsConfigured.set(configured ? 1 : 0);
+  if (!configured) {
+    return;
+  }
+  const guildId = Bun.env["GLITTER_DISCORD_GUILD_ID"];
+  if (guildId === undefined || guildId === "") {
+    throw new Error("configured Glitter corpus metrics have no guild ID");
+  }
+  const stores = createCorpusStoresFromEnv();
+  const pointerKey = `guilds/${guildId}/snapshots/latest.json`;
+  const pointerBytes = await readMirroredObject({ stores, key: pointerKey });
+  if (pointerBytes === undefined) {
+    return;
+  }
+  const pointer = LatestSnapshotPointerSchema.parse(
+    JSON.parse(new TextDecoder().decode(pointerBytes)),
+  );
+  if (pointer.guildId !== guildId) {
+    throw new Error(`latest corpus pointer belongs to ${pointer.guildId}`);
+  }
+  const snapshotBytes = await readVerifiedMirroredObject({
+    stores,
+    key: pointer.snapshotKey,
+    expectedSha256: pointer.snapshotSha256,
+  });
+  const snapshot = GuildSnapshotSchema.parse(
+    JSON.parse(new TextDecoder().decode(snapshotBytes)),
+  );
+  glitterCorpusSnapshotMessages.set(snapshot.uniqueMessageCount);
+  glitterCorpusLastSnapshotTimestampSeconds.set(
+    Date.parse(snapshot.createdAt) / 1000,
+  );
+}
 
 export async function finalizeGlitterCorpusSnapshot(
   rawInput: z.input<typeof FinalizeSnapshotInputSchema>,
@@ -52,6 +105,21 @@ export async function finalizeGlitterCorpusSnapshot(
     complete: true,
   });
   const stores = createCorpusStoresFromEnv();
+  const inventoryBytes = await readVerifiedMirroredObject({
+    stores,
+    key: snapshot.inventoryObject.key,
+    expectedSha256: snapshot.inventoryObject.sha256,
+  });
+  const inventory = GuildInventorySchema.parse(
+    JSON.parse(new TextDecoder().decode(inventoryBytes)),
+  );
+  if (inventory.guildId !== snapshot.guildId) {
+    throw new Error("snapshot inventory belongs to a different guild");
+  }
+  await verifyGlitterCorpusSnapshotGraph({
+    snapshot,
+    guildSlug: inventory.guildSlug,
+  });
   const snapshotKey = `guilds/${input.guildId}/snapshots/${input.snapshotId}.json`;
   const snapshotObject = await putMirroredImmutableObject({
     stores,

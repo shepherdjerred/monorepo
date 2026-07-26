@@ -328,7 +328,7 @@ export function createTemporalDashboard() {
         title: "Glitter Snapshot Age",
         description:
           "Seconds since the most recently published complete mirrored snapshot.",
-        expr: "time() - max(glitter_corpus_last_snapshot_timestamp_seconds)",
+        expr: "time() - max(glitter_corpus_last_snapshot_timestamp_seconds) or on() vector(-1)",
         legend: "age",
         x: 6,
         y: 84,

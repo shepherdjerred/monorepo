@@ -19,6 +19,7 @@ import {
 } from "./observability/metrics.ts";
 import { readPositiveIntegerEnv } from "./shared/env.ts";
 import { createStructuredLogger } from "./observability/logging.ts";
+import { restoreGlitterCorpusSnapshotMetrics } from "./activities/glitter-corpus-snapshot.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -195,6 +196,7 @@ async function main(): Promise<void> {
   initSentry();
   initializeTracing();
   startMetricsServer();
+  await restoreGlitterCorpusSnapshotMetrics();
 
   const address = Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_ADDRESS;
   jsonLog("info", "Connecting to Temporal server", { address });

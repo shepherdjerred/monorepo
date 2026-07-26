@@ -539,6 +539,12 @@ export const glitterCorpusLastSnapshotTimestampSeconds = new Gauge({
   registers: [register],
 });
 
+export const glitterCorpusSnapshotMetricsConfigured = new Gauge({
+  name: "glitter_corpus_snapshot_metrics_configured",
+  help: "1 when the worker has enough storage configuration to restore Glitter corpus snapshot metrics after restart",
+  registers: [register],
+});
+
 export const glitterCorpusMirrorDivergenceTotal = new Counter({
   name: "glitter_corpus_mirror_divergence_total",
   help: "Detected missing or checksum-divergent objects between SeaweedFS and R2",

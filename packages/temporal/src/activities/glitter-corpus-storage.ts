@@ -246,6 +246,7 @@ async function putMutableJson(
   store: CorpusStore,
   key: string,
   value: unknown,
+  expectedEtag: string | undefined,
 ): Promise<void> {
   const body = new TextEncoder().encode(`${JSON.stringify(value, null, 2)}\n`);
   await store.client.send(
@@ -255,8 +256,66 @@ async function putMutableJson(
       Body: body,
       ContentType: "application/json",
       Metadata: { sha256: sha256(body) },
+      ...(expectedEtag === undefined
+        ? { IfNoneMatch: "*" }
+        : { IfMatch: expectedEtag }),
     }),
   );
+}
+
+export function latestSnapshotPointerNeedsUpdate(
+  existing: LatestSnapshotPointer | undefined,
+  incoming: LatestSnapshotPointer,
+): boolean {
+  if (existing === undefined) {
+    return true;
+  }
+  const timeComparison =
+    Date.parse(incoming.publishedAt) - Date.parse(existing.publishedAt);
+  if (timeComparison < 0) {
+    throw new Error(
+      `refusing to move latest pointer backward from ${existing.publishedAt} to ${incoming.publishedAt}`,
+    );
+  }
+  if (timeComparison === 0) {
+    if (JSON.stringify(existing) !== JSON.stringify(incoming)) {
+      throw new Error(
+        `latest pointer has a conflicting snapshot at ${incoming.publishedAt}`,
+      );
+    }
+    return false;
+  }
+  return true;
+}
+
+async function prepareLatestPointerUpdate(input: {
+  store: CorpusStore;
+  pointerKey: string;
+  incoming: LatestSnapshotPointer;
+}): Promise<{ expectedEtag: string | undefined; shouldWrite: boolean }> {
+  const expectedEtag = await objectEtag(input.store, input.pointerKey);
+  if (expectedEtag === undefined) {
+    return { expectedEtag, shouldWrite: true };
+  }
+  const existingBytes = await getObjectBytes(input.store, input.pointerKey);
+  if (existingBytes === undefined) {
+    throw new Error(
+      `${input.store.name} latest pointer disappeared after its ETag was read`,
+    );
+  }
+  const existing = LatestSnapshotPointerSchema.parse(
+    JSON.parse(new TextDecoder().decode(existingBytes)),
+  );
+  try {
+    return {
+      expectedEtag,
+      shouldWrite: latestSnapshotPointerNeedsUpdate(existing, input.incoming),
+    };
+  } catch (error: unknown) {
+    throw new Error(`${input.store.name} rejected latest pointer publication`, {
+      cause: error,
+    });
+  }
 }
 
 export async function publishLatestSnapshotPointer(input: {
@@ -283,8 +342,20 @@ export async function publishLatestSnapshotPointer(input: {
   }
 
   const pointerKey = `guilds/${pointer.guildId}/snapshots/latest.json`;
-  for (const store of input.stores) {
-    await putMutableJson(store, pointerKey, pointer);
+  const updates = await Promise.all(
+    input.stores.map(async (store) => ({
+      store,
+      update: await prepareLatestPointerUpdate({
+        store,
+        pointerKey,
+        incoming: pointer,
+      }),
+    })),
+  );
+  for (const { store, update } of updates) {
+    if (update.shouldWrite) {
+      await putMutableJson(store, pointerKey, pointer, update.expectedEtag);
+    }
   }
 
   for (const store of input.stores) {
@@ -294,9 +365,14 @@ export async function publishLatestSnapshotPointer(input: {
         `${store.name} latest pointer vanished after publication`,
       );
     }
-    LatestSnapshotPointerSchema.parse(
+    const storedPointer = LatestSnapshotPointerSchema.parse(
       JSON.parse(new TextDecoder().decode(bytes)),
     );
+    if (JSON.stringify(storedPointer) !== JSON.stringify(pointer)) {
+      throw new Error(
+        `${store.name} latest pointer changed during publication`,
+      );
+    }
   }
 }
 
@@ -323,6 +399,50 @@ export async function readMirroredObject(input: {
     );
   }
   return firstBytes;
+}
+
+export async function readAndRepairMirroredImmutableObject(input: {
+  stores: readonly [CorpusStore, CorpusStore];
+  key: string;
+  contentType: string;
+  repairedAt: string;
+}): Promise<Uint8Array | undefined> {
+  const [first, second] = input.stores;
+  const [firstBytes, secondBytes] = await Promise.all([
+    getObjectBytes(first, input.key),
+    getObjectBytes(second, input.key),
+  ]);
+  if (firstBytes === undefined && secondBytes === undefined) {
+    return undefined;
+  }
+  if (firstBytes !== undefined && secondBytes !== undefined) {
+    if (sha256(firstBytes) !== sha256(secondBytes)) {
+      glitterCorpusMirrorDivergenceTotal.inc();
+      throw new Error(`mirror divergence for immutable ${input.key}`);
+    }
+    return firstBytes;
+  }
+  glitterCorpusMirrorDivergenceTotal.inc();
+  const body = firstBytes ?? secondBytes;
+  if (body === undefined) {
+    throw new Error(`partial mirror body disappeared: ${input.key}`);
+  }
+  const missingStore = firstBytes === undefined ? first : second;
+  await putImmutableObject({
+    store: missingStore,
+    key: input.key,
+    body,
+    contentType: input.contentType,
+    writtenAt: input.repairedAt,
+  });
+  const repaired = await readMirroredObject({
+    stores: input.stores,
+    key: input.key,
+  });
+  if (repaired === undefined) {
+    throw new Error(`repaired immutable object disappeared: ${input.key}`);
+  }
+  return repaired;
 }
 
 export async function readVerifiedMirroredObject(input: {

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   CorpusObservationSchema,
+  type DiscordAttachment,
   type CorpusObservation,
 } from "./glitter-corpus.ts";
 import {
@@ -20,6 +21,10 @@ function observation(input: {
   observedAt?: string;
   guildId?: string | null;
   pinned?: boolean;
+  timestamp?: string;
+  authorUsername?: string;
+  authorAvatar?: string | null;
+  attachments?: DiscordAttachment[];
 }): CorpusObservation {
   return CorpusObservationSchema.parse({
     schemaVersion: 1,
@@ -32,20 +37,20 @@ function observation(input: {
     messageId: input.messageId ?? "789",
     author: {
       id: "111",
-      username: "person",
+      username: input.authorUsername ?? "person",
       globalName: "Person",
       discriminator: "0",
       bot: false,
-      avatar: null,
+      avatar: input.authorAvatar ?? null,
     },
     content: input.content,
-    timestamp: "2025-01-01T00:00:00.000Z",
+    timestamp: input.timestamp ?? "2025-01-01T00:00:00.000Z",
     editedTimestamp: input.editedTimestamp ?? null,
     type: 0,
     flags: "0",
     pinned: input.pinned ?? false,
     tts: false,
-    attachments: [],
+    attachments: input.attachments ?? [],
     referencedMessageId: null,
     raw: { sourceKey: input.sourceKey },
   });
@@ -112,6 +117,120 @@ describe("Glitter corpus current projection", () => {
     });
 
     expect(buildCurrentProjection([later, first])[0]?.pinned).toBe(true);
+    expect(
+      mergeCurrentProjection(buildCurrentProjection([first]), [later])[0]
+        ?.pinned,
+    ).toBe(true);
+  });
+});
+
+describe("Glitter corpus observation metadata", () => {
+  test("a later observation captures author profile changes without an edit", () => {
+    const first = observation({
+      sourceKey: "page-1",
+      content: "same",
+      observedAt: "2026-01-01T00:00:00.000Z",
+      authorUsername: "old-name",
+      authorAvatar: "old-avatar",
+    });
+    const later = observation({
+      sourceKey: "page-2",
+      content: "same",
+      observedAt: "2026-01-02T00:00:00.000Z",
+      authorUsername: "new-name",
+      authorAvatar: "new-avatar",
+    });
+
+    const projected = buildCurrentProjection([first, later]);
+    expect(projected[0]?.author.username).toBe("new-name");
+    expect(
+      mergeCurrentProjection(buildCurrentProjection([first]), [later])[0]
+        ?.author.avatar,
+    ).toBe("new-avatar");
+  });
+
+  test("a later observation refreshes signed attachment URLs", () => {
+    const attachment = {
+      id: "900",
+      filename: "photo.png",
+      size: 42,
+      url: "https://cdn.discord.test/old",
+      proxyUrl: "https://proxy.discord.test/old",
+      contentType: "image/png",
+      height: 10,
+      width: 20,
+      description: null,
+      ephemeral: false,
+    };
+    const first = observation({
+      sourceKey: "page-1",
+      content: "same",
+      observedAt: "2026-01-01T00:00:00.000Z",
+      attachments: [attachment],
+    });
+    const later = observation({
+      sourceKey: "page-2",
+      content: "same",
+      observedAt: "2026-01-02T00:00:00.000Z",
+      attachments: [
+        {
+          ...attachment,
+          url: "https://cdn.discord.test/new",
+          proxyUrl: "https://proxy.discord.test/new",
+        },
+      ],
+    });
+
+    expect(buildCurrentProjection([first, later])[0]?.attachments[0]?.url).toBe(
+      "https://cdn.discord.test/new",
+    );
+  });
+
+  test("same version with different stable attachment data fails loudly", () => {
+    const attachment = {
+      id: "900",
+      filename: "photo.png",
+      size: 42,
+      url: "https://cdn.discord.test/photo",
+      proxyUrl: "https://proxy.discord.test/photo",
+      contentType: "image/png",
+      height: 10,
+      width: 20,
+      description: null,
+      ephemeral: false,
+    };
+    expect(() =>
+      selectCurrentObservation([
+        observation({
+          sourceKey: "page/a",
+          content: "same",
+          attachments: [attachment],
+        }),
+        observation({
+          sourceKey: "page/b",
+          content: "same",
+          attachments: [{ ...attachment, size: 43 }],
+        }),
+      ]),
+    ).toThrow("conflicting payloads");
+  });
+
+  test("compares equivalent timestamp representations as instants", () => {
+    const first = observation({
+      sourceKey: "page-1",
+      content: "same",
+      timestamp: "2025-01-01T00:00:00.000Z",
+      observedAt: "2026-01-01T00:00:00.000Z",
+    });
+    const later = observation({
+      sourceKey: "page-2",
+      content: "same",
+      timestamp: "2024-12-31T16:00:00.000-08:00",
+      observedAt: "2025-12-31T16:00:01.000-08:00",
+      pinned: true,
+    });
+
+    expect(buildCurrentProjection([first, later])[0]?.pinned).toBe(true);
     expect(
       mergeCurrentProjection(buildCurrentProjection([first]), [later])[0]
         ?.pinned,

@@ -154,7 +154,7 @@ function finalSnapshot(rawInput: z.input<typeof FinalizeSnapshotInputSchema>) {
 }
 
 describe("Glitter corpus workflows", () => {
-  it("requires independent terminal backward and forward traversals", async () => {
+  it("freezes the forward traversal at the backward pass upper bound", async () => {
     const captured: CapturePageInput[] = [];
     const verified: z.input<typeof VerifyChannelInputSchema>[] = [];
     const approvedInventory = inventory(["10"]);
@@ -178,7 +178,11 @@ describe("Glitter corpus workflows", () => {
           }
           if (input.direction === "forward") {
             return input.after === "0"
-              ? pageResult(input, ["2", "1"], [CREATED_AT, CREATED_AT])
+              ? pageResult(
+                  input,
+                  ["1", "2", "3"],
+                  [CREATED_AT, CREATED_AT, CREATED_AT],
+                )
               : pageResult(input, [], []);
           }
           throw new Error(`unexpected direction ${input.direction}`);
@@ -219,16 +223,17 @@ describe("Glitter corpus workflows", () => {
       "backward",
       "backward",
       "forward",
-      "forward",
     ]);
     expect(captured[1]?.before).toBe("1");
     expect(captured[2]?.after).toBe("0");
-    expect(captured[3]?.after).toBe("2");
     expect(verified).toHaveLength(1);
     expect(verified[0]?.backwardPageManifestKeys).toHaveLength(2);
-    expect(verified[0]?.forwardPageManifestKeys).toHaveLength(2);
-  });
+    expect(verified[0]?.forwardPageManifestKeys).toHaveLength(1);
+    expect(verified[0]?.forwardUpperBoundMessageId).toBe("2");
+  }, 30_000);
+});
 
+describe("Glitter corpus daily overlap workflows", () => {
   it("keeps paging after the time cutoff until it crosses the baseline ID", async () => {
     const overlapInputs: z.input<typeof ApplyOverlapInputSchema>[] = [];
     const captured: CapturePageInput[] = [];
@@ -307,5 +312,81 @@ describe("Glitter corpus workflows", () => {
     expect(overlapInputs[0]?.baselineNewestMessageId).toBe("100");
     expect(overlapInputs[0]?.pageManifestKeys).toHaveLength(2);
     expect(overlapInputs[0]?.stoppedBecause).toBe("cutoff-reached");
-  });
+  }, 30_000);
+
+  it("requires an empty page when the baseline has no newest message", async () => {
+    const overlapInputs: z.input<typeof ApplyOverlapInputSchema>[] = [];
+    const captured: CapturePageInput[] = [];
+    const baselineInventory = inventory(["10"]);
+    const stateObject = mirroredObject("states/empty-baseline.json");
+    const worker = await Worker.create({
+      connection: testEnvironment.nativeConnection,
+      taskQueue: TASK_QUEUE,
+      workflowsPath: new URL("index.ts", import.meta.url).pathname,
+      activities: {
+        loadGlitterCorpusDailyBaseline: async () => ({
+          inventory: baselineInventory,
+          inventoryObject: mirroredObject("inventory-empty-baseline.json"),
+          states: {
+            "10": {
+              manifestKey: stateObject.key,
+              manifestObject: stateObject,
+              uniqueMessageCount: 0,
+              newestMessageId: null,
+            },
+          },
+        }),
+        inventoryGlitterGuild: async () => ({
+          inventory: baselineInventory,
+          inventoryKey: "inventory-current-empty-baseline.json",
+          inventoryObject: mirroredObject(
+            "inventory-current-empty-baseline.json",
+          ),
+        }),
+        captureGlitterCorpusPage: async (rawInput: CapturePageInput) => {
+          const input = CapturePageInputSchema.parse(rawInput);
+          captured.push(input);
+          if (input.direction !== "daily-overlap") {
+            throw new Error(`unexpected direction ${input.direction}`);
+          }
+          return input.before === undefined
+            ? pageResult(
+                input,
+                ["2", "1"],
+                ["2010-01-02T00:00:00.000Z", "2010-01-01T00:00:00.000Z"],
+              )
+            : pageResult(input, [], []);
+        },
+        applyGlitterCorpusOverlap: async (
+          rawInput: z.input<typeof ApplyOverlapInputSchema>,
+        ) => {
+          const input = ApplyOverlapInputSchema.parse(rawInput);
+          overlapInputs.push(input);
+          const manifestKey = `states/${input.snapshotId}.json`;
+          return {
+            channelId: input.channelId,
+            manifestKey,
+            manifestObject: mirroredObject(manifestKey),
+            uniqueMessageCount: 2,
+          };
+        },
+        finalizeGlitterCorpusSnapshot: finalSnapshot,
+      },
+    });
+
+    const result = await worker.runUntil(
+      testEnvironment.client.workflow.execute(runGlitterCorpusDaily, {
+        args: [],
+        taskQueue: TASK_QUEUE,
+        workflowId: "glitter-corpus-daily-empty-baseline-test",
+      }),
+    );
+
+    expect(result.snapshot.uniqueMessageCount).toBe(2);
+    expect(captured).toHaveLength(2);
+    expect(captured[1]?.before).toBe("1");
+    expect(overlapInputs).toHaveLength(1);
+    expect(overlapInputs[0]?.baselineNewestMessageId).toBeNull();
+    expect(overlapInputs[0]?.stoppedBecause).toBe("empty-channel");
+  }, 30_000);
 });

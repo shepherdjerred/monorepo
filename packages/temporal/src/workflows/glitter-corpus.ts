@@ -14,6 +14,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const {
   inventoryGlitterGuild,
   loadApprovedGlitterInventory,
+  validateApprovedGlitterSeed,
   captureGlitterCorpusPage,
   verifyGlitterCorpusChannel,
   applyGlitterCorpusOverlap,
@@ -43,6 +44,8 @@ export type GlitterCorpusSnapshotResult = Awaited<
 type FullTraversalResult = {
   pageManifestKeys: string[];
   oldestMessageId: string | undefined;
+  newestMessageId: string | undefined;
+  terminalReason: "empty-channel" | "reached-upper-bound";
 };
 
 function nowIso(): string {
@@ -100,12 +103,14 @@ async function captureFullTraversal(input: {
   channelId: string;
   direction: "backward" | "forward";
   initialAfter?: string;
+  upperBoundInclusive?: string;
   maxPages: number;
 }): Promise<FullTraversalResult> {
   const pageManifestKeys: string[] = [];
   let before: string | undefined;
   let after = input.initialAfter;
   let oldestMessageId: string | undefined;
+  let newestMessageId: string | undefined;
 
   for (let pageIndex = 0; pageIndex < input.maxPages; pageIndex += 1) {
     const page = await capturePage({
@@ -118,7 +123,12 @@ async function captureFullTraversal(input: {
     });
     pageManifestKeys.push(page.manifestKey);
     if (page.page.responseCount === 0) {
-      return { pageManifestKeys, oldestMessageId };
+      return {
+        pageManifestKeys,
+        oldestMessageId,
+        newestMessageId,
+        terminalReason: "empty-channel",
+      };
     }
 
     const pageSmallest = smallestSnowflake(page.messageIds);
@@ -134,9 +144,26 @@ async function captureFullTraversal(input: {
     ) {
       oldestMessageId = pageSmallest;
     }
+    if (
+      newestMessageId === undefined ||
+      BigInt(pageLargest) > BigInt(newestMessageId)
+    ) {
+      newestMessageId = pageLargest;
+    }
     if (input.direction === "backward") {
       before = pageSmallest;
     } else {
+      if (
+        input.upperBoundInclusive !== undefined &&
+        BigInt(pageLargest) >= BigInt(input.upperBoundInclusive)
+      ) {
+        return {
+          pageManifestKeys,
+          oldestMessageId,
+          newestMessageId,
+          terminalReason: "reached-upper-bound",
+        };
+      }
       after = pageLargest;
     }
   }
@@ -176,6 +203,9 @@ export async function runGlitterCorpusChannelBackfill(
       : {
           initialAfter: snowflakeImmediatelyBefore(backward.oldestMessageId),
         }),
+    ...(backward.newestMessageId === undefined
+      ? {}
+      : { upperBoundInclusive: backward.newestMessageId }),
     maxPages: input.maxPages,
   });
   return await verifyGlitterCorpusChannel({
@@ -186,6 +216,9 @@ export async function runGlitterCorpusChannelBackfill(
     verifiedAt: input.verifiedAt,
     backwardPageManifestKeys: backward.pageManifestKeys,
     forwardPageManifestKeys: forward.pageManifestKeys,
+    ...(backward.newestMessageId === undefined
+      ? {}
+      : { forwardUpperBoundMessageId: backward.newestMessageId }),
     ...(input.seedPrefix === undefined ? {} : { seedPrefix: input.seedPrefix }),
   });
 }
@@ -266,7 +299,7 @@ export async function runGlitterCorpusChannelOverlap(
       );
     }
     const crossedBaselineBoundary =
-      input.baselineNewestMessageId === null ||
+      input.baselineNewestMessageId !== null &&
       BigInt(cursor) <= BigInt(input.baselineNewestMessageId);
     if (
       oldestTimestamp !== undefined &&
@@ -307,6 +340,12 @@ export async function runGlitterCorpusBackfill(
   const entries = approved.inventory.entries.filter(
     (entry) => entry.scopeDecision === "include",
   );
+  if (input.seedPrefix !== undefined) {
+    await validateApprovedGlitterSeed({
+      seedPrefix: input.seedPrefix,
+      approvedChannelIds: entries.map((entry) => entry.channelId),
+    });
+  }
   for (const entry of entries) {
     states.push(
       await executeChild(runGlitterCorpusChannelBackfill, {

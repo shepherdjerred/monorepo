@@ -56,8 +56,6 @@ const RateLimitResponseSchema = z.looseObject({
   global: z.boolean().optional(),
 });
 
-const JsonRecordSchema = z.record(z.string(), z.unknown());
-
 type RateLimitMetadata = {
   limit: number | null;
   remaining: number | null;
@@ -74,6 +72,24 @@ export type DiscordRestResponse<T> = {
   completedAt: string;
   retryCount: number;
   rateLimit: RateLimitMetadata;
+};
+
+export type DiscordRestProgress = {
+  phase:
+    | "global-rate-limit-wait"
+    | "network-retry-wait"
+    | "rate-limit-wait"
+    | "server-retry-wait"
+    | "request";
+  path: string;
+  attempt: number;
+  delayMs: number;
+};
+
+export type DiscordRestClientHooks = {
+  cancellationSignal: AbortSignal;
+  onProgress: (progress: DiscordRestProgress) => void;
+  wait: (delayMs: number, progress: DiscordRestProgress) => Promise<void>;
 };
 
 function parseNullableIntegerHeader(value: string | null): number | null {
@@ -145,22 +161,38 @@ export function requireMessageContentIntent(input: {
 
 export class DiscordRestClient {
   readonly #token: string;
+  readonly #hooks: DiscordRestClientHooks | undefined;
 
-  public constructor(token: string) {
+  public constructor(token: string, hooks?: DiscordRestClientHooks) {
     if (token === "") {
       throw new Error("Discord archival bot token must not be empty");
     }
     this.#token = token;
+    this.#hooks = hooks;
   }
 
-  async #waitForGlobalCeiling(): Promise<void> {
+  async #wait(delayMs: number, progress: DiscordRestProgress): Promise<void> {
+    this.#hooks?.cancellationSignal.throwIfAborted();
+    this.#hooks?.onProgress(progress);
+    await (this.#hooks === undefined
+      ? Bun.sleep(delayMs)
+      : this.#hooks.wait(delayMs, progress));
+    this.#hooks?.cancellationSignal.throwIfAborted();
+  }
+
+  async #waitForGlobalCeiling(path: string, attempt: number): Promise<void> {
     const nextRequestAt = Math.max(
       globalLastRequestStartedAt + MIN_REQUEST_INTERVAL_MS,
       globalBlockedUntil,
     );
     const delay = nextRequestAt - Date.now();
     if (delay > 0) {
-      await Bun.sleep(delay);
+      await this.#wait(delay, {
+        phase: "global-rate-limit-wait",
+        path,
+        attempt,
+        delayMs: delay,
+      });
     }
     globalLastRequestStartedAt = Date.now();
   }
@@ -175,15 +207,29 @@ export class DiscordRestClient {
 
     let attempt = 0;
     while (attempt <= MAX_RETRIES) {
-      await this.#waitForGlobalCeiling();
+      await this.#waitForGlobalCeiling(path, attempt);
+      this.#hooks?.onProgress({
+        phase: "request",
+        path,
+        attempt,
+        delayMs: 0,
+      });
       const requestedAt = new Date().toISOString();
       let response: Response;
       try {
+        const timeoutSignal = AbortSignal.timeout(30_000);
         response = await fetch(`${API_BASE_URL}${path}`, {
           headers: { Authorization: `Bot ${this.#token}` },
-          signal: AbortSignal.timeout(30_000),
+          signal:
+            this.#hooks === undefined
+              ? timeoutSignal
+              : AbortSignal.any([
+                  this.#hooks.cancellationSignal,
+                  timeoutSignal,
+                ]),
         });
       } catch (error: unknown) {
+        this.#hooks?.cancellationSignal.throwIfAborted();
         if (attempt === MAX_RETRIES) {
           glitterCorpusDiscordRequestsTotal.inc({
             outcome: "fatal-network-error",
@@ -196,7 +242,13 @@ export class DiscordRestClient {
         glitterCorpusDiscordRequestsTotal.inc({
           outcome: "retryable-network-error",
         });
-        await Bun.sleep(retryDelayMs(attempt));
+        const delayMs = retryDelayMs(attempt);
+        await this.#wait(delayMs, {
+          phase: "network-retry-wait",
+          path,
+          attempt,
+          delayMs,
+        });
         attempt += 1;
         continue;
       }
@@ -242,12 +294,23 @@ export class DiscordRestClient {
           globalBlockedUntil,
           Date.now() + retryDelay,
         );
-        await Bun.sleep(retryDelay);
+        await this.#wait(retryDelay, {
+          phase: "rate-limit-wait",
+          path,
+          attempt,
+          delayMs: retryDelay,
+        });
       } else {
         glitterCorpusDiscordRequestsTotal.inc({
           outcome: "retryable-server-error",
         });
-        await Bun.sleep(retryDelayMs(attempt));
+        const delayMs = retryDelayMs(attempt);
+        await this.#wait(delayMs, {
+          phase: "server-retry-wait",
+          path,
+          attempt,
+          delayMs,
+        });
       }
       attempt += 1;
     }
@@ -333,8 +396,9 @@ export async function discoverGuildInventory(input: {
   guildSlug: string;
   denylistedChannelIds: readonly string[];
   discoveredAt: string;
+  hooks?: DiscordRestClientHooks;
 }): Promise<GuildInventory> {
-  const client = new DiscordRestClient(input.token);
+  const client = new DiscordRestClient(input.token, input.hooks);
   // Deliberately sequential: the same one-request-per-second ceiling applies
   // during inventory, not only during message pagination.
   const guildResponse = await client.get(
@@ -429,53 +493,4 @@ export async function discoverGuildInventory(input: {
     ...unsigned,
     sha256: sha256(JSON.stringify(unsigned)),
   });
-}
-
-export function normalizeDiscordMessage(input: {
-  message: DiscordApiMessage;
-  guildId: string;
-  guildSlug: string;
-  sourceKey: string;
-  observedAt: string;
-}) {
-  const message = DiscordApiMessageSchema.parse(input.message);
-  return {
-    schemaVersion: 1,
-    source: "discord-rest",
-    sourceKey: input.sourceKey,
-    observedAt: input.observedAt,
-    guildId: input.guildId,
-    guildSlug: input.guildSlug,
-    channelId: message.channel_id,
-    messageId: message.id,
-    author: {
-      id: message.author.id,
-      username: message.author.username,
-      globalName: message.author.global_name ?? null,
-      discriminator: message.author.discriminator,
-      bot: message.author.bot ?? false,
-      avatar: message.author.avatar ?? null,
-    },
-    content: message.content,
-    timestamp: message.timestamp,
-    editedTimestamp: message.edited_timestamp,
-    type: message.type,
-    flags: String(message.flags ?? 0),
-    pinned: message.pinned,
-    tts: message.tts,
-    attachments: message.attachments.map((attachment) => ({
-      id: attachment.id,
-      filename: attachment.filename,
-      size: attachment.size,
-      url: attachment.url,
-      proxyUrl: attachment.proxy_url,
-      contentType: attachment.content_type ?? null,
-      height: attachment.height ?? null,
-      width: attachment.width ?? null,
-      description: attachment.description ?? null,
-      ephemeral: attachment.ephemeral ?? false,
-    })),
-    referencedMessageId: message.message_reference?.message_id ?? null,
-    raw: JsonRecordSchema.parse(message),
-  };
 }

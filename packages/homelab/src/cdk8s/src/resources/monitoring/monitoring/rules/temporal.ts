@@ -410,7 +410,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
               "A verified corpus snapshot exists but has not advanced for more than 30 hours. Check the glitter-corpus-daily schedule and its most recent workflow.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "time() - max(glitter_corpus_last_snapshot_timestamp_seconds) > 108000",
+            "(time() - max(glitter_corpus_last_snapshot_timestamp_seconds) > 108000) or (max(glitter_corpus_snapshot_metrics_configured) == 1 unless on() glitter_corpus_last_snapshot_timestamp_seconds)",
           ),
           for: "30m",
           labels: {

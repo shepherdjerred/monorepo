@@ -13,11 +13,13 @@ import {
   compareSnowflakes,
   sha256,
 } from "#shared/glitter-corpus-projection.ts";
-import { normalizeDiscordMessage } from "./glitter-corpus-discord.ts";
+import { normalizeDiscordMessage } from "./glitter-corpus-normalize.ts";
+import { assertDiscordPageOrder } from "./glitter-corpus-page-order.ts";
 import {
   createCorpusStoresFromEnv,
   putMirroredImmutableObject,
   readMirroredObject,
+  readVerifiedMirroredObject,
 } from "./glitter-corpus-storage.ts";
 import { ChannelStateResultSchema } from "./glitter-corpus-activity-types.ts";
 
@@ -124,19 +126,18 @@ export async function readCorpusPage(
   ) {
     throw new Error(`page boundary IDs do not match manifest ${key}`);
   }
-  for (const [index, message] of messages.entries()) {
+  for (const message of messages) {
     if (message.channel_id !== manifest.channelId) {
       throw new Error(
         `raw Discord page ${manifest.rawObjectKey} contains message ${message.id} from channel ${message.channel_id}`,
       );
     }
-    const next = messages[index + 1];
-    if (next !== undefined && compareSnowflakes(message.id, next.id) <= 0) {
-      throw new Error(
-        `raw Discord page ${manifest.rawObjectKey} is not strictly newest-to-oldest`,
-      );
-    }
   }
+  assertDiscordPageOrder({
+    messageIds: messages.map((message) => message.id),
+    direction: expectedDirection,
+    objectKey: manifest.rawObjectKey,
+  });
   return { manifest, messages };
 }
 
@@ -158,64 +159,125 @@ export function normalizePageObservations(input: {
   );
 }
 
+function assertTraversalPage(input: {
+  key: string;
+  page: Awaited<ReturnType<typeof readCorpusPage>>;
+  guildId: string;
+  channelId: string;
+  direction: "backward" | "forward";
+  expectedCursor: string | undefined;
+}): void {
+  if (
+    input.page.manifest.guildId !== input.guildId ||
+    input.page.manifest.channelId !== input.channelId
+  ) {
+    throw new Error(`page manifest identity mismatch: ${input.key}`);
+  }
+  const actualCursor =
+    input.direction === "backward"
+      ? input.page.manifest.before
+      : input.page.manifest.after;
+  if (actualCursor !== (input.expectedCursor ?? null)) {
+    throw new Error(
+      `${input.direction} traversal cursor mismatch at ${input.key}: expected ${input.expectedCursor ?? "none"}, received ${actualCursor ?? "none"}`,
+    );
+  }
+}
+
+function traversalTerminalReason(input: {
+  terminal: PageManifest;
+  direction: "backward" | "forward";
+  reachedUpperBound: boolean;
+}): "empty-channel" | "reached-upper-bound" | undefined {
+  if (input.terminal.responseCount === 0) {
+    return "empty-channel";
+  }
+  return input.reachedUpperBound && input.direction === "forward"
+    ? "reached-upper-bound"
+    : undefined;
+}
+
 export async function readTraversal(input: {
   guildId: string;
   guildSlug: string;
   channelId: string;
   direction: "backward" | "forward";
   initialAfter?: string;
+  upperBoundInclusive?: string;
   pageManifestKeys: readonly string[];
 }): Promise<{
   observations: CorpusObservation[];
   messageIds: string[];
   terminal: PageManifest;
+  terminalReason: "empty-channel" | "reached-upper-bound";
 }> {
+  if (
+    input.direction === "backward" &&
+    (input.initialAfter !== undefined ||
+      input.upperBoundInclusive !== undefined)
+  ) {
+    throw new Error("backward traversal cannot have forward-only boundaries");
+  }
   const observations: CorpusObservation[] = [];
   const messageIds: string[] = [];
   let terminal: PageManifest | undefined;
-  let expectedBefore: string | undefined;
-  let expectedAfter = input.initialAfter;
+  let reachedUpperBound = false;
+  let expectedCursor = input.initialAfter;
   for (const key of input.pageManifestKeys) {
     const page = await readCorpusPage(key, input.direction);
-    if (
-      page.manifest.guildId !== input.guildId ||
-      page.manifest.channelId !== input.channelId
-    ) {
-      throw new Error(`page manifest identity mismatch: ${key}`);
-    }
-    const expectedCursor =
-      input.direction === "backward" ? expectedBefore : expectedAfter;
-    const actualCursor =
-      input.direction === "backward"
-        ? page.manifest.before
-        : page.manifest.after;
-    if (actualCursor !== (expectedCursor ?? null)) {
-      throw new Error(
-        `${input.direction} traversal cursor mismatch at ${key}: expected ${expectedCursor ?? "none"}, received ${actualCursor ?? "none"}`,
-      );
-    }
+    assertTraversalPage({
+      key,
+      page,
+      guildId: input.guildId,
+      channelId: input.channelId,
+      direction: input.direction,
+      expectedCursor,
+    });
     terminal = page.manifest;
-    for (const message of page.messages) {
+    const upperBound = input.upperBoundInclusive;
+    const boundedMessages =
+      upperBound === undefined
+        ? page.messages
+        : page.messages.filter(
+            (message) => compareSnowflakes(message.id, upperBound) <= 0,
+          );
+    for (const message of boundedMessages) {
       messageIds.push(message.id);
     }
+    const pageObservations = normalizePageObservations({
+      page,
+      guildId: input.guildId,
+      guildSlug: input.guildSlug,
+    });
+    const boundedIds = new Set(boundedMessages.map((message) => message.id));
     observations.push(
-      ...normalizePageObservations({
-        page,
-        guildId: input.guildId,
-        guildSlug: input.guildSlug,
-      }),
+      ...pageObservations.filter((observation) =>
+        boundedIds.has(observation.messageId),
+      ),
     );
-    if (page.messages.length > 0) {
-      if (input.direction === "backward") {
-        expectedBefore = page.messages.at(-1)?.id;
-      } else {
-        expectedAfter = page.messages[0]?.id;
-      }
+    if (
+      upperBound !== undefined &&
+      page.messages.some(
+        (message) => compareSnowflakes(message.id, upperBound) >= 0,
+      )
+    ) {
+      reachedUpperBound = true;
     }
+    expectedCursor = page.messages.at(-1)?.id ?? expectedCursor;
   }
-  if (terminal?.responseCount !== 0) {
+  if (terminal === undefined) {
     throw new Error(
-      `${input.direction} traversal for ${input.channelId} does not end with an empty page`,
+      `${input.direction} traversal for ${input.channelId} has no pages`,
+    );
+  }
+  const terminalReason = traversalTerminalReason({
+    terminal,
+    direction: input.direction,
+    reachedUpperBound,
+  });
+  if (terminalReason === undefined) {
+    throw new Error(
+      `${input.direction} traversal for ${input.channelId} has no valid terminal proof`,
     );
   }
   if (new Set(messageIds).size !== messageIds.length) {
@@ -223,7 +285,7 @@ export async function readTraversal(input: {
       `${input.direction} traversal for ${input.channelId} contains duplicate message IDs`,
     );
   }
-  return { observations, messageIds, terminal };
+  return { observations, messageIds, terminal, terminalReason };
 }
 
 export async function readOverlapTraversal(input: {
@@ -324,6 +386,46 @@ export async function readSeedChannelObservations(input: {
     throw new Error(`seed channel partition has invalid observations: ${key}`);
   }
   return observations;
+}
+
+export async function validateSeedForApprovedInventory(input: {
+  seedPrefix: string;
+  approvedChannelIds: readonly string[];
+}): Promise<void> {
+  const manifest = await readCorpusJson(
+    `${input.seedPrefix}/manifest.json`,
+    SeedImportManifestSchema,
+  );
+  if (input.seedPrefix !== `seed/${manifest.archiveSha256}`) {
+    throw new Error(
+      `seed prefix ${input.seedPrefix} does not match archive ${manifest.archiveSha256}`,
+    );
+  }
+  const stores = createCorpusStoresFromEnv();
+  const archiveBytes = await readVerifiedMirroredObject({
+    stores,
+    key: `${input.seedPrefix}/archive.zip`,
+    expectedSha256: manifest.archiveSha256,
+  });
+  if (sha256(archiveBytes) !== manifest.archiveSha256) {
+    throw new Error(
+      `trusted seed archive checksum mismatch: ${input.seedPrefix}`,
+    );
+  }
+  await readVerifiedMirroredObject({
+    stores,
+    key: `${input.seedPrefix}/projection.ndjson`,
+    expectedSha256: manifest.projectionSha256,
+  });
+  const approved = new Set(input.approvedChannelIds);
+  const missing = manifest.channelIds.filter(
+    (channelId) => !approved.has(channelId),
+  );
+  if (missing.length > 0) {
+    throw new Error(
+      `approved inventory omits ${String(missing.length)} trusted seed channels: ${missing.join(",")}`,
+    );
+  }
 }
 
 export async function loadStateManifest(

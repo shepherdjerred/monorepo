@@ -55,10 +55,12 @@ unless an independently discovered safety constraint makes it necessary.
 ### Completeness contract
 
 - Paginate backward from the newest message until Discord returns an empty page.
-- Independently paginate forward from the oldest observed boundary until
-  Discord returns an empty page.
+- Freeze the newest message ID observed by the backward pass, then
+  independently paginate forward from the oldest observed boundary until that
+  frozen upper bound is reached. Ignore messages created after the frozen bound
+  for that proof; they are captured by the next overlap.
 - Record every request boundary, response count, first and last message ID,
-  checksum, retry, and terminal empty-page proof.
+  checksum, retry, and terminal empty-page or frozen-upper-bound proof.
 - Reconcile all unique message IDs against the projection and reject duplicates,
   holes, malformed records, or inconsistent channel attribution.
 - A channel is complete only when both traversal proofs and the projection
@@ -173,7 +175,7 @@ unless an independently discovered safety constraint makes it necessary.
 
 ## Remaining
 
-- [ ] Implement, verify, and publish both pull requests.
+- [x] Implement, verify, and publish both draft pull requests.
 - [ ] Provision credentials and run controlled Discord, Temporal, SeaweedFS, R2,
       and pull-request acceptance tests.
 
@@ -194,17 +196,39 @@ unless an independently discovered safety constraint makes it necessary.
   `19aaca11be85b99d8034e48cfaf45e50e9739e9760da116d7262a6fd7588cc92`,
   and projection SHA-256
   `8bad3bee568dfb5eb60d6524eee6b3c75d6ea3b1ac8f545887bac60cc8db572f`.
-- Passed the affected repository verification surface, including 656 Temporal
+- Passed the affected repository verification surface, including 665 Temporal
   tests, plus focused cdk8s, Terraform/OpenTofu, documentation, and dashboard
   query tests. The explicit 1Password contract check correctly remains red
   until the seven new Discord/R2 fields are populated and its hashed snapshot
   is refreshed.
+- Published the two planned draft pull requests: corpus and capture safety in
+  [#1693](https://github.com/shepherdjerred/monorepo/pull/1693), followed by the
+  shared context and weekly refresh in
+  [#1700](https://github.com/shepherdjerred/monorepo/pull/1700).
+- Added the language-neutral `@shepherdjerred/glitter-context` package with 71
+  people, 80 relationship events, 13 style cards, JSON Schema, Zod, and
+  Pydantic validation. Birmel, Scout, and Glitter now consume that package;
+  Caitlyn and Richard retain historical Dating and project to current Exes.
+- Added the paused weekly GPT-5.5 Temporal proposal workflow, deterministic
+  sampling, evidence requirements, isolated queue, observability, rehearsal,
+  and human-only pull-request publication.
+- Hardened the corpus after automated review: direction-aware Discord page
+  ordering, a frozen backfill upper bound, content-addressed retry artifacts,
+  a repairable per-request response journal that reuses the first Discord
+  response after partial mirror failure, Temporal-aware rate-limit cancellation
+  and heartbeats, exact empty-baseline overlap behavior, stable-instant
+  timestamp comparison, mutable author and signed-attachment metadata handling,
+  trusted-seed checksum and inventory coverage gates, monotonic conditional
+  latest-pointer publication, full object-graph recovery before publication,
+  and snapshot metric restoration after worker restart.
+- Re-ran the focused correctness suite with 29 passing tests and the complete
+  Temporal typecheck. The post-remediation affected repository gate passed all
+  33 tasks.
 
 ### Remaining
 
-- Commit and publish the corpus layer as the first draft pull request.
-- Implement, verify, and publish the shared-context and weekly-refresh pull
-  request on top.
+- Commit and publish the final review remediations to the existing two-PR
+  stack, then confirm the new Buildkite builds and automated reviews are clean.
 - Populate the Temporal worker's seven Discord/R2 fields in 1Password, refresh
   the non-secret vault snapshot, then run inventory and obtain explicit scope
   approval before any full-history Discord request.
@@ -224,3 +248,6 @@ unless an independently discovered safety constraint makes it necessary.
 - Local `op` is not signed in, and no Discord/R2 credentials have been supplied
   in this session. The schedule is created paused and the full backfill is
   inventory-approval-gated, so this cannot accidentally start scraping.
+- The credential projection remains preserved outside the branch in
+  `refs/codex/glitter-corpus-secret-wiring` and a named stash. It must not land
+  until the real 1Password fields and non-secret snapshot can be verified.

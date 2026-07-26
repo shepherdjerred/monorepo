@@ -49,6 +49,7 @@ export const VerifyChannelInputSchema =
   ChannelVerificationIdentitySchema.extend({
     backwardPageManifestKeys: z.array(z.string().min(1)).min(1),
     forwardPageManifestKeys: z.array(z.string().min(1)).min(1),
+    forwardUpperBoundMessageId: z.string().regex(/^\d+$/).optional(),
     seedPrefix: z.string().min(1).optional(),
   });
 

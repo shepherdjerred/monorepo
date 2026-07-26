@@ -3,6 +3,7 @@ import {
   GuildSnapshotSchema,
   type ChannelStateManifest,
   type CurrentMessage,
+  type GuildSnapshot,
 } from "#shared/glitter-corpus.ts";
 import {
   buildCurrentProjection,
@@ -75,10 +76,33 @@ async function rebuildCompleteState(
     ...(oldestMessageId === undefined
       ? {}
       : { initialAfter: immediatelyBefore(oldestMessageId) }),
+    ...(manifest.forwardProof.upperBoundMessageId === null
+      ? {}
+      : {
+          upperBoundInclusive: manifest.forwardProof.upperBoundMessageId,
+        }),
     pageManifestKeys: manifest.forwardProof.pageManifestKeys,
   });
   const backwardIds = backward.messageIds.toSorted(compareSnowflakes);
   const forwardIds = forward.messageIds.toSorted(compareSnowflakes);
+  const newestBackwardId = backwardIds.at(-1) ?? null;
+  if (newestBackwardId !== manifest.forwardProof.upperBoundMessageId) {
+    throw new Error(
+      `recovery frozen forward boundary differs for ${manifest.channelId}`,
+    );
+  }
+  if (
+    backward.terminalReason !== manifest.backwardProof.terminalReason ||
+    backward.terminal.responseCount !==
+      manifest.backwardProof.terminalResponseCount ||
+    forward.terminalReason !== manifest.forwardProof.terminalReason ||
+    forward.terminal.responseCount !==
+      manifest.forwardProof.terminalResponseCount
+  ) {
+    throw new Error(
+      `recovery traversal terminal proof differs for ${manifest.channelId}`,
+    );
+  }
   if (JSON.stringify(backwardIds) !== JSON.stringify(forwardIds)) {
     throw new Error(
       `recovery traversal mismatch for channel ${manifest.channelId}`,
@@ -105,6 +129,41 @@ async function rebuildCompleteState(
     );
   }
   return projection;
+}
+
+export async function verifyGlitterCorpusSnapshotGraph(input: {
+  snapshot: GuildSnapshot;
+  guildSlug: string;
+}): Promise<number> {
+  const stores = createCorpusStoresFromEnv();
+  const context: RebuildContext = {
+    guildSlug: input.guildSlug,
+    cache: new Map(),
+    active: new Set(),
+  };
+  let uniqueMessageCount = 0;
+  for (const manifestObject of input.snapshot.channelManifestObjects) {
+    const manifestBytes = await readMirroredObject({
+      stores,
+      key: manifestObject.key,
+    });
+    if (
+      manifestBytes === undefined ||
+      sha256(manifestBytes) !== manifestObject.sha256
+    ) {
+      throw new Error(
+        `snapshot state checksum mismatch: ${manifestObject.key}`,
+      );
+    }
+    const projection = await rebuildState(manifestObject.key, context);
+    uniqueMessageCount += projection.length;
+  }
+  if (uniqueMessageCount !== input.snapshot.uniqueMessageCount) {
+    throw new Error(
+      `rebuilt snapshot count ${String(uniqueMessageCount)} does not match ${String(input.snapshot.uniqueMessageCount)}`,
+    );
+  }
+  return uniqueMessageCount;
 }
 
 async function rebuildOverlapState(
@@ -231,33 +290,10 @@ export async function verifyLatestGlitterCorpusSnapshot(): Promise<{
   const inventory = GuildInventorySchema.parse(
     JSON.parse(new TextDecoder().decode(inventoryBytes)),
   );
-  const context: RebuildContext = {
+  const uniqueMessageCount = await verifyGlitterCorpusSnapshotGraph({
+    snapshot,
     guildSlug: inventory.guildSlug,
-    cache: new Map(),
-    active: new Set(),
-  };
-  let uniqueMessageCount = 0;
-  for (const manifestObject of snapshot.channelManifestObjects) {
-    const manifestBytes = await readMirroredObject({
-      stores,
-      key: manifestObject.key,
-    });
-    if (
-      manifestBytes === undefined ||
-      sha256(manifestBytes) !== manifestObject.sha256
-    ) {
-      throw new Error(
-        `snapshot state checksum mismatch: ${manifestObject.key}`,
-      );
-    }
-    const projection = await rebuildState(manifestObject.key, context);
-    uniqueMessageCount += projection.length;
-  }
-  if (uniqueMessageCount !== snapshot.uniqueMessageCount) {
-    throw new Error(
-      `rebuilt snapshot count ${String(uniqueMessageCount)} does not match ${String(snapshot.uniqueMessageCount)}`,
-    );
-  }
+  });
   return {
     guildId,
     snapshotId: snapshot.snapshotId,

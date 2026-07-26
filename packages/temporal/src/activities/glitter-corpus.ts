@@ -34,7 +34,10 @@ import {
 import {
   DiscordRestClient,
   discoverGuildInventory,
+  type DiscordRestClientHooks,
+  type DiscordRestProgress,
 } from "./glitter-corpus-discord.ts";
+import { readOrCaptureDiscordPage } from "./glitter-corpus-capture-page.ts";
 import {
   glitterCorpusRuntimeConfig,
   jsonBytes,
@@ -43,8 +46,10 @@ import {
   readOverlapTraversal,
   readSeedChannelObservations,
   readTraversal,
+  validateSeedForApprovedInventory,
   writeChannelProjection,
 } from "./glitter-corpus-io.ts";
+import { assertDiscordPageOrder } from "./glitter-corpus-page-order.ts";
 import {
   finalizeGlitterCorpusSnapshot,
   loadGlitterCorpusDailyBaseline,
@@ -59,6 +64,31 @@ import {
   projectionStateFields,
 } from "./glitter-corpus-state.ts";
 
+const DISCORD_WAIT_HEARTBEAT_INTERVAL_MS = 15_000;
+
+function temporalDiscordRestHooks(activity: string): DiscordRestClientHooks {
+  const context = Context.current();
+  const heartbeat = (progress: DiscordRestProgress): void => {
+    context.heartbeat({ activity, ...progress });
+  };
+  return {
+    cancellationSignal: context.cancellationSignal,
+    onProgress: heartbeat,
+    wait: async (delayMs, progress) => {
+      let remainingMs = delayMs;
+      while (remainingMs > 0) {
+        heartbeat({ ...progress, delayMs: remainingMs });
+        const chunkMs = Math.min(
+          remainingMs,
+          DISCORD_WAIT_HEARTBEAT_INTERVAL_MS,
+        );
+        await context.sleep(chunkMs);
+        remainingMs -= chunkMs;
+      }
+    },
+  };
+}
+
 async function inventoryGlitterGuild(input: {
   discoveredAt: string;
   baselineInventory?: z.input<typeof GuildInventorySchema>;
@@ -70,6 +100,7 @@ async function inventoryGlitterGuild(input: {
     guildSlug: config.guildSlug,
     denylistedChannelIds: config.denylistedChannelIds,
     discoveredAt: input.discoveredAt,
+    hooks: temporalDiscordRestHooks("inventory"),
   });
   glitterCorpusInventoryEntries.reset();
   for (const entry of inventory.entries) {
@@ -164,6 +195,13 @@ async function loadApprovedGlitterInventory(input: {
   });
 }
 
+async function validateApprovedGlitterSeed(input: {
+  seedPrefix: string;
+  approvedChannelIds: string[];
+}): Promise<void> {
+  await validateSeedForApprovedInventory(input);
+}
+
 async function captureGlitterCorpusPage(
   rawInput: CapturePageInput,
 ): Promise<CapturePageResult> {
@@ -174,20 +212,23 @@ async function captureGlitterCorpusPage(
       `configured guild ${config.guildId} does not match workflow guild ${input.guildId}`,
     );
   }
-  Context.current().heartbeat({
-    phase: "discord-request",
-    channelId: input.channelId,
-    direction: input.direction,
-  });
-  const page = await new DiscordRestClient(config.token).getMessages({
-    channelId: input.channelId,
-    ...(input.before === undefined ? {} : { before: input.before }),
-    ...(input.after === undefined ? {} : { after: input.after }),
+  const page = await readOrCaptureDiscordPage({
+    request: input,
+    client: new DiscordRestClient(
+      config.token,
+      temporalDiscordRestHooks("capture-page"),
+    ),
   });
   const rawBody = new TextEncoder().encode(page.rawBody);
+  const rawSha256 = sha256(rawBody);
+  assertDiscordPageOrder({
+    messageIds: page.data.map((message) => message.id),
+    direction: input.direction,
+    objectKey: `Discord response for ${input.requestId}`,
+  });
   const rawObjectKey =
     `guilds/${input.guildId}/channels/${input.channelId}/raw/` +
-    `${input.direction}/${input.requestId}.json`;
+    `${input.direction}/${input.requestId}/${rawSha256}.json`;
   const stores = createCorpusStoresFromEnv();
   await putMirroredImmutableObject({
     stores,
@@ -211,17 +252,18 @@ async function captureGlitterCorpusPage(
     firstMessageId: page.data[0]?.id ?? null,
     lastMessageId: page.data.at(-1)?.id ?? null,
     rawObjectKey,
-    rawSha256: sha256(rawBody),
+    rawSha256,
     retryCount: page.retryCount,
     rateLimit: page.rateLimit,
   });
+  const manifestBody = jsonBytes(manifest);
   const manifestKey =
     `guilds/${input.guildId}/channels/${input.channelId}/pages/` +
-    `${input.direction}/${input.requestId}.json`;
+    `${input.direction}/${input.requestId}/${sha256(manifestBody)}.json`;
   const manifestObject = await putMirroredImmutableObject({
     stores,
     key: manifestKey,
-    body: jsonBytes(manifest),
+    body: manifestBody,
     contentType: "application/json",
     writtenAt: page.completedAt,
   });
@@ -256,6 +298,14 @@ async function verifyGlitterCorpusChannel(
   });
   const oldestBackwardMessageId =
     backward.messageIds.toSorted(compareSnowflakes)[0];
+  const newestBackwardMessageId = backward.messageIds
+    .toSorted(compareSnowflakes)
+    .at(-1);
+  if (newestBackwardMessageId !== input.forwardUpperBoundMessageId) {
+    throw new Error(
+      `frozen forward boundary for ${input.channelId} does not match the backward traversal`,
+    );
+  }
   if (oldestBackwardMessageId === "0") {
     throw new Error("Discord snowflake cannot be zero");
   }
@@ -269,6 +319,9 @@ async function verifyGlitterCorpusChannel(
       : {
           initialAfter: String(BigInt(oldestBackwardMessageId) - 1n),
         }),
+    ...(input.forwardUpperBoundMessageId === undefined
+      ? {}
+      : { upperBoundInclusive: input.forwardUpperBoundMessageId }),
     pageManifestKeys: input.forwardPageManifestKeys,
   });
   const backwardIds = backward.messageIds.toSorted(compareSnowflakes);
@@ -305,12 +358,16 @@ async function verifyGlitterCorpusChannel(
       pageManifestKeys: input.backwardPageManifestKeys,
       terminalPageManifestKey: input.backwardPageManifestKeys.at(-1),
       terminalResponseCount: backward.terminal.responseCount,
+      terminalReason: backward.terminalReason,
+      upperBoundMessageId: null,
     },
     forwardProof: {
       direction: "forward",
       pageManifestKeys: input.forwardPageManifestKeys,
       terminalPageManifestKey: input.forwardPageManifestKeys.at(-1),
       terminalResponseCount: forward.terminal.responseCount,
+      terminalReason: forward.terminalReason,
+      upperBoundMessageId: input.forwardUpperBoundMessageId ?? null,
     },
     observationCount: observations.length,
     seedPrefix: input.seedPrefix ?? null,
@@ -430,6 +487,7 @@ async function applyGlitterCorpusOverlap(
 export const glitterCorpusActivities = {
   inventoryGlitterGuild,
   loadApprovedGlitterInventory,
+  validateApprovedGlitterSeed,
   captureGlitterCorpusPage,
   verifyGlitterCorpusChannel,
   applyGlitterCorpusOverlap,
