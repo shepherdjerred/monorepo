@@ -16,6 +16,7 @@ import {
   resolveQueueTypeFromGame,
   isArenaQueueOrMode,
 } from "@scout-for-lol/data/index.ts";
+import configuration from "#src/configuration.ts";
 import { getPlayer } from "#src/league/model/player.ts";
 import type { MessageCreateOptions } from "discord.js";
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
@@ -95,7 +96,11 @@ async function createMatchImage(
   const svgData =
     matchToRender.queueType === "arena"
       ? await arenaMatchToSvg(matchToRender)
-      : await matchToSvg(matchToRender);
+      : await matchToSvg(matchToRender, {
+          // Gate the new ranked banner/square designs to beta + local dev;
+          // prod keeps the legacy report until the redesign is promoted.
+          enableRankedDesigns: configuration.environment !== "prod",
+        });
   const svg = z.string().parse(svgData);
   const image = z.instanceof(Uint8Array).parse(await svgToPng(svg));
 
