@@ -2,15 +2,17 @@
  * Non-tRPC GET routes that serve generated PNG charts for `<img src>` use in
  * the web app. Browsers can't attach a CSRF token to an image request, so
  * these are safe (read-only) GETs authorized purely by the `scout_session`
- * cookie + per-guild Administrator — the same `assertGuildAdmin` gate the
- * tRPC routers use, with the guild resolved from the row's `serverId`.
+ * cookie + the same per-guild RBAC read permission the corresponding tRPC read
+ * requires (`competitions:read` for leaderboards, `reports:read` for report
+ * runs), resolved from the row's `serverId`. Using `assertGuildAdmin` here would
+ * 403 every delegated Viewer/Manager whose tRPC read already succeeded.
  *
  *   GET /api/competition/{competitionId}/leaderboard.png
  *   GET /api/report/{reportId}/runs/{runId}.png
  */
 
 import { createContext } from "#src/trpc/context.ts";
-import { assertGuildAdmin } from "#src/trpc/guild-guard.ts";
+import { resolveGuildPermissions } from "#src/trpc/guild-permission.ts";
 import { prisma } from "#src/database/index.ts";
 import { loadLeaderboardImage } from "#src/storage/s3-leaderboard-image.ts";
 import { loadReportRunImage } from "#src/storage/s3-report-run.ts";
@@ -77,7 +79,13 @@ export async function handleImageRoute(
       if (competition === null) {
         return notFound(cors);
       }
-      await assertGuildAdmin({ user, guildId: competition.serverId });
+      const permissions = await resolveGuildPermissions(
+        user,
+        competition.serverId,
+      );
+      if (permissions.cannot("competitions", "read")) {
+        return new Response("Forbidden", { status: 403, headers: cors });
+      }
       const image = await loadLeaderboardImage(competitionId);
       return image === null ? notFound(cors) : pngResponse(image, cors);
     }
@@ -92,15 +100,18 @@ export async function handleImageRoute(
       if (run?.reportId !== reportId) {
         return notFound(cors);
       }
-      await assertGuildAdmin({ user, guildId: run.serverId });
+      const permissions = await resolveGuildPermissions(user, run.serverId);
+      if (permissions.cannot("reports", "read")) {
+        return new Response("Forbidden", { status: 403, headers: cors });
+      }
       const image = await loadReportRunImage(reportId, runId);
       return image === null ? notFound(cors) : pngResponse(image, cors);
     }
 
     return null;
   } catch (error) {
-    // assertGuildAdmin throws TRPCError (FORBIDDEN / NOT_FOUND) for callers who
-    // aren't an admin of the owning guild. Don't leak which case it was.
+    // resolveGuildPermissions throws TRPCError (FORBIDDEN / NOT_FOUND) for
+    // non-members or guilds where Scout isn't installed. Don't leak which case.
     logger.warn("Image route authorization rejected:", error);
     return new Response("Forbidden", { status: 403, headers: cors });
   }

@@ -4,15 +4,13 @@
  * gateway member-search (prefix match on username/nickname) and does NOT
  * require the privileged GuildMembers intent for the query-based form.
  *
- * Guild-admin gated; fail-soft (returns [] on any error) so a flaky search
- * never breaks the form.
+ * Authorization is handled by the router before this function is called;
+ * fail-soft (returns [] on any error) so a flaky search never breaks the form.
  */
 
 import { z } from "zod";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import type { User } from "#generated/prisma/client/index.js";
 import { client as discordClient } from "#src/discord/client.ts";
-import { assertGuildAdmin } from "#src/trpc/guild-guard.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("discord-search-members");
@@ -32,11 +30,8 @@ export type SearchedMember = {
 };
 
 export async function searchGuildMembers(
-  user: User,
   input: SearchMembersInput,
 ): Promise<SearchedMember[]> {
-  await assertGuildAdmin({ user, guildId: input.guildId });
-
   const guild = discordClient.guilds.cache.get(input.guildId);
   if (guild === undefined) return [];
 

@@ -433,11 +433,16 @@ model ServerPermission {
   id            Int      @id @default(autoincrement())
   serverId      String
   discordUserId String
-  permission    String // CREATE_COMPETITION (can add more later)
+  // Canonical "resource:action" key from the RBAC catalog (@scout-for-lol/data),
+  // e.g. "subscriptions:create". Legacy web-less grants "CREATE_COMPETITION" /
+  // "CREATE_REPORT" were migrated to "competitions:create" / "reports:create".
+  permission    String
   grantedBy     String // Discord user ID
   grantedAt     DateTime
 
   @@unique([serverId, discordUserId, permission])
+  @@index([serverId, discordUserId]) // resolveGuildPermissions: a user's grants in a guild
+  @@index([serverId]) // roles.list: all grants in a guild
 }
 
 model GuildPermissionError {

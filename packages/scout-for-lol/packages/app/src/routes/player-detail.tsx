@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import type { ReactNode } from "react";
+import { useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { findRegion, type RegionValue } from "#src/lib/regions.ts";
+import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import {
   Card,
@@ -11,6 +13,7 @@ import {
   CardTitle,
 } from "#src/components/ui/card.tsx";
 import { DiscordUser } from "#src/components/discord-user.tsx";
+import { PlayerHeaderActions } from "#src/components/player-header-actions.tsx";
 import {
   CompetitionSection,
   PlayerAccountsTable,
@@ -42,11 +45,23 @@ function isActiveCompetition(competition: {
   return new Date(competition.endDate).getTime() >= Date.now();
 }
 
+function Allowed(props: { when: boolean; children: ReactNode }) {
+  return props.when ? props.children : null;
+}
+
+function hasPlayerRouteData(
+  guildId: string | undefined,
+  alias: string | undefined,
+): boolean {
+  return guildId !== undefined && alias !== undefined;
+}
+
 export function PlayerDetail() {
   const { guildId, alias } = useParams();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { perms } = usePermissions(guildId);
   const safeGuildId = guildId ?? "";
   const safeAlias = alias ?? "";
   const [renameOpen, setRenameOpen] = useState(false);
@@ -67,7 +82,7 @@ export function PlayerDetail() {
   const playerQuery = useQuery(
     trpc.player.getPlayer.queryOptions(
       { guildId: safeGuildId, alias: safeAlias },
-      { enabled: guildId !== undefined && alias !== undefined },
+      { enabled: hasPlayerRouteData(guildId, alias) },
     ),
   );
   const channelsQuery = useQuery(
@@ -137,56 +152,22 @@ export function PlayerDetail() {
             </p>
           )}
         </div>
-        <div className="flex flex-wrap gap-2">
-          {player && (
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setRenameOpen(true);
-                }}
-              >
-                Rename
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setMergeOpen(true);
-                }}
-              >
-                Merge
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                disabled={deletePlayerMutation.isPending}
-                onClick={() => {
-                  if (
-                    !globalThis.confirm(
-                      `Delete "${safeAlias}" and all linked accounts/subscriptions?`,
-                    )
-                  ) {
-                    return;
-                  }
-                  deletePlayerMutation.mutate({
-                    guildId,
-                    alias: safeAlias,
-                  });
-                }}
-              >
-                Delete
-              </Button>
-            </>
-          )}
-          <Button asChild variant="outline" size="sm">
-            <Link to={`/g/${guildId}/players`}>Players</Link>
-          </Button>
-        </div>
+        <PlayerHeaderActions
+          guildId={guildId}
+          alias={safeAlias}
+          playerLoaded={player !== undefined}
+          permissions={perms}
+          deletePending={deletePlayerMutation.isPending}
+          onRename={() => {
+            setRenameOpen(true);
+          }}
+          onMerge={() => {
+            setMergeOpen(true);
+          }}
+          onDelete={() => {
+            deletePlayerMutation.mutate({ guildId, alias: safeAlias });
+          }}
+        />
       </div>
 
       {playerQuery.isLoading && (
@@ -217,42 +198,44 @@ export function PlayerDetail() {
                       name={player.discordUser}
                     />
                   </p>
-                  <div className="pt-1">
-                    {player.discordId === null ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setLinkOpen(true);
-                        }}
-                      >
-                        Link Discord
-                      </Button>
-                    ) : (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={unlinkMutation.isPending}
-                        onClick={() => {
-                          if (
-                            !globalThis.confirm(
-                              `Unlink Discord from "${safeAlias}"?`,
-                            )
-                          ) {
-                            return;
-                          }
-                          unlinkMutation.mutate({
-                            guildId,
-                            playerAlias: safeAlias,
-                          });
-                        }}
-                      >
-                        Unlink
-                      </Button>
-                    )}
-                  </div>
+                  <Allowed when={perms.can("players", "link")}>
+                    <div className="pt-1">
+                      {player.discordId === null ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setLinkOpen(true);
+                          }}
+                        >
+                          Link Discord
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={unlinkMutation.isPending}
+                          onClick={() => {
+                            if (
+                              !globalThis.confirm(
+                                `Unlink Discord from "${safeAlias}"?`,
+                              )
+                            ) {
+                              return;
+                            }
+                            unlinkMutation.mutate({
+                              guildId,
+                              playerAlias: safeAlias,
+                            });
+                          }}
+                        >
+                          Unlink
+                        </Button>
+                      )}
+                    </div>
+                  </Allowed>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Created by</span>
@@ -297,20 +280,25 @@ export function PlayerDetail() {
           <Section
             title="Riot accounts"
             action={
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setAddAccountOpen(true);
-                }}
-              >
-                + Add account
-              </Button>
+              <Allowed when={perms.can("accounts", "create")}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setAddAccountOpen(true);
+                  }}
+                >
+                  + Add account
+                </Button>
+              </Allowed>
             }
           >
             <PlayerAccountsTable
               accounts={player.accounts}
+              canEdit={perms.can("accounts", "update")}
+              canTransfer={perms.can("accounts", "transfer")}
+              canDelete={perms.can("accounts", "delete")}
               deletePending={deleteAccountMutation.isPending}
               onEdit={(account) => {
                 setEditAccount({
@@ -376,80 +364,96 @@ export function PlayerDetail() {
             }
           />
 
-          <RenamePlayerDialog
-            guildId={guildId}
-            currentAlias={safeAlias}
-            open={renameOpen}
-            onOpenChange={setRenameOpen}
-            onRenamed={(newAlias) => {
-              setRenameOpen(false);
-              void navigate(
-                `/g/${guildId}/players/${encodeURIComponent(newAlias)}`,
-              );
-            }}
-          />
-          <MergePlayersDialog
-            guildId={guildId}
-            sourceAlias={safeAlias}
-            open={mergeOpen}
-            onOpenChange={setMergeOpen}
-            onMerged={(targetAlias) => {
-              setMergeOpen(false);
-              void navigate(
-                `/g/${guildId}/players/${encodeURIComponent(targetAlias)}`,
-              );
-            }}
-          />
-          {transferAccount !== null && (
-            <TransferAccountDialog
+          <Allowed when={perms.can("players", "update")}>
+            <RenamePlayerDialog
               guildId={guildId}
-              account={transferAccount}
-              open
-              onOpenChange={(open) => {
-                if (!open) setTransferAccount(null);
-              }}
-              onTransferred={(toPlayerAlias) => {
-                setTransferAccount(null);
+              currentAlias={safeAlias}
+              open={renameOpen}
+              onOpenChange={setRenameOpen}
+              onRenamed={(newAlias) => {
+                setRenameOpen(false);
                 void navigate(
-                  `/g/${guildId}/players/${encodeURIComponent(toPlayerAlias)}`,
+                  `/g/${guildId}/players/${encodeURIComponent(newAlias)}`,
                 );
               }}
             />
-          )}
-          <LinkDiscordDialog
-            guildId={guildId}
-            playerAlias={safeAlias}
-            open={linkOpen}
-            onOpenChange={setLinkOpen}
-            onLinked={() => {
-              setLinkOpen(false);
-              refresh();
-            }}
-          />
-          <AddAccountDialog
-            guildId={guildId}
-            playerAlias={safeAlias}
-            open={addAccountOpen}
-            onOpenChange={setAddAccountOpen}
-            onAdded={() => {
-              setAddAccountOpen(false);
-              refresh();
-            }}
-          />
-          {editAccount !== null && (
-            <EditAccountDialog
+          </Allowed>
+          <Allowed when={perms.can("players", "merge")}>
+            <MergePlayersDialog
               guildId={guildId}
-              account={editAccount}
-              open
-              onOpenChange={(open) => {
-                if (!open) setEditAccount(null);
+              sourceAlias={safeAlias}
+              open={mergeOpen}
+              onOpenChange={setMergeOpen}
+              onMerged={(targetAlias) => {
+                setMergeOpen(false);
+                void navigate(
+                  `/g/${guildId}/players/${encodeURIComponent(targetAlias)}`,
+                );
               }}
-              onSaved={() => {
-                setEditAccount(null);
+            />
+          </Allowed>
+          <Allowed
+            when={perms.can("accounts", "transfer") && transferAccount !== null}
+          >
+            {transferAccount !== null && (
+              <TransferAccountDialog
+                guildId={guildId}
+                account={transferAccount}
+                open
+                onOpenChange={(open) => {
+                  if (!open) setTransferAccount(null);
+                }}
+                onTransferred={(toPlayerAlias) => {
+                  setTransferAccount(null);
+                  void navigate(
+                    `/g/${guildId}/players/${encodeURIComponent(toPlayerAlias)}`,
+                  );
+                }}
+              />
+            )}
+          </Allowed>
+          <Allowed when={perms.can("players", "link")}>
+            <LinkDiscordDialog
+              guildId={guildId}
+              playerAlias={safeAlias}
+              open={linkOpen}
+              onOpenChange={setLinkOpen}
+              onLinked={() => {
+                setLinkOpen(false);
                 refresh();
               }}
             />
-          )}
+          </Allowed>
+          <Allowed when={perms.can("accounts", "create")}>
+            <AddAccountDialog
+              guildId={guildId}
+              playerAlias={safeAlias}
+              open={addAccountOpen}
+              onOpenChange={setAddAccountOpen}
+              onAdded={() => {
+                setAddAccountOpen(false);
+                refresh();
+              }}
+            />
+          </Allowed>
+          <Allowed
+            when={perms.can("accounts", "update") && editAccount !== null}
+          >
+            {editAccount !== null && (
+              <EditAccountDialog
+                guildId={guildId}
+                account={editAccount}
+                open
+                onOpenChange={(open) => {
+                  if (!open) setEditAccount(null);
+                }}
+                onSaved={() => {
+                  setEditAccount(null);
+                  refresh();
+                }}
+              />
+            )}
+          </Allowed>
         </>
       )}
     </div>

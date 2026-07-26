@@ -34,3 +34,6 @@ export * from "./team.ts";
 export * from "./tier.ts";
 export * from "./voice-notification.ts";
 export * from "./pairing-stats.ts";
+export * from "./permissions/catalog.ts";
+export * from "./permissions/permission-set.ts";
+export * from "./permissions/roles.ts";

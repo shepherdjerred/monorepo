@@ -82,6 +82,9 @@ export function PlayerSubscriptionsTable(props: {
 
 export function PlayerAccountsTable(props: {
   accounts: AccountRow[];
+  canEdit: boolean;
+  canTransfer: boolean;
+  canDelete: boolean;
   deletePending: boolean;
   onEdit: (account: AccountRow) => void;
   onTransfer: (account: AccountRow) => void;
@@ -99,7 +102,9 @@ export function PlayerAccountsTable(props: {
           <TableHead>Region</TableHead>
           <TableHead>Last match</TableHead>
           <TableHead>Last checked</TableHead>
-          <TableHead className="w-1" />
+          {(props.canEdit || props.canTransfer || props.canDelete) && (
+            <TableHead className="w-1" />
+          )}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -121,54 +126,62 @@ export function PlayerAccountsTable(props: {
             <TableCell>{account.region}</TableCell>
             <TableCell>{formatDate(account.lastMatchTime)}</TableCell>
             <TableCell>{formatDate(account.lastCheckedAt)}</TableCell>
-            <TableCell>
-              <div className="flex justify-end gap-1">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    props.onEdit(account);
-                  }}
-                >
-                  Edit
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={account.riotGameName === null}
-                  title={
-                    account.riotGameName === null
-                      ? "Riot ID not resolved yet — reload to enable transfer"
-                      : undefined
-                  }
-                  onClick={() => {
-                    props.onTransfer(account);
-                  }}
-                >
-                  Transfer
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={
-                    account.riotGameName === null || props.deletePending
-                  }
-                  title={
-                    account.riotGameName === null
-                      ? "Riot ID not resolved yet — reload to enable delete"
-                      : undefined
-                  }
-                  onClick={() => {
-                    props.onDelete(account);
-                  }}
-                >
-                  Delete
-                </Button>
-              </div>
-            </TableCell>
+            {(props.canEdit || props.canTransfer || props.canDelete) && (
+              <TableCell>
+                <div className="flex justify-end gap-1">
+                  {props.canEdit && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        props.onEdit(account);
+                      }}
+                    >
+                      Edit
+                    </Button>
+                  )}
+                  {props.canTransfer && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={account.riotGameName === null}
+                      title={
+                        account.riotGameName === null
+                          ? "Riot ID not resolved yet — reload to enable transfer"
+                          : undefined
+                      }
+                      onClick={() => {
+                        props.onTransfer(account);
+                      }}
+                    >
+                      Transfer
+                    </Button>
+                  )}
+                  {props.canDelete && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={
+                        account.riotGameName === null || props.deletePending
+                      }
+                      title={
+                        account.riotGameName === null
+                          ? "Riot ID not resolved yet — reload to enable delete"
+                          : undefined
+                      }
+                      onClick={() => {
+                        props.onDelete(account);
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  )}
+                </div>
+              </TableCell>
+            )}
           </TableRow>
         ))}
       </TableBody>

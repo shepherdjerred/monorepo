@@ -3,7 +3,12 @@ import { Login } from "#src/routes/login.tsx";
 import { GuildPicker } from "#src/routes/guild-picker.tsx";
 import { GuildSubscriptions } from "#src/routes/guild-subscriptions.tsx";
 import { GuildAudit } from "#src/routes/guild-audit.tsx";
-import { GuildWorkspace } from "#src/routes/guild-workspace.tsx";
+import { GuildAccess } from "#src/routes/guild-access.tsx";
+import {
+  GuildPermissionsGate,
+  GuildSectionIndex,
+  GuildWorkspace,
+} from "#src/routes/guild-workspace.tsx";
 import { PlayerList } from "#src/routes/player-list.tsx";
 import { PlayerDetail } from "#src/routes/player-detail.tsx";
 import { CompetitionList } from "#src/routes/competition-list.tsx";
@@ -20,6 +25,7 @@ import {
   ContractMismatchBanner,
   VersionFooter,
 } from "#src/components/version-info.tsx";
+import { GUILD_ACTION_ROUTE_PERMISSIONS } from "#src/lib/guild-route-permissions.ts";
 
 export function App() {
   return (
@@ -33,26 +39,62 @@ export function App() {
             <Route path="/welcome" element={<OnboardingWizard />} />
             <Route path="/installed" element={<InstallLanding />} />
             <Route path="/g/:guildId" element={<GuildWorkspace />}>
-              <Route index element={<Navigate to="subscriptions" replace />} />
+              <Route index element={<GuildSectionIndex />} />
               <Route path="subscriptions" element={<GuildSubscriptions />} />
               <Route path="players" element={<PlayerList />} />
               <Route path="players/:alias" element={<PlayerDetail />} />
               <Route path="competitions" element={<CompetitionList />} />
-              <Route path="competitions/new" element={<CompetitionForm />} />
+              <Route
+                path="competitions/new"
+                element={
+                  <GuildPermissionsGate
+                    permissions={
+                      GUILD_ACTION_ROUTE_PERMISSIONS.competitionCreate
+                    }
+                  >
+                    <CompetitionForm />
+                  </GuildPermissionsGate>
+                }
+              />
               <Route
                 path="competitions/:competitionId"
                 element={<CompetitionDetail />}
               />
               <Route
                 path="competitions/:competitionId/edit"
-                element={<CompetitionForm />}
+                element={
+                  <GuildPermissionsGate
+                    permissions={GUILD_ACTION_ROUTE_PERMISSIONS.competitionEdit}
+                  >
+                    <CompetitionForm />
+                  </GuildPermissionsGate>
+                }
               />
               <Route path="reports" element={<ReportList />} />
               <Route path="reports/help" element={<ReportHelp />} />
-              <Route path="reports/new" element={<ReportForm />} />
+              <Route
+                path="reports/new"
+                element={
+                  <GuildPermissionsGate
+                    permissions={GUILD_ACTION_ROUTE_PERMISSIONS.reportCreate}
+                  >
+                    <ReportForm />
+                  </GuildPermissionsGate>
+                }
+              />
               <Route path="reports/:reportId" element={<ReportDetail />} />
-              <Route path="reports/:reportId/edit" element={<ReportForm />} />
+              <Route
+                path="reports/:reportId/edit"
+                element={
+                  <GuildPermissionsGate
+                    permissions={GUILD_ACTION_ROUTE_PERMISSIONS.reportEdit}
+                  >
+                    <ReportForm />
+                  </GuildPermissionsGate>
+                }
+              />
               <Route path="audit" element={<GuildAudit />} />
+              <Route path="access" element={<GuildAccess />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

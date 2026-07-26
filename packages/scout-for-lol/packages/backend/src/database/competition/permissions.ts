@@ -53,6 +53,29 @@ export async function hasPermission(
 }
 
 /**
+ * Check a raw `"resource:action"` permission key (the RBAC catalog form used by
+ * the web surface). Lets the Discord-command checks honor a web-granted role
+ * without depending on the legacy {@link PermissionType} enum.
+ */
+async function hasPermissionKey(
+  prisma: ExtendedPrismaClient,
+  serverId: DiscordGuildId,
+  userId: DiscordAccountId,
+  key: string,
+): Promise<boolean> {
+  const record = await prisma.serverPermission.findUnique({
+    where: {
+      serverId_discordUserId_permission: {
+        serverId,
+        discordUserId: userId,
+        permission: key,
+      },
+    },
+  });
+  return record !== null;
+}
+
+/**
  * Grant permission to a user
  */
 export async function grantPermission(
@@ -142,13 +165,10 @@ export async function canCreateCompetition(
     return { allowed: true };
   }
 
-  // 2. Check ServerPermission grant
-  const hasGrant = await hasPermission(
-    prisma,
-    serverId,
-    userId,
-    "CREATE_COMPETITION",
-  );
+  // 2. Check ServerPermission grant — the RBAC key or the legacy enum value.
+  const hasGrant =
+    (await hasPermissionKey(prisma, serverId, userId, "competitions:create")) ||
+    (await hasPermission(prisma, serverId, userId, "CREATE_COMPETITION"));
 
   if (!hasGrant) {
     return {
@@ -182,12 +202,9 @@ export async function canCreateReport(
     return { allowed: true };
   }
 
-  const hasGrant = await hasPermission(
-    prisma,
-    serverId,
-    userId,
-    "CREATE_REPORT",
-  );
+  const hasGrant =
+    (await hasPermissionKey(prisma, serverId, userId, "reports:create")) ||
+    (await hasPermission(prisma, serverId, userId, "CREATE_REPORT"));
   if (!hasGrant) {
     return {
       allowed: false,

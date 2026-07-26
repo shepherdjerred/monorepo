@@ -401,7 +401,8 @@ const FIELD_TYPE_MAP: Record<string, string> = {
   visibility: "CompetitionVisibility",
   status: "ParticipantStatus",
   snapshotType: "SnapshotType",
-  permission: "PermissionType",
+  // ServerPermission.permission stores canonical RBAC "resource:action" keys
+  // (@scout-for-lol/data), validated at the boundary — kept as a plain string.
   seasonId: "SeasonId",
   userId: "DiscordAccountId",
 };

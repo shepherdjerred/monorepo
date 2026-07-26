@@ -1,0 +1,167 @@
+// Generated from permission-catalog.json. Do not edit by hand.
+export const PERMISSION_CATALOG = {
+  "subscriptions": {
+    "label": "Subscriptions",
+    "actions": [
+      {
+        "name": "read",
+        "label": "View subscriptions"
+      },
+      {
+        "name": "create",
+        "label": "Add subscriptions"
+      },
+      {
+        "name": "update",
+        "label": "Edit subscriptions (filters, mute, move)"
+      },
+      {
+        "name": "delete",
+        "label": "Remove subscriptions"
+      }
+    ]
+  },
+  "players": {
+    "label": "Players",
+    "actions": [
+      {
+        "name": "read",
+        "label": "View players"
+      },
+      {
+        "name": "update",
+        "label": "Rename players"
+      },
+      {
+        "name": "delete",
+        "label": "Delete players"
+      },
+      {
+        "name": "merge",
+        "label": "Merge players"
+      },
+      {
+        "name": "link",
+        "label": "Link / unlink Discord accounts"
+      }
+    ]
+  },
+  "accounts": {
+    "label": "Riot accounts",
+    "actions": [
+      {
+        "name": "read",
+        "label": "Look up Riot accounts"
+      },
+      {
+        "name": "create",
+        "label": "Add Riot accounts"
+      },
+      {
+        "name": "update",
+        "label": "Edit Riot accounts"
+      },
+      {
+        "name": "delete",
+        "label": "Remove Riot accounts"
+      },
+      {
+        "name": "transfer",
+        "label": "Transfer accounts between players"
+      }
+    ]
+  },
+  "competitions": {
+    "label": "Competitions",
+    "actions": [
+      {
+        "name": "read",
+        "label": "View competitions & leaderboards"
+      },
+      {
+        "name": "create",
+        "label": "Create competitions"
+      },
+      {
+        "name": "update",
+        "label": "Edit competitions"
+      },
+      {
+        "name": "cancel",
+        "label": "Cancel competitions"
+      },
+      {
+        "name": "invite",
+        "label": "Manage participants"
+      },
+      {
+        "name": "schedule",
+        "label": "Change update schedule"
+      },
+      {
+        "name": "refresh",
+        "label": "Force-refresh leaderboards"
+      }
+    ]
+  },
+  "reports": {
+    "label": "Reports",
+    "actions": [
+      {
+        "name": "read",
+        "label": "View & preview reports"
+      },
+      {
+        "name": "create",
+        "label": "Create reports"
+      },
+      {
+        "name": "update",
+        "label": "Edit reports"
+      },
+      {
+        "name": "delete",
+        "label": "Delete reports"
+      },
+      {
+        "name": "run",
+        "label": "Run & post reports"
+      }
+    ]
+  },
+  "channels": {
+    "label": "Channels",
+    "actions": [
+      {
+        "name": "read",
+        "label": "List postable channels"
+      }
+    ]
+  },
+  "audit": {
+    "label": "Audit log",
+    "actions": [
+      {
+        "name": "read",
+        "label": "View the audit log"
+      }
+    ]
+  },
+  "roles": {
+    "label": "Roles & access",
+    "actions": [
+      {
+        "name": "read",
+        "label": "View who has access"
+      },
+      {
+        "name": "grant",
+        "label": "Grant access"
+      },
+      {
+        "name": "revoke",
+        "label": "Revoke access"
+      }
+    ]
+  }
+} as const;

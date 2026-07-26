@@ -1,85 +1,117 @@
 /**
- * Web UI helper procedures for picking guilds and channels.
+ * Web UI helpers for picking guilds and channels, and for bootstrapping the
+ * caller's per-guild permissions.
  *
- * `listManageable` filters the signed-in user's Discord guilds to those
- * where they have Administrator AND Scout is installed (mirroring the
- * Discord-command permission gate).
- *
- * `listChannels` returns text channels in a guild that the bot can see,
- * so the web UI only offers channels Scout could actually post to.
+ * `listManageable` returns every guild the user can touch in Scout — Discord
+ * admins/owners (root) plus anyone holding at least one Scout grant — each
+ * enriched with the caller's effective permission set so the SPA can gate its
+ * nav and controls. `myPermissions` is the same set for a single guild (used on
+ * deep-links and after a role change). `listChannels` lists postable channels
+ * and is gated on `channels:read`.
  */
 
 import { z } from "zod";
-import { TRPCError } from "@trpc/server";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import {
+  type Permission,
+  ALL_PERMISSIONS,
+  DiscordGuildIdSchema,
+  parseStoredPermissionKey,
+} from "@scout-for-lol/data";
 import {
   ChannelType,
   PermissionFlagsBits,
   type GuildBasedChannel,
 } from "discord.js";
 import { router, webProcedure } from "#src/trpc/trpc.ts";
+import {
+  guildProcedure,
+  resolveGuildPermissions,
+} from "#src/trpc/guild-permission.ts";
 import { client as discordClient } from "#src/discord/client.ts";
 import { fetchUserGuilds, hasAdministrator } from "#src/lib/discord-rest.ts";
+import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("guild-router");
 
 export const guildRouter = router({
   /**
-   * Guilds the signed-in user can manage in Scout: Administrator perm AND
-   * Scout bot is currently a member.
+   * Guilds the signed-in user can access in Scout, each with the caller's
+   * effective permissions: Discord admins/owners get every permission, everyone
+   * else gets their granted set. Guilds with no access are omitted.
    */
   listManageable: webProcedure.query(async ({ ctx }) => {
     const userGuilds = await fetchUserGuilds(ctx.user);
     const botGuildIds = new Set(discordClient.guilds.cache.map((g) => g.id));
+    const present = userGuilds.filter((g) => botGuildIds.has(g.id));
 
-    const manageable = userGuilds
-      .filter(
-        (g) =>
-          (g.owner || hasAdministrator(g.permissions)) && botGuildIds.has(g.id),
-      )
-      .map((g) => ({
-        id: g.id,
-        name: g.name,
-        icon: g.icon,
-        isOwner: g.owner,
-      }));
+    // One query for the user's grants across all present guilds (no N+1).
+    const grantRows = await prisma.serverPermission.findMany({
+      where: {
+        serverId: { in: present.map((g) => g.id) },
+        discordUserId: ctx.user.discordId,
+      },
+      select: { serverId: true, permission: true },
+    });
+    const grantsByGuild = new Map<string, Permission[]>();
+    for (const row of grantRows) {
+      const permission = parseStoredPermissionKey(row.permission);
+      const list = grantsByGuild.get(row.serverId) ?? [];
+      list.push(permission);
+      grantsByGuild.set(row.serverId, list);
+    }
+
+    const manageable = present.flatMap((g) => {
+      const isDiscordAdmin = g.owner || hasAdministrator(g.permissions);
+      const permissions: Permission[] = isDiscordAdmin
+        ? [...ALL_PERMISSIONS]
+        : (grantsByGuild.get(g.id) ?? []);
+      if (permissions.length === 0) return [];
+      return [
+        {
+          id: g.id,
+          name: g.name,
+          icon: g.icon,
+          isOwner: g.owner,
+          isDiscordAdmin,
+          permissions,
+        },
+      ];
+    });
 
     logger.debug(
-      `User ${ctx.user.discordId} can manage ${manageable.length.toString()} guild(s)`,
+      `User ${ctx.user.discordId} can access ${manageable.length.toString()} guild(s)`,
     );
 
     return manageable;
   }),
 
   /**
-   * Text channels in a guild that the bot has view access to.
-   * Admin-gated: the signed-in user must be an Administrator of the guild.
+   * The caller's effective permissions in a single guild. Session-gated (not
+   * permission-gated) so a viewer can bootstrap their own UI and deep-links
+   * resolve even when the guild isn't in the cached `listManageable`.
    */
-  listChannels: webProcedure
+  myPermissions: webProcedure
     .input(z.object({ guildId: DiscordGuildIdSchema }))
     .query(async ({ ctx, input }) => {
-      const userGuilds = await fetchUserGuilds(ctx.user);
-      const target = userGuilds.find((g) => g.id === input.guildId);
-      if (target === undefined) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You are not a member of that guild",
-        });
-      }
-      if (!target.owner && !hasAdministrator(target.permissions)) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Administrator permission required",
-        });
-      }
+      const permissions = await resolveGuildPermissions(
+        ctx.user,
+        input.guildId,
+      );
+      return permissions.toArray();
+    }),
 
+  /**
+   * Text channels in a guild that the bot can post to. Gated on `channels:read`.
+   */
+  listChannels: guildProcedure("channels", "read")
+    .input(z.object({ guildId: DiscordGuildIdSchema }))
+    .query(({ input }) => {
       const guild = discordClient.guilds.cache.get(input.guildId);
       if (guild === undefined) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Scout is not installed in that guild",
-        });
+        // resolveGuildPermissions already proved Scout is installed, but the
+        // cache lookup is still narrowed here for type-safety.
+        return [];
       }
 
       const me = guild.members.me;
@@ -104,8 +136,7 @@ export const guildRouter = router({
           parentId: c.parentId,
         }));
 
-      // Channels are returned sorted by position via discord.js position()
-      // — fall back to name ordering to keep the response deterministic.
+      // Keep the response deterministic.
       channels.sort((a, b) => a.name.localeCompare(b.name));
 
       return channels;

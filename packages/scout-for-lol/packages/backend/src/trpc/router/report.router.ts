@@ -3,9 +3,9 @@
  * only via Discord commands (create/update/enable/delete/run) plus a live
  * query preview and run history with archived output.
  *
- * Gated on per-guild Administrator (`assertGuildAdmin`) — admins satisfy the
- * owner-or-admin model the Discord side enforces, so `isReportManager` is not
- * needed. System-managed reports are read-only (`assertReportMutable`).
+ * Gated on `reports:<action>` permissions via `guildProcedure`/
+ * `guildMutationProcedure` (Discord admins/owners hold all permissions).
+ * System-managed reports are read-only (`assertReportMutable`).
  */
 
 import { z } from "zod";
@@ -30,11 +30,12 @@ import {
   ReportScheduleTimezoneSchema,
 } from "@scout-for-lol/data/model/competition-cron.ts";
 import type { Report } from "#generated/prisma/client/index.js";
-import { router, webProcedure, webMutationProcedure } from "#src/trpc/trpc.ts";
+import { router } from "#src/trpc/trpc.ts";
+import { assertChannelInGuild } from "#src/trpc/guild-guard.ts";
 import {
-  assertChannelInGuild,
-  assertGuildAdmin,
-} from "#src/trpc/guild-guard.ts";
+  guildProcedure,
+  guildMutationProcedure,
+} from "#src/trpc/guild-permission.ts";
 import { prisma } from "#src/database/index.ts";
 import { canCreateAnotherUserReport } from "#src/discord/commands/report/authorization.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
@@ -79,35 +80,33 @@ async function loadReportOr404(
 }
 
 export const reportRouter = router({
-  list: webProcedure.input(GuildInput).query(async ({ ctx, input }) => {
-    await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
-    return prisma.report.findMany({
-      where: { serverId: input.guildId },
-      orderBy: { createdTime: "desc" },
-    });
-  }),
-
-  aiEditStatus: webProcedure.input(GuildInput).query(async ({ ctx, input }) => {
-    await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
-    return ReportAiEditStatusSchema.parse(
-      getReportAiEditStatus({
-        guildId: input.guildId,
-        userId: DiscordAccountIdSchema.parse(ctx.user.discordId),
-      }),
-    );
-  }),
-
-  dataExplorerSchema: webProcedure
+  list: guildProcedure("reports", "read")
     .input(GuildInput)
-    .query(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
-      return reportDataExplorerSchema();
+    .query(async ({ input }) => {
+      return prisma.report.findMany({
+        where: { serverId: input.guildId },
+        orderBy: { createdTime: "desc" },
+      });
     }),
 
-  browseData: webProcedure
+  aiEditStatus: guildProcedure("reports", "read")
+    .input(GuildInput)
+    .query(({ ctx, input }) =>
+      ReportAiEditStatusSchema.parse(
+        getReportAiEditStatus({
+          guildId: input.guildId,
+          userId: DiscordAccountIdSchema.parse(ctx.user.discordId),
+        }),
+      ),
+    ),
+
+  dataExplorerSchema: guildProcedure("reports", "read")
+    .input(GuildInput)
+    .query(() => reportDataExplorerSchema()),
+
+  browseData: guildProcedure("reports", "read")
     .input(GuildInput.extend(ReportDataBrowseInputSchema.shape))
-    .query(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+    .query(async ({ input }) => {
       try {
         return await browseReportData({
           serverId: input.guildId,
@@ -125,14 +124,13 @@ export const reportRouter = router({
       }
     }),
 
-  get: webProcedure
+  get: guildProcedure("reports", "read")
     .input(
       ReportIdInput.extend({
         runLimit: z.number().int().min(1).max(100).default(20),
       }),
     )
-    .query(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+    .query(async ({ input }) => {
       const report = await loadReportOr404(input.reportId, input.guildId);
       const runs = await prisma.reportRun.findMany({
         where: { reportId: input.reportId },
@@ -157,10 +155,9 @@ export const reportRouter = router({
       };
     }),
 
-  create: webMutationProcedure
+  create: guildMutationProcedure("reports", "create")
     .input(GuildInput.extend(ReportCreateInputSchema.shape))
     .mutation(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
       assertChannelInGuild({
         guildId: input.guildId,
         channelId: input.channelId,
@@ -207,7 +204,7 @@ export const reportRouter = router({
       });
     }),
 
-  update: webMutationProcedure
+  update: guildMutationProcedure("reports", "update")
     .input(
       ReportIdInput.extend({
         title: z.string().trim().min(1).max(100).optional(),
@@ -218,8 +215,7 @@ export const reportRouter = router({
         scheduleTimezone: ReportScheduleTimezoneSchema.optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+    .mutation(async ({ input }) => {
       const report = await loadReportOr404(input.reportId, input.guildId);
       assertReportMutable(report);
 
@@ -269,10 +265,9 @@ export const reportRouter = router({
       });
     }),
 
-  setEnabled: webMutationProcedure
+  setEnabled: guildMutationProcedure("reports", "update")
     .input(ReportIdInput.extend({ isEnabled: z.boolean() }))
-    .mutation(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+    .mutation(async ({ input }) => {
       const report = await loadReportOr404(input.reportId, input.guildId);
       assertReportMutable(report);
       const now = new Date();
@@ -292,20 +287,18 @@ export const reportRouter = router({
       });
     }),
 
-  delete: webMutationProcedure
+  delete: guildMutationProcedure("reports", "delete")
     .input(ReportIdInput)
-    .mutation(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+    .mutation(async ({ input }) => {
       const report = await loadReportOr404(input.reportId, input.guildId);
       assertReportMutable(report);
       await prisma.report.delete({ where: { id: input.reportId } });
       return { deleted: true };
     }),
 
-  run: webMutationProcedure
+  run: guildMutationProcedure("reports", "run")
     .input(ReportIdInput.extend({ post: z.boolean().default(true) }))
-    .mutation(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+    .mutation(async ({ input }) => {
       const report = await loadReportOr404(input.reportId, input.guildId);
       let result;
       try {
@@ -336,7 +329,7 @@ export const reportRouter = router({
       };
     }),
 
-  previewQuery: webMutationProcedure
+  previewQuery: guildMutationProcedure("reports", "read")
     .input(
       GuildInput.extend({
         queryText: ReportQueryTextSchema,
@@ -349,8 +342,7 @@ export const reportRouter = router({
           .default(null),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+    .mutation(async ({ input }) => {
       try {
         const result = await executeReportQuery({
           prisma,
