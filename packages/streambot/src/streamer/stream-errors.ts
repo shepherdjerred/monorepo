@@ -62,6 +62,20 @@ export class StreamCrashError extends Error {
   }
 }
 
+/**
+ * Resume position (seconds) for a stalled segment. During a stall the wall-clock position tracker
+ * keeps advancing while ffmpeg delivered nothing, so `currentPosition` is inflated by roughly the
+ * stall duration (`staleSeconds`). Subtract it to land on the last delivered media position, and
+ * never resume before the segment's own start offset (`floorSeconds`).
+ */
+export function producerResumeSeconds(
+  currentPosition: number,
+  staleSeconds: number,
+  floorSeconds: number,
+): number {
+  return Math.max(floorSeconds, currentPosition - staleSeconds);
+}
+
 /** A detected mid-stream stall: ffmpeg alive but silent past the watchdog threshold. */
 export type StallInfo = {
   /** Playback position (seconds) when the stall was detected. */

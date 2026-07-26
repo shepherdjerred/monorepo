@@ -137,7 +137,10 @@ export function createSeekablePlayer(
     conn.mediaConnection.setVideoAttributes(false);
   }
 
-  async function runSegment(startSeconds: number): Promise<void> {
+  async function runSegment(
+    startSeconds: number,
+    initial = false,
+  ): Promise<void> {
     if (!conn) throw new Error("runSegment called before the connection was created");
     const gen = ++generation;
 
@@ -185,6 +188,16 @@ export function createSeekablePlayer(
       );
     } catch (err) {
       if (gen !== generation || stopped) return;
+      if (initial) {
+        // A failed FIRST attach is a startup/graph-init failure (e.g. a VAAPI device/filter the
+        // GPU lacks), not a mid-stream crash. Abort the paired ffmpeg (its `promise.catch` above is
+        // guarded on `abort.signal.aborted`, so it won't also settle `finished`) and reject
+        // `start()` so the caller keeps this on the immediate software fallback instead of the
+        // slower mid-stream recovery ladder. `finished` is intentionally left unsettled: nobody
+        // awaits it once `start()` rejects and the player is discarded.
+        abort.abort();
+        throw err;
+      }
       fail(err);
       return;
     }
@@ -212,10 +225,22 @@ export function createSeekablePlayer(
           return;
         }
         if (outcome.kind === "timeout") {
+          // Output drained but ffmpeg never exited: a wedged process, not a natural end. Treating
+          // it as EOF would tear the Discord connection down while leaving ffmpeg (and its pending
+          // promise) alive — an orphan that can run alongside a retry or the next item. Abort it and
+          // surface a failure so the outcome is classified (retry/next), not reported as a clean end.
           log.warn(
             { timeoutMs: ffmpegSettleTimeoutMs },
-            "ffmpeg did not settle after output drain; treating as natural end",
+            "ffmpeg did not settle after output drain; aborting wedged process",
           );
+          abort.abort();
+          teardownConn();
+          fail(
+            new Error(
+              `ffmpeg did not settle within ${String(ffmpegSettleTimeoutMs)}ms after output drain`,
+            ),
+          );
+          return;
         }
         teardownConn();
         succeed();
@@ -247,7 +272,9 @@ export function createSeekablePlayer(
         conn = streamer.voiceConnection.webRtcConn;
         streamer.signalVideo(true);
       }
-      await runSegment(positionSeconds);
+      // `initial: true` — a failed first attach rejects here (startup/graph-init failure) instead of
+      // being swallowed into `finished`, so callers can distinguish it from a mid-stream crash.
+      await runSegment(positionSeconds, true);
     },
     async seek(seconds: number) {
       if (stopped || !conn) return;

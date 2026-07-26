@@ -753,6 +753,55 @@ describe("crash recovery ladder", () => {
   });
 });
 
+describe("crash recovery — state cleanup", () => {
+  test("a rejected recovery re-resolve clears recovery state so the NEXT item starts clean", async () => {
+    const stream = makeStreamController();
+    // "a" resolves for its initial play and its first crash-retry, then its SECOND re-resolve
+    // (recovery attempt 2) rejects; "b" resolves normally.
+    let resolveCalls = 0;
+    const resolveSource: PlaybackActors["resolveSource"] = (input, signal) => {
+      resolveCalls += 1;
+      if (resolveCalls === 3) {
+        return Promise.reject(new Error("re-resolve failed (expired URL)"));
+      }
+      return makeActors().resolveSource(input, signal);
+    };
+    const actor = startActor(
+      makeActors({ resolveSource, runStream: stream.runStream }),
+    );
+    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
+    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+
+    // Crash once (retry 1, resumes at 42 on hw), then crash again — the retry-2 re-resolve rejects.
+    stream.crashCurrent(crashError(42));
+    await waitFor(
+      actor,
+      (s) => s.matches("streaming") && stream.invocationCount() === 2,
+      WAIT,
+    );
+    expect(stream.inputs[1]?.seekSeconds).toBe(42);
+    stream.crashCurrent(crashError(84));
+
+    // The failed re-resolve drops "a" and advances to "b", which must start CLEAN — not inherit
+    // "a"'s crash offset (84) or its escalated hw-upload pipeline.
+    await waitFor(
+      actor,
+      (s) =>
+        s.matches("streaming") &&
+        s.context.current?.source.kind === "file" &&
+        s.context.current.source.title === "b",
+      WAIT,
+    );
+    const context = actor.getSnapshot().context;
+    expect(context.crashRetries).toBe(0);
+    expect(context.resumeSeekSeconds).toBe(0);
+    const bInput = stream.inputs.at(-1);
+    expect(bInput?.seekSeconds).toBe(0);
+    expect(bInput?.pipelineMode).toBe("hw");
+  });
+});
+
 describe("wedge timeouts", () => {
   test("a hung resolve times out, drops the item, and continues", async () => {
     const stream = makeStreamController();

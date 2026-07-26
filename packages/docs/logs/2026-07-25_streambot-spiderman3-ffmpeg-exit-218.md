@@ -74,12 +74,28 @@ Stopping`), treats it as a natural stream end, and the machine goes to
 - Reproduced the failure in-pod with the exact ffmpeg command; captured the
   real error (hidden in the app log, which only keeps ffmpeg's last line).
 - Tested `-ss 10` (works) and `-reinit_filter 0` (fails identically).
+- **Shipped** the "correct fix" from Fix options: truthful mid-stream-death
+  detection + a bounded recovery ladder (PR #1667, hardened in the #1667 Codex
+  follow-up). Implemented:
+  - Crash detection in the fork: `StreamCrashError` / `FfmpegExitError` carry the
+    parsed exit code + stderr tail; `createSeekablePlayer` waits for the ffmpeg
+    exit outcome before settling `finished` so a crashed-but-drained pipe is no
+    longer mistaken for EOF (`packages/discord-video-stream/src/media/player.ts`),
+    and `LibavDemuxer` destroys source pipes WITH the error (not `.end()`) so a
+    mid-stream failure is distinguishable from real EOF.
+  - Machine-level bounded retry ladder in `packages/streambot`: re-queue the item
+    at its head and replay from the death position, walking hw → hw → hw-upload →
+    sw (`MAX_CRASH_RETRIES`, `pipelineForAttempt`), plus exit-0 truncation
+    ("ended-short") classification, wedge timeouts (join/resolve/leave), a stall
+    watchdog (`stream-observer` → `PRODUCER_STALLED`), Discord announcements
+    (`crashNotice`), and `streambot_stream_crashes_total{kind=crash|ended-short|stall}`.
 
 ### Remaining
 
-- Implement mid-stream-crash detection + HW→SW retry in streambot
-  (`packages/streambot` / `packages/discord-video-stream`).
-- Optionally file upstream ffmpeg bug.
+- Optionally file the upstream ffmpeg bug (VAAPI tonemap graph reinit after
+  "hwaccel changed" on HEVC — 7.1.x regression candidate).
+- Live verification: confirm the Spider-Man 3 remux now recovers to a playing
+  state (hw-upload/sw) instead of silently ending, next time it is queued.
 
 ### Caveats
 
@@ -106,3 +122,9 @@ Stopping`), treats it as a natural stream end, and the machine goes to
   truthful crash detection in the fork + machine-level bounded retry
   ladder hw → hw → hw-upload → sw at last position, wedge timeouts,
   stall detection, and Discord announcements.
+- 2026-07-25 (later): **the fix design above is now implemented and shipped**
+  (PR #1667, hardened in the #1667 Codex follow-up). The earlier "still
+  unimplemented" note is superseded — the crash-detection/recovery ladder,
+  wedge timeouts, stall watchdog, and Discord announcements are all in the
+  tree (see the updated `### Done`). What remains is optional upstream
+  reporting and a live re-verification with the same Spider-Man 3 remux.

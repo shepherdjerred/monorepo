@@ -3,7 +3,10 @@ import {
   StreambotStreamer,
   type PlayerFactory,
 } from "@shepherdjerred/streambot/streamer/streamer.ts";
-import { StreamCrashError } from "@shepherdjerred/streambot/streamer/stream-errors.ts";
+import {
+  producerResumeSeconds,
+  StreamCrashError,
+} from "@shepherdjerred/streambot/streamer/stream-errors.ts";
 import {
   loadConfig,
   type EnvLookup,
@@ -249,5 +252,22 @@ describe("StreambotStreamer position tracking", () => {
     clock.ms = 7_190_000; // within 30s of the end
     segments[0]?.resolve();
     await run; // resolves — no ended-short misclassification
+  });
+});
+
+describe("producerResumeSeconds", () => {
+  test("backs out the stale interval to recover the last delivered media position", () => {
+    // Played to 5s, then ffmpeg wedged for 20s while wall-clock kept the tracker at 25s: resume 5s.
+    expect(producerResumeSeconds(25, 20, 0)).toBe(5);
+  });
+
+  test("never resumes before the segment start offset", () => {
+    // Stalled almost immediately after a seek to 100s: the whole stale window predates any delivery.
+    expect(producerResumeSeconds(120, 20, 100)).toBe(100);
+    expect(producerResumeSeconds(105, 20, 100)).toBe(100);
+  });
+
+  test("floors at the start offset rather than going negative", () => {
+    expect(producerResumeSeconds(10, 20, 0)).toBe(0);
   });
 });

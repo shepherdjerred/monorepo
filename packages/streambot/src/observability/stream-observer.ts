@@ -80,11 +80,17 @@ export type StreamObserverHandle = {
  */
 export const STALL_AFTER_SECONDS = 20;
 
+/** Cadence of the progress-age watchdog tick. Injectable so tests can drive it deterministically. */
+export const PROGRESS_TICK_MS = 1000;
+
 /**
  * Build a {@link StreamObserver} for one streaming segment. `hardware` labels the metrics with the
  * path the segment is attempting. `now` is injectable for deterministic tests. `onStall` (optional)
- * fires — once per silence, re-armed when progress resumes — after {@link STALL_AFTER_SECONDS}
- * with no ffmpeg progress; the caller routes it into the playback machine's stall recovery.
+ * fires — once per silence, re-armed only when the media clock actually advances — after
+ * {@link STALL_AFTER_SECONDS} with no ffmpeg progress; it receives the stale interval in seconds
+ * (how long the media clock has been frozen), so the caller can resume from the last delivered
+ * media position rather than the inflated wall-clock one. `progressTickMs` sets the watchdog
+ * cadence (default {@link PROGRESS_TICK_MS}).
  *
  * Always call the returned `dispose()` when the segment ends to stop the internal progress-age
  * timer. Without it, each call leaves a live `setInterval` writing to the shared
@@ -94,7 +100,8 @@ export const STALL_AFTER_SECONDS = 20;
 export function createStreamObserver(
   hardware: boolean,
   now: () => number = Date.now,
-  onStall?: () => void,
+  onStall?: (staleSeconds: number) => void,
+  progressTickMs: number = PROGRESS_TICK_MS,
 ): StreamObserverHandle {
   const hw = hardware ? "true" : "false";
   let prevMediaSeconds: number | undefined;
@@ -115,9 +122,11 @@ export function createStreamObserver(
       if (ageSeconds >= STALL_AFTER_SECONDS && !stallFired) {
         stallFired = true;
         log.warn("ffmpeg progress stalled", { ageSeconds });
-        onStall?.();
+        // `ageSeconds` is the stale interval — how long the media clock has been frozen. The caller
+        // subtracts it from the wall-clock position to recover the last delivered media position.
+        onStall?.(ageSeconds);
       }
-    }, 1000);
+    }, progressTickMs);
     progressAgeTimer.unref();
   };
 
@@ -169,9 +178,19 @@ export function createStreamObserver(
       }
       const mediaSeconds = parseTimemarkSeconds(progress.timemark);
       const wallMs = now();
-      lastProgressWallMs = wallMs;
-      ffmpegProgressAgeSeconds.set(0);
-      stallFired = false;
+      // Re-arm the stall watchdog ONLY when the media clock actually advanced. A wedged ffmpeg that
+      // stays alive and keeps emitting progress reports with the SAME timemark would otherwise
+      // refresh `lastProgressWallMs` and clear `stallFired` every tick, so the progress-age never
+      // reaches STALL_AFTER_SECONDS and the stall is never detected. The first parseable sample
+      // (prevMediaSeconds still undefined) counts as an advance so a healthy start arms the gauge.
+      const mediaAdvanced =
+        mediaSeconds !== undefined &&
+        (prevMediaSeconds === undefined || mediaSeconds > prevMediaSeconds);
+      if (mediaAdvanced) {
+        lastProgressWallMs = wallMs;
+        ffmpegProgressAgeSeconds.set(0);
+        stallFired = false;
+      }
       if (
         mediaSeconds !== undefined &&
         prevMediaSeconds !== undefined &&

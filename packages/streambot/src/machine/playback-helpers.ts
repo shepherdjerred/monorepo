@@ -245,6 +245,15 @@ export function resolveErrorUpdates(
     lastBlockedRequester: blocked
       ? (context.current?.requesterId ?? null)
       : context.lastBlockedRequester,
+    // Clear recovery state so the NEXT item starts clean. This resolve may be the fresh re-resolve
+    // of a crash/stall recovery retry, whose item carries `resumeSeekSeconds` + `crashRetries`. If
+    // that re-resolve rejects, the item is dropped (`failed → skipped`) and the next queued item is
+    // dequeued — which would otherwise inherit this item's crash offset and escalated pipeline
+    // (hw-upload/sw), skipping most or all of an unrelated video. (The normal path clears these via
+    // the `streaming` state's `consumeSeek` exit / `resetCrashRetries`, but a resolve failure never
+    // enters `streaming`.)
+    resumeSeekSeconds: 0,
+    crashRetries: 0,
   };
 }
 

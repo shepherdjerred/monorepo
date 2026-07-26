@@ -102,3 +102,77 @@ describe("createStreamObserver", () => {
     dispose();
   });
 });
+
+/** Let the fast (2ms) watchdog interval fire at least once. */
+const tick = () => new Promise((resolve) => setTimeout(resolve, 25));
+
+describe("createStreamObserver stall watchdog", () => {
+  test("a wedged ffmpeg emitting the SAME timemark still trips the stall watchdog", async () => {
+    let wall = 0;
+    const stalls: number[] = [];
+    const { observer, dispose } = createStreamObserver(
+      true,
+      () => wall,
+      (staleSeconds) => stalls.push(staleSeconds),
+      2, // fast watchdog tick for a deterministic test
+    );
+    observer.onCommand?.("ffmpeg -i in.mkv out");
+    // First parseable sample arms the watchdog at wall=1000.
+    wall = 1000;
+    observer.onProgress?.({ timemark: "00:00:05.00" });
+    // A wedged process keeps reporting the SAME media timemark — the watchdog must NOT re-arm.
+    wall = 2000;
+    observer.onProgress?.({ timemark: "00:00:05.00" });
+    // 21s past the last real media advance (wall=1000), not since the last (stale) report.
+    wall = 22_000;
+    await tick();
+
+    expect(stalls.length).toBeGreaterThanOrEqual(1);
+    // staleSeconds is measured from the last media advance, so the caller can back out the inflated
+    // wall-clock position: (22000 - 1000) / 1000 = 21.
+    expect(stalls[0]).toBeCloseTo(21, 3);
+    dispose();
+  });
+
+  test("advancing media keeps the watchdog armed (no false stall)", async () => {
+    let wall = 0;
+    const stalls: number[] = [];
+    const { observer, dispose } = createStreamObserver(
+      true,
+      () => wall,
+      (staleSeconds) => stalls.push(staleSeconds),
+      2,
+    );
+    observer.onCommand?.("ffmpeg -i in.mkv out");
+    // Media advances in lockstep with wall-clock across a span > STALL_AFTER_SECONDS.
+    for (let i = 1; i <= 25; i++) {
+      wall = i * 1000;
+      observer.onProgress?.({
+        timemark: `00:00:${String(i).padStart(2, "0")}.00`,
+      });
+    }
+    await tick();
+
+    expect(stalls).toHaveLength(0);
+    dispose();
+  });
+
+  test("the stall fires once per silence (not every tick)", async () => {
+    let wall = 0;
+    const stalls: number[] = [];
+    const { observer, dispose } = createStreamObserver(
+      true,
+      () => wall,
+      (staleSeconds) => stalls.push(staleSeconds),
+      2,
+    );
+    observer.onCommand?.("ffmpeg -i in.mkv out");
+    wall = 1000;
+    observer.onProgress?.({ timemark: "00:00:05.00" });
+    wall = 30_000; // deep into the stall; many watchdog ticks will elapse during the wait
+    await tick();
+
+    expect(stalls).toHaveLength(1);
+    dispose();
+  });
+});

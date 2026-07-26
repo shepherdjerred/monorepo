@@ -20,6 +20,7 @@ import type {
 } from "@shepherdjerred/streambot/machine/types.ts";
 import {
   endedShortError,
+  producerResumeSeconds,
   StreamCrashError,
   type StallInfo,
 } from "@shepherdjerred/streambot/streamer/stream-errors.ts";
@@ -438,9 +439,21 @@ export class StreambotStreamer implements StreamerLike {
     const { observer, dispose: disposeObserver } = createStreamObserver(
       useHardware,
       this.now,
-      () => {
+      (staleSeconds) => {
+        // A detected stall IS a mid-stream segment death — count it alongside crash/ended-short so
+        // the advertised `stall` kind on the crash counter actually populates (aborting the actor
+        // otherwise leaves the segment outcome at "ended" and the recovery goes uncounted).
+        streamCrashesTotal.inc({ pipeline: pipelineMode, kind: "stall" });
+        // `getPosition()` kept advancing from wall-clock through the silence; resume from the last
+        // delivered media position (position minus the stale interval), floored at the segment
+        // start, so the retry doesn't seek past media that was never produced.
+        const positionSeconds = producerResumeSeconds(
+          this.getPosition() ?? startSeconds,
+          staleSeconds,
+          startSeconds,
+        );
         this.stallListener?.({
-          positionSeconds: this.getPosition() ?? startSeconds,
+          positionSeconds,
           reason: `ffmpeg produced no output for ${String(STALL_AFTER_SECONDS)}s`,
         });
       },
@@ -466,6 +479,18 @@ export class StreambotStreamer implements StreamerLike {
       },
     );
     this.player = player;
+    // If `start()` rejects (a startup/graph-init failure — the player now surfaces a failed initial
+    // attach there rather than swallowing it into `finished`), we take the catch path below and
+    // never await `finished`. Consume any late rejection from the torn-down player so it can't
+    // surface as an unhandled rejection; the success path still awaits `player.finished` below and
+    // sees its settled value.
+    void (async () => {
+      try {
+        await player.finished;
+      } catch {
+        // Intentionally swallowed here; real error handling happens on the awaited paths below.
+      }
+    })();
 
     const onAbort = () => {
       player.stop();
