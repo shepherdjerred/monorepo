@@ -51,6 +51,14 @@ RUN cargo build --release --locked --bin redlib \
 # renovate: datasource=docker depName=ubuntu
 FROM ubuntu:noble@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90 AS release
 
+# wget powers both the HEALTHCHECK below and the in-image `smoke` stage's
+# /settings probe. ubuntu:noble does not ship wget, so install it (upstream's
+# Dockerfile.ubuntu relies on the base having a probe tool; the minimal noble
+# image does not). Without this the smoke solve fails with `wget: not found`.
+RUN apt-get update \
+  && apt-get -y install --no-install-recommends wget \
+  && rm -rf /var/lib/apt/lists/*
+
 # Import redlib binary from builder.
 COPY --from=builder /redlib/target/release/redlib /usr/local/bin/redlib
 

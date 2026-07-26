@@ -8,7 +8,7 @@
  * continue to provide the same checks for developers, while CI invokes this
  * file from each Dockerfile's `smoke` target.
  */
-const target = Bun.env.CI_IMAGE_SMOKE_TARGET;
+const target = Bun.env["CI_IMAGE_SMOKE_TARGET"];
 
 if (target === undefined || target.length === 0) {
   throw new Error("CI_IMAGE_SMOKE_TARGET is required");

@@ -39,7 +39,10 @@ export function createTurboCacheDeployment(chart: Chart) {
   // rebuildable after node loss.
   const secrets = new OnePasswordItem(chart, "turbo-cache-secrets", {
     spec: {
-      itemPath: vaultItemPath("buildkite-ci-secrets"),
+      // vaultItemPath takes the 1Password item *ID*, not its title. This is the
+      // shared `buildkite-ci-secrets` item (same ID buildkite.ts references) —
+      // we only need its TURBO_TOKEN field for the remote cache bearer token.
+      itemPath: vaultItemPath("rzk3lawpk4yspyyu5rxlz44ssi"),
     },
     metadata: {
       name: "buildkite-ci-secrets",
