@@ -353,7 +353,7 @@ export const reportRouter = router({
       };
     }),
 
-  previewQuery: guildMutationProcedure("reports", "read")
+  previewQuery: guildProcedure("reports", "read")
     .input(
       GuildInput.extend({
         queryText: ReportQueryTextSchema,
@@ -366,7 +366,7 @@ export const reportRouter = router({
           .default(null),
       }),
     )
-    .mutation(async ({ input }) => {
+    .query(async ({ input }) => {
       try {
         const result = await executeReportQuery({
           prisma,
