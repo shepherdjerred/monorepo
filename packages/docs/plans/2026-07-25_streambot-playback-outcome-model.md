@@ -92,3 +92,28 @@ Verify: `bunx turbo run typecheck test lint --filter=discord-video-stream --filt
 ## Workflow
 
 One PR from worktree `.claude/worktrees/streambot-outcome-model` (branch `feature/streambot-outcome-model`, git-spice).
+
+## Session Log — 2026-07-25
+
+### Done
+
+- Phase 0 in-pod experiments (results above): pinned the fix shape — retry-at-position alone does NOT rescue the Spider-Man file in pure HW; the hw-upload pipeline does, at 1.34x vs 6.1x realtime, so it ships as the middle recovery rung, not the default.
+- Phase 1 (fork): `player.finished` now awaits ffmpeg's exit after output drain (`ffmpegSettleTimeoutMs`, default 5 s) — crash-vs-EOF is truthful; demux errors destroy the pipes with the error and reject `pipeline.done`; `FfmpegExitError` carries the parsed exit code + a 50-line stderr tail; new `hardwarePipelineMode: "upload"` prepare option + `uploadDecodeOptions`/`uploadInput` plumbing (`newApi.ts`, `player.ts`, `LibavDemuxer.ts`, `videoGraph.ts`, `encoders/*`).
+- Phase 2 (streamer): `StreamCrashError { kind: crash | ended-short, positionSeconds, pipelineMode, exitCode, stderrTail }`; `streamOnce` classifies mid-stream crashes and exit-0 truncations (30 s + 10% tolerance); startup failures keep the in-streamer immediate software fallback; `durationSeconds` threaded through `ResolvedSource`.
+- Phase 3 (machine): bounded recovery ladder (`MAX_CRASH_RETRIES=3`, pipeline per attempt hw → hw → hw-upload → sw) retrying at the death position through re-resolve (regenerates expired URLs); `PRODUCER_STALLED` handled with the same ladder, fed by a 20 s stall watchdog (`stream-observer` → streamer listener → session-manager dispatch); `after` wedge timeouts on `resolving` (60 s), `joining` (30 s), `leaving` (10 s); helpers extracted to `machine/playback-helpers.ts`.
+- Phase 4 (feedback): `crashNotice` in context → `StatusSnapshot` → StatusReporter announces retries (`⚠️ … retrying (attempt k/3, hardware|software)`) and give-ups (`🛑 Gave up …`), nonce-deduped; `streamCrashesTotal{pipeline,kind}` + `gatewayDisruptionsTotal{client,kind}` metrics.
+- Phase 5 (hardening): `guildDelete`/`channelDelete` listeners now dispatch `GUILD_REMOVED`/`CHANNEL_DELETED` (`discord/client-events.ts`, session-manager `notifyGuildRemoved`/`notifyChannelDeleted`); command + userbot gateway disconnect/invalidated/error observability; dead `SHUTDOWN` event and unused gateway-health union members removed from `PlaybackEvent`.
+- Tests: fork 56 (player race/settle/demux-error, upload graph/encoder/prepareStream), streambot 377 (ladder walk, stall retry, wedge timeouts, ended-short matrix, reporter announcements, topology removals). `bun run verify -- --affected` green.
+- Commits: `02f0cf0bf` (docs), `34405487b` (fork), `be850f2db` (streambot core), `0e3e47d9d` (announcements), `688d47fed` (hardening).
+
+### Remaining
+
+- Open the PR (git-spice) and drive CI green.
+- Live verification after deploy (see Verification): replay the Spider-Man 3 remux — expect crash detection + hw-upload rung playing in hardware; stall drill (`kill -STOP` ffmpeg); SDR sanity; Grafana counters.
+- Optional: file the upstream ffmpeg trac bug (VAAPI tonemap graph reinit after mid-stream "hwaccel changed"; evidence in the companion log).
+
+### Caveats
+
+- The hw-upload rung averaged 1.34x realtime on this file's quiet sections; peak 4K HDR scenes may dip near 1.0x — acceptable for a recovery rung, worth watching `ffmpegSpeedRatio` when it engages.
+- The `-nostdin` lesson: in-pod ffmpeg experiments over `kubectl exec -i` must pass `-nostdin` or ffmpeg eats the script from stdin (a stray `q` quits it).
+- `ended-short` classification is skipped when the resolve-time probe found no duration (live streams, failed probes) — those still end silently on truncation.
