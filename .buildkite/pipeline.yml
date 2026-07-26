@@ -1024,6 +1024,14 @@ steps:
     command: |
       if ! bash .buildkite/scripts/ci-changed.sh images; then
         jq -n '{}' | buildkite-agent meta-data set image-digests
+        # bake-images.sh never runs on this path, so it never produces the two
+        # artifact_paths below. Write skip-shaped reports ourselves — an empty
+        # artifact_paths match fails the step even though the skip itself is fine.
+        jq -n '{base: null, changedPaths: [], mode: "selected", globalReason: "no image-owning packages changed since last green main build", targets: {}}' > image-selection-report.json
+        jq -n '[]' > image-push-outcomes.json
+        if ! bun --no-install .buildkite/scripts/annotate-image-summary.ts --report image-selection-report.json --outcomes image-push-outcomes.json; then
+          echo "WARN: image summary annotation failed (non-fatal)" >&2
+        fi
         exit 0
       fi
       . .buildkite/scripts/toolchain.sh
@@ -1469,6 +1477,13 @@ steps:
       - helm-push
       - tofu-apply
       - argocd-sync
+      # These three record the npm/cooklang, scout-reconcile, and ci-image
+      # lane decisions the table below renders; without depending on them
+      # directly, build-summary can render before they finish and show a
+      # false "not recorded" for a lane that's still mid-run.
+      - publish
+      - scout-prod-reconcile
+      - ci-image-refresh
     allow_dependency_failure: true
     command: bash .buildkite/scripts/annotate-build-summary.sh
     plugins:
