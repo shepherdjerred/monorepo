@@ -340,6 +340,18 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Daily Velero orphan ZFS snapshot detection — emits Prometheus metrics for the orphan-snapshot pathology (see packages/docs/decisions/2026-05-05_velero-orphan-snapshot-prevention.md)",
   },
   {
+    id: "review-signals-collect",
+    workflowType: "observeReviewSignalsWorkflow",
+    args: [],
+    // Every 6 hours — frequent enough to catch same-day review latency
+    // patterns without hammering the GitHub API on every recent PR.
+    cronExpression: "0 */6 * * *",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "10 minutes",
+    memo: "Durable review-signal collector — scans recent PRs, computes each PR's code-review signal via @shepherdjerred/code-review, records Prometheus metrics, and appends NDJSON to S3 (what the review bot did and when)",
+  },
+  {
     id: "golink-sync",
     workflowType: "syncGolinks",
     args: [],

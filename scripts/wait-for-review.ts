@@ -126,7 +126,12 @@ function buildSignalEvent(input: {
     head_pushed_at: input.headPushedAt,
     review_state: reviewState,
     completion_signal: input.state.completionSignal,
-    latency_s: latencySeconds(input.state.reviewedAt, input.headPushedAt),
+    // Latency is only meaningful when the reviewed commit IS the head; a stale
+    // review of an older commit must not produce a (possibly negative) latency.
+    latency_s:
+      input.state.reviewedCommit === input.head
+        ? latencySeconds(input.state.reviewedAt, input.headPushedAt)
+        : null,
     findings: tallyFindings(providerThreads.map((thread) => thread.priority)),
     blocking_count: blocking.length,
     unresolved_count: providerThreads.filter((thread) => !thread.isResolved)

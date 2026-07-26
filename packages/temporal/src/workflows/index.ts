@@ -56,6 +56,11 @@ import { cancelBuildkiteBuildsWorkflow as _cancelBuildkiteBuildsWorkflow } from 
 import { checkPrMergeConflictsWorkflow as _checkPrMergeConflictsWorkflow } from "./check-pr-merge-conflicts.ts";
 import { prBabysitWorkflow as _prBabysitWorkflow } from "./pr-babysit/index.ts";
 import type { PrBabysitWorkflowInput } from "#shared/pr-babysit/workflow-types.ts";
+import { observeReviewSignalsWorkflow as _observeReviewSignalsWorkflow } from "./observe-review-signals.ts";
+import type {
+  ObserveReviewSignalsInput,
+  ObserveReviewSignalsResult,
+} from "#activities/observe-review-signals.ts";
 import type {
   CancelBuildkiteBuildsInput,
   CheckPrMergeConflictsInput,
@@ -214,4 +219,10 @@ export async function prBabysitWorkflow(
   input: PrBabysitWorkflowInput,
 ): Promise<void> {
   return _prBabysitWorkflow(input);
+}
+
+export async function observeReviewSignalsWorkflow(
+  input: ObserveReviewSignalsInput = {},
+): Promise<ObserveReviewSignalsResult> {
+  return _observeReviewSignalsWorkflow(input);
 }

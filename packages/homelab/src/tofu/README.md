@@ -89,7 +89,9 @@ public visibility, auto-delete branches on merge, auto-merge enabled. The `monor
 the PR title and its body from the list of squashed commits.
 
 The `monorepo` default-branch ruleset (`rulesets.tf`) enforces linear history, blocks deletion and
-non-fast-forward pushes, and requires the BuildKite CI-complete and Greptile review status checks.
+non-fast-forward pushes, and requires the `ci/merge-conflict` and aggregate `buildkite/monorepo/pr`
+status checks. (The code-review gate — provider-neutral, Codex by default — feeds the aggregate
+`buildkite/monorepo/pr` status rather than being its own required check.)
 
 ### SeaweedFS
 

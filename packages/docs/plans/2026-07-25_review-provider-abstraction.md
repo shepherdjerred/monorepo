@@ -95,10 +95,22 @@ gate timeout.
 
 ## Remaining
 
-- [ ] Observability: `observe-review-signals` collector activity + workflow + `SCHEDULES` entry, `review_*` metrics, S3 `review-signals/` prefix, `scripts/probe-review-signal.ts`, Grafana panels
-- [ ] Codex steering (`## Code Review Rules` in root `AGENTS.md`) + docs fixes (`temporal/AGENTS.md`, stale `homelab/src/tofu/README.md`)
-- [ ] Gate dry-run against a live Codex PR (both `REVIEW_PROVIDER` values); confirm 👍-reaction clean path with the probe
-- [ ] `bun run verify -- --affected` green; open draft PR; attach gate + dashboard screenshots
+Done in this PR: package + gate + pipeline + pr-babysit; observability
+(`observe-review-signals` collector + workflow + `review-signals-collect`
+schedule, `review_*` metrics, NDJSON → existing `llm-archive` S3 bucket under
+`review-signals/`, `scripts/probe-review-signal.ts`); Codex `## Code Review
+Rules` + docs fixes. Probe run live against #1645/#1638 (validated
+review-at-head + transient-wait paths; fixed a stale-review negative-latency bug).
+
+- [ ] **Deferred follow-up:** Grafana dashboard panels (latency p50/p95,
+      findings×severity, clean-via-reaction rate, stale-reaction rate, gate
+      timeout) + real-time webhook capture in `event-bridge/github-webhook.ts`.
+      Both need a live deploy to validate; the gate's structured `review-gate`
+      logs already stream the same signal to Loki now.
+- [ ] **Post-deploy verification:** confirm `review_*` metrics populate on
+      `:9465`, NDJSON lands in `llm-archive/review-signals/`, and capture one
+      **clean** Codex PR with the probe to confirm the 👍-reaction location/behavior.
+- [ ] Open draft PR; promote to ready after CI is green.
 
 ## Caveats
 
