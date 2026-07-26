@@ -7,6 +7,7 @@ import {
   sendNotification,
   startEligibleVacuums,
   verifyState,
+  verifyStartedVacuums,
 } from "./util.ts";
 import { PRESENCE_COOLDOWN_SECONDS } from "#shared/presence.ts";
 
@@ -51,16 +52,12 @@ export async function leavingHome(): Promise<void> {
     });
   }
 
-  const started = await startEligibleVacuums();
+  const { started } = await startEligibleVacuums();
   // Verify concurrently so the fleet's sleep budget stays ~one unit's worth
   // rather than summing sequentially across all floors.
-  await Promise.all(
-    started.map((vacuum) =>
-      verifyState(
-        vacuum,
-        (state) => state === "cleaning" || state === "returning",
-        { delaySeconds: 5 * 60, retries: 3, retryDelaySeconds: 60 },
-      ),
-    ),
-  );
+  await verifyStartedVacuums(started, {
+    delaySeconds: 5 * 60,
+    retries: 3,
+    retryDelaySeconds: 60,
+  });
 }

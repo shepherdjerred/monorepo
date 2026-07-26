@@ -13,9 +13,10 @@ type PrometheusRule = NonNullable<PrometheusRuleSpecGroups["rules"]>[number];
 //
 // Each entry lists the skip `reason`s that are normal operation for that
 // workflow; the alert counts only skips whose reason is NOT benign, so it fires
-// only when the gate is stuck for an anomalous reason (e.g. an `unavailable`
-// vacuum state). A genuinely stuck presence sensor surfaces via HA
-// entity-availability alerts, not here.
+// only when a workflow records an anomalous skip reason. The vacuum workflow
+// fails outright for unavailable or unexpected unit states, which is covered by
+// Temporal workflow-failure alerts. A genuinely stuck presence sensor surfaces
+// via HA entity-availability alerts, not here.
 const CHECK_AND_SKIP_WORKFLOWS: {
   workflow: string;
   benignSkipReasons: string[];

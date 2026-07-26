@@ -1,10 +1,11 @@
+import { ApplicationFailure } from "@temporalio/workflow";
 import {
   everyoneAway,
   sendNotification,
   setOutcome,
   startEligibleVacuums,
   VACUUMS,
-  verifyState,
+  verifyStartedVacuums,
 } from "./util.ts";
 
 export async function runVacuumIfNotHome(): Promise<void> {
@@ -14,12 +15,18 @@ export async function runVacuumIfNotHome(): Promise<void> {
     return;
   }
 
-  const started = await startEligibleVacuums();
+  const { active, started } = await startEligibleVacuums();
 
   if (started.length === 0) {
-    // Nothing to start — every unit is already cleaning/returning. This is a
-    // benign gate skip: the "all-units-active" reason is allow-listed for this
-    // workflow in the monitoring rules (temporal.ts) so it never pages.
+    if (active.length !== VACUUMS.length) {
+      throw ApplicationFailure.nonRetryable(
+        `Vacuum fleet classification is incomplete: ${String(active.length)} of ${String(VACUUMS.length)} units are active`,
+        "VacuumFleetClassificationError",
+      );
+    }
+    // startEligibleVacuums fails on anomalous states, so reaching this branch
+    // proves every unit is already cleaning/returning. This benign reason is
+    // allow-listed for this workflow in the monitoring rules (temporal.ts).
     console.warn("All vacuums already active, skipping");
     await setOutcome("skipped", "all-units-active");
     return;
@@ -34,14 +41,10 @@ export async function runVacuumIfNotHome(): Promise<void> {
   // sleep) would exceed the schedules' 15-minute workflowExecutionTimeout and
   // break register-schedules.test.ts (WORKFLOW_MAX_SLEEP_MS = 7m); running them
   // in parallel keeps the total sleep budget at ~one unit's worth (~6 min).
-  await Promise.all(
-    started.map((vacuum) =>
-      verifyState(
-        vacuum,
-        (state) => state === "cleaning" || state === "returning",
-        { delaySeconds: 3 * 60, retries: 3, retryDelaySeconds: 60 },
-      ),
-    ),
-  );
+  await verifyStartedVacuums(started, {
+    delaySeconds: 3 * 60,
+    retries: 3,
+    retryDelaySeconds: 60,
+  });
   await setOutcome("executed", "started");
 }

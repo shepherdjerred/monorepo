@@ -1,4 +1,5 @@
 import {
+  ApplicationFailure,
   proxyActivities,
   sleep,
   upsertMemo,
@@ -148,6 +149,8 @@ export const VACUUM_START_STATES = new Set([
   "paused",
 ]);
 
+export const VACUUM_ACTIVE_STATES = new Set(["cleaning", "returning"]);
+
 export const VACUUM_STOP_STATES = new Set(["cleaning", "paused", "idle"]);
 
 export function shouldStartVacuum(state: string): boolean {
@@ -159,21 +162,47 @@ export function shouldStopVacuum(state: string): boolean {
 }
 
 /**
- * Starts every fleet unit currently eligible to start (idle/docked/charging/
- * paused); a unit already cleaning or returning is left as-is. Returns the entity
- * IDs actually commanded to start. Shared by `runVacuumIfNotHome` and `leavingHome`
- * so the fleet-start loop lives in exactly one place.
+ * Inspects the entire fleet before applying side effects, then starts every unit
+ * currently eligible to start (idle/docked/charging/paused). A unit already
+ * cleaning or returning is left as-is. Any other state is anomalous and fails the
+ * workflow before a start command is sent, so an errored or missing unit can never
+ * be misreported as an all-units-active skip.
  */
-export async function startEligibleVacuums(): Promise<string[]> {
-  const started: string[] = [];
+export async function startEligibleVacuums(): Promise<{
+  active: string[];
+  started: string[];
+}> {
+  const active: string[] = [];
+  const startable: string[] = [];
+  const anomalous: { entityId: string; state: string }[] = [];
+
   for (const vacuum of VACUUMS) {
     const state = await getEntityStateUnchecked(vacuum);
     if (shouldStartVacuum(state.state)) {
-      await callServiceUnchecked("vacuum", "start", { entity_id: vacuum });
-      started.push(vacuum);
+      startable.push(vacuum);
+    } else if (VACUUM_ACTIVE_STATES.has(state.state)) {
+      active.push(vacuum);
+    } else {
+      anomalous.push({ entityId: vacuum, state: state.state });
     }
   }
-  return started;
+
+  if (anomalous.length > 0) {
+    const details = anomalous
+      .map(({ entityId, state }) => `${entityId}=${state}`)
+      .join(", ");
+    throw ApplicationFailure.nonRetryable(
+      `Vacuum fleet has anomalous states: ${details}`,
+      "VacuumFleetStateError",
+    );
+  }
+
+  const started: string[] = [];
+  for (const vacuum of startable) {
+    await callServiceUnchecked("vacuum", "start", { entity_id: vacuum });
+    started.push(vacuum);
+  }
+  return { active, started };
 }
 
 /**
@@ -199,6 +228,31 @@ export async function verifyState(
   }
   console.warn(`Verify failed: ${entityId} did not reach expected state`);
   return false;
+}
+
+export async function verifyStartedVacuums(
+  vacuums: readonly string[],
+  options: { delaySeconds: number; retries: number; retryDelaySeconds: number },
+): Promise<void> {
+  const results = await Promise.all(
+    vacuums.map(async (vacuum) => ({
+      vacuum,
+      verified: await verifyState(
+        vacuum,
+        (state) => VACUUM_ACTIVE_STATES.has(state),
+        options,
+      ),
+    })),
+  );
+  const failed = results
+    .filter(({ verified }) => !verified)
+    .map(({ vacuum }) => vacuum);
+  if (failed.length > 0) {
+    throw ApplicationFailure.nonRetryable(
+      `Vacuum start verification failed: ${failed.join(", ")} did not become active`,
+      "VacuumStartVerificationError",
+    );
+  }
 }
 
 export function matchExact(expected: string): (state: string) => boolean {

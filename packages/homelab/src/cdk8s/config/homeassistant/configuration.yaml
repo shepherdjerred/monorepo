@@ -277,35 +277,35 @@ template:
   # sensors carry no numeric Prometheus metric, so HA's exporter can't alert on
   # them directly; these device_class:problem template binary_sensors collapse the
   # enums to a boolean that exports as homeassistant_binary_sensor_state and is
-  # alerted on by the homeassistant-roborock PrometheusRule group. `states()` of a
-  # missing/unknown entity returns 'unknown', which the guards below treat as
-  # not-a-problem, so a bad id or an HA restart yields `off`, never a false page.
+  # alerted on by the homeassistant-roborock PrometheusRule group. Every expected
+  # dependency treats unknown/unavailable as a problem, so an entity-registry
+  # rename or a missing integration cannot silently disable the per-floor alert.
   # Enum values verified live from the Roborock integration's options list.
   - binary_sensor:
       - name: "1st Floor Vacuum Problem"
         unique_id: floor_1_vacuum_problem
         device_class: problem
         state: >
-          {{ "{{" }} states('vacuum.1st_floor') == 'error'
-             or states('sensor.1st_floor_status') in ['error', 'charging_problem']
-             or states('sensor.1st_floor_vacuum_error') not in ['none', 'unknown', 'unavailable', 'low_battery', 'robot_on_carpet']
-             or states('sensor.1st_floor_dock_dock_error') not in ['ok', 'unknown', 'unavailable'] {{ "}}" }}
+          {{ "{{" }} states('vacuum.1st_floor') in ['error', 'unknown', 'unavailable']
+             or states('sensor.1st_floor_status') in ['error', 'charging_problem', 'unknown', 'unavailable']
+             or states('sensor.1st_floor_vacuum_error') not in ['none', 'low_battery', 'robot_on_carpet']
+             or states('sensor.1st_floor_dock_dock_error') != 'ok' {{ "}}" }}
       - name: "2nd Floor Vacuum Problem"
         unique_id: floor_2_vacuum_problem
         device_class: problem
         state: >
-          {{ "{{" }} states('vacuum.2nd_floor') == 'error'
-             or states('sensor.2nd_floor_status') in ['error', 'charging_problem']
-             or states('sensor.2nd_floor_vacuum_error') not in ['none', 'unknown', 'unavailable', 'low_battery', 'robot_on_carpet']
-             or states('sensor.2nd_floor_dock_dock_error') not in ['ok', 'unknown', 'unavailable'] {{ "}}" }}
+          {{ "{{" }} states('vacuum.2nd_floor') in ['error', 'unknown', 'unavailable']
+             or states('sensor.2nd_floor_status') in ['error', 'charging_problem', 'unknown', 'unavailable']
+             or states('sensor.2nd_floor_vacuum_error') not in ['none', 'low_battery', 'robot_on_carpet']
+             or states('sensor.2nd_floor_dock_dock_error') != 'ok' {{ "}}" }}
       - name: "3rd Floor Vacuum Problem"
         unique_id: floor_3_vacuum_problem
         device_class: problem
         state: >
-          {{ "{{" }} states('vacuum.3rd_floor') == 'error'
-             or states('sensor.3rd_floor_status') in ['error', 'charging_problem']
-             or states('sensor.3rd_floor_vacuum_error') not in ['none', 'unknown', 'unavailable', 'low_battery', 'robot_on_carpet']
-             or states('sensor.3rd_floor_dock_dock_error') not in ['ok', 'unknown', 'unavailable'] {{ "}}" }}
+          {{ "{{" }} states('vacuum.3rd_floor') in ['error', 'unknown', 'unavailable']
+             or states('sensor.3rd_floor_status') in ['error', 'charging_problem', 'unknown', 'unavailable']
+             or states('sensor.3rd_floor_vacuum_error') not in ['none', 'low_battery', 'robot_on_carpet']
+             or states('sensor.3rd_floor_dock_dock_error') != 'ok' {{ "}}" }}
 
 prometheus:
   namespace: homeassistant

@@ -259,8 +259,8 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
         }),
         // Battery low AND not charging. Self-join on the same battery series: a
         // cross-entity join to the *_charging binary_sensor never matches (the
-        // `entity` label value differs), so we mirror the retired Roomba rule and
-        // require the battery to be non-increasing over 30m instead.
+        // `entity` label value differs), so use gauge-safe delta() to require the
+        // battery to be non-increasing over 30m.
         {
           alert: "RoborockBatteryLowNotCharging",
           annotations: {
@@ -270,7 +270,7 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
             summary: "Roborock battery low and not charging",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'homeassistant_sensor_battery_percent{entity=~"sensor[.](1st|2nd|3rd)_floor_battery"} < 20 and increase(homeassistant_sensor_battery_percent{entity=~"sensor[.](1st|2nd|3rd)_floor_battery"}[30m]) <= 0',
+            'homeassistant_sensor_battery_percent{entity=~"sensor[.](1st|2nd|3rd)_floor_battery"} < 20 and delta(homeassistant_sensor_battery_percent{entity=~"sensor[.](1st|2nd|3rd)_floor_battery"}[30m]) <= 0',
           ),
           for: "10m",
           labels: { severity: "warning" },

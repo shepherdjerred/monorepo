@@ -111,6 +111,13 @@ take effect only after the config reload.
   (3rd_floor already correct). Verified: all alert-referenced IDs resolve; old IDs
   gone; friendly names intact; the `sensor.office_energy/_power` energy monitor
   (different integration) untouched.
+- **Codex review remediation:** fleet state inspection now distinguishes active,
+  startable, and anomalous units before sending commands; anomalous states and
+  failed post-start verification terminate the Temporal workflow instead of
+  recording a benign/executed outcome. Expected HA entities now report
+  `unknown`/`unavailable` as a problem, and the low-battery rule uses
+  gauge-safe `delta()` rather than counter-only `increase()`. Added focused
+  Temporal workflow and Home Assistant rule/config regression tests.
 
 ### Remaining
 
