@@ -4,8 +4,8 @@ import {
   type AgentTaskInput,
 } from "#shared/agent-task.ts";
 
-const DEFAULT_CLAUDE_MODEL = "claude-opus-4-8";
-const DEFAULT_CODEX_MODEL = "gpt-5.5";
+const DEFAULT_CLAUDE_MODEL = "claude-opus-5";
+const DEFAULT_CODEX_MODEL = "gpt-5.6-sol";
 const DEFAULT_MAX_TURNS = 80;
 const CLAUDE_ALLOWED_TOOLS = "Bash,Read,Grep,Glob,WebFetch";
 

@@ -43,7 +43,7 @@ function loadCoreConfig() {
     },
     openai: {
       apiKey: Bun.env["OPENAI_API_KEY"] ?? "",
-      model: Bun.env["OPENAI_MODEL"] ?? "gpt-5.5",
+      model: Bun.env["OPENAI_MODEL"] ?? "gpt-5.6-sol",
       classifierModel: Bun.env["OPENAI_CLASSIFIER_MODEL"] ?? "gpt-5.4-nano",
       reasoningEffort: Bun.env["OPENAI_REASONING_EFFORT"] ?? "medium",
       textVerbosity: Bun.env["OPENAI_TEXT_VERBOSITY"] ?? "low",

@@ -409,7 +409,7 @@ Format the response in HTML for email.`;
 
     try {
       const params = {
-        model: "gpt-5.5",
+        model: "gpt-5.6-sol",
         messages: [{ role: "user" as const, content: prompt }],
         max_completion_tokens: 8000,
       };

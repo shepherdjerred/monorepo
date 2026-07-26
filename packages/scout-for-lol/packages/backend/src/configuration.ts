@@ -100,7 +100,7 @@ function computeConfiguration() {
       .default("512MB")
       .asString(),
     openaiApiKey: getOptionalEnvVar("OPENAI_API_KEY"),
-    reportAiModel: getOptionalEnvVar("REPORT_AI_MODEL", "openai/gpt-5.5"),
+    reportAiModel: getOptionalEnvVar("REPORT_AI_MODEL", "openai/gpt-5.6-sol"),
     geminiApiKey: getOptionalEnvVar("GEMINI_API_KEY"),
     openaiHourlyTokenBudget: env
       .get("OPENAI_HOURLY_TOKEN_BUDGET")

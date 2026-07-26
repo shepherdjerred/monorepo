@@ -130,7 +130,7 @@ export function createBirmelDeployment(chart: Chart) {
           ),
           key: "OPENAI_API_KEY",
         }),
-        OPENAI_MODEL: EnvValue.fromValue("gpt-5.5"),
+        OPENAI_MODEL: EnvValue.fromValue("gpt-5.6-sol"),
         OPENAI_CLASSIFIER_MODEL: EnvValue.fromValue("gpt-5.4-nano"),
         OPENAI_REASONING_EFFORT: EnvValue.fromValue("medium"),
         OPENAI_TEXT_VERBOSITY: EnvValue.fromValue("low"),

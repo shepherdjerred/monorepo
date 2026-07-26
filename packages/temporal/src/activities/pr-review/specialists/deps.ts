@@ -21,7 +21,7 @@ import {
   type SpecialistRunResult,
 } from "./runner.ts";
 
-export const DEPS_MODEL = "claude-sonnet-4-6";
+export const DEPS_MODEL = "claude-sonnet-5";
 export const DEPS_EFFORT = "medium" as const;
 export const DEPS_MAX_TOKENS = 16_000;
 const MAX_FILES_IN_PROMPT = 200;

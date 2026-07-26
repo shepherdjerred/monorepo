@@ -40,7 +40,7 @@ export function getConfig(): Config {
       apply: { type: "boolean", default: false },
       limit: { type: "string", default: "0" },
       "batch-size": { type: "string", default: "25" },
-      model: { type: "string", default: "claude-sonnet-4-6" },
+      model: { type: "string", default: "claude-sonnet-5" },
       "skip-amazon": { type: "boolean", default: false },
       "amazon-years": { type: "string" },
       "force-scrape": { type: "boolean", default: false },

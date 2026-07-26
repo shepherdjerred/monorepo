@@ -95,7 +95,7 @@ MODEL_CONTEXT_LIMITS = {
 
 MODE_CONFIGS = {
     "test": _mode_config("gpt-5.4-nano", 0.3),
-    "prod": _mode_config("gpt-5.5", 1.0),
+    "prod": _mode_config("gpt-5.6-sol", 1.0),
 }
 
 # Fallback per-token prices for DEFAULT_MODEL (overridable via CLI flags).
@@ -403,7 +403,7 @@ def main() -> None:
         "--mode",
         choices=["test", "prod"],
         default="test",
-        help="Mode: 'test' uses gpt-5.4-nano (cheap), 'prod' uses gpt-5.4 (better)",
+        help="Mode: 'test' uses gpt-5.4-nano (cheap), 'prod' uses gpt-5.6-sol (better)",
     )
     parser.add_argument(
         "--model", default=None, help="OpenAI model name (overrides --mode default)"

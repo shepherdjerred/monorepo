@@ -92,7 +92,7 @@ Requires `.env` with Discord and AI API keys. Key variables:
 - `OTLP_ENDPOINT` — OpenTelemetry trace endpoint
   (`http://tempo.tempo.svc.cluster.local:4318` in production).
 - `EDITOR_ENABLED` / `EDITOR_GITHUB_*` — see `src/editor/`.
-- `OPENAI_MODEL` defaults to `gpt-5.5`; classifier/style models stay on
+- `OPENAI_MODEL` defaults to `gpt-5.6-sol`; classifier/style models stay on
   nano-class defaults unless explicitly configured.
 - `BROWSER_PROVIDER` defaults to `pinchtab`; set `PINCHTAB_BASE_URL`,
   `PINCHTAB_TOKEN`, and `PINCHTAB_PROFILE` for real browser automation.

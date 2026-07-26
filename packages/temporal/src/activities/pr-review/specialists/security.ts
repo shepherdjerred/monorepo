@@ -21,7 +21,7 @@ import {
   type SpecialistRunResult,
 } from "./runner.ts";
 
-export const SECURITY_MODEL = "claude-opus-4-8";
+export const SECURITY_MODEL = "claude-opus-5";
 export const SECURITY_EFFORT = "high" as const;
 export const SECURITY_MAX_TOKENS = 16_000;
 const MAX_FILES_IN_PROMPT = 150;

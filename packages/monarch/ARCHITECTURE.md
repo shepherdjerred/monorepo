@@ -216,7 +216,7 @@ All caches live in `~/.monarch-cache/`:
 
 All Claude calls go through `callClaude()` in `src/lib/classifier/claude.ts`:
 
-- Model: `claude-sonnet-4-20250514` (configurable via `--model`)
+- Model: `claude-sonnet-5` (configurable via `--model`)
 - Max tokens: 16,384
 - API retries: 5 attempts with jittered exponential backoff (429, 529, 5xx)
 - Parse retries: 2 attempts for JSON/Zod validation failures

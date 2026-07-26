@@ -109,7 +109,7 @@ async function setupPhase(): Promise<void> {
       threadId: "thread-1",
       userId: "user-1",
       label: "docker e2e",
-      model: "gpt-5.5",
+      model: "gpt-5.6-sol",
       reasoningEffort: "medium",
       textVerbosity: "low",
     }),
@@ -171,7 +171,7 @@ async function setupPhase(): Promise<void> {
     description: "persistent restart job",
     maxAttempts: 2,
     timeoutMs: 30_000,
-    model: "gpt-5.5",
+    model: "gpt-5.6-sol",
     reasoningEffort: "medium",
     textVerbosity: "low",
   });
