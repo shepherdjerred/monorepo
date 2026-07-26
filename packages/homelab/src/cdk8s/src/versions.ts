@@ -87,7 +87,7 @@ const versions = {
   // Books patch, then version commit-back replaces this seed after the first
   // push. Switch the Deployment only after the real digest resolves publicly.
   "shepherdjerred/bindery":
-    "2.0.0-6322@sha256:5238caa9d9f5d56f554421a69d2fd3ba831347ab9c84ecb8f5c7c6b647323446",
+    "2.0.0-6333@sha256:e91ffc26c4a119eb2f7ec1d3136124ed4556dfdd9444499c359b637314c616f2",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   // Calibre-Web Automated — library + ingest + Send-to-Kindle path
   "crocodilestick/calibre-web-automated":
