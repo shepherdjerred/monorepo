@@ -1,6 +1,6 @@
 // Bun Snapshot v1, https://bun.sh/docs/test/snapshots
 
-exports[`square — solo victory with commentary 1`] = `"fef4896460c083e2b49ed22e50a757d0f0ee10b297405b5b93fcab66c6bae16d"`;
+exports[`square — solo victory with public champion name 1`] = `"3744a0ff55e5c489e6fa4fe79beb02d62f5508556215301462e4791daf4fb24d"`;
 
 exports[`square — solo defeat without commentary 1`] = `"6ac2f2c77fcd1c6fd07f4395f9a137c1acc56806805d3402e76342964616b7c3"`;
 

@@ -23,6 +23,9 @@ resolved all four:
   rendered SVG assets.
 - Backend startup validates champion splash art alongside portraits and loading
   art in both champion-name resolution passes.
+- Ranked report labels convert Data Dragon asset keys to public champion names.
+- `packages/scout-for-lol/CLAUDE.md` documents the ranked routing, canvas sizes,
+  design override, and splash preload/refresh/validation workflow.
 
 The layout changes use Satori/Yoga-compatible flex containers. Boundary fixtures
 for six and ten tracked players were rendered and visually inspected.
@@ -38,8 +41,11 @@ for six and ten tracked players were rendered and visually inspected.
   passed)
 - `bunx turbo run typecheck lint test --filter=@scout-for-lol/data` (466
   passed)
-- `bunx turbo run typecheck lint --filter=@scout-for-lol/backend`
+- `bunx turbo run typecheck lint test --filter=@scout-for-lol/backend` (1,138
+  passed)
 - Direct invocation of `validateChampionAssets()` (344 champion entries)
+- Visual inspection of `MonkeyKing` fixtures rendering as public `Wukong`
+  labels in both ranked designs
 
 ## Session Log — 2026-07-25
 
@@ -55,15 +61,17 @@ for six and ten tracked players were rendered and visually inspected.
 - Added both ranked render suites to the Data Dragon snapshot refresh list.
 - Added splash-art checks to backend startup validation and covered override
   names plus the missing-asset error path.
+- Addressed the hosted Codex follow-up by rendering public champion names in all
+  ranked text labels and documenting the ranked renderer integration points.
 
 ### Remaining
 
-- No implementation work remains from the four Codex findings.
+- No implementation work remains from the local or hosted Codex findings.
 - Buildkite and hosted Codex review will evaluate the pushed head asynchronously.
 
 ### Caveats
 
 - `packages/scout-for-lol/packages/backend/src/testing/template.db` was already
-  modified in the worktree and was intentionally left unstaged and untouched.
+  modified in the worktree and was intentionally left unstaged.
 - The Greptile credit failure is not a code finding and was not treated as a
   blocker.

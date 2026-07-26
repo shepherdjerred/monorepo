@@ -1,4 +1,8 @@
-import { divisionToString, leaguePointsDelta } from "@scout-for-lol/data";
+import {
+  championNameToDisplayName,
+  divisionToString,
+  leaguePointsDelta,
+} from "@scout-for-lol/data";
 import type { CompletedMatch } from "@scout-for-lol/data";
 import { palette } from "#src/assets/colors.ts";
 import { font } from "#src/assets/index.ts";
@@ -90,7 +94,9 @@ function HeroCard({
           }}
         >
           <span style={{ color: palette.gold[4], display: "flex" }}>△</span>
-          <span style={{ display: "flex" }}>{championName}</span>
+          <span style={{ display: "flex" }}>
+            {championNameToDisplayName(championName)}
+          </span>
           <span style={{ display: "flex" }}>·</span>
           <span style={{ display: "flex" }}>
             {teamLabel} {isWin ? "Win" : "Loss"}

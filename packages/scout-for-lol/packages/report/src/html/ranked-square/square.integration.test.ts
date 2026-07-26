@@ -20,13 +20,18 @@ async function writeOutputs(name: string, svg: string, png: Uint8Array) {
   await Bun.write(new URL(`__snapshots__/${name}.png`, import.meta.url), png);
 }
 
-test("square — solo victory with commentary", async () => {
+test("square — solo victory with public champion name", async () => {
   const match = rankedFixture({
     queueType: "solo",
     trackedCount: 1,
     outcome: "Victory",
-    commentary: "Warwick ate the deaths so the carries could feast.",
+    commentary: "Wukong made space so the carries could feast.",
   });
+  const hero = match.players[0];
+  if (hero === undefined) {
+    throw new Error("Missing expected square hero fixture");
+  }
+  hero.champion.championName = "MonkeyKing";
   const svg = await matchToSvg(match, { designOverride: "square" });
   const png = await svgToPng(svg);
   await writeOutputs("square_solo_victory_commentary", svg, png);

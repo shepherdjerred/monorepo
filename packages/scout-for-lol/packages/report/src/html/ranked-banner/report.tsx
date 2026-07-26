@@ -1,5 +1,8 @@
 import { sumBy } from "remeda";
-import type { CompletedMatch } from "@scout-for-lol/data";
+import {
+  championNameToDisplayName,
+  type CompletedMatch,
+} from "@scout-for-lol/data";
 import { palette } from "#src/assets/colors.ts";
 import { font } from "#src/assets/index.ts";
 import { Splash } from "#src/html/shared/splash.tsx";
@@ -211,7 +214,7 @@ export function RankedBannerReport({ match }: { match: CompletedMatch }) {
                   display: "flex",
                 }}
               >
-                {heroChampion.championName}
+                {championNameToDisplayName(heroChampion.championName)}
               </span>
               <span
                 style={{

@@ -44,12 +44,17 @@ test("banner — solo defeat (ranked flex)", async () => {
   expect(hashSvg(svg)).toMatchSnapshot();
 });
 
-test("banner — 3-player squad", async () => {
+test("banner — 3-player squad with public champion name", async () => {
   const match = rankedFixture({
     queueType: "solo",
     trackedCount: 3,
     outcome: "Victory",
   });
+  const hero = match.players[1];
+  if (hero === undefined) {
+    throw new Error("Missing expected banner hero fixture");
+  }
+  hero.champion.championName = "MonkeyKing";
   const svg = await matchToSvg(match, { designOverride: "banner" });
   const png = await svgToPng(svg);
   await writeOutputs("banner_squad_3", svg, png);

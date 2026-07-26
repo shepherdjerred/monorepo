@@ -7,7 +7,10 @@ import {
   gradeFromKda,
   type Grade,
 } from "#src/html/shared/grade.ts";
-import type { CompletedMatch } from "@scout-for-lol/data";
+import {
+  championNameToDisplayName,
+  type CompletedMatch,
+} from "@scout-for-lol/data";
 
 export function SquadRow({
   player,
@@ -109,7 +112,7 @@ export function SquadRow({
             display: "flex",
           }}
         >
-          {championName} · {won ? "W" : "L"}
+          {championNameToDisplayName(championName)} · {won ? "W" : "L"}
         </span>
       </div>
       <span
