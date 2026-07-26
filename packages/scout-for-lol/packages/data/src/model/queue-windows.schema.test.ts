@@ -4,10 +4,7 @@ import {
   QueueWindowsArraySchema,
   QueueWindowsFileSchema,
 } from "#src/model/queue-windows.schema.ts";
-import {
-  QUEUE_AVAILABILITY,
-  type QueueAvailability,
-} from "#src/model/queue-availability.ts";
+import { QUEUE_AVAILABILITY } from "#src/model/queue-availability.ts";
 import { QueueTypeSchema } from "#src/model/state.ts";
 
 describe("QueueWindowsFileSchema", () => {
@@ -78,84 +75,38 @@ describe("QueueWindowsFileSchema", () => {
   });
 });
 
-// Equivalence guard: the JSON-backed loader must reproduce exactly the window
-// literals that lived inline in queue-availability.ts before the JSON split.
-describe("QUEUE_AVAILABILITY equivalence with pre-split literals", () => {
-  function limited(
-    windows: [start: string, end: string | null][],
-  ): QueueAvailability {
-    return {
-      kind: "limited",
-      windows: windows.map(([start, end]) => ({
-        start: new Date(start),
-        // Ends are inclusive through the whole (UTC) end day, matching the
-        // loader's semantics.
-        end: end === null ? null : new Date(`${end}T23:59:59.999Z`),
-      })),
-    };
-  }
+// Round-trip guard: the loader must reproduce queue-windows.json exactly —
+// day-start starts, end-of-day-inclusive ends — for every limited queue, and
+// every limited queue must have JSON data. (The watcher edits the JSON, so
+// this intentionally asserts loader↔JSON agreement, not a fixed snapshot.)
+describe("QUEUE_AVAILABILITY round-trips queue-windows.json", () => {
+  const file = QueueWindowsFileSchema.parse(queueWindowsJson);
 
-  const PERMANENT: QueueAvailability = { kind: "permanent" };
-  const DOOM_BOTS_2025 = limited([["2025-08-27", "2025-10-22"]]);
-
-  const expected: Record<string, QueueAvailability> = {
-    solo: PERMANENT,
-    flex: PERMANENT,
-    "ranked 5s": PERMANENT,
-    clash: PERMANENT,
-    "aram clash": PERMANENT,
-    aram: PERMANENT,
-    arurf: limited([
-      ["2021-02-03", "2021-03-03"],
-      ["2022-01-26", "2022-02-23"],
-      ["2023-01-11", "2023-02-08"],
-      ["2025-01-23", "2025-02-20"],
-      ["2025-07-30", "2025-08-27"],
-      ["2026-01-22", "2026-02-18"],
-    ]),
-    urf: limited([
-      ["2014-04-03", "2014-04-13"],
-      ["2019-10-28", "2019-11-08"],
-      ["2025-11-19", "2025-12-10"],
-    ]),
-    quickplay: PERMANENT,
-    swiftplay: PERMANENT,
-    arena: limited([
-      ["2023-07-20", "2023-08-28"],
-      ["2023-12-07", "2024-01-08"],
-      ["2024-05-01", "2024-09-24"],
-      ["2025-03-01", "2025-05-14"],
-      ["2025-06-25", null],
-    ]),
-    brawl: limited([
-      ["2025-05-14", "2025-11-19"],
-      ["2026-03-04", "2026-04-28"],
-    ]),
-    "aram mayhem": limited([["2025-10-22", null]]),
-    "draft pick": PERMANENT,
-    "easy doom bots": DOOM_BOTS_2025,
-    "normal doom bots": DOOM_BOTS_2025,
-    "hard doom bots": DOOM_BOTS_2025,
-    custom: PERMANENT,
-  };
-
-  test("every queue matches the hardcoded expected availability", () => {
-    for (const [key, availability] of Object.entries(expected)) {
+  test("every limited queue matches its JSON windows with end-of-day ends", () => {
+    for (const [key, windows] of Object.entries(file.queues)) {
       const queue = QueueTypeSchema.parse(key);
-      const actual = QUEUE_AVAILABILITY[queue];
-      // Compare kind + window Date epoch values for a stable deep equality.
-      expect(actual.kind).toBe(availability.kind);
-      if (actual.kind === "limited" && availability.kind === "limited") {
-        expect(actual.windows.map((w) => w.start.getTime())).toEqual(
-          availability.windows.map((w) => w.start.getTime()),
-        );
-        expect(
-          actual.windows.map((w) => (w.end === null ? null : w.end.getTime())),
-        ).toEqual(
-          availability.windows.map((w) =>
-            w.end === null ? null : w.end.getTime(),
-          ),
-        );
+      const availability = QUEUE_AVAILABILITY[queue];
+      expect(availability.kind).toBe("limited");
+      if (availability.kind !== "limited") continue;
+      expect(availability.windows.map((w) => w.start.getTime())).toEqual(
+        windows.map((w) => new Date(w.start).getTime()),
+      );
+      expect(
+        availability.windows.map((w) =>
+          w.end === null ? null : w.end.getTime(),
+        ),
+      ).toEqual(
+        windows.map((w) =>
+          w.end === null ? null : new Date(`${w.end}T23:59:59.999Z`).getTime(),
+        ),
+      );
+    }
+  });
+
+  test("every limited queue in the availability record has JSON data", () => {
+    for (const queue of QueueTypeSchema.options) {
+      if (QUEUE_AVAILABILITY[queue].kind === "limited") {
+        expect(file.queues[queue]).toBeDefined();
       }
     }
   });
