@@ -171,6 +171,31 @@ overrides:
     },
   });
 
+  // Shared bun download cache for step pods. Replaces the ~1 GiB
+  // bun-cache-warm layer that was baked into ci-base (and re-pushed/re-pulled
+  // on every lockfile change): the cache now persists across builds on the CI
+  // node instead of living in the image. Bun's download cache is
+  // content-addressed and safe for concurrent installs (verified with
+  // concurrent cold-cache installs sharing one BUN_INSTALL_CACHE_DIR); this is
+  // the download cache, NOT the isolated-linker global store (whose parallel
+  // CI hazard — oven-sh/bun#12917 — is why bunfig's globalStore stays off).
+  // Disposable derived data, like the caches above — excluded from backups.
+  new KubePersistentVolumeClaim(chart, "buildkite-bun-cache-pvc", {
+    metadata: {
+      name: "buildkite-bun-cache",
+      namespace: "buildkite",
+      labels: {
+        "velero.io/backup": "disabled",
+        "velero.io/exclude-from-backup": "true",
+      },
+    },
+    spec: {
+      accessModes: ["ReadWriteMany"],
+      storageClassName: NVME_STORAGE_CLASS_LZ4,
+      resources: { requests: { storage: Quantity.fromString("30Gi") } },
+    },
+  });
+
   new Application(chart, "buildkite-app", {
     metadata: {
       name: "buildkite",
@@ -247,7 +272,33 @@ overrides:
                 tolerations: [CI_NODE_TOLERATION],
                 serviceAccountName: "buildkite-agent-stack-k8s-controller",
                 automountServiceAccountToken: true,
+                // Shared bun download cache (see the buildkite-bun-cache PVC
+                // above). Volume + mount + env are patched here so EVERY step
+                // pod gets them without touching each pipeline.yml pod anchor;
+                // strategic merge matches the step container by name
+                // (container-0) and merges env/volumeMounts by key.
+                volumes: [
+                  {
+                    name: "buildkite-bun-cache",
+                    persistentVolumeClaim: { claimName: "buildkite-bun-cache" },
+                  },
+                ],
                 containers: [
+                  {
+                    name: "container-0",
+                    env: [
+                      {
+                        name: "BUN_INSTALL_CACHE_DIR",
+                        value: "/buildkite/bun-cache",
+                      },
+                    ],
+                    volumeMounts: [
+                      {
+                        name: "buildkite-bun-cache",
+                        mountPath: "/buildkite/bun-cache",
+                      },
+                    ],
+                  },
                   {
                     name: "agent",
                     resources: {

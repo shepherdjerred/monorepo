@@ -5,10 +5,52 @@
 #
 # birmel's editor sub-agent shells out to `gh` (opens PRs) and `claude` (runs
 # edits); its music stack shells out through youtube-dl-exec (needs Node + Python
-# + a yt-dlp binary) and ffmpeg-static. This mirrors the old Dagger
-# withEditorClis + withBirmelMusicRuntime + installYtDlp path.
+# + a yt-dlp binary) and ffmpeg-static.
+#
+# Multi-stage: deps does a full (dev-inclusive) install to feed the in-image
+# prisma generate; prod-deps installs the production-only closure; runtime
+# COPYs the prod tree, the scoped source closure, and the generated Prisma
+# client — it never runs `bun install`. Dev dependencies and the rest of the
+# monorepo source never reach the final image, and the source layer only
+# invalidates when a closure package changes — not on every repo commit.
 FROM oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4 AS base
 WORKDIR /app
+
+# ── deps: full install (dev deps) — feeds the prisma generate below ─────────
+# `--frozen-lockfile` requires every workspace member's package.json present,
+# so the globs enumerate every member (top-level, nested packages/*/packages/*,
+# homelab/src/*, the desktop src-tauri crate, and the `scripts` dir).
+FROM base AS deps
+COPY --parents \
+  package.json bun.lock bunfig.toml patches/ scripts/package.json \
+  packages/*/package.json packages/*/packages/*/package.json \
+  packages/homelab/src/cdk8s/package.json \
+  packages/homelab/src/helm-types/package.json \
+  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
+  ./
+RUN bun install --frozen-lockfile --filter '@shepherdjerred/birmel'
+
+# ── build: generate the Prisma client (output is gitignored, produced here) ──
+FROM deps AS build
+COPY --parents \
+  tsconfig.base.json \
+  packages/birmel \
+  ./
+RUN cd packages/birmel && bun run generate
+
+# ── prod-deps: production-only node_modules, cached on manifests ────────────
+FROM base AS prod-deps
+COPY --parents \
+  package.json bun.lock bunfig.toml patches/ scripts/package.json \
+  packages/*/package.json packages/*/packages/*/package.json \
+  packages/homelab/src/cdk8s/package.json \
+  packages/homelab/src/helm-types/package.json \
+  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
+  ./
+RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/birmel'
+
+# ── runtime: CLIs + COPY-only app layers — no install, no build tooling ─────
+FROM base AS runtime
 
 # --- gh CLI + Claude Code CLI (editor sub-agent) ---
 # BUN_INSTALL=/usr/local drops `bun add -g` binaries into /usr/local/bin
@@ -35,28 +77,18 @@ RUN set -e; \
     rm -rf /var/lib/apt/lists/*; \
     node --version; python3 --version
 
-# --- Workspace install + prisma generate ---
-# Manifests-only install layer: install birmel and its workspace dependency
-# closure, rather than materializing every unrelated workspace package. This
-# layer only invalidates when a manifest/lockfile/patch changes.
-# `--frozen-lockfile` requires every workspace member's package.json present, so
-# the globs enumerate every member (top-level, nested packages/*/packages/*,
-# homelab/src/*, the desktop src-tauri crate, and the `scripts` dir).
-COPY --parents \
-  package.json bun.lock bunfig.toml patches/ scripts/package.json \
-  packages/*/package.json packages/*/packages/*/package.json \
-  packages/homelab/src/cdk8s/package.json \
-  packages/homelab/src/helm-types/package.json \
-  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
-  ./
-RUN bun install --frozen-lockfile --filter '@shepherdjerred/birmel'
+# Production node_modules + workspace manifests. The isolated-linker tree uses
+# relative symlinks (store at node_modules/.bun), so copying the whole install
+# root between same-rooted stages is safe. Kept BEFORE the source COPY so a
+# source edit doesn't re-push this layer.
+COPY --from=prod-deps /app/ /app/
 
 # youtube-dl-exec resolves its binary at node_modules/youtube-dl-exec/bin/yt-dlp,
 # but its own postinstall fetches that UNAUTHENTICATED from api.github.com and
 # flakes on shared runners. Provide it via the rate-limit-proof, SHA-verified
-# release-CDN download instead (mirrors the old installYtDlp for birmel).
-# Kept BEFORE the source COPY: the target dir exists right after the
-# install layer, and a source edit must not re-trigger this network fetch.
+# release-CDN download instead. Sequenced AFTER the prod-deps COPY (the target
+# dir must exist) and BEFORE the source COPY (a source edit must not re-trigger
+# this network fetch).
 RUN set -e; \
     arch="$(dpkg --print-architecture)"; \
     if [ "$arch" = "amd64" ]; then asset=yt-dlp_linux; \
@@ -72,14 +104,13 @@ RUN set -e; \
     rm -f "/tmp/$asset" /tmp/SHA2-256SUMS "/tmp/$asset.sha256"; \
     test -x /app/packages/birmel/node_modules/youtube-dl-exec/bin/yt-dlp
 
-# Now the sources. node_modules is excluded from context by .dockerignore, so
-# this does not clobber the installed tree.
-COPY . .
-
-# birmel's Prisma client is generated into the package (its `generate` script
-# runs `bunx --trust prisma generate`). Run it in-image so the client exists at
-# boot. Mirrors the old usePrisma entrypoint's generate step.
-RUN cd packages/birmel && bun run generate
+# Scoped source closure + the generated Prisma client from the build stage.
+COPY --parents \
+  tsconfig.base.json \
+  packages/birmel \
+  packages/llm-observability \
+  ./
+COPY --from=build /app/packages/birmel/generated packages/birmel/generated
 
 ARG VERSION=dev
 ARG GIT_SHA=unknown
@@ -95,9 +126,12 @@ LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorep
 WORKDIR /app/packages/birmel
 CMD ["bun", "src/index.ts"]
 
-FROM base AS smoke
+FROM runtime AS smoke
+# The smoke harness ships in CI context only — the scoped source COPY
+# excludes .buildkite, so stage it here (never in the pushed image stage).
+COPY .buildkite/scripts/smoke-app-in-image.ts /app/.buildkite/scripts/smoke-app-in-image.ts
 ARG SMOKE_TARGET=birmel
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 RUN bun /app/.buildkite/scripts/smoke-app-in-image.ts
 
-FROM base AS image
+FROM runtime AS image
