@@ -301,23 +301,24 @@ query($owner: String!, $name: String!, $oid: GitObjectID!) {
     object(oid: $oid) {
       ... on Commit {
         pushedDate
-        committedDate
       }
     }
   }
 }`;
 
 /**
- * The ISO time a commit became the PR head — the reference point for
- * review-latency and for binding a clean 👍 reaction to the current head.
+ * The ISO time a commit was PUSHED (GitHub's `Commit.pushedDate`) — the
+ * reference point for review-latency and for binding a clean 👍 reaction to the
+ * current head. Returns null when GitHub does not report a real push time.
  *
- * Uses the commit's GraphQL `pushedDate` (when GitHub actually received the
- * push) in preference to `committedDate`: the committer date is embedded in the
- * commit object and predates the push after a local delay, cherry-pick, or
- * rebase, which would corrupt latency and let a 👍 left on an older head bind
- * to a rebased commit. `committedDate` is the fallback for the (documented)
- * cases where GitHub leaves `pushedDate` null. Returns null only when the
- * commit itself cannot be read.
+ * We deliberately do NOT fall back to `committedDate`: the committer date is
+ * embedded in the commit and can predate the actual push (local delay,
+ * cherry-pick, rebase, or reusing an existing commit as the new head). Binding a
+ * 👍 to `committedDate` would let a stale reaction created between that embedded
+ * date and the real head-update satisfy the gate without a review of the new
+ * head. When the push time is unknown, callers treat the reaction as unbound
+ * (gate stays `reviewing`) and latency as null — correct-but-unmeasured beats a
+ * falsely-bound completion.
  */
 export async function fetchHeadPushedAt(input: {
   repo: string;
@@ -336,9 +337,7 @@ export async function fetchHeadPushedAt(input: {
   const repository = data === null ? null : recordField(data, "repository");
   const object = repository === null ? null : recordField(repository, "object");
   if (object === null) return null;
-  return (
-    stringField(object, "pushedDate") ?? stringField(object, "committedDate")
-  );
+  return stringField(object, "pushedDate");
 }
 
 /**
@@ -468,9 +467,14 @@ export async function resolveReviewState(input: {
       token,
       provider,
     });
+    // A skip is `reviewed` (nothing to review) but is NOT a check-run
+    // completion — no check-run ran for this head. Reporting `check-run` here
+    // would inflate the check-run completion metric and archive a false
+    // completion mechanism for every skip, corrupting provider comparisons. The
+    // completion signal stays `none`; `skipReason` carries the real reason.
     return {
       state: skipReason === null ? "reviewing" : "reviewed",
-      completionSignal: skipReason === null ? "none" : "check-run",
+      completionSignal: "none",
       reviewedCommit: null,
       reviewedAt: null,
       staleReaction: false,

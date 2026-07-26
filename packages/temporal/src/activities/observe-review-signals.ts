@@ -16,6 +16,7 @@ import {
   resolveReviewState,
 } from "@shepherdjerred/code-review/github";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
+import { requiredRunId } from "#activities/temporal-context.ts";
 import { putS3Object } from "#shared/s3.ts";
 import {
   summarizeReviewSignals,
@@ -141,12 +142,27 @@ async function buildSignalEvent(input: {
   const { provider, repo, prNumber, head, token } = input;
 
   // Head push time first — `resolveReviewState` needs it to bind a 👍 reaction
-  // to the current head, so it cannot share a Promise.all with that call.
+  // to the current head. Then resolve completion state, and fetch threads
+  // strictly AFTER (never concurrently): a concurrent thread query can capture
+  // the pre-review snapshot while the state query observes the completed review,
+  // archiving a "reviewed" event that undercounts the newly-created findings and
+  // unresolved threads. Sequential ordering keeps the archived observation
+  // internally consistent (same fix as the CI gate).
   const headPushedAt = await fetchHeadPushedAt({ repo, sha: head, token });
-  const [threadResult, state] = await Promise.all([
-    fetchReviewThreads({ repo, number: prNumber, token, provider }),
-    resolveReviewState({ provider, repo, head, prNumber, token, headPushedAt }),
-  ]);
+  const state = await resolveReviewState({
+    provider,
+    repo,
+    head,
+    prNumber,
+    token,
+    headPushedAt,
+  });
+  const threadResult = await fetchReviewThreads({
+    repo,
+    number: prNumber,
+    token,
+    provider,
+  });
 
   const providerThreads = threadResult.threads.filter(
     (thread) =>
@@ -334,13 +350,20 @@ async function observeAllPrs(input: {
   return { events, errored };
 }
 
-function buildArchiveKey(now: Date): string {
+/**
+ * Archive key for a collection run. The filename is a STABLE per-run id (the
+ * Temporal workflow run id) rather than a wall-clock timestamp, so if Temporal
+ * re-runs the activity (a lost completion ack, a retry) the archive overwrites
+ * the same object instead of writing a second, duplicate NDJSON file.
+ */
+function buildArchiveKey(now: Date, runId: string): string {
   const dateStr = now.toISOString().slice(0, 10);
-  return `review-signals/${dateStr}/${String(now.getTime())}.ndjson`;
+  return `review-signals/${dateStr}/${runId}.ndjson`;
 }
 
 async function runObserveReviewSignalsImpl(
   input: ObserveReviewSignalsInput,
+  runId: string,
 ): Promise<ObserveReviewSignalsResult> {
   const start = Date.now();
   const repo = input.repo ?? DEFAULT_REPO;
@@ -375,7 +398,7 @@ async function runObserveReviewSignalsImpl(
 
   const ndjson = events.map((event) => JSON.stringify(event)).join("\n");
   const now = new Date();
-  const key = buildArchiveKey(now);
+  const key = buildArchiveKey(now, runId);
   const s3Config = loadReviewSignalArchiveConfig();
   await putS3Object(
     {
@@ -396,7 +419,13 @@ async function runObserveReviewSignalsImpl(
   // effect of the run. Any failure that triggers an activity retry (token mint,
   // PR listing, the S3 upload above) happens before this point, so a retried
   // run cannot re-increment counters/histograms for observations it already
-  // recorded on a prior attempt.
+  // recorded on a prior attempt. NOTE: this does NOT cover Temporal's
+  // at-least-once completion window (upload + metrics succeed, the completion
+  // ack is lost, the activity re-runs) — a Prometheus counter increment is not
+  // idempotent. Fully deduping metric side effects across retries AND across the
+  // 6-hourly scheduled scans needs a persistent seen-set keyed by
+  // (provider, PR, head); tracked in
+  // packages/docs/todos/review-signal-cross-run-metric-dedup.md.
   for (const event of events) {
     recordEventMetrics(provider.id, event);
   }
@@ -436,7 +465,10 @@ export const observeReviewSignalsActivities = {
       });
     }, HEARTBEAT_INTERVAL_MS);
     try {
-      return await runObserveReviewSignalsImpl(input);
+      // The workflow run id is stable across activity retries within this
+      // scheduled run, so it keys the archive object idempotently.
+      const runId = requiredRunId(Context.current().info);
+      return await runObserveReviewSignalsImpl(input, runId);
     } finally {
       clearInterval(heartbeat);
     }

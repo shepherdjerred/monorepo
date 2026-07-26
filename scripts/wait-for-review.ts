@@ -95,13 +95,26 @@ function latencySeconds(
 
 /**
  * Whether a GitHub query error during the poll loop is worth retrying rather
- * than failing the gate. Transport failures (socket closed unexpectedly, DNS,
- * connection reset) and 5xx responses are transient — a single flaky poll must
- * not exit the gate non-zero. A 4xx (bad token, missing permission, malformed
- * request) will not recover by retrying, so it propagates immediately.
+ * than failing the gate. Only transport-level failures (socket closed
+ * unexpectedly, DNS, connection reset — no HTTP status in the message) and 5xx
+ * responses are transient; a single flaky poll must not exit the gate non-zero.
+ * Everything else is permanent and fails fast so the step doesn't hold an agent
+ * until the 20-minute deadline:
+ *  - a GraphQL application-error payload (HTTP 200 + `errors`, e.g. the token
+ *    can't read `reviewThreads` or the query is invalid) — `graphqlRequest`
+ *    throws "GitHub GraphQL returned errors: …", which is NOT a transport
+ *    failure;
+ *  - any 4xx (bad token, missing permission, malformed request).
  */
 function isRetryablePollError(error: Error): boolean {
-  return !/failed with 4\d\d/u.test(error.message);
+  const message = error.message;
+  if (message.includes("GraphQL returned errors")) return false;
+  const httpStatus = /request failed with (\d{3})/u.exec(message);
+  if (httpStatus !== null) {
+    const code = Number.parseInt(httpStatus[1] ?? "", 10);
+    return code >= 500 && code <= 599;
+  }
+  return true;
 }
 
 function buildSignalEvent(input: {
@@ -194,17 +207,6 @@ async function waitForReview(): Promise<void> {
     DEFAULT_INTERVAL_SECONDS,
   );
 
-  // Head-commit timestamp (for review-latency in the signal events). A failure
-  // here must not fail the gate — it is telemetry only.
-  let headPushedAt: string | null = null;
-  try {
-    headPushedAt = await fetchHeadPushedAt({ repo, sha: head, token });
-  } catch (error) {
-    console.warn(
-      `Could not read head commit timestamp for latency: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
-
   console.log(
     `Review gate: provider=${provider.id}, repo=${repo}, pr=#${String(number)}, head=${head}, ` +
       `timeout=${String(timeoutSeconds)}s, blockingPriority<=P${String(maxBlockingPriority)}.`,
@@ -216,7 +218,6 @@ async function waitForReview(): Promise<void> {
     number,
     head,
     token,
-    headPushedAt,
     maxBlockingPriority,
     timeoutSeconds,
     intervalSeconds,
@@ -229,7 +230,6 @@ type GateConfig = {
   number: number;
   head: string;
   token: string;
-  headPushedAt: string | null;
   maxBlockingPriority: number;
   timeoutSeconds: number;
   intervalSeconds: number;
@@ -238,6 +238,7 @@ type GateConfig = {
 /** Log one structured `review-signal` event for the current observation. */
 function emitSignal(input: {
   config: GateConfig;
+  headPushedAt: string | null;
   state: ReviewStateResult;
   threads: readonly ReviewThread[];
   startedAt: number;
@@ -251,7 +252,7 @@ function emitSignal(input: {
         provider: config.provider,
         pr: config.number,
         head: config.head,
-        headPushedAt: config.headPushedAt,
+        headPushedAt: input.headPushedAt,
         state: input.state,
         threads: input.threads,
         maxBlockingPriority: config.maxBlockingPriority,
@@ -262,6 +263,17 @@ function emitSignal(input: {
     ),
   );
 }
+
+/** A synthetic "nothing observed yet" review state for the terminal timeout
+ * event when every poll failed transiently and no snapshot was captured. */
+const UNOBSERVED_STATE: ReviewStateResult = {
+  state: "reviewing",
+  completionSignal: "none",
+  reviewedCommit: null,
+  reviewedAt: null,
+  staleReaction: false,
+  skipReason: null,
+};
 
 /**
  * Poll GitHub until the gate passes, fails, or the deadline is reached.
@@ -274,7 +286,6 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
     number,
     head,
     token,
-    headPushedAt,
     maxBlockingPriority,
     timeoutSeconds,
     intervalSeconds,
@@ -283,6 +294,12 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
   const startedAt = Date.now();
   const deadline = startedAt + timeoutSeconds * 1000;
   let warnedMismatch = false;
+  // The head push time is REQUIRED for the clean-review 👍 binding (not
+  // telemetry-only), so it is fetched INSIDE the retry loop: a transient failure
+  // on one poll must not permanently poison every later reaction as stale. Once
+  // resolved (a real push time, or a definitive null from GitHub) it is cached.
+  let headPushedAt: string | null = null;
+  let headPushedAtResolved = false;
   let lastState: ReviewStateResult | null = null;
   let lastThreads: readonly ReviewThread[] = [];
   let lastPollError: Error | null = null;
@@ -291,6 +308,10 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
     let stateResult: ReviewStateResult;
     let threadResult: { threads: ReviewThread[]; headRefOid: string | null };
     try {
+      if (!headPushedAtResolved) {
+        headPushedAt = await fetchHeadPushedAt({ repo, sha: head, token });
+        headPushedAtResolved = true;
+      }
       // Resolve completion FIRST, then fetch threads AFTER — never
       // concurrently. A concurrent thread query can be captured just before the
       // provider submits its review while the state query lands just after,
@@ -348,6 +369,7 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
 
     emitSignal({
       config,
+      headPushedAt,
       state: stateResult,
       threads: threadResult.threads,
       startedAt,
@@ -366,20 +388,20 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
     await Bun.sleep(intervalSeconds * 1000);
   }
 
-  // Deadline reached. Emit ONE terminal signal event with `timed_out: true`
-  // (using the most recent successful observation) so consumers can distinguish
-  // a genuine timeout from an ordinary waiting poll and the timeout
-  // observability records a terminal event — then throw.
-  if (lastState !== null) {
-    emitSignal({
-      config,
-      state: lastState,
-      threads: lastThreads,
-      startedAt,
-      timedOut: true,
-      decision: null,
-    });
-  }
+  // Deadline reached. Always emit ONE terminal signal event with
+  // `timed_out: true` so consumers can distinguish a genuine timeout from an
+  // ordinary waiting poll — even when every poll failed transiently and no
+  // snapshot was ever captured (a synthetic "unobserved" state; the underlying
+  // error is carried in the thrown message below).
+  emitSignal({
+    config,
+    headPushedAt,
+    state: lastState ?? UNOBSERVED_STATE,
+    threads: lastThreads,
+    startedAt,
+    timedOut: true,
+    decision: null,
+  });
 
   if (lastPollError !== null) {
     throw new Error(

@@ -27,6 +27,16 @@ Raised as a Codex P2 on PR #1657 (`register-schedules.ts:348`); deferred
 there (see [[pr-1657-review-gate-hardening]]) because a correct fix needs new
 persistent state, out of proportion for the Greptile→Codex cutover.
 
+A second Codex P2 on the same PR (`observe-review-signals.ts:339`, "make
+collector side effects idempotent across retries") is folded in here: Temporal's
+at-least-once completion means the activity can re-run after a successful
+upload + metric recording (a lost completion ack), re-incrementing every
+non-idempotent Prometheus counter. The **archive** side of that was already made
+idempotent on PR #1657 (the NDJSON object is now keyed by the stable workflow
+run id, so a retry overwrites rather than duplicates). The **metric** side needs
+the same persistent seen-set as the cross-run case — a key that has already been
+recorded is skipped — which is why both concerns share this todo.
+
 ## Why it's open
 
 - The intra-run double-count on activity retry was already fixed in PR #1657
@@ -48,7 +58,9 @@ persistent state, out of proportion for the Greptile→Codex cutover.
 - [ ] Record `review_*` metrics only for observations whose key is NOT already
       in the seen-set; still archive every observation to NDJSON regardless.
       Persist the updated seen-set as the final step (mirror the "record metrics
-      after upload succeeds" ordering so a retry cannot double-persist).
+      after upload succeeds" ordering so a retry cannot double-persist). This
+      same seen-set closes the Temporal at-least-once retry double-count
+      (`observe-review-signals.ts:339`), not just the cross-scan case.
 - [ ] Handle a seen-set read failure conservatively (fail the run so Temporal
       retries, rather than silently reverting to counting everything).
 - [ ] Extend `src/shared/review-signals.test.ts` (or a new test) to cover the

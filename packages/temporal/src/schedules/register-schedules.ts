@@ -348,7 +348,13 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 */6 * * *",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "10 minutes",
+    // Must fit the activity's FULL retry budget, not one attempt: the
+    // `runObserveReviewSignals` proxy allows 3 attempts at a 5m
+    // startToCloseTimeout each (observe-review-signals workflow) plus ~30s of
+    // 10s/20s backoff = ~15m30s. A 10m cap terminated the workflow mid-2nd
+    // attempt and made attempt 3 unreachable; 18m covers 3×5m + backoff + slack.
+    // SKIP overlap + the 6-hourly cadence make the wider ceiling harmless.
+    workflowExecutionTimeout: "18 minutes",
     memo: "Durable review-signal collector — scans recent PRs, computes each PR's code-review signal via @shepherdjerred/code-review, records Prometheus metrics, and appends NDJSON to S3 (what the review bot did and when)",
   },
   {
