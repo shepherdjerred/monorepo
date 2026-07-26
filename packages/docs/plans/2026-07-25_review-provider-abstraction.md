@@ -110,7 +110,8 @@ review-at-head + transient-wait paths; fixed a stale-review negative-latency bug
 - [ ] **Post-deploy verification:** confirm `review_*` metrics populate on
       `:9465`, NDJSON lands in `llm-archive/review-signals/`, and capture one
       **clean** Codex PR with the probe to confirm the 👍-reaction location/behavior.
-- [ ] Open draft PR; promote to ready after CI is green.
+- [ ] Promote draft PR #1657 to ready after CI is green (the PR's own
+      `review-gate` step + Codex review exercises the new gate end-to-end).
 
 ## Caveats
 
@@ -118,3 +119,41 @@ review-at-head + transient-wait paths; fixed a stale-review negative-latency bug
   - `@codex review`. Probe confirms real behavior.
 - Greptile dormant — keep `.greptile/config.json`; re-enable via `REVIEW_PROVIDER=greptile`.
 - One PR for the whole themed change.
+
+## Session Log — 2026-07-25
+
+### Done
+
+- New `@shepherdjerred/code-review` package (registry, pure gate, severity/author
+  parsing, `ReviewSignalEvent`, GitHub I/O). 30 unit tests.
+- CI gate `scripts/wait-for-review.ts` (replaces `wait-for-greptile.ts`); Buildkite
+  step `greptile-review` → `review-gate`.
+- pr-babysit generalized (`isReviewBotAuthor`, `isReviewBot`); 34 tests. temporal
+  full suite 632 pass.
+- Observability: `observe-review-signals` collector + `review-signals-collect`
+  schedule (every 6h), `review_*` metrics, NDJSON → `llm-archive` S3 `review-signals/`,
+  `scripts/probe-review-signal.ts`. Gate emits structured `review-gate` signal logs.
+- Docs: root `AGENTS.md` `## Code Review Rules`; temporal gate section (blocking,
+  provider-neutral); stale homelab tofu README fixed.
+- Draft PR **#1657** (rebased onto latest main; merged `bun.lock` frozen-clean).
+- Probe validated live on #1645 (review-at-head, 385s latency, 1 blocking P2) and
+  a freshly-pushed PR (reviewing/waiting). Fixed a stale-review negative-latency bug.
+
+### Remaining
+
+- Promote #1657 to ready after CI is green (its own `review-gate` step exercises
+  the gate end-to-end against Codex).
+- Deferred: Grafana dashboard panels + real-time webhook capture (need a live deploy).
+- Post-deploy: confirm `review_*` metrics on `:9465`, NDJSON in S3, and capture a
+  **clean** Codex PR with the probe to confirm 👍 location/behavior.
+
+### Caveats
+
+- The clean-review case (no findings → 👍 only) is still unobserved in the wild —
+  the completion code handles it (issue-level 👍 reaction) but the exact reaction
+  surface is probe-confirm-pending. Backstopped by the poll-until-timeout + `@codex review`.
+- Collector S3 bucket defaults to `llm-archive` (existing); no new bucket provisioned.
+  Override with `REVIEW_SIGNAL_ARCHIVE_BUCKET`.
+- git-spice base tracking used `spice.submit.skipRestackCheck trunk` because local
+  `main` was behind origin/main (checked out in the main worktree); the branch was
+  manually rebased onto origin/main instead.
