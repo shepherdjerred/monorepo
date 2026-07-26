@@ -2,10 +2,9 @@
 
 ## [1.17.2](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.17.1...astro-opengraph-images-v1.17.2) (2026-07-26)
 
+No public API changes.
 
-### Bug Fixes
-
-* **deps:** update react to v19.2.7 ([#1476](https://github.com/shepherdjerred/monorepo/issues/1476)) ([091a43f](https://github.com/shepherdjerred/monorepo/commit/091a43fb6fe7ec4494aa1a470d243941f119b3a6))
+- Bump runtime dep `react` to `19.2.7` (was `19.2.6`) ([091a43f](https://github.com/shepherdjerred/monorepo/commit/091a43fb6fe7ec4494aa1a470d243941f119b3a6))
 
 ## [1.17.1](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.17.0...astro-opengraph-images-v1.17.1) (2026-06-14)
 

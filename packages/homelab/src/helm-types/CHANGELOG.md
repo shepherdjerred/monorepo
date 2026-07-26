@@ -2,10 +2,10 @@
 
 ## [1.5.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.4.0...helm-types-v1.5.0) (2026-07-26)
 
+Small correctness and API-surface changes; no runtime dependency changes.
 
-### Features
-
-* **homelab:** liskov CI-only worker node — join config, Kueue removal, symmetric node layout ([#1629](https://github.com/shepherdjerred/monorepo/issues/1629)) ([e3f2523](https://github.com/shepherdjerred/monorepo/commit/e3f2523f8618f21ce88baac835de9e54c7d553fd))
+- The CLI module (`src/cli.ts`) now runs `main()` only under `if (import.meta.main)`, so importing it no longer kicks off a generation run as an import side effect; the `toPascalCase` helper is now `export`ed ([e69457f](https://github.com/shepherdjerred/monorepo/commit/e69457ff9b5552554af4d983334dd9b7f9c228c9))
+- `EXTENSIBLE_TYPE_PATTERNS` drops its `dagger-helm` entry (the Dagger chart was retired from the repo), so generation no longer force-marks that chart's commented-out `engine.*` example keys as extensible ([6dba01a](https://github.com/shepherdjerred/monorepo/commit/6dba01a905a03dd568bd4a9c1bfa0a9981c160c4))
 
 ## [1.4.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.3.0...helm-types-v1.4.0) (2026-06-14)
 
