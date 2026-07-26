@@ -195,3 +195,90 @@ pod=~<job-pod-pattern>, phase="Running"} == 1)`. Every Buildkite step pod is
   hardware-module verification.
 - The installer will wipe only the 1 TB disk selected by serial; the 2 TB cache
   disk must not be touched during installation.
+
+## Session Log — 2026-07-25 (liskov installed)
+
+### Done
+
+- Recovered the cluster secrets bundle from the live torvalds control-plane
+  configuration and used a single-use, tagged Tailscale bootstrap key in an
+  ignored local patch.
+- Applied liskov's worker configuration to `192.168.1.3` after confirming the
+  1 TB Samsung 990 Pro serial `S7LANL0L414099Z` immediately before the write.
+- Corrected the Talos v1.13 hostname patch: a legacy
+  `machine.network.hostname` conflicts with the generated `HostnameConfig`;
+  liskov now uses `HostnameConfig { hostname: liskov, auto: off }`.
+- Verified liskov is a Kubernetes `Ready` worker with internal IP
+  `192.168.1.3` and its intended `ci=only:NoSchedule` taint. KubePrism
+  recovered after the control-plane restart and has healthy upstream
+  connections to torvalds.
+
+### Remaining
+
+- Agent: create `zfspv-pool-nvme` only on the verified 2 TB Samsung 990 Pro
+  (`S7L9NJ0L312632A`). Do not merge PR #1629 until both are complete.
+
+### Caveats
+
+- The user explicitly accepted liskov operating without firmware Secure Boot
+  after the firmware reported a Secure Boot violation. The installed image still
+  boots as a UKI with kernel module signature enforcement; `secureBoot: false`
+  remains a deliberate security waiver for this node.
+- The 2 TB cache disk has not been modified.
+
+## Session Log — 2026-07-25 (post-join networking)
+
+### Done
+
+- Replaced the rejected Tailscale bootstrap credential with a new single-use,
+  preauthorized `tag:k8s` auth key generated through the stored OAuth client.
+  Liskov is now enrolled as `liskov.tailnet-1a49.ts.net`; the OpenEBS ZFS node
+  plugin recovered to `2/2 Running`.
+
+### Remaining
+
+- Obtain explicit approval for the smallest Tailscale ACL change that lets the
+  liskov Kubernetes node reach torvalds' API endpoint on TCP 6443. The API
+  Service currently resolves to torvalds' Tailscale address, so this is a
+  required worker control-plane path.
+- After the policy is live and the plugin remains healthy, create
+  `zfspv-pool-nvme` only on `S7L9NJ0L312632A`. Do not merge PR #1629 first.
+
+### Caveats
+
+- The declared ACL deliberately permits `tag:k8s` to `tag:k8s:443` but denies
+  raw API port 6443. Liskov is correctly rejected on that path today; the 2 TB
+  cache disk remains untouched.
+
+## Session Log — 2026-07-25 (worker storage and isolation ready)
+
+### Done
+
+- Applied and server-validated the Tailscale ACL additions required by a second
+  `tag:k8s` worker: TCP 6443 to the control-plane API Service endpoint and TCP
+  10250 for API-server-to-kubelet exec/log/port-forward streams. Verified the
+  repaired exec path with the OpenEBS liskov pod.
+- Created `zfspv-pool-nvme` only on the 2 TB Samsung 990 Pro serial
+  `S7L9NJ0L312632A`. Verified it is `ONLINE` (1.81 TiB), `ashift=12`,
+  `autotrim=on`, and uses `atime=off`, `compression=off`, and `mountpoint=none`.
+- Added the temporary live OpenEBS toleration, then tainted liskov
+  `ci=only:NoSchedule`; liskov remains Ready and its OpenEBS node plugin is
+  healthy.
+- Corrected the runbook: worker identities cannot set their own node taints
+  under the default Kubernetes NodeRestriction admission policy, and current
+  OpenEBS uses the Talos host `zpool` binary through `chroot /host`.
+
+### Remaining
+
+- User decision: merge PR #1629 to move Buildkite onto liskov and replace the
+  temporary OpenEBS toleration with its declarative ArgoCD-managed version.
+- After the merge, perform the runbook's cache/PVC cutover and first-build
+  verification; do not remove the live OpenEBS toleration before then.
+
+### Caveats
+
+- Firmware Secure Boot remains deliberately waived for liskov. Talos reports
+  `secureBoot: false`, while the UKI image and module-signature enforcement are
+  still active.
+- `zfspv-pool-nvme` is a single-disk cache pool: loss requires rebuilding CI
+  caches, not recovering source-of-truth data.
