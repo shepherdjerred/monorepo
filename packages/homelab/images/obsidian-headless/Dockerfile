@@ -10,7 +10,7 @@
 # so the smoke test can assert the installed version matches.
 
 # renovate: datasource=docker depName=node
-FROM node:24-slim@sha256:cb4e8f7c443347358b7875e717c29e27bf9befc8f5a26cf18af3c3dec80e58c5
+FROM node:24-slim@sha256:cb4e8f7c443347358b7875e717c29e27bf9befc8f5a26cf18af3c3dec80e58c5 AS runtime
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends python3 build-essential \
@@ -28,3 +28,12 @@ RUN npm install -g "obsidian-headless@${OBSIDIAN_HEADLESS_VERSION}" \
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 
 ENTRYPOINT ["/bin/sh", "-c"]
+
+FROM runtime AS smoke
+RUN ob --help \
+  && actual="$(ob --version)" \
+  && test "$actual" = "$OBSIDIAN_HEADLESS_EXPECTED_VERSION" \
+  && cd "$(npm root -g)/obsidian-headless" \
+  && node -e "const Database = require('better-sqlite3'); const db = new Database(':memory:'); db.exec('CREATE TABLE t (x INT)'); db.prepare('INSERT INTO t VALUES (?)').run(42); if (db.prepare('SELECT x FROM t').get().x !== 42) throw new Error('better-sqlite3 round-trip failed');"
+
+FROM runtime AS image

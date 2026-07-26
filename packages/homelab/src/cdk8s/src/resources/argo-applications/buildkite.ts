@@ -5,10 +5,11 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
   KubeLimitRange,
+  KubeConfigMap,
   KubePersistentVolumeClaim,
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import { NVME_STORAGE_CLASS_LZ4 } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import {
   CI_NODE_HOSTNAME,
@@ -84,6 +85,47 @@ export function createBuildkiteApp(chart: Chart) {
     },
   });
 
+  // The LLM observability E2E uses native Tempo and MinIO sidecars in its
+  // Buildkite pod. Keeping the Tempo configuration in Git makes the Kubernetes
+  // topology equivalent to the former Compose fixture without a DinD daemon or
+  // a bind mount that a sidecar cannot see.
+  new KubeConfigMap(chart, "llm-observability-e2e-tempo", {
+    metadata: { name: "llm-observability-e2e-tempo", namespace: "buildkite" },
+    data: {
+      "tempo.yaml": `stream_over_http_enabled: true
+server:
+  http_listen_port: 3200
+  log_level: info
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        http:
+          endpoint: "0.0.0.0:4318"
+        grpc:
+          endpoint: "0.0.0.0:4317"
+ingester:
+  max_block_duration: 5m
+  complete_block_timeout: 10s
+  trace_idle_period: 1s
+compactor:
+  compaction:
+    block_retention: 1h
+storage:
+  trace:
+    backend: local
+    wal:
+      path: /var/tempo/wal
+    local:
+      path: /var/tempo/blocks
+overrides:
+  defaults:
+    metrics_generator:
+      processors: []
+`,
+    },
+  });
+
   // Shared git-mirror store for step-pod checkouts (restored 2026-07-18; it
   // was dropped in the CI replatform on the assumption of "plain shallow
   // checkouts", but the static pipeline does FULL `--no-tags` clones so turbo
@@ -93,11 +135,39 @@ export function createBuildkiteApp(chart: Chart) {
   // checkouts to use the mirror via the alternates path
   // `/buildkite/git-mirrors/<encoded-url>/objects`.
   new KubePersistentVolumeClaim(chart, "buildkite-git-mirrors-pvc", {
-    metadata: { name: "buildkite-git-mirrors", namespace: "buildkite" },
+    metadata: {
+      name: "buildkite-git-mirrors",
+      namespace: "buildkite",
+      labels: {
+        "velero.io/backup": "disabled",
+        "velero.io/exclude-from-backup": "true",
+      },
+    },
     spec: {
       accessModes: ["ReadWriteMany"],
-      storageClassName: NVME_STORAGE_CLASS,
+      storageClassName: NVME_STORAGE_CLASS_LZ4,
       resources: { requests: { storage: Quantity.fromString("20Gi") } },
+    },
+  });
+
+  // OpenTofu provider archives are deterministic but expensive to download.
+  // The pipeline takes an advisory lock before invoking tofu because its
+  // plugin-cache protocol does not support concurrent writers. RWX is needed
+  // for that cross-pod lock even though every claimant is constrained to
+  // Liskov; no build output or state is stored here.
+  new KubePersistentVolumeClaim(chart, "buildkite-tofu-plugin-cache-pvc", {
+    metadata: {
+      name: "buildkite-tofu-plugin-cache",
+      namespace: "buildkite",
+      labels: {
+        "velero.io/backup": "disabled",
+        "velero.io/exclude-from-backup": "true",
+      },
+    },
+    spec: {
+      accessModes: ["ReadWriteMany"],
+      storageClassName: NVME_STORAGE_CLASS_LZ4,
+      resources: { requests: { storage: Quantity.fromString("10Gi") } },
     },
   });
 

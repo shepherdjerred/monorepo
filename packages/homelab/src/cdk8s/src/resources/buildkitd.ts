@@ -38,10 +38,11 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 const PORT = 1234;
 
 // Keep the on-disk build cache bounded well under the PVC size so BuildKit's GC
-// always has headroom and the volume can never fill. 100 GiB kept of a 150 GiB
-// PVC.
-const CACHE_PVC = Size.gibibytes(150);
-const GC_KEEP_BYTES = 100 * 1024 * 1024 * 1024;
+// always has headroom and the volume can never fill. 240 GiB kept of a 300 GiB
+// PVC. This is large enough to retain hot production-image layers without
+// letting an unbounded build cache consume the CI node.
+const CACHE_PVC = Size.gibibytes(300);
+const GC_KEEP_BYTES = 240 * 1024 * 1024 * 1024;
 
 // buildkitd.toml: listen on tcp for the remote driver, and cap the cache with a
 // GC policy so the compressed ZFS volume stays bounded (the whole point vs the

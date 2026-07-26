@@ -42,8 +42,16 @@ RUN set -e \
 
 # Stage 2 — bake the prebuilt server into the mcp-proxy runtime image.
 # renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver depName=tbxark/mcp-proxy
-FROM ghcr.io/tbxark/mcp-proxy:v0.43.2@sha256:1c43164a910a4f74a3ce48d95cb2ef792de8d467296555e63944fa798f0a44bd
+FROM ghcr.io/tbxark/mcp-proxy:v0.43.2@sha256:1c43164a910a4f74a3ce48d95cb2ef792de8d467296555e63944fa798f0a44bd AS runtime
 
 COPY --from=builder /opt/edstem-mcp /opt/edstem-mcp
 
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
+
+FROM runtime AS smoke
+RUN node --version \
+  && test -f /opt/edstem-mcp/dist/index.js \
+  && node --check /opt/edstem-mcp/dist/index.js \
+  && node --input-type=module -e "import { readFileSync, existsSync } from 'node:fs'; const pkg = JSON.parse(readFileSync('/opt/edstem-mcp/package.json', 'utf8')); const missing = Object.keys(pkg.dependencies ?? {}).filter((dependency) => !existsSync('/opt/edstem-mcp/node_modules/' + dependency)); if (missing.length > 0) { throw new Error('missing production dependencies: ' + missing.join(', ')); }"
+
+FROM runtime AS image

@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7-labs@sha256:b99fecfe00268a8b556fad7d9c37ee25d716ae08a5d7320e6d51c4dd83246894
+# syntax=docker/dockerfile:1-labs@sha256:7d49dad25a050e14338ba7028b0460243f9d911dedc160a8fe20c34738fef3af
 # birmel image. Build context is the REPO ROOT (single Bun workspace, one root
 # bun.lock, isolated linker). Built via `bun run docker:build` in this package
 # (which passes `-f Dockerfile ../..`).
@@ -94,3 +94,10 @@ LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorep
 # service and is left to the deployment (not baked into the image CMD).
 WORKDIR /app/packages/birmel
 CMD ["bun", "src/index.ts"]
+
+FROM base AS smoke
+ARG SMOKE_TARGET=birmel
+ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
+RUN bun /app/.buildkite/scripts/smoke-app-in-image.ts
+
+FROM base AS image

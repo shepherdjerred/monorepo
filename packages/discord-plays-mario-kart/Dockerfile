@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7-labs@sha256:b99fecfe00268a8b556fad7d9c37ee25d716ae08a5d7320e6d51c4dd83246894
+# syntax=docker/dockerfile:1-labs@sha256:7d49dad25a050e14338ba7028b0460243f9d911dedc160a8fe20c34738fef3af
 # Headless Discord Plays Mario Kart. Build context is the REPO ROOT (single Bun
 # workspace, one root bun.lock, isolated linker, workspace:* deps). Built via
 # `bun run docker:build` in packages/discord-plays-mario-kart/packages/backend
@@ -118,3 +118,10 @@ ENV GIT_SHA=${GIT_SHA}
 # `--skip-generate`, so it is omitted (generate ran at build time above).
 WORKDIR /app/packages/discord-plays-mario-kart
 CMD ["sh", "-c", "cd packages/backend && bunx prisma db push && cd /app/packages/discord-plays-mario-kart && exec bun packages/backend/src/index.ts"]
+
+FROM runtime AS smoke
+ARG SMOKE_TARGET=discord-plays-mario-kart
+ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
+RUN bun /app/.buildkite/scripts/smoke-app-in-image.ts
+
+FROM runtime AS image
