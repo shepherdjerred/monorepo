@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { match } from "ts-pattern";
 import {
   type CompetitionCriteria,
   competitionQueueTypeToString,
   CompetitionQueueTypeSchema,
+  isCompetitionQueueCurrentlyAvailable,
 } from "@scout-for-lol/data";
+import { ChampionCombobox } from "#src/components/champion-combobox.tsx";
 import { Input } from "#src/components/ui/input.tsx";
 import { Label } from "#src/components/ui/label.tsx";
 import {
@@ -36,6 +39,12 @@ const CRITERIA_OPTIONS: {
 const ALL_QUEUES = CompetitionQueueTypeSchema.options;
 const RANKED_QUEUES = ["SOLO", "FLEX"] as const;
 
+function isAvailableChoice(queue: string): boolean {
+  return isCompetitionQueueCurrentlyAvailable(
+    CompetitionQueueTypeSchema.parse(queue),
+  );
+}
+
 function QueueSelect(props: {
   id: string;
   value: string;
@@ -44,6 +53,16 @@ function QueueSelect(props: {
   includeAny?: boolean;
   onChange: (next: string) => void;
 }) {
+  // Limited-time queues that are not currently live are hidden behind a
+  // reveal toggle; the current value always stays visible (editing an old
+  // competition must keep its queue selectable).
+  const [showUnavailable, setShowUnavailable] = useState(false);
+  const visibleOptions = props.options.filter(
+    (queue) =>
+      showUnavailable || queue === props.value || isAvailableChoice(queue),
+  );
+  const hiddenCount = props.options.length - visibleOptions.length;
+
   return (
     <Select
       value={props.value}
@@ -57,13 +76,31 @@ function QueueSelect(props: {
         {props.includeAny === true && (
           <SelectItem value="__ANY__">Any queue</SelectItem>
         )}
-        {props.options.map((queue) => (
+        {visibleOptions.map((queue) => (
           <SelectItem key={queue} value={queue}>
-            {competitionQueueTypeToString(
-              CompetitionQueueTypeSchema.parse(queue),
-            )}
+            <span
+              className={
+                isAvailableChoice(queue) ? undefined : "text-muted-foreground"
+              }
+            >
+              {competitionQueueTypeToString(
+                CompetitionQueueTypeSchema.parse(queue),
+              )}
+              {isAvailableChoice(queue) ? "" : " (not currently live)"}
+            </span>
           </SelectItem>
         ))}
+        {hiddenCount > 0 && (
+          <button
+            type="button"
+            className="w-full rounded-sm px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            onClick={() => {
+              setShowUnavailable(true);
+            }}
+          >
+            Show {hiddenCount.toString()} unavailable queues
+          </button>
+        )}
       </SelectContent>
     </Select>
   );
@@ -108,15 +145,13 @@ export function CompetitionCriteriaFields(props: {
     .with("MOST_WINS_CHAMPION", () => (
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="criteria-champion">Champion ID</Label>
-          <Input
+          <Label htmlFor="criteria-champion">Champion</Label>
+          <ChampionCombobox
             id="criteria-champion"
-            type="number"
-            min={1}
             value={value.championId}
             disabled={disabled}
-            onChange={(event) => {
-              onChange({ ...value, championId: event.target.value });
+            onChange={(championId) => {
+              onChange({ ...value, championId });
             }}
           />
         </div>
