@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router";
 import { Login } from "#src/routes/login.tsx";
 import { GuildPicker } from "#src/routes/guild-picker.tsx";
 import { GuildSubscriptions } from "#src/routes/guild-subscriptions.tsx";

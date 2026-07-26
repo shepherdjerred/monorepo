@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { visibilityToString } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";

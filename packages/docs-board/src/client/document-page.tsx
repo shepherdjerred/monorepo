@@ -7,7 +7,7 @@ import {
   ShieldCheckIcon,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router";
 import remarkGfm from "remark-gfm";
 
 import { DocumentSidebar } from "./document-sidebar.tsx";

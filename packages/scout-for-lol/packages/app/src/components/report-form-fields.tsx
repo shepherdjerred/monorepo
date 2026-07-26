@@ -1,5 +1,5 @@
 import { lazy, Suspense, type Dispatch, type SetStateAction } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { DEFAULT_REPORT_CRON } from "@scout-for-lol/data";
 import { Button } from "#src/components/ui/button.tsx";
 import { Input } from "#src/components/ui/input.tsx";

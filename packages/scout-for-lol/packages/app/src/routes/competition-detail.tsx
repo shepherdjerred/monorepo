@@ -1,4 +1,4 @@
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CompetitionIdSchema, visibilityToString } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";

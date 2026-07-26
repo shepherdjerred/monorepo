@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Button } from "#src/components/ui/button.tsx";
 import { DiscordUser } from "#src/components/discord-user.tsx";
 import {
