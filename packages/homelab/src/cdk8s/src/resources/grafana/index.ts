@@ -7,6 +7,7 @@ import { exportSmartctlDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafa
 import { exportVeleroDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/velero-dashboard.ts";
 import { exportTasknotesDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/tasknotes-dashboard.ts";
 import { exportBuildkiteDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/buildkite-dashboard.ts";
+import { exportBuildkitdDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/buildkitd-dashboard.ts";
 import { exportZfsDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/zfs-dashboard.ts";
 import { exportTemporalDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/temporal-dashboard.ts";
 import { exportPrReviewBotDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/pr-review-bot-dashboard.ts";
@@ -111,6 +112,13 @@ const BUILDKITE_DASHBOARD: DashboardConfig = {
   exportFn: exportBuildkiteDashboardJson,
 };
 
+const BUILDKITD_DASHBOARD: DashboardConfig = {
+  id: "buildkitd-dashboard-configmap",
+  name: "buildkitd-dashboard",
+  jsonFilename: "buildkitd.json",
+  exportFn: exportBuildkitdDashboardJson,
+};
+
 const TEMPORAL_DASHBOARD: DashboardConfig = {
   id: "temporal-dashboard-configmap",
   name: "temporal-dashboard",
@@ -148,6 +156,7 @@ const DISCORD_PLAYS_DASHBOARD: DashboardConfig = {
 
 const ALL_DASHBOARDS: DashboardConfig[] = [
   AI_PROVIDER_DASHBOARD,
+  BUILDKITD_DASHBOARD,
   BUILDKITE_DASHBOARD,
   DISCORD_PLAYS_DASHBOARD,
   GITCKUP_DASHBOARD,
