@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle } from "lucide-react";
-import { useTRPC } from "#src/lib/trpc.ts";
 import {
   buildInfo,
   isContractMismatch,
@@ -9,14 +8,6 @@ import {
   VersionResponseSchema,
   type VersionResponse,
 } from "#src/lib/build-info.ts";
-
-// Jerred's Discord ID — mirrors the backend's owner override in
-// packages/backend/src/configuration/flags.ts (`ME`). The app only imports
-// AppRouter as a type (no runtime import from backend), so this is a
-// separate literal, not a shared constant. Named `OWNER_ID` rather than
-// `OWNER_DISCORD_ID`: gitleaks' discord-client-id rule false-positives on
-// any identifier combining "discord" + "id" next to an 18-digit literal.
-const OWNER_ID = "160509172704739328";
 
 const DISMISSED_MISMATCH_STORAGE_KEY = "scout:dismissed-contract-mismatch";
 
@@ -47,9 +38,8 @@ function useBackendVersion() {
  * bundle and the backend were built against different tRPC contracts (hash
  * comparison — build numbers legitimately differ in a healthy pair). This is
  * a developer diagnostic, not something any other user can act on, so it:
- * - never renders for anyone but OWNER_ID (most sessions pay only
- *   the cost of a deduped `auth.meWeb` query, already fetched by
- *   RequireSession elsewhere in the tree)
+ * - asks the public version endpoint whether this signed session belongs to
+ *   the owner; it never invokes the protected `auth.meWeb` identity procedure
  * - stays out of the page flow (fixed corner chip, not a page-pushing
  *   banner)
  * - remembers dismissal per hash pair in localStorage, so it won't nag again
@@ -57,19 +47,12 @@ function useBackendVersion() {
  *   redeploying to a different hash) un-dismisses it.
  */
 export function ContractMismatchBanner() {
-  const trpc = useTRPC();
-  const me = useQuery(
-    trpc.auth.meWeb.queryOptions(undefined, { retry: false }),
-  );
   const backend = useBackendVersion();
   const [dismissedKey, setDismissedKey] = useState(() =>
     localStorage.getItem(DISMISSED_MISMATCH_STORAGE_KEY),
   );
 
-  if (me.data?.discordId !== OWNER_ID) {
-    return null;
-  }
-  if (backend.data === undefined) {
+  if (backend.data?.canViewContractMismatch !== true) {
     return null;
   }
   if (!isContractMismatch(buildInfo.contractHash, backend.data.contractHash)) {

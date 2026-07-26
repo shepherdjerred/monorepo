@@ -193,7 +193,7 @@ const server = Bun.serve({
 
     // Build/deploy identity: version, git SHA, tRPC contract hash
     if (url.pathname === "/api/version") {
-      return handleVersion(corsHeadersFor(request));
+      return handleVersion(request, corsHeadersFor(request));
     }
 
     // Metrics endpoint for Prometheus

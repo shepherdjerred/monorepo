@@ -1,4 +1,36 @@
 import configuration from "#src/configuration.ts";
+import { getFlag } from "#src/configuration/flags.ts";
+import { DiscordAccountIdSchema } from "@scout-for-lol/data";
+import { verifySession } from "#src/trpc/jwt.ts";
+
+const SESSION_COOKIE = "scout_session";
+
+function sessionCookie(request: Request): string | undefined {
+  const cookieHeader = request.headers.get("Cookie");
+  if (cookieHeader === null) {
+    return undefined;
+  }
+  for (const part of cookieHeader.split(";")) {
+    const [name, value] = part.trim().split("=", 2);
+    if (name === SESSION_COOKIE && value !== undefined) {
+      return decodeURIComponent(value);
+    }
+  }
+  return undefined;
+}
+
+async function canViewContractMismatch(request: Request): Promise<boolean> {
+  const session = sessionCookie(request);
+  if (session === undefined || session.length === 0) {
+    return false;
+  }
+  const claims = await verifySession(session);
+  if (claims === null) {
+    return false;
+  }
+  const discordId = DiscordAccountIdSchema.safeParse(claims.sub);
+  return discordId.success && getFlag("debug", { user: discordId.data });
+}
 
 /**
  * Body of GET /api/version — the deploy identity of this backend process.
@@ -29,8 +61,17 @@ export function versionBody(): {
  * `corsHeadersFor(request)` so the SPA origin can read it cross-origin in
  * dev.
  */
-export function handleVersion(corsHeaders: Record<string, string>): Response {
-  return Response.json(versionBody(), {
-    headers: { "Cache-Control": "no-store", ...corsHeaders },
-  });
+export async function handleVersion(
+  request: Request,
+  corsHeaders: Record<string, string>,
+): Promise<Response> {
+  return Response.json(
+    {
+      ...versionBody(),
+      canViewContractMismatch: await canViewContractMismatch(request),
+    },
+    {
+      headers: { "Cache-Control": "no-store", ...corsHeaders },
+    },
+  );
 }

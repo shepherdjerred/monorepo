@@ -43,11 +43,13 @@ describe("VersionResponseSchema", () => {
         version: "2.0.0-6017",
         gitSha: "abcdef1234567890",
         contractHash: "cafebabe",
+        canViewContractMismatch: true,
       }),
     ).toEqual({
       version: "2.0.0-6017",
       gitSha: "abcdef1234567890",
       contractHash: "cafebabe",
+      canViewContractMismatch: true,
     });
   });
 
