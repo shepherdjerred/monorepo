@@ -224,10 +224,14 @@ const server = Bun.serve({
       return authResponse;
     }
 
-    // Dev-only instant sign-in (no Discord OAuth round-trip). Never
-    // reachable in beta/prod: `configuration.environment` is fixed at boot.
+    // Dev-only instant sign-in (no Discord OAuth round-trip). Gated on BOTH
+    // environment=dev AND the explicit, default-off ENABLE_DEV_LOGIN flag, so a
+    // beta/prod deploy that omits ENVIRONMENT (which defaults to "dev") still
+    // fails closed rather than exposing an unauthenticated session-minting
+    // endpoint. Set only by scripts/dev-web.sh.
     if (
       configuration.environment === "dev" &&
+      configuration.enableDevLogin &&
       url.pathname === "/api/dev/login"
     ) {
       return await handleDevLogin(request, prisma);

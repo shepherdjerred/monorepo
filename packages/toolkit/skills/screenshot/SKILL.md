@@ -44,8 +44,9 @@ Zero-auth packages (`packages/toolkit/src/lib/screenshot/catalog.ts`):
 
 Auth-gated: `scout-app` (`packages/scout-for-lol`) — boots the full
 `dev:web` stack (backend + Vite) and signs in via the backend's
-`/api/dev/login` dev-only route (never registered outside
-`environment=dev`) instead of a real Discord OAuth click-through.
+`/api/dev/login` dev-only route (registered only when `environment=dev`
+AND `ENABLE_DEV_LOGIN=true`, which `dev:web` sets — so it never ships
+enabled to beta/prod) instead of a real Discord OAuth click-through.
 
 **Explicitly out of scope** (different tooling needed, not attempted here):
 `scout-for-lol/packages/desktop` (Tauri/Rust — no browser-drivable dev

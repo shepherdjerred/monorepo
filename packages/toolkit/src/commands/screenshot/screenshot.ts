@@ -5,6 +5,7 @@
  */
 import { mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
+import nodePath from "node:path";
 import { resolvePackage } from "#lib/screenshot/catalog.ts";
 import { ensureDevServer } from "#lib/screenshot/dev-server.ts";
 import { captureScreenshot } from "#lib/screenshot/pinchtab-driver.ts";
@@ -42,7 +43,10 @@ export async function screenshotCommand(
   const entry = resolvePackage(options.alias);
   const route = options.route ?? entry.defaultRoute;
   const outPath = options.out ?? defaultOutPath(options.alias, route);
-  await mkdir(outPath.slice(0, outPath.lastIndexOf("/")), { recursive: true });
+  // `dirname` resolves the parent correctly for bare filenames too — a plain
+  // `--out screenshot.png` yields "." (cwd), not a bogus `screenshot.pn/` dir
+  // from slicing at a nonexistent "/".
+  await mkdir(nodePath.dirname(outPath), { recursive: true });
 
   const devServer = await ensureDevServer(entry, {
     envOverrides: options.envOverrides,

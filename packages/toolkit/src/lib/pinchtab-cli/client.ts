@@ -124,6 +124,19 @@ export async function navigateNewTab(
   return runRaw(["nav", url, "--new-tab", "--print-tab-id"], sessionToken);
 }
 
+/**
+ * `pinchtab nav <url> --tab <id>` — navigates an already-open tab. Used to
+ * load the real target *after* viewport/media emulation is configured, so the
+ * page sees the emulated `prefers-color-scheme` during its first paint/init.
+ */
+export async function navigateTab(
+  sessionToken: string,
+  tabId: string,
+  url: string,
+): Promise<PinchtabResult<string>> {
+  return runRaw(["nav", url, "--tab", tabId], sessionToken);
+}
+
 /** `pinchtab set viewport <width> <height> --tab <id>`. */
 export async function setViewport(
   sessionToken: string,

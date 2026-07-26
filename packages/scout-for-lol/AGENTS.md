@@ -115,10 +115,14 @@ plaintext credentials are written to disk. You must be `op signin`'d.
 `GET /api/dev/login[?discordId=...&username=...&returnTo=/app/...]`
 (`packages/backend/src/trpc/dev-login.ts`) mints a real signed session for a
 chosen — or fake default — Discord user without the OAuth round-trip.
-**Registered only when `configuration.environment === "dev"`** (a plain
-inline check in `http-server.ts`'s route dispatch, matching every other
-route in that file) — genuinely absent from beta/prod, not just gated
-behind a runtime `if` inside an always-present handler.
+**Registered only when `configuration.environment === "dev"` AND the explicit
+`ENABLE_DEV_LOGIN` flag is set** (both checked inline in `http-server.ts`'s
+route dispatch) — genuinely absent from beta/prod, not just gated behind a
+runtime `if` inside an always-present handler. The extra flag matters because
+`ENVIRONMENT` defaults to `"dev"` when unset, so gating on environment alone
+would fail _open_ (expose an unauthenticated session-minting route) on any
+deploy that forgot to set it; `ENABLE_DEV_LOGIN` defaults off, so an omitted
+config fails closed. `scripts/dev-web.sh` sets it for local runs.
 
 Driving this by hand: with `dev:web` running, visiting
 `http://localhost:5180/api/dev/login?discordId=<id>&returnTo=/app/g/123` in

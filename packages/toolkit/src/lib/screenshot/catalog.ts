@@ -78,6 +78,11 @@ export const PACKAGES: PackageEntry[] = [
     // /api to the backend), so that's the port this entry probes/waits on.
     expectedPort: 5180,
     defaultRoute: "/app/",
+    // Wait on a backend-backed path (Vite proxies /api → :3000), not just the
+    // SPA shell. The backend takes ~5s to open its listener after Vite is up;
+    // probing /app/ alone would let the auth flow navigate to the proxied
+    // /api/dev/login before the backend exists, yielding a proxy error.
+    readyPath: "/api/version",
     requiresAuth: "scout-dev-login",
   },
 ];

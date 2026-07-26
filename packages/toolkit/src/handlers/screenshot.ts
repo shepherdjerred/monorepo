@@ -102,6 +102,18 @@ export async function handleScreenshotCommand(
     process.exit(1);
   }
 
+  // Validate --discord-id up front against the same 17–20 digit snowflake
+  // contract the dev-login endpoint enforces (@scout-for-lol/data's
+  // DiscordAccountIdSchema). Otherwise a typo'd ID is forwarded, the endpoint
+  // 400s, and the driver screenshots the error page while reporting success.
+  const discordId = values["discord-id"];
+  if (discordId !== undefined && !/^\d{17,20}$/.test(discordId)) {
+    console.error(
+      `--discord-id must be a 17–20 digit Discord ID, got "${discordId}"`,
+    );
+    process.exit(1);
+  }
+
   try {
     const result = await screenshotCommand({
       alias: subcommand,
@@ -110,7 +122,7 @@ export async function handleScreenshotCommand(
       waitForSelector: values["wait-for-selector"],
       timeoutMs:
         values.timeout === undefined ? undefined : Number(values.timeout),
-      authDiscordId: values["discord-id"],
+      authDiscordId: discordId,
       envOverrides: parseEnvOverrides(values.env),
       viewport:
         values.viewport === undefined

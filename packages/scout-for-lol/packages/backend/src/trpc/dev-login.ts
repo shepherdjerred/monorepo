@@ -55,12 +55,17 @@ export async function handleDevLogin(
     );
   }
   const discordId = discordIdResult.data;
-  const username =
-    url.searchParams.get("username") ?? DEV_LOGIN_DEFAULT_USERNAME;
+  // Only overwrite an existing user's username when one was explicitly passed;
+  // an ID-only login (the documented `--discord-id` flow) must not clobber a
+  // real user's `discordUsername` with the placeholder. The default is applied
+  // only when creating a new row.
+  const requestedUsername = url.searchParams.get("username");
+  const username = requestedUsername ?? DEV_LOGIN_DEFAULT_USERNAME;
 
   await prisma.user.upsert({
     where: { discordId },
-    update: { discordUsername: username },
+    update:
+      requestedUsername === null ? {} : { discordUsername: requestedUsername },
     create: { discordId, discordUsername: username, discordAvatar: null },
   });
 
