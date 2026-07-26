@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import {
   Popover,
   PopoverAnchor,
@@ -13,6 +13,12 @@ import { cn } from "#src/lib/cn.ts";
  * search query); selecting a result invokes `onSelect`. Rendering of results
  * and the search itself live in the caller — this component is purely the
  * input + popover shell.
+ *
+ * Implements the ARIA combobox + listbox pattern: the input owns
+ * `aria-activedescendant`, the `<ul>` is the `role="listbox"` referenced by
+ * `aria-controls`, and each result is a `role="option"`. Keyboard navigation
+ * (arrows / Home / End / Enter / Escape) moves a virtual active option without
+ * moving DOM focus out of the input.
  */
 export function Combobox<T>(props: {
   value: string;
@@ -35,6 +41,7 @@ export function Combobox<T>(props: {
   onBlur?: (() => void) | undefined;
 }) {
   const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const listId = useId();
   const hasQuery = props.value.trim().length > 0;
   const canOpenWithoutQuery = props.openOnEmptyQuery ?? false;
@@ -44,6 +51,85 @@ export function Combobox<T>(props: {
     open &&
     (hasQuery || canOpenWithoutQuery) &&
     (props.isLoading || props.items.length > 0);
+
+  const optionId = (item: T) =>
+    `${listId}-opt-${encodeURIComponent(props.getKey(item))}`;
+
+  // A stable-enough signature of the rendered options: when the result set
+  // changes we re-anchor the active option to the top, but plain re-renders
+  // (e.g. during arrow navigation, where `items` keeps the same contents)
+  // leave the user's position untouched.
+  const itemCount = props.items.length;
+  const itemsSignature = props.items
+    .map((item) => props.getKey(item))
+    .join(" ");
+  useEffect(() => {
+    // Open with items -> highlight the first; closed or loading -> nothing.
+    setActiveIndex(showPopover && itemCount > 0 ? 0 : -1);
+  }, [showPopover, itemCount, itemsSignature]);
+
+  const activeItem =
+    activeIndex >= 0 && activeIndex < itemCount
+      ? props.items[activeIndex]
+      : undefined;
+  const activeOptionId =
+    activeItem === undefined ? undefined : optionId(activeItem);
+
+  // Keep the active option scrolled into view as the highlight moves. Guard
+  // for environments (jsdom) where `scrollIntoView` is not implemented.
+  useEffect(() => {
+    if (activeOptionId === undefined) return;
+    const element = document.querySelector(`#${CSS.escape(activeOptionId)}`);
+    if (element && typeof element.scrollIntoView === "function") {
+      element.scrollIntoView({ block: "nearest" });
+    }
+  }, [activeOptionId]);
+
+  function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    // Only take over navigation keys while the listbox is visible; otherwise
+    // leave normal typing/caret behavior alone.
+    if (!showPopover) return;
+    const lastIndex = itemCount - 1;
+    switch (event.key) {
+      case "ArrowDown":
+        event.preventDefault();
+        setActiveIndex((index) =>
+          index < 0 ? 0 : Math.min(index + 1, lastIndex),
+        );
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        setActiveIndex((index) => (index < 0 ? 0 : Math.max(index - 1, 0)));
+        break;
+      case "Home":
+        if (itemCount > 0) {
+          event.preventDefault();
+          setActiveIndex(0);
+        }
+        break;
+      case "End":
+        if (itemCount > 0) {
+          event.preventDefault();
+          setActiveIndex(lastIndex);
+        }
+        break;
+      case "Enter":
+        // Only intercept Enter when there is an active option to commit —
+        // otherwise let it behave normally (e.g. submit an enclosing form).
+        if (activeItem !== undefined) {
+          event.preventDefault();
+          props.onSelect(activeItem);
+          setOpen(false);
+        }
+        break;
+      case "Escape":
+        event.preventDefault();
+        setOpen(false);
+        break;
+      default:
+        break;
+    }
+  }
 
   return (
     <Popover open={showPopover} onOpenChange={setOpen}>
@@ -60,6 +146,7 @@ export function Combobox<T>(props: {
           aria-expanded={showPopover}
           aria-controls={listId}
           aria-autocomplete="list"
+          aria-activedescendant={activeOptionId}
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
@@ -77,10 +164,10 @@ export function Combobox<T>(props: {
           onBlur={() => {
             props.onBlur?.();
           }}
+          onKeyDown={handleKeyDown}
         />
       </PopoverAnchor>
       <PopoverContent
-        id={listId}
         // Keep focus in the input while results render/update.
         onOpenAutoFocus={(event) => {
           event.preventDefault();
@@ -92,24 +179,34 @@ export function Combobox<T>(props: {
             Searching…
           </p>
         ) : (
-          <ul>
-            {props.items.map((item) => (
-              <li key={props.getKey(item)}>
-                <button
-                  type="button"
-                  className={cn(
-                    "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm outline-none",
-                    "hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-                  )}
-                  onClick={() => {
-                    props.onSelect(item);
-                    setOpen(false);
-                  }}
-                >
-                  {props.renderItem(item)}
-                </button>
-              </li>
-            ))}
+          <ul id={listId} role="listbox">
+            {props.items.map((item, index) => {
+              const isActive = index === activeIndex;
+              return (
+                <li key={props.getKey(item)}>
+                  <button
+                    type="button"
+                    id={optionId(item)}
+                    role="option"
+                    aria-selected={isActive}
+                    className={cn(
+                      "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm outline-none",
+                      "hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+                      isActive && "bg-accent text-accent-foreground",
+                    )}
+                    onClick={() => {
+                      props.onSelect(item);
+                      setOpen(false);
+                    }}
+                    onMouseEnter={() => {
+                      setActiveIndex(index);
+                    }}
+                  >
+                    {props.renderItem(item)}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </PopoverContent>
