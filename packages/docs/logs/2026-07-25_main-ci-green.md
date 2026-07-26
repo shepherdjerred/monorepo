@@ -36,6 +36,9 @@ type safety, or any other quality gate.
 - Merged Kueue lookup RBAC PR
   [#1658](https://github.com/shepherdjerred/monorepo/pull/1658)
 - Replacement `main` build `#6246`
+- Merged project-scoped Argo deletion PR
+  [#1660](https://github.com/shepherdjerred/monorepo/pull/1660)
+- OOM reproductions in current-main builds `#6256` and `#6261`
 - Build `#6212` proved checkout, verify, Playwright, resume, Docker E2E, and the
   image dry-run run on Liskov. Its Trivy gate found three newly published
   dependency advisories after downloading a fresh vulnerability database.
@@ -61,6 +64,8 @@ type safety, or any other quality gate.
       CD's delete handler before it checks `delete`.
 - [x] Fully scope the Application deletion request to project `default` so
       Argo CD can return HTTP 404 for an already-absent Application.
+- [x] Diagnose the verify-container loss after Scout RBAC landed.
+- [ ] Land the verify-container memory correction.
 - [ ] Confirm the resulting `main` Buildkite build is green.
 
 ## Session Log — 2026-07-25
@@ -219,10 +224,28 @@ type safety, or any other quality gate.
 - Passed both focused HTTP-contract tests, pipeline validation, CDK8s
   build/typecheck/lint, the full CDK8s suite (244 pass, 13 skip, 0 fail),
   GPU-resource verification, and `bun run verify -- --affected` (33/33).
+- Landed PR [#1660](https://github.com/shepherdjerred/monorepo/pull/1660) as
+  `c321d1fee49098accba4276fa5fadc81415e8046`.
+- Followed replacement build `#6253` through 12 successful executable jobs
+  before Buildkite canceled it in favor of a newer `main` commit.
+- Diagnosed build `#6256`'s verify `exit_status: -7` as command-container loss,
+  then reproduced it on current-main build `#6261`.
+- Captured the live build `#6261` cgroup at `13.9998GiB` usage against its
+  `14Gi` limit and Kubernetes' terminal state: exit 137, `OOMKilled`.
+- Confirmed Liskov itself retained roughly `85GiB` available memory; this was
+  the verify container's stale limit after the larger Scout RBAC graph landed,
+  not node-wide exhaustion.
+- Raised only verify's command-container request from `6Gi` to `14Gi` and
+  limit from `14Gi` to `20Gi`, preserving 43% burst headroom over the measured
+  failure point.
+- Added an exact pipeline-validator invariant for the measured verify request
+  and limit.
+- Passed the focused pipeline validator, Prettier, Markdown lint, diff checks,
+  and `bun run verify -- --affected` (20/20).
 
 ### Remaining
 
-- Land the project-scoped Argo CD Application deletion follow-up.
+- Land the verify-container memory correction.
 - Run the next replacement `main` build through Argo CD sync, downstream
   reconciliation, version commit-back, and summary.
 - Verify post-sync Buildkite job placement on `liskov` and current cluster
