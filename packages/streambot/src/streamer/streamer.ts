@@ -18,7 +18,11 @@ import type {
   RunStreamInput,
   VoiceHandle,
 } from "@shepherdjerred/streambot/machine/types.ts";
-import { StreamCrashError } from "@shepherdjerred/streambot/streamer/stream-errors.ts";
+import {
+  endedShortError,
+  StreamCrashError,
+  type StallInfo,
+} from "@shepherdjerred/streambot/streamer/stream-errors.ts";
 import { computeElapsed } from "@shepherdjerred/streambot/streamer/elapsed.ts";
 import {
   GuildIdSchema,
@@ -32,6 +36,7 @@ import {
   STALL_AFTER_SECONDS,
 } from "@shepherdjerred/streambot/observability/stream-observer.ts";
 import {
+  gatewayDisruptionsTotal,
   hwFallbackTotal,
   streamActive,
   streamCrashesTotal,
@@ -87,43 +92,6 @@ export type StreamerLike = PooledUserbot & {
   setStallListener: (listener: ((info: StallInfo) => void) | null) => void;
 };
 
-/** A detected mid-stream stall: ffmpeg alive but silent past the watchdog threshold. */
-export type StallInfo = {
-  /** Playback position (seconds) when the stall was detected. */
-  positionSeconds: number;
-  reason: string;
-};
-
-/**
- * Classify an ffmpeg exit 0 that landed far short of the probed media duration as a truncation.
- * Tolerances: 30 s absolute AND 10% relative — either being within range means a genuine end
- * (credits cut early, container rounding, live seeks near the end).
- */
-function endedShortError(
-  expectedSeconds: number | undefined,
-  endedAtSeconds: number,
-  pipelineMode: PipelineMode,
-): StreamCrashError | null {
-  if (
-    expectedSeconds === undefined ||
-    expectedSeconds <= 0 ||
-    endedAtSeconds >= expectedSeconds - 30 ||
-    endedAtSeconds >= expectedSeconds * 0.9
-  ) {
-    return null;
-  }
-  return new StreamCrashError(
-    `stream ended at ${String(Math.floor(endedAtSeconds))}s of ${String(Math.floor(expectedSeconds))}s (exit 0 truncation)`,
-    {
-      kind: "ended-short",
-      positionSeconds: endedAtSeconds,
-      pipelineMode,
-      exitCode: 0,
-      stderrTail: [],
-    },
-  );
-}
-
 /** A Discord-side voice connection death, timestamped for freshness-based classification. */
 export type VoiceCloseInfo = {
   code: number;
@@ -171,6 +139,23 @@ export class StreambotStreamer implements StreamerLike {
     this.createPlayer = createPlayer;
     this.client = new Client();
     this.streamer = new Streamer(this.client);
+    // Gateway health observability: a dropped/invalidated userbot gateway kills streaming
+    // capability out from under the pool — surface it instead of nothing. (Voice-connection
+    // deaths have their own recovery path; this covers the main gateway.)
+    this.client.on("shardDisconnect", (event) => {
+      gatewayDisruptionsTotal.inc({ client: "userbot", kind: "disconnect" });
+      log.warn("userbot gateway shard disconnected", { code: event.code });
+    });
+    this.client.on("invalidated", () => {
+      gatewayDisruptionsTotal.inc({ client: "userbot", kind: "invalidated" });
+      log.error(
+        "userbot gateway session invalidated — streaming is dead until the process restarts",
+      );
+    });
+    this.client.on("error", (error) => {
+      gatewayDisruptionsTotal.inc({ client: "userbot", kind: "error" });
+      log.warn("userbot client error", { error: getErrorMessage(error) });
+    });
   }
 
   /**

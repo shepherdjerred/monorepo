@@ -61,3 +61,40 @@ export class StreamCrashError extends Error {
     });
   }
 }
+
+/** A detected mid-stream stall: ffmpeg alive but silent past the watchdog threshold. */
+export type StallInfo = {
+  /** Playback position (seconds) when the stall was detected. */
+  positionSeconds: number;
+  reason: string;
+};
+
+/**
+ * Classify an ffmpeg exit 0 that landed far short of the probed media duration as a truncation.
+ * Tolerances: 30 s absolute AND 10% relative — either being within range means a genuine end
+ * (credits cut early, container rounding, live seeks near the end).
+ */
+export function endedShortError(
+  expectedSeconds: number | undefined,
+  endedAtSeconds: number,
+  pipelineMode: PipelineMode,
+): StreamCrashError | null {
+  if (
+    expectedSeconds === undefined ||
+    expectedSeconds <= 0 ||
+    endedAtSeconds >= expectedSeconds - 30 ||
+    endedAtSeconds >= expectedSeconds * 0.9
+  ) {
+    return null;
+  }
+  return new StreamCrashError(
+    `stream ended at ${String(Math.floor(endedAtSeconds))}s of ${String(Math.floor(expectedSeconds))}s (exit 0 truncation)`,
+    {
+      kind: "ended-short",
+      positionSeconds: endedAtSeconds,
+      pipelineMode,
+      exitCode: 0,
+      stderrTail: [],
+    },
+  );
+}

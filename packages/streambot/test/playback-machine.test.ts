@@ -849,3 +849,29 @@ describe("wedge timeouts", () => {
     expect(actor.getSnapshot().context.lastErrorKind).toBe("timeout");
   });
 });
+
+describe("topology removals", () => {
+  test("GUILD_REMOVED mid-stream clears the queue and winds down", async () => {
+    const stream = makeStreamController();
+    const actor = startActor(makeActors({ runStream: stream.runStream }));
+    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
+    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+
+    actor.send({ type: "GUILD_REMOVED", guildId: INPUT.guildId });
+    await waitFor(actor, (s) => s.matches("idle"), WAIT);
+    expect(actor.getSnapshot().context.queue).toHaveLength(0);
+    expect(actor.getSnapshot().context.lastError).toBe("guild removed");
+  });
+
+  test("CHANNEL_DELETED mid-stream clears the queue and winds down", async () => {
+    const stream = makeStreamController();
+    const actor = startActor(makeActors({ runStream: stream.runStream }));
+    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+
+    actor.send({ type: "CHANNEL_DELETED", channelId: INPUT.channelId });
+    await waitFor(actor, (s) => s.matches("idle"), WAIT);
+    expect(actor.getSnapshot().context.lastError).toBe("voice channel deleted");
+  });
+});

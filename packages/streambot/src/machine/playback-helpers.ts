@@ -111,7 +111,6 @@ const EXTERNAL_STOP_MESSAGES: ReadonlyMap<PlaybackEvent["type"], string> =
   new Map([
     ["GUILD_REMOVED", "guild removed"],
     ["CHANNEL_DELETED", "voice channel deleted"],
-    ["SHUTDOWN", "shutdown"],
   ]);
 
 export function externalStopMessage(event: PlaybackEvent): string {

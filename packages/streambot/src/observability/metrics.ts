@@ -219,6 +219,14 @@ export const streamCrashesTotal = new Counter({
   registers: [register],
 });
 
+/** Discord gateway disruptions, by client (command | userbot) and kind (disconnect | invalidated | error). */
+export const gatewayDisruptionsTotal = new Counter({
+  name: "streambot_gateway_disruptions_total",
+  help: "Discord gateway disruptions, by client (command | userbot) and kind (disconnect | invalidated | error)",
+  labelNames: ["client", "kind"] as const,
+  registers: [register],
+});
+
 export const streamSegmentDurationSeconds = new Histogram({
   name: "streambot_stream_segment_duration_seconds",
   help: "Wall-clock duration of a stream segment, by hardware path and outcome",

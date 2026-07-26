@@ -222,7 +222,6 @@ export function createPlaybackMachine(actors: PlaybackActors) {
       GUILD_REMOVED: externalStopTransitions,
       CHANNEL_DELETED: externalStopTransitions,
       PRODUCER_FAILED: externalStopTransitions,
-      SHUTDOWN: externalStopTransitions,
     },
     states: {
       idle: {

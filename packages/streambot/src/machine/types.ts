@@ -1,7 +1,6 @@
 import { z } from "zod";
 import type {
   DiscordTopologyEvent,
-  GatewayHealthEvent,
   ProducerHealthEvent,
 } from "@shepherdjerred/discord-stream-lifecycle/types";
 import type {
@@ -172,10 +171,12 @@ export type PlaybackEvent =
       subtitles: SubtitlePref | undefined;
       positionSeconds: number;
     }
+  // Gateway-health events (COMMAND_GATEWAY_* / USERBOT_GATEWAY_*) are deliberately NOT part of
+  // this union: gateway disruptions are observability-only (logs + metrics in command-bot /
+  // streamer), and a SHUTDOWN event does not exist — shutdown tears sessions down directly via
+  // `actor.stop()` + pool release (session-manager destroyAll).
   | DiscordTopologyEvent
-  | GatewayHealthEvent
-  | ProducerHealthEvent
-  | { type: "SHUTDOWN" };
+  | ProducerHealthEvent;
 
 export type PlaybackInput = {
   readonly guildId: GuildId;
