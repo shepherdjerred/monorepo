@@ -90,7 +90,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
 ########################
 ## Minimal runtime
 ########################
-FROM gcr.io/distroless/static-debian12:nonroot@sha256:aef9602f8710ec12bde19d593fed1f76c708531bb7aba205110f1029786ead7b
+FROM gcr.io/distroless/static-debian12:nonroot@sha256:aef9602f8710ec12bde19d593fed1f76c708531bb7aba205110f1029786ead7b AS release
 # OCI metadata: the image is a patched build of the MIT-licensed upstream.
 LABEL org.opencontainers.image.title="Bindery (sjer.red patched)" \
       org.opencontainers.image.description="Automated book download manager — patched to add Chinese Google Books results" \
@@ -107,3 +107,27 @@ EXPOSE 8787
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD ["/bindery", "healthcheck"]
 ENTRYPOINT ["/bindery"]
+
+########################
+## smoke: boot the patched binary and require /api/v1/health before push.
+## The release stage is distroless (no shell), so smoke runs the same static
+## binary on the alpine source stage instead (reusing its pin — a second
+## annotated alpine FROM would give Renovate two copies to keep in sync).
+## Mirrors the retired smoke-images.ts bindery check: default DB/data dir is
+## /config, which doesn't exist here, so point both at /tmp for the SQLite DB
+## to open and the server to boot.
+########################
+FROM source AS smoke
+COPY --from=builder /bindery /bindery
+RUN BINDERY_DB_PATH=/tmp/bindery.db BINDERY_DATA_DIR=/tmp /bindery >/tmp/bindery-smoke.log 2>&1 & \
+  pid=$!; \
+  trap 'if kill -0 $pid; then kill $pid; if wait $pid; then :; else cleanup_status=$?; [ $cleanup_status -eq 143 ] || exit $cleanup_status; fi; fi' EXIT; \
+  for _ in $(seq 1 30); do \
+    if /bindery healthcheck; then exit 0; fi; \
+    if ! kill -0 $pid; then cat /tmp/bindery-smoke.log; exit 1; fi; \
+    sleep 1; \
+  done; \
+  cat /tmp/bindery-smoke.log; \
+  exit 1
+
+FROM release AS image
