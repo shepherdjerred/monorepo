@@ -93,21 +93,54 @@ function latencySeconds(
   return Math.round((reviewed - pushed) / 1000);
 }
 
-/** Recognized transport-level failure signatures (no HTTP status): the socket
- * dropped, DNS/connection failed, or the request timed out. */
+/**
+ * Recognized transport-level failure signatures (no HTTP status): the socket
+ * dropped, DNS/connection failed, or the request timed out. Covers both
+ * libc/undici wording and Bun's native fetch phrasing ("Unable to connect. Is
+ * the computer able to access the url?" / "Failed to open socket").
+ */
 const TRANSPORT_FAILURE_RE =
-  /socket connection was closed|socket hang up|fetch failed|network|ECONNRESET|ECONNREFUSED|ETIMEDOUT|EAI_AGAIN|ENOTFOUND|EPIPE|timed out|timeout/iu;
+  /socket connection was closed|socket hang up|fetch failed|failed to open socket|unable to connect|able to access the url|connection (?:closed|refused|reset|timed out)|network|ECONNRESET|ECONNREFUSED|ECONNABORTED|ETIMEDOUT|EAI_AGAIN|ENOTFOUND|EPIPE|timed out|timeout/iu;
+
+/**
+ * Recognized transport-level error CODES. Bun surfaces refused/closed/timed-out
+ * connections with a string `code` (e.g. `ConnectionRefused`,
+ * `ConnectionClosed`, `FailedToOpenSocket`) that carries no HTTP status, so
+ * matching the code catches failures whose message wording may vary.
+ */
+const TRANSPORT_FAILURE_CODES = new Set<string>([
+  "ConnectionRefused",
+  "ConnectionClosed",
+  "ConnectionResetByPeer",
+  "FailedToOpenSocket",
+  "Timeout",
+  "ECONNRESET",
+  "ECONNREFUSED",
+  "ECONNABORTED",
+  "ETIMEDOUT",
+  "EAI_AGAIN",
+  "ENOTFOUND",
+  "EPIPE",
+]);
+
+/** Read a transport error `code` from the error or its `cause`, when present. */
+function errorCode(error: unknown): string | null {
+  if (typeof error !== "object" || error === null) return null;
+  if ("code" in error && typeof error.code === "string") return error.code;
+  if ("cause" in error) return errorCode(error.cause);
+  return null;
+}
 
 /**
  * Whether a GitHub query error during the poll loop is worth retrying rather
  * than failing the gate. Retry ONLY recognized transient failures — a 5xx
- * response, or a transport-level failure (socket closed, DNS/connection error,
- * timeout). Everything else fails fast so the step doesn't hold a Buildkite
- * agent until the 20-minute deadline: a 4xx (bad token / missing permission),
- * a GraphQL application-error payload (HTTP 200 + `errors`), and — critically —
- * an unexpected-shape / invariant error thrown by our own parsers (e.g.
- * `parseThreadPage` when `reviewThreads` is missing) all carry neither an HTTP
- * status nor a transport signature, so they propagate immediately.
+ * response, or a transport-level failure (socket closed/refused, DNS error,
+ * timeout — by message OR error code). Everything else fails fast so the step
+ * doesn't hold a Buildkite agent until the 20-minute deadline: a 4xx (bad token
+ * / missing permission), a GraphQL application-error payload (HTTP 200 +
+ * `errors`), and — critically — an unexpected-shape / invariant error thrown by
+ * our own parsers (e.g. `parseThreadPage` when `reviewThreads` is missing) all
+ * carry neither an HTTP status nor a transport signature, so they propagate.
  */
 function isRetryablePollError(error: Error): boolean {
   const message = error.message;
@@ -116,6 +149,8 @@ function isRetryablePollError(error: Error): boolean {
     const code = Number.parseInt(httpStatus[1] ?? "", 10);
     return code >= 500 && code <= 599;
   }
+  const code = errorCode(error);
+  if (code !== null && TRANSPORT_FAILURE_CODES.has(code)) return true;
   return TRANSPORT_FAILURE_RE.test(message);
 }
 

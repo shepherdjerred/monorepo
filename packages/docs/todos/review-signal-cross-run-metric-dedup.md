@@ -42,11 +42,12 @@ recorded is skipped — which is why both concerns share this todo.
 - The intra-run double-count on activity retry was already fixed in PR #1657
   (metrics now recorded once, after the S3 upload succeeds). This todo is only
   the **cross-run** inflation.
-- The raw NDJSON archive (`review-signals/<date>/<epochMillis>.ndjson` in
-  `llm-archive`) already records **every** observation with its
-  `(provider, pr, head_sha)`, so accurate offline analysis is unaffected today —
-  only the live Prometheus counters inflate. There is no dashboard consuming
-  these metrics yet, so the impact is currently latent.
+- The raw NDJSON archive (`review-signals/<temporal-run-id>.ndjson` in
+  `llm-archive` — keyed by the workflow run id, one object per collection run)
+  already records **every** observation with its `(provider, pr, head_sha)`, so
+  accurate offline analysis is unaffected today — only the live Prometheus
+  counters inflate. There is no dashboard consuming these metrics yet, so the
+  impact is currently latent.
 
 ## Remaining
 

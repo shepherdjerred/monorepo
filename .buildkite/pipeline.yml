@@ -884,6 +884,7 @@ steps:
         - "turbo.json"
         - "tsconfig.base.json"
         - "packages/birmel/**"
+        - "packages/code-review/**"
         - "packages/discord-plays-core/**"
         - "packages/discord-plays-mario-kart/**"
         - "packages/discord-plays-pokemon/**"

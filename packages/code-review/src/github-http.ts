@@ -36,12 +36,25 @@ export function recordField(
   return asRecord(record[key]);
 }
 
+/**
+ * A REQUIRED array field from a GitHub response. Throws when the value is
+ * missing or not an array rather than treating an unexpected shape as an empty
+ * list: for the review gate, silently coercing a malformed `reviewThreads.nodes`
+ * / `comments.nodes` / `check_runs` to `[]` would let a completed review pass
+ * with its (possibly blocking) findings omitted. A genuinely empty connection
+ * is still a valid `[]` and passes through.
+ */
 export function arrayField(
   record: Record<string, unknown>,
   key: string,
 ): unknown[] {
   const value = record[key];
-  return Array.isArray(value) ? value : [];
+  if (!Array.isArray(value)) {
+    throw new TypeError(
+      `Expected GitHub response field "${key}" to be an array, got ${value === null ? "null" : typeof value}`,
+    );
+  }
+  return value;
 }
 
 export function stringField(
