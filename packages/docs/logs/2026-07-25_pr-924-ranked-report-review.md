@@ -30,6 +30,8 @@ resolved all four:
   champion IDs before any image download can be skipped.
 - Data Dragon snapshot refreshes throw when any enrolled report or backend suite
   exits nonzero, so ranked SVG/hash generation cannot silently remain stale.
+- The archived ranked-report plan links to the legacy report implementation from
+  its current `archive/completed` location.
 
 The layout changes use Satori/Yoga-compatible flex containers. Boundary fixtures
 for six and ten tracked players were rendered and visually inspected.
@@ -71,6 +73,8 @@ for six and ten tracked players were rendered and visually inspected.
   at the Data Dragon boundary and replacing both invalid-ID skips with errors.
 - Added explicit snapshot subprocess failure propagation and tests covering the
   ranked-suite failure path.
+- Corrected the archived plan's relative link to the legacy report implementation
+  and verified the target locally and on GitHub.
 
 ### Remaining
 

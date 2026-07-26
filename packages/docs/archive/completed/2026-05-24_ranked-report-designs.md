@@ -11,7 +11,7 @@ disposition: active
 
 ## Context
 
-The current post-match report ([report.tsx](../../scout-for-lol/packages/report/src/html/report.tsx)) renders every non-arena match with the same cinematic blue-gradient layout — "Outcome" title in gold, time/LP delta, ranked badge(s) in the top-right, then both teams listed as rosters with full champion cards.
+The current post-match report ([report.tsx](../../../scout-for-lol/packages/report/src/html/report.tsx)) renders every non-arena match with the same cinematic blue-gradient layout — "Outcome" title in gold, time/LP delta, ranked badge(s) in the top-right, then both teams listed as rosters with full champion cards.
 
 We want ranked solo/duo and ranked flex matches to feel **more distinctive and shareable** than normals/clash/ARAM. Two new full-bleed splash-art designs (mockups attached to the originating task) will fire for ranked games:
 
