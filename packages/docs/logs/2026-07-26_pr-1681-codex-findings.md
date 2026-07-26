@@ -65,11 +65,32 @@ UX), the enrollment was **hardened**:
 
 ### Caveats
 
-- Finding #11 (move queue-availability catalog to language-neutral JSON) was not
-  among the active threads pulled this cycle. If it resurfaces, it is a larger
-  cross-package refactor (JSON + JSON Schema + per-language validation) and
-  should be scoped separately.
 - The shared `visibilityDescription("SERVER_WIDE")` still reads as "automatic"
   in Discord, where SERVER_WIDE alone does not auto-enroll (enrollment is the
   explicit `add-all-members` flag). That pre-existing Discord discrepancy was
   left as-is; the findings targeted the web surface.
+
+## Re-review round — 3 new findings on head 120bd465e
+
+Codex re-reviewed the pushed head and raised 3 valid findings against the new
+code; all fixed in a follow-up commit:
+
+- **P1 participants.ts (bulkEnroll blanket catch):** the tolerant `try/catch`
+  swallowed _every_ exception, including Prisma/infra failures, so callers could
+  report success on a partial roster. Rewrote the helper to check eligibility up
+  front (inactive competition → enroll nobody; already-participant / previously
+  LEFT / cap all pre-filtered) so `addParticipant` is only called when it can
+  succeed — and removed the catch entirely, so any unexpected error now
+  propagates and fails the mutation.
+- **P2 participants.ts (cap cut short by ineligible players):** the old `take:
+maxParticipants` could fill the raw list with `LEFT`/existing rows and finish
+  below cap. Now scans all tracked players oldest-first and skips ineligible ones
+  without consuming a slot, tracking the live active count against the cap.
+- **P2 timezone-select.tsx (UTC not committable):** `Intl.supportedValuesOf`
+  omits `UTC`, so typing it neither matched nor appeared in search. Added
+  `SEARCHABLE_ZONES` (pinned zones folded into `ALL_ZONES`) used for both the
+  exact-match commit and the filtered results.
+
+Verified: backend+app typecheck clean, lint clean, `competition-create.router`
+tests 3/3 pass. The helper's return type narrowed from `{added, failed}` to
+`{added}` (no consumer read `failed`).

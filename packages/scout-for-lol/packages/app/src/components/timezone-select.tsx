@@ -68,6 +68,16 @@ const ALL_ZONES: Zone[] = Intl.supportedValuesOf("timeZone")
       : a.offsetMinutes - b.offsetMinutes,
   );
 
+// `Intl.supportedValuesOf("timeZone")` omits some ids the app pins — notably
+// "UTC", which `Intl.DateTimeFormat` still accepts. Fold the pinned zones in so
+// they are both searchable and committable by exact match, not just visible in
+// the resting shortlist.
+const ALL_ZONE_IDS = new Set(ALL_ZONES.map((zone) => zone.id));
+const SEARCHABLE_ZONES: Zone[] = [
+  ...PINNED_ZONES.filter((zone) => !ALL_ZONE_IDS.has(zone.id)),
+  ...ALL_ZONES,
+];
+
 function labelForValue(value: string): string {
   return makeZone(value).label;
 }
@@ -92,7 +102,7 @@ export function TimezoneSelect(props: {
   const resting = trimmed.length === 0 || query === selectedLabel;
   const items = resting
     ? PINNED_ZONES
-    : ALL_ZONES.filter((zone) =>
+    : SEARCHABLE_ZONES.filter((zone) =>
         zone.id.toLowerCase().includes(trimmed.toLowerCase()),
       );
 
@@ -107,7 +117,7 @@ export function TimezoneSelect(props: {
         // and submitting without clicking a result silently keeps the old
         // timezone. Partial text matches nothing, so this never fires mid-type.
         const trimmedText = text.trim();
-        const exact = ALL_ZONES.find(
+        const exact = SEARCHABLE_ZONES.find(
           (zone) => zone.id === trimmedText || zone.label === trimmedText,
         );
         if (exact !== undefined && exact.id !== props.value) {

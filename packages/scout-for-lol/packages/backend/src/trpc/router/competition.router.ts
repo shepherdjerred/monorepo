@@ -285,7 +285,6 @@ export const competitionRouter = router({
           prisma,
           competitionId: competition.id,
           guildId: input.guildId,
-          maxParticipants: input.maxParticipants,
         });
       }
       if (!ctx.permissions.isRoot) {
@@ -372,7 +371,6 @@ export const competitionRouter = router({
           prisma,
           competitionId: input.competitionId,
           guildId: input.guildId,
-          maxParticipants: updated.maxParticipants,
         });
       }
       return updated;
@@ -468,15 +466,11 @@ export const competitionRouter = router({
   addAllMembers: guildMutationProcedure("competitions", "invite")
     .input(CompetitionIdInput)
     .mutation(async ({ input }) => {
-      const competition = await loadCompetitionOr404(
-        input.competitionId,
-        input.guildId,
-      );
+      await loadCompetitionOr404(input.competitionId, input.guildId);
       return bulkEnrollTrackedPlayers({
         prisma,
         competitionId: input.competitionId,
         guildId: input.guildId,
-        maxParticipants: competition.maxParticipants,
       });
     }),
 
