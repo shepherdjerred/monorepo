@@ -112,6 +112,24 @@ export type PrepareStreamOptions = {
   hardwareAcceleratedDecoding: boolean;
 
   /**
+   * How decoded frames travel into the filter graph when a full hardware pipeline is active
+   * (`hardwareAcceleratedDecoding` + an encoder with `hwPipeline`).
+   *
+   * - `"full"` (default): the decoder emits GPU surfaces (`-hwaccel_output_format`) and the whole
+   *   graph runs on hardware frames. Fastest, but if the decoder flips its hwaccel state
+   *   mid-stream (seen on some HEVC remuxes) ffmpeg ≤7.1 cannot renegotiate the hardware-only
+   *   graph and dies with "Impossible to convert between the formats" (exit 218).
+   * - `"upload"`: the decoder still decodes on the GPU but emits system-memory frames, and the
+   *   graph starts with `hwupload` — scale/tonemap/encode stay on the GPU at the cost of one
+   *   PCIe round-trip per frame. Structurally immune to the mid-stream renegotiation bug (the
+   *   graph input is always a software frame), so it serves as the recovery pipeline for sources
+   *   that crash the `"full"` mode.
+   *
+   * Ignored when the full hardware pipeline is not active.
+   */
+  hardwarePipelineMode: "full" | "upload";
+
+  /**
    * Add some options to minimize latency
    */
   minimizeLatency: boolean;
@@ -220,6 +238,41 @@ export type Controller = {
   setVolume(newVolume: number): Promise<boolean>;
 };
 
+/**
+ * Rejection type of {@link prepareStream}'s `promise` when ffmpeg itself fails (as opposed to an
+ * abort). Carries what the raw fluent-ffmpeg error loses: the parsed exit code and a bounded tail
+ * of ffmpeg's stderr — the actual error lines (e.g. filter-graph negotiation failures), not just
+ * the final "Conversion failed!".
+ */
+export class FfmpegExitError extends Error {
+  readonly exitCode: number | null;
+  readonly stderrTail: readonly string[];
+  readonly startTimeSeconds: number | undefined;
+
+  constructor(
+    message: string,
+    opts: {
+      cause: unknown;
+      exitCode: number | null;
+      stderrTail: readonly string[];
+      startTimeSeconds: number | undefined;
+    },
+  ) {
+    super(message, { cause: opts.cause });
+    this.name = "FfmpegExitError";
+    this.exitCode = opts.exitCode;
+    this.stderrTail = opts.stderrTail;
+    this.startTimeSeconds = opts.startTimeSeconds;
+  }
+}
+
+/** Parse fluent-ffmpeg's "ffmpeg exited with code N" message; null when the shape doesn't match. */
+export function parseFfmpegExitCode(message: string): number | null {
+  const match = /exited with code (\d+)/u.exec(message);
+  const code = match?.[1];
+  return code === undefined ? null : Number(code);
+}
+
 export function prepareStream(
   input: string | Readable,
   options: Partial<PrepareStreamOptions> = {},
@@ -238,6 +291,7 @@ export function prepareStream(
     includeAudio: true,
     encoder: Encoders.software(),
     hardwareAcceleratedDecoding: false,
+    hardwarePipelineMode: "full",
     minimizeLatency: false,
     customHeaders: {
       "User-Agent":
@@ -311,6 +365,9 @@ export function prepareStream(
       hardwareAcceleratedDecoding:
         opts.hardwareAcceleratedDecoding ??
         defaultOptions.hardwareAcceleratedDecoding,
+
+      hardwarePipelineMode:
+        opts.hardwarePipelineMode ?? defaultOptions.hardwarePipelineMode,
 
       minimizeLatency: opts.minimizeLatency ?? defaultOptions.minimizeLatency,
 
@@ -449,9 +506,22 @@ export function prepareStream(
       ? encoderSettings.hwPipeline
       : undefined;
 
+  const uploadMode =
+    hwPipeline !== undefined && mergedOptions.hardwarePipelineMode === "upload";
+  if (uploadMode && !hwPipeline.uploadDecodeOptions) {
+    throw new Error(
+      `hardwarePipelineMode "upload" requested but the ${mergedOptions.videoCodec} encoder's hwPipeline declares no uploadDecodeOptions`,
+    );
+  }
+
   if (hardwareAcceleratedDecoding) {
-    if (hwPipeline) command.inputOptions(hwPipeline.decodeOptions);
-    else command.inputOption("-hwaccel", "auto");
+    if (hwPipeline) {
+      command.inputOptions(
+        uploadMode && hwPipeline.uploadDecodeOptions
+          ? hwPipeline.uploadDecodeOptions
+          : hwPipeline.decodeOptions,
+      );
+    } else command.inputOption("-hwaccel", "auto");
   }
 
   if (minimizeLatency) {
@@ -546,6 +616,7 @@ export function prepareStream(
       width,
       height,
       inputColor: mergedOptions.inputColor,
+      ...(uploadMode ? { uploadInput: true } : {}),
       ...(frameRate !== undefined ? { frameRate } : {}),
       ...(mergedOptions.subtitleBurn !== undefined
         ? {
@@ -628,8 +699,16 @@ export function prepareStream(
   }
 
   // exit handling
+  // Bounded stderr tail: fluent-ffmpeg's error object keeps only the last line ("Conversion
+  // failed!"), which loses the actual error (e.g. the filter-graph negotiation failure lines).
+  const STDERR_TAIL_LINES = 50;
+  const stderrTail: string[] = [];
+  command.on("stderr", (line: string) => {
+    stderrTail.push(line);
+    if (stderrTail.length > STDERR_TAIL_LINES) stderrTail.shift();
+  });
   const promise = new Promise<void>((resolve, reject) => {
-    command.on("error", (err) => {
+    command.on("error", (err: Error) => {
       if (cancelSignal?.aborted)
         /**
          * fluent-ffmpeg might throw an error when SIGTERM is sent to
@@ -637,7 +716,15 @@ export function prepareStream(
          * and throw that instead
          */
         reject(cancelSignal.reason);
-      else reject(err);
+      else
+        reject(
+          new FfmpegExitError(err.message, {
+            cause: err,
+            exitCode: parseFfmpegExitCode(err.message),
+            stderrTail: [...stderrTail],
+            startTimeSeconds: mergedOptions.startTime,
+          }),
+        );
     });
     command.on("end", () => resolve());
   });
@@ -988,6 +1075,16 @@ export async function attachPipeline(
       cleanup();
       resolve();
     });
+    // A demuxer error destroys the source pipes with the error instead of ending them (see
+    // LibavDemuxer's cleanup). Pipe does not forward source errors to the destination, so without
+    // this listener `done` would never settle — surface it as a real failure.
+    const onSourceError = (err: Error) => {
+      if (cancelSignal?.aborted) return;
+      cleanup();
+      reject(err);
+    };
+    video.stream.once("error", onSourceError);
+    audio?.stream.once("error", onSourceError);
   });
 
   return {

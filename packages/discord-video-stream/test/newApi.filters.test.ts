@@ -153,3 +153,73 @@ describe("prepareStream readrate pacing", () => {
     }
   });
 });
+
+describe("prepareStream hardwarePipelineMode", () => {
+  const hwOptions = {
+    hardwareAcceleratedDecoding: true,
+    width: 1920,
+    height: 1080,
+    inputColor: "hdr",
+  } satisfies Parameters<typeof prepareStream>[1];
+
+  async function importVaapi() {
+    const { Encoders } = await import("../src/media/encoders/index.ts");
+    return Encoders.vaapi({ device: "/dev/dri/renderD128" });
+  }
+
+  test('default ("full"): GPU output frames, no leading hwupload', async () => {
+    const encoder = await importVaapi();
+    const { command, output, promise } = prepareStream("video.mkv", {
+      ...hwOptions,
+      encoder,
+    });
+    promise.catch(() => {});
+    try {
+      const joined = ffmpegArgs(command).join(" ");
+      expect(joined).toContain("-hwaccel_output_format vaapi");
+      expect(joined).not.toContain("hwupload,scale_vaapi");
+    } finally {
+      killQuietly(command);
+      output.destroy();
+    }
+  });
+
+  test('"upload": system-memory frames with a leading hwupload in the graph', async () => {
+    const encoder = await importVaapi();
+    const { command, output, promise } = prepareStream("video.mkv", {
+      ...hwOptions,
+      encoder,
+      hardwarePipelineMode: "upload",
+    });
+    promise.catch(() => {});
+    try {
+      const joined = ffmpegArgs(command).join(" ");
+      expect(joined).not.toContain("-hwaccel_output_format");
+      expect(joined).toContain("-hwaccel vaapi");
+      expect(joined).toContain(
+        "hwupload,scale_vaapi=w=1920:h=1080:format=p010",
+      );
+    } finally {
+      killQuietly(command);
+      output.destroy();
+    }
+  });
+
+  test('"upload" is inert on the software pipeline (no hw pipeline engaged)', () => {
+    const { command, output, promise } = prepareStream("video.mkv", {
+      width: 1920,
+      height: 1080,
+      inputColor: "hdr",
+      hardwarePipelineMode: "upload",
+    });
+    promise.catch(() => {});
+    try {
+      const joined = ffmpegArgs(command).join(" ");
+      expect(joined).not.toContain("-hwaccel");
+      expect(joined).not.toContain("hwupload");
+    } finally {
+      killQuietly(command);
+      output.destroy();
+    }
+  });
+});

@@ -162,6 +162,38 @@ describe("buildVaapiVideoGraph", () => {
     });
   });
 
+  test("uploadInput prefixes hwupload (upload pipeline mode, HDR)", () => {
+    expect(
+      buildVaapiVideoGraph({
+        width: 1920,
+        height: 1080,
+        inputColor: "hdr",
+        uploadInput: true,
+      }),
+    ).toEqual({
+      kind: "filterChain",
+      filters: [
+        "hwupload,scale_vaapi=w=1920:h=1080:format=p010," +
+          "tonemap_vaapi=format=nv12:t=bt709:m=bt709:p=bt709",
+      ],
+    });
+  });
+
+  test("uploadInput + subtitles: the base branch uploads before scaling", () => {
+    const graph = buildVaapiVideoGraph({
+      width: 1920,
+      height: 1080,
+      frameRate: 30,
+      inputColor: "sdr",
+      uploadInput: true,
+      subtitle: { path: SUB, startTime: 0 },
+    });
+    if (graph.kind !== "filterComplex") throw new Error("expected filterComplex");
+    expect(graph.graph[0]).toBe(
+      "[0:v]hwupload,scale_vaapi=w=1920:h=1080:format=nv12[base]",
+    );
+  });
+
   test("SDR + subtitles: filter_complex with BGRA alpha canvas, hwupload, overlay_vaapi", () => {
     expect(
       buildVaapiVideoGraph({

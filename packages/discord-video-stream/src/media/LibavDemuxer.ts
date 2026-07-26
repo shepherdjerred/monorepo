@@ -121,13 +121,22 @@ export async function demux(input: Readable, { format }: DemuxerOptions) {
     bufferSize: 8192,
   });
 
-  const cleanup = () => {
+  // Natural EOF ends the pipes (graceful stream end downstream). A demux error instead destroys
+  // them WITH the error so consumers can tell a mid-stream failure from a completed source —
+  // `.end()` on error would be indistinguishable from real EOF (the silent-truncation bug).
+  const cleanup = (err?: unknown) => {
     input.destroy();
     demuxer.close();
     vPipe.off("drain", readFrame);
     aPipe.off("drain", readFrame);
-    vPipe.end();
-    aPipe.end();
+    if (err === undefined) {
+      vPipe.end();
+      aPipe.end();
+    } else {
+      const error = err instanceof Error ? err : new Error(String(err));
+      vPipe.destroy(error);
+      aPipe.destroy(error);
+    }
     vbsf.forEach((e) => {
       e.close();
     });
@@ -291,11 +300,11 @@ export async function demux(input: Readable, { format }: DemuxerOptions) {
           inPacket.free();
         }
       } catch (e) {
-        loggerFrameCommon.info(
+        loggerFrameCommon.error(
           { error: e },
           "Received an error during frame extraction. Stopping",
         );
-        cleanup();
+        cleanup(e);
         return;
       }
     }
