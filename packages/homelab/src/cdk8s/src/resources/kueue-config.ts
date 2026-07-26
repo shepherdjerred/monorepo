@@ -10,9 +10,10 @@ import { BUILDKITE_MAX_IN_FLIGHT } from "@shepherdjerred/homelab/cdk8s/src/resou
  * of the node's 27 CPU / 73Gi allocatable, leaving ~13.8 CPU / 28Gi schedulable
  * for CI. Memory sits at the full 28Gi headroom because the CI workspace
  * volume is memory-backed now (agent-stack `workspace-volume` tmpfs — see
- * argo-applications/buildkite.ts): per-pod requests grew to absorb checkout +
- * install bytes as RAM (verify 7Gi + dind 1.5Gi; other privileged 3Gi + 1.5Gi;
- * light 1.5Gi), trading admission width for near-zero NVMe writes from those
+ * argo-applications/buildkite.ts): checkout explicitly requests 1Gi, while
+ * per-step requests absorb install bytes as RAM (verify 6Gi + checkout 1Gi +
+ * dind 1.5Gi; other privileged 2Gi + checkout 1Gi + dind 1.5Gi; light 512Mi +
+ * checkout 1Gi), trading admission width for near-zero NVMe writes from those
  * pods. This still admits verify plus ~3-4 other heavy pods concurrently, vs
  * the pre-2026-07-22 starvation of 2 (see
  * packages/docs/logs/2026-07-22_ci-capacity-analysis.md). The 8Gi

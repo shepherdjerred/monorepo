@@ -207,13 +207,19 @@ github.com/1Password/connect-helm-charts#272.
 
 (The `pre-push` hook and CI run `bun run verify`, which includes these tests; run them locally too so you catch failures before pushing.)
 
-### Run tests with `bun run test`, not bare `bun test`
+### Run tests from the CDK8s workspace
 
-Run homelab tests via the **script** `bun run test` (which does
-`install-subpkgs && cd src/cdk8s && bun run test && cd ../helm-types && bun run test`).
-The `cd src/cdk8s` matters: many cdk8s tests read `config/homeassistant` via a
-CWD-relative path. Bare `bun test` from `packages/homelab` uses the wrong CWD and
-produces ~15 spurious failures, all reporting
+The `packages/homelab` umbrella has no `test` script. Run the CDK8s suite from
+its own workspace:
+
+```bash
+cd packages/homelab/src/cdk8s
+bun run test
+```
+
+The working directory matters: many CDK8s tests read `config/homeassistant` via
+a CWD-relative path. Bare `bun test` from `packages/homelab` uses the wrong CWD
+and produces ~15 spurious failures, all reporting
 `ENOENT: no such file or directory, open 'config/homeassistant '` (note the trailing
 null byte) across unrelated test files — these are NOT real failures.
 
