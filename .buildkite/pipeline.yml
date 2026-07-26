@@ -963,7 +963,15 @@ steps:
     concurrency: 1
     concurrency_group: monorepo/site-deploys
     command: |
-      if ! bash .buildkite/scripts/ci-changed.sh sites; then exit 0; fi
+      # The site-scout lane carries paths the aggregate sites lane does not
+      # (notably versions.ts: the version commit-back build must archive +
+      # mint the deferred scout release pair — build 6281 hard-failed when
+      # this early exit swallowed that build's archive), so only skip when
+      # BOTH selectors agree nothing site-shaped changed.
+      if ! bash .buildkite/scripts/ci-changed.sh sites &&
+        ! bash .buildkite/scripts/ci-changed.sh site-scout; then
+        exit 0
+      fi
       . .buildkite/scripts/toolchain.sh
       filters=()
       site_sjer=false
@@ -1029,6 +1037,10 @@ steps:
         bun --no-install run --cwd packages/llm-models build
         bun --no-install run --cwd packages/astro-opengraph-images build
         bun --no-install scripts/scout-site-release.ts archive --version "2.0.0-$BUILDKITE_BUILD_NUMBER"
+        # Record the archived version so scout-tag-release can gate on what
+        # actually happened instead of re-deriving it from a second path
+        # selector that can (and did — build 6281) skew from this one.
+        buildkite-agent meta-data set scout-site-archived "2.0.0-$BUILDKITE_BUILD_NUMBER"
         bun --no-install scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER"
       fi
     retry: *retry
@@ -1193,13 +1205,16 @@ steps:
     depends_on: [images, sites]
     cancel_on_build_failing: true
     command: |
-      if ! bash .buildkite/scripts/ci-changed.sh site-scout; then
-        # No site archived this build. If the images step still recorded a
-        # scout digest (a backend-closure change outside the site lane), the
-        # mint is deferred: the commit-back merge touches versions.ts, which
-        # IS in the site lane, so the next build archives + mints the pair.
-        exit 0
-      fi
+      # Gate on what the sites step actually recorded, not on a re-derived
+      # path selector: build 6281 failed because this step's site-scout list
+      # and the sites step's aggregate list disagreed about a versions.ts-only
+      # commit. No recorded archive → nothing to mint this build. If the
+      # images step still recorded a scout digest (a backend-closure change
+      # outside the site lane), the mint is deferred: the commit-back merge
+      # touches versions.ts (in the site-scout lane), so the next build
+      # archives + mints the pair.
+      archived=$$(buildkite-agent meta-data get scout-site-archived --default "")
+      if [ -z "$$archived" ]; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       # SeaweedFS creds: asserts the version's archive manifest exists before
@@ -1207,7 +1222,7 @@ steps:
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       printf '%s' "$$GH_TOKEN" | docker login ghcr.io -u shepherdjerred --password-stdin
       scout_digest=$$(buildkite-agent meta-data get image-digests | jq -r '."shepherdjerred/scout-for-lol" // empty')
-      bun --no-install scripts/scout-site-release.ts tag-release --version "2.0.0-$BUILDKITE_BUILD_NUMBER" $${scout_digest:+--digest "$$scout_digest"}
+      bun --no-install scripts/scout-site-release.ts tag-release --version "$$archived" $${scout_digest:+--digest "$$scout_digest"}
     retry: *retry
     plugins:
       - kubernetes:
