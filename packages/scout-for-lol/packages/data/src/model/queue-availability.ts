@@ -58,8 +58,15 @@ export const QUEUE_AVAILABILITY: Record<QueueType, QueueAvailability> = {
   clash: PERMANENT,
   "aram clash": PERMANENT,
   aram: PERMANENT,
+  // Confidence notes (researched 2026-07-26 from Riot patch notes + news;
+  // the wikis no longer publish per-run availability tables, so pre-2025
+  // END dates are estimates of "until the following patch"):
+  // starts are patch-day-sourced (high confidence) except where noted.
+  // Known runs NOT listed because no reliable window could be pinned:
+  // ARURF 2016/2017 rotating-game-mode weekends, an ARURF run in 2020, and
+  // an ARURF run in 2024 (patch 14.x). Missing historical windows have no
+  // behavioral effect — only current-window membership drives the UI.
   arurf: limited([
-    // Ends approximate (~the following patch) for pre-2025 runs.
     ["2021-02-03", "2021-03-03"],
     ["2022-01-26", "2022-02-23"],
     ["2023-01-11", "2023-02-08"],
@@ -68,6 +75,9 @@ export const QUEUE_AVAILABILITY: Record<QueueType, QueueAvailability> = {
     ["2026-01-22", "2026-02-18"],
   ]),
   urf: limited([
+    // 2014 April Fools launch (extended from Apr 7); 2019 10th-anniversary
+    // Pick URF (exact dates announced by Riot); 2025 year-end run (start
+    // patch-sourced, end approximate).
     ["2014-04-03", "2014-04-13"],
     ["2019-10-28", "2019-11-08"],
     ["2025-11-19", "2025-12-10"],
@@ -75,6 +85,8 @@ export const QUEUE_AVAILABILITY: Record<QueueType, QueueAvailability> = {
   quickplay: PERMANENT,
   swiftplay: PERMANENT,
   arena: limited([
+    // Runs 1-3 dates from Riot announcements (high confidence). Run 4's
+    // start is approximate (early-2025 return, extended to May 14).
     ["2023-07-20", "2023-08-28"],
     ["2023-12-07", "2024-01-08"],
     ["2024-05-01", "2024-09-24"],
