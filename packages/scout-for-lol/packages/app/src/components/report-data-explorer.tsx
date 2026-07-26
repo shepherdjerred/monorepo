@@ -51,7 +51,11 @@ export function ReportDataExplorer(props: {
     if (table === undefined) {
       return;
     }
-    setSelectedColumns(table.columns.map((column) => column.id));
+    setSelectedColumns(
+      table.columns
+        .filter((column) => column.defaultVisible)
+        .map((column) => column.id),
+    );
     setSortColumn(table.defaultSort);
     setFilters([]);
     setCursor(0);
@@ -115,45 +119,58 @@ export function ReportDataExplorer(props: {
           </SelectContent>
         </Select>
 
-        <div className="flex flex-wrap gap-2">
-          {(table?.columns ?? []).map((column) => (
-            <label
-              key={column.id}
-              className="flex items-center gap-2 rounded border border-border px-2 py-1 text-xs"
-              title={column.description}
-            >
-              <input
-                type="checkbox"
-                checked={selectedColumns.includes(column.id)}
-                onChange={() => {
-                  setSelectedColumns((current) =>
-                    current.includes(column.id)
-                      ? current.filter((id) => id !== column.id)
-                      : [...current, column.id],
-                  );
-                  setCursor(0);
-                }}
-              />
-              {column.label}
-              <button
-                type="button"
-                title={`Copy ${column.id}`}
-                onClick={() => {
-                  void navigator.clipboard.writeText(column.id);
-                }}
-              >
-                <Copy className="size-3" />
-              </button>
-              <button
-                type="button"
-                title={`Insert ${column.id} into query`}
-                onClick={() => {
-                  props.onInsertIdentifier(column.id);
-                }}
-              >
-                <CornerDownLeft className="size-3" />
-              </button>
-            </label>
+        <div className="space-y-2">
+          {columnGroups(table?.columns ?? []).map(([group, columns]) => (
+            <fieldset key={group} className="space-y-1">
+              <legend className="text-xs font-medium text-muted-foreground">
+                {group}
+              </legend>
+              <div className="flex flex-wrap gap-2">
+                {columns.map((column) => (
+                  <span
+                    key={column.id}
+                    className="flex items-center gap-2 rounded border border-border px-2 py-1 text-xs"
+                    title={column.description}
+                  >
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedColumns.includes(column.id)}
+                        onChange={() => {
+                          setSelectedColumns((current) =>
+                            current.includes(column.id)
+                              ? current.filter((id) => id !== column.id)
+                              : [...current, column.id],
+                          );
+                          setCursor(0);
+                        }}
+                      />
+                      {column.label}
+                    </label>
+                    <button
+                      type="button"
+                      aria-label={`Copy ${column.id}`}
+                      title={`Copy ${column.id}`}
+                      onClick={() => {
+                        void navigator.clipboard.writeText(column.id);
+                      }}
+                    >
+                      <Copy className="size-3" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Insert ${column.id} into query`}
+                      title={`Insert ${column.id} into query`}
+                      onClick={() => {
+                        props.onInsertIdentifier(column.id);
+                      }}
+                    >
+                      <CornerDownLeft className="size-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </fieldset>
           ))}
         </div>
       </div>
@@ -321,7 +338,9 @@ export function ReportDataExplorer(props: {
         </Table>
       </div>
       {browseQuery.isPending && (
-        <p className="text-sm text-muted-foreground">Loading rows…</p>
+        <p role="status" className="text-sm text-muted-foreground">
+          Loading rows…
+        </p>
       )}
       <div className="flex justify-between">
         <Button
@@ -356,6 +375,29 @@ export function ReportDataExplorer(props: {
 
 function usableCursor(value: number | null | undefined): number | null {
   return typeof value === "number" ? value : null;
+}
+
+type ExplorerColumnInfo = {
+  id: string;
+  label: string;
+  description: string;
+  group: string;
+  defaultVisible: boolean;
+};
+
+function columnGroups(
+  columns: ExplorerColumnInfo[],
+): [string, ExplorerColumnInfo[]][] {
+  const groups = new Map<string, ExplorerColumnInfo[]>();
+  for (const column of columns) {
+    const existing = groups.get(column.group);
+    if (existing === undefined) {
+      groups.set(column.group, [column]);
+    } else {
+      existing.push(column);
+    }
+  }
+  return [...groups.entries()];
 }
 
 function updateFilter(
