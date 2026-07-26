@@ -79,9 +79,10 @@ export type ReviewProvider = {
   /** Human-facing name for gate messages, e.g. `"Greptile"`, `"Codex"`. */
   displayName: string;
   /**
-   * GitHub login tokens this provider posts as, compared after stripping the
-   * REST `[bot]` suffix. Matched by case-insensitive substring so both the
-   * exact slug and any `-apps`/`-connector` variants resolve.
+   * The complete GitHub login(s) this provider posts as (the GraphQL bare slug,
+   * e.g. `greptile-apps` / `chatgpt-codex-connector`). Matched EXACTLY
+   * (case-insensitive) after stripping the REST `[bot]` suffix — never by
+   * substring, so a look-alike login cannot impersonate the provider.
    */
   authorLogins: readonly string[];
   /** Parse the severity level (0..3) from a review comment body, or null. */

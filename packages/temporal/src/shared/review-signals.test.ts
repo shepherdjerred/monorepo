@@ -19,6 +19,7 @@ function makeEvent(
     head_pushed_at: null,
     review_state: "reviewing",
     completion_signal: "none",
+    reviewed_at_head: false,
     latency_s: null,
     findings: emptyFindingCounts(),
     blocking_count: 0,
@@ -55,22 +56,25 @@ describe("summarizeReviewSignals", () => {
         pr: 1,
         review_state: "reviewed",
         completion_signal: "review-at-head",
+        reviewed_at_head: true,
         stale_reaction: false,
         findings: { p0: 1, p1: 0, p2: 2, p3: 0, unknown: 0 },
       }),
-      // Clean 👍 reaction confirmed NOT stale — counts as at-head.
+      // Clean 👍 reaction bound to head — counts as at-head.
       makeEvent({
         pr: 2,
         review_state: "reviewed-clean-reaction",
         completion_signal: "thumbsup-reaction",
+        reviewed_at_head: true,
         stale_reaction: false,
         findings: emptyFindingCounts(),
       }),
-      // Clean 👍 reaction but flagged stale (reviewed commit != head) — NOT at-head.
+      // Clean 👍 reaction unbound/stale (not tied to head) — NOT at-head.
       makeEvent({
         pr: 3,
         review_state: "reviewed-clean-reaction",
         completion_signal: "thumbsup-reaction",
+        reviewed_at_head: false,
         stale_reaction: true,
         findings: emptyFindingCounts(),
       }),
@@ -87,22 +91,33 @@ describe("summarizeReviewSignals", () => {
         pr: 5,
         review_state: "errored",
         completion_signal: "check-run",
+        reviewed_at_head: false,
         stale_reaction: false,
         findings: { p0: 0, p1: 1, p2: 0, p3: 0, unknown: 1 },
+      }),
+      // Deliberate provider skip — `reviewed` state but NOT head-bound (no
+      // check-run for the head), so it must count as reviewedNotAtHead.
+      makeEvent({
+        pr: 6,
+        review_state: "reviewed",
+        completion_signal: "check-run",
+        reviewed_at_head: false,
+        stale_reaction: false,
+        findings: emptyFindingCounts(),
       }),
     ];
 
     const summary = summarizeReviewSignals(events);
 
-    expect(summary.total).toBe(5);
+    expect(summary.total).toBe(6);
     expect(summary.byCompletionSignal).toEqual({
-      "check-run": 1,
+      "check-run": 2,
       "review-at-head": 1,
       "thumbsup-reaction": 2,
       none: 1,
     });
     expect(summary.reviewedAtHead).toBe(2);
-    expect(summary.reviewedNotAtHead).toBe(3);
+    expect(summary.reviewedNotAtHead).toBe(4);
     expect(summary.findingsTotal).toEqual({
       p0: 1,
       p1: 1,

@@ -27,6 +27,7 @@ describe("formatSignalEvent", () => {
     head_pushed_at: "2026-07-26T00:19:58Z",
     review_state: "reviewed",
     completion_signal: "review-at-head",
+    reviewed_at_head: true,
     latency_s: 385,
     findings: { p0: 0, p1: 0, p2: 2, p3: 0, unknown: 0 },
     blocking_count: 2,

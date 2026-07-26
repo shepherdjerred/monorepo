@@ -18,12 +18,12 @@ export type ReviewSignalSummary = {
   total: number;
   byCompletionSignal: Record<CompletionSignal, number>;
   /**
-   * "At head" = the provider's most recent completion for this event is
-   * confirmed to be for the exact head commit under observation: either a
-   * `reviewed` state (set only once a check-run/review-at-head completion is
-   * confirmed to be for `head`) or a `reviewed-clean-reaction` state whose 👍
-   * was NOT flagged `stale_reaction`. Every other case — still `reviewing`,
-   * `errored`, or a confirmed-stale 👍 — counts toward `reviewedNotAtHead`.
+   * "At head" = the provider's completion for this event is confirmed to be for
+   * the exact head commit under observation (the event's `reviewed_at_head`
+   * flag): a review-at-head, a head-bound 👍, or a completed check-run for the
+   * head. Every other case — still `reviewing`, `errored`, an unbound/stale 👍,
+   * or a deliberate skip (`reviewed` but not head-bound) — counts toward
+   * `reviewedNotAtHead`.
    */
   reviewedAtHead: number;
   reviewedNotAtHead: number;
@@ -40,11 +40,7 @@ function emptyCompletionSignalCounts(): Record<CompletionSignal, number> {
 }
 
 function isAtHead(event: ReviewSignalEvent): boolean {
-  if (event.review_state === "reviewed") return true;
-  if (event.review_state === "reviewed-clean-reaction") {
-    return !event.stale_reaction;
-  }
-  return false;
+  return event.reviewed_at_head;
 }
 
 /** Summarize a batch of review-signal events: counts by completion signal,

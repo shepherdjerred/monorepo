@@ -11,7 +11,7 @@ import {
   type ReviewSignalEvent,
 } from "@shepherdjerred/code-review";
 import {
-  fetchCommitCommittedAt,
+  fetchHeadPushedAt,
   fetchReviewThreads,
   resolveReviewState,
 } from "@shepherdjerred/code-review/github";
@@ -129,10 +129,7 @@ function splitOwnerRepo(repo: string): { owner: string; name: string } {
 /**
  * Builds one `ReviewSignalEvent` for a single PR head, mirroring
  * `scripts/probe-review-signal.ts` / `scripts/wait-for-review.ts` exactly
- * (including the latency guard). `atHead` is returned alongside the event
- * (rather than folded into it) because the event schema has no such field —
- * it's derived here from the raw `ReviewStateResult` for the
- * `review_reviewed_head_total` metric.
+ * (including the latency guard and the head-bound `reviewed_at_head` flag).
  */
 async function buildSignalEvent(input: {
   provider: ReviewProvider;
@@ -140,13 +137,15 @@ async function buildSignalEvent(input: {
   prNumber: number;
   head: string;
   token: string;
-}): Promise<{ event: ReviewSignalEvent; atHead: boolean }> {
+}): Promise<ReviewSignalEvent> {
   const { provider, repo, prNumber, head, token } = input;
 
-  const [threadResult, state, headPushedAt] = await Promise.all([
+  // Head push time first — `resolveReviewState` needs it to bind a 👍 reaction
+  // to the current head, so it cannot share a Promise.all with that call.
+  const headPushedAt = await fetchHeadPushedAt({ repo, sha: head, token });
+  const [threadResult, state] = await Promise.all([
     fetchReviewThreads({ repo, number: prNumber, token, provider }),
-    resolveReviewState({ provider, repo, head, prNumber, token }),
-    fetchCommitCommittedAt({ repo, sha: head, token }),
+    resolveReviewState({ provider, repo, head, prNumber, token, headPushedAt }),
   ]);
 
   const providerThreads = threadResult.threads.filter(
@@ -166,7 +165,7 @@ async function buildSignalEvent(input: {
       ? Math.round((Date.parse(reviewedAt) - Date.parse(headPushedAt)) / 1000)
       : null;
 
-  const event: ReviewSignalEvent = {
+  return {
     schema: REVIEW_SIGNAL_SCHEMA,
     ts: new Date().toISOString(),
     provider: provider.id,
@@ -178,6 +177,7 @@ async function buildSignalEvent(input: {
         ? "reviewed-clean-reaction"
         : state.state,
     completion_signal: state.completionSignal,
+    reviewed_at_head: atHead,
     latency_s: latencyS,
     findings: tallyFindings(providerThreads.map((thread) => thread.priority)),
     blocking_count: blocking.length,
@@ -188,14 +188,11 @@ async function buildSignalEvent(input: {
     stale_reaction: state.staleReaction,
     decision: null,
   };
-
-  return { event, atHead };
 }
 
 function recordEventMetrics(
   providerId: string,
   event: ReviewSignalEvent,
-  atHead: boolean,
 ): void {
   if (event.latency_s !== null) {
     reviewCompletionLatencySeconds.observe(
@@ -244,7 +241,7 @@ function recordEventMetrics(
 
   reviewReviewedHeadTotal.inc({
     provider: providerId,
-    at_head: atHead ? "true" : "false",
+    at_head: event.reviewed_at_head ? "true" : "false",
   });
 }
 
@@ -270,7 +267,10 @@ async function listRecentPrs(
 /**
  * Observes one PR's review signal. Failures here are per-PR telemetry
  * failures (a flaky GraphQL call, a deleted PR, etc.) — the caller logs +
- * continues rather than aborting the whole run.
+ * continues rather than aborting the whole run. Metrics are deliberately NOT
+ * recorded here: they are recorded once, after the S3 archive upload succeeds
+ * (see `runObserveReviewSignalsImpl`), so an activity retry after a failed
+ * upload cannot double-count the same observations.
  */
 async function observeOnePr(input: {
   provider: ReviewProvider;
@@ -280,15 +280,13 @@ async function observeOnePr(input: {
 }): Promise<ReviewSignalEvent | null> {
   const { provider, repo, pr, token } = input;
   try {
-    const { event, atHead } = await buildSignalEvent({
+    return await buildSignalEvent({
       provider,
       repo,
       prNumber: pr.number,
       head: pr.headSha,
       token,
     });
-    recordEventMetrics(provider.id, event, atHead);
-    return event;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     Sentry.withScope((scope) => {
@@ -363,6 +361,18 @@ async function runObserveReviewSignalsImpl(
     token: tokenResult.token,
   });
 
+  // Isolated per-PR errors are tolerated (partial success), but if EVERY PR in
+  // a non-empty batch failed, the cause is systematic (GraphQL permissions
+  // changed, the review-thread endpoint is down, …) — throw so Temporal applies
+  // its retries instead of archiving an empty run and recording a green
+  // scheduled execution that collected nothing.
+  if (prs.length > 0 && events.length === 0) {
+    throw new Error(
+      `review-signal collection produced 0 events across ${String(prs.length)} PR(s) ` +
+        `(${String(errored)} errored); treating as a systematic failure so Temporal retries.`,
+    );
+  }
+
   const ndjson = events.map((event) => JSON.stringify(event)).join("\n");
   const now = new Date();
   const key = buildArchiveKey(now);
@@ -381,6 +391,15 @@ async function runObserveReviewSignalsImpl(
     },
     ndjson.length > 0 ? `${ndjson}\n` : "",
   );
+
+  // Record metrics ONLY after the archive upload succeeds, as the final side
+  // effect of the run. Any failure that triggers an activity retry (token mint,
+  // PR listing, the S3 upload above) happens before this point, so a retried
+  // run cannot re-increment counters/histograms for observations it already
+  // recorded on a prior attempt.
+  for (const event of events) {
+    recordEventMetrics(provider.id, event);
+  }
 
   const summary = summarizeReviewSignals(events);
   const durationSeconds = (Date.now() - start) / 1000;

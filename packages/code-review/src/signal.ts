@@ -45,6 +45,14 @@ export const ReviewSignalEventSchema = z.object({
     "errored",
   ]),
   completion_signal: CompletionSignalSchema,
+  /**
+   * The provider's completion is confirmed to be FOR this exact head commit —
+   * a review-at-head, a head-bound 👍 reaction, or a completed check-run for
+   * the head — as opposed to a stale/older completion, an unbound 👍, or a
+   * deliberate skip (which is `reviewed` but not head-bound). This is the
+   * precise "at head" signal; `review_state` alone cannot distinguish a skip.
+   */
+  reviewed_at_head: z.boolean(),
   /** Seconds from head-commit push to the review/👍, when both are known. */
   latency_s: z.number().nullable(),
   findings: FindingCountsSchema,
@@ -53,7 +61,11 @@ export const ReviewSignalEventSchema = z.object({
   /** Total seconds the gate waited (gate only; null for the collector). */
   gate_wait_s: z.number().nullable(),
   timed_out: z.boolean(),
-  /** A 👍 clean signal exists but the reviewed commit != current head. */
+  /**
+   * A 👍 clean signal exists but could not be bound to the current head (it
+   * predates the head push or the push time is unknown), so it did NOT satisfy
+   * the gate.
+   */
   stale_reaction: z.boolean(),
   /** Terminal gate decision, when this event is a decision (else null). */
   decision: z.enum(["waiting", "passed", "failed"]).nullable(),

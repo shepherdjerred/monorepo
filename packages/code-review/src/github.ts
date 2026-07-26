@@ -295,26 +295,58 @@ export async function fetchLatestProviderReview(input: {
   return latest;
 }
 
+const HEAD_PUSHED_AT_QUERY = `
+query($owner: String!, $name: String!, $oid: GitObjectID!) {
+  repository(owner: $owner, name: $name) {
+    object(oid: $oid) {
+      ... on Commit {
+        pushedDate
+        committedDate
+      }
+    }
+  }
+}`;
+
 /**
- * The committer date of a commit (ISO), used as the "head pushed at" reference
- * for review-latency. Returns null when unavailable.
+ * The ISO time a commit became the PR head — the reference point for
+ * review-latency and for binding a clean 👍 reaction to the current head.
+ *
+ * Uses the commit's GraphQL `pushedDate` (when GitHub actually received the
+ * push) in preference to `committedDate`: the committer date is embedded in the
+ * commit object and predates the push after a local delay, cherry-pick, or
+ * rebase, which would corrupt latency and let a 👍 left on an older head bind
+ * to a rebased commit. `committedDate` is the fallback for the (documented)
+ * cases where GitHub leaves `pushedDate` null. Returns null only when the
+ * commit itself cannot be read.
  */
-export async function fetchCommitCommittedAt(input: {
+export async function fetchHeadPushedAt(input: {
   repo: string;
   sha: string;
   token: string;
 }): Promise<string | null> {
-  const url = `${GITHUB_API_URL}/repos/${input.repo}/commits/${encodeURIComponent(input.sha)}`;
-  const { payload } = await getJsonWithLink(url, input.token);
-  const record = asRecord(payload);
-  const commit = record === null ? null : recordField(record, "commit");
-  const committer = commit === null ? null : recordField(commit, "committer");
-  return committer === null ? null : stringField(committer, "date");
+  const { owner, name } = splitRepo(input.repo);
+  const payload = await graphqlRequest(
+    HEAD_PUSHED_AT_QUERY,
+    { owner, name, oid: input.sha },
+    input.token,
+  );
+  const payloadRecord = asRecord(payload);
+  const data =
+    payloadRecord === null ? null : recordField(payloadRecord, "data");
+  const repository = data === null ? null : recordField(data, "repository");
+  const object = repository === null ? null : recordField(repository, "object");
+  if (object === null) return null;
+  return (
+    stringField(object, "pushedDate") ?? stringField(object, "committedDate")
+  );
 }
 
 /**
- * Whether the provider left a 👍 (`+1`) reaction on the PR issue — the
- * "reviewed clean, nothing to flag" signal for `review-at-head` providers.
+ * The provider's 👍 (`+1`) reaction on the PR issue — the "reviewed clean,
+ * nothing to flag" signal for `review-at-head` providers — or null when the
+ * provider left none. Returns the reaction's `createdAt` so the caller can
+ * bind the (commit-less) reaction to a specific head by timestamp; when the
+ * provider reacted more than once the most recent reaction wins.
  * NOTE: the exact surface Codex reacts on is probe-confirmed; issue-level is
  * the documented "react with 👍" location.
  */
@@ -323,9 +355,11 @@ export async function fetchProviderThumbsUp(input: {
   number: number;
   token: string;
   provider: ReviewProvider;
-}): Promise<boolean> {
+}): Promise<{ createdAt: string | null } | null> {
   let url: string | null =
     `${GITHUB_API_URL}/repos/${input.repo}/issues/${String(input.number)}/reactions?per_page=100`;
+  let latest: { createdAt: string | null } | null = null;
+  let latestScore = Number.NEGATIVE_INFINITY;
   while (url !== null) {
     const { payload, linkNext } = await getJsonWithLink(url, input.token);
     const reactions = Array.isArray(payload) ? payload : [];
@@ -335,11 +369,37 @@ export async function fetchProviderThumbsUp(input: {
       if (stringField(item, "content") !== "+1") continue;
       const user = recordField(item, "user");
       const login = user === null ? null : stringField(user, "login");
-      if (isProviderAuthor(input.provider, login)) return true;
+      if (!isProviderAuthor(input.provider, login)) continue;
+      const createdAt = stringField(item, "created_at");
+      const score = Date.parse(createdAt ?? "");
+      const normalized = Number.isFinite(score)
+        ? score
+        : Number.NEGATIVE_INFINITY;
+      if (latest === null || normalized >= latestScore) {
+        latest = { createdAt };
+        latestScore = normalized;
+      }
     }
     url = linkNext;
   }
-  return false;
+  return latest;
+}
+
+/**
+ * Whether a commit-less 👍 reaction can be trusted as a review OF the current
+ * head: it must have been created at/after the head was pushed. A reaction that
+ * predates the head push (a leftover from an earlier commit), or any reaction
+ * when the push time is unknown or unparseable, is NOT bound to the head.
+ */
+function reactionBoundToHead(
+  reactionCreatedAt: string | null,
+  headPushedAt: string | null,
+): boolean {
+  if (reactionCreatedAt === null || headPushedAt === null) return false;
+  const reacted = Date.parse(reactionCreatedAt);
+  const pushed = Date.parse(headPushedAt);
+  if (!Number.isFinite(reacted) || !Number.isFinite(pushed)) return false;
+  return reacted >= pushed;
 }
 
 // ---------------------------------------------------------------------------
@@ -353,7 +413,11 @@ export type ReviewStateResult = {
   reviewedCommit: string | null;
   /** ISO time of that review/reaction, when known. */
   reviewedAt: string | null;
-  /** A clean 👍 exists but the reviewed commit != head (reaction may be stale). */
+  /**
+   * A clean 👍 reaction exists but could not be bound to the current head (it
+   * predates the head push, or the push time is unknown), so it did NOT satisfy
+   * the gate. Telemetry only — the `state` already reflects the non-pass.
+   */
   staleReaction: boolean;
   /** Provider skip reason (check-run providers only), or null. */
   skipReason: string | null;
@@ -370,8 +434,15 @@ export async function resolveReviewState(input: {
   head: string;
   prNumber: number;
   token: string;
+  /**
+   * ISO time the head commit was pushed (`fetchHeadPushedAt`). Required to bind
+   * a commit-less 👍 clean-review reaction to the current head: a reaction that
+   * predates the head push — or any reaction when the push time is unknown —
+   * cannot be trusted as a review OF this head and must not satisfy the gate.
+   */
+  headPushedAt: string | null;
 }): Promise<ReviewStateResult> {
-  const { provider, repo, head, prNumber, token } = input;
+  const { provider, repo, head, prNumber, token, headPushedAt } = input;
 
   if (provider.completion.kind === "check-run") {
     const { state, reviewedAt } = await fetchCheckRunState({
@@ -431,13 +502,30 @@ export async function resolveReviewState(input: {
     token,
     provider,
   });
-  if (thumbsUp) {
+  // A 👍 reaction carries no commit SHA, so it only counts as "reviewed clean
+  // at head" when it can be independently tied to the current head: the
+  // reaction must have been created at/after the head was pushed. A reaction
+  // that predates the head push (a leftover 👍 from an earlier commit) — or any
+  // reaction when the push time is unknown — leaves the gate `reviewing` so a
+  // new head cannot pass before the provider re-reviews it. Such a reaction is
+  // still reported via `staleReaction` for telemetry.
+  if (thumbsUp !== null) {
+    if (reactionBoundToHead(thumbsUp.createdAt, headPushedAt)) {
+      return {
+        state: "reviewed",
+        completionSignal: "thumbsup-reaction",
+        reviewedCommit: head,
+        reviewedAt: thumbsUp.createdAt,
+        staleReaction: false,
+        skipReason: null,
+      };
+    }
     return {
-      state: "reviewed",
-      completionSignal: "thumbsup-reaction",
+      state: "reviewing",
+      completionSignal: "none",
       reviewedCommit: review?.commitId ?? null,
       reviewedAt: review?.submittedAt ?? null,
-      staleReaction: review !== null && review.commitId !== head,
+      staleReaction: true,
       skipReason: null,
     };
   }

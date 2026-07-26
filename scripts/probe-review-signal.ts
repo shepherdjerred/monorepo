@@ -20,7 +20,7 @@ import {
   type ReviewSignalEvent,
 } from "@shepherdjerred/code-review";
 import {
-  fetchCommitCommittedAt,
+  fetchHeadPushedAt,
   fetchLatestProviderReview,
   fetchProviderThumbsUp,
   fetchReviewThreads,
@@ -67,14 +67,15 @@ async function probePr(
   const provider = resolveProvider(Bun.env["REVIEW_PROVIDER"]);
   const head = await fetchHeadSha(repo, prNumber, token);
 
-  const [threadResult, state, latestReview, thumbsUp, headPushedAt] =
-    await Promise.all([
-      fetchReviewThreads({ repo, number: prNumber, token, provider }),
-      resolveReviewState({ provider, repo, head, prNumber, token }),
-      fetchLatestProviderReview({ repo, number: prNumber, token, provider }),
-      fetchProviderThumbsUp({ repo, number: prNumber, token, provider }),
-      fetchCommitCommittedAt({ repo, sha: head, token }),
-    ]);
+  // Head push time first — `resolveReviewState` needs it to bind a 👍 reaction
+  // to the current head, so it cannot share a Promise.all with that call.
+  const headPushedAt = await fetchHeadPushedAt({ repo, sha: head, token });
+  const [threadResult, state, latestReview, thumbsUp] = await Promise.all([
+    fetchReviewThreads({ repo, number: prNumber, token, provider }),
+    resolveReviewState({ provider, repo, head, prNumber, token, headPushedAt }),
+    fetchLatestProviderReview({ repo, number: prNumber, token, provider }),
+    fetchProviderThumbsUp({ repo, number: prNumber, token, provider }),
+  ]);
 
   const providerThreads = threadResult.threads.filter(
     (thread) =>
@@ -85,7 +86,8 @@ async function probePr(
   );
   // Latency only when the reviewed commit IS the head (else a stale review of
   // an older commit yields a bogus/negative value).
-  const reviewedAt = state.reviewedCommit === head ? state.reviewedAt : null;
+  const atHead = state.reviewedCommit === head;
+  const reviewedAt = atHead ? state.reviewedAt : null;
   const latencyS =
     reviewedAt !== null && headPushedAt !== null
       ? Math.round((Date.parse(reviewedAt) - Date.parse(headPushedAt)) / 1000)
@@ -103,6 +105,7 @@ async function probePr(
         ? "reviewed-clean-reaction"
         : state.state,
     completion_signal: state.completionSignal,
+    reviewed_at_head: atHead,
     latency_s: latencyS,
     findings: tallyFindings(providerThreads.map((thread) => thread.priority)),
     blocking_count: blocking.length,
