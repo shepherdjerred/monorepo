@@ -28,6 +28,7 @@ import {
   renderReportOutput,
   type RenderedReportOutput,
 } from "#src/reports/output.ts";
+import { loadAliasToDiscordId } from "#src/reports/alias-mentions.ts";
 import { saveReportRunImage } from "#src/storage/s3-report-run.ts";
 
 export type ReportRunResult = {
@@ -75,10 +76,15 @@ export async function runReport(
       sourceCompetitionId: params.report.sourceCompetitionId,
       now: startedAt,
     });
+    const aliasToDiscordId = await loadAliasToDiscordId(
+      params.prisma,
+      params.report.serverId,
+    );
     const output = await renderReportOutput({
       title: params.report.title,
       result,
       startedAt,
+      aliasToDiscordId,
     });
     const completedAt = new Date();
     const durationMs = completedAt.getTime() - startedAt.getTime();

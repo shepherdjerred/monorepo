@@ -28,6 +28,7 @@ import {
   type RenderedReportOutput,
 } from "#src/reports/output.ts";
 import { runReport } from "#src/reports/runner.ts";
+import { loadAliasToDiscordId } from "#src/reports/alias-mentions.ts";
 
 // End-to-end coverage of the report DSL's declarative `RENDER` clause: real
 // report-lake rows → parse → compiled SQL on DuckDB → render. This is the
@@ -129,6 +130,156 @@ describe("RENDER clause — text kinds", () => {
     const output = await render(BASE_QUERY);
     expect(output.image).toBeNull();
     expect(output.content).toContain("Player | Games | Wins | Win rate");
+  });
+});
+
+describe("RENDER clause — leaderboard top-3 mentions", () => {
+  test("mentions ranks 1-3 and leaves rank 4+ as plain alias", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        fact({ player: 1, alias: "Alpha", matchId: "NA1_m1", win: true }),
+        fact({ player: 1, alias: "Alpha", matchId: "NA1_m2", win: true }),
+        fact({ player: 1, alias: "Alpha", matchId: "NA1_m3", win: true }),
+        fact({ player: 1, alias: "Alpha", matchId: "NA1_m4", win: true }),
+        fact({ player: 2, alias: "Bravo", matchId: "NA1_m5", win: true }),
+        fact({ player: 2, alias: "Bravo", matchId: "NA1_m6", win: true }),
+        fact({ player: 2, alias: "Bravo", matchId: "NA1_m7", win: true }),
+        fact({ player: 3, alias: "Charlie", matchId: "NA1_m8", win: true }),
+        fact({ player: 3, alias: "Charlie", matchId: "NA1_m9", win: true }),
+        fact({ player: 4, alias: "Delta", matchId: "NA1_m10", win: true }),
+      ],
+    });
+    const result = await executeReportQuery({
+      prisma,
+      serverId,
+      queryText: `${BASE_QUERY} RENDER leaderboard`,
+      now,
+    });
+    const output = await renderReportOutput({
+      title: TITLE,
+      result,
+      startedAt: now,
+      aliasToDiscordId: new Map([
+        ["Alpha", testAccountId("1001")],
+        ["Bravo", testAccountId("1002")],
+        ["Charlie", testAccountId("1003")],
+        ["Delta", testAccountId("1004")],
+      ]),
+    });
+    // ORDER BY games DESC: Alpha(4), Bravo(3), Charlie(2) rank 1-3 → mentioned.
+    expect(output.content).toContain(`1. <@${testAccountId("1001")}>`);
+    expect(output.content).toContain(`2. <@${testAccountId("1002")}>`);
+    expect(output.content).toContain(`3. <@${testAccountId("1003")}>`);
+    // Delta ranks 4th — left as a plain alias even though it has a Discord ID.
+    expect(output.content).toContain("4. Delta");
+    expect(output.content).not.toContain(`<@${testAccountId("1004")}>`);
+  });
+
+  test("a player with no linked Discord ID falls back to their alias", async () => {
+    await seedFacts();
+    const output = await renderReportOutput({
+      title: TITLE,
+      result: await executeReportQuery({
+        prisma,
+        serverId,
+        queryText: `${BASE_QUERY} RENDER leaderboard`,
+        now,
+      }),
+      startedAt: now,
+      aliasToDiscordId: new Map([["Alpha", testAccountId("2001")]]),
+    });
+    expect(output.content).toContain(`1. <@${testAccountId("2001")}>`);
+    // Bravo has no entry in the map — falls back to plain alias, not mentioned.
+    expect(output.content).toContain("2. Bravo");
+  });
+
+  test("group labels mention each linked member independently", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        fact({ player: 1, alias: "Alpha", matchId: "NA1_g1", win: true }),
+        fact({ player: 2, alias: "Bravo", matchId: "NA1_g1", win: true }),
+      ],
+    });
+    const result = await executeReportQuery({
+      prisma,
+      serverId,
+      queryText:
+        "SELECT group, games, wins FROM player_groups WHERE queue IN ('solo') GROUP BY group(all) ORDER BY label ASC RENDER leaderboard",
+      now,
+    });
+    const output = await renderReportOutput({
+      title: TITLE,
+      result,
+      startedAt: now,
+      aliasToDiscordId: new Map([
+        ["Alpha", testAccountId("3001")],
+        // Bravo intentionally has no linked Discord ID.
+      ]),
+    });
+    expect(output.content).toContain(`1. <@${testAccountId("3001")}> + Bravo`);
+  });
+
+  test("runReport builds the mention map from the report's own server's linked players", async () => {
+    await seedFacts();
+    await prisma.player.create({
+      data: {
+        discordId: testAccountId("4001"),
+        alias: "Alpha",
+        serverId,
+        creatorDiscordId: testAccountId("4001"),
+        createdTime: now,
+        updatedTime: now,
+      },
+    });
+    const report = await prisma.report.create({
+      data: {
+        serverId,
+        ownerId: testAccountId("4002"),
+        channelId: testChannelId("4003"),
+        title: "Mentioned Leaderboard",
+        description: null,
+        queryText: `${BASE_QUERY} RENDER leaderboard`,
+        isEnabled: true,
+        isSystemManaged: false,
+        cronExpression: "0 0 * * *",
+        nextScheduledRunAt: now,
+        createdTime: now,
+        updatedTime: now,
+      },
+    });
+
+    const result = await runReport({ prisma, report, trigger: "MANUAL", now });
+    expect(result.output.content).toContain(`1. <@${testAccountId("4001")}>`);
+    // Bravo has no linked Player row for this server — plain alias.
+    expect(result.output.content).toContain("2. Bravo");
+  });
+
+  test("loadAliasToDiscordId omits players without a linked Discord ID", async () => {
+    await prisma.player.create({
+      data: {
+        discordId: null,
+        alias: "NoDiscordLink",
+        serverId,
+        creatorDiscordId: testAccountId("5001"),
+        createdTime: now,
+        updatedTime: now,
+      },
+    });
+    await prisma.player.create({
+      data: {
+        discordId: testAccountId("5002"),
+        alias: "HasDiscordLink",
+        serverId,
+        creatorDiscordId: testAccountId("5002"),
+        createdTime: now,
+        updatedTime: now,
+      },
+    });
+    const map = await loadAliasToDiscordId(prisma, serverId);
+    expect(map.get("HasDiscordLink")).toBe(testAccountId("5002"));
+    expect(map.has("NoDiscordLink")).toBe(false);
   });
 });
 
@@ -313,5 +464,6 @@ describe("RENDER clause — full runner pipeline", () => {
 async function cleanup(): Promise<void> {
   await deleteIfExists(() => prisma.reportRun.deleteMany());
   await deleteIfExists(() => prisma.report.deleteMany());
+  await deleteIfExists(() => prisma.player.deleteMany());
   await resetTestLake(lakeDir);
 }

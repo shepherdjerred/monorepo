@@ -10,6 +10,7 @@ import type {
   ReportQueryResult,
   ReportResultRow,
 } from "#src/reports/query-engine.ts";
+import { formatRankedLabel } from "#src/reports/mention-format.ts";
 
 export type RenderedReportOutput = {
   content: string;
@@ -20,6 +21,12 @@ type RenderReportOutputParams = {
   title: string;
   result: ReportQueryResult;
   startedAt: Date;
+  /**
+   * Alias → Discord ID, used to `@mention` the top-ranked rows of a ranked
+   * text report. Omitted for chart-only render paths (e.g. the tRPC preview
+   * mutation), which never reach `formatTextReport`.
+   */
+  aliasToDiscordId?: Map<string, string>;
 };
 
 type ChartRender = Extract<
@@ -66,7 +73,12 @@ function renderReportOutputSync(
     return renderAnalyticsChart(params, render);
   }
   return {
-    content: formatTextReport(params.title, render.kind, params.result),
+    content: formatTextReport(
+      params.title,
+      render.kind,
+      params.result,
+      params.aliasToDiscordId ?? new Map(),
+    ),
     image: null,
   };
 }
@@ -75,6 +87,7 @@ function formatTextReport(
   title: string,
   kind: ReportOutputFormat,
   result: ReportQueryResult,
+  aliasToDiscordId: Map<string, string>,
 ): string {
   if (result.rows.length === 0) {
     return `**${title}**\nNo rows matched this report.`;
@@ -93,7 +106,7 @@ function formatTextReport(
   return `**${title}**\n${result.rows
     .map(
       (row, index) =>
-        `${(index + 1).toString()}. ${row.label} — ${formatValues(result, row)}`,
+        `${(index + 1).toString()}. ${formatRankedLabel(row.label, index, aliasToDiscordId)} — ${formatValues(result, row)}`,
     )
     .join("\n")}`;
 }
