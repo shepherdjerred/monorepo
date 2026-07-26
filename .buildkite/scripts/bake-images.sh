@@ -231,10 +231,14 @@ if [ "$PUSH" = true ]; then
     docker buildx bake --builder ci --push "${bake_targets[@]}"
   for name in "${push_images[@]}"; do
     # Record the pushed manifest digest for the version commit-back step
-    # (versions.ts pins tag@digest).
-    digest=$(docker buildx imagetools inspect "${REGISTRY}/${name}:${SHA}" --format '{{.Manifest.Digest}}')
-    if [ -z "$digest" ]; then
-      echo "no repo digest recorded for ${REGISTRY}/${name}:${SHA} after push" >&2
+    # (versions.ts pins tag@digest). buildx 0.30.x (the ci-image pin) silently
+    # ignores the '{{.Manifest.Digest}}' template and prints the full
+    # human-readable inspect output (build 6296 shipped that text into
+    # image-digests); the JSON form is honored by 0.30 and 0.33 alike, and the
+    # shape assert keeps any future format regression from reaching meta-data.
+    digest=$(docker buildx imagetools inspect "${REGISTRY}/${name}:${SHA}" --format '{{json .Manifest}}' | jq -r '.digest')
+    if ! printf '%s' "$digest" | grep -Eq '^sha256:[a-f0-9]{64}$'; then
+      echo "no valid manifest digest for ${REGISTRY}/${name}:${SHA} after push (got: ${digest})" >&2
       exit 1
     fi
     # CONTENT gate, not manifest gate: VERSION/GIT_SHA are baked into every
