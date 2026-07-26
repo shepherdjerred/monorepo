@@ -32,6 +32,11 @@ export function gradeForPlayer(
 /**
  * MVP = highest KDA among tracked players. Returns undefined when only one
  * tracked player exists (no comparison to make).
+ *
+ * Ties are broken on a stable key (the player's puuid), not array position:
+ * `match.players` inherits getAccountsWithState()'s unordered Prisma findMany,
+ * so a retry can reorder tied players. Without a stable tie-break the selected
+ * hero's splash, outcome, rank/LP, and MVP badge could flip between renders.
  */
 export function findMvpIndex(
   players: CompletedMatch["players"],
@@ -40,15 +45,18 @@ export function findMvpIndex(
 
   let bestIndex = 0;
   let bestKda = -Infinity;
+  let bestPuuid = "";
   for (const [i, p] of players.entries()) {
     const kda = computeKda(
       p.champion.kills,
       p.champion.deaths,
       p.champion.assists,
     );
-    if (kda > bestKda) {
+    const puuid = String(p.playerConfig.league.leagueAccount.puuid);
+    if (kda > bestKda || (kda === bestKda && puuid < bestPuuid)) {
       bestKda = kda;
       bestIndex = i;
+      bestPuuid = puuid;
     }
   }
   return bestIndex;
