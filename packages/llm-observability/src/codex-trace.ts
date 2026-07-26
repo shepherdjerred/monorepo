@@ -180,6 +180,7 @@ export function attachCodexTrace(
           event,
           spanName: `${spanPrefix}.tool`,
           attrPrefix: toolAttrPrefix,
+          logger,
           nextId: () => {
             toolCounter += 1;
             return `tool_${String(toolCounter)}`;
@@ -223,6 +224,7 @@ type ToolHandlerArgs = {
   spanName: string;
   attrPrefix: string;
   nextId: () => string;
+  logger: CodexLogger;
 };
 
 const RecordSchema = z.record(z.string(), z.unknown());
@@ -243,7 +245,8 @@ function handleToolEvents(args: ToolHandlerArgs): void {
 
   if (type === "ExecCommandBegin" || type === "exec_command_begin") {
     const callId = stringField(record, "call_id") ?? nextId();
-    const command = collapseCommand(record);
+    const fullCommand = collapseCommand(record, /* snip */ false);
+    const command = snippet(fullCommand);
     const span = tracer.startSpan(
       spanName,
       {
@@ -254,7 +257,13 @@ function handleToolEvents(args: ToolHandlerArgs): void {
       },
       rootCtx,
     );
-    openTools.set(callId, { span, command, startedAtMs: Date.now() });
+    openTools.set(callId, {
+      span,
+      command: fullCommand,
+      startedAtMs: Date.now(),
+    });
+    // Structured log for live kubectl/Loki blackbox (full command, not snipped).
+    args.logger.info?.(`codex tool begin: ${fullCommand}`);
     return;
   }
 
@@ -263,18 +272,25 @@ function handleToolEvents(args: ToolHandlerArgs): void {
     if (callId === undefined) return;
     const open = openTools.get(callId);
     if (open === undefined) return;
+    const exitCode = numberField(record, "exit_code") ?? -1;
+    const durationMs = Date.now() - open.startedAtMs;
+    const stdout = stringField(record, "stdout") ?? "";
+    const stderr = stringField(record, "stderr") ?? "";
+    // Dual-track: short snippets stay on Tempo-bound attrs; full bodies use
+    // gen_ai.tool.* keys that LlmArchiveSpanProcessor strips to S3.
     open.span.setAttributes({
-      [`${attrPrefix}.exit_code`]: numberField(record, "exit_code") ?? -1,
-      [`${attrPrefix}.duration_ms`]: Date.now() - open.startedAtMs,
-      [`${attrPrefix}.stdout_snippet`]: snippet(
-        stringField(record, "stdout") ?? "",
-      ),
-      [`${attrPrefix}.stderr_snippet`]: snippet(
-        stringField(record, "stderr") ?? "",
-      ),
+      [`${attrPrefix}.exit_code`]: exitCode,
+      [`${attrPrefix}.duration_ms`]: durationMs,
+      [`${attrPrefix}.stdout_snippet`]: snippet(stdout),
+      [`${attrPrefix}.stderr_snippet`]: snippet(stderr),
+      "gen_ai.tool.stdout": bodyForArchive(stdout),
+      "gen_ai.tool.stderr": bodyForArchive(stderr),
     });
     open.span.end();
     openTools.delete(callId);
+    args.logger.info?.(
+      `codex tool end: exit=${String(exitCode)} durationMs=${String(durationMs)} cmd=${open.command} stdout=${bodyForArchive(stdout)} stderr=${bodyForArchive(stderr)}`,
+    );
     return;
   }
 }
@@ -295,18 +311,31 @@ function numberField(
   return typeof value === "number" ? value : undefined;
 }
 
-function collapseCommand(record: Record<string, unknown>): string {
+function collapseCommand(record: Record<string, unknown>, snip = true): string {
   const raw = record["command"];
-  if (typeof raw === "string") return snippet(raw);
-  if (Array.isArray(raw)) {
-    return snippet(raw.map(String).join(" "));
+  let value: string;
+  if (typeof raw === "string") {
+    value = raw;
+  } else if (Array.isArray(raw)) {
+    value = raw.map(String).join(" ");
+  } else {
+    return "<unknown>";
   }
-  return "<unknown>";
+  return snip ? snippet(value) : value;
 }
 
 function snippet(value: string): string {
   if (value.length <= 200) return value;
   return `${value.slice(0, 200)}…`;
+}
+
+// Cap archived/logged tool bodies so a pathological pokemonctl dump can't blow
+// span attribute limits. 16 KiB is enough for full /state + movement JSON.
+const TOOL_BODY_MAX = 16_384;
+
+function bodyForArchive(value: string): string {
+  if (value.length <= TOOL_BODY_MAX) return value;
+  return `${value.slice(0, TOOL_BODY_MAX)}…`;
 }
 
 function stringifyError(error: unknown): string {

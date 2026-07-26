@@ -24,6 +24,9 @@ const BODY_ATTR_KEYS = [
   "gen_ai.output.messages",
   "gen_ai.system_instructions",
   "gen_ai.input.tools",
+  // Codex tool I/O (full stdout/stderr; short snippets stay on Tempo attrs)
+  "gen_ai.tool.stdout",
+  "gen_ai.tool.stderr",
   // Vercel AI SDK legacy attribute names
   "ai.prompt.messages",
   "ai.prompt",
