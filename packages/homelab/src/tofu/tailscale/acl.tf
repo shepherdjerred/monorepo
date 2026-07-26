@@ -78,7 +78,13 @@ resource "tailscale_acl" "homelab" {
       # Tailscale endpoint on TCP 6443. The API server reaches worker kubelets
       # over TCP 10250 for exec, logs, and port-forward streams. Both are
       # required after a worker reports its Tailscale address as InternalIP.
-      { action = "accept", src = ["tag:k8s"], dst = ["tag:k8s:6443", "tag:k8s:10250"] },
+      # Prometheus (on torvalds) scrapes node-exporter on TCP 9100: the exporter
+      # is hostNetwork and binds the node's Tailscale InternalIP, so any
+      # cross-node scrape is tailnet traffic subject to this ACL. Without 9100
+      # here, every worker joined after torvalds is invisible to node-level
+      # monitoring (verified: liskov's node-exporter timed out for its first
+      # ~18h while kubelet on 10250 scraped fine — NodeExporterDown, 2026-07-26).
+      { action = "accept", src = ["tag:k8s"], dst = ["tag:k8s:6443", "tag:k8s:10250", "tag:k8s:9100"] },
 
       # A dedicated CI runner tagged tag:ci (none today — CI currently runs on the
       # tag:k8s node above) would also need the tofu-state backend on 443.
