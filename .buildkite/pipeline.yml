@@ -314,6 +314,11 @@ steps:
         - "packages/astro-opengraph-images/**"
         - "packages/webring/**"
         - "packages/eslint-config/**"
+        # Main's playwright lane also gates on the deploy consumers of its
+        # artifact — mirror them (lane↔if_changed coverage test).
+        - "scripts/deploy-site.ts"
+        - "scripts/lib/s3-static-site.ts"
+        - "scripts/lib/run.ts"
     cancel_on_build_failing: true
     command: |
       apt-get update -qq && apt-get install -y -qq --no-install-recommends unzip
@@ -405,6 +410,11 @@ steps:
         - "patches/**"
         - "turbo.json"
         - "packages/resume/**"
+        # Main's resume lane also gates on the deploy consumers of its
+        # artifact — mirror them (lane↔if_changed coverage test).
+        - "scripts/deploy-site.ts"
+        - "scripts/lib/s3-static-site.ts"
+        - "scripts/lib/run.ts"
     cancel_on_build_failing: true
     command: |
       export PATH="$(dirname "$(find /usr/local/texlive -name xelatex | head -1)"):$$PATH"
@@ -863,8 +873,16 @@ steps:
         - "packages/homelab/src/tofu/**"
         - "packages/homelab/scripts/tofu-stack.ts"
         - "packages/homelab/scripts/helm-push.ts"
+        - "packages/homelab/scripts/argocd.ts"
         - "packages/homelab/src/cdk8s/**"
         - "packages/homelab/src/helm-types/**"
+        # Inputs of the npm, cooklang, and scout-image main lanes — mirrored
+        # here so no lane input can change without a PR-side gate (asserted by
+        # the lane↔if_changed coverage test).
+        - "scripts/publish-npm.ts"
+        - "packages/cooklang-for-obsidian/**"
+        - "docker-bake.hcl"
+        - ".dockerignore"
         - "packages/sjer.red/**"
         - "packages/resume/**"
         - "packages/webring/**"

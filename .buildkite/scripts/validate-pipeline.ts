@@ -4,6 +4,11 @@
  * Guard the CI work-reduction invariants that are easy to regress in a large
  * static pipeline. This runs before verify so a malformed step cannot silently
  * disappear from the step-key observability or restore a full-root install.
+ *
+ * Division of labor: this file spot-checks specific critical inputs by string
+ * matching at upload time; the generic "every ci-changed.sh lane path is
+ * covered by its PR step's if_changed globs" subset property is owned by
+ * ci-lane-coverage.test.ts (run in the root-scripts test suite).
  */
 
 export {};
