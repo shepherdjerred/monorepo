@@ -38,7 +38,8 @@ export const VersionResponseSchema = z.object({
   version: z.string().min(1),
   gitSha: z.string().min(1),
   contractHash: z.string().min(1),
-  canViewContractMismatch: z.boolean(),
+  // Older backend images predate this owner-only diagnostic capability.
+  canViewContractMismatch: z.boolean().default(false),
 });
 
 export type VersionResponse = z.infer<typeof VersionResponseSchema>;

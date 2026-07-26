@@ -12,8 +12,11 @@ function setBuildEnv(values: {
   Bun.env["VERSION"] = values.VERSION;
   Bun.env["GIT_SHA"] = values.GIT_SHA;
   Bun.env["CONTRACT_HASH"] = values.CONTRACT_HASH;
-  Bun.env["JWT_SIGNING_SECRET"] =
-    "a-secure-test-signing-secret-that-is-long-enough";
+  // JWT_SIGNING_SECRET is owned by test-setup.ts for the whole suite (a valid
+  // >= 32 char throwaway key). Do NOT set or delete it here: the owner-session
+  // test only needs sign/verify to round-trip against the same configuration,
+  // and deleting it in afterEach would wipe the secret for every sibling e2e
+  // test file that runs afterward (rbac-http, ai/http-route), failing them.
   resetConfigurationForTests();
 }
 
@@ -21,7 +24,6 @@ afterEach(() => {
   delete Bun.env["VERSION"];
   delete Bun.env["GIT_SHA"];
   delete Bun.env["CONTRACT_HASH"];
-  delete Bun.env["JWT_SIGNING_SECRET"];
   resetConfigurationForTests();
 });
 
@@ -82,6 +84,25 @@ describe("handleVersion", () => {
 
     expect(await response.json()).toMatchObject({
       canViewContractMismatch: true,
+    });
+  });
+
+  test("treats a malformed session cookie as unauthenticated", async () => {
+    setBuildEnv({
+      VERSION: "2.0.0-1234",
+      GIT_SHA: "abcdef1234567890",
+      CONTRACT_HASH: "cafebabe",
+    });
+    const response = await handleVersion(
+      new Request("https://scout-for-lol.com/api/version", {
+        headers: { Cookie: "scout_session=%E0%A4%A" },
+      }),
+      {},
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      canViewContractMismatch: false,
     });
   });
 });

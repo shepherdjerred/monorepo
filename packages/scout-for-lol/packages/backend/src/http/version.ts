@@ -1,9 +1,8 @@
 import configuration from "#src/configuration.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
+import { SESSION_COOKIE } from "#src/trpc/context.ts";
 import { verifySession } from "#src/trpc/jwt.ts";
-
-const SESSION_COOKIE = "scout_session";
 
 function sessionCookie(request: Request): string | undefined {
   const cookieHeader = request.headers.get("Cookie");
@@ -13,7 +12,11 @@ function sessionCookie(request: Request): string | undefined {
   for (const part of cookieHeader.split(";")) {
     const [name, value] = part.trim().split("=", 2);
     if (name === SESSION_COOKIE && value !== undefined) {
-      return decodeURIComponent(value);
+      try {
+        return decodeURIComponent(value);
+      } catch {
+        return undefined;
+      }
     }
   }
   return undefined;
