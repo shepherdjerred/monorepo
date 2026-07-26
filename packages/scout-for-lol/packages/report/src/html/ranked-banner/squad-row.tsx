@@ -9,14 +9,14 @@ import {
 } from "#src/html/shared/grade.ts";
 import type { CompletedMatch } from "@scout-for-lol/data";
 
-const ICON_REM = 7;
-
 export function SquadRow({
   player,
   isMvp,
+  compact = false,
 }: {
   player: CompletedMatch["players"][number];
   isMvp: boolean;
+  compact?: boolean;
 }) {
   const { kills, deaths, assists, championName, riotIdGameName } =
     player.champion;
@@ -24,14 +24,15 @@ export function SquadRow({
   const grade: Grade = gradeFromKda(kda);
   const icon = getChampionImage(championName);
   const won = player.outcome === "Victory";
+  const iconRem = compact ? 5 : 7;
 
   return (
     <div
       style={{
         display: "flex",
         alignItems: "center",
-        gap: "3rem",
-        padding: "1.5rem 2.5rem",
+        gap: compact ? "1.2rem" : "3rem",
+        padding: compact ? "0.8rem 1.2rem" : "1.5rem 2.5rem",
         background: "rgba(1, 10, 19, 0.55)",
         border: `0.2rem solid ${palette.gold[5]}`,
         borderRadius: "1rem",
@@ -40,8 +41,8 @@ export function SquadRow({
     >
       <div
         style={{
-          width: `${ICON_REM.toString()}rem`,
-          height: `${ICON_REM.toString()}rem`,
+          width: `${iconRem.toString()}rem`,
+          height: `${iconRem.toString()}rem`,
           display: "flex",
           flexShrink: 0,
           overflow: "hidden",
@@ -52,8 +53,8 @@ export function SquadRow({
         <img
           src={icon}
           alt=""
-          width={ICON_REM * 16}
-          height={ICON_REM * 16}
+          width={iconRem * 16}
+          height={iconRem * 16}
           style={{ width: "100%", height: "100%", display: "block" }}
         />
       </div>
@@ -69,12 +70,12 @@ export function SquadRow({
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "1.5rem",
+            gap: compact ? "0.8rem" : "1.5rem",
           }}
         >
           <span
             style={{
-              fontSize: "3.4rem",
+              fontSize: compact ? "2.4rem" : "3.4rem",
               color: palette.gold[1],
               fontWeight: 600,
               display: "flex",
@@ -85,7 +86,7 @@ export function SquadRow({
           {isMvp && (
             <span
               style={{
-                fontSize: "1.8rem",
+                fontSize: compact ? "1.3rem" : "1.8rem",
                 color: palette.blue[2],
                 background: "rgba(10, 200, 185, 0.15)",
                 border: `0.15rem solid ${palette.blue[2]}`,
@@ -102,7 +103,7 @@ export function SquadRow({
         </div>
         <span
           style={{
-            fontSize: "2rem",
+            fontSize: compact ? "1.5rem" : "2rem",
             color: palette.grey[1],
             fontFamily: font.body,
             display: "flex",
@@ -113,7 +114,7 @@ export function SquadRow({
       </div>
       <span
         style={{
-          fontSize: "3.4rem",
+          fontSize: compact ? "2.4rem" : "3.4rem",
           color: palette.gold[1],
           fontFamily: font.title,
           letterSpacing: "0.15rem",
@@ -122,7 +123,7 @@ export function SquadRow({
       >
         {kills} / {deaths} / {assists}
       </span>
-      <GradeDiamond grade={grade} size={6} />
+      <GradeDiamond grade={grade} size={compact ? 4.8 : 6} />
     </div>
   );
 }

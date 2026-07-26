@@ -67,3 +67,27 @@ test("banner — 5-player squad", async () => {
   await writeOutputs("banner_squad_5", svg, png);
   expect(hashSvg(svg)).toMatchSnapshot();
 });
+
+test("banner — 6-player squad", async () => {
+  const match = rankedFixture({
+    queueType: "flex",
+    trackedCount: 6,
+    outcome: "Victory",
+  });
+  const svg = await matchToSvg(match, { designOverride: "banner" });
+  const png = await svgToPng(svg);
+  await writeOutputs("banner_squad_6", svg, png);
+  expect(hashSvg(svg)).toMatchSnapshot();
+});
+
+test("banner — 10-player squad", async () => {
+  const match = rankedFixture({
+    queueType: "flex",
+    trackedCount: 10,
+    outcome: "Victory",
+  });
+  const svg = await matchToSvg(match, { designOverride: "banner" });
+  const png = await svgToPng(svg);
+  await writeOutputs("banner_squad_10", svg, png);
+  expect(hashSvg(svg)).toMatchSnapshot();
+});

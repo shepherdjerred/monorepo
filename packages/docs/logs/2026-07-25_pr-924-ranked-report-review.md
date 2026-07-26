@@ -14,21 +14,32 @@ ranked-report design intent.
 
 ## Review result
 
-`codex review --base origin/main` reported four P2 findings. This cycle fixed
-the highest-ranked defect: the square design's final score bar floated directly
-under the content instead of anchoring to the bottom of the canvas.
+`codex review --base origin/main` reported four P2 findings. The two fix cycles
+resolved all four:
 
-The fix adds an explicit Satori/Yoga flex spacer above the score bar and refreshes
-the square SVG/hash snapshots. The actual rendered fixture was inspected before
-and after the change.
+- The square design's final score bar is anchored to the bottom of the canvas.
+- Both ranked designs balance 6–10 tracked players into groups of at most five.
+- Data Dragon refreshes regenerate the ranked banner and square snapshots and
+  rendered SVG assets.
+- Backend startup validates champion splash art alongside portraits and loading
+  art in both champion-name resolution passes.
+
+The layout changes use Satori/Yoga-compatible flex containers. Boundary fixtures
+for six and ten tracked players were rendered and visually inspected.
 
 ## Verification
 
 - `git merge-tree --write-tree --quiet origin/main HEAD`
 - `bun test --update-snapshots src/html/ranked-square/square.integration.test.ts`
-  (4 passed)
-- `bunx turbo run typecheck lint --filter=@scout-for-lol/report`
-- `bunx turbo run test --filter=@scout-for-lol/report` (63 passed)
+  (6 passed)
+- `bun test --update-snapshots src/html/ranked-banner/banner.integration.test.ts`
+  (6 passed)
+- `bunx turbo run typecheck lint test --filter=@scout-for-lol/report` (77
+  passed)
+- `bunx turbo run typecheck lint test --filter=@scout-for-lol/data` (466
+  passed)
+- `bunx turbo run typecheck lint --filter=@scout-for-lol/backend`
+- Direct invocation of `validateChampionAssets()` (344 champion entries)
 
 ## Session Log — 2026-07-25
 
@@ -39,18 +50,20 @@ and after the change.
   `packages/scout-for-lol/packages/report/src/html/ranked-square/report.tsx`.
 - Refreshed the four square SVG/hash snapshots and uploaded before/after PNG
   proof for PR #924.
+- Added balanced 1–10 player layout coverage shared by the banner and square
+  designs, with rendered six- and ten-player boundary fixtures.
+- Added both ranked render suites to the Data Dragon snapshot refresh list.
+- Added splash-art checks to backend startup validation and covered override
+  names plus the missing-asset error path.
 
 ### Remaining
 
-- Handle ranked matches with 6–10 tracked players or route them to the legacy
-  report.
-- Add ranked render tests to the Data Dragon snapshot refresh list.
-- Validate the new splash assets during backend startup.
-- Recheck Buildkite after the pushed fix; do not treat the Greptile credit
-  failure as a code finding.
+- No implementation work remains from the four Codex findings.
+- Buildkite and hosted Codex review will evaluate the pushed head asynchronously.
 
 ### Caveats
 
 - `packages/scout-for-lol/packages/backend/src/testing/template.db` was already
   modified in the worktree and was intentionally left unstaged and untouched.
-- This session was limited to one fix cycle and did not wait for new CI.
+- The Greptile credit failure is not a code finding and was not treated as a
+  blocker.

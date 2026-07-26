@@ -4,6 +4,10 @@ exports[`banner — solo victory 1`] = `"ff54f72fb8f2d8611467668285fa4969b675e9c
 
 exports[`banner — solo defeat (ranked flex) 1`] = `"59304ab00181a10e5f7d32dfeb1ec8a99c41335aeac06155fead374659a310a1"`;
 
-exports[`banner — 3-player squad 1`] = `"a728cc2e773836e96c10d330f5b383a3740f85e3c634e13c4efc1af991c3ac2a"`;
+exports[`banner — 3-player squad 1`] = `"5eb455219376e0603800ce0cbd9e36cdb58134660d01998ad921c9d59252583e"`;
 
-exports[`banner — 5-player squad 1`] = `"915e7d0dd39c65c0565753f640b525aaf2ef011a7ced83e7ce94b14ac9520aea"`;
+exports[`banner — 5-player squad 1`] = `"090667af593eef4a2c3359d74fcda678d7a78ace32e288d3191051b8383acbbe"`;
+
+exports[`banner — 6-player squad 1`] = `"b333f7f0f29ca57b06e97004ebee42f54c5f2ea546d4b14456b28636a1092832"`;
+
+exports[`banner — 10-player squad 1`] = `"cb8454c311fa5e10092a962be74452717b943096b54545e58692e7d022739225"`;

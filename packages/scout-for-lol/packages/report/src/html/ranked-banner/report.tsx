@@ -17,6 +17,7 @@ import {
   queueLabel,
   winningTeamOf,
 } from "#src/html/shared/format.ts";
+import { splitSquad } from "#src/html/shared/squad-layout.ts";
 
 export const BANNER_WIDTH = 4760;
 export const BANNER_HEIGHT = 1500;
@@ -85,6 +86,8 @@ export function RankedBannerReport({ match }: { match: CompletedMatch }) {
   const heroGrade = gradeFromKda(heroKda);
   const mvpIndex = findMvpIndex(match.players);
   const isSolo = match.players.length === 1;
+  const squadGroups = splitSquad(match.players);
+  const isLargeSquad = match.players.length > 5;
   const rankAfter = hero.rankAfterMatch;
   const titleColor =
     heroOutcome === "Victory" ? palette.gold[4] : palette.teams.red;
@@ -285,7 +288,7 @@ export function RankedBannerReport({ match }: { match: CompletedMatch }) {
                 flexDirection: "column",
                 alignItems: "flex-end",
                 gap: "1.2rem",
-                width: "55%",
+                width: isLargeSquad ? "68%" : "55%",
               }}
             >
               <span
@@ -301,17 +304,30 @@ export function RankedBannerReport({ match }: { match: CompletedMatch }) {
               <div
                 style={{
                   display: "flex",
-                  flexDirection: "column",
+                  flexDirection: isLargeSquad ? "row" : "column",
                   gap: "1rem",
                   width: "100%",
                 }}
               >
-                {match.players.map((p, i) => (
-                  <SquadRow
-                    key={p.champion.riotIdGameName + i.toString()}
-                    player={p}
-                    isMvp={mvpIndex === i}
-                  />
+                {squadGroups.map((group, groupIndex) => (
+                  <div
+                    key={groupIndex.toString()}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "1rem",
+                      width: isLargeSquad ? "50%" : "100%",
+                    }}
+                  >
+                    {group.map((player) => (
+                      <SquadRow
+                        key={player.champion.riotIdGameName}
+                        player={player}
+                        isMvp={match.players.indexOf(player) === mvpIndex}
+                        compact={isLargeSquad}
+                      />
+                    ))}
+                  </div>
                 ))}
               </div>
             </div>

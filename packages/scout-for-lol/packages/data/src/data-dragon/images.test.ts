@@ -10,6 +10,7 @@ import {
   normalizeChampionName,
   validateChampionImage,
   validateChampionLoadingImage,
+  validateChampionSplashImage,
   validateItemImage,
   validateSpellImage,
   validateRuneIcon,
@@ -159,6 +160,13 @@ describe("championNameOverrides", () => {
   );
 
   test.each(championOverrides)(
+    "validateChampionSplashImage finds splash art for override input %s",
+    async (input) => {
+      await expect(validateChampionSplashImage(input)).resolves.toBeUndefined();
+    },
+  );
+
+  test.each(championOverrides)(
     "getChampionLoadingImageUrl rewrites %s to the correct CDN path",
     (input, expected) => {
       expect(getChampionLoadingImageUrl(input, 0)).toContain(
@@ -187,6 +195,16 @@ describe("validateChampionLoadingImage missing asset", () => {
       validateChampionLoadingImage("NonExistentChampion"),
     ).rejects.toThrow(
       /Champion loading image for NonExistentChampion not found.*Run 'bun run update-data-dragon'/,
+    );
+  });
+});
+
+describe("validateChampionSplashImage missing asset", () => {
+  test("throws pointing at update-data-dragon", async () => {
+    await expect(
+      validateChampionSplashImage("NonExistentChampion"),
+    ).rejects.toThrow(
+      /Champion splash image for NonExistentChampion not found.*Run 'bun run update-data-dragon'/,
     );
   });
 });

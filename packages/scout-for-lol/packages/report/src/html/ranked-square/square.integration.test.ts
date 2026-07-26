@@ -69,3 +69,28 @@ test("square — 3-player squad", async () => {
   await writeOutputs("square_squad_3", svg, png);
   expect(hashSvg(svg)).toMatchSnapshot();
 });
+
+test("square — 6-player squad with commentary", async () => {
+  const match = rankedFixture({
+    queueType: "flex",
+    trackedCount: 6,
+    outcome: "Victory",
+    commentary: "Six tracked players fit across two balanced rows.",
+  });
+  const svg = await matchToSvg(match, { designOverride: "square" });
+  const png = await svgToPng(svg);
+  await writeOutputs("square_squad_6_commentary", svg, png);
+  expect(hashSvg(svg)).toMatchSnapshot();
+});
+
+test("square — 10-player squad", async () => {
+  const match = rankedFixture({
+    queueType: "flex",
+    trackedCount: 10,
+    outcome: "Victory",
+  });
+  const svg = await matchToSvg(match, { designOverride: "square" });
+  const png = await svgToPng(svg);
+  await writeOutputs("square_squad_10", svg, png);
+  expect(hashSvg(svg)).toMatchSnapshot();
+});

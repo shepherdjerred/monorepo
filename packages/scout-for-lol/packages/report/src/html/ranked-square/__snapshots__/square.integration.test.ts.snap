@@ -4,6 +4,10 @@ exports[`square — solo victory with commentary 1`] = `"fef4896460c083e2b49ed22
 
 exports[`square — solo defeat without commentary 1`] = `"6ac2f2c77fcd1c6fd07f4395f9a137c1acc56806805d3402e76342964616b7c3"`;
 
-exports[`square — 5-player squad with commentary 1`] = `"d545bcc02a99ba064ee7811998373f2a3194a98c09fc31dd33fe0476e5a78733"`;
+exports[`square — 5-player squad with commentary 1`] = `"374b17654bae3a065d5541412885d5e9b2724281e669932a4c585712772ddf74"`;
 
-exports[`square — 3-player squad 1`] = `"7e62665a8328378eec059e4b5d32ca820d1755a33eaba95488d344399db0666a"`;
+exports[`square — 3-player squad 1`] = `"13ba28e408749fc5251737f2dab93361f31b2a272b1e3fcd722193dd979c9fad"`;
+
+exports[`square — 6-player squad with commentary 1`] = `"fdc2206c95118de68220730c392edd6eaf6e38cfd26229a21a8e50ae46d8017f"`;
+
+exports[`square — 10-player squad 1`] = `"344e4abf2be359ad57cfd1617e69865b240530e2c922a1804f03e3ed1526d6e4"`;

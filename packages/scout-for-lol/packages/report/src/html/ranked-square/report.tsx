@@ -17,6 +17,7 @@ import {
   queueLabel,
   winningTeamOf,
 } from "#src/html/shared/format.ts";
+import { splitSquad } from "#src/html/shared/squad-layout.ts";
 
 export const SQUARE_WIDTH = 4760;
 export const SQUARE_HEIGHT = 4760;
@@ -129,6 +130,7 @@ export function RankedSquareReport({ match }: { match: CompletedMatch }) {
   const heroOutcome = hero.outcome;
   const isWin = heroOutcome === "Victory";
   const isSolo = match.players.length === 1;
+  const squadRows = splitSquad(match.players);
   const mvpIndex = findMvpIndex(match.players);
   const rankAfter = hero.rankAfterMatch;
   const winningTeam = winningTeamOf(hero);
@@ -336,17 +338,29 @@ export function RankedSquareReport({ match }: { match: CompletedMatch }) {
             <div
               style={{
                 display: "flex",
+                flexDirection: "column",
                 gap: "1.5rem",
                 width: "100%",
               }}
             >
-              {match.players.map((p, i) => (
-                <PlayerCard
-                  key={p.champion.riotIdGameName + i.toString()}
-                  player={p}
-                  isMvp={mvpIndex === i}
-                  width={squadCardWidth(match.players.length)}
-                />
+              {squadRows.map((row, rowIndex) => (
+                <div
+                  key={rowIndex.toString()}
+                  style={{
+                    display: "flex",
+                    gap: "1.5rem",
+                    width: "100%",
+                  }}
+                >
+                  {row.map((player) => (
+                    <PlayerCard
+                      key={player.champion.riotIdGameName}
+                      player={player}
+                      isMvp={match.players.indexOf(player) === mvpIndex}
+                      width={squadCardWidth(row.length)}
+                    />
+                  ))}
+                </div>
               ))}
             </div>
           </div>

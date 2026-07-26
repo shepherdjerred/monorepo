@@ -198,6 +198,11 @@ const PUUIDS = [
   `tracked_player_2_fixture_${"c".repeat(53)}`,
   `tracked_player_3_fixture_${"d".repeat(53)}`,
   `tracked_player_4_fixture_${"e".repeat(53)}`,
+  `tracked_player_5_fixture_${"f".repeat(53)}`,
+  `tracked_player_6_fixture_${"g".repeat(53)}`,
+  `tracked_player_7_fixture_${"h".repeat(53)}`,
+  `tracked_player_8_fixture_${"i".repeat(53)}`,
+  `tracked_player_9_fixture_${"j".repeat(53)}`,
 ];
 
 const DISCORD_IDS = [
@@ -206,11 +211,16 @@ const DISCORD_IDS = [
   "10000000000000003",
   "10000000000000004",
   "10000000000000005",
+  "10000000000000006",
+  "10000000000000007",
+  "10000000000000008",
+  "10000000000000009",
+  "10000000000000010",
 ];
 
 export type RankedFixtureOptions = {
   queueType: "solo" | "flex";
-  trackedCount: 1 | 2 | 3 | 5;
+  trackedCount: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
   outcome: "Victory" | "Defeat";
   commentary?: string;
 };
@@ -218,25 +228,32 @@ export type RankedFixtureOptions = {
 export function rankedFixture(options: RankedFixtureOptions): CompletedMatch {
   const blue = blueTeam();
   const red = redTeam();
+  const champions = [...blue, ...red];
 
-  // Swap blue/red KDA if the outcome is Defeat so the splash hero (a tracked
-  // player on blue) lines up with the chosen outcome.
+  // The first five tracked players are on blue; tracked players 6–10 are on
+  // red and therefore receive the opposite outcome. The hero remains the
+  // first blue player, so the report title follows the requested outcome.
   const players = Array.from({ length: options.trackedCount }, (_, i) => {
-    const playerChampion = blue[i];
+    const playerChampion = champions[i];
     if (!playerChampion)
-      throw new Error(`No blue champion at index ${i.toString()}`);
+      throw new Error(`No champion at index ${i.toString()}`);
     const puuid = PUUIDS[i];
     const discordId = DISCORD_IDS[i];
     if (puuid === undefined || discordId === undefined)
       throw new Error(
         `Missing fixture puuid/discord id for index ${i.toString()}`,
       );
+    const isBluePlayer = i < blue.length;
     return trackedPlayer({
       alias: playerChampion.riotIdGameName,
       puuid,
       discordId,
-      outcome: options.outcome,
-      team: "blue",
+      outcome: isBluePlayer
+        ? options.outcome
+        : options.outcome === "Victory"
+          ? "Defeat"
+          : "Victory",
+      team: isBluePlayer ? "blue" : "red",
       lane: playerChampion.lane,
       champion: playerChampion,
     });

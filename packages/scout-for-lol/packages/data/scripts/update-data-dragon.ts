@@ -1359,6 +1359,8 @@ async function updateSnapshots(): Promise<void> {
         "src/dataDragon/__snapshots__/summoner.test.ts",
         "src/dataDragon/__snapshots__/version.test.ts",
         "src/html/arena/__snapshots__/realdata.integration.test.ts",
+        "src/html/ranked-banner/banner.integration.test.ts",
+        "src/html/ranked-square/square.integration.test.ts",
       ],
     },
     // Backend package snapshots
