@@ -99,6 +99,16 @@ board: false
 - Passed app typecheck, lint, and production build; the full data suite (480
   tests), typecheck, and lint; and the full backend suite (1,172 passing tests,
   6 intentional skips), typecheck, and lint.
+- Addressed the three fresh hosted Codex P2 findings from the pre-restack head:
+  action-only competition/report routes now reach their exact action gate,
+  stale non-member grants no longer count as remaining role managers, and
+  permission bootstrap failures fall back to the scoped query before surfacing
+  an explicit load error.
+- Added the app test task plus focused action-route and permission-query state
+  coverage, and extended the RBAC router harness and suite with current Discord
+  membership behavior.
+- Passed all 34 app tests, app typecheck/lint/build, all 1,173 backend tests
+  with 6 intentional skips, and backend typecheck/lint after the review fixes.
 
 ### Remaining
 

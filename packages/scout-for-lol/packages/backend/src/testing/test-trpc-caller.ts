@@ -59,6 +59,10 @@ type TrpcCaller = ReturnType<AppRouter["createCaller"]>;
  */
 type MembershipConfig = "root" | { guildId: string; asAdmin: boolean }[];
 
+class UnknownMemberError extends Error {
+  readonly code = 10_007;
+}
+
 // test-ids requires a digits-only identifier (it builds a snowflake).
 const DEFAULT_ACTOR = testAccountId("900000001");
 
@@ -100,6 +104,8 @@ export type OfflineTrpcHarness = {
    * not) of only those guilds, so seeded grants decide access.
    */
   setMembership: (config: MembershipConfig) => void;
+  /** Set the current Discord member IDs returned by guild member fetches. */
+  setGuildMembers: (guildId: string, discordIds: readonly string[]) => void;
 };
 
 // An array whose `.find()` always yields an admin guild, so the actor is
@@ -130,7 +136,10 @@ export async function createOfflineTrpcHarness(
   const { prisma, dbPath } = createTestDatabase(testName);
 
   // Membership/admin state the RBAC guard reads (mutable via setMembership).
-  const state: { membership: MembershipConfig } = { membership: "root" };
+  const state: {
+    membership: MembershipConfig;
+    guildMembers: Map<string, Set<string>>;
+  } = { membership: "root", guildMembers: new Map() };
   const toPartialGuilds = (): PartialGuild[] =>
     state.membership === "root"
       ? rootMembership()
@@ -169,9 +178,22 @@ export async function createOfflineTrpcHarness(
         cache: {
           has: (id: string) =>
             state.membership === "root" || installedGuildIds().has(id),
-          // `get` is only used by listChannels, which these tests don't exercise.
-          get: (): undefined => {
-            return;
+          get: (id: string) => {
+            if (state.membership !== "root" && !installedGuildIds().has(id)) {
+              return;
+            }
+            return {
+              members: {
+                fetch: (options: { user: string }) => {
+                  if (state.guildMembers.get(id)?.has(options.user) === true) {
+                    return Promise.resolve({ id: options.user });
+                  }
+                  return Promise.reject(
+                    new UnknownMemberError("Unknown Member"),
+                  );
+                },
+              },
+            };
           },
           map: <T>(fn: (g: { id: string }) => T): T[] =>
             [...installedGuildIds()].map((id) => fn({ id })),
@@ -212,6 +234,9 @@ export async function createOfflineTrpcHarness(
   const setMembership = (config: MembershipConfig) => {
     state.membership = config;
   };
+  const setGuildMembers = (guildId: string, discordIds: readonly string[]) => {
+    state.guildMembers.set(guildId, new Set(discordIds));
+  };
 
   return {
     prisma,
@@ -220,5 +245,6 @@ export async function createOfflineTrpcHarness(
     authedCaller,
     anonCaller,
     setMembership,
+    setGuildMembers,
   };
 }

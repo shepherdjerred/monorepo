@@ -16,6 +16,8 @@ import {
   ForbiddenPanel,
   permissionLabel,
 } from "#src/components/forbidden-panel.tsx";
+import { permissionForGuildActionRoute } from "#src/lib/guild-route-permissions.ts";
+import type { QueryError } from "#src/lib/permission-query-state.ts";
 
 const NAV_ITEMS: {
   to: string;
@@ -62,7 +64,7 @@ export function GuildWorkspace() {
   // served from cache; auto-fetches if the user deep-linked here).
   const { data: guilds } = useQuery(trpc.guild.listManageable.queryOptions());
   const guild = guilds?.find((g) => g.id === guildId);
-  const { perms, isLoading, hasAccess } = usePermissions(guildId);
+  const { perms, isLoading, hasAccess, error } = usePermissions(guildId);
 
   if (guildId === undefined) {
     return (
@@ -79,15 +81,20 @@ export function GuildWorkspace() {
   // The active section is the first path segment after `/g/:guildId/`. Gate the
   // rendered child on that section's read permission so a member holding only,
   // say, `reports:read` can't deep-link `/subscriptions` or `/access` (any grant
-  // used to open every route). Write permissions stay enforced server-side and
-  // by the per-control gates inside each section.
+  // used to open every route). Action-only routes bypass this read gate and
+  // reach their exact GuildPermissionGate below.
   const activeSection = /^\/g\/[^/]+\/([^/]+)/.exec(location.pathname)?.[1];
   const activeNav = NAV_ITEMS.find((item) => item.to === activeSection);
+  const actionRoutePermission = permissionForGuildActionRoute(
+    location.pathname,
+  );
   const sectionForbidden =
     !isLoading &&
     hasAccess &&
+    actionRoutePermission === null &&
     activeNav !== undefined &&
     perms.cannot(activeNav.permission.resource, activeNav.permission.action);
+  const accessDenied = !isLoading && !hasAccess;
 
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:py-12">
@@ -138,18 +145,22 @@ export function GuildWorkspace() {
         )}
       </div>
 
-      {!isLoading && !hasAccess ? (
-        <ForbiddenPanel
-          title="No access to this server"
-          message="You aren't a member of this server, or a Scout admin hasn't granted you access yet."
-        />
-      ) : sectionForbidden ? (
-        <ForbiddenPanel
-          title={`No access to ${activeNav.label}`}
-          message={`Ask a Scout admin to grant you ${activeNav.label} access.`}
-        />
+      {error === null ? (
+        accessDenied ? (
+          <ForbiddenPanel
+            title="No access to this server"
+            message="You aren't a member of this server, or a Scout admin hasn't granted you access yet."
+          />
+        ) : sectionForbidden ? (
+          <ForbiddenPanel
+            title={`No access to ${activeNav.label}`}
+            message={`Ask a Scout admin to grant you ${activeNav.label} access.`}
+          />
+        ) : (
+          <Outlet />
+        )
       ) : (
-        <Outlet />
+        <PermissionLoadError error={error} />
       )}
     </main>
   );
@@ -164,9 +175,10 @@ export function GuildWorkspace() {
  */
 export function GuildSectionIndex() {
   const { guildId } = useParams();
-  const { perms, isLoading } = usePermissions(guildId);
+  const { perms, isLoading, error } = usePermissions(guildId);
 
   if (isLoading) return null;
+  if (error !== null) return <PermissionLoadError error={error} />;
   const first = NAV_ITEMS.find((item) =>
     perms.can(item.permission.resource, item.permission.action),
   );
@@ -187,7 +199,7 @@ export function GuildPermissionGate(props: {
   children: ReactNode;
 }) {
   const { guildId } = useParams();
-  const { perms, isLoading } = usePermissions(guildId);
+  const { perms, isLoading, error } = usePermissions(guildId);
 
   if (guildId === undefined) {
     return (
@@ -198,6 +210,7 @@ export function GuildPermissionGate(props: {
     );
   }
   if (isLoading) return null;
+  if (error !== null) return <PermissionLoadError error={error} />;
   if (perms.cannot(props.permission.resource, props.permission.action)) {
     return (
       <ForbiddenPanel
@@ -207,4 +220,17 @@ export function GuildPermissionGate(props: {
     );
   }
   return props.children;
+}
+
+function PermissionLoadError(props: { error: QueryError }) {
+  return (
+    <div className="rounded-lg border border-destructive/40 bg-card p-8 text-center">
+      <h2 className="text-base font-semibold text-destructive">
+        Unable to load access
+      </h2>
+      <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
+        {props.error.message}
+      </p>
+    </div>
+  );
 }

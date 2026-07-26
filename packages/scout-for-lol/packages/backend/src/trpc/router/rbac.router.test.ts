@@ -20,6 +20,7 @@ const other = DiscordAccountIdSchema.parse("900000000000000003");
 async function reset() {
   await trpc.prisma.serverPermission.deleteMany({});
   await trpc.prisma.auditLog.deleteMany({});
+  trpc.setGuildMembers(guildId, [member, target, other]);
 }
 
 async function seedGrants(userId: string, permissions: readonly Permission[]) {
@@ -357,6 +358,29 @@ describe("RBAC guard invariants", () => {
       trpc.authedCaller(member).roles.clear({ guildId, discordUserId: other }),
       trpc.authedCaller(other).roles.clear({ guildId, discordUserId: member }),
     ]);
+  });
+
+  test("stale non-member grants do not satisfy the remaining-manager invariant", async () => {
+    await reset();
+    asMember();
+    await seedTwoRoleManagers();
+    trpc.setGuildMembers(guildId, [member]);
+
+    await expect(
+      trpc.authedCaller(member).roles.clear({
+        guildId,
+        discordUserId: member,
+      }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+
+    const remainingCurrentManager = await trpc.prisma.serverPermission.count({
+      where: {
+        serverId: guildId,
+        discordUserId: member,
+        permission: permissionKey({ resource: "roles", action: "grant" }),
+      },
+    });
+    expect(remainingCurrentManager).toBe(1);
   });
 
   test("anonymous caller is UNAUTHORIZED before any permission check", async () => {

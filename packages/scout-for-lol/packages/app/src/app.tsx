@@ -25,6 +25,7 @@ import {
   ContractMismatchBanner,
   VersionFooter,
 } from "#src/components/version-info.tsx";
+import { GUILD_ACTION_PERMISSIONS } from "#src/lib/guild-route-permissions.ts";
 
 export function App() {
   return (
@@ -47,7 +48,7 @@ export function App() {
                 path="competitions/new"
                 element={
                   <GuildPermissionGate
-                    permission={{ resource: "competitions", action: "create" }}
+                    permission={GUILD_ACTION_PERMISSIONS.competitionCreate}
                   >
                     <CompetitionForm />
                   </GuildPermissionGate>
@@ -61,7 +62,7 @@ export function App() {
                 path="competitions/:competitionId/edit"
                 element={
                   <GuildPermissionGate
-                    permission={{ resource: "competitions", action: "update" }}
+                    permission={GUILD_ACTION_PERMISSIONS.competitionUpdate}
                   >
                     <CompetitionForm />
                   </GuildPermissionGate>
@@ -73,7 +74,7 @@ export function App() {
                 path="reports/new"
                 element={
                   <GuildPermissionGate
-                    permission={{ resource: "reports", action: "create" }}
+                    permission={GUILD_ACTION_PERMISSIONS.reportCreate}
                   >
                     <ReportForm />
                   </GuildPermissionGate>
@@ -84,7 +85,7 @@ export function App() {
                 path="reports/:reportId/edit"
                 element={
                   <GuildPermissionGate
-                    permission={{ resource: "reports", action: "update" }}
+                    permission={GUILD_ACTION_PERMISSIONS.reportUpdate}
                   >
                     <ReportForm />
                   </GuildPermissionGate>

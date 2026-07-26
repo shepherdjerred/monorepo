@@ -29,9 +29,33 @@ import {
 import { prisma } from "#src/database/index.ts";
 import { type Db, recordAudit } from "#src/lib/audit/index.ts";
 import { resolveDiscordUsers } from "#src/lib/discord/resolve-users.ts";
+import { client as discordClient } from "#src/discord/client.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 const GRANT_KEY = permissionKey({ resource: "roles", action: "grant" });
+const DiscordApiErrorSchema = z.object({ code: z.number() });
+const UNKNOWN_MEMBER_CODE = 10_007;
+
+async function isCurrentGuildMember(
+  guildId: DiscordGuildId,
+  discordId: DiscordAccountId,
+): Promise<boolean> {
+  const guild = discordClient.guilds.cache.get(guildId);
+  if (guild === undefined) {
+    throw new Error(`Discord guild ${guildId} is unavailable`);
+  }
+
+  try {
+    await guild.members.fetch({ user: discordId, force: true });
+    return true;
+  } catch (error) {
+    const parsed = DiscordApiErrorSchema.safeParse(error);
+    if (parsed.success && parsed.data.code === UNKNOWN_MEMBER_CODE) {
+      return false;
+    }
+    throw error;
+  }
+}
 
 /**
  * Prevent a non-root mutation from removing the last Scout-managed `roles:grant`
@@ -51,14 +75,20 @@ async function assertPreservesRoleManager(
   const removesGrant =
     params.targetHasGrant && !params.keepsGrant && !params.isRoot;
   if (!removesGrant) return;
-  const otherGrantHolders = await tx.serverPermission.count({
+  const otherGrantHolders = await tx.serverPermission.findMany({
     where: {
       serverId: params.guildId,
       permission: GRANT_KEY,
       discordUserId: { not: params.targetDiscordId },
     },
+    select: { discordUserId: true },
   });
-  if (otherGrantHolders === 0) {
+  const currentMemberChecks = await Promise.all(
+    otherGrantHolders.map((holder) =>
+      isCurrentGuildMember(params.guildId, holder.discordUserId),
+    ),
+  );
+  if (!currentMemberChecks.some(Boolean)) {
     throw new TRPCError({
       code: "BAD_REQUEST",
       message:
