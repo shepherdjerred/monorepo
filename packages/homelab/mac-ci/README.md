@@ -3,9 +3,15 @@
 Provisions a Mac Mini as a Buildkite CI agent on the **`macos`** queue, for
 native Swift/Xcode builds that couldn't run in the Linux in-cluster path.
 
-> **2026-07:** the monorepo's CI pipeline (Dagger + Buildkite) was removed, so
-> nothing dispatches jobs to this agent; this setup is dormant pending the
-> Buildkite service teardown.
+> **Status (2026-07-25):** the `macos` queue exists (Tofu-applied 2026-07-06)
+> and dispatch is unpaused, but **no macOS agent has ever connected** — run
+> `bootstrap.sh` on the Mini to register one. CI was replatformed from the old
+> Dagger + dynamic-generator setup to a **static `.buildkite/pipeline.yml`**;
+> that migration dropped the per-package macOS SwiftLint step (it lived in the
+> now-deleted `scripts/ci/src/`), so no job routes to this queue **yet** —
+> re-adding a `agents: { queue: macos }` step to the static pipeline is the
+> outstanding follow-up (see "Activating the first job"). Bringing the agent
+> online is independent of that and worth doing first.
 
 This is a **thin, headless-appliance** setup — deliberately separate from the
 personal chezmoi dotfiles layer (`packages/dotfiles/`, which is for
@@ -20,13 +26,13 @@ The Mac Mini was that surface.
 
 ## What runs where
 
-| Layer         | Mechanism                              | Notes                                                                      |
-| ------------- | -------------------------------------- | -------------------------------------------------------------------------- |
-| Host packages | `bootstrap.sh` → Homebrew              | `buildkite-agent`, `swiftlint`, `tailscale`                                |
-| Agent daemon  | `brew services` (LaunchAgent)          | user context (keychain/Xcode-friendly); needs auto-login for headless boot |
-| Queue         | Tofu `buildkite_cluster_queue "macos"` | `src/tofu/buildkite/cluster.tf`                                            |
-| Job routing   | per-step `agents.queue = "macos"`      | `scripts/ci/src/steps/per-package.ts`                                      |
-| Activation    | `MACOS_CI_ENABLED=true`                | env at pipeline-upload time; default off                                   |
+| Layer         | Mechanism                              | Notes                                                                                                   |
+| ------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Host packages | `bootstrap.sh` → Homebrew              | `buildkite-agent`, `swiftlint`, `tailscale`                                                             |
+| Power         | `bootstrap.sh` → `pmset`               | never sleep (`sleep 0`, `powernap 0`, `womp 1`, `autorestart 1`) — a sleeping agent drops off Buildkite |
+| Agent daemon  | `brew services` (LaunchAgent)          | user context (keychain/Xcode-friendly); needs auto-login for headless boot                              |
+| Queue         | Tofu `buildkite_cluster_queue "macos"` | `src/tofu/buildkite/cluster.tf` (applied)                                                               |
+| Job routing   | per-step `agents: { queue: macos }`    | to be added to `.buildkite/pipeline.yml` (static; the old generator is gone)                            |
 
 ## First-time setup
 
@@ -48,7 +54,13 @@ The Mac Mini was that surface.
 
    The script installs Homebrew (if missing), the packages above, writes
    `$(brew --prefix)/etc/buildkite-agent/buildkite-agent.cfg` (tagged
-   `queue=macos`, `chmod 600`), and starts the agent. Re-running is safe.
+   `queue=macos`, `chmod 600`), applies the **never-sleep `pmset` profile**
+   (prompts for sudo), and starts the agent. Re-running is safe.
+
+   The `pmset` step is what keeps a Mac Mini from dropping off Buildkite: a
+   sleeping host disconnects its agent and hangs any dispatched job. It forces
+   `sleep 0` / `disksleep 0` / `powernap 0` / `womp 1` / `autorestart 1`.
+   Verify afterward with `pmset -g custom` (look for `sleep 0`).
 
 3. **Join the tailnet** (manual — needs interactive auth):
 
@@ -70,20 +82,28 @@ The Mac Mini was that surface.
 
 ## Activating the first job
 
-The macOS SwiftLint step (`swiftlint-tasks-for-obsidian`) is **dormant by
-default** — the pipeline generator only emits it when `MACOS_CI_ENABLED=true`.
-This keeps `tasks-for-obsidian` PRs from hanging on a macOS agent before one
-exists.
+**No macOS step exists in CI right now.** The original SwiftLint step and its
+`MACOS_CI_ENABLED` gate lived in the dynamic pipeline generator
+(`scripts/ci/src/steps/per-package.ts`), which was deleted when CI was
+replatformed to the static `.buildkite/pipeline.yml`. Nothing dispatches to the
+`macos` queue until a step is re-added there.
 
-Once the agent above shows connected, set `MACOS_CI_ENABLED=true` in the
-pipeline-upload environment (Buildkite pipeline env var, or the bootstrap
-`.buildkite/pipeline.yml` env). The next `tasks-for-obsidian` change will route
-a `:swift: SwiftLint (macOS)` step to the Mac.
+To wire it up (do this **after** the agent shows connected, so PRs never hang on
+a missing agent):
+
+1. Add a step to `.buildkite/pipeline.yml` with `agents: { queue: "macos" }`,
+   `soft_fail: true`, and an `if:` that only triggers on
+   `packages/tasks-for-obsidian/ios/**` changes. Run `swiftlint --strict` (or
+   the iOS build / Maestro suite) as the command — it executes on the agent's
+   native checkout, **not** via the kubernetes plugin the Linux steps use.
+2. Leave it `soft_fail: true` until it's green; only then add its
+   `buildkite/monorepo/pr/...` context to `src/tofu/github/rulesets.tf` as a
+   required check, or it blocks every PR.
 
 > **Note:** there's no `.swiftlint.yml` in `packages/tasks-for-obsidian/ios`
-> yet, so the step runs `swiftlint --strict` with defaults — expect to either
-> add a config or fix violations on the first real run. Consider starting with
-> `soft_fail: true` on the step while shaking it out.
+> yet, so `swiftlint --strict` runs with defaults — expect to either add a
+> config or fix violations on the first real run. `soft_fail: true` keeps the
+> build green while that's shaken out.
 
 ## Security posture
 
@@ -98,5 +118,7 @@ per job) on top later — orthogonal to this setup.
 ```bash
 brew services stop buildkite/buildkite/buildkite-agent
 brew uninstall buildkite/buildkite/buildkite-agent
-# Then set MACOS_CI_ENABLED back to unset/false and `tofu apply` to drop the queue.
+sudo pmset -a sleep 1 powernap 1        # restore default sleep behavior
+# Then remove any macos-queue step from .buildkite/pipeline.yml and, if the
+# queue is no longer wanted, delete the resource in src/tofu/buildkite and apply.
 ```
