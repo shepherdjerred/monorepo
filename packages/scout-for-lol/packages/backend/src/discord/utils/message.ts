@@ -162,22 +162,28 @@ function fencedCodeBlockParts(message: string): {
   body: string;
   closingFence: string;
 } | null {
-  const match = /^([\s\S]*?)(```[^\n]*\n)([\s\S]*)(\n```)$/.exec(message);
-  if (match === null) {
+  // Parse with plain string scans instead of a single regex: matching an
+  // arbitrary prefix, an opening fence, a greedy body, and a trailing fence in
+  // one pattern makes the quantifiers ambiguous over backtick runs, which
+  // trips `regexp/no-super-linear-backtracking`. indexOf/endsWith are linear.
+  const closingFence = "\n```";
+  const openFenceStart = message.indexOf("```");
+  if (openFenceStart === -1 || !message.endsWith(closingFence)) {
     return null;
   }
-  const [, prefix, openingFence, body, closingFence] = match;
-  if (
-    prefix === undefined ||
-    openingFence === undefined ||
-    body === undefined ||
-    closingFence === undefined
-  ) {
-    throw new Error(
-      "Fenced code block match omitted a required capture group.",
-    );
+  const openFenceEnd = message.indexOf("\n", openFenceStart);
+  const closingFenceStart = message.length - closingFence.length;
+  // The opening fence needs its own newline positioned before the closing
+  // fence; otherwise a lone "```…```" is not a well-formed block to split.
+  if (openFenceEnd === -1 || openFenceEnd >= closingFenceStart) {
+    return null;
   }
-  return { prefix, openingFence, body, closingFence };
+  return {
+    prefix: message.slice(0, openFenceStart),
+    openingFence: message.slice(openFenceStart, openFenceEnd + 1),
+    body: message.slice(openFenceEnd + 1, closingFenceStart),
+    closingFence,
+  };
 }
 
 function splitFencedCodeBlock(

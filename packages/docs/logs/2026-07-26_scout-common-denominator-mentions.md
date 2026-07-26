@@ -117,8 +117,8 @@ hardcoded. Followed the existing precedent — every other render knob (chart
 `title`, `theme`, `sort`, `smooth`, …) is a `key = value` pair inside the
 query's trailing `RENDER <kind> WITH (...)` clause, so `mentions` became
 a new `WITH` option scoped to `RENDER leaderboard`, not a new Prisma column
-or slash-command flag. Full design in
-`~/.claude/plans/for-the-mention-whimsical-nova.md`.
+or slash-command flag. Full design mirrored into the repo at
+`packages/docs/plans/2026-07-26_configurable-leaderboard-mentions.md`.
 
 - `packages/scout-for-lol/packages/data/src/model/report.ts`: added
   `ReportLeaderboardOptionsSchema` (`mentions: number | "all"`, mirroring the
