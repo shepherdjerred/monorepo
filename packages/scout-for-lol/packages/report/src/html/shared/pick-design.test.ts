@@ -13,6 +13,23 @@ test("pickRankedDesign is deterministic for the same match", () => {
   expect(first).toBe(second);
 });
 
+test("pickRankedDesign is independent of match.players ordering", () => {
+  // `match.players` inherits the order of getAccountsWithState()'s unordered
+  // Prisma findMany, so a retry can hand us the same players in a different
+  // order. The design must not change when that happens.
+  const match = rankedFixture({
+    queueType: "solo",
+    trackedCount: 3,
+    outcome: "Victory",
+  });
+  const forward = pickRankedDesign(match);
+  const reversed = pickRankedDesign({
+    ...match,
+    players: [...match.players].reverse(),
+  });
+  expect(reversed).toBe(forward);
+});
+
 test("pickRankedDesign splits roughly 50/50 across many distinct matches", () => {
   // Vary the durationInSeconds to produce many distinct stable hashes
   // without rebuilding the fixture (which is the expensive part).

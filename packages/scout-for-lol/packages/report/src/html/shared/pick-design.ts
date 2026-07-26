@@ -17,14 +17,18 @@ function fnv1a(input: string): number {
 
 /**
  * Build a stable identifier for a match. CompletedMatch has no matchId field,
- * so derive one from the first tracked player's puuid + duration. Same match
- * always hashes the same way, so retries land on the same design and
+ * so derive one from the full set of tracked player puuids + duration. The
+ * puuids are sorted so the key is independent of `match.players` ordering —
+ * that array inherits the order of `getAccountsWithState()`'s Prisma
+ * `findMany` (no `orderBy`), so `players[0]` is not stable across queries.
+ * Sorting makes retries hash identically, so they land on the same design and
  * snapshots stay stable.
  */
 function stableMatchKey(match: CompletedMatch): string {
-  const firstPlayer = match.players[0];
-  const puuid = firstPlayer?.playerConfig.league.leagueAccount.puuid ?? "";
-  return `${String(puuid)}|${match.durationInSeconds.toString()}`;
+  const puuids = match.players
+    .map((player) => String(player.playerConfig.league.leagueAccount.puuid))
+    .sort();
+  return `${puuids.join(",")}|${match.durationInSeconds.toString()}`;
 }
 
 export function pickRankedDesign(match: CompletedMatch): RankedDesign {
