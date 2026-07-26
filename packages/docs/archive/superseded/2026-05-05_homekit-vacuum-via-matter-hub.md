@@ -1,13 +1,20 @@
 ---
 id: plan-2026-05-05-homekit-vacuum-via-matter-hub
 type: plan
-status: planned
+status: complete
 board: true
 verification: agent
-disposition: active
+disposition: deferred
 ---
 
 # HomeKit Vacuum Support via Matter Hub
+
+> **Superseded 2026-07-25 — not implemented.** The vacuum fleet is now three
+> Roborock Saros 10R, each of which supports **native Matter 1.4** and is paired
+> directly into Apple Home (native vacuum tiles) — so the HAMH bridge this plan
+> proposed is unnecessary. HAMH would still be the answer for a _non-Matter_
+> vacuum, but no such device remains in the fleet. See
+> `plan-2026-07-25-roborock-saros-fleet-migration`.
 
 Add `home-assistant-matter-hub` (HAMH) to the cluster so HA `vacuum.*` entities (Roomba, Roborock, Dreame, etc.) appear as native robot vacuums in Apple Home.
 
@@ -98,4 +105,5 @@ Prerequisite: the vacuum's HA integration is already working — `vacuum.<name>`
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `HomeKit Vacuum Support via Matter Hub`.
+- [x] Superseded 2026-07-25 — not implemented (see banner). No further work: the
+      Saros 10R fleet uses native Matter, so HAMH is unnecessary.

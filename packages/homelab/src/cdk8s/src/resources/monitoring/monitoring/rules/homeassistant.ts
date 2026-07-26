@@ -1,6 +1,10 @@
 import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
-import { createSensorAlert, createBinarySensorAlert } from "./shared.ts";
+import {
+  createSensorAlert,
+  createBinarySensorAlert,
+  escapePrometheusTemplate,
+} from "./shared.ts";
 
 const ignoredUnavailableEntityDomains = [
   "group",
@@ -128,27 +132,6 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "30m",
           labels: { severity: "warning" },
         },
-        createBinarySensorAlert({
-          name: "RoombaBinFull",
-          entity: "binary_sensor.roomba_bin_full",
-          description:
-            "Binary sensor {{ $labels.entity }} reports bad state ({{ $value }}).",
-          summary: "Roomba bin full",
-          duration: "15m",
-        }),
-        {
-          alert: "RoombaNotRunningRecently",
-          annotations: {
-            description:
-              'Roomba has not run any missions in the last 48 hours ({{ "{{" }} $value {{ "}}" }} missions).',
-            summary: "Roomba not running recently",
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(homeassistant_sensor_unit_missions{entity="sensor.roomba_total_missions"}[48h]) == 0',
-          ),
-          for: "1h",
-          labels: { severity: "warning" },
-        },
       ],
     },
 
@@ -177,27 +160,117 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
     {
       name: "homeassistant-batteries",
       rules: [
-        // General battery alert for non-Roomba devices
+        // General battery alert. The Roborock floor vacuums are excluded here —
+        // they're governed by the charging-aware RoborockBatteryLowNotCharging
+        // rule below (a docked unit routinely sits below 20% while recharging,
+        // which the general rule would otherwise page on for 2h).
         createSensorAlert({
           name: "HomeAssistantBatteryLow",
           entity:
-            'min by (entity) (homeassistant_sensor_battery_percent{entity!="sensor.roomba_battery",entity!~".*blue_pure.*filter.*"})',
+            'min by (entity) (homeassistant_sensor_battery_percent{entity!~"sensor[.](1st|2nd|3rd)_floor_battery",entity!~".*blue_pure.*filter.*"})',
           condition: "<",
           threshold: 20, // Lowered from 30 to reduce flapping - 20% is genuinely critical
           description: "Battery low: {{ $value }}% ({{ $labels.entity }}).",
           summary: "Home Assistant battery low",
           duration: "2h",
         }),
-        // Specific Roomba battery alert that only fires when battery is low AND decreasing (not charging)
+      ],
+    },
+
+    // Roborock Saros 10R fleet health (3 units — 1st/2nd/3rd floor). One rule
+    // per condition, regex-matched across all three; the offending unit is named
+    // via friendly_name. severity:warning → PagerDuty (Alertmanager severity
+    // route). Metric names + the enum→binary bridges (*_vacuum_problem template
+    // sensors) were verified live against HA's /api/prometheus.
+    {
+      name: "homeassistant-roborock",
+      rules: [
+        // Stuck / robot error / dock error, via the device_class:problem template
+        // binary_sensors that collapse the status/vacuum_error/dock_dock_error
+        // enums (which carry no numeric metric) to a boolean.
+        createSensorAlert({
+          name: "RoborockVacuumProblem",
+          entity:
+            'homeassistant_binary_sensor_state{entity=~"binary_sensor[.](1st|2nd|3rd)_floor_vacuum_problem"}',
+          condition: "==",
+          threshold: 1,
+          description:
+            "Roborock {{ $labels.friendly_name }} reports a problem (stuck / robot error / dock error). Check the vacuum.",
+          summary: "Roborock vacuum problem",
+          duration: "5m",
+        }),
+        createSensorAlert({
+          name: "RoborockDirtyWaterTankFull",
+          entity:
+            'homeassistant_binary_sensor_state{entity=~"binary_sensor[.](1st|2nd|3rd)_floor_dock_dirty_water_box"}',
+          condition: "==",
+          threshold: 1,
+          description:
+            "Roborock {{ $labels.friendly_name }} dock dirty-water tank is full — empty it.",
+          summary: "Roborock dirty-water tank full",
+          duration: "5m",
+        }),
+        createSensorAlert({
+          name: "RoborockCleanWaterTankEmpty",
+          entity:
+            'homeassistant_binary_sensor_state{entity=~"binary_sensor[.](1st|2nd|3rd)_floor_dock_clean_water_box"}',
+          condition: "==",
+          threshold: 1,
+          description:
+            "Roborock {{ $labels.friendly_name }} dock clean-water tank is empty — refill it.",
+          summary: "Roborock clean-water tank empty",
+          duration: "5m",
+        }),
+        createSensorAlert({
+          name: "RoborockCleaningFluidLow",
+          entity:
+            'homeassistant_binary_sensor_state{entity=~"binary_sensor[.](1st|2nd|3rd)_floor_dock_cleaning_fluid"}',
+          condition: "==",
+          threshold: 1,
+          description:
+            "Roborock {{ $labels.friendly_name }} dock cleaning fluid is low — refill it.",
+          summary: "Roborock cleaning fluid low",
+          duration: "5m",
+        }),
+        createSensorAlert({
+          name: "RoborockWaterShortage",
+          entity:
+            'homeassistant_binary_sensor_state{entity=~"binary_sensor[.](1st|2nd|3rd)_floor_water_shortage"}',
+          condition: "==",
+          threshold: 1,
+          description:
+            "Roborock {{ $labels.friendly_name }} reports a water shortage.",
+          summary: "Roborock water shortage",
+          duration: "5m",
+        }),
+        // Consumables (main/side brush, filter, dock strainer) — the friendly_name
+        // identifies which consumable on which unit. Threshold is hours of life
+        // left; tune as desired.
+        createSensorAlert({
+          name: "RoborockConsumableDue",
+          entity:
+            'homeassistant_sensor_duration_h{entity=~"sensor[.](1st|2nd|3rd)_floor_(main_brush|side_brush|filter|dock_strainer)_time_left"}',
+          condition: "<",
+          threshold: 10,
+          description:
+            "Roborock consumable {{ $labels.friendly_name }} has under 10h of life left ({{ $value }}h) — replace/clean it soon.",
+          summary: "Roborock consumable due",
+          duration: "1h",
+        }),
+        // Battery low AND not charging. Self-join on the same battery series: a
+        // cross-entity join to the *_charging binary_sensor never matches (the
+        // `entity` label value differs), so use gauge-safe delta() to require the
+        // battery to be non-increasing over 30m.
         {
-          alert: "RoombaBatteryLowNotCharging",
+          alert: "RoborockBatteryLowNotCharging",
           annotations: {
-            description:
-              'Roomba battery is low and not charging: {{ "{{" }} $value {{ "}}" }}% ({{ "{{" }} $labels.entity {{ "}}" }}).',
-            summary: "Roomba battery low and not charging",
+            description: escapePrometheusTemplate(
+              "Roborock {{ $labels.friendly_name }} battery is low and not charging: {{ $value }}%.",
+            ),
+            summary: "Roborock battery low and not charging",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'homeassistant_sensor_battery_percent{entity="sensor.roomba_battery"} < 20 and increase(homeassistant_sensor_battery_percent{entity="sensor.roomba_battery"}[30m]) <= 0',
+            'homeassistant_sensor_battery_percent{entity=~"sensor[.](1st|2nd|3rd)_floor_battery"} < 20 and delta(homeassistant_sensor_battery_percent{entity=~"sensor[.](1st|2nd|3rd)_floor_battery"}[30m]) <= 0',
           ),
           for: "10m",
           labels: { severity: "warning" },
