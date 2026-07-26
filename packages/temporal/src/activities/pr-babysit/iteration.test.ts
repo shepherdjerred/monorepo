@@ -59,7 +59,7 @@ const verdict = BabysitVerdictSchema.parse({
   prState: "open",
   ci: {
     green: false,
-    failing: ["buildkite/monorepo/pr/mag-greptile-review"],
+    failing: ["buildkite/monorepo/pr/robot-face-review-gate"],
     pending: [],
     ignoredSoft: [],
     noChecksReported: false,

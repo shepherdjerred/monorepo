@@ -3,7 +3,7 @@ import {
   classifyChecks,
   classifyReviewThreads,
   computeDodMet,
-  isGreptileAuthor,
+  isReviewBotAuthor,
   isSoftFailureContext,
   parseReviewSeverity,
   severityBlocks,
@@ -29,7 +29,7 @@ describe("isSoftFailureContext", () => {
       ),
     ).toBe(false);
     expect(
-      isSoftFailureContext("buildkite/monorepo/pr/mag-greptile-review"),
+      isSoftFailureContext("buildkite/monorepo/pr/robot-face-review-gate"),
     ).toBe(false);
   });
 });
@@ -156,14 +156,15 @@ describe("severityBlocks", () => {
   });
 });
 
-describe("isGreptileAuthor", () => {
-  test("matches greptile bot logins", () => {
-    expect(isGreptileAuthor("greptile-apps[bot]")).toBe(true);
-    expect(isGreptileAuthor("Greptile")).toBe(true);
+describe("isReviewBotAuthor", () => {
+  test("matches any registered review-provider bot login", () => {
+    expect(isReviewBotAuthor("greptile-apps[bot]")).toBe(true);
+    expect(isReviewBotAuthor("chatgpt-codex-connector[bot]")).toBe(true);
+    expect(isReviewBotAuthor("chatgpt-codex-connector")).toBe(true);
   });
   test("does not match others", () => {
-    expect(isGreptileAuthor("shepherdjerred")).toBe(false);
-    expect(isGreptileAuthor(null)).toBe(false);
+    expect(isReviewBotAuthor("shepherdjerred")).toBe(false);
+    expect(isReviewBotAuthor(null)).toBe(false);
   });
 });
 
@@ -192,7 +193,7 @@ describe("classifyReviewThreads", () => {
     expect(v.allResolved).toBe(false);
     expect(v.blocking).toHaveLength(1);
     expect(v.blocking[0]?.severity).toBe("P2");
-    expect(v.blocking[0]?.isGreptile).toBe(true);
+    expect(v.blocking[0]?.isReviewBot).toBe(true);
   });
 
   test("unresolved thread without severity is advisory, not blocking", () => {
