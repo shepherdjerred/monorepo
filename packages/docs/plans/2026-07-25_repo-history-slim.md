@@ -51,13 +51,13 @@ Measured now; re-measure at execution (numbers shift once PR #1640 merges).
 
 Expected result: **644 MB → ~390 MB reachable** (fresh clones ~40% smaller), plus the free ~360 MB local-`.git` gc.
 
-## Phase 0 — free, no rewrite (do first, low risk)
+## Phase 0 — free, no rewrite (optional, low risk)
 
-`git gc --prune=now` in the main checkout reclaims the ~360 MB of unreachable objects on local disk. Does **not**
-change any SHA, does **not** shrink clone size, does **not** touch GitHub — pure local maintenance. **Safe to run with
-all worktrees active:** git gc is worktree-aware — it treats every worktree's HEAD, index, and reflog as roots and only
-prunes objects unreachable from _all_ of them, so it can't delete anything a worktree needs and never touches working
-directories or uncommitted/staged changes.
+An ordinary `git gc` in the main checkout can reclaim old unreachable objects on local disk without changing any SHA,
+shrinking a fresh clone, or touching GitHub. Keep Git's default prune grace period while worktrees or agents may be
+writing objects; **never run `git gc --prune=now` concurrently with repository writers**, because removing the grace
+period can race a new loose object before its ref is installed. The immediate final prune belongs after the Phase-3
+writer freeze, ref verification, restacks, and obsolete-reflog expiration.
 
 ## Blast radius (read before Phase 1) — worktrees are safe; open PRs restack; every ref must move together
 
@@ -89,29 +89,34 @@ for a low-PR window → nothing to rebase.
       re-adds 104 MB instead of 9 MB. _(Merged 2026-07-25.)_
 - [ ] **Pick a low-PR window** (see Blast radius): the fewer open PRs, the fewer restacks afterward. Worktrees need not
       be deleted — only their open PRs eventually restack onto the new main.
-- [ ] **Full backup**: `git clone --mirror` the current remote to a safe location before any force-push (rollback anchor).
-- [ ] **Freeze writers and classify refs**: pause Renovate and every other branch/tag publisher, then capture
-      `git ls-remote origin` to an external manifest. Partition it into operator-controlled refs (`refs/heads/*`,
-      `refs/tags/*`, and custom namespaces such as `refs/renovate/*`) versus GitHub-owned refs (`refs/pull/*`).
-      Decide explicitly whether each controlled ref is retained or retired; no writer may republish an old ref during
-      the rewrite.
-- [ ] **Record tip-tree oracles outside the rewrite clone**: save `<ref> <ref^{tree}>` for `main` and every retained
-      head. A retained head whose target paths differ from `main` needs its own saved target-directory contents; a
-      stale head that still contains content intentionally being purged must be retired or its retained size must be
-      accepted and removed from the reclaim estimate.
+- [ ] **Freeze every writer first**: stop pushes, merges, branch/tag publishers, Renovate, release automation, and
+      agents that can create Git objects. Keep the freeze in place through backup, manifest capture, rewrite, atomic
+      publish, local recovery, and final prune.
+- [ ] **Capture and classify the frozen ref manifest** with `git ls-remote origin`. Partition it into
+      operator-controlled refs (`refs/heads/*`, `refs/tags/*`, and every discovered custom namespace) versus
+      GitHub-owned refs (`refs/pull/*`). Decide explicitly whether each controlled ref is retained or retired; no
+      writer may republish an old ref during the rewrite.
+- [ ] **Create the full rollback backup after the freeze**: `git clone --mirror` the frozen remote to a safe location.
+      Verify every operator-controlled ref and SHA in the manifest matches the mirror before proceeding; if any differ,
+      discard/refresh the mirror while writers remain frozen.
+- [ ] **Record tip-tree oracles outside the rewrite clone**: save `<ref> <ref^{tree}>` for `main`, every retained head,
+      and every retained tag whose target contains a collapse directory. A retained ref whose target paths differ from
+      `main` needs its own saved target-directory contents. Retire a stale head or tag that still contains content
+      intentionally being purged, or preserve its exact tree and subtract the retained bytes from the reclaim estimate.
 
 ## Phase 2 — the rewrite (`git-filter-repo`, installed)
 
 Work in a fresh **working** clone of `main` (not the backup mirror — we need to re-add files). A plain `git clone`
 fetches every branch and tag from `origin`, and `git filter-repo`'s default run (no `--partial`, no `--refs`) does its
 own mirror-like fetch of those refs before filtering and remaps `refs/remotes/origin/*` to local `refs/heads/*`.
-Explicitly fetch each operator-controlled custom namespace from the Phase-1 manifest before filtering; today that is
-`git fetch origin '+refs/renovate/*:refs/renovate/*'`. Do not fetch GitHub-owned `refs/pull/*` into the rewrite set:
-operators cannot publish their rewritten values back. Do not pass `--refs`/`--partial`, which would limit the rewrite
-to a subset and leave the rest holding the pre-rewrite blobs.
+Generate explicit fetch refspecs for **every** operator-controlled custom namespace in the frozen manifest before
+filtering; `refs/renovate/*` is only today's known example, not a complete hard-coded list. Do not fetch GitHub-owned
+`refs/pull/*` into the rewrite set: operators cannot publish their rewritten values back. Do not pass
+`--refs`/`--partial`, which would limit the rewrite to a subset and leave the rest holding the pre-rewrite blobs.
 
-1. Copy the collapse-target dirs aside for `main` and every retained head, keyed by ref. Deduplicate identical
-   directory trees, but do not assume all branch tips carry the same version.
+1. Copy the collapse-target dirs aside for `main`, every retained head, and every retained tag whose target contains
+   them, keyed by ref. Deduplicate identical directory trees, but do not assume branch or tag tips carry the same
+   version. Preserve annotated-tag metadata; signed tags must be explicitly re-signed or retired.
 2. Run one `git filter-repo --invert-paths` pass listing **all** targets — both the `delete` paths and the `collapse`
    dirs (this strips the collapse dirs from tip too; step 4 restores them):
 
@@ -121,6 +126,7 @@ to a subset and leave the rest holding the pre-rewrite blobs.
      --path 'packages/scout-for-lol/packages/data/src/data-dragon/assets/img/champion-splash/' \
      --path 'packages/scout-for-lol/packages/data/src/data-dragon/assets/img/champion-loading/' \
      --path 'packages/scout-for-lol/packages/frontend/public/generated/scout-showcase/' \
+     --path 'packages/scout-for-lol/packages/report/src/html/__snapshots__/' \
      --path-glob 'packages/scout-for-lol/packages/report/src/html/**/__snapshots__/*' \
      --path 'packages/discord-plays-pokemon/docs/' \
      --path-glob 'packages/discord-plays-pokemon/**/pokeemerald.wasm' \
@@ -139,20 +145,29 @@ to a subset and leave the rest holding the pre-rewrite blobs.
    before publishing. Verify its resulting tree hash equals the external pre-filter `<ref^{tree}>` oracle. Retire
    obsolete heads instead of publishing a silently altered tip. This may retain one copy per distinct live branch-tip
    version; that is the cost of preserving retained refs, and the measured size delta must include it.
+6. For every retained tag whose target had a collapse directory, restore that tag's saved tree on top of its rewritten
+   target, then retarget/recreate the tag with its preserved metadata and verify the resulting tree hash against the
+   external oracle. Explicitly re-sign signed tags. Retire the tag instead if exact preservation is not worth its
+   retained blobs; never silently publish a tag whose source archive or checkout lost snapshot content.
 
 ## Phase 3 — publish + recover downstream
 
 - [ ] Verify (see below) on the rewritten clone BEFORE pushing.
 - [ ] `filter-repo` removes the `origin` remote as a safety net — re-add it
-      (`git remote add origin git@github.com:shepherdjerred/monorepo.git`), then force-push **every retained
-      operator-controlled ref**, not just `main`: `git push --force origin
-'refs/heads/*:refs/heads/*' 'refs/tags/*:refs/tags/*'
-'refs/renovate/*:refs/renovate/*'`. The owner account must intentionally exercise its current ruleset bypass
-      for the protected, non-fast-forward `main` update. Explicitly delete every controlled ref marked retired in the
-      Phase-1 manifest (`git push origin --delete <full-ref>`) instead of silently omitting it: an un-pushed ref keeps
-      its pre-rewrite blobs — including already-deleted content, e.g. old release tags that still point at the
-      pre-`demo.mp4`-removal commit — reachable on GitHub, and any branch that never gets force-updated can merge that
-      old graph straight back into `main`.
+      (`git remote add origin git@github.com:shepherdjerred/monorepo.git`). Generate one refspec array from **every**
+      operator-controlled ref in the frozen manifest: `<ref>:<ref>` for each retained rewritten ref and `:<ref>` for
+      each retired ref. Dry-run the entire transaction:
+
+      ```bash
+      git push --atomic --force --dry-run origin "${publish_refspecs[@]}"
+      ```
+
+      Any unsupported atomic capability, ruleset rejection, missing rewritten ref, or manifest mismatch aborts before
+      remote mutation. Then run the same command without `--dry-run` as **one atomic transaction**. Do not issue
+      separate deletion pushes. The owner account must intentionally exercise its current ruleset bypass for the
+      protected non-fast-forward `main` update. An omitted controlled namespace keeps the old graph reachable, while
+      a partial non-atomic update creates the mixed history this plan forbids.
+
 - [ ] Verify the publish actually took before declaring the rewrite effective: compare the controlled namespaces from
       `git ls-remote origin` against the rewritten clone and the Phase-1 retained/retired manifest, **and** use a fresh
       `git clone` into a new directory (no reused `.git`) to confirm both the smaller size and that retired paths are
@@ -181,9 +196,16 @@ to a subset and leave the rest holding the pre-rewrite blobs.
       the old (bloated) objects with no error to notice.
 - [ ] Rehearse the restack sequence above in a disposable clone (with a copy of `refs/spice/data` and one
       representative stack) before running it against real stacks. Resolve conflicts with `git-spice rebase continue`
-      / `git-spice rebase abort` per the normal conflict flow; if a stack's history is too tangled to replay
-      automatically, abort and fall back to `git cherry-pick` of that branch's own commits onto the new `main`.
-- [ ] Once no branch references the old objects, a local `git gc --prune=now` reclaims the rewritten history on disk.
+      / `git-spice rebase abort` per the normal conflict flow. If automatic restacking cannot represent the old stack,
+      abort and repair its tracked topology **through git-spice**: check out the bottom branch, use
+      `git-spice upstack onto main` (or `git-spice branch onto <parent>` plus `git-spice stack edit`) to retarget the
+      stack, then verify `git-spice log long` and each branch diff before `git-spice stack submit --update-only`.
+      Never fall back to raw `git cherry-pick`, which leaves `refs/spice/data` with stale bases. If git-spice cannot
+      reconstruct the intended topology, stop and roll back instead of publishing an unmanaged stack.
+- [ ] After every controlled ref is verified on the rewritten graph and the rollback mirror is secured, expire only
+      obsolete unreachable reflog entries with `git reflog expire --expire-unreachable=now --all`, verify writers are
+      still frozen, then run `git gc --prune=now`. Without the reflog expiration, recent pre-rewrite commits remain
+      roots and the immediate prune cannot reclaim them. Unfreeze writers only after this final verification/prune.
 
 ## Phase 4 — GitHub server-side (set expectations)
 
@@ -196,33 +218,42 @@ longer fetch the retired operator-controlled graph. Local `.git` shrinks after o
 
 The rewrite must change **history weight only, never working-tree content**:
 
-1. **Tip-tree identity (primary oracle):** before filtering, write the tree hashes for `main` and every retained head
-   to an external manifest (outside the disposable clone). After all per-head restorations, require
-   `git rev-parse <ref>^{tree}` to equal the recorded hash for each retained head. Comparing hashes remains executable
-   after `filter-repo` expires reflogs and garbage-collects old objects; a `git diff <old-commit> <new-commit>` inside
-   the rewritten clone does not. Any mismatch means a mistargeted path or missing per-head restore; abort and fix.
+1. **Tip-tree identity (primary oracle):** before filtering, write the tree hashes for `main`, every retained head,
+   and every retained tag whose target contains a collapse directory to an external manifest (outside the disposable
+   clone). After all per-ref restorations, require `git rev-parse <ref>^{tree}` to equal the recorded hash for each
+   retained ref. Comparing hashes remains executable after `filter-repo` expires reflogs and garbage-collects old
+   objects; a `git diff <old-commit> <new-commit>` inside the rewritten clone does not. Any mismatch means a mistargeted
+   path or missing per-ref restore; abort and fix.
 2. **Build/verify green** on the rewritten clone: `bun install --frozen-lockfile && bunx turbo run generate && bun run verify`.
 3. **Size delta measured:** rerun the analysis (`scratchpad/analyze-git.sh` pattern) → reachable should drop ~250 MB.
 4. **Backup retained** until the rewritten remote is confirmed healthy for a few days.
 
 ## Rollback
 
-The Phase-1 mirror backup is the anchor. Run the rollback **from that backup**, with GitHub as the destination:
-`cd <backup>.git && git push --force git@github.com:shepherdjerred/monorepo.git
-'refs/heads/*:refs/heads/*' 'refs/tags/*:refs/tags/*' 'refs/renovate/*:refs/renovate/*'`. Delete any
-operator-controlled refs that exist only in the rewritten remote, using the Phase-1 manifest. Never put
-`<backup-path>` in the destination position of `git push`: that would overwrite the rollback anchor rather than
-restore GitHub. Never do a `main`-only rollback, or the repo ends up in a mixed state worse than either complete
-version. Keep the backup until CI + a couple of fresh clones are confirmed good.
+The Phase-1 mirror backup is the anchor. Freeze every writer again before rollback and capture the current remote
+manifest. From the mirror backup, generate one refspec array covering **every** operator-controlled namespace: the
+backup's `<ref>:<ref>` updates plus `:<ref>` deletions for controlled refs that exist only in the rewritten remote.
+Dry-run the rollback transaction:
+
+```bash
+git push --atomic --force --dry-run git@github.com:shepherdjerred/monorepo.git "${rollback_refspecs[@]}"
+```
+
+Then run the identical atomic transaction without `--dry-run`. Never put `<backup-path>` in the destination position
+of `git push`: that would overwrite the rollback anchor rather than restore GitHub. Never omit a namespace, split
+deletions into a second push, or do a `main`-only rollback; any of those creates the mixed state this plan forbids.
+Keep writers frozen until remote refs and fresh clones match the backup, and retain the backup until CI + a couple of
+fresh clones are confirmed good.
 
 ## Supersedes
 
-Absorbs `packages/docs/todos/scout-champion-loading-history-rewrite.md` (skins-only rewrite) — champion-loading is
-now one target within this aggressive pass. That todo is updated to point here.
+Absorbs the archived `packages/docs/archive/completed/scout-champion-loading-history-rewrite.md` (skins-only rewrite)
+— champion-loading is now one target within this aggressive pass. The superseded TODO is complete and no longer
+appears as active work on the docs board.
 
 ## Remaining
 
-- [ ] Phase 0: run `git gc --prune=now` (free, immediate).
+- [ ] Phase 0: optionally run ordinary `git gc` with its default prune grace period.
 - [ ] Phase 1–4: execute the coordinated rewrite once PR #1640 is merged and worktrees are quiescent.
 
 ## Session Log — 2026-07-25
@@ -287,3 +318,21 @@ now one target within this aggressive pass. That todo is updated to point here.
 
 - The Buildkite aggregate remains hard-red solely because its Greptile gate timed out after 1,200 seconds with no
   Greptile check started; affected verification and every other substantive PR job passed.
+
+## Session Log — 2026-07-25 (hosted Codex review)
+
+### Done
+
+- Addressed all 9 current-head hosted Codex findings: immediate pruning now requires quiesced writers; the top-level
+  report snapshot directory is included; retained tag trees are classified, restored, and verified; the superseded
+  skins-only TODO is complete and archived; all controlled namespaces come from the frozen manifest; recovery stays
+  inside git-spice; the rollback mirror is taken only after writers freeze; publish and rollback are atomic
+  all-ref transactions; and obsolete reflogs expire before the final immediate prune.
+
+### Remaining
+
+- Execute Phases 0–4 only in the coordinated freeze window described above.
+
+### Caveats
+
+- GitHub-owned `refs/pull/*` remain outside operator control and require the Phase-4 Support cleanup.
