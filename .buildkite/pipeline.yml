@@ -132,10 +132,12 @@ common:
                   { cpu: "750m", memory: "1536Mi", ephemeral-storage: "4Gi" }
                 limits: { cpu: "4", memory: "8Gi", ephemeral-storage: "80Gi" }
   # Verify's pod: identical to pod_privileged except the memory request. The
-  # full-root install + turbo scratch put ~5-6Gi into the memory-backed
-  # workspace (node_modules 3.75Gi alone), on top of the ~1.5Gi p90 process
-  # RSS. Checkout now requests its 1Gi separately, so request 6Gi here and keep
-  # the pod's total resource request explicit.
+  # full-root install + turbo scratch put ~6Gi into the memory-backed
+  # workspace (node_modules 3.75Gi alone). After the Scout RBAC graph landed,
+  # main builds 6256 and 6261 drove the command container to its exact 14Gi
+  # limit (12.85Gi working set, 6.69Gi RSS immediately before exit 137).
+  # Request the observed working set plus scheduling margin and retain 43%
+  # burst headroom. Checkout still requests its 1Gi separately.
   # Only verify pays this; the other privileged lanes stay at 2Gi.
   - pod_verify: &pod_verify
       kubernetes: &pod_verify_kubernetes
@@ -156,8 +158,8 @@ common:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
               resources:
-                requests: { cpu: "1", memory: "6Gi", ephemeral-storage: "2Gi" }
-                limits: { cpu: "7", memory: "14Gi", ephemeral-storage: "40Gi" }
+                requests: { cpu: "1", memory: "14Gi", ephemeral-storage: "2Gi" }
+                limits: { cpu: "7", memory: "20Gi", ephemeral-storage: "40Gi" }
               volumeMounts:
                 # Mirror-backed checkouts: see the base pod anchor above.
                 - name: buildkite-git-mirrors

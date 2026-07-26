@@ -94,6 +94,16 @@ for (const anchorName of SHARED_POD_ANCHORS) {
   }
 }
 
+const verifyPodAnchor = sharedPodAnchorBlock("pod_verify_kubernetes");
+for (const resourceLine of [
+  'requests: { cpu: "1", memory: "14Gi", ephemeral-storage: "2Gi" }',
+  'limits: { cpu: "7", memory: "20Gi", ephemeral-storage: "40Gi" }',
+]) {
+  if (!hasTrimmedLine(verifyPodAnchor, resourceLine)) {
+    fail(`verify pod is missing measured resource budget ${resourceLine}`);
+  }
+}
+
 const stepStarts = lines
   .map((line, index) => (/^  - label:/.test(line) ? index : -1))
   .filter((index) => index !== -1);
