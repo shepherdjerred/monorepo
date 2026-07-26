@@ -5,6 +5,7 @@ import {
   PermissionSchema,
   P,
   parsePermissionKey,
+  parseStoredPermissionKey,
   permissionKey,
 } from "#src/model/permissions/catalog.ts";
 import {
@@ -62,6 +63,16 @@ describe("catalog", () => {
     // Single-segment (no colon) is likewise not a canonical key.
     expect(parsePermissionKey("reports")).toBeUndefined();
     expect(parsePermissionKey("")).toBeUndefined();
+  });
+
+  test("stored keys accept legacy grants and reject invalid internal data", () => {
+    expect(parseStoredPermissionKey("CREATE_COMPETITION")).toEqual({
+      resource: "competitions",
+      action: "create",
+    });
+    expect(() => parseStoredPermissionKey("unknown:grant")).toThrow(
+      "Invalid stored permission key: unknown:grant",
+    );
   });
 
   test("PermissionSchema rejects action/resource mismatches", () => {

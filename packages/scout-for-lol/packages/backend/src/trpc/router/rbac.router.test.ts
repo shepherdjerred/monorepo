@@ -38,6 +38,31 @@ function asMember() {
   trpc.setMembership([{ guildId, asAdmin: false }]);
 }
 
+async function seedTwoRoleManagers() {
+  const accessPermissions: Permission[] = [
+    { resource: "roles", action: "grant" },
+    { resource: "roles", action: "revoke" },
+  ];
+  await seedGrants(member, accessPermissions);
+  await seedGrants(other, accessPermissions);
+}
+
+async function expectOneRoleManagerRemains(
+  requests: [Promise<unknown>, Promise<unknown>],
+) {
+  const results = await Promise.allSettled(requests);
+  expect(
+    results.filter((result) => result.status === "fulfilled"),
+  ).toHaveLength(1);
+  const remainingGrantHolders = await trpc.prisma.serverPermission.count({
+    where: {
+      serverId: guildId,
+      permission: permissionKey({ resource: "roles", action: "grant" }),
+    },
+  });
+  expect(remainingGrantHolders).toBe(1);
+}
+
 afterAll(async () => {
   await trpc.prisma.$disconnect();
 });
@@ -170,6 +195,32 @@ describe("RBAC guild-permission gate", () => {
     });
   });
 
+  test("invalid stored permission keys fail every RBAC grant reader", async () => {
+    await reset();
+    asMember();
+    await trpc.prisma.serverPermission.create({
+      data: {
+        serverId: guildId,
+        discordUserId: member,
+        permission: "unknown:grant",
+        grantedBy: member,
+        grantedAt: new Date(),
+      },
+    });
+    const caller = trpc.authedCaller(member);
+    const expected = "Invalid stored permission key: unknown:grant";
+
+    await expect(caller.guild.myPermissions({ guildId })).rejects.toThrow(
+      expected,
+    );
+    await expect(caller.guild.listManageable()).rejects.toThrow(expected);
+
+    trpc.setMembership("root");
+    await expect(
+      trpc.authedCaller(member).roles.list({ guildId }),
+    ).rejects.toThrow(expected);
+  });
+
   test("roles.set writes rows + a ROLE_GRANT audit entry", async () => {
     await reset();
     trpc.setMembership("root"); // an admin grants a viewer
@@ -291,28 +342,21 @@ describe("RBAC guard invariants", () => {
   test("self-lockout: concurrent removals preserve one delegated role admin", async () => {
     await reset();
     asMember();
-    const accessPermissions: Permission[] = [
-      { resource: "roles", action: "grant" },
-      { resource: "roles", action: "revoke" },
-    ];
-    await seedGrants(member, accessPermissions);
-    await seedGrants(other, accessPermissions);
-
-    const results = await Promise.allSettled([
+    await seedTwoRoleManagers();
+    await expectOneRoleManagerRemains([
       trpc.authedCaller(member).roles.clear({ guildId, discordUserId: member }),
       trpc.authedCaller(other).roles.clear({ guildId, discordUserId: other }),
     ]);
+  });
 
-    expect(
-      results.filter((result) => result.status === "fulfilled"),
-    ).toHaveLength(1);
-    const remainingGrantHolders = await trpc.prisma.serverPermission.count({
-      where: {
-        serverId: guildId,
-        permission: permissionKey({ resource: "roles", action: "grant" }),
-      },
-    });
-    expect(remainingGrantHolders).toBe(1);
+  test("cross-revocation: concurrent removals preserve one delegated role admin", async () => {
+    await reset();
+    asMember();
+    await seedTwoRoleManagers();
+    await expectOneRoleManagerRemains([
+      trpc.authedCaller(member).roles.clear({ guildId, discordUserId: other }),
+      trpc.authedCaller(other).roles.clear({ guildId, discordUserId: member }),
+    ]);
   });
 
   test("anonymous caller is UNAUTHORIZED before any permission check", async () => {

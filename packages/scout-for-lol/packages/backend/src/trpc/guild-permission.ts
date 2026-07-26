@@ -38,7 +38,7 @@ const GuildIdInput = z.object({ guildId: DiscordGuildIdSchema });
  * - not a member ⇒ FORBIDDEN
  * - Scout not installed ⇒ NOT_FOUND
  * - Discord admin/owner ⇒ every permission ({@link rootPermissions})
- * - otherwise ⇒ the union of their granted rows (unknown keys dropped)
+ * - otherwise ⇒ the union of their validated granted rows
  *
  * Grants are read per request (no cache) so a revoke takes effect immediately;
  * only the membership/admin branch lags up to the 5-minute `fetchUserGuilds`
@@ -69,10 +69,7 @@ export async function resolveGuildPermissions(
     where: { serverId: guildId, discordUserId: user.discordId },
     select: { permission: true },
   });
-  const granted = rows.flatMap((r) => {
-    const permission = parseStoredPermissionKey(r.permission);
-    return permission ? [permission] : [];
-  });
+  const granted = rows.map((row) => parseStoredPermissionKey(row.permission));
   return createPermissionSet(granted);
 }
 

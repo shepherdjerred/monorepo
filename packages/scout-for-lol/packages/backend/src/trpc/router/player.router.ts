@@ -38,7 +38,7 @@ import {
 export const playerRouter = router({
   listPlayers: guildProcedure("players", "read")
     .input(ListPlayersInput)
-    .query(async ({ input }) => listPlayers(input)),
+    .query(async ({ ctx, input }) => listPlayers(input, ctx.permissions)),
 
   getPlayer: guildProcedure("players", "read")
     .input(PlayerLookupInput)

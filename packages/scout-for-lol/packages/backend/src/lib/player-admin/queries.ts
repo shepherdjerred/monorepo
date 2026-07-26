@@ -36,7 +36,7 @@ export const ListPlayersInput = GuildIdInput.extend({
 export type ListPlayersInputData = z.infer<typeof ListPlayersInput>;
 export type PlayerLookupInputData = z.infer<typeof PlayerLookupInput>;
 
-function serializePlayerSummary(
+export function serializePlayerSummary(
   player: {
     id: number;
     alias: string;
@@ -46,6 +46,7 @@ function serializePlayerSummary(
     subscriptions: { id: number; channelId: string }[];
   },
   names: DiscordNames,
+  permissions: PermissionSet,
 ) {
   return {
     id: player.id,
@@ -53,11 +54,15 @@ function serializePlayerSummary(
     discordId: player.discordId,
     discordUser: lookupUser(names, player.discordId),
     updatedTime: player.updatedTime,
-    accountCount: player.accounts.length,
-    subscriptionCount: player.subscriptions.length,
-    channelIds: player.subscriptions.map(
-      (subscription) => subscription.channelId,
-    ),
+    accountCount: permissions.can("accounts", "read")
+      ? player.accounts.length
+      : 0,
+    subscriptionCount: permissions.can("subscriptions", "read")
+      ? player.subscriptions.length
+      : 0,
+    channelIds: permissions.can("subscriptions", "read")
+      ? player.subscriptions.map((subscription) => subscription.channelId)
+      : [],
   };
 }
 
@@ -151,7 +156,10 @@ export function serializePlayerDetail(
   };
 }
 
-export async function listPlayers(input: ListPlayersInputData) {
+export async function listPlayers(
+  input: ListPlayersInputData,
+  permissions: PermissionSet,
+) {
   const rows = await prisma.player.findMany({
     where: {
       serverId: input.guildId,
@@ -176,7 +184,9 @@ export async function listPlayers(input: ListPlayersInputData) {
   );
   // Cursor is the last returned row's id (next page resumes after it).
   return {
-    items: items.map((item) => serializePlayerSummary(item, names)),
+    items: items.map((item) =>
+      serializePlayerSummary(item, names, permissions),
+    ),
     nextCursor: hasMore ? (items.at(-1)?.id ?? null) : null,
   };
 }

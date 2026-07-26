@@ -138,10 +138,15 @@ export const LEGACY_PERMISSION_KEYS: Record<string, Permission> = {
  * tolerating the legacy Discord-command grant strings ({@link
  * LEGACY_PERMISSION_KEYS}). Use this — not {@link parsePermissionKey}, which
  * stays strict — when reading grant rows, so a Discord-issued grant is not
- * silently dropped. Returns `undefined` for genuinely unknown/stale values.
+ * silently dropped. Unknown values violate the persisted-data contract and
+ * throw so the bad row is corrected instead of becoming an unexplained denial.
  */
-export function parseStoredPermissionKey(key: string): Permission | undefined {
-  return parsePermissionKey(key) ?? LEGACY_PERMISSION_KEYS[key];
+export function parseStoredPermissionKey(key: string): Permission {
+  const permission = parsePermissionKey(key) ?? LEGACY_PERMISSION_KEYS[key];
+  if (permission === undefined) {
+    throw new Error(`Invalid stored permission key: ${key}`);
+  }
+  return permission;
 }
 
 /** Every valid permission, derived from the catalog. */

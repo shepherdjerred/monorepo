@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { createPermissionSet } from "@scout-for-lol/data";
-import { serializePlayerDetail } from "#src/lib/player-admin/queries.ts";
+import {
+  serializePlayerDetail,
+  serializePlayerSummary,
+} from "#src/lib/player-admin/queries.ts";
 
 const detail = {
   id: 1,
@@ -49,6 +52,46 @@ const detail = {
     },
   ],
 };
+
+const summary = {
+  id: detail.id,
+  alias: detail.alias,
+  discordId: detail.discordId,
+  updatedTime: detail.updatedTime,
+  accounts: detail.accounts.map((account) => ({ id: account.id })),
+  subscriptions: detail.subscriptions.map((subscription) => ({
+    id: subscription.id,
+    channelId: subscription.channelId,
+  })),
+};
+
+describe("serializePlayerSummary", () => {
+  test("redacts related-resource metadata without its read scopes", () => {
+    const permissions = createPermissionSet([
+      { resource: "players", action: "read" },
+    ]);
+
+    const serialized = serializePlayerSummary(summary, {}, permissions);
+
+    expect(serialized.accountCount).toBe(0);
+    expect(serialized.subscriptionCount).toBe(0);
+    expect(serialized.channelIds).toEqual([]);
+  });
+
+  test("includes related-resource metadata with its read scopes", () => {
+    const permissions = createPermissionSet([
+      { resource: "players", action: "read" },
+      { resource: "accounts", action: "read" },
+      { resource: "subscriptions", action: "read" },
+    ]);
+
+    const serialized = serializePlayerSummary(summary, {}, permissions);
+
+    expect(serialized.accountCount).toBe(1);
+    expect(serialized.subscriptionCount).toBe(1);
+    expect(serialized.channelIds).toEqual(["100000000000000003"]);
+  });
+});
 
 describe("serializePlayerDetail", () => {
   test("redacts related resources without their read scopes", () => {

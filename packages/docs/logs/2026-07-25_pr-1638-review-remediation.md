@@ -51,6 +51,17 @@ board: false
 - Passed the full Scout data suite (479 tests), full Scout backend suite (1,168
   passing tests and 6 intentional skips), app production build, focused
   authorization regressions, and scoped data/backend/app lint and typecheck.
+- Addressed the following hosted Codex cycle's three current-head findings:
+  player summaries now redact account and subscription metadata independently,
+  last-role-manager preservation covers cross-revocations as well as
+  self-revocations, and invalid persisted permission keys fail loudly across
+  every RBAC grant reader.
+- Added regression coverage for summary redaction, concurrent cross-revocation,
+  and invalid stored keys in effective-permission, manageable-guild, and role
+  list reads.
+- Passed the updated full Scout data suite (480 tests), full Scout backend suite
+  (1,172 passing tests and 6 intentional skips), focused authorization
+  regressions, and scoped data/backend lint and typecheck.
 
 ### Remaining
 

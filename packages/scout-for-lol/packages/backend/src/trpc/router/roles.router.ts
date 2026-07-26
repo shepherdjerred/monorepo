@@ -34,37 +34,35 @@ const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 const GRANT_KEY = permissionKey({ resource: "roles", action: "grant" });
 
 /**
- * Prevent a non-root user from removing the last Scout-managed `roles:grant`
+ * Prevent a non-root mutation from removing the last Scout-managed `roles:grant`
  * (which would leave nobody but Discord admins able to manage access). Discord
  * admins (root) are exempt — they always retain implicit access.
  */
-async function assertNotSelfLockout(
+async function assertPreservesRoleManager(
   tx: Db,
   params: {
     isRoot: boolean;
     guildId: DiscordGuildId;
-    actorDiscordId: DiscordAccountId;
     targetDiscordId: DiscordAccountId;
+    targetHasGrant: boolean;
     keepsGrant: boolean;
   },
 ): Promise<void> {
-  const removingOwnGrant =
-    params.targetDiscordId === params.actorDiscordId &&
-    !params.keepsGrant &&
-    !params.isRoot;
-  if (!removingOwnGrant) return;
+  const removesGrant =
+    params.targetHasGrant && !params.keepsGrant && !params.isRoot;
+  if (!removesGrant) return;
   const otherGrantHolders = await tx.serverPermission.count({
     where: {
       serverId: params.guildId,
       permission: GRANT_KEY,
-      discordUserId: { not: params.actorDiscordId },
+      discordUserId: { not: params.targetDiscordId },
     },
   });
   if (otherGrantHolders === 0) {
     throw new TRPCError({
       code: "BAD_REQUEST",
       message:
-        "You can't remove your own role management here — grant another member access first.",
+        "You can't remove the last role manager — grant another member access first.",
     });
   }
 }
@@ -84,7 +82,6 @@ export const rolesRouter = router({
       >();
       for (const row of rows) {
         const permission = parseStoredPermissionKey(row.permission);
-        if (permission === undefined) continue;
         const entry = byUser.get(row.discordUserId) ?? {
           permissions: [],
           grantedBy: row.grantedBy,
@@ -145,14 +142,6 @@ export const rolesRouter = router({
 
       const now = new Date();
       await prisma.$transaction(async (tx) => {
-        await assertNotSelfLockout(tx, {
-          isRoot: ctx.permissions.isRoot,
-          guildId: input.guildId,
-          actorDiscordId: ctx.user.discordId,
-          targetDiscordId: input.discordUserId,
-          keepsGrant: desiredKeys.has(GRANT_KEY),
-        });
-
         // Read current grants inside the txn for a consistent diff.
         const currentRows = await tx.serverPermission.findMany({
           where: {
@@ -162,6 +151,14 @@ export const rolesRouter = router({
           select: { permission: true },
         });
         const currentKeys = new Set(currentRows.map((r) => r.permission));
+
+        await assertPreservesRoleManager(tx, {
+          isRoot: ctx.permissions.isRoot,
+          guildId: input.guildId,
+          targetDiscordId: input.discordUserId,
+          targetHasGrant: currentKeys.has(GRANT_KEY),
+          keepsGrant: desiredKeys.has(GRANT_KEY),
+        });
 
         const additions = [...desired.values()].filter(
           (p) => !currentKeys.has(permissionKey(p)),
@@ -258,11 +255,19 @@ export const rolesRouter = router({
     .input(GuildInput.extend({ discordUserId: DiscordAccountIdSchema }))
     .mutation(async ({ ctx, input }) => {
       await prisma.$transaction(async (tx) => {
-        await assertNotSelfLockout(tx, {
+        const targetHasGrant =
+          (await tx.serverPermission.count({
+            where: {
+              serverId: input.guildId,
+              discordUserId: input.discordUserId,
+              permission: GRANT_KEY,
+            },
+          })) > 0;
+        await assertPreservesRoleManager(tx, {
           isRoot: ctx.permissions.isRoot,
           guildId: input.guildId,
-          actorDiscordId: ctx.user.discordId,
           targetDiscordId: input.discordUserId,
+          targetHasGrant,
           keepsGrant: false,
         });
 

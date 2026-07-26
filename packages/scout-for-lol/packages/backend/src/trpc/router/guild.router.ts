@@ -56,7 +56,6 @@ export const guildRouter = router({
     const grantsByGuild = new Map<string, Permission[]>();
     for (const row of grantRows) {
       const permission = parseStoredPermissionKey(row.permission);
-      if (permission === undefined) continue;
       const list = grantsByGuild.get(row.serverId) ?? [];
       list.push(permission);
       grantsByGuild.set(row.serverId, list);
