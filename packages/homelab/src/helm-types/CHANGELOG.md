@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.4.0...helm-types-v1.5.0) (2026-07-26)
+
+
+### Features
+
+* **homelab:** liskov CI-only worker node — join config, Kueue removal, symmetric node layout ([#1629](https://github.com/shepherdjerred/monorepo/issues/1629)) ([e3f2523](https://github.com/shepherdjerred/monorepo/commit/e3f2523f8618f21ce88baac835de9e54c7d553fd))
+
 ## [1.4.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.3.0...helm-types-v1.4.0) (2026-06-14)
 
 Adds OCI-registry support to the chart fetcher and emits broader, more permissive generated types for well-known Kubernetes fields.
