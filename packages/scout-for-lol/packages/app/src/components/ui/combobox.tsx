@@ -26,14 +26,21 @@ export function Combobox<T>(props: {
   disabled?: boolean | undefined;
   className?: string | undefined;
   id?: string | undefined;
+  // When true, the popover may open before the user types (e.g. to show a
+  // pinned/default list on focus). Defaults to false so existing consumers keep
+  // the "only open once there's a query" behavior.
+  openOnEmptyQuery?: boolean | undefined;
 }) {
   const [open, setOpen] = useState(false);
   const listId = useId();
   const hasQuery = props.value.trim().length > 0;
+  const canOpenWithoutQuery = props.openOnEmptyQuery ?? false;
   // Only show the popover while searching or when there are results — never an
   // empty "no results" box.
   const showPopover =
-    open && hasQuery && (props.isLoading || props.items.length > 0);
+    open &&
+    (hasQuery || canOpenWithoutQuery) &&
+    (props.isLoading || props.items.length > 0);
 
   return (
     <Popover open={showPopover} onOpenChange={setOpen}>
