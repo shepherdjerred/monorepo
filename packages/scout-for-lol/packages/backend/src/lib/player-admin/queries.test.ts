@@ -73,6 +73,11 @@ const detail = {
       channelId: "100000000000000003",
       creatorDiscordId: "100000000000000002",
       createdTime: new Date("2026-01-03T00:00:00Z"),
+      filters: JSON.stringify({
+        version: 1,
+        filters: [{ type: "queue", queues: ["solo"] }],
+      }),
+      isMuted: false,
     },
   ],
   competitionParticipants: [
@@ -154,6 +159,11 @@ describe("serializePlayerDetail", () => {
     expect(serialized.accounts).toHaveLength(1);
     expect(serialized.accounts[0]?.puuid).toBe("secret-puuid");
     expect(serialized.subscriptions).toHaveLength(1);
+    expect(serialized.subscriptions[0]?.filters).toEqual({
+      version: 1,
+      filters: [{ type: "queue", queues: ["solo"] }],
+    });
+    expect(serialized.subscriptions[0]?.isMuted).toBe(false);
     expect(serialized.competitions).toHaveLength(1);
     expect(serialized.competitions[0]?.competition.status).toBe("ACTIVE");
   });

@@ -9,6 +9,13 @@ import { useTRPC } from "#src/lib/trpc.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { AddSubscriptionDialog } from "#src/components/add-subscription-dialog.tsx";
 import { Button } from "#src/components/ui/button.tsx";
+import { ConceptCards } from "#src/components/concept-cards.tsx";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "#src/components/ui/collapsible.tsx";
+import { ChevronDown } from "lucide-react";
 import { Input } from "#src/components/ui/input.tsx";
 import {
   Table,
@@ -80,10 +87,15 @@ export function PlayerList() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Players</h2>
-          <p className="text-sm text-muted-foreground">
-            A player is a person you track: their Riot accounts, linked Discord
-            user, and channel subscriptions.
-          </p>
+          <Collapsible>
+            <CollapsibleTrigger className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+              What are players, accounts, and subscriptions?
+              <ChevronDown className="h-3 w-3" aria-hidden="true" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-2">
+              <ConceptCards />
+            </CollapsibleContent>
+          </Collapsible>
         </div>
         <div className="flex items-center gap-2">
           <Button

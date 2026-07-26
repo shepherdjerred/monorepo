@@ -118,6 +118,10 @@ export function SubscriptionFields(props: {
             onChange({ ...value, discordUserId });
           }}
         />
+        <p className="text-xs text-muted-foreground">
+          Links a <em>new</em> player to this Discord user. Existing players
+          keep their current link — manage it from the player page.
+        </p>
       </div>
 
       <div className="space-y-2">
