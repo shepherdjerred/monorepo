@@ -5,12 +5,8 @@ import { createLogger } from "#src/logger.ts";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter } from "#src/trpc/router/index.ts";
 import { createContext } from "#src/trpc/context.ts";
-import {
-  handleDiscordCallback,
-  handleDiscordInstall,
-  handleDiscordStart,
-  handleWebLogout,
-} from "#src/trpc/auth-web.ts";
+import { handleAuthRoutes } from "#src/trpc/auth-web.ts";
+import { handleDevLogin } from "#src/trpc/dev-login.ts";
 import { handleImageRoute } from "#src/trpc/image-routes.ts";
 import { handleReportAiRoute } from "#src/reports/ai/http-route.ts";
 import { handleVersion } from "#src/http/version.ts";
@@ -220,56 +216,20 @@ const server = Bun.serve({
       }
     }
 
-    // Web auth: kick off Discord OAuth (sets the state cookie + 302)
-    if (url.pathname === "/api/auth/discord/start") {
-      try {
-        return handleDiscordStart(request);
-      } catch (error) {
-        logger.error("❌ OAuth start error:", error);
-        Sentry.captureException(error, { tags: { source: "auth-web-start" } });
-        return new Response("OAuth start failed", {
-          status: 500,
-          headers: { "Content-Type": "text/plain" },
-        });
-      }
+    // Web auth: Discord OAuth start/install/callback/logout — see
+    // handleAuthRoutes for the individual routes and their error handling.
+    const authResponse = await handleAuthRoutes(request, url);
+    if (authResponse !== null) {
+      return authResponse;
     }
 
-    // Bot install: 302 to Discord's add-to-server screen for a
-    // signed-in admin, returning to /app/installed with guild_id.
-    if (url.pathname === "/api/discord/install") {
-      try {
-        return await handleDiscordInstall(request);
-      } catch (error) {
-        logger.error("❌ Bot install redirect error:", error);
-        Sentry.captureException(error, {
-          tags: { source: "auth-web-install" },
-        });
-        return new Response("Bot install redirect failed", {
-          status: 500,
-          headers: { "Content-Type": "text/plain" },
-        });
-      }
-    }
-
-    // Web auth: Discord OAuth callback
-    if (url.pathname === "/api/auth/discord/callback") {
-      try {
-        return await handleDiscordCallback(request);
-      } catch (error) {
-        logger.error("❌ OAuth callback error:", error);
-        Sentry.captureException(error, {
-          tags: { source: "auth-web-callback" },
-        });
-        return new Response("OAuth callback failed", {
-          status: 500,
-          headers: { "Content-Type": "text/plain" },
-        });
-      }
-    }
-
-    // Web auth: logout
-    if (url.pathname === "/api/auth/logout" && request.method === "POST") {
-      return handleWebLogout(request);
+    // Dev-only instant sign-in (no Discord OAuth round-trip). Never
+    // reachable in beta/prod: `configuration.environment` is fixed at boot.
+    if (
+      configuration.environment === "dev" &&
+      url.pathname === "/api/dev/login"
+    ) {
+      return await handleDevLogin(request);
     }
 
     const reportAiResponse = await handleReportAiRoute(

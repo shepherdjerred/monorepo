@@ -12,6 +12,7 @@ bun run src/index.ts deployed scout        # Is a service/commit live on the hom
 bun run src/index.ts pd incidents          # PagerDuty incidents
 bun run src/index.ts bugsink issues        # Bugsink issues
 bun run src/index.ts gf dashboards         # Grafana dashboards
+bun run src/index.ts screenshot stocks-sjer-red /   # Visually verify a frontend change
 
 # Build
 bun run build                              # Compile to dist/toolkit
@@ -34,19 +35,23 @@ src/
 │   ├── deployed.ts       # toolkit deployed
 │   ├── pagerduty.ts      # toolkit pd
 │   ├── bugsink.ts        # toolkit bugsink
-│   └── grafana.ts        # toolkit gf
+│   ├── grafana.ts        # toolkit gf
+│   └── screenshot.ts     # toolkit screenshot
 ├── commands/
 │   ├── pr/               # PR subcommands
 │   ├── deployed/         # `deployed` orchestration
 │   ├── pagerduty/        # PagerDuty subcommands
 │   ├── bugsink/          # Bugsink subcommands
-│   └── grafana/          # Grafana subcommands
+│   ├── grafana/          # Grafana subcommands
+│   └── screenshot/       # `screenshot` orchestration
 └── lib/
     ├── github/           # GitHub API via gh CLI
     ├── deployed/         # Commit → homelab deploy trace (git/argocd/kubectl)
     ├── pagerduty/        # PagerDuty REST API client
     ├── bugsink/          # Bugsink REST API client
     ├── grafana/          # Grafana REST API client
+    ├── pinchtab-cli/     # PinchTab CLI wrapper (screenshot's browser driver)
+    ├── screenshot/       # Package registry + dev-server lifecycle
     └── output/           # Output formatting
 ```
 
@@ -92,6 +97,38 @@ us and are encoded in the code:
   (`test-integration/catalog.integration.test.ts`, run via `bun run test:integration`
   in a git checkout) asserts every versionKey exists in the live
   `versions.ts`.
+
+## `screenshot` — visually verify a frontend change
+
+`toolkit screenshot <package> [route] [options]` boots (or reuses) a
+registered package's dev server and drives a real PinchTab-controlled
+Chrome tab to a route to capture a screenshot — the happy-path way to
+confirm a UI change actually renders, without a manual browser session.
+Full flag reference and recipes: the `screenshot` skill.
+
+- **Driver: PinchTab, not a new dependency.** `src/lib/pinchtab-cli/client.ts`
+  shells out to the `pinchtab` CLI (already-running daemon, same pattern as
+  `lib/github/client.ts`'s `gh` wrapper) — no Playwright/Chromium install,
+  no second automation stack. Every call scopes itself to a fresh
+  `session create`/`session revoke` pair (env-scoped `PINCHTAB_SESSION`, never
+  the parent process's own env) so concurrent PinchTab usage is unaffected.
+  **Requires a running PinchTab browser instance** (`pinchtab instance start
+--profile default --mode headless` if `pinchtab instances` is empty) —
+  the daemon itself doesn't auto-start one.
+- **Registry:** `src/lib/screenshot/catalog.ts` — alias → `cwd`/`devCommand`/
+  `expectedPort`/`defaultRoute`/optional `requiresAuth`. Reuse detection
+  probes `expectedPort` but always trusts the _actual_ bound port parsed from
+  the spawned process's own stdout banner (Astro/Vite auto-bump ports).
+  `--env KEY=VALUE` always forces a fresh spawn — a reused server can't pick
+  up new env vars.
+- **Auth:** `scout-app` is the one auth-gated entry (`requiresAuth:
+"scout-dev-login"`) — see `packages/scout-for-lol/AGENTS.md`'s dev-login
+  section. `--discord-id` only matters for entries that declare `requiresAuth`.
+- **No network mocking in v1** — PinchTab has no `page.route()` equivalent, so
+  this can't fake a backend response to force an unreachable state. See the
+  skill's Limitations section.
+- Out of scope, not in the registry: `scout-for-lol/packages/desktop`
+  (Tauri/Rust) and `tasks-for-obsidian` (React Native/Metro).
 
 ## `discord` — act on Discord through a session daemon
 

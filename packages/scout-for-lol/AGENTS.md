@@ -110,6 +110,35 @@ plaintext credentials are written to disk. You must be `op signin`'d.
 - The bot only sees guilds it has been invited to. To populate the guild
   picker, make sure your test guild has the BETA bot in it.
 
+### Local UI screenshots (no manual OAuth click-through)
+
+`GET /api/dev/login[?discordId=...&username=...&returnTo=/app/...]`
+(`packages/backend/src/trpc/dev-login.ts`) mints a real signed session for a
+chosen — or fake default — Discord user without the OAuth round-trip.
+**Registered only when `configuration.environment === "dev"`** (a plain
+inline check in `http-server.ts`'s route dispatch, matching every other
+route in that file) — genuinely absent from beta/prod, not just gated
+behind a runtime `if` inside an always-present handler.
+
+Driving this by hand: with `dev:web` running, visiting
+`http://localhost:5180/api/dev/login?discordId=<id>&returnTo=/app/g/123` in
+a browser signs you in as that user and lands on the given route. Omit
+`discordId` for a stable fake test user; pass a real Discord ID (e.g. the
+owner's) to see UI gated to a specific account (PR #1676 adds one such
+example, a version-mismatch banner in
+`packages/app/src/components/version-info.tsx`).
+
+The `toolkit screenshot` command (`packages/toolkit`, `screenshot` skill)
+wraps this into one call:
+
+```bash
+toolkit screenshot scout-app /app/ --discord-id 160509172704739328
+```
+
+This does not, by itself, reproduce every possible backend-driven state —
+see the `screenshot` skill's Limitations section (no network-response
+mocking in v1).
+
 ### Desktop Package
 
 ```bash
