@@ -18,24 +18,12 @@ import {
   stopMetricsServer,
 } from "./observability/metrics.ts";
 import { readPositiveIntegerEnv } from "./shared/env.ts";
+import { createStructuredLogger } from "./observability/logging.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
 
-function jsonLog(
-  level: "info" | "warning" | "error",
-  message: string,
-  fields: Record<string, unknown> = {},
-): void {
-  console.warn(
-    JSON.stringify({
-      level,
-      msg: message,
-      component: "temporal-worker",
-      ...fields,
-    }),
-  );
-}
+const jsonLog = createStructuredLogger();
 
 function installRuntime(): void {
   const metricsAddress =
@@ -298,6 +286,21 @@ async function main(): Promise<void> {
     maxConcurrentActivityTaskExecutions: prBabysitMaxConcurrentActivities,
   });
 
+  const glitterCorpusWorker = await Worker.create({
+    connection,
+    namespace: "default",
+    taskQueue: TASK_QUEUES.GLITTER_CORPUS,
+    workflowsPath,
+    activities,
+    maxConcurrentActivityTaskExecutions: 1,
+    maxConcurrentWorkflowTaskExecutions: 1,
+  });
+
+  jsonLog("info", "Worker created", {
+    taskQueue: TASK_QUEUES.GLITTER_CORPUS,
+    maxConcurrentActivityTaskExecutions: 1,
+  });
+
   const clientConnection = await Connection.connect({ address });
   const client = new Client({ connection: clientConnection });
   await registerSchedules(client);
@@ -372,6 +375,16 @@ async function main(): Promise<void> {
         state: prBabysitState,
       });
     }
+    const glitterCorpusState = glitterCorpusWorker.getState();
+    if (glitterCorpusState === "RUNNING") {
+      glitterCorpusWorker.shutdown();
+    } else {
+      jsonLog(
+        "info",
+        "glitter-corpus worker not RUNNING, skipping shutdown()",
+        { state: glitterCorpusState },
+      );
+    }
     await stopMetricsServer();
     await shutdownTracing();
   };
@@ -389,6 +402,7 @@ async function main(): Promise<void> {
     prSummaryWorker.run(),
     agentTaskWorker.run(),
     prBabysitWorker.run(),
+    glitterCorpusWorker.run(),
   ]);
 }
 

@@ -1,13 +1,17 @@
 ---
 id: plan-2026-06-13-discord-style-cards-extraction-daily-pipeline
 type: plan
-status: in-progress
+status: complete
 board: true
 verification: agent
-disposition: active
+disposition: deferred
 ---
 
 # Plan: Extract `discord-style-cards` package + daily Temporal refresh pipeline
+
+> Superseded by
+> `plans/2026-07-26_glitter-discord-source-of-truth.md`, which replaces the
+> export-driven daily design with a verified mirrored corpus and weekly refresh.
 
 ## Context
 
@@ -268,4 +272,19 @@ the worker starts cleanly before the token is provisioned.
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `Plan: Extract discord-style-cards package + daily Temporal refresh pipeline`.
+- [x] Superseded by the consolidated Glitter Discord source-of-truth plan.
+
+## Session Log — 2026-07-26
+
+### Done
+
+- Consolidated this design into the source-of-truth implementation plan and
+  archived this older plan as superseded.
+
+### Remaining
+
+- None in this document; follow the consolidated plan.
+
+### Caveats
+
+- Historical design details remain here for context but are not authoritative.

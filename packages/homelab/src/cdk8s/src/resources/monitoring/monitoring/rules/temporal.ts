@@ -354,6 +354,88 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
       rules: buildCheckAndSkipOutcomeRules(),
     },
     {
+      name: "glitter-discord-corpus",
+      rules: [
+        {
+          alert: "GlitterCorpusMirrorDivergence",
+          annotations: {
+            summary: "Glitter Discord corpus mirrors diverged",
+            description:
+              "SeaweedFS and Cloudflare R2 are missing different objects or returned different checksums. Snapshot publication is blocked; inspect the failed Glitter corpus activity before retrying.",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "increase(glitter_corpus_mirror_divergence_total[15m]) > 0",
+          ),
+          for: "1m",
+          labels: {
+            severity: "critical",
+          },
+        },
+        {
+          alert: "GlitterCorpusDiscordAuthorizationFailed",
+          annotations: {
+            summary: "Glitter Discord archival bot lost authorization",
+            description:
+              "The corpus archiver received a Discord 401 or 403. Capture intentionally stopped because completeness cannot be proven with missing permissions.",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'increase(glitter_corpus_discord_requests_total{outcome="auth-failure"}[15m]) > 0',
+          ),
+          for: "1m",
+          labels: {
+            severity: "critical",
+          },
+        },
+        {
+          alert: "GlitterCorpusRateLimitPressure",
+          annotations: {
+            summary: "Glitter Discord corpus is repeatedly rate limited",
+            description: escapePrometheusTemplate(
+              "The conservative one-request-per-second archiver still received {{ $value }} Discord 429 responses in the last hour. Inspect retry_after telemetry and pause the backfill if pressure persists.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'increase(glitter_corpus_discord_requests_total{outcome="rate-limited"}[1h]) > 10',
+          ),
+          for: "10m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
+          alert: "GlitterCorpusSnapshotStale",
+          annotations: {
+            summary: "Glitter Discord corpus snapshot is stale",
+            description:
+              "A verified corpus snapshot exists but has not advanced for more than 30 hours. Check the glitter-corpus-daily schedule and its most recent workflow.",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "time() - max(glitter_corpus_last_snapshot_timestamp_seconds) > 108000",
+          ),
+          for: "30m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
+          alert: "GlitterCorpusInventoryScopeChanged",
+          annotations: {
+            summary: "Glitter Discord corpus inventory scope changed",
+            description: escapePrometheusTemplate(
+              "The latest Discord inventory has {{ $value }} added, removed, or newly excluded channels/threads compared with the published baseline. Review the immutable inventory before accepting the new scope.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "sum(glitter_corpus_inventory_scope_changes) > 0",
+          ),
+          for: "15m",
+          labels: {
+            severity: "warning",
+          },
+        },
+      ],
+    },
+    {
       name: "pr-bot",
       rules: [
         {
