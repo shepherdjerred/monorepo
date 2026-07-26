@@ -27,6 +27,9 @@ type safety, or any other quality gate.
 - Draft dependency-security and Argo RBAC follow-up PR
   [#1652](https://github.com/shepherdjerred/monorepo/pull/1652)
 - Liskov validation build `#6212`
+- Merged dependency-security and Argo RBAC follow-up PR
+  [#1652](https://github.com/shepherdjerred/monorepo/pull/1652)
+- Replacement `main` build `#6223`
 - Build `#6212` proved checkout, verify, Playwright, resume, Docker E2E, and the
   image dry-run run on Liskov. Its Trivy gate found three newly published
   dependency advisories after downloading a fresh vulnerability database.
@@ -45,7 +48,8 @@ type safety, or any other quality gate.
 - [x] Land the Buildx import retry-classification fix.
 - [x] Remediate the fresh Trivy findings from validation build `#6212`.
 - [x] Fix the Argo CD RBAC denial exposed by current-main build `#6213`.
-- [ ] Land the dependency-security and Argo RBAC follow-up.
+- [x] Land the dependency-security and Argo RBAC follow-up.
+- [x] Fix Argo CD's HTTP 415 response to the Kueue Application deletion.
 - [ ] Confirm the resulting `main` Buildkite build is green.
 
 ## Session Log — 2026-07-25
@@ -155,12 +159,27 @@ type safety, or any other quality gate.
   Application tree.
 - Added the missing narrow `applications,get,default/argocd` grant to the
   Buildkite Argo account and an exact-policy synthesis regression test.
+- Landed PR [#1652](https://github.com/shepherdjerred/monorepo/pull/1652) as
+  `454bfa6d53d72d3fae6a81ded65594bbf0f30d6d`.
+- Followed replacement build `#6223` through successful verification, browser
+  and Docker E2E tests, image build/smoke/push, publishing, Tofu, and release
+  automation.
+- Confirmed the RBAC fix live: `tree-health-wait argocd` reported
+  `Synced/Healthy` instead of HTTP 403.
+- Isolated build `#6223`'s new hard failure to Argo CD rejecting the body-less
+  Kueue Application DELETE request with HTTP 415 `Invalid content type`.
+- Added the required `Content-Type: application/json` header and a local
+  HTTP-contract regression test covering the DELETE query, headers, and
+  follow-up 404 deletion check.
+- Passed the focused contract test, CDK8s build/typecheck/lint, the full CDK8s
+  suite (243 pass, 13 skip, 0 fail), GPU-resource verification, and
+  `bun run verify -- --affected` (25/25).
 
 ### Remaining
 
-- Amend and land the dependency-security and Argo RBAC follow-up.
-- Run the replacement `main` build through image publishing, OpenTofu, Argo CD
-  sync, version commit-back, and summary.
+- Land the Argo CD Application DELETE content-type follow-up.
+- Run the next replacement `main` build through Argo CD sync, downstream
+  reconciliation, version commit-back, and summary.
 - Verify post-sync Buildkite job placement on `liskov` and current cluster
   readiness.
 
@@ -180,3 +199,7 @@ type safety, or any other quality gate.
   command pods ran on Torvalds. Build `#6212` has since proved the selector,
   toleration, replacement mirror PV, and multiple CI workload classes on
   Liskov.
+- The interactive shell placed Homebrew Go 1.26.5 before the repository's Mise
+  Go 1.25.12 while retaining the older `GOROOT`. The high-fidelity PagerDuty
+  test passed after invoking Bun with the pinned Go binary and matching
+  `GOROOT`; CI's Mise-controlled toolchain does not have this split.

@@ -176,7 +176,12 @@ async function deleteApplication(
     "?cascade=true&propagationPolicy=foreground";
   const res = await fetch(url, {
     method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
+    headers: {
+      Authorization: `Bearer ${token}`,
+      // Argo CD versions before argoproj/argo-cd#23028 validate Content-Type
+      // even for body-less DELETE requests and otherwise return HTTP 415.
+      "Content-Type": "application/json",
+    },
   });
   if (res.status !== 404 && !res.ok) {
     const body = (await res.text()).slice(0, 1024);
