@@ -12,6 +12,28 @@ export function renderChangelogToHtml(content: ReactNode): string {
 
 export const changelog: ChangelogEntry[] = [
   buildChangelogEntry({
+    date: "2026 07 25",
+    banner: "Ranked report redesign and delegated dashboard roles",
+    sections: [
+      {
+        title: "Post-Match Reports",
+        color: "green",
+        items: [
+          "Ranked solo/duo and flex matches now post as one of two splash-art designs — a wide cinematic banner or a square squad card — with champion splash art, KDA and LP, rank badges, a per-player letter grade, and an MVP call-out",
+          "Reports cover 1–10 tracked players in a game, grouped into squads",
+          "Champion names now display consistently across Discord, the dashboard, and reports (e.g. Wukong, not MonkeyKing)",
+        ],
+      },
+      {
+        title: "Access Control",
+        color: "indigo",
+        items: [
+          "Delegate dashboard access with roles — assign members Viewer, Manager, or Admin (or a custom permission set) so non-admins can manage subscriptions, players, competitions, or reports without full server admin",
+        ],
+      },
+    ],
+  }),
+  buildChangelogEntry({
     date: "2026 07 19",
     banner: "Updated for League patch 26.14",
     sections: [
@@ -20,10 +42,7 @@ export const changelog: ChangelogEntry[] = [
         color: "indigo",
         items: [
           "Champion, item, summoner spell, and rune data refreshed for League patch 26.14",
-          "Seraphine, Senna, and Nami enchanters get reshuffled — two nerfed, one buffed.",
-          "Corki, Mordekaiser, and Azir get buffed while Garen, Jayce, and Locke take nerfs.",
-          "Blue Buff now scales ability haste with level, and the buff bar was heavily decluttered.",
-          "Hextech Rocketbelt, Immortal Path, and Protoplasm Harness all got weaker.",
+          "Enchanter supports plus several mid- and top-lane champions were rebalanced — reports use the new patch data",
         ],
       },
     ],
@@ -31,6 +50,37 @@ export const changelog: ChangelogEntry[] = [
       label: "Read Riot's full Patch 26.14 notes",
       href: "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-14-notes",
     },
+  }),
+  buildChangelogEntry({
+    date: "2026 07 12",
+    banner: "Bigger report analytics and a smarter report builder",
+    sections: [
+      {
+        title: "Reports",
+        color: "yellow",
+        items: [
+          "Report queries can now do real analytics — math and aggregate expressions (per-game, per-minute, rounding), grouping by up to two dimensions with day/week/month time buckets, and many more metrics across economy, farming, damage, vision, objectives, and Arena",
+          "Seven new chart types — stacked bar, area, donut, scatter, heatmap, radar, and KPI cards — with themes, palettes, and custom colors, plus 23 ready-made presets",
+          "A cleaner report builder: live AI-draft preview, visible AI credits, a point-and-click Data Explorer, champion-name filters, and full custom scheduling with a timezone picker and next-run preview",
+        ],
+      },
+      {
+        title: "Subscriptions",
+        color: "teal",
+        items: [
+          "Filter each subscription by queue type — get pinged only for the queues you care about (e.g. ranked only), set per subscription on Discord or in bulk per channel from the dashboard",
+          "Mute a subscription to silence its match pings without deleting it",
+          "Group win-rate reports for any squad of 2–5, plus Arena subteams",
+        ],
+      },
+      {
+        title: "Arena",
+        color: "purple",
+        items: [
+          "Arena games are correctly detected and reported again after Riot moved the queue",
+        ],
+      },
+    ],
   }),
   buildChangelogEntry({
     date: "2026 06 28",
@@ -41,9 +91,9 @@ export const changelog: ChangelogEntry[] = [
         color: "indigo",
         items: [
           "Champion, item, summoner spell, and rune data refreshed for League patch 26.13",
-          "New champion Locke, the Ashen Exorcist, arrives with demon-hunting abilities",
+          "New champion Locke, the Ashen Exorcist, is supported in reports and prematch",
           "Ranked 5v5 returns for a limited-time run with Tournament Draft",
-          "Champion balance shifts: buffs to Aphelios, Draven, and Kai'Sa; nerfs to Bard, Brand, and Cassiopeia",
+          "Champion balance shifted across several picks — reports reflect the latest patch",
         ],
       },
     ],
@@ -51,6 +101,42 @@ export const changelog: ChangelogEntry[] = [
       label: "Read Riot's full Patch 26.13 notes",
       href: "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-13-notes/",
     },
+  }),
+  buildChangelogEntry({
+    date: "2026 06 26",
+    banner: "Ranked 5v5 and new champions supported",
+    sections: [
+      {
+        title: "Game Data",
+        color: "indigo",
+        items: [
+          "Ranked 5v5 matches are detected and reported, including the Tournament Draft return",
+          "New champions are picked up automatically from Riot's data, so reports and prematch never miss a just-released champion",
+        ],
+      },
+    ],
+  }),
+  buildChangelogEntry({
+    date: "2026 06 19",
+    banner: "The Scout web dashboard is now the easiest way to run everything",
+    sections: [
+      {
+        title: "Web Dashboard",
+        color: "blue",
+        items: [
+          "A guided first-run wizard walks new admins through installing Scout, understanding players and subscriptions, subscribing to themselves, adding friends, and creating a first report or competition",
+          "Manage everything from the browser — subscriptions, players and linked Riot accounts (with typeahead Riot-ID search), competitions with standings and charts, and scheduled reports with run history. Slash commands are now optional",
+        ],
+      },
+      {
+        title: "Report Query Studio",
+        color: "purple",
+        items: [
+          "Build custom report queries in a full code editor with syntax highlighting, autocomplete, hover docs, and live error underlining, plus in-app query documentation",
+          "Control a report's display right in the query with a RENDER clause — pick the chart type, metric, title, and axis labels — and preview the exact chart before saving",
+        ],
+      },
+    ],
   }),
   {
     date: "2026 05 23",

@@ -1151,7 +1151,8 @@ async function maybeAppendChangelogEntry(
   }
 
   // Ask Claude to read the real patch notes and produce a structured changeset
-  // (consumed by AI reviews) plus the short highlight bullets (consumed here).
+  // (`summary` + per-change data feed the AI review) plus the Scout-focused
+  // `changelogHighlights` consumed here for the "What's New" entry.
   // Best-effort: a failure (no claude, timeout, bad output) falls back to just
   // the data-refresh line and leaves the committed changeset untouched, rather
   // than blocking the asset PR or shipping a garbage changeset.
@@ -1173,7 +1174,7 @@ async function maybeAppendChangelogEntry(
     console.log(
       `✓ Wrote patch changeset (${String(changeset.champions.length)} champion, ${String(changeset.items.length)} item, ${String(changeset.systems.length)} system changes)`,
     );
-    highlights = changeset.summary;
+    highlights = changeset.changelogHighlights;
     await saveRawPatchNotes(patch);
   } catch (error) {
     console.warn(
