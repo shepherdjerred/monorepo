@@ -1,4 +1,4 @@
-import { getSeasonChoices } from "@scout-for-lol/data";
+import { getCurrentSeason, getSeasonChoices } from "@scout-for-lol/data";
 import {
   EMPTY_REPORT_STATE,
   type ReportFormState,
@@ -63,8 +63,11 @@ export const REPORT_EXAMPLES: ReportExample[] = [
 ];
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-// Latest currently-joinable season (getSeasonChoices filters out ended ones).
-const CURRENT_SEASON_ID = getSeasonChoices()[0]?.value ?? "";
+// The season active right now; falls back to the next joinable one between
+// seasons (getSeasonChoices filters out ended seasons but includes future
+// ones, so [0] alone could pick a not-yet-started season).
+const CURRENT_SEASON_ID =
+  getCurrentSeason()?.id ?? getSeasonChoices().at(-1)?.value ?? "";
 
 function toIsoDate(date: Date): string {
   return date.toISOString().slice(0, 10);

@@ -34,7 +34,9 @@ function limited(
     kind: "limited",
     windows: windows.map(([start, end]) => ({
       start: new Date(start),
-      end: end === null ? null : new Date(end),
+      // End dates are inclusive through the entire (UTC) end day — a bare
+      // date would parse to midnight and exclude almost all of the last day.
+      end: end === null ? null : new Date(`${end}T23:59:59.999Z`),
     })),
   };
 }

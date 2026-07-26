@@ -65,9 +65,10 @@ export function ReportScheduleFields(props: {
     }
   }, [customSelected]);
 
-  const selectValue = customSelected
-    ? CUSTOM_SCHEDULE
-    : (matchingPreset ?? CUSTOM_SCHEDULE);
+  // Derived, not just state: a report hydrated with a custom cron (edit page)
+  // must show the cron input even though the user never clicked "Custom cron".
+  const isCustom = customSelected || matchingPreset === undefined;
+  const selectValue = isCustom ? CUSTOM_SCHEDULE : matchingPreset;
 
   const upcoming = useMemo(
     () => schedulePreview(props.cronExpression, props.scheduleTimezone),
@@ -108,7 +109,7 @@ export function ReportScheduleFields(props: {
           onChange={props.onTimezoneChange}
         />
       </div>
-      {customSelected && (
+      {isCustom && (
         <div className="space-y-1">
           <Input
             ref={cronInputRef}

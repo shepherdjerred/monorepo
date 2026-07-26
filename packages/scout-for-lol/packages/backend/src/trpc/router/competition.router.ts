@@ -224,6 +224,27 @@ export const competitionRouter = router({
         criteria: input.criteria,
         updateCronExpression: input.updateCronExpression,
       });
+      // SERVER_WIDE competitions enroll every tracked player up front — the
+      // visibility's opt-out semantics. The competition is brand new, so the
+      // only capacity constraint is maxParticipants: enroll the oldest
+      // players first and stop at the cap. Any other addParticipant failure
+      // is a genuine bug and propagates.
+      if (input.visibility === "SERVER_WIDE") {
+        const players = await prisma.player.findMany({
+          where: { serverId: input.guildId },
+          select: { id: true },
+          orderBy: { id: "asc" },
+          take: input.maxParticipants,
+        });
+        for (const player of players) {
+          await addParticipant({
+            prisma,
+            competitionId: competition.id,
+            playerId: player.id,
+            status: "JOINED",
+          });
+        }
+      }
       if (!ctx.permissions.isRoot) {
         recordCreation(input.guildId, ownerId);
       }
