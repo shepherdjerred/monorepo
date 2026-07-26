@@ -267,6 +267,8 @@ pod=~<job-pod-pattern>, phase="Running"} == 1)`. Every Buildkite step pod is
 - Corrected the runbook: worker identities cannot set their own node taints
   under the default Kubernetes NodeRestriction admission policy, and current
   OpenEBS uses the Talos host `zpool` binary through `chroot /host`.
+- Published the supporting source changes on PR #1629 as
+  `3d9da5141 fix(homelab): finalize liskov join prerequisites`.
 
 ### Remaining
 
@@ -282,3 +284,7 @@ pod=~<job-pod-pattern>, phase="Running"} == 1)`. Every Buildkite step pod is
   still active.
 - `zfspv-pool-nvme` is a single-disk cache pool: loss requires rebuilding CI
   caches, not recovering source-of-truth data.
+- The full affected verification is clean for tracked source checks, but this
+  working tree's ignored generated `secrets.yaml` and `worker.yaml` trigger
+  repository-wide gitleaks/prettier scans. CI evaluates a clean checkout and
+  remains the merge gate for the published PR.
