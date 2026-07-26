@@ -20,6 +20,7 @@ import {
 } from "#src/components/ui/table.tsx";
 import { DiscordUser } from "#src/components/discord-user.tsx";
 import { LoadMore } from "#src/components/load-more.tsx";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 
 function channelLabel(
   channels: { id: string; name: string }[] | undefined,
@@ -51,19 +52,20 @@ export function PlayerList() {
   const playersQuery = useInfiniteQuery(
     trpc.player.listPlayers.infiniteQueryOptions(listInput, {
       enabled: guildId !== undefined,
+      staleTime: STALE_TIME_SLOW_LIST,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     }),
   );
   const currentPlayerQuery = useQuery(
     trpc.player.getCurrentLinkedPlayer.queryOptions(
       { guildId: safeGuildId },
-      { enabled: guildId !== undefined },
+      { enabled: guildId !== undefined, staleTime: STALE_TIME_SLOW_LIST },
     ),
   );
   const channelsQuery = useQuery(
     trpc.guild.listChannels.queryOptions(
       { guildId: safeGuildId },
-      { enabled: guildId !== undefined },
+      { enabled: guildId !== undefined, staleTime: STALE_TIME_SLOW_LIST },
     ),
   );
 
@@ -146,6 +148,7 @@ export function PlayerList() {
       {playersQuery.data && players.length > 0 && (
         <div className="rounded-md border border-border">
           <Table>
+            <caption className="sr-only">Tracked players</caption>
             <TableHeader>
               <TableRow>
                 <TableHead>Alias</TableHead>

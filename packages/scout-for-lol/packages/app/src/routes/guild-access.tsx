@@ -36,6 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from "#src/components/ui/table.tsx";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 
 function roleLabel(role: Role | "custom"): string {
   if (role === "custom") return "Custom";
@@ -139,7 +140,7 @@ export function GuildAccess() {
   const rolesQuery = useQuery(
     trpc.roles.list.queryOptions(
       { guildId: safeGuildId },
-      { enabled: guildId !== undefined },
+      { enabled: guildId !== undefined, staleTime: STALE_TIME_SLOW_LIST },
     ),
   );
   // roles.set backs both new grants AND edits (role changes, custom-permission
@@ -290,6 +291,7 @@ export function GuildAccess() {
       )}
 
       <Table>
+        <caption className="sr-only">Role permissions</caption>
         <TableHeader>
           <TableRow>
             <TableHead>Member</TableHead>

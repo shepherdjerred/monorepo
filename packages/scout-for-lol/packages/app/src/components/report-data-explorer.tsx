@@ -347,6 +347,7 @@ export function ReportDataExplorer(props: {
       )}
       <div className="overflow-x-auto rounded-md border border-border">
         <Table>
+          <caption className="sr-only">Report data rows</caption>
           <TableHeader>
             <TableRow>
               {(browseQuery.data?.columns ?? []).map((column) => (

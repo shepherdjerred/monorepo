@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "#src/components/ui/table.tsx";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 
 export function GuildAudit() {
   const { guildId } = useParams();
@@ -23,6 +24,7 @@ export function GuildAudit() {
       {
         enabled: guildId !== undefined,
         getNextPageParam: (lastPage) => lastPage.nextCursor,
+        staleTime: STALE_TIME_SLOW_LIST,
       },
     ),
   );
@@ -59,6 +61,7 @@ export function GuildAudit() {
       {query.data && rows.length > 0 && (
         <div className="rounded-md border border-border">
           <Table>
+            <caption className="sr-only">Subscription audit log</caption>
             <TableHeader>
               <TableRow>
                 <TableHead>When</TableHead>

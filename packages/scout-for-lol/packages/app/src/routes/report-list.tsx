@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "#src/components/ui/table.tsx";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 
 function cronLabel(cron: string): string {
   const preset = CronPresets.find((entry) => entry.value === cron);
@@ -37,7 +38,7 @@ export function ReportList() {
   const reportsQuery = useQuery(
     trpc.report.list.queryOptions(
       { guildId: safeGuildId },
-      { enabled: guildId !== undefined },
+      { enabled: guildId !== undefined, staleTime: STALE_TIME_SLOW_LIST },
     ),
   );
   const setEnabledMutation = useMutation(
@@ -110,6 +111,7 @@ export function ReportList() {
       {visibleReports.length > 0 && (
         <div className="rounded-md border border-border">
           <Table>
+            <caption className="sr-only">Scheduled reports</caption>
             <TableHeader>
               <TableRow>
                 <TableHead>Report</TableHead>

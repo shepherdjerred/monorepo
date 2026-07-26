@@ -83,6 +83,9 @@ export function PlayerSubscriptionsTable(props: {
   }
   return (
     <Table>
+      <caption className="sr-only">
+        Channel subscriptions for this player
+      </caption>
       <TableHeader>
         <TableRow>
           <TableHead>Channel</TableHead>
@@ -125,6 +128,7 @@ export function PlayerAccountsTable(props: {
   }
   return (
     <Table>
+      <caption className="sr-only">Riot accounts for this player</caption>
       <TableHeader>
         <TableRow>
           <TableHead>Alias</TableHead>
@@ -264,6 +268,9 @@ export function CompetitionSection(props: {
         <p className="p-3 text-sm text-muted-foreground">None.</p>
       ) : (
         <Table>
+          <caption className="sr-only">
+            Competitions this player participates in
+          </caption>
           <TableHeader>
             <TableRow>
               <TableHead>Competition</TableHead>

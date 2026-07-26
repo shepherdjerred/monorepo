@@ -41,6 +41,7 @@ import {
   TableHeader,
   TableRow,
 } from "#src/components/ui/table.tsx";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 
 function accountLabel(account: {
   alias: string;
@@ -120,7 +121,7 @@ export function GuildSubscriptions() {
   const channelsQuery = useQuery(
     trpc.guild.listChannels.queryOptions(
       { guildId: safeGuildId },
-      { enabled: guildId !== undefined },
+      { enabled: guildId !== undefined, staleTime: STALE_TIME_SLOW_LIST },
     ),
   );
   const removeMutation = useMutation(
@@ -289,6 +290,10 @@ export function GuildSubscriptions() {
       {subsQuery.data && subscriptions.length > 0 && (
         <div className="rounded-md border border-border">
           <Table>
+            <caption className="sr-only">
+              Subscriptions: tracked players and the channels their match
+              reports post to
+            </caption>
             <TableHeader>
               <TableRow>
                 <TableHead>Alias</TableHead>

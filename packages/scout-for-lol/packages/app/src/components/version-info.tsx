@@ -137,6 +137,9 @@ export function VersionFooter() {
             <CommitSha gitSha={backend.data.gitSha} />)
           </>
         )}
+        {/* The contract hashes live in the title tooltip for sighted mouse
+            users; expose them to screen readers too. */}
+        <span className="sr-only">{title}</span>
       </span>
     </footer>
   );

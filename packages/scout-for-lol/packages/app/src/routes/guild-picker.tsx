@@ -17,6 +17,7 @@ import {
   markOnboardingSeen,
 } from "#src/lib/onboarding-storage.ts";
 import { trackOutboundClick } from "#src/lib/analytics.ts";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 
 /**
  * Kicks off the bot-install flow. Points at the backend route (not an
@@ -53,7 +54,9 @@ export function GuildPicker() {
     trpc.auth.meWeb.queryOptions(undefined, { retry: false }),
   );
   const { data, isLoading, error } = useQuery(
-    trpc.guild.listManageable.queryOptions(),
+    trpc.guild.listManageable.queryOptions(undefined, {
+      staleTime: STALE_TIME_SLOW_LIST,
+    }),
   );
   const discordId = meQuery.data?.discordId ?? null;
   const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -132,7 +135,7 @@ export function GuildPicker() {
     <Shell>
       {banner}
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-xl font-semibold tracking-tight">Pick a guild</h2>
+        <h1 className="text-xl font-semibold tracking-tight">Pick a guild</h1>
         <div className="flex items-center gap-3">
           <Link
             to="/welcome"
