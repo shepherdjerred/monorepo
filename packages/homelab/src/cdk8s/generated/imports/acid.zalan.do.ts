@@ -2939,6 +2939,11 @@ export interface PostgresqlSpecStreams {
   readonly batchSize?: number;
 
   /**
+   * @schema PostgresqlSpecStreams#cpu
+   */
+  readonly cpu?: string;
+
+  /**
    * @schema PostgresqlSpecStreams#database
    */
   readonly database: string;
@@ -2952,6 +2957,11 @@ export interface PostgresqlSpecStreams {
    * @schema PostgresqlSpecStreams#filter
    */
   readonly filter?: { [key: string]: string };
+
+  /**
+   * @schema PostgresqlSpecStreams#memory
+   */
+  readonly memory?: string;
 
   /**
    * @schema PostgresqlSpecStreams#tables
@@ -2972,6 +2982,7 @@ export function toJson_PostgresqlSpecStreams(
   const result = {
     applicationId: obj.applicationId,
     batchSize: obj.batchSize,
+    cpu: obj.cpu,
     database: obj.database,
     enableRecovery: obj.enableRecovery,
     filter:
@@ -2981,6 +2992,7 @@ export function toJson_PostgresqlSpecStreams(
             (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
             {},
           ),
+    memory: obj.memory,
     tables:
       obj.tables === undefined
         ? undefined
@@ -3505,6 +3517,11 @@ export interface PostgresqlSpecStreamsTables {
   readonly idColumn?: string;
 
   /**
+   * @schema PostgresqlSpecStreamsTables#ignoreRecovery
+   */
+  readonly ignoreRecovery?: boolean;
+
+  /**
    * @schema PostgresqlSpecStreamsTables#payloadColumn
    */
   readonly payloadColumn?: string;
@@ -3528,6 +3545,7 @@ export function toJson_PostgresqlSpecStreamsTables(
   const result = {
     eventType: obj.eventType,
     idColumn: obj.idColumn,
+    ignoreRecovery: obj.ignoreRecovery,
     payloadColumn: obj.payloadColumn,
     recoveryEventType: obj.recoveryEventType,
   };
