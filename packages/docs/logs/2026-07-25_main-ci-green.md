@@ -39,6 +39,9 @@ type safety, or any other quality gate.
 - Merged project-scoped Argo deletion PR
   [#1660](https://github.com/shepherdjerred/monorepo/pull/1660)
 - OOM reproductions in current-main builds `#6256` and `#6261`
+- Merged verify-container memory PR
+  [#1662](https://github.com/shepherdjerred/monorepo/pull/1662)
+- Replacement `main` build `#6265`
 - Build `#6212` proved checkout, verify, Playwright, resume, Docker E2E, and the
   image dry-run run on Liskov. Its Trivy gate found three newly published
   dependency advisories after downloading a fresh vulnerability database.
@@ -242,12 +245,30 @@ type safety, or any other quality gate.
   and limit.
 - Passed the focused pipeline validator, Prettier, Markdown lint, diff checks,
   and `bun run verify -- --affected` (20/20).
+- Landed PR [#1662](https://github.com/shepherdjerred/monorepo/pull/1662) as
+  `ae9b171d711aff03e5775b532acb48ec53cc35f2`.
+- Followed replacement build `#6265`: full-repository verify passed after
+  reaching `16.11GiB`, directly exercising the new `20Gi` limit; Playwright,
+  resume, Docker E2E, image build/smoke/push, publishing, OpenTofu, Argo CD,
+  release-please, and CI-image refresh also passed on Liskov.
+- Isolated build `#6265`'s final failure to version commit-back rebasing the
+  stale remote `chore/version-bump-pending` commit from closed PR `#1634`;
+  `versions.ts` had since changed on main, producing a content conflict.
+- Changed the generated bump branch to be reconstructed from current
+  `origin/main` before applying the build's cumulative digest set, eliminating
+  stale-branch and generated-rebase conflicts while retaining
+  `--force-with-lease` concurrency protection.
+- Added a real temporary-Git-repository regression test that creates
+  conflicting main and generated-branch edits, then verifies the reset leaves
+  the generated branch exactly at current main with a clean worktree.
+- Passed the focused regression test and the root-scripts typecheck, lint, and
+  full 98-test suite.
 
 ### Remaining
 
-- Land the verify-container memory correction.
-- Run the next replacement `main` build through Argo CD sync, downstream
-  reconciliation, version commit-back, and summary.
+- Land the version commit-back branch reconstruction.
+- Run the next replacement `main` build through version commit-back and the
+  final summary.
 - Verify post-sync Buildkite job placement on `liskov` and current cluster
   readiness.
 
@@ -271,3 +292,7 @@ type safety, or any other quality gate.
   Go 1.25.12 while retaining the older `GOROOT`. The high-fidelity PagerDuty
   test passed after invoking Bun with the pinned Go binary and matching
   `GOROOT`; CI's Mise-controlled toolchain does not have this split.
+- Closed PR `#1634` left its generated remote branch in place. The prior
+  commit-back implementation treated branch existence as an open pending PR
+  and attempted a rebase, so the stale ref could poison every later main
+  build.

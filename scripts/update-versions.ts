@@ -31,6 +31,21 @@ const MONOREPO_WRITE_URL = `https://github.com/${MONOREPO_REPO}.git`;
 const VERSION_BUMP_BRANCH = "chore/version-bump-pending";
 const VERSIONS_FILE_REL = "packages/homelab/src/cdk8s/src/versions.ts";
 
+type GitRunner = (args: string[]) => Promise<unknown>;
+
+/**
+ * Reconstruct the generated bump branch from current main.
+ *
+ * Main image builds are scoped from the last green main build, and a failed
+ * commit-back prevents that baseline from advancing. The current digest set
+ * therefore contains every still-pending image change. Starting from main is
+ * both cumulative and immune to conflicts from a closed or superseded
+ * generated PR.
+ */
+export async function resetVersionBumpBranch(git: GitRunner): Promise<void> {
+  await git(["checkout", "-B", VERSION_BUMP_BRANCH, "origin/main"]);
+}
+
 // ---------------------------------------------------------------------------
 // In-place versions.ts rewrite (verbatim port of update-versions.ts)
 // ---------------------------------------------------------------------------
@@ -211,34 +226,8 @@ async function commitBack(
     await git(["config", "user.email", "ci@sjer.red"]);
     await git(["config", "user.name", "CI Bot"]);
 
-    // Reuse the pending branch (rebased onto main) if it exists, else branch fresh.
-    const branchExists =
-      (await run(
-        [
-          "git",
-          "-C",
-          cloneDir,
-          "ls-remote",
-          "--exit-code",
-          "--heads",
-          "origin",
-          VERSION_BUMP_BRANCH,
-        ],
-        { env, capture: true },
-      ).catch(() => null)) !== null;
-
     await git(["fetch", "origin", "main:refs/remotes/origin/main"]);
-    if (branchExists) {
-      await git([
-        "fetch",
-        "origin",
-        `${VERSION_BUMP_BRANCH}:${VERSION_BUMP_BRANCH}`,
-      ]);
-      await git(["checkout", VERSION_BUMP_BRANCH]);
-      await git(["rebase", "origin/main"]);
-    } else {
-      await git(["checkout", "-b", VERSION_BUMP_BRANCH, "origin/main"]);
-    }
+    await resetVersionBumpBranch(git);
 
     await rewriteVersionsFile(
       `${cloneDir}/${VERSIONS_FILE_REL}`,
@@ -418,4 +407,6 @@ async function main(): Promise<void> {
   );
 }
 
-await runMain(main);
+if (import.meta.main) {
+  await runMain(main);
+}
