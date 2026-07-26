@@ -11,9 +11,14 @@
 # velero / bk / temporal / toolkit (homelab-audit-daily runbook + preflight —
 # see src/activities/homelab-audit-preflight.ts REQUIRED_AUDIT_BINARIES), and
 # cog (readme-refresh-weekly regenerates the README project-listing tables).
-# This mirrors the old Dagger buildTemporalWorkerImageHelper (withEditorClis +
-# withKubectl + withGithubMcpServer + withHomelabAuditClis + withCogapp +
-# withToolkit). scripts/smoke.ts asserts every one of these boots + is on PATH.
+# scripts/smoke.ts asserts every one of these boots + is on PATH.
+#
+# Multi-stage: deps does a full (dev-inclusive) install to feed the llm-models
+# and toolkit builds; prod-deps installs the production-only worker closure;
+# runtime carries the CLI zoo plus COPY-only app layers — it never runs
+# `bun install`. Dev dependencies and the rest of the monorepo source never
+# reach the final image, and the source layer only invalidates when a closure
+# package changes — not on every repo commit.
 #
 # Arch: the production cluster is amd64; local builds are arm64. Every download
 # is arch-guarded (`dpkg --print-architecture`) so both build with native
@@ -21,9 +26,62 @@
 FROM oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4 AS base
 WORKDIR /app
 
-# Pinned CLI versions (mirror the old .dagger/src/constants.ts). Renovate
-# annotations let the same datasources keep these current as they did for the
-# Dagger constants.
+# ── deps: full install (dev deps) — feeds the artifact builds below ─────────
+# `--frozen-lockfile` requires every workspace member's package.json present,
+# so the globs enumerate every member (top-level, nested packages/*/packages/*,
+# homelab/src/*, the desktop src-tauri crate, and the `scripts` dir).
+FROM base AS deps
+COPY --parents \
+  package.json bun.lock bunfig.toml patches/ scripts/package.json \
+  packages/*/package.json packages/*/packages/*/package.json \
+  packages/homelab/src/cdk8s/package.json \
+  packages/homelab/src/helm-types/package.json \
+  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
+  ./
+RUN bun install --frozen-lockfile \
+  --filter '@shepherdjerred/temporal' \
+  --filter '@shepherdjerred/toolkit'
+
+# ── build: gitignored artifacts (llm-models dist + compiled toolkit) ────────
+FROM deps AS build
+COPY --parents \
+  tsconfig.base.json \
+  packages/temporal \
+  packages/code-review \
+  packages/llm-models \
+  packages/toolkit \
+  ./
+# llm-models' package `main`/`exports` resolve to a gitignored `dist/`, so a
+# consumer that imports it (temporal's pr-review cost activity) crashes at
+# startup with `Cannot find module '@shepherdjerred/llm-models'` unless the
+# catalog is compiled first. (home-assistant and llm-observability export their
+# `src/` directly and need no build.)
+RUN cd packages/llm-models && bun run build
+# Compile the in-tree toolkit CLI into a single static binary. The
+# homelab-audit runbook + preflight shell out to `toolkit pd|bugsink|gf`;
+# it's compiled here (not `bun add -g`) because it lives in the workspace
+# source. `--external ffmpeg-static` matches the package's own build script (a
+# native shim that must not be bundled).
+RUN cd packages/toolkit && bun build ./src/index.ts --compile --external ffmpeg-static --outfile=/usr/local/bin/toolkit \
+    && chmod +x /usr/local/bin/toolkit \
+    && toolkit --version
+
+# ── prod-deps: production-only node_modules, cached on manifests ────────────
+FROM base AS prod-deps
+COPY --parents \
+  package.json bun.lock bunfig.toml patches/ scripts/package.json \
+  packages/*/package.json packages/*/packages/*/package.json \
+  packages/homelab/src/cdk8s/package.json \
+  packages/homelab/src/helm-types/package.json \
+  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
+  ./
+RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/temporal'
+
+# ── runtime: operator CLIs + COPY-only app layers ───────────────────────────
+FROM base AS runtime
+
+# Pinned CLI versions. Renovate annotations keep these current via the same
+# datasources as before.
 # renovate: datasource=github-releases depName=cli/cli
 ARG GH_CLI_VERSION=2.96.0
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
@@ -66,9 +124,8 @@ RUN set -e; \
 
 # --- Claude Code + Codex CLIs (bun global installs) ---
 # BUN_INSTALL=/usr/local drops `bun add -g` binaries into /usr/local/bin
-# (on PATH, world-readable) instead of /root/.bun/bin. Scoped to this layer so
-# it doesn't leak into the workspace install below (which must use the base's
-# default install prefix). Mirrors the old withEditorClis / withCodexCli.
+# (on PATH, world-readable) instead of /root/.bun/bin. Scoped per-layer so it
+# doesn't leak into the runtime environment.
 RUN BUN_INSTALL=/usr/local bun add -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" && claude --version
 RUN BUN_INSTALL=/usr/local bun add -g "@openai/codex@${CODEX_CLI_VERSION}" && codex --version
 
@@ -202,50 +259,31 @@ RUN set -e; \
     pip3 install --no-cache-dir --break-system-packages "cogapp==${COGAPP_VERSION}"; \
     cog -v
 
-# --- Manifests-first install layer (CLI layers above cache independently) ---
-# Install the Temporal worker plus the toolkit package compiled into this image;
-# each filter includes its complete workspace dependency closure (including
-# llm-models). This layer only invalidates when a manifest/lockfile/patch changes.
-# `--frozen-lockfile` requires every
-# workspace member's package.json present, so the globs enumerate every member
-# (top-level, nested packages/*/packages/*, homelab/src/*, the desktop src-tauri
-# crate, and the `scripts` dir). node_modules/dist are excluded from the build
-# context by the root .dockerignore, so the later `COPY . .` can't clobber the
-# installed tree.
+# Production node_modules + workspace manifests. The isolated-linker tree uses
+# relative symlinks (store at node_modules/.bun), so copying the whole install
+# root between same-rooted stages is safe. Kept BEFORE the source COPY so a
+# source edit doesn't re-push this layer.
+COPY --from=prod-deps /app/ /app/
+
+# Scoped source closure (toolkit ships only as the compiled binary below).
 COPY --parents \
-  package.json bun.lock bunfig.toml patches/ scripts/package.json \
-  packages/*/package.json packages/*/packages/*/package.json \
-  packages/homelab/src/cdk8s/package.json \
-  packages/homelab/src/helm-types/package.json \
-  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
+  tsconfig.base.json \
+  packages/temporal \
+  packages/code-review \
+  packages/home-assistant \
+  packages/llm-models \
+  packages/llm-observability \
   ./
-RUN bun install --frozen-lockfile \
-  --filter '@shepherdjerred/temporal' \
-  --filter '@shepherdjerred/toolkit'
 
-# Now the sources (source COPY last so a code-only edit keeps the install layer
-# cached).
-COPY . .
-
-# llm-models' package `main`/`exports` resolve to a gitignored `dist/`, so a
-# consumer that imports it (temporal's pr-review cost activity) crashes at
-# startup with `Cannot find module '@shepherdjerred/llm-models'` unless the
-# catalog is compiled first. (home-assistant and llm-observability export their
-# `src/` directly and need no build.) Mirrors the old Dagger `withBuiltLlmModels`.
-RUN cd packages/llm-models && bun run build
-
-# Compile the in-tree toolkit CLI into a single static binary on PATH. The
-# homelab-audit runbook + preflight shell out to `toolkit pd|bugsink|gf`;
-# it's compiled here (not `bun add -g`) because it lives in the workspace source.
-# `--external ffmpeg-static` matches the package's own build script (a native
-# shim that must not be bundled). Mirrors the old Dagger `withToolkit`.
-RUN cd packages/toolkit && bun build ./src/index.ts --compile --external ffmpeg-static --outfile=/usr/local/bin/toolkit \
-    && chmod +x /usr/local/bin/toolkit \
-    && toolkit --version
+# Built artifacts from the build stage.
+COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
+COPY --from=build /usr/local/bin/toolkit /usr/local/bin/toolkit
+RUN toolkit --version
 
 # The worker imports `#generated/ha-schema.ts` (type-only, but keep the file
 # present so any runtime `import` resolves). ensure-ha-schema copies the
-# committed stub into place if a generated schema isn't present. Idempotent.
+# committed stub into place if a generated schema isn't present. Idempotent,
+# dependency-free — runs here because it writes into the source tree.
 RUN bun packages/temporal/scripts/ensure-ha-schema.ts
 
 ARG VERSION=dev
@@ -255,9 +293,8 @@ ENV GIT_SHA=${GIT_SHA}
 ENV NODE_ENV=production
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 
-# Point Bun's runtime install cache at a writable path (the base sets
-# BUN_INSTALL=/usr/local, whose install/cache is root-owned) — mirrors the old
-# Dagger image's BUN_INSTALL_CACHE_DIR fix.
+# Point Bun's runtime install cache at a writable path — the runtime user may
+# not be able to write the default root-owned cache location.
 ENV BUN_INSTALL_CACHE_DIR=/tmp/bun-install-cache
 
 # Run from the package dir so Bun resolves this package's tsconfig + imports map
@@ -265,9 +302,12 @@ ENV BUN_INSTALL_CACHE_DIR=/tmp/bun-install-cache
 WORKDIR /app/packages/temporal
 CMD ["bun", "src/worker.ts"]
 
-FROM base AS smoke
+FROM runtime AS smoke
+# The smoke harness ships in CI context only — the scoped source COPY
+# excludes .buildkite, so stage it here (never in the pushed image stage).
+COPY .buildkite/scripts/smoke-app-in-image.ts /app/.buildkite/scripts/smoke-app-in-image.ts
 ARG SMOKE_TARGET=temporal-worker
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 RUN bun /app/.buildkite/scripts/smoke-app-in-image.ts
 
-FROM base AS image
+FROM runtime AS image

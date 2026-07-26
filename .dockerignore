@@ -14,3 +14,8 @@ node_modules
 .claude
 sandbox
 packages/docs
+# Heavy assets no image needs: test snapshots (multi-MiB SVG/PNG fixtures) and
+# the personal-site blog media (videos/images). Keeps them out of the build
+# context AND out of scoped runtime source COPYs (e.g. scout's report package).
+**/__snapshots__
+packages/sjer.red/src/content

@@ -2,7 +2,7 @@
 # CI toolchain image — baked from the repo's .mise.toml so agents run the
 # EXACT tool versions developers run. Rebuilt every main build via registry
 # cache (near-free when unchanged); the toolchain layers invalidate on
-# .mise.toml changes and the bun-cache layer on manifest/lockfile changes.
+# .mise.toml changes.
 
 FROM debian:bookworm-slim@sha256:7b140f374b289a7c2befc338f42ebe6441b7ea838a042bbd5acbfca6ec875818 AS base
 
@@ -45,26 +45,13 @@ ARG CLAUDE_CODE_VERSION=2.1.175
 ENV BUN_INSTALL=/usr/local
 RUN bun add -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" && claude --version
 
-# Throwaway stage: warm the bun download cache from the workspace manifests
-# (same enumeration as the app images' install layer). Only /opt/bun-cache is
-# copied into the final image — node_modules and the manifest tree are
-# discarded. CI's per-step `bun install --frozen-lockfile` then resolves
-# packages from local disk: measured 13s warm vs 25-72s network-cold, ~11-15
-# installs per main build. A stale cache (lockfile changed since the last
-# image push) degrades gracefully — bun fetches the delta from the network.
-FROM base AS bun-cache-warm
-ENV BUN_INSTALL_CACHE_DIR=/opt/bun-cache
-COPY --parents \
-  package.json bun.lock bunfig.toml patches/ scripts/package.json \
-  packages/*/package.json packages/*/packages/*/package.json \
-  packages/homelab/src/cdk8s/package.json \
-  packages/homelab/src/helm-types/package.json \
-  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
-  ./
-RUN bun install --frozen-lockfile
-
-FROM base
-COPY --from=bun-cache-warm /opt/bun-cache /opt/bun-cache
-ENV BUN_INSTALL_CACHE_DIR=/opt/bun-cache
+# The bun download cache is NOT baked into this image anymore. The old
+# bun-cache-warm stage added ~1 GiB compressed that re-pushed/re-pulled on
+# every lockfile change; CI pods now share a persistent node-local cache
+# volume instead (buildkite-bun-cache PVC, mounted by the agent-stack
+# pod-spec-patch in packages/homelab/src/cdk8s/src/resources/argo-applications/
+# buildkite.ts, with BUN_INSTALL_CACHE_DIR pointing at the mount). The shared
+# cache stays warm across builds without living in the image; if it's absent,
+# bun degrades gracefully to network fetches.
 
 CMD ["bash"]

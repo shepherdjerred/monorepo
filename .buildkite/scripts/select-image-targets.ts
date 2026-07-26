@@ -30,24 +30,56 @@ export const ALL_IMAGE_TARGETS = [
   "infra",
 ].sort();
 
-// Paths whose change means "build everything". bun.lock is deliberately NOT
-// here: lockfile changes are attributed per image via the closure fingerprint
-// below (with fail-open to ALL on any parse surprise). Root package.json and
-// scripts/package.json stay global: every Dockerfile COPYs the full manifest
-// tree for its filtered install, and both sit outside any image's workspace
-// closure while still shaping resolution for all of them.
+// Paths whose change means "build everything", unconditionally. Deliberately
+// NOT here, because their changes are attributed per image instead (each with
+// fail-open to ALL on any parse surprise):
+// - bun.lock — closure resolution fingerprints (below).
+// - package.json / scripts/package.json — content-aware: a delta confined to
+//   devDependencies/scripts is repo tooling that ships in no image; the
+//   accompanying bun.lock change is attributed by the fingerprints. Any other
+//   key (workspaces, overrides, patchedDependencies, trustedDependencies, …)
+//   still selects ALL.
+// - patches/ — each patch file maps to one dependency via the manifest's
+//   patchedDependencies; only images whose closure contains that dependency
+//   are selected.
+// - .buildkite/ — only the files that shape image builds/selection are
+//   global; other CI scripts don't change image content.
 const GLOBAL_IMAGE_INPUTS = [
-  ".buildkite/",
+  ".buildkite/pipeline.yml",
+  ".buildkite/scripts/bake-images.sh",
+  ".buildkite/scripts/bake-retry.sh",
+  ".buildkite/scripts/buildkit-env.sh",
+  ".buildkite/scripts/docker-env.sh",
+  ".buildkite/scripts/select-image-targets.ts",
+  // Staged into every Dockerfile's smoke stage — a harness change must
+  // re-run every image's in-image smoke.
+  ".buildkite/scripts/smoke-app-in-image.ts",
   ".dockerignore",
   ".mise.toml",
   "docker-bake.hcl",
   "bunfig.toml",
-  "package.json",
-  "scripts/package.json",
-  "patches/",
   "turbo.json",
   "tsconfig.base.json",
 ];
+
+// Top-level root-manifest keys whose changes are NOT global: repo tooling
+// (devDependencies: turbo, prettier, knip, …) and script text ship in no
+// image. Everything else — workspaces, overrides, patchedDependencies,
+// trustedDependencies, packageManager — shapes resolution or install behavior
+// for every image and stays global.
+const MANIFEST_ATTRIBUTABLE_KEYS = new Set(["devDependencies", "scripts"]);
+
+// Extra workspace owners whose dependency closures are BAKED into an image
+// beyond the primary owner's runtime closure: temporal embeds the compiled
+// toolkit CLI, and the game images bake their frontend's vite build. Their
+// resolved deps must join the target's lockfile/patch attribution — a
+// toolkit-only or frontend-only dep bump changes the embedded artifact even
+// though no file under the target's source prefixes changed.
+const TARGET_EXTRA_OWNERS: Readonly<Record<string, readonly string[]>> = {
+  "temporal-worker": ["@shepherdjerred/toolkit"],
+  "discord-plays-pokemon": ["@discord-plays-pokemon/frontend"],
+  "discord-plays-mario-kart": ["@discord-plays-mario-kart/frontend"],
+};
 
 const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> = {
   "scout-for-lol": ["packages/scout-for-lol/tsconfig.base.json"],
@@ -151,8 +183,108 @@ function dependencyClosure(
   return closure;
 }
 
+/**
+ * Workspace dirs whose resolved dependencies shape the target's image: the
+ * primary owner's closure plus any TARGET_EXTRA_OWNERS closures (embedded
+ * artifacts like the compiled toolkit CLI and baked frontend builds).
+ */
+export function targetClosureDirs(
+  target: string,
+  owner: string,
+  packages: ReadonlyMap<string, WorkspacePackage>,
+): string[] {
+  const names = dependencyClosure(owner, packages);
+  for (const extra of TARGET_EXTRA_OWNERS[target] ?? []) {
+    for (const name of dependencyClosure(extra, packages)) {
+      names.add(name);
+    }
+  }
+  return [...names].map((name) => {
+    const pkg = packages.get(name);
+    if (pkg === undefined) {
+      throw new Error(`workspace disappeared while selecting images: ${name}`);
+    }
+    return pkg.dir.replace(/\/$/, "");
+  });
+}
+
 function pathMatchesPrefix(path: string, prefix: string): boolean {
   return prefix.endsWith("/") ? path.startsWith(prefix) : path === prefix;
+}
+
+/** Base/head contents of one changed file; base null = unreadable at base. */
+export interface FilePair {
+  base: string | null;
+  head: string;
+}
+
+/**
+ * Whether a root-manifest (package.json / scripts/package.json) change must
+ * select every image. Allowlist, not blocklist: the change may skip the
+ * global trigger ONLY if every differing top-level key is in
+ * MANIFEST_ATTRIBUTABLE_KEYS. Parse failure, an unreadable base, or any other
+ * differing key → true (fail open).
+ */
+export function manifestChangeIsGlobal(pair: FilePair): boolean {
+  if (pair.base === null) {
+    return true;
+  }
+  let baseRaw: unknown;
+  let headRaw: unknown;
+  try {
+    baseRaw = JSON.parse(pair.base);
+    headRaw = JSON.parse(pair.head);
+  } catch {
+    return true;
+  }
+  if (!isRecord(baseRaw) || !isRecord(headRaw)) {
+    return true;
+  }
+  const keys = new Set([...Object.keys(baseRaw), ...Object.keys(headRaw)]);
+  for (const key of keys) {
+    const same =
+      JSON.stringify(baseRaw[key] ?? null) ===
+      JSON.stringify(headRaw[key] ?? null);
+    if (!same && !MANIFEST_ATTRIBUTABLE_KEYS.has(key)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Resolve a changed patch file to the "dep@version" it patches via the HEAD
+ * root manifest's patchedDependencies ("dep@version" → "patches/<file>").
+ * Patches apply to one exact resolved version, so the caller matches the full
+ * key against resolved lockfile ids — an image whose closure resolves a
+ * DIFFERENT version of the same dep is correctly unaffected. Returns null
+ * when the file has no manifest entry (the caller fails open); an
+ * added/removed patch also changes patchedDependencies itself, which is a
+ * global key in manifestChangeIsGlobal.
+ */
+export function patchedDependencyKey(
+  path: string,
+  rootManifestHead: string,
+): string | null {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(rootManifestHead);
+  } catch {
+    return null;
+  }
+  if (!isRecord(raw)) {
+    return null;
+  }
+  const patched = raw["patchedDependencies"];
+  if (!isRecord(patched)) {
+    return null;
+  }
+  for (const [key, value] of Object.entries(patched)) {
+    if (value === path) {
+      return key;
+    }
+  }
+  return null;
 }
 
 /**
@@ -433,10 +565,69 @@ export function closureFingerprint(
   return [...acc].sort().join("\n");
 }
 
+/**
+ * Every resolved package ID ("name@version") reachable from the closure's
+ * workspace dirs in this lockfile, plus the workspace member names. Same
+ * graph walk as closureFingerprint, accumulating ids instead of resolution
+ * fingerprint lines — used to match version-exact patchedDependencies keys.
+ * Returns null when a closure dir is missing from the lockfile (membership
+ * changed → caller fails open).
+ */
+export function closurePackageIds(
+  closureDirs: readonly string[],
+  lock: Lockfile,
+): Set<string> | null {
+  const ids = new Set<string>();
+  const queue: { name: string; parentName: string; required: boolean }[] = [];
+  for (const dir of closureDirs) {
+    const workspace = lock.workspaces.get(dir);
+    if (workspace === undefined) return null;
+    ids.add(workspace.name);
+    for (const [name, { spec, required }] of Object.entries(workspace.deps)) {
+      if (!spec.startsWith("workspace:"))
+        queue.push({ name, parentName: workspace.name, required });
+    }
+  }
+  const seen = new Set<string>();
+  while (queue.length > 0) {
+    const next = queue.pop();
+    if (next === undefined) break;
+    const key = resolvePackageKey(next.name, next.parentName, lock.packages);
+    if (key === null) {
+      if (next.required)
+        throw new Error(
+          `lockfile has no resolution for ${next.name} under ${next.parentName}`,
+        );
+      continue;
+    }
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const entry = lock.packages.get(key);
+    if (entry === undefined) throw new Error(`lockfile lost key ${key}`);
+    ids.add(entry.id);
+    const parentName = packageNameOfId(entry.id);
+    // Workspace members reached through the graph are covered by closureDirs.
+    if (entry.id.includes("@workspace:")) continue;
+    for (const { field, required } of PACKAGE_DEP_FIELDS) {
+      for (const name of Object.keys(depMap(entry.meta, field))) {
+        queue.push({ name, parentName, required });
+      }
+    }
+  }
+  return ids;
+}
+
 export interface LockfilePair {
   /** null when the base lockfile is unreadable — treated as fully changed. */
   base: string | null;
   head: string;
+}
+
+/** Optional changed-file contents the selector attributes precisely. */
+export interface SelectorInputs {
+  lockfiles?: LockfilePair;
+  rootPackageJson?: FilePair;
+  scriptsPackageJson?: FilePair;
 }
 
 function lockfileChangedTargets(
@@ -448,14 +639,7 @@ function lockfileChangedTargets(
   const head = parseLockfile(lockfiles.head);
   const changed = new Set<string>();
   for (const [target, owner] of Object.entries(TARGET_OWNERS)) {
-    const closureDirs = [...dependencyClosure(owner, packages)].map((name) => {
-      const pkg = packages.get(name);
-      if (pkg === undefined)
-        throw new Error(
-          `workspace disappeared while selecting images: ${name}`,
-        );
-      return pkg.dir.replace(/\/$/, "");
-    });
+    const closureDirs = targetClosureDirs(target, owner, packages);
     const baseFp = closureFingerprint(closureDirs, base);
     const headFp = closureFingerprint(closureDirs, head);
     if (baseFp === null || headFp === null || baseFp !== headFp) {
@@ -468,7 +652,7 @@ function lockfileChangedTargets(
 export async function selectImageTargets(
   changedPaths: readonly string[],
   repoRoot = process.cwd(),
-  lockfiles?: LockfilePair,
+  inputs?: SelectorInputs,
 ): Promise<string[]> {
   if (
     changedPaths.some((path) =>
@@ -476,6 +660,22 @@ export async function selectImageTargets(
     )
   ) {
     return ALL_IMAGE_TARGETS;
+  }
+
+  // Root manifests: global unless the delta is confined to attributable keys
+  // (repo tooling). The accompanying bun.lock change — if any — is attributed
+  // by the closure fingerprints below; the root workspace is in no image
+  // closure, so a pure tooling bump correctly selects nothing. A missing pair
+  // fails open.
+  const manifestPairs: readonly (readonly [string, FilePair | undefined])[] = [
+    ["package.json", inputs?.rootPackageJson],
+    ["scripts/package.json", inputs?.scriptsPackageJson],
+  ];
+  for (const [path, pair] of manifestPairs) {
+    if (!changedPaths.includes(path)) continue;
+    if (pair === undefined || manifestChangeIsGlobal(pair)) {
+      return ALL_IMAGE_TARGETS;
+    }
   }
 
   const packages = await loadWorkspaces(repoRoot);
@@ -507,15 +707,56 @@ export async function selectImageTargets(
     }
   }
 
+  // Attribute each changed patch file to the images whose closure contains
+  // the patched dependency, via the HEAD manifest + HEAD lockfile (a
+  // patch-content edit doesn't touch bun.lock, so this reads HEAD state
+  // directly). Any surprise fails OPEN to every target.
+  const patchPaths = changedPaths.filter((path) => path.startsWith("patches/"));
+  if (patchPaths.length > 0) {
+    try {
+      const manifestHead =
+        inputs?.rootPackageJson?.head ??
+        (await Bun.file(`${repoRoot}/package.json`).text());
+      const lockHead =
+        inputs?.lockfiles?.head ??
+        (await Bun.file(`${repoRoot}/bun.lock`).text());
+      const lock = parseLockfile(lockHead);
+      const closureIds = new Map<string, Set<string>>();
+      for (const [target, owner] of Object.entries(TARGET_OWNERS)) {
+        const dirs = targetClosureDirs(target, owner, packages);
+        const ids = closurePackageIds(dirs, lock);
+        if (ids === null) {
+          throw new Error(`closure dirs missing from lockfile for ${target}`);
+        }
+        closureIds.set(target, ids);
+      }
+      for (const path of patchPaths) {
+        const key = patchedDependencyKey(path, manifestHead);
+        if (key === null) {
+          throw new Error(`no patchedDependencies entry for ${path}`);
+        }
+        for (const [target, ids] of closureIds) {
+          if (ids.has(key)) selected.add(target);
+        }
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(
+        `select-image-targets: patch attribution failed (${message}); selecting ALL targets`,
+      );
+      return ALL_IMAGE_TARGETS;
+    }
+  }
+
   if (changedPaths.includes("bun.lock")) {
     // Attribute the lockfile diff to image closures via resolved-dependency
     // fingerprints. Any surprise (schema drift, unreadable base, resolution
     // miss) fails OPEN to every target — selection can only save work, never
     // omit a required image.
     try {
-      if (lockfiles === undefined)
+      if (inputs?.lockfiles === undefined)
         throw new Error("bun.lock changed but no lockfile contents provided");
-      for (const target of lockfileChangedTargets(lockfiles, packages)) {
+      for (const target of lockfileChangedTargets(inputs.lockfiles, packages)) {
         selected.add(target);
       }
     } catch (error) {
@@ -550,11 +791,12 @@ export async function changedPathsSince(
   return stdout.split("\0").filter((path) => path.length > 0);
 }
 
-async function baseLockfile(
+async function baseFile(
   base: string,
+  path: string,
   repoRoot = process.cwd(),
 ): Promise<string | null> {
-  const proc = Bun.spawn(["git", "show", `${base}:bun.lock`], {
+  const proc = Bun.spawn(["git", "show", `${base}:${path}`], {
     cwd: repoRoot,
     stdout: "pipe",
     stderr: "inherit",
@@ -565,6 +807,13 @@ async function baseLockfile(
   return stdout;
 }
 
+async function changedFilePair(base: string, path: string): Promise<FilePair> {
+  return {
+    base: await baseFile(base, path),
+    head: await Bun.file(path).text(),
+  };
+}
+
 async function main(): Promise<void> {
   const baseFlag = Bun.argv.indexOf("--base");
   const base = baseFlag === -1 ? undefined : Bun.argv[baseFlag + 1];
@@ -573,16 +822,22 @@ async function main(): Promise<void> {
     process.exit(2);
   }
   const changedPaths = await changedPathsSince(base);
-  let lockfiles: LockfilePair | undefined;
+  const inputs: SelectorInputs = {};
   if (changedPaths.includes("bun.lock")) {
-    lockfiles = {
-      base: await baseLockfile(base),
-      head: await Bun.file("bun.lock").text(),
-    };
+    inputs.lockfiles = await changedFilePair(base, "bun.lock");
+  }
+  if (changedPaths.includes("package.json")) {
+    inputs.rootPackageJson = await changedFilePair(base, "package.json");
+  }
+  if (changedPaths.includes("scripts/package.json")) {
+    inputs.scriptsPackageJson = await changedFilePair(
+      base,
+      "scripts/package.json",
+    );
   }
   console.log(
     JSON.stringify(
-      await selectImageTargets(changedPaths, process.cwd(), lockfiles),
+      await selectImageTargets(changedPaths, process.cwd(), inputs),
     ),
   );
 }

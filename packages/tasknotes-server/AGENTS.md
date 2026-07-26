@@ -2,9 +2,12 @@
 
 Hono HTTP server (Bun runtime) that reads/writes task markdown files and exposes the TaskNotes API. Designed to run alongside obsidian-headless (official Obsidian CLI) as a K8s sidecar sharing a vault volume.
 
-## NOT a workspace member
+## Workspace member
 
-This package has its own `node_modules` — always `cd packages/tasknotes-server` before running commands.
+This package is a member of the root Bun workspace (one root `bun.lock`,
+isolated linker) — `bun install` at the repo root covers it. `cd
+packages/tasknotes-server` before running package-scoped commands like
+`bun test` or `bunx eslint`.
 
 ## Quick Reference
 
