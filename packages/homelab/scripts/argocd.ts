@@ -10,7 +10,8 @@
  *
  * Usage:
  *   bun packages/homelab/scripts/argocd.ts sync <app> [--prune] [--timeout <s>] [--dry-run]
- *   bun packages/homelab/scripts/argocd.ts delete-application <app> [--timeout <s>] [--dry-run]
+ *   bun packages/homelab/scripts/argocd.ts delete-application <app> \
+ *       --project <project> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts health-wait <app> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts tree-health-wait <app> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts wait-deletion <app> \
@@ -157,23 +158,31 @@ async function sync(
  */
 async function deleteApplication(
   appName: string,
+  project: string,
   timeoutSeconds: number,
   dryRun: boolean,
 ): Promise<void> {
   console.log(
-    `--- argocd delete-application: ${appName}${dryRun ? " (dry run)" : ""}`,
+    `--- argocd delete-application: ${project}/${appName}${dryRun ? " (dry run)" : ""}`,
   );
   if (dryRun) {
     console.log(
-      `DRYRUN: would foreground-cascade delete ArgoCD app ${appName}`,
+      `DRYRUN: would foreground-cascade delete ArgoCD app ${project}/${appName}`,
     );
     return;
   }
 
   const token = requireEnv("ARGOCD_TOKEN");
-  const url =
-    `${serverUrl()}/api/v1/applications/${encodeURIComponent(appName)}` +
-    "?cascade=true&propagationPolicy=foreground";
+  const url = new URL(
+    `/api/v1/applications/${encodeURIComponent(appName)}`,
+    serverUrl(),
+  );
+  url.searchParams.set("cascade", "true");
+  url.searchParams.set("propagationPolicy", "foreground");
+  // Argo CD intentionally returns HTTP 403 for a missing Application when the
+  // project is omitted. Fully scoping the request lets an authorized caller
+  // receive HTTP 404 and keeps repeated teardown runs idempotent.
+  url.searchParams.set("project", project);
   const res = await fetch(url, {
     method: "DELETE",
     headers: {
@@ -194,7 +203,11 @@ async function deleteApplication(
     return;
   }
 
-  const getUrl = `${serverUrl()}/api/v1/applications/${encodeURIComponent(appName)}`;
+  const getUrl = new URL(
+    `/api/v1/applications/${encodeURIComponent(appName)}`,
+    serverUrl(),
+  );
+  getUrl.searchParams.set("project", project);
   const deadline = Date.now() + timeoutSeconds * 1000;
   let elapsed = 0;
   while (Date.now() < deadline) {
@@ -341,7 +354,7 @@ function usage(): never {
       "  bun packages/homelab/scripts/argocd.ts sync <app> " +
       "[--prune] [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts delete-application <app> " +
-      "[--timeout <s>] [--dry-run]\n" +
+      "--project <project> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts health-wait <app> " +
       "[--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts tree-health-wait <app> " +
@@ -397,13 +410,20 @@ async function main(): Promise<void> {
         argv.includes("--prune"),
       );
       return;
-    case "delete-application":
+    case "delete-application": {
+      const project = flag(argv, "project");
+      if (project === undefined) {
+        console.error("--project is required for delete-application.");
+        usage();
+      }
       await deleteApplication(
         app,
+        project,
         timeoutOverride ?? DEFAULT_DELETION_TIMEOUT_S,
         dryRun,
       );
       return;
+    }
     case "health-wait":
       await healthWait(
         app,
