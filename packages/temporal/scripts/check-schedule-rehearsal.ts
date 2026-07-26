@@ -13,8 +13,8 @@
  * tree mounted WITHOUT `.git` (so the script git-inits a scratch repo). This
  * driver reproduces that shape locally:
  *
- *  1. Copy the repo tree to a temp dir, excluding `.git`, `node_modules`,
- *     `dist`, and `.eslintcache` — matching the old Dagger exclude list.
+ *  1. Copy the repo tree to a temp dir, excluding source-control and generated
+ *     dependency/build/cache directories.
  *  2. Ensure the `cog` (cogapp) CLI is on PATH — the worker image bakes in
  *     cogapp system-wide; locally we shim `uvx --from cogapp==<pinned> cog`
  *     when a bare `cog` isn't already present.
@@ -79,6 +79,7 @@ async function copyRepoTree(dest: string): Promise<void> {
       "--exclude=dist",
       "--exclude=.eslintcache",
       "--exclude=.turbo",
+      "--exclude=.venv",
       `${REPO_ROOT}/`,
       `${dest}/`,
     ],

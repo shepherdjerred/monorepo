@@ -2,8 +2,10 @@ import { describe, expect, test } from "bun:test";
 
 import SYSTEM_PROMPT from "#src/review/prompts/system/2-review-text.txt";
 import USER_PROMPT from "#src/review/prompts/user/2-review-text.txt";
-import FRIEND_GROUP_HISTORY from "#src/review/prompts/context/glitter-boys-history.txt";
-import RELATIONSHIP_GRAPH from "#src/review/prompts/context/relationships.txt";
+import {
+  friendGroupHistory,
+  relationshipContextText,
+} from "@shepherdjerred/glitter-context";
 
 import { generateReviewTextStage } from "#src/review/pipeline-stages.ts";
 import type { OpenAIClient, ModelConfig } from "#src/review/pipeline-types.ts";
@@ -166,16 +168,16 @@ describe("generateReviewTextStage — Stage 2 system prompt injection", () => {
     expect(systemMsg.content).toContain(UNIQUE_INSTRUCTIONS_MARKER);
     expect(systemMsg.content).toContain(UNIQUE_STYLE_AUTHOR_MARKER);
 
-    const historyMarker = FRIEND_GROUP_HISTORY.trim().split("\n")[0];
+    const historyMarker = friendGroupHistory.trim().split("\n")[0];
     if (historyMarker === undefined || historyMarker.length === 0) {
-      throw new Error("glitter-boys-history.txt unexpectedly empty");
+      throw new Error("shared Glitter history unexpectedly empty");
     }
     expect(systemMsg.content).toContain(historyMarker);
     expect(systemMsg.content).toContain("Glitter Boys");
 
-    expect(systemMsg.content).toContain("digraph");
-    const graphSnippet = RELATIONSHIP_GRAPH.trim().slice(0, 80);
+    const graphSnippet = relationshipContextText().trim().slice(0, 80);
     expect(systemMsg.content).toContain(graphSnippet);
+    expect(systemMsg.content).toContain("Caitlyn ↔ Richard (Exes)");
 
     expect(systemMsg.content).toContain(REVIEWER_NAME);
     expect(systemMsg.content).toContain(PLAYER_NAME);

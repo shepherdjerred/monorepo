@@ -96,6 +96,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // activity carries its own startToCloseTimeout + retry budget.
   "observeReviewSignalsWorkflow",
   "runGlitterCorpusDaily",
+  "runGlitterContextRefresh",
 ]);
 
 const SLACK_MS = 5 * ONE_MINUTE;
@@ -237,6 +238,31 @@ describe("Glitter corpus schedule", () => {
     const configured = configuredEnvironment(schedule);
     expect(
       buildScheduleState(schedule, configured, {
+        paused: false,
+      }),
+    ).toEqual({ paused: false });
+  });
+});
+
+describe("Glitter context refresh schedule", () => {
+  test("uses its isolated queue and remains paused through credential setup", () => {
+    const schedule = findScheduleById("glitter-context-refresh-weekly");
+    expect(schedule.taskQueue).toBe("glitter-context");
+    expect(schedule.cronExpression).toBe("0 11 * * 1");
+    expect(schedule.args).toEqual([{}]);
+    expect(buildScheduleState(schedule, {}).paused).toBe(true);
+    expect(
+      buildScheduleState(schedule, configuredEnvironment(schedule)),
+    ).toEqual({
+      paused: true,
+      note: "Awaiting credentialed dry-run against the first approved complete snapshot",
+    });
+  });
+
+  test("preserves the operator unpause after acceptance", () => {
+    const schedule = findScheduleById("glitter-context-refresh-weekly");
+    expect(
+      buildScheduleState(schedule, configuredEnvironment(schedule), {
         paused: false,
       }),
     ).toEqual({ paused: false });

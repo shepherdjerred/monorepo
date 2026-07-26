@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.sjer.red/glitter-context/people.schema.json",
+  "title": "Glitter people",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "people"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "people": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "displayName", "kind", "aliases", "discordUserIds"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "displayName": { "type": "string", "minLength": 1 },
+          "kind": { "enum": ["person", "group"] },
+          "aliases": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "discordUserIds": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^\\d{17,20}$" }
+          }
+        }
+      }
+    }
+  }
+}

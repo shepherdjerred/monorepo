@@ -1,63 +1,36 @@
 import { describe, expect, test } from "bun:test";
-import { z } from "zod";
-import { Glob } from "bun";
-import path from "node:path";
 import {
   buildPersonaPrompt,
   buildStyleContext,
 } from "@shepherdjerred/birmel/persona/style-transform.ts";
+import {
+  getStyleCard,
+  listStyleCardNames,
+} from "@shepherdjerred/glitter-context";
+import { StyleCardSchema } from "@shepherdjerred/glitter-context/schema";
 
-const StyleCardSchema = z.object({
-  author: z.string(),
-  voice: z.array(z.string()),
-  style_markers: z.array(z.string()),
-  personality: z.array(z.string()),
-  humor_or_tone: z.array(z.string()),
-  how_to_mimic: z.array(z.string()),
-  sample_messages: z.array(z.string()),
-  summary: z.string(),
-});
-
-const STYLE_CARDS_DIR = path.resolve(import.meta.dir, "style-cards");
-
-async function findStyleCardFiles(): Promise<string[]> {
-  const glob = new Glob("*_style.json");
-  const files: string[] = [];
-  for await (const filename of glob.scan({ cwd: STYLE_CARDS_DIR })) {
-    files.push(filename);
-  }
-  return files.toSorted();
-}
-
-describe("birmel style cards on disk", () => {
-  test("at least 10 style cards are shipped", async () => {
-    const files = await findStyleCardFiles();
-    expect(files.length).toBeGreaterThanOrEqual(10);
+describe("shared Birmel style cards", () => {
+  test("all 13 style cards are shipped", () => {
+    expect(listStyleCardNames()).toHaveLength(13);
   });
 
-  test("every shipped style card parses against StyleCardSchema", async () => {
-    const files = await findStyleCardFiles();
-    expect(files.length).toBeGreaterThan(0);
-
-    for (const filename of files) {
-      const filePath = path.join(STYLE_CARDS_DIR, filename);
-      const raw: unknown = JSON.parse(await Bun.file(filePath).text());
-      const result = StyleCardSchema.safeParse(raw);
-      if (!result.success) {
-        throw new Error(
-          `style card "${filename}" failed schema validation: ${result.error.message}`,
-        );
+  test("every shared style card parses against StyleCardSchema", () => {
+    for (const name of listStyleCardNames()) {
+      const card = getStyleCard(name);
+      if (card === undefined) {
+        throw new Error(`style card "${name}" is not loadable`);
       }
-      expect(result.data.author.length).toBeGreaterThan(0);
-      expect(result.data.voice.length).toBeGreaterThan(0);
-      expect(result.data.sample_messages.length).toBeGreaterThan(0);
+      const parsed = StyleCardSchema.parse(card);
+      expect(parsed.author.length).toBeGreaterThan(0);
+      expect(parsed.voice.length).toBeGreaterThan(0);
+      expect(parsed.sample_messages.length).toBeGreaterThan(0);
     }
   });
 });
 
 describe("buildStyleContext", () => {
   test("returns a style context for an existing persona (e.g. virmel)", async () => {
-    const ctx = await buildStyleContext("virmel");
+    const ctx = buildStyleContext("virmel");
     if (ctx === null) {
       throw new Error("expected style context for virmel, got null");
     }
@@ -67,14 +40,14 @@ describe("buildStyleContext", () => {
   });
 
   test("returns null when persona file is missing", async () => {
-    const ctx = await buildStyleContext("does-not-exist-9f8e7d");
+    const ctx = buildStyleContext("does-not-exist-9f8e7d");
     expect(ctx).toBeNull();
   });
 });
 
 describe("buildPersonaPrompt", () => {
   test("produces a structured prompt for an existing persona", async () => {
-    const prompt = await buildPersonaPrompt("virmel");
+    const prompt = buildPersonaPrompt("virmel");
     if (prompt === null) {
       throw new Error("expected persona prompt for virmel, got null");
     }
@@ -88,7 +61,7 @@ describe("buildPersonaPrompt", () => {
   });
 
   test("returns null when persona file is missing (silent-skip path)", async () => {
-    const prompt = await buildPersonaPrompt("does-not-exist-9f8e7d");
+    const prompt = buildPersonaPrompt("does-not-exist-9f8e7d");
     expect(prompt).toBeNull();
   });
 });

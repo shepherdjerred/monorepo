@@ -1,6 +1,43 @@
 import { exportDashboardWithHelmEscaping } from "./dashboard-export.ts";
 import { statPanel, timeseriesPanel } from "./dashboard-panels.ts";
 
+function createGlitterContextPanels() {
+  return [
+    statPanel({
+      id: 406,
+      title: "Glitter Context People Refreshed",
+      description:
+        "Style cards refreshed by the latest checksum-verified weekly context run.",
+      expr: 'max(glitter_context_refresh_people{state="refreshed"}) or on() vector(0)',
+      legend: "people",
+      x: 0,
+      y: 96,
+      w: 6,
+      h: 4,
+    }),
+    timeseriesPanel({
+      id: 407,
+      title: "Glitter Context Refresh Outcomes",
+      description:
+        "Weekly context workflow outcomes and evidence-backed relationship updates.",
+      targets: [
+        {
+          expr: "sum by (outcome) (increase(glitter_context_refresh_runs_total[30d])) or on() vector(0)",
+          legend: "runs {{outcome}}",
+        },
+        {
+          expr: "max(glitter_context_refresh_relationship_proposals) or on() vector(0)",
+          legend: "relationship proposals",
+        },
+      ],
+      x: 6,
+      y: 96,
+      w: 18,
+      h: 4,
+    }),
+  ];
+}
+
 export function createTemporalDashboard() {
   return {
     uid: "temporal-dashboard",
@@ -404,6 +441,7 @@ export function createTemporalDashboard() {
         w: 12,
         h: 8,
       }),
+      ...createGlitterContextPanels(),
     ],
   };
 }

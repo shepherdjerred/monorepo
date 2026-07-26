@@ -13,7 +13,7 @@
 # cog (readme-refresh-weekly regenerates the README project-listing tables).
 # scripts/smoke.ts asserts every one of these boots + is on PATH.
 #
-# Multi-stage: deps does a full (dev-inclusive) install to feed the llm-models
+# Multi-stage: deps does a full (dev-inclusive) install to feed shared-package
 # and toolkit builds; prod-deps installs the production-only worker closure;
 # runtime carries the CLI zoo plus COPY-only app layers — it never runs
 # `bun install`. Dev dependencies and the rest of the monorepo source never
@@ -42,12 +42,13 @@ RUN bun install --frozen-lockfile \
   --filter '@shepherdjerred/temporal' \
   --filter '@shepherdjerred/toolkit'
 
-# ── build: gitignored artifacts (llm-models dist + compiled toolkit) ────────
+# ── build: gitignored artifacts (shared dist + compiled toolkit) ────────────
 FROM deps AS build
 COPY --parents \
   tsconfig.base.json \
   packages/temporal \
   packages/code-review \
+  packages/glitter-context \
   packages/llm-models \
   packages/toolkit \
   ./
@@ -57,6 +58,9 @@ COPY --parents \
 # catalog is compiled first. (home-assistant and llm-observability export their
 # `src/` directly and need no build.)
 RUN cd packages/llm-models && bun run build
+# Glitter context also exports gitignored dist files. Its build validates and
+# bundles the language-neutral JSON before Temporal imports it at startup.
+RUN cd packages/glitter-context && bun run build
 # Compile the in-tree toolkit CLI into a single static binary. The
 # homelab-audit runbook + preflight shell out to `toolkit pd|bugsink|gf`;
 # it's compiled here (not `bun add -g`) because it lives in the workspace
@@ -270,6 +274,7 @@ COPY --parents \
   tsconfig.base.json \
   packages/temporal \
   packages/code-review \
+  packages/glitter-context \
   packages/home-assistant \
   packages/llm-models \
   packages/llm-observability \
@@ -277,6 +282,7 @@ COPY --parents \
 
 # Built artifacts from the build stage.
 COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
+COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/dist
 COPY --from=build /usr/local/bin/toolkit /usr/local/bin/toolkit
 RUN toolkit --version
 

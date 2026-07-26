@@ -315,6 +315,21 @@ async function main(): Promise<void> {
     maxConcurrentActivityTaskExecutions: 1,
   });
 
+  const glitterContextWorker = await Worker.create({
+    connection,
+    namespace: "default",
+    taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
+    workflowsPath,
+    activities,
+    maxConcurrentActivityTaskExecutions: 1,
+    maxConcurrentWorkflowTaskExecutions: 1,
+  });
+
+  jsonLog("info", "Worker created", {
+    taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
+    maxConcurrentActivityTaskExecutions: 1,
+  });
+
   const clientConnection = await Connection.connect({ address });
   const client = new Client({ connection: clientConnection });
   await registerSchedules(client);
@@ -399,6 +414,16 @@ async function main(): Promise<void> {
         { state: glitterCorpusState },
       );
     }
+    const glitterContextState = glitterContextWorker.getState();
+    if (glitterContextState === "RUNNING") {
+      glitterContextWorker.shutdown();
+    } else {
+      jsonLog(
+        "info",
+        "glitter-context worker not RUNNING, skipping shutdown()",
+        { state: glitterContextState },
+      );
+    }
     await stopMetricsServer();
     await shutdownTracing();
   };
@@ -417,6 +442,7 @@ async function main(): Promise<void> {
     agentTaskWorker.run(),
     prBabysitWorker.run(),
     glitterCorpusWorker.run(),
+    glitterContextWorker.run(),
   ];
   void restoreGlitterCorpusMetricsAfterWorkerStart();
   await Promise.all(workerRuns);

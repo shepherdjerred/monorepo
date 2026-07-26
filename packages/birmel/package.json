@@ -45,6 +45,7 @@
     "@prisma/client-runtime-utils": "7.8.0",
     "@sentry/bun": "10.53.1",
     "@shepherdjerred/llm-observability": "workspace:*",
+    "@shepherdjerred/glitter-context": "workspace:*",
     "@snazzah/davey": "^0.1.11",
     "@voltagent/core": "^2.7.4",
     "@voltagent/libsql": "^2.1.2",

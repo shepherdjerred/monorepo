@@ -1,4 +1,5 @@
 import {
+  getStyleCard,
   PersonalityMetadataSchema,
   type Personality,
 } from "@scout-for-lol/data/index.ts";
@@ -32,19 +33,7 @@ function getPromptsDir(): string {
   return url.pathname.replace(/\/src\/index\.ts$/, "/src/review/prompts");
 }
 
-// Resolve the analysis style card directory (packages/analysis/llm-out)
-function getStyleCardsDir(): string {
-  const dataPackageUrl = import.meta.resolve("@scout-for-lol/data");
-  const url = new URL(dataPackageUrl);
-  // Navigate from data/src/index.ts -> packages/data/src/review/prompts/style-cards
-  return url.pathname.replace(
-    /\/src\/index\.ts$/,
-    "/src/review/prompts/style-cards",
-  );
-}
-
 const PROMPTS_DIR = getPromptsDir();
-const STYLECARDS_DIR = getStyleCardsDir();
 const EXCLUDED = new Set(["generic.json"]);
 
 /**
@@ -82,37 +71,17 @@ async function loadPersonality(basename: string): Promise<Personality> {
   const instructionsText = await Bun.file(txtPath).text();
   const instructions = instructionsText.trim();
 
-  // Load a matching style card from analysis/llm-out (required)
-  const normalizedBasename = basename.toLowerCase();
-  const normalizedDisplayName = metadata.name
-    .toLowerCase()
-    .replaceAll(/[^a-z0-9._-]+/g, "_")
-    .replaceAll(/^_+|_+$/g, "");
-  const styleCardCandidates = [
-    ...new Set([normalizedBasename, normalizedDisplayName]),
-  ];
-
-  let styleCard: string | undefined;
-  for (const candidate of styleCardCandidates) {
-    const stylePath = `${STYLECARDS_DIR}/${candidate}_style.json`;
-    const styleFile = Bun.file(stylePath);
-    if (await styleFile.exists()) {
-      const text = await styleFile.text();
-      styleCard = text.trim();
-      break;
-    }
-  }
-
+  const styleCard = getStyleCard(basename);
   if (styleCard === undefined) {
     throw new Error(
-      `Missing required style card for personality "${basename}". Expected one of: ${styleCardCandidates.map((c) => `${c}_style.json`).join(", ")}`,
+      `Missing required shared style card for personality "${basename}"`,
     );
   }
 
   return {
     metadata,
     instructions,
-    styleCard,
+    styleCard: JSON.stringify(styleCard),
     filename: basename,
   };
 }
@@ -185,22 +154,8 @@ async function listValidPersonalities(): Promise<Personality[]> {
   }
 
   const valid: Personality[] = [];
-  const discarded: string[] = [];
-
   for (const base of basenames) {
-    try {
-      const personality = await loadPersonality(base);
-      valid.push(personality);
-    } catch (error) {
-      const reason = error instanceof Error ? error.message : String(error);
-      discarded.push(`${base} (${reason})`);
-    }
-  }
-
-  if (discarded.length > 0) {
-    logger.warn(
-      `[ai-review] Discarded personalities due to incomplete data: ${discarded.join("; ")}`,
-    );
+    valid.push(await loadPersonality(base));
   }
 
   if (valid.length === 0) {

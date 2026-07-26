@@ -164,7 +164,7 @@ export async function checkAndStartElections(): Promise<void> {
         }
 
         // Select random candidates and create poll
-        const candidates = await selectRandomCandidates();
+        const candidates = selectRandomCandidates();
         const answers = createElectionAnswers(candidates);
 
         const now = new Date();

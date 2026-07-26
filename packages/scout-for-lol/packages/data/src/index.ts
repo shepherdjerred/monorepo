@@ -1,4 +1,12 @@
 export * from "./model/index.ts";
+export {
+  friendGroupHistory,
+  getPerson,
+  getStyleCard,
+  listStyleCardNames,
+  relationshipContextText,
+} from "@shepherdjerred/glitter-context";
+export type { StyleCard } from "@shepherdjerred/glitter-context/schema";
 export * from "./seasons.ts";
 export * from "./review/art-styles.ts";
 export { ART_STYLES } from "./review/art-styles-list.ts";

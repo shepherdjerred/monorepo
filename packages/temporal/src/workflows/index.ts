@@ -87,6 +87,11 @@ import type {
   ChannelStateResult,
   InventoryResult,
 } from "#activities/glitter-corpus-activity-types.ts";
+import { runGlitterContextRefresh as _runGlitterContextRefresh } from "./glitter-context-refresh.ts";
+import type {
+  GlitterContextRefreshInput,
+  GlitterContextRefreshResult,
+} from "#activities/glitter-context-refresh.ts";
 
 export async function fetchSkillCappedManifest(): Promise<void> {
   return _fetchSkillCappedManifest();
@@ -246,6 +251,12 @@ export async function observeReviewSignalsWorkflow(
 
 export async function runGlitterCorpusInventory(): Promise<InventoryResult> {
   return _runGlitterCorpusInventory();
+}
+
+export async function runGlitterContextRefresh(
+  input: GlitterContextRefreshInput = {},
+): Promise<GlitterContextRefreshResult> {
+  return _runGlitterContextRefresh(input);
 }
 
 export async function runGlitterCorpusBackfill(

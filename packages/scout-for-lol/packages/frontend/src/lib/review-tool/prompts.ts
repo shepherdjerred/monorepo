@@ -3,7 +3,7 @@
  */
 import type { Personality } from "./config/schema.ts";
 import { PersonalityMetadataSchema } from "./config/schema.ts";
-import type { Lane } from "@scout-for-lol/data";
+import { getStyleCard, type Lane } from "@scout-for-lol/data";
 
 // Import personality files
 import aaronJson from "@scout-for-lol/data/review/prompts/personalities/aaron.json";
@@ -33,21 +33,6 @@ import richardTxt from "@scout-for-lol/data/review/prompts/personalities/richard
 import virmelJson from "@scout-for-lol/data/review/prompts/personalities/virmel.json";
 import virmelTxt from "@scout-for-lol/data/review/prompts/personalities/virmel.txt?raw";
 
-// Import style cards
-import aaronStyleCard from "@scout-for-lol/data/review/prompts/style-cards/aaron_style.json";
-import brianStyleCard from "@scout-for-lol/data/review/prompts/style-cards/brian_style.json";
-import caitlynStyleCard from "@scout-for-lol/data/review/prompts/style-cards/caitlyn_style.json";
-import colinStyleCard from "@scout-for-lol/data/review/prompts/style-cards/colin_style.json";
-import dannyStyleCard from "@scout-for-lol/data/review/prompts/style-cards/danny_style.json";
-import edwardStyleCard from "@scout-for-lol/data/review/prompts/style-cards/edward_style.json";
-import hirzaStyleCard from "@scout-for-lol/data/review/prompts/style-cards/hirza_style.json";
-import irfanStyleCard from "@scout-for-lol/data/review/prompts/style-cards/irfan_style.json";
-import jerredStyleCard from "@scout-for-lol/data/review/prompts/style-cards/jerred_style.json";
-import longStyleCard from "@scout-for-lol/data/review/prompts/style-cards/long_style.json";
-import nekoryanStyleCard from "@scout-for-lol/data/review/prompts/style-cards/nekoryan_style.json";
-import richardStyleCard from "@scout-for-lol/data/review/prompts/style-cards/richard_style.json";
-import virmelStyleCard from "@scout-for-lol/data/review/prompts/style-cards/virmel_style.json";
-
 // Import lane contexts
 import topLane from "@scout-for-lol/data/review/prompts/lanes/top.txt?raw";
 import middleLane from "@scout-for-lol/data/review/prompts/lanes/middle.txt?raw";
@@ -59,6 +44,16 @@ import genericLane from "@scout-for-lol/data/review/prompts/lanes/generic.txt?ra
 // Import base prompt template (user prompt for review text stage)
 import basePrompt from "@scout-for-lol/data/review/prompts/user/2-review-text.txt?raw";
 
+function requiredStyleCard(personalityId: string): string {
+  const styleCard = getStyleCard(personalityId);
+  if (styleCard === undefined) {
+    throw new Error(
+      `Missing required shared style card for personality "${personalityId}"`,
+    );
+  }
+  return JSON.stringify(styleCard);
+}
+
 /**
  * Built-in personalities (from prompt files)
  */
@@ -67,79 +62,79 @@ const RAW_BUILTIN_PERSONALITIES: Personality[] = [
     id: "aaron",
     metadata: PersonalityMetadataSchema.parse(aaronJson),
     instructions: aaronTxt,
-    styleCard: JSON.stringify(aaronStyleCard),
+    styleCard: requiredStyleCard("aaron"),
   },
   {
     id: "brian",
     metadata: PersonalityMetadataSchema.parse(brianJson),
     instructions: brianTxt,
-    styleCard: JSON.stringify(brianStyleCard),
+    styleCard: requiredStyleCard("brian"),
   },
   {
     id: "caitlyn",
     metadata: PersonalityMetadataSchema.parse(caitlynJson),
     instructions: caitlynTxt,
-    styleCard: JSON.stringify(caitlynStyleCard),
+    styleCard: requiredStyleCard("caitlyn"),
   },
   {
     id: "colin",
     metadata: PersonalityMetadataSchema.parse(colinJson),
     instructions: colinTxt,
-    styleCard: JSON.stringify(colinStyleCard),
+    styleCard: requiredStyleCard("colin"),
   },
   {
     id: "danny",
     metadata: PersonalityMetadataSchema.parse(dannyJson),
     instructions: dannyTxt,
-    styleCard: JSON.stringify(dannyStyleCard),
+    styleCard: requiredStyleCard("danny"),
   },
   {
     id: "edward",
     metadata: PersonalityMetadataSchema.parse(edwardJson),
     instructions: edwardTxt,
-    styleCard: JSON.stringify(edwardStyleCard),
+    styleCard: requiredStyleCard("edward"),
   },
   {
     id: "hirza",
     metadata: PersonalityMetadataSchema.parse(hirzaJson),
     instructions: hirzaTxt,
-    styleCard: JSON.stringify(hirzaStyleCard),
+    styleCard: requiredStyleCard("hirza"),
   },
   {
     id: "irfan",
     metadata: PersonalityMetadataSchema.parse(irfanJson),
     instructions: irfanTxt,
-    styleCard: JSON.stringify(irfanStyleCard),
+    styleCard: requiredStyleCard("irfan"),
   },
   {
     id: "jerred",
     metadata: PersonalityMetadataSchema.parse(jerredJson),
     instructions: jerredTxt,
-    styleCard: JSON.stringify(jerredStyleCard),
+    styleCard: requiredStyleCard("jerred"),
   },
   {
     id: "long",
     metadata: PersonalityMetadataSchema.parse(longJson),
     instructions: longTxt,
-    styleCard: JSON.stringify(longStyleCard),
+    styleCard: requiredStyleCard("long"),
   },
   {
     id: "nekoryan",
     metadata: PersonalityMetadataSchema.parse(nekoryanJson),
     instructions: nekoryanTxt,
-    styleCard: JSON.stringify(nekoryanStyleCard),
+    styleCard: requiredStyleCard("nekoryan"),
   },
   {
     id: "richard",
     metadata: PersonalityMetadataSchema.parse(richardJson),
     instructions: richardTxt,
-    styleCard: JSON.stringify(richardStyleCard),
+    styleCard: requiredStyleCard("richard"),
   },
   {
     id: "virmel",
     metadata: PersonalityMetadataSchema.parse(virmelJson),
     instructions: virmelTxt,
-    styleCard: JSON.stringify(virmelStyleCard),
+    styleCard: requiredStyleCard("virmel"),
   },
 ];
 

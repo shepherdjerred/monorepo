@@ -8,6 +8,7 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
 import { detectOrphanSchedules } from "./orphan-detection.ts";
 import { buildScheduleState } from "./schedule-state.ts";
+import { GLITTER_CORPUS_STORAGE_ENV } from "./glitter-schedule-environment.ts";
 
 // All cron expressions below are wall-clock local time for the homelab.
 const SCHEDULE_TIMEZONE = "America/Los_Angeles";
@@ -349,14 +350,28 @@ export const SCHEDULES: ScheduleDefinition[] = [
       "GLITTER_DISCORD_GUILD_ID",
       "GLITTER_DISCORD_GUILD_SLUG",
       "GLITTER_DISCORD_DENYLIST_CHANNEL_IDS",
-      "GLITTER_CORPUS_S3_ENDPOINT",
-      "GLITTER_CORPUS_S3_BUCKET",
-      "GLITTER_CORPUS_S3_ACCESS_KEY_ID",
-      "GLITTER_CORPUS_S3_SECRET_ACCESS_KEY",
-      "GLITTER_CORPUS_R2_ENDPOINT",
-      "GLITTER_CORPUS_R2_BUCKET",
-      "GLITTER_CORPUS_R2_ACCESS_KEY_ID",
-      "GLITTER_CORPUS_R2_SECRET_ACCESS_KEY",
+      ...GLITTER_CORPUS_STORAGE_ENV,
+    ],
+  },
+  {
+    id: "glitter-context-refresh-weekly",
+    workflowType: "runGlitterContextRefresh",
+    args: [{}],
+    // Monday 11:00 PT, isolated from Discord capture and after other PR jobs.
+    cronExpression: "0 11 * * 1",
+    taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "3 hours",
+    memo: "Weekly GPT-5.6 Sol refresh of shared Glitter style cards and evidence-backed relationship history from the verified mirrored corpus",
+    initialPauseNote:
+      "Awaiting credentialed dry-run against the first approved complete snapshot",
+    requiredEnvironment: [
+      "GLITTER_DISCORD_GUILD_ID",
+      ...GLITTER_CORPUS_STORAGE_ENV,
+      "OPENAI_API_KEY",
+      "GITHUB_APP_ID",
+      "GITHUB_APP_INSTALLATION_ID",
+      "GITHUB_APP_PRIVATE_KEY",
     ],
   },
   {

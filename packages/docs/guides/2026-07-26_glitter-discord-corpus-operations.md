@@ -238,6 +238,25 @@ The scheduled run is at 04:15 America/Los_Angeles with overlap policy `SKIP`.
 The Temporal dashboard and Prometheus rules expose progress, rate limiting,
 authorization failure, mirror divergence, inventory drift, and snapshot age.
 
+## Shared-context refresh acceptance
+
+Leave `glitter-context-refresh-weekly` paused until the first complete snapshot
+passes recovery verification. Then start one dry run with workflow input
+`{"dryRun":true}` and verify:
+
+- the result names the exact published snapshot checksum;
+- only eligible people are refreshed (20 new messages or 90 days);
+- every style sample is an exact safe corpus candidate;
+- relationship changes cite available message IDs and preserve superseded
+  events as `historical`;
+- `changedFiles` contains only shared-package data and generated-data paths;
+- a second rehearsal is byte-idempotent.
+
+Run once without `dryRun` only after those checks pass. It may open one
+human-reviewed pull request and never auto-merges. A `no-diff` result opens no
+pull request. After reviewing that first PR, unpause the Monday 11:00
+America/Los_Angeles schedule.
+
 ## Incident response
 
 Never repair `latest.json` by hand.
