@@ -229,6 +229,11 @@
     "packages/discord-stream-lifecycle": {
       "entry": ["src/**/*.ts"],
       "project": ["src/**/*.ts"]
+    },
+    "packages/code-review": {
+      "entry": ["src/index.ts", "src/github.ts", "eslint.config.ts"],
+      "project": ["src/**/*.ts", "eslint.config.ts"],
+      "ignoreDependencies": ["eslint"]
     }
   },
   "ignoreExportsUsedInFile": true,
