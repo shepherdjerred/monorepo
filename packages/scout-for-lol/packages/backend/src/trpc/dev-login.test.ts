@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { afterAll, describe, expect, test } from "bun:test";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 
@@ -13,13 +13,11 @@ const TEST_APP_ORIGIN = "https://scout-for-lol.com";
 Bun.env["WEB_APP_ORIGIN"] = TEST_APP_ORIGIN;
 Bun.env["ENVIRONMENT"] = "dev";
 
-const { dbUrl } = createTestDatabase("dev-login-test");
-Bun.env["DATABASE_URL"] = dbUrl;
+const { prisma } = createTestDatabase("dev-login-test");
 resetConfigurationForTests();
 
 const { handleDevLogin, DEV_LOGIN_DEFAULT_DISCORD_ID } =
   await import("#src/trpc/dev-login.ts");
-const { prisma } = await import("#src/database/index.ts");
 const { SESSION_COOKIE, CSRF_COOKIE } = await import("#src/trpc/context.ts");
 
 function devLoginRequest(query = ""): Request {
@@ -38,7 +36,7 @@ function cookieValue(setCookieHeaders: string[], name: string): string {
 
 describe("handleDevLogin", () => {
   test("mints a session for the default fake user and upserts the User row", async () => {
-    const response = await handleDevLogin(devLoginRequest());
+    const response = await handleDevLogin(devLoginRequest(), prisma);
 
     expect(response.status).toBe(302);
     expect(response.headers.get("Location")).toBe(`${TEST_APP_ORIGIN}/app/`);
@@ -70,6 +68,7 @@ describe("handleDevLogin", () => {
       devLoginRequest(
         `?discordId=${customId}&username=${encodeURIComponent("Custom User")}`,
       ),
+      prisma,
     );
 
     expect(response.status).toBe(302);
@@ -83,6 +82,7 @@ describe("handleDevLogin", () => {
   test("rejects a malformed discordId with 400, not a throw", async () => {
     const response = await handleDevLogin(
       devLoginRequest("?discordId=not-a-snowflake"),
+      prisma,
     );
 
     expect(response.status).toBe(400);
@@ -94,6 +94,7 @@ describe("handleDevLogin", () => {
       devLoginRequest(
         `?returnTo=${encodeURIComponent("https://evil.example/")}`,
       ),
+      prisma,
     );
 
     expect(response.status).toBe(302);
@@ -103,6 +104,7 @@ describe("handleDevLogin", () => {
   test("honors a same-app returnTo", async () => {
     const response = await handleDevLogin(
       devLoginRequest(`?returnTo=${encodeURIComponent("/app/g/123")}`),
+      prisma,
     );
 
     expect(response.status).toBe(302);
@@ -115,11 +117,15 @@ describe("handleDevLogin", () => {
     Bun.env["ENVIRONMENT"] = "beta";
     resetConfigurationForTests();
 
-    await expect(handleDevLogin(devLoginRequest())).rejects.toThrow(
+    await expect(handleDevLogin(devLoginRequest(), prisma)).rejects.toThrow(
       /environment=dev/,
     );
 
     Bun.env["ENVIRONMENT"] = "dev";
     resetConfigurationForTests();
   });
+});
+
+afterAll(async () => {
+  await prisma.$disconnect();
 });

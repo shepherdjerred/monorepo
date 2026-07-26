@@ -7,6 +7,7 @@ import { appRouter } from "#src/trpc/router/index.ts";
 import { createContext } from "#src/trpc/context.ts";
 import { handleAuthRoutes } from "#src/trpc/auth-web.ts";
 import { handleDevLogin } from "#src/trpc/dev-login.ts";
+import { prisma } from "#src/database/index.ts";
 import { handleImageRoute } from "#src/trpc/image-routes.ts";
 import { handleReportAiRoute } from "#src/reports/ai/http-route.ts";
 import { handleVersion } from "#src/http/version.ts";
@@ -229,7 +230,7 @@ const server = Bun.serve({
       configuration.environment === "dev" &&
       url.pathname === "/api/dev/login"
     ) {
-      return await handleDevLogin(request);
+      return await handleDevLogin(request, prisma);
     }
 
     const reportAiResponse = await handleReportAiRoute(

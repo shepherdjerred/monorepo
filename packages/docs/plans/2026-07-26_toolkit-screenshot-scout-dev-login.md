@@ -247,3 +247,30 @@ instances` is empty) — the daemon being up isn't sufficient by itself;
   change, so implemented rather than artificially cut.
 - The scout-app auth-flow composition (`--discord-id`) is implemented and
   unit-level-correct but not live-HTTP-verified end-to-end (see Remaining).
+
+## CI Remediation Session Log — 2026-07-26
+
+### Done
+
+- Repaired PR #1685's hard Buildkite failure: `dev-login.test.ts` no longer
+  depends on the process-global default Prisma client, which can be bound to
+  the uninitialized `test.db` by a sibling test suite.
+- `handleDevLogin` now receives its Prisma client from the dev-only HTTP route;
+  the test supplies its isolated, schema-backed test client and disconnects it
+  after the suite.
+- Verified with `bun run --cwd packages/scout-for-lol/packages/backend test`,
+  `bunx turbo run typecheck lint --filter=@scout-for-lol/backend
+--concurrency=1`, and `bun run --cwd packages/scout-for-lol/packages/backend
+check:test-template`.
+
+### Remaining
+
+- [ ] Push this CI remediation commit and wait for Buildkite plus the Codex
+      review gate on the new head.
+
+### Caveats
+
+- The full backend test command still logs expected no-table errors from a
+  separate metrics test's intentionally stubbed default database; the command
+  exits successfully and the dev-login regression is covered by the isolated
+  database client.

@@ -11,7 +11,7 @@
  */
 
 import { z } from "zod";
-import { prisma } from "#src/database/index.ts";
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   buildCookie,
   generateCsrfToken,
@@ -33,7 +33,10 @@ const DEV_LOGIN_DEFAULT_USERNAME = "Dev Test User";
 /** Short-lived on purpose: this is a re-mintable throwaway, not a real login. */
 const DEV_LOGIN_TTL_SECONDS = 24 * 60 * 60;
 
-export async function handleDevLogin(request: Request): Promise<Response> {
+export async function handleDevLogin(
+  request: Request,
+  prisma: Pick<ExtendedPrismaClient, "user">,
+): Promise<Response> {
   if (configuration.environment !== "dev") {
     throw new Error(
       "handleDevLogin invoked outside environment=dev — this must never happen",
