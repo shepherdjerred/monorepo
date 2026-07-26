@@ -79,10 +79,7 @@ export function rowsFromAggregates(
       dimensions: row.label.split(" • "),
       mentionIdentity:
         plan.groupBy === "group"
-          ? {
-              kind: "group",
-              members: row.groupMembers ?? [],
-            }
+          ? groupMentionIdentity(row)
           : plan.groupBys.length === 1 && plan.groupBys[0] === "player"
             ? {
                 kind: "player",
@@ -98,6 +95,18 @@ export function rowsFromAggregates(
     })),
     rowsScanned,
   };
+}
+
+function groupMentionIdentity(
+  row: AggregateRow,
+): Extract<
+  ReportQueryResult["rows"][number]["mentionIdentity"],
+  { kind: "group" }
+> {
+  if (row.groupMembers === null) {
+    throw new Error("Group aggregate is missing member identities.");
+  }
+  return { kind: "group", members: row.groupMembers };
 }
 
 export function cappedLimit(plan: ReportQueryPlan, maxRows: number): number {

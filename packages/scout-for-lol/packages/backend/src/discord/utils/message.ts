@@ -156,6 +156,67 @@ function splitLargeSection(
   return { chunks, currentChunk };
 }
 
+function fencedCodeBlockParts(message: string): {
+  prefix: string;
+  openingFence: string;
+  body: string;
+  closingFence: string;
+} | null {
+  const match = /^([\s\S]*?)(```[^\n]*\n)([\s\S]*)(\n```)$/.exec(message);
+  if (match === null) {
+    return null;
+  }
+  const [, prefix, openingFence, body, closingFence] = match;
+  if (
+    prefix === undefined ||
+    openingFence === undefined ||
+    body === undefined ||
+    closingFence === undefined
+  ) {
+    throw new Error(
+      "Fenced code block match omitted a required capture group.",
+    );
+  }
+  return { prefix, openingFence, body, closingFence };
+}
+
+function splitFencedCodeBlock(
+  message: string,
+  maxLength: number,
+): string[] | null {
+  const parts = fencedCodeBlockParts(message);
+  if (parts === null) {
+    return null;
+  }
+  const chunks: string[] = [];
+  let prefix = parts.prefix;
+  let body = parts.body;
+  while (body.length > 0) {
+    const available =
+      maxLength -
+      prefix.length -
+      parts.openingFence.length -
+      parts.closingFence.length;
+    if (available <= 0) {
+      throw new Error(
+        "Discord message limit cannot accommodate the fenced code block.",
+      );
+    }
+    const boundary = body.lastIndexOf("\n", available);
+    const splitAt = boundary > 0 ? boundary : available;
+    const chunkBody = body.slice(0, splitAt);
+    chunks.push(
+      `${prefix}${parts.openingFence}${chunkBody}${parts.closingFence}`,
+    );
+    body = body.slice(splitAt);
+    if (body.startsWith("\n")) {
+      body = body.slice(1);
+    }
+    prefix = "";
+  }
+  return chunks;
+}
+
 /**
  * Split a message into chunks that respect Discord's character limit
  *
@@ -179,6 +240,11 @@ export function splitMessageIntoChunks(
   // If message fits in one chunk, return it as-is
   if (message.length <= maxLength) {
     return [message];
+  }
+
+  const fencedCodeChunks = splitFencedCodeBlock(message, maxLength);
+  if (fencedCodeChunks !== null) {
+    return fencedCodeChunks;
   }
 
   let chunks: string[] = [];

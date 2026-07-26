@@ -84,6 +84,22 @@ describe("splitMessageIntoChunks", () => {
     }
   });
 
+  test("keeps a fenced table valid in every chunk", () => {
+    const tableRows = Array.from(
+      { length: 12 },
+      (_, index) => `Player ${index.toString()} | ${"value".repeat(8)}`,
+    ).join("\n");
+    const message = `**Weekly table**\n\`\`\`\nPlayer | Score\n--- | ---\n${tableRows}\n\`\`\``;
+    const chunks = splitMessageIntoChunks(message, 100);
+
+    expect(chunks.length).toBeGreaterThan(1);
+    for (const chunk of chunks) {
+      expect(chunk.length).toBeLessThanOrEqual(100);
+      expect(chunk.match(/```/g)).toHaveLength(2);
+    }
+    expect(chunks.join("\n")).toContain("Player 11");
+  });
+
   test("splits at section boundaries when possible", () => {
     const section1 = "## Section 1\nContent for section 1";
     const section2 = "## Section 2\nContent for section 2";

@@ -484,6 +484,21 @@ describe("RENDER clause — leaderboard mention fallbacks", () => {
     expect(result.output.content).toContain(`1. <@${testAccountId("4001")}>`);
     // Bravo has no linked Player row for this server — plain alias.
     expect(result.output.content).toContain("2. Bravo");
+
+    await prisma.player.updateMany({
+      where: { serverId, alias: "Alpha" },
+      data: { discordId: null },
+    });
+    const unlinkedResult = await runReport({
+      prisma,
+      report,
+      trigger: "MANUAL",
+      now,
+    });
+    expect(unlinkedResult.output.content).toContain("1. Alpha");
+    expect(unlinkedResult.output.content).not.toContain(
+      `<@${testAccountId("4001")}>`,
+    );
   });
 
   test("loadPlayerDiscordIds omits players without a linked Discord ID", async () => {

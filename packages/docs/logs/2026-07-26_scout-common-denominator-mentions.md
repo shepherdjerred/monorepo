@@ -204,3 +204,24 @@ or slash-command flag. Full design in
 
 - The local integration suite logs its expected isolated test-database metrics
   warning and best-effort S3 credential warning; the targeted suite passed.
+
+## Session Log — 2026-07-26 (follow-up Codex remediation)
+
+### Done
+
+- Made the live player map authoritative for text report delivery, so a player
+  unlinked after a report-lake fold no longer receives a stale snapshot mention.
+- Made Discord chunking preserve complete fenced tables in every split message.
+- Made missing group member identities fail the report instead of silently
+  rendering an empty group label.
+- Added targeted regression coverage for the unlink and fenced-table cases.
+
+### Remaining
+
+- Commit and publish this follow-up to PR #1678, then await the new Buildkite
+  review gate and any fresh Codex findings.
+
+### Caveats
+
+- Targeted integration tests emit the expected isolated metrics-database and
+  unset-S3 warnings; the tests themselves pass.

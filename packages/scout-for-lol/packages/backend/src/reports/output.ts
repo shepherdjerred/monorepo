@@ -76,13 +76,15 @@ function renderReportOutputSync(
   }
   return {
     content: formatTextReport(params.title, render, params.result, {
-      playerDiscordIds: params.playerDiscordIds ?? new Map(),
+      ...(params.playerDiscordIds === undefined
+        ? {}
+        : { playerDiscordIds: params.playerDiscordIds }),
     }),
     image: null,
   };
 }
 
-type MentionOptions = { playerDiscordIds: Map<number, string> };
+type MentionOptions = { playerDiscordIds?: Map<number, string> };
 
 function formatTextReport(
   title: string,
@@ -111,7 +113,15 @@ function formatTextReport(
   return `**${title}**\n${result.rows
     .map(
       (row, index) =>
-        `${(index + 1).toString()}. ${formatRankedLabel({ label: row.label, index, mentionIdentity: row.mentionIdentity, playerDiscordIds: mentions.playerDiscordIds, mentionCount })} — ${formatValues(result, row)}`,
+        `${(index + 1).toString()}. ${formatRankedLabel({
+          label: row.label,
+          index,
+          mentionIdentity: row.mentionIdentity,
+          ...(mentions.playerDiscordIds === undefined
+            ? {}
+            : { playerDiscordIds: mentions.playerDiscordIds }),
+          mentionCount,
+        })} — ${formatValues(result, row)}`,
     )
     .join("\n")}`;
 }

@@ -26,7 +26,12 @@ export function formatRankedLabel(params: {
   label: string;
   index: number;
   mentionIdentity: ReportMentionIdentity | null;
-  playerDiscordIds: Map<number, string>;
+  /**
+   * The current server player map. Its presence makes the map authoritative:
+   * an absent player has been unlinked or deleted since the lake snapshot.
+   * Omit it only for map-less preview paths, which must use the snapshot value.
+   */
+  playerDiscordIds?: Map<number, string>;
   mentionCount: number;
 }): string {
   if (params.index >= params.mentionCount || params.mentionIdentity === null) {
@@ -36,15 +41,17 @@ export function formatRankedLabel(params: {
     const discordId =
       params.mentionIdentity.playerId === null
         ? params.mentionIdentity.discordId
-        : (params.playerDiscordIds.get(params.mentionIdentity.playerId) ??
-          params.mentionIdentity.discordId);
+        : params.playerDiscordIds === undefined
+          ? params.mentionIdentity.discordId
+          : (params.playerDiscordIds.get(params.mentionIdentity.playerId) ??
+            null);
     return discordId === null
       ? params.mentionIdentity.alias
       : `<@${discordId}>`;
   }
   return params.mentionIdentity.members
     .map((member) => {
-      const discordId = params.playerDiscordIds.get(member.playerId);
+      const discordId = params.playerDiscordIds?.get(member.playerId);
       return discordId === undefined ? member.alias : `<@${discordId}>`;
     })
     .join(" + ");
