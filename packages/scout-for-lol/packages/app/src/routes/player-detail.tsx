@@ -36,13 +36,8 @@ function formatDate(value: Date | string | null): string {
   return new Date(value).toLocaleString();
 }
 
-function isActiveCompetition(competition: {
-  isCancelled: boolean;
-  endDate: Date | string | null;
-}): boolean {
-  if (competition.isCancelled) return false;
-  if (competition.endDate === null) return true;
-  return new Date(competition.endDate).getTime() >= Date.now();
+function isActiveCompetition(competition: { status: string }): boolean {
+  return competition.status !== "ENDED" && competition.status !== "CANCELLED";
 }
 
 function Allowed(props: { when: boolean; children: ReactNode }) {

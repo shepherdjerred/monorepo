@@ -1,4 +1,10 @@
 import { Link } from "react-router";
+import {
+  CompetitionVisibilitySchema,
+  ParticipantStatusSchema,
+  participantStatusToString,
+  visibilityToString,
+} from "@scout-for-lol/data";
 import { Button } from "#src/components/ui/button.tsx";
 import { DiscordUser } from "#src/components/discord-user.tsx";
 import {
@@ -34,6 +40,25 @@ function channelLabel(
 ): string {
   const channel = channels?.find((candidate) => candidate.id === channelId);
   return channel === undefined ? channelId : `#${channel.name}`;
+}
+
+function participantStatusLabel(status: string): string {
+  const result = ParticipantStatusSchema.safeParse(status);
+  return result.success ? participantStatusToString(result.data) : status;
+}
+
+function visibilityLabel(visibility: string): string {
+  const result = CompetitionVisibilitySchema.safeParse(visibility);
+  return result.success ? visibilityToString(result.data) : visibility;
+}
+
+function competitionTitleSuffix(competition: {
+  isCancelled: boolean;
+  status: string;
+}): string {
+  if (competition.isCancelled) return " (cancelled)";
+  if (competition.status === "ENDED") return " (ended)";
+  return "";
 }
 
 export function PlayerSubscriptionsTable(props: {
@@ -222,6 +247,7 @@ export function CompetitionSection(props: {
       title: string;
       visibility: string;
       isCancelled: boolean;
+      status: string;
       startDate: Date | string | null;
       endDate: Date | string | null;
     };
@@ -252,10 +278,14 @@ export function CompetitionSection(props: {
                   >
                     {participant.competition.title}
                   </Link>
-                  {participant.competition.isCancelled ? " (cancelled)" : ""}
+                  {competitionTitleSuffix(participant.competition)}
                 </TableCell>
-                <TableCell>{participant.status}</TableCell>
-                <TableCell>{participant.competition.visibility}</TableCell>
+                <TableCell>
+                  {participantStatusLabel(participant.status)}
+                </TableCell>
+                <TableCell>
+                  {visibilityLabel(participant.competition.visibility)}
+                </TableCell>
                 <TableCell className="text-muted-foreground">
                   {formatDate(participant.competition.startDate)} to{" "}
                   {formatDate(participant.competition.endDate)}
