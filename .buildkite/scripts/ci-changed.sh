@@ -58,6 +58,41 @@ global_paths=(
   patches
   turbo.json
 )
+
+# Per-site lane path lists, defined ONCE. The aggregate `sites` lane is
+# derived as their union below so the two can never skew — a hand-maintained
+# aggregate missing a path a per-site lane had (versions.ts) is exactly what
+# broke the scout release pair in build 6281.
+site_sjer_red_paths=(
+  packages/sjer.red
+  packages/astro-opengraph-images
+  packages/webring
+  scripts/deploy-site.ts
+  scripts/lib/s3-static-site.ts
+  scripts/lib/run.ts
+)
+site_resume_paths=(packages/resume scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
+site_webring_paths=(packages/webring scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
+site_cooklang_paths=(packages/cooklang-rich-preview scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
+site_stocks_paths=(packages/stocks-sjer-red scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
+site_better_skill_capped_paths=(packages/better-skill-capped scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
+site_glitter_paths=(packages/glitter scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
+# docker-bake.hcl and .dockerignore are scout image-content inputs: a bake
+# config change can alter the backend image without touching the scout
+# tree, and the release-pair tag mint (scout-tag-release) requires a fresh
+# site archive in the same build to pair with.
+site_scout_paths=(
+  packages/scout-for-lol
+  packages/astro-opengraph-images
+  packages/llm-models
+  packages/homelab/src/cdk8s/src/versions.ts
+  scripts/package.json
+  scripts/scout-site-release.ts
+  scripts/lib
+  docker-bake.hcl
+  .dockerignore
+)
+
 lane_paths=()
 case "$lane" in
   playwright)
@@ -124,69 +159,40 @@ case "$lane" in
     )
     ;;
   site-sjer-red)
-    lane_paths=(
-      packages/sjer.red
-      packages/astro-opengraph-images
-      packages/webring
-      scripts/deploy-site.ts
-      scripts/lib/s3-static-site.ts
-      scripts/lib/run.ts
-    )
+    lane_paths=("${site_sjer_red_paths[@]}")
     ;;
   site-resume)
-    lane_paths=(packages/resume scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
+    lane_paths=("${site_resume_paths[@]}")
     ;;
   site-webring)
-    lane_paths=(packages/webring scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
+    lane_paths=("${site_webring_paths[@]}")
     ;;
   site-cooklang)
-    lane_paths=(packages/cooklang-rich-preview scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
+    lane_paths=("${site_cooklang_paths[@]}")
     ;;
   site-stocks)
-    lane_paths=(packages/stocks-sjer-red scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
+    lane_paths=("${site_stocks_paths[@]}")
     ;;
   site-better-skill-capped)
-    lane_paths=(packages/better-skill-capped scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
+    lane_paths=("${site_better_skill_capped_paths[@]}")
     ;;
   site-glitter)
-    lane_paths=(packages/glitter scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
+    lane_paths=("${site_glitter_paths[@]}")
     ;;
   site-scout)
-    # docker-bake.hcl and .dockerignore are scout image-content inputs: a bake
-    # config change can alter the backend image without touching the scout
-    # tree, and the release-pair tag mint (scout-tag-release) requires a fresh
-    # site archive in the same build to pair with.
-    lane_paths=(
-      packages/scout-for-lol
-      packages/astro-opengraph-images
-      packages/llm-models
-      packages/homelab/src/cdk8s/src/versions.ts
-      scripts/package.json
-      scripts/scout-site-release.ts
-      scripts/lib
-      docker-bake.hcl
-      .dockerignore
-    )
+    lane_paths=("${site_scout_paths[@]}")
     ;;
   sites)
+    # Union of every per-site lane (duplicates are harmless to git diff).
     lane_paths=(
-      packages/sjer.red
-      packages/resume
-      packages/webring
-      packages/astro-opengraph-images
-      packages/cooklang-rich-preview
-      packages/stocks-sjer-red
-      packages/better-skill-capped
-      packages/glitter
-      packages/scout-for-lol
-      packages/llm-models
-      scripts/package.json
-      scripts/deploy-site.ts
-      scripts/scout-site-release.ts
-      scripts/lib/s3-static-site.ts
-      scripts/lib/run.ts
-      docker-bake.hcl
-      .dockerignore
+      "${site_sjer_red_paths[@]}"
+      "${site_resume_paths[@]}"
+      "${site_webring_paths[@]}"
+      "${site_cooklang_paths[@]}"
+      "${site_stocks_paths[@]}"
+      "${site_better_skill_capped_paths[@]}"
+      "${site_glitter_paths[@]}"
+      "${site_scout_paths[@]}"
     )
     ;;
   scout-reconcile)

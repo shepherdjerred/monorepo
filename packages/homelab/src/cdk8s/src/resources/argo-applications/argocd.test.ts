@@ -45,9 +45,7 @@ describe("ArgoCD application", () => {
       ].split("\n"),
     ).toEqual([
       "p, buildkite, applications, sync, default/apps, allow",
-      "p, buildkite, applications, get, default/apps, allow",
-      "p, buildkite, applications, get, default/argocd, allow",
-      "p, buildkite, applications, get, default/kueue, allow",
+      "p, buildkite, applications, get, default/*, allow",
       "p, buildkite, applications, delete, default/kueue, allow",
     ]);
   });

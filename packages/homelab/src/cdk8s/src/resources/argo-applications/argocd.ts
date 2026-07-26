@@ -211,7 +211,7 @@ return hs`,
         // get authorization before the delete authorization, including when
         // the Application is already absent.
         "policy.csv":
-          "p, buildkite, applications, sync, default/apps, allow\np, buildkite, applications, get, default/apps, allow\np, buildkite, applications, get, default/argocd, allow\np, buildkite, applications, get, default/kueue, allow\np, buildkite, applications, delete, default/kueue, allow",
+          "p, buildkite, applications, sync, default/apps, allow\np, buildkite, applications, get, default/*, allow\np, buildkite, applications, delete, default/kueue, allow",
       },
     },
   };

@@ -252,6 +252,18 @@ for (const required of [
   }
 }
 
+// Top-level `name=( … )` array definitions in the selector. Lane case arms
+// reference them as "${name[@]}" (the per-site lists are defined once and the
+// aggregate `sites` lane is their union), so lane blocks must be expanded
+// through this map before asserting on literal paths.
+const selectorArrays = new Map<string, string>();
+for (const match of ciChanged.matchAll(/^([a-z0-9_]+)=\(([\s\S]*?)\)/gm)) {
+  const [, name, contents] = match;
+  if (name !== undefined && contents !== undefined) {
+    selectorArrays.set(name, contents);
+  }
+}
+
 function selectorLane(lane: string): string {
   const startMarker = `  ${lane})\n`;
   const start = ciChanged.indexOf(startMarker);
@@ -263,7 +275,17 @@ function selectorLane(lane: string): string {
   if (blockEnd === -1) {
     fail(`runtime CI selector lane ${lane} has no terminator`);
   }
-  return ciChanged.slice(blockStart, blockEnd);
+  return ciChanged
+    .slice(blockStart, blockEnd)
+    .replace(/"\$\{([a-z0-9_]+)\[@\]\}"/g, (_reference, name: string) => {
+      const contents = selectorArrays.get(name);
+      if (contents === undefined) {
+        fail(
+          `runtime CI selector lane ${lane} references undefined array ${name}`,
+        );
+      }
+      return contents;
+    });
 }
 
 for (const lane of ["site-scout", "sites", "scout-reconcile"]) {
