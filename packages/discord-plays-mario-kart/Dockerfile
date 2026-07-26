@@ -135,6 +135,16 @@ COPY --parents \
   packages/discord-video-stream \
   ./
 
+# Bake the Prisma engines into the production tree. prod-deps installs
+# without lifecycle scripts, so @prisma/engines ships empty and the CLI
+# downloads engines on FIRST USE — but the pod runs as uid 1000 over this
+# root-owned node_modules, so the startup `prisma db push` died with
+# "Can't write to …@prisma+engines…" (image 2.0.0-6322 crash-loop).
+# Running generate here (as root, schema present from the source COPY above)
+# fetches them at build time; verified in-container: after this, db push as
+# uid 1000 proceeds straight to the database step.
+RUN cd packages/discord-plays-mario-kart/packages/backend && bunx --trust prisma generate
+
 # Built artifacts from the build stage.
 COPY --from=build /app/packages/discord-stream-lifecycle/dist packages/discord-stream-lifecycle/dist
 COPY --from=build /app/packages/discord-plays-mario-kart/packages/backend/generated packages/discord-plays-mario-kart/packages/backend/generated
