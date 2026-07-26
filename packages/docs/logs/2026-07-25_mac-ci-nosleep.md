@@ -18,9 +18,13 @@ blocker: **the Mini keeps falling asleep**, which is fatal for a CI agent.
 - **`macos` queue exists** — `bk queue list <cluster>` shows it (created
   2026-07-06, `dispatch_paused: false`). The Tofu `buildkite_cluster_queue
 "macos"` was applied.
-- **No macOS agent has ever connected** — `bk agent list` shows only the two
-  Linux `default` agents (liskov, amd64/alpine). So the Mini has never
-  registered, or registered and slept off.
+- **No macOS agent is currently connected** — `bk agent list` shows only the
+  two Linux `default` agents (liskov, amd64/alpine). Note `bk agent list`
+  reports only _currently connected_ agents (per the audit runbook,
+  `packages/docs/guides/2026-04-04_homelab-audit-runbook.md:340`), so this
+  doesn't establish the Mini has _never_ registered — it's equally consistent
+  with a prior registration that dropped off (e.g. slept). Not verified via
+  Buildkite audit/event history either way.
 - **The CI step regressed out.** `macosSwiftLintStep()` + the `agents.queue`
   field lived in the dynamic generator `scripts/ci/src/steps/per-package.ts`,
   which was wholesale deleted by #1516 (`chore: remove all CI`) when CI was

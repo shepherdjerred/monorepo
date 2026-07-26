@@ -4,8 +4,10 @@ Provisions a Mac Mini as a Buildkite CI agent on the **`macos`** queue, for
 native Swift/Xcode builds that couldn't run in the Linux in-cluster path.
 
 > **Status (2026-07-25):** the `macos` queue exists (Tofu-applied 2026-07-06)
-> and dispatch is unpaused, but **no macOS agent has ever connected** — run
-> `bootstrap.sh` on the Mini to register one. CI was replatformed from the old
+> and dispatch is unpaused, but **no macOS agent is currently connected**
+> (`bk agent list` only reports currently-connected agents, so this doesn't
+> establish whether the Mini has ever registered before) — run `bootstrap.sh`
+> on the Mini to register/re-register one. CI was replatformed from the old
 > Dagger + dynamic-generator setup to a **static `.buildkite/pipeline.yml`**;
 > that migration dropped the per-package macOS SwiftLint step (it lived in the
 > now-deleted `scripts/ci/src/`), so no job routes to this queue **yet** —
@@ -92,13 +94,22 @@ To wire it up (do this **after** the agent shows connected, so PRs never hang on
 a missing agent):
 
 1. Add a step to `.buildkite/pipeline.yml` with `agents: { queue: "macos" }`,
-   `soft_fail: true`, and an `if:` that only triggers on
-   `packages/tasks-for-obsidian/ios/**` changes. Run `swiftlint --strict` (or
-   the iOS build / Maestro suite) as the command — it executes on the agent's
-   native checkout, **not** via the kubernetes plugin the Linux steps use.
-2. Leave it `soft_fail: true` until it's green; only then add its
-   `buildkite/monorepo/pr/...` context to `src/tofu/github/rulesets.tf` as a
-   required check, or it blocks every PR.
+   `soft_fail: true`, an `if:` gating it to PR builds, and an
+   `if_changed.include` list scoped to `packages/tasks-for-obsidian/ios/**` —
+   path filters are `if_changed:`, not `if:` (`if:` only evaluates boolean
+   build/pipeline expressions and can't match a changed-file glob; see the
+   neighboring `playwright-e2e-pr` step for the `if:` + `if_changed:` pattern
+   to copy). Run `swiftlint --strict` (or the iOS build / Maestro suite) as
+   the command — it executes on the agent's native checkout, **not** via the
+   kubernetes plugin the Linux steps use.
+2. Leave it `soft_fail: true` until it's green, then drop `soft_fail`. Do
+   **not** add a macOS-specific required status check — the replatformed
+   pipeline posts only a single aggregate `buildkite/monorepo/pr` commit
+   status per PR build; the old per-step `buildkite/monorepo/pr/<step>`
+   contexts are gone (`src/tofu/github/rulesets.tf` requires only the
+   aggregate). Once `soft_fail` is removed, a red macOS step already fails
+   that existing aggregate check — adding a new required context that no
+   build will ever produce would block every PR forever.
 
 > **Note:** there's no `.swiftlint.yml` in `packages/tasks-for-obsidian/ios`
 > yet, so `swiftlint --strict` runs with defaults — expect to either add a
@@ -118,7 +129,13 @@ per job) on top later — orthogonal to this setup.
 ```bash
 brew services stop buildkite/buildkite/buildkite-agent
 brew uninstall buildkite/buildkite/buildkite-agent
-sudo pmset -a sleep 1 powernap 1        # restore default sleep behavior
+# Restore every setting bootstrap.sh's step 4 forced (sleep, disksleep,
+# displaysleep, powernap, womp, autorestart) — leaving any of them at their
+# forced value defeats the point of decommissioning an always-on CI appliance.
+# Values below approximate macOS' stock Energy Saver defaults for a desktop
+# Mac; if this host had a customized power profile before bootstrap.sh ran,
+# check `pmset -g` and restore that instead.
+sudo pmset -a sleep 10 disksleep 10 displaysleep 10 powernap 1 womp 1 autorestart 1
 # Then remove any macos-queue step from .buildkite/pipeline.yml and, if the
 # queue is no longer wanted, delete the resource in src/tofu/buildkite and apply.
 ```
