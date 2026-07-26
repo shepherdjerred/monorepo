@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import type { PermissionSet } from "@scout-for-lol/data";
 import { Button } from "#src/components/ui/button.tsx";
 

@@ -78,3 +78,39 @@ board: false
   delegated-role screenshot as human verification.
 - Per the controller instruction, this session submits one fix commit and does
   not wait for the resulting CI run.
+
+## Session Log — 2026-07-25 (current-main restack)
+
+### Done
+
+- Created an independent clone at
+  `.claude/worktrees/pr-1638-current-main`, with local `main` exactly matching
+  `origin/main` at `454bfa6d53d72d3fae6a81ded65594bbf0f30d6d`.
+- Initialized git-spice against `main`, tracked only `feature/scout-rbac`, and
+  restacked all ten PR commits onto current `main`.
+- Resolved the `guild-workspace.tsx` and `player-detail.tsx` conflicts by
+  preserving the RBAC navigation and permission-gating behavior while adopting
+  current `main`'s `react-router` dependency migration.
+- Replaced the remaining `react-router-dom` imports in the RBAC-added
+  `PlayerHeaderActions` and guild access route after the app typecheck exposed
+  them.
+- Confirmed `git merge-tree --write-tree --quiet origin/main HEAD` exits
+  successfully after the restack.
+- Passed app typecheck, lint, and production build; the full data suite (480
+  tests), typecheck, and lint; and the full backend suite (1,172 passing tests,
+  6 intentional skips), typecheck, and lint.
+
+### Remaining
+
+- Buildkite and the newly requested hosted Codex review must evaluate the
+  submitted current-main head.
+
+### Caveats
+
+- App, data, and backend lint exit successfully with warning-level duplication
+  findings and zero errors. The app build also retains its warning about the
+  non-module theme initializer and large generated chunks.
+- The first no-checkout partial-clone attempt inherited a global sparse-checkout
+  setting and fetched blobs inefficiently. It was moved intact to
+  `/tmp/pr-1638-current-main-partial.dkxWgb/` before the clean full clone was
+  created.
