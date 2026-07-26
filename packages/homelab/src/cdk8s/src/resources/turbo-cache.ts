@@ -32,6 +32,11 @@ import {
 // ducktors/turborepo-remote-cache listens on 3000 by default (PORT env).
 const PORT = 3000;
 const CACHE_PVC_SIZE = Size.gibibytes(256);
+// The ducktors image runs as uid/gid 1001 (`app`). A fresh PVC's root is
+// created root:root 0755, so the non-root process can't `mkdir /cache/<team>`
+// and every artifact upload 412s. fsGroup makes the kubelet chgrp the volume
+// to this gid + group-writable on mount, so writes succeed.
+const APP_GID = 1001;
 
 export function createTurboCacheDeployment(chart: Chart) {
   // The local cache only needs the shared Turbo bearer token. Its contents are
@@ -70,6 +75,9 @@ export function createTurboCacheDeployment(chart: Chart) {
 
   const deployment = new Deployment(chart, "turbo-cache", {
     replicas: 1,
+    securityContext: {
+      fsGroup: APP_GID,
+    },
     strategy: DeploymentStrategy.recreate(),
   });
   deployment.scheduling.attract(
