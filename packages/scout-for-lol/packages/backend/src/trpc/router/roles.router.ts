@@ -33,6 +33,7 @@ import { client as discordClient } from "#src/discord/client.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 const GRANT_KEY = permissionKey({ resource: "roles", action: "grant" });
+const REVOKE_KEY = permissionKey({ resource: "roles", action: "revoke" });
 const DiscordApiErrorSchema = z.object({ code: z.number() });
 const UNKNOWN_MEMBER_CODE = 10_007;
 
@@ -58,9 +59,11 @@ async function isCurrentGuildMember(
 }
 
 /**
- * Prevent a non-root mutation from removing the last Scout-managed `roles:grant`
- * (which would leave nobody but Discord admins able to manage access). Discord
- * admins (root) are exempt — they always retain implicit access.
+ * Prevent a non-root mutation from removing either capability from the last
+ * Scout-managed role manager. A viable manager needs both `roles:grant` and
+ * `roles:revoke`; retaining only grant would let them remove access without
+ * being able to restore it. Discord admins (root) are exempt because they
+ * always retain implicit access.
  */
 async function assertPreservesRoleManager(
   tx: Db,
@@ -68,24 +71,35 @@ async function assertPreservesRoleManager(
     isRoot: boolean;
     guildId: DiscordGuildId;
     targetDiscordId: DiscordAccountId;
-    targetHasGrant: boolean;
-    keepsGrant: boolean;
+    targetHasManagerAccess: boolean;
+    targetKeepsManagerAccess: boolean;
   },
 ): Promise<void> {
-  const removesGrant =
-    params.targetHasGrant && !params.keepsGrant && !params.isRoot;
-  if (!removesGrant) return;
-  const otherGrantHolders = await tx.serverPermission.findMany({
+  const removesManagerAccess =
+    params.targetHasManagerAccess &&
+    !params.targetKeepsManagerAccess &&
+    !params.isRoot;
+  if (!removesManagerAccess) return;
+  const otherManagerPermissionRows = await tx.serverPermission.findMany({
     where: {
       serverId: params.guildId,
-      permission: GRANT_KEY,
+      permission: { in: [GRANT_KEY, REVOKE_KEY] },
       discordUserId: { not: params.targetDiscordId },
     },
-    select: { discordUserId: true },
+    select: { discordUserId: true, permission: true },
   });
+  const permissionKeysByUser = new Map<string, Set<string>>();
+  for (const row of otherManagerPermissionRows) {
+    const keys = permissionKeysByUser.get(row.discordUserId) ?? new Set();
+    keys.add(row.permission);
+    permissionKeysByUser.set(row.discordUserId, keys);
+  }
+  const otherManagerIds = [...permissionKeysByUser.entries()]
+    .filter(([, keys]) => keys.has(GRANT_KEY) && keys.has(REVOKE_KEY))
+    .map(([discordUserId]) => DiscordAccountIdSchema.parse(discordUserId));
   const currentMemberChecks = await Promise.all(
-    otherGrantHolders.map((holder) =>
-      isCurrentGuildMember(params.guildId, holder.discordUserId),
+    otherManagerIds.map((discordUserId) =>
+      isCurrentGuildMember(params.guildId, discordUserId),
     ),
   );
   if (!currentMemberChecks.some(Boolean)) {
@@ -186,8 +200,10 @@ export const rolesRouter = router({
           isRoot: ctx.permissions.isRoot,
           guildId: input.guildId,
           targetDiscordId: input.discordUserId,
-          targetHasGrant: currentKeys.has(GRANT_KEY),
-          keepsGrant: desiredKeys.has(GRANT_KEY),
+          targetHasManagerAccess:
+            currentKeys.has(GRANT_KEY) && currentKeys.has(REVOKE_KEY),
+          targetKeepsManagerAccess:
+            desiredKeys.has(GRANT_KEY) && desiredKeys.has(REVOKE_KEY),
         });
 
         const additions = [...desired.values()].filter(
@@ -285,20 +301,25 @@ export const rolesRouter = router({
     .input(GuildInput.extend({ discordUserId: DiscordAccountIdSchema }))
     .mutation(async ({ ctx, input }) => {
       await prisma.$transaction(async (tx) => {
-        const targetHasGrant =
-          (await tx.serverPermission.count({
-            where: {
-              serverId: input.guildId,
-              discordUserId: input.discordUserId,
-              permission: GRANT_KEY,
-            },
-          })) > 0;
+        const targetManagerPermissionRows = await tx.serverPermission.findMany({
+          where: {
+            serverId: input.guildId,
+            discordUserId: input.discordUserId,
+            permission: { in: [GRANT_KEY, REVOKE_KEY] },
+          },
+          select: { permission: true },
+        });
+        const targetManagerPermissionKeys = new Set(
+          targetManagerPermissionRows.map((row) => row.permission),
+        );
         await assertPreservesRoleManager(tx, {
           isRoot: ctx.permissions.isRoot,
           guildId: input.guildId,
           targetDiscordId: input.discordUserId,
-          targetHasGrant,
-          keepsGrant: false,
+          targetHasManagerAccess:
+            targetManagerPermissionKeys.has(GRANT_KEY) &&
+            targetManagerPermissionKeys.has(REVOKE_KEY),
+          targetKeepsManagerAccess: false,
         });
 
         await tx.serverPermission.deleteMany({

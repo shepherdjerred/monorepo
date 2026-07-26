@@ -208,8 +208,8 @@ async function authenticateReportAiRequest(
     const ctx = await createContext(request);
     const web = readWebCsrfContext(ctx);
     assertWebCsrf(web.webSession);
-    // The AI editor drafts/edits a report query, so gate it on reports:create —
-    // the same capability the ReportForm draft flow requires. Using
+    // The AI editor drafts/edits a report query and may preview existing
+    // report-lake rows, so require both the draft and read capabilities. Using
     // assertGuildAdmin here would 403 every delegated Manager the query claims
     // can use the editor.
     const permissions = await resolveGuildPermissions(web.user, input.guildId);
@@ -217,6 +217,12 @@ async function authenticateReportAiRequest(
       throw new TRPCError({
         code: "FORBIDDEN",
         message: "Missing permission reports:create",
+      });
+    }
+    if (permissions.cannot("reports", "read")) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Missing permission reports:read",
       });
     }
     return {

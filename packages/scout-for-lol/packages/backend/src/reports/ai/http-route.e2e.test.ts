@@ -1,14 +1,15 @@
 /**
  * Authorization for the AI report-editor stream endpoint
  * (`POST /api/reports/query-agent/stream`). It must gate on `reports:create`
- * (the report-draft capability) via the shared RBAC resolver, NOT
- * `assertGuildAdmin` — otherwise a delegated Manager the UI told could use the
- * editor always gets 403.
+ * (the report-draft capability) and `reports:read` (the agent can preview
+ * report-lake rows) via the shared RBAC resolver, NOT `assertGuildAdmin` —
+ * otherwise a delegated Manager the UI told could use the editor always gets
+ * 403.
  *
  * `ai_reports_enabled` defaults to false, so a caller that PASSES authorization
  * deterministically falls through to the "not enabled" 403 (no LLM call). That
  * makes the auth decision observable by the error message: a denied caller is
- * rejected with the missing `reports:create`, an authorized one with the
+ * rejected with the missing permission, an authorized one with the
  * feature-disabled message.
  */
 
@@ -105,14 +106,27 @@ describe("report AI stream endpoint authorization", () => {
     expect(body.error).toContain("reports:create");
   });
 
-  test("member with reports:create passes authorization (falls through to feature-disabled, not a permission error)", async () => {
+  test("reports:create alone is insufficient", async () => {
     trpc.setMembership([{ guildId, asAdmin: false }]);
     await seedGrants(permissionKey({ resource: "reports", action: "create" }));
     const res = await post();
+    expect(res?.status).toBe(403);
+    const body = ErrBody.parse(await res?.json());
+    expect(body.error).toContain("reports:read");
+  });
+
+  test("member with reports:create and reports:read passes authorization", async () => {
+    trpc.setMembership([{ guildId, asAdmin: false }]);
+    await seedGrants(
+      permissionKey({ resource: "reports", action: "create" }),
+      permissionKey({ resource: "reports", action: "read" }),
+    );
+    const res = await post();
     // ai_reports_enabled defaults false, so passing auth yields the disabled
-    // 403 — crucially NOT the reports:create permission error.
+    // 403 — crucially not either permission error.
     const body = ErrBody.parse(await res?.json());
     expect(body.error).not.toContain("reports:create");
+    expect(body.error).not.toContain("reports:read");
     expect(body.error.toLowerCase()).toContain("not enabled");
   });
 
@@ -122,5 +136,6 @@ describe("report AI stream endpoint authorization", () => {
     const res = await post();
     const body = ErrBody.parse(await res?.json());
     expect(body.error).not.toContain("reports:create");
+    expect(body.error).not.toContain("reports:read");
   });
 });

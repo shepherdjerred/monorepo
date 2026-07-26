@@ -85,7 +85,7 @@ board: false
 
 - Created an independent clone at
   `.claude/worktrees/pr-1638-current-main`, with local `main` exactly matching
-  `origin/main` at `454bfa6d53d72d3fae6a81ded65594bbf0f30d6d`.
+  `origin/main`.
 - Initialized git-spice against `main`, tracked only `feature/scout-rbac`, and
   restacked all ten PR commits onto current `main`.
 - Resolved the `guild-workspace.tsx` and `player-detail.tsx` conflicts by
@@ -109,6 +109,19 @@ board: false
   membership behavior.
 - Passed all 34 app tests, app typecheck/lint/build, all 1,173 backend tests
   with 6 intentional skips, and backend typecheck/lint after the review fixes.
+- Addressed the next hosted review's two actionable findings: the AI report
+  stream now requires both `reports:create` and `reports:read` because the
+  agent can preview report-lake rows, and a delegated role manager remains
+  viable only while holding both `roles:grant` and `roles:revoke`.
+- Added focused regression coverage for each missing AI-stream permission and
+  for preventing the last delegated role manager from removing their own
+  revoke capability.
+- Passed both focused backend suites, backend typecheck, full backend lint with
+  zero errors, and the full backend suite with 1,175 passing tests and 6
+  intentional skips.
+- Refreshed `main` again immediately before submission and restacked the branch
+  onto `33bc6131edb589aafc7e6d103cfd4eae5011cf54`; the intervening main commit
+  only changed homelab and documentation files.
 
 ### Remaining
 

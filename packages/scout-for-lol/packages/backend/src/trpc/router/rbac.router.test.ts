@@ -340,6 +340,40 @@ describe("RBAC guard invariants", () => {
     ).rejects.toMatchObject({ code: "BAD_REQUEST" });
   });
 
+  test("self-lockout: last role-admin cannot remove their own revoke capability", async () => {
+    await reset();
+    asMember();
+    await seedGrants(member, permissionsForRole("admin"));
+    const caller = trpc.authedCaller(member);
+    const withoutRevoke = permissionsForRole("admin").filter(
+      (permission) =>
+        permissionKey(permission) !==
+        permissionKey({ resource: "roles", action: "revoke" }),
+    );
+
+    await expect(
+      caller.roles.set({
+        guildId,
+        discordUserId: member,
+        permissions: withoutRevoke,
+      }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+
+    const revokeGrant = await trpc.prisma.serverPermission.findUnique({
+      where: {
+        serverId_discordUserId_permission: {
+          serverId: guildId,
+          discordUserId: member,
+          permission: permissionKey({
+            resource: "roles",
+            action: "revoke",
+          }),
+        },
+      },
+    });
+    expect(revokeGrant).not.toBeNull();
+  });
+
   test("self-lockout: concurrent removals preserve one delegated role admin", async () => {
     await reset();
     asMember();
