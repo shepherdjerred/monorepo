@@ -392,6 +392,8 @@ export function RankedSquareReport({ match }: { match: CompletedMatch }) {
           </div>
         )}
 
+        <div style={{ display: "flex", flexGrow: 1 }} />
+
         {/* Bottom score bar */}
         <ScoreBar match={match} winningTeam={winningTeam} />
       </div>
