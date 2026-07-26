@@ -133,3 +133,33 @@ scratch files) and needs a full local bake of each app target to validate.
 
 - The Argo CD diagnostic read permission is intentionally limited to the
   `default` project; it does not grant sync or delete access to child apps.
+
+## Session Log — 2026-07-26 (scout non-root smoke prisma-engines regression)
+
+### Done
+
+- The non-root (uid 1000) smoke surfaced exactly the class of bug it was built
+  for: the scout-for-lol in-image smoke failed with
+  `Can't write to …@prisma+engines@7.8.0…@prisma/engines` (build 6381,
+  `images-pr`). Root cause: `prod-deps` installs `--production` without
+  lifecycle scripts, so `@prisma/engines` ships empty; scout's runtime
+  `prisma migrate deploy` (CLI) tried to fetch the engine on first use and, as
+  uid 1000 over the root-owned `node_modules`, could not write.
+- Fixed by baking the engines at build time in scout's `runtime` stage —
+  `RUN cd packages/scout-for-lol/packages/backend && bunx --trust prisma generate`
+  after the source COPY (schema present) — so uid 1000 only reads them at
+  runtime. This mirrors the discord-plays-mario-kart runtime fix from the
+  2.0.0-6322 crash-loop; the pattern is proven in CI.
+
+### Remaining
+
+- Buildkite must rebuild and re-smoke scout-for-lol as uid 1000 to confirm the
+  engine bake resolves the write failure end-to-end.
+
+### Caveats
+
+- Other prisma-using images were checked and do NOT need this: birmel uses the
+  `@prisma/adapter-libsql` driver adapter (JS, no Rust engine) and its smoke
+  runs `bun src/index.ts` (no prisma CLI); temporal-worker and the pokemon
+  image use no prisma; mario-kart already bakes engines. Only the scout
+  runtime CLI (`prisma migrate deploy`) needs the engine binary present.

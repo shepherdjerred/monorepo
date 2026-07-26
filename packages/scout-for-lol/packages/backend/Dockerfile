@@ -72,6 +72,15 @@ COPY --parents \
   packages/llm-models \
   packages/llm-observability \
   ./
+# Bake the Prisma engines into the production tree. prod-deps installs
+# without lifecycle scripts, so @prisma/engines ships empty and the CLI
+# downloads engines on FIRST USE — but the pod (and the non-root smoke) runs
+# as uid 1000 over this root-owned node_modules, so the startup
+# `prisma migrate deploy` died with "Can't write to …@prisma+engines…".
+# Running generate here (as root, schema present from the source COPY above)
+# fetches them at build time; uid 1000 then only reads them at runtime.
+# Mirrors the discord-plays-mario-kart runtime fix (2.0.0-6322 crash-loop).
+RUN cd packages/scout-for-lol/packages/backend && bunx --trust prisma generate
 # Built artifacts from the build stage.
 COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
 COPY --from=build /app/packages/scout-for-lol/packages/backend/generated packages/scout-for-lol/packages/backend/generated
