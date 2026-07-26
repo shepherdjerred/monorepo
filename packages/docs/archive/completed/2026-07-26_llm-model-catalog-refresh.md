@@ -1,7 +1,7 @@
 ---
 id: plan-llm-model-catalog-refresh-2026-07-26
 type: plan
-status: in-progress
+status: complete
 board: false
 ---
 
@@ -15,8 +15,9 @@ every monorepo caller off superseded IDs to the latest.
 
 ## Research (authoritative sources)
 
-- **Anthropic** — live models page (`platform.claude.com/.../models/overview.md`,
-  fetched 2026-07-26): Opus 4.8 is now **Legacy**; current lineup is Fable 5,
+- **Anthropic** — live models page
+  (`https://docs.claude.com/en/docs/about-claude/models/overview.md`, fetched
+  2026-07-26): Opus 4.8 is now **Legacy**; current lineup is Fable 5,
   **Opus 5**, Sonnet 5, Haiku 4.5.
 - **OpenAI** — models.dev (repo's own sync upstream) + web: **GPT-5.6** family
   (Sol/Terra/Luna) shipped 2026-07-09; `gpt-5.4-mini`/`nano` remain current.

@@ -9,7 +9,7 @@ board: false
 
 ## Source of truth
 
-- **`src/catalog.json`** (not a `.ts`). Validated per-language: Zod (`src/index.ts` → `MODELS`, `getModel`, `getPricing`, `getPerTokenPricing`, `costForTextUsage`, `modelsByProvider`, `isModelId`) and Pydantic (`python/validate_catalog.py`). Active models only; legacy rows intentionally absent.
+- **`src/catalog.json`** (not a `.ts`). Validated per-language: Zod (`src/index.ts` → `MODELS`, `getModel`, `getPricing`, `getPerTokenPricing`, `costForTextUsage`, `modelsByProvider`, `isModelId`) and Pydantic (`python/validate_catalog.py`). Primarily current models, but recently-superseded rows are retained and marked `status: "deprecated"` (e.g. `claude-opus-4-8`, `claude-sonnet-4-6`, `gpt-5.5`) so their pricing stays available for historical cost attribution / observability fixtures — do not delete a `deprecated` row just because it is no longer wired to a caller. Truly ancient models are dropped.
 - **Pricing:** USD per 1M tokens (text), USD per image (Gemini `perImage`). OpenAI uses `cachedInput`; Anthropic uses `cacheRead`/`cacheWrite`.
 
 ## It's a BUILT package
