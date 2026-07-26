@@ -650,11 +650,10 @@ async function downloadChampionLoadingImages(
 
   for (const [championName, listEntry] of championEntries) {
     const championId = Number(listEntry.key);
-    if (!Number.isFinite(championId)) {
-      console.warn(
-        `  ⚠ Champion ${championName} has invalid championId ${listEntry.key} — skipping`,
+    if (!Number.isSafeInteger(championId) || championId <= 0) {
+      throw new Error(
+        `Champion ${championName} has invalid championId ${listEntry.key}`,
       );
-      continue;
     }
 
     const result = await downloadLoadingScreenSkin(championName, championId, 0);
@@ -859,11 +858,10 @@ async function downloadChampionSplashImages(
 
   for (const [championName, listEntry] of championEntries) {
     const championId = Number(listEntry.key);
-    if (!Number.isFinite(championId)) {
-      console.warn(
-        `  ⚠ Champion ${championName} has invalid championId ${listEntry.key} — skipping`,
+    if (!Number.isSafeInteger(championId) || championId <= 0) {
+      throw new Error(
+        `Champion ${championName} has invalid championId ${listEntry.key}`,
       );
-      continue;
     }
 
     const result = await downloadSplashSkin(championName, championId, 0);
@@ -1379,14 +1377,30 @@ async function updateSnapshots(): Promise<void> {
 
       console.log(`  Updating: ${testFile}`);
       const result =
-        await $`cd ${cwd} && bun test --update-snapshots ${testFile}`.quiet();
-      if (result.exitCode !== 0) {
-        console.warn(
-          `    ⚠ Warning: snapshot update had non-zero exit code for ${testFile}`,
-        );
-      }
+        await $`cd ${cwd} && bun test --update-snapshots ${testFile}`
+          .quiet()
+          .nothrow();
+      assertSnapshotUpdateSucceeded(
+        testFile,
+        result.exitCode,
+        result.stderr.toString(),
+      );
     }
   }
+}
+
+export function assertSnapshotUpdateSucceeded(
+  testFile: string,
+  exitCode: number,
+  stderr: string,
+): void {
+  if (exitCode === 0) {
+    return;
+  }
+
+  throw new Error(
+    `Snapshot update failed for ${testFile} (exit ${String(exitCode)}): ${stderr}`,
+  );
 }
 
 if (import.meta.main) {

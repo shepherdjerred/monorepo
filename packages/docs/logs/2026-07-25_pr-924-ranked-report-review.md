@@ -26,6 +26,10 @@ resolved all four:
 - Ranked report labels convert Data Dragon asset keys to public champion names.
 - `packages/scout-for-lol/CLAUDE.md` documents the ranked routing, canvas sizes,
   design override, and splash preload/refresh/validation workflow.
+- Data Dragon champion-list parsing rejects nonnumeric, non-positive, and unsafe
+  champion IDs before any image download can be skipped.
+- Data Dragon snapshot refreshes throw when any enrolled report or backend suite
+  exits nonzero, so ranked SVG/hash generation cannot silently remain stale.
 
 The layout changes use Satori/Yoga-compatible flex containers. Boundary fixtures
 for six and ten tracked players were rendered and visually inspected.
@@ -39,7 +43,7 @@ for six and ten tracked players were rendered and visually inspected.
   (6 passed)
 - `bunx turbo run typecheck lint test --filter=@scout-for-lol/report` (77
   passed)
-- `bunx turbo run typecheck lint test --filter=@scout-for-lol/data` (466
+- `bunx turbo run typecheck lint test --filter=@scout-for-lol/data` (469
   passed)
 - `bunx turbo run typecheck lint test --filter=@scout-for-lol/backend` (1,138
   passed)
@@ -63,6 +67,10 @@ for six and ten tracked players were rendered and visually inspected.
   names plus the missing-asset error path.
 - Addressed the hosted Codex follow-up by rendering public champion names in all
   ranked text labels and documenting the ranked renderer integration points.
+- Addressed the second hosted Codex follow-up by validating champion ID strings
+  at the Data Dragon boundary and replacing both invalid-ID skips with errors.
+- Added explicit snapshot subprocess failure propagation and tests covering the
+  ranked-suite failure path.
 
 ### Remaining
 

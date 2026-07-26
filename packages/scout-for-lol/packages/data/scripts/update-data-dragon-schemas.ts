@@ -20,12 +20,23 @@ export type ItemData = z.infer<typeof ItemSchema>;
 
 export type RuneTreeData = z.infer<typeof RuneTreeSchema>;
 
+const ChampionIdSchema = z
+  .string()
+  .regex(/^\d+$/, "Champion key must be a numeric ID")
+  .refine(
+    (key) => {
+      const championId = Number(key);
+      return Number.isSafeInteger(championId) && championId > 0;
+    },
+    { message: "Champion key must be a positive safe integer" },
+  );
+
 export const ChampionListSchema = z.object({
   data: z.record(
     z.string(),
     z.object({
       id: z.string(),
-      key: z.string(),
+      key: ChampionIdSchema,
       name: z.string(),
     }),
   ),
