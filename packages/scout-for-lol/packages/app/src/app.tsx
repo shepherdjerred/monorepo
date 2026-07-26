@@ -5,7 +5,7 @@ import { GuildSubscriptions } from "#src/routes/guild-subscriptions.tsx";
 import { GuildAudit } from "#src/routes/guild-audit.tsx";
 import { GuildAccess } from "#src/routes/guild-access.tsx";
 import {
-  GuildPermissionGate,
+  GuildPermissionsGate,
   GuildSectionIndex,
   GuildWorkspace,
 } from "#src/routes/guild-workspace.tsx";
@@ -25,7 +25,7 @@ import {
   ContractMismatchBanner,
   VersionFooter,
 } from "#src/components/version-info.tsx";
-import { GUILD_ACTION_PERMISSIONS } from "#src/lib/guild-route-permissions.ts";
+import { GUILD_ACTION_ROUTE_PERMISSIONS } from "#src/lib/guild-route-permissions.ts";
 
 export function App() {
   return (
@@ -47,11 +47,13 @@ export function App() {
               <Route
                 path="competitions/new"
                 element={
-                  <GuildPermissionGate
-                    permission={GUILD_ACTION_PERMISSIONS.competitionCreate}
+                  <GuildPermissionsGate
+                    permissions={
+                      GUILD_ACTION_ROUTE_PERMISSIONS.competitionCreate
+                    }
                   >
                     <CompetitionForm />
-                  </GuildPermissionGate>
+                  </GuildPermissionsGate>
                 }
               />
               <Route
@@ -61,11 +63,11 @@ export function App() {
               <Route
                 path="competitions/:competitionId/edit"
                 element={
-                  <GuildPermissionGate
-                    permission={GUILD_ACTION_PERMISSIONS.competitionUpdate}
+                  <GuildPermissionsGate
+                    permissions={GUILD_ACTION_ROUTE_PERMISSIONS.competitionEdit}
                   >
                     <CompetitionForm />
-                  </GuildPermissionGate>
+                  </GuildPermissionsGate>
                 }
               />
               <Route path="reports" element={<ReportList />} />
@@ -73,22 +75,22 @@ export function App() {
               <Route
                 path="reports/new"
                 element={
-                  <GuildPermissionGate
-                    permission={GUILD_ACTION_PERMISSIONS.reportCreate}
+                  <GuildPermissionsGate
+                    permissions={GUILD_ACTION_ROUTE_PERMISSIONS.reportCreate}
                   >
                     <ReportForm />
-                  </GuildPermissionGate>
+                  </GuildPermissionsGate>
                 }
               />
               <Route path="reports/:reportId" element={<ReportDetail />} />
               <Route
                 path="reports/:reportId/edit"
                 element={
-                  <GuildPermissionGate
-                    permission={GUILD_ACTION_PERMISSIONS.reportUpdate}
+                  <GuildPermissionsGate
+                    permissions={GUILD_ACTION_ROUTE_PERMISSIONS.reportEdit}
                   >
                     <ReportForm />
-                  </GuildPermissionGate>
+                  </GuildPermissionsGate>
                 }
               />
               <Route path="audit" element={<GuildAudit />} />

@@ -7,6 +7,11 @@ import {
   permissionKey,
   permissionsForRole,
 } from "@scout-for-lol/data";
+import {
+  checkRateLimit,
+  clearAllRateLimits,
+  recordCreation,
+} from "#src/database/competition/rate-limit.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 
 // Must run before anything imports appRouter (installs module mocks).
@@ -18,8 +23,10 @@ const target = DiscordAccountIdSchema.parse("900000000000000002");
 const other = DiscordAccountIdSchema.parse("900000000000000003");
 
 async function reset() {
+  await trpc.prisma.competition.deleteMany({});
   await trpc.prisma.serverPermission.deleteMany({});
   await trpc.prisma.auditLog.deleteMany({});
+  clearAllRateLimits();
   trpc.setGuildMembers(guildId, [member, target, other]);
 }
 
@@ -37,6 +44,26 @@ async function seedGrants(userId: string, permissions: readonly Permission[]) {
 
 function asMember() {
   trpc.setMembership([{ guildId, asAdmin: false }]);
+}
+
+function competitionCreateInput() {
+  return {
+    guildId,
+    channelId: "111111111111111111",
+    title: "RBAC test competition",
+    description: "Competition created by the RBAC router suite",
+    visibility: "OPEN" as const,
+    maxParticipants: 10,
+    dates: {
+      type: "FIXED_DATES" as const,
+      startDate: new Date("2030-01-01T00:00:00.000Z"),
+      endDate: new Date("2030-02-01T00:00:00.000Z"),
+    },
+    criteria: {
+      type: "MOST_GAMES_PLAYED" as const,
+      queue: "SOLO" as const,
+    },
+  };
 }
 
 async function seedTwoRoleManagers() {
@@ -128,6 +155,41 @@ describe("RBAC guild-permission gate", () => {
     await expect(caller.report.list({ guildId })).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
+  });
+
+  test.each([
+    { resource: "players", action: "read" },
+    { resource: "players", action: "link" },
+    { resource: "roles", action: "grant" },
+    { resource: "competitions", action: "invite" },
+    { resource: "subscriptions", action: "create" },
+  ] satisfies Permission[])(
+    "member search accepts the $resource:$action workflow permission",
+    async (permission) => {
+      await reset();
+      asMember();
+      await seedGrants(member, [permission]);
+
+      await expect(
+        trpc.authedCaller(member).discord.searchMembers({
+          guildId,
+          query: "member",
+        }),
+      ).resolves.toEqual([]);
+    },
+  );
+
+  test("member search rejects grants unrelated to member selection", async () => {
+    await reset();
+    asMember();
+    await seedGrants(member, [{ resource: "audit", action: "read" }]);
+
+    await expect(
+      trpc.authedCaller(member).discord.searchMembers({
+        guildId,
+        query: "member",
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 
   test("manager can manage but cannot touch roles", async () => {
@@ -248,6 +310,48 @@ describe("RBAC guild-permission gate", () => {
 });
 
 describe("roles.set privilege boundaries", () => {
+  test("roles.set compares legacy grants by their canonical permission", async () => {
+    await reset();
+    asMember();
+    await seedGrants(member, [
+      { resource: "roles", action: "grant" },
+      { resource: "competitions", action: "create" },
+      { resource: "subscriptions", action: "read" },
+    ]);
+    await trpc.prisma.serverPermission.create({
+      data: {
+        serverId: guildId,
+        discordUserId: target,
+        permission: "CREATE_COMPETITION",
+        grantedBy: member,
+        grantedAt: new Date(),
+      },
+    });
+
+    await trpc.authedCaller(member).roles.set({
+      guildId,
+      discordUserId: target,
+      permissions: [
+        { resource: "competitions", action: "create" },
+        { resource: "subscriptions", action: "read" },
+      ],
+    });
+
+    const rows = await trpc.prisma.serverPermission.findMany({
+      where: { serverId: guildId, discordUserId: target },
+      orderBy: { permission: "asc" },
+    });
+    expect(rows.map((row) => row.permission)).toEqual([
+      "CREATE_COMPETITION",
+      "subscriptions:read",
+    ]);
+    expect(
+      await trpc.prisma.auditLog.count({
+        where: { serverId: guildId, action: "ROLE_REVOKE" },
+      }),
+    ).toBe(0);
+  });
+
   test("roles.set: non-root cannot self-escalate beyond permissions they hold", async () => {
     await reset();
     asMember();
@@ -330,6 +434,22 @@ describe("roles.set privilege boundaries", () => {
 });
 
 describe("RBAC guard invariants", () => {
+  test("roles.clear does not audit a no-op revocation", async () => {
+    await reset();
+    trpc.setMembership("root");
+
+    await trpc.authedCaller(member).roles.clear({
+      guildId,
+      discordUserId: target,
+    });
+
+    expect(
+      await trpc.prisma.auditLog.count({
+        where: { serverId: guildId, action: "ROLE_REVOKE" },
+      }),
+    ).toBe(0);
+  });
+
   test("self-lockout: last role-admin cannot clear their own grant", async () => {
     await reset();
     asMember();
@@ -422,5 +542,34 @@ describe("RBAC guard invariants", () => {
     await expect(
       trpc.anonCaller().subscription.list({ guildId }),
     ).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+  });
+});
+
+describe("competition creation RBAC", () => {
+  test("delegated creators are subject to the hourly rate limit", async () => {
+    await reset();
+    asMember();
+    await seedGrants(member, [{ resource: "competitions", action: "create" }]);
+    recordCreation(guildId, member);
+
+    await expect(
+      trpc.authedCaller(member).competition.create(competitionCreateInput()),
+    ).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: expect.stringContaining("Rate limited"),
+    });
+  });
+
+  test("successful delegated creation records the rate limit", async () => {
+    await reset();
+    asMember();
+    await seedGrants(member, [{ resource: "competitions", action: "create" }]);
+    expect(checkRateLimit(guildId, member)).toBe(true);
+
+    await trpc
+      .authedCaller(member)
+      .competition.create(competitionCreateInput());
+
+    expect(checkRateLimit(guildId, member)).toBe(false);
   });
 });

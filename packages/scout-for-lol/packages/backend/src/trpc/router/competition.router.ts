@@ -51,6 +51,11 @@ import {
   validateServerLimit,
 } from "#src/database/competition/validation.ts";
 import {
+  checkRateLimit,
+  getTimeRemaining,
+  recordCreation,
+} from "#src/database/competition/rate-limit.ts";
+import {
   loadCachedLeaderboard,
   loadHistoricalLeaderboardSnapshots,
 } from "#src/storage/s3-leaderboard.ts";
@@ -187,9 +192,19 @@ export const competitionRouter = router({
       const ownerId = DiscordAccountIdSchema.parse(ctx.user.discordId);
       const dates = CompetitionDatesSchema.parse(input.dates);
 
+      if (!ctx.permissions.isRoot && !checkRateLimit(input.guildId, ownerId)) {
+        const remainingMinutes = Math.ceil(
+          getTimeRemaining(input.guildId, ownerId) / (60 * 1000),
+        );
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Rate limited: You can create 1 competition per hour. Try again in ${remainingMinutes.toString()} minute${remainingMinutes === 1 ? "" : "s"}.`,
+        });
+      }
+
       // Persistent active-competition limits (per server + per owner). The
-      // single-instance in-memory rate limiter is intentionally skipped: it
-      // guards the Discord non-admin grant flow, and the web app is admin-only.
+      // in-memory rate limiter above matches the Discord delegated-grant flow;
+      // Discord roots bypass it in both surfaces.
       try {
         await validateServerLimit(prisma, input.guildId, ownerId);
         await validateOwnerLimit(prisma, input.guildId, ownerId);
@@ -197,7 +212,7 @@ export const competitionRouter = router({
         asBadRequest(error);
       }
 
-      return createCompetition(prisma, {
+      const competition = await createCompetition(prisma, {
         serverId: input.guildId,
         ownerId,
         channelId: input.channelId,
@@ -209,6 +224,10 @@ export const competitionRouter = router({
         criteria: input.criteria,
         updateCronExpression: input.updateCronExpression,
       });
+      if (!ctx.permissions.isRoot) {
+        recordCreation(input.guildId, ownerId);
+      }
+      return competition;
     }),
 
   edit: guildMutationProcedure("competitions", "update")

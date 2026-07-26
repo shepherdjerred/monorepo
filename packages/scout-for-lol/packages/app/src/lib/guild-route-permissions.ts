@@ -1,46 +1,52 @@
 import { matchPath } from "react-router";
 import type { Permission } from "@scout-for-lol/data";
 
-export const GUILD_ACTION_PERMISSIONS = {
-  competitionCreate: { resource: "competitions", action: "create" },
-  competitionUpdate: { resource: "competitions", action: "update" },
-  reportCreate: { resource: "reports", action: "create" },
-  reportUpdate: { resource: "reports", action: "update" },
-} satisfies Record<string, Permission>;
+export const GUILD_ACTION_ROUTE_PERMISSIONS = {
+  competitionCreate: [{ resource: "competitions", action: "create" }],
+  competitionEdit: [
+    { resource: "competitions", action: "update" },
+    { resource: "competitions", action: "read" },
+  ],
+  reportCreate: [{ resource: "reports", action: "create" }],
+  reportEdit: [
+    { resource: "reports", action: "update" },
+    { resource: "reports", action: "read" },
+  ],
+} satisfies Record<string, readonly Permission[]>;
 
 const GUILD_ACTION_ROUTES: {
   path: string;
-  permission: Permission;
+  permissions: readonly Permission[];
 }[] = [
   {
     path: "/g/:guildId/competitions/new",
-    permission: GUILD_ACTION_PERMISSIONS.competitionCreate,
+    permissions: GUILD_ACTION_ROUTE_PERMISSIONS.competitionCreate,
   },
   {
     path: "/g/:guildId/competitions/:competitionId/edit",
-    permission: GUILD_ACTION_PERMISSIONS.competitionUpdate,
+    permissions: GUILD_ACTION_ROUTE_PERMISSIONS.competitionEdit,
   },
   {
     path: "/g/:guildId/reports/new",
-    permission: GUILD_ACTION_PERMISSIONS.reportCreate,
+    permissions: GUILD_ACTION_ROUTE_PERMISSIONS.reportCreate,
   },
   {
     path: "/g/:guildId/reports/:reportId/edit",
-    permission: GUILD_ACTION_PERMISSIONS.reportUpdate,
+    permissions: GUILD_ACTION_ROUTE_PERMISSIONS.reportEdit,
   },
 ];
 
 /**
- * Return the action permission for an action-only child route. These routes
- * must reach their own action gate even when the caller lacks the section's
- * read permission.
+ * Return every permission required by a form child route. Create forms only
+ * need their create action; edit forms also need read access because they load
+ * the current resource before submitting an update.
  */
-export function permissionForGuildActionRoute(
+export function permissionsForGuildActionRoute(
   pathname: string,
-): Permission | null {
+): readonly Permission[] | null {
   return (
     GUILD_ACTION_ROUTES.find((route) =>
       matchPath({ path: route.path, end: true }, pathname),
-    )?.permission ?? null
+    )?.permissions ?? null
   );
 }

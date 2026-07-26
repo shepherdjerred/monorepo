@@ -4,8 +4,10 @@
  */
 
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import { type Permission, P } from "@scout-for-lol/data";
 import { router, webProcedure } from "#src/trpc/trpc.ts";
-import { guildProcedure } from "#src/trpc/guild-permission.ts";
+import { resolveGuildPermissions } from "#src/trpc/guild-permission.ts";
 import {
   MAX_IDS_PER_RESOLVE,
   resolveDiscordUsers,
@@ -14,6 +16,14 @@ import {
   SearchMembersInputSchema,
   searchGuildMembers,
 } from "#src/lib/discord/search-members.ts";
+
+const MEMBER_SEARCH_PERMISSIONS: Permission[] = [
+  P("players", "read"),
+  P("players", "link"),
+  P("roles", "grant"),
+  P("competitions", "invite"),
+  P("subscriptions", "create"),
+];
 
 export const discordRouter = router({
   /**
@@ -27,11 +37,24 @@ export const discordRouter = router({
     .query(async ({ input }) => resolveDiscordUsers(input.ids)),
 
   /**
-   * Typeahead search for members of a guild (add/invite/role flows). Gated on
-   * `players:read` (it exposes the guild roster); returns [] on failure so the
-   * form degrades gracefully.
+   * Typeahead search for members of a guild. The roster is available to callers
+   * holding any action whose UI needs a member selector; the Discord lookup
+   * still returns [] on failure so an authorized form degrades gracefully.
    */
-  searchMembers: guildProcedure("players", "read")
+  searchMembers: webProcedure
     .input(SearchMembersInputSchema)
-    .query(async ({ input }) => searchGuildMembers(input)),
+    .query(async ({ ctx, input }) => {
+      const permissions = await resolveGuildPermissions(
+        ctx.user,
+        input.guildId,
+      );
+      if (!permissions.canAny(...MEMBER_SEARCH_PERMISSIONS)) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            "Missing a permission that authorizes Discord member selection",
+        });
+      }
+      return searchGuildMembers(input);
+    }),
 });

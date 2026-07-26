@@ -122,6 +122,20 @@ board: false
 - Refreshed `main` again immediately before submission and restacked the branch
   onto `33bc6131edb589aafc7e6d103cfd4eae5011cf54`; the intervening main commit
   only changed homelab and documentation files.
+- Addressed the next hosted review's five P2 findings: edit forms now require
+  both update and read access, Discord member search accepts each workflow that
+  needs member selection, role updates compare legacy rows by canonical
+  permission while retaining raw deletion keys, no-op revocations do not emit
+  audit events, and delegated web competition creation uses the hourly rate
+  limiter.
+- Added focused route-requirement, member-search authorization, legacy-diff,
+  no-op-audit, and delegated-rate-limit regression coverage.
+- Passed all 34 app tests, app typecheck/lint/build, all 1,185 backend tests
+  with 6 intentional skips, and backend typecheck/lint after the five-finding
+  review cycle.
+- Refreshed and restacked once more before submission onto
+  `fa391b034f727e4a5f5d0a76cc11f80ddd4931a0`; the new main commit only changed
+  homelab Argo behavior and its session log.
 
 ### Remaining
 

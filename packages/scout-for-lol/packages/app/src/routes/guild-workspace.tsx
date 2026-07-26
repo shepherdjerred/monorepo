@@ -16,7 +16,7 @@ import {
   ForbiddenPanel,
   permissionLabel,
 } from "#src/components/forbidden-panel.tsx";
-import { permissionForGuildActionRoute } from "#src/lib/guild-route-permissions.ts";
+import { permissionsForGuildActionRoute } from "#src/lib/guild-route-permissions.ts";
 import type { QueryError } from "#src/lib/permission-query-state.ts";
 
 const NAV_ITEMS: {
@@ -81,17 +81,17 @@ export function GuildWorkspace() {
   // The active section is the first path segment after `/g/:guildId/`. Gate the
   // rendered child on that section's read permission so a member holding only,
   // say, `reports:read` can't deep-link `/subscriptions` or `/access` (any grant
-  // used to open every route). Action-only routes bypass this read gate and
-  // reach their exact GuildPermissionGate below.
+  // used to open every route). Form routes bypass this broad section gate and
+  // reach their exact create-only or update-plus-read gate below.
   const activeSection = /^\/g\/[^/]+\/([^/]+)/.exec(location.pathname)?.[1];
   const activeNav = NAV_ITEMS.find((item) => item.to === activeSection);
-  const actionRoutePermission = permissionForGuildActionRoute(
+  const actionRoutePermissions = permissionsForGuildActionRoute(
     location.pathname,
   );
   const sectionForbidden =
     !isLoading &&
     hasAccess &&
-    actionRoutePermission === null &&
+    actionRoutePermissions === null &&
     activeNav !== undefined &&
     perms.cannot(activeNav.permission.resource, activeNav.permission.action);
   const accessDenied = !isLoading && !hasAccess;
@@ -193,9 +193,9 @@ export function GuildSectionIndex() {
   return <Navigate to={first.to} replace />;
 }
 
-/** Block a mutation-only child route unless the caller holds its action. */
-export function GuildPermissionGate(props: {
-  permission: Permission;
+/** Block a form route unless the caller holds every required permission. */
+export function GuildPermissionsGate(props: {
+  permissions: readonly Permission[];
   children: ReactNode;
 }) {
   const { guildId } = useParams();
@@ -211,11 +211,14 @@ export function GuildPermissionGate(props: {
   }
   if (isLoading) return null;
   if (error !== null) return <PermissionLoadError error={error} />;
-  if (perms.cannot(props.permission.resource, props.permission.action)) {
+  const missing = props.permissions.find((permission) =>
+    perms.cannot(permission.resource, permission.action),
+  );
+  if (missing !== undefined) {
     return (
       <ForbiddenPanel
         title="Action not permitted"
-        message={`You need “${permissionLabel(props.permission)}” to open this page.`}
+        message={`You need “${permissionLabel(missing)}” to open this page.`}
       />
     );
   }

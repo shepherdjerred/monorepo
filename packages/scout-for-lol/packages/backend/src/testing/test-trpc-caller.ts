@@ -184,8 +184,14 @@ export async function createOfflineTrpcHarness(
             }
             return {
               members: {
-                fetch: (options: { user: string }) => {
-                  if (state.guildMembers.get(id)?.has(options.user) === true) {
+                fetch: (options: { user?: string; query?: string }) => {
+                  if (options.query !== undefined) {
+                    return Promise.resolve({ map: () => [] });
+                  }
+                  if (
+                    options.user !== undefined &&
+                    state.guildMembers.get(id)?.has(options.user) === true
+                  ) {
                     return Promise.resolve({ id: options.user });
                   }
                   return Promise.reject(

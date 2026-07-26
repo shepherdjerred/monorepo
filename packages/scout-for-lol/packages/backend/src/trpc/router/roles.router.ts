@@ -194,7 +194,17 @@ export const rolesRouter = router({
           },
           select: { permission: true },
         });
-        const currentKeys = new Set(currentRows.map((r) => r.permission));
+        const currentGrants = currentRows.map((row) => {
+          const permission = parseStoredPermissionKey(row.permission);
+          return {
+            rawKey: row.permission,
+            canonicalKey: permissionKey(permission),
+            permission,
+          };
+        });
+        const currentKeys = new Set(
+          currentGrants.map((grant) => grant.canonicalKey),
+        );
 
         await assertPreservesRoleManager(tx, {
           isRoot: ctx.permissions.isRoot,
@@ -209,9 +219,15 @@ export const rolesRouter = router({
         const additions = [...desired.values()].filter(
           (p) => !currentKeys.has(permissionKey(p)),
         );
-        const removalKeys = [...currentKeys].filter(
-          (key) => !desiredKeys.has(key),
+        const removals = currentGrants.filter(
+          (grant) => !desiredKeys.has(grant.canonicalKey),
         );
+        const removalRawKeys = removals.map((grant) => grant.rawKey);
+        const removedPermissions = [
+          ...new Map(
+            removals.map((grant) => [grant.canonicalKey, grant.permission]),
+          ).values(),
+        ];
 
         // Privilege & revoke boundaries (root bypasses — it holds everything).
         if (!ctx.permissions.isRoot) {
@@ -227,7 +243,7 @@ export const rolesRouter = router({
             });
           }
           if (
-            removalKeys.length > 0 &&
+            removalRawKeys.length > 0 &&
             ctx.permissions.cannot("roles", "revoke")
           ) {
             throw new TRPCError({
@@ -238,15 +254,16 @@ export const rolesRouter = router({
           }
         }
 
-        if (removalKeys.length > 0) {
-          await tx.serverPermission.deleteMany({
-            where: {
-              serverId: input.guildId,
-              discordUserId: input.discordUserId,
-              permission: { in: removalKeys },
-            },
-          });
-        }
+        const deletion =
+          removalRawKeys.length === 0
+            ? { count: 0 }
+            : await tx.serverPermission.deleteMany({
+                where: {
+                  serverId: input.guildId,
+                  discordUserId: input.discordUserId,
+                  permission: { in: removalRawKeys },
+                },
+              });
         if (additions.length > 0) {
           await tx.serverPermission.createMany({
             data: additions.map((p) => ({
@@ -276,7 +293,7 @@ export const rolesRouter = router({
             tx,
           );
         }
-        if (removalKeys.length > 0) {
+        if (deletion.count > 0) {
           await recordAudit(
             {
               action: "ROLE_REVOKE",
@@ -284,7 +301,9 @@ export const rolesRouter = router({
               serverId: input.guildId,
               payload: {
                 targetUserId: input.discordUserId,
-                permissions: removalKeys,
+                permissions: removedPermissions.map((permission) =>
+                  permissionKey(permission),
+                ),
               },
               ipAddress: ctx.webSession.ipAddress,
               userAgent: ctx.webSession.userAgent,
@@ -322,23 +341,25 @@ export const rolesRouter = router({
           targetKeepsManagerAccess: false,
         });
 
-        await tx.serverPermission.deleteMany({
+        const deletion = await tx.serverPermission.deleteMany({
           where: {
             serverId: input.guildId,
             discordUserId: input.discordUserId,
           },
         });
-        await recordAudit(
-          {
-            action: "ROLE_REVOKE",
-            actorDiscordId: ctx.user.discordId,
-            serverId: input.guildId,
-            payload: { targetUserId: input.discordUserId },
-            ipAddress: ctx.webSession.ipAddress,
-            userAgent: ctx.webSession.userAgent,
-          },
-          tx,
-        );
+        if (deletion.count > 0) {
+          await recordAudit(
+            {
+              action: "ROLE_REVOKE",
+              actorDiscordId: ctx.user.discordId,
+              serverId: input.guildId,
+              payload: { targetUserId: input.discordUserId },
+              ipAddress: ctx.webSession.ipAddress,
+              userAgent: ctx.webSession.userAgent,
+            },
+            tx,
+          );
+        }
       });
       return { ok: true } as const;
     }),

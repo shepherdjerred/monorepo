@@ -4,9 +4,8 @@
  * gateway member-search (prefix match on username/nickname) and does NOT
  * require the privileged GuildMembers intent for the query-based form.
  *
- * Authorization is handled by the caller's `guildProcedure("players", "read")`
- * gate; fail-soft (returns [] on any error) so a flaky search never breaks the
- * form.
+ * Authorization is handled by the router before this function is called;
+ * fail-soft (returns [] on any error) so a flaky search never breaks the form.
  */
 
 import { z } from "zod";
