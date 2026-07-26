@@ -82,6 +82,10 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runScoutImageGcWorkflow",
   "runVeleroOrphanAuditWorkflow",
   "syncGolinks",
+  // Awaits a single runObserveReviewSignals activity (list PRs + per-PR
+  // GitHub reads + one S3 NDJSON write). No workflow-level sleeps; the
+  // activity carries its own startToCloseTimeout + retry budget.
+  "observeReviewSignalsWorkflow",
 ]);
 
 const SLACK_MS = 5 * ONE_MINUTE;

@@ -35,6 +35,11 @@ export type VideoGraphSpec = {
    * media-clock timestamps (see {@link subtitlePtsSandwich}).
    */
   subtitle?: { path: string; startTime: number };
+  /**
+   * The decoder emits system-memory frames (upload pipeline mode): prefix the GPU graph with
+   * `hwupload` so scale/tonemap/overlay still run on the device. Software graphs ignore this.
+   */
+  uploadInput?: boolean;
 };
 
 export type VideoGraph =
@@ -124,12 +129,15 @@ export function buildSoftwareVideoGraph(
  *   while planar YUV+alpha has no VAAPI surface format.
  */
 export function buildVaapiVideoGraph(spec: VideoGraphSpec): VideoGraph {
-  const { width, height, frameRate, inputColor, subtitle } = spec;
-  const base =
+  const { width, height, frameRate, inputColor, subtitle, uploadInput } = spec;
+  const chain =
     inputColor === "hdr"
       ? `scale_vaapi=w=${width}:h=${height}:format=p010,` +
         "tonemap_vaapi=format=nv12:t=bt709:m=bt709:p=bt709"
       : `scale_vaapi=w=${width}:h=${height}:format=nv12`;
+  // Upload mode: the decoder emitted system-memory frames; put them on the device first so the
+  // rest of the graph is unchanged. See PrepareStreamOptions.hardwarePipelineMode.
+  const base = uploadInput ? `hwupload,${chain}` : chain;
   if (!subtitle) {
     return { kind: "filterChain", filters: [base] };
   }

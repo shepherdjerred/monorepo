@@ -10,9 +10,9 @@ set -euo pipefail
 #   --push       main mode: write per-target registry cache and push
 #                :<sha> + :latest for every image after its smoke passes.
 #
-# Smoke scripts are invoked directly (not through `turbo run smoke`): the
-# images are pre-built by bake, and turbo's smoke/docker:build tasks are
-# cache:false, so no turbo caching is lost by bypassing the task graph.
+# Each Dockerfile owns a `smoke` stage. BuildKit executes that stage against
+# the production filesystem with no image exporter; the production stage is
+# pushed directly only after the smoke solve succeeds.
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck source=.buildkite/scripts/bake-retry.sh
@@ -49,11 +49,10 @@ APP_TARGETS=(
   "discord-plays-pokemon|packages/discord-plays-pokemon/packages/backend"
   "discord-plays-mario-kart|packages/discord-plays-mario-kart/packages/backend"
 )
-INFRA_IMAGES=(caddy-s3proxy obsidian-headless mcp-gateway redlib shelfbridge)
+INFRA_IMAGES=(bindery caddy-s3proxy obsidian-headless mcp-gateway redlib shelfbridge)
 KNOWN_TARGETS_JSON=$(printf '%s\n' "${APP_TARGETS[@]%%|*}" infra | jq -R . | jq -s 'sort')
 
 bake_targets=()
-smoke_dirs=()
 push_images=()
 
 # Scope selection. PRs diff against their merge-base with origin/main. Main
@@ -109,16 +108,15 @@ is_selected() {
 if [ "$scope" = "affected" ]; then
   for entry in "${APP_TARGETS[@]}"; do
     target="${entry%%|*}"
-    dir="${entry#*|}"
     if is_selected "$target"; then
       bake_targets+=("$target")
-      smoke_dirs+=("$dir")
       push_images+=("$target")
     fi
   done
   if is_selected "infra"; then
-    bake_targets+=("infra")
-    smoke_dirs+=("packages/homelab")
+    # `infra` is a Bake group, not an invokable target. Expand it before the
+    # per-target smoke override so every image receives its own `smoke` stage.
+    bake_targets+=("${INFRA_IMAGES[@]}")
     push_images+=("${INFRA_IMAGES[@]}")
   fi
   if [ "${#bake_targets[@]}" -eq 0 ]; then
@@ -135,31 +133,32 @@ if [ "$scope" = "all" ]; then
   selected_json=$KNOWN_TARGETS_JSON
   for entry in "${APP_TARGETS[@]}"; do
     target="${entry%%|*}"
-    dir="${entry#*|}"
     bake_targets+=("$target")
-    smoke_dirs+=("$dir")
     push_images+=("$target")
   done
-  bake_targets+=("infra")
-  smoke_dirs+=("packages/homelab")
+  bake_targets+=("${INFRA_IMAGES[@]}")
   push_images+=("${INFRA_IMAGES[@]}")
 fi
 
-# Builds run on the persistent in-cluster buildkitd (150Gi zfs-ssd-lz4 PVC,
-# GC-bounded at 100Gi) instead of a per-run docker-container builder inside
-# this pod's dind: layer writes land once, compressed, on the shared store
-# rather than tens of GiB of ephemeral dind graph per images pod, and warm
-# layers are cache hits with no registry-cache download. The ghcr buildcache
-# export stays as the cross-store fallback, and `--load` still imports the
-# finished images into this pod's dind for smoke + the digest gate. Used in
-# both modes so the PR dry-run rehearses exactly what main runs.
+# Builds run on the persistent in-cluster buildkitd. Smoke solves have no
+# exporter, so CI never materializes a second image graph in a job-local Docker
+# daemon. Main pushes the already-warm production target directly to GHCR.
 if ! docker buildx inspect ci; then
   docker buildx create --name ci --driver remote tcp://buildkitd-buildkitd-service.buildkitd.svc.cluster.local:1234
 fi
 
-PUSH_CACHE=false
-if [ "$PUSH" = true ]; then
-  PUSH_CACHE=true
+smoke_target_args=()
+for target in "${bake_targets[@]}"; do
+  smoke_target_args+=(--set "${target}.target=smoke")
+done
+if [ -z "${CADDYFILE_SMOKE_PATH:-}" ] && is_selected "infra"; then
+  echo "CADDYFILE_SMOKE_PATH is required when Caddy's in-image smoke runs" >&2
+  exit 2
+fi
+if [ -n "${CADDYFILE_SMOKE_PATH:-}" ]; then
+  # Buildx Bake protects host-file reads used by target secrets. Limit the
+  # entitlement to the generated Caddyfile; it is never exported into an image.
+  smoke_target_args+=(--allow "fs.read=${CADDYFILE_SMOKE_PATH}")
 fi
 
 # Bake with bounded retry + exponential backoff. Image builds do a lot of
@@ -193,10 +192,10 @@ CONTRACT_HASH=$(bun --no-install packages/scout-for-lol/scripts/contract-hash.ts
 bake_attempt=1
 bake_max=3
 while :; do
-  echo "--- :docker: bake ${bake_targets[*]} (attempt ${bake_attempt}/${bake_max})"
+  echo "--- :fire: in-image smoke ${bake_targets[*]} (attempt ${bake_attempt}/${bake_max})"
   bake_log="$(mktemp)"
-  if VERSION="$BUILD_NUMBER" GIT_SHA="$SHA" CONTRACT_HASH="$CONTRACT_HASH" PUSH_CACHE="$PUSH_CACHE" \
-      docker buildx bake --builder ci --load "${bake_targets[@]}" 2>&1 | tee "$bake_log"; then
+  if VERSION=dev GIT_SHA=unknown CONTRACT_HASH="$CONTRACT_HASH" PUSH_CACHE=false \
+      docker buildx bake --builder ci "${smoke_target_args[@]}" "${bake_targets[@]}" 2>&1 | tee "$bake_log"; then
     rm -f "$bake_log"
     break
   fi
@@ -216,20 +215,6 @@ while :; do
   bake_attempt=$((bake_attempt + 1))
 done
 
-# Smoke serially (containers contend on the daemon; assertions are cheap).
-for dir in "${smoke_dirs[@]}"; do
-  echo "--- :fire: smoke ${dir}"
-  smoke_script="scripts/smoke.ts"
-  if [ "$dir" = "packages/homelab" ]; then
-    smoke_script="scripts/smoke-images.ts"
-  fi
-  if [ -n "${CADDYFILE_SMOKE_PATH:-}" ]; then
-    CADDYFILE_SMOKE_PATH="$CADDYFILE_SMOKE_PATH" bun --no-install --cwd "$dir" "$smoke_script"
-  else
-    bun --no-install --cwd "$dir" "$smoke_script"
-  fi
-done
-
 if [ "$PUSH" = true ]; then
   VERSIONS_TS="packages/homelab/src/cdk8s/src/versions.ts"
   # Images whose /prod pin in versions.ts is Renovate-managed (docker
@@ -241,18 +226,19 @@ if [ "$PUSH" = true ]; then
   # the paired site archive exists.
   VERSIONED_TAG_IMAGES=(starlight-karma-bot)
   digest_args=()
+  echo "--- :arrow_up: push production targets ${bake_targets[*]}"
+  VERSION="$BUILD_NUMBER" GIT_SHA="$SHA" CONTRACT_HASH="$CONTRACT_HASH" PUSH_CACHE=true PUSH_IMAGES=true \
+    docker buildx bake --builder ci --push "${bake_targets[@]}"
   for name in "${push_images[@]}"; do
-    echo "--- :arrow_up: push ${name}"
-    docker tag "${name}:dev" "${REGISTRY}/${name}:${SHA}"
-    docker tag "${name}:dev" "${REGISTRY}/${name}:latest"
-    docker push "${REGISTRY}/${name}:${SHA}"
-    docker push "${REGISTRY}/${name}:latest"
     # Record the pushed manifest digest for the version commit-back step
-    # (versions.ts pins tag@digest).
-    digest=$(docker inspect --format '{{range .RepoDigests}}{{println .}}{{end}}' "${REGISTRY}/${name}:${SHA}" \
-      | grep -m1 "^${REGISTRY}/${name}@" | cut -d@ -f2)
-    if [ -z "$digest" ]; then
-      echo "no repo digest recorded for ${REGISTRY}/${name}:${SHA} after push" >&2
+    # (versions.ts pins tag@digest). buildx 0.30.x (the ci-image pin) silently
+    # ignores the '{{.Manifest.Digest}}' template and prints the full
+    # human-readable inspect output (build 6296 shipped that text into
+    # image-digests); the JSON form is honored by 0.30 and 0.33 alike, and the
+    # shape assert keeps any future format regression from reaching meta-data.
+    digest=$(docker buildx imagetools inspect "${REGISTRY}/${name}:${SHA}" --format '{{json .Manifest}}' | jq -r '.digest')
+    if ! printf '%s' "$digest" | grep -Eq '^sha256:[a-f0-9]{64}$'; then
+      echo "no valid manifest digest for ${REGISTRY}/${name}:${SHA} after push (got: ${digest})" >&2
       exit 1
     fi
     # CONTENT gate, not manifest gate: VERSION/GIT_SHA are baked into every
@@ -275,15 +261,12 @@ if [ "$PUSH" = true ]; then
     if [ -n "$pinned" ]; then
       # imagetools failure (e.g. a placeholder pin that was never pushed)
       # counts as changed — the safe direction is an extra bump, never a
-      # skipped one. These images are single-platform (bake runs with --load,
-      # which only supports one platform), so a pinned digest always resolves
+      # skipped one. These images are single-platform, so a pinned digest always resolves
       # to an image manifest: .Image is populated and .Image.RootFS.DiffIDs is
       # a real array, never the `null` that a multi-platform manifest-list
       # index would yield.
       if old_layers=$(docker buildx imagetools inspect "${REGISTRY}/${name}@${pinned}" --format '{{json .Image.RootFS.DiffIDs}}' | jq -c .); then
-        # imagetools pretty-prints its JSON while docker inspect emits compact
-        # JSON, so normalize both before comparing the same uncompressed IDs.
-        new_layers=$(docker inspect --format '{{json .RootFS.Layers}}' "${name}:dev" | jq -c .)
+        new_layers=$(docker buildx imagetools inspect "${REGISTRY}/${name}:${SHA}" --format '{{json .Image.RootFS.DiffIDs}}' | jq -c .)
         if [ "$old_layers" = "$new_layers" ]; then
           echo "content unchanged vs pinned ${pinned} (identical rootfs) — no version bump for ${name}"
           continue
@@ -297,8 +280,7 @@ if [ "$PUSH" = true ]; then
     fi
     for versioned in "${VERSIONED_TAG_IMAGES[@]}"; do
       if [ "$name" = "$versioned" ]; then
-        docker tag "${name}:dev" "${REGISTRY}/${name}:2.0.0-${BUILD_NUMBER}"
-        docker push "${REGISTRY}/${name}:2.0.0-${BUILD_NUMBER}"
+        docker buildx imagetools create --tag "${REGISTRY}/${name}:2.0.0-${BUILD_NUMBER}" "${REGISTRY}/${name}:${SHA}"
       fi
     done
     digest_args+=(--arg "shepherdjerred/${name}" "$digest")

@@ -9,6 +9,11 @@
  * existing merge-tree conflict check.
  */
 import {
+  isProviderAuthor,
+  parseSeverityLevel,
+  PROVIDERS,
+} from "@shepherdjerred/code-review";
+import {
   REVIEW_SEVERITIES,
   SOFT_FAILURE_CONTEXT_SUBSTRINGS,
   type CiVerdict,
@@ -19,8 +24,17 @@ import {
   type UnresolvedThread,
 } from "./types.ts";
 
-/** GitHub login of the Greptile review app (comments may have a `[bot]` suffix). */
-export const GREPTILE_LOGIN_SUBSTRING = "greptile";
+/**
+ * True when `login` belongs to any registered code-review provider (Greptile,
+ * Codex, …). Provider identity + `[bot]`-suffix normalisation live in the
+ * shared `@shepherdjerred/code-review` registry so the gate and the babysitter
+ * can't drift on who the reviewer is.
+ */
+export function isReviewBotAuthor(login: string | null | undefined): boolean {
+  return Object.values(PROVIDERS).some((provider) =>
+    isProviderAuthor(provider, login),
+  );
+}
 
 /** A check context is a SOFT failure (ignored) when its name matches policy. */
 export function isSoftFailureContext(name: string): boolean {
@@ -93,36 +107,16 @@ export function classifyChecks(
   };
 }
 
-const SEVERITY_RE = /\bP([0-3])\b/g;
-
 /**
  * Parse the most-severe `P0`–`P3` token from a comment body (lower number =
- * more severe). Returns undefined when no severity token is present.
+ * more severe). Returns undefined when no severity token is present. Uses the
+ * shared, provider-agnostic token parser so every provider's badge is handled.
  */
 export function parseReviewSeverity(
   body: string | null | undefined,
 ): ReviewSeverity | undefined {
-  if (typeof body !== "string" || body.length === 0) {
-    return undefined;
-  }
-  let best: number | undefined;
-  for (const match of body.matchAll(SEVERITY_RE)) {
-    const n = Number(match[1]);
-    if (best === undefined || n < best) {
-      best = n;
-    }
-  }
-  if (best === undefined) {
-    return undefined;
-  }
-  return REVIEW_SEVERITIES[best];
-}
-
-export function isGreptileAuthor(login: string | null | undefined): boolean {
-  return (
-    typeof login === "string" &&
-    login.toLowerCase().includes(GREPTILE_LOGIN_SUBSTRING)
-  );
+  const level = parseSeverityLevel(body);
+  return level === null ? undefined : REVIEW_SEVERITIES[level];
 }
 
 /** True when `severity` is at or above (more/equally severe as) `threshold`. */
@@ -157,7 +151,7 @@ function toUnresolved(thread: NormalizedReviewThread): UnresolvedThread {
   const base: UnresolvedThread = {
     threadId: thread.id,
     author: thread.author ?? "unknown",
-    isGreptile: isGreptileAuthor(thread.author),
+    isReviewBot: isReviewBotAuthor(thread.author),
     snippet: snippetOf(thread.body),
     ...(severity === undefined ? {} : { severity }),
     ...(thread.url === undefined ? {} : { url: thread.url }),

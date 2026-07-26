@@ -39,6 +39,10 @@ import {
 } from "@shepherdjerred/streambot/util/errors.ts";
 import * as Sentry from "@sentry/bun";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import {
+  registerGatewayHealthListeners,
+  registerTopologyListeners,
+} from "@shepherdjerred/streambot/discord/client-events.ts";
 
 const log = logger.child("command-bot");
 // Grace period before leaving an empty voice channel, so a brief solo moment or a reconnect
@@ -126,6 +130,8 @@ export class CommandBot {
     this.client.on(Events.VoiceStateUpdate, (oldState, newState) => {
       this.onVoiceStateUpdate(oldState, newState);
     });
+    registerTopologyListeners(this.client, () => this.deps.getSessions());
+    registerGatewayHealthListeners(this.client);
   }
 
   async login(): Promise<void> {

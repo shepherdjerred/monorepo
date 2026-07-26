@@ -38,10 +38,11 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 const PORT = 1234;
 
 // Keep the on-disk build cache bounded well under the PVC size so BuildKit's GC
-// always has headroom and the volume can never fill. 100 GiB kept of a 150 GiB
-// PVC.
-const CACHE_PVC = Size.gibibytes(150);
-const GC_KEEP_BYTES = 100 * 1024 * 1024 * 1024;
+// always has headroom and the volume can never fill. 240 GiB kept of a 300 GiB
+// PVC. This is large enough to retain hot production-image layers without
+// letting an unbounded build cache consume the CI node.
+const CACHE_PVC = Size.gibibytes(300);
+const GC_KEEP_BYTES = 240 * 1024 * 1024 * 1024;
 
 // buildkitd.toml: listen on tcp for the remote driver, and cap the cache with a
 // GC policy so the compressed ZFS volume stays bounded (the whole point vs the
@@ -55,6 +56,11 @@ debug = false
 [worker.oci]
   enabled = true
   gc = true
+  # Bound concurrent solve steps: a full-fleet bake (all ~15 targets, cold
+  # cache) with unbounded parallelism OOMKilled the daemon at its previous
+  # 12Gi limit (PR #1668 build 6303). Every fan-out needs a concurrency
+  # bound; 8 matches the CPU limit and keeps peak memory proportional.
+  max-parallelism = 8
   # Reserve the kept-cache floor; GC prunes above it. Keeps the volume bounded.
   [[worker.oci.gcpolicy]]
     keepBytes = ${String(GC_KEEP_BYTES)}
@@ -144,7 +150,14 @@ export function createBuildkitdDeployment(chart: Chart) {
         },
         memory: {
           request: Size.gibibytes(1),
-          limit: Size.gibibytes(12),
+          // 12Gi OOMKilled buildkitd into a crash loop on PR #1668's build:
+          // a full-fleet bake (every Dockerfile changed → all ~15 targets
+          // solving in parallel, fully cold cache) needs far more than 12Gi
+          // at peak, and every global-input change (pipeline.yml,
+          // .dockerignore, bake scripts) produces exactly that build shape.
+          // liskov has ~83Gi allocatable and step pods request well under
+          // half of it, so 32Gi leaves ample headroom for the rest of CI.
+          limit: Size.gibibytes(32),
         },
       },
       // A TCP check on the gRPC port is a sufficient, cheap readiness signal.

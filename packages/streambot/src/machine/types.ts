@@ -1,7 +1,6 @@
 import { z } from "zod";
 import type {
   DiscordTopologyEvent,
-  GatewayHealthEvent,
   ProducerHealthEvent,
 } from "@shepherdjerred/discord-stream-lifecycle/types";
 import type {
@@ -20,7 +19,37 @@ export const LoopModeSchema = z.enum(["off", "track", "queue"]);
 export type LoopMode = z.infer<typeof LoopModeSchema>;
 
 /** What kind of failure last occurred — used to drive the public "blocked" shaming message. */
-export type ErrorKind = "blocked" | "generic";
+export type ErrorKind = "blocked" | "generic" | "crash" | "stall" | "timeout";
+
+/**
+ * Which ffmpeg pipeline a stream segment runs on. The recovery ladder walks these in order of
+ * quality: `hw` (full-GPU: decode/scale/tonemap/encode on device surfaces, ~6x realtime headroom
+ * on 4K HDR) → `hw-upload` (GPU decode to system memory + `hwupload` back for GPU filters/encode
+ * — immune to ffmpeg's mid-stream hwaccel-flip renegotiation crash, ~1.3x realtime) → `sw`
+ * (software decode/scale/tonemap, GPU encode via outFilters hwupload — the last resort).
+ */
+export type PipelineMode = "hw" | "hw-upload" | "sw";
+
+/** Why a crash-recovery retry (or give-up) happened — drives the user-facing announcement. */
+export type CrashReason = "crash" | "ended-short" | "stall";
+
+/**
+ * One-shot notice that a stream segment died and what the machine did about it. The status
+ * reporter announces each distinct `nonce` exactly once (same pattern as `blockedNonce`).
+ */
+export type CrashNotice = {
+  readonly nonce: number;
+  readonly kind: "retry" | "gave-up";
+  readonly reason: CrashReason;
+  readonly title: string;
+  /** Position (seconds) playback had reached when the segment died. */
+  readonly positionSeconds: number;
+  /** 1-based retry attempt this notice announces (for `retry`) or the total attempts spent. */
+  readonly attempt: number;
+  readonly maxAttempts: number;
+  /** Pipeline the retry will use (for `retry`) or the last one tried (for `gave-up`). */
+  readonly pipelineMode: PipelineMode;
+};
 
 /**
  * Opaque handle to an active voice connection, produced by the `joinVoice` actor and consumed by
@@ -56,6 +85,12 @@ export type ResolvedSource = {
    * the stream pipeline; absent (probe failed or SDR) → no tonemap.
    */
   readonly hdr?: boolean;
+  /**
+   * Media duration (seconds, from the resolve-time ffprobe). Lets the streamer distinguish a real
+   * end of media from a premature exit-0 truncation (network URL expiry, container short-read).
+   * Absent when the probe failed or the source has no known duration (live streams).
+   */
+  readonly durationSeconds?: number;
 };
 
 /** A queue entry: a requested source plus who asked for it. */
@@ -75,6 +110,12 @@ export type PlaybackContext = {
   readonly guildId: GuildId;
   readonly channelId: ChannelId;
   readonly idleTimeoutMs: number;
+  /** Wedge guards for the invoked actors — no state may hold a hung actor forever. */
+  readonly wedgeTimeoutsMs: {
+    readonly join: number;
+    readonly resolve: number;
+    readonly leave: number;
+  };
   queue: QueuedSource[];
   current: QueuedSource | null;
   voice: VoiceHandle | null;
@@ -94,6 +135,14 @@ export type PlaybackContext = {
    * from 0.
    */
   resumeSeekSeconds: number;
+  /**
+   * In-process recovery attempts spent on the CURRENT item (0 = first play). Drives the pipeline
+   * ladder for the next attempt and bounds the retry loop; reset when the item ends, is skipped,
+   * or playback stops. Orthogonal to the per-boot resume counter (MAX_RESUME_ATTEMPTS).
+   */
+  crashRetries: number;
+  /** One-shot crash/retry notice for the status reporter; null until the first crash. */
+  crashNotice: CrashNotice | null;
 };
 
 export type PlaybackEvent =
@@ -122,10 +171,12 @@ export type PlaybackEvent =
       subtitles: SubtitlePref | undefined;
       positionSeconds: number;
     }
+  // Gateway-health events (COMMAND_GATEWAY_* / USERBOT_GATEWAY_*) are deliberately NOT part of
+  // this union: gateway disruptions are observability-only (logs + metrics in command-bot /
+  // streamer), and a SHUTDOWN event does not exist — shutdown tears sessions down directly via
+  // `actor.stop()` + pool release (session-manager destroyAll).
   | DiscordTopologyEvent
-  | GatewayHealthEvent
-  | ProducerHealthEvent
-  | { type: "SHUTDOWN" };
+  | ProducerHealthEvent;
 
 export type PlaybackInput = {
   readonly guildId: GuildId;
@@ -139,6 +190,12 @@ export type PlaybackInput = {
   readonly initialVolume?: number;
   /** One-shot seek (seconds) for the first streamed item (resume position). */
   readonly initialSeekSeconds?: number;
+  /** Wedge-timeout overrides (tests use small values; production takes the defaults). */
+  readonly wedgeTimeoutsMs?: {
+    readonly join?: number;
+    readonly resolve?: number;
+    readonly leave?: number;
+  };
 };
 
 export type JoinVoiceInput = {
@@ -155,5 +212,7 @@ export type RunStreamInput = {
   readonly volume: number;
   /** Offset (seconds) to start playback at — >0 only for the first item after a resume. */
   readonly seekSeconds: number;
+  /** Pipeline for this attempt (the machine walks hw → hw-upload → sw across crash retries). */
+  readonly pipelineMode: PipelineMode;
 };
 export type LeaveVoiceInput = { readonly voice: VoiceHandle };

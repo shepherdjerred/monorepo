@@ -42,6 +42,12 @@ export const CompletedMatchSchema = z.strictObject({
     red: RosterSchema,
     blue: RosterSchema,
   }),
+  /**
+   * Short one-line Scout commentary surfaced on the ranked-square design.
+   * Optional — the renderer hides the commentary box when absent. Backend
+   * may populate via LLM, template, or leave undefined.
+   */
+  commentary: z.string().optional(),
 });
 
 export function getLaneOpponent(

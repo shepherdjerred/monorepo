@@ -60,6 +60,25 @@ plan's Phase C pivot).
 Versions are pinned with digests in
 `packages/homelab/src/cdk8s/src/versions.ts`.
 
+### Patched Bindery image rollout
+
+The repository self-builds `ghcr.io/shepherdjerred/bindery` from a pinned
+upstream commit with a local patch that lets author-named, author-ID-less
+Google Books results be added. The deployment intentionally remains on
+`docker.io/vavallee/bindery` during the publication stage:
+
+1. Main CI builds, tests, smokes, and pushes the patched image.
+2. Version commit-back replaces the unused
+   `shepherdjerred/bindery` seed with the real tag and digest.
+3. An operator makes the new GHCR package public and verifies the digest can be
+   pulled anonymously. The cluster has no GHCR pull secret.
+4. A follow-up change switches `bindery.ts` to the verified first-party pin.
+
+Do not point the deployment at the all-zero seed or a private package. Until
+all four steps are complete, Renovate continues to update the deployed
+`vavallee/bindery` pin; the first-party source commit is updated separately
+through the `bindery-source` custom manager and requires manual review.
+
 ## Storage
 
 | PVC                   | Size   | Class    | Used by                     |
@@ -109,6 +128,8 @@ Port `25`, no TLS (cluster-internal), same pattern as Bugsink/Plausible.
 | `packages/homelab/src/cdk8s/src/resources/torrents/bindery.ts`            | Bindery Deployment            |
 | `packages/homelab/src/cdk8s/src/resources/media/calibre-web-automated.ts` | CWA Deployment                |
 | `packages/homelab/src/cdk8s/src/resources/torrents/shelfbridge.ts`        | ShelfBridge Deployment + 1PW  |
+| `packages/homelab/images/bindery/Dockerfile`                              | Patched Bindery image build   |
+| `packages/homelab/images/bindery/0001-gb-author-synthetic.patch`          | Chinese Google Books fix      |
 | `packages/homelab/images/shelfbridge/Dockerfile`                          | Self-built image (pinned ref) |
 | `packages/homelab/src/cdk8s/src/cdk8s-charts/media.ts`                    | PVC + wiring                  |
 | `packages/homelab/src/cdk8s/src/cdk8s-charts/postal.ts`                   | SMTP netpol for CWA           |
@@ -198,7 +219,7 @@ Do this once after Argo syncs `media` + `postal`.
 | Manual drop         | Copy EPUB into CWA ingest (or any path that lands in `ingest/`)                   |
 | Metadata fix        | CWA book page → edit; enforcement writes into file                                |
 | Resize books PVC    | New larger PVC + copy; 50 GiB is the v1 size                                      |
-| Upgrade images      | Renovate bumps `versions.ts` digests                                              |
+| Upgrade images      | Renovate updates deployed upstream pins; CI commit-back updates first-party pins  |
 | Logs                | Loki: `{namespace="media"}` + app labels / pod names `media-bindery`, `media-cwa` |
 
 ## Troubleshooting

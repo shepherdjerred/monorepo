@@ -25,13 +25,13 @@ describe("classifyCiFailClosed", () => {
     expect(ci.missingRequired).toEqual([CI_COMPLETE]);
   });
 
-  test("babysitter-tracked required contexts (merge-conflict / greptile) are excluded", () => {
+  test("babysitter-tracked required contexts (merge-conflict / review-gate) are excluded", () => {
     const checks: NormalizedCheck[] = [{ name: "fast", bucket: "pass" }];
     const ci = classifyCiFailClosed(checks, {
       known: true,
       contexts: [
         "ci/merge-conflict",
-        "buildkite/monorepo/pr/mag-greptile-review",
+        "buildkite/monorepo/pr/robot-face-review-gate",
       ],
     });
     // Both required contexts are tracked separately → no required gating remains.

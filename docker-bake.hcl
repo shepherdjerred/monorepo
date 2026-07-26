@@ -10,8 +10,9 @@
 # Per-package `docker:build` scripts remain for one-off local builds; target
 # definitions here must stay in sync with them.
 #
-# Tags are `<name>:dev` so the per-package smoke scripts (`docker run
-# <name>:dev`) work unchanged; CI re-tags/pushes after smoke passes.
+// CI solves `smoke` targets without an exporter, then pushes the production
+// target directly to GHCR. Local bake calls retain convenient `<name>:dev`
+// tags for the package-owned Docker wrappers.
 
 variable "REGISTRY" {
   default = "ghcr.io/shepherdjerred"
@@ -38,6 +39,16 @@ variable "CONTRACT_HASH" {
 variable "PUSH_CACHE" {
   default = "false"
 }
+variable "PUSH_IMAGES" {
+  default = "false"
+}
+# Caddy's smoke stage parses the generated production configuration. Secrets
+# are target attributes in Bake (not a `docker buildx bake` CLI flag), so keep
+# the ephemeral source path out of the Dockerfile and pass it only at solve
+# time.
+variable "CADDYFILE_SMOKE_PATH" {
+  default = ""
+}
 function "cachefrom" {
   params = [name]
   result = ["type=registry,ref=${REGISTRY}/${name}:buildcache"]
@@ -46,6 +57,10 @@ function "cachefrom" {
 function "cacheto" {
   params = [name]
   result = equal(PUSH_CACHE, "true") ? ["type=registry,ref=${REGISTRY}/${name}:buildcache,mode=max,image-manifest=true"] : []
+}
+function "imagetags" {
+  params = [name]
+  result = equal(PUSH_IMAGES, "true") ? ["${REGISTRY}/${name}:${GIT_SHA}", "${REGISTRY}/${name}:latest"] : ["${name}:dev"]
 }
 
 group "default" {
@@ -69,6 +84,7 @@ group "app" {
 
 target "_app" {
   context = "."
+  target = "image"
   args = {
     VERSION = VERSION
     GIT_SHA = GIT_SHA
@@ -78,7 +94,7 @@ target "_app" {
 target "birmel" {
   inherits   = ["_app"]
   dockerfile = "packages/birmel/Dockerfile"
-  tags       = ["birmel:dev"]
+  tags       = imagetags("birmel")
   cache-from = cachefrom("birmel")
   cache-to   = cacheto("birmel")
 }
@@ -86,7 +102,7 @@ target "birmel" {
 target "tasknotes-server" {
   inherits   = ["_app"]
   dockerfile = "packages/tasknotes-server/Dockerfile"
-  tags       = ["tasknotes-server:dev"]
+  tags       = imagetags("tasknotes-server")
   cache-from = cachefrom("tasknotes-server")
   cache-to   = cacheto("tasknotes-server")
 }
@@ -94,7 +110,7 @@ target "tasknotes-server" {
 target "starlight-karma-bot" {
   inherits   = ["_app"]
   dockerfile = "packages/starlight-karma-bot/Dockerfile"
-  tags       = ["starlight-karma-bot:dev"]
+  tags       = imagetags("starlight-karma-bot")
   cache-from = cachefrom("starlight-karma-bot")
   cache-to   = cacheto("starlight-karma-bot")
 }
@@ -102,7 +118,7 @@ target "starlight-karma-bot" {
 target "streambot" {
   inherits   = ["_app"]
   dockerfile = "packages/streambot/Dockerfile"
-  tags       = ["streambot:dev"]
+  tags       = imagetags("streambot")
   cache-from = cachefrom("streambot")
   cache-to   = cacheto("streambot")
 }
@@ -110,7 +126,7 @@ target "streambot" {
 target "temporal-worker" {
   inherits   = ["_app"]
   dockerfile = "packages/temporal/Dockerfile"
-  tags       = ["temporal-worker:dev"]
+  tags       = imagetags("temporal-worker")
   cache-from = cachefrom("temporal-worker")
   cache-to   = cacheto("temporal-worker")
 }
@@ -118,7 +134,7 @@ target "temporal-worker" {
 target "trmnl-dashboard" {
   inherits   = ["_app"]
   dockerfile = "packages/trmnl-dashboard/Dockerfile"
-  tags       = ["trmnl-dashboard:dev"]
+  tags       = imagetags("trmnl-dashboard")
   cache-from = cachefrom("trmnl-dashboard")
   cache-to   = cacheto("trmnl-dashboard")
 }
@@ -126,7 +142,7 @@ target "trmnl-dashboard" {
 target "scout-for-lol" {
   inherits   = ["_app"]
   dockerfile = "packages/scout-for-lol/packages/backend/Dockerfile"
-  tags       = ["scout-for-lol:dev"]
+  tags       = imagetags("scout-for-lol")
   args = {
     VERSION       = VERSION
     GIT_SHA       = GIT_SHA
@@ -139,7 +155,7 @@ target "scout-for-lol" {
 target "discord-plays-pokemon" {
   inherits   = ["_app"]
   dockerfile = "packages/discord-plays-pokemon/Dockerfile"
-  tags       = ["discord-plays-pokemon:dev"]
+  tags       = imagetags("discord-plays-pokemon")
   cache-from = cachefrom("discord-plays-pokemon")
   cache-to   = cacheto("discord-plays-pokemon")
 }
@@ -147,47 +163,65 @@ target "discord-plays-pokemon" {
 target "discord-plays-mario-kart" {
   inherits   = ["_app"]
   dockerfile = "packages/discord-plays-mario-kart/Dockerfile"
-  tags       = ["discord-plays-mario-kart:dev"]
+  tags       = imagetags("discord-plays-mario-kart")
   cache-from = cachefrom("discord-plays-mario-kart")
   cache-to   = cacheto("discord-plays-mario-kart")
 }
 
-# ── Homelab infra images: self-contained contexts, no VERSION/GIT_SHA ───────
+# ── Homelab infra images: self-contained contexts ────────────────────────────
 group "infra" {
-  targets = ["caddy-s3proxy", "obsidian-headless", "mcp-gateway", "redlib", "shelfbridge"]
+  targets = ["bindery", "caddy-s3proxy", "obsidian-headless", "mcp-gateway", "redlib", "shelfbridge"]
+}
+
+target "bindery" {
+  context    = "packages/homelab/images/bindery"
+  target     = "image"
+  tags       = imagetags("bindery")
+  args = {
+    VERSION = VERSION
+    COMMIT  = GIT_SHA
+  }
+  cache-from = cachefrom("bindery")
+  cache-to   = cacheto("bindery")
 }
 
 target "caddy-s3proxy" {
   context    = "packages/homelab/images/caddy-s3proxy"
-  tags       = ["caddy-s3proxy:dev"]
+  target     = "image"
+  tags       = imagetags("caddy-s3proxy")
+  secret     = CADDYFILE_SMOKE_PATH != "" ? ["id=caddyfile,src=${CADDYFILE_SMOKE_PATH}"] : []
   cache-from = cachefrom("caddy-s3proxy")
   cache-to   = cacheto("caddy-s3proxy")
 }
 
 target "obsidian-headless" {
   context    = "packages/homelab/images/obsidian-headless"
-  tags       = ["obsidian-headless:dev"]
+  target     = "image"
+  tags       = imagetags("obsidian-headless")
   cache-from = cachefrom("obsidian-headless")
   cache-to   = cacheto("obsidian-headless")
 }
 
 target "mcp-gateway" {
   context    = "packages/homelab/images/mcp-gateway"
-  tags       = ["mcp-gateway:dev"]
+  target     = "image"
+  tags       = imagetags("mcp-gateway")
   cache-from = cachefrom("mcp-gateway")
   cache-to   = cacheto("mcp-gateway")
 }
 
 target "redlib" {
   context    = "packages/homelab/images/redlib"
-  tags       = ["redlib:dev"]
+  target     = "image"
+  tags       = imagetags("redlib")
   cache-from = cachefrom("redlib")
   cache-to   = cacheto("redlib")
 }
 
 target "shelfbridge" {
   context    = "packages/homelab/images/shelfbridge"
-  tags       = ["shelfbridge:dev"]
+  target     = "image"
+  tags       = imagetags("shelfbridge")
   cache-from = cachefrom("shelfbridge")
   cache-to   = cacheto("shelfbridge")
 }

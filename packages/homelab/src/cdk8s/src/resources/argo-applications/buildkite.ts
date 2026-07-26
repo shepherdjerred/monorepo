@@ -5,10 +5,11 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
   KubeLimitRange,
+  KubeConfigMap,
   KubePersistentVolumeClaim,
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import { NVME_STORAGE_CLASS_LZ4 } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import {
   CI_NODE_HOSTNAME,
@@ -84,6 +85,47 @@ export function createBuildkiteApp(chart: Chart) {
     },
   });
 
+  // The LLM observability E2E uses native Tempo and MinIO sidecars in its
+  // Buildkite pod. Keeping the Tempo configuration in Git makes the Kubernetes
+  // topology equivalent to the former Compose fixture without a DinD daemon or
+  // a bind mount that a sidecar cannot see.
+  new KubeConfigMap(chart, "llm-observability-e2e-tempo", {
+    metadata: { name: "llm-observability-e2e-tempo", namespace: "buildkite" },
+    data: {
+      "tempo.yaml": `stream_over_http_enabled: true
+server:
+  http_listen_port: 3200
+  log_level: info
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        http:
+          endpoint: "0.0.0.0:4318"
+        grpc:
+          endpoint: "0.0.0.0:4317"
+ingester:
+  max_block_duration: 5m
+  complete_block_timeout: 10s
+  trace_idle_period: 1s
+compactor:
+  compaction:
+    block_retention: 1h
+storage:
+  trace:
+    backend: local
+    wal:
+      path: /var/tempo/wal
+    local:
+      path: /var/tempo/blocks
+overrides:
+  defaults:
+    metrics_generator:
+      processors: []
+`,
+    },
+  });
+
   // Shared git-mirror store for step-pod checkouts (restored 2026-07-18; it
   // was dropped in the CI replatform on the assumption of "plain shallow
   // checkouts", but the static pipeline does FULL `--no-tags` clones so turbo
@@ -93,11 +135,71 @@ export function createBuildkiteApp(chart: Chart) {
   // checkouts to use the mirror via the alternates path
   // `/buildkite/git-mirrors/<encoded-url>/objects`.
   new KubePersistentVolumeClaim(chart, "buildkite-git-mirrors-pvc", {
-    metadata: { name: "buildkite-git-mirrors", namespace: "buildkite" },
+    metadata: {
+      // -liskov: same forced-recreation rename as buildkitd-cache-liskov /
+      // turbo-cache-liskov. The original buildkite-git-mirrors claim was
+      // (re)created during the liskov migration hours before #1663 switched
+      // this definition to the lz4 class, and storageClassName is immutable
+      // on a bound claim — ArgoCD sync failed on the diff forever (build
+      // 6306). A new name binds fresh on the lz4 class; the old claim is
+      // pruned by the argocd-sync step's `sync apps --prune`.
+      name: "buildkite-git-mirrors-liskov",
+      namespace: "buildkite",
+      labels: {
+        "velero.io/backup": "disabled",
+        "velero.io/exclude-from-backup": "true",
+      },
+    },
     spec: {
       accessModes: ["ReadWriteMany"],
-      storageClassName: NVME_STORAGE_CLASS,
+      storageClassName: NVME_STORAGE_CLASS_LZ4,
       resources: { requests: { storage: Quantity.fromString("20Gi") } },
+    },
+  });
+
+  // OpenTofu provider archives are deterministic but expensive to download.
+  // The pipeline takes an advisory lock before invoking tofu because its
+  // plugin-cache protocol does not support concurrent writers. RWX is needed
+  // for that cross-pod lock even though every claimant is constrained to
+  // Liskov; no build output or state is stored here.
+  new KubePersistentVolumeClaim(chart, "buildkite-tofu-plugin-cache-pvc", {
+    metadata: {
+      name: "buildkite-tofu-plugin-cache",
+      namespace: "buildkite",
+      labels: {
+        "velero.io/backup": "disabled",
+        "velero.io/exclude-from-backup": "true",
+      },
+    },
+    spec: {
+      accessModes: ["ReadWriteMany"],
+      storageClassName: NVME_STORAGE_CLASS_LZ4,
+      resources: { requests: { storage: Quantity.fromString("10Gi") } },
+    },
+  });
+
+  // Shared bun download cache for step pods. Replaces the ~1 GiB
+  // bun-cache-warm layer that was baked into ci-base (and re-pushed/re-pulled
+  // on every lockfile change): the cache now persists across builds on the CI
+  // node instead of living in the image. Bun's download cache is
+  // content-addressed and safe for concurrent installs (verified with
+  // concurrent cold-cache installs sharing one BUN_INSTALL_CACHE_DIR); this is
+  // the download cache, NOT the isolated-linker global store (whose parallel
+  // CI hazard — oven-sh/bun#12917 — is why bunfig's globalStore stays off).
+  // Disposable derived data, like the caches above — excluded from backups.
+  new KubePersistentVolumeClaim(chart, "buildkite-bun-cache-pvc", {
+    metadata: {
+      name: "buildkite-bun-cache",
+      namespace: "buildkite",
+      labels: {
+        "velero.io/backup": "disabled",
+        "velero.io/exclude-from-backup": "true",
+      },
+    },
+    spec: {
+      accessModes: ["ReadWriteMany"],
+      storageClassName: NVME_STORAGE_CLASS_LZ4,
+      resources: { requests: { storage: Quantity.fromString("30Gi") } },
     },
   });
 
@@ -133,9 +235,12 @@ export function createBuildkiteApp(chart: Chart) {
               "default-checkout-params": {
                 gitMirrors: {
                   volume: {
+                    // Pod-level volume NAME stays stable — pipeline.yml's
+                    // container volumeMounts reference it. Only the claim
+                    // behind it moves to the -liskov lz4 PVC.
                     name: "buildkite-git-mirrors",
                     persistentVolumeClaim: {
-                      claimName: "buildkite-git-mirrors",
+                      claimName: "buildkite-git-mirrors-liskov",
                     },
                   },
                   lockTimeout: 300,
@@ -177,7 +282,33 @@ export function createBuildkiteApp(chart: Chart) {
                 tolerations: [CI_NODE_TOLERATION],
                 serviceAccountName: "buildkite-agent-stack-k8s-controller",
                 automountServiceAccountToken: true,
+                // Shared bun download cache (see the buildkite-bun-cache PVC
+                // above). Volume + mount + env are patched here so EVERY step
+                // pod gets them without touching each pipeline.yml pod anchor;
+                // strategic merge matches the step container by name
+                // (container-0) and merges env/volumeMounts by key.
+                volumes: [
+                  {
+                    name: "buildkite-bun-cache",
+                    persistentVolumeClaim: { claimName: "buildkite-bun-cache" },
+                  },
+                ],
                 containers: [
+                  {
+                    name: "container-0",
+                    env: [
+                      {
+                        name: "BUN_INSTALL_CACHE_DIR",
+                        value: "/buildkite/bun-cache",
+                      },
+                    ],
+                    volumeMounts: [
+                      {
+                        name: "buildkite-bun-cache",
+                        mountPath: "/buildkite/bun-cache",
+                      },
+                    ],
+                  },
                   {
                     name: "agent",
                     resources: {

@@ -251,7 +251,11 @@ function getMatch(): CompletedMatch {
   }
 
   return {
-    queueType: "solo",
+    // Existing tests exercise the standard Report (non-ranked queues).
+    // Ranked solo/flex routes to the new ranked-banner / ranked-square
+    // designs, which have their own integration tests under
+    // ranked-banner/ and ranked-square/.
+    queueType: "draft pick",
     players: [
       {
         playerConfig: {

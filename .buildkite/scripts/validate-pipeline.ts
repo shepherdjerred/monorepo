@@ -29,9 +29,10 @@ const PATH_GATED_PR_KEYS = new Set([
 ]);
 const SHARED_POD_ANCHORS = [
   "pod_kubernetes",
-  "pod_privileged_kubernetes",
+  "pod_buildkit_kubernetes",
   "pod_verify_kubernetes",
   "pod_light_kubernetes",
+  "pod_tofu_kubernetes",
 ] as const;
 const CHECKOUT_CONTAINER_ALIAS = "- *checkout_container";
 
@@ -631,6 +632,16 @@ for (const forbidden of ["CI_BUILDX_", "--target", "image-build-manifest"]) {
     fail(`bake-images.sh retained rejected Buildx experiment ${forbidden}`);
   }
 }
+for (const forbidden of [
+  "--load",
+  "docker-env.sh",
+  "DOCKER_HOST",
+  "docker:28-dind",
+]) {
+  if (pipeline.includes(forbidden) || bakeImages.includes(forbidden)) {
+    fail(`CI retained forbidden Docker-in-Docker path ${forbidden}`);
+  }
+}
 
 const dockerBake = await Bun.file("docker-bake.hcl").text();
 if (dockerBake.includes('variable "READ_CACHE"')) {
@@ -642,11 +653,11 @@ const buildCiImage = await Bun.file(
 ).text();
 if (
   !buildCiImage.includes(
-    "docker buildx create --name ci --driver docker-container",
+    "docker buildx create --name ci --driver remote tcp://buildkitd-buildkitd-service.buildkitd.svc.cluster.local:1234",
   ) ||
   !buildCiImage.includes("--builder ci")
 ) {
-  fail("build-ci-image.sh must use the production docker-container builder");
+  fail("build-ci-image.sh must use the remote production BuildKit builder");
 }
 
 const caddyCheck = await Bun.file(
@@ -663,16 +674,16 @@ for (const hiddenBuild of [
   }
 }
 
-const imageSmoke = await Bun.file(
-  "packages/homelab/scripts/smoke-images.ts",
+const caddyDockerfile = await Bun.file(
+  "packages/homelab/images/caddy-s3proxy/Dockerfile",
 ).text();
 for (const required of [
-  'const image = "caddy-s3proxy:dev"',
-  'process.env["CADDYFILE_SMOKE_PATH"]',
-  "caddy validate --config /tmp/Caddyfile --adapter caddyfile",
+  "FROM runtime AS smoke",
+  "--mount=type=secret,id=caddyfile",
+  "caddy adapt --config /run/secrets/caddyfile --adapter caddyfile",
 ]) {
-  if (!imageSmoke.includes(required)) {
-    fail(`infra image smoke is missing Caddy validation contract ${required}`);
+  if (!caddyDockerfile.includes(required)) {
+    fail(`Caddy in-image smoke is missing contract ${required}`);
   }
 }
 

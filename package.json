@@ -41,6 +41,7 @@
     "packages/astro-opengraph-images",
     "packages/better-skill-capped",
     "packages/birmel",
+    "packages/code-review",
     "packages/cooklang-for-obsidian",
     "packages/cooklang-rich-preview",
     "packages/discord-plays-core",

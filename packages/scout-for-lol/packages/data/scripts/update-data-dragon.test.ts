@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { resolveCDragonAssetUrl } from "./update-data-dragon.ts";
+import {
+  assertSnapshotUpdateSucceeded,
+  resolveCDragonAssetUrl,
+} from "./update-data-dragon.ts";
+import { ChampionListSchema } from "./update-data-dragon-schemas.ts";
 
 describe("resolveCDragonAssetUrl", () => {
   // Recipe: take the `loadScreenPath` from CommunityDragon's per-champion JSON,
@@ -31,6 +35,42 @@ describe("resolveCDragonAssetUrl", () => {
     );
     expect(url).toContain(
       "/assets/characters/missfortune/skins/skin99/missfortuneloadscreen_99.jpg",
+    );
+  });
+});
+
+describe("ChampionListSchema", () => {
+  test("rejects a nonnumeric champion key", () => {
+    const result = ChampionListSchema.safeParse({
+      data: {
+        InvalidChampion: {
+          id: "InvalidChampion",
+          key: "not-a-number",
+          name: "Invalid Champion",
+        },
+      },
+    });
+
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("assertSnapshotUpdateSucceeded", () => {
+  test("accepts a successful snapshot update", () => {
+    expect(() => {
+      assertSnapshotUpdateSucceeded("ranked-banner.test.ts", 0, "");
+    }).not.toThrow();
+  });
+
+  test("propagates a failed ranked snapshot update", () => {
+    expect(() => {
+      assertSnapshotUpdateSucceeded(
+        "ranked-square/square.integration.test.ts",
+        1,
+        "snapshot mismatch",
+      );
+    }).toThrow(
+      "Snapshot update failed for ranked-square/square.integration.test.ts (exit 1): snapshot mismatch",
     );
   });
 });

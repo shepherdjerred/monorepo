@@ -24,7 +24,42 @@ export type SeekablePlayerDeps = {
 export type SeekablePlayerOptions = {
   prepare?: Partial<PrepareStreamOptions>;
   play?: Partial<PlayStreamOptions>;
+  /**
+   * How long to wait for the ffmpeg process to settle after the output pipeline drains before
+   * declaring a natural end anyway. Output drain alone cannot distinguish a real end of media from
+   * a crashed ffmpeg whose pipe closed early — the exit outcome decides. ffmpeg settles within
+   * milliseconds of its pipe closing, so the timeout only guards a wedged process (never settle →
+   * never finish). Default 5000.
+   */
+  ffmpegSettleTimeoutMs?: number;
 };
+
+type FfmpegSettle =
+  | { kind: "exited" }
+  | { kind: "failed"; err: unknown }
+  | { kind: "timeout" };
+
+function settleFfmpeg(
+  promise: Promise<void>,
+  timeoutMs: number,
+): Promise<FfmpegSettle> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      resolve({ kind: "timeout" });
+    }, timeoutMs);
+    timer.unref();
+    promise.then(
+      () => {
+        clearTimeout(timer);
+        resolve({ kind: "exited" });
+      },
+      (err: unknown) => {
+        clearTimeout(timer);
+        resolve({ kind: "failed", err });
+      },
+    );
+  });
+}
 
 export type Player = {
   /** Open the Go-Live stream and begin playing from the initial offset. Resolves once attached. */
@@ -62,6 +97,7 @@ export function createSeekablePlayer(
 
   const mergedPlay = mergePlayStreamOptions(options.play ?? {});
   const playType = mergedPlay.type;
+  const ffmpegSettleTimeoutMs = options.ffmpegSettleTimeoutMs ?? 5000;
 
   let conn: WebRtcConnWrapper | undefined;
   let connConfigured = false;
@@ -101,7 +137,10 @@ export function createSeekablePlayer(
     conn.mediaConnection.setVideoAttributes(false);
   }
 
-  async function runSegment(startSeconds: number): Promise<void> {
+  async function runSegment(
+    startSeconds: number,
+    initial = false,
+  ): Promise<void> {
     if (!conn) throw new Error("runSegment called before the connection was created");
     const gen = ++generation;
 
@@ -149,6 +188,21 @@ export function createSeekablePlayer(
       );
     } catch (err) {
       if (gen !== generation || stopped) return;
+      if (initial) {
+        // A failed FIRST attach is a startup/graph-init failure (e.g. a VAAPI device/filter the
+        // GPU lacks), not a mid-stream crash. Mark the player inert, abort the paired ffmpeg (its
+        // `promise.catch` above is guarded on `stopped`/`abort.signal.aborted`, so it won't also
+        // settle `finished`), and TEAR DOWN the just-opened Go-Live connection before rejecting —
+        // otherwise the caller's immediate software fallback opens a second stream while this dead
+        // one is still up, leaking the connection or blocking the fallback's attach. Reject
+        // `start()` so the caller keeps this on the immediate software fallback instead of the
+        // slower mid-stream recovery ladder. `finished` is intentionally left unsettled: nobody
+        // awaits it once `start()` rejects and the player is discarded.
+        stopped = true;
+        abort.abort();
+        teardownConn();
+        throw err;
+      }
       fail(err);
       return;
     }
@@ -161,15 +215,48 @@ export function createSeekablePlayer(
     currentPipeline = pipeline;
 
     pipeline.done
-      .then(() => {
-        // Natural end of media for THIS segment. Superseded (seek) or stopped segments are ignored;
-        // their replacement drives playback.
+      .then(async () => {
+        // Output drained for THIS segment. Superseded (seek) or stopped segments are ignored;
+        // their replacement drives playback. Drain alone cannot distinguish natural end of media
+        // from a crashed ffmpeg whose closed pipe drained through the demuxer — the ffmpeg exit
+        // outcome decides, so wait for it before settling `finished`.
         if (gen !== generation || stopped) return;
+        const outcome = await settleFfmpeg(promise, ffmpegSettleTimeoutMs);
+        if (gen !== generation || stopped) return;
+        if (outcome.kind === "failed" && !abort.signal.aborted) {
+          log.error({ err: outcome.err }, "ffmpeg failed after output drain");
+          teardownConn();
+          fail(outcome.err);
+          return;
+        }
+        if (outcome.kind === "timeout") {
+          // Output drained but ffmpeg never exited: a wedged process, not a natural end. Treating
+          // it as EOF would tear the Discord connection down while leaving ffmpeg (and its pending
+          // promise) alive — an orphan that can run alongside a retry or the next item. Abort it and
+          // surface a failure so the outcome is classified (retry/next), not reported as a clean end.
+          log.warn(
+            { timeoutMs: ffmpegSettleTimeoutMs },
+            "ffmpeg did not settle after output drain; aborting wedged process",
+          );
+          abort.abort();
+          teardownConn();
+          fail(
+            new Error(
+              `ffmpeg did not settle within ${String(ffmpegSettleTimeoutMs)}ms after output drain`,
+            ),
+          );
+          return;
+        }
         teardownConn();
         succeed();
       })
-      .catch(() => {
-        // Aborted by a seek/stop — the new segment (or stop()) owns the outcome.
+      .catch((err: unknown) => {
+        // Rejection paths: aborted by a seek/stop (the new segment or stop() owns the outcome),
+        // or a demuxer error surfaced through the pipeline — the latter is a real failure.
+        if (gen !== generation || stopped || abort.signal.aborted) return;
+        log.error({ err }, "pipeline failed");
+        teardownConn();
+        fail(err);
       });
   }
 
@@ -190,7 +277,9 @@ export function createSeekablePlayer(
         conn = streamer.voiceConnection.webRtcConn;
         streamer.signalVideo(true);
       }
-      await runSegment(positionSeconds);
+      // `initial: true` — a failed first attach rejects here (startup/graph-init failure) instead of
+      // being swallowed into `finished`, so callers can distinguish it from a mid-stream crash.
+      await runSegment(positionSeconds, true);
     },
     async seek(seconds: number) {
       if (stopped || !conn) return;

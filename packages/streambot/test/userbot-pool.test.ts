@@ -46,6 +46,9 @@ function fakeStreamer(guilds: GuildId[], onLogin?: () => Promise<void>) {
     setVoiceCloseListener: () => {
       /* pool tests never simulate voice closes */
     },
+    setStallListener: () => {
+      /* pool tests never simulate stalls */
+    },
     userId: () => "200000000000000000",
     destroy: () => {
       destroyed = true;

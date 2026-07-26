@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { rm } from "node:fs/promises";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { z } from "zod";
 
@@ -66,7 +67,10 @@ afterEach(async () => {
   for (const root of temporaryRoots.splice(0)) {
     if (!root.includes("/docs-board-test."))
       throw new Error(`Refusing cleanup: ${root}`);
-    await command("/tmp", ["trash", root]);
+    // Not `trash`: that CLI is macOS-only and absent from the CI image, and
+    // the path guard above already scopes deletion to this suite's mktemp
+    // fixtures (CI build 6302).
+    await rm(root, { recursive: true, force: true });
   }
 });
 

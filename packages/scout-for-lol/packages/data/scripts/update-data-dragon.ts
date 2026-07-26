@@ -45,6 +45,22 @@ const MONOREPO_ROOT = `${import.meta.dir}/../../../../..`;
 const BASE_URL = "https://ddragon.leagueoflegends.com";
 const BYTES_PER_MIB = 1024 * 1024;
 const MAX_LOADING_SCREEN_IMAGE_BYTES = 1 * BYTES_PER_MIB;
+// Splash art is higher-resolution than loading art (centered CDragon ~85 KB,
+// Data Dragon splash ~180 KB), so it gets a slightly larger ceiling.
+const MAX_SPLASH_IMAGE_BYTES = 2 * BYTES_PER_MIB;
+
+/**
+ * CommunityDragon *centered* splash art (≈1280×720) keyed by numeric champion
+ * id. Centered composition keeps the champion framed when the ranked report
+ * designs crop the wide splash to their banner / square canvases. Verified 200
+ * for id 62 (Wukong) skin 0/1 on 2026-07-25.
+ */
+function getCDragonCenteredSplashUrl(
+  championId: number,
+  skinNum: number,
+): string {
+  return `https://cdn.communitydragon.org/latest/champion/${championId.toString()}/splash-art/centered/skin/${skinNum.toString()}`;
+}
 
 function getCommunityDragonVersion(dataDragonVersion: string): string {
   const parts = dataDragonVersion.split(".");
@@ -262,6 +278,7 @@ async function createDirectories(): Promise<void> {
   await ensureDir(`${IMG_DIR}/augment`);
   await ensureDir(`${IMG_DIR}/lane`);
   await ensureDir(`${IMG_DIR}/champion-loading`);
+  await ensureDir(`${IMG_DIR}/champion-splash`);
   await ensureDir(`${ASSETS_DIR}/champion`);
 }
 
@@ -633,11 +650,10 @@ async function downloadChampionLoadingImages(
 
   for (const [championName, listEntry] of championEntries) {
     const championId = Number(listEntry.key);
-    if (!Number.isFinite(championId)) {
-      console.warn(
-        `  ⚠ Champion ${championName} has invalid championId ${listEntry.key} — skipping`,
+    if (!Number.isSafeInteger(championId) || championId <= 0) {
+      throw new Error(
+        `Champion ${championName} has invalid championId ${listEntry.key}`,
       );
-      continue;
     }
 
     const result = await downloadLoadingScreenSkin(championName, championId, 0);
@@ -707,6 +723,211 @@ async function downloadChampionLoadingImages(
   const imageCount = ddragonCount + cdragonCount;
   console.log(
     `✓ Downloaded ${imageCount.toString()} champion loading images across ${championEntries.length.toString()} champions`,
+  );
+  return { imageCount };
+}
+
+type SplashSource = "cdragon" | "ddragon";
+
+type SplashDownloadResult =
+  | { status: "success"; source: SplashSource }
+  | { status: "failed" };
+
+/**
+ * Download a single champion splash-art image (base skin 0 in practice).
+ *
+ * Two-tier source resolution, mirroring `downloadLoadingScreenSkin` but with a
+ * higher-resolution source order:
+ *   1. CommunityDragon *centered* splash (≈1280×720), keyed by numeric champion
+ *      id — the primary source because centered art stays framed when the ranked
+ *      designs crop the wide splash.
+ *   2. Data Dragon splash (≈1215×717), keyed by champion name.
+ *
+ * Both are ~4× the linear resolution of the loading-screen art the ranked
+ * designs used before. Returns the source used so the caller can summarise
+ * coverage; `failed` only when both sources fail.
+ */
+async function downloadSplashSkin(
+  championName: string,
+  championId: number,
+  skinNum: number,
+): Promise<SplashDownloadResult> {
+  const outputPath = `${IMG_DIR}/champion-splash/${championName}_${String(skinNum)}.jpg`;
+
+  // Tier 1: CommunityDragon centered splash (by numeric champion id)
+  const cdragonUrl = getCDragonCenteredSplashUrl(championId, skinNum);
+  try {
+    const response = await fetchWithRetry(cdragonUrl);
+    if (response.ok) {
+      const buffer = await response.arrayBuffer();
+      await Bun.write(outputPath, buffer);
+      assertFileSizeAtMost(
+        outputPath,
+        MAX_SPLASH_IMAGE_BYTES,
+        `CommunityDragon centered splash ${championName}_${String(skinNum)}`,
+      );
+      return { status: "success", source: "cdragon" };
+    }
+  } catch {
+    // Network error — fall through to Data Dragon
+  }
+
+  // Tier 2: Data Dragon splash (by champion name)
+  const ddragonUrl = `${BASE_URL}/cdn/img/champion/splash/${championName}_${String(skinNum)}.jpg`;
+  try {
+    const response = await fetchWithRetry(ddragonUrl);
+    if (!response.ok) {
+      return { status: "failed" };
+    }
+    const buffer = await response.arrayBuffer();
+    await Bun.write(outputPath, buffer);
+    assertFileSizeAtMost(
+      outputPath,
+      MAX_SPLASH_IMAGE_BYTES,
+      `Data Dragon splash ${championName}_${String(skinNum)}`,
+    );
+    return { status: "success", source: "ddragon" };
+  } catch {
+    return { status: "failed" };
+  }
+}
+
+type SplashFailure = {
+  championName: string;
+  championId: number;
+  skinNum: number;
+};
+
+/**
+ * Re-attempt splashes that failed BOTH sources on the first pass — same
+ * fresh-patch CDN propagation-lag guard as `retryFailedLoadingScreens`.
+ */
+async function retryFailedSplashes(
+  failures: SplashFailure[],
+  onSuccess: (failure: SplashFailure, source: SplashSource) => void,
+): Promise<SplashFailure[]> {
+  const ROUNDS = 3;
+  const DELAY_MS = 30_000;
+  let pending = failures;
+  for (let round = 1; round <= ROUNDS && pending.length > 0; round++) {
+    console.warn(
+      `\n⏳ ${String(pending.length)} splash(es) missing from both sources — retry ${String(round)}/${String(ROUNDS)} after ${String(DELAY_MS / 1000)}s (likely fresh-patch CDN propagation lag)...`,
+    );
+    await Bun.sleep(DELAY_MS);
+    const stillFailing: SplashFailure[] = [];
+    for (const failure of pending) {
+      const result = await downloadSplashSkin(
+        failure.championName,
+        failure.championId,
+        failure.skinNum,
+      );
+      if (result.status === "success") {
+        onSuccess(failure, result.source);
+      } else {
+        stillFailing.push(failure);
+      }
+    }
+    pending = stillFailing;
+  }
+  return pending;
+}
+
+/**
+ * Download high-resolution champion splash art — **base skin 0 only**.
+ *
+ * The ranked-banner / ranked-square report designs render one full-bleed splash
+ * (the hero champion, always skin 0), so only base-skin art is needed. Non-zero
+ * skins fall back to `_0` at runtime (`getChampionSplashImageBase64`), and
+ * skin-aware ranked art would only need this loop to iterate more skins.
+ *
+ * Hard-fails (non-zero exit) if any champion's splash is missing from both
+ * sources after the propagation-lag retries — silent data drift is exactly what
+ * caused the original loading-screen "no picture" bug.
+ */
+async function downloadChampionSplashImages(
+  championList: ChampionListData,
+): Promise<{ imageCount: number }> {
+  console.log("\nDownloading champion splash-art images (base skin 0)...");
+
+  const championEntries = Object.entries(championList.data);
+  let cdragonCount = 0;
+  let ddragonCount = 0;
+  // championName → skin nums sourced from Data Dragon (CDragon centered missing)
+  const ddragonByChampion: Record<string, number[]> = {};
+  const failedSkins: SplashFailure[] = [];
+
+  for (const [championName, listEntry] of championEntries) {
+    const championId = Number(listEntry.key);
+    if (!Number.isSafeInteger(championId) || championId <= 0) {
+      throw new Error(
+        `Champion ${championName} has invalid championId ${listEntry.key}`,
+      );
+    }
+
+    const result = await downloadSplashSkin(championName, championId, 0);
+    if (result.status === "success") {
+      if (result.source === "cdragon") {
+        cdragonCount++;
+      } else {
+        ddragonCount++;
+        (ddragonByChampion[championName] ??= []).push(0);
+      }
+    } else {
+      failedSkins.push({ championName, championId, skinNum: 0 });
+    }
+  }
+
+  const stillMissing = await retryFailedSplashes(
+    failedSkins,
+    (failure, source) => {
+      if (source === "cdragon") {
+        cdragonCount++;
+      } else {
+        ddragonCount++;
+        (ddragonByChampion[failure.championName] ??= []).push(failure.skinNum);
+      }
+    },
+  );
+
+  // Summary
+  console.log("");
+  console.log("Splash art by source:");
+  console.log(
+    `  cdragon: ${cdragonCount.toString().padStart(5)} skins  (centered)`,
+  );
+  console.log(
+    `  ddragon: ${ddragonCount.toString().padStart(5)} skins  (CommunityDragon centered missing — used Data Dragon)`,
+  );
+  console.log(`  failed:  ${stillMissing.length.toString().padStart(5)} skins`);
+
+  if (Object.keys(ddragonByChampion).length > 0) {
+    console.log("");
+    console.log(
+      "Data Dragon-sourced splashes (CommunityDragon centered missing):",
+    );
+    for (const [champion, skinNums] of Object.entries(ddragonByChampion)) {
+      console.log(`  ${champion}: skins [${skinNums.join(",")}]`);
+    }
+  }
+
+  if (stillMissing.length > 0) {
+    console.error("");
+    console.error(
+      "❌ Splashes that failed BOTH sources (will not be on disk):",
+    );
+    for (const failure of stillMissing) {
+      console.error(
+        `  ${failure.championName}: skin ${String(failure.skinNum)}`,
+      );
+    }
+    throw new Error(
+      `update-data-dragon: ${stillMissing.length.toString()} splash(es) failed both CommunityDragon and Data Dragon`,
+    );
+  }
+
+  const imageCount = cdragonCount + ddragonCount;
+  console.log(
+    `✓ Downloaded ${imageCount.toString()} champion splash images across ${championEntries.length.toString()} champions`,
   );
   return { imageCount };
 }
@@ -1066,6 +1287,11 @@ async function main(): Promise<void> {
     const { imageCount: loadingImagesCount } =
       await downloadChampionLoadingImages(championList);
 
+    // Download high-res champion splash art (base skin 0) for the ranked
+    // report designs — keyed by champion id/name, no champion-data dependency.
+    const { imageCount: splashImagesCount } =
+      await downloadChampionSplashImages(championList);
+
     const totalImages =
       spellImagesCount +
       itemImagesCount +
@@ -1073,7 +1299,8 @@ async function main(): Promise<void> {
       runeImagesCount +
       augmentImagesCount +
       laneImagesCount +
-      loadingImagesCount;
+      loadingImagesCount +
+      splashImagesCount;
     console.log(
       `\n✅ Successfully updated Data Dragon assets to version ${version}`,
     );
@@ -1084,6 +1311,9 @@ async function main(): Promise<void> {
     console.log(`  - ${String(championImagesCount)} champion portrait images`);
     console.log(
       `  - ${String(loadingImagesCount)} champion loading screen images`,
+    );
+    console.log(
+      `  - ${String(splashImagesCount)} champion splash-art images (skin 0)`,
     );
     console.log(`  - ${String(runeImagesCount)} rune images`);
     console.log(`  - ${String(augmentImagesCount)} augment images`);
@@ -1127,6 +1357,8 @@ async function updateSnapshots(): Promise<void> {
         "src/dataDragon/__snapshots__/summoner.test.ts",
         "src/dataDragon/__snapshots__/version.test.ts",
         "src/html/arena/__snapshots__/realdata.integration.test.ts",
+        "src/html/ranked-banner/banner.integration.test.ts",
+        "src/html/ranked-square/square.integration.test.ts",
       ],
     },
     // Backend package snapshots
@@ -1145,14 +1377,30 @@ async function updateSnapshots(): Promise<void> {
 
       console.log(`  Updating: ${testFile}`);
       const result =
-        await $`cd ${cwd} && bun test --update-snapshots ${testFile}`.quiet();
-      if (result.exitCode !== 0) {
-        console.warn(
-          `    ⚠ Warning: snapshot update had non-zero exit code for ${testFile}`,
-        );
-      }
+        await $`cd ${cwd} && bun test --update-snapshots ${testFile}`
+          .quiet()
+          .nothrow();
+      assertSnapshotUpdateSucceeded(
+        testFile,
+        result.exitCode,
+        result.stderr.toString(),
+      );
     }
   }
+}
+
+export function assertSnapshotUpdateSucceeded(
+  testFile: string,
+  exitCode: number,
+  stderr: string,
+): void {
+  if (exitCode === 0) {
+    return;
+  }
+
+  throw new Error(
+    `Snapshot update failed for ${testFile} (exit ${String(exitCode)}): ${stderr}`,
+  );
 }
 
 if (import.meta.main) {

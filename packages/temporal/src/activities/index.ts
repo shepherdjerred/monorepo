@@ -22,6 +22,7 @@ import { scoutImageGcActivities } from "./scout-image-gc.ts";
 import { homelabCrdImportsRefreshActivities } from "./homelab-crd-imports-refresh.ts";
 import { pokeemeraldDataRefreshActivities } from "./dpp-pokeemerald-data-refresh.ts";
 import { scoutShowcaseRefreshActivities } from "./scout-showcase-refresh.ts";
+import { observeReviewSignalsActivities } from "./observe-review-signals.ts";
 
 export const activities = {
   ...fetcherActivities,
@@ -48,4 +49,5 @@ export const activities = {
   ...homelabCrdImportsRefreshActivities,
   ...pokeemeraldDataRefreshActivities,
   ...scoutShowcaseRefreshActivities,
+  ...observeReviewSignalsActivities,
 };

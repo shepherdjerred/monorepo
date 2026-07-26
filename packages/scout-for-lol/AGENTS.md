@@ -406,6 +406,31 @@ type ParticipantDto = ...;  // Use RawParticipant instead
 - Lazy load heavy dependencies
 - Follow satori best practices (enforced by `custom-rules/satori-best-practices`)
 
+### Ranked match renderer
+
+`report/src/html/index.tsx` routes ranked solo/duo and ranked flex matches with
+at least one tracked player through one of two deterministic designs:
+
+- `ranked-banner`: 4760×1500
+- `ranked-square`: 4760×4760
+
+`pickRankedDesign` hashes stable match data so retries render the same design.
+`MatchRenderOptions.designOverride` may force `banner` or `square` for integration
+tests and manual debugging; it is ignored for non-ranked queues, which continue
+to use the legacy 4760×3500 report.
+
+Champion names stored on match data are Data Dragon asset keys. Keep those keys
+for image lookup and pass every user-visible champion label through
+`championNameToDisplayName`.
+
+Before ranked rendering, `matchToSvg` preloads both teams' champion icons and
+the selected hero's base splash art. Splash assets live under
+`packages/data/src/data-dragon/assets/img/champion-splash/`; refresh them with
+`bun run update-data-dragon` from `packages/data`. That command also reruns the
+ranked banner and square snapshot suites, which rewrite their committed SVG/hash
+artifacts. Backend startup validates splash art alongside champion portraits and
+loading art, so a missing refresh fails deployment immediately.
+
 ## ScoutQL Report Queries — DuckDB Report Lake
 
 Scheduled/user-authored ScoutQL reports execute as **compiled SQL on embedded

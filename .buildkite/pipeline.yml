@@ -65,11 +65,14 @@ common:
                   readOnly: true
               envFrom:
                 - secretRef: { name: buildkite-ci-secrets }
-  - pod_privileged: &pod_privileged
-      kubernetes: &pod_privileged_kubernetes
+  - pod_buildkit: &pod_buildkit
+      # Image solves use the remote BuildKit service. This remains a separate
+      # anchor because it has a larger memory limit than ordinary CI steps, but
+      # it has no privileged Docker daemon sidecar.
+      kubernetes: &pod_buildkit_kubernetes
         checkout:
           cloneFlags: "--no-tags"
-        podSpecPatch:
+        podSpecPatch: &pod_buildkit_pod_spec
           serviceAccountName: buildkite-agent-stack-k8s-controller
           containers:
             - *checkout_container
@@ -78,16 +81,12 @@ common:
               # Same stale-:latest guard as the base pod above.
               imagePullPolicy: Always
               env:
-                - name: DOCKER_HOST
-                  value: "tcp://127.0.0.1:2375"
                 # Same dash-vs-bash guard as the base pod above (build 5651).
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
               resources:
                 # Measured p90 plus the post-checkout tmpfs workspace (filtered
-                # install ~1Gi for the images/docker-e2e lanes — verify has its
-                # own bigger anchor below). Checkout and dind add their own
-                # requests.
+                # install ~1Gi for the image and native-sidecar E2E lanes.
                 requests: { cpu: "1", memory: "2Gi", ephemeral-storage: "2Gi" }
                 limits: { cpu: "7", memory: "14Gi", ephemeral-storage: "40Gi" }
               volumeMounts:
@@ -101,43 +100,11 @@ common:
                   readOnly: true
               envFrom:
                 - secretRef: { name: buildkite-ci-secrets }
-          # Docker daemon for image builds + compose e2e, as a NATIVE SIDECAR
-          # (initContainer + restartPolicy Always): kubelet terminates it by
-          # itself once the regular containers finish, so pod completion never
-          # depends on the agent-stack controller's Job-reap update. As a
-          # regular container it zombied: the reap raced a kyverno webhook
-          # outage (failurePolicy=Fail rejected the update) and the finished
-          # pod sat as ~4 CPU/10Gi of phantom load for 2.5h, starving the
-          # whole queue (2026-07-18; same freeze signature as 07-05/08 —
-          # under the since-removed Kueue quota admission).
-          # Steps source .buildkite/scripts/docker-env.sh (CLI bootstrap +
-          # daemon wait).
-          initContainers:
-            - name: dind
-              # renovate: datasource=docker depName=docker
-              image: "docker:28-dind"
-              restartPolicy: Always
-              securityContext: { privileged: true }
-              env:
-                - name: DOCKER_TLS_CERTDIR
-                  value: ""
-              resources:
-                # Right-sized to measured dind p90 (1.35 CPU / 1.1Gi over 7d);
-                # was 1/2Gi. Limits stay high for cold image builds. dind's
-                # /var/lib/docker (the image build graph — the single largest
-                # writer, ~3.8 TiB/wk) lives on this container's ephemeral
-                # storage, so its limit is the real cap on a runaway build
-                # filling the xfs /var; 80Gi bounds it well above observed.
-                requests:
-                  { cpu: "750m", memory: "1536Mi", ephemeral-storage: "4Gi" }
-                limits: { cpu: "4", memory: "8Gi", ephemeral-storage: "80Gi" }
-  # Verify's pod: identical to pod_privileged except the memory request. The
-  # full-root install + turbo scratch put ~6Gi into the memory-backed
-  # workspace (node_modules 3.75Gi alone). After the Scout RBAC graph landed,
-  # main builds 6256 and 6261 drove the command container to its exact 14Gi
-  # limit (12.85Gi working set, 6.69Gi RSS immediately before exit 137).
-  # Request the observed working set plus scheduling margin and retain 43%
-  # burst headroom. Checkout still requests its 1Gi separately.
+  # Verify's pod uses the larger memory request needed by its full install.
+  # full-root install + turbo scratch put ~6Gi into the memory-backed workspace
+  # (node_modules 3.75Gi alone). Recent main builds reached the old 14Gi limit,
+  # so retain the measured request and burst margin from main. It has no DinD
+  # sidecar; image work uses remote BuildKit instead.
   # Only verify pays this; the other privileged lanes stay at 2Gi.
   - pod_verify: &pod_verify
       kubernetes: &pod_verify_kubernetes
@@ -152,8 +119,6 @@ common:
               # Same stale-:latest guard as the base pod above.
               imagePullPolicy: Always
               env:
-                - name: DOCKER_HOST
-                  value: "tcp://127.0.0.1:2375"
                 # Same dash-vs-bash guard as the base pod above (build 5651).
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
@@ -167,21 +132,6 @@ common:
                   readOnly: true
               envFrom:
                 - secretRef: { name: buildkite-ci-secrets }
-          # Same native-sidecar dind as pod_privileged (verify's docker tasks:
-          # check:caddyfile, llm-observability unit surface).
-          initContainers:
-            - name: dind
-              # renovate: datasource=docker depName=docker
-              image: "docker:28-dind"
-              restartPolicy: Always
-              securityContext: { privileged: true }
-              env:
-                - name: DOCKER_TLS_CERTDIR
-                  value: ""
-              resources:
-                requests:
-                  { cpu: "750m", memory: "1536Mi", ephemeral-storage: "4Gi" }
-                limits: { cpu: "4", memory: "8Gi", ephemeral-storage: "80Gi" }
   # Light steps: thin deploy/publish/annotate scripts whose work is seconds
   # even on a cold cache. Small REQUESTS so the scheduler places them
   # alongside the long images job (build 5644: light steps sat runnable
@@ -217,6 +167,39 @@ common:
                 - name: buildkite-git-mirrors
                   mountPath: /buildkite/git-mirrors
                   readOnly: true
+              envFrom:
+                - secretRef: { name: buildkite-ci-secrets }
+  # OpenTofu's provider cache is shared across the selected CI jobs on Liskov.
+  # Those commands use `flock` around Terraform itself: OpenTofu explicitly
+  # does not guarantee concurrent writes to TF_PLUGIN_CACHE_DIR are safe.
+  - pod_tofu: &pod_tofu
+      kubernetes: &pod_tofu_kubernetes
+        checkout:
+          cloneFlags: "--no-tags"
+        podSpecPatch:
+          serviceAccountName: buildkite-agent-stack-k8s-controller
+          volumes:
+            - name: buildkite-tofu-plugin-cache
+              persistentVolumeClaim:
+                claimName: buildkite-tofu-plugin-cache
+          containers:
+            - *checkout_container
+            - name: container-0
+              image: "ghcr.io/shepherdjerred/ci-base:latest"
+              imagePullPolicy: Always
+              env:
+                - name: BUILDKITE_SHELL
+                  value: "/bin/bash -e -c"
+              resources:
+                requests:
+                  { cpu: "250m", memory: "512Mi", ephemeral-storage: "1Gi" }
+                limits: { cpu: "7", memory: "12Gi", ephemeral-storage: "20Gi" }
+              volumeMounts:
+                - name: buildkite-git-mirrors
+                  mountPath: /buildkite/git-mirrors
+                  readOnly: true
+                - name: buildkite-tofu-plugin-cache
+                  mountPath: /buildkite/tofu-plugin-cache
               envFrom:
                 - secretRef: { name: buildkite-ci-secrets }
   - retry: &retry
@@ -289,7 +272,6 @@ steps:
     command: |
       . .buildkite/scripts/toolchain.sh
       bun --no-install .buildkite/scripts/validate-pipeline.ts
-      . .buildkite/scripts/docker-env.sh
       bun install --frozen-lockfile
       if [ "$BUILDKITE_BRANCH" = "main" ]; then SCOPE=""; else SCOPE="--affected"; fi
       set +e
@@ -494,7 +476,7 @@ steps:
                 envFrom:
                   - secretRef: { name: buildkite-ci-secrets }
 
-  - label: ":docker: docker e2e (PR)"
+  - label: ":test_tube: observability e2e (PR)"
     key: docker-e2e-pr
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     if_changed:
@@ -511,18 +493,57 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      . .buildkite/scripts/docker-env.sh
       bun install --frozen-lockfile --filter '@shepherdjerred/llm-observability'
-      bun --no-install run --cwd packages/llm-observability test:e2e
+      bun --no-install run --cwd packages/llm-observability test:e2e:ci
     retry: *retry
     plugins:
       - kubernetes:
-          <<: *pod_privileged_kubernetes
+          <<: *pod_buildkit_kubernetes
+          podSpecPatch:
+            <<: *pod_buildkit_pod_spec
+            initContainers:
+              - name: tempo
+                image: "grafana/tempo:2.10.6@sha256:6ea351a2186822a044d5e326ed4c7a43d019378e4c033c271b89584216db03e7"
+                restartPolicy: Always
+                args: ["-config.file=/etc/tempo/tempo.yaml"]
+                volumeMounts:
+                  - {
+                      name: llm-observability-e2e-tempo,
+                      mountPath: /etc/tempo,
+                      readOnly: true,
+                    }
+                  - { name: llm-observability-e2e-data, mountPath: /var/tempo }
+              - name: minio
+                image: "minio/minio:RELEASE.2025-04-08T15-41-24Z@sha256:8834ae47a2de3509b83e0e70da9369c24bbbc22de42f2a2eddc530eee88acd1b"
+                restartPolicy: Always
+                args: ["server", "/data", "--console-address", ":9001"]
+                env:
+                  - { name: MINIO_ROOT_USER, value: minioadmin }
+                  - { name: MINIO_ROOT_PASSWORD, value: minioadmin }
+                volumeMounts:
+                  - { name: llm-observability-e2e-data, mountPath: /data }
+              - name: minio-init
+                image: "minio/mc:RELEASE.2025-04-03T17-07-56Z@sha256:69fb6e6ca209008ae3cacf9f63c2524f68a1322dc921c8992ba2cc99c5bef3c6"
+                command:
+                  [
+                    "/bin/sh",
+                    "-c",
+                    "until mc alias set local http://127.0.0.1:9000 minioadmin minioadmin; do sleep 1; done; mc mb --ignore-existing local/llm-archive",
+                  ]
+            volumes:
+              - {
+                  name: llm-observability-e2e-tempo,
+                  configMap: { name: llm-observability-e2e-tempo },
+                }
+              - {
+                  name: llm-observability-e2e-data,
+                  emptyDir: { medium: Memory, sizeLimit: 1Gi },
+                }
           metadata:
             labels:
               ci.sjer.red/step-key: docker-e2e-pr
 
-  - label: ":docker: docker e2e (main)"
+  - label: ":test_tube: observability e2e (main)"
     key: docker-e2e-main
     if: build.branch == pipeline.default_branch
     depends_on: ci-selector-base
@@ -530,13 +551,52 @@ steps:
     command: |
       if ! bash .buildkite/scripts/ci-changed.sh docker-e2e; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      . .buildkite/scripts/docker-env.sh
       bun install --frozen-lockfile --filter '@shepherdjerred/llm-observability'
-      bun --no-install run --cwd packages/llm-observability test:e2e
+      bun --no-install run --cwd packages/llm-observability test:e2e:ci
     retry: *retry
     plugins:
       - kubernetes:
-          <<: *pod_privileged_kubernetes
+          <<: *pod_buildkit_kubernetes
+          podSpecPatch:
+            <<: *pod_buildkit_pod_spec
+            initContainers:
+              - name: tempo
+                image: "grafana/tempo:2.10.6@sha256:6ea351a2186822a044d5e326ed4c7a43d019378e4c033c271b89584216db03e7"
+                restartPolicy: Always
+                args: ["-config.file=/etc/tempo/tempo.yaml"]
+                volumeMounts:
+                  - {
+                      name: llm-observability-e2e-tempo,
+                      mountPath: /etc/tempo,
+                      readOnly: true,
+                    }
+                  - { name: llm-observability-e2e-data, mountPath: /var/tempo }
+              - name: minio
+                image: "minio/minio:RELEASE.2025-04-08T15-41-24Z@sha256:8834ae47a2de3509b83e0e70da9369c24bbbc22de42f2a2eddc530eee88acd1b"
+                restartPolicy: Always
+                args: ["server", "/data", "--console-address", ":9001"]
+                env:
+                  - { name: MINIO_ROOT_USER, value: minioadmin }
+                  - { name: MINIO_ROOT_PASSWORD, value: minioadmin }
+                volumeMounts:
+                  - { name: llm-observability-e2e-data, mountPath: /data }
+              - name: minio-init
+                image: "minio/mc:RELEASE.2025-04-03T17-07-56Z@sha256:69fb6e6ca209008ae3cacf9f63c2524f68a1322dc921c8992ba2cc99c5bef3c6"
+                command:
+                  [
+                    "/bin/sh",
+                    "-c",
+                    "until mc alias set local http://127.0.0.1:9000 minioadmin minioadmin; do sleep 1; done; mc mb --ignore-existing local/llm-archive",
+                  ]
+            volumes:
+              - {
+                  name: llm-observability-e2e-tempo,
+                  configMap: { name: llm-observability-e2e-tempo },
+                }
+              - {
+                  name: llm-observability-e2e-data,
+                  emptyDir: { medium: Memory, sizeLimit: 1Gi },
+                }
           metadata:
             labels:
               ci.sjer.red/step-key: docker-e2e-main
@@ -749,27 +809,28 @@ steps:
                     mountPath: /buildkite/git-mirrors
                     readOnly: true
 
-  # Blocking, like the old pipeline (greptileReviewStep sat in blockingGates
-  # and fed the required check): every non-outdated Greptile review thread on
-  # the PR must be resolved before the aggregate buildkite/monorepo/pr
-  # required status can go green. wait-for-greptile.ts polls only while
-  # Greptile is still reviewing the head commit, then fails fast with the
+  # Blocking (like the old pipeline's blockingGates review step, which fed the
+  # required check): every non-outdated review thread from the active code-review
+  # provider must be resolved before the aggregate buildkite/monorepo/pr required
+  # status can go green. The provider (Greptile, Codex, …) is chosen by
+  # REVIEW_PROVIDER (default codex); wait-for-review.ts polls only while the
+  # provider is still reviewing the head commit, then fails fast with the
   # unresolved-thread list.
-  - label: ":robot_face: greptile review gate"
-    key: greptile-review
+  - label: ":robot_face: review gate"
+    key: review-gate
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
-      bun --no-install scripts/wait-for-greptile.ts
+      bun --no-install scripts/wait-for-review.ts
     retry: *retry
     plugins:
       - kubernetes:
           <<: *pod_light_kubernetes
           metadata:
             labels:
-              ci.sjer.red/step-key: greptile-review
+              ci.sjer.red/step-key: review-gate
 
   # ── PR-only dry-run lane: ONE pod validates every deploy path, no side
   # effects (the old pipeline's --dryrun plumbing). Replaces five micro-steps
@@ -843,10 +904,12 @@ steps:
       if bash .buildkite/scripts/ci-changed.sh tofu; then
         (
           export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
+          export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+          flock -x 9
           for stack in seaweedfs tailscale buildkite arr pagerduty github cloudflare; do
             bun --no-install packages/homelab/scripts/tofu-stack.ts "$$stack" plan
           done
-        )
+        ) 9>/buildkite/tofu-plugin-cache/.lock
       fi
       # Print-only rehearsals (seconds each): sites catalog, the versioned
       # scout release path, helm chart push, and release-please.
@@ -862,7 +925,7 @@ steps:
     retry: *retry
     plugins:
       - kubernetes:
-          <<: *pod_kubernetes
+          <<: *pod_tofu_kubernetes
           metadata:
             labels:
               ci.sjer.red/step-key: pr-dryrun
@@ -885,6 +948,7 @@ steps:
         - "turbo.json"
         - "tsconfig.base.json"
         - "packages/birmel/**"
+        - "packages/code-review/**"
         - "packages/discord-plays-core/**"
         - "packages/discord-plays-mario-kart/**"
         - "packages/discord-plays-pokemon/**"
@@ -915,16 +979,16 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      . .buildkite/scripts/docker-env.sh
+      . .buildkite/scripts/buildkit-env.sh
       buildkite-agent artifact download "caddyfile.generated" /tmp --step verify
       # Affected-scoped parallel bake + smoke, no push, cache read-only
       # (PUSH_CACHE stays false — only main writes the buildcache refs).
-      # Rehearses exactly the path main runs, including the --load transfer.
+      # Executes no-exporter in-image smoke targets against remote BuildKit.
       CADDYFILE_SMOKE_PATH=/tmp/caddyfile.generated bash .buildkite/scripts/bake-images.sh --affected
     retry: *retry
     plugins:
       - kubernetes:
-          <<: *pod_privileged_kubernetes
+          <<: *pod_buildkit_kubernetes
           metadata:
             labels:
               ci.sjer.red/step-key: images-pr
@@ -943,13 +1007,13 @@ steps:
         exit 0
       fi
       . .buildkite/scripts/toolchain.sh
-      . .buildkite/scripts/docker-env.sh
+      . .buildkite/scripts/buildkit-env.sh
       buildkite-agent artifact download "caddyfile.generated" /tmp --step verify
       CADDYFILE_SMOKE_PATH=/tmp/caddyfile.generated bash .buildkite/scripts/bake-images.sh --push
     retry: *retry
     plugins:
       - kubernetes:
-          <<: *pod_privileged_kubernetes
+          <<: *pod_buildkit_kubernetes
           metadata:
             labels:
               ci.sjer.red/step-key: images
@@ -963,7 +1027,15 @@ steps:
     concurrency: 1
     concurrency_group: monorepo/site-deploys
     command: |
-      if ! bash .buildkite/scripts/ci-changed.sh sites; then exit 0; fi
+      # The site-scout lane carries paths the aggregate sites lane does not
+      # (notably versions.ts: the version commit-back build must archive +
+      # mint the deferred scout release pair — build 6281 hard-failed when
+      # this early exit swallowed that build's archive), so only skip when
+      # BOTH selectors agree nothing site-shaped changed.
+      if ! bash .buildkite/scripts/ci-changed.sh sites &&
+        ! bash .buildkite/scripts/ci-changed.sh site-scout; then
+        exit 0
+      fi
       . .buildkite/scripts/toolchain.sh
       filters=()
       site_sjer=false
@@ -1029,6 +1101,10 @@ steps:
         bun --no-install run --cwd packages/llm-models build
         bun --no-install run --cwd packages/astro-opengraph-images build
         bun --no-install scripts/scout-site-release.ts archive --version "2.0.0-$BUILDKITE_BUILD_NUMBER"
+        # Record the archived version so scout-tag-release can gate on what
+        # actually happened instead of re-deriving it from a second path
+        # selector that can (and did — build 6281) skew from this one.
+        buildkite-agent meta-data set scout-site-archived "2.0.0-$BUILDKITE_BUILD_NUMBER"
         bun --no-install scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER"
       fi
     retry: *retry
@@ -1118,14 +1194,18 @@ steps:
     command: |
       if ! bash .buildkite/scripts/ci-changed.sh tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
-      for stack in seaweedfs tailscale buildkite arr pagerduty; do
-        bun --no-install packages/homelab/scripts/tofu-stack.ts "$$stack" apply
-      done
+      (
+        export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
+        export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+        flock -x 9
+        for stack in seaweedfs tailscale buildkite arr pagerduty; do
+          bun --no-install packages/homelab/scripts/tofu-stack.ts "$$stack" apply
+        done
+      ) 9>/buildkite/tofu-plugin-cache/.lock
     retry: *retry
     plugins:
       - kubernetes:
-          <<: *pod_light_kubernetes
+          <<: *pod_tofu_kubernetes
           metadata:
             labels:
               ci.sjer.red/step-key: tofu-apply
@@ -1142,11 +1222,15 @@ steps:
     command: |
       if ! bash .buildkite/scripts/ci-changed.sh tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
-      bun --no-install packages/homelab/scripts/tofu-stack.ts github apply
+      (
+        export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
+        export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+        flock -x 9
+        bun --no-install packages/homelab/scripts/tofu-stack.ts github apply
+      ) 9>/buildkite/tofu-plugin-cache/.lock
     plugins:
       - kubernetes:
-          <<: *pod_light_kubernetes
+          <<: *pod_tofu_kubernetes
           metadata:
             labels:
               ci.sjer.red/step-key: tofu-github
@@ -1193,13 +1277,16 @@ steps:
     depends_on: [images, sites]
     cancel_on_build_failing: true
     command: |
-      if ! bash .buildkite/scripts/ci-changed.sh site-scout; then
-        # No site archived this build. If the images step still recorded a
-        # scout digest (a backend-closure change outside the site lane), the
-        # mint is deferred: the commit-back merge touches versions.ts, which
-        # IS in the site lane, so the next build archives + mints the pair.
-        exit 0
-      fi
+      # Gate on what the sites step actually recorded, not on a re-derived
+      # path selector: build 6281 failed because this step's site-scout list
+      # and the sites step's aggregate list disagreed about a versions.ts-only
+      # commit. No recorded archive → nothing to mint this build. If the
+      # images step still recorded a scout digest (a backend-closure change
+      # outside the site lane), the mint is deferred: the commit-back merge
+      # touches versions.ts (in the site-scout lane), so the next build
+      # archives + mints the pair.
+      archived=$$(buildkite-agent meta-data get scout-site-archived --default "")
+      if [ -z "$$archived" ]; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       # SeaweedFS creds: asserts the version's archive manifest exists before
@@ -1207,7 +1294,7 @@ steps:
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       printf '%s' "$$GH_TOKEN" | docker login ghcr.io -u shepherdjerred --password-stdin
       scout_digest=$$(buildkite-agent meta-data get image-digests | jq -r '."shepherdjerred/scout-for-lol" // empty')
-      bun --no-install scripts/scout-site-release.ts tag-release --version "2.0.0-$BUILDKITE_BUILD_NUMBER" $${scout_digest:+--digest "$$scout_digest"}
+      bun --no-install scripts/scout-site-release.ts tag-release --version "$$archived" $${scout_digest:+--digest "$$scout_digest"}
     retry: *retry
     plugins:
       - kubernetes:
@@ -1262,14 +1349,18 @@ steps:
       # Same ARGOCD_AUTH_TOKEN → ARGOCD_TOKEN mapping as the sync step.
       export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
       bun --no-install packages/homelab/scripts/argocd.ts wait-deletion apps --group networking.cfargotunnel.com --version v1alpha1 --kind TunnelBinding --namespace seaweedfs --timeout 120
-      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
-      bun --no-install packages/homelab/scripts/tofu-stack.ts cloudflare apply
+      (
+        export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
+        export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+        flock -x 9
+        bun --no-install packages/homelab/scripts/tofu-stack.ts cloudflare apply
+      ) 9>/buildkite/tofu-plugin-cache/.lock
     # Safe to retry: tofu re-plans from state, and the scripts only exit 34
     # (the retryable code) on classified transient failures.
     retry: *retry
     plugins:
       - kubernetes:
-          <<: *pod_light_kubernetes
+          <<: *pod_tofu_kubernetes
           metadata:
             labels:
               ci.sjer.red/step-key: tofu-cloudflare
@@ -1331,12 +1422,12 @@ steps:
     command: |
       if ! bash .buildkite/scripts/ci-changed.sh ci-image; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      . .buildkite/scripts/docker-env.sh
+      . .buildkite/scripts/buildkit-env.sh
       bash .buildkite/scripts/build-ci-image.sh
     retry: *retry
     plugins:
       - kubernetes:
-          <<: *pod_privileged_kubernetes
+          <<: *pod_buildkit_kubernetes
           metadata:
             labels:
               ci.sjer.red/step-key: ci-image-refresh

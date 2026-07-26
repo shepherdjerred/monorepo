@@ -7,19 +7,23 @@ import {
   ALL_IMAGE_TARGETS,
   changedPathsSince,
   closureFingerprint,
+  closurePackageIds,
+  manifestChangeIsGlobal,
   parseJsonc,
   parseLockfile,
+  patchedDependencyKey,
   selectImageTargets,
   type LockfilePair,
+  type SelectorInputs,
 } from "./select-image-targets.ts";
 
 const REPO_ROOT = new URL("../..", import.meta.url).pathname;
 
 function select(
   changedPaths: readonly string[],
-  lockfiles?: LockfilePair,
+  inputs?: SelectorInputs,
 ): Promise<string[]> {
-  return selectImageTargets(changedPaths, REPO_ROOT, lockfiles);
+  return selectImageTargets(changedPaths, REPO_ROOT, inputs);
 }
 
 describe("selectImageTargets", () => {
@@ -76,8 +80,14 @@ describe("selectImageTargets", () => {
     expect(await select([".mise.toml"])).toEqual(ALL_IMAGE_TARGETS);
     expect(await select(["turbo.json"])).toEqual(ALL_IMAGE_TARGETS);
     expect(await select(["tsconfig.base.json"])).toEqual(ALL_IMAGE_TARGETS);
+    // Root manifests with NO FilePair provided fail open to ALL.
     expect(await select(["package.json"])).toEqual(ALL_IMAGE_TARGETS);
     expect(await select(["scripts/package.json"])).toEqual(ALL_IMAGE_TARGETS);
+    // Image-shaping CI scripts stay global; other CI scripts do not.
+    expect(await select([".buildkite/scripts/bake-images.sh"])).toEqual(
+      ALL_IMAGE_TARGETS,
+    );
+    expect(await select([".buildkite/scripts/upload-pipeline.sh"])).toEqual([]);
   });
 
   test("attributes a workspace package.json to its closure, not ALL images", async () => {
@@ -190,7 +200,7 @@ describe("lockfile attribution", () => {
     // in CI instead of the runtime selector failing open on every build.
     const real = await Bun.file(`${REPO_ROOT}/bun.lock`).text();
     const identical: LockfilePair = { base: real, head: real };
-    expect(await select(["bun.lock"], identical)).toEqual([]);
+    expect(await select(["bun.lock"], { lockfiles: identical })).toEqual([]);
   });
 
   test("a real direct-dep resolution change selects only its closures", async () => {
@@ -203,20 +213,192 @@ describe("lockfile attribution", () => {
     expect(match).not.toBeNull();
     if (match === null) throw new Error("unreachable");
     const mutated = real.replace(match[1] ?? "", "sha512-mutated");
-    const targets = await select(["bun.lock"], { base: real, head: mutated });
+    const targets = await select(["bun.lock"], {
+      lockfiles: { base: real, head: mutated },
+    });
     expect(targets).toContain("birmel");
+    expect(targets).not.toEqual(ALL_IMAGE_TARGETS);
+  });
+
+  test("embedded-artifact closures join lockfile attribution", async () => {
+    // temporal-worker bakes the compiled toolkit CLI, so a resolution change
+    // reachable only through toolkit's closure (asciinema-player is a
+    // toolkit-only dep) must rebuild temporal-worker even though toolkit is
+    // not a runtime workspace dep of the temporal owner.
+    const real = await Bun.file(`${REPO_ROOT}/bun.lock`).text();
+    const entry =
+      /"asciinema-player": \["asciinema-player@[^"]+", [^\n]*"(sha512-[^"]+)"\]/;
+    const match = real.match(entry);
+    expect(match).not.toBeNull();
+    if (match === null) throw new Error("unreachable");
+    const mutated = real.replace(match[1] ?? "", "sha512-mutated");
+    const targets = await select(["bun.lock"], {
+      lockfiles: { base: real, head: mutated },
+    });
+    expect(targets).toContain("temporal-worker");
     expect(targets).not.toEqual(ALL_IMAGE_TARGETS);
   });
 
   test("fails open to ALL on an unreadable base or malformed head", async () => {
     const real = await Bun.file(`${REPO_ROOT}/bun.lock`).text();
-    expect(await select(["bun.lock"], { base: null, head: real })).toEqual(
-      ALL_IMAGE_TARGETS,
-    );
     expect(
-      await select(["bun.lock"], { base: real, head: "{ not json" }),
+      await select(["bun.lock"], { lockfiles: { base: null, head: real } }),
+    ).toEqual(ALL_IMAGE_TARGETS);
+    expect(
+      await select(["bun.lock"], {
+        lockfiles: { base: real, head: "{ not json" },
+      }),
     ).toEqual(ALL_IMAGE_TARGETS);
     expect(await select(["bun.lock"])).toEqual(ALL_IMAGE_TARGETS);
+  });
+});
+
+describe("root manifest attribution", () => {
+  const basePkg = {
+    name: "root",
+    workspaces: ["packages/a"],
+    devDependencies: { turbo: "1.0.0", prettier: "3.0.0" },
+    scripts: { verify: "turbo run build" },
+    overrides: { axios: "1.0.0" },
+  };
+  const pair = (head: object): SelectorInputs => ({
+    rootPackageJson: {
+      base: JSON.stringify(basePkg),
+      head: JSON.stringify(head),
+    },
+  });
+
+  test("a devDependencies-only bump selects nothing", async () => {
+    const head = {
+      ...basePkg,
+      devDependencies: { turbo: "2.0.0", prettier: "3.0.0" },
+    };
+    expect(await select(["package.json"], pair(head))).toEqual([]);
+  });
+
+  test("a scripts-only change selects nothing", async () => {
+    const head = { ...basePkg, scripts: { verify: "turbo run build test" } };
+    expect(await select(["package.json"], pair(head))).toEqual([]);
+  });
+
+  test("an overrides change stays global", async () => {
+    const head = { ...basePkg, overrides: { axios: "1.1.0" } };
+    expect(await select(["package.json"], pair(head))).toEqual(
+      ALL_IMAGE_TARGETS,
+    );
+  });
+
+  test("a workspaces change stays global", async () => {
+    const head = { ...basePkg, workspaces: ["packages/a", "packages/b"] };
+    expect(await select(["package.json"], pair(head))).toEqual(
+      ALL_IMAGE_TARGETS,
+    );
+  });
+
+  test("a new top-level key stays global", async () => {
+    const head = { ...basePkg, patchedDependencies: {} };
+    expect(await select(["package.json"], pair(head))).toEqual(
+      ALL_IMAGE_TARGETS,
+    );
+  });
+
+  test("fails open on malformed content or a missing base", async () => {
+    expect(
+      await select(["package.json"], {
+        rootPackageJson: { base: JSON.stringify(basePkg), head: "{ not json" },
+      }),
+    ).toEqual(ALL_IMAGE_TARGETS);
+    expect(
+      await select(["package.json"], {
+        rootPackageJson: { base: null, head: JSON.stringify(basePkg) },
+      }),
+    ).toEqual(ALL_IMAGE_TARGETS);
+  });
+
+  test("scripts/package.json gets the same treatment", async () => {
+    const head = { ...basePkg, devDependencies: { turbo: "2.0.0" } };
+    expect(
+      await select(["scripts/package.json"], {
+        scriptsPackageJson: {
+          base: JSON.stringify(basePkg),
+          head: JSON.stringify(head),
+        },
+      }),
+    ).toEqual([]);
+  });
+
+  test("manifestChangeIsGlobal treats identical content as attributable", () => {
+    const text = JSON.stringify(basePkg);
+    expect(manifestChangeIsGlobal({ base: text, head: text })).toBe(false);
+  });
+});
+
+describe("patch attribution", () => {
+  // These run against the REAL repo manifest + lockfile: patch keys are
+  // version-exact, so a patch whose pinned version nothing resolves anymore
+  // (a stale patch) correctly selects no image.
+  test("a patch for a dep resolved in one closure selects only that image", async () => {
+    expect(
+      await select(["patches/discord-player-youtubei@2.0.0.patch"]),
+    ).toEqual(["birmel"]);
+  });
+
+  test("a patch pinned to a version no closure resolves selects nothing", async () => {
+    // twisted resolves at a newer version than the patch pins, so the patch
+    // applies to no image install (stale patch — flagged in the session log).
+    expect(await select(["patches/twisted@1.73.0.patch"])).toEqual([]);
+  });
+
+  test("a patch for a dep outside every image closure selects nothing", async () => {
+    expect(await select(["patches/react-native-sound@0.13.0.patch"])).toEqual(
+      [],
+    );
+  });
+
+  test("a patch file with no patchedDependencies entry fails open", async () => {
+    expect(await select(["patches/unknown@9.9.9.patch"])).toEqual(
+      ALL_IMAGE_TARGETS,
+    );
+  });
+
+  test("patchedDependencyKey resolves via the manifest mapping", () => {
+    const manifest = JSON.stringify({
+      patchedDependencies: { "satori@0.18.3": "patches/satori@0.18.3.patch" },
+    });
+    expect(patchedDependencyKey("patches/satori@0.18.3.patch", manifest)).toBe(
+      "satori@0.18.3",
+    );
+    expect(patchedDependencyKey("patches/other.patch", manifest)).toBeNull();
+    expect(
+      patchedDependencyKey("patches/satori@0.18.3.patch", "{ nope"),
+    ).toBeNull();
+  });
+
+  test("closurePackageIds walks nested resolution and skips other closures", () => {
+    const lock = parseLockfile(
+      JSON.stringify({
+        lockfileVersion: 1,
+        workspaces: {
+          "": { name: "root", devDependencies: { lint: "^1" } },
+          "packages/a": { name: "a", dependencies: { x: "^1" } },
+        },
+        packages: {
+          lint: ["lint@1.0.0", "", {}, "sha512-lint"],
+          x: ["x@1.0.0", "", { dependencies: { y: "^2" } }, "sha512-x"],
+          y: ["y@2.0.0", "", {}, "sha512-y"],
+          "x/y": ["y@2.5.0", "", {}, "sha512-y-nested"],
+        },
+      }),
+    );
+    const ids = closurePackageIds(["packages/a"], lock);
+    expect(ids).not.toBeNull();
+    if (ids === null) throw new Error("unreachable");
+    expect(ids.has("x@1.0.0")).toBe(true);
+    // The nested (parent-scoped) resolution wins: y is 2.5.0 under x.
+    expect(ids.has("y@2.5.0")).toBe(true);
+    expect(ids.has("y@2.0.0")).toBe(false);
+    expect(ids.has("lint@1.0.0")).toBe(false);
+    expect(closurePackageIds(["packages/missing"], lock)).toBeNull();
   });
 });
 

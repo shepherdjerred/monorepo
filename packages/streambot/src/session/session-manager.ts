@@ -3,8 +3,8 @@ import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import {
   StatusReporter,
   type Announcement,
-  type StatusSnapshot,
 } from "@shepherdjerred/streambot/discord/status-reporter.ts";
+import { describeSnapshot } from "@shepherdjerred/streambot/session/status-snapshot.ts";
 import {
   createPosterFetcher,
   type PosterFetcher,
@@ -18,10 +18,7 @@ import type {
   ResolveSourceInput,
 } from "@shepherdjerred/streambot/machine/types.ts";
 import { buildPlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
-import {
-  sourceIdentity,
-  sourceLabel,
-} from "@shepherdjerred/streambot/sources/source.ts";
+import { sourceIdentity } from "@shepherdjerred/streambot/sources/source.ts";
 import { listSubtitleCandidatesForSource } from "@shepherdjerred/streambot/sources/subtitle-candidates.ts";
 import {
   playbackPositionSeconds,
@@ -235,6 +232,7 @@ export class SessionManager {
     this.sessions.clear();
     for (const session of sessions) {
       session.entry.userbot.setVoiceCloseListener(null);
+      session.entry.userbot.setStallListener(null);
       if (session.checkpointTimer !== null) {
         clearInterval(session.checkpointTimer);
         session.checkpointTimer = null;
@@ -261,6 +259,21 @@ export class SessionManager {
       return;
     }
     void this.voiceRecovery.beginRecovery(session);
+  }
+
+  /** The command bot was removed from a guild: stop every session in it (queue cleared, voice left). */
+  notifyGuildRemoved(guildId: GuildId): void {
+    for (const session of this.sessions.values()) {
+      if (session.guildId === guildId) {
+        session.actor.send({ type: "GUILD_REMOVED", guildId });
+      }
+    }
+  }
+
+  /** The session's voice channel was deleted: stop that session. */
+  notifyChannelDeleted(guildId: GuildId, channelId: ChannelId): void {
+    const session = this.sessions.get(keyOf(guildId, channelId));
+    session?.actor.send({ type: "CHANNEL_DELETED", channelId });
   }
 
   private spawn(params: SpawnParams): Session {
@@ -313,26 +326,19 @@ export class SessionManager {
     entry.userbot.setVoiceCloseListener(() => {
       void this.voiceRecovery.beginRecovery(session);
     });
+    // Stall watchdog: ffmpeg alive but producing nothing → the machine's bounded stall recovery
+    // (retry at position, pipeline ladder). Without this the machine would sit in `streaming`
+    // forever on a wedged pipeline.
+    entry.userbot.setStallListener((info) => {
+      session.actor.send({
+        type: "PRODUCER_STALLED",
+        reason: info.reason,
+        positionSeconds: info.positionSeconds,
+      });
+    });
 
     const subscription = actor.subscribe((snapshot) => {
-      const stateValue = snapshot.value;
-      const stateName =
-        typeof stateValue === "string"
-          ? stateValue
-          : JSON.stringify(stateValue);
-      const currentSource = snapshot.context.current?.source ?? null;
-      const snap: StatusSnapshot = {
-        state: stateName,
-        currentTitle: snapshot.context.resolved?.title ?? null,
-        currentRequester: snapshot.context.current?.requesterId ?? null,
-        currentKind: currentSource?.kind ?? null,
-        // Available during `resolving` (before a title is known) so the "preparing…" notice can name it.
-        currentSourceLabel:
-          currentSource === null ? null : sourceLabel(currentSource),
-        blockedNonce: snapshot.context.blockedNonce,
-        blockedRequester: snapshot.context.lastBlockedRequester,
-        lastError: snapshot.context.lastError,
-      };
+      const { stateName, snap } = describeSnapshot(snapshot);
       reporter.handle(snap);
       // Metrics are process-global (unlabeled) gauges inherited from the single-session design:
       // playback state is last-writer across sessions and queue length is the pool-wide total.
@@ -415,6 +421,7 @@ export class SessionManager {
     session.unsubscribe();
     session.actor.stop();
     session.entry.userbot.setVoiceCloseListener(null);
+    session.entry.userbot.setStallListener(null);
     this.deps.pool.release(session.entry);
     // A preserved file only makes sense for an error-driven end; a natural finish (lastError
     // null) has nothing to resume even mid-recovery, so it cleans up as usual.

@@ -1,6 +1,7 @@
 import {
   getChampionImageBase64,
   getChampionLoadingImageBase64,
+  getChampionSplashImageBase64,
   getItemImageBase64,
   getSpellImageBase64,
   getAugmentIconBase64,
@@ -28,6 +29,10 @@ const augmentIconCache = new Map<string, string>();
 // Pre-loaded into a sync-accessible Map because satori renders JSX
 // synchronously — it cannot do async file reads during render.
 const championLoadingImageCache = new Map<string, string>();
+
+// Champion splash-art image cache (key: normalized champion name). High-res
+// landscape art used by the ranked report designs' full-bleed hero background.
+const championSplashImageCache = new Map<string, string>();
 
 // Pre-load spell images at module load time (static set)
 if (typeof Bun !== "undefined") {
@@ -138,16 +143,10 @@ export function getAugmentIcon(augmentIconPath: string): string {
 export async function preloadChampionImages(
   championNames: string[],
 ): Promise<void> {
-  const uniqueKeys = [
-    ...new Set(championNames.map((name) => normalizeChampionName(name))),
-  ];
-  await Promise.all(
-    uniqueKeys.map(async (key) => {
-      if (!championImageCache.has(key)) {
-        const base64 = await getChampionImageBase64(key);
-        championImageCache.set(key, base64);
-      }
-    }),
+  await preloadChampionArt(
+    championImageCache,
+    getChampionImageBase64,
+    championNames,
   );
 }
 
@@ -179,22 +178,61 @@ export function getChampionLoadingImage(championName: string): string {
   );
 }
 
-// Pre-load champion loading screen images (base skin only) for a list of
-// champion names, keyed by normalized champion name.
-export async function preloadChampionLoadingImages(
+// Shared preload driver for the loading + splash champion-art caches. Both are
+// keyed by normalized champion name and only ever hold the base skin (skin 0).
+async function preloadChampionArt(
+  cache: Map<string, string>,
+  loadBase64: (championName: string) => Promise<string>,
   championNames: string[],
 ): Promise<void> {
   const uniqueKeys = [
     ...new Set(championNames.map((name) => normalizeChampionName(name))),
   ];
-
   await Promise.all(
     uniqueKeys.map(async (key) => {
-      if (championLoadingImageCache.has(key)) {
+      if (cache.has(key)) {
         return;
       }
-      const base64 = await getChampionLoadingImageBase64(key);
-      championLoadingImageCache.set(key, base64);
+      cache.set(key, await loadBase64(key));
     }),
+  );
+}
+
+// Pre-load champion loading screen images (base skin only) for a list of
+// champion names, keyed by normalized champion name.
+export async function preloadChampionLoadingImages(
+  championNames: string[],
+): Promise<void> {
+  await preloadChampionArt(
+    championLoadingImageCache,
+    getChampionLoadingImageBase64,
+    championNames,
+  );
+}
+
+// Get champion splash-art image from cache (must be pre-loaded via
+// preloadChampionSplashImages). Normalizes the champion name so casing variants
+// resolve to the canonical entry. Only the base skin (skin 0) is ever rendered.
+export function getChampionSplashImage(championName: string): string {
+  const key = normalizeChampionName(championName);
+  const cached = championSplashImageCache.get(key);
+  if (cached !== undefined && cached.length > 0) {
+    return cached;
+  }
+
+  throw new Error(
+    `Champion splash image for ${key} not found in cache. Call preloadChampionSplashImages() before rendering.`,
+  );
+}
+
+// Pre-load champion splash-art images (base skin only) for a list of champion
+// names, keyed by normalized champion name.
+export async function preloadChampionSplashImages(
+  championNames: string[],
+): Promise<void> {
+  await preloadChampionArt(
+    championSplashImageCache,
+    getChampionSplashImageBase64,
+    championNames,
   );
 }

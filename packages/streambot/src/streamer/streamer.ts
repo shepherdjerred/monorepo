@@ -13,10 +13,16 @@ import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type {
   JoinVoiceInput,
   LeaveVoiceInput,
+  PipelineMode,
   ResolvedSubtitle,
   RunStreamInput,
   VoiceHandle,
 } from "@shepherdjerred/streambot/machine/types.ts";
+import {
+  endedShortError,
+  StreamCrashError,
+  type StallInfo,
+} from "@shepherdjerred/streambot/streamer/stream-errors.ts";
 import { computeElapsed } from "@shepherdjerred/streambot/streamer/elapsed.ts";
 import {
   GuildIdSchema,
@@ -25,10 +31,15 @@ import {
 } from "@shepherdjerred/streambot/types/ids.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
-import { createStreamObserver } from "@shepherdjerred/streambot/observability/stream-observer.ts";
 import {
+  createStreamObserver,
+  STALL_AFTER_SECONDS,
+} from "@shepherdjerred/streambot/observability/stream-observer.ts";
+import {
+  gatewayDisruptionsTotal,
   hwFallbackTotal,
   streamActive,
+  streamCrashesTotal,
   streamHardware,
   streamSegmentDurationSeconds,
   streamSegmentsTotal,
@@ -73,6 +84,12 @@ export type StreamerLike = PooledUserbot & {
   setVoiceCloseListener: (
     listener: ((info: VoiceCloseInfo) => void) | null,
   ) => void;
+  /**
+   * Register the (single) callback fired when the active segment's ffmpeg stops producing output
+   * while its process stays alive (see STALL_AFTER_SECONDS). The session layer routes it into the
+   * machine's stall recovery. Pass null to clear.
+   */
+  setStallListener: (listener: ((info: StallInfo) => void) | null) => void;
 };
 
 /** A Discord-side voice connection death, timestamped for freshness-based classification. */
@@ -105,6 +122,8 @@ export class StreambotStreamer implements StreamerLike {
   private lastVoiceClose: VoiceCloseInfo | null = null;
   /** Session-layer callback for Discord-side voice closes; cleared between sessions. */
   private voiceCloseListener: ((info: VoiceCloseInfo) => void) | null = null;
+  /** Session-layer callback for mid-stream ffmpeg stalls; cleared between sessions. */
+  private stallListener: ((info: StallInfo) => void) | null = null;
   /** Unsubscribes the current voice connection's close handler; null when not joined. */
   private detachVoiceCloseHandler: (() => void) | null = null;
 
@@ -120,6 +139,23 @@ export class StreambotStreamer implements StreamerLike {
     this.createPlayer = createPlayer;
     this.client = new Client();
     this.streamer = new Streamer(this.client);
+    // Gateway health observability: a dropped/invalidated userbot gateway kills streaming
+    // capability out from under the pool — surface it instead of nothing. (Voice-connection
+    // deaths have their own recovery path; this covers the main gateway.)
+    this.client.on("shardDisconnect", (event) => {
+      gatewayDisruptionsTotal.inc({ client: "userbot", kind: "disconnect" });
+      log.warn("userbot gateway shard disconnected", { code: event.code });
+    });
+    this.client.on("invalidated", () => {
+      gatewayDisruptionsTotal.inc({ client: "userbot", kind: "invalidated" });
+      log.error(
+        "userbot gateway session invalidated — streaming is dead until the process restarts",
+      );
+    });
+    this.client.on("error", (error) => {
+      gatewayDisruptionsTotal.inc({ client: "userbot", kind: "error" });
+      log.warn("userbot client error", { error: getErrorMessage(error) });
+    });
   }
 
   /**
@@ -220,6 +256,10 @@ export class StreambotStreamer implements StreamerLike {
     this.voiceCloseListener = listener;
   }
 
+  setStallListener(listener: ((info: StallInfo) => void) | null): void {
+    this.stallListener = listener;
+  }
+
   private safeStop(): void {
     // Detach first so the ws close triggered by our own teardown can never fire the listener.
     this.detachVoiceCloseHandler?.();
@@ -289,24 +329,29 @@ export class StreambotStreamer implements StreamerLike {
   ): Promise<void> => {
     // Subtitles no longer disqualify VAAPI: prepareStream composes them as a GPU overlay branch
     // (libass alpha canvas → hwupload → overlay_vaapi), so decode, scale, tonemap, and encode all
-    // stay on the GPU even with burned-in subs. The HW→SW retry below remains the safety net for
-    // graph features the device lacks (tonemap_vaapi/overlay_vaapi on older iGPUs).
-    const useHardware = this.config.stream.hardwareAcceleration;
+    // stay on the GPU even with burned-in subs. The startup fallback below remains the safety net
+    // for graph features the device lacks (tonemap_vaapi/overlay_vaapi on older iGPUs).
+    const pipelineMode: PipelineMode = this.config.stream.hardwareAcceleration
+      ? input.pipelineMode
+      : "sw";
     try {
       try {
         // Start at the resume offset (0 for a fresh play; >0 when resuming after a restart).
-        await this.streamOnce(input, signal, useHardware, input.seekSeconds);
+        await this.streamOnce(input, signal, pipelineMode, input.seekSeconds);
       } catch (error) {
-        if (useHardware && !signal.aborted) {
-          // Resume the software retry at wherever playback (incl. any live seek) had reached, rather
-          // than restarting the video from 0.
+        // Mid-stream deaths (crash / ended-short) carry position + pipeline context; the playback
+        // machine owns that recovery ladder (bounded retry at position, hw → hw-upload → sw).
+        if (error instanceof StreamCrashError) throw error;
+        if (pipelineMode !== "sw" && !signal.aborted) {
+          // Startup failure on a hardware pipeline (device/driver/graph init): retry immediately
+          // in software, resuming at wherever playback (incl. any live seek) had reached.
           const resumeAt = this.lastPlaybackPositionSeconds;
           hwFallbackTotal.inc();
           log.warn("hardware (VAAPI) encode failed; retrying with software", {
             error: getErrorMessage(error),
             resumeAt,
           });
-          await this.streamOnce(input, signal, false, resumeAt);
+          await this.streamOnce(input, signal, "sw", resumeAt);
           return;
         }
         throw error;
@@ -336,10 +381,11 @@ export class StreambotStreamer implements StreamerLike {
   private async streamOnce(
     input: RunStreamInput,
     signal: AbortSignal,
-    useHardware: boolean,
+    pipelineMode: PipelineMode,
     startSeconds: number,
   ): Promise<void> {
     const { stream } = this.config;
+    const useHardware = pipelineMode !== "sw";
     const prepareOpts = {
       width: stream.width,
       height: stream.height,
@@ -372,18 +418,45 @@ export class StreambotStreamer implements StreamerLike {
       ...(useHardware
         ? { encoder: Encoders.vaapi({ device: stream.vaapiDevice }) }
         : {}),
+      // "hw-upload": GPU decode to system memory + hwupload back onto the device for the GPU
+      // filters/encode — the recovery pipeline for sources whose mid-stream hwaccel flip crashes
+      // the full-GPU graph (ffmpeg exit 218). See PipelineMode.
+      ...(pipelineMode === "hw-upload"
+        ? { hardwarePipelineMode: "upload" as const }
+        : {}),
     };
 
     log.info("starting stream", {
       title: input.resolved.title,
       hardware: useHardware,
+      pipelineMode,
     });
 
     // Observability seam — forwards ffmpeg command/codec/progress and send-frametime stats to the
-    // Prometheus metrics. Passed to both prepare (ffmpeg events) and play (send stats).
+    // Prometheus metrics. Passed to both prepare (ffmpeg events) and play (send stats). The stall
+    // watchdog routes to the session layer, which converts it into the machine's stall recovery.
     const { observer, dispose: disposeObserver } = createStreamObserver(
       useHardware,
       this.now,
+      (lastMediaSeconds) => {
+        // A detected stall IS a mid-stream segment death — count it alongside crash/ended-short so
+        // the advertised `stall` kind on the crash counter actually populates (aborting the actor
+        // otherwise leaves the segment outcome at "ended" and the recovery goes uncounted).
+        streamCrashesTotal.inc({ pipeline: pipelineMode, kind: "stall" });
+        // Resume from the producer's last DELIVERED media position — the observer's timemark, which
+        // is relative to the current ffmpeg `-ss`, so add the segment's start offset (kept current
+        // across live seeks). We deliberately do NOT derive this from `getPosition()`: the wall-clock
+        // tracker over-counts when ffmpeg was producing below realtime before it froze, which would
+        // skip unseen media. Fall back to the segment start if no media time was parsed yet.
+        const positionSeconds =
+          lastMediaSeconds === undefined
+            ? this.segmentStartOffsetSeconds
+            : this.segmentStartOffsetSeconds + lastMediaSeconds;
+        this.stallListener?.({
+          positionSeconds,
+          reason: `ffmpeg produced no output for ${String(STALL_AFTER_SECONDS)}s`,
+        });
+      },
     );
 
     // The seekable player owns prepare+play on a single Go-Live connection. `finished` resolves at
@@ -406,6 +479,18 @@ export class StreambotStreamer implements StreamerLike {
       },
     );
     this.player = player;
+    // If `start()` rejects (a startup/graph-init failure — the player now surfaces a failed initial
+    // attach there rather than swallowing it into `finished`), we take the catch path below and
+    // never await `finished`. Consume any late rejection from the torn-down player so it can't
+    // surface as an unhandled rejection; the success path still awaits `player.finished` below and
+    // sees its settled value.
+    void (async () => {
+      try {
+        await player.finished;
+      } catch {
+        // Intentionally swallowed here; real error handling happens on the awaited paths below.
+      }
+    })();
 
     const onAbort = () => {
       player.stop();
@@ -420,9 +505,11 @@ export class StreambotStreamer implements StreamerLike {
     const segmentStartedMs = this.now();
     streamActive.set(1);
     streamHardware.set(useHardware ? 1 : 0);
-    let outcome: "ended" | "error" = "ended";
+    let outcome: "ended" | "ended-short" | "crash" | "error" = "ended";
+    let playbackStarted = false;
     try {
       await player.start();
+      playbackStarted = true;
       // Anchor the elapsed clock at the segment's start offset so getPosition() tracks live position.
       this.segmentStartOffsetSeconds = startSeconds;
       this.segmentStartedAtMs = this.now();
@@ -432,7 +519,44 @@ export class StreambotStreamer implements StreamerLike {
         log.warn("initial setVolume failed", { error: getErrorMessage(error) });
       }
       await player.finished;
+      // `finished` resolving means ffmpeg exited 0 — but exit 0 far short of the probed duration
+      // is a truncation (network URL expiry, container short-read), not a completed track. Without
+      // this check a truncated source under loop:"track" replays its first N seconds forever.
+      // Aborts (stop/skip/voice loss) also resolve `finished`; they are never classified.
+      const shortEnd = signal.aborted
+        ? null
+        : endedShortError(
+            input.resolved.durationSeconds,
+            this.getPosition() ?? startSeconds,
+            pipelineMode,
+          );
+      if (shortEnd !== null) {
+        outcome = "ended-short";
+        streamCrashesTotal.inc({ pipeline: pipelineMode, kind: "ended-short" });
+        throw shortEnd;
+      }
     } catch (error) {
+      // Our own ended-short classification from above — already counted.
+      if (error instanceof StreamCrashError) throw error;
+      if (playbackStarted && !signal.aborted) {
+        // Mid-stream death (non-zero ffmpeg exit or demuxer error) after playback was up.
+        outcome = "crash";
+        const positionSeconds = this.getPosition() ?? startSeconds;
+        streamCrashesTotal.inc({ pipeline: pipelineMode, kind: "crash" });
+        const crash = StreamCrashError.fromCause(error, {
+          positionSeconds,
+          pipelineMode,
+        });
+        log.error("stream crashed mid-playback", {
+          title: input.resolved.title,
+          positionSeconds,
+          pipelineMode,
+          exitCode: crash.exitCode,
+          // The tail is bounded (≤50 lines) but still noisy; the last lines carry the error.
+          stderrTail: crash.stderrTail.slice(-15),
+        });
+        throw crash;
+      }
       outcome = "error";
       throw error;
     } finally {
