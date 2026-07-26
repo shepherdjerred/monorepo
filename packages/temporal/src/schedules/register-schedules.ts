@@ -293,6 +293,21 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Weekly marketing-showcase refresh — regenerates the committed showcase PNGs + asset index from scout-prod, opens a PR on drift (generatedAt-only churn suppressed)",
   },
   {
+    id: "scout-queue-windows-daily",
+    workflowType: "runScoutQueueWindowsWatch",
+    args: [],
+    // 06:45 PT — staggered after the 06:00 data-dragon version check. Scans
+    // the scout-prod match lake (21-day lookback) for limited-queue window
+    // drift; opens an auto-merging PR for window opens/reopens, a plain PR
+    // for closes (a human confirms against patch notes), and emails
+    // warnings-only runs. Steady state is a silent no-diff.
+    cronExpression: "45 6 * * *",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "45 minutes",
+    memo: "Daily LoL limited-queue window watcher — proposes queue-windows.json edits from scout-prod match volume; auto-merge on open/reopen, plain PR on close",
+  },
+  {
     id: "zfs-maintenance-weekly",
     workflowType: "runZfsMaintenanceWorkflow",
     args: [],

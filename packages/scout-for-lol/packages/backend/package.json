@@ -29,6 +29,7 @@
     "compact:report-lake": "bun run scripts/compact-report-lake.ts",
     "generate-lane-priors": "bun run scripts/generate-lane-priors.ts",
     "evaluate-lane-priors": "bun run scripts/evaluate-lane-priors.ts",
+    "update-queue-windows": "bun run scripts/update-queue-windows.ts",
     "db:generate": "bunx --trust prisma generate && bun run brand-types && bunx prettier --write generated/ && bun run generate:test-template",
     "generate:test-template": "RUST_LOG=info bun run scripts/generate-test-template-db.ts",
     "check:test-template": "bun run scripts/check-test-template-db.ts",

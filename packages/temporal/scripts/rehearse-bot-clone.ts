@@ -53,6 +53,7 @@ import {
 import { isAllowedGlitterContextRefreshPath } from "#activities/glitter-context-refresh-paths.ts";
 import { runCommand } from "#activities/data-dragon-shell.ts";
 import { COG_TARGETS } from "#activities/readme-refresh.ts";
+import { z } from "zod";
 import {
   CHANGELOG_FILE,
   SEASONS_FILE,
@@ -334,6 +335,32 @@ async function rehearseCrdImportsEnvironment(repoDir: string): Promise<void> {
   console.error("[rehearsal] crd-imports: environment OK");
 }
 
+async function rehearseQueueWindowsEnvironment(repoDir: string): Promise<void> {
+  console.error("[rehearsal] queue-windows: verifying catalog + script");
+  const windowsJson = `${repoDir}/packages/scout-for-lol/packages/data/src/model/queue-windows.json`;
+  if (!(await Bun.file(windowsJson).exists())) {
+    throw new Error(
+      `queue-windows.json missing at ${windowsJson} — ` +
+        "scout-queue-windows-daily's GENERATED_PATHS diff check would " +
+        "never fire and the update CLI would fail to rewrite the catalog.",
+    );
+  }
+  const backendPackageJson: unknown = await Bun.file(
+    `${repoDir}/packages/scout-for-lol/packages/backend/package.json`,
+  ).json();
+  const parsed = z
+    .object({ scripts: z.record(z.string(), z.string()) })
+    .safeParse(backendPackageJson);
+  if (!parsed.success || !("update-queue-windows" in parsed.data.scripts)) {
+    throw new Error(
+      "backend package.json no longer declares the update-queue-windows " +
+        "script — scout-queue-windows-daily's `bun run --filter` spawn " +
+        "would fail.",
+    );
+  }
+  console.error("[rehearsal] queue-windows: environment OK");
+}
+
 async function rehearseCogTargets(repoDir: string): Promise<void> {
   console.error("[rehearsal] cog: verifying binary + targets");
   // cogapp has no --version long flag; -v prints the version.
@@ -419,6 +446,7 @@ async function main(): Promise<void> {
   await rehearseHookFreeCommit(repoDir);
   await rehearseCogTargets(repoDir);
   await rehearseCrdImportsEnvironment(repoDir);
+  await rehearseQueueWindowsEnvironment(repoDir);
   await rehearsePokeemeraldDataEnvironment(repoDir);
   await rehearseShowcaseEnvironment(repoDir);
   console.error("[rehearsal] all canaries passed");
