@@ -1,4 +1,4 @@
-import { getSeasonChoices } from "@scout-for-lol/data";
+import { getAllSeasons } from "@scout-for-lol/data";
 import { Input } from "#src/components/ui/input.tsx";
 import { Label } from "#src/components/ui/label.tsx";
 import {
@@ -16,7 +16,23 @@ export type DatesState = {
   seasonId: string;
 };
 
-const SEASON_CHOICES = getSeasonChoices();
+/**
+ * Format a season's start/end as a compact date range in the user's locale,
+ * e.g. "Jun 10 – Jul 28, 2026". Both years are shown when they differ.
+ */
+function formatDateRange(start: Date, end: Date): string {
+  const monthDay = new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+  const startYear = start.getFullYear();
+  const endYear = end.getFullYear();
+  const startText =
+    startYear === endYear
+      ? monthDay.format(start)
+      : `${monthDay.format(start)}, ${startYear.toString()}`;
+  return `${startText} – ${monthDay.format(end)}, ${endYear.toString()}`;
+}
 
 export function CompetitionDatesFields(props: {
   value: DatesState;
@@ -24,6 +40,13 @@ export function CompetitionDatesFields(props: {
   onChange: (next: DatesState) => void;
 }) {
   const { value, disabled = false, onChange } = props;
+
+  // Compute inside the component body so "now" reflects render time rather
+  // than freezing at module load.
+  const now = new Date();
+  const seasonChoices = getAllSeasons().filter(
+    (season) => season.endDate >= now,
+  );
 
   return (
     <div className="space-y-3">
@@ -90,9 +113,14 @@ export function CompetitionDatesFields(props: {
               <SelectValue placeholder="Pick a season" />
             </SelectTrigger>
             <SelectContent>
-              {SEASON_CHOICES.map((choice) => (
-                <SelectItem key={choice.value} value={choice.value}>
-                  {choice.name}
+              {seasonChoices.map((season) => (
+                <SelectItem key={season.id} value={season.id}>
+                  <span className="flex flex-col">
+                    <span>{season.displayName}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDateRange(season.startDate, season.endDate)}
+                    </span>
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>

@@ -333,6 +333,22 @@ export function visibilityToString(visibility: CompetitionVisibility): string {
 }
 
 /**
+ * Describe what a visibility setting means for participants
+ */
+export function visibilityDescription(
+  visibility: CompetitionVisibility,
+): string {
+  return match(visibility)
+    .with("OPEN", () => "Anyone in the server can join themselves (opt-in).")
+    .with("INVITE_ONLY", () => "Players join only when invited.")
+    .with(
+      "SERVER_WIDE",
+      () => "Every tracked player is entered automatically (opt-out).",
+    )
+    .exhaustive();
+}
+
+/**
  * Format participant status to human-readable string
  */
 export function participantStatusToString(status: ParticipantStatus): string {

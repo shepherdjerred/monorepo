@@ -22,6 +22,7 @@ export type ReportExample = {
 export type CompetitionExample = {
   id: string;
   label: string;
+  description: string;
   build: (channelId: string) => FormState;
 };
 
@@ -73,6 +74,8 @@ export const COMPETITION_EXAMPLES: CompetitionExample[] = [
   {
     id: "rank",
     label: "Highest rank this season",
+    description:
+      "Rank everyone by their peak Solo Queue rank before the season ends.",
     build: (channelId) => ({
       ...EMPTY_STATE,
       title: "Highest Solo Queue rank this season",
@@ -95,6 +98,8 @@ export const COMPETITION_EXAMPLES: CompetitionExample[] = [
   {
     id: "games-2026",
     label: "Most games in 2026",
+    description:
+      "A year-long race to see who grinds the most games across every queue.",
     build: (channelId) => ({
       ...EMPTY_STATE,
       title: "Most games in 2026",
@@ -117,6 +122,8 @@ export const COMPETITION_EXAMPLES: CompetitionExample[] = [
   {
     id: "yuumi",
     label: "Most wins on Yuumi",
+    description:
+      "A one-month sprint for the most wins on a single champion (Yuumi).",
     build: (channelId) => {
       const now = new Date();
       return {
