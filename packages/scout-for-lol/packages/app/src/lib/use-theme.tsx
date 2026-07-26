@@ -6,6 +6,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { track } from "#src/lib/analytics.ts";
 
 export type ThemePreference = "system" | "light" | "dark";
 export type ResolvedTheme = "light" | "dark";
@@ -69,6 +70,7 @@ export function ThemeProvider(props: { children: ReactNode }) {
       setPreference: (next) => {
         globalThis.window.localStorage.setItem(STORAGE_KEY, next);
         setPreferenceState(next);
+        track("theme_changed", { preference: next });
       },
     }),
     [preference, resolved],

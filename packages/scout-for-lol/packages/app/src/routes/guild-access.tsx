@@ -12,6 +12,7 @@ import {
   permissionsForRole,
 } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import { Badge } from "#src/components/ui/badge.tsx";
@@ -142,10 +143,16 @@ export function GuildAccess() {
     ),
   );
   const setMutation = useMutation(
-    trpc.roles.set.mutationOptions({ onSuccess: invalidate }),
+    trpc.roles.set.mutationOptions({
+      meta: analyticsMeta("access_granted"),
+      onSuccess: invalidate,
+    }),
   );
   const clearMutation = useMutation(
-    trpc.roles.clear.mutationOptions({ onSuccess: invalidate }),
+    trpc.roles.clear.mutationOptions({
+      meta: analyticsMeta("access_revoked"),
+      onSuccess: invalidate,
+    }),
   );
 
   const [newUserId, setNewUserId] = useState("");

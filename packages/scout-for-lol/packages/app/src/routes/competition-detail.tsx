@@ -2,6 +2,7 @@ import { Link, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CompetitionIdSchema, visibilityToString } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { formatDate, channelLabel } from "#src/lib/format.ts";
 import { summarizeCriteria } from "#src/lib/criteria-summary.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
@@ -44,6 +45,7 @@ export function CompetitionDetail() {
   );
   const cancelMutation = useMutation(
     trpc.competition.cancel.mutationOptions({
+      meta: analyticsMeta("competition_cancelled"),
       onSuccess: () => {
         void queryClient.invalidateQueries({
           queryKey: trpc.competition.get.queryKey({

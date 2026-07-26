@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "#src/components/ui/card.tsx";
 import { Button } from "#src/components/ui/button.tsx";
+import { track } from "#src/lib/analytics.ts";
 
 export function ReportCommonPresets(props: {
   onUsePreset: (preset: ReportCommonPresetInfo) => void;
@@ -34,6 +35,9 @@ export function ReportCommonPresets(props: {
                     variant="outline"
                     className="h-auto justify-start whitespace-normal p-3 text-left"
                     onClick={() => {
+                      track("report_preset_used", {
+                        category: preset.category ?? "Other",
+                      });
                       props.onUsePreset(preset);
                     }}
                   >

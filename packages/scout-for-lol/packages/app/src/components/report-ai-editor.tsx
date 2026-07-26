@@ -18,6 +18,7 @@ import { Button } from "#src/components/ui/button.tsx";
 import { Badge } from "#src/components/ui/badge.tsx";
 import { Textarea } from "#src/components/ui/textarea.tsx";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { track } from "#src/lib/analytics.ts";
 import { streamReportAiEdit } from "#src/lib/report-ai-stream.ts";
 import { type ReportFormState } from "#src/components/report-form-fields.tsx";
 import { ReportQueryViewer } from "#src/components/report-query-viewer.tsx";
@@ -70,6 +71,9 @@ export function ReportAiEditor(props: {
     setDraftText("");
     setFinalDraft(null);
     setPreview(null);
+    track("ai_edit_started", {
+      has_existing_query: props.state.queryText.trim().length > 0,
+    });
 
     try {
       const guildId = DiscordGuildIdSchema.parse(props.guildId);
@@ -93,11 +97,12 @@ export function ReportAiEditor(props: {
         onEvent: handleStreamEvent,
       });
     } catch (streamError) {
-      setError(
-        controller.signal.aborted
-          ? "AI edit was cancelled."
-          : errorMessage(streamError),
-      );
+      if (controller.signal.aborted) {
+        setError("AI edit was cancelled.");
+      } else {
+        setError(errorMessage(streamError));
+        track("ai_edit_error", { reason: "stream" });
+      }
     } finally {
       setRunning(false);
       abortRef.current = null;
@@ -141,6 +146,7 @@ export function ReportAiEditor(props: {
       case "error": {
         setError(event.message);
         appendProgress(event.message, "error");
+        track("ai_edit_error", { reason: "server" });
         break;
       }
       case "done": {
@@ -159,6 +165,7 @@ export function ReportAiEditor(props: {
     if (finalDraft === null) {
       return;
     }
+    track("ai_edit_applied");
     props.setState((prev) => ({
       ...prev,
       title: finalDraft.title,
@@ -168,6 +175,7 @@ export function ReportAiEditor(props: {
   }
 
   function cancelEdit() {
+    track("ai_edit_cancelled");
     abortRef.current?.abort();
   }
 

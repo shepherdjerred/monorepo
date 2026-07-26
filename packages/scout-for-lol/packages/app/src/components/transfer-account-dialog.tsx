@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import type { RegionValue } from "#src/lib/regions.ts";
 import { PlayerAliasCombobox } from "#src/components/player-alias-combobox.tsx";
 import {
@@ -33,6 +34,7 @@ export function TransferAccountDialog(props: {
   const [error, setError] = useState<string | null>(null);
   const mutation = useMutation(
     trpc.player.transferAccount.mutationOptions({
+      meta: analyticsMeta("player_account_transferred"),
       onSuccess: (result) => {
         props.onTransferred(result.toPlayerAlias);
       },

@@ -1,11 +1,16 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  MutationCache,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
 import * as Sentry from "@sentry/react";
 import { App } from "#src/app.tsx";
 import { TRPCProvider, trpcClient } from "#src/lib/trpc.ts";
 import { ThemeProvider } from "#src/lib/use-theme.tsx";
+import { initAnalytics, trackMutationMeta } from "#src/lib/analytics.ts";
 import "#src/styles/global.css";
 
 // VITE_SENTRY_RELEASE is injected at build time by the CI site-deploy step
@@ -23,6 +28,10 @@ Sentry.init({
   // Bugsink is Sentry-compatible but does not support performance tracing.
   tracesSampleRate: 0,
 });
+
+// Product-usage analytics (self-hosted Plausible). No-op unless the site build
+// injected VITE_PLAUSIBLE_DOMAIN (prod/beta only) — see lib/analytics.ts.
+initAnalytics();
 
 // Recover from a stale dynamic-import chunk after a deploy. A still-open tab can
 // reference a content-hashed chunk that a later deploy has aged out; Vite fires
@@ -48,6 +57,17 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: { retry: 1, staleTime: 30_000 },
   },
+  // Fire an analytics event for any mutation whose meta was built with
+  // analyticsMeta(), labeled by outcome. Runs alongside each mutation's own
+  // onSuccess/onError; trackMutationMeta validates the meta and no-ops otherwise.
+  mutationCache: new MutationCache({
+    onSuccess: (_data, _variables, _context, mutation) => {
+      trackMutationMeta(mutation.meta, "success");
+    },
+    onError: (_error, _variables, _context, mutation) => {
+      trackMutationMeta(mutation.meta, "error");
+    },
+  }),
 });
 
 const container = document.querySelector("#root");

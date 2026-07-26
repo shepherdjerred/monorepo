@@ -7,6 +7,7 @@ import {
   type CompetitionVisibility,
 } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import type { CriteriaState } from "#src/components/competition-criteria-fields.tsx";
 import {
@@ -58,6 +59,7 @@ export function CompetitionForm() {
 
   const createMutation = useMutation(
     trpc.competition.create.mutationOptions({
+      meta: analyticsMeta("competition_created"),
       onSuccess: (created) => {
         void navigate(
           `/g/${safeGuildId}/competitions/${created.id.toString()}`,
@@ -70,6 +72,7 @@ export function CompetitionForm() {
   );
   const editMutation = useMutation(
     trpc.competition.edit.mutationOptions({
+      meta: analyticsMeta("competition_edited"),
       onSuccess: () => {
         void navigate(
           `/g/${safeGuildId}/competitions/${competitionId.toString()}`,

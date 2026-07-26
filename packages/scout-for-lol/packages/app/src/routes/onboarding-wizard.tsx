@@ -1,8 +1,9 @@
-import { useReducer, type ReactElement } from "react";
+import { useEffect, useReducer, type ReactElement } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { match } from "ts-pattern";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { track } from "#src/lib/analytics.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import {
   initialOnboardingState,
@@ -41,6 +42,12 @@ export function OnboardingWizard() {
           },
   );
   const guildId = state.selectedGuildId;
+
+  // Funnel: record each onboarding step as it is reached (fires on the initial
+  // step and every transition). `step` is a bounded enum — low cardinality.
+  useEffect(() => {
+    track("onboarding_step", { step: state.step });
+  }, [state.step]);
 
   const meQuery = useQuery(
     trpc.auth.meWeb.queryOptions(undefined, { retry: false }),

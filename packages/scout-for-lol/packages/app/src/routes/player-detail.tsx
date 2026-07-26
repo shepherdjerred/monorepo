@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { findRegion, type RegionValue } from "#src/lib/regions.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "#src/components/ui/button.tsx";
@@ -98,6 +99,7 @@ export function PlayerDetail() {
 
   const unlinkMutation = useMutation(
     trpc.player.unlinkDiscord.mutationOptions({
+      meta: analyticsMeta("player_discord_unlinked"),
       onSuccess: () => {
         setActionError(null);
         refresh();
@@ -109,6 +111,7 @@ export function PlayerDetail() {
   );
   const deleteAccountMutation = useMutation(
     trpc.player.deleteAccount.mutationOptions({
+      meta: analyticsMeta("player_account_deleted"),
       onSuccess: () => {
         setActionError(null);
         refresh();
@@ -120,6 +123,7 @@ export function PlayerDetail() {
   );
   const deletePlayerMutation = useMutation(
     trpc.player.deletePlayer.mutationOptions({
+      meta: analyticsMeta("player_deleted"),
       onSuccess: () => {
         void navigate(`/g/${safeGuildId}/players`);
       },

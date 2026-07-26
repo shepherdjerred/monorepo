@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,7 @@ export function RenamePlayerDialog(props: {
   const [error, setError] = useState<string | null>(null);
   const mutation = useMutation(
     trpc.player.renamePlayer.mutationOptions({
+      meta: analyticsMeta("player_renamed"),
       onSuccess: (result) => {
         props.onRenamed(result.alias);
       },

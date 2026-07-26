@@ -7,6 +7,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { AddSubscriptionDialog } from "#src/components/add-subscription-dialog.tsx";
 import {
@@ -82,6 +83,7 @@ export function GuildSubscriptions() {
   );
   const removeMutation = useMutation(
     trpc.subscription.remove.mutationOptions({
+      meta: analyticsMeta("subscription_removed"),
       onSuccess: (result) => {
         switch (result.kind) {
           case "removed":
@@ -107,6 +109,7 @@ export function GuildSubscriptions() {
   );
   const muteMutation = useMutation(
     trpc.subscription.setMuted.mutationOptions({
+      meta: analyticsMeta("subscription_muted"),
       onSuccess: (result, variables) => {
         switch (result.kind) {
           case "updated":

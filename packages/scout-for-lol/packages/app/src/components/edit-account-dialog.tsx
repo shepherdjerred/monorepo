@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { findRegion, type RegionValue } from "#src/lib/regions.ts";
 import {
   Dialog,
@@ -37,6 +38,7 @@ export function EditAccountDialog(props: {
   const [error, setError] = useState<string | null>(null);
   const mutation = useMutation(
     trpc.player.updateAccount.mutationOptions({
+      meta: analyticsMeta("player_account_edited"),
       onSuccess: () => {
         props.onSaved();
       },

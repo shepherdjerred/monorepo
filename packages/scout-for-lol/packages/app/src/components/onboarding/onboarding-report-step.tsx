@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import {
   buildReportPayload,
@@ -38,6 +39,7 @@ export function OnboardingReportStep(props: {
 
   const mutation = useMutation(
     trpc.report.create.mutationOptions({
+      meta: analyticsMeta("report_created"),
       onSuccess: (created) => {
         props.onCreated(created.id);
       },

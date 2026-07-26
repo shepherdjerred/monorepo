@@ -2,6 +2,7 @@ import { Link, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ReportIdSchema, type ReportId } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { channelLabel } from "#src/lib/format.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "#src/components/ui/button.tsx";
@@ -153,6 +154,7 @@ export function ReportDetail() {
   );
   const runMutation = useMutation(
     trpc.report.run.mutationOptions({
+      meta: analyticsMeta("report_run"),
       onSuccess: () => {
         void queryClient.invalidateQueries({ queryKey: getKey });
       },
@@ -160,6 +162,7 @@ export function ReportDetail() {
   );
   const deleteMutation = useMutation(
     trpc.report.delete.mutationOptions({
+      meta: analyticsMeta("report_deleted"),
       onSuccess: () => {
         void navigate(`/g/${safeGuildId}/reports`);
       },

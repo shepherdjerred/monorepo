@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import type { SubscriptionFilterSpec } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import {
   Dialog,
   DialogContent,
@@ -59,6 +60,7 @@ export function SubscriptionFilterDialog(props: Props) {
 
   const setFiltersMutation = useMutation(
     trpc.subscription.setFilters.mutationOptions({
+      meta: analyticsMeta("subscription_filters_set"),
       onSuccess: (result) => {
         switch (result.kind) {
           case "updated":
@@ -83,6 +85,7 @@ export function SubscriptionFilterDialog(props: Props) {
 
   const setChannelFiltersMutation = useMutation(
     trpc.subscription.setChannelFilters.mutationOptions({
+      meta: analyticsMeta("subscription_channel_filters_set"),
       onSuccess: (result) => {
         switch (result.kind) {
           case "updated":
