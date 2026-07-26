@@ -1,9 +1,9 @@
 ---
 id: plan-2026-07-25-scout-ranked-splash-highres
 type: plan
-status: in-progress
+status: awaiting-human
 board: true
-verification: agent
+verification: human
 disposition: active
 ---
 
@@ -13,7 +13,7 @@ Shipped on PR #924 (`claude/peaceful-driscoll-2a021a`): high-res centered splash
 art + grade-letter centering. PR itself remains deferred pending owner review of
 the designs.
 
-## Remaining
+## Human Verification
 
 - [ ] PR #924 un-deferred and merged (design review by owner)
 
@@ -37,9 +37,9 @@ CommunityDragon centered endpoint takes the **numeric champion ID** directly
 (`.../champion/{id}/splash-art/centered/skin/{n}`), so no CDragon game-data Zod
 schema change is needed.
 
-**Decisions:** download **skin-0 only** (~173 files, ~15MB — ranked designs only
-render the hero at skin 0; non-zero skins fall back to `_0`). Land **directly on
-PR #924's branch**.
+**Decisions:** download **skin-0 only** (~173 files, ~15MB — ranked designs
+always render the hero at base skin 0; there is no skin parameter to fall back
+from). Land **directly on PR #924's branch**.
 
 ## Changes
 
@@ -115,6 +115,32 @@ Non-ranked / loading-screen / arena reports are untouched (keep loading art).
   `preloadChampionSplashImages` and the `Splash` component; folded the three
   preloaders (portrait/loading/splash) into one shared `preloadChampionArt`.
 
+### Codex remediation follow-up (same day, separate session)
+
+- Merged `origin/main` into the PR branch to pick up 4 CI-memory fixes (#1662
+  "right-size verify memory", #1647 "tmpfs checkout memory", #1650 "retry
+  Buildx import panic", #1639 "buildkitd cutover") that fix the repeated
+  `verify --affected` OOM kill on this branch's Buildkite runs. Validated the
+  merged `bun.lock` with `bun install --frozen-lockfile --dry-run`.
+- Fixed a Codex P2 on `ranked-banner/report.tsx`: squad columns were sized off
+  a hardcoded `isLargeSquad ? "50%" : "100%"`, which only covered exactly two
+  groups; cross-guild duplicate configs can push `splitSquad` to 3+ groups.
+  Added `squadGroupWidth(groupCount)` (mirrors `squadCardWidth` in
+  ranked-square/report.tsx) sized off `squadGroups.length`, plus a regression
+  test for an 11-player / 3-group render.
+- Reclassified this plan's status `in-progress` → `awaiting-human` (and
+  `verification` `agent` → `human`) and moved the un-defer checklist item from
+  `## Remaining` to `## Human Verification`, matching `packages/docs/AGENTS.md`'s
+  workflow-status conventions — the only remaining step is owner design review,
+  not agent work.
+- Corrected this doc's "non-zero skins fall back to `_0`" claim (Decisions +
+  Caveats above): `getChampionSplashImageBase64` takes only a champion name and
+  has no skin parameter, so there is no fallback to describe — ranked rendering
+  simply always requests skin 0.
+- Enrolled `champion-splash/*.jpg` in `packages/scout-for-lol/scripts/check-asset-sizes.ts`
+  at the 2 MiB ceiling that `MAX_SPLASH_IMAGE_BYTES` in `update-data-dragon.ts`
+  already declares but the asset gate never evaluated.
+
 ### Remaining
 
 - PR #924 stays **deferred** — owner still needs to review the two designs before
@@ -122,10 +148,12 @@ Non-ranked / loading-screen / arena reports are untouched (keep loading art).
 
 ### Caveats
 
-- Splash art is **base skin 0 only** by design (~15 MB vs ~180 MB for all skins);
-  the ranked designs only render the hero at skin 0. Non-zero skins fall back to
-  `_0` via `getChampionSplashImageBase64`. Extending to skin-aware art = iterate
-  more skins in `downloadChampionSplashImages`.
+- Splash art is **base skin 0 only** by design (~15 MB vs ~180 MB for all skins).
+  `getChampionSplashImageBase64` takes only a champion name — it always loads
+  `<champion>_0.jpg` and has no skin parameter, so there is no per-skin fallback;
+  ranked rendering simply never requests anything but skin 0. Extending to
+  skin-aware art = add a skin parameter to `getChampionSplashImageBase64` and
+  iterate more skins in `downloadChampionSplashImages`.
 - Assets were generated with a throwaway scratch script using the **same URLs** as
   the new pipeline (byte-identical output); a full `bun run update-data-dragon`
   would also refresh every other asset to the latest patch, which we deliberately
