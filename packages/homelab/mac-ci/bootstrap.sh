@@ -21,6 +21,8 @@
 
 set -euo pipefail
 
+POWER_BACKUP_FILE="/var/db/buildkite-mac-ci-pmset-before"
+
 if [[ "$(uname -s)" != "Darwin" ]]; then
   echo "error: this provisions a macOS host, but uname -s is $(uname -s)" >&2
   exit 1
@@ -89,6 +91,13 @@ umask 022
 #   womp 1          wake on network access (magic packet)
 #   autorestart 1   power back on automatically after a power loss
 echo "==> Configuring power management (never sleep) — needs sudo"
+if ! sudo test -e "$POWER_BACKUP_FILE"; then
+  power_backup="$(mktemp)"
+  pmset -g custom >"$power_backup"
+  sudo install -m 600 "$power_backup" "$POWER_BACKUP_FILE"
+  rm "$power_backup"
+  echo "    Saved the previous profile to $POWER_BACKUP_FILE"
+fi
 sudo pmset -a sleep 0 disksleep 0 displaysleep 0 powernap 0 womp 1 autorestart 1
 echo "    Full profile (verify sleep=0): pmset -g custom"
 

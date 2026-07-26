@@ -56,8 +56,10 @@ The Mac Mini was that surface.
 
    The script installs Homebrew (if missing), the packages above, writes
    `$(brew --prefix)/etc/buildkite-agent/buildkite-agent.cfg` (tagged
-   `queue=macos`, `chmod 600`), applies the **never-sleep `pmset` profile**
-   (prompts for sudo), and starts the agent. Re-running is safe.
+   `queue=macos`, `chmod 600`), saves the existing power profile to
+   `/var/db/buildkite-mac-ci-pmset-before`, applies the **never-sleep `pmset`
+   profile** (prompts for sudo), and starts the agent. Re-running is safe and
+   preserves the first saved profile.
 
    The `pmset` step is what keeps a Mac Mini from dropping off Buildkite: a
    sleeping host disconnects its agent and hangs any dispatched job. It forces
@@ -129,13 +131,11 @@ per job) on top later — orthogonal to this setup.
 ```bash
 brew services stop buildkite/buildkite/buildkite-agent
 brew uninstall buildkite/buildkite/buildkite-agent
-# Restore every setting bootstrap.sh's step 4 forced (sleep, disksleep,
-# displaysleep, powernap, womp, autorestart) — leaving any of them at their
-# forced value defeats the point of decommissioning an always-on CI appliance.
-# Values below approximate macOS' stock Energy Saver defaults for a desktop
-# Mac; if this host had a customized power profile before bootstrap.sh ran,
-# check `pmset -g` and restore that instead.
-sudo pmset -a sleep 10 disksleep 10 displaysleep 10 powernap 1 womp 1 autorestart 1
+# Restore the exact pre-bootstrap values for every setting bootstrap.sh
+# changed: sleep, disksleep, displaysleep, powernap, womp, and autorestart.
+# This intentionally fails if the saved profile is unavailable rather than
+# guessing stock defaults for a host that might have been customized.
+./packages/homelab/mac-ci/restore-power.sh
 # Then remove any macos-queue step from .buildkite/pipeline.yml and, if the
 # queue is no longer wanted, delete the resource in src/tofu/buildkite and apply.
 ```

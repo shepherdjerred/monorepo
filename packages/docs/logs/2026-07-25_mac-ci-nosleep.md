@@ -93,3 +93,22 @@ displaysleep 0 powernap 0 womp 1 autorestart 1`).
   passing a file appends to a whole-repo scan and `bunx prettier` resolves a
   different config than the root binary — check/format single files with
   `./node_modules/.bin/prettier` directly.
+
+## Session Log — 2026-07-26
+
+### Done
+
+- Preserved the exact pre-bootstrap AC power settings before applying the
+  always-on profile and added `packages/homelab/mac-ci/restore-power.sh` to
+  restore all six changed settings during teardown.
+
+### Remaining
+
+- Run bootstrap and the restore procedure on the physical Mac Mini when it is
+  available; neither action can be exercised from this Linux/macOS development
+  checkout.
+
+### Caveats
+
+- The restoration script intentionally fails if the saved pre-bootstrap profile
+  is absent or malformed rather than guessing system defaults.
