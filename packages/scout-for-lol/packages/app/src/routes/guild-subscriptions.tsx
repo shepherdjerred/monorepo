@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { MoreHorizontal } from "lucide-react";
 import {
-  queueTypeToDisplayString,
+  queueDisplayLabels,
   subscriptionFilterQueues,
 } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
@@ -60,27 +60,23 @@ function FilterSummary(props: {
   filters: Parameters<typeof subscriptionFilterQueues>[0];
   isMuted: boolean;
 }) {
-  const queues = subscriptionFilterQueues(props.filters);
-  const shown = queues.slice(0, 2);
-  const extra = queues.length - shown.length;
+  // Labels, not raw queues: the Doom Bots trio collapses to one badge.
+  const labels = queueDisplayLabels(subscriptionFilterQueues(props.filters));
+  const shown = labels.slice(0, 2);
+  const extra = labels.length - shown.length;
   return (
     <span className="inline-flex flex-wrap items-center gap-1">
-      {queues.length === 0 ? (
+      {labels.length === 0 ? (
         <span>All queues</span>
       ) : (
         <>
-          {shown.map((queue) => (
-            <Badge key={queue} variant="secondary" className="font-normal">
-              {queueTypeToDisplayString(queue)}
+          {shown.map((label) => (
+            <Badge key={label} variant="secondary" className="font-normal">
+              {label}
             </Badge>
           ))}
           {extra > 0 && (
-            <span
-              className="text-xs"
-              title={queues
-                .map((queue) => queueTypeToDisplayString(queue))
-                .join(", ")}
-            >
+            <span className="text-xs" title={labels.join(", ")}>
               +{extra.toString()} more
             </span>
           )}

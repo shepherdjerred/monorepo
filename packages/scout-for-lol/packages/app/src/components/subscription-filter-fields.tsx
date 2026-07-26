@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  DOOM_BOTS_QUEUES,
   isQueueCurrentlyAvailable,
   QueueTypeSchema,
   queueAvailabilityNote,
@@ -42,12 +43,48 @@ export function summarizeFilters(
   return describeSubscriptionFilters(spec);
 }
 
-function QueueRow(props: {
-  queue: QueueType;
+/**
+ * One selectable row. The Doom Bots difficulties present as a single entry
+ * that toggles all three queue types together.
+ */
+type PickerEntry = { key: string; label: string; queues: QueueType[] };
+
+const PICKER_ENTRIES: PickerEntry[] = QueueTypeSchema.options.reduce<
+  PickerEntry[]
+>((entries, queue) => {
+  if (DOOM_BOTS_QUEUES.includes(queue)) {
+    if (!entries.some((entry) => entry.key === "doom-bots")) {
+      entries.push({
+        key: "doom-bots",
+        label: "Doom Bots",
+        queues: [...DOOM_BOTS_QUEUES],
+      });
+    }
+    return entries;
+  }
+  entries.push({
+    key: queue,
+    label: queueTypeToDisplayString(queue),
+    queues: [queue],
+  });
+  return entries;
+}, []);
+
+function entryAvailable(entry: PickerEntry): boolean {
+  return entry.queues.some((queue) => isQueueCurrentlyAvailable(queue));
+}
+
+function entryNote(entry: PickerEntry): string | undefined {
+  const first = entry.queues[0];
+  return first === undefined ? undefined : queueAvailabilityNote(first);
+}
+
+function EntryRow(props: {
+  entry: PickerEntry;
   isSelected: boolean;
-  onToggle: (queue: QueueType) => void;
+  onToggle: (entry: PickerEntry) => void;
 }) {
-  const note = queueAvailabilityNote(props.queue);
+  const note = entryNote(props.entry);
   return (
     <button
       type="button"
@@ -57,11 +94,11 @@ function QueueRow(props: {
         note !== undefined && "text-muted-foreground",
       )}
       onClick={() => {
-        props.onToggle(props.queue);
+        props.onToggle(props.entry);
       }}
     >
       <span className="flex flex-col items-start">
-        <span>{queueTypeToDisplayString(props.queue)}</span>
+        <span>{props.entry.label}</span>
         {note !== undefined && <span className="text-xs">{note}</span>}
       </span>
       {props.isSelected ? <Check className="h-4 w-4 shrink-0" /> : null}
@@ -74,9 +111,9 @@ function QueueRow(props: {
  * the backend's null-spec semantics. Value/onChange work in terms of the full
  * SubscriptionFilterSpec so the extensible model stays intact.
  *
- * Limited-time queues that are not currently live are hidden behind a
- * "show unavailable" toggle; already-selected ones always stay visible so
- * they can be deselected.
+ * Limited-time queues that are not currently live are hidden until the
+ * "Show unavailable queues" checkbox reveals them; already-selected ones
+ * always stay visible so they can be deselected.
  */
 export function SubscriptionFilterFields(props: {
   id?: string;
@@ -87,17 +124,24 @@ export function SubscriptionFilterFields(props: {
   const selected = subscriptionFilterQueues(props.value);
   const selectedSet = new Set<QueueType>(selected);
 
-  const visibleQueues = QueueTypeSchema.options.filter(
-    (queue) => isQueueCurrentlyAvailable(queue) || selectedSet.has(queue),
-  );
-  const hiddenQueues = QueueTypeSchema.options.filter(
-    (queue) => !isQueueCurrentlyAvailable(queue) && !selectedSet.has(queue),
+  const entrySelected = (entry: PickerEntry) =>
+    entry.queues.some((queue) => selectedSet.has(queue));
+
+  const unavailableCount = PICKER_ENTRIES.filter(
+    (entry) => !entryAvailable(entry) && !entrySelected(entry),
+  ).length;
+  // Selected-but-unavailable entries always stay visible (deselect path).
+  const visibleEntries = PICKER_ENTRIES.filter(
+    (entry) => showUnavailable || entryAvailable(entry) || entrySelected(entry),
   );
 
-  const toggle = (queue: QueueType) => {
-    const next = selectedSet.has(queue)
-      ? selected.filter((q) => q !== queue)
-      : [...selected, queue];
+  const toggle = (entry: PickerEntry) => {
+    const next = entrySelected(entry)
+      ? selected.filter((queue) => !entry.queues.includes(queue))
+      : [
+          ...selected,
+          ...entry.queues.filter((queue) => !selectedSet.has(queue)),
+        ];
     props.onChange(queuesToSpec(next));
   };
 
@@ -118,6 +162,21 @@ export function SubscriptionFilterFields(props: {
         className="max-h-72 w-64 overflow-y-auto p-1"
         align="start"
       >
+        {unavailableCount > 0 && (
+          <>
+            <label className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground">
+              <input
+                type="checkbox"
+                checked={showUnavailable}
+                onChange={(event) => {
+                  setShowUnavailable(event.target.checked);
+                }}
+              />
+              Show unavailable queues ({unavailableCount})
+            </label>
+            <div className="my-1 h-px bg-border" />
+          </>
+        )}
         <button
           type="button"
           className={cn(
@@ -132,39 +191,14 @@ export function SubscriptionFilterFields(props: {
           {selected.length === 0 ? <Check className="h-4 w-4" /> : null}
         </button>
         <div className="my-1 h-px bg-border" />
-        {visibleQueues.map((queue) => (
-          <QueueRow
-            key={queue}
-            queue={queue}
-            isSelected={selectedSet.has(queue)}
+        {visibleEntries.map((entry) => (
+          <EntryRow
+            key={entry.key}
+            entry={entry}
+            isSelected={entrySelected(entry)}
             onToggle={toggle}
           />
         ))}
-        {hiddenQueues.length > 0 && (
-          <>
-            <div className="my-1 h-px bg-border" />
-            <button
-              type="button"
-              className="w-full rounded-sm px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              onClick={() => {
-                setShowUnavailable((current) => !current);
-              }}
-            >
-              {showUnavailable
-                ? "Hide unavailable queues"
-                : `Show ${hiddenQueues.length.toString()} unavailable queues`}
-            </button>
-            {showUnavailable &&
-              hiddenQueues.map((queue) => (
-                <QueueRow
-                  key={queue}
-                  queue={queue}
-                  isSelected={false}
-                  onToggle={toggle}
-                />
-              ))}
-          </>
-        )}
       </PopoverContent>
     </Popover>
   );

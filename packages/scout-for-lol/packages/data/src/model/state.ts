@@ -114,13 +114,48 @@ export function queueTypeToDisplayString(queueType: QueueType): string {
     .with("urf", () => "URF")
     .with("arena", () => "arena")
     .with("brawl", () => "brawl")
-    .with("aram mayhem", () => "ARAM mayhem")
-    .with("easy doom bots", () => "doom bots")
-    .with("normal doom bots", () => "doom bots")
-    .with("hard doom bots", () => "doom bots")
+    .with("aram mayhem", () => "ARAM: Mayhem")
+    .with("easy doom bots", () => "Easy Doom Bots")
+    .with("normal doom bots", () => "Normal Doom Bots")
+    .with("hard doom bots", () => "Hard Doom Bots")
     .with("custom", () => "custom")
     .with("draft pick", () => "draft pick")
     .with("quickplay", () => "quickplay")
     .with("swiftplay", () => "swiftplay")
     .exhaustive();
+}
+
+/**
+ * The three Doom Bots difficulties present as ONE mode to users. Pickers and
+ * filter summaries collapse the trio into a single "Doom Bots" entry; the
+ * distinct per-difficulty names above remain for match-specific displays.
+ */
+export const DOOM_BOTS_QUEUES: readonly QueueType[] = [
+  "easy doom bots",
+  "normal doom bots",
+  "hard doom bots",
+];
+
+const DOOM_BOTS_GROUP_LABEL = "Doom Bots";
+
+/**
+ * Display labels for a queue list, collapsing the full Doom Bots trio into a
+ * single "Doom Bots" label (partial selections keep the per-difficulty names).
+ * Order follows the input; the collapsed label sits at the first trio member.
+ */
+export function queueDisplayLabels(queues: readonly QueueType[]): string[] {
+  const hasAllDoomBots = DOOM_BOTS_QUEUES.every((queue) =>
+    queues.includes(queue),
+  );
+  const labels: string[] = [];
+  for (const queue of queues) {
+    if (hasAllDoomBots && DOOM_BOTS_QUEUES.includes(queue)) {
+      if (!labels.includes(DOOM_BOTS_GROUP_LABEL)) {
+        labels.push(DOOM_BOTS_GROUP_LABEL);
+      }
+      continue;
+    }
+    labels.push(queueTypeToDisplayString(queue));
+  }
+  return labels;
 }

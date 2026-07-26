@@ -53,15 +53,17 @@ function QueueSelect(props: {
   includeAny?: boolean;
   onChange: (next: string) => void;
 }) {
-  // Limited-time queues that are not currently live are hidden behind a
-  // reveal toggle; the current value always stays visible (editing an old
-  // competition must keep its queue selectable).
+  // Limited-time queues that are not currently live are hidden until the
+  // checkbox reveals them; the current value always stays visible (editing
+  // an old competition must keep its queue selectable).
   const [showUnavailable, setShowUnavailable] = useState(false);
+  const unavailableCount = props.options.filter(
+    (queue) => queue !== props.value && !isAvailableChoice(queue),
+  ).length;
   const visibleOptions = props.options.filter(
     (queue) =>
       showUnavailable || queue === props.value || isAvailableChoice(queue),
   );
-  const hiddenCount = props.options.length - visibleOptions.length;
 
   return (
     <Select
@@ -73,6 +75,29 @@ function QueueSelect(props: {
         <SelectValue placeholder="Pick a queue" />
       </SelectTrigger>
       <SelectContent>
+        {unavailableCount > 0 && (
+          <>
+            <label className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground">
+              <input
+                type="checkbox"
+                checked={showUnavailable}
+                // Radix Select listens for pointer/key events to drive item
+                // highlight + typeahead; keep checkbox interaction local.
+                onPointerDown={(event) => {
+                  event.stopPropagation();
+                }}
+                onKeyDown={(event) => {
+                  event.stopPropagation();
+                }}
+                onChange={(event) => {
+                  setShowUnavailable(event.target.checked);
+                }}
+              />
+              Show unavailable queues ({unavailableCount})
+            </label>
+            <div className="my-1 h-px bg-border" />
+          </>
+        )}
         {props.includeAny === true && (
           <SelectItem value="__ANY__">Any queue</SelectItem>
         )}
@@ -90,17 +115,6 @@ function QueueSelect(props: {
             </span>
           </SelectItem>
         ))}
-        {hiddenCount > 0 && (
-          <button
-            type="button"
-            className="w-full rounded-sm px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-            onClick={() => {
-              setShowUnavailable(true);
-            }}
-          >
-            Show {hiddenCount.toString()} unavailable queues
-          </button>
-        )}
       </SelectContent>
     </Select>
   );

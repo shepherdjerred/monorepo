@@ -118,13 +118,13 @@ describe("queueTypeToDisplayString", () => {
     ["urf", "URF"],
     ["arena", "arena"],
     ["brawl", "brawl"],
-    ["aram mayhem", "ARAM mayhem"],
+    ["aram mayhem", "ARAM: Mayhem"],
     ["draft pick", "draft pick"],
     ["quickplay", "quickplay"],
     ["swiftplay", "swiftplay"],
-    ["easy doom bots", "doom bots"],
-    ["normal doom bots", "doom bots"],
-    ["hard doom bots", "doom bots"],
+    ["easy doom bots", "Easy Doom Bots"],
+    ["normal doom bots", "Normal Doom Bots"],
+    ["hard doom bots", "Hard Doom Bots"],
     ["custom", "custom"],
   ];
 
