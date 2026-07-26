@@ -5,6 +5,7 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { CI_NODE_TOLERATION } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { ConfigMap } from "cdk8s-plus-31";
 
 // Loki alerting rules for Kubernetes events
@@ -323,6 +324,12 @@ export function createLokiApp(chart: Chart) {
     },
     minio: {
       enabled: false,
+    },
+    // The canary is a per-node DaemonSet verifying the log path end-to-end;
+    // it must cover the tainted CI node too (its pre-taint pod there raised
+    // KubeDaemonSetMisScheduled).
+    lokiCanary: {
+      tolerations: [CI_NODE_TOLERATION],
     },
   };
 
