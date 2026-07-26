@@ -73,6 +73,16 @@
     "//#check-suppressions": {
       "inputs": ["scripts/**", "!scripts/node_modules/**"]
     },
+    "//#check-patched-deps": {
+      "inputs": [
+        "package.json",
+        "bun.lock",
+        "patches/**",
+        "packages/**/patches/*.patch",
+        "scripts/check-patched-deps.ts",
+        ".buildkite/scripts/select-image-targets.ts"
+      ]
+    },
     "//#markdownlint": {
       "inputs": ["**/*.md", ".markdownlint*", "!**/node_modules/**"]
     },

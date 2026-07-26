@@ -17,7 +17,7 @@
     },
     "packages/astro-opengraph-images": {
       "name": "astro-opengraph-images",
-      "version": "1.17.1",
+      "version": "1.17.2",
       "dependencies": {
         "@resvg/resvg-js": "^2.6.2",
         "jsdom": "^29.0.2",
@@ -633,7 +633,7 @@
     },
     "packages/homelab/src/helm-types": {
       "name": "@shepherdjerred/helm-types",
-      "version": "1.4.0",
+      "version": "1.5.0",
       "bin": {
         "helm-types": "dist/cli.js",
       },
@@ -762,7 +762,7 @@
         "@tauri-apps/plugin-dialog": "^2.7.0",
         "openai": "^6.34.0",
         "react": "19.2.7",
-        "twisted": "^1.73.0",
+        "twisted": "^1.82.0",
         "zod": "^4.4.3",
       },
       "devDependencies": {
@@ -872,7 +872,7 @@
         "sodium-native": "^5.0.10",
         "ts-pattern": "^5.7.0",
         "tslog": "^4.10.2",
-        "twisted": "^1.73.0",
+        "twisted": "^1.82.0",
         "uuid": "^14.0.0",
         "yoga-wasm-web": "^0.3.3",
         "zod": "^4.4.3",
@@ -902,7 +902,7 @@
       "devDependencies": {
         "bun-types": "latest",
         "eslint": "^10.3.0",
-        "twisted": "^1.73.0",
+        "twisted": "^1.82.0",
         "typescript": "^6.0.3",
       },
     },
@@ -1394,6 +1394,7 @@
     "bun-types@1.3.14": "patches/bun-types@1.3.14.patch",
     "react-native-ios-utilities@5.2.0": "patches/react-native-ios-utilities@5.2.0.patch",
     "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch",
+    "twisted@1.82.0": "patches/twisted@1.82.0.patch",
   },
   "overrides": {
     "@anthropic-ai/claude-agent-sdk": "0.3.150",
@@ -6962,7 +6963,7 @@
 
     "tweetnacl": ["tweetnacl@1.0.3", "", {}, "sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw=="],
 
-    "twisted": ["twisted@1.81.0", "", { "dependencies": { "promise-queue": "^2.2.5" } }, "sha512-/IwYqCktd2/kYVjkqK/j0FtN6B8uwSSOXTMWzuBV54YD9jcflnKqxhL3divO6UYiTuAttOM8AoSaUBBSmQXNPQ=="],
+    "twisted": ["twisted@1.82.0", "", { "dependencies": { "promise-queue": "^2.2.5" } }, "sha512-Bs4eX0nOkP2W8gZX0mPMncJXMDcV32KFFRpHhdj8LT9KC84QadtGvv19zoVnp16VA/MUmHAASYSs2oOmKT8keQ=="],
 
     "twoslash": ["twoslash@0.3.9", "", { "dependencies": { "@typescript/vfs": "^1.6.4", "twoslash-protocol": "0.3.9" }, "peerDependencies": { "typescript": "^5.5.0 || ^6.0.0" } }, "sha512-rDclk+OtzuTX+tnea7DYLCkqGQ3eP0IyfD+kzUJ7t46X/NzlaxwrhecmEBNuSCuEn3V+n1PhcjUUQQ7gUJzX5Q=="],
 

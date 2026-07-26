@@ -2,7 +2,7 @@
   "name": "@shepherdjerred/monorepo",
   "private": true,
   "scripts": {
-    "verify": "turbo run build typecheck test lint check-todos check-suppressions markdownlint prettier shellcheck knip gitleaks jscpd quality-ratchet compliance-check lockfile-check merge-conflicts env-var-names line-endings react-version-sync large-files guard:migration ruff pyright tunnel-dns-coverage check:talos lint:helm check:1password check:test-template check:ios-native-deps check:release-bundle lint:swift check:caddyfile test:contract check:rehearsal --continue",
+    "verify": "turbo run build typecheck test lint check-todos check-suppressions check-patched-deps markdownlint prettier shellcheck knip gitleaks jscpd quality-ratchet compliance-check lockfile-check merge-conflicts env-var-names line-endings react-version-sync large-files guard:migration ruff pyright tunnel-dns-coverage check:talos lint:helm check:1password check:test-template check:ios-native-deps check:release-bundle lint:swift check:caddyfile test:contract check:rehearsal --continue",
     "docs:board": "bun run --cwd packages/docs-board launch",
     "knip": "knip --no-config-hints",
     "markdownlint": "markdownlint-cli2 '**/*.md'",
@@ -25,7 +25,8 @@
     "pyright": "bash scripts/pyright-check.sh",
     "tunnel-dns-coverage": "bun scripts/check-tunnel-dns-coverage.ts",
     "check-todos": "bun run packages/docs-board/src/cli/check-docs.ts",
-    "check-suppressions": "bun scripts/check-suppressions.ts"
+    "check-suppressions": "bun scripts/check-suppressions.ts",
+    "check-patched-deps": "bun scripts/check-patched-deps.ts"
   },
   "devDependencies": {
     "@eslint/compat": "^2.1.0",
@@ -129,8 +130,7 @@
     "discord-player-youtubei@2.0.0": "patches/discord-player-youtubei@2.0.0.patch",
     "react-native-ios-utilities@5.2.0": "patches/react-native-ios-utilities@5.2.0.patch",
     "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch",
-    "satori@0.18.3": "patches/satori@0.18.3.patch",
-    "twisted@1.73.0": "patches/twisted@1.73.0.patch"
+    "twisted@1.82.0": "patches/twisted@1.82.0.patch"
   },
   "packageManager": "bun@1.3.14"
 }

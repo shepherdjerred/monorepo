@@ -343,10 +343,14 @@ describe("patch attribution", () => {
     ).toEqual(["birmel"]);
   });
 
-  test("a patch pinned to a version no closure resolves selects nothing", async () => {
-    // twisted resolves at a newer version than the patch pins, so the patch
-    // applies to no image install (stale patch — flagged in the session log).
-    expect(await select(["patches/twisted@1.73.0.patch"])).toEqual([]);
+  test("a patch resolved through several scout packages selects only scout", async () => {
+    // twisted@1.82.0 is the live resolution across scout's closure (backend,
+    // data), so its patch attributes to exactly the scout image. (Stale
+    // patches — keys no closure resolves — can no longer exist:
+    // scripts/check-patched-deps.ts fails verify on them.)
+    expect(await select(["patches/twisted@1.82.0.patch"])).toEqual([
+      "scout-for-lol",
+    ]);
   });
 
   test("a patch for a dep outside every image closure selects nothing", async () => {
