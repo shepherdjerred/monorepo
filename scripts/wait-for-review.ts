@@ -93,28 +93,30 @@ function latencySeconds(
   return Math.round((reviewed - pushed) / 1000);
 }
 
+/** Recognized transport-level failure signatures (no HTTP status): the socket
+ * dropped, DNS/connection failed, or the request timed out. */
+const TRANSPORT_FAILURE_RE =
+  /socket connection was closed|socket hang up|fetch failed|network|ECONNRESET|ECONNREFUSED|ETIMEDOUT|EAI_AGAIN|ENOTFOUND|EPIPE|timed out|timeout/iu;
+
 /**
  * Whether a GitHub query error during the poll loop is worth retrying rather
- * than failing the gate. Only transport-level failures (socket closed
- * unexpectedly, DNS, connection reset — no HTTP status in the message) and 5xx
- * responses are transient; a single flaky poll must not exit the gate non-zero.
- * Everything else is permanent and fails fast so the step doesn't hold an agent
- * until the 20-minute deadline:
- *  - a GraphQL application-error payload (HTTP 200 + `errors`, e.g. the token
- *    can't read `reviewThreads` or the query is invalid) — `graphqlRequest`
- *    throws "GitHub GraphQL returned errors: …", which is NOT a transport
- *    failure;
- *  - any 4xx (bad token, missing permission, malformed request).
+ * than failing the gate. Retry ONLY recognized transient failures — a 5xx
+ * response, or a transport-level failure (socket closed, DNS/connection error,
+ * timeout). Everything else fails fast so the step doesn't hold a Buildkite
+ * agent until the 20-minute deadline: a 4xx (bad token / missing permission),
+ * a GraphQL application-error payload (HTTP 200 + `errors`), and — critically —
+ * an unexpected-shape / invariant error thrown by our own parsers (e.g.
+ * `parseThreadPage` when `reviewThreads` is missing) all carry neither an HTTP
+ * status nor a transport signature, so they propagate immediately.
  */
 function isRetryablePollError(error: Error): boolean {
   const message = error.message;
-  if (message.includes("GraphQL returned errors")) return false;
   const httpStatus = /request failed with (\d{3})/u.exec(message);
   if (httpStatus !== null) {
     const code = Number.parseInt(httpStatus[1] ?? "", 10);
     return code >= 500 && code <= 599;
   }
-  return true;
+  return TRANSPORT_FAILURE_RE.test(message);
 }
 
 function buildSignalEvent(input: {
@@ -309,7 +311,12 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
     let threadResult: { threads: ReviewThread[]; headRefOid: string | null };
     try {
       if (!headPushedAtResolved) {
-        headPushedAt = await fetchHeadPushedAt({ repo, sha: head, token });
+        headPushedAt = await fetchHeadPushedAt({
+          repo,
+          sha: head,
+          prNumber: number,
+          token,
+        });
         headPushedAtResolved = true;
       }
       // Resolve completion FIRST, then fetch threads AFTER — never

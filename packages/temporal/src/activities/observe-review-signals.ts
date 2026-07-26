@@ -148,7 +148,12 @@ async function buildSignalEvent(input: {
   // archiving a "reviewed" event that undercounts the newly-created findings and
   // unresolved threads. Sequential ordering keeps the archived observation
   // internally consistent (same fix as the CI gate).
-  const headPushedAt = await fetchHeadPushedAt({ repo, sha: head, token });
+  const headPushedAt = await fetchHeadPushedAt({
+    repo,
+    sha: head,
+    prNumber,
+    token,
+  });
   const state = await resolveReviewState({
     provider,
     repo,
@@ -351,14 +356,15 @@ async function observeAllPrs(input: {
 }
 
 /**
- * Archive key for a collection run. The filename is a STABLE per-run id (the
- * Temporal workflow run id) rather than a wall-clock timestamp, so if Temporal
- * re-runs the activity (a lost completion ack, a retry) the archive overwrites
- * the same object instead of writing a second, duplicate NDJSON file.
+ * Archive key for a collection run — the STABLE Temporal workflow run id, with
+ * NO wall-clock component. A date directory derived from `now` would fork the
+ * key if a retry crossed UTC midnight (a delayed/near-midnight run), writing a
+ * second object instead of overwriting. Keying purely by run id makes the
+ * upload idempotent across every retry; each NDJSON event still carries its own
+ * `ts`, so the dataset remains time-queryable without a date prefix.
  */
-function buildArchiveKey(now: Date, runId: string): string {
-  const dateStr = now.toISOString().slice(0, 10);
-  return `review-signals/${dateStr}/${runId}.ndjson`;
+function buildArchiveKey(runId: string): string {
+  return `review-signals/${runId}.ndjson`;
 }
 
 async function runObserveReviewSignalsImpl(
@@ -397,8 +403,7 @@ async function runObserveReviewSignalsImpl(
   }
 
   const ndjson = events.map((event) => JSON.stringify(event)).join("\n");
-  const now = new Date();
-  const key = buildArchiveKey(now, runId);
+  const key = buildArchiveKey(runId);
   const s3Config = loadReviewSignalArchiveConfig();
   await putS3Object(
     {

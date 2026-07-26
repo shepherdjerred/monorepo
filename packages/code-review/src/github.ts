@@ -295,49 +295,92 @@ export async function fetchLatestProviderReview(input: {
   return latest;
 }
 
-const HEAD_PUSHED_AT_QUERY = `
-query($owner: String!, $name: String!, $oid: GitObjectID!) {
+const HEAD_REF_UPDATED_AT_QUERY = `
+query($owner: String!, $name: String!, $oid: GitObjectID!, $number: Int!) {
   repository(owner: $owner, name: $name) {
     object(oid: $oid) {
-      ... on Commit {
-        pushedDate
+      ... on Commit { pushedDate }
+    }
+    pullRequest(number: $number) {
+      timelineItems(last: 50, itemTypes: [HEAD_REF_FORCE_PUSHED_EVENT]) {
+        nodes {
+          ... on HeadRefForcePushedEvent {
+            createdAt
+            afterCommit { oid }
+          }
+        }
       }
     }
   }
 }`;
 
+function latestIso(candidates: readonly (string | null)[]): string | null {
+  let best: string | null = null;
+  let bestScore = Number.NEGATIVE_INFINITY;
+  for (const candidate of candidates) {
+    if (candidate === null) continue;
+    const score = Date.parse(candidate);
+    if (Number.isFinite(score) && score >= bestScore) {
+      best = candidate;
+      bestScore = score;
+    }
+  }
+  return best;
+}
+
 /**
- * The ISO time a commit was PUSHED (GitHub's `Commit.pushedDate`) — the
- * reference point for review-latency and for binding a clean 👍 reaction to the
- * current head. Returns null when GitHub does not report a real push time.
+ * The ISO time the PR's head REF became `sha` — the reference point for
+ * review-latency and for binding a clean 👍 reaction to the current head.
+ * Returns null when it cannot be determined.
  *
- * We deliberately do NOT fall back to `committedDate`: the committer date is
- * embedded in the commit and can predate the actual push (local delay,
- * cherry-pick, rebase, or reusing an existing commit as the new head). Binding a
- * 👍 to `committedDate` would let a stale reaction created between that embedded
- * date and the real head-update satisfy the gate without a review of the new
- * head. When the push time is unknown, callers treat the reaction as unbound
- * (gate stays `reviewing`) and latency as null — correct-but-unmeasured beats a
- * falsely-bound completion.
+ * This is NOT simply the commit's `pushedDate`. `pushedDate` records when the
+ * commit object first reached the repo, which for a force-move of the PR ref to
+ * an ALREADY-pushed commit (e.g. resetting the branch to a commit from another
+ * branch) predates the moment that commit became this PR's head — so a stale 👍
+ * left before the force-move could bind to it. We therefore take the LATEST of:
+ *   - the commit's `pushedDate` (accurate for an ordinary append push), and
+ *   - the `createdAt` of any `HeadRefForcePushedEvent` whose `afterCommit` is
+ *     this head (the real ref-update time for a force-push).
+ * `committedDate` is never used (it is embedded in the commit and can predate
+ * either). When neither signal is available the result is null, and callers
+ * treat the reaction as unbound (gate stays `reviewing`) and latency as null —
+ * correct-but-unmeasured beats a falsely-bound completion.
  */
 export async function fetchHeadPushedAt(input: {
   repo: string;
   sha: string;
+  prNumber: number;
   token: string;
 }): Promise<string | null> {
   const { owner, name } = splitRepo(input.repo);
   const payload = await graphqlRequest(
-    HEAD_PUSHED_AT_QUERY,
-    { owner, name, oid: input.sha },
+    HEAD_REF_UPDATED_AT_QUERY,
+    { owner, name, oid: input.sha, number: input.prNumber },
     input.token,
   );
   const payloadRecord = asRecord(payload);
   const data =
     payloadRecord === null ? null : recordField(payloadRecord, "data");
   const repository = data === null ? null : recordField(data, "repository");
-  const object = repository === null ? null : recordField(repository, "object");
-  if (object === null) return null;
-  return stringField(object, "pushedDate");
+  if (repository === null) return null;
+
+  const object = recordField(repository, "object");
+  const pushedDate = object === null ? null : stringField(object, "pushedDate");
+
+  const candidates: (string | null)[] = [pushedDate];
+  const pullRequest = recordField(repository, "pullRequest");
+  const timeline =
+    pullRequest === null ? null : recordField(pullRequest, "timelineItems");
+  if (timeline !== null) {
+    for (const rawNode of arrayField(timeline, "nodes")) {
+      const node = asRecord(rawNode);
+      if (node === null) continue;
+      const afterCommit = recordField(node, "afterCommit");
+      const oid = afterCommit === null ? null : stringField(afterCommit, "oid");
+      if (oid === input.sha) candidates.push(stringField(node, "createdAt"));
+    }
+  }
+  return latestIso(candidates);
 }
 
 /**
@@ -346,8 +389,14 @@ export async function fetchHeadPushedAt(input: {
  * provider left none. Returns the reaction's `createdAt` so the caller can
  * bind the (commit-less) reaction to a specific head by timestamp; when the
  * provider reacted more than once the most recent reaction wins.
- * NOTE: the exact surface Codex reacts on is probe-confirmed; issue-level is
- * the documented "react with 👍" location.
+ *
+ * SURFACE CAVEAT: this reads reactions on the PR ISSUE body, which is the
+ * documented "react with 👍" location — but it is NOT yet confirmed against a
+ * live clean Codex review that this is where Codex attaches its clean-review 👍
+ * (it may react on the `@codex review` comment or another surface). If the
+ * surface is wrong, a clean PR stays `reviewing` until the gate times out.
+ * Verify with a real clean fixture before fully trusting the clean path — see
+ * packages/docs/todos/verify-codex-clean-reaction-surface.md.
  */
 export async function fetchProviderThumbsUp(input: {
   repo: string;

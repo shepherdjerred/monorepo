@@ -69,7 +69,12 @@ async function probePr(
 
   // Head push time first — `resolveReviewState` needs it to bind a 👍 reaction
   // to the current head, so it cannot share a Promise.all with that call.
-  const headPushedAt = await fetchHeadPushedAt({ repo, sha: head, token });
+  const headPushedAt = await fetchHeadPushedAt({
+    repo,
+    sha: head,
+    prNumber,
+    token,
+  });
   const [threadResult, state, latestReview, thumbsUp] = await Promise.all([
     fetchReviewThreads({ repo, number: prNumber, token, provider }),
     resolveReviewState({ provider, repo, head, prNumber, token, headPushedAt }),
