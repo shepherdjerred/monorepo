@@ -7,7 +7,8 @@ import {
   useParams,
 } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
+import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
 import type { Permission } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { cn } from "#src/lib/cn.ts";
@@ -162,7 +163,9 @@ export function GuildWorkspace() {
             message={`Ask a Scout admin to grant you ${activeNav.label} access.`}
           />
         ) : (
-          <Outlet />
+          <Suspense fallback={<SectionSkeleton />}>
+            <Outlet />
+          </Suspense>
         )
       ) : (
         <PermissionLoadError error={error} />

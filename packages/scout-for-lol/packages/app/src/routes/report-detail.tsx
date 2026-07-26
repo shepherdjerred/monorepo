@@ -1,10 +1,16 @@
-import { Link, useNavigate, useParams } from "react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ReportIdSchema, type ReportId } from "@scout-for-lol/data";
+import { Link, useNavigate } from "react-router";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
+import type { ReportId } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { channelLabel } from "#src/lib/format.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
+import { useReportParams } from "#src/lib/route-params.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import { Badge } from "#src/components/ui/badge.tsx";
 import {
@@ -128,29 +134,18 @@ function ReportDefinitionCards(props: {
 }
 
 export function ReportDetail() {
-  const { guildId, reportId: idParam } = useParams();
+  const { guildId, reportId } = useReportParams();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { perms } = usePermissions(guildId);
-  const safeGuildId = guildId ?? "";
 
-  const idResult = ReportIdSchema.safeParse(Number(idParam));
-  const reportId = idResult.success ? idResult.data : ReportIdSchema.parse(1);
-  const enabled = guildId !== undefined && idResult.success;
-
-  const getKey = trpc.report.get.queryKey({ guildId: safeGuildId, reportId });
-  const reportQuery = useQuery(
-    trpc.report.get.queryOptions(
-      { guildId: safeGuildId, reportId },
-      { enabled },
-    ),
+  const getKey = trpc.report.get.queryKey({ guildId, reportId });
+  const reportQuery = useSuspenseQuery(
+    trpc.report.get.queryOptions({ guildId, reportId }),
   );
   const channelsQuery = useQuery(
-    trpc.guild.listChannels.queryOptions(
-      { guildId: safeGuildId },
-      { enabled: guildId !== undefined },
-    ),
+    trpc.guild.listChannels.queryOptions({ guildId }),
   );
   const runMutation = useMutation(
     trpc.report.run.mutationOptions({
@@ -164,32 +159,28 @@ export function ReportDetail() {
     trpc.report.delete.mutationOptions({
       meta: analyticsMeta("report_deleted"),
       onSuccess: () => {
-        void navigate(`/g/${safeGuildId}/reports`);
+        void navigate(`/g/${guildId}/reports`);
       },
     }),
   );
 
-  if (guildId === undefined || !idResult.success) {
-    return <p className="text-sm text-destructive">Invalid report route.</p>;
-  }
-
-  const report = reportQuery.data?.report;
-  const runs = reportQuery.data?.runs ?? [];
-  const systemManaged = report?.isSystemManaged === true;
+  const report = reportQuery.data.report;
+  const runs = reportQuery.data.runs;
+  const systemManaged = report.isSystemManaged;
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-semibold tracking-tight">
-            {report?.title ?? "Report"}
+            {report.title}
           </h2>
           {systemManaged && <Badge variant="outline">System</Badge>}
         </div>
         <ReportHeaderActions
           guildId={guildId}
           reportId={reportId}
-          title={report?.title ?? "this report"}
+          title={report.title}
           systemManaged={systemManaged}
           canEdit={perms.can("reports", "update")}
           canRun={perms.can("reports", "run")}
@@ -199,9 +190,7 @@ export function ReportDetail() {
           }}
           runPending={runMutation.isPending}
           onDelete={() => {
-            if (
-              !globalThis.confirm(`Delete "${report?.title ?? "this report"}"?`)
-            ) {
+            if (!globalThis.confirm(`Delete "${report.title}"?`)) {
               return;
             }
             deleteMutation.mutate({ guildId, reportId });
@@ -210,14 +199,6 @@ export function ReportDetail() {
         />
       </div>
 
-      {reportQuery.isLoading && (
-        <p className="text-sm text-muted-foreground">Loading report…</p>
-      )}
-      {reportQuery.error && (
-        <p className="text-sm text-destructive">
-          Failed to load: {reportQuery.error.message}
-        </p>
-      )}
       {runMutation.error && (
         <p className="text-sm text-destructive">{runMutation.error.message}</p>
       )}
@@ -227,16 +208,12 @@ export function ReportDetail() {
         </p>
       )}
 
-      {report && (
-        <>
-          <ReportDefinitionCards
-            guildId={guildId}
-            report={report}
-            channels={channelsQuery.data}
-          />
-          <ReportRunHistory guildId={guildId} reportId={reportId} runs={runs} />
-        </>
-      )}
+      <ReportDefinitionCards
+        guildId={guildId}
+        report={report}
+        channels={channelsQuery.data}
+      />
+      <ReportRunHistory guildId={guildId} reportId={reportId} runs={runs} />
     </div>
   );
 }

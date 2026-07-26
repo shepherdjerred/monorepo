@@ -1,11 +1,16 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { ReportIdSchema } from "@scout-for-lol/data";
 import { CronPresets } from "@scout-for-lol/data/model/competition-cron.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
+import { useGuildParams } from "#src/lib/route-params.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import { Badge } from "#src/components/ui/badge.tsx";
 import { ReportRunStatusBadge } from "#src/components/status-badge.tsx";
@@ -25,20 +30,19 @@ function cronLabel(cron: string): string {
 }
 
 export function ReportList() {
-  const { guildId } = useParams();
+  const { guildId } = useGuildParams();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { perms } = usePermissions(guildId);
   const canManageReports = perms.can("reports", "update");
   // Default to hiding disabled reports; the toggle shows all.
   const [enabledOnly, setEnabledOnly] = useState(true);
-  const safeGuildId = guildId ?? "";
 
-  const listKey = trpc.report.list.queryKey({ guildId: safeGuildId });
-  const reportsQuery = useQuery(
+  const listKey = trpc.report.list.queryKey({ guildId });
+  const reportsQuery = useSuspenseQuery(
     trpc.report.list.queryOptions(
-      { guildId: safeGuildId },
-      { enabled: guildId !== undefined, staleTime: STALE_TIME_SLOW_LIST },
+      { guildId },
+      { staleTime: STALE_TIME_SLOW_LIST },
     ),
   );
   const setEnabledMutation = useMutation(
@@ -50,11 +54,7 @@ export function ReportList() {
     }),
   );
 
-  if (guildId === undefined) {
-    return <p className="text-sm text-destructive">Missing guild id</p>;
-  }
-
-  const reports = reportsQuery.data ?? [];
+  const reports = reportsQuery.data;
   const visibleReports = enabledOnly
     ? reports.filter((report) => report.isEnabled)
     : reports;
@@ -82,21 +82,13 @@ export function ReportList() {
         </div>
       </div>
 
-      {reportsQuery.isLoading && (
-        <p className="text-sm text-muted-foreground">Loading reports…</p>
-      )}
-      {reportsQuery.error && (
-        <p className="text-sm text-destructive">
-          Failed to load: {reportsQuery.error.message}
-        </p>
-      )}
       {setEnabledMutation.error && (
         <p className="text-sm text-destructive">
           {setEnabledMutation.error.message}
         </p>
       )}
 
-      {reportsQuery.data && reports.length === 0 && (
+      {reports.length === 0 && (
         <p className="text-sm text-muted-foreground">
           No reports yet — click &quot;New report&quot; to get started.
         </p>

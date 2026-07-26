@@ -1,13 +1,20 @@
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { Link, useNavigate, useParams } from "react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
+import { PlayerSubscriptionsManager } from "#src/components/player-subscriptions-manager.tsx";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { CompetitionStatusSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { nextRiotIdPollInterval } from "#src/lib/riot-id-poll.ts";
 import { findRegion, type RegionValue } from "#src/lib/regions.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
+import { usePlayerParams } from "#src/lib/route-params.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import {
   Card,
@@ -20,7 +27,6 @@ import { PlayerHeaderActions } from "#src/components/player-header-actions.tsx";
 import {
   CompetitionSection,
   PlayerAccountsTable,
-  PlayerSubscriptionsTable,
   Section,
 } from "#src/components/player-detail-sections.tsx";
 import { RenamePlayerDialog } from "#src/components/rename-player-dialog.tsx";
@@ -147,21 +153,12 @@ function PlayerSummaryCards(props: {
   );
 }
 
-function hasPlayerRouteData(
-  guildId: string | undefined,
-  alias: string | undefined,
-): boolean {
-  return guildId !== undefined && alias !== undefined;
-}
-
 export function PlayerDetail() {
-  const { guildId, alias } = useParams();
+  const { guildId, alias } = usePlayerParams();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { perms } = usePermissions(guildId);
-  const safeGuildId = guildId ?? "";
-  const safeAlias = alias ?? "";
   const [renameOpen, setRenameOpen] = useState(false);
   // Ended/cancelled competitions are hidden by default behind the toggle.
   const [showAllCompetitions, setShowAllCompetitions] = useState(false);
@@ -173,17 +170,16 @@ export function PlayerDetail() {
     useState<TransferableAccount | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const playerKey = trpc.player.getPlayer.queryKey({
-    guildId: safeGuildId,
-    alias: safeAlias,
-  });
+  const playerKey = trpc.player.getPlayer.queryKey({ guildId, alias });
   // Bounded poll for accounts whose Riot ID is still resolving (see helper).
   const unresolvedPollsRef = useRef(0);
-  const playerQuery = useQuery(
+  const playerQuery = useSuspenseQuery(
     trpc.player.getPlayer.queryOptions(
-      { guildId: safeGuildId, alias: safeAlias },
+      { guildId, alias },
       {
-        enabled: hasPlayerRouteData(guildId, alias),
+        // Freshly added accounts start with an unresolved Riot ID (resolved
+        // server-side shortly after). Poll (bounded) until every account
+        // resolves so the user never has to reload by hand.
         refetchInterval: (query) =>
           nextRiotIdPollInterval(
             query.state.data?.accounts,
@@ -193,14 +189,18 @@ export function PlayerDetail() {
     ),
   );
   const channelsQuery = useQuery(
-    trpc.guild.listChannels.queryOptions(
-      { guildId: safeGuildId },
-      { enabled: guildId !== undefined },
-    ),
+    trpc.guild.listChannels.queryOptions({ guildId }),
   );
 
   function refresh() {
     void queryClient.invalidateQueries({ queryKey: playerKey });
+    // Keep the channel-centric surfaces in sync with player-page edits.
+    void queryClient.invalidateQueries({
+      queryKey: trpc.subscription.list.pathKey(),
+    });
+    void queryClient.invalidateQueries({
+      queryKey: trpc.player.listPlayers.pathKey(),
+    });
   }
 
   const unlinkMutation = useMutation(
@@ -231,7 +231,7 @@ export function PlayerDetail() {
     trpc.player.deletePlayer.mutationOptions({
       meta: analyticsMeta("player_deleted"),
       onSuccess: () => {
-        void navigate(`/g/${safeGuildId}/players`);
+        void navigate(`/g/${guildId}/players`);
       },
       onError: (err) => {
         setActionError(err.message);
@@ -239,14 +239,8 @@ export function PlayerDetail() {
     }),
   );
 
-  if (guildId === undefined || alias === undefined) {
-    return (
-      <p className="text-sm text-destructive">Missing player route data</p>
-    );
-  }
-
   const player = playerQuery.data;
-  const competitions = player?.competitions ?? [];
+  const competitions = player.competitions;
   const activeCompetitions = competitions.filter((participant) =>
     isActiveCompetition(participant.competition),
   );
@@ -255,17 +249,15 @@ export function PlayerDetail() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight">{safeAlias}</h2>
-          {player && (
-            <p className="text-sm text-muted-foreground">
-              Updated {formatDate(player.updatedTime)}
-            </p>
-          )}
+          <h2 className="text-xl font-semibold tracking-tight">{alias}</h2>
+          <p className="text-sm text-muted-foreground">
+            Updated {formatDate(player.updatedTime)}
+          </p>
         </div>
         <PlayerHeaderActions
           guildId={guildId}
-          alias={safeAlias}
-          playerLoaded={player !== undefined}
+          alias={alias}
+          playerLoaded={true}
           permissions={perms}
           deletePending={deletePlayerMutation.isPending}
           onRename={() => {
@@ -275,229 +267,207 @@ export function PlayerDetail() {
             setMergeOpen(true);
           }}
           onDelete={() => {
-            deletePlayerMutation.mutate({ guildId, alias: safeAlias });
+            deletePlayerMutation.mutate({ guildId, alias });
           }}
         />
       </div>
 
-      {playerQuery.isLoading && (
-        <p className="text-sm text-muted-foreground">Loading player...</p>
-      )}
-      {playerQuery.error && (
-        <p className="text-sm text-destructive">
-          Failed to load: {playerQuery.error.message}
-        </p>
-      )}
       {actionError !== null && (
         <p className="text-sm text-destructive">{actionError}</p>
       )}
 
-      {player && (
-        <>
-          <PlayerSummaryCards
-            player={player}
-            competitionCount={competitions.length}
-            canLink={perms.can("players", "link")}
-            unlinkPending={unlinkMutation.isPending}
-            onLink={() => {
-              setLinkOpen(true);
-            }}
-            onUnlink={() => {
-              if (!globalThis.confirm(`Unlink Discord from "${safeAlias}"?`)) {
-                return;
-              }
-              unlinkMutation.mutate({ guildId, playerAlias: safeAlias });
-            }}
-          />
+      <PlayerSummaryCards
+        player={player}
+        competitionCount={competitions.length}
+        canLink={perms.can("players", "link")}
+        unlinkPending={unlinkMutation.isPending}
+        onLink={() => {
+          setLinkOpen(true);
+        }}
+        onUnlink={() => {
+          if (!globalThis.confirm(`Unlink Discord from "${alias}"?`)) {
+            return;
+          }
+          unlinkMutation.mutate({ guildId, playerAlias: alias });
+        }}
+      />
 
-          <Section
-            title="Riot accounts"
-            action={
-              <Allowed when={perms.can("accounts", "create")}>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setAddAccountOpen(true);
-                  }}
-                >
-                  + Add account
-                </Button>
-              </Allowed>
-            }
-          >
-            <PlayerAccountsTable
-              accounts={player.accounts}
-              canEdit={perms.can("accounts", "update")}
-              canTransfer={perms.can("accounts", "transfer")}
-              canDelete={perms.can("accounts", "delete")}
-              deletePending={deleteAccountMutation.isPending}
-              onEdit={(account) => {
-                setEditAccount({
-                  id: account.id,
-                  alias: account.alias,
-                  region: account.region,
-                });
-              }}
-              onTransfer={(account) => {
-                if (account.riotGameName === null) return;
-                const region = findRegion(account.region);
-                if (region === null) {
-                  setActionError(`Unknown region "${account.region}".`);
-                  return;
-                }
-                setTransferAccount({
-                  riotId: `${account.riotGameName}#${account.riotTagLine ?? ""}`,
-                  region,
-                });
-              }}
-              onDelete={(account) => {
-                if (account.riotGameName === null) return;
-                const region = findRegion(account.region);
-                if (region === null) {
-                  setActionError(`Unknown region "${account.region}".`);
-                  return;
-                }
-                const riotId = `${account.riotGameName}#${account.riotTagLine ?? ""}`;
-                if (
-                  !globalThis.confirm(
-                    `Delete account ${riotId} from "${safeAlias}"?`,
-                  )
-                ) {
-                  return;
-                }
-                deleteAccountMutation.mutate({ guildId, riotId, region });
-              }}
-            />
-          </Section>
-
-          <Section
-            title="Subscriptions"
-            action={
-              <Button asChild type="button" size="sm" variant="outline">
-                <Link to={`/g/${guildId}/subscriptions`}>
-                  Manage subscriptions
-                </Link>
-              </Button>
-            }
-          >
-            <PlayerSubscriptionsTable
-              subscriptions={player.subscriptions}
-              channels={channelsQuery.data}
-            />
-          </Section>
-
-          <CompetitionSection
-            title="Competitions"
-            guildId={guildId}
-            rows={showAllCompetitions ? competitions : activeCompetitions}
-            action={
-              <Button
-                type="button"
-                size="sm"
-                variant={showAllCompetitions ? "outline" : "default"}
-                onClick={() => {
-                  setShowAllCompetitions((prev) => !prev);
-                }}
-              >
-                {showAllCompetitions ? "All" : "Active only"}
-              </Button>
-            }
-          />
-
-          <Allowed when={perms.can("players", "update")}>
-            <RenamePlayerDialog
-              guildId={guildId}
-              currentAlias={safeAlias}
-              open={renameOpen}
-              onOpenChange={setRenameOpen}
-              onRenamed={(newAlias) => {
-                setRenameOpen(false);
-                void navigate(
-                  `/g/${guildId}/players/${encodeURIComponent(newAlias)}`,
-                );
-              }}
-            />
-          </Allowed>
-          <Allowed when={perms.can("players", "merge")}>
-            <MergePlayersDialog
-              guildId={guildId}
-              sourceAlias={safeAlias}
-              open={mergeOpen}
-              onOpenChange={setMergeOpen}
-              onMerged={(targetAlias) => {
-                setMergeOpen(false);
-                void navigate(
-                  `/g/${guildId}/players/${encodeURIComponent(targetAlias)}`,
-                );
-              }}
-            />
-          </Allowed>
-          <Allowed
-            when={perms.can("accounts", "transfer") && transferAccount !== null}
-          >
-            {transferAccount !== null && (
-              <TransferAccountDialog
-                guildId={guildId}
-                account={transferAccount}
-                open
-                onOpenChange={(open) => {
-                  if (!open) setTransferAccount(null);
-                }}
-                onTransferred={(toPlayerAlias) => {
-                  setTransferAccount(null);
-                  void navigate(
-                    `/g/${guildId}/players/${encodeURIComponent(toPlayerAlias)}`,
-                  );
-                }}
-              />
-            )}
-          </Allowed>
-          <Allowed when={perms.can("players", "link")}>
-            <LinkDiscordDialog
-              guildId={guildId}
-              playerAlias={safeAlias}
-              open={linkOpen}
-              onOpenChange={setLinkOpen}
-              onLinked={() => {
-                setLinkOpen(false);
-                refresh();
-              }}
-            />
-          </Allowed>
+      <Section
+        title="Riot accounts"
+        action={
           <Allowed when={perms.can("accounts", "create")}>
-            <AddAccountDialog
-              guildId={guildId}
-              playerAlias={safeAlias}
-              open={addAccountOpen}
-              onOpenChange={setAddAccountOpen}
-              onAdded={() => {
-                setAddAccountOpen(false);
-                refresh();
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setAddAccountOpen(true);
               }}
-            />
+            >
+              + Add account
+            </Button>
           </Allowed>
-          <Allowed
-            when={perms.can("accounts", "update") && editAccount !== null}
+        }
+      >
+        <PlayerAccountsTable
+          accounts={player.accounts}
+          canEdit={perms.can("accounts", "update")}
+          canTransfer={perms.can("accounts", "transfer")}
+          canDelete={perms.can("accounts", "delete")}
+          deletePending={deleteAccountMutation.isPending}
+          onEdit={(account) => {
+            setEditAccount({
+              id: account.id,
+              alias: account.alias,
+              region: account.region,
+            });
+          }}
+          onTransfer={(account) => {
+            if (account.riotGameName === null) return;
+            const region = findRegion(account.region);
+            if (region === null) {
+              setActionError(`Unknown region "${account.region}".`);
+              return;
+            }
+            setTransferAccount({
+              riotId: `${account.riotGameName}#${account.riotTagLine ?? ""}`,
+              region,
+            });
+          }}
+          onDelete={(account) => {
+            if (account.riotGameName === null) return;
+            const region = findRegion(account.region);
+            if (region === null) {
+              setActionError(`Unknown region "${account.region}".`);
+              return;
+            }
+            const riotId = `${account.riotGameName}#${account.riotTagLine ?? ""}`;
+            if (
+              !globalThis.confirm(`Delete account ${riotId} from "${alias}"?`)
+            ) {
+              return;
+            }
+            deleteAccountMutation.mutate({ guildId, riotId, region });
+          }}
+        />
+      </Section>
+
+      <PlayerSubscriptionsManager
+        guildId={guildId}
+        alias={alias}
+        subscriptions={player.subscriptions}
+        channels={channelsQuery.data}
+        perms={perms}
+        refresh={refresh}
+        setActionError={setActionError}
+      />
+
+      <CompetitionSection
+        title="Competitions"
+        guildId={guildId}
+        rows={showAllCompetitions ? competitions : activeCompetitions}
+        action={
+          <Button
+            type="button"
+            size="sm"
+            variant={showAllCompetitions ? "outline" : "default"}
+            onClick={() => {
+              setShowAllCompetitions((prev) => !prev);
+            }}
           >
-            {editAccount !== null && (
-              <EditAccountDialog
-                guildId={guildId}
-                account={editAccount}
-                open
-                onOpenChange={(open) => {
-                  if (!open) setEditAccount(null);
-                }}
-                onSaved={() => {
-                  setEditAccount(null);
-                  refresh();
-                }}
-              />
-            )}
-          </Allowed>
-        </>
-      )}
+            {showAllCompetitions ? "All" : "Active only"}
+          </Button>
+        }
+      />
+
+      <Allowed when={perms.can("players", "update")}>
+        <RenamePlayerDialog
+          guildId={guildId}
+          currentAlias={alias}
+          open={renameOpen}
+          onOpenChange={setRenameOpen}
+          onRenamed={(newAlias) => {
+            setRenameOpen(false);
+            void navigate(
+              `/g/${guildId}/players/${encodeURIComponent(newAlias)}`,
+            );
+          }}
+        />
+      </Allowed>
+      <Allowed when={perms.can("players", "merge")}>
+        <MergePlayersDialog
+          guildId={guildId}
+          sourceAlias={alias}
+          open={mergeOpen}
+          onOpenChange={setMergeOpen}
+          onMerged={(targetAlias) => {
+            setMergeOpen(false);
+            void navigate(
+              `/g/${guildId}/players/${encodeURIComponent(targetAlias)}`,
+            );
+          }}
+        />
+      </Allowed>
+      <Allowed
+        when={perms.can("accounts", "transfer") && transferAccount !== null}
+      >
+        {transferAccount !== null && (
+          <TransferAccountDialog
+            guildId={guildId}
+            account={transferAccount}
+            open
+            onOpenChange={(open) => {
+              if (!open) setTransferAccount(null);
+            }}
+            onTransferred={(toPlayerAlias) => {
+              setTransferAccount(null);
+              void navigate(
+                `/g/${guildId}/players/${encodeURIComponent(toPlayerAlias)}`,
+              );
+            }}
+          />
+        )}
+      </Allowed>
+      <Allowed when={perms.can("players", "link")}>
+        <LinkDiscordDialog
+          guildId={guildId}
+          playerAlias={alias}
+          open={linkOpen}
+          onOpenChange={setLinkOpen}
+          onLinked={() => {
+            setLinkOpen(false);
+            refresh();
+          }}
+        />
+      </Allowed>
+      <Allowed when={perms.can("accounts", "create")}>
+        <AddAccountDialog
+          guildId={guildId}
+          playerAlias={alias}
+          open={addAccountOpen}
+          onOpenChange={setAddAccountOpen}
+          onAdded={() => {
+            setAddAccountOpen(false);
+            refresh();
+          }}
+        />
+      </Allowed>
+      <Allowed when={perms.can("accounts", "update") && editAccount !== null}>
+        {editAccount !== null && (
+          <EditAccountDialog
+            guildId={guildId}
+            account={editAccount}
+            open
+            onOpenChange={(open) => {
+              if (!open) setEditAccount(null);
+            }}
+            onSaved={() => {
+              setEditAccount(null);
+              refresh();
+            }}
+          />
+        )}
+      </Allowed>
     </div>
   );
 }

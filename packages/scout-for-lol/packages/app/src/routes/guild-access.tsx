@@ -1,6 +1,9 @@
 import { Fragment, useState } from "react";
-import { useParams } from "react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import {
   type Permission,
   type PermissionSet,
@@ -37,6 +40,7 @@ import {
   TableRow,
 } from "#src/components/ui/table.tsx";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
+import { useGuildParams } from "#src/lib/route-params.ts";
 
 function roleLabel(role: Role | "custom"): string {
   if (role === "custom") return "Custom";
@@ -116,15 +120,14 @@ function PermissionChecklist(props: {
 }
 
 export function GuildAccess() {
-  const { guildId } = useParams();
+  const { guildId } = useGuildParams();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const safeGuildId = guildId ?? "";
   const { perms } = usePermissions(guildId);
   const canGrant = perms.can("roles", "grant");
   const canRevoke = perms.can("roles", "revoke");
 
-  const listKey = trpc.roles.list.queryKey({ guildId: safeGuildId });
+  const listKey = trpc.roles.list.queryKey({ guildId });
   const invalidate = async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: listKey }),
@@ -137,10 +140,10 @@ export function GuildAccess() {
     ]);
   };
 
-  const rolesQuery = useQuery(
+  const rolesQuery = useSuspenseQuery(
     trpc.roles.list.queryOptions(
-      { guildId: safeGuildId },
-      { enabled: guildId !== undefined, staleTime: STALE_TIME_SLOW_LIST },
+      { guildId },
+      { staleTime: STALE_TIME_SLOW_LIST },
     ),
   );
   // roles.set backs both new grants AND edits (role changes, custom-permission
@@ -170,11 +173,7 @@ export function GuildAccess() {
     [],
   );
 
-  if (guildId === undefined) {
-    return <p className="text-sm text-destructive">Missing guild id</p>;
-  }
-
-  const members = rolesQuery.data ?? [];
+  const members = rolesQuery.data;
   const mutationError = setMutation.error ?? clearMutation.error;
 
   return (
@@ -284,12 +283,6 @@ export function GuildAccess() {
             </p>
           );
         })()}
-      {rolesQuery.error && (
-        <p className="text-sm text-destructive">
-          Failed to load: {rolesQuery.error.message}
-        </p>
-      )}
-
       <Table>
         <caption className="sr-only">Role permissions</caption>
         <TableHeader>

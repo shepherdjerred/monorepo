@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import {
@@ -53,7 +53,7 @@ export function GuildPicker() {
   const meQuery = useQuery(
     trpc.auth.meWeb.queryOptions(undefined, { retry: false }),
   );
-  const { data, isLoading, error } = useQuery(
+  const { data } = useSuspenseQuery(
     trpc.guild.listManageable.queryOptions(undefined, {
       staleTime: STALE_TIME_SLOW_LIST,
     }),
@@ -89,25 +89,7 @@ export function GuildPicker() {
     />
   ) : null;
 
-  if (isLoading) {
-    return (
-      <Shell>
-        <p className="text-sm text-muted-foreground">Loading guilds…</p>
-      </Shell>
-    );
-  }
-
-  if (error) {
-    return (
-      <Shell>
-        <p className="text-sm text-destructive">
-          Failed to load guilds: {error.message}
-        </p>
-      </Shell>
-    );
-  }
-
-  if (data === undefined || data.length === 0) {
+  if (data.length === 0) {
     return (
       <Shell>
         {banner}
