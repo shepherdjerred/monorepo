@@ -246,6 +246,10 @@ export function resolveErrorUpdates(
       ? (context.current?.requesterId ?? null)
       : context.lastBlockedRequester,
   };
+  // NOTE: recovery-state cleanup (resumeSeekSeconds/crashRetries) is NOT done here. It is applied
+  // uniformly by the machine's `clearRecovery` action on EVERY non-success exit from `resolving`
+  // (onError, resolveTimeout, SKIP, STOP), so a re-resolve that fails via any of those paths — not
+  // just this one — can't leak the crashed item's seek/pipeline onto the next queued item.
 }
 
 /** Admin moved the voice target: retarget the context (and live handle, when joined). */

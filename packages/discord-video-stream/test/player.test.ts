@@ -47,10 +47,14 @@ function makeStreamer() {
   };
 }
 
-/** Fake prepareStream/attachPipeline that record calls and expose per-segment control. */
-function makeDeps() {
+/**
+ * Fake prepareStream/attachPipeline that record calls and expose per-segment control.
+ * `attachErrors[i]` makes attach attempt i reject (the graph-init failure path).
+ */
+function makeDeps(attachErrors = []) {
   const prepareCalls = [];
   const subtitleBurnCalls = [];
+  const signals = [];
   const ffmpeg = [];
   const attachCalls = [];
   const segments = [];
@@ -58,9 +62,10 @@ function makeDeps() {
   const volumes = [];
 
   const deps = {
-    prepareStream: (_input, opts) => {
+    prepareStream: (_input, opts, signal) => {
       prepareCalls.push({ startTime: opts.startTime });
       subtitleBurnCalls.push(opts.subtitleBurn);
+      signals.push(signal);
       const ff = deferred();
       ffmpeg.push(ff);
       return {
@@ -77,9 +82,11 @@ function makeDeps() {
       };
     },
     attachPipeline: (conn, _streamer, _input, opts) => {
+      const index = attachCalls.length;
       attachCalls.push({ configureConn: opts.configureConn, conn });
+      const attachError = attachErrors[index];
+      if (attachError !== undefined) return Promise.reject(attachError);
       const seg = deferred();
-      const index = segments.length;
       segments.push(seg);
       return Promise.resolve({
         done: seg.promise,
@@ -95,6 +102,7 @@ function makeDeps() {
     deps,
     prepareCalls,
     subtitleBurnCalls,
+    signals,
     ffmpeg,
     attachCalls,
     segments,
@@ -152,7 +160,7 @@ describe("createSeekablePlayer", () => {
     expect(streamer.calls.stopStream).toBe(1);
   });
 
-  test("ffmpeg that never settles after drain resolves finished after the settle timeout", async () => {
+  test("ffmpeg that never settles after drain aborts the wedged process and rejects finished", async () => {
     const streamer = makeStreamer();
     const f = makeDeps();
     const player = createSeekablePlayer(
@@ -163,8 +171,27 @@ describe("createSeekablePlayer", () => {
     );
     await player.start();
 
-    f.segments[0]?.resolve(); // drain, but the ffmpeg promise stays pending forever
-    await player.finished; // resolves via the timeout instead of hanging
+    f.segments[0]?.resolve(); // drain, but the ffmpeg promise stays pending (wedged) forever
+    // A drained-but-wedged ffmpeg is a failure, not a natural end: `finished` rejects rather than
+    // resolving, and the process is aborted so it can't linger as an orphan.
+    await expect(player.finished).rejects.toThrow("did not settle");
+    expect(f.signals[0]?.aborted).toBe(true);
+    expect(streamer.calls.stopStream).toBe(1);
+  });
+
+  test("initial attach failure rejects start() (startup/graph-init failure, not a mid-stream crash)", async () => {
+    const streamer = makeStreamer();
+    const f = makeDeps([new Error("overlay_vaapi unsupported")]);
+    const player = createSeekablePlayer(streamer, "video.mkv", {}, f.deps);
+
+    // A failed FIRST attach must reject start() so the caller keeps it on the immediate software
+    // fallback — NOT swallow it into `finished` (which would look like a mid-stream crash).
+    await expect(player.start()).rejects.toThrow("overlay_vaapi unsupported");
+    // The paired ffmpeg is aborted so it can't linger.
+    expect(f.signals[0]?.aborted).toBe(true);
+    // The just-opened Go-Live connection is torn down before rejecting, so the caller's software
+    // fallback opens a fresh stream instead of racing/leaking this dead one.
+    expect(streamer.calls.createStream).toBe(1);
     expect(streamer.calls.stopStream).toBe(1);
   });
 

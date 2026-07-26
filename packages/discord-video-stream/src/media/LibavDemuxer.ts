@@ -134,8 +134,16 @@ export async function demux(input: Readable, { format }: DemuxerOptions) {
       aPipe.end();
     } else {
       const error = err instanceof Error ? err : new Error(String(err));
-      vPipe.destroy(error);
-      aPipe.destroy(error);
+      // Destroy WITH the error only the pipes that are actually returned to a consumer — those are
+      // the only ones `attachPipeline` installs an `error` listener on (see newApi.ts). When ffmpeg
+      // emits video without audio (e.g. `includeAudio: false`, or a video-only source), `aInfo` is
+      // absent so `aPipe` is never returned and has no error consumer; destroying it WITH an error
+      // would emit an unhandled stream `error` that can terminate the process. Destroy unconsumed
+      // pipes without an error.
+      if (vInfo) vPipe.destroy(error);
+      else vPipe.destroy();
+      if (aInfo) aPipe.destroy(error);
+      else aPipe.destroy();
     }
     vbsf.forEach((e) => {
       e.close();
