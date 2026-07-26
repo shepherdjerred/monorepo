@@ -22,10 +22,11 @@ import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepasswor
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { PROD_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 
 // Hostname of the Talos node where the Zooz ZST39 USB stick is plugged in.
 // Update after physically inserting the stick (verify via `kubectl get nodes`).
-const ZWAVE_NODE_HOSTNAME = "torvalds";
+const ZWAVE_NODE_HOSTNAME = PROD_NODE_HOSTNAME;
 
 // Persistent USB device path on the host. Resolve via `ls -la /dev/serial/by-id/`
 // on the target node after plugging in the stick. The by-id path survives reboots

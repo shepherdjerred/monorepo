@@ -205,9 +205,10 @@ return hs`,
   - PodVolumeRestore`,
       },
       rbac: {
-        // Allow buildkite to sync and read the apps application
+        // The release step syncs/prunes the root app and explicitly
+        // foreground-deletes the retired Kueue child Application.
         "policy.csv":
-          "p, buildkite, applications, sync, default/apps, allow\np, buildkite, applications, get, default/apps, allow",
+          "p, buildkite, applications, sync, default/apps, allow\np, buildkite, applications, get, default/apps, allow\np, buildkite, applications, delete, default/kueue, allow",
       },
     },
   };

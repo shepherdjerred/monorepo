@@ -96,35 +96,14 @@ Never write tokens to files or embed in URLs. Use `--token` flags or your CI sys
 | Medium  | 500m  | 1Gi    | birmel                 |
 | Default | 250m  | 512Mi  | Everything else        |
 
-### Kueue Integration
+### Admission control — Kueue removed (2026-07)
 
-This monorepo uses Kueue for admission control:
-
-```yaml
-# ClusterQueue
-apiVersion: kueue.x-k8s.io/v1beta1
-kind: ClusterQueue
-spec:
-  namespaceSelector: {}
-  resourceGroups:
-    - flavors:
-        - name: default
-          resources:
-            - name: cpu
-              nominalQuota: "16"
-            - name: memory
-              nominalQuota: "64Gi"
-  preemption:
-    withinClusterQueue: Never # Running jobs never suspended
-  queueingStrategy: StrictFIFO # Suspended jobs unsuspended in order
-```
-
-Benefits over ResourceQuota:
-
-- Elastic concurrency (jobs sized by actual resource requests)
-- FIFO ordering for suspended jobs
-- No etcd event storms from quota admission failures
-- Graceful degradation under load
+This monorepo previously ran Kueue quota admission over the `buildkite`
+namespace (ClusterQueue + LocalQueue + namespace label). It was removed when
+CI moved to the dedicated `liskov` node: the node's own capacity plus
+`max-in-flight` is the concurrency control, and Kueue had caused several
+admission-freeze incidents. If a Job ever sits `suspend: true` with no pods,
+a Kueue-style webhook is the first suspect.
 
 ## Helm Values (agent-stack-k8s)
 
@@ -181,9 +160,5 @@ plugins:
 
 This monorepo has a Grafana dashboard tracking:
 
-- Kueue admitted/pending workloads
-- Quota usage (CPU/memory)
 - Actual vs requested resources per pod
-- Running pods, suspended jobs, admission rate
-
-Prometheus metrics: `kueue_admitted_active_workloads`, `kueue_pending_workloads`, `kueue_cluster_queue_resource_usage`, `kueue_cluster_queue_nominal_quota`.
+- Running pods and job throughput

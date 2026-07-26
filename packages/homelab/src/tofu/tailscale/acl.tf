@@ -74,6 +74,12 @@ resource "tailscale_acl" "homelab" {
       # service, so the traffic is tailnet traffic subject to this ACL.)
       { action = "accept", src = ["tag:k8s"], dst = ["tag:k8s:443"] },
 
+      # Kubernetes workers reach the API Service through its control-plane
+      # Tailscale endpoint on TCP 6443. The API server reaches worker kubelets
+      # over TCP 10250 for exec, logs, and port-forward streams. Both are
+      # required after a worker reports its Tailscale address as InternalIP.
+      { action = "accept", src = ["tag:k8s"], dst = ["tag:k8s:6443", "tag:k8s:10250"] },
+
       # A dedicated CI runner tagged tag:ci (none today — CI currently runs on the
       # tag:k8s node above) would also need the tofu-state backend on 443.
       { action = "accept", src = ["tag:ci"], dst = ["tag:k8s:443"] },
@@ -138,13 +144,12 @@ resource "tailscale_acl" "homelab" {
         deny   = ["tag:server:22"]
       },
       # CRITICAL: the cluster node + proxies (tag:k8s) MUST reach tailnet ingresses
-      # on 443 — the tofu-state backend (seaweedfs-s3) and ArgoCD's chartmuseum.
-      # A future edit that drops the tag:k8s -> tag:k8s:443 acl fails here, before
-      # it can break tofu apply for every stack or ArgoCD deployments. They must
-      # NOT, however, get raw node SSH/k8s-API ports.
+      # on 443, the control-plane API endpoint on 6443, and worker kubelets on
+      # 10250. A future edit that drops any path fails here before it can break
+      # cluster operations.
       {
         src    = "tag:k8s"
-        accept = ["tag:k8s:443"]
+        accept = ["tag:k8s:443", "tag:k8s:6443", "tag:k8s:10250"]
         deny   = ["tag:k8s:22"]
       },
       # NOTE: the "non-admin members reach only the published web apps" invariant

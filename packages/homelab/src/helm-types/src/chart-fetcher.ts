@@ -65,7 +65,7 @@ async function runCommand(command: string, args: string[]): Promise<string> {
 /**
  * Locate the directory `helm pull --untar` created. helm names it after the
  * Chart.yaml `name`, which can differ from the OCI artifact path (e.g.
- * `kueue/charts/kueue` untars to `kueue/`), so prefer the version-key fallback
+ * a chart at `foo/charts/foo` untars to `foo/`), so prefer the version-key fallback
  * but fall back to scanning for the extracted Chart.yaml.
  */
 async function resolveUntarredChartDir(

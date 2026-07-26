@@ -48,11 +48,11 @@ some things I'm proud of:
 ```bash {"interpreter":""}
 talosctl gen config \
   --with-secrets secrets.yaml \
-  --config-patch-control-plane @patches/scheduling.yaml \
-  --config-patch @patches/image.yaml \
-  --config-patch @patches/tailscale.yaml \
-  --config-patch @patches/kubelet.yaml \
-  --config-patch @patches/interface.yaml \
+  --config-patch-control-plane @torvalds/patches/scheduling.yaml \
+  --config-patch @torvalds/patches/image.yaml \
+  --config-patch @torvalds/patches/tailscale.yaml \
+  --config-patch @torvalds/patches/kubelet.yaml \
+  --config-patch @torvalds/patches/interface.yaml \
   torvalds https://192.168.1.81:6443 --force
 
 ```

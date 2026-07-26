@@ -2,6 +2,15 @@ import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/gen
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "./shared.ts";
 import { getSystemHealthRuleGroups } from "./resource-monitoring-system.ts";
+import { CI_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
+
+// The dedicated CI node runs at high CPU by design (that's its job), so
+// sustained-usage alerts exclude it via the `node` label added by the
+// node-exporter ServiceMonitor relabeling (prometheus.ts).
+const NOT_CI_NODE = `node!="${CI_NODE_HOSTNAME}"`;
+// ...but the CI node is not a security blind spot. Where we need to still
+// watch it (crypto-mining), we scope to it explicitly.
+const CI_NODE_ONLY = `node="${CI_NODE_HOSTNAME}"`;
 
 export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
@@ -18,7 +27,7 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
             summary: "Sustained high CPU usage detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            '(100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 75',
+            `(100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle", ${NOT_CI_NODE}}[5m])) * 100)) > 75`,
           ),
           for: "1d",
           labels: { severity: "warning" },
@@ -32,7 +41,7 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
             summary: "Very high CPU usage detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            '(100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 80',
+            `(100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle", ${NOT_CI_NODE}}[5m])) * 100)) > 80`,
           ),
           for: "15m",
           labels: { severity: "critical" },
@@ -245,54 +254,7 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
     },
 
     // Temperature monitoring
-    {
-      name: "resource-temperature-monitoring",
-      rules: [
-        {
-          alert: "HighCPUTemperature",
-          annotations: {
-            description: escapePrometheusTemplate(
-              "CPU temperature on {{ $labels.instance }} is high: {{ $value }}°C (chip: {{ $labels.chip }})",
-            ),
-            summary: "High CPU temperature detected",
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'node_hwmon_temp_celsius{chip=~".*coretemp.*"} > 80',
-          ),
-          for: "10m",
-          labels: { severity: "warning" },
-        },
-        {
-          alert: "CriticalCPUTemperature",
-          annotations: {
-            description: escapePrometheusTemplate(
-              "CPU temperature on {{ $labels.instance }} is critical: {{ $value }}°C (chip: {{ $labels.chip }})",
-            ),
-            summary: "Critical CPU temperature detected",
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'node_hwmon_temp_celsius{chip=~".*coretemp.*"} > 90',
-          ),
-          for: "5m",
-          labels: { severity: "critical" },
-        },
-        {
-          alert: "HighSystemTemperature",
-          annotations: {
-            description: escapePrometheusTemplate(
-              "System temperature on {{ $labels.instance }} is high: {{ $value }}°C (sensor: {{ $labels.sensor }})",
-            ),
-            summary: "High system temperature detected",
-          },
-          // Raised threshold from 75°C to 85°C to reduce noise - 75°C is normal for many components under load
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "node_hwmon_temp_celsius > 85",
-          ),
-          for: "15m",
-          labels: { severity: "warning" },
-        },
-      ],
-    },
+    getTemperatureRuleGroup(),
 
     // Security and anomaly detection
     {
@@ -405,7 +367,29 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
             summary: "Potential crypto mining activity detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            '(100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 90 and rate(node_network_transmit_bytes_total[5m]) > 1048576', // High CPU + network activity
+            // Non-CI nodes: any sustained high CPU + egress is suspicious. The
+            // CI node is excluded here (it runs hot by design) and covered by
+            // the CI-node-specific rule below instead — it is NOT unmonitored.
+            `(100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle", ${NOT_CI_NODE}}[5m])) * 100)) > 90 and sum by (instance) (rate(node_network_transmit_bytes_total{${NOT_CI_NODE}}[5m])) > 1048576`,
+          ),
+          for: "30m",
+          labels: { severity: "critical" },
+        },
+        {
+          // Security: the CI node is excluded from the generic rule above
+          // because legitimate CI pins its CPU hot, but excluding it entirely
+          // would let a compromised Buildkite step mine undetected. Keep the
+          // same compound CPU + egress signal active even while a job runs:
+          // job presence is attacker-controlled and cannot be an exemption.
+          alert: "PotentialCryptoMiningCiNode",
+          annotations: {
+            description: escapePrometheusTemplate(
+              "CI node {{ $labels.instance }} shows potential crypto mining activity: sustained high CPU with unusual network egress",
+            ),
+            summary: "Potential crypto mining activity on the CI node",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            `(100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle", ${CI_NODE_ONLY}}[5m])) * 100)) > 90 and sum by (instance) (rate(node_network_transmit_bytes_total{${CI_NODE_ONLY}}[5m])) > 1048576`,
           ),
           for: "30m",
           labels: { severity: "critical" },
@@ -415,4 +399,92 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
 
     ...getSystemHealthRuleGroups(),
   ];
+}
+
+function getTemperatureRuleGroup(): PrometheusRuleSpecGroups {
+  return {
+    name: "resource-temperature-monitoring",
+    rules: [
+      {
+        alert: "HighCPUTemperature",
+        annotations: {
+          description: escapePrometheusTemplate(
+            "CPU temperature on {{ $labels.instance }} is high: {{ $value }}°C (chip: {{ $labels.chip }})",
+          ),
+          summary: "High CPU temperature detected",
+        },
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          'node_hwmon_temp_celsius{chip=~".*coretemp.*"} > 80',
+        ),
+        for: "10m",
+        labels: { severity: "warning" },
+      },
+      {
+        alert: "CriticalCPUTemperature",
+        annotations: {
+          description: escapePrometheusTemplate(
+            "CPU temperature on {{ $labels.instance }} is critical: {{ $value }}°C (chip: {{ $labels.chip }})",
+          ),
+          summary: "Critical CPU temperature detected",
+        },
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          'node_hwmon_temp_celsius{chip=~".*coretemp.*"} > 90',
+        ),
+        for: "5m",
+        labels: { severity: "critical" },
+      },
+      {
+        // AMD (liskov, Ryzen 9950X): the k10temp hwmon chip label is a bare
+        // PCI address (e.g. "pci0000:00_0000:00:18_3"), NOT the string
+        // "k10temp", so the coretemp-style regex above can never match it.
+        // Join through node_hwmon_chip_names to select by chip_name instead.
+        // Thresholds: Zen 5 Tctl TjMax is 95°C and Ryzen deliberately boosts
+        // toward it, so warn only on sustained 90+ and page at 94+.
+        alert: "HighCPUTemperatureAmd",
+        annotations: {
+          description: escapePrometheusTemplate(
+            "AMD CPU temperature on {{ $labels.instance }} is high: {{ $value }}°C (chip: {{ $labels.chip }})",
+          ),
+          summary: "High AMD CPU temperature detected",
+        },
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          'node_hwmon_temp_celsius * on (chip, instance) group_left(chip_name) node_hwmon_chip_names{chip_name=~".*k10temp.*"} > 90',
+        ),
+        for: "15m",
+        labels: { severity: "warning" },
+      },
+      {
+        alert: "CriticalCPUTemperatureAmd",
+        annotations: {
+          description: escapePrometheusTemplate(
+            "AMD CPU temperature on {{ $labels.instance }} is critical: {{ $value }}°C (chip: {{ $labels.chip }})",
+          ),
+          summary: "Critical AMD CPU temperature detected",
+        },
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          'node_hwmon_temp_celsius * on (chip, instance) group_left(chip_name) node_hwmon_chip_names{chip_name=~".*k10temp.*"} > 94',
+        ),
+        for: "5m",
+        labels: { severity: "critical" },
+      },
+      {
+        alert: "HighSystemTemperature",
+        annotations: {
+          description: escapePrometheusTemplate(
+            "System temperature on {{ $labels.instance }} is high: {{ $value }}°C (sensor: {{ $labels.sensor }})",
+          ),
+          summary: "High system temperature detected",
+        },
+        // Raised threshold from 75°C to 85°C to reduce noise - 75°C is normal for many components under load.
+        // k10temp sensors are excluded: Ryzen boosts Tctl toward its 95°C
+        // TjMax by design, so 85°C+ is normal there — the dedicated
+        // *CPUTemperatureAmd rules above cover those sensors instead.
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          '(node_hwmon_temp_celsius unless on (chip, instance) node_hwmon_chip_names{chip_name=~".*k10temp.*"}) > 85',
+        ),
+        for: "15m",
+        labels: { severity: "warning" },
+      },
+    ],
+  };
 }

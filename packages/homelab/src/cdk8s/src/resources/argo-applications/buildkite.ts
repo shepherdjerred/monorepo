@@ -10,11 +10,16 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import {
+  CI_NODE_HOSTNAME,
+  CI_NODE_TOLERATION,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 
-// Exported so kueue-config.ts's `pods` nominalQuota can be asserted equal to
-// this in a test — the two are independent enforcement layers for the same
-// cap and must never drift apart. See the long comment on `max-in-flight`
-// below for why both exist.
+// The sole cluster-wide cap on concurrently-scheduled CI jobs (the
+// agent-stack controller stops creating Jobs beyond it). Kueue and its
+// quota-based admission were removed once CI moved to the dedicated node —
+// liskov's own capacity (kubelet reservations, eviction, pids cap) is the
+// resource bulkhead now.
 export const BUILDKITE_MAX_IN_FLIGHT = 20;
 
 export function createBuildkiteApp(chart: Chart) {
@@ -25,7 +30,6 @@ export function createBuildkiteApp(chart: Chart) {
         "pod-security.kubernetes.io/enforce": "privileged",
         "pod-security.kubernetes.io/audit": "privileged",
         "pod-security.kubernetes.io/warn": "privileged",
-        "kueue.x-k8s.io/managed-namespace": "true",
       },
     },
   });
@@ -54,8 +58,8 @@ export function createBuildkiteApp(chart: Chart) {
 
   // Default resource requests/limits for any generated sidecar that doesn't set its
   // own resources. The known agent and checkout containers are patched explicitly
-  // below so Kueue accounts for their different workloads; this LimitRange remains a
-  // fail-safe for new containers introduced by the controller.
+  // below; this LimitRange remains a fail-safe for new containers introduced by the
+  // controller, so sidecars are never BestEffort and the scheduler sees honest totals.
   //
   // 2026-07 CI-freeze hardening: `default` (limits) added alongside the existing
   // `defaultRequest`. Explicit-tier step containers and the controller's known
@@ -118,10 +122,9 @@ export function createBuildkiteApp(chart: Chart) {
               // Cluster-wide cap on concurrently-scheduled CI jobs. Sized
               // during the 2026-07 incident response (see
               // packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md
-              // and 2026-07-05_torvalds-ci-freeze-investigation.md). Kept as the
-              // admission bound for the replatformed CI, which schedules jobs on
-              // this "default" queue. Mirrored by kueue-config.ts's `pods`
-              // nominalQuota — the two must stay in lockstep (asserted in a test).
+              // and 2026-07-05_torvalds-ci-freeze-investigation.md); since the
+              // Kueue removal this is the only concurrency cap — revisit its
+              // value from liskov soak data.
               "max-in-flight": BUILDKITE_MAX_IN_FLIGHT,
               "empty-job-grace-period": "5m",
               // Git mirrors: see the buildkite-git-mirrors PVC comment above —
@@ -146,8 +149,8 @@ export function createBuildkiteApp(chart: Chart) {
               // 20-58 GiB/heavy pod measured pre-#1602) off the xfs /var
               // entirely. tmpfs pages count against each container's memory
               // limit; the pipeline pod anchors' memory REQUESTS are sized to
-              // cover expected workspace usage so Kueue admission stays
-              // honest (see .buildkite/pipeline.yml). sizeLimit evicts a
+              // cover expected workspace usage (see .buildkite/pipeline.yml).
+              // sizeLimit evicts a
               // runaway build (kubelet, fail-fast + step retry) instead of
               // letting it eat the node's RAM.
               "workspace-volume": {
@@ -165,6 +168,13 @@ export function createBuildkiteApp(chart: Chart) {
               // written `$$VAR` (runtime shell expansion).
               "pod-spec-patch": {
                 priorityClassName: "batch-low",
+                // CI step pods run ONLY on the dedicated CI node (liskov):
+                // the toleration lets them onto its ci=only:NoSchedule taint,
+                // and the nodeSelector keeps them off torvalds. If liskov is
+                // down, CI pods stay Pending — deliberate: CI never falls
+                // back onto the prod node. Rollback = remove these two keys.
+                nodeSelector: { "kubernetes.io/hostname": CI_NODE_HOSTNAME },
+                tolerations: [CI_NODE_TOLERATION],
                 serviceAccountName: "buildkite-agent-stack-k8s-controller",
                 automountServiceAccountToken: true,
                 containers: [

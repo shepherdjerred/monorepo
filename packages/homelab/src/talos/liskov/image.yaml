@@ -1,0 +1,23 @@
+# Image Factory schematic for liskov (CI-only worker: Ryzen 9950X, 128GB DDR5).
+#
+# Differences from torvalds' schematic (../image.yaml), all deliberate:
+# - amd-ucode instead of intel-ucode (AMD CPU microcode early-loading).
+# - no i915 extension: liskov has no Plex/media transcode job; the 9950X iGPU's
+#   HDMI console (for the NanoKVM) works via the plain EFI framebuffer.
+# - no processor.max_cstate=2: that is a NAS-responsiveness tweak for torvalds;
+#   deep C-states are fine (desirable, even) on a burst-loaded CI box.
+# - keeps -lockdown/lockdown=integrity: the SecureBoot default (confidentiality)
+#   disables bpf_probe_read*(), which breaks the alloy eBPF profiler.
+#
+# The pinned installer reference lives in patches/image.yaml and is verified by
+# `bun run check:talos` (src/talos/update-image-id.ts --check); regenerate with
+# `bun packages/homelab/src/talos/update-image-id.ts` after editing this file.
+customization:
+  extraKernelArgs:
+    - -lockdown
+    - lockdown=integrity
+  systemExtensions:
+    officialExtensions:
+      - siderolabs/amd-ucode
+      - siderolabs/tailscale
+      - siderolabs/zfs
