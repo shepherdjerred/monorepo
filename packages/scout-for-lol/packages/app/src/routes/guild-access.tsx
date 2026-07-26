@@ -3,9 +3,11 @@ import { useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   type Permission,
+  type PermissionSet,
   type Role,
   ALL_PERMISSIONS,
   ROLES,
+  canDelegateRole,
   permissionKey,
   permissionsForRole,
 } from "@scout-for-lol/data";
@@ -44,6 +46,15 @@ type RoleSelection = Role | "custom";
 function parseRoleSelection(value: string): RoleSelection | null {
   if (value === "custom") return value;
   return ROLES.find((role) => role.id === value)?.id ?? null;
+}
+
+function canDelegateSelection(
+  permissions: PermissionSet,
+  selection: RoleSelection,
+  customPermissions: readonly Permission[],
+): boolean {
+  if (selection === "custom") return customPermissions.length > 0;
+  return canDelegateRole(permissions, selection);
 }
 
 function PermissionChecklist(props: {
@@ -192,7 +203,11 @@ export function GuildAccess() {
               </SelectTrigger>
               <SelectContent>
                 {ROLES.map((role) => (
-                  <SelectItem key={role.id} value={role.id}>
+                  <SelectItem
+                    key={role.id}
+                    value={role.id}
+                    disabled={!canDelegateRole(perms, role.id)}
+                  >
                     {role.label}
                   </SelectItem>
                 ))}
@@ -204,7 +219,7 @@ export function GuildAccess() {
             disabled={
               newUserId.length === 0 ||
               setMutation.isPending ||
-              (newRole === "custom" && newCustomPermissions.length === 0)
+              !canDelegateSelection(perms, newRole, newCustomPermissions)
             }
             onClick={() => {
               setMutation.mutate(
@@ -326,7 +341,11 @@ export function GuildAccess() {
                           </SelectTrigger>
                           <SelectContent>
                             {ROLES.map((role) => (
-                              <SelectItem key={role.id} value={role.id}>
+                              <SelectItem
+                                key={role.id}
+                                value={role.id}
+                                disabled={!canDelegateRole(perms, role.id)}
+                              >
                                 {role.label}
                               </SelectItem>
                             ))}

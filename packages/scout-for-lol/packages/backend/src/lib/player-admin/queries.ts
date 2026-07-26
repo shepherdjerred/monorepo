@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { PermissionSet } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import {
   GuildIdInput,
@@ -103,6 +104,7 @@ export function serializePlayerDetail(
     }[];
   },
   names: DiscordNames,
+  permissions: PermissionSet,
 ) {
   return {
     id: player.id,
@@ -113,33 +115,39 @@ export function serializePlayerDetail(
     creatorDiscordUser: lookupUser(names, player.creatorDiscordId),
     createdTime: player.createdTime,
     updatedTime: player.updatedTime,
-    accounts: player.accounts.map((account) => ({
-      id: account.id,
-      alias: account.alias,
-      puuid: account.puuid,
-      region: account.region,
-      riotGameName: account.riotGameName,
-      riotTagLine: account.riotTagLine,
-      lastMatchTime: account.lastMatchTime,
-      lastCheckedAt: account.lastCheckedAt,
-    })),
-    subscriptions: player.subscriptions.map((subscription) => ({
-      id: subscription.id,
-      channelId: subscription.channelId,
-      creatorDiscordId: subscription.creatorDiscordId,
-      creatorDiscordUser: lookupUser(names, subscription.creatorDiscordId),
-      createdTime: subscription.createdTime,
-    })),
-    competitions: player.competitionParticipants.map((participant) => ({
-      id: participant.id,
-      status: participant.status,
-      invitedBy: participant.invitedBy,
-      invitedByUser: lookupUser(names, participant.invitedBy),
-      invitedAt: participant.invitedAt,
-      joinedAt: participant.joinedAt,
-      leftAt: participant.leftAt,
-      competition: participant.competition,
-    })),
+    accounts: permissions.can("accounts", "read")
+      ? player.accounts.map((account) => ({
+          id: account.id,
+          alias: account.alias,
+          puuid: account.puuid,
+          region: account.region,
+          riotGameName: account.riotGameName,
+          riotTagLine: account.riotTagLine,
+          lastMatchTime: account.lastMatchTime,
+          lastCheckedAt: account.lastCheckedAt,
+        }))
+      : [],
+    subscriptions: permissions.can("subscriptions", "read")
+      ? player.subscriptions.map((subscription) => ({
+          id: subscription.id,
+          channelId: subscription.channelId,
+          creatorDiscordId: subscription.creatorDiscordId,
+          creatorDiscordUser: lookupUser(names, subscription.creatorDiscordId),
+          createdTime: subscription.createdTime,
+        }))
+      : [],
+    competitions: permissions.can("competitions", "read")
+      ? player.competitionParticipants.map((participant) => ({
+          id: participant.id,
+          status: participant.status,
+          invitedBy: participant.invitedBy,
+          invitedByUser: lookupUser(names, participant.invitedBy),
+          invitedAt: participant.invitedAt,
+          joinedAt: participant.joinedAt,
+          leftAt: participant.leftAt,
+          competition: participant.competition,
+        }))
+      : [],
   };
 }
 
@@ -178,13 +186,42 @@ export async function listPlayers(input: ListPlayersInputData) {
  * the freshly resolved values onto the rows, then serialize. Keeps the
  * displayed Riot ID at most 24h stale without blocking on every account.
  */
+type PlayerDetailInput = Parameters<typeof serializePlayerDetail>[0];
+type RefreshablePlayerDetail = Omit<PlayerDetailInput, "accounts"> & {
+  accounts: (PlayerDetailInput["accounts"][number] & AccountRiotRow)[];
+};
+
 async function serializePlayerDetailWithRiotRefresh(
-  player: Parameters<typeof serializePlayerDetail>[0] & {
-    accounts: AccountRiotRow[];
-  },
+  player: RefreshablePlayerDetail,
+  permissions: PermissionSet,
 ) {
-  const resolved = await refreshAccountRiotIds(player.accounts);
-  const accounts = player.accounts.map((account) => {
+  const accounts = await refreshAuthorizedAccounts(
+    player.accounts,
+    permissions,
+  );
+  const subscriptionCreatorIds = permissions.can("subscriptions", "read")
+    ? player.subscriptions.map((subscription) => subscription.creatorDiscordId)
+    : [];
+  const competitionInviterIds = permissions.can("competitions", "read")
+    ? player.competitionParticipants.map((participant) => participant.invitedBy)
+    : [];
+  const discordIds = [
+    player.discordId,
+    player.creatorDiscordId,
+    ...subscriptionCreatorIds,
+    ...competitionInviterIds,
+  ].flatMap((id) => (id === null ? [] : [id]));
+  const names = await resolveDiscordUsers(discordIds);
+  return serializePlayerDetail({ ...player, accounts }, names, permissions);
+}
+
+async function refreshAuthorizedAccounts<T extends AccountRiotRow>(
+  accounts: T[],
+  permissions: PermissionSet,
+): Promise<T[]> {
+  if (permissions.cannot("accounts", "read")) return [];
+  const resolved = await refreshAccountRiotIds(accounts);
+  return accounts.map((account) => {
     const fresh = resolved.get(account.id);
     return fresh === undefined
       ? account
@@ -194,33 +231,25 @@ async function serializePlayerDetailWithRiotRefresh(
           riotTagLine: fresh.tagLine,
         };
   });
-  const discordIds = [
-    player.discordId,
-    player.creatorDiscordId,
-    ...player.subscriptions.map(
-      (subscription) => subscription.creatorDiscordId,
-    ),
-    ...player.competitionParticipants.map(
-      (participant) => participant.invitedBy,
-    ),
-  ].flatMap((id) => (id === null ? [] : [id]));
-  const names = await resolveDiscordUsers(discordIds);
-  return serializePlayerDetail({ ...player, accounts }, names);
 }
 
-export async function getPlayer(input: PlayerLookupInputData) {
+export async function getPlayer(
+  input: PlayerLookupInputData,
+  permissions: PermissionSet,
+) {
   const player = await getPlayerOrThrow(input);
-  return serializePlayerDetailWithRiotRefresh(player);
+  return serializePlayerDetailWithRiotRefresh(player, permissions);
 }
 
 export async function getCurrentLinkedPlayer(
   ctx: WebCtx,
   input: z.infer<typeof GuildIdInput>,
+  permissions: PermissionSet,
 ) {
   const player = await prisma.player.findFirst({
     where: { serverId: input.guildId, discordId: ctx.user.discordId },
     include: playerDetailInclude,
   });
   if (player === null) return null;
-  return serializePlayerDetailWithRiotRefresh(player);
+  return serializePlayerDetailWithRiotRefresh(player, permissions);
 }

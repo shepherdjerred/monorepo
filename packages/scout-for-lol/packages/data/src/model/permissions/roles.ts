@@ -76,6 +76,13 @@ export function permissionsForRole(role: Role): Permission[] {
   return [...ROLE_CATALOG[role].permissions];
 }
 
+/** Whether an actor may delegate every permission contained in a role preset. */
+export function canDelegateRole(set: PermissionSet, role: Role): boolean {
+  return permissionsForRole(role).every((permission) =>
+    set.can(permission.resource, permission.action),
+  );
+}
+
 /**
  * Name the preset a permission set exactly matches, else `"custom"`. Discord
  * admins/owners (root) always derive as `"admin"`.

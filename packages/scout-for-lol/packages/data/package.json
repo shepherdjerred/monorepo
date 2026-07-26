@@ -8,6 +8,7 @@
     "./*": "./src/*"
   },
   "scripts": {
+    "generate": "bun run scripts/generate-permission-catalog.ts",
     "test": "bun test",
     "test:watch": "bun test --watch",
     "test:coverage": "bun test --coverage",
@@ -34,6 +35,7 @@
     "typescript": "^6.0.3"
   },
   "imports": {
+    "#generated/*": "./generated/*",
     "#src/*": "./src/*"
   }
 }

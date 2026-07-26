@@ -1,99 +1,20 @@
 import { z } from "zod";
+import { PERMISSION_CATALOG as GENERATED_PERMISSION_CATALOG } from "#generated/permission-catalog.ts";
 
 /**
- * The permission catalog — the single source of truth for Scout's RBAC.
+ * The permission catalog — generated from the language-neutral JSON source.
  *
  * Everything else (the {@link Permission} union, {@link PermissionSchema},
  * role bundles, the backend procedure gate, and the frontend `can(...)` checks)
- * is derived from this one object, so the API and UI can never drift.
+ * is derived from this value, so the API and UI can never drift. Edit
+ * `permission-catalog.json`, then run this package's `generate` task.
  *
  * A permission is a structured `{ resource, action }` pair. On the wire and in
  * the TypeScript API it stays an object; in the database it is stored as the
  * canonical `"resource:action"` string (see {@link permissionKey}).
  */
 
-/** One selectable verb within a resource. */
-type ActionDef = {
-  readonly name: string;
-  readonly label: string;
-  readonly description?: string;
-};
-
-type ResourceDef = {
-  readonly label: string;
-  readonly description?: string;
-  readonly actions: readonly ActionDef[];
-};
-
-export const PERMISSION_CATALOG = {
-  subscriptions: {
-    label: "Subscriptions",
-    actions: [
-      { name: "read", label: "View subscriptions" },
-      { name: "create", label: "Add subscriptions" },
-      { name: "update", label: "Edit subscriptions (filters, mute, move)" },
-      { name: "delete", label: "Remove subscriptions" },
-    ],
-  },
-  players: {
-    label: "Players",
-    actions: [
-      { name: "read", label: "View players" },
-      { name: "update", label: "Rename players" },
-      { name: "delete", label: "Delete players" },
-      { name: "merge", label: "Merge players" },
-      { name: "link", label: "Link / unlink Discord accounts" },
-    ],
-  },
-  accounts: {
-    label: "Riot accounts",
-    actions: [
-      { name: "read", label: "Look up Riot accounts" },
-      { name: "create", label: "Add Riot accounts" },
-      { name: "update", label: "Edit Riot accounts" },
-      { name: "delete", label: "Remove Riot accounts" },
-      { name: "transfer", label: "Transfer accounts between players" },
-    ],
-  },
-  competitions: {
-    label: "Competitions",
-    actions: [
-      { name: "read", label: "View competitions & leaderboards" },
-      { name: "create", label: "Create competitions" },
-      { name: "update", label: "Edit competitions" },
-      { name: "cancel", label: "Cancel competitions" },
-      { name: "invite", label: "Manage participants" },
-      { name: "schedule", label: "Change update schedule" },
-      { name: "refresh", label: "Force-refresh leaderboards" },
-    ],
-  },
-  reports: {
-    label: "Reports",
-    actions: [
-      { name: "read", label: "View & preview reports" },
-      { name: "create", label: "Create reports" },
-      { name: "update", label: "Edit reports" },
-      { name: "delete", label: "Delete reports" },
-      { name: "run", label: "Run & post reports" },
-    ],
-  },
-  channels: {
-    label: "Channels",
-    actions: [{ name: "read", label: "List postable channels" }],
-  },
-  audit: {
-    label: "Audit log",
-    actions: [{ name: "read", label: "View the audit log" }],
-  },
-  roles: {
-    label: "Roles & access",
-    actions: [
-      { name: "read", label: "View who has access" },
-      { name: "grant", label: "Grant access" },
-      { name: "revoke", label: "Revoke access" },
-    ],
-  },
-} as const satisfies Record<string, ResourceDef>;
+export const PERMISSION_CATALOG = { ...GENERATED_PERMISSION_CATALOG };
 
 export type Resource = keyof typeof PERMISSION_CATALOG;
 

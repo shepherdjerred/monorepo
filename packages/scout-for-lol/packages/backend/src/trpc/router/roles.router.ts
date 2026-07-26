@@ -27,7 +27,7 @@ import {
   guildProcedure,
 } from "#src/trpc/guild-permission.ts";
 import { prisma } from "#src/database/index.ts";
-import { recordAudit } from "#src/lib/audit/index.ts";
+import { type Db, recordAudit } from "#src/lib/audit/index.ts";
 import { resolveDiscordUsers } from "#src/lib/discord/resolve-users.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
@@ -38,19 +38,22 @@ const GRANT_KEY = permissionKey({ resource: "roles", action: "grant" });
  * (which would leave nobody but Discord admins able to manage access). Discord
  * admins (root) are exempt — they always retain implicit access.
  */
-async function assertNotSelfLockout(params: {
-  isRoot: boolean;
-  guildId: DiscordGuildId;
-  actorDiscordId: DiscordAccountId;
-  targetDiscordId: DiscordAccountId;
-  keepsGrant: boolean;
-}): Promise<void> {
+async function assertNotSelfLockout(
+  tx: Db,
+  params: {
+    isRoot: boolean;
+    guildId: DiscordGuildId;
+    actorDiscordId: DiscordAccountId;
+    targetDiscordId: DiscordAccountId;
+    keepsGrant: boolean;
+  },
+): Promise<void> {
   const removingOwnGrant =
     params.targetDiscordId === params.actorDiscordId &&
     !params.keepsGrant &&
     !params.isRoot;
   if (!removingOwnGrant) return;
-  const otherGrantHolders = await prisma.serverPermission.count({
+  const otherGrantHolders = await tx.serverPermission.count({
     where: {
       serverId: params.guildId,
       permission: GRANT_KEY,
@@ -140,16 +143,16 @@ export const rolesRouter = router({
       for (const p of input.permissions) desired.set(permissionKey(p), p);
       const desiredKeys = new Set(desired.keys());
 
-      await assertNotSelfLockout({
-        isRoot: ctx.permissions.isRoot,
-        guildId: input.guildId,
-        actorDiscordId: ctx.user.discordId,
-        targetDiscordId: input.discordUserId,
-        keepsGrant: desiredKeys.has(GRANT_KEY),
-      });
-
       const now = new Date();
       await prisma.$transaction(async (tx) => {
+        await assertNotSelfLockout(tx, {
+          isRoot: ctx.permissions.isRoot,
+          guildId: input.guildId,
+          actorDiscordId: ctx.user.discordId,
+          targetDiscordId: input.discordUserId,
+          keepsGrant: desiredKeys.has(GRANT_KEY),
+        });
+
         // Read current grants inside the txn for a consistent diff.
         const currentRows = await tx.serverPermission.findMany({
           where: {
@@ -254,14 +257,15 @@ export const rolesRouter = router({
   clear: guildMutationProcedure("roles", "revoke")
     .input(GuildInput.extend({ discordUserId: DiscordAccountIdSchema }))
     .mutation(async ({ ctx, input }) => {
-      await assertNotSelfLockout({
-        isRoot: ctx.permissions.isRoot,
-        guildId: input.guildId,
-        actorDiscordId: ctx.user.discordId,
-        targetDiscordId: input.discordUserId,
-        keepsGrant: false,
-      });
       await prisma.$transaction(async (tx) => {
+        await assertNotSelfLockout(tx, {
+          isRoot: ctx.permissions.isRoot,
+          guildId: input.guildId,
+          actorDiscordId: ctx.user.discordId,
+          targetDiscordId: input.discordUserId,
+          keepsGrant: false,
+        });
+
         await tx.serverPermission.deleteMany({
           where: {
             serverId: input.guildId,

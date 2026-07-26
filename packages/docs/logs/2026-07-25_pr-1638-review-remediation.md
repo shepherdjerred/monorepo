@@ -40,20 +40,30 @@ board: false
   findings: mutation-route and control gating, custom-permission editing, and
   effective-permission cache invalidation after role changes.
 - Passed scoped app lint, typecheck, test dependencies, and production build.
+- Addressed the next hosted Codex review cycle's four current-head findings:
+  player detail responses now require the related resource read scopes, the
+  permission catalog now originates in language-neutral JSON with a JSON Schema
+  and validated TypeScript generation, self-lockout checks execute atomically
+  with role mutations, and role presets outside the caller's delegation
+  authority are disabled in both access selectors.
+- Added regression coverage for related-resource redaction, catalog generation
+  parity, role delegation, and concurrent self-lockout attempts.
+- Passed the full Scout data suite (479 tests), full Scout backend suite (1,168
+  passing tests and 6 intentional skips), app production build, focused
+  authorization regressions, and scoped data/backend/app lint and typecheck.
 
 ### Remaining
 
-- Buildkite must evaluate the newly submitted commit once its checkout
-  infrastructure is healthy.
+- Buildkite and hosted Codex review must evaluate the newly submitted commit.
 
 ### Caveats
 
-- Buildkite build 6184 contains no branch execution evidence because its
-  checkout container died before the pipeline upload script started. The same
-  failure on unrelated PR #1629 build 6185 makes this a shared agent/container
-  blocker rather than a branch defect.
 - Greptile is out of credits, so its required Buildkite gate cannot presently
   observe a fresh Greptile check. Codex review is the replacement review
   oracle for this cycle.
+- The role-preset change is visible UI behavior, but the delegated-manager state
+  still requires an authenticated Discord OAuth browser session to capture.
+  Existing PR media covers the Access surface; the RBAC plan retains the manual
+  delegated-role screenshot as human verification.
 - Per the controller instruction, this session submits one fix commit and does
   not wait for the resulting CI run.

@@ -13,11 +13,22 @@ import {
 } from "#src/model/permissions/permission-set.ts";
 import {
   ROLE_CATALOG,
+  canDelegateRole,
   deriveRole,
   permissionsForRole,
 } from "#src/model/permissions/roles.ts";
+import { PermissionCatalogSourceSchema } from "#src/model/permissions/permission-catalog-source.ts";
 
 describe("catalog", () => {
+  test("generated TypeScript matches the validated language-neutral source", async () => {
+    const source = PermissionCatalogSourceSchema.parse(
+      await Bun.file(
+        new URL("../../../permission-catalog.json", import.meta.url),
+      ).json(),
+    );
+    expect(JSON.stringify(source)).toBe(JSON.stringify(PERMISSION_CATALOG));
+  });
+
   test("has 31 permissions across 8 resources", () => {
     const expected = Object.values(PERMISSION_CATALOG).reduce(
       (sum, def) => sum + def.actions.length,
@@ -172,5 +183,19 @@ describe("roles", () => {
       "manager",
       "viewer",
     ]);
+  });
+
+  test("role delegation requires every permission in the preset", () => {
+    const partial = createPermissionSet([
+      { resource: "roles", action: "grant" },
+      { resource: "players", action: "read" },
+    ]);
+    expect(canDelegateRole(partial, "viewer")).toBe(false);
+    expect(canDelegateRole(partial, "admin")).toBe(false);
+
+    const admin = createPermissionSet(permissionsForRole("admin"));
+    expect(canDelegateRole(admin, "viewer")).toBe(true);
+    expect(canDelegateRole(admin, "manager")).toBe(true);
+    expect(canDelegateRole(admin, "admin")).toBe(true);
   });
 });

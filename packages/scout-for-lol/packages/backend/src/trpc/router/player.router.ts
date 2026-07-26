@@ -42,11 +42,13 @@ export const playerRouter = router({
 
   getPlayer: guildProcedure("players", "read")
     .input(PlayerLookupInput)
-    .query(async ({ input }) => getPlayer(input)),
+    .query(async ({ ctx, input }) => getPlayer(input, ctx.permissions)),
 
   getCurrentLinkedPlayer: guildProcedure("players", "read")
     .input(GuildIdInput)
-    .query(async ({ ctx, input }) => getCurrentLinkedPlayer(ctx, input)),
+    .query(async ({ ctx, input }) =>
+      getCurrentLinkedPlayer(ctx, input, ctx.permissions),
+    ),
 
   renamePlayer: guildMutationProcedure("players", "update")
     .input(RenamePlayerInput)

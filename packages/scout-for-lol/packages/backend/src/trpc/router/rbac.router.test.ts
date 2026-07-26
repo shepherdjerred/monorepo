@@ -15,6 +15,7 @@ const trpc = await createOfflineTrpcHarness("rbac-router");
 const guildId = DiscordGuildIdSchema.parse("100000000000009001");
 const member = DiscordAccountIdSchema.parse("900000000000000001");
 const target = DiscordAccountIdSchema.parse("900000000000000002");
+const other = DiscordAccountIdSchema.parse("900000000000000003");
 
 async function reset() {
   await trpc.prisma.serverPermission.deleteMany({});
@@ -285,6 +286,33 @@ describe("RBAC guard invariants", () => {
     await expect(
       caller.roles.clear({ guildId, discordUserId: member }),
     ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+
+  test("self-lockout: concurrent removals preserve one delegated role admin", async () => {
+    await reset();
+    asMember();
+    const accessPermissions: Permission[] = [
+      { resource: "roles", action: "grant" },
+      { resource: "roles", action: "revoke" },
+    ];
+    await seedGrants(member, accessPermissions);
+    await seedGrants(other, accessPermissions);
+
+    const results = await Promise.allSettled([
+      trpc.authedCaller(member).roles.clear({ guildId, discordUserId: member }),
+      trpc.authedCaller(other).roles.clear({ guildId, discordUserId: other }),
+    ]);
+
+    expect(
+      results.filter((result) => result.status === "fulfilled"),
+    ).toHaveLength(1);
+    const remainingGrantHolders = await trpc.prisma.serverPermission.count({
+      where: {
+        serverId: guildId,
+        permission: permissionKey({ resource: "roles", action: "grant" }),
+      },
+    });
+    expect(remainingGrantHolders).toBe(1);
   });
 
   test("anonymous caller is UNAUTHORIZED before any permission check", async () => {
