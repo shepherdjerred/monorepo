@@ -152,6 +152,13 @@ export function createPlaybackMachine(actors: PlaybackActors) {
       consumeSeek: assign({ resumeSeekSeconds: 0 }),
       // The current item finished, was skipped, or playback stopped: its recovery budget resets.
       resetCrashRetries: assign({ crashRetries: 0 }),
+      // Clear ALL crash/stall recovery state (resume seek + retry budget). Applied to every
+      // non-success exit from `resolving` so a recovery re-resolve that fails via ANY path
+      // (reject, wedge timeout, SKIP, STOP) can't leak the crashed item's seek offset or escalated
+      // pipeline onto the next dequeued item. The success path (`resolving → streaming`) must NOT
+      // clear these — streaming consumes resumeSeekSeconds (via its `consumeSeek` exit) and picks
+      // its pipeline from crashRetries — so this is applied per-transition, not as a state exit.
+      clearRecovery: assign({ resumeSeekSeconds: 0, crashRetries: 0 }),
     },
   }).createMachine({
     id: "playback",
@@ -305,9 +312,12 @@ export function createPlaybackMachine(actors: PlaybackActors) {
           },
           onError: {
             target: "failed",
-            actions: assign(({ context, event }) =>
-              resolveErrorUpdates(context, event.error),
-            ),
+            actions: [
+              assign(({ context, event }) =>
+                resolveErrorUpdates(context, event.error),
+              ),
+              "clearRecovery",
+            ],
           },
         },
         // Wedge guard: the yt-dlp resolve path has no timeout of its own — a hung probe would
@@ -316,15 +326,18 @@ export function createPlaybackMachine(actors: PlaybackActors) {
         after: {
           resolveTimeout: {
             target: "failed",
-            actions: assign({
-              lastError: "resolving the source timed out",
-              lastErrorKind: "timeout",
-            }),
+            actions: [
+              assign({
+                lastError: "resolving the source timed out",
+                lastErrorKind: "timeout",
+              }),
+              "clearRecovery",
+            ],
           },
         },
         on: {
-          SKIP: { target: "skipped" },
-          STOP: { target: "leaving", actions: "clearQueue" },
+          SKIP: { target: "skipped", actions: "clearRecovery" },
+          STOP: { target: "leaving", actions: ["clearQueue", "clearRecovery"] },
         },
       },
       streaming: {

@@ -190,12 +190,17 @@ export function createSeekablePlayer(
       if (gen !== generation || stopped) return;
       if (initial) {
         // A failed FIRST attach is a startup/graph-init failure (e.g. a VAAPI device/filter the
-        // GPU lacks), not a mid-stream crash. Abort the paired ffmpeg (its `promise.catch` above is
-        // guarded on `abort.signal.aborted`, so it won't also settle `finished`) and reject
+        // GPU lacks), not a mid-stream crash. Mark the player inert, abort the paired ffmpeg (its
+        // `promise.catch` above is guarded on `stopped`/`abort.signal.aborted`, so it won't also
+        // settle `finished`), and TEAR DOWN the just-opened Go-Live connection before rejecting —
+        // otherwise the caller's immediate software fallback opens a second stream while this dead
+        // one is still up, leaking the connection or blocking the fallback's attach. Reject
         // `start()` so the caller keeps this on the immediate software fallback instead of the
         // slower mid-stream recovery ladder. `finished` is intentionally left unsettled: nobody
         // awaits it once `start()` rejects and the player is discarded.
+        stopped = true;
         abort.abort();
+        teardownConn();
         throw err;
       }
       fail(err);

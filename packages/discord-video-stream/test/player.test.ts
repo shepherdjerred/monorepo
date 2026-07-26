@@ -189,6 +189,10 @@ describe("createSeekablePlayer", () => {
     await expect(player.start()).rejects.toThrow("overlay_vaapi unsupported");
     // The paired ffmpeg is aborted so it can't linger.
     expect(f.signals[0]?.aborted).toBe(true);
+    // The just-opened Go-Live connection is torn down before rejecting, so the caller's software
+    // fallback opens a fresh stream instead of racing/leaking this dead one.
+    expect(streamer.calls.createStream).toBe(1);
+    expect(streamer.calls.stopStream).toBe(1);
   });
 
   test("stop during a pending ffmpeg settle resolves finished", async () => {

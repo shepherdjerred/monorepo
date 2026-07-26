@@ -20,7 +20,6 @@ import type {
 } from "@shepherdjerred/streambot/machine/types.ts";
 import {
   endedShortError,
-  producerResumeSeconds,
   StreamCrashError,
   type StallInfo,
 } from "@shepherdjerred/streambot/streamer/stream-errors.ts";
@@ -439,19 +438,20 @@ export class StreambotStreamer implements StreamerLike {
     const { observer, dispose: disposeObserver } = createStreamObserver(
       useHardware,
       this.now,
-      (staleSeconds) => {
+      (lastMediaSeconds) => {
         // A detected stall IS a mid-stream segment death — count it alongside crash/ended-short so
         // the advertised `stall` kind on the crash counter actually populates (aborting the actor
         // otherwise leaves the segment outcome at "ended" and the recovery goes uncounted).
         streamCrashesTotal.inc({ pipeline: pipelineMode, kind: "stall" });
-        // `getPosition()` kept advancing from wall-clock through the silence; resume from the last
-        // delivered media position (position minus the stale interval), floored at the segment
-        // start, so the retry doesn't seek past media that was never produced.
-        const positionSeconds = producerResumeSeconds(
-          this.getPosition() ?? startSeconds,
-          staleSeconds,
-          startSeconds,
-        );
+        // Resume from the producer's last DELIVERED media position — the observer's timemark, which
+        // is relative to the current ffmpeg `-ss`, so add the segment's start offset (kept current
+        // across live seeks). We deliberately do NOT derive this from `getPosition()`: the wall-clock
+        // tracker over-counts when ffmpeg was producing below realtime before it froze, which would
+        // skip unseen media. Fall back to the segment start if no media time was parsed yet.
+        const positionSeconds =
+          lastMediaSeconds === undefined
+            ? this.segmentStartOffsetSeconds
+            : this.segmentStartOffsetSeconds + lastMediaSeconds;
         this.stallListener?.({
           positionSeconds,
           reason: `ffmpeg produced no output for ${String(STALL_AFTER_SECONDS)}s`,

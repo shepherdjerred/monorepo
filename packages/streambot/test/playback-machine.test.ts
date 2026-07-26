@@ -800,6 +800,109 @@ describe("crash recovery — state cleanup", () => {
     expect(bInput?.seekSeconds).toBe(0);
     expect(bInput?.pipelineMode).toBe("hw");
   });
+
+  test("SKIP during a recovery re-resolve clears recovery state (a non-onError resolving exit)", async () => {
+    const stream = makeStreamController();
+    // "a" resolves initially, then its crash-retry re-resolve HANGS so we can SKIP mid-resolve.
+    let resolveCalls = 0;
+    const resolveSource: PlaybackActors["resolveSource"] = (input, signal) => {
+      resolveCalls += 1;
+      if (resolveCalls === 2) {
+        return new Promise((_resolve, reject) => {
+          signal.addEventListener("abort", () => {
+            reject(new Error("aborted"));
+          });
+        });
+      }
+      return makeActors().resolveSource(input, signal);
+    };
+    const actor = startActor(
+      makeActors({ resolveSource, runStream: stream.runStream }),
+    );
+    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
+    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+
+    stream.crashCurrent(crashError(42));
+    // The retry re-resolve is now hanging in `resolving` with recovery state set.
+    await waitFor(
+      actor,
+      (s) =>
+        s.matches("resolving") &&
+        s.context.current?.source.kind === "file" &&
+        s.context.current.source.title === "a",
+      WAIT,
+    );
+    expect(actor.getSnapshot().context.resumeSeekSeconds).toBe(42);
+    expect(actor.getSnapshot().context.crashRetries).toBe(1);
+
+    // SKIP mid-resolve — this exits `resolving` via the SKIP transition, NOT onError. It must still
+    // clear recovery state so "b" doesn't inherit "a"'s crash offset/pipeline.
+    actor.send({ type: "SKIP" });
+    await waitFor(
+      actor,
+      (s) =>
+        s.matches("streaming") &&
+        s.context.current?.source.kind === "file" &&
+        s.context.current.source.title === "b",
+      WAIT,
+    );
+    const context = actor.getSnapshot().context;
+    expect(context.resumeSeekSeconds).toBe(0);
+    expect(context.crashRetries).toBe(0);
+    const bInput = stream.inputs.at(-1);
+    expect(bInput?.seekSeconds).toBe(0);
+    expect(bInput?.pipelineMode).toBe("hw");
+  });
+
+  test("a recovery re-resolve that TIMES OUT clears recovery state (the wedge-timeout exit)", async () => {
+    const stream = makeStreamController();
+    let resolveCalls = 0;
+    const actor = createActor(
+      createPlaybackMachine(
+        makeActors({
+          runStream: stream.runStream,
+          resolveSource: (input, signal) => {
+            resolveCalls += 1;
+            if (resolveCalls === 2) {
+              return new Promise((_resolve, reject) => {
+                signal.addEventListener("abort", () => {
+                  reject(new Error("aborted"));
+                });
+              });
+            }
+            return makeActors().resolveSource(input, signal);
+          },
+        }),
+      ),
+      { input: { ...INPUT, wedgeTimeoutsMs: { resolve: 40 } } },
+    );
+    actor.start();
+    // lastErrorKind is transient (cleared when "b" resolves) — capture it across snapshots.
+    const errorKinds: (string | null)[] = [];
+    actor.subscribe((s) => errorKinds.push(s.context.lastErrorKind));
+    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
+    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+
+    stream.crashCurrent(crashError(55));
+    // The retry re-resolve hangs → the wedge `resolveTimeout` fires → failed → skipped → "b".
+    await waitFor(
+      actor,
+      (s) =>
+        s.matches("streaming") &&
+        s.context.current?.source.kind === "file" &&
+        s.context.current.source.title === "b",
+      WAIT,
+    );
+    const context = actor.getSnapshot().context;
+    expect(errorKinds).toContain("timeout");
+    expect(context.resumeSeekSeconds).toBe(0);
+    expect(context.crashRetries).toBe(0);
+    const bInput = stream.inputs.at(-1);
+    expect(bInput?.seekSeconds).toBe(0);
+    expect(bInput?.pipelineMode).toBe("hw");
+  });
 });
 
 describe("wedge timeouts", () => {

@@ -107,40 +107,39 @@ describe("createStreamObserver", () => {
 const tick = () => new Promise((resolve) => setTimeout(resolve, 25));
 
 describe("createStreamObserver stall watchdog", () => {
-  test("a wedged ffmpeg emitting the SAME timemark still trips the stall watchdog", async () => {
+  test("a wedged ffmpeg emitting the SAME timemark still trips the stall watchdog and reports the last media position", async () => {
     let wall = 0;
-    const stalls: number[] = [];
+    const stalls: (number | undefined)[] = [];
     const { observer, dispose } = createStreamObserver(
       true,
       () => wall,
-      (staleSeconds) => stalls.push(staleSeconds),
+      (lastMediaSeconds) => stalls.push(lastMediaSeconds),
       2, // fast watchdog tick for a deterministic test
     );
     observer.onCommand?.("ffmpeg -i in.mkv out");
-    // First parseable sample arms the watchdog at wall=1000.
+    // First parseable sample arms the watchdog at wall=1000 with media at 5s.
     wall = 1000;
     observer.onProgress?.({ timemark: "00:00:05.00" });
     // A wedged process keeps reporting the SAME media timemark — the watchdog must NOT re-arm.
     wall = 2000;
     observer.onProgress?.({ timemark: "00:00:05.00" });
-    // 21s past the last real media advance (wall=1000), not since the last (stale) report.
+    // 21s past the last real media advance (wall=1000).
     wall = 22_000;
     await tick();
 
     expect(stalls.length).toBeGreaterThanOrEqual(1);
-    // staleSeconds is measured from the last media advance, so the caller can back out the inflated
-    // wall-clock position: (22000 - 1000) / 1000 = 21.
-    expect(stalls[0]).toBeCloseTo(21, 3);
+    // The reported position is the last DELIVERED media timemark (5s), not a wall-clock figure.
+    expect(stalls[0]).toBe(5);
     dispose();
   });
 
   test("advancing media keeps the watchdog armed (no false stall)", async () => {
     let wall = 0;
-    const stalls: number[] = [];
+    const stalls: (number | undefined)[] = [];
     const { observer, dispose } = createStreamObserver(
       true,
       () => wall,
-      (staleSeconds) => stalls.push(staleSeconds),
+      (lastMediaSeconds) => stalls.push(lastMediaSeconds),
       2,
     );
     observer.onCommand?.("ffmpeg -i in.mkv out");
@@ -157,13 +156,47 @@ describe("createStreamObserver stall watchdog", () => {
     dispose();
   });
 
-  test("the stall fires once per silence (not every tick)", async () => {
+  test("a seek (new onCommand) starts a fresh epoch — healthy post-seek playback is not a false stall", async () => {
     let wall = 0;
-    const stalls: number[] = [];
+    const stalls: (number | undefined)[] = [];
     const { observer, dispose } = createStreamObserver(
       true,
       () => wall,
-      (staleSeconds) => stalls.push(staleSeconds),
+      (lastMediaSeconds) => stalls.push(lastMediaSeconds),
+      2,
+    );
+    observer.onCommand?.("ffmpeg -i in.mkv out");
+    // Play healthily well past the stall threshold so the pre-seek media baseline is high (25s).
+    for (let i = 1; i <= 25; i++) {
+      wall = i * 1000;
+      observer.onProgress?.({
+        timemark: `00:00:${String(i).padStart(2, "0")}.00`,
+      });
+    }
+    // A /seek restarts ffmpeg at a new -ss → new onCommand, and its output timemark restarts near
+    // zero. Without an epoch reset the low post-seek timemarks stay < the old 25s baseline, never
+    // re-arm the watchdog, and a false stall fires ~20s later despite healthy playback.
+    wall = 26_000;
+    observer.onCommand?.("ffmpeg -ss 120 -i in.mkv out");
+    for (let i = 1; i <= 25; i++) {
+      wall = 26_000 + i * 1000;
+      observer.onProgress?.({
+        timemark: `00:00:${String(i).padStart(2, "0")}.00`,
+      });
+    }
+    await tick();
+
+    expect(stalls).toHaveLength(0);
+    dispose();
+  });
+
+  test("the stall fires once per silence (not every tick)", async () => {
+    let wall = 0;
+    const stalls: (number | undefined)[] = [];
+    const { observer, dispose } = createStreamObserver(
+      true,
+      () => wall,
+      (lastMediaSeconds) => stalls.push(lastMediaSeconds),
       2,
     );
     observer.onCommand?.("ffmpeg -i in.mkv out");

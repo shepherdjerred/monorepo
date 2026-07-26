@@ -129,10 +129,44 @@ stream-observer 10 pass; the stall tests log `ffmpeg progress stalled`
   spiderman3 diagnosis log, and four test files (see above).
 - Scoped typecheck/test/lint green for both packages.
 
+### Round 2 — Codex follow-ons on #1672 (4× P1)
+
+Codex reviewed the round-1 PR and posted four P1 refinements of the fixes above;
+all four addressed:
+
+- **A. `stream-observer.ts` — reset the progress epoch on `onCommand`.** The #2
+  "advance only when media advances" gate regressed `/seek`: a seek restarts
+  ffmpeg with a near-zero timemark that stayed below the pre-seek baseline, so
+  the watchdog never re-armed and fired a false stall on healthy post-seek
+  playback. `onCommand` now clears `prevMediaSeconds`/`prevWallMs`/`stallFired`
+  (a new command is a new epoch).
+- **D. `streamer.ts` / `stream-errors.ts` — resume stalls from media time.** The
+  #3 wall-clock-minus-`staleSeconds` math over-counted when ffmpeg ran below
+  realtime before freezing. The observer now passes the last delivered media
+  timemark to `onStall`; the streamer resumes at
+  `segmentStartOffsetSeconds + lastMediaSeconds` (timemark is relative to the
+  current `-ss`, verified: `command.inputOption("-ss", …)`). Removed the
+  wall-derived `producerResumeSeconds` helper + its tests.
+- **B. `player.ts` — tear down the failed player before the sw fallback.** The #7
+  reject path left the just-opened Go-Live connection up; the initial-attach
+  catch now marks the player inert and calls `teardownConn()` before throwing so
+  the streamer's software fallback opens a fresh stream.
+- **C. `playback-machine.ts` / `playback-helpers.ts` — clear recovery state on
+  ALL non-success `resolving` exits.** The #4 clear only covered the reject
+  (`onError`) path. Moved it to a machine `clearRecovery` action applied to
+  `resolving`'s `onError`, `resolveTimeout`, `SKIP`, and `STOP` transitions (NOT
+  the success `→ streaming` path, which must keep the seek/pipeline). Reverted
+  the clear from `resolveErrorUpdates`.
+
+Round-2 tests: seek-epoch reset + last-media-position reporting (A/D) in
+`stream-observer.test.ts`; connection teardown on init-attach failure (B) in
+`player.test.ts`; SKIP-during-recovery and resolve-timeout-during-recovery
+cleanup (C) in `playback-machine.test.ts`. Scoped verify green (streambot 384
+pass, discord-video-stream 57 pass).
+
 ### Remaining
 
-- Drive the new PR's Buildkite checks to green and resolve any Codex review
-  threads it opens.
+- Drive the PR's Buildkite checks to green and reply+resolve the Codex threads.
 
 ### Caveats
 
@@ -143,5 +177,9 @@ stream-observer 10 pass; the stall tests log `ffmpeg progress stalled`
 - `#8` increments the stall counter at detection in the streamer's `onStall`
   (has the `pipeline` label, symmetric with crash counting). Direct unit
   coverage of that single line isn't practical without the real observer timer;
-  the trigger (`onStall` firing with `staleSeconds`) is covered by the observer
-  suite.
+  the trigger (`onStall` firing with the last media position) is covered by the
+  observer suite.
+- Stall resume position (D) uses `segmentStartOffsetSeconds` as the base rather
+  than the fixed `startSeconds`, because a live `/seek` restarts ffmpeg (new
+  `-ss`) without re-invoking `streamOnce`; `segmentStartOffsetSeconds` tracks the
+  current run's offset, and the observer epoch resets on that seek's `onCommand`.
