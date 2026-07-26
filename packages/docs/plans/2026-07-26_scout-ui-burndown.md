@@ -63,6 +63,29 @@ Pending commit: competition UX (#3, #4, #14 — visibility descriptions, season 
 
 Deliberately deferred (candidates for follow-up todos): ScoutQL preview-as-query rewrite (needs a backend query procedure), full combobox ARIA listbox/activedescendant keyboard pattern, useSuspenseQuery + error-boundary refactor, React Router data-router loaders, full IA redesign of player/sub/account surfaces (deeper than this PR).
 
+## Session Log — 2026-07-26
+
+### Done
+
+- All 19 issue-list items addressed across 8 commits on `feature/scout-ui-burndown`; PR #1681 opened and marked ready for review with 15 e2e screenshots (uploaded to public.sjer.red via `toolkit pr asset`).
+- New shared infra: `data/src/model/queue-availability.ts` (per-queue availability windows + helpers + competition-queue mapping, seeded from wiki/patch-notes research; tests with fixed clock).
+- Bug fixes with regression tests: player-page active-only filter (season join + computed status), data-explorer DuckDB timestamp normalization, custom-cron selection.
+- Report scheduling UX (full IANA tz combobox with offsets + local default, labeled local-tz next-runs, starter query, wizard Advanced collapse), data-explorer column expansion (~60 match cols, grouped, default-visible subset), competition UX (season dates, visibility descriptions, champion combobox, shared presets), subscriptions kebab + badges + optimistic mute, user-menu redesign, version-footer commit links (guarded for dev builds), player-card definition grids, flow fixes (Track player entry, auto-poll unresolved accounts, Player-name label, Manage-subscriptions link), React Query + a11y fixes.
+- Verified: `bun run verify -- --affected` green; every commit passed the full pre-commit gate; e2e against local `dev:web` (real Discord OAuth via PinchTab scout-e2e profile + prompt=none, real Riot ID resolution).
+
+### Remaining
+
+- CI (Buildkite) + code review on PR #1681; watch `buildkite/monorepo/pr` + review-gate.
+- Follow-up candidates (deliberate deferrals): ScoutQL preview-as-query (backend query procedure needed), full ARIA combobox keyboard pattern, useSuspenseQuery/error-boundary refactor, data-router loaders, deeper player/sub/account IA redesign, explorer tables for aggregate ScoutQL sources if still wanted.
+
+### Caveats
+
+- Queue windows are hand-maintained (seasons-style): when Riot starts/ends a mode run, append/close a window in `queue-availability.ts`. Pre-2024 historical windows are approximate; only current-window membership drives UI.
+- Explorer "more sources" consciously excluded (aggregate, competition-scoped — don't fit a row-level browser); flagged in the PR for redirect.
+- The three doom-bots QueueTypes all display as "doom bots" (pre-existing display-name duplication, now visible as three identical greyed rows in the picker).
+- Version-footer commit links only render for real 40-char SHAs — local/dev builds show plain text by design.
+- `dev:web` was run locally for screenshots (beta bot briefly disconnected, reconnected on stop).
+
 ## Verification
 
 - `bunx turbo run typecheck test lint --filter=@scout-for-lol/data --filter=@scout-for-lol/backend --filter=@scout-for-lol/app`, then `bun run verify -- --affected`.
