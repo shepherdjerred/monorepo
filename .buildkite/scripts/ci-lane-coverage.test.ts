@@ -8,15 +8,14 @@
 // specific critical inputs by string matching; this test owns the generic
 // subset property over every lane, parsed from the real YAML.
 
-import { statSync } from "node:fs";
 import { describe, expect, test } from "bun:test";
 
 const REPO_ROOT = new URL("../..", import.meta.url).pathname;
 
-interface PipelineStep {
+type PipelineStep = {
   key: string;
   include: string[];
-}
+};
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -37,7 +36,9 @@ async function loadPipelineSteps(): Promise<Map<string, PipelineStep>> {
     if (isRecord(ifChanged) && Array.isArray(ifChanged["include"])) {
       for (const glob of ifChanged["include"]) {
         if (typeof glob !== "string") {
-          throw new Error(`non-string if_changed glob in step ${step["key"]}`);
+          throw new TypeError(
+            `non-string if_changed glob in step ${step["key"]}`,
+          );
         }
         include.push(glob);
       }
@@ -47,10 +48,10 @@ async function loadPipelineSteps(): Promise<Map<string, PipelineStep>> {
   return steps;
 }
 
-interface SelectorLanes {
+type SelectorLanes = {
   globalPaths: string[];
   lanePaths: Map<string, string[]>;
-}
+};
 
 function parseParenList(source: string, marker: string): string[] {
   const start = source.indexOf(marker);
@@ -115,21 +116,17 @@ const LANE_TO_STEP: Record<string, string | null> = {
 };
 
 /**
- * Sample concrete paths a lane entry stands for. Directories (per the live
- * tree, so `packages/sjer.red` isn't mistaken for a file) sample a shallow and
- * a nested child; files sample themselves.
+ * Sample concrete paths a lane entry stands for. An entry is a file iff it
+ * exists as one in the live tree (Bun.file().exists() is false for
+ * directories, so `packages/sjer.red` isn't mistaken for a file); everything
+ * else samples a shallow and a nested child.
  */
-function samplePaths(entry: string): string[] {
-  let isDirectory: boolean;
-  try {
-    isDirectory = statSync(`${REPO_ROOT}/${entry}`).isDirectory();
-  } catch {
-    isDirectory = !entry.split("/").at(-1)?.includes(".");
+async function samplePaths(entry: string): Promise<string[]> {
+  const isFile = await Bun.file(`${REPO_ROOT}/${entry}`).exists();
+  if (isFile) {
+    return [entry];
   }
-  if (isDirectory) {
-    return [`${entry}/sample-file.ts`, `${entry}/nested/dir/sample-file.ts`];
-  }
-  return [entry];
+  return [`${entry}/sample-file.ts`, `${entry}/nested/dir/sample-file.ts`];
 }
 
 function coveredBy(path: string, globs: readonly string[]): boolean {
@@ -158,7 +155,7 @@ describe("lane↔if_changed coverage", () => {
         throw new Error(`lane ${lane} not found in ci-changed.sh`);
       }
       for (const entry of [...globalPaths, ...entries]) {
-        for (const sample of samplePaths(entry)) {
+        for (const sample of await samplePaths(entry)) {
           if (!coveredBy(sample, step.include)) {
             uncovered.push(`${lane} → ${stepKey}: ${entry} (sample ${sample})`);
           }

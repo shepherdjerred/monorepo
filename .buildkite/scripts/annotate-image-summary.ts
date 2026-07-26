@@ -17,10 +17,10 @@
 import { ALL_IMAGE_TARGETS } from "./select-image-targets.ts";
 import type { SelectionReport } from "./select-image-targets.ts";
 
-interface PushOutcome {
+type PushOutcome = {
   image: string;
   outcome: string;
-}
+};
 
 function isStringArray(value: unknown): value is string[] {
   return (
@@ -72,7 +72,7 @@ function parseOutcomes(text: string): PushOutcome[] {
     const record: Record<string, unknown> = { ...entry };
     const { image, outcome } = record;
     if (typeof image !== "string" || typeof outcome !== "string") {
-      throw new Error("push outcome entry needs string image and outcome");
+      throw new TypeError("push outcome entry needs string image and outcome");
     }
     return { image, outcome };
   });
@@ -127,13 +127,13 @@ function renderMarkdown(
     lines.push("| Target | Decision | Why |", "| --- | --- | --- |");
     for (const target of ALL_IMAGE_TARGETS) {
       const reasons = report.targets[target];
-      if (reasons !== undefined) {
+      if (reasons === undefined) {
         lines.push(
-          `| \`${target}\` | :hammer: build | ${reasons.join("<br>")} |`,
+          `| \`${target}\` | :fast_forward: skip | no closure input changed |`,
         );
       } else {
         lines.push(
-          `| \`${target}\` | :fast_forward: skip | no closure input changed |`,
+          `| \`${target}\` | :hammer: build | ${reasons.join("<br>")} |`,
         );
       }
     }

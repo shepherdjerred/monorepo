@@ -1,22 +1,24 @@
 import { describe, expect, test } from "bun:test";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import nodePath from "node:path";
 
 import {
   ALL_IMAGE_TARGETS,
   changedPathsSince,
+  selectImageTargets,
+  selectImageTargetsWithReasons,
+  type SelectorInputs,
+} from "./select-image-targets.ts";
+import {
   closureFingerprint,
   closurePackageIds,
   manifestChangeIsGlobal,
   parseJsonc,
   parseLockfile,
   patchedDependencyKey,
-  selectImageTargets,
-  selectImageTargetsWithReasons,
   type LockfilePair,
-  type SelectorInputs,
-} from "./select-image-targets.ts";
+} from "./select-image-targets-lockfile.ts";
 
 const REPO_ROOT = new URL("../..", import.meta.url).pathname;
 
@@ -210,7 +212,7 @@ describe("lockfile attribution", () => {
     // contains it; resume/sjer.red-class targets must stay unselected.
     const entry =
       /"discord\.js": \["discord\.js@[^"]+", [^\n]*"(sha512-[^"]+)"\]/;
-    const match = real.match(entry);
+    const match = entry.exec(real);
     expect(match).not.toBeNull();
     if (match === null) throw new Error("unreachable");
     const mutated = real.replace(match[1] ?? "", "sha512-mutated");
@@ -229,7 +231,7 @@ describe("lockfile attribution", () => {
     const real = await Bun.file(`${REPO_ROOT}/bun.lock`).text();
     const entry =
       /"asciinema-player": \["asciinema-player@[^"]+", [^\n]*"(sha512-[^"]+)"\]/;
-    const match = real.match(entry);
+    const match = entry.exec(real);
     expect(match).not.toBeNull();
     if (match === null) throw new Error("unreachable");
     const mutated = real.replace(match[1] ?? "", "sha512-mutated");
@@ -420,7 +422,7 @@ function runGit(repoRoot: string, args: readonly string[]): void {
 
 describe("changedPathsSince", () => {
   test("reports both sides of a rename so the source image is rebuilt", async () => {
-    const fixture = await mkdtemp(join(tmpdir(), "ci-image-rename-"));
+    const fixture = await mkdtemp(nodePath.join(tmpdir(), "ci-image-rename-"));
     try {
       runGit(fixture, ["init", "-q"]);
       runGit(fixture, ["config", "user.email", "ci-selector@example.invalid"]);

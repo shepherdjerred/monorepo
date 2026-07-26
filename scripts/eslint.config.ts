@@ -22,5 +22,16 @@ const config: ReturnType<typeof recommended> = [
       "custom-rules/no-parent-imports": "off",
     },
   },
+  {
+    // CI scripts run dependency-free via `bun --no-install` BEFORE any
+    // workspace install (image selection happens pre-toolchain), so Zod
+    // cannot exist there — type-guard narrowing is the only available
+    // validation. These patterns only match on the repo-root lint pass (see
+    // the lint script); the in-workspace `eslint .` run never sees them.
+    files: [".buildkite/scripts/**/*.ts"],
+    rules: {
+      "custom-rules/no-type-guards": "off",
+    },
+  },
 ];
 export default config;

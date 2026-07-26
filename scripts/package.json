@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "lint": "bunx --no-install eslint --cache .",
+    "lint": "bunx --no-install eslint --cache . && bun lint-buildkite.ts",
     "test": "bun test . ../.buildkite/scripts/select-image-targets.test.ts ../.buildkite/scripts/ci-lane-coverage.test.ts && bash ../.buildkite/scripts/ci-changed.test.sh && bash ../.buildkite/scripts/upload-pipeline.test.sh && bash ../.buildkite/scripts/bake-retry.test.sh",
     "typecheck": "tsc --noEmit"
   },
