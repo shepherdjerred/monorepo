@@ -1,6 +1,13 @@
+---
+id: plan-2026-07-03-asuswrt-tofu-tracking
+type: plan
+status: awaiting-human
+board: false
+---
+
 # Track all Asus routers/APs in OpenTofu
 
-## Status
+## Tracking outcome
 
 Complete (tracking) — provider fixed + tofu stack built, verified against live
 hardware, and the **shared SeaweedFS state backend is populated** (15 resources,

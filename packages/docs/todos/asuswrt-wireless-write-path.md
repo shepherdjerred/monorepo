@@ -1,6 +1,10 @@
 ---
 id: asuswrt-wireless-write-path
-status: blocked
+type: todo
+status: awaiting-human
+board: true
+verification: human
+disposition: blocked
 origin: packages/docs/plans/2026-07-03_asuswrt-tofu-tracking.md
 source_marker: false
 ---
@@ -29,14 +33,15 @@ not verified and has firmware-specific hazards found in Asuswrt-Merlin source:
    doesn't write `wl_mfp`, so setting an SAE auth mode via tofu could produce a
    non-functional band. (WPA2-PSK is fine.)
 
-## Recommended redesign (needs a controlled apply to validate)
+## Human Verification
 
-- Model wireless channel/width as a single `chanspec` string attribute (firmware-stable,
+- Approve a controlled apply on real hardware, then validate a redesign that models wireless
+  channel/width as a single `chanspec` string attribute (firmware-stable,
   1:1 with `wl_chanspec`) instead of `channel`+`bandwidth` ints; keep `bw` in sync or
   derive it.
-- Add `mfp` handling (force for SAE/WPA3).
-- On 3006, target the band-named keys (map via `wlnband_list`); confirm with a read-back.
-- Validate each with: apply a no-op-equivalent change on real hardware, read NVRAM back,
+- Include `mfp` handling (force for SAE/WPA3).
+- On 3006, target the band-named keys (map via `wlnband_list`) and confirm with a read-back.
+- Validate each change by applying a no-op-equivalent change on real hardware, reading NVRAM back,
   confirm it matches. This requires an `apply` (blocked: user does not want router writes yet).
 
 Until then, treat `asuswrt_wireless_network` as **read/track-only**; do not `apply` wireless

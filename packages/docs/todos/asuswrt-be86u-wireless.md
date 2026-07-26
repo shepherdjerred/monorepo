@@ -1,6 +1,10 @@
 ---
 id: asuswrt-be86u-wireless
-status: active
+type: todo
+status: planned
+board: true
+verification: human
+disposition: deferred
 origin: packages/docs/plans/2026-07-03_asuswrt-tofu-tracking.md
 source_marker: false
 ---
@@ -14,17 +18,17 @@ The `asuswrt` tofu stack (`packages/homelab/src/tofu/asuswrt/`) manages the RT-B
 "Jerred" fronthaul. AiMesh was deactivated ~6 months ago (before 2026-07-03) but this
 residual state remains. Managing wl0/wl1 as-is would be managing the backhaul SSID.
 
-## Next steps
+## Remaining
 
-1. Read the virtual-interface SSIDs on 192.168.1.2 (read-only), e.g. `wl0.1_ssid`,
-   `wl1.1_ssid`, `wl0.2_ssid`, and the AiMesh residual keys (`cfg_device_list`,
-   `cfg_master`, `amas_*`) to locate the real fronthaul the BE86U broadcasts.
-2. Decide whether to (a) clean up the residual AiMesh/backhaul NVRAM so wl0/wl1 become
-   normal fronthaul, then manage them like the other devices, or (b) manage the correct
-   virtual-interface indices directly. Option (a) likely needs `asuswrt_nvram` writes and
-   should be validated carefully (risk of dropping the AP off the network).
-3. Add the wireless resources to `packages/homelab/src/tofu/asuswrt/ap-be86u.tf` and the
-   import list in `import.sh`, then confirm a clean `plan`.
+- [ ] Read the virtual-interface SSIDs on 192.168.1.2 (read-only), e.g. `wl0.1_ssid`,
+      `wl1.1_ssid`, `wl0.2_ssid`, and the AiMesh residual keys (`cfg_device_list`,
+      `cfg_master`, `amas_*`) to locate the real fronthaul the BE86U broadcasts.
+- [ ] Decide whether to (a) clean up the residual AiMesh/backhaul NVRAM so wl0/wl1 become
+      normal fronthaul, then manage them like the other devices, or (b) manage the correct
+      virtual-interface indices directly. Option (a) likely needs `asuswrt_nvram` writes and
+      should be validated carefully (risk of dropping the AP off the network).
+- [ ] Add the wireless resources to `packages/homelab/src/tofu/asuswrt/ap-be86u.tf` and the
+      import list in `import.sh`, then confirm a clean `plan`.
 
 ## How to inspect (read-only, from the cluster)
 
