@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { RiotIdSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import type { RegionValue } from "#src/lib/regions.ts";
@@ -46,7 +46,7 @@ export function RiotIdCombobox(props: {
   const suggestQuery = useQuery(
     trpc.riot.searchSummoners.queryOptions(
       { guildId: props.guildId, query: trimmed, region: props.region },
-      { enabled: trimmed.length >= 2 },
+      { enabled: trimmed.length >= 2, placeholderData: keepPreviousData },
     ),
   );
   const resolveQuery = useQuery(

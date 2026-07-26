@@ -174,7 +174,7 @@ export function PlayerAccountsTable(props: {
                       disabled={account.riotGameName === null}
                       title={
                         account.riotGameName === null
-                          ? "Riot ID not resolved yet — reload to enable transfer"
+                          ? "Waiting for the Riot ID to resolve — this refreshes automatically"
                           : undefined
                       }
                       onClick={() => {
@@ -194,7 +194,7 @@ export function PlayerAccountsTable(props: {
                       }
                       title={
                         account.riotGameName === null
-                          ? "Riot ID not resolved yet — reload to enable delete"
+                          ? "Waiting for the Riot ID to resolve — this refreshes automatically"
                           : undefined
                       }
                       onClick={() => {

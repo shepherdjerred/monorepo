@@ -1,6 +1,6 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { Copy, CornerDownLeft, Plus, Trash2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Button } from "#src/components/ui/button.tsx";
 import { Input } from "#src/components/ui/input.tsx";
 import {
@@ -82,7 +82,11 @@ export function ReportDataExplorer(props: {
         cursor,
         pageSize,
       },
-      { enabled: table !== undefined && selectedColumns.length > 0 },
+      {
+        enabled: table !== undefined && selectedColumns.length > 0,
+        // Keep the current rows visible while the next page/filter loads.
+        placeholderData: keepPreviousData,
+      },
     ),
   );
 

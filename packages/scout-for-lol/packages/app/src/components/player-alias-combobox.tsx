@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { useDebouncedValue } from "#src/hooks/use-debounced-value.ts";
 import { Combobox } from "#src/components/ui/combobox.tsx";
@@ -26,7 +26,10 @@ export function PlayerAliasCombobox(props: {
   const search = useQuery(
     trpc.player.listPlayers.queryOptions(
       { guildId: props.guildId, query: debounced.trim(), limit: 20 },
-      { enabled: debounced.trim().length > 0 },
+      {
+        enabled: debounced.trim().length > 0,
+        placeholderData: keepPreviousData,
+      },
     ),
   );
 

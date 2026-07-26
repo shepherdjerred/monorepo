@@ -94,14 +94,31 @@ export function ContractMismatchBanner() {
  * backend's when reachable. Full contract hashes live in the title attribute
  * for copy/paste during debugging.
  */
+const FULL_SHA_PATTERN = /^[0-9a-f]{40}$/i;
+
+/**
+ * Short SHA linked to the commit on GitHub when the build carries a real
+ * 40-char SHA; dev builds carry placeholders and render as plain text.
+ */
+function CommitSha(props: { gitSha: string }) {
+  if (!FULL_SHA_PATTERN.test(props.gitSha)) {
+    return <>{shortSha(props.gitSha)}</>;
+  }
+  return (
+    <a
+      href={`https://github.com/shepherdjerred/monorepo/commit/${props.gitSha}`}
+      target="_blank"
+      rel="noreferrer"
+      className="underline decoration-dotted underline-offset-2 hover:text-foreground"
+    >
+      {shortSha(props.gitSha)}
+    </a>
+  );
+}
+
 export function VersionFooter() {
   const backend = useBackendVersion();
 
-  const appLabel = `app ${buildInfo.version} (${shortSha(buildInfo.gitSha)})`;
-  const apiLabel =
-    backend.data === undefined
-      ? null
-      : `api ${backend.data.version} (${shortSha(backend.data.gitSha)})`;
   const title =
     backend.data === undefined
       ? `app contract ${buildInfo.contractHash}`
@@ -110,8 +127,13 @@ export function VersionFooter() {
   return (
     <footer className="px-4 py-3 text-center text-xs text-muted-foreground">
       <span title={title}>
-        {appLabel}
-        {apiLabel === null ? "" : ` · ${apiLabel}`}
+        app {buildInfo.version} (<CommitSha gitSha={buildInfo.gitSha} />)
+        {backend.data === undefined ? null : (
+          <>
+            {" · "}api {backend.data.version} (
+            <CommitSha gitSha={backend.data.gitSha} />)
+          </>
+        )}
       </span>
     </footer>
   );

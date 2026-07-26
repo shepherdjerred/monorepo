@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { usePermissions } from "#src/hooks/use-permissions.ts";
+import { AddSubscriptionDialog } from "#src/components/add-subscription-dialog.tsx";
 import { Button } from "#src/components/ui/button.tsx";
 import { Input } from "#src/components/ui/input.tsx";
 import {
@@ -31,7 +37,10 @@ export function PlayerList() {
   const { guildId } = useParams();
   const trpc = useTRPC();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { perms } = usePermissions(guildId);
   const [search, setSearch] = useState("");
+  const [isAddOpen, setAddOpen] = useState(false);
   const safeGuildId = guildId ?? "";
   const trimmedSearch = search.trim();
   const listInput =
@@ -70,26 +79,38 @@ export function PlayerList() {
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Players</h2>
           <p className="text-sm text-muted-foreground">
-            Search aliases and inspect linked accounts, Discord IDs, and channel
-            subscriptions.
+            A player is a person you track: their Riot accounts, linked Discord
+            user, and channel subscriptions.
           </p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={
-            currentPlayerQuery.isLoading || currentPlayerQuery.data === null
-          }
-          onClick={() => {
-            const player = currentPlayerQuery.data;
-            if (player === undefined || player === null) return;
-            void navigate(
-              `/g/${guildId}/players/${encodeURIComponent(player.alias)}`,
-            );
-          }}
-        >
-          My linked player
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={
+              currentPlayerQuery.isLoading || currentPlayerQuery.data === null
+            }
+            onClick={() => {
+              const player = currentPlayerQuery.data;
+              if (player === undefined || player === null) return;
+              void navigate(
+                `/g/${guildId}/players/${encodeURIComponent(player.alias)}`,
+              );
+            }}
+          >
+            My linked player
+          </Button>
+          {perms.can("subscriptions", "create") && (
+            <Button
+              type="button"
+              onClick={() => {
+                setAddOpen(true);
+              }}
+            >
+              + Track player
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="max-w-md">
@@ -103,7 +124,9 @@ export function PlayerList() {
       </div>
 
       {playersQuery.isLoading && (
-        <p className="text-sm text-muted-foreground">Loading players...</p>
+        <p role="status" className="text-sm text-muted-foreground">
+          Loading players...
+        </p>
       )}
       {playersQuery.error && (
         <p className="text-sm text-destructive">
@@ -139,6 +162,14 @@ export function PlayerList() {
                     <Link
                       className="underline"
                       to={`/g/${guildId}/players/${encodeURIComponent(player.alias)}`}
+                      onMouseEnter={() => {
+                        void queryClient.prefetchQuery(
+                          trpc.player.getPlayer.queryOptions({
+                            guildId: safeGuildId,
+                            alias: player.alias,
+                          }),
+                        );
+                      }}
                     >
                       {player.alias}
                     </Link>
@@ -174,6 +205,22 @@ export function PlayerList() {
         isFetchingNextPage={playersQuery.isFetchingNextPage}
         onLoadMore={() => {
           void playersQuery.fetchNextPage();
+        }}
+      />
+
+      <AddSubscriptionDialog
+        guildId={guildId}
+        channels={channelsQuery.data ?? []}
+        open={isAddOpen}
+        onOpenChange={setAddOpen}
+        onAdded={() => {
+          void queryClient.invalidateQueries({
+            queryKey: trpc.player.listPlayers.pathKey(),
+          });
+          void queryClient.invalidateQueries({
+            queryKey: trpc.subscription.list.pathKey(),
+          });
+          setAddOpen(false);
         }}
       />
     </div>

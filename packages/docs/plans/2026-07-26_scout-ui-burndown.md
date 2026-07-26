@@ -50,6 +50,19 @@ Baseline: app 2.0.0-6319 (d71e630) · api 6277 (b4948f0). One big PR from worktr
 - URF/ARURF/Ultimate Spellbook/One for All/Brawl/ARAM Mayhem/Swarm: needs per-mode patch-notes pass during implementation.
 - Sources: wiki.leagueoflegends.com per-mode pages; static.developer.riotgames.com/docs/lol/queues.json.
 
+## Progress (2026-07-26)
+
+Committed on `feature/scout-ui-burndown`:
+
+1. `fix(scout-for-lol): resolve season dates for player-page competitions` — active-only bug (#11) + humanized labels.
+2. `feat(scout-for-lol): expand data explorer to full lake schema + fix timestamps` — #15 + #16 (columns; extra ScoutQL sources deliberately excluded — they're aggregate, competition-scoped leaderboards, not row-level browse tables).
+3. `feat(scout-for-lol): queue availability windows + champion name combobox` — #2 (hide+toggle) + #5.
+4. `feat(scout-for-lol): report scheduling UX …` — #6, #7, #8, #9, #17 (custom cron, IANA tz combobox + offsets + local default, labeled next-runs in local tz, starter query, wizard Advanced collapse).
+
+Pending commit: competition UX (#3, #4, #14 — visibility descriptions, season dates in selector, presets on create page), visual polish (#1, #10, #12, #13), flow consolidation (#19 subset: Track-player entry on Players tab, auto-poll unresolved accounts, alias→"Player name" label, Manage-subscriptions link, prefetch-on-hover), best-practices (#18 subset: optimistic mute, keepPreviousData, retry-skips-4xx, refetch→invalidate, nested-main fix, role=status/alert, contrast token, gap-2 in DropdownMenuItem base).
+
+Deliberately deferred (candidates for follow-up todos): ScoutQL preview-as-query rewrite (needs a backend query procedure), full combobox ARIA listbox/activedescendant keyboard pattern, useSuspenseQuery + error-boundary refactor, React Router data-router loaders, full IA redesign of player/sub/account surfaces (deeper than this PR).
+
 ## Verification
 
 - `bunx turbo run typecheck test lint --filter=@scout-for-lol/data --filter=@scout-for-lol/backend --filter=@scout-for-lol/app`, then `bun run verify -- --affected`.

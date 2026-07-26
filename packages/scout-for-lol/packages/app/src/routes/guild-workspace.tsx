@@ -68,9 +68,9 @@ export function GuildWorkspace() {
 
   if (guildId === undefined) {
     return (
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
         <p className="text-sm text-destructive">Missing guild id</p>
-      </main>
+      </div>
     );
   }
 
@@ -97,7 +97,7 @@ export function GuildWorkspace() {
   const accessDenied = !isLoading && !hasAccess;
 
   return (
-    <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:py-12">
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:py-12">
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -162,7 +162,7 @@ export function GuildWorkspace() {
       ) : (
         <PermissionLoadError error={error} />
       )}
-    </main>
+    </div>
   );
 }
 

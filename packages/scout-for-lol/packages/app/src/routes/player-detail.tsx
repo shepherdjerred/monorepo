@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { findRegion, type RegionValue } from "#src/lib/regions.ts";
@@ -44,6 +44,104 @@ function Allowed(props: { when: boolean; children: ReactNode }) {
   return props.when ? props.children : null;
 }
 
+type PlayerSummary = {
+  id: number;
+  discordId: string | null;
+  discordUser: { username: string; displayName: string } | null;
+  creatorDiscordId: string;
+  creatorDiscordUser: { username: string; displayName: string } | null;
+  createdTime: Date | string;
+  accounts: unknown[];
+  subscriptions: unknown[];
+};
+
+function PlayerSummaryCards(props: {
+  player: PlayerSummary;
+  competitionCount: number;
+  canLink: boolean;
+  unlinkPending: boolean;
+  onLink: () => void;
+  onUnlink: () => void;
+}) {
+  const { player } = props;
+  return (
+    <div className="grid gap-4 md:grid-cols-3">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle>Discord</CardTitle>
+          <Allowed when={props.canLink}>
+            {player.discordId === null ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={props.onLink}
+              >
+                Link Discord
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={props.unlinkPending}
+                onClick={props.onUnlink}
+              >
+                Unlink
+              </Button>
+            )}
+          </Allowed>
+        </CardHeader>
+        <CardContent>
+          <dl className="grid grid-cols-[max-content_1fr] items-baseline gap-x-4 gap-y-2 text-sm">
+            <dt className="text-muted-foreground">Linked user</dt>
+            <dd>
+              <DiscordUser id={player.discordId} name={player.discordUser} />
+            </dd>
+            <dt className="text-muted-foreground">Created by</dt>
+            <dd>
+              <DiscordUser
+                id={player.creatorDiscordId}
+                name={player.creatorDiscordUser}
+              />
+            </dd>
+          </dl>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Metadata</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <dl className="grid grid-cols-[max-content_1fr] items-baseline gap-x-4 gap-y-2 text-sm">
+            <dt className="text-muted-foreground">Player ID</dt>
+            <dd>{player.id}</dd>
+            <dt className="text-muted-foreground">Created</dt>
+            <dd>{formatDate(player.createdTime)}</dd>
+          </dl>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Counts</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <dl className="grid grid-cols-[max-content_1fr] items-baseline gap-x-4 gap-y-2 text-sm">
+            <dt className="text-muted-foreground">Accounts</dt>
+            <dd>{player.accounts.length}</dd>
+            <dt className="text-muted-foreground">Subscriptions</dt>
+            <dd>{player.subscriptions.length}</dd>
+            <dt className="text-muted-foreground">Competitions</dt>
+            <dd>{props.competitionCount}</dd>
+          </dl>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 function hasPlayerRouteData(
   guildId: string | undefined,
   alias: string | undefined,
@@ -77,7 +175,18 @@ export function PlayerDetail() {
   const playerQuery = useQuery(
     trpc.player.getPlayer.queryOptions(
       { guildId: safeGuildId, alias: safeAlias },
-      { enabled: hasPlayerRouteData(guildId, alias) },
+      {
+        enabled: hasPlayerRouteData(guildId, alias),
+        // Freshly added accounts start with an unresolved Riot ID (resolved
+        // server-side shortly after). Poll until every account resolves so
+        // the user never has to reload by hand.
+        refetchInterval: (query) =>
+          query.state.data?.accounts.some(
+            (account) => account.riotGameName === null,
+          ) === true
+            ? 5000
+            : false,
+      },
     ),
   );
   const channelsQuery = useQuery(
@@ -179,98 +288,21 @@ export function PlayerDetail() {
 
       {player && (
         <>
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <CardTitle>Discord</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Linked user</span>
-                  <p>
-                    <DiscordUser
-                      id={player.discordId}
-                      name={player.discordUser}
-                    />
-                  </p>
-                  <Allowed when={perms.can("players", "link")}>
-                    <div className="pt-1">
-                      {player.discordId === null ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setLinkOpen(true);
-                          }}
-                        >
-                          Link Discord
-                        </Button>
-                      ) : (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          disabled={unlinkMutation.isPending}
-                          onClick={() => {
-                            if (
-                              !globalThis.confirm(
-                                `Unlink Discord from "${safeAlias}"?`,
-                              )
-                            ) {
-                              return;
-                            }
-                            unlinkMutation.mutate({
-                              guildId,
-                              playerAlias: safeAlias,
-                            });
-                          }}
-                        >
-                          Unlink
-                        </Button>
-                      )}
-                    </div>
-                  </Allowed>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Created by</span>
-                  <p>
-                    <DiscordUser
-                      id={player.creatorDiscordId}
-                      name={player.creatorDiscordUser}
-                    />
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Metadata</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Player ID</span>
-                  <p>{player.id}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Created</span>
-                  <p>{formatDate(player.createdTime)}</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Counts</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <p>{player.accounts.length} accounts</p>
-                <p>{player.subscriptions.length} subscriptions</p>
-                <p>{competitions.length} competitions</p>
-              </CardContent>
-            </Card>
-          </div>
+          <PlayerSummaryCards
+            player={player}
+            competitionCount={competitions.length}
+            canLink={perms.can("players", "link")}
+            unlinkPending={unlinkMutation.isPending}
+            onLink={() => {
+              setLinkOpen(true);
+            }}
+            onUnlink={() => {
+              if (!globalThis.confirm(`Unlink Discord from "${safeAlias}"?`)) {
+                return;
+              }
+              unlinkMutation.mutate({ guildId, playerAlias: safeAlias });
+            }}
+          />
 
           <Section
             title="Riot accounts"
@@ -334,7 +366,16 @@ export function PlayerDetail() {
             />
           </Section>
 
-          <Section title="Subscriptions">
+          <Section
+            title="Subscriptions"
+            action={
+              <Button asChild type="button" size="sm" variant="outline">
+                <Link to={`/g/${guildId}/subscriptions`}>
+                  Manage subscriptions
+                </Link>
+              </Button>
+            }
+          >
             <PlayerSubscriptionsTable
               subscriptions={player.subscriptions}
               channels={channelsQuery.data}
