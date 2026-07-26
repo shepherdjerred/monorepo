@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DEV_PLACEHOLDER } from "@scout-for-lol/data/build-identity.ts";
 
 /**
  * Build identity stamped into this bundle at site-release build time
@@ -17,8 +18,6 @@ export type BuildInfo = {
   gitSha: string;
   contractHash: string;
 };
-
-export const DEV_PLACEHOLDER = "dev";
 
 function readBuildInfo(): BuildInfo {
   const parsed = EnvSchema.safeParse(import.meta.env);

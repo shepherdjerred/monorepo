@@ -1,6 +1,7 @@
 import configuration from "#src/configuration.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
+import { DEV_PLACEHOLDER } from "@scout-for-lol/data/build-identity.ts";
 import { SESSION_COOKIE } from "#src/trpc/context.ts";
 import { verifySession } from "#src/trpc/jwt.ts";
 
@@ -68,10 +69,20 @@ export async function handleVersion(
   request: Request,
   corsHeaders: Record<string, string>,
 ): Promise<Response> {
+  const canView = await canViewContractMismatch(request);
+  const body = versionBody();
   return Response.json(
     {
-      ...versionBody(),
-      canViewContractMismatch: await canViewContractMismatch(request),
+      ...body,
+      // The contract-mismatch banner is an owner-only developer diagnostic.
+      // A pre-owner-gating SPA bundle still open across a redeploy ignores
+      // `canViewContractMismatch` and renders its banner from `contractHash`
+      // alone, so owner-gating on the client is not enough. Hand non-owners
+      // the client's no-mismatch sentinel as the hash: every bundle
+      // generation (new gated chip and legacy full-width banner) then treats
+      // it as "no mismatch" and stays silent. Owners get the real hash.
+      contractHash: canView ? body.contractHash : DEV_PLACEHOLDER,
+      canViewContractMismatch: canView,
     },
     {
       headers: { "Cache-Control": "no-store", ...corsHeaders },

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { DEV_PLACEHOLDER } from "@scout-for-lol/data/build-identity.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import { ME } from "#src/configuration/flags.ts";
 import { handleVersion, versionBody } from "#src/http/version.ts";
@@ -43,7 +44,7 @@ describe("versionBody", () => {
 });
 
 describe("handleVersion", () => {
-  test("serves JSON with no-store and the provided CORS headers", async () => {
+  test("serves JSON with no-store and the provided CORS headers, and neutralizes the contract hash for anonymous clients", async () => {
     setBuildEnv({
       VERSION: "2.0.0-1234",
       GIT_SHA: "abcdef1234567890",
@@ -60,15 +61,17 @@ describe("handleVersion", () => {
     expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
       "https://scout-for-lol.com",
     );
+    // No session → non-owner → the real contract hash is withheld and the
+    // client's no-mismatch sentinel is returned so no bundle shows the banner.
     expect(await response.json()).toEqual({
       version: "2.0.0-1234",
       gitSha: "abcdef1234567890",
-      contractHash: "cafebabe",
+      contractHash: DEV_PLACEHOLDER,
       canViewContractMismatch: false,
     });
   });
 
-  test("authorizes the contract diagnostic from the signed owner session", async () => {
+  test("authorizes the contract diagnostic and returns the real hash for the signed owner session", async () => {
     setBuildEnv({
       VERSION: "2.0.0-1234",
       GIT_SHA: "abcdef1234567890",
@@ -82,12 +85,15 @@ describe("handleVersion", () => {
       {},
     );
 
-    expect(await response.json()).toMatchObject({
+    expect(await response.json()).toEqual({
+      version: "2.0.0-1234",
+      gitSha: "abcdef1234567890",
+      contractHash: "cafebabe",
       canViewContractMismatch: true,
     });
   });
 
-  test("treats a malformed session cookie as unauthenticated", async () => {
+  test("treats a malformed session cookie as unauthenticated and withholds the hash", async () => {
     setBuildEnv({
       VERSION: "2.0.0-1234",
       GIT_SHA: "abcdef1234567890",
@@ -102,6 +108,7 @@ describe("handleVersion", () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
+      contractHash: DEV_PLACEHOLDER,
       canViewContractMismatch: false,
     });
   });
