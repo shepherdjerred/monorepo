@@ -132,12 +132,18 @@ When adding a new Kubernetes service/chart, you MUST complete ALL of these steps
 
 **NEVER apply manifests directly with `kubectl apply`. All deployments go through ArgoCD.**
 
-### Single-Node Cluster (torvalds)
+### Cluster Topology (torvalds + liskov)
 
-The cluster is a **single-node Talos cluster** (`torvalds`). When debugging or testing in-cluster:
+The Talos cluster has **two nodes** with strictly separated roles:
 
-- No node-placement variance — GPU/hwaccel, NUMA, and disk locality are constant.
-- There is no way to spin up an isolated test pod on a separate node; a replacement pod IS prod.
+- **torvalds** — the control-plane node and the ONLY node running prod (media, home automation, monitoring, storage for all prod PVCs). Its ZFS PVCs are node-local, so prod stateful workloads cannot move.
+- **liskov** — a CI-only worker (Ryzen 9950X), tainted `ci=only:NoSchedule` from its Talos machine config (`src/talos/liskov/`). Only Buildkite step pods (which also nodeSelector onto it) and per-node system/observability DaemonSets (via tolerations) run there. Shared constants: `src/cdk8s/src/misc/nodes.ts`.
+
+Implications when debugging or testing in-cluster:
+
+- For prod workloads, torvalds is still effectively a single node: a replacement pod IS prod, and there is no second node prod can use (liskov's taint keeps everything without a toleration off it).
+- CI outages and prod outages are separate failure domains: liskov down ⇒ CI pods Pending (deliberate — CI never falls back onto torvalds); torvalds down ⇒ everything down (control plane lives there).
+- GPU/hwaccel (Intel i915) exists only on torvalds; liskov has no GPU workloads.
 - `kubectl set image` or any direct deployment mutation hits prod immediately, and ArgoCD reverts it unless that Application is paused. All changes should go through GitOps.
 
 ## 1Password Secrets
@@ -207,13 +213,19 @@ github.com/1Password/connect-helm-charts#272.
 
 (The `pre-push` hook and CI run `bun run verify`, which includes these tests; run them locally too so you catch failures before pushing.)
 
-### Run tests with `bun run test`, not bare `bun test`
+### Run tests from the CDK8s workspace
 
-Run homelab tests via the **script** `bun run test` (which does
-`install-subpkgs && cd src/cdk8s && bun run test && cd ../helm-types && bun run test`).
-The `cd src/cdk8s` matters: many cdk8s tests read `config/homeassistant` via a
-CWD-relative path. Bare `bun test` from `packages/homelab` uses the wrong CWD and
-produces ~15 spurious failures, all reporting
+The `packages/homelab` umbrella has no `test` script. Run the CDK8s suite from
+its own workspace:
+
+```bash
+cd packages/homelab/src/cdk8s
+bun run test
+```
+
+The working directory matters: many CDK8s tests read `config/homeassistant` via
+a CWD-relative path. Bare `bun test` from `packages/homelab` uses the wrong CWD
+and produces ~15 spurious failures, all reporting
 `ENOENT: no such file or directory, open 'config/homeassistant '` (note the trailing
 null byte) across unrelated test files — these are NOT real failures.
 

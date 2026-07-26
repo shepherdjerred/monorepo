@@ -13,23 +13,21 @@ type PrometheusRule = NonNullable<PrometheusRuleSpecGroups["rules"]>[number];
 //
 // Each entry lists the skip `reason`s that are normal operation for that
 // workflow; the alert counts only skips whose reason is NOT benign, so it fires
-// only when the gate is stuck for an anomalous reason (e.g. an `unavailable`
-// vacuum state). A genuinely stuck presence sensor surfaces via HA
-// entity-availability alerts, not here.
+// only when a workflow records an anomalous skip reason. The vacuum workflow
+// fails outright for unavailable or unexpected unit states, which is covered by
+// Temporal workflow-failure alerts. A genuinely stuck presence sensor surfaces
+// via HA entity-availability alerts, not here.
 const CHECK_AND_SKIP_WORKFLOWS: {
   workflow: string;
   benignSkipReasons: string[];
 }[] = [
   {
     workflow: "runVacuumIfNotHome",
-    // someone-home = expected presence gate; cleaning/returning = the vacuum is
-    // already running. error/unavailable/unknown vacuum states are anomalous and
-    // intentionally still page.
-    benignSkipReasons: [
-      "someone-home",
-      "vacuum-state-cleaning",
-      "vacuum-state-returning",
-    ],
+    // someone-home = expected presence gate; all-units-active = every floor unit
+    // is already cleaning/returning so there was nothing to start. Both are normal
+    // operation. (These are the only two skip reasons the fleet workflow emits;
+    // keep them in sync with run-vacuum-if-not-home.ts.)
+    benignSkipReasons: ["someone-home", "all-units-active"],
   },
   // goodMorning* skip when no one is home to wake — the expected gate.
   { workflow: "goodMorningPreheat", benignSkipReasons: ["no-one-home"] },

@@ -16,6 +16,7 @@ import { competitionRouter } from "#src/trpc/router/competition.router.ts";
 import { reportRouter } from "#src/trpc/router/report.router.ts";
 import { discordRouter } from "#src/trpc/router/discord.router.ts";
 import { riotRouter } from "#src/trpc/router/riot.router.ts";
+import { rolesRouter } from "#src/trpc/router/roles.router.ts";
 
 export const appRouter = router({
   auth: authRouter,
@@ -29,6 +30,7 @@ export const appRouter = router({
   report: reportRouter,
   discord: discordRouter,
   riot: riotRouter,
+  roles: rolesRouter,
 });
 
 export type AppRouter = typeof appRouter;

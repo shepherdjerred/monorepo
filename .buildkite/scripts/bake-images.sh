@@ -14,6 +14,10 @@ set -euo pipefail
 # images are pre-built by bake, and turbo's smoke/docker:build tasks are
 # cache:false, so no turbo caching is lost by bypassing the task graph.
 
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+# shellcheck source=.buildkite/scripts/bake-retry.sh
+source "${SCRIPT_DIR}/bake-retry.sh"
+
 REGISTRY="ghcr.io/shepherdjerred"
 SHA="${BUILDKITE_COMMIT:?BUILDKITE_COMMIT is required}"
 BUILD_NUMBER="${BUILDKITE_BUILD_NUMBER:?BUILDKITE_BUILD_NUMBER is required}"
@@ -45,7 +49,7 @@ APP_TARGETS=(
   "discord-plays-pokemon|packages/discord-plays-pokemon/packages/backend"
   "discord-plays-mario-kart|packages/discord-plays-mario-kart/packages/backend"
 )
-INFRA_IMAGES=(caddy-s3proxy obsidian-headless mcp-gateway redlib shelfbridge)
+INFRA_IMAGES=(bindery caddy-s3proxy obsidian-headless mcp-gateway redlib shelfbridge)
 KNOWN_TARGETS_JSON=$(printf '%s\n' "${APP_TARGETS[@]%%|*}" infra | jq -R . | jq -s 'sort')
 
 bake_targets=()
@@ -141,11 +145,16 @@ if [ "$scope" = "all" ]; then
   push_images+=("${INFRA_IMAGES[@]}")
 fi
 
-# Registry cache export needs a docker-container builder — dind's default
-# docker driver cannot export cache. Used in both modes so the PR dry-run
-# rehearses exactly what main runs, including the --load transfer.
+# Builds run on the persistent in-cluster buildkitd (150Gi zfs-ssd-lz4 PVC,
+# GC-bounded at 100Gi) instead of a per-run docker-container builder inside
+# this pod's dind: layer writes land once, compressed, on the shared store
+# rather than tens of GiB of ephemeral dind graph per images pod, and warm
+# layers are cache hits with no registry-cache download. The ghcr buildcache
+# export stays as the cross-store fallback, and `--load` still imports the
+# finished images into this pod's dind for smoke + the digest gate. Used in
+# both modes so the PR dry-run rehearses exactly what main runs.
 if ! docker buildx inspect ci; then
-  docker buildx create --name ci --driver docker-container
+  docker buildx create --name ci --driver remote tcp://buildkitd-buildkitd-service.buildkitd.svc.cluster.local:1234
 fi
 
 PUSH_CACHE=false
@@ -173,7 +182,8 @@ fi
 # target's error at the end, so the tail is the failing target's output, not a
 # sibling's benign mid-build noise. So a deterministic failure (e.g. a missing
 # COPY source) in one target isn't masked as transient by another target's text.
-transient_re='Request timed out|i/o timeout|TLS handshake|remote error: tls|connection reset|connection refused|net/http:|failed to do request|dial tcp|temporary failure in name resolution|Internal Server Error|Bad Gateway|Service Unavailable|Gateway Timeout|blob unknown|failed to resolve source metadata|unexpected EOF|context deadline exceeded|error: failed to download'
+# The classifier lives in bake-retry.sh so its bounded-tail behavior has direct
+# regression coverage.
 
 # Contract-source hash baked into the scout image (ENV CONTRACT_HASH) and
 # stamped into the SPA bundle by the sites step — equal hashes at runtime
@@ -190,7 +200,7 @@ while :; do
     rm -f "$bake_log"
     break
   fi
-  if ! tail -n 120 "$bake_log" | grep -qiE "$transient_re"; then
+  if ! bake_failure_is_transient "$bake_log"; then
     echo "^^^ +++ bake failed with a non-transient error — failing fast."
     rm -f "$bake_log"
     exit 1

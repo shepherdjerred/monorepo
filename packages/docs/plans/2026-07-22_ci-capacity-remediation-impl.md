@@ -262,3 +262,18 @@ Remaining (lower priority, deferred):
   for a week; the quota constant is a one-line back-off if any fire.
 - buildkitd gRPC is plaintext tcp (cluster-internal); add a NetworkPolicy as
   hardening.
+
+## Comment Log
+
+- 2026-07-25: **Re-groomed around the liskov CI node** (see
+  `plans/2026-07-25_liskov-cluster-join.md` and
+  `plans/2026-07-25_kueue-removal-node-symmetry.md`, both delivered via PR
+  #1629). Track 1's Kueue-quota tuning is superseded: Kueue is being removed
+  outright at the liskov cutover (CI moves to a dedicated tainted node;
+  `BUILDKITE_MAX_IN_FLIGHT` becomes the sole concurrency cap; the freeze
+  canaries stay). The remaining open tracks should target liskov, not
+  torvalds: the buildkitd PVC and any future cache volumes belong on
+  liskov's `zfspv-pool-nvme` (same storage class names, placement via CI
+  pod scheduling), and T2.x pipeline-shape items are unchanged. Re-measure
+  wait/run stats only after the cutover soaks — pre-cutover numbers no
+  longer describe the target topology.

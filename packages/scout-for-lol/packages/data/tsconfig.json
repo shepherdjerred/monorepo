@@ -1,5 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src/**/*", "scripts/**/*", "../../types/**/*"],
+  "include": ["generated/**/*", "src/**/*", "scripts/**/*", "../../types/**/*"],
   "exclude": ["node_modules", "vendor"]
 }

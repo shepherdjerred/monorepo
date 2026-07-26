@@ -45,5 +45,21 @@ resource "buildkite_pipeline" "monorepo" {
               metadata:
                 labels:
                   ci.sjer.red/step-key: pipeline-upload
+              # This bootstrap job runs before the repository pipeline can be
+              # uploaded, so it cannot rely on .buildkite/pipeline.yml for
+              # checkout resources. Keep the override here as well as in the
+              # agent-stack controller to prevent a controller rollout or
+              # configuration regression from making CI unable to clone the
+              # repository that contains its fix.
+              podSpecPatch:
+                containers:
+                  - name: checkout
+                    resources:
+                      requests:
+                        cpu: 50m
+                        memory: 1Gi
+                      limits:
+                        cpu: 400m
+                        memory: 2Gi
   YAML
 }

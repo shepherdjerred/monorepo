@@ -62,7 +62,7 @@ export const PrSummaryInputSchema = z.object({
 /**
  * Input for `cancelBuildkiteBuildsWorkflow`. Started from the GitHub webhook
  * `closed` action (merge *or* plain close) to stop any still-active Buildkite
- * builds for the PR's branch — finished builds waste Kueue-capped CI capacity.
+ * builds for the PR's branch — finished builds waste CI capacity.
  * Cancellation is keyed on `branch` (Buildkite builds carry the branch; the PR
  * filter is less reliable). `commitSha` only feeds the idempotent workflow id,
  * and `merged` is for logging/metrics.

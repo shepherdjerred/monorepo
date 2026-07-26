@@ -205,9 +205,13 @@ return hs`,
   - PodVolumeRestore`,
       },
       rbac: {
-        // Allow buildkite to sync and read the apps application
+        // The release step syncs/prunes the root app, waits for both the ArgoCD
+        // and root-app trees, and explicitly foreground-deletes the retired
+        // Kueue child Application. Argo CD's delete handler performs its own
+        // get authorization before the delete authorization, including when
+        // the Application is already absent.
         "policy.csv":
-          "p, buildkite, applications, sync, default/apps, allow\np, buildkite, applications, get, default/apps, allow",
+          "p, buildkite, applications, sync, default/apps, allow\np, buildkite, applications, get, default/apps, allow\np, buildkite, applications, get, default/argocd, allow\np, buildkite, applications, get, default/kueue, allow\np, buildkite, applications, delete, default/kueue, allow",
       },
     },
   };

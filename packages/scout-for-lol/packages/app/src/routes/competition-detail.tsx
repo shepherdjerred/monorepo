@@ -1,9 +1,10 @@
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CompetitionIdSchema, visibilityToString } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { formatDate, channelLabel } from "#src/lib/format.ts";
 import { summarizeCriteria } from "#src/lib/criteria-summary.ts";
+import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import {
   Card,
@@ -20,6 +21,7 @@ export function CompetitionDetail() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { perms } = usePermissions(guildId);
 
   const safeGuildId = guildId ?? "";
   const idResult = CompetitionIdSchema.safeParse(Number(idParam));
@@ -83,31 +85,35 @@ export function CompetitionDetail() {
             (competition.status === "DRAFT" ||
               competition.status === "ACTIVE") && (
               <>
-                <Button asChild variant="outline" size="sm">
-                  <Link
-                    to={`/g/${guildId}/competitions/${competitionId.toString()}/edit`}
+                {perms.can("competitions", "update") && (
+                  <Button asChild variant="outline" size="sm">
+                    <Link
+                      to={`/g/${guildId}/competitions/${competitionId.toString()}/edit`}
+                    >
+                      Edit
+                    </Link>
+                  </Button>
+                )}
+                {perms.can("competitions", "cancel") && (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    disabled={cancelMutation.isPending}
+                    onClick={() => {
+                      if (
+                        !globalThis.confirm(
+                          `Cancel "${competition.title}"? This cannot be undone.`,
+                        )
+                      ) {
+                        return;
+                      }
+                      cancelMutation.mutate({ guildId, competitionId });
+                    }}
                   >
-                    Edit
-                  </Link>
-                </Button>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  disabled={cancelMutation.isPending}
-                  onClick={() => {
-                    if (
-                      !globalThis.confirm(
-                        `Cancel "${competition.title}"? This cannot be undone.`,
-                      )
-                    ) {
-                      return;
-                    }
-                    cancelMutation.mutate({ guildId, competitionId });
-                  }}
-                >
-                  Cancel
-                </Button>
+                    Cancel
+                  </Button>
+                )}
               </>
             )}
         </div>

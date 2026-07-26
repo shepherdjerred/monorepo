@@ -1,4 +1,5 @@
 import {
+  ApplicationFailure,
   proxyActivities,
   sleep,
   upsertMemo,
@@ -124,12 +125,31 @@ export async function getEntitiesInDomain(
   return activities.getEntitiesInDomain(domain);
 }
 
+/**
+ * The Roborock Saros 10R fleet — one unit per floor. Declared once here (a pure
+ * string-literal array, bundle-safe) and imported by every workflow that touches
+ * the vacuums (`runVacuumIfNotHome`, `leavingHome`, `welcomeHome`). Keeping the
+ * list in one place is deliberate: it used to be re-declared per workflow, which
+ * is how `runVacuumIfNotHome` drifted to a single hard-coded unit.
+ *
+ * Entity IDs are the floor-renamed ones (see the HA entity registry). If HA is
+ * rebuilt/restored and the rename reverts, these become dead references — the
+ * mapping is recorded in the migration plan/session log.
+ */
+export const VACUUMS = [
+  "vacuum.1st_floor",
+  "vacuum.2nd_floor",
+  "vacuum.3rd_floor",
+] as const;
+
 export const VACUUM_START_STATES = new Set([
   "idle",
   "docked",
   "charging",
   "paused",
 ]);
+
+export const VACUUM_ACTIVE_STATES = new Set(["cleaning", "returning"]);
 
 export const VACUUM_STOP_STATES = new Set(["cleaning", "paused", "idle"]);
 
@@ -139,6 +159,50 @@ export function shouldStartVacuum(state: string): boolean {
 
 export function shouldStopVacuum(state: string): boolean {
   return VACUUM_STOP_STATES.has(state);
+}
+
+/**
+ * Inspects the entire fleet before applying side effects, then starts every unit
+ * currently eligible to start (idle/docked/charging/paused). A unit already
+ * cleaning or returning is left as-is. Any other state is anomalous and fails the
+ * workflow before a start command is sent, so an errored or missing unit can never
+ * be misreported as an all-units-active skip.
+ */
+export async function startEligibleVacuums(): Promise<{
+  active: string[];
+  started: string[];
+}> {
+  const active: string[] = [];
+  const startable: string[] = [];
+  const anomalous: { entityId: string; state: string }[] = [];
+
+  for (const vacuum of VACUUMS) {
+    const state = await getEntityStateUnchecked(vacuum);
+    if (shouldStartVacuum(state.state)) {
+      startable.push(vacuum);
+    } else if (VACUUM_ACTIVE_STATES.has(state.state)) {
+      active.push(vacuum);
+    } else {
+      anomalous.push({ entityId: vacuum, state: state.state });
+    }
+  }
+
+  if (anomalous.length > 0) {
+    const details = anomalous
+      .map(({ entityId, state }) => `${entityId}=${state}`)
+      .join(", ");
+    throw ApplicationFailure.nonRetryable(
+      `Vacuum fleet has anomalous states: ${details}`,
+      "VacuumFleetStateError",
+    );
+  }
+
+  const started: string[] = [];
+  for (const vacuum of startable) {
+    await callServiceUnchecked("vacuum", "start", { entity_id: vacuum });
+    started.push(vacuum);
+  }
+  return { active, started };
 }
 
 /**
@@ -164,6 +228,31 @@ export async function verifyState(
   }
   console.warn(`Verify failed: ${entityId} did not reach expected state`);
   return false;
+}
+
+export async function verifyStartedVacuums(
+  vacuums: readonly string[],
+  options: { delaySeconds: number; retries: number; retryDelaySeconds: number },
+): Promise<void> {
+  const results = await Promise.all(
+    vacuums.map(async (vacuum) => ({
+      vacuum,
+      verified: await verifyState(
+        vacuum,
+        (state) => VACUUM_ACTIVE_STATES.has(state),
+        options,
+      ),
+    })),
+  );
+  const failed = results
+    .filter(({ verified }) => !verified)
+    .map(({ vacuum }) => vacuum);
+  if (failed.length > 0) {
+    throw ApplicationFailure.nonRetryable(
+      `Vacuum start verification failed: ${failed.join(", ")} did not become active`,
+      "VacuumStartVerificationError",
+    );
+  }
 }
 
 export function matchExact(expected: string): (state: string) => boolean {

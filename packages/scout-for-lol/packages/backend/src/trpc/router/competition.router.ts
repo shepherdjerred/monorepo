@@ -3,10 +3,9 @@
  * previously Discord-command-only (create/edit/cancel/participants/schedule)
  * plus cached leaderboard reads and an explicit "refresh standings" recompute.
  *
- * Every procedure is gated on per-guild Administrator via `assertGuildAdmin`.
- * Admins are exactly the bypass branch of the Discord-side permission checks,
- * so the `PermissionsBitField`-based `canCreateCompetition` is intentionally
- * not used here. Any fetch-by-id additionally verifies the row belongs to the
+ * Every procedure is gated on a `competitions:<action>` permission via
+ * `guildProcedure`/`guildMutationProcedure` (Discord admins/owners hold all
+ * permissions). Any fetch-by-id additionally verifies the row belongs to the
  * requested guild (NOT_FOUND otherwise) to prevent cross-guild ID probing.
  */
 
@@ -28,11 +27,12 @@ import {
 import { CompetitionCronSchema } from "@scout-for-lol/data/model/competition-cron.ts";
 import { computeNextScheduledUpdateAt } from "@scout-for-lol/data/model/competition-cron.ts";
 import { CompetitionDatesSchema } from "#src/database/competition/validation.ts";
-import { router, webProcedure, webMutationProcedure } from "#src/trpc/trpc.ts";
+import { router } from "#src/trpc/trpc.ts";
+import { assertChannelInGuild } from "#src/trpc/guild-guard.ts";
 import {
-  assertChannelInGuild,
-  assertGuildAdmin,
-} from "#src/trpc/guild-guard.ts";
+  guildProcedure,
+  guildMutationProcedure,
+} from "#src/trpc/guild-permission.ts";
 import { prisma } from "#src/database/index.ts";
 import {
   cancelCompetition,
@@ -50,6 +50,11 @@ import {
   validateOwnerLimit,
   validateServerLimit,
 } from "#src/database/competition/validation.ts";
+import {
+  checkRateLimit,
+  getTimeRemaining,
+  recordCreation,
+} from "#src/database/competition/rate-limit.ts";
 import {
   loadCachedLeaderboard,
   loadHistoricalLeaderboardSnapshots,
@@ -107,7 +112,7 @@ async function loadCompetitionOr404(
 }
 
 export const competitionRouter = router({
-  list: webProcedure
+  list: guildProcedure("competitions", "read")
     .input(
       GuildInput.extend({
         activeOnly: z.boolean().default(false),
@@ -115,8 +120,7 @@ export const competitionRouter = router({
         cursor: z.number().int().min(1).optional(),
       }),
     )
-    .query(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+    .query(async ({ input }) => {
       const { items, nextCursor } = await getCompetitionsByServerPaginated(
         prisma,
         input.guildId,
@@ -147,40 +151,40 @@ export const competitionRouter = router({
       };
     }),
 
-  get: webProcedure.input(CompetitionIdInput).query(async ({ ctx, input }) => {
-    await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
-    const competition = await loadCompetitionOr404(
-      input.competitionId,
-      input.guildId,
-    );
-    const participants = await prisma.competitionParticipant.findMany({
-      where: { competitionId: input.competitionId },
-      include: {
-        player: { select: { id: true, alias: true, discordId: true } },
-      },
-      orderBy: { joinedAt: "asc" },
-    });
-    return {
-      ...competition,
-      status: getCompetitionStatus(competition),
-      participants: participants.map((participant) => ({
-        id: participant.id,
-        playerId: participant.playerId,
-        alias: participant.player.alias,
-        discordId: participant.player.discordId,
-        status: participant.status,
-        invitedBy: participant.invitedBy,
-        invitedAt: participant.invitedAt,
-        joinedAt: participant.joinedAt,
-        leftAt: participant.leftAt,
-      })),
-    };
-  }),
+  get: guildProcedure("competitions", "read")
+    .input(CompetitionIdInput)
+    .query(async ({ input }) => {
+      const competition = await loadCompetitionOr404(
+        input.competitionId,
+        input.guildId,
+      );
+      const participants = await prisma.competitionParticipant.findMany({
+        where: { competitionId: input.competitionId },
+        include: {
+          player: { select: { id: true, alias: true, discordId: true } },
+        },
+        orderBy: { joinedAt: "asc" },
+      });
+      return {
+        ...competition,
+        status: getCompetitionStatus(competition),
+        participants: participants.map((participant) => ({
+          id: participant.id,
+          playerId: participant.playerId,
+          alias: participant.player.alias,
+          discordId: participant.player.discordId,
+          status: participant.status,
+          invitedBy: participant.invitedBy,
+          invitedAt: participant.invitedAt,
+          joinedAt: participant.joinedAt,
+          leftAt: participant.leftAt,
+        })),
+      };
+    }),
 
-  create: webMutationProcedure
+  create: guildMutationProcedure("competitions", "create")
     .input(GuildInput.extend(CompetitionWriteSchema.shape))
     .mutation(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
       assertChannelInGuild({
         guildId: input.guildId,
         channelId: input.channelId,
@@ -188,9 +192,19 @@ export const competitionRouter = router({
       const ownerId = DiscordAccountIdSchema.parse(ctx.user.discordId);
       const dates = CompetitionDatesSchema.parse(input.dates);
 
+      if (!ctx.permissions.isRoot && !checkRateLimit(input.guildId, ownerId)) {
+        const remainingMinutes = Math.ceil(
+          getTimeRemaining(input.guildId, ownerId) / (60 * 1000),
+        );
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Rate limited: You can create 1 competition per hour. Try again in ${remainingMinutes.toString()} minute${remainingMinutes === 1 ? "" : "s"}.`,
+        });
+      }
+
       // Persistent active-competition limits (per server + per owner). The
-      // single-instance in-memory rate limiter is intentionally skipped: it
-      // guards the Discord non-admin grant flow, and the web app is admin-only.
+      // in-memory rate limiter above matches the Discord delegated-grant flow;
+      // Discord roots bypass it in both surfaces.
       try {
         await validateServerLimit(prisma, input.guildId, ownerId);
         await validateOwnerLimit(prisma, input.guildId, ownerId);
@@ -198,7 +212,7 @@ export const competitionRouter = router({
         asBadRequest(error);
       }
 
-      return createCompetition(prisma, {
+      const competition = await createCompetition(prisma, {
         serverId: input.guildId,
         ownerId,
         channelId: input.channelId,
@@ -210,9 +224,13 @@ export const competitionRouter = router({
         criteria: input.criteria,
         updateCronExpression: input.updateCronExpression,
       });
+      if (!ctx.permissions.isRoot) {
+        recordCreation(input.guildId, ownerId);
+      }
+      return competition;
     }),
 
-  edit: webMutationProcedure
+  edit: guildMutationProcedure("competitions", "update")
     .input(
       CompetitionIdInput.extend({
         channelId: DiscordChannelIdSchema.optional(),
@@ -224,8 +242,7 @@ export const competitionRouter = router({
         criteria: CompetitionCriteriaSchema.optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+    .mutation(async ({ input }) => {
       const competition = await loadCompetitionOr404(
         input.competitionId,
         input.guildId,
@@ -297,10 +314,9 @@ export const competitionRouter = router({
       }
     }),
 
-  cancel: webMutationProcedure
+  cancel: guildMutationProcedure("competitions", "cancel")
     .input(CompetitionIdInput)
-    .mutation(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+    .mutation(async ({ input }) => {
       const competition = await loadCompetitionOr404(
         input.competitionId,
         input.guildId,
@@ -315,7 +331,7 @@ export const competitionRouter = router({
       return cancelCompetition(prisma, input.competitionId);
     }),
 
-  invite: webMutationProcedure
+  invite: guildMutationProcedure("competitions", "invite")
     .input(
       CompetitionIdInput.extend({
         playerId: PlayerIdSchema.optional(),
@@ -328,7 +344,6 @@ export const competitionRouter = router({
       ),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
       await loadCompetitionOr404(input.competitionId, input.guildId);
 
       // The .refine guarantees exactly one of playerId/discordUserId is set;
@@ -371,10 +386,9 @@ export const competitionRouter = router({
       }
     }),
 
-  removeParticipant: webMutationProcedure
+  removeParticipant: guildMutationProcedure("competitions", "invite")
     .input(CompetitionIdInput.extend({ playerId: PlayerIdSchema }))
-    .mutation(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+    .mutation(async ({ input }) => {
       await loadCompetitionOr404(input.competitionId, input.guildId);
       try {
         return await removeParticipant(
@@ -387,10 +401,9 @@ export const competitionRouter = router({
       }
     }),
 
-  addAllMembers: webMutationProcedure
+  addAllMembers: guildMutationProcedure("competitions", "invite")
     .input(CompetitionIdInput)
-    .mutation(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+    .mutation(async ({ input }) => {
       await loadCompetitionOr404(input.competitionId, input.guildId);
       const players = await prisma.player.findMany({
         where: { serverId: input.guildId },
@@ -411,14 +424,13 @@ export const competitionRouter = router({
       return { added, failed: results.length - added };
     }),
 
-  updateSchedule: webMutationProcedure
+  updateSchedule: guildMutationProcedure("competitions", "schedule")
     .input(
       CompetitionIdInput.extend({
         updateCronExpression: CompetitionCronSchema,
       }),
     )
-    .mutation(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+    .mutation(async ({ input }) => {
       const competition = await loadCompetitionOr404(
         input.competitionId,
         input.guildId,
@@ -446,26 +458,23 @@ export const competitionRouter = router({
       });
     }),
 
-  leaderboard: webProcedure
+  leaderboard: guildProcedure("competitions", "read")
     .input(CompetitionIdInput)
-    .query(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+    .query(async ({ input }) => {
       await loadCompetitionOr404(input.competitionId, input.guildId);
       return loadCachedLeaderboard(input.competitionId);
     }),
 
-  leaderboardHistory: webProcedure
+  leaderboardHistory: guildProcedure("competitions", "read")
     .input(CompetitionIdInput)
-    .query(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+    .query(async ({ input }) => {
       await loadCompetitionOr404(input.competitionId, input.guildId);
       return loadHistoricalLeaderboardSnapshots(input.competitionId);
     }),
 
-  refreshLeaderboard: webMutationProcedure
+  refreshLeaderboard: guildMutationProcedure("competitions", "refresh")
     .input(CompetitionIdInput)
-    .mutation(async ({ ctx, input }) => {
-      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+    .mutation(async ({ input }) => {
       const competition = await loadCompetitionOr404(
         input.competitionId,
         input.guildId,

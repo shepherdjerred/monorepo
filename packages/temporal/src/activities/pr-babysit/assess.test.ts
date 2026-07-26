@@ -7,6 +7,8 @@ import { BabysitVerdictSchema } from "#shared/pr-babysit/types.ts";
 // its other exports (babysitWorkdirPath, used by index.ts's cleanup) keep
 // linking (see iteration.test.ts / agent-task.test.ts for this pattern).
 import * as actualEnsureWorkdir from "./ensure-workdir.ts";
+import * as actualEvaluateDod from "./evaluate-dod.ts";
+import * as actualRuntime from "./runtime.ts";
 
 // Canned DoD verdict the mocked evaluator returns (a still-broken open PR).
 const VERDICT = BabysitVerdictSchema.parse({
@@ -32,6 +34,7 @@ const calls: { fn: "ensure" | "evaluate"; workdir?: string }[] = [];
 
 // mintBabysitAuth: no real GitHub App token.
 void mock.module("./runtime.ts", () => ({
+  ...actualRuntime,
   mintBabysitAuth: () => Promise.resolve({ token: "test-token", env: {} }),
 }));
 
@@ -53,6 +56,7 @@ void mock.module("./ensure-workdir.ts", () => ({
 
 // evaluateBabysitDoD: record the workdir it was handed, return the canned verdict.
 void mock.module("./evaluate-dod.ts", () => ({
+  ...actualEvaluateDod,
   evaluateBabysitDoD: (input: { workdir: string }) => {
     calls.push({ fn: "evaluate", workdir: input.workdir });
     return Promise.resolve(VERDICT);

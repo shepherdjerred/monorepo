@@ -92,9 +92,7 @@ import type { McrouterHelmValues } from "@shepherdjerred/homelab/cdk8s/generated
 import type { AlloyHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/alloy.types";
 import type { PyroscopeHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/pyroscope.types";
 import type { TempoHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/tempo.types";
-import type { KyvernoHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/kyverno.types";
 import type { MariadbHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/mariadb.types";
-import type { KueueHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/kueue.types";
 import type { Agentstackk8sHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/agent-stack-k8s.types";
 
 type HelmChartValuesMap = {
@@ -120,9 +118,7 @@ type HelmChartValuesMap = {
   alloy: AlloyHelmValues;
   pyroscope: PyroscopeHelmValues;
   tempo: TempoHelmValues;
-  kyverno: KyvernoHelmValues;
   mariadb: MariadbHelmValues;
-  kueue: KueueHelmValues;
   "agent-stack-k8s": Agentstackk8sHelmValues;
 };
 

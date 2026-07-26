@@ -21,16 +21,19 @@ const GLOBAL_IF_CHANGED = [
 const PATH_GATED_PR_KEYS = new Set([
   "playwright-e2e-pr",
   "resume-build-pr",
-  "helm-types-drift-check",
   "docker-e2e-pr",
   "trivy",
   "semgrep",
-  "tofu-plan",
   "images-pr",
-  "sites-pr",
-  "helm-pr",
-  "release-pr",
+  "pr-dryrun",
 ]);
+const SHARED_POD_ANCHORS = [
+  "pod_kubernetes",
+  "pod_privileged_kubernetes",
+  "pod_verify_kubernetes",
+  "pod_light_kubernetes",
+] as const;
+const CHECKOUT_CONTAINER_ALIAS = "- *checkout_container";
 
 function fail(message: string): never {
   throw new Error(`[validate-pipeline] ${message}`);
@@ -56,6 +59,51 @@ function hasTrimmedLine(block: string | undefined, expected: string): boolean {
 
 const pipeline = await Bun.file(PIPELINE_PATH).text();
 const lines = pipeline.split("\n");
+
+const checkoutContainerDefinition = [
+  "  - checkout_container: &checkout_container",
+  "      name: checkout",
+  "      resources:",
+  "        # The checkout writes the tracked tree into the memory-backed workspace.",
+  '        requests: { cpu: "50m", memory: "1Gi" }',
+  '        limits: { cpu: "400m", memory: "2Gi" }',
+].join("\n");
+if (!pipeline.includes(checkoutContainerDefinition)) {
+  fail(
+    "checkout container anchor must define the tested CPU and memory budget",
+  );
+}
+
+function sharedPodAnchorBlock(anchorName: string): string {
+  const marker = `      kubernetes: &${anchorName}\n`;
+  const start = pipeline.indexOf(marker);
+  if (start === -1) {
+    fail(`pipeline is missing shared pod anchor ${anchorName}`);
+  }
+  const end = pipeline.indexOf("\n  - ", start);
+  if (end === -1) {
+    fail(`shared pod anchor ${anchorName} has no boundary`);
+  }
+  return pipeline.slice(start, end);
+}
+
+for (const anchorName of SHARED_POD_ANCHORS) {
+  const anchorBlock = sharedPodAnchorBlock(anchorName);
+  if (!hasTrimmedLine(anchorBlock, CHECKOUT_CONTAINER_ALIAS)) {
+    fail(`shared pod anchor ${anchorName} does not patch checkout resources`);
+  }
+}
+
+const verifyPodAnchor = sharedPodAnchorBlock("pod_verify_kubernetes");
+for (const resourceLine of [
+  'requests: { cpu: "1", memory: "14Gi", ephemeral-storage: "2Gi" }',
+  'limits: { cpu: "7", memory: "20Gi", ephemeral-storage: "40Gi" }',
+]) {
+  if (!hasTrimmedLine(verifyPodAnchor, resourceLine)) {
+    fail(`verify pod is missing measured resource budget ${resourceLine}`);
+  }
+}
+
 const stepStarts = lines
   .map((line, index) => (/^  - label:/.test(line) ? index : -1))
   .filter((index) => index !== -1);
@@ -95,6 +143,14 @@ for (const [position, start] of stepStarts.entries()) {
     fail(
       `step ${key} must have exactly one ci.sjer.red/step-key label equal to its key`,
     );
+  }
+
+  const inheritedCheckoutPatch = SHARED_POD_ANCHORS.some((anchorName) =>
+    block.includes(`<<: *${anchorName}`),
+  );
+  const directCheckoutPatch = hasTrimmedLine(block, CHECKOUT_CONTAINER_ALIAS);
+  if (!inheritedCheckoutPatch && !directCheckoutPatch) {
+    fail(`step ${key} does not patch checkout to 1Gi/2Gi`);
   }
 
   if (PATH_GATED_PR_KEYS.has(key)) {
@@ -149,17 +205,29 @@ for (const key of ["playwright-e2e-pr", "playwright-e2e-main"]) {
   }
 }
 
-const helmTypesDrift = stepBlocks.get("helm-types-drift-check");
-const helmInstall = "bun install --frozen-lockfile --filter '@homelab/cdk8s'";
-if (!hasTrimmedLine(helmTypesDrift, helmInstall)) {
-  fail(`Helm types lane is missing exact filtered install ${helmInstall}`);
+// The merged PR dry-run lane owns the helm-types drift gate, the tofu plans,
+// and the print-only deploy rehearsals. Its install must stay the exact
+// union of the sections' tool closures, and the two real-work sections must
+// stay internally gated on their ci-changed lanes.
+const prDryrun = stepBlocks.get("pr-dryrun");
+const prDryrunInstall =
+  "bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter '@homelab/cdk8s'";
+if (!hasTrimmedLine(prDryrun, prDryrunInstall)) {
+  fail(`pr-dryrun is missing exact filtered install ${prDryrunInstall}`);
 }
 for (const required of [
-  '- "packages/homelab/src/cdk8s/package.json"',
-  "bun --no-install run generate-helm-types --check",
+  '- "packages/homelab/src/cdk8s/**"',
+  '- "packages/homelab/src/helm-types/**"',
+  "generate-helm-types --check",
+  "ci-changed.sh helm-types",
+  "ci-changed.sh tofu",
+  "scripts/deploy-site.ts",
+  "scripts/scout-site-release.ts",
+  "helm-push.ts",
+  "scripts/release.ts --dry-run",
 ]) {
-  if (helmTypesDrift === undefined || !helmTypesDrift.includes(required)) {
-    fail(`Helm types lane is missing explicit tool closure ${required}`);
+  if (prDryrun === undefined || !prDryrun.includes(required)) {
+    fail(`pr-dryrun is missing section content ${required}`);
   }
 }
 
@@ -313,6 +381,26 @@ function containerBlock(
   );
 }
 
+for (const [stepKey, expectedRequests] of [
+  ["playwright-e2e-pr", 'requests: { cpu: "2", memory: "5Gi" }'],
+  ["playwright-e2e-main", 'requests: { cpu: "2", memory: "5Gi" }'],
+  ["resume-build-pr", 'requests: { cpu: "1", memory: "2Gi" }'],
+  ["resume-build-main", 'requests: { cpu: "1", memory: "2Gi" }'],
+  ["trivy", 'requests: { cpu: "500m", memory: "1Gi" }'],
+  ["semgrep", 'requests: { cpu: "500m", memory: "1Gi" }'],
+] satisfies ReadonlyArray<readonly [string, string]>) {
+  const commandContainer = containerBlock(
+    stepKey,
+    stepBlocks.get(stepKey),
+    "container-0",
+  );
+  if (!commandContainer.includes(expectedRequests)) {
+    fail(
+      `${stepKey} must transfer the checkout tmpfs memory request to the checkout container`,
+    );
+  }
+}
+
 for (const [stepKey, step] of [
   ["trivy", trivy],
   ["semgrep", semgrep],
@@ -337,23 +425,27 @@ for (const required of [
   }
 }
 
-const sitesPr = stepBlocks.get("sites-pr");
 for (const dependency of [
   '"packages/astro-opengraph-images/**"',
   '"packages/llm-models/**"',
   '"scripts/package.json"',
 ]) {
-  if (sitesPr === undefined || !sitesPr.includes(dependency)) {
-    fail(`sites-pr path gate is missing ${dependency}`);
+  if (prDryrun === undefined || !prDryrun.includes(dependency)) {
+    fail(`pr-dryrun path gate is missing ${dependency}`);
   }
 }
 
-const npmPublish = stepBlocks.get("npm-publish");
+const publish = stepBlocks.get("publish");
 if (
-  npmPublish === undefined ||
-  npmPublish.includes("--filter '@shepherdjerred/root-scripts'")
+  publish === undefined ||
+  publish.includes("--filter '@shepherdjerred/root-scripts'")
 ) {
-  fail("npm-publish restored an unnecessary root-scripts install");
+  fail("publish restored an unnecessary root-scripts install");
+}
+for (const required of ["ci-changed.sh npm", "ci-changed.sh cooklang"]) {
+  if (publish === undefined || !publish.includes(required)) {
+    fail(`publish is missing section gate ${required}`);
+  }
 }
 
 const releasePlease = stepBlocks.get("release-please");

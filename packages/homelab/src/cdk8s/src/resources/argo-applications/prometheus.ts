@@ -4,6 +4,7 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import { CI_NODE_TOLERATION } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
@@ -156,6 +157,14 @@ export async function createPrometheusApp(chart: Chart) {
         },
         storage: {
           volumeClaimTemplate: {
+            metadata: {
+              labels: {
+                // Include the alertmanager PVC in Velero backups. Replaces the removed
+                // Kyverno velero-label mutation (the chart templates volumeClaimTemplate
+                // metadata onto the PVC, same as prometheusSpec above).
+                "velero.io/backup": "enabled",
+              },
+            },
             spec: {
               storageClassName: NVME_STORAGE_CLASS,
               accessModes: ["ReadWriteOnce"],
@@ -326,6 +335,8 @@ export async function createPrometheusApp(chart: Chart) {
     // Collects metrics from: SMART, OS info, NTPD, NVMe, ZFS snapshots, ZFS zpools
 
     "prometheus-node-exporter": {
+      // Node metrics must cover the CI-only node (liskov) too.
+      tolerations: [CI_NODE_TOLERATION],
       extraArgs: [
         "--collector.textfile.directory=/host/var/lib/node_exporter/textfile_collector",
       ],

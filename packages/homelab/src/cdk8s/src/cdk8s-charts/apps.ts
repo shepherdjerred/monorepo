@@ -58,11 +58,7 @@ import { createMarioKartApp } from "@shepherdjerred/homelab/cdk8s/src/resources/
 import { createGickupApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/gickup.ts";
 import { createGrafanaDbApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/grafana-db.ts";
 import { createS3StaticSitesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/s3-static-sites.ts";
-import { createKueueApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/kueue.ts";
-import { createKueueConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
 import { createCpuPowerCap } from "@shepherdjerred/homelab/cdk8s/src/resources/cpu-power-cap.ts";
-import { createKyvernoApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/kyverno.ts";
-import { createKyvernoPoliciesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/kyverno-policies.ts";
 import { createMcpGatewayApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/mcp-gateway.ts";
 import { createBugsinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/bugsink.ts";
 import { createTasknotesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/tasknotes.ts";
@@ -129,8 +125,6 @@ export async function createAppsChart(app: App) {
   createPyroscopeApp(chart);
   createAlloyApp(chart);
   createBuildkiteApp(chart);
-  createKueueApp(chart);
-  createKueueConfig(chart);
   // Enforces Intel stock package power limits (PL1 125 W / PL2 253 W). ASUS
   // firmware defaults PL1 to unlimited, which drove sustained 100 °C TJMax and
   // overheated the adjacent M.2 slots before the AIO cooler was installed
@@ -139,8 +133,6 @@ export async function createAppsChart(app: App) {
   // See packages/docs/logs/2026-05-24_torvalds-thermal-investigation.md.
   createCpuPowerCap(chart, { pl1Watts: 125, pl2Watts: 253 });
   createVeleroApp(chart);
-  createKyvernoApp(chart);
-  createKyvernoPoliciesApp(chart);
   createPostgresOperatorApp(chart);
   createSeaweedfsApp(chart);
   // Create all Grafana dashboards (gitckup, ha-workflow, scout, smartctl, velero, zfs)

@@ -1,0 +1,33 @@
+# Hardware watchdog — primary auto-recovery for the CI-freeze failure mode
+# (pure R-state runqueue contention that starves machined's heartbeat; see
+# ../patches/watchdog.yaml for the full torvalds rationale). liskov is the CI
+# node, i.e. exactly where that workload now lives.
+#
+# AMD difference: iTCO_wdt is the Intel chipset TCO driver. On the AMD B650
+# platform (ASUS PRIME B650-PLUS WiFi) the chipset watchdog driver is
+# sp5100_tco (SP5100/SB800+ lineage, still current for AM5). No
+# vendor-support companion module exists or is needed.
+#
+# ⚠️ NOT YET LIVE-VERIFIED on this board (torvalds' iTCO was confirmed live
+# before arming). VERIFY BEFORE APPLYING THIS FILE, in order:
+#   1. Boot without this patch; check the module + device exist:
+#        talosctl -n liskov read /proc/modules | grep sp5100
+#        talosctl -n liskov list /sys/class/watchdog
+#   2. Apply the machine.kernel.modules half only; re-check watchdog0 appears
+#      (identity=sp5100_tco).
+#   3. Only then apply the WatchdogTimerConfig document below and confirm
+#        talosctl -n liskov get watchdogtimerstatus
+#      shows owner runtime.WatchdogTimerController with a recent feed time.
+# An armed-but-unpetted watchdog (nowayout=1) reboot-loops the node.
+machine:
+  kernel:
+    modules:
+      - name: sp5100_tco
+        parameters:
+          - heartbeat=60
+          - nowayout=1
+---
+apiVersion: v1alpha1
+kind: WatchdogTimerConfig
+device: /dev/watchdog0
+timeout: 3m0s

@@ -11,6 +11,7 @@ import {
 import { useTRPC } from "#src/lib/trpc.ts";
 import { formatDate } from "#src/lib/format.ts";
 import { useDiscordNames } from "#src/hooks/use-discord-names.ts";
+import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import { DiscordUser } from "#src/components/discord-user.tsx";
 import { DiscordMemberCombobox } from "#src/components/discord-member-combobox.tsx";
@@ -51,6 +52,7 @@ export function CompetitionParticipantsPanel(props: {
 }) {
   const { guildId, competitionId, status, visibility, participants } = props;
   const trpc = useTRPC();
+  const { perms } = usePermissions(guildId);
   const [inviteId, setInviteId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const names = useDiscordNames(participants.map((p) => p.discordId));
@@ -95,7 +97,7 @@ export function CompetitionParticipantsPanel(props: {
   return (
     <Section title="Participants">
       <div className="space-y-3 p-3">
-        {!locked && (
+        {!locked && perms.can("competitions", "invite") && (
           <div className="flex flex-wrap items-center gap-2">
             <div className="w-full max-w-xs">
               <DiscordMemberCombobox
@@ -185,30 +187,32 @@ export function CompetitionParticipantsPanel(props: {
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        disabled={locked || removeMutation.isPending}
-                        onClick={() => {
-                          if (
-                            !globalThis.confirm(
-                              `Remove ${participant.alias} from this competition?`,
-                            )
-                          ) {
-                            return;
-                          }
-                          removeMutation.mutate({
-                            guildId,
-                            competitionId,
-                            playerId: PlayerIdSchema.parse(
-                              participant.playerId,
-                            ),
-                          });
-                        }}
-                      >
-                        Remove
-                      </Button>
+                      {perms.can("competitions", "invite") && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={locked || removeMutation.isPending}
+                          onClick={() => {
+                            if (
+                              !globalThis.confirm(
+                                `Remove ${participant.alias} from this competition?`,
+                              )
+                            ) {
+                              return;
+                            }
+                            removeMutation.mutate({
+                              guildId,
+                              competitionId,
+                              playerId: PlayerIdSchema.parse(
+                                participant.playerId,
+                              ),
+                            });
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

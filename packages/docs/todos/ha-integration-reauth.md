@@ -29,7 +29,12 @@ source_marker: false
 
 ## Remaining
 
-- [ ] Restart HA → roborock loads, Q7 Max returns to HomeKit.
+- [x] Restart HA → roborock loads. Resolved: the Roborock integration is healthy and
+      serving all units. The Q7 Max has since been retired and replaced by three
+      Roborock Saros 10R (one per floor) — see
+      `plan-2026-07-25-roborock-saros-fleet-migration`. Vacuums now reach Apple Home
+      via native Matter, not the HomeKit bridge, so the old "returns to HomeKit" note
+      no longer applies.
 - [ ] Watch home-assistant/core#172228 / Rheem for the econet chain fix; re-check the
       water heater after any Rheem-side change.
 - [ ] After econet recovers: check whether the doubled `Heat Pump Water Heater_*`

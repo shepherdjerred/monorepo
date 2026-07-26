@@ -8,11 +8,7 @@
 import type { z } from "zod";
 import { RegionSchema, RiotIdSchema } from "@scout-for-lol/data";
 import { resolveRiotIdToPuuid } from "#src/lib/subscription/resolve.ts";
-import {
-  assertAdmin,
-  GuildIdInput,
-  type WebCtx,
-} from "#src/lib/player-admin/shared.ts";
+import { GuildIdInput } from "#src/lib/player-admin/shared.ts";
 
 export const ResolveRiotIdInput = GuildIdInput.extend({
   riotId: RiotIdSchema,
@@ -25,10 +21,8 @@ export type ResolveRiotIdResult =
   | { kind: "not-found"; message: string };
 
 export async function resolveRiotIdExact(
-  ctx: WebCtx,
   input: ResolveRiotIdInputData,
 ): Promise<ResolveRiotIdResult> {
-  await assertAdmin(ctx, input.guildId);
   const result = await resolveRiotIdToPuuid(input.riotId, input.region);
   if (result.kind !== "ok") {
     return { kind: "not-found", message: result.message };

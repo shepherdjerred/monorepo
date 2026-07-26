@@ -14,6 +14,12 @@ export function createBugsinkPostgreSQLDatabase(chart: Chart) {
   return new Postgresql(chart, "bugsink-postgresql", {
     metadata: {
       name: "bugsink-postgresql",
+      labels: {
+        // Velero selects PVCs to back up by this label. The postgres-operator copies
+        // it onto the pgdata PVC via inherited_labels (postgres-operator.ts); this
+        // replaces the removed Kyverno velero-label mutation.
+        "velero.io/backup": "enabled",
+      },
       annotations: {
         // Prevent ArgoCD from deleting this resource during sync - data loss protection
         "argocd.argoproj.io/sync-options": "Delete=false",

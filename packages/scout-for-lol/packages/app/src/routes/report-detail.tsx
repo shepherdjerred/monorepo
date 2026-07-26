@@ -1,8 +1,9 @@
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ReportIdSchema, type ReportId } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { channelLabel } from "#src/lib/format.ts";
+import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import { Badge } from "#src/components/ui/badge.tsx";
 import {
@@ -29,6 +30,9 @@ function ReportHeaderActions(props: {
   reportId: ReportId;
   title: string;
   systemManaged: boolean;
+  canEdit: boolean;
+  canRun: boolean;
+  canDelete: boolean;
   onRun: () => void;
   runPending: boolean;
   onDelete: () => void;
@@ -39,7 +43,7 @@ function ReportHeaderActions(props: {
       <Button asChild variant="outline" size="sm">
         <Link to={`/g/${props.guildId}/reports`}>Back</Link>
       </Button>
-      {!props.systemManaged && (
+      {!props.systemManaged && props.canEdit && (
         <Button asChild variant="outline" size="sm">
           <Link
             to={`/g/${props.guildId}/reports/${props.reportId.toString()}/edit`}
@@ -48,15 +52,17 @@ function ReportHeaderActions(props: {
           </Link>
         </Button>
       )}
-      <Button
-        type="button"
-        size="sm"
-        disabled={props.runPending}
-        onClick={props.onRun}
-      >
-        {props.runPending ? "Running…" : "Run now"}
-      </Button>
-      {!props.systemManaged && (
+      {props.canRun && (
+        <Button
+          type="button"
+          size="sm"
+          disabled={props.runPending}
+          onClick={props.onRun}
+        >
+          {props.runPending ? "Running…" : "Run now"}
+        </Button>
+      )}
+      {!props.systemManaged && props.canDelete && (
         <Button
           type="button"
           variant="destructive"
@@ -125,6 +131,7 @@ export function ReportDetail() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { perms } = usePermissions(guildId);
   const safeGuildId = guildId ?? "";
 
   const idResult = ReportIdSchema.safeParse(Number(idParam));
@@ -181,6 +188,9 @@ export function ReportDetail() {
           reportId={reportId}
           title={report?.title ?? "this report"}
           systemManaged={systemManaged}
+          canEdit={perms.can("reports", "update")}
+          canRun={perms.can("reports", "run")}
+          canDelete={perms.can("reports", "delete")}
           onRun={() => {
             runMutation.mutate({ guildId, reportId });
           }}

@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { visibilityToString } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { formatDate } from "#src/lib/format.ts";
 import { summarizeCriteria } from "#src/lib/criteria-summary.ts";
 import { Button } from "#src/components/ui/button.tsx";
+import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { LoadMore } from "#src/components/load-more.tsx";
 import { CompetitionStatusBadge } from "#src/components/status-badge.tsx";
 import {
@@ -20,6 +21,7 @@ import {
 export function CompetitionList() {
   const { guildId } = useParams();
   const trpc = useTRPC();
+  const { perms } = usePermissions(guildId);
   // Default to hiding cancelled/ended competitions; the toggle shows all.
   const [activeOnly, setActiveOnly] = useState(true);
   const safeGuildId = guildId ?? "";
@@ -56,9 +58,13 @@ export function CompetitionList() {
           >
             {activeOnly ? "Active only" : "All"}
           </Button>
-          <Button asChild size="sm">
-            <Link to={`/g/${guildId}/competitions/new`}>+ New competition</Link>
-          </Button>
+          {perms.can("competitions", "create") && (
+            <Button asChild size="sm">
+              <Link to={`/g/${guildId}/competitions/new`}>
+                + New competition
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 

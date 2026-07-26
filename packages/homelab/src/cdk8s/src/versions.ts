@@ -77,9 +77,17 @@ const versions = {
   "linuxserver/sonarr":
     "4.0.19@sha256:4b025354d338999e03bf6dbdadcdde94815d39d4a5aba5de3cdc86a56d7d6c51",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
-  // Bindery (Readarr replacement) — docker hub mirror of ghcr.io/vavallee/bindery
+  // Bindery (Readarr replacement) — keep serving upstream until the patched
+  // first-party image below has a real digest and its GHCR package is public.
   "vavallee/bindery":
     "v1.26.2@sha256:5d898d2b0d2000465b3c5f15fc0aa918458f017558f48f111b772a59b04a819d",
+  // not managed by renovate — publication-stage pin only; no Deployment reads
+  // this key yet. Main CI builds upstream vavallee/bindery at BINDERY_SOURCE_REF
+  // (packages/homelab/images/bindery/Dockerfile), applies the Chinese Google
+  // Books patch, then version commit-back replaces this seed after the first
+  // push. Switch the Deployment only after the real digest resolves publicly.
+  "shepherdjerred/bindery":
+    "2.0.0-0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   // Calibre-Web Automated — library + ingest + Send-to-Kindle path
   "crocodilestick/calibre-web-automated":
@@ -192,9 +200,6 @@ const versions = {
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "ducktors/turborepo-remote-cache":
     "2.11.2@sha256:99634a04eba43c839fb96f3e60bf0012b59abe1e6889153580493a840aad7ad0",
-  // renovate: datasource=docker registryUrl=https://registry.k8s.io versioning=semver packageName=kueue/charts/kueue
-  kueue:
-    "0.18.2@sha256:156fbc8c6752b08cf66a2324fed33e269e0a64e54dd8d70d51118065bca651af",
   // Persistent BuildKit daemon backing CI image builds (bounded-GC cache on a
   // compressed ZFS PVC, replacing the per-run throwaway builder inside dind —
   // moves the build-layer write storm off the xfs /var system disk).
@@ -209,8 +214,6 @@ const versions = {
     "1.33.4@sha256:ed0b31a0508da84ee655c5c6e01bd3897fc56ad6cf69debb27fa1893a06d2246",
   // renovate: datasource=helm registryUrl=https://vmware-tanzu.github.io/helm-charts versioning=semver
   velero: "12.1.0",
-  // renovate: datasource=helm registryUrl=https://kyverno.github.io/kyverno versioning=semver
-  kyverno: "3.8.1",
   // PINNED to v1.14.0 (last release that works on Cloudflare R2). The plugin always sets an
   // (often empty) `Tagging` field on PutObject; v1.14.1's dependency bump pulled a newer
   // aws-sdk-go-v2 that started emitting an empty `x-amz-tagging` header on the wire, which R2

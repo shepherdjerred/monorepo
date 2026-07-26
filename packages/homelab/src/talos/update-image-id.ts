@@ -4,9 +4,22 @@ import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
-const schematicFile = join(scriptDir, "image.yaml");
-const patchFile = join(scriptDir, "patches/image.yaml");
 const readmeFile = join(scriptDir, "../../README.md");
+
+// One entry per node: schematic source → pinned installer reference. Every
+// node's pin is checked/updated; add new nodes here.
+const NODES = [
+  {
+    name: "torvalds",
+    schematicFile: join(scriptDir, "torvalds/image.yaml"),
+    patchFile: join(scriptDir, "torvalds/patches/image.yaml"),
+  },
+  {
+    name: "liskov",
+    schematicFile: join(scriptDir, "liskov/image.yaml"),
+    patchFile: join(scriptDir, "liskov/patches/image.yaml"),
+  },
+];
 
 // With --check the script verifies (without writing) that the pinned schematic
 // ID + digest in patches/image.yaml still match what image.yaml produces, then
@@ -84,71 +97,83 @@ async function fetchImageDigest(
   return digest;
 }
 
-async function main() {
-  const schematic = await Bun.file(schematicFile).text();
+async function processNode(node: (typeof NODES)[number]): Promise<boolean> {
+  const schematic = await Bun.file(node.schematicFile).text();
   const newId = await fetchSchematicId(schematic);
-  console.log(`New schematic ID: ${newId}`);
+  console.log(`[${node.name}] schematic ID: ${newId}`);
 
-  const patchContent = await Bun.file(patchFile).text();
+  const patchContent = await Bun.file(node.patchFile).text();
   const refMatch = patchContent.match(IMAGE_REF_PATTERN);
   if (refMatch === null) {
     throw new Error(
-      `Could not find existing <id>:<version>@<digest> image reference in ${patchFile}`,
+      `Could not find existing <id>:<version>@<digest> image reference in ${node.patchFile}`,
     );
   }
   const [, oldId, version, oldDigest] = refMatch;
   if (oldId === undefined || version === undefined || oldDigest === undefined) {
-    throw new Error(`Malformed image reference match in ${patchFile}`);
+    throw new Error(`Malformed image reference match in ${node.patchFile}`);
   }
 
   const newDigest = await fetchImageDigest(newId, version);
-  console.log(`Installer digest for ${version}: ${newDigest}`);
+  console.log(`[${node.name}] installer digest for ${version}: ${newDigest}`);
 
   if (oldId === newId && oldDigest === newDigest) {
     console.log(
       CHECK_MODE
-        ? "✓ Pinned Talos installer is in sync with image.yaml"
-        : "Image ID and digest unchanged, nothing to update",
+        ? `✓ [${node.name}] pinned Talos installer is in sync with its image.yaml`
+        : `[${node.name}] image ID and digest unchanged, nothing to update`,
     );
-    return;
+    return true;
   }
 
   if (CHECK_MODE) {
     console.error(
       [
-        "✗ Talos installer pin is OUT OF SYNC with image.yaml.",
+        `✗ [${node.name}] Talos installer pin is OUT OF SYNC with its image.yaml.`,
         "",
-        `  pinned   (patches/image.yaml): ${oldId}@${oldDigest}`,
-        `  expected (from image.yaml):    ${newId}@${newDigest}`,
+        `  pinned   (${node.patchFile}): ${oldId}@${oldDigest}`,
+        `  expected (${node.schematicFile}): ${newId}@${newDigest}`,
         "",
-        "image.yaml (the schematic source) changed but the pinned installer",
-        "reference was not regenerated, so the node would boot a stale schematic",
-        "(e.g. dropping extraKernelArgs like lockdown=integrity). Regenerate with:",
+        "The schematic source changed but the pinned installer reference was",
+        "not regenerated, so the node would boot a stale schematic (e.g.",
+        "dropping extraKernelArgs like lockdown=integrity). Regenerate with:",
         "",
         "  bun packages/homelab/src/talos/update-image-id.ts",
         "",
-        "then commit the updated patches/image.yaml and README.md.",
+        "then commit the updated patch file(s) and README.md.",
       ].join("\n"),
     );
-    process.exit(1);
+    return false;
   }
 
-  console.log(`Old schematic ID: ${oldId}`);
-  console.log("Updating files...");
+  console.log(`[${node.name}] old schematic ID: ${oldId}`);
+  console.log(`[${node.name}] updating files...`);
 
   await Bun.write(
-    patchFile,
+    node.patchFile,
     patchContent.replaceAll(oldId, newId).replaceAll(oldDigest, newDigest),
   );
-  console.log(`  Updated: ${patchFile}`);
+  console.log(`  Updated: ${node.patchFile}`);
 
+  // The repo README embeds torvalds' schematic id; replaceAll is a no-op for
+  // nodes whose id does not appear there.
   const readmeContent = await Bun.file(readmeFile).text();
   await Bun.write(readmeFile, readmeContent.replaceAll(oldId, newId));
-  console.log(`  Updated: ${readmeFile}`);
 
   console.log(
-    `Done! New image: ${IMAGE_REPO}/${newId}:${version}@${newDigest}`,
+    `[${node.name}] done! New image: ${IMAGE_REPO}/${newId}:${version}@${newDigest}`,
   );
+  return true;
+}
+
+async function main() {
+  let ok = true;
+  for (const node of NODES) {
+    ok = (await processNode(node)) && ok;
+  }
+  if (!ok) {
+    process.exit(1);
+  }
 }
 
 await main();

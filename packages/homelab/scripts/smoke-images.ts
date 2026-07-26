@@ -439,6 +439,75 @@ async function smokeRedlib(): Promise<SmokeResult> {
  * serves /health, and answers a Torznab caps query authenticated by the
  * configured API key — the exact endpoint Prowlarr/Bindery will hit.
  */
+async function smokeBindery(): Promise<SmokeResult> {
+  const image = "bindery:dev";
+  const name = "smoke-bindery";
+  const port = 18788;
+  await forceRemove(name);
+  try {
+    // Default DB/data dir is /config, which the distroless nonroot user can't
+    // create in the bare image (no bind-mount). Point both at /tmp so bindery
+    // can open its SQLite DB and boot.
+    const start = await run([
+      "docker",
+      "run",
+      "-d",
+      "--name",
+      name,
+      "-p",
+      `${String(port)}:8787`,
+      "-e",
+      "BINDERY_DB_PATH=/tmp/bindery.db",
+      "-e",
+      "BINDERY_DATA_DIR=/tmp",
+      image,
+    ]);
+    if (start.exitCode !== 0) {
+      return {
+        image,
+        ok: false,
+        detail: `docker run failed (exit ${String(start.exitCode)})\n${start.stderr}`,
+      };
+    }
+
+    const deadline = Date.now() + 30_000;
+    let healthy = false;
+    let lastErr = "";
+    while (Date.now() < deadline) {
+      try {
+        const res = await fetch(
+          `http://127.0.0.1:${String(port)}/api/v1/health`,
+          {
+            signal: AbortSignal.timeout(2000),
+          },
+        );
+        healthy = res.ok;
+        if (healthy) break;
+      } catch (err) {
+        lastErr = err instanceof Error ? err.message : String(err);
+      }
+      await Bun.sleep(1000);
+    }
+
+    if (!healthy) {
+      const logs = await run(["docker", "logs", name]);
+      return {
+        image,
+        ok: false,
+        detail: `bindery /api/v1/health did not answer on :${String(port)} within 30s (last error: ${lastErr})\n${logs.stdout}\n${logs.stderr}`,
+      };
+    }
+
+    return {
+      image,
+      ok: true,
+      detail: `bindery booted, /api/v1/health OK on :${String(port)}`,
+    };
+  } finally {
+    await forceRemove(name);
+  }
+}
+
 async function smokeShelfbridge(): Promise<SmokeResult> {
   const image = "shelfbridge:dev";
   const name = "smoke-shelfbridge";
@@ -527,6 +596,7 @@ async function main(): Promise<void> {
     { label: "mcp-gateway", fn: smokeMcpGateway },
     { label: "redlib", fn: smokeRedlib },
     { label: "shelfbridge", fn: smokeShelfbridge },
+    { label: "bindery", fn: smokeBindery },
   ];
 
   const results: SmokeResult[] = [];

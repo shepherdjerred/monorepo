@@ -29,7 +29,11 @@ homekit:
         - switch
         - binary_sensor
         - input_select
-        - vacuum
+      # Note: the `vacuum` domain is deliberately NOT bridged. The three Roborock
+      # Saros 10R units are paired directly to Apple Home over Matter (native vacuum
+      # tiles); bridging the domain here only produced duplicate crude on/off switch
+      # tiles (HAP has no robot-vacuum service). It also un-bridges the Litter-Robot
+      # vacuum entity, which is intentionally not wanted in HomeKit.
       # device_tracker is whitelisted per-entity instead of by domain: the domain also
       # covers non-person network devices (NAS, printer, TVs, speakers, game consoles)
       # picked up by router/nmap-style tracking, and HomeKit presence only makes sense
@@ -48,7 +52,6 @@ homekit:
         # Apple Home / Siri / Watch lock control with HomeKit's secure-unlock UX.
         - lock.front_door
       exclude_entities:
-        - binary_sensor.roomba_bin_full
         - binary_sensor.remote_ui
         - sensor.800_series_long_range_usb_controller_status
         - sensor.petlibro_petlibro_sjer_red
@@ -88,14 +91,6 @@ homekit:
         - sensor.thor_rfid_collar
         - switch.kit_neutered_spayed
         - switch.thor_neutered_spayed
-        # Roomba historical stats, not live status (battery/tank-level sensors stay)
-        - sensor.roomba_average_mission_time
-        - sensor.roomba_battery_cycles
-        - sensor.roomba_canceled_missions
-        - sensor.roomba_failed_missions
-        - sensor.roomba_successful_missions
-        - sensor.roomba_total_missions
-        - sensor.roomba_total_cleaning_time
       exclude_entity_globs:
         - binary_sensor.*_focus
         - binary_sensor.*entertainment_configuration
@@ -111,6 +106,19 @@ homekit:
         - sensor.electricity_maps*
         - sensor.refrigerator*
         - binary_sensor.refrigerator*
+        # Roborock Saros 10R per-floor diagnostic entities — each unit is paired
+        # directly to Apple Home over Matter (native vacuum tile), so keep the
+        # Roborock integration's sensor/switch clutter (and the alerting-only
+        # *_vacuum_problem template sensors) out of the HomeKit bridge.
+        - sensor.1st_floor_*
+        - sensor.2nd_floor_*
+        - sensor.3rd_floor_*
+        - binary_sensor.1st_floor_*
+        - binary_sensor.2nd_floor_*
+        - binary_sensor.3rd_floor_*
+        - switch.1st_floor_*
+        - switch.2nd_floor_*
+        - switch.3rd_floor_*
         # Retired front-door camera config — Scrypted (HKSV) owns this device now
         - sensor.front_door_*
         - switch.front_door_*
@@ -265,6 +273,39 @@ template:
                | rejectattr('entity_id', 'in', ignored_entities)
                | map(attribute='entity_id')
                | list {{ "}}" }}
+  # Roborock Saros 10R per-floor "problem" bridges. The vacuum/status/error enum
+  # sensors carry no numeric Prometheus metric, so HA's exporter can't alert on
+  # them directly; these device_class:problem template binary_sensors collapse the
+  # enums to a boolean that exports as homeassistant_binary_sensor_state and is
+  # alerted on by the homeassistant-roborock PrometheusRule group. Every expected
+  # dependency treats unknown/unavailable as a problem, so an entity-registry
+  # rename or a missing integration cannot silently disable the per-floor alert.
+  # Enum values verified live from the Roborock integration's options list.
+  - binary_sensor:
+      - name: "1st Floor Vacuum Problem"
+        unique_id: floor_1_vacuum_problem
+        device_class: problem
+        state: >
+          {{ "{{" }} states('vacuum.1st_floor') in ['error', 'unknown', 'unavailable']
+             or states('sensor.1st_floor_status') in ['error', 'charging_problem', 'unknown', 'unavailable']
+             or states('sensor.1st_floor_vacuum_error') not in ['none', 'low_battery', 'robot_on_carpet']
+             or states('sensor.1st_floor_dock_dock_error') != 'ok' {{ "}}" }}
+      - name: "2nd Floor Vacuum Problem"
+        unique_id: floor_2_vacuum_problem
+        device_class: problem
+        state: >
+          {{ "{{" }} states('vacuum.2nd_floor') in ['error', 'unknown', 'unavailable']
+             or states('sensor.2nd_floor_status') in ['error', 'charging_problem', 'unknown', 'unavailable']
+             or states('sensor.2nd_floor_vacuum_error') not in ['none', 'low_battery', 'robot_on_carpet']
+             or states('sensor.2nd_floor_dock_dock_error') != 'ok' {{ "}}" }}
+      - name: "3rd Floor Vacuum Problem"
+        unique_id: floor_3_vacuum_problem
+        device_class: problem
+        state: >
+          {{ "{{" }} states('vacuum.3rd_floor') in ['error', 'unknown', 'unavailable']
+             or states('sensor.3rd_floor_status') in ['error', 'charging_problem', 'unknown', 'unavailable']
+             or states('sensor.3rd_floor_vacuum_error') not in ['none', 'low_battery', 'robot_on_carpet']
+             or states('sensor.3rd_floor_dock_dock_error') != 'ok' {{ "}}" }}
 
 prometheus:
   namespace: homeassistant

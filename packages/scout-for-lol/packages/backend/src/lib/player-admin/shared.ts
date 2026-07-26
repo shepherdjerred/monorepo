@@ -6,7 +6,6 @@ import {
   RiotIdSchema,
 } from "@scout-for-lol/data";
 import { Prisma, type User } from "#generated/prisma/client/index.js";
-import { assertGuildAdmin } from "#src/trpc/guild-guard.ts";
 import { prisma } from "#src/database/index.ts";
 
 export const GuildIdInput = z.object({ guildId: DiscordGuildIdSchema });
@@ -35,10 +34,6 @@ export function isUniqueConstraintError(error: unknown): boolean {
     error instanceof Prisma.PrismaClientKnownRequestError &&
     error.code === "P2002"
   );
-}
-
-export async function assertAdmin(ctx: WebCtx, guildId: string): Promise<void> {
-  await assertGuildAdmin({ user: ctx.user, guildId });
 }
 
 export const playerDetailInclude = {

@@ -52,20 +52,6 @@ export function getHaWorkflowRuleGroups(): PrometheusRuleSpecGroups[] {
           labels: { severity: "warning" },
         },
         {
-          alert: "HaRoombaVerificationFailed",
-          annotations: {
-            description: escapePrometheusTemplate(
-              "Roomba failed to start cleaning after being commanded. The vacuum state did not transition to 'cleaning' within the verification window.",
-            ),
-            summary: "Roomba failed to start cleaning",
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'sum without(pod, instance, container, endpoint) (increase(ha_workflow_executions_total{workflow=~"dsc_roomba_.*", status="failure"}[15m])) > 0',
-          ),
-          for: "0m",
-          labels: { severity: "warning" },
-        },
-        {
           alert: "HaDscVerificationFailed",
           annotations: {
             description: escapePrometheusTemplate(
@@ -143,25 +129,6 @@ export function getHaWorkflowRuleGroups(): PrometheusRuleSpecGroups[] {
           ),
           for: "1h",
           labels: { severity: "warning" },
-        },
-
-        // Vacuum workflow - should run every day at 9am
-        // Uses recording rule to survive app restarts
-        {
-          alert: "HaVacuumWorkflowMissing",
-          annotations: {
-            description: escapePrometheusTemplate(
-              "HA Vacuum workflow has not run in the last 25 hours. Expected to run daily at 9am. Last run: {{ $value | humanizeDuration }} ago.",
-            ),
-            summary: "HA Vacuum workflow missing",
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `time() - max without(pod, instance, container, endpoint) (
-              ha_workflow_last_success_timestamp_max{workflow="run_vacuum_if_not_home"}
-            ) > 90000`,
-          ),
-          for: "1h",
-          labels: { severity: "info" },
         },
       ],
     },

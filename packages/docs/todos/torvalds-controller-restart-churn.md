@@ -80,4 +80,18 @@ Work items:
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `Control-plane-wide restart churn on torvalds under CI load (probe-stall waves); webhook outages have Fail blast radius`.
+- [ ] After the liskov cutover (PR #1629), verify the churn actually stopped: controller restart counts flat over ≥48h of normal CI volume, no synchronized probe-failure waves in Grafana during builds.
+- [ ] If churn persists without CI on the node, the txg-sync/IO-stall hypothesis needs a non-CI culprit — reopen work items 1/3 (apiserver latency, memory overcommit audit).
+
+## Comment Log
+
+- 2026-07-25: Re-scoped by the liskov cutover + Kueue removal (see
+  `plans/2026-07-25_kueue-removal-node-symmetry.md`). The root cause
+  hypothesis (whole-box I/O stalls under CI write storms) is addressed by
+  moving CI off torvalds entirely, and Kueue — one of the two webhook victims
+  AND a phantom-reservation source (builds 5663/5680) — is removed outright.
+  Dropped now-moot Kueue-specific work items (leader-election tuning for
+  kueue, kueue CPU requests, `vjob.kb.io` blast radius). Kyverno's Fail-mode
+  webhook was already descoped from CI namespaces (kyverno.ts exclusion
+  list). This todo now tracks post-cutover verification that the churn is
+  gone, not active remediation.

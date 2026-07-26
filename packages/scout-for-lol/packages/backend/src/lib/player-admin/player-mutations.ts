@@ -5,7 +5,6 @@ import { recordAudit, type Db } from "#src/lib/audit/index.ts";
 import {
   AliasSchema,
   GuildIdInput,
-  assertAdmin,
   conflict,
   getPlayerOrThrow,
   isUniqueConstraintError,
@@ -36,7 +35,6 @@ export type MergePlayersInputData = z.infer<typeof MergePlayersInput>;
 export type DeletePlayerInputData = z.infer<typeof PlayerLookupInput>;
 
 export async function renamePlayer(ctx: WebCtx, input: RenamePlayerInputData) {
-  await assertAdmin(ctx, input.guildId);
   if (input.currentAlias === input.newAlias) {
     throw conflict("The new alias is the same as the current alias");
   }
@@ -91,7 +89,6 @@ export async function renamePlayer(ctx: WebCtx, input: RenamePlayerInputData) {
 }
 
 export async function linkDiscord(ctx: WebCtx, input: LinkDiscordInputData) {
-  await assertAdmin(ctx, input.guildId);
   const player = await getPlayerOrThrow({
     guildId: input.guildId,
     alias: input.playerAlias,
@@ -138,7 +135,6 @@ export async function unlinkDiscord(
   ctx: WebCtx,
   input: UnlinkDiscordInputData,
 ) {
-  await assertAdmin(ctx, input.guildId);
   const player = await getPlayerOrThrow({
     guildId: input.guildId,
     alias: input.playerAlias,
@@ -170,7 +166,6 @@ export async function unlinkDiscord(
 }
 
 export async function deletePlayer(ctx: WebCtx, input: DeletePlayerInputData) {
-  await assertAdmin(ctx, input.guildId);
   const player = await getPlayerOrThrow(input);
   await prisma.$transaction(async (tx) => {
     await tx.subscription.deleteMany({ where: { playerId: player.id } });
@@ -202,7 +197,6 @@ export async function deletePlayer(ctx: WebCtx, input: DeletePlayerInputData) {
 }
 
 export async function mergePlayers(ctx: WebCtx, input: MergePlayersInputData) {
-  await assertAdmin(ctx, input.guildId);
   if (input.sourceAlias === input.targetAlias) {
     throw conflict("Cannot merge a player into itself");
   }

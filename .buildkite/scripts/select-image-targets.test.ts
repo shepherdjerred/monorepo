@@ -6,13 +6,20 @@ import { join } from "node:path";
 import {
   ALL_IMAGE_TARGETS,
   changedPathsSince,
+  closureFingerprint,
+  parseJsonc,
+  parseLockfile,
   selectImageTargets,
+  type LockfilePair,
 } from "./select-image-targets.ts";
 
 const REPO_ROOT = new URL("../..", import.meta.url).pathname;
 
-function select(changedPaths: readonly string[]): Promise<string[]> {
-  return selectImageTargets(changedPaths, REPO_ROOT);
+function select(
+  changedPaths: readonly string[],
+  lockfiles?: LockfilePair,
+): Promise<string[]> {
+  return selectImageTargets(changedPaths, REPO_ROOT, lockfiles);
 }
 
 describe("selectImageTargets", () => {
@@ -63,17 +70,20 @@ describe("selectImageTargets", () => {
   });
 
   test("selects every image for shared build inputs", async () => {
-    expect(await select(["bun.lock"])).toEqual(ALL_IMAGE_TARGETS);
     expect(await select([".buildkite/pipeline.yml"])).toEqual(
       ALL_IMAGE_TARGETS,
     );
     expect(await select([".mise.toml"])).toEqual(ALL_IMAGE_TARGETS);
     expect(await select(["turbo.json"])).toEqual(ALL_IMAGE_TARGETS);
     expect(await select(["tsconfig.base.json"])).toEqual(ALL_IMAGE_TARGETS);
-    expect(await select(["packages/resume/package.json"])).toEqual(
-      ALL_IMAGE_TARGETS,
-    );
+    expect(await select(["package.json"])).toEqual(ALL_IMAGE_TARGETS);
     expect(await select(["scripts/package.json"])).toEqual(ALL_IMAGE_TARGETS);
+  });
+
+  test("attributes a workspace package.json to its closure, not ALL images", async () => {
+    // resume is in no image closure — its manifest alone builds nothing.
+    expect(await select(["packages/resume/package.json"])).toEqual([]);
+    expect(await select(["packages/birmel/package.json"])).toEqual(["birmel"]);
   });
 
   test("selects Scout for its shared base TypeScript config", async () => {
@@ -84,6 +94,129 @@ describe("selectImageTargets", () => {
 
   test("selects nothing for unrelated documentation", async () => {
     expect(await select(["packages/docs/guides/example.md"])).toEqual([]);
+  });
+});
+
+describe("parseJsonc", () => {
+  test("handles comments and trailing commas without touching strings", () => {
+    const parsed = parseJsonc(
+      `{
+        // line comment
+        "list": [ "a, ]", "b", /* block */ ],
+        "nested": { "k": "v", },
+      }`,
+    );
+    expect(parsed).toEqual({ list: ["a, ]", "b"], nested: { k: "v" } });
+  });
+});
+
+describe("lockfile attribution", () => {
+  const syntheticLock = JSON.stringify({
+    lockfileVersion: 1,
+    configVersion: 1,
+    workspaces: {
+      "": { name: "root", devDependencies: { lint: "^1" } },
+      "packages/a": { name: "a", dependencies: { x: "^1" } },
+    },
+    packages: {
+      lint: ["lint@1.0.0", "", {}, "sha512-lint"],
+      x: ["x@1.0.0", "", { dependencies: { y: "^2" } }, "sha512-x"],
+      y: ["y@2.0.0", "", {}, "sha512-y"],
+      "x/y": ["y@2.5.0", "", {}, "sha512-y-nested"],
+    },
+  });
+
+  test("fingerprints follow nested (parent-name) resolution", () => {
+    const lock = parseLockfile(syntheticLock);
+    const fp = closureFingerprint(["packages/a"], lock);
+    expect(fp).toContain("x/y=y@2.5.0#sha512-y-nested");
+    expect(fp).not.toContain("lint@1.0.0");
+  });
+
+  test("a change outside the closure leaves the fingerprint alone", () => {
+    const bumpedLint = syntheticLock.replace("lint@1.0.0", "lint@1.1.0");
+    const before = closureFingerprint(
+      ["packages/a"],
+      parseLockfile(syntheticLock),
+    );
+    const after = closureFingerprint(["packages/a"], parseLockfile(bumpedLint));
+    expect(after).toEqual(before);
+  });
+
+  test("a transitive bump inside the closure changes the fingerprint", () => {
+    const bumped = syntheticLock.replace("sha512-y-nested", "sha512-y-next");
+    const before = closureFingerprint(
+      ["packages/a"],
+      parseLockfile(syntheticLock),
+    );
+    const after = closureFingerprint(["packages/a"], parseLockfile(bumped));
+    expect(after).not.toEqual(before);
+  });
+
+  test("a lockfile format bump flips the fingerprint even with no dep change", () => {
+    // configVersion/lockfileVersion carry no dep spec, but a bun format bump can
+    // change resolution semantics, so it must fail selection open to all targets
+    // rather than leave every closure fingerprint equal (which selects none).
+    const before = closureFingerprint(
+      ["packages/a"],
+      parseLockfile(syntheticLock),
+    );
+    const configBumped = syntheticLock.replace(
+      '"configVersion":1',
+      '"configVersion":2',
+    );
+    expect(configBumped).not.toEqual(syntheticLock);
+    expect(
+      closureFingerprint(["packages/a"], parseLockfile(configBumped)),
+    ).not.toEqual(before);
+    const lockBumped = syntheticLock.replace(
+      '"lockfileVersion":1',
+      '"lockfileVersion":2',
+    );
+    expect(lockBumped).not.toEqual(syntheticLock);
+    expect(
+      closureFingerprint(["packages/a"], parseLockfile(lockBumped)),
+    ).not.toEqual(before);
+  });
+
+  test("unknown lockfile keys are rejected (fail-open trigger)", () => {
+    expect(() =>
+      parseLockfile(JSON.stringify({ lockfileVersion: 1, mystery: {} })),
+    ).toThrow("unknown lockfile key");
+  });
+
+  test("the real lockfile parses and every image closure fingerprints", async () => {
+    // Schema-drift canary: if bun changes the lock format, THIS fails loudly
+    // in CI instead of the runtime selector failing open on every build.
+    const real = await Bun.file(`${REPO_ROOT}/bun.lock`).text();
+    const identical: LockfilePair = { base: real, head: real };
+    expect(await select(["bun.lock"], identical)).toEqual([]);
+  });
+
+  test("a real direct-dep resolution change selects only its closures", async () => {
+    const real = await Bun.file(`${REPO_ROOT}/bun.lock`).text();
+    // Mutate the resolved discord.js entry's integrity — birmel's closure
+    // contains it; resume/sjer.red-class targets must stay unselected.
+    const entry =
+      /"discord\.js": \["discord\.js@[^"]+", [^\n]*"(sha512-[^"]+)"\]/;
+    const match = real.match(entry);
+    expect(match).not.toBeNull();
+    if (match === null) throw new Error("unreachable");
+    const mutated = real.replace(match[1] ?? "", "sha512-mutated");
+    const targets = await select(["bun.lock"], { base: real, head: mutated });
+    expect(targets).toContain("birmel");
+    expect(targets).not.toEqual(ALL_IMAGE_TARGETS);
+  });
+
+  test("fails open to ALL on an unreadable base or malformed head", async () => {
+    const real = await Bun.file(`${REPO_ROOT}/bun.lock`).text();
+    expect(await select(["bun.lock"], { base: null, head: real })).toEqual(
+      ALL_IMAGE_TARGETS,
+    );
+    expect(
+      await select(["bun.lock"], { base: real, head: "{ not json" }),
+    ).toEqual(ALL_IMAGE_TARGETS);
+    expect(await select(["bun.lock"])).toEqual(ALL_IMAGE_TARGETS);
   });
 });
 

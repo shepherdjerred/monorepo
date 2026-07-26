@@ -12,6 +12,7 @@ import {
 } from "cdk8s-plus-31";
 import { z } from "zod";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { PROD_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 
 const CpuPowerCapOptionsSchema = z
   .object({
@@ -38,8 +39,8 @@ const NAMESPACE = "node-tuning";
 // The 125 W / 253 W limits are Intel stock for the i9-14900K in this host. If
 // another node ever joins the cluster the limits would be wrong for it, and
 // the DaemonSet would CrashLoopBackOff there anyway because non-Intel hosts
-// lack /sys/class/powercap/intel-rapl:0. Pin to torvalds explicitly.
-const TARGET_NODE_HOSTNAME = "torvalds";
+// lack /sys/class/powercap/intel-rapl:0. Pin to the prod (Intel) node explicitly.
+const TARGET_NODE_HOSTNAME = PROD_NODE_HOSTNAME;
 
 /**
  * Caps Intel RAPL package power limits (PL1/PL2) on every node via a

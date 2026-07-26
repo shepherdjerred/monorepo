@@ -5,6 +5,7 @@ import {
   getEntityStateUnchecked,
   sendNotification,
   shouldStopVacuum,
+  VACUUMS,
 } from "./util.ts";
 import { PRESENCE_COOLDOWN_SECONDS } from "#shared/presence.ts";
 
@@ -12,9 +13,6 @@ const LIVING_ROOM_SCENE = "scene.living_room_bright" as const;
 const ENTRYWAY_LIGHT = "switch.light_2" as const;
 const FRONT_DOOR_LIGHT = "switch.light" as const;
 const SUN = "sun.sun" as const;
-const ROOMBA = "vacuum.roomba" as const;
-const Q7_MAX = "vacuum.q7_max" as const;
-const VACUUMS = [ROOMBA, Q7_MAX] as const;
 
 /**
  * Runs on every arrival (`not_home` → `home`), not just when the house was

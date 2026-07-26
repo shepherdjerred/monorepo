@@ -3,17 +3,13 @@ import {
   callServiceUnchecked,
   everyoneAway,
   getEntitiesInDomain,
-  getEntityStateUnchecked,
   matchExact,
   sendNotification,
-  shouldStartVacuum,
+  startEligibleVacuums,
   verifyState,
+  verifyStartedVacuums,
 } from "./util.ts";
 import { PRESENCE_COOLDOWN_SECONDS } from "#shared/presence.ts";
-
-const ROOMBA = "vacuum.roomba" as const;
-const Q7_MAX = "vacuum.q7_max" as const;
-const VACUUMS = [ROOMBA, Q7_MAX] as const;
 
 export async function leavingHome(): Promise<void> {
   // HA presence routinely emits a brief not_home blip while the user is
@@ -56,19 +52,12 @@ export async function leavingHome(): Promise<void> {
     });
   }
 
-  const started: (typeof VACUUMS)[number][] = [];
-  for (const vacuum of VACUUMS) {
-    const state = await getEntityStateUnchecked(vacuum);
-    if (shouldStartVacuum(state.state)) {
-      await callServiceUnchecked("vacuum", "start", { entity_id: vacuum });
-      started.push(vacuum);
-    }
-  }
-  for (const vacuum of started) {
-    await verifyState(
-      vacuum,
-      (state) => state === "cleaning" || state === "returning",
-      { delaySeconds: 5 * 60, retries: 3, retryDelaySeconds: 60 },
-    );
-  }
+  const { started } = await startEligibleVacuums();
+  // Verify concurrently so the fleet's sleep budget stays ~one unit's worth
+  // rather than summing sequentially across all floors.
+  await verifyStartedVacuums(started, {
+    delaySeconds: 5 * 60,
+    retries: 3,
+    retryDelaySeconds: 60,
+  });
 }

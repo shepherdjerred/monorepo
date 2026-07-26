@@ -15,6 +15,12 @@ agents:
 # Steps that run repo tasks start with `. .buildkite/scripts/toolchain.sh`
 # — a fast no-op on a current image, a runtime mise bootstrap on a stale one.
 common:
+  - checkout_container: &checkout_container
+      name: checkout
+      resources:
+        # The checkout writes the tracked tree into the memory-backed workspace.
+        requests: { cpu: "50m", memory: "1Gi" }
+        limits: { cpu: "400m", memory: "2Gi" }
   - pod: &pod
       kubernetes: &pod_kubernetes
         checkout:
@@ -23,6 +29,7 @@ common:
         podSpecPatch:
           serviceAccountName: buildkite-agent-stack-k8s-controller
           containers:
+            - *checkout_container
             - name: container-0
               image: "ghcr.io/shepherdjerred/ci-base:latest"
               # :latest is mutable and the ci-image refresh step repushes it;
@@ -37,16 +44,14 @@ common:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
               resources:
-                # Requests right-sized to measured p90 usage (step container
-                # p90 0.96 CPU / 1.5Gi over 7d, 2026-07-22); limits stay high
-                # so a cold-cache burst still gets real CPU. Halving requests
-                # (was 2/4Gi) is what lets Kueue admit ~6 heavy pods at once
-                # instead of 2 — see kueue-config.ts and the analysis log.
+                # Requests sized to measured p90 usage plus the post-checkout
+                # memory-backed workspace. The checkout's ~1Gi tmpfs charge now
+                # has an explicit request on the generated checkout container.
+                # Limits stay high so a cold-cache burst still gets real CPU.
                 # ephemeral-storage limit caps the pod's writable layer +
-                # emptyDir on the Talos xfs /var so a runaway build is evicted
-                # rather than filling the system disk and wedging the node
-                # (the 2026-07 freeze failure mode; 40Gi is well above the
-                # 20-58GiB/pod measured, but bounded).
+                # non-workspace emptyDirs on the Talos xfs /var so a runaway
+                # build is evicted rather than filling the system disk and
+                # wedging the node (the 2026-07 freeze failure mode).
                 requests: { cpu: "1", memory: "2Gi", ephemeral-storage: "2Gi" }
                 limits: { cpu: "7", memory: "12Gi", ephemeral-storage: "40Gi" }
               volumeMounts:
@@ -67,6 +72,7 @@ common:
         podSpecPatch:
           serviceAccountName: buildkite-agent-stack-k8s-controller
           containers:
+            - *checkout_container
             - name: container-0
               image: "ghcr.io/shepherdjerred/ci-base:latest"
               # Same stale-:latest guard as the base pod above.
@@ -78,8 +84,10 @@ common:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
               resources:
-                # Right-sized to measured p90 (see the base pod above). Was
-                # 2/6Gi; the dind sidecar below adds its own request.
+                # Measured p90 plus the post-checkout tmpfs workspace (filtered
+                # install ~1Gi for the images/docker-e2e lanes — verify has its
+                # own bigger anchor below). Checkout and dind add their own
+                # requests.
                 requests: { cpu: "1", memory: "2Gi", ephemeral-storage: "2Gi" }
                 limits: { cpu: "7", memory: "14Gi", ephemeral-storage: "40Gi" }
               volumeMounts:
@@ -97,10 +105,11 @@ common:
           # (initContainer + restartPolicy Always): kubelet terminates it by
           # itself once the regular containers finish, so pod completion never
           # depends on the agent-stack controller's Job-reap update. As a
-          # regular container it zombied: the reap raced a kyverno/kueue
-          # webhook outage (failurePolicy=Fail rejected the update) and the
-          # finished pod held ~4 CPU/10Gi of Kueue quota for 2.5h, starving
-          # the whole queue (2026-07-18; same freeze signature as 07-05/08).
+          # regular container it zombied: the reap raced a kyverno webhook
+          # outage (failurePolicy=Fail rejected the update) and the finished
+          # pod sat as ~4 CPU/10Gi of phantom load for 2.5h, starving the
+          # whole queue (2026-07-18; same freeze signature as 07-05/08 —
+          # under the since-removed Kueue quota admission).
           # Steps source .buildkite/scripts/docker-env.sh (CLI bootstrap +
           # daemon wait).
           initContainers:
@@ -122,10 +131,61 @@ common:
                 requests:
                   { cpu: "750m", memory: "1536Mi", ephemeral-storage: "4Gi" }
                 limits: { cpu: "4", memory: "8Gi", ephemeral-storage: "80Gi" }
+  # Verify's pod: identical to pod_privileged except the memory request. The
+  # full-root install + turbo scratch put ~6Gi into the memory-backed
+  # workspace (node_modules 3.75Gi alone). After the Scout RBAC graph landed,
+  # main builds 6256 and 6261 drove the command container to its exact 14Gi
+  # limit (12.85Gi working set, 6.69Gi RSS immediately before exit 137).
+  # Request the observed working set plus scheduling margin and retain 43%
+  # burst headroom. Checkout still requests its 1Gi separately.
+  # Only verify pays this; the other privileged lanes stay at 2Gi.
+  - pod_verify: &pod_verify
+      kubernetes: &pod_verify_kubernetes
+        checkout:
+          cloneFlags: "--no-tags"
+        podSpecPatch:
+          serviceAccountName: buildkite-agent-stack-k8s-controller
+          containers:
+            - *checkout_container
+            - name: container-0
+              image: "ghcr.io/shepherdjerred/ci-base:latest"
+              # Same stale-:latest guard as the base pod above.
+              imagePullPolicy: Always
+              env:
+                - name: DOCKER_HOST
+                  value: "tcp://127.0.0.1:2375"
+                # Same dash-vs-bash guard as the base pod above (build 5651).
+                - name: BUILDKITE_SHELL
+                  value: "/bin/bash -e -c"
+              resources:
+                requests: { cpu: "1", memory: "14Gi", ephemeral-storage: "2Gi" }
+                limits: { cpu: "7", memory: "20Gi", ephemeral-storage: "40Gi" }
+              volumeMounts:
+                # Mirror-backed checkouts: see the base pod anchor above.
+                - name: buildkite-git-mirrors
+                  mountPath: /buildkite/git-mirrors
+                  readOnly: true
+              envFrom:
+                - secretRef: { name: buildkite-ci-secrets }
+          # Same native-sidecar dind as pod_privileged (verify's docker tasks:
+          # check:caddyfile, llm-observability unit surface).
+          initContainers:
+            - name: dind
+              # renovate: datasource=docker depName=docker
+              image: "docker:28-dind"
+              restartPolicy: Always
+              securityContext: { privileged: true }
+              env:
+                - name: DOCKER_TLS_CERTDIR
+                  value: ""
+              resources:
+                requests:
+                  { cpu: "750m", memory: "1536Mi", ephemeral-storage: "4Gi" }
+                limits: { cpu: "4", memory: "8Gi", ephemeral-storage: "80Gi" }
   # Light steps: thin deploy/publish/annotate scripts whose work is seconds
-  # even on a cold cache. Small REQUESTS so Kueue admits them alongside the
-  # long images job (12 CPU / 20Gi namespace quota — build 5644: light steps
-  # sat runnable 3-66 min behind it); limits stay high so a cold-cache burst
+  # even on a cold cache. Small REQUESTS so the scheduler places them
+  # alongside the long images job (build 5644: light steps sat runnable
+  # 3-66 min behind it under the old quota); limits stay high so a cold-cache burst
   # still gets real CPU. Steps that do heavy work when cold (verify, e2e,
   # images, site builds' turbo graph) keep the full-size pod.
   - pod_light: &pod_light
@@ -135,6 +195,7 @@ common:
         podSpecPatch:
           serviceAccountName: buildkite-agent-stack-k8s-controller
           containers:
+            - *checkout_container
             - name: container-0
               image: "ghcr.io/shepherdjerred/ci-base:latest"
               imagePullPolicy: Always
@@ -142,6 +203,8 @@ common:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
               resources:
+                # The checkout container requests its own 1Gi tmpfs charge;
+                # 512Mi covers these thin command containers.
                 requests:
                   { cpu: "250m", memory: "512Mi", ephemeral-storage: "1Gi" }
                 limits: { cpu: "7", memory: "12Gi", ephemeral-storage: "20Gi" }
@@ -245,7 +308,7 @@ steps:
     retry: *retry
     plugins:
       - kubernetes:
-          <<: *pod_privileged_kubernetes
+          <<: *pod_verify_kubernetes
           metadata:
             labels:
               ci.sjer.red/step-key: verify
@@ -288,11 +351,13 @@ steps:
           podSpecPatch:
             serviceAccountName: buildkite-agent-stack-k8s-controller
             containers:
+              - *checkout_container
               - name: container-0
                 # renovate: datasource=docker depName=mcr.microsoft.com/playwright
                 image: "mcr.microsoft.com/playwright:v1.61.1-noble"
                 resources:
-                  requests: { cpu: "2", memory: "4Gi" }
+                  # The checkout container separately requests its 1Gi tmpfs charge.
+                  requests: { cpu: "2", memory: "5Gi" }
                   limits: { cpu: "4", memory: "8Gi" }
                 volumeMounts:
                   # Mirror-backed checkouts: see the container-0 mounts in the
@@ -330,11 +395,13 @@ steps:
           podSpecPatch:
             serviceAccountName: buildkite-agent-stack-k8s-controller
             containers:
+              - *checkout_container
               - name: container-0
                 # renovate: datasource=docker depName=mcr.microsoft.com/playwright
                 image: "mcr.microsoft.com/playwright:v1.61.1-noble"
                 resources:
-                  requests: { cpu: "2", memory: "4Gi" }
+                  # The checkout container separately requests its 1Gi tmpfs charge.
+                  requests: { cpu: "2", memory: "5Gi" }
                   limits: { cpu: "4", memory: "8Gi" }
                 volumeMounts:
                   - name: buildkite-git-mirrors
@@ -373,10 +440,12 @@ steps:
           podSpecPatch:
             serviceAccountName: buildkite-agent-stack-k8s-controller
             containers:
+              - *checkout_container
               - name: container-0
                 # renovate: datasource=docker depName=texlive/texlive
                 image: "texlive/texlive:TL2024-historic"
                 resources:
+                  # The checkout container separately requests its 1Gi tmpfs charge.
                   requests: { cpu: "1", memory: "2Gi" }
                   limits: { cpu: "2", memory: "4Gi" }
                 volumeMounts:
@@ -410,10 +479,12 @@ steps:
           podSpecPatch:
             serviceAccountName: buildkite-agent-stack-k8s-controller
             containers:
+              - *checkout_container
               - name: container-0
                 # renovate: datasource=docker depName=texlive/texlive
                 image: "texlive/texlive:TL2024-historic"
                 resources:
+                  # The checkout container separately requests its 1Gi tmpfs charge.
                   requests: { cpu: "1", memory: "2Gi" }
                   limits: { cpu: "2", memory: "4Gi" }
                 volumeMounts:
@@ -422,47 +493,6 @@ steps:
                     readOnly: true
                 envFrom:
                   - secretRef: { name: buildkite-ci-secrets }
-
-  # ── Helm value types drift gate (PR-only). The committed
-  # packages/homelab/src/cdk8s/generated/helm types must be regenerated in the
-  # same PR that changes a generator input. Replaces the deleted freshness
-  # mechanisms (helm-types-weekly-refresh Temporal schedule → #1168 Dagger
-  # gate → lost in the Buildkite replatform #1516). Accepted trade-off:
-  # Renovate chart bumps touching versions.ts fail here until someone pushes
-  # the regen commit (--check prints the command; hosted Renovate cannot run
-  # it). Main is skipped: inputs are fully version-pinned, so a green PR gate
-  # implies a green main tree. helm comes from the ci-image's mise toolchain.
-  - label: ":helm: helm types drift check"
-    key: helm-types-drift-check
-    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
-    if_changed:
-      include:
-        - ".buildkite/**"
-        - ".mise.toml"
-        - "bun.lock"
-        - "bunfig.toml"
-        - "package.json"
-        - "patches/**"
-        - "turbo.json"
-        - "packages/homelab/src/cdk8s/package.json"
-        - "packages/homelab/src/cdk8s/src/versions.ts"
-        - "packages/homelab/src/cdk8s/scripts/generate-helm-types.ts"
-        - "packages/homelab/src/cdk8s/scripts/parse-helm-charts.ts"
-        - "packages/homelab/src/helm-types/**"
-        - "packages/homelab/src/cdk8s/generated/helm/**"
-    cancel_on_build_failing: true
-    command: |
-      . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile --filter '@homelab/cdk8s'
-      cd packages/homelab/src/cdk8s
-      bun --no-install run generate-helm-types --check
-    retry: *retry
-    plugins:
-      - kubernetes:
-          <<: *pod_light_kubernetes
-          metadata:
-            labels:
-              ci.sjer.red/step-key: helm-types-drift-check
 
   - label: ":docker: docker e2e (PR)"
     key: docker-e2e-pr
@@ -568,6 +598,7 @@ steps:
             cloneFlags: "--no-tags"
           podSpecPatch:
             containers:
+              - *checkout_container
               # The shell is taken from the AGENT container's registration
               # env (container-0-level BUILDKITE_SHELL is ignored — the
               # build-5651 lesson). This image has no bash; use sh.
@@ -586,8 +617,17 @@ steps:
                   - name: BUILDKITE_SHELL
                     value: "/bin/sh -e -c"
                 resources:
+                  # The checkout container separately requests its 1Gi tmpfs charge.
                   requests: { cpu: "500m", memory: "1Gi" }
                   limits: { cpu: "2", memory: "4Gi" }
+                volumeMounts:
+                  # Mirror-backed checkouts (same as semgrep below): without
+                  # this mount the trivy pod's checkout cannot resolve the
+                  # alternates path and pays a full ~1 GB cold clone on every
+                  # lockfile-touching PR.
+                  - name: buildkite-git-mirrors
+                    mountPath: /buildkite/git-mirrors
+                    readOnly: true
 
   - label: ":mag: semgrep"
     key: semgrep
@@ -687,6 +727,7 @@ steps:
             cloneFlags: "--no-tags"
           podSpecPatch:
             containers:
+              - *checkout_container
               # The shell is taken from the AGENT container's registration
               # env (container-0-level BUILDKITE_SHELL is ignored — the
               # build-5651 lesson). This image has no bash; use sh.
@@ -700,6 +741,7 @@ steps:
                 securityContext:
                   allowPrivilegeEscalation: false
                 resources:
+                  # The checkout container separately requests its 1Gi tmpfs charge.
                   requests: { cpu: "500m", memory: "1Gi" }
                   limits: { cpu: "2", memory: "4Gi" }
                 volumeMounts:
@@ -729,10 +771,16 @@ steps:
             labels:
               ci.sjer.red/step-key: greptile-review
 
-  # ── PR-only dry-run lane: validate every deploy path, no side effects ─────
-  # (the old pipeline's --dryrun plumbing, restored)
-  - label: ":terraform: tofu plan"
-    key: tofu-plan
+  # ── PR-only dry-run lane: ONE pod validates every deploy path, no side
+  # effects (the old pipeline's --dryrun plumbing). Replaces five micro-steps
+  # (tofu-plan, sites-pr, helm-pr, release-pr, helm-types-drift-check), each
+  # of which paid pod + checkout + install overhead for seconds of real work.
+  # Sections self-gate with ci-changed.sh against the PR merge-base
+  # (CI_CHANGED_BASE override), so the two sections that do real work — the
+  # tofu plans and the helm-types drift regen — still only run when their
+  # inputs changed; the deploy rehearsals are print-only and always run.
+  - label: ":microscope: pr dry-run (deploy paths + drift)"
+    key: pr-dryrun
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     if_changed:
       include:
@@ -741,27 +789,83 @@ steps:
         - "bun.lock"
         - "bunfig.toml"
         - "package.json"
+        - "packages/**/package.json"
         - "patches/**"
         - "turbo.json"
+        - "release-please-config.json"
+        - ".release-please-manifest.json"
+        - "scripts/package.json"
+        - "scripts/release.ts"
+        - "scripts/deploy-site.ts"
+        - "scripts/scout-site-release.ts"
+        - "scripts/lib/**"
         - "packages/homelab/src/tofu/**"
         - "packages/homelab/scripts/tofu-stack.ts"
-        - "scripts/lib/run.ts"
-        - "scripts/lib/transient.ts"
+        - "packages/homelab/scripts/helm-push.ts"
+        - "packages/homelab/src/cdk8s/**"
+        - "packages/homelab/src/helm-types/**"
+        - "packages/sjer.red/**"
+        - "packages/resume/**"
+        - "packages/webring/**"
+        - "packages/astro-opengraph-images/**"
+        - "packages/llm-models/**"
+        - "packages/cooklang-rich-preview/**"
+        - "packages/stocks-sjer-red/**"
+        - "packages/better-skill-capped/**"
+        - "packages/glitter/**"
+        - "packages/scout-for-lol/**"
     depends_on: verify
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
-      for stack in seaweedfs tailscale buildkite arr pagerduty github cloudflare; do
-        bun --no-install packages/homelab/scripts/tofu-stack.ts "$$stack" plan
+      bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter '@homelab/cdk8s'
+      # Merge-base for section gating; unresolvable → empty → ci-changed.sh
+      # fails open and every section runs (extra work, never lost coverage).
+      if ! CI_CHANGED_BASE=$(git merge-base origin/main HEAD); then
+        CI_CHANGED_BASE=""
+      fi
+      export CI_CHANGED_BASE
+      # Helm value-types drift gate (PR-only; main is skipped by design —
+      # inputs are fully version-pinned, so a green PR gate implies a green
+      # main tree). Renovate chart bumps touching versions.ts fail here until
+      # someone pushes the regen commit (--check prints the command; hosted
+      # Renovate cannot run it). helm comes from the ci-image's mise toolchain.
+      if bash .buildkite/scripts/ci-changed.sh helm-types; then
+        bun --no-install run --cwd packages/homelab/src/cdk8s generate-helm-types --check
+      fi
+      # Tofu plans — the only expensive section; gated on tofu inputs. The
+      # SeaweedFS creds (tofu's S3 state backend) are confined to a subshell so
+      # they DON'T leak into the deploy-site/scout dry-run rehearsals below:
+      # with creds present, deploy-site's --dry-run runs a real
+      # `aws s3 sync --dryrun` against a dist/ that was never built (the build
+      # is stubbed in dry-run), which fails "path does not exist". These lanes
+      # used to be separate pods; merging them into one made the leak possible.
+      if bash .buildkite/scripts/ci-changed.sh tofu; then
+        (
+          export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
+          for stack in seaweedfs tailscale buildkite arr pagerduty github cloudflare; do
+            bun --no-install packages/homelab/scripts/tofu-stack.ts "$$stack" plan
+          done
+        )
+      fi
+      # Print-only rehearsals (seconds each): sites catalog, the versioned
+      # scout release path, helm chart push, and release-please.
+      for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red better-skill-capped glitter; do
+        bun --no-install scripts/deploy-site.ts "$$site" --dry-run
       done
+      bun --no-install scripts/scout-site-release.ts archive --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
+      bun --no-install scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
+      bun --no-install scripts/scout-site-release.ts reconcile-prod --dry-run
+      bun --no-install scripts/scout-site-release.ts tag-release --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
+      bun --no-install packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER" --dry-run
+      bun --no-install scripts/release.ts --dry-run
     retry: *retry
     plugins:
       - kubernetes:
           <<: *pod_kubernetes
           metadata:
             labels:
-              ci.sjer.red/step-key: tofu-plan
+              ci.sjer.red/step-key: pr-dryrun
 
   - label: ":docker: images — build + smoke (PR dry-run)"
     key: images-pr
@@ -824,114 +928,6 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: images-pr
-
-  - label: ":rocket: sites (PR dry-run)"
-    key: sites-pr
-    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
-    if_changed:
-      include:
-        - ".buildkite/**"
-        - ".mise.toml"
-        - "bun.lock"
-        - "bunfig.toml"
-        - "package.json"
-        - "patches/**"
-        - "scripts/package.json"
-        - "turbo.json"
-        - "packages/sjer.red/**"
-        - "packages/resume/**"
-        - "packages/webring/**"
-        - "packages/astro-opengraph-images/**"
-        - "packages/llm-models/**"
-        - "packages/cooklang-rich-preview/**"
-        - "packages/stocks-sjer-red/**"
-        - "packages/better-skill-capped/**"
-        - "packages/glitter/**"
-        - "packages/scout-for-lol/**"
-        - "packages/homelab/src/cdk8s/src/versions.ts"
-        - "scripts/deploy-site.ts"
-        - "scripts/scout-site-release.ts"
-        - "scripts/lib/**"
-    depends_on: verify
-    cancel_on_build_failing: true
-    command: |
-      . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
-      for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red better-skill-capped glitter; do
-        bun --no-install scripts/deploy-site.ts "$$site" --dry-run
-      done
-      # Scout sites deploy versioned + stage-pinned (not via the catalog);
-      # rehearse all three subcommands so PRs exercise the real main path.
-      bun --no-install scripts/scout-site-release.ts archive --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
-      bun --no-install scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
-      bun --no-install scripts/scout-site-release.ts reconcile-prod --dry-run
-      bun --no-install scripts/scout-site-release.ts tag-release --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
-    retry: *retry
-    plugins:
-      - kubernetes:
-          <<: *pod_kubernetes
-          metadata:
-            labels:
-              ci.sjer.red/step-key: sites-pr
-
-  - label: ":helm: helm push (PR dry-run)"
-    key: helm-pr
-    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
-    if_changed:
-      include:
-        - ".buildkite/**"
-        - ".mise.toml"
-        - "bun.lock"
-        - "bunfig.toml"
-        - "package.json"
-        - "patches/**"
-        - "turbo.json"
-        - "packages/homelab/src/cdk8s/**"
-        - "packages/homelab/scripts/helm-push.ts"
-        - "scripts/lib/run.ts"
-    depends_on: verify
-    cancel_on_build_failing: true
-    command: |
-      . .buildkite/scripts/toolchain.sh
-      bun --no-install packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER" --dry-run
-    retry: *retry
-    plugins:
-      - kubernetes:
-          <<: *pod_light_kubernetes
-          metadata:
-            labels:
-              ci.sjer.red/step-key: helm-pr
-
-  - label: ":package: release (PR dry-run)"
-    key: release-pr
-    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
-    if_changed:
-      include:
-        - ".buildkite/**"
-        - ".mise.toml"
-        - "bun.lock"
-        - "bunfig.toml"
-        - "package.json"
-        - "packages/**/package.json"
-        - "patches/**"
-        - "release-please-config.json"
-        - ".release-please-manifest.json"
-        - "scripts/release.ts"
-        - "scripts/package.json"
-        - "scripts/lib/**"
-        - "turbo.json"
-    depends_on: verify
-    cancel_on_build_failing: true
-    command: |
-      . .buildkite/scripts/toolchain.sh
-      bun --no-install scripts/release.ts --dry-run
-    retry: *retry
-    plugins:
-      - kubernetes:
-          <<: *pod_light_kubernetes
-          metadata:
-            labels:
-              ci.sjer.red/step-key: release-pr
 
   # ── Main-only: images (parallel bake + smoke + push) ─────────────────────
   - label: ":docker: images — build, smoke, push"
@@ -1051,31 +1047,44 @@ steps:
   # <version>-dev.<build#> to --tag dev on every main build. Prod runs FIRST;
   # dev mode rewrites package.json versions mid-publish (and restores them in
   # a finally, so a failed dev publish can't leak -dev.N into a later prod run).
-  - label: ":npm: publish packages"
-    key: npm-publish
+  - label: ":npm: publish packages + cooklang plugin"
+    key: publish
     if: build.branch == pipeline.default_branch
     depends_on: verify
     cancel_on_build_failing: true
+    # Both halves are idempotent (npm --tolerate-republish; cooklang skips an
+    # existing version tag), so the shared retry anchor is safe.
     command: |
-      if ! bash .buildkite/scripts/ci-changed.sh npm; then exit 0; fi
+      npm_changed=true
+      cooklang_changed=true
+      if ! bash .buildkite/scripts/ci-changed.sh npm; then npm_changed=false; fi
+      if ! bash .buildkite/scripts/ci-changed.sh cooklang; then cooklang_changed=false; fi
+      if ! $$npm_changed && ! $$cooklang_changed; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile \
-        --filter astro-opengraph-images \
-        --filter webring \
-        --filter '@shepherdjerred/helm-types'
-      bun --no-install run --cwd packages/astro-opengraph-images publish:npm
-      bun --no-install run --cwd packages/webring publish:npm
-      bun --no-install run --cwd packages/homelab/src/helm-types publish:npm
-      bun --no-install scripts/publish-npm.ts packages/astro-opengraph-images --dev-suffix "$BUILDKITE_BUILD_NUMBER"
-      bun --no-install scripts/publish-npm.ts packages/webring --dev-suffix "$BUILDKITE_BUILD_NUMBER"
-      bun --no-install scripts/publish-npm.ts packages/homelab/src/helm-types --dev-suffix "$BUILDKITE_BUILD_NUMBER"
+      filters=()
+      if $$npm_changed; then
+        filters+=(--filter astro-opengraph-images --filter webring --filter '@shepherdjerred/helm-types')
+      fi
+      if $$cooklang_changed; then filters+=(--filter cooklang-for-obsidian); fi
+      bun install --frozen-lockfile "$${filters[@]}"
+      if $$npm_changed; then
+        bun --no-install run --cwd packages/astro-opengraph-images publish:npm
+        bun --no-install run --cwd packages/webring publish:npm
+        bun --no-install run --cwd packages/homelab/src/helm-types publish:npm
+        bun --no-install scripts/publish-npm.ts packages/astro-opengraph-images --dev-suffix "$BUILDKITE_BUILD_NUMBER"
+        bun --no-install scripts/publish-npm.ts packages/webring --dev-suffix "$BUILDKITE_BUILD_NUMBER"
+        bun --no-install scripts/publish-npm.ts packages/homelab/src/helm-types --dev-suffix "$BUILDKITE_BUILD_NUMBER"
+      fi
+      if $$cooklang_changed; then
+        bun --no-install run --cwd packages/cooklang-for-obsidian publish:plugin
+      fi
     retry: *retry
     plugins:
       - kubernetes:
           <<: *pod_light_kubernetes
           metadata:
             labels:
-              ci.sjer.red/step-key: npm-publish
+              ci.sjer.red/step-key: publish
 
   # ── Main-only: homelab release track ─────────────────────────────────────
   - label: ":helm: helm push"
@@ -1155,6 +1164,12 @@ steps:
       # argocd.ts reads ARGOCD_TOKEN (build 5648).
       export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
       bun --no-install packages/homelab/scripts/argocd.ts sync apps
+      bun --no-install packages/homelab/scripts/argocd.ts tree-health-wait argocd --timeout 300
+      # Kueue was a child Application without a resources finalizer. Delete it
+      # explicitly with foreground cascading before pruning the root-owned
+      # queues and namespace; otherwise its Helm resources are orphaned.
+      bun --no-install packages/homelab/scripts/argocd.ts delete-application kueue --project default --timeout 300
+      bun --no-install packages/homelab/scripts/argocd.ts sync apps --prune
       bun --no-install packages/homelab/scripts/argocd.ts tree-health-wait apps --timeout 300
     retry: *retry
     plugins:
@@ -1306,26 +1321,6 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: version-commit-back
-
-  # ── Main-only: cooklang Obsidian plugin release ───────────────────────────
-  # Publishes to the plugin repo + commits the version back (idempotent: the
-  # script skips the release cut when the version tag already exists).
-  - label: ":knife_fork_plate: cooklang plugin publish"
-    key: cooklang-publish
-    if: build.branch == pipeline.default_branch
-    depends_on: verify
-    cancel_on_build_failing: true
-    command: |
-      if ! bash .buildkite/scripts/ci-changed.sh cooklang; then exit 0; fi
-      . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile --filter cooklang-for-obsidian
-      bun --no-install run --cwd packages/cooklang-for-obsidian publish:plugin
-    plugins:
-      - kubernetes:
-          <<: *pod_light_kubernetes
-          metadata:
-            labels:
-              ci.sjer.red/step-key: cooklang-publish
 
   # ── Toolchain image refresh ───────────────────────────────────────────────
   - label: ":docker: ci-image refresh"

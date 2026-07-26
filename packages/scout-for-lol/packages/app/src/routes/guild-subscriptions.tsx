@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router";
 import {
   useInfiniteQuery,
   useMutation,
@@ -7,6 +7,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { AddSubscriptionDialog } from "#src/components/add-subscription-dialog.tsx";
 import {
   SubscriptionChannelDialog,
@@ -46,6 +47,10 @@ export function GuildSubscriptions() {
   const { guildId } = useParams();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const { perms } = usePermissions(guildId);
+  const canCreate = perms.can("subscriptions", "create");
+  const canUpdate = perms.can("subscriptions", "update");
+  const canDelete = perms.can("subscriptions", "delete");
   const [isAddOpen, setAddOpen] = useState(false);
   const [channelAction, setChannelAction] =
     useState<SubscriptionChannelAction | null>(null);
@@ -143,25 +148,29 @@ export function GuildSubscriptions() {
       <div className="flex items-baseline justify-between">
         <h2 className="text-xl font-semibold tracking-tight">Subscriptions</h2>
         <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              setFilterAction({ kind: "bulk" });
-            }}
-          >
-            Set filters for a channel
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            onClick={() => {
-              setAddOpen(true);
-            }}
-          >
-            + Add subscription
-          </Button>
+          {canUpdate && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setFilterAction({ kind: "bulk" });
+              }}
+            >
+              Set filters for a channel
+            </Button>
+          )}
+          {canCreate && (
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                setAddOpen(true);
+              }}
+            >
+              + Add subscription
+            </Button>
+          )}
         </div>
       </div>
 
@@ -239,86 +248,94 @@ export function GuildSubscriptions() {
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-1">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setFilterAction({
-                              kind: "edit",
-                              alias: sub.player.alias,
-                              channelId: sub.channelId,
-                              initial: sub.filters,
-                            });
-                          }}
-                        >
-                          Edit filters
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setChannelAction({
-                              kind: "add-channel",
-                              alias: sub.player.alias,
-                            });
-                          }}
-                        >
-                          Add channel
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setChannelAction({
-                              kind: "move",
-                              alias: sub.player.alias,
-                              fromChannelId: sub.channelId,
-                            });
-                          }}
-                        >
-                          Move
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          disabled={muteMutation.isPending}
-                          onClick={() => {
-                            muteMutation.mutate({
-                              guildId,
-                              channelId: sub.channelId,
-                              alias: sub.player.alias,
-                              isMuted: !sub.isMuted,
-                            });
-                          }}
-                        >
-                          {sub.isMuted ? "Unmute" : "Mute"}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          disabled={removeMutation.isPending}
-                          onClick={() => {
-                            if (
-                              !globalThis.confirm(
-                                `Remove "${sub.player.alias}" from this channel?`,
-                              )
-                            ) {
-                              return;
-                            }
-                            removeMutation.mutate({
-                              guildId,
-                              channelId: sub.channelId,
-                              alias: sub.player.alias,
-                            });
-                          }}
-                        >
-                          Remove
-                        </Button>
+                        {canUpdate && (
+                          <>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setFilterAction({
+                                  kind: "edit",
+                                  alias: sub.player.alias,
+                                  channelId: sub.channelId,
+                                  initial: sub.filters,
+                                });
+                              }}
+                            >
+                              Edit filters
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setChannelAction({
+                                  kind: "move",
+                                  alias: sub.player.alias,
+                                  fromChannelId: sub.channelId,
+                                });
+                              }}
+                            >
+                              Move
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              disabled={muteMutation.isPending}
+                              onClick={() => {
+                                muteMutation.mutate({
+                                  guildId,
+                                  channelId: sub.channelId,
+                                  alias: sub.player.alias,
+                                  isMuted: !sub.isMuted,
+                                });
+                              }}
+                            >
+                              {sub.isMuted ? "Unmute" : "Mute"}
+                            </Button>
+                          </>
+                        )}
+                        {canCreate && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setChannelAction({
+                                kind: "add-channel",
+                                alias: sub.player.alias,
+                              });
+                            }}
+                          >
+                            Add channel
+                          </Button>
+                        )}
+                        {canDelete && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            disabled={removeMutation.isPending}
+                            onClick={() => {
+                              if (
+                                !globalThis.confirm(
+                                  `Remove "${sub.player.alias}" from this channel?`,
+                                )
+                              ) {
+                                return;
+                              }
+                              removeMutation.mutate({
+                                guildId,
+                                channelId: sub.channelId,
+                                alias: sub.player.alias,
+                              });
+                            }}
+                          >
+                            Remove
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

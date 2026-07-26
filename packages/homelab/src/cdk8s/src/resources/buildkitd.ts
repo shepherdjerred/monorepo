@@ -6,6 +6,8 @@ import {
   Deployment,
   DeploymentStrategy,
   Namespace,
+  Node,
+  NodeLabelQuery,
   PersistentVolumeAccessMode,
   PersistentVolumeClaim,
   PersistentVolumeMode,
@@ -14,17 +16,25 @@ import {
   Volume,
 } from "cdk8s-plus-31";
 import {
+  KubeNetworkPolicy,
+  IntOrString,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
   setRevisionHistoryLimit,
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { NVME_STORAGE_CLASS_LZ4 } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import {
+  CI_NODE_HOSTNAME,
+  ciNodeTaintedNode,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 // Plaintext gRPC port. BuildKit serves the build API here; the buildx `remote`
 // driver in CI connects to it in-cluster. No TLS/mTLS: the endpoint is a
 // ClusterIP Service reachable only inside the cluster (never a Tailscale/tunnel
-// ingress), on a single-tenant homelab. A NetworkPolicy restricting ingress to
-// the buildkite namespace is a sensible follow-up hardening.
+// ingress), on a single-tenant homelab. The NetworkPolicy below restricts
+// ingress to the buildkite namespace.
 const PORT = 1234;
 
 // Keep the on-disk build cache bounded well under the PVC size so BuildKit's GC
@@ -56,10 +66,13 @@ debug = false
 `;
 
 export function createBuildkitdDeployment(chart: Chart) {
-  // Own namespace, NOT the Kueue-managed `buildkite` namespace: a long-running
-  // Deployment there would be intercepted by Kueue admission (which is for
-  // batch jobs, not services). PSA `privileged` because rootful buildkitd needs
-  // it. CI reaches this at buildkitd.buildkitd.svc.cluster.local:1234.
+  // Own namespace, separate from `buildkite`: this is a long-running service,
+  // not a CI batch job, and keeping it out of the CI namespace keeps that
+  // separation obvious. PSA `privileged` because rootful buildkitd needs it.
+  // CI reaches this at
+  // buildkitd-buildkitd-service.buildkitd.svc.cluster.local:1234 (the Service
+  // construct id is "buildkitd-service" under the "buildkitd" chart, and
+  // resource-name hashes are disabled — the chart id is the prefix).
   new Namespace(chart, "buildkitd-namespace", {
     metadata: {
       name: "buildkitd",
@@ -77,13 +90,16 @@ export function createBuildkitdDeployment(chart: Chart) {
 
   // Rebuildable cache — explicitly excluded from Velero backup (a cache is
   // pointless to restore, and it can be large).
-  const cache = new PersistentVolumeClaim(chart, "buildkitd-cache", {
+  const cache = new PersistentVolumeClaim(chart, "buildkitd-cache-liskov", {
     storageClassName: NVME_STORAGE_CLASS_LZ4,
     accessModes: [PersistentVolumeAccessMode.READ_WRITE_ONCE],
     volumeMode: PersistentVolumeMode.FILE_SYSTEM,
     storage: CACHE_PVC,
     metadata: {
-      name: "buildkitd-cache",
+      // The old buildkitd-cache claim is node-affined to torvalds. A new name
+      // lets WaitForFirstConsumer bind this replacement cache on liskov
+      // without taking the image builder down before the cutover.
+      name: "buildkitd-cache-liskov",
       labels: {
         "velero.io/backup": "disabled",
         "velero.io/exclude-from-backup": "true",
@@ -96,6 +112,10 @@ export function createBuildkitdDeployment(chart: Chart) {
     // A single writer owns the RWO cache volume; never run two at once.
     strategy: DeploymentStrategy.recreate(),
   });
+  deployment.scheduling.attract(
+    Node.labeled(NodeLabelQuery.is("kubernetes.io/hostname", CI_NODE_HOSTNAME)),
+  );
+  deployment.scheduling.tolerate(ciNodeTaintedNode());
 
   deployment.addContainer(
     withCommonProps({
@@ -118,7 +138,7 @@ export function createBuildkitdDeployment(chart: Chart) {
       resources: {
         cpu: {
           // Requests small so it costs little while idle; limit high so a real
-          // parallel bake gets CPU. Not Kueue-managed (own namespace).
+          // parallel bake gets CPU.
           request: Cpu.millis(500),
           limit: Cpu.units(8),
         },
@@ -156,6 +176,30 @@ export function createBuildkitdDeployment(chart: Chart) {
   const service = new Service(chart, "buildkitd-service", {
     selector: deployment,
     ports: [{ port: PORT, name: "buildkit" }],
+  });
+
+  // The gRPC endpoint is plaintext and privileged — restrict ingress to the
+  // CI job pods (buildkite namespace) so nothing else in the cluster can drive
+  // builds through it. Egress stays open: buildkitd pulls base images and
+  // pushes to ghcr.
+  new KubeNetworkPolicy(chart, "buildkitd-ingress-netpol", {
+    metadata: { name: "buildkitd-ingress-netpol" },
+    spec: {
+      podSelector: {},
+      policyTypes: ["Ingress"],
+      ingress: [
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "buildkite" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(PORT), protocol: "TCP" }],
+        },
+      ],
+    },
   });
 
   return { deployment, service, config, cache };

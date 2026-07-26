@@ -1,0 +1,201 @@
+---
+id: plan-2026-07-25-scout-rbac-permission-system
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
+# Scout for LoL — RBAC Permission System
+
+## Context
+
+Scout's web UI is **binary admin-only** today. Every guild-scoped tRPC resolver
+manually calls `assertGuildAdmin({user, guildId})` (`packages/backend/src/trpc/guild-guard.ts:13`)
+— "Discord guild owner or Administrator bit, else FORBIDDEN." A non-admin member
+can't see the dashboard at all: the guild never appears in the picker
+(`guild.listManageable` filters to admins) and every read throws FORBIDDEN.
+
+We're adding **role-based access control** so a guild admin can delegate scoped
+access, using **Scout-managed grants** on the existing `ServerPermission` table.
+
+**Locked decisions:**
+
+- **Assignment = Scout-managed grants** (extend `ServerPermission`). No Discord-role mapping.
+- **Granularity = full CRUD** — a resource × action matrix (**31 permissions**).
+- **Identifier = structured `{ resource, action }`** carried end-to-end (TS + JSON wire);
+  DB stores the canonical `"resource:action"` string, parsed at the boundary.
+- **Enforced identically at API + UI** from ONE `packages/data` catalog; server authoritative.
+- Roles (Viewer/Manager/Admin) are **presets = permission bundles**, not stored; "Custom" allowed.
+- **Discord admin/owner = Scout root/sudo** (implicit all permissions, the ONLY Discord signal);
+  membership still gates access (OAuth presence). Backwards-compatible — admins keep full access
+  with zero grants.
+
+**Build vs buy:** evaluated the 2026 landscape (OpenFGA/SpiceDB/Ory Keto/Cerbos/Permit.io/
+WorkOS/Oso Cloud/Topaz — all overkill or SaaS-coupled for a single-node SQLite bot; CASL is
+the one in-app fit but its conditions DSL is unused by a flat capability model). **Decision:
+hand-roll** a ~30-line `PermissionSet` derived from the catalog (more type-safe, dependency-free);
+**CASL is the documented upgrade path** if we ever need ownership/field-level rules.
+
+## Design
+
+### Matrix (31 permissions)
+
+`subscriptions`{read,create,update,delete} · `players`{read,update,delete,merge,link} ·
+`accounts`{read,create,update,delete,transfer} ·
+`competitions`{read,create,update,cancel,invite,schedule,refresh} ·
+`reports`{read,create,update,delete,run} · `channels`{read} · `audit`{read} ·
+`roles`{read,grant,revoke}
+
+### Role presets
+
+- **Viewer** = every resource `:read` except `audit`/`roles`.
+- **Manager** = everything except `roles:*`.
+- **Admin** = everything. Discord admin/owner ⇒ `rootPermissions()` (derives as admin).
+
+### Readable interface (CASL-inspired; `{resource,action}` stays the canonical value)
+
+```ts
+const viewer = can("read").on("subscriptions", "players", "reports", …);   // define
+add: guildMutationProcedure("subscriptions", "create").input(…).mutation(…) // guard
+if (perms.can("subscriptions", "create")) …                                 // check (API or UI)
+{perms.can("reports", "run") && <RunButton />}   perms.canManage("competitions")   perms.isRoot
+```
+
+### Data package (`packages/data/src/model/permissions/`)
+
+`catalog.ts` (`PERMISSION_CATALOG` `as const satisfies`, derived `Resource`/`ActionFor`/
+`Permission` exhaustive union, `PermissionSchema` catalog-driven discriminated union,
+`permissionKey`/`parsePermissionKey`, `ALL_PERMISSIONS`, `PermissionDeniedCauseSchema`),
+`permission-set.ts` (`createPermissionSet`/`rootPermissions`, positional
+`can(resource, action)`/`canManage`/`isRoot`/`canAny`/`toArray`, `P()` constructor),
+`roles.ts` (`RoleSchema`, `ROLE_CATALOG`, `permissionsForRole`, `deriveRole`). Wired via
+`model/index.ts` `export *`. 31 permissions across 8 resources.
+
+### Prisma (`ServerPermission`)
+
+Add `@@index([serverId,discordUserId])` + `@@index([serverId])`; `permission` stores
+`"resource:action"` keys; migration rewrites legacy `CREATE_COMPETITION`/`CREATE_REPORT`.
+
+### Backend
+
+`guild-permission.ts`: `resolveGuildPermissions(user,guildId)` (member? → admin/owner ⇒ root;
+else grant rows) + `guildProcedure(resource,action)`/`guildMutationProcedure(...)` composing on
+`webProcedure`/`webMutationProcedure`, guildId from `getRawInput()` via Zod, inject
+`ctx.guildId`/`ctx.permissions`. Convert every guild-scoped resolver; delete scattered
+`assertGuildAdmin`/`assertAdmin` (keep `assertChannelInGuild`). `errorFormatter` adds
+`data.missingPermission`. `listManageable` returns `permissions: Permission[]` + includes
+Viewer guilds; new `guild.myPermissions`. New `roles` router (list/set/clear) + `ROLE_GRANT`/
+`ROLE_REVOKE` audit + self-lockout guard. `discord.searchMembers` → `players:read`. Discord
+bridge so `canCreate*` honor the new keys.
+
+### Frontend (`packages/app`)
+
+`use-permissions.ts` hook (+ `<Can>`), `guild-workspace` access guard + nav filtering,
+gate every mutating control, `forbidden-panel.tsx`, `guild-access.tsx` Members/Access tab + route.
+
+### Delivery
+
+One atomic PR (lockstep contract), 3 commits: data → backend → app.
+
+## Remaining
+
+- [x] Data package: catalog + permission-set + roles + tests
+- [x] Prisma indexes + legacy-key migration + regen
+- [x] Backend: guard, resolver conversion, errorFormatter, listManageable, roles router, bridge, tests
+- [x] Frontend: hook, gating, forbidden panel, Access tab
+- [x] Verify (scoped typecheck/test/lint across data/backend/app — green)
+- [ ] Manual browser e2e + PR screenshots (needs `op signin` + Discord OAuth; not runnable headless)
+
+## Full design reference
+
+See the approved plan for the complete procedure→permission table, code sketches, and
+verification detail: `~/.claude/plans/could-we-begin-work-peppy-fairy.md` (copied here in summary).
+
+## Session Log — 2026-07-25
+
+### Done
+
+- **PR #1638** on `feature/scout-rbac` — 3 commits (data → backend → app), each
+  through the full `bun run verify -- --affected` pre-commit gate.
+- **Data** (`packages/data/src/model/permissions/`): `catalog.ts`, `permission-set.ts`,
+  `roles.ts` + `permissions.test.ts` (15 tests). **31 permissions** across 8 resources
+  (the design said 29 — miscount; the real matrix sums to 31).
+- **Prisma**: `ServerPermission` gains two indexes; migration
+  `20260725000000_rbac_permission_keys` rewrites legacy keys; unbranded the
+  `permission` field in `scripts/brand-prisma-types.ts` (now stores catalog keys).
+- **Backend**: `trpc/guild-permission.ts` (`resolveGuildPermissions` +
+  `guildProcedure`/`guildMutationProcedure`); converted every guild resolver off
+  `assertGuildAdmin`/`assertAdmin` (subscription/player/competition/report/guild/riot/discord);
+  `errorFormatter` adds `missingPermission`; `guild.listManageable` enrichment +
+  `guild.myPermissions`; new `roles` router (list/set/clear) + `ROLE_GRANT`/`ROLE_REVOKE`
+  audit + self-lockout; `discord.searchMembers` → `players:read`; Discord `canCreate*`
+  bridge. Offline harness gains `setMembership`; new `rbac.router.test.ts` (9 tests).
+- **App**: `hooks/use-permissions.ts`, `components/forbidden-panel.tsx`,
+  `routes/guild-access.tsx` (Access tab) + route; nav filtering + access guard in
+  `guild-workspace.tsx`; gated create/manage buttons in subscriptions/competitions/reports.
+
+### Remaining
+
+- Manual browser e2e via `bun run dev:web` (needs `op signin` + Discord OAuth) and PR
+  screenshots (grant a second account Viewer → confirm read-only dashboard, hidden
+  Audit/Access tabs, Forbidden panel on forced mutation). Not runnable headless here.
+- Optional polish: gate remaining per-row/detail mutating controls (subscription
+  remove/add-channel/move, player-detail actions, competition-detail actions,
+  report-detail). The server already enforces all of these; this is UX-only.
+- Promote PR from draft → ready once screenshots are attached.
+
+### Caveats
+
+- **Membership model unchanged**: a Discord admin/owner is Scout root/sudo (all
+  permissions, the only Discord signal); non-admins need a Scout grant AND current
+  guild membership. Admin/membership still lags up to 5 min (the existing
+  `fetchUserGuilds` cache); grant changes are immediate.
+- Prisma generated client + `template.db` are gitignored/reproduced by codegen, so
+  the `permission`-field unbrand shows only as the `brand-prisma-types.ts` diff.
+- The `<Can>` component from the plan was dropped — the `usePermissions` hook covers
+  every call site; keeping an unused component tripped `knip`.
+
+### Greptile review remediation — 2026-07-25
+
+Follow-up session to clear three Greptile findings on PR #1638.
+
+#### Done
+
+- **Legacy Discord grants now round-trip through the RBAC readers (P1).** The
+  `/competition grant-permission` Discord command persists the raw legacy
+  `PermissionType` enum (`CREATE_COMPETITION` / `CREATE_REPORT`), not a
+  canonical `"resource:action"` key. All three readers of stored
+  `ServerPermission` rows dropped those via `parsePermissionKey`, so a
+  freshly-issued Discord grant was invisible to the web RBAC surface. Added
+  `LEGACY_PERMISSION_KEYS` + `parseStoredPermissionKey` in
+  `packages/data/src/model/permissions/catalog.ts` (bridges the two legacy
+  strings; `parsePermissionKey` stays strict) and switched the three readers to
+  it: `trpc/guild-permission.ts` (`resolveGuildPermissions`),
+  `trpc/router/guild.router.ts` (`listManageable`), and
+  `trpc/router/roles.router.ts` (`list` / Access tab). New scoped test in
+  `trpc/router/rbac.router.test.ts` seeds a raw `CREATE_COMPETITION` row and
+  asserts `guild.listManageable` surfaces `competitions:create`.
+- **Malformed permission keys are rejected, not truncated (P2).**
+  `parsePermissionKey` used `split(":", 2)`, which accepted
+  `"reports:create:unexpected"` as `"reports:create"`. Now splits without a
+  limit and requires exactly two segments; extended `permissions.test.ts` with
+  extra-segment and missing-segment cases.
+- **Session Log (P2).** The dated `## Session Log — 2026-07-25` with Done /
+  Remaining / Caveats already landed via the `docs(scout-for-lol): RBAC plan
+session log` commit; this subsection records the remediation session.
+
+#### Remaining
+
+- Same as the parent session: manual browser e2e + PR screenshots; promote from
+  draft once attached.
+
+#### Caveats
+
+- The Discord grant **write** path still emits the legacy enum by design — the
+  read-side bridge (`parseStoredPermissionKey`) is the single normalization
+  point, mirroring the existing dual-read bridge in
+  `database/competition/permissions.ts` (`hasPermissionKey` + `hasPermission`).
+  Changing the write path instead would have broken the legacy grant/`hasPermission`
+  symmetry that the competition permission tests depend on.
