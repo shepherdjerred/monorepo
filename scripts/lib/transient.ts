@@ -21,7 +21,10 @@ export const EXIT_TRANSIENT = 34;
 export const TRANSIENT_ERROR_PATTERN =
   // 5xx status signatures (incl. GitHub's GraphQL 500 envelope, which carries
   // no numeric status: "Something went wrong while executing your query").
-  /\b(?:500|502|503|504)\b|Internal Server Error|Bad Gateway|Proxy Error|Service Unavailable|Gateway Timeout|Something went wrong while executing your query|secondary rate limit|ECONNRESET|ECONNREFUSED|EAI_AGAIN|ETIMEDOUT|i\/o timeout|TLS handshake|tls: handshake|connection reset|connection refused|temporary failure in name resolution|dial tcp/i;
+  // "another operation is already in progress" is ArgoCD code 9: a sync/refresh
+  // op from an overlapping build or auto-sync still holds the app; the step's
+  // automatic retry lands after it completes (build 6296).
+  /\b(?:500|502|503|504)\b|Internal Server Error|Bad Gateway|Proxy Error|Service Unavailable|Gateway Timeout|Something went wrong while executing your query|secondary rate limit|ECONNRESET|ECONNREFUSED|EAI_AGAIN|ETIMEDOUT|i\/o timeout|TLS handshake|tls: handshake|connection reset|connection refused|temporary failure in name resolution|dial tcp|another operation is already in progress/i;
 
 export function isTransientError(error: unknown): boolean {
   const text =

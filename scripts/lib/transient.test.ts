@@ -27,6 +27,8 @@ describe("isTransientError", () => {
     "connect ETIMEDOUT 140.82.113.3:443",
     // DNS resolution flap (getaddrinfo temporary failure).
     "curl: (6) Could not resolve host: temporary failure in name resolution",
+    // ArgoCD code 9: an overlapping sync op still holds the app (build 6296).
+    'Sync failed: HTTP 400 Bad Request\n{"error":"another operation is already in progress","code":9,"message":"another operation is already in progress"}',
   ])("transient: %s", (message) => {
     expect(isTransientError(new Error(message))).toBe(true);
   });
