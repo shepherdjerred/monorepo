@@ -97,7 +97,14 @@ export async function resolveSource(
     resolved = await resolveWithYtdlp(config, source, signal);
   }
   const info = await probeAndRecordSourceMetadata(config, resolved, signal);
-  // Thread the probed HDR flag into the pipeline (drives the HDR→SDR tonemap). A failed probe
-  // leaves it unset — the stream then runs as SDR, which matches today's best-effort behavior.
-  return info?.hdr === true ? { ...resolved, hdr: true } : resolved;
+  // Thread the probed HDR flag (drives the HDR→SDR tonemap) and duration (lets the streamer tell
+  // a real end of media from a premature exit-0 truncation) into the pipeline. A failed probe
+  // leaves both unset — SDR, no truncation detection — matching today's best-effort behavior.
+  return {
+    ...resolved,
+    ...(info?.hdr === true ? { hdr: true } : {}),
+    ...(info?.durationSeconds === undefined
+      ? {}
+      : { durationSeconds: info.durationSeconds }),
+  };
 }

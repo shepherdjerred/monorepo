@@ -23,6 +23,13 @@ export type EncoderSettings = {
   hwPipeline?: {
     /** Input options that decode into GPU surfaces (e.g. `-hwaccel vaapi -hwaccel_output_format vaapi`). */
     decodeOptions: string[];
+    /**
+     * Input options for {@link PrepareStreamOptions.hardwarePipelineMode} `"upload"`: hardware
+     * decode that emits system-memory frames (no `-hwaccel_output_format`), paired with an
+     * `uploadInput` graph whose leading `hwupload` puts them back on the GPU. Immune to ffmpeg's
+     * mid-stream hwaccel-flip renegotiation bug at the cost of one PCIe round-trip per frame.
+     */
+    uploadDecodeOptions?: string[];
     /** Builds the GPU video graph (scale / tonemap / subtitle overlay) for this encoder family. */
     videoGraph: (spec: VideoGraphSpec) => VideoGraph;
   };

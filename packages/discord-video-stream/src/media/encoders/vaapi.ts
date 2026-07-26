@@ -41,6 +41,17 @@ export function vaapi({
         "-hwaccel_device",
         "va",
       ],
+      // No `-hwaccel_output_format vaapi`: still a GPU decode, but frames land in system memory
+      // and the graph's leading `hwupload` (spec.uploadInput) puts them back on the device. Used
+      // as the recovery pipeline for sources whose mid-stream hwaccel flip crashes the full-GPU
+      // graph (ffmpeg "Impossible to convert between the formats", exit 218).
+      uploadDecodeOptions: [
+        ...deviceOptions,
+        "-hwaccel",
+        "vaapi",
+        "-hwaccel_device",
+        "va",
+      ],
       videoGraph: buildVaapiVideoGraph,
     },
   };

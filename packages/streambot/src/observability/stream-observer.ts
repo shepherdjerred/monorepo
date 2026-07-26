@@ -74,8 +74,17 @@ export type StreamObserverHandle = {
 };
 
 /**
+ * Seconds of zero ffmpeg progress (process alive, no output) before {@link createStreamObserver}
+ * fires its `onStall` callback. Well above the 5 s alert threshold so transient dips alert first
+ * without triggering recovery; a full 20 s of silence means the pipeline is genuinely wedged.
+ */
+export const STALL_AFTER_SECONDS = 20;
+
+/**
  * Build a {@link StreamObserver} for one streaming segment. `hardware` labels the metrics with the
- * path the segment is attempting. `now` is injectable for deterministic tests.
+ * path the segment is attempting. `now` is injectable for deterministic tests. `onStall` (optional)
+ * fires — once per silence, re-armed when progress resumes — after {@link STALL_AFTER_SECONDS}
+ * with no ffmpeg progress; the caller routes it into the playback machine's stall recovery.
  *
  * Always call the returned `dispose()` when the segment ends to stop the internal progress-age
  * timer. Without it, each call leaves a live `setInterval` writing to the shared
@@ -85,12 +94,14 @@ export type StreamObserverHandle = {
 export function createStreamObserver(
   hardware: boolean,
   now: () => number = Date.now,
+  onStall?: () => void,
 ): StreamObserverHandle {
   const hw = hardware ? "true" : "false";
   let prevMediaSeconds: number | undefined;
   let prevWallMs: number | undefined;
   let lastProgressWallMs: number | undefined;
   let progressAgeTimer: ReturnType<typeof setInterval> | undefined;
+  let stallFired = false;
 
   // Drive the progress-age gauge on a 1s tick: a deadlocked subprocess (stdout+stderr both backed
   // up, ffmpeg blocked on write) stops emitting progress entirely, so the only way the gauge can
@@ -99,7 +110,13 @@ export function createStreamObserver(
     if (progressAgeTimer !== undefined) return;
     progressAgeTimer = setInterval(() => {
       if (lastProgressWallMs === undefined) return;
-      ffmpegProgressAgeSeconds.set((now() - lastProgressWallMs) / 1000);
+      const ageSeconds = (now() - lastProgressWallMs) / 1000;
+      ffmpegProgressAgeSeconds.set(ageSeconds);
+      if (ageSeconds >= STALL_AFTER_SECONDS && !stallFired) {
+        stallFired = true;
+        log.warn("ffmpeg progress stalled", { ageSeconds });
+        onStall?.();
+      }
     }, 1000);
     progressAgeTimer.unref();
   };
@@ -154,6 +171,7 @@ export function createStreamObserver(
       const wallMs = now();
       lastProgressWallMs = wallMs;
       ffmpegProgressAgeSeconds.set(0);
+      stallFired = false;
       if (
         mediaSeconds !== undefined &&
         prevMediaSeconds !== undefined &&

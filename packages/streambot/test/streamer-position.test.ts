@@ -3,6 +3,7 @@ import {
   StreambotStreamer,
   type PlayerFactory,
 } from "@shepherdjerred/streambot/streamer/streamer.ts";
+import { StreamCrashError } from "@shepherdjerred/streambot/streamer/stream-errors.ts";
 import {
   loadConfig,
   type EnvLookup,
@@ -43,8 +44,12 @@ type SegmentControl = {
   startTime: number | undefined;
 };
 
-/** A fake player factory that records the `-ss` start time and lets the test end each segment. */
-function makeFakeFactory() {
+/**
+ * A fake player factory that records the `-ss` start time and lets the test end each segment.
+ * `startErrors[i]` makes segment i's `start()` reject — the startup-failure path, as opposed to
+ * rejecting `finished` (a mid-stream crash).
+ */
+function makeFakeFactory(startErrors: (Error | undefined)[] = []) {
   const segments: SegmentControl[] = [];
   const factory: PlayerFactory = (_streamer, _input, options) => {
     let resolve!: () => void;
@@ -53,9 +58,13 @@ function makeFakeFactory() {
       resolve = res;
       reject = rej;
     });
+    const startError = startErrors[segments.length];
     segments.push({ resolve, reject, startTime: options?.prepare?.startTime });
     return {
-      start: () => Promise.resolve(),
+      start: () =>
+        startError === undefined
+          ? Promise.resolve()
+          : Promise.reject(startError),
       seek: () => Promise.resolve(),
       setVolume: () => Promise.resolve(true),
       stop: () => {
@@ -87,7 +96,13 @@ describe("StreambotStreamer position tracking", () => {
     expect(streamer.getPosition()).toBeNull();
 
     const run = streamer.runStream(
-      { voice: VOICE, resolved: RESOLVED, volume: 100, seekSeconds: 30 },
+      {
+        voice: VOICE,
+        resolved: RESOLVED,
+        volume: 100,
+        seekSeconds: 30,
+        pipelineMode: "hw",
+      },
       new AbortController().signal,
     );
     await flush();
@@ -104,7 +119,7 @@ describe("StreambotStreamer position tracking", () => {
     expect(streamer.getPosition()).toBeNull();
   });
 
-  test("HW→SW retry resumes at the elapsed position, not the start", async () => {
+  test("a mid-stream failure surfaces as StreamCrashError with the elapsed position — no in-streamer retry", async () => {
     const clock = { ms: 1000 };
     const { factory, segments } = makeFakeFactory();
     const streamer = new StreambotStreamer(
@@ -115,21 +130,124 @@ describe("StreambotStreamer position tracking", () => {
     );
 
     const run = streamer.runStream(
-      { voice: VOICE, resolved: RESOLVED, volume: 100, seekSeconds: 0 },
+      {
+        voice: VOICE,
+        resolved: RESOLVED,
+        volume: 100,
+        seekSeconds: 0,
+        pipelineMode: "hw",
+      },
       new AbortController().signal,
     );
     await flush();
     expect(segments[0]?.startTime).toBeUndefined(); // fresh play, no -ss
 
-    clock.ms = 9000; // 8s played before the encoder fails
-    segments[0]?.reject(new Error("vaapi boom"));
+    clock.ms = 9000; // 8s played before ffmpeg dies
+    segments[0]?.reject(new Error("ffmpeg exited with code 218"));
+
+    // The machine owns mid-stream recovery: the crash propagates with its position, and the
+    // streamer does NOT spawn its own software retry.
+    await expect(run).rejects.toBeInstanceOf(StreamCrashError);
+    await run.catch((error: unknown) => {
+      if (!(error instanceof StreamCrashError)) throw new Error("unreachable");
+      expect(error.kind).toBe("crash");
+      expect(error.positionSeconds).toBe(8);
+      expect(error.pipelineMode).toBe("hw");
+    });
+    expect(segments).toHaveLength(1);
+  });
+
+  test("a STARTUP failure still falls back to software in-streamer, resuming at the requested offset", async () => {
+    const clock = { ms: 1000 };
+    const { factory, segments } = makeFakeFactory([
+      new Error("vaapi device init failed"),
+    ]);
+    const streamer = new StreambotStreamer(
+      USER_TOKEN,
+      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "true" })),
+      () => clock.ms,
+      factory,
+    );
+
+    const run = streamer.runStream(
+      {
+        voice: VOICE,
+        resolved: RESOLVED,
+        volume: 100,
+        seekSeconds: 30,
+        pipelineMode: "hw",
+      },
+      new AbortController().signal,
+    );
     await flush();
 
-    // The software retry restarts at ~8s, not from 0.
+    // start() rejected before playback began → the classic in-streamer software fallback, at the
+    // last known position (playback never started, so the requested offset).
     expect(segments).toHaveLength(2);
-    expect(segments[1]?.startTime).toBe(8);
+    expect(segments[1]?.startTime).toBe(30);
 
     segments[1]?.resolve();
     await run;
+  });
+
+  test("exit-0 far short of the probed duration classifies as ended-short", async () => {
+    const clock = { ms: 0 };
+    const { factory, segments } = makeFakeFactory();
+    const streamer = new StreambotStreamer(
+      USER_TOKEN,
+      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "true" })),
+      () => clock.ms,
+      factory,
+    );
+
+    const run = streamer.runStream(
+      {
+        voice: VOICE,
+        resolved: { ...RESOLVED, durationSeconds: 7200 },
+        volume: 100,
+        seekSeconds: 0,
+        pipelineMode: "hw",
+      },
+      new AbortController().signal,
+    );
+    await flush();
+
+    clock.ms = 40_000; // "played" 40s of a 2h movie, then ffmpeg exited 0
+    segments[0]?.resolve();
+
+    await expect(run).rejects.toBeInstanceOf(StreamCrashError);
+    await run.catch((error: unknown) => {
+      if (!(error instanceof StreamCrashError)) throw new Error("unreachable");
+      expect(error.kind).toBe("ended-short");
+      expect(error.positionSeconds).toBe(40);
+      expect(error.exitCode).toBe(0);
+    });
+  });
+
+  test("exit-0 near the probed duration is a natural end", async () => {
+    const clock = { ms: 0 };
+    const { factory, segments } = makeFakeFactory();
+    const streamer = new StreambotStreamer(
+      USER_TOKEN,
+      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "true" })),
+      () => clock.ms,
+      factory,
+    );
+
+    const run = streamer.runStream(
+      {
+        voice: VOICE,
+        resolved: { ...RESOLVED, durationSeconds: 7200 },
+        volume: 100,
+        seekSeconds: 0,
+        pipelineMode: "hw",
+      },
+      new AbortController().signal,
+    );
+    await flush();
+
+    clock.ms = 7_190_000; // within 30s of the end
+    segments[0]?.resolve();
+    await run; // resolves — no ended-short misclassification
   });
 });

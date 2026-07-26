@@ -85,6 +85,9 @@ function fakeStreamer(): FakeStreamer {
     setVoiceCloseListener: (next) => {
       listener = next;
     },
+    setStallListener: () => {
+      /* stall recovery is exercised at the machine layer */
+    },
     triggerVoiceClose: (info) => {
       lastClose = info;
       listener?.(info);

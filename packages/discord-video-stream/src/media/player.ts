@@ -24,7 +24,42 @@ export type SeekablePlayerDeps = {
 export type SeekablePlayerOptions = {
   prepare?: Partial<PrepareStreamOptions>;
   play?: Partial<PlayStreamOptions>;
+  /**
+   * How long to wait for the ffmpeg process to settle after the output pipeline drains before
+   * declaring a natural end anyway. Output drain alone cannot distinguish a real end of media from
+   * a crashed ffmpeg whose pipe closed early — the exit outcome decides. ffmpeg settles within
+   * milliseconds of its pipe closing, so the timeout only guards a wedged process (never settle →
+   * never finish). Default 5000.
+   */
+  ffmpegSettleTimeoutMs?: number;
 };
+
+type FfmpegSettle =
+  | { kind: "exited" }
+  | { kind: "failed"; err: unknown }
+  | { kind: "timeout" };
+
+function settleFfmpeg(
+  promise: Promise<void>,
+  timeoutMs: number,
+): Promise<FfmpegSettle> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      resolve({ kind: "timeout" });
+    }, timeoutMs);
+    timer.unref();
+    promise.then(
+      () => {
+        clearTimeout(timer);
+        resolve({ kind: "exited" });
+      },
+      (err: unknown) => {
+        clearTimeout(timer);
+        resolve({ kind: "failed", err });
+      },
+    );
+  });
+}
 
 export type Player = {
   /** Open the Go-Live stream and begin playing from the initial offset. Resolves once attached. */
@@ -62,6 +97,7 @@ export function createSeekablePlayer(
 
   const mergedPlay = mergePlayStreamOptions(options.play ?? {});
   const playType = mergedPlay.type;
+  const ffmpegSettleTimeoutMs = options.ffmpegSettleTimeoutMs ?? 5000;
 
   let conn: WebRtcConnWrapper | undefined;
   let connConfigured = false;
@@ -161,15 +197,36 @@ export function createSeekablePlayer(
     currentPipeline = pipeline;
 
     pipeline.done
-      .then(() => {
-        // Natural end of media for THIS segment. Superseded (seek) or stopped segments are ignored;
-        // their replacement drives playback.
+      .then(async () => {
+        // Output drained for THIS segment. Superseded (seek) or stopped segments are ignored;
+        // their replacement drives playback. Drain alone cannot distinguish natural end of media
+        // from a crashed ffmpeg whose closed pipe drained through the demuxer — the ffmpeg exit
+        // outcome decides, so wait for it before settling `finished`.
         if (gen !== generation || stopped) return;
+        const outcome = await settleFfmpeg(promise, ffmpegSettleTimeoutMs);
+        if (gen !== generation || stopped) return;
+        if (outcome.kind === "failed" && !abort.signal.aborted) {
+          log.error({ err: outcome.err }, "ffmpeg failed after output drain");
+          teardownConn();
+          fail(outcome.err);
+          return;
+        }
+        if (outcome.kind === "timeout") {
+          log.warn(
+            { timeoutMs: ffmpegSettleTimeoutMs },
+            "ffmpeg did not settle after output drain; treating as natural end",
+          );
+        }
         teardownConn();
         succeed();
       })
-      .catch(() => {
-        // Aborted by a seek/stop — the new segment (or stop()) owns the outcome.
+      .catch((err: unknown) => {
+        // Rejection paths: aborted by a seek/stop (the new segment or stop() owns the outcome),
+        // or a demuxer error surfaced through the pipeline — the latter is a real failure.
+        if (gen !== generation || stopped || abort.signal.aborted) return;
+        log.error({ err }, "pipeline failed");
+        teardownConn();
+        fail(err);
       });
   }
 

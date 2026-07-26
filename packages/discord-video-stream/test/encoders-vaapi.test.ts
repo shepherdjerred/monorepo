@@ -28,6 +28,20 @@ describe("Encoders.vaapi", () => {
         "va",
       ]);
       expect(s?.hwPipeline?.videoGraph).toBe(buildVaapiVideoGraph);
+      // Upload (recovery) mode: same device wiring and GPU decode, but WITHOUT
+      // -hwaccel_output_format — frames land in system memory and the graph's leading hwupload
+      // (uploadInput) puts them back on the device. Immune to the mid-stream hwaccel-flip
+      // renegotiation crash (ffmpeg exit 218).
+      expect(s?.hwPipeline?.uploadDecodeOptions).toEqual([
+        "-init_hw_device",
+        "vaapi=va:/dev/dri/renderD128",
+        "-filter_hw_device",
+        "va",
+        "-hwaccel",
+        "vaapi",
+        "-hwaccel_device",
+        "va",
+      ]);
     }
   });
 

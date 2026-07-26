@@ -81,7 +81,12 @@ export type GatewayHealthEvent =
 
 export type ProducerHealthEvent =
   | { readonly type: "PRODUCER_HEALTHY" }
-  | { readonly type: "PRODUCER_STALLED"; readonly reason: string }
+  | {
+      readonly type: "PRODUCER_STALLED";
+      readonly reason: string;
+      /** Playback position (seconds) when the stall was detected, for a resume-at-position retry. */
+      readonly positionSeconds?: number;
+    }
   | { readonly type: "PRODUCER_FAILED"; readonly reason: string };
 
 export type StreamLifecycleEvent =

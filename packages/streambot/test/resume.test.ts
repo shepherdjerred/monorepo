@@ -42,6 +42,7 @@ function makeContext(over: Partial<PlaybackContext> = {}): PlaybackContext {
     guildId: G,
     channelId: C,
     idleTimeoutMs: 30,
+    wedgeTimeoutsMs: { join: 30_000, resolve: 60_000, leave: 10_000 },
     queue: [{ source: fileSource("next"), requesterId: U }],
     current: { source: fileSource("movie"), requesterId: U },
     voice: null,
@@ -57,6 +58,8 @@ function makeContext(over: Partial<PlaybackContext> = {}): PlaybackContext {
     blockedNonce: 0,
     lastBlockedRequester: null,
     resumeSeekSeconds: 0,
+    crashRetries: 0,
+    crashNotice: null,
     ...over,
   };
 }

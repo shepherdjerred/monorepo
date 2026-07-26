@@ -127,11 +127,89 @@ describe("createSeekablePlayer", () => {
     let done = false;
     void player.finished.then(() => (done = true));
     f.segments[0]?.resolve(); // natural EOF of the only segment
+    f.ffmpeg[0]?.resolve(); // ffmpeg exits cleanly — confirms the drain was a real end
     await player.finished;
 
     expect(done).toBe(true);
     expect(streamer.calls.stopStream).toBe(1);
     expect(streamer.conn.speaking).toContain(false);
+  });
+
+  test("ffmpeg crash after output drain rejects finished (crash is not EOF)", async () => {
+    const streamer = makeStreamer();
+    const f = makeDeps();
+    const player = createSeekablePlayer(streamer, "video.mkv", {}, f.deps);
+    await player.start();
+
+    // The crashed ffmpeg's closed pipe drains the demuxer first (pipeline done resolves), THEN
+    // the ffmpeg error lands. Previously succeed() won this race and the crash looked like EOF.
+    f.segments[0]?.resolve();
+    await Promise.resolve();
+    f.ffmpeg[0]?.reject(new Error("ffmpeg exited with code 218"));
+
+    await expect(player.finished).rejects.toThrow("exited with code 218");
+    // The connection is torn down on failure too.
+    expect(streamer.calls.stopStream).toBe(1);
+  });
+
+  test("ffmpeg that never settles after drain resolves finished after the settle timeout", async () => {
+    const streamer = makeStreamer();
+    const f = makeDeps();
+    const player = createSeekablePlayer(
+      streamer,
+      "video.mkv",
+      { ffmpegSettleTimeoutMs: 20 },
+      f.deps,
+    );
+    await player.start();
+
+    f.segments[0]?.resolve(); // drain, but the ffmpeg promise stays pending forever
+    await player.finished; // resolves via the timeout instead of hanging
+    expect(streamer.calls.stopStream).toBe(1);
+  });
+
+  test("stop during a pending ffmpeg settle resolves finished", async () => {
+    const streamer = makeStreamer();
+    const f = makeDeps();
+    const player = createSeekablePlayer(streamer, "video.mkv", {}, f.deps);
+    await player.start();
+
+    f.segments[0]?.resolve(); // drain; ffmpeg still pending
+    await Promise.resolve();
+    player.stop();
+    await player.finished;
+
+    // A late ffmpeg rejection after stop must not surface anywhere.
+    f.ffmpeg[0]?.reject(new Error("late crash"));
+    await player.finished;
+  });
+
+  test("a superseded segment's ffmpeg crash after a seek does not reject finished", async () => {
+    const streamer = makeStreamer();
+    const f = makeDeps();
+    const player = createSeekablePlayer(streamer, "video.mkv", {}, f.deps);
+    await player.start();
+
+    f.segments[0]?.resolve(); // old segment drains…
+    await player.seek(30); // …but a seek supersedes it before ffmpeg settles
+    f.ffmpeg[0]?.reject(new Error("old segment crash"));
+
+    // The live segment ends cleanly.
+    f.segments[1]?.resolve();
+    f.ffmpeg[1]?.resolve();
+    await player.finished;
+  });
+
+  test("a demuxer error (pipeline done rejection) rejects finished", async () => {
+    const streamer = makeStreamer();
+    const f = makeDeps();
+    const player = createSeekablePlayer(streamer, "video.mkv", {}, f.deps);
+    await player.start();
+
+    f.segments[0]?.reject(new Error("Received an error during frame extraction"));
+
+    await expect(player.finished).rejects.toThrow("frame extraction");
+    expect(streamer.calls.stopStream).toBe(1);
   });
 
   test("seek restarts ffmpeg at the offset, reuses the connection, and does not reconfigure it", async () => {
@@ -168,8 +246,9 @@ describe("createSeekablePlayer", () => {
     await Promise.resolve();
     expect(resolved).toBe(false);
 
-    // The live (second) segment ending does end playback.
+    // The live (second) segment ending (drain + clean ffmpeg exit) does end playback.
     f.segments[1]?.resolve();
+    f.ffmpeg[1]?.resolve();
     await player.finished;
     expect(resolved).toBe(true);
   });
