@@ -102,10 +102,16 @@ commits require an explicit owner-approved loss policy or a separately designed 
       versus GitHub-owned refs (`refs/pull/*`). Decide explicitly whether each controlled ref is retained or retired;
       no writer may republish an old ref during the rewrite.
 - [ ] **Back up and classify all local-only state outside `.git`**: record every local head/tag object ID, every
-      worktree-to-branch mapping, and `git-spice log short --all --json`; copy the exact `refs/spice/data` ref; and
-      create/verify a durable git bundle containing `--branches`, `--tags`, and `refs/spice/data`. Classify local tags
-      as identical-to-remote, local-only, or same-name divergent, then explicitly retain or retire each one. The
-      bundle is the rollback source for refs that never existed in the remote mirror.
+      worktree-to-branch mapping, and `git-spice log short --all --json`; copy the exact `refs/spice/data` ref.
+      Inventory **every** local reachability root, not only branches and tags: `git for-each-ref refs/` (all heads,
+      tags, `refs/spice/data`, and any other custom namespace), every per-worktree `HEAD` including detached ones
+      (`git worktree list --porcelain` × `git rev-parse`), and any stash (`refs/stash` and its reflog). Classify each
+      root retained or retired, and classify local tags as identical-to-remote, local-only, or same-name divergent.
+      Create/verify a durable git bundle containing every **retained** root — a bundle built from `--branches --tags`
+      (plus `refs/spice/data`) alone silently omits detached worktree HEADs, stashes, and custom namespaces, leaving
+      them with no filtered counterpart so the final prune either strands them or drops the rejected graph they still
+      reach. Explicitly retire (and block from pushes) every root you do not bundle. This bundle is the rollback
+      source for refs that never existed in the remote mirror.
 - [ ] **Create the full rollback backup after the freeze**: `git clone --mirror` the frozen remote to a safe location.
       Verify every operator-controlled ref and SHA in the manifest matches the mirror before proceeding; if any differ,
       discard/refresh the mirror while writers remain frozen.
@@ -131,10 +137,19 @@ Generate explicit fetch refspecs for **every** operator-controlled custom namesp
 filtering; `refs/renovate/*` is only today's known example, not a complete hard-coded list. Do not fetch GitHub-owned
 `refs/pull/*` into the rewrite set: operators cannot publish their rewritten values back. Do not pass
 `--refs`/`--partial`, which would limit the rewrite to a subset and leave the rest holding the pre-rewrite blobs.
-Before filtering, import the Phase-1 local-state bundle under reserved temporary head/tag prefixes that do not collide
-with remote refs (for example, `refs/heads/__history_rewrite_local__/*` and
-`refs/tags/__history_rewrite_local__/*`). Include those temporary refs in the same filter pass, but never include them
-in the remote publication refspecs.
+
+Assemble the rewrite repo so `git filter-repo` cannot drop the Phase-1 recovery refs during its origin-normalization
+pass. On a repo that still has an `origin` remote and looks freshly cloned, `filter-repo` refreshes from origin with a
+pruning fetch that **deletes any local ref absent from origin** — exactly the imported local-only recovery refs — and
+importing extra refs also trips its fresh-clone safety check. So do **not** import the bundle into a plain
+clone-of-origin and then run the default filter. Instead build one **combined source** that already holds both graphs
+as local refs: clone `main`, fetch every operator-controlled `refs/heads/*`, `refs/tags/*`, and custom namespace from
+the frozen manifest into local refs, then `git bundle unbundle` the Phase-1 local-state bundle into reserved temporary
+prefixes that cannot collide with remote refs (for example `refs/heads/__history_rewrite_local__/*` and
+`refs/tags/__history_rewrite_local__/*`). **Remove the `origin` remote** before filtering so no normalization fetch
+can prune those temporary refs, then run `git filter-repo --force` (required because the populated repo is no longer a
+pristine fresh clone). One pass filters every ref present — remote counterparts and temporary recovery refs alike.
+Re-add `origin` only in Phase 3, and never include the temporary refs in the remote publication refspecs.
 
 1. For **every affected retained head or tag**, including temporary local-recovery refs, copy aside every filtered
    target path present in its peeled commit—collapse and delete targets alike—keyed by ref. Deduplicate identical
@@ -164,12 +179,19 @@ in the remote publication refspecs.
 3. Enumerate any other big deleted-at-tip blobs from the analysis and add them to the list.
 4. On `main`, copy its saved generated dirs back in, `git add <those paths>`, and commit:
    `chore(root): re-add current generated artifacts after history slim`.
-5. For every other affected retained head, restore **all** of that ref's saved filtered paths and commit the
-   restoration on that head before publishing/exporting it. This includes delete targets retained by an important
-   stale branch, not only generated collapse directories. Verify its resulting tree hash equals the external
-   pre-filter `<ref^{tree}>` oracle. Retire obsolete heads instead of publishing a silently altered tip. This may
-   retain one copy per distinct live branch-tip version; that is the cost of preserving retained refs, and the
-   measured size delta must include it.
+5. Re-parent every other affected retained head onto its **restored** parent instead of appending an independent
+   restoration commit. An independent sibling restoration commit would leave the branch descending from the
+   pre-restoration `main`, so its later exact-OID reset could not also preserve stack ancestry and a three-dot PR diff
+   would show the generated dirs as newly added. Process stacks bottom-up: rebase each head's already-filtered
+   branch-only commits — from this same filter pass, **never** the pre-rewrite originals (replaying those resurrects
+   filtered blobs) — onto restored `main` for a direct child, or onto its restored parent branch for a stacked child,
+   so the branch descends from restored history. If a head needs a tip version of a filtered path that differs from
+   its parent's, restore that head's saved filtered paths as the rebased tip commit; otherwise it inherits the
+   parent's restoration. This includes delete targets retained by an important stale branch, not only generated
+   collapse directories. Verify its resulting tree hash equals the external pre-filter `<ref^{tree}>` oracle and
+   record the recovery OID from this re-parented chain. Retire obsolete heads instead of publishing a silently altered
+   tip. This may retain one copy per distinct live branch-tip version; that is the cost of preserving retained refs,
+   and the measured size delta must include it.
 6. For every affected retained tag, create a tag-only restoration commit on its rewritten target, restore **all**
    saved filtered paths, then retarget/recreate the tag with its preserved metadata and verify the resulting tree hash
    against the external oracle. Explicitly re-sign signed tags. This applies to tags affected only by delete targets
@@ -566,3 +588,32 @@ appears as active work on the docs board.
 - Original signed-commit verification cannot survive changed commit objects unless a separate new-signature policy is
   designed and approved.
 - Never recover a local branch by restacking its pre-rewrite commits; only its exact post-filter counterpart is safe.
+
+## Session Log — 2026-07-25 (hosted Codex reachability review)
+
+### Done
+
+- Addressed the 4 current-head (`c3abf7ec8`) findings:
+  - **Restore through the filtered parent chain (P1):** Phase 2 step 5 now re-parents each retained head onto its
+    restored parent (stacks bottom-up) by rebasing its already-filtered commits, instead of appending independent
+    sibling restoration commits that would leave the branch on pre-restoration `main` and surface generated dirs as
+    "added" in three-dot PR diffs.
+  - **Preserve imported refs across filter-repo's origin refresh (P1):** Phase 2 no longer imports the local-state
+    bundle into a plain clone-of-origin. It builds one combined source with every controlled ref plus temporary
+    recovery refs as local refs, removes the `origin` remote before filtering (so filter-repo's pruning
+    origin-normalization fetch cannot delete the local-only recovery refs), and runs `git filter-repo --force`.
+  - **Include every worktree reachability root in the bundle (P2):** Phase 1 now inventories every local root
+    (`git for-each-ref refs/`, every per-worktree `HEAD` incl. detached, and `refs/stash`), bundles every retained
+    root, and explicitly retires/blocks the rest — not just `--branches --tags refs/spice/data`.
+  - **Archive the predecessor plan (P2):** `2026-07-25_scout-drop-unused-skins.md` is marked `complete` and moved to
+    `archive/completed/` (its code cleanup shipped; the rewrite is owned here), so the docs board no longer lists it
+    as a second active owner of the rewrite.
+
+### Remaining
+
+- Execute Phases 0–4 only in the coordinated freeze window described above.
+
+### Caveats
+
+- The combined-source clone must hold every controlled ref locally before `origin` is removed; a missing custom
+  namespace at that point is filtered out of the rewrite entirely.

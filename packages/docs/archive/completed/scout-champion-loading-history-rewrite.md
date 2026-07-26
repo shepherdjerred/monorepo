@@ -5,7 +5,7 @@ status: complete
 board: true
 verification: human
 disposition: active
-origin: packages/docs/plans/2026-07-25_scout-drop-unused-skins.md
+origin: packages/docs/archive/completed/2026-07-25_scout-drop-unused-skins.md
 source_marker: false
 ---
 
