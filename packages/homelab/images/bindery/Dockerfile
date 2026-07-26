@@ -6,9 +6,13 @@
 # but no author ID and no ISBN edition — be added to the wanted list instead of
 # 422ing "Author metadata unavailable". See packages/docs/plans for the rationale.
 #
-# The build mirrors upstream's own Dockerfile (Bun frontend → cross-compiled Go
-# binary → distroless/static runtime); the only additions are the source fetch +
-# `git apply`, and a go-test stage that gates the build on the patch's behaviour.
+# The build mirrors upstream's own Dockerfile (frontend → cross-compiled Go
+# binary → distroless/static runtime), diverging only to satisfy this repo's
+# Bun-only package-manager invariant: upstream builds the web frontend with
+# `npm ci`, we build it with Bun (which migrates upstream's package-lock.json —
+# there is no bun.lock to freeze against). The other additions are the source
+# fetch + `git apply`, and a go-test stage that gates the build on the patch's
+# behaviour.
 #
 # The pin advances via Renovate's git-refs custom manager (see renovate.json —
 # BINDERY_SOURCE_REF); upstream tags releases, but we track main's HEAD like
@@ -42,12 +46,19 @@ RUN set -e \
 
 ########################
 ## frontend build (native arch — output is arch-agnostic JS)
+##
+## Bun, not npm, per the monorepo's Bun-only invariant. Upstream ships only an
+## npm package-lock.json (no bun.lock), copied here via the package*.json glob,
+## so Bun migrates that lockfile on install. --frozen-lockfile is intentionally
+## omitted: there is no committed bun.lock to freeze against, and the source
+## tree is fetched fresh each build, so a frozen install would fail with
+## "lockfile had changes, but lockfile is frozen".
 ########################
 # renovate: datasource=docker depName=oven/bun
 FROM --platform=$BUILDPLATFORM oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4 AS frontend
 WORKDIR /app/web
 COPY --from=source /src/web/package*.json ./
-RUN bun install --frozen-lockfile
+RUN bun install
 COPY --from=source /src/web/ .
 RUN bun run build
 

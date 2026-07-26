@@ -2,7 +2,7 @@ diff --git a/internal/api/authors.go b/internal/api/authors.go
 index d84ebf7..d109796 100644
 --- a/internal/api/authors.go
 +++ b/internal/api/authors.go
-@@ -2279,10 +2279,27 @@ func (h *AuthorHandler) AddBook(w http.ResponseWriter, r *http.Request) {
+@@ -2279,10 +2279,33 @@ func (h *AuthorHandler) AddBook(w http.ResponseWriter, r *http.Request) {
  			resolvedByName = req.ForeignAuthorID != ""
  		}
  		if req.ForeignAuthorID == "" {
@@ -10,10 +10,16 @@ index d84ebf7..d109796 100644
 -				"error": "Author metadata unavailable for this result. Add the author manually first (Authors → Add Author by name), then try again.",
 -			})
 -			return
-+			if key := metadata.CanonicalAuthorKey(req.AuthorName); key != "" {
++			if key := metadata.CanonicalAuthorKey(req.AuthorName); key != "" &&
++				strings.HasPrefix(req.ForeignBookID, "gb:") {
 +				// Google Books returns Chinese (and other non-Latin) results with
 +				// an author NAME but no provider author ID and no ISBN edition, so
 +				// neither the library nor OpenLibrary can resolve a canonical ID.
++				// Gate the synthetic on the picked book being a Google Books volume
++				// ("gb:" — the same prefix AuthorProviderFromForeignID maps to
++				// googlebooks): an OpenLibrary/Hardcover pick (or malformed input)
++				// whose author simply failed to resolve must keep the friendly 422
++				// rather than be stamped with a fabricated googlebooks author.
 +				// Mint a deterministic library-local synthetic author ID from the
 +				// name — the same idea as the dnb:author:/calibre:author:
 +				// synthetics, but keyed off CanonicalAuthorKey rather than slug()
