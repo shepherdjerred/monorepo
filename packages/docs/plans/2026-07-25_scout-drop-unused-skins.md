@@ -78,33 +78,23 @@ All paths below are relative to `packages/scout-for-lol/`.
 5. `bun run verify -- --affected` before commit (pre-push gate parity).
 6. PR: attach a before/after of a rendered prematch loading screen (should be pixel-identical) to prove no visual regression, plus the file-count / repo-size delta.
 
-## Deferred follow-up — git history rewrite (separate, coordinated)
+## Deferred follow-up — git history rewrite (absorbed into repo-wide plan)
 
 Do **not** run this in the code PR. Reclaims ~108 MB of champion-loading history
 (~10% of the 1.0 GB `.git`), but: it force-pushes a rewritten `main` (every SHA from
-`2f721e34f` forward changes), **strands all 13 active worktrees + open PRs** (each must
-be rebased/re-created), invalidates SHA refs in release-pair tags/docs, and **GitHub
-will not GC server-side immediately** (fresh clones benefit; the remote stays large
-until GitHub's own GC / a support request). Run only when worktrees/PRs are quiescent.
+`2f721e34f` forward changes), requires coordinated filtered-ref recovery for all local
+worktrees and PR branches, invalidates SHA refs/signatures, and leaves service-owned
+pull-request refs outside operator control (fresh clones benefit, but GitHub's stored
+size may remain large indefinitely). Run only when worktrees/PRs are quiescent.
 
-Procedure (fresh mirror clone, `git-filter-repo` is installed):
-
-```bash
-git clone --mirror git@github.com:shepherdjerred/monorepo.git monorepo-rewrite.git
-cd monorepo-rewrite.git
-git filter-repo --force --filename-callback '
-return None if (b"/champion-loading/" in filename and not filename.endswith(b"_0.jpg")) else filename
-'
-# review size delta, then coordinate the force-push + re-clone
-```
-
-The callback keeps `*_0.jpg` at every commit (still used at the tip) and drops only the
-non-zero blobs from all 48 historical commits.
+The standalone skins-only callback was superseded by the coordinated repo-wide plan,
+which treats champion-loading as one target and preserves the full remote/local ref
+graph. Do not execute a narrower rewrite from this predecessor plan.
 
 ## Remaining
 
-- [ ] Execute the deferred git history rewrite when worktrees/PRs are quiescent —
-      tracked in [`todos/scout-champion-loading-history-rewrite.md`](../todos/scout-champion-loading-history-rewrite.md).
+- [ ] Execute the coordinated rewrite when worktrees/PRs are quiescent — tracked in
+      [`2026-07-25_repo-history-slim.md`](2026-07-25_repo-history-slim.md).
 
 ## Session Log — 2026-07-25
 
@@ -137,6 +127,21 @@ non-zero blobs from all 48 historical commits.
 ### Caveats
 
 - The history rewrite is intentionally NOT part of the code PR; running it
-  force-pushes `main` and strands active worktrees/PRs (see the todo).
+  force-pushes `main` and strands active worktrees/PRs (see the coordinated plan).
 - `getChampionLoadingImageUrl` (a generic ddragon CDN-URL builder) keeps its
   `skinNum` param — it is not tied to on-disk assets, so it was left as-is.
+
+## Session Log — 2026-07-25 (history rewrite handoff)
+
+### Done
+
+- Retargeted the deferred rewrite to the active repo-wide plan after its standalone TODO was archived, and removed the
+  obsolete executable callback from this predecessor plan.
+
+### Remaining
+
+- Execute the coordinated rewrite through `2026-07-25_repo-history-slim.md`.
+
+### Caveats
+
+- This plan documents the shipped skins cleanup; it is no longer an executable history-rewrite runbook.

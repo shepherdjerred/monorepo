@@ -57,9 +57,9 @@ An ordinary `git gc` in the main checkout can reclaim old unreachable objects on
 shrinking a fresh clone, or touching GitHub. Keep Git's default prune grace period while worktrees or agents may be
 writing objects; **never run `git gc --prune=now` concurrently with repository writers**, because removing the grace
 period can race a new loose object before its ref is installed. The immediate final prune belongs after the Phase-3
-writer freeze, ref verification, restacks, and obsolete-reflog expiration.
+writer freeze, ref verification, filtered local-ref replacement, and obsolete-reflog expiration.
 
-## Blast radius (read before Phase 1) — worktrees stay intact; every local branch restacks; every ref moves together
+## Blast radius — worktrees stay intact; every local ref gets a filtered counterpart; every remote ref moves together
 
 The rewrite runs in an **isolated throwaway clone** (`git clone` → `filter-repo` → force-push). `filter-repo` never
 modifies your real `.git`, any worktree's files, or any uncommitted work — the 13 worktrees are physically untouched.
@@ -70,27 +70,29 @@ or custom ref keeps the pre-rewrite blobs (including already-deleted content) re
 merge that old graph straight back into `main` later; see Phase 3 for the explicit controlled-ref publish step.
 GitHub also advertises service-owned `refs/pull/*`; those cannot be force-pushed or deleted by an operator. Treat
 their retained objects as permanent for this non-sensitive large-file cleanup; Phase 4 explains why Support removal
-is not an expected outcome. After a correct publish, nothing _breaks_ locally (the old objects still exist in the
-shared `.git`, so every worktree keeps building), but every local feature branch is now based on an old `main` that's
-been replaced.
+is not an expected outcome. After a correct publish, nothing _breaks_ immediately in the shared clone, but its local
+branches and tags still point at the rejected graph and must not be pushed or pruned until Phase 3 replaces them from
+the post-filter recovery bundle.
 
-The real cost is narrow but applies to **every retained local branch**, not only branches with open PRs: each stack
-must be restacked onto the new main, and branches with PRs must then be resubmitted (CI re-runs). A dormant local
-branch still reconnects the purged graph if it is pushed or merged later. This is **not** a
-`git-spice repo sync --restack` freebie: that flag only rebases branches whose _parent branch_ was merged/deleted by
-that same sync, and does nothing when trunk itself is force-updated to an unrelated history out from under branches
-based directly on it — it'll report nothing to do and silently leave the stack on the old, bloated objects. No work
-is lost either way (the old commits stay reachable locally until a `git gc`), but the mechanical step is a real
-per-stack restack, not a passive sync. The bloat blobs are ancestors of _every_ current branch, so no partial rewrite
-can leave a retained branch's base untouched — **timing is the only way to make it zero-touch.**
+The recovery applies to **every retained local branch**, not only branches with open PRs. Do **not** restack the
+original branches: replaying an old branch-only commit that touched a filtered path can reintroduce the purged blob as
+an intermediate version even when its final tree and ancestry checks pass. Instead, Phase 1 bundles every local head,
+Phase 2 filters those heads in the same pass as the remote refs, and Phase 3 replaces each clean local branch with its
+exact post-filter counterpart before rebuilding git-spice metadata. A dormant local branch that has no filtered
+counterpart remains blocked from pushes.
+
+The rewrite also changes commit payloads and parent IDs, invalidating embedded commit signatures. The current review
+found 606 signed commits descended from the first affected commit. Original signature verification and GitHub
+Verified provenance cannot survive changed commit objects; signed tags can be recreated and re-signed, but signed
+commits require an explicit owner-approved loss policy or a separately designed new-signature policy before cutover.
 
 ## Phase 1 — prerequisites (the rewrite is destructive; stage carefully)
 
 - [x] **Merge PR #1640** (skins cleanup) so champion-loading's tip is just the 173 `*_0.jpg` — otherwise the collapse
       re-adds 104 MB instead of 9 MB. _(Merged 2026-07-25.)_
-- [ ] **Pick a low-branch window** (see Blast radius): inventory every worktree and local `refs/heads/*`; the fewer
-      retained branches, the fewer restacks afterward. Worktrees need not be deleted, but every retained branch in
-      them must be clean and restacked before writers unfreeze.
+- [ ] **Pick a low-ref window** (see Blast radius): inventory every worktree plus local `refs/heads/*` and
+      `refs/tags/*`; the fewer retained local refs, the fewer filtered recovery refs. Worktrees need not be deleted,
+      but every retained branch in them must be clean and replaced before writers unfreeze.
 - [ ] **Freeze every writer first**: stop pushes, merges, branch/tag publishers, Renovate, release automation, and
       agents that can create Git objects. Keep the freeze in place through backup, manifest capture, rewrite, atomic
       publish, local recovery, and final prune.
@@ -99,16 +101,26 @@ can leave a retained branch's base untouched — **timing is the only way to mak
       the result into operator-controlled refs (`refs/heads/*`, `refs/tags/*`, and every discovered custom namespace)
       versus GitHub-owned refs (`refs/pull/*`). Decide explicitly whether each controlled ref is retained or retired;
       no writer may republish an old ref during the rewrite.
+- [ ] **Back up and classify all local-only state outside `.git`**: record every local head/tag object ID, every
+      worktree-to-branch mapping, and `git-spice log short --all --json`; copy the exact `refs/spice/data` ref; and
+      create/verify a durable git bundle containing `--branches`, `--tags`, and `refs/spice/data`. Classify local tags
+      as identical-to-remote, local-only, or same-name divergent, then explicitly retain or retire each one. The
+      bundle is the rollback source for refs that never existed in the remote mirror.
 - [ ] **Create the full rollback backup after the freeze**: `git clone --mirror` the frozen remote to a safe location.
       Verify every operator-controlled ref and SHA in the manifest matches the mirror before proceeding; if any differ,
       discard/refresh the mirror while writers remain frozen.
-- [ ] **Classify every affected tag**: for each tag, test its peeled commit tree against **every** collapse and delete
-      target. An affected tag must be retired or preserved exactly; default to retirement when it contains a delete
-      target, because exact preservation keeps those blobs reachable. No affected retained tag may skip restoration.
+- [ ] **Classify every affected head and tag**, including the bundled local heads/tags: test each peeled commit tree
+      against **every** collapse and delete target. An affected ref must be retired or preserved exactly; default to
+      retirement when it contains a delete target, because exact preservation keeps those blobs reachable. No
+      affected retained ref may skip restoration.
 - [ ] **Record tip-tree oracles outside the rewrite clone**: save `<ref> <ref^{tree}>` for `main`, every retained head,
       and every affected retained tag. A retained ref whose target paths differ from `main` needs its own saved
       target-path contents. Retire a stale head or tag that still contains content intentionally being purged, or
       preserve its exact tree and subtract the retained bytes from the reclaim estimate.
+- [ ] **Inventory rewritten commit signatures**: save `git log --all --format='%H%x09%G?'` from the frozen graph and
+      cross-reference signed commits with the filter-repo commit map during rehearsal. Record the final count and
+      obtain explicit owner acceptance for losing original commit signatures/Verified provenance. If new signatures
+      are required, stop and define a feasible signing policy before cutover.
 
 ## Phase 2 — the rewrite (`git-filter-repo`, installed)
 
@@ -119,11 +131,15 @@ Generate explicit fetch refspecs for **every** operator-controlled custom namesp
 filtering; `refs/renovate/*` is only today's known example, not a complete hard-coded list. Do not fetch GitHub-owned
 `refs/pull/*` into the rewrite set: operators cannot publish their rewritten values back. Do not pass
 `--refs`/`--partial`, which would limit the rewrite to a subset and leave the rest holding the pre-rewrite blobs.
+Before filtering, import the Phase-1 local-state bundle under reserved temporary head/tag prefixes that do not collide
+with remote refs (for example, `refs/heads/__history_rewrite_local__/*` and
+`refs/tags/__history_rewrite_local__/*`). Include those temporary refs in the same filter pass, but never include them
+in the remote publication refspecs.
 
-1. Copy the collapse-target dirs aside for `main` and every retained head, keyed by ref. For **every affected retained
-   tag**, copy aside every filtered target path present in its peeled commit, including delete targets. Deduplicate
-   identical directory trees, but do not assume branch or tag tips carry the same version. Preserve annotated-tag
-   metadata; signed tags must be explicitly re-signed or retired.
+1. For **every affected retained head or tag**, including temporary local-recovery refs, copy aside every filtered
+   target path present in its peeled commit—collapse and delete targets alike—keyed by ref. Deduplicate identical
+   directory trees, but do not assume branch or tag tips carry the same version. Preserve annotated-tag metadata;
+   signed tags must be explicitly re-signed or retired.
 2. Run one `git filter-repo --invert-paths` pass listing **all** targets — both the `delete` paths and the `collapse`
    dirs (this strips the collapse dirs from tip too; step 4 restores them):
 
@@ -148,15 +164,21 @@ filtering; `refs/renovate/*` is only today's known example, not a complete hard-
 3. Enumerate any other big deleted-at-tip blobs from the analysis and add them to the list.
 4. On `main`, copy its saved generated dirs back in, `git add <those paths>`, and commit:
    `chore(root): re-add current generated artifacts after history slim`.
-5. For every other retained head, restore that head's saved generated dirs and commit the restoration on that head
-   before publishing. Verify its resulting tree hash equals the external pre-filter `<ref^{tree}>` oracle. Retire
-   obsolete heads instead of publishing a silently altered tip. This may retain one copy per distinct live branch-tip
-   version; that is the cost of preserving retained refs, and the measured size delta must include it.
+5. For every other affected retained head, restore **all** of that ref's saved filtered paths and commit the
+   restoration on that head before publishing/exporting it. This includes delete targets retained by an important
+   stale branch, not only generated collapse directories. Verify its resulting tree hash equals the external
+   pre-filter `<ref^{tree}>` oracle. Retire obsolete heads instead of publishing a silently altered tip. This may
+   retain one copy per distinct live branch-tip version; that is the cost of preserving retained refs, and the
+   measured size delta must include it.
 6. For every affected retained tag, create a tag-only restoration commit on its rewritten target, restore **all**
    saved filtered paths, then retarget/recreate the tag with its preserved metadata and verify the resulting tree hash
    against the external oracle. Explicitly re-sign signed tags. This applies to tags affected only by delete targets
    as well as collapse targets. Retire the tag instead if exact preservation is not worth its retained blobs; never
    silently publish an affected tag whose source archive or checkout lost content.
+7. Export every filtered temporary local head/tag to a durable post-filter recovery bundle and manifest before
+   deleting the reserved temporary refs. Record each original local ref name, its filtered object ID, tree oracle,
+   and original git-spice parent from the Phase-1 topology manifest. This bundle—not replay of old commits—is the only
+   source for Phase-3 local recovery.
 
 ## Phase 3 — publish + recover downstream
 
@@ -182,14 +204,11 @@ filtering; `refs/renovate/*` is only today's known example, not a complete hard-
       a fresh `git clone` into a new directory (no reused `.git`) to confirm both the smaller size and that retired
       paths are gone from `git log --all -- <path>`. Do not require GitHub-owned `refs/pull/*` to match the clone;
       record their count as permanently outside operator control for this non-sensitive cleanup.
-- [ ] Before touching any local state, back up `refs/spice/data`
-      (`git for-each-ref refs/spice/data > /tmp/spice-data-backup.txt`, or copy `.git/refs/spice/`). A remote-side
-      history rewrite does **not** invalidate
-      this ref — it's purely local and someone else's force-push can't touch it — and it holds the old base commit
-      git-spice needs, per tracked branch, to replay that branch's commits across the pre-/post-rewrite split (the
-      old base commit stays reachable locally via the feature branch's own ancestry, so it survives even a later
-      `git gc`). Do **not** run `git-spice repo init` to "reset" the store after the reset below — that was this
-      plan's original (wrong) instinct, and it throws away exactly the base pointers the restack step depends on.
+- [ ] Before touching any shared-clone state, verify the durable Phase-1 local bundle, exact pre-cutover
+      `refs/spice/data` object ID, worktree/topology manifests, and Phase-2 post-filter recovery bundle. Every retained
+      local head/tag must have both a pre-cutover rollback object and a post-filter replacement object. Keep both
+      bundles outside `.git`; importing the pre-cutover bundle before a rollback would keep the rejected graph
+      reachable and defeat pruning.
 - [ ] Recover local trunk only from a **clean, explicitly checked** main checkout:
       `test -z "$(git status --porcelain=v1 --untracked-files=all)"` must pass. Then force-synchronize rewritten and
       retired remote refs before resetting:
@@ -203,34 +222,30 @@ filtering; `refs/renovate/*` is only today's known example, not a complete hard-
 
       Generate equivalent forced fetch refspecs for every controlled custom namespace in the frozen manifest. Compare
       local `refs/tags/*` names and object IDs with the rewritten remote manifest; changed tags must be clobbered and
-      retired tags absent before pruning. Plain `git fetch origin` is insufficient because it does not replace
-      force-moved local tags. If the main checkout is not clean, abort recovery and first commit/push the work through
-      its owning branch; do not stash or reset it. A separate re-clone is safe for inspection, but it does not contain
-      this clone's `refs/spice/data`, so use the clean original clone for the per-stack restacks.
+      retired remote tags absent before pruning. `--prune-tags` may also delete local-only tags, so recreate every
+      retained local-only tag from its **filtered** recovery ref after the fetch and verify its object ID/tree against
+      the post-filter manifest. Same-name divergent tags follow the explicit Phase-1 disposition; never silently
+      overwrite one. Plain `git fetch origin` is insufficient because it does not replace force-moved local tags. If
+      the main checkout is not clean, abort recovery and first commit/push the work through its owning branch; do not
+      stash or reset it.
 
-- [ ] Restack **every retained local branch**, including clean worktree branches with no PR. Start from the frozen
-      `git worktree list --porcelain` and local `refs/heads/*` inventory; classify each branch as retained or retired.
-      For each retained stack, enter its owning worktree, select its bottom branch with
-      `git-spice branch checkout <name>` if needed, and run `git-spice upstack restack`. Use
-      `git-spice branch restack --branch=<name>` only when intentionally restacking that branch alone;
-      `git-spice upstack restack` has no `--branch` option. Run `git-spice stack submit --update-only` only for
-      branches with existing PRs. Verify rewritten `origin/main` is an ancestor of every retained local branch. Retire
-      obsolete branches through git-spice. Also require
-      `git merge-base --is-ancestor <pre-rewrite-main> <branch>` to fail for every retained branch so no replay kept
-      the old graph as a second parent. If any branch cannot be repaired, keep its worktree and push capability blocked
-      and do not unfreeze repository writers. This is **not** `git-spice repo sync --restack`: that flag only rebases
-      the upstacks of branches whose _parent branch_ was merged/deleted by that same sync — a merged-PR cleanup. When
-      trunk itself is force-updated to an unrelated history out from branches based directly on it, `repo sync` finds
-      no merged branch to clean up and leaves those branches on the old graph.
-
-- [ ] Rehearse the restack sequence above in a disposable clone (with a copy of `refs/spice/data` and one
-      representative stack) before running it against real stacks. Resolve conflicts with `git-spice rebase continue`
-      / `git-spice rebase abort` per the normal conflict flow. If automatic restacking cannot represent the old stack,
-      abort and repair its tracked topology **through git-spice**: check out the bottom branch, use
-      `git-spice upstack onto main` (or `git-spice branch onto <parent>` plus `git-spice stack edit`) to retarget the
-      stack, then verify `git-spice log long` and each branch diff before `git-spice stack submit --update-only`.
-      Never fall back to raw `git cherry-pick`, which leaves `refs/spice/data` with stale bases. If git-spice cannot
-      reconstruct the intended topology, stop and roll back instead of publishing an unmanaged stack.
+- [ ] Replace **every retained local branch** from the post-filter recovery bundle, including clean worktree branches
+      with no PR. Fetch the bundle into a reserved recovery namespace, enter each owning worktree, recheck cleanliness,
+      and reset its checked-out branch to the exact recorded filtered object ID. Verify every local branch object ID
+      equals the post-filter manifest and its tree equals the pre-cutover oracle. Never restack/rebase/cherry-pick the
+      original pre-rewrite branch: replay can resurrect filtered intermediate blobs while passing final-tree checks.
+- [ ] Rebuild git-spice metadata **without rewriting commits**: after every local head is on its exact filtered object,
+      run `git-spice repo init --reset --trunk main --remote origin`, then re-track each branch with its recorded
+      parent using
+      `git-spice branch track <branch> --base <parent>`. Verify `git-spice log long --all`, every branch diff, and the
+      saved topology manifest. Existing remote PR branches were filtered in the same pass; submit only a filtered
+      local branch that intentionally contains previously unpushed work, and verify the submitted SHA is exactly its
+      post-filter recovery SHA. If topology cannot be reconstructed without mutating branch history, keep writers
+      frozen and roll back.
+- [ ] Rehearse the bundle import, per-worktree exact reset, local-tag reconstruction, and git-spice metadata rebuild in
+      a disposable clone with a representative stack before touching the shared clone. Verify the entire branch
+      object IDs—not just tip trees or ancestry—against the post-filter manifest. Remove reserved recovery refs after
+      verification so no accidental publish namespace remains.
 - [ ] After every controlled ref is verified on the rewritten graph and the rollback mirror is secured, expire only
       obsolete unreachable reflog entries with `git reflog expire --expire-unreachable=now --all`, verify writers are
       still frozen, then run `git gc --prune=now`. Without the reflog expiration, recent pre-rewrite commits remain
@@ -379,10 +394,16 @@ The rewrite must change **history weight only, never working-tree content**:
    hashes remains executable after `filter-repo` expires reflogs and garbage-collects old objects; a
    `git diff <old-commit> <new-commit>` inside the rewritten clone does not. Any mismatch means a mistargeted path or
    missing per-ref restore; abort and fix.
-2. **Build/verify green** on the rewritten clone: `bun install --frozen-lockfile && bunx turbo run generate && bun run verify`.
-3. **Size delta measured:** rerun the committed procedure above; compare its pre/post `summary.json` and target
-   inventories. Reachable size should drop ~250 MB, adjusted for every retained affected tag.
-4. **Backup retained** after cutover as disaster evidence. Direct mirror rollback is allowed only while writers remain
+2. **Complete-history identity:** every recovered local head/tag object ID must equal its post-filter recovery
+   manifest entry. This guards against a replay that restores a correct tip tree while reintroducing filtered
+   intermediate blobs.
+3. **Signature disposition recorded:** cross-reference the pre-filter signature inventory with filter-repo's
+   commit-map, record the number of rewritten signed commits, and attach the owner's explicit loss acceptance or the
+   approved new-signature policy. Verify every retained signed tag was re-signed.
+4. **Build/verify green** on the rewritten clone: `bun install --frozen-lockfile && bunx turbo run generate && bun run verify`.
+5. **Size delta measured:** rerun the committed procedure above; compare its pre/post `summary.json` and target
+   inventories. Reachable size should drop ~250 MB, adjusted for every retained affected head or tag.
+6. **Backup retained** after cutover as disaster evidence. Direct mirror rollback is allowed only while writers remain
    frozen; after unfreeze, the preservation workflow below is mandatory.
 
 ## Rollback
@@ -400,16 +421,20 @@ git push --atomic --force --dry-run git@github.com:shepherdjerred/monorepo.git "
 Then run the identical atomic transaction without `--dry-run`. Never put `<backup-path>` in the destination position
 of `git push`: that would overwrite the rollback anchor rather than restore GitHub. Never omit a namespace, split
 deletions into a second push, or do a `main`-only rollback; any of those creates the mixed state this plan forbids.
-Keep writers frozen until remote refs and fresh clones match the backup, and retain the backup until CI + a couple of
-fresh clones are confirmed good.
+After the remote transaction, force-fetch its restored heads/tags/custom refs, import the pre-cutover local bundle
+under a reserved rollback namespace, and reset every clean worktree branch—including `main`—to its exact saved
+pre-cutover object ID. Restore every retained local-only tag, then restore the exact saved `refs/spice/data` object
+with `git update-ref`. Verify the local head/tag manifest, worktree mapping, `git-spice log long --all`, and every stack
+base against restored `main`; remove the reserved rollback refs only after those checks pass. Keep writers frozen
+until remote refs, local refs, git-spice state, CI, and fresh clones all match the pre-cutover backups.
 
 After writers have been unfrozen, **never** force-push the Phase-1 mirror directly. A post-unfreeze rollback is a new
 coordinated migration: freeze writers again; create and verify a second mirror of the current rewritten remote; diff
-every controlled ref against the accepted cutover manifest; preserve every new commit, branch, and tag from that
-mirror; and translate the post-cutover changes onto the Phase-1 graph. Reconstruct feature stacks through git-spice,
-recreate tags with their metadata/signatures, and verify every translated ref's tree oracle before building one
-atomic rollback refspec array. If any post-cutover ref cannot be preserved exactly, abort rollback rather than discard
-new work.
+every controlled ref against the accepted cutover manifest; create a second durable bundle of current local
+heads/tags and `refs/spice/data`; preserve every new remote or local commit, branch, and tag; and translate the
+post-cutover changes onto the Phase-1 graph. Reconstruct feature stacks through git-spice, recreate tags with their
+metadata/signatures, and verify every translated ref's tree oracle before building one atomic rollback refspec array.
+If any post-cutover remote or local ref cannot be preserved exactly, abort rollback rather than discard new work.
 
 ## Supersedes
 
@@ -437,7 +462,7 @@ appears as active work on the docs board.
 
 - Rewrite is destructive and coordination-heavy; do not run it opportunistically. The tip-tree-identity check is the
   guardrail that the working tree is unchanged.
-- GitHub won't reclaim server-side space without its own GC / a support request.
+- GitHub-owned pull-request refs may retain non-sensitive large files indefinitely; no Support cleanup is assumed.
 
 ## Session Log — 2026-07-25 (P1 review fixes)
 
@@ -446,14 +471,12 @@ appears as active work on the docs board.
 - Fixed 2 P1 findings from a Codex substitute review (Greptile credit-paused): (1) Phase 3's publish step now
   force-pushes **every** rewritten ref (`refs/heads/*` + `refs/tags/*`, 18 heads + 311 tags), not just `main`, with
   explicit deletion of retired refs and a `git ls-remote` + fresh-clone verification step; the Rollback section
-  mirrors the same all-refs push. (2) Phase 3's restack step no longer relies on `git-spice repo sync --restack`
-  (confirmed via `git-spice-helper`'s command reference that it only rebases upstacks of merged/deleted branches,
-  not branches based directly on a force-updated trunk) — replaced with backing up `refs/spice/data` (not
-  `repo init`, which would destroy the base pointers needed to replay commits across the rewrite), then
-  `git-spice stack restack` or branch checkout + `git-spice upstack restack` per stack, followed by
-  `stack submit --update-only`, rehearsed in a disposable clone first. Also confirmed via
-  `git-filter-repo --help` that its default (non-`--partial`) run already does a mirror-like fetch of all refs, so
-  Phase 2's existing single-clone approach didn't need restructuring — only a clarifying note.
+  mirrors the same all-refs push. (2) Phase 3 stopped relying on `git-spice repo sync --restack`, which cannot repair
+  branches after an unrelated trunk rewrite. A later review also showed that replaying the original branch commits
+  can resurrect filtered blobs; the current procedure therefore imports exact post-filter local refs and rebuilds
+  git-spice metadata without restacking. Also confirmed via `git-filter-repo --help` that its default
+  (non-`--partial`) run already does a mirror-like fetch of all refs, so Phase 2's existing single-clone approach
+  didn't need restructuring—only a clarifying note.
 
 ### Remaining
 
@@ -508,10 +531,10 @@ appears as active work on the docs board.
 ### Done
 
 - Addressed all 9 current-head follow-up findings: every affected retained tag now has an exact preservation oracle;
-  every retained local/worktree branch must restack before unfreeze; local tags are force-synchronized; peeled tag
-  pseudo-records are excluded from the manifest; upstack selection uses supported git-spice commands; dry-run scope
-  no longer claims to exercise rulesets; Support cleanup is treated as unavailable; the exact history-analysis
-  procedure is inline and reproducible; and direct rollback cannot discard post-cutover work.
+  every retained local/worktree branch must receive its filtered counterpart before unfreeze; local tags are
+  force-synchronized; peeled tag pseudo-records are excluded from the manifest; recovery remains inside git-spice;
+  dry-run scope no longer claims to exercise rulesets; Support cleanup is treated as unavailable; the exact
+  history-analysis procedure is inline and reproducible; and direct rollback cannot discard post-cutover work.
 
 ### Remaining
 
@@ -523,3 +546,23 @@ appears as active work on the docs board.
 - GitHub-owned `refs/pull/*` may retain the non-sensitive large files indefinitely.
 - After writers unfreeze, rollback requires preserving and translating all post-cutover refs; the Phase-1 mirror
   cannot be pushed directly.
+
+## Session Log — 2026-07-25 (hosted Codex local-state review)
+
+### Done
+
+- Addressed all 6 current-head findings: local branches now come from the same filter pass instead of replaying old
+  patches; affected retained heads preserve delete targets; local-only/divergent tags are inventoried and bundled
+  before pruning; rollback restores every local ref and exact git-spice state; the predecessor plan points to this
+  runbook; and rewritten commit signatures require an explicit owner-approved disposition.
+
+### Remaining
+
+- Execute Phases 0–4 only after the remote and local ref manifests, pre-cutover bundle, post-filter recovery bundle,
+  signature disposition, and rollback rehearsal are complete.
+
+### Caveats
+
+- Original signed-commit verification cannot survive changed commit objects unless a separate new-signature policy is
+  designed and approved.
+- Never recover a local branch by restacking its pre-rewrite commits; only its exact post-filter counterpart is safe.
