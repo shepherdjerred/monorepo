@@ -175,7 +175,8 @@ group "infra" {
 
 target "bindery" {
   context    = "packages/homelab/images/bindery"
-  tags       = ["bindery:dev"]
+  target     = "image"
+  tags       = imagetags("bindery")
   args = {
     VERSION = VERSION
     COMMIT  = GIT_SHA
