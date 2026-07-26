@@ -119,7 +119,7 @@ export const UnresolvedThreadSchema = z.object({
   /** Severity if one was parseable from the comment body. */
   severity: ReviewSeveritySchema.optional(),
   author: z.string(),
-  isGreptile: z.boolean(),
+  isReviewBot: z.boolean(),
   /** First line / snippet of the thread's first comment, for the report. */
   snippet: z.string(),
   url: z.string().optional(),

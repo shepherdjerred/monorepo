@@ -127,6 +127,21 @@
         "typescript": "^6.0.3",
       },
     },
+    "packages/code-review": {
+      "name": "@shepherdjerred/code-review",
+      "version": "0.1.0",
+      "dependencies": {
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@types/bun": "^1.3.14",
+        "eslint": "^10.3.0",
+        "jiti": "^2.7.0",
+        "typescript": "^6.0.3",
+        "typescript-eslint": "^8.59.0",
+      },
+    },
     "packages/cooklang-for-obsidian": {
       "name": "cooklang-for-obsidian",
       "version": "1.0.0",
@@ -1246,6 +1261,7 @@
         "@opentelemetry/sdk-trace-base": "^2.7.1",
         "@opentelemetry/semantic-conventions": "^1.40.0",
         "@sentry/bun": "^10.49.0",
+        "@shepherdjerred/code-review": "workspace:*",
         "@shepherdjerred/home-assistant": "workspace:*",
         "@shepherdjerred/llm-models": "workspace:*",
         "@shepherdjerred/llm-observability": "workspace:*",
@@ -1353,6 +1369,7 @@
       "name": "@shepherdjerred/root-scripts",
       "dependencies": {
         "@homelab/cdk8s": "workspace:*",
+        "@shepherdjerred/code-review": "workspace:*",
         "zod": "^4.4.3",
       },
       "devDependencies": {
@@ -3154,6 +3171,8 @@
     "@seydx/node-av-win32-x64-msvc": ["@seydx/node-av-win32-x64-msvc@5.2.4", "", { "os": "win32", "cpu": "x64" }, "sha512-01s5ij6nudrtZ7ojiAOAgzuUrImvuQYrAE5o6uesoxYqOha6j7yRu5e4qCXRQCDKrh2FBzyO1cGDc7Ht8Ly8wQ=="],
 
     "@shepherdjerred/birmel": ["@shepherdjerred/birmel@workspace:packages/birmel"],
+
+    "@shepherdjerred/code-review": ["@shepherdjerred/code-review@workspace:packages/code-review"],
 
     "@shepherdjerred/cooklang-rich-preview": ["@shepherdjerred/cooklang-rich-preview@workspace:packages/cooklang-rich-preview"],
 

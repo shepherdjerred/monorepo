@@ -809,27 +809,28 @@ steps:
                     mountPath: /buildkite/git-mirrors
                     readOnly: true
 
-  # Blocking, like the old pipeline (greptileReviewStep sat in blockingGates
-  # and fed the required check): every non-outdated Greptile review thread on
-  # the PR must be resolved before the aggregate buildkite/monorepo/pr
-  # required status can go green. wait-for-greptile.ts polls only while
-  # Greptile is still reviewing the head commit, then fails fast with the
+  # Blocking (like the old pipeline's blockingGates review step, which fed the
+  # required check): every non-outdated review thread from the active code-review
+  # provider must be resolved before the aggregate buildkite/monorepo/pr required
+  # status can go green. The provider (Greptile, Codex, …) is chosen by
+  # REVIEW_PROVIDER (default codex); wait-for-review.ts polls only while the
+  # provider is still reviewing the head commit, then fails fast with the
   # unresolved-thread list.
-  - label: ":robot_face: greptile review gate"
-    key: greptile-review
+  - label: ":robot_face: review gate"
+    key: review-gate
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
-      bun --no-install scripts/wait-for-greptile.ts
+      bun --no-install scripts/wait-for-review.ts
     retry: *retry
     plugins:
       - kubernetes:
           <<: *pod_light_kubernetes
           metadata:
             labels:
-              ci.sjer.red/step-key: greptile-review
+              ci.sjer.red/step-key: review-gate
 
   # ── PR-only dry-run lane: ONE pod validates every deploy path, no side
   # effects (the old pipeline's --dryrun plumbing). Replaces five micro-steps
@@ -947,6 +948,7 @@ steps:
         - "turbo.json"
         - "tsconfig.base.json"
         - "packages/birmel/**"
+        - "packages/code-review/**"
         - "packages/discord-plays-core/**"
         - "packages/discord-plays-mario-kart/**"
         - "packages/discord-plays-pokemon/**"

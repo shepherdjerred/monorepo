@@ -35,13 +35,14 @@ const REQUIRED_CHECKS_UNKNOWN = "(required checks could not be determined)";
 /**
  * Required contexts the babysitter does NOT fold into the CI gate because it
  * tracks them through dedicated signals: merge-conflict via the local
- * merge-tree, and the Greptile review gate via review-thread resolution. A
- * required context matching any of these is excluded; the remainder (e.g. the
- * build-completion aggregate) must be present-and-passing for `ci.green`.
+ * merge-tree, and the code-review gate (provider-neutral: Codex/Greptile/…)
+ * via review-thread resolution. A required context matching any of these is
+ * excluded; the remainder (e.g. the build-completion aggregate) must be
+ * present-and-passing for `ci.green`.
  */
 function isBabysitterTrackedContext(context: string): boolean {
   const lower = context.toLowerCase();
-  return lower.includes("merge-conflict") || lower.includes("greptile");
+  return lower.includes("merge-conflict") || lower.includes("review-gate");
 }
 
 /**

@@ -4,13 +4,13 @@ import type { CaptureResult } from "./exec.ts";
 // keep linking for sibling test files (see agent-task.test.ts for the rationale).
 import * as actualExec from "./exec.ts";
 
-const GREPTILE = "buildkite/monorepo/pr/mag-greptile-review";
+const REVIEW_GATE = "buildkite/monorepo/pr/robot-face-review-gate";
 
-// Ruleset payload with one required-status-checks rule listing GREPTILE.
+// Ruleset payload with one required-status-checks rule listing REVIEW_GATE.
 const RULESET_STDOUT = JSON.stringify([
   {
     type: "required_status_checks",
-    parameters: { required_status_checks: [{ context: GREPTILE }] },
+    parameters: { required_status_checks: [{ context: REVIEW_GATE }] },
   },
 ]);
 
@@ -68,7 +68,7 @@ describe("getRequiredCheckContexts — classic-protection 403", () => {
     // authoritative — must NOT fail closed.
     expect(result.known).toBe(true);
     if (result.known) {
-      expect(result.contexts).toEqual([GREPTILE]);
+      expect(result.contexts).toEqual([REVIEW_GATE]);
     }
   });
 

@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@homelab/cdk8s": "workspace:*",
+    "@shepherdjerred/code-review": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {

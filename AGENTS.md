@@ -69,6 +69,29 @@ sandbox/                        # Personal scratch (not shipped, excluded from m
 - **Update docs with code** — When adding a CLI command or feature, update CLAUDE.md and the relevant skills in the same phase, not a later "polish" pass, so the integration points are usable as soon as the feature works.
 - **Shared data is language-neutral** — Cross-package shared data (catalogs, config) belongs in a language-neutral source of truth (JSON + JSON Schema), validated per-language (Zod in TS, Pydantic in Python). The repo has Bun and Python consumers; don't ship a TS-only module. If TS needs it browser- and node-safe, ship a built package with inlined JSON + `.d.ts`, not a `node:fs` read or a source-only JSON import.
 
+## Code Review Rules
+
+These rules steer the automated PR code-review provider (Codex by default; the
+gate is provider-neutral — see `@shepherdjerred/code-review` and the `review-gate`
+Buildkite step). They apply repo-wide; per-package `AGENTS.md` files add more.
+
+- **Review against the `AGENTS.md` hierarchy** (root + `packages/*/AGENTS.md`) — it
+  is the source of truth. Flag deviations from it; do not restate it.
+- **Assume mechanical checks pass.** ESLint, prettier, typecheck, and the repo
+  checks run separately in CI — don't duplicate them. Focus on what humans/tools
+  miss: architecture, correctness, secret hygiene, and process.
+- **Enforce the Engineering Principles above.** Flag: type assertions (`as`, outside
+  `as const`/`as unknown`); `any`/implicit-any/loose types; silent fallbacks or
+  swallowed errors where fail-fast is required; defensive guards that hide a broken
+  caller contract; suppressions of build/lint/CI errors; the banned automation
+  patterns (`|| true`, `2>/dev/null`, `git add -A`, tokens written to files, …).
+- **Process invariants.** `TODO(todo:<id>)` markers need a matching
+  `packages/docs/todos/<id>.md`; `temporal-agent-task` blocks must match the schema;
+  prefer Bun-runtime APIs; ensure Prisma teardown in tests; follow the K8s/cdk8s
+  and worktree/git-spice conventions.
+- **Severity discipline.** Only flag genuine issues (P0–P2); skip nits and anything
+  a linter would catch. A clean diff should get a clean review.
+
 ## Documentation Discipline — Per Session
 
 **Every session must produce one of: a session log OR a plan**, and end with a written summary appended to it. Default to a log; reserve plans for substantive design work.

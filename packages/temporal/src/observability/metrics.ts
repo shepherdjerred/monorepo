@@ -414,6 +414,59 @@ export const prMergeConflictCheckDurationSeconds = new Histogram({
 });
 
 // ---------------------------------------------------------------------------
+// Review-signal collector — durable longitudinal record of "what the code-
+// review provider did and when" (see src/activities/observe-review-signals.ts
+// and @shepherdjerred/code-review's ReviewSignalEvent). Provider-neutral: the
+// `provider` label carries the active provider id (REVIEW_PROVIDER, default
+// `codex`). The CI gate (scripts/wait-for-review.ts) emits the same event
+// shape as structured logs only; this collector is the metrics + S3 side.
+// ---------------------------------------------------------------------------
+
+export const reviewCompletionLatencySeconds = new Histogram({
+  name: "review_completion_latency_seconds",
+  help: "Seconds from PR head-commit push to the review provider's completion signal (review-at-head, check-run, or 👍 reaction), by provider. Only observed when the reviewed commit is confirmed to be the head.",
+  labelNames: ["provider"] as const,
+  buckets: [30, 60, 120, 300, 600, 900, 1200, 1800, 3600],
+  registers: [register],
+});
+
+export const reviewFindingsTotal = new Counter({
+  name: "review_findings_total",
+  help: "Review findings observed by the review-signal collector, by provider and severity (p0|p1|p2|p3|unknown)",
+  labelNames: ["provider", "severity"] as const,
+  registers: [register],
+});
+
+export const reviewFindingsPerPr = new Histogram({
+  name: "review_findings_per_pr",
+  help: "Total findings per PR observed by the review-signal collector, by provider",
+  labelNames: ["provider"] as const,
+  buckets: [0, 1, 2, 3, 5, 10, 20],
+  registers: [register],
+});
+
+export const reviewCompletionSignalTotal = new Counter({
+  name: "review_completion_signal_total",
+  help: "Review-signal collector observations by provider and completion signal (check-run|review-at-head|thumbsup-reaction|none)",
+  labelNames: ["provider", "signal"] as const,
+  registers: [register],
+});
+
+export const reviewStaleReactionTotal = new Counter({
+  name: "review_stale_reaction_total",
+  help: "Review-signal collector observations where a clean 👍 reaction existed but the reviewed commit was not the current head, by provider",
+  labelNames: ["provider"] as const,
+  registers: [register],
+});
+
+export const reviewReviewedHeadTotal = new Counter({
+  name: "review_reviewed_head_total",
+  help: "Review-signal collector observations, by provider and whether the provider's most recently observed review/reaction is confirmed to be for the exact head commit (at_head = true|false)",
+  labelNames: ["provider", "at_head"] as const,
+  registers: [register],
+});
+
+// ---------------------------------------------------------------------------
 // Schedule-registry drift
 //
 // registerSchedules() upserts the declared SCHEDULES and deletes the explicit
