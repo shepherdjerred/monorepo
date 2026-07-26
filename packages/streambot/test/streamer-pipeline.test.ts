@@ -42,6 +42,7 @@ function env(over: EnvLookup = {}): EnvLookup {
 
 type PrepareSnapshot = {
   hardwareAcceleratedDecoding: boolean | undefined;
+  hardwarePipelineMode: string | undefined;
   hasEncoder: boolean;
   subtitleBurn: { path: string } | undefined;
   inputColor: string | undefined;
@@ -49,8 +50,13 @@ type PrepareSnapshot = {
   reject: (error: unknown) => void;
 };
 
-/** Fake player factory recording the prepare options each ffmpeg attempt would receive. */
-function makeFakeFactory() {
+/**
+ * Fake player factory recording the prepare options each ffmpeg attempt would receive.
+ * `startErrors[i]` makes attempt i's `start()` reject (the startup-failure path that triggers the
+ * in-streamer software fallback — rejecting `finished` instead models a mid-stream crash, which
+ * propagates to the machine).
+ */
+function makeFakeFactory(startErrors: (Error | undefined)[] = []) {
   const attempts: PrepareSnapshot[] = [];
   const factory: PlayerFactory = (_streamer, _input, options) => {
     let resolve!: () => void;
@@ -59,9 +65,11 @@ function makeFakeFactory() {
       resolve = res;
       reject = rej;
     });
+    const startError = startErrors[attempts.length];
     attempts.push({
       hardwareAcceleratedDecoding:
         options?.prepare?.hardwareAcceleratedDecoding,
+      hardwarePipelineMode: options?.prepare?.hardwarePipelineMode,
       hasEncoder: options?.prepare?.encoder !== undefined,
       subtitleBurn: options?.prepare?.subtitleBurn,
       inputColor: options?.prepare?.inputColor,
@@ -69,7 +77,10 @@ function makeFakeFactory() {
       reject,
     });
     return {
-      start: () => Promise.resolve(),
+      start: () =>
+        startError === undefined
+          ? Promise.resolve()
+          : Promise.reject(startError),
       seek: () => Promise.resolve(),
       setVolume: () => Promise.resolve(true),
       stop: () => {
@@ -102,6 +113,7 @@ describe("StreambotStreamer pipeline options", () => {
         resolved: RESOLVED_HDR_WITH_SUBS,
         volume: 100,
         seekSeconds: 0,
+        pipelineMode: "hw",
       },
       new AbortController().signal,
     );
@@ -109,6 +121,7 @@ describe("StreambotStreamer pipeline options", () => {
 
     expect(attempts).toHaveLength(1);
     expect(attempts[0]?.hardwareAcceleratedDecoding).toBe(true);
+    expect(attempts[0]?.hardwarePipelineMode).toBeUndefined(); // full-GPU default
     expect(attempts[0]?.hasEncoder).toBe(true); // VAAPI encoder despite the subtitle burn
     expect(attempts[0]?.subtitleBurn).toEqual({ path: SUBTITLE_PATH });
     expect(attempts[0]?.inputColor).toBe("hdr");
@@ -117,7 +130,7 @@ describe("StreambotStreamer pipeline options", () => {
     await run;
   });
 
-  test("HW→SW retry keeps subtitleBurn and inputColor so the software graph tonemaps + burns", async () => {
+  test("pipelineMode hw-upload threads hardwarePipelineMode upload with the VAAPI encoder", async () => {
     const { factory, attempts } = makeFakeFactory();
     const streamer = new StreambotStreamer(
       USER_TOKEN,
@@ -132,11 +145,69 @@ describe("StreambotStreamer pipeline options", () => {
         resolved: RESOLVED_HDR_WITH_SUBS,
         volume: 100,
         seekSeconds: 0,
+        pipelineMode: "hw-upload",
       },
       new AbortController().signal,
     );
     await flush();
-    attempts[0]?.reject(new Error("overlay_vaapi unsupported"));
+
+    expect(attempts[0]?.hardwareAcceleratedDecoding).toBe(true);
+    expect(attempts[0]?.hardwarePipelineMode).toBe("upload");
+    expect(attempts[0]?.hasEncoder).toBe(true);
+
+    attempts[0]?.resolve();
+    await run;
+  });
+
+  test("pipelineMode sw runs software even when hardware is enabled in config", async () => {
+    const { factory, attempts } = makeFakeFactory();
+    const streamer = new StreambotStreamer(
+      USER_TOKEN,
+      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "true" })),
+      () => 0,
+      factory,
+    );
+
+    const run = streamer.runStream(
+      {
+        voice: VOICE,
+        resolved: RESOLVED_HDR_WITH_SUBS,
+        volume: 100,
+        seekSeconds: 0,
+        pipelineMode: "sw",
+      },
+      new AbortController().signal,
+    );
+    await flush();
+
+    expect(attempts[0]?.hardwareAcceleratedDecoding).toBe(false);
+    expect(attempts[0]?.hasEncoder).toBe(false);
+
+    attempts[0]?.resolve();
+    await run;
+  });
+
+  test("HW startup failure → SW retry keeps subtitleBurn and inputColor so the software graph tonemaps + burns", async () => {
+    const { factory, attempts } = makeFakeFactory([
+      new Error("overlay_vaapi unsupported"),
+    ]);
+    const streamer = new StreambotStreamer(
+      USER_TOKEN,
+      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "true" })),
+      () => 0,
+      factory,
+    );
+
+    const run = streamer.runStream(
+      {
+        voice: VOICE,
+        resolved: RESOLVED_HDR_WITH_SUBS,
+        volume: 100,
+        seekSeconds: 0,
+        pipelineMode: "hw",
+      },
+      new AbortController().signal,
+    );
     await flush();
 
     expect(attempts).toHaveLength(2);
@@ -168,6 +239,7 @@ describe("StreambotStreamer pipeline options", () => {
         },
         volume: 100,
         seekSeconds: 0,
+        pipelineMode: "hw",
       },
       new AbortController().signal,
     );

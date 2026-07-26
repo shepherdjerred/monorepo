@@ -1,31 +1,39 @@
 import { assign, fromPromise, setup } from "xstate";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
-import { BlockedSourceError } from "@shepherdjerred/streambot/moderation/adult-block.ts";
-import {
-  ChannelIdSchema,
-  GuildIdSchema,
-} from "@shepherdjerred/streambot/types/ids.ts";
 import {
   moveItem,
   removeAt,
   shuffleQueue,
 } from "@shepherdjerred/streambot/machine/queue-ops.ts";
 import { withSubtitles } from "@shepherdjerred/streambot/sources/source.ts";
+import {
+  crashGiveUpUpdates,
+  externalStopMessage,
+  JOIN_TIMEOUT_MS,
+  LEAVE_TIMEOUT_MS,
+  MACHINE_TYPES,
+  MAX_CRASH_RETRIES,
+  moveVoiceTargetUpdates,
+  mustCurrent,
+  mustResolved,
+  mustVoice,
+  pipelineForAttempt,
+  queueCrashRetryUpdates,
+  queuedItem,
+  resolveDoneUpdates,
+  resolveErrorUpdates,
+  RESOLVE_TIMEOUT_MS,
+  streamCrashFrom,
+  streamErrorUpdates,
+} from "@shepherdjerred/streambot/machine/playback-helpers.ts";
 import type {
   JoinVoiceInput,
   LeaveVoiceInput,
-  PlaybackContext,
-  PlaybackEvent,
-  PlaybackInput,
   ResolvedSource,
   ResolveSourceInput,
   RunStreamInput,
   VoiceHandle,
 } from "@shepherdjerred/streambot/machine/types.ts";
-
-// Branded placeholders for the XState `types` phantom (never read at runtime).
-const PLACEHOLDER_GUILD = GuildIdSchema.parse("000000000000000000");
-const PLACEHOLDER_CHANNEL = ChannelIdSchema.parse("000000000000000000");
 
 /**
  * The side-effecting operations the machine drives. Implementations live in the streamer/sources
@@ -41,96 +49,42 @@ export type PlaybackActors = {
     input: ResolveSourceInput,
     signal: AbortSignal,
   ) => Promise<ResolvedSource>;
-  /** Resolves when the stream ends naturally; rejects on stream error. */
+  /** Resolves when the stream ends naturally; rejects on stream error (typed for crashes). */
   runStream: (input: RunStreamInput, signal: AbortSignal) => Promise<void>;
   leaveVoice: (input: LeaveVoiceInput, signal: AbortSignal) => Promise<void>;
 };
 
 const VOLUME_MIN = 0;
 const VOLUME_MAX = 200;
-const EXTERNAL_STOP_MESSAGES: ReadonlyMap<PlaybackEvent["type"], string> =
-  new Map([
-    ["GUILD_REMOVED", "guild removed"],
-    ["CHANNEL_DELETED", "voice channel deleted"],
-    ["SHUTDOWN", "shutdown"],
-  ]);
-
-function mustCurrent(
-  context: PlaybackContext,
-): NonNullable<PlaybackContext["current"]> {
-  if (context.current === null) {
-    throw new Error("invariant: no current source while resolving");
-  }
-  return context.current;
-}
-
-function mustVoice(context: PlaybackContext): VoiceHandle {
-  if (context.voice === null) {
-    throw new Error("invariant: no voice connection");
-  }
-  return context.voice;
-}
-
-function mustResolved(context: PlaybackContext): ResolvedSource {
-  if (context.resolved === null) {
-    throw new Error("invariant: no resolved source while streaming");
-  }
-  return context.resolved;
-}
-
-function externalStopMessage(event: PlaybackEvent): string {
-  if (event.type === "STREAMER_VOICE_DETACHED") {
-    return event.reason ?? "streamer voice detached";
-  }
-  if (event.type === "PRODUCER_FAILED") {
-    return event.reason;
-  }
-  return EXTERNAL_STOP_MESSAGES.get(event.type) ?? "external stream event";
-}
 
 /**
  * Build the playback state machine — the single source of truth for the streaming lifecycle. All
  * I/O is delegated to the provided {@link PlaybackActors}, so the machine is pure and every
- * transition (queue edits, loop modes, skip/stop, blocked sources, idle disconnect) is
- * deterministically unit-testable.
+ * transition (queue edits, loop modes, skip/stop, blocked sources, crash recovery, wedge
+ * timeouts, idle disconnect) is deterministically unit-testable.
  *
  * Flow: `idle → joining → advance → resolving → streaming → advance → … → waiting → leaving → idle`.
  * `advance` picks the next item per loop mode; `waiting` holds the voice connection for a grace
  * period before disconnecting; `failed` drops a bad/blocked item and continues (or bails on join
- * failure).
+ * failure). A mid-stream death (crash / truncation / stall) re-queues the current item and
+ * retries at the death position, walking the pipeline ladder (see MAX_CRASH_RETRIES).
  */
 export function createPlaybackMachine(actors: PlaybackActors) {
-  const machineTypes: {
-    context: PlaybackContext;
-    events: PlaybackEvent;
-    input: PlaybackInput;
-  } = {
-    context: {
-      guildId: PLACEHOLDER_GUILD,
-      channelId: PLACEHOLDER_CHANNEL,
-      idleTimeoutMs: 0,
-      queue: [],
-      current: null,
-      voice: null,
-      resolved: null,
-      loop: "off",
-      volume: 100,
-      lastError: null,
-      lastErrorKind: null,
-      blockedNonce: 0,
-      lastBlockedRequester: null,
-      resumeSeekSeconds: 0,
+  // Shared by every externally-driven stop (guild/channel gone, producer dead, shutdown).
+  const externalStopTransitions = [
+    {
+      guard: "hasVoice" as const,
+      target: "#playback.leaving" as const,
+      actions: ["clearQueue" as const, "recordExternalStop" as const],
     },
-    events: { type: "SKIP" },
-    input: {
-      guildId: PLACEHOLDER_GUILD,
-      channelId: PLACEHOLDER_CHANNEL,
-      idleTimeoutMs: 0,
+    {
+      target: "#playback.idle" as const,
+      actions: ["clearQueue" as const, "recordExternalStop" as const],
     },
-  };
+  ];
 
   return setup({
-    types: machineTypes,
+    types: MACHINE_TYPES,
     actors: {
       joinVoice: fromPromise(
         ({ input, signal }: { input: JoinVoiceInput; signal: AbortSignal }) =>
@@ -156,6 +110,9 @@ export function createPlaybackMachine(actors: PlaybackActors) {
     },
     delays: {
       idleTimeout: ({ context }) => context.idleTimeoutMs,
+      joinTimeout: ({ context }) => context.wedgeTimeoutsMs.join,
+      resolveTimeout: ({ context }) => context.wedgeTimeoutsMs.resolve,
+      leaveTimeout: ({ context }) => context.wedgeTimeoutsMs.leave,
     },
     guards: {
       hasQueue: ({ context }) => context.queue.length > 0,
@@ -165,6 +122,9 @@ export function createPlaybackMachine(actors: PlaybackActors) {
       isQueueLoopHasContent: ({ context }) =>
         context.loop === "queue" &&
         (context.current !== null || context.queue.length > 0),
+      // A mid-stream death with retry budget left and an item to replay.
+      isCrashRetryable: ({ context }) =>
+        context.crashRetries < MAX_CRASH_RETRIES && context.current !== null,
     },
     actions: {
       dequeue: assign({
@@ -184,31 +144,14 @@ export function createPlaybackMachine(actors: PlaybackActors) {
         lastError: ({ event }) => externalStopMessage(event),
         lastErrorKind: "generic",
       }),
-      moveVoiceTarget: assign({
-        guildId: ({ event, context }) =>
-          event.type === "VOICE_TARGET_MOVED"
-            ? GuildIdSchema.parse(event.target.guildId)
-            : context.guildId,
-        channelId: ({ event, context }) =>
-          event.type === "VOICE_TARGET_MOVED"
-            ? ChannelIdSchema.parse(event.target.channelId)
-            : context.channelId,
-        voice: ({ event, context }) => {
-          if (event.type !== "VOICE_TARGET_MOVED") {
-            return context.voice;
-          }
-          if (context.voice === null) {
-            return null;
-          }
-          return {
-            guildId: GuildIdSchema.parse(event.target.guildId),
-            channelId: ChannelIdSchema.parse(event.target.channelId),
-          };
-        },
-      }),
+      moveVoiceTarget: assign(({ context, event }) =>
+        moveVoiceTargetUpdates(context, event),
+      ),
       // Consume the one-shot resume seek so only the first post-restart playthrough seeks; any
       // loop/replay of the same item starts from 0.
       consumeSeek: assign({ resumeSeekSeconds: 0 }),
+      // The current item finished, was skipped, or playback stopped: its recovery budget resets.
+      resetCrashRetries: assign({ crashRetries: 0 }),
     },
   }).createMachine({
     id: "playback",
@@ -216,6 +159,11 @@ export function createPlaybackMachine(actors: PlaybackActors) {
       guildId: input.guildId,
       channelId: input.channelId,
       idleTimeoutMs: input.idleTimeoutMs,
+      wedgeTimeoutsMs: {
+        join: input.wedgeTimeoutsMs?.join ?? JOIN_TIMEOUT_MS,
+        resolve: input.wedgeTimeoutsMs?.resolve ?? RESOLVE_TIMEOUT_MS,
+        leave: input.wedgeTimeoutsMs?.leave ?? LEAVE_TIMEOUT_MS,
+      },
       // Resume seeding: the in-progress item (if any) is placed at queue[0] by the caller, so the
       // normal idle → joining → advance(dequeue) → resolving → streaming flow plays it first.
       queue: input.initialQueue ?? [],
@@ -229,36 +177,20 @@ export function createPlaybackMachine(actors: PlaybackActors) {
       blockedNonce: 0,
       lastBlockedRequester: null,
       resumeSeekSeconds: input.initialSeekSeconds ?? 0,
+      crashRetries: 0,
+      crashNotice: null,
     }),
     initial: "idle",
     // Queue-editing events are accepted in every state (they only touch context).
     on: {
       ADD: {
         actions: assign({
-          queue: ({ context, event }) => [
-            ...context.queue,
-            {
-              source: event.source,
-              requesterId: event.requesterId,
-              ...(event.preResolved === undefined
-                ? {}
-                : { preResolved: event.preResolved }),
-            },
-          ],
+          queue: ({ context, event }) => [...context.queue, queuedItem(event)],
         }),
       },
       ADD_NEXT: {
         actions: assign({
-          queue: ({ context, event }) => [
-            {
-              source: event.source,
-              requesterId: event.requesterId,
-              ...(event.preResolved === undefined
-                ? {}
-                : { preResolved: event.preResolved }),
-            },
-            ...context.queue,
-          ],
+          queue: ({ context, event }) => [queuedItem(event), ...context.queue],
         }),
       },
       REMOVE: {
@@ -286,61 +218,11 @@ export function createPlaybackMachine(actors: PlaybackActors) {
         }),
       },
       VOICE_TARGET_MOVED: { actions: "moveVoiceTarget" },
-      STREAMER_VOICE_DETACHED: [
-        {
-          guard: "hasVoice",
-          target: "#playback.leaving",
-          actions: ["clearQueue", "recordExternalStop"],
-        },
-        {
-          target: "#playback.idle",
-          actions: ["clearQueue", "recordExternalStop"],
-        },
-      ],
-      GUILD_REMOVED: [
-        {
-          guard: "hasVoice",
-          target: "#playback.leaving",
-          actions: ["clearQueue", "recordExternalStop"],
-        },
-        {
-          target: "#playback.idle",
-          actions: ["clearQueue", "recordExternalStop"],
-        },
-      ],
-      CHANNEL_DELETED: [
-        {
-          guard: "hasVoice",
-          target: "#playback.leaving",
-          actions: ["clearQueue", "recordExternalStop"],
-        },
-        {
-          target: "#playback.idle",
-          actions: ["clearQueue", "recordExternalStop"],
-        },
-      ],
-      PRODUCER_FAILED: [
-        {
-          guard: "hasVoice",
-          target: "#playback.leaving",
-          actions: ["clearQueue", "recordExternalStop"],
-        },
-        {
-          target: "#playback.idle",
-          actions: ["clearQueue", "recordExternalStop"],
-        },
-      ],
-      SHUTDOWN: [
-        {
-          guard: "hasVoice",
-          target: "#playback.leaving",
-          actions: ["clearQueue", "recordExternalStop"],
-        },
-        {
-          target: "#playback.idle",
-          actions: ["clearQueue", "recordExternalStop"],
-        },
-      ],
+      STREAMER_VOICE_DETACHED: externalStopTransitions,
+      GUILD_REMOVED: externalStopTransitions,
+      CHANNEL_DELETED: externalStopTransitions,
+      PRODUCER_FAILED: externalStopTransitions,
+      SHUTDOWN: externalStopTransitions,
     },
     states: {
       idle: {
@@ -367,6 +249,18 @@ export function createPlaybackMachine(actors: PlaybackActors) {
             actions: assign({
               lastError: ({ event }) => getErrorMessage(event.error),
               lastErrorKind: "generic",
+            }),
+          },
+        },
+        // The fork's joinVoice promise only ever resolves (no rejection path for a stuck voice
+        // handshake) — without this the machine would wedge here forever. Leaving the state
+        // aborts the pending join via the actor's signal.
+        after: {
+          joinTimeout: {
+            target: "failed",
+            actions: assign({
+              lastError: "voice join timed out",
+              lastErrorKind: "timeout",
             }),
           },
         },
@@ -406,33 +300,26 @@ export function createPlaybackMachine(actors: PlaybackActors) {
           },
           onDone: {
             target: "streaming",
-            actions: assign(({ context, event }) => ({
-              resolved: event.output,
-              lastError: null,
-              lastErrorKind: null,
-              // Drop the one-shot pre-resolved payload now that it's been consumed, so any later
-              // replay of this same queued item (track loop, requeue) re-resolves for real instead
-              // of reusing a possibly-expired URL.
-              current: {
-                source: mustCurrent(context).source,
-                requesterId: mustCurrent(context).requesterId,
-              },
-            })),
+            actions: assign(({ context, event }) =>
+              resolveDoneUpdates(context, event.output),
+            ),
           },
           onError: {
             target: "failed",
-            actions: assign(({ context, event }) => {
-              const blocked = event.error instanceof BlockedSourceError;
-              return {
-                lastError: getErrorMessage(event.error),
-                lastErrorKind: blocked ? "blocked" : "generic",
-                blockedNonce: blocked
-                  ? context.blockedNonce + 1
-                  : context.blockedNonce,
-                lastBlockedRequester: blocked
-                  ? (context.current?.requesterId ?? null)
-                  : context.lastBlockedRequester,
-              };
+            actions: assign(({ context, event }) =>
+              resolveErrorUpdates(context, event.error),
+            ),
+          },
+        },
+        // Wedge guard: the yt-dlp resolve path has no timeout of its own — a hung probe would
+        // hold this state forever. Leaving the state aborts the subprocess via the actor signal;
+        // `failed` then drops the item and the queue continues.
+        after: {
+          resolveTimeout: {
+            target: "failed",
+            actions: assign({
+              lastError: "resolving the source timed out",
+              lastErrorKind: "timeout",
             }),
           },
         },
@@ -452,19 +339,72 @@ export function createPlaybackMachine(actors: PlaybackActors) {
             resolved: mustResolved(context),
             volume: context.volume,
             seekSeconds: context.resumeSeekSeconds,
+            pipelineMode: pipelineForAttempt(context.crashRetries),
           }),
-          onDone: { target: "advance" },
-          onError: {
-            target: "failed",
-            actions: assign({
-              lastError: ({ event }) => getErrorMessage(event.error),
-              lastErrorKind: "generic",
-            }),
-          },
+          onDone: { target: "advance", actions: "resetCrashRetries" },
+          onError: [
+            // Mid-stream death (crash or exit-0 truncation) with retry budget left: re-queue the
+            // current item at its head and replay from the crash position. Going back through
+            // `resolving` re-resolves the source — which also regenerates expired network URLs.
+            // Exit-order note: the state's `consumeSeek` exit action runs BEFORE these transition
+            // actions in XState v5, so the resumeSeekSeconds written here survives.
+            {
+              guard: ({ context, event }) =>
+                streamCrashFrom(event.error) !== null &&
+                context.crashRetries < MAX_CRASH_RETRIES &&
+                context.current !== null,
+              target: "skipped",
+              actions: assign(({ context, event }) => {
+                const crash = streamCrashFrom(event.error);
+                return crash === null
+                  ? {}
+                  : queueCrashRetryUpdates(context, {
+                      reason: crash.kind,
+                      positionSeconds: crash.positionSeconds,
+                    });
+              }),
+            },
+            // Retry budget spent on a crashing item, or a non-crash stream error: drop it (via
+            // `failed` → `skipped`), announce, and continue with the rest of the queue.
+            {
+              target: "failed",
+              actions: assign(({ context, event }) =>
+                streamErrorUpdates(context, event.error),
+              ),
+            },
+          ],
         },
         on: {
-          SKIP: { target: "skipped" },
-          STOP: { target: "leaving", actions: "clearQueue" },
+          SKIP: { target: "skipped", actions: "resetCrashRetries" },
+          STOP: {
+            target: "leaving",
+            actions: ["clearQueue", "resetCrashRetries"],
+          },
+          // The stall watchdog (stream-observer → session-manager) saw ffmpeg stop producing while
+          // the process stayed alive — the machine would otherwise sit here forever. Same bounded
+          // recovery ladder as a crash; leaving the state aborts the wedged ffmpeg.
+          PRODUCER_STALLED: [
+            {
+              guard: "isCrashRetryable",
+              target: "skipped",
+              actions: assign(({ context, event }) =>
+                queueCrashRetryUpdates(context, {
+                  reason: "stall",
+                  positionSeconds: event.positionSeconds ?? 0,
+                }),
+              ),
+            },
+            {
+              target: "failed",
+              actions: assign(({ context, event }) =>
+                crashGiveUpUpdates(context, {
+                  reason: "stall",
+                  positionSeconds: event.positionSeconds ?? 0,
+                  lastError: `stream stalled: ${event.reason}`,
+                }),
+              ),
+            },
+          ],
           // Restart the current source with a new subtitle preference at the same position —
           // reuses the resume-seek plumbing (`resumeSeekSeconds`) that voice-reconnect resume
           // already relies on, so no new state is needed beyond the existing `skipped` transient.
@@ -481,6 +421,7 @@ export function createPlaybackMachine(actors: PlaybackActors) {
                   ...context.queue,
                 ],
                 resumeSeekSeconds: event.positionSeconds,
+                crashRetries: 0,
               };
             }),
           },
@@ -502,6 +443,16 @@ export function createPlaybackMachine(actors: PlaybackActors) {
             actions: assign({
               lastError: ({ event }) => getErrorMessage(event.error),
               lastErrorKind: "generic",
+            }),
+          },
+        },
+        // Wedge guard: a hung leave must not hold the session open forever.
+        after: {
+          leaveTimeout: {
+            target: "idle",
+            actions: assign({
+              lastError: "leaving voice timed out",
+              lastErrorKind: "timeout",
             }),
           },
         },

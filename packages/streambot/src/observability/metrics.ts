@@ -202,8 +202,20 @@ export const streamActive = new Gauge({
 
 export const streamSegmentsTotal = new Counter({
   name: "streambot_stream_segments_total",
-  help: "Completed stream segments, by hardware path and outcome (ended | error)",
+  help: "Completed stream segments, by hardware path and outcome (ended | error | crash | ended-short)",
   labelNames: ["hardware", "outcome"] as const,
+  registers: [register],
+});
+
+/**
+ * Mid-stream segment deaths the recovery ladder acts on, by pipeline mode (hw | hw-upload | sw)
+ * and kind (crash = non-zero ffmpeg exit or demux error; ended-short = exit-0 truncation;
+ * stall = no ffmpeg progress while the process stayed alive).
+ */
+export const streamCrashesTotal = new Counter({
+  name: "streambot_stream_crashes_total",
+  help: "Mid-stream segment deaths, by pipeline mode and kind (crash | ended-short | stall)",
+  labelNames: ["pipeline", "kind"] as const,
   registers: [register],
 });
 

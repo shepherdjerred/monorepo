@@ -235,6 +235,7 @@ export class SessionManager {
     this.sessions.clear();
     for (const session of sessions) {
       session.entry.userbot.setVoiceCloseListener(null);
+      session.entry.userbot.setStallListener(null);
       if (session.checkpointTimer !== null) {
         clearInterval(session.checkpointTimer);
         session.checkpointTimer = null;
@@ -312,6 +313,16 @@ export class SessionManager {
     // reports the streamer leaving — the silent-to-EOF case).
     entry.userbot.setVoiceCloseListener(() => {
       void this.voiceRecovery.beginRecovery(session);
+    });
+    // Stall watchdog: ffmpeg alive but producing nothing → the machine's bounded stall recovery
+    // (retry at position, pipeline ladder). Without this the machine would sit in `streaming`
+    // forever on a wedged pipeline.
+    entry.userbot.setStallListener((info) => {
+      session.actor.send({
+        type: "PRODUCER_STALLED",
+        reason: info.reason,
+        positionSeconds: info.positionSeconds,
+      });
     });
 
     const subscription = actor.subscribe((snapshot) => {
@@ -415,6 +426,7 @@ export class SessionManager {
     session.unsubscribe();
     session.actor.stop();
     session.entry.userbot.setVoiceCloseListener(null);
+    session.entry.userbot.setStallListener(null);
     this.deps.pool.release(session.entry);
     // A preserved file only makes sense for an error-driven end; a natural finish (lastError
     // null) has nothing to resume even mid-recovery, so it cleans up as usual.

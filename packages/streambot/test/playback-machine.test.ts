@@ -5,7 +5,9 @@ import {
   type PlaybackActors,
 } from "@shepherdjerred/streambot/machine/playback-machine.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
+import type { RunStreamInput } from "@shepherdjerred/streambot/machine/types.ts";
 import { BlockedSourceError } from "@shepherdjerred/streambot/moderation/adult-block.ts";
+import { StreamCrashError } from "@shepherdjerred/streambot/streamer/stream-errors.ts";
 import {
   ChannelIdSchema,
   GuildIdSchema,
@@ -28,8 +30,10 @@ function fileSource(title: string): Source {
 function makeStreamController() {
   const resolvers: { resolve: () => void; reject: (error: unknown) => void }[] =
     [];
-  const runStream: PlaybackActors["runStream"] = () =>
+  const inputs: RunStreamInput[] = [];
+  const runStream: PlaybackActors["runStream"] = (input) =>
     new Promise<void>((resolve, reject) => {
+      inputs.push(input);
       resolvers.push({ resolve, reject });
     });
   return {
@@ -37,8 +41,25 @@ function makeStreamController() {
     endCurrent: () => {
       resolvers.at(-1)?.resolve();
     },
+    crashCurrent: (error: unknown) => {
+      resolvers.at(-1)?.reject(error);
+    },
+    inputs,
     invocationCount: () => resolvers.length,
   };
+}
+
+function crashError(
+  positionSeconds: number,
+  kind: "crash" | "ended-short" = "crash",
+): StreamCrashError {
+  return new StreamCrashError("ffmpeg exited with code 218", {
+    kind,
+    positionSeconds,
+    pipelineMode: "hw",
+    exitCode: kind === "ended-short" ? 0 : 218,
+    stderrTail: [],
+  });
 }
 
 function makeActors(overrides: Partial<PlaybackActors> = {}): PlaybackActors {
@@ -532,5 +553,299 @@ describe("preResolved (synchronous pre-validation short-circuit)", () => {
       (s) => s.context.resolved?.title === "re-resolved",
       WAIT,
     );
+  });
+});
+
+describe("crash recovery ladder", () => {
+  test("a mid-stream crash re-queues the same item and retries at the crash position", async () => {
+    const stream = makeStreamController();
+    const actor = startActor(makeActors({ runStream: stream.runStream }));
+    actor.send({ type: "ADD", source: fileSource("movie"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+
+    stream.crashCurrent(crashError(42));
+    await waitFor(
+      actor,
+      (s) => s.matches("streaming") && stream.invocationCount() === 2,
+      WAIT,
+    );
+
+    // Same item, resumed at the crash position, still on full hardware for the first retry.
+    expect(actor.getSnapshot().context.current?.source).toEqual(
+      fileSource("movie"),
+    );
+    expect(stream.inputs[1]?.seekSeconds).toBe(42);
+    expect(stream.inputs[1]?.pipelineMode).toBe("hw");
+    const notice = actor.getSnapshot().context.crashNotice;
+    expect(notice?.kind).toBe("retry");
+    expect(notice?.reason).toBe("crash");
+    expect(notice?.attempt).toBe(1);
+    expect(notice?.positionSeconds).toBe(42);
+  });
+
+  test("the ladder walks hw → hw → hw-upload → sw, then gives up and plays the next item", async () => {
+    const stream = makeStreamController();
+    const actor = startActor(makeActors({ runStream: stream.runStream }));
+    // lastErrorKind is transient (cleared when the next item resolves) — observe it via snapshots.
+    const errorKinds: (string | null)[] = [];
+    actor.subscribe((s) => errorKinds.push(s.context.lastErrorKind));
+    actor.send({ type: "ADD", source: fileSource("cursed"), requesterId: U1 });
+    actor.send({ type: "ADD", source: fileSource("next"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      stream.crashCurrent(crashError(10 * attempt));
+      await waitFor(
+        actor,
+        (s) =>
+          s.matches("streaming") && stream.invocationCount() === attempt + 1,
+        WAIT,
+      );
+    }
+    expect(stream.inputs.map((i) => i.pipelineMode)).toEqual([
+      "hw",
+      "hw",
+      "hw-upload",
+      "sw",
+    ]);
+    // Each retry resumes where the previous attempt died.
+    expect(stream.inputs.map((i) => i.seekSeconds)).toEqual([0, 10, 20, 30]);
+
+    // Fourth crash: budget spent — give up, announce, and continue with the next queued item.
+    stream.crashCurrent(crashError(40));
+    await waitFor(
+      actor,
+      (s) =>
+        s.matches("streaming") &&
+        s.context.current?.source.kind === "file" &&
+        s.context.current.source.title === "next",
+      WAIT,
+    );
+    const context = actor.getSnapshot().context;
+    expect(errorKinds).toContain("crash");
+    expect(context.crashNotice?.kind).toBe("gave-up");
+    expect(context.crashRetries).toBe(0);
+    expect(stream.inputs[4]?.pipelineMode).toBe("hw"); // fresh item starts clean
+    expect(stream.inputs[4]?.seekSeconds).toBe(0);
+  });
+
+  test("an ended-short (exit-0 truncation) crash carries its reason into the notice and does not loop forever under loop:track", async () => {
+    const stream = makeStreamController();
+    const actor = startActor(makeActors({ runStream: stream.runStream }));
+    actor.send({ type: "SET_LOOP", mode: "track" });
+    actor.send({ type: "ADD", source: fileSource("trunc"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      stream.crashCurrent(crashError(40, "ended-short"));
+      await waitFor(
+        actor,
+        (s) =>
+          s.matches("streaming") && stream.invocationCount() === attempt + 1,
+        WAIT,
+      );
+      expect(actor.getSnapshot().context.crashNotice?.reason).toBe(
+        "ended-short",
+      );
+    }
+    // Budget spent: the item is dropped even under loop:"track" — no infinite truncated loop.
+    stream.crashCurrent(crashError(40, "ended-short"));
+    await waitFor(actor, (s) => s.matches("idle"), WAIT);
+    expect(stream.invocationCount()).toBe(4);
+  });
+
+  test("a natural end resets the retry budget for the next item", async () => {
+    const stream = makeStreamController();
+    const actor = startActor(makeActors({ runStream: stream.runStream }));
+    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
+    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+
+    stream.crashCurrent(crashError(5));
+    await waitFor(
+      actor,
+      (s) => s.matches("streaming") && stream.invocationCount() === 2,
+      WAIT,
+    );
+    stream.endCurrent(); // retry of "a" plays to the end
+    await waitFor(
+      actor,
+      (s) =>
+        s.matches("streaming") &&
+        s.context.current?.source.kind === "file" &&
+        s.context.current.source.title === "b",
+      WAIT,
+    );
+    expect(actor.getSnapshot().context.crashRetries).toBe(0);
+    expect(stream.inputs[2]?.pipelineMode).toBe("hw");
+    expect(stream.inputs[2]?.seekSeconds).toBe(0);
+  });
+
+  test("SKIP during a crashing item resets the budget for the next item", async () => {
+    const stream = makeStreamController();
+    const actor = startActor(makeActors({ runStream: stream.runStream }));
+    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
+    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+
+    stream.crashCurrent(crashError(5));
+    await waitFor(
+      actor,
+      (s) => s.matches("streaming") && stream.invocationCount() === 2,
+      WAIT,
+    );
+    actor.send({ type: "SKIP" });
+    await waitFor(
+      actor,
+      (s) =>
+        s.matches("streaming") &&
+        s.context.current?.source.kind === "file" &&
+        s.context.current.source.title === "b",
+      WAIT,
+    );
+    expect(actor.getSnapshot().context.crashRetries).toBe(0);
+    expect(stream.inputs[2]?.pipelineMode).toBe("hw");
+  });
+
+  test("PRODUCER_STALLED retries at the reported position via the same ladder", async () => {
+    const stream = makeStreamController();
+    const actor = startActor(makeActors({ runStream: stream.runStream }));
+    actor.send({ type: "ADD", source: fileSource("stally"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+
+    actor.send({
+      type: "PRODUCER_STALLED",
+      reason: "ffmpeg produced no output for 20s",
+      positionSeconds: 77,
+    });
+    await waitFor(
+      actor,
+      (s) => s.matches("streaming") && stream.invocationCount() === 2,
+      WAIT,
+    );
+    expect(stream.inputs[1]?.seekSeconds).toBe(77);
+    const notice = actor.getSnapshot().context.crashNotice;
+    expect(notice?.reason).toBe("stall");
+    expect(notice?.kind).toBe("retry");
+  });
+
+  test("a non-crash stream error still drops the item without retrying", async () => {
+    const stream = makeStreamController();
+    const actor = startActor(makeActors({ runStream: stream.runStream }));
+    const errorKinds: (string | null)[] = [];
+    actor.subscribe((s) => errorKinds.push(s.context.lastErrorKind));
+    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
+    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+
+    stream.crashCurrent(new Error("plain stream error"));
+    await waitFor(
+      actor,
+      (s) =>
+        s.matches("streaming") &&
+        s.context.current?.source.kind === "file" &&
+        s.context.current.source.title === "b",
+      WAIT,
+    );
+    expect(stream.invocationCount()).toBe(2); // no retry of "a"
+    expect(errorKinds).toContain("generic");
+    expect(actor.getSnapshot().context.crashNotice).toBeNull(); // not a crash — nothing to announce
+  });
+});
+
+describe("wedge timeouts", () => {
+  test("a hung resolve times out, drops the item, and continues", async () => {
+    const stream = makeStreamController();
+    const errorKinds: (string | null)[] = [];
+    const actor = createActor(
+      createPlaybackMachine(
+        makeActors({
+          runStream: stream.runStream,
+          resolveSource: (input, signal) =>
+            input.source.kind === "file" && input.source.title === "hang"
+              ? new Promise((_resolve, reject) => {
+                  signal.addEventListener("abort", () => {
+                    reject(new Error("aborted"));
+                  });
+                })
+              : makeActors().resolveSource(input, signal),
+        }),
+      ),
+      {
+        input: {
+          ...INPUT,
+          wedgeTimeoutsMs: { resolve: 40 },
+        },
+      },
+    );
+    actor.start();
+    actor.subscribe((s) => errorKinds.push(s.context.lastErrorKind));
+    actor.send({ type: "ADD", source: fileSource("hang"), requesterId: U1 });
+    actor.send({ type: "ADD", source: fileSource("ok"), requesterId: U1 });
+
+    await waitFor(
+      actor,
+      (s) =>
+        s.matches("streaming") &&
+        s.context.current?.source.kind === "file" &&
+        s.context.current.source.title === "ok",
+      WAIT,
+    );
+    expect(errorKinds).toContain("timeout");
+  });
+
+  test("a hung voice join times out to idle instead of wedging forever", async () => {
+    const actor = createActor(
+      createPlaybackMachine(
+        makeActors({
+          joinVoice: () =>
+            new Promise(() => {
+              /* never settles — the wedge timeout must fire */
+            }),
+        }),
+      ),
+      {
+        input: {
+          ...INPUT,
+          wedgeTimeoutsMs: { join: 40 },
+        },
+      },
+    );
+    actor.start();
+    actor.send({ type: "ADD", source: fileSource("movie"), requesterId: U1 });
+
+    await waitFor(actor, (s) => s.matches("idle"), WAIT);
+    const context = actor.getSnapshot().context;
+    expect(context.lastError).toBe("voice join timed out");
+    expect(context.lastErrorKind).toBe("timeout");
+    expect(context.queue).toHaveLength(0);
+  });
+
+  test("a hung leave times out to idle", async () => {
+    const stream = makeStreamController();
+    const actor = createActor(
+      createPlaybackMachine(
+        makeActors({
+          runStream: stream.runStream,
+          leaveVoice: () =>
+            new Promise(() => {
+              /* never settles — the wedge timeout must fire */
+            }),
+        }),
+      ),
+      {
+        input: {
+          ...INPUT,
+          wedgeTimeoutsMs: { leave: 40 },
+        },
+      },
+    );
+    actor.start();
+    actor.send({ type: "ADD", source: fileSource("movie"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    actor.send({ type: "STOP" });
+
+    await waitFor(actor, (s) => s.matches("idle"), WAIT);
+    expect(actor.getSnapshot().context.lastErrorKind).toBe("timeout");
   });
 });
