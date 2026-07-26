@@ -5,6 +5,7 @@ import {
   type StatusSnapshot,
 } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import type { PosterInfo } from "@shepherdjerred/streambot/metadata/tmdb.ts";
+import type { CrashNotice } from "@shepherdjerred/streambot/machine/types.ts";
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
 
 const REQUESTER = UserIdSchema.parse("100000000000000001");
@@ -57,6 +58,7 @@ function streaming(
     blockedNonce: 0,
     blockedRequester: null,
     lastError: null,
+    crashNotice: null,
   };
 }
 
@@ -73,6 +75,7 @@ function resolving(
     blockedNonce: 0,
     blockedRequester: null,
     lastError: null,
+    crashNotice: null,
   };
 }
 
@@ -106,6 +109,7 @@ describe("StatusReporter now-playing", () => {
       blockedNonce: 0,
       blockedRequester: null,
       lastError: null,
+      crashNotice: null,
     });
     reporter.handle(streaming("Song A"));
     expect(messages).toHaveLength(2);
@@ -248,6 +252,7 @@ describe("StatusReporter blocked shaming", () => {
       blockedNonce: 1,
       blockedRequester: REQUESTER,
       lastError: null,
+      crashNotice: null,
     });
     expect(messages).toHaveLength(1);
     expect(messages[0]).toContain(`<@${REQUESTER}>`);
@@ -264,6 +269,7 @@ describe("StatusReporter blocked shaming", () => {
       blockedNonce: 1,
       blockedRequester: REQUESTER,
       lastError: null,
+      crashNotice: null,
     };
     reporter.handle(blocked);
     reporter.handle(blocked);
@@ -288,6 +294,7 @@ describe("StatusReporter blocked shaming", () => {
       blockedNonce: 1,
       blockedRequester: REQUESTER,
       lastError: null,
+      crashNotice: null,
     });
     expect(messages).toHaveLength(0);
   });
@@ -308,6 +315,7 @@ function idleWith(lastError: string | null): StatusSnapshot {
     blockedNonce: 0,
     blockedRequester: null,
     lastError,
+    crashNotice: null,
   };
 }
 
@@ -350,5 +358,96 @@ describe("StatusReporter stop reasons", () => {
     reporter.handle(idleWith("voice connection dropped (close code 4014)"));
     const stops = messages.filter((m) => text(m).includes("Stream stopped"));
     expect(stops).toHaveLength(2);
+  });
+});
+
+function crashNotice(over: Partial<CrashNotice> = {}): CrashNotice {
+  return {
+    nonce: 1,
+    kind: "retry",
+    reason: "crash",
+    title: "Spider-Man 3 (2007)",
+    positionSeconds: 2,
+    attempt: 1,
+    maxAttempts: 3,
+    pipelineMode: "hw",
+    ...over,
+  };
+}
+
+describe("StatusReporter crash notices", () => {
+  test("announces a retry with position, attempt, and pipeline", () => {
+    const { reporter, messages } = collector();
+    reporter.handle({
+      ...streaming("Spider-Man 3 (2007)"),
+      crashNotice: crashNotice(),
+    });
+    expect(
+      messages.map((m) => text(m)).filter((m) => m.startsWith("⚠️")),
+    ).toEqual([
+      "⚠️ **Spider-Man 3 (2007)** crashed at 0:02 — retrying from there (attempt 1/3, hardware)…",
+    ]);
+  });
+
+  test("dedupes by nonce across re-rendered snapshots, announces new nonces", () => {
+    const { reporter, messages } = collector();
+    const first = {
+      ...streaming("Movie"),
+      crashNotice: crashNotice({ title: "Movie" }),
+    };
+    reporter.handle(first);
+    reporter.handle(first);
+    reporter.handle({
+      ...streaming("Movie"),
+      crashNotice: crashNotice({
+        title: "Movie",
+        nonce: 2,
+        attempt: 2,
+        reason: "stall",
+        positionSeconds: 3671,
+      }),
+    });
+    const warnings = messages
+      .map((m) => text(m))
+      .filter((m) => m.startsWith("⚠️"));
+    expect(warnings).toHaveLength(2);
+    expect(warnings[1]).toContain("stalled at 1:01:11");
+    expect(warnings[1]).toContain("attempt 2/3");
+  });
+
+  test("announces the give-up with the last position and reason", () => {
+    const { reporter, messages } = collector();
+    reporter.handle({
+      ...streaming("Movie"),
+      crashNotice: crashNotice({
+        title: "Movie",
+        kind: "gave-up",
+        reason: "ended-short",
+        positionSeconds: 40,
+        attempt: 3,
+      }),
+    });
+    const stops = messages
+      .map((m) => text(m))
+      .filter((m) => m.startsWith("🛑"));
+    expect(stops).toEqual([
+      "🛑 Gave up on **Movie** after 3 retries (last ended early at 0:40). Skipping it.",
+    ]);
+  });
+
+  test("software retry announces as software", () => {
+    const { reporter, messages } = collector();
+    reporter.handle({
+      ...streaming("Movie"),
+      crashNotice: crashNotice({
+        title: "Movie",
+        attempt: 3,
+        pipelineMode: "sw",
+      }),
+    });
+    const warnings = messages
+      .map((m) => text(m))
+      .filter((m) => m.startsWith("⚠️"));
+    expect(warnings.at(-1)).toContain("attempt 3/3, software");
   });
 });

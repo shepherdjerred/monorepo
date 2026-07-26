@@ -343,6 +343,7 @@ export class SessionManager {
         blockedNonce: snapshot.context.blockedNonce,
         blockedRequester: snapshot.context.lastBlockedRequester,
         lastError: snapshot.context.lastError,
+        crashNotice: snapshot.context.crashNotice,
       };
       reporter.handle(snap);
       // Metrics are process-global (unlabeled) gauges inherited from the single-session design:

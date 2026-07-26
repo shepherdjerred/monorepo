@@ -2,6 +2,7 @@ import { shameMessage } from "@shepherdjerred/streambot/moderation/adult-block.t
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import { parseTitleYear } from "@shepherdjerred/streambot/sources/normalize.ts";
 import type { PosterFetcher } from "@shepherdjerred/streambot/metadata/tmdb.ts";
+import type { CrashNotice } from "@shepherdjerred/streambot/machine/types.ts";
 import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
 
 /**
@@ -31,6 +32,8 @@ export type StatusSnapshot = {
   readonly blockedRequester: UserId | null;
   /** Machine `lastError` — the reason playback stopped (external stop, failure), or null. */
   readonly lastError: string | null;
+  /** One-shot crash/retry notice from the recovery ladder (deduped by nonce), or null. */
+  readonly crashNotice: CrashNotice | null;
 };
 
 /** Cancels a pending scheduled notice. Returned by {@link NoticeScheduler}. */
@@ -40,6 +43,17 @@ export type NoticeScheduler = (fn: () => void, ms: number) => CancelNotice;
 
 /** Default delay before a still-resolving file gets a "preparing…" notice (ms). */
 const DEFAULT_RESOLVING_NOTICE_DELAY_MS = 4000;
+
+/** "m:ss" / "h:mm:ss" from a position in seconds (floored). */
+function formatTimecode(totalSeconds: number): string {
+  const whole = Math.max(0, Math.floor(totalSeconds));
+  const h = Math.floor(whole / 3600);
+  const m = Math.floor((whole % 3600) / 60);
+  const s = whole % 60;
+  const mm = h > 0 ? String(m).padStart(2, "0") : String(m);
+  const ss = String(s).padStart(2, "0");
+  return h > 0 ? `${String(h)}:${mm}:${ss}` : `${mm}:${ss}`;
+}
 
 const defaultScheduler: NoticeScheduler = (fn, ms) => {
   const timer = setTimeout(fn, ms);
@@ -82,6 +96,8 @@ export class StatusReporter {
   private lastState: string | null = null;
   /** Dedup key for the last stop-reason announcement (state edges can re-render). */
   private lastStopKey: string | null = null;
+  /** Nonce of the last announced crash/retry notice (0 = none yet). */
+  private lastCrashNonce = 0;
   /** Cancels the pending "preparing…" notice timer, or null when none is scheduled. */
   private cancelNotice: CancelNotice | null = null;
   /** Source label the current notice is scheduled/announced for — dedupes re-rendered snapshots. */
@@ -107,6 +123,7 @@ export class StatusReporter {
       }
     }
 
+    this.announceCrashNotice(snapshot);
     this.announceStopReason(snapshot);
     this.updateResolvingNotice(snapshot);
 
@@ -211,6 +228,39 @@ export class StatusReporter {
     }
     this.lastStopKey = stopKey;
     void this.announce(`⏹️ Stream stopped: ${snapshot.lastError}`);
+  }
+
+  /**
+   * Announce the recovery ladder's work — a mid-stream crash/truncation/stall being retried, or a
+   * give-up after the retry budget. Deduped by the notice nonce (each machine transition that
+   * crashes bumps it exactly once), so re-rendered snapshots stay silent. Fires even when the
+   * queue continues afterward — this is the fix for the silent `failed → skipped` path.
+   */
+  private announceCrashNotice(snapshot: StatusSnapshot): void {
+    const notice = snapshot.crashNotice;
+    if (notice === null || notice.nonce === this.lastCrashNonce) {
+      return;
+    }
+    this.lastCrashNonce = notice.nonce;
+    const at = formatTimecode(notice.positionSeconds);
+    const what =
+      notice.reason === "stall"
+        ? "stalled"
+        : notice.reason === "ended-short"
+          ? "ended early"
+          : "crashed";
+    if (notice.kind === "retry") {
+      const pipeline = notice.pipelineMode === "sw" ? "software" : "hardware";
+      void this.announce(
+        `⚠️ **${notice.title}** ${what} at ${at} — retrying from there ` +
+          `(attempt ${String(notice.attempt)}/${String(notice.maxAttempts)}, ${pipeline})…`,
+      );
+      return;
+    }
+    void this.announce(
+      `🛑 Gave up on **${notice.title}** after ${String(notice.maxAttempts)} retries ` +
+        `(last ${what} at ${at}). Skipping it.`,
+    );
   }
 
   /** Cancel any pending "preparing…" notice and clear its dedup key. */
