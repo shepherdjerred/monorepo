@@ -205,10 +205,11 @@ return hs`,
   - PodVolumeRestore`,
       },
       rbac: {
-        // The release step syncs/prunes the root app and explicitly
-        // foreground-deletes the retired Kueue child Application.
+        // The release step syncs/prunes the root app, waits for both the ArgoCD
+        // and root-app trees, and explicitly foreground-deletes the retired
+        // Kueue child Application.
         "policy.csv":
-          "p, buildkite, applications, sync, default/apps, allow\np, buildkite, applications, get, default/apps, allow\np, buildkite, applications, delete, default/kueue, allow",
+          "p, buildkite, applications, sync, default/apps, allow\np, buildkite, applications, get, default/apps, allow\np, buildkite, applications, get, default/argocd, allow\np, buildkite, applications, delete, default/kueue, allow",
       },
     },
   };

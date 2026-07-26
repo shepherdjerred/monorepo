@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router";
 import { Button } from "#src/components/ui/button.tsx";
 import { ReportQueryDocs } from "#src/components/report-query-docs.tsx";
 

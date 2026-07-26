@@ -22,7 +22,7 @@ import {
   UserCheckIcon,
 } from "lucide-react";
 import { useMemo } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";
 
 import { moveDocumentInList } from "./cache.ts";

@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router";
 
 import { DocumentChanges } from "./document-changes.tsx";
 import { loadDocumentPage } from "./route-loaders.ts";

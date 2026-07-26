@@ -22,12 +22,14 @@ type safety, or any other quality gate.
 - Merged checkout-memory fix PR
   [#1647](https://github.com/shepherdjerred/monorepo/pull/1647)
 - Current `main` build `#6207`
-- The only hard-failing job is `:turborepo: verify`
-  (`019f9b73-ee64-4356-9a55-7cc12cec1bf5`, exit status 1).
-- The failing package is `@shepherdjerred/temporal`. Bun reports an unhandled
-  link error because the process-wide mock installed by
-  `pr-babysit/assess.test.ts` replaces `evaluate-dod.ts` with only
-  `evaluateBabysitDoD`, removing the later test's `classifyCiFailClosed` export.
+- Draft Buildx follow-up PR
+  [#1650](https://github.com/shepherdjerred/monorepo/pull/1650)
+- Draft dependency-security and Argo RBAC follow-up PR
+  [#1652](https://github.com/shepherdjerred/monorepo/pull/1652)
+- Liskov validation build `#6212`
+- Build `#6212` proved checkout, verify, Playwright, resume, Docker E2E, and the
+  image dry-run run on Liskov. Its Trivy gate found three newly published
+  dependency advisories after downloading a fresh vulnerability database.
 
 ## Remaining
 
@@ -38,7 +40,12 @@ type safety, or any other quality gate.
 - [x] Correct the Buildkite checkout container's tmpfs memory accounting exposed
       by build `#6179`.
 - [x] Publish and land the resource fix.
-- [ ] Land the Buildx import retry-classification fix exposed by build `#6207`.
+- [x] Publish the Buildx import retry-classification fix exposed by build
+      `#6207`.
+- [x] Land the Buildx import retry-classification fix.
+- [x] Remediate the fresh Trivy findings from validation build `#6212`.
+- [x] Fix the Argo CD RBAC denial exposed by current-main build `#6213`.
+- [ ] Land the dependency-security and Argo RBAC follow-up.
 - [ ] Confirm the resulting `main` Buildkite build is green.
 
 ## Session Log — 2026-07-25
@@ -120,10 +127,38 @@ type safety, or any other quality gate.
   positive and negative shell regression tests.
 - Passed the focused classifier test, ShellCheck, pipeline validation, and the
   root-scripts test suite (97 Bun tests plus all shell suites).
+- Published commit `129ca0e8b` as draft PR
+  [#1650](https://github.com/shepherdjerred/monorepo/pull/1650).
+- Confirmed the durable Buildkite Application values are live with no Argo CD
+  Helm parameter overrides. Every generated job uses
+  `kubernetes.io/hostname=liskov` plus `ci=only:NoSchedule`.
+- Recreated the disposable `buildkite-git-mirrors` claim during the documented
+  node migration. Its replacement PV is bound to Liskov and build `#6212`
+  cloned successfully through the new mirror.
+- Followed build `#6212` through successful checkout, verify, Playwright, resume,
+  and Docker E2E jobs on Liskov.
+- Diagnosed its fresh Trivy failure as `brace-expansion@5.0.7`,
+  `postcss@8.5.16`, and `react-router@7.18.1`.
+- Updated the vulnerable dependency lines to `brace-expansion@5.0.8`,
+  `postcss@8.5.23`, and `react-router@8.3.0`; migrated all three declarative
+  React apps away from the removed `react-router-dom` compatibility package.
+- Passed frozen install, all affected app builds/typechecks/tests/lints, and the
+  exact Trivy filesystem gate with zero HIGH or CRITICAL findings.
+- Made the CDK8s lint task depend on its own build. A root dependency change
+  exposed that parallel `build` and `lint` could remove `dist/` after ESLint
+  discovered it but before the directory scan completed.
+- Landed the Buildx retry-classification fix in PR
+  [#1650](https://github.com/shepherdjerred/monorepo/pull/1650) as
+  `0f21e807b885fc00cde8a8eb48d9f609fc167dcd`.
+- Followed current-main build `#6213` to its only hard failure: the Argo release
+  step synced `apps`, then received HTTP 403 while waiting for the `argocd`
+  Application tree.
+- Added the missing narrow `applications,get,default/argocd` grant to the
+  Buildkite Argo account and an exact-policy synthesis regression test.
 
 ### Remaining
 
-- Publish and land the Buildx retry-classification follow-up.
+- Amend and land the dependency-security and Argo RBAC follow-up.
 - Run the replacement `main` build through image publishing, OpenTofu, Argo CD
   sync, version commit-back, and summary.
 - Verify post-sync Buildkite job placement on `liskov` and current cluster
@@ -141,6 +176,7 @@ type safety, or any other quality gate.
 - The first package-script test attempt expanded to the entire CDK8s suite and
   exposed a local Go compiler/cache version mismatch. The focused test and all
   TypeScript/synthesis checks passed.
-- Build `#6207` began before the liskov Application chart was synced, so its
-  command pods ran on torvalds. The replacement build must prove the intended
-  liskov selector/toleration after deployment completes.
+- Build `#6207` began before the Liskov Application chart was synced, so its
+  command pods ran on Torvalds. Build `#6212` has since proved the selector,
+  toleration, replacement mirror PV, and multiple CI workload classes on
+  Liskov.

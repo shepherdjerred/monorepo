@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet, useParams } from "react-router-dom";
+import { Link, NavLink, Outlet, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { cn } from "#src/lib/cn.ts";

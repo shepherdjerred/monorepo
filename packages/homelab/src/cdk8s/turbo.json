@@ -27,6 +27,12 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
+    // `build` replaces dist/ while ESLint walks the package root. Serialize
+    // them so a combined `turbo run build lint` cannot remove the directory
+    // between ESLint discovering and scanning it.
+    "lint": {
+      "dependsOn": ["build", "^build", "generate"]
+    },
     // Tests read the synth output; the inline `bun run build &&` was dropped
     // from the script so turbo orders (and caches) the synth instead.
     "test": {
