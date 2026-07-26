@@ -54,6 +54,8 @@ Liskov so warm CI work is read-heavy rather than recreated per pod.
 
 ### Done
 
+- Published draft PR #1663 from commit `e77d42865` (`feat(ci): remove dind
+image cache path`); Buildkite build 6267 is the first remote execution.
 - Replaced CI DinD usage with the remote BuildKit client flow. PR image solves
   execute in-image `smoke` targets without an exporter; main validates first,
   then pushes directly to GHCR and records registry digests.
