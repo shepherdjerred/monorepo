@@ -100,7 +100,20 @@ export function TimezoneSelect(props: {
     <Combobox<Zone>
       id={props.id}
       value={query}
-      onValueChange={setQuery}
+      onValueChange={(text) => {
+        setQuery(text);
+        // Commit as soon as the typed/pasted text is itself a complete, valid
+        // zone (id or full label) — without this, typing an exact IANA name
+        // and submitting without clicking a result silently keeps the old
+        // timezone. Partial text matches nothing, so this never fires mid-type.
+        const trimmedText = text.trim();
+        const exact = ALL_ZONES.find(
+          (zone) => zone.id === trimmedText || zone.label === trimmedText,
+        );
+        if (exact !== undefined && exact.id !== props.value) {
+          props.onChange(exact.id);
+        }
+      }}
       items={items}
       isLoading={false}
       openOnEmptyQuery

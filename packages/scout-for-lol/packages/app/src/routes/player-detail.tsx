@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { nextRiotIdPollInterval } from "#src/lib/riot-id-poll.ts";
 import { findRegion, type RegionValue } from "#src/lib/regions.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "#src/components/ui/button.tsx";
@@ -172,20 +173,18 @@ export function PlayerDetail() {
     guildId: safeGuildId,
     alias: safeAlias,
   });
+  // Bounded poll for accounts whose Riot ID is still resolving (see helper).
+  const unresolvedPollsRef = useRef(0);
   const playerQuery = useQuery(
     trpc.player.getPlayer.queryOptions(
       { guildId: safeGuildId, alias: safeAlias },
       {
         enabled: hasPlayerRouteData(guildId, alias),
-        // Freshly added accounts start with an unresolved Riot ID (resolved
-        // server-side shortly after). Poll until every account resolves so
-        // the user never has to reload by hand.
         refetchInterval: (query) =>
-          query.state.data?.accounts.some(
-            (account) => account.riotGameName === null,
-          ) === true
-            ? 5000
-            : false,
+          nextRiotIdPollInterval(
+            query.state.data?.accounts,
+            unresolvedPollsRef,
+          ),
       },
     ),
   );

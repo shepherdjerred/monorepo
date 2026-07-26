@@ -16,22 +16,34 @@ export type DatesState = {
   seasonId: string;
 };
 
+// Season boundaries in the catalog (packages/data/src/seasons.ts) are Pacific
+// instants (e.g. `2026-07-28T23:59:59-07:00`). Format them in that same zone so
+// the advertised calendar dates match the catalog for every viewer — a
+// browser-local format renders the July 28 end as July 29 in UTC/Europe and the
+// June 10 midnight start as June 9 in Hawaii.
+const SEASON_CATALOG_TIME_ZONE = "America/Los_Angeles";
+
 /**
- * Format a season's start/end as a compact date range in the user's locale,
+ * Format a season's start/end as a compact date range in the catalog timezone,
  * e.g. "Jun 10 – Jul 28, 2026". Both years are shown when they differ.
  */
 function formatDateRange(start: Date, end: Date): string {
   const monthDay = new Intl.DateTimeFormat(undefined, {
     month: "short",
     day: "numeric",
+    timeZone: SEASON_CATALOG_TIME_ZONE,
   });
-  const startYear = start.getFullYear();
-  const endYear = end.getFullYear();
+  const year = new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    timeZone: SEASON_CATALOG_TIME_ZONE,
+  });
+  const startYear = year.format(start);
+  const endYear = year.format(end);
   const startText =
     startYear === endYear
       ? monthDay.format(start)
-      : `${monthDay.format(start)}, ${startYear.toString()}`;
-  return `${startText} – ${monthDay.format(end)}, ${endYear.toString()}`;
+      : `${monthDay.format(start)}, ${startYear}`;
+  return `${startText} – ${monthDay.format(end)}, ${endYear}`;
 }
 
 export function CompetitionDatesFields(props: {

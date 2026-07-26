@@ -1,13 +1,16 @@
 import {
   type CompetitionId,
   type DiscordAccountId,
+  type DiscordGuildId,
   type ParticipantStatus,
   ParticipantStatusSchema,
   type PlayerId,
+  PlayerIdSchema,
 } from "@scout-for-lol/data";
 import type { CompetitionParticipant } from "#generated/prisma/client/index.js";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { isCompetitionActive } from "#src/database/competition/validation.ts";
+import { logger } from "#src/logger.ts";
 import { match } from "ts-pattern";
 
 // ============================================================================
@@ -127,6 +130,57 @@ export async function addParticipant(options: {
       leftAt: null,
     },
   });
+}
+
+/**
+ * Enroll every tracked player in a guild into a competition as JOINED, up to
+ * the competition's participant cap. Backs SERVER_WIDE competitions (opt-out
+ * visibility) and the manual "add all members" action.
+ *
+ * Enrollment is tolerant: players who are already participants, previously
+ * LEFT, or overflow the cap are skipped individually (counted in `failed`)
+ * rather than aborting the batch — one player's state must never block
+ * enrolling the rest. Because a skipped enrollment never throws, a
+ * create-then-enroll caller cannot leave an orphaned competition behind on a
+ * partial failure (e.g. enrolling into an already-ended competition simply
+ * enrolls nobody instead of surfacing an error the client would retry).
+ *
+ * Players are enrolled oldest-first (stable `id` order) with the fetch capped
+ * at `maxParticipants`, so the cap is enforced deterministically.
+ */
+export async function bulkEnrollTrackedPlayers(options: {
+  prisma: ExtendedPrismaClient;
+  competitionId: CompetitionId;
+  guildId: DiscordGuildId;
+  maxParticipants: number;
+}): Promise<{ added: number; failed: number }> {
+  const { prisma, competitionId, guildId, maxParticipants } = options;
+  const players = await prisma.player.findMany({
+    where: { serverId: guildId },
+    select: { id: true },
+    orderBy: { id: "asc" },
+    take: maxParticipants,
+  });
+  let added = 0;
+  let failed = 0;
+  for (const player of players) {
+    try {
+      await addParticipant({
+        prisma,
+        competitionId,
+        playerId: PlayerIdSchema.parse(player.id),
+        status: "JOINED",
+      });
+      added += 1;
+    } catch (error) {
+      failed += 1;
+      logger.debug(
+        `Skipped bulk-enroll for player ${player.id.toString()} into competition ${competitionId.toString()}`,
+        error,
+      );
+    }
+  }
+  return { added, failed };
 }
 
 // ============================================================================

@@ -44,6 +44,7 @@ import {
 } from "#src/database/competition/queries.ts";
 import {
   addParticipant,
+  bulkEnrollTrackedPlayers,
   removeParticipant,
 } from "#src/database/competition/participants.ts";
 import {
@@ -109,6 +110,41 @@ async function loadCompetitionOr404(
     });
   }
   return competition;
+}
+
+const CompetitionEditInputSchema = CompetitionIdInput.extend({
+  channelId: DiscordChannelIdSchema.optional(),
+  title: z.string().trim().min(1).max(100).optional(),
+  description: z.string().trim().min(1).max(500).optional(),
+  visibility: CompetitionVisibilitySchema.optional(),
+  maxParticipants: z.number().int().min(2).max(100).optional(),
+  dates: WebCompetitionDatesSchema.optional(),
+  criteria: CompetitionCriteriaSchema.optional(),
+});
+
+/**
+ * Build the sparse update payload — only the keys the caller actually provided,
+ * as required by exactOptionalPropertyTypes. Extracted from the `edit` handler
+ * so the mutation stays under the cyclomatic-complexity limit.
+ */
+function buildCompetitionUpdateInput(
+  input: z.infer<typeof CompetitionEditInputSchema>,
+): UpdateCompetitionInput {
+  return {
+    ...(input.title === undefined ? {} : { title: input.title }),
+    ...(input.description === undefined
+      ? {}
+      : { description: input.description }),
+    ...(input.channelId === undefined ? {} : { channelId: input.channelId }),
+    ...(input.visibility === undefined ? {} : { visibility: input.visibility }),
+    ...(input.maxParticipants === undefined
+      ? {}
+      : { maxParticipants: input.maxParticipants }),
+    ...(input.dates === undefined
+      ? {}
+      : { dates: CompetitionDatesSchema.parse(input.dates) }),
+    ...(input.criteria === undefined ? {} : { criteria: input.criteria }),
+  };
 }
 
 export const competitionRouter = router({
@@ -212,6 +248,22 @@ export const competitionRouter = router({
         asBadRequest(error);
       }
 
+      // SERVER_WIDE bulk-enrolls every tracked player, which is participant
+      // management — gate it on competitions:invite (the permission the invite /
+      // add-all-members procedures already require) rather than letting the
+      // create permission alone bypass it. Checked before insertion so a
+      // denied request never leaves a competition behind.
+      if (
+        input.visibility === "SERVER_WIDE" &&
+        !ctx.permissions.can("competitions", "invite")
+      ) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            "Server-wide competitions enroll every tracked player, which requires the invite permission.",
+        });
+      }
+
       const competition = await createCompetition(prisma, {
         serverId: input.guildId,
         ownerId,
@@ -225,25 +277,16 @@ export const competitionRouter = router({
         updateCronExpression: input.updateCronExpression,
       });
       // SERVER_WIDE competitions enroll every tracked player up front — the
-      // visibility's opt-out semantics. The competition is brand new, so the
-      // only capacity constraint is maxParticipants: enroll the oldest
-      // players first and stop at the cap. Any other addParticipant failure
-      // is a genuine bug and propagates.
+      // visibility's opt-out semantics. Enrollment is tolerant and never
+      // throws, so a partial failure cannot orphan the just-created
+      // competition (see bulkEnrollTrackedPlayers).
       if (input.visibility === "SERVER_WIDE") {
-        const players = await prisma.player.findMany({
-          where: { serverId: input.guildId },
-          select: { id: true },
-          orderBy: { id: "asc" },
-          take: input.maxParticipants,
+        await bulkEnrollTrackedPlayers({
+          prisma,
+          competitionId: competition.id,
+          guildId: input.guildId,
+          maxParticipants: input.maxParticipants,
         });
-        for (const player of players) {
-          await addParticipant({
-            prisma,
-            competitionId: competition.id,
-            playerId: player.id,
-            status: "JOINED",
-          });
-        }
       }
       if (!ctx.permissions.isRoot) {
         recordCreation(input.guildId, ownerId);
@@ -252,18 +295,8 @@ export const competitionRouter = router({
     }),
 
   edit: guildMutationProcedure("competitions", "update")
-    .input(
-      CompetitionIdInput.extend({
-        channelId: DiscordChannelIdSchema.optional(),
-        title: z.string().trim().min(1).max(100).optional(),
-        description: z.string().trim().min(1).max(500).optional(),
-        visibility: CompetitionVisibilitySchema.optional(),
-        maxParticipants: z.number().int().min(2).max(100).optional(),
-        dates: WebCompetitionDatesSchema.optional(),
-        criteria: CompetitionCriteriaSchema.optional(),
-      }),
-    )
-    .mutation(async ({ input }) => {
+    .input(CompetitionEditInputSchema)
+    .mutation(async ({ ctx, input }) => {
       const competition = await loadCompetitionOr404(
         input.competitionId,
         input.guildId,
@@ -273,6 +306,20 @@ export const competitionRouter = router({
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: `A ${status} competition cannot be edited.`,
+        });
+      }
+
+      // Switching an existing competition to SERVER_WIDE bulk-enrolls every
+      // tracked player, so it requires the same invite permission the create
+      // path enforces for that visibility.
+      const enrollsServerWide =
+        input.visibility === "SERVER_WIDE" &&
+        competition.visibility !== "SERVER_WIDE";
+      if (enrollsServerWide && !ctx.permissions.can("competitions", "invite")) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            "Server-wide competitions enroll every tracked player, which requires the invite permission.",
         });
       }
 
@@ -304,28 +351,10 @@ export const competitionRouter = router({
         });
       }
 
-      // exactOptionalPropertyTypes: only set keys that were actually provided.
-      const updateInput: UpdateCompetitionInput = {
-        ...(input.title === undefined ? {} : { title: input.title }),
-        ...(input.description === undefined
-          ? {}
-          : { description: input.description }),
-        ...(input.channelId === undefined
-          ? {}
-          : { channelId: input.channelId }),
-        ...(input.visibility === undefined
-          ? {}
-          : { visibility: input.visibility }),
-        ...(input.maxParticipants === undefined
-          ? {}
-          : { maxParticipants: input.maxParticipants }),
-        ...(input.dates === undefined
-          ? {}
-          : { dates: CompetitionDatesSchema.parse(input.dates) }),
-        ...(input.criteria === undefined ? {} : { criteria: input.criteria }),
-      };
+      const updateInput = buildCompetitionUpdateInput(input);
+      let updated: CompetitionWithCriteria;
       try {
-        return await updateCompetition(
+        updated = await updateCompetition(
           prisma,
           input.competitionId,
           updateInput,
@@ -333,6 +362,20 @@ export const competitionRouter = router({
       } catch (error) {
         asBadRequest(error);
       }
+
+      // Enroll the whole server once the visibility flip has persisted so the
+      // opt-out promise holds for drafts converted to SERVER_WIDE, not just
+      // ones created that way. Tolerant: players already in the roster are
+      // skipped, and the cap is enforced by the enroll helper.
+      if (enrollsServerWide) {
+        await bulkEnrollTrackedPlayers({
+          prisma,
+          competitionId: input.competitionId,
+          guildId: input.guildId,
+          maxParticipants: updated.maxParticipants,
+        });
+      }
+      return updated;
     }),
 
   cancel: guildMutationProcedure("competitions", "cancel")
@@ -425,24 +468,16 @@ export const competitionRouter = router({
   addAllMembers: guildMutationProcedure("competitions", "invite")
     .input(CompetitionIdInput)
     .mutation(async ({ input }) => {
-      await loadCompetitionOr404(input.competitionId, input.guildId);
-      const players = await prisma.player.findMany({
-        where: { serverId: input.guildId },
-      });
-      const results = await Promise.allSettled(
-        players.map((player) =>
-          addParticipant({
-            prisma,
-            competitionId: input.competitionId,
-            playerId: PlayerIdSchema.parse(player.id),
-            status: "JOINED",
-          }),
-        ),
+      const competition = await loadCompetitionOr404(
+        input.competitionId,
+        input.guildId,
       );
-      const added = results.filter(
-        (result) => result.status === "fulfilled",
-      ).length;
-      return { added, failed: results.length - added };
+      return bulkEnrollTrackedPlayers({
+        prisma,
+        competitionId: input.competitionId,
+        guildId: input.guildId,
+        maxParticipants: competition.maxParticipants,
+      });
     }),
 
   updateSchedule: guildMutationProcedure("competitions", "schedule")
