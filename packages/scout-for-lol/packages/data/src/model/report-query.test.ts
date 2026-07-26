@@ -351,6 +351,17 @@ describe("RENDER clause", () => {
     ).toThrow('must be a non-negative integer or "all"');
   });
 
+  test("rejects an empty leaderboard mentions value", () => {
+    for (const query of [
+      "SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard WITH (mentions =)",
+      'SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard WITH (mentions = "")',
+    ]) {
+      expect(() => parseAndCompile(query)).toThrow(
+        'RENDER mentions must be a non-negative integer or "all"',
+      );
+    }
+  });
+
   test("ignores keywords inside a quoted render title", () => {
     const plan = parseAndCompile(
       'SELECT player, games FROM match_participants GROUP BY player ORDER BY games DESC LIMIT 3 RENDER bar_chart WITH (title = "no limit here")',

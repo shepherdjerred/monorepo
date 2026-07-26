@@ -121,6 +121,11 @@ function parseLeaderboardRenderWith(
       );
     }
     const normalized = normalizeColumnRef(value);
+    if (normalized.length === 0) {
+      throw new Error(
+        'RENDER mentions must be a non-negative integer or "all".',
+      );
+    }
     if (normalized === "all") {
       options.mentions = "all";
       continue;

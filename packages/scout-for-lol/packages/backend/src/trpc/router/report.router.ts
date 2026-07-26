@@ -32,6 +32,7 @@ import {
 import type { Report } from "#generated/prisma/client/index.js";
 import { router } from "#src/trpc/trpc.ts";
 import { assertChannelInGuild } from "#src/trpc/guild-guard.ts";
+import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 import {
   guildProcedure,
   guildMutationProcedure,
@@ -308,17 +309,19 @@ export const reportRouter = router({
       }
       if (input.post) {
         const image = result.output.image;
-        await sendChannelMessage(
-          {
-            content: result.output.content,
-            files:
-              image === null
-                ? []
-                : [new AttachmentBuilder(image.data, { name: image.filename })],
-          },
-          report.channelId,
-          report.serverId,
-        );
+        const files =
+          image === null
+            ? []
+            : [new AttachmentBuilder(image.data, { name: image.filename })];
+        for (const [index, content] of splitMessageIntoChunks(
+          result.output.content,
+        ).entries()) {
+          await sendChannelMessage(
+            { content, files: index === 0 ? files : [] },
+            report.channelId,
+            report.serverId,
+          );
+        }
       }
       return {
         content: result.output.content,

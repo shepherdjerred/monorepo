@@ -1,26 +1,33 @@
-import type { DiscordGuildId } from "@scout-for-lol/data";
+import {
+  DiscordAccountIdSchema,
+  type DiscordAccountId,
+  type DiscordGuildId,
+} from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 
 /**
- * Build an alias→Discord-ID map for every tracked player in a server, so
- * report rendering can turn a leaderboard row's player alias into an
- * `@mention`. Players without a linked Discord ID are omitted; callers fall
- * back to the plain alias for those.
+ * Build a player-ID→Discord-ID map for every tracked player in a server. The
+ * report result carries player identities, so mention rendering never infers
+ * an identity from a display label. A non-null stored ID is a contract and is
+ * validated here; only null represents an intentionally unlinked player.
  */
-export async function loadAliasToDiscordId(
+export async function loadPlayerDiscordIds(
   prisma: ExtendedPrismaClient,
   serverId: DiscordGuildId,
-): Promise<Map<string, string>> {
+): Promise<Map<number, DiscordAccountId>> {
   const players = await prisma.player.findMany({
     where: { serverId },
-    select: { alias: true, discordId: true },
+    select: { id: true, discordId: true },
   });
 
-  const aliasToDiscordId = new Map<string, string>();
+  const playerDiscordIds = new Map<number, DiscordAccountId>();
   for (const player of players) {
-    if (player.discordId !== null && player.discordId.length > 0) {
-      aliasToDiscordId.set(player.alias, player.discordId);
+    if (player.discordId !== null) {
+      playerDiscordIds.set(
+        player.id,
+        DiscordAccountIdSchema.parse(player.discordId),
+      );
     }
   }
-  return aliasToDiscordId;
+  return playerDiscordIds;
 }

@@ -1,3 +1,5 @@
+import type { ReportMentionIdentity } from "#src/reports/query-engine.ts";
+
 // Fallback rank count used when a `RENDER leaderboard` clause doesn't specify
 // `WITH (mentions = ...)`.
 export const DEFAULT_MENTION_COUNT = 3;
@@ -16,25 +18,34 @@ export function resolveMentionCount(
 }
 
 /**
- * Render a ranked row's label, `@mention`ing its player(s) for ranks below
- * `mentionCount`. Group labels (e.g. "Danny + Aaron + Kendrick") mention each
- * member independently; a member without a linked Discord ID falls back to
- * their plain alias.
+ * Render a ranked row's label, `@mention`ing structured player identities for
+ * ranks below `mentionCount`. Non-player rows have no mention identity and
+ * always retain their display label.
  */
-export function formatRankedLabel(
-  label: string,
-  index: number,
-  aliasToDiscordId: Map<string, string>,
-  mentionCount: number,
-): string {
-  if (index >= mentionCount) {
-    return label;
+export function formatRankedLabel(params: {
+  label: string;
+  index: number;
+  mentionIdentity: ReportMentionIdentity | null;
+  playerDiscordIds: Map<number, string>;
+  mentionCount: number;
+}): string {
+  if (params.index >= params.mentionCount || params.mentionIdentity === null) {
+    return params.label;
   }
-  return label
-    .split(" + ")
-    .map((alias) => {
-      const discordId = aliasToDiscordId.get(alias);
-      return discordId === undefined ? alias : `<@${discordId}>`;
+  if (params.mentionIdentity.kind === "player") {
+    const discordId =
+      params.mentionIdentity.playerId === null
+        ? params.mentionIdentity.discordId
+        : (params.playerDiscordIds.get(params.mentionIdentity.playerId) ??
+          params.mentionIdentity.discordId);
+    return discordId === null
+      ? params.mentionIdentity.alias
+      : `<@${discordId}>`;
+  }
+  return params.mentionIdentity.members
+    .map((member) => {
+      const discordId = params.playerDiscordIds.get(member.playerId);
+      return discordId === undefined ? member.alias : `<@${discordId}>`;
     })
     .join(" + ");
 }

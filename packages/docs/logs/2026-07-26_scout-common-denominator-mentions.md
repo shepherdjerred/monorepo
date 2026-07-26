@@ -178,3 +178,29 @@ or slash-command flag. Full design in
   deliberately left untouched (still bare `RENDER leaderboard`, defaulting to
   top 3) — bumping them to a different `mentions` value is a manual
   `/report update` follow-up, not part of this change.
+
+## Session Log — 2026-07-26 (Codex review remediation)
+
+### Done
+
+- Replaced label-derived mention lookup with structured player and player-group
+  identities in the report result pipeline, so non-player rows cannot ping a
+  player merely by sharing an alias.
+- Validated every non-null stored player Discord ID before using it for a
+  report; only `null` remains the unlinked-player representation.
+- Split report delivery into Discord-safe chunks for scheduled reports,
+  `/report run`, and web-triggered report posts, preserving an attachment on
+  the first chunk only.
+- Rejected empty `mentions` values, documented the option/default/opt-out in
+  Scout's guide, and added the repository copy of the configurable-mentions
+  implementation plan.
+
+### Remaining
+
+- Commit and publish the Codex review remediation to PR #1678, then await its
+  Buildkite and review-gate results.
+
+### Caveats
+
+- The local integration suite logs its expected isolated test-database metrics
+  warning and best-effort S3 credential warning; the targeted suite passed.

@@ -9,6 +9,7 @@ import {
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import { isReportManager } from "#src/discord/commands/report/authorization.ts";
+import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 import { send as sendChannelMessage } from "#src/league/discord/channel.ts";
 import { runReport } from "#src/reports/runner.ts";
 
@@ -62,14 +63,18 @@ export async function executeReportRun(
       ? []
       : [new AttachmentBuilder(image.data, { name: image.filename })];
 
-  await sendChannelMessage(
-    {
-      content: result.output.content,
-      files,
-    },
-    report.channelId,
-    report.serverId,
-  );
+  for (const [index, content] of splitMessageIntoChunks(
+    result.output.content,
+  ).entries()) {
+    await sendChannelMessage(
+      {
+        content,
+        files: index === 0 ? files : [],
+      },
+      report.channelId,
+      report.serverId,
+    );
+  }
 
   await interaction.editReply(
     `Posted **${report.title}** to <#${report.channelId}> (${result.rowsReturned.toString()} row(s), ${result.rowsScanned.toString()} scanned).`,

@@ -2,6 +2,7 @@ import { AttachmentBuilder } from "discord.js";
 import * as Sentry from "@sentry/bun";
 import { prisma } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
+import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 import {
   send as sendChannelMessage,
   ChannelSendError,
@@ -51,14 +52,18 @@ export async function runScheduledReportDispatch(): Promise<void> {
     // errors captured to Sentry inside `send`, so a ChannelSendError just gets a
     // warning here; anything unexpected is reported and we move on.
     try {
-      await sendChannelMessage(
-        {
-          content: dispatch.result.output.content,
-          files,
-        },
-        channelId,
-        serverId,
-      );
+      for (const [index, content] of splitMessageIntoChunks(
+        dispatch.result.output.content,
+      ).entries()) {
+        await sendChannelMessage(
+          {
+            content,
+            files: index === 0 ? files : [],
+          },
+          channelId,
+          serverId,
+        );
+      }
     } catch (error) {
       if (error instanceof ChannelSendError) {
         logger.warn(

@@ -165,7 +165,9 @@ export async function runLakeAggregation(input: {
       const parsed = LakeAggregateRowSchema.parse(row);
       return {
         label: parsed.label,
+        playerId: parsed.player_id,
         discordId: parsed.discord_id,
+        groupMembers: null,
         games: parsed.games,
         wins: parsed.wins,
         surrenders: parsed.surrenders,

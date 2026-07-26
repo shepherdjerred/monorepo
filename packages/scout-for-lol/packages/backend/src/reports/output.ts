@@ -24,11 +24,11 @@ type RenderReportOutputParams = {
   result: ReportQueryResult;
   startedAt: Date;
   /**
-   * Alias → Discord ID, used to `@mention` the top-ranked rows of a ranked
-   * text report. Omitted for chart-only render paths (e.g. the tRPC preview
-   * mutation), which never reach `formatTextReport`.
+   * Player ID → Discord ID, used for structured player-group mentions in
+   * ranked text reports. Omitted for chart-only render paths (e.g. the tRPC
+   * preview mutation), which never reach `formatTextReport`.
    */
-  aliasToDiscordId?: Map<string, string>;
+  playerDiscordIds?: Map<number, string>;
 };
 
 type ChartRender = Extract<
@@ -76,13 +76,13 @@ function renderReportOutputSync(
   }
   return {
     content: formatTextReport(params.title, render, params.result, {
-      aliasToDiscordId: params.aliasToDiscordId ?? new Map(),
+      playerDiscordIds: params.playerDiscordIds ?? new Map(),
     }),
     image: null,
   };
 }
 
-type MentionOptions = { aliasToDiscordId: Map<string, string> };
+type MentionOptions = { playerDiscordIds: Map<number, string> };
 
 function formatTextReport(
   title: string,
@@ -111,7 +111,7 @@ function formatTextReport(
   return `**${title}**\n${result.rows
     .map(
       (row, index) =>
-        `${(index + 1).toString()}. ${formatRankedLabel(row.label, index, mentions.aliasToDiscordId, mentionCount)} — ${formatValues(result, row)}`,
+        `${(index + 1).toString()}. ${formatRankedLabel({ label: row.label, index, mentionIdentity: row.mentionIdentity, playerDiscordIds: mentions.playerDiscordIds, mentionCount })} — ${formatValues(result, row)}`,
     )
     .join("\n")}`;
 }

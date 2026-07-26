@@ -377,6 +377,7 @@ export function compileMatchQuery(
   return {
     aggregateSql:
       `${facts.sql} SELECT ${grouping.labelExpr} AS label, ` +
+      `${grouping.groupExprs.includes("player_id") ? "any_value(player_id)" : "NULL::BIGINT"} AS player_id, ` +
       `${grouping.discordExpr} AS discord_id, ${matchAggregateSelect()} ` +
       `FROM facts${groupBySql}`,
     aggregateParams: facts.params,
@@ -468,6 +469,7 @@ export function compilePrematchQuery(
   return {
     aggregateSql:
       `${factsSql} SELECT ${grouping.labelExpr} AS label, ` +
+      `${grouping.groupExprs.includes("player_id") ? "any_value(player_id)" : "NULL::BIGINT"} AS player_id, ` +
       `${grouping.discordExpr} AS discord_id, ${prematchAggregateSelect()} ` +
       `FROM facts${aggregateWhere}${groupBySql}`,
     aggregateParams: [...factsParams, ...champion.params],

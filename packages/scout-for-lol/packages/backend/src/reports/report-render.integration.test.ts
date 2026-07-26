@@ -28,7 +28,7 @@ import {
   type RenderedReportOutput,
 } from "#src/reports/output.ts";
 import { runReport } from "#src/reports/runner.ts";
-import { loadAliasToDiscordId } from "#src/reports/alias-mentions.ts";
+import { loadPlayerDiscordIds } from "#src/reports/alias-mentions.ts";
 
 // End-to-end coverage of the report DSL's declarative `RENDER` clause: real
 // report-lake rows → parse → compiled SQL on DuckDB → render. This is the
@@ -54,10 +54,13 @@ function fact(input: {
   alias: string;
   matchId: string;
   win: boolean;
+  discordId?: string | null;
+  championName?: string;
 }): TestLakeMatchFact {
   return {
     playerId: input.player,
     playerAlias: input.alias,
+    ...(input.discordId === undefined ? {} : { discordId: input.discordId }),
     matchId: input.matchId,
     puuid: testPuuid(`render-${input.alias}`),
     queue: "solo",
@@ -66,6 +69,9 @@ function fact(input: {
     kills: 5,
     deaths: 3,
     assists: 7,
+    ...(input.championName === undefined
+      ? {}
+      : { championName: input.championName }),
     gameCreationAt: now,
   };
 }
@@ -138,16 +144,76 @@ describe("RENDER clause — leaderboard top-3 mentions", () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
-        fact({ player: 1, alias: "Alpha", matchId: "NA1_m1", win: true }),
-        fact({ player: 1, alias: "Alpha", matchId: "NA1_m2", win: true }),
-        fact({ player: 1, alias: "Alpha", matchId: "NA1_m3", win: true }),
-        fact({ player: 1, alias: "Alpha", matchId: "NA1_m4", win: true }),
-        fact({ player: 2, alias: "Bravo", matchId: "NA1_m5", win: true }),
-        fact({ player: 2, alias: "Bravo", matchId: "NA1_m6", win: true }),
-        fact({ player: 2, alias: "Bravo", matchId: "NA1_m7", win: true }),
-        fact({ player: 3, alias: "Charlie", matchId: "NA1_m8", win: true }),
-        fact({ player: 3, alias: "Charlie", matchId: "NA1_m9", win: true }),
-        fact({ player: 4, alias: "Delta", matchId: "NA1_m10", win: true }),
+        fact({
+          player: 1,
+          alias: "Alpha",
+          matchId: "NA1_m1",
+          win: true,
+          discordId: testAccountId("1001"),
+        }),
+        fact({
+          player: 1,
+          alias: "Alpha",
+          matchId: "NA1_m2",
+          win: true,
+          discordId: testAccountId("1001"),
+        }),
+        fact({
+          player: 1,
+          alias: "Alpha",
+          matchId: "NA1_m3",
+          win: true,
+          discordId: testAccountId("1001"),
+        }),
+        fact({
+          player: 1,
+          alias: "Alpha",
+          matchId: "NA1_m4",
+          win: true,
+          discordId: testAccountId("1001"),
+        }),
+        fact({
+          player: 2,
+          alias: "Bravo",
+          matchId: "NA1_m5",
+          win: true,
+          discordId: testAccountId("1002"),
+        }),
+        fact({
+          player: 2,
+          alias: "Bravo",
+          matchId: "NA1_m6",
+          win: true,
+          discordId: testAccountId("1002"),
+        }),
+        fact({
+          player: 2,
+          alias: "Bravo",
+          matchId: "NA1_m7",
+          win: true,
+          discordId: testAccountId("1002"),
+        }),
+        fact({
+          player: 3,
+          alias: "Charlie",
+          matchId: "NA1_m8",
+          win: true,
+          discordId: testAccountId("1003"),
+        }),
+        fact({
+          player: 3,
+          alias: "Charlie",
+          matchId: "NA1_m9",
+          win: true,
+          discordId: testAccountId("1003"),
+        }),
+        fact({
+          player: 4,
+          alias: "Delta",
+          matchId: "NA1_m10",
+          win: true,
+          discordId: testAccountId("1004"),
+        }),
       ],
     });
     const result = await executeReportQuery({
@@ -160,12 +226,6 @@ describe("RENDER clause — leaderboard top-3 mentions", () => {
       title: TITLE,
       result,
       startedAt: now,
-      aliasToDiscordId: new Map([
-        ["Alpha", testAccountId("1001")],
-        ["Bravo", testAccountId("1002")],
-        ["Charlie", testAccountId("1003")],
-        ["Delta", testAccountId("1004")],
-      ]),
     });
     // ORDER BY games DESC: Alpha(4), Bravo(3), Charlie(2) rank 1-3 → mentioned.
     expect(output.content).toContain(`1. <@${testAccountId("1001")}>`);
@@ -182,13 +242,55 @@ describe("RENDER clause — leaderboard mentions option", () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
-        fact({ player: 1, alias: "Alpha", matchId: "NA1_n1", win: true }),
-        fact({ player: 1, alias: "Alpha", matchId: "NA1_n2", win: true }),
-        fact({ player: 1, alias: "Alpha", matchId: "NA1_n3", win: true }),
-        fact({ player: 1, alias: "Alpha", matchId: "NA1_n4", win: true }),
-        fact({ player: 2, alias: "Bravo", matchId: "NA1_n5", win: true }),
-        fact({ player: 2, alias: "Bravo", matchId: "NA1_n6", win: true }),
-        fact({ player: 2, alias: "Bravo", matchId: "NA1_n7", win: true }),
+        fact({
+          player: 1,
+          alias: "Alpha",
+          matchId: "NA1_n1",
+          win: true,
+          discordId: testAccountId("6001"),
+        }),
+        fact({
+          player: 1,
+          alias: "Alpha",
+          matchId: "NA1_n2",
+          win: true,
+          discordId: testAccountId("6001"),
+        }),
+        fact({
+          player: 1,
+          alias: "Alpha",
+          matchId: "NA1_n3",
+          win: true,
+          discordId: testAccountId("6001"),
+        }),
+        fact({
+          player: 1,
+          alias: "Alpha",
+          matchId: "NA1_n4",
+          win: true,
+          discordId: testAccountId("6001"),
+        }),
+        fact({
+          player: 2,
+          alias: "Bravo",
+          matchId: "NA1_n5",
+          win: true,
+          discordId: testAccountId("6002"),
+        }),
+        fact({
+          player: 2,
+          alias: "Bravo",
+          matchId: "NA1_n6",
+          win: true,
+          discordId: testAccountId("6002"),
+        }),
+        fact({
+          player: 2,
+          alias: "Bravo",
+          matchId: "NA1_n7",
+          win: true,
+          discordId: testAccountId("6002"),
+        }),
       ],
     });
     const result = await executeReportQuery({
@@ -201,10 +303,6 @@ describe("RENDER clause — leaderboard mentions option", () => {
       title: TITLE,
       result,
       startedAt: now,
-      aliasToDiscordId: new Map([
-        ["Alpha", testAccountId("6001")],
-        ["Bravo", testAccountId("6002")],
-      ]),
     });
     expect(output.content).toContain(`1. <@${testAccountId("6001")}>`);
     // mentions = 1 overrides the default top-3 — rank 2 stays a plain alias
@@ -217,9 +315,27 @@ describe("RENDER clause — leaderboard mentions option", () => {
     await writeTestLake(lakeDir, {
       serverId,
       matchFacts: [
-        fact({ player: 1, alias: "Alpha", matchId: "NA1_o1", win: true }),
-        fact({ player: 1, alias: "Alpha", matchId: "NA1_o2", win: true }),
-        fact({ player: 2, alias: "Bravo", matchId: "NA1_o3", win: true }),
+        fact({
+          player: 1,
+          alias: "Alpha",
+          matchId: "NA1_o1",
+          win: true,
+          discordId: testAccountId("7001"),
+        }),
+        fact({
+          player: 1,
+          alias: "Alpha",
+          matchId: "NA1_o2",
+          win: true,
+          discordId: testAccountId("7001"),
+        }),
+        fact({
+          player: 2,
+          alias: "Bravo",
+          matchId: "NA1_o3",
+          win: true,
+          discordId: testAccountId("7002"),
+        }),
       ],
     });
     const result = await executeReportQuery({
@@ -232,10 +348,6 @@ describe("RENDER clause — leaderboard mentions option", () => {
       title: TITLE,
       result,
       startedAt: now,
-      aliasToDiscordId: new Map([
-        ["Alpha", testAccountId("7001")],
-        ["Bravo", testAccountId("7002")],
-      ]),
     });
     expect(output.content).toContain(`1. <@${testAccountId("7001")}>`);
     expect(output.content).toContain(`2. <@${testAccountId("7002")}>`);
@@ -253,7 +365,6 @@ describe("RENDER clause — leaderboard mentions option", () => {
       title: TITLE,
       result,
       startedAt: now,
-      aliasToDiscordId: new Map([["Alpha", testAccountId("8001")]]),
     });
     expect(output.content).toContain("1. Alpha");
     expect(output.content).not.toContain(`<@${testAccountId("8001")}>`);
@@ -261,8 +372,46 @@ describe("RENDER clause — leaderboard mentions option", () => {
 });
 
 describe("RENDER clause — leaderboard mention fallbacks", () => {
+  test("does not mention a non-player row that shares a player alias", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        fact({
+          player: 1,
+          alias: "Lux",
+          championName: "Lux",
+          matchId: "NA1_lux",
+          win: true,
+          discordId: testAccountId("1999"),
+        }),
+      ],
+    });
+    const output = await render(
+      "SELECT champion, games FROM match_participants GROUP BY champion RENDER leaderboard",
+    );
+    expect(output.content).toContain("1. Lux");
+    expect(output.content).not.toContain(`<@${testAccountId("1999")}>`);
+  });
+
   test("a player with no linked Discord ID falls back to their alias", async () => {
-    await seedFacts();
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        fact({
+          player: 1,
+          alias: "Alpha",
+          matchId: "NA1_f1",
+          win: true,
+          discordId: testAccountId("2001"),
+        }),
+        fact({
+          player: 2,
+          alias: "Bravo",
+          matchId: "NA1_f2",
+          win: true,
+        }),
+      ],
+    });
     const output = await renderReportOutput({
       title: TITLE,
       result: await executeReportQuery({
@@ -272,7 +421,6 @@ describe("RENDER clause — leaderboard mention fallbacks", () => {
         now,
       }),
       startedAt: now,
-      aliasToDiscordId: new Map([["Alpha", testAccountId("2001")]]),
     });
     expect(output.content).toContain(`1. <@${testAccountId("2001")}>`);
     // Bravo has no entry in the map — falls back to plain alias, not mentioned.
@@ -298,10 +446,7 @@ describe("RENDER clause — leaderboard mention fallbacks", () => {
       title: TITLE,
       result,
       startedAt: now,
-      aliasToDiscordId: new Map([
-        ["Alpha", testAccountId("3001")],
-        // Bravo intentionally has no linked Discord ID.
-      ]),
+      playerDiscordIds: new Map([[1, testAccountId("3001")]]),
     });
     expect(output.content).toContain(`1. <@${testAccountId("3001")}> + Bravo`);
   });
@@ -341,7 +486,7 @@ describe("RENDER clause — leaderboard mention fallbacks", () => {
     expect(result.output.content).toContain("2. Bravo");
   });
 
-  test("loadAliasToDiscordId omits players without a linked Discord ID", async () => {
+  test("loadPlayerDiscordIds omits players without a linked Discord ID", async () => {
     await prisma.player.create({
       data: {
         discordId: null,
@@ -362,9 +507,8 @@ describe("RENDER clause — leaderboard mention fallbacks", () => {
         updatedTime: now,
       },
     });
-    const map = await loadAliasToDiscordId(prisma, serverId);
-    expect(map.get("HasDiscordLink")).toBe(testAccountId("5002"));
-    expect(map.has("NoDiscordLink")).toBe(false);
+    const map = await loadPlayerDiscordIds(prisma, serverId);
+    expect([...map.values()]).toEqual([testAccountId("5002")]);
   });
 });
 
