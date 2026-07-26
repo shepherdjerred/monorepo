@@ -36,7 +36,7 @@ export function makeScreenshot(driver: MarioKartGameDriver, botClient: Client) {
       });
       return;
     }
-    const frame = runtime.emulator.renderFrame();
+    const frame = await runtime.emulator.renderFrame();
     if (frame.height === 0 || frame.width === 0) {
       await interaction.reply({
         flags: MessageFlags.Ephemeral,

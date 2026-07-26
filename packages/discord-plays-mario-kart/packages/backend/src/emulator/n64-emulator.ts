@@ -15,17 +15,7 @@ import {
   MAX_SEATS,
   AUDIO_RING_SAMPLES,
 } from "./constants.ts";
-import {
-  emulateMs,
-  lateMs,
-  ticksTotal,
-  loopResyncTotal,
-} from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
-import {
-  copyMs,
-  inputApplyDelayMs,
-  emulatorRestartsTotal,
-} from "#src/observability/metrics.ts";
+import { createPromMetricSink, type MetricSink } from "./metric-sink.ts";
 import { InputLatencyTracker } from "#src/input/input-latency-tracker.ts";
 import type {
   ButtonState,
@@ -85,6 +75,12 @@ export type N64EmulatorOptions = {
    * and dies with the wasm module (the pre-pool legacy behaviour).
    */
   savesDir?: string;
+  /**
+   * Where metric observations go. Defaults to the prom-client instruments in
+   * this process; the Worker-thread host injects a batching sink that ships
+   * them to the main thread for replay (see worker/emulator-worker.ts).
+   */
+  metrics?: MetricSink;
 };
 
 function requireObject(u: unknown, what: string): object {
@@ -125,6 +121,7 @@ function encodeButtons(b: ButtonState): string {
  */
 export class N64Emulator {
   private readonly opts: N64EmulatorOptions;
+  private readonly metrics: MetricSink;
   private rt: Runtime | undefined;
   /** The emscripten FS object — captured during init so persistSaves can walk it. */
   private fs: FsModule | undefined;
@@ -142,6 +139,7 @@ export class N64Emulator {
 
   constructor(opts: N64EmulatorOptions) {
     this.opts = opts;
+    this.metrics = opts.metrics ?? createPromMetricSink();
     this.frameMs = 1000 / opts.fps;
     this.inputs = Array.from({ length: MAX_SEATS }, () =>
       structuredClone(EMPTY_INPUT),
@@ -474,7 +472,7 @@ export class N64Emulator {
     // The loop was stopped across reset(), so audio kept being written without
     // being drained; snap the cursor forward so we don't dump that gap on resume.
     this.resyncAudioCursor();
-    emulatorRestartsTotal.inc({ reason });
+    this.metrics.incRestarts(reason);
     logger.info("n64 emulator restarted", { reason });
     if (wasRunning) {
       this.start();
@@ -533,12 +531,12 @@ export class N64Emulator {
     }
     // Everything pending is now latched into this tick.
     this.inputLatency.drainAll((ms) => {
-      inputApplyDelayMs.observe(ms);
+      this.metrics.observeInputApplyDelayMs(ms);
     });
 
     const emulateStart = performance.now();
     rt.runMainLoop();
-    emulateMs.observe(performance.now() - emulateStart);
+    this.metrics.observeEmulateMs(performance.now() - emulateStart);
 
     const cb = this.onFrameCb;
     if (cb !== undefined) {
@@ -549,7 +547,7 @@ export class N64Emulator {
         // Copy out of the (reused) heap view before handing off.
         const copyStart = performance.now();
         cb(Buffer.from(rt.heap().subarray(vbuf, vbuf + WIDTH * h * 4)));
-        copyMs.observe(performance.now() - copyStart);
+        this.metrics.observeCopyMs(performance.now() - copyStart);
       }
     }
 
@@ -562,7 +560,7 @@ export class N64Emulator {
       const pcm = this.drainAudio();
       if (pcm.length > 0) audioCb(pcm);
     }
-    ticksTotal.inc();
+    this.metrics.incTicks(1);
   }
 
   private loop(): void {
@@ -575,10 +573,10 @@ export class N64Emulator {
     this.nextAt += this.frameMs;
     let delay = this.nextAt - performance.now();
     // delay < 0 means the tick overran its budget; record how far behind we are.
-    lateMs.observe(Math.max(0, -delay));
+    this.metrics.observeLateMs(Math.max(0, -delay));
     if (delay < -250) {
       // Fell far behind (paused process); resync rather than sprint.
-      loopResyncTotal.inc();
+      this.metrics.incLoopResync();
       this.nextAt = performance.now();
       delay = 0;
     }

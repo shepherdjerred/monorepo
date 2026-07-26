@@ -50,7 +50,7 @@ let fakeFrame: { rgba: Buffer; width: number; height: number } = {
 const fakeEmu: EmulatorControls = {
   setPlayerInput: (seat, state) => recorded.push({ seat, state }),
   clearPlayerInput: (seat) => cleared.push(seat),
-  renderFrame: () => fakeFrame,
+  renderFrame: () => Promise.resolve(fakeFrame),
 };
 
 const overlayNames: { seat: number; name: string | null }[] = [];

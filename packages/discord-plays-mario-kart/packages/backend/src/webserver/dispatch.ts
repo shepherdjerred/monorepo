@@ -27,7 +27,7 @@ import type {
 export type EmulatorControls = {
   setPlayerInput: (seat: number, state: PlayerInputState) => void;
   clearPlayerInput: (seat: number) => void;
-  renderFrame: () => { rgba: Buffer; width: number; height: number };
+  renderFrame: () => Promise<{ rgba: Buffer; width: number; height: number }>;
 };
 
 /** Optional leaderboard wiring; absent when the feature is disabled. */
@@ -68,6 +68,31 @@ async function emitLeaderboard(
     sock.emit("response", response);
   } catch (error) {
     logger.warn("leaderboard fetch failed", error);
+  }
+}
+
+/** Render the current frame (now a Worker round-trip), overlay it, and emit the
+ *  PNG to a single socket (fire-and-forget). */
+async function emitScreenshot(
+  sock: Socket,
+  emulator: EmulatorControls,
+  overlayContext: StreamOverlayContextProvider | undefined,
+): Promise<void> {
+  try {
+    const frame = await emulator.renderFrame();
+    if (frame.height === 0) return;
+    const ctx = overlayContext?.();
+    if (ctx !== undefined) {
+      applyStreamOverlays(frame.rgba, frame.height, ctx);
+    }
+    const png = encodeScreenshotPng(frame);
+    const response: ScreenshotResponse = {
+      kind: "screenshot",
+      value: png.toString("base64"),
+    };
+    sock.emit("response", response);
+  } catch (error) {
+    logger.warn("screenshot render failed", error);
   }
 }
 
@@ -134,18 +159,7 @@ export function handleRequest(
     })
     .with({ request: { kind: "screenshot" } }, (e) => {
       if (emulator === undefined) return;
-      const frame = emulator.renderFrame();
-      if (frame.height === 0) return;
-      const ctx = overlayContext?.();
-      if (ctx !== undefined) {
-        applyStreamOverlays(frame.rgba, frame.height, ctx);
-      }
-      const png = encodeScreenshotPng(frame);
-      const response: ScreenshotResponse = {
-        kind: "screenshot",
-        value: png.toString("base64"),
-      };
-      e.socket.emit("response", response);
+      void emitScreenshot(e.socket, emulator, overlayContext);
     })
     .with({ request: { kind: "status" } }, (e) => {
       const response: StatusResponse = {
