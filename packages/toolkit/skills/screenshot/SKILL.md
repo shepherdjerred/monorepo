@@ -80,6 +80,12 @@ toolkit screenshot sjer-red /blog --theme dark --viewport 1440x900 \
 - Setup cost: PinchTab itself must be running and configured
   (`pinchtab-helper` skill) — this tool does not install or launch the
   PinchTab daemon.
+- **One server per port.** A fresh spawn binds the package's fixed
+  `expectedPort`; if that port is already in use (another dev server, or a
+  shared-port sibling like the other `:4321` sites) the tool fails fast with an
+  actionable message rather than auto-bumping to an unknown port and risking a
+  screenshot of the wrong app. Stop the other server (or screenshot that one)
+  and retry.
 
 ## One-time setup
 

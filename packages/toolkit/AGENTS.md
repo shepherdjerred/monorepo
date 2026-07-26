@@ -116,9 +116,14 @@ Full flag reference and recipes: the `screenshot` skill.
 --profile default --mode headless` if `pinchtab instances` is empty) —
   the daemon itself doesn't auto-start one.
 - **Registry:** `src/lib/screenshot/catalog.ts` — alias → `cwd`/`devCommand`/
-  `expectedPort`/`defaultRoute`/optional `requiresAuth`. Reuse detection
-  probes `expectedPort` but always trusts the _actual_ bound port parsed from
-  the spawned process's own stdout banner (Astro/Vite auto-bump ports).
+  `expectedPort`/`defaultRoute`/optional `requiresAuth`. `expectedPort` is
+  authoritative: reuse detection probes it (only for ports unique to one
+  catalog entry — a shared-port probe can't confirm identity), and a fresh
+  spawn must bind exactly it. The bound port is **not** parsed from stdout
+  (dev commands print inconsistent/hard-coded banners — scout's `dev-web.sh`
+  prints a static `:5180`), so if the expected port is already in use when a
+  fresh spawn is needed, `ensureDevServer` **fails fast** instead of
+  auto-bumping to an unknown port or capturing whatever is already there.
   `--env KEY=VALUE` always forces a fresh spawn — a reused server can't pick
   up new env vars.
 - **Auth:** `scout-app` is the one auth-gated entry (`requiresAuth:

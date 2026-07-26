@@ -15,10 +15,11 @@ export type PackageEntry = {
   /** Command + args to boot the dev server, e.g. ["bun", "run", "dev"]. */
   devCommand: string[];
   /**
-   * Default bound port, used only as a fast reuse-detection probe — Astro
-   * and Vite both auto-bump to the next free port if this one is taken, so
-   * the actual bound URL is always discovered from the spawned process's
-   * own stdout banner, never assumed from this field.
+   * The port the dev server is expected to bind. It is authoritative, not a
+   * hint: reuse detection probes it, and a fresh spawn must bind exactly it
+   * (we don't parse an auto-bumped port back from stdout — dev commands print
+   * inconsistent/hard-coded banners). If the port is already in use when a
+   * fresh spawn is needed, `ensureDevServer` fails fast rather than guessing.
    */
   expectedPort: number;
   /** Path navigated to when no route is given on the CLI. */

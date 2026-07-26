@@ -53,6 +53,12 @@ export type CaptureOptions = {
   theme?: "light" | "dark" | undefined;
   fullPage?: boolean | undefined;
   timeoutMs?: number | undefined;
+  /**
+   * Register a teardown action (here: revoking the just-created session) with
+   * the orchestrator so it can run on a SIGINT/SIGTERM that would otherwise
+   * kill the process before this function's own cleanup. See screenshotCommand.
+   */
+  registerCleanup?: ((cleanup: () => Promise<void>) => void) | undefined;
 };
 
 function unwrap<T>(
@@ -167,37 +173,24 @@ export async function captureScreenshot(
     "pinchtab session create",
   );
 
-  // A Ctrl-C (or SIGTERM) during navigation/selector-wait would otherwise
-  // terminate the process before the catch below runs, leaking this session
-  // and its tab in the persistent browser. Revoke on the signal, then
-  // re-raise it so the exit code stays signal-correct.
-  function onSignal(signal: "SIGINT" | "SIGTERM"): void {
-    process.removeListener("SIGINT", onSignal);
-    process.removeListener("SIGTERM", onSignal);
-    void (async () => {
-      await revokeSession(session.id);
-      process.kill(process.pid, signal);
-    })();
-  }
-  process.once("SIGINT", onSignal);
-  process.once("SIGTERM", onSignal);
-  const removeSignalHandlers = () => {
-    process.removeListener("SIGINT", onSignal);
-    process.removeListener("SIGTERM", onSignal);
-  };
+  // Hand the session's teardown to the orchestrator so a SIGINT/SIGTERM that
+  // kills the process before the paths below run still revokes the session
+  // (and stops the dev server) — signal teardown is coordinated in
+  // screenshotCommand, which owns both resources.
+  options.registerCleanup?.(async () => {
+    await revokeSession(session.id);
+  });
 
   let capture: { path: string };
   try {
     capture = await runCapture(session, options);
   } catch (error) {
-    removeSignalHandlers();
     // Still release the isolated session on failure, but let the original
     // capture error win — a cleanup failure here must not mask it.
     await revokeSession(session.id);
     throw error;
   }
 
-  removeSignalHandlers();
   // Happy path: revoking the session is the documented isolation guarantee, so
   // a nonzero revoke is a real failure, not something to swallow.
   unwrap(await revokeSession(session.id), "pinchtab session revoke");

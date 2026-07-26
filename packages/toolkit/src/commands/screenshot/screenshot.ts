@@ -48,37 +48,73 @@ export async function screenshotCommand(
   // from slicing at a nonexistent "/".
   await mkdir(nodePath.dirname(outPath), { recursive: true });
 
-  const devServer = await ensureDevServer(entry, {
-    envOverrides: options.envOverrides,
-    timeoutMs: options.timeoutMs,
-  });
+  // Signal-coordinated teardown: a Ctrl-C (or SIGTERM) mid-capture would
+  // otherwise terminate the process before the finally blocks below run,
+  // leaking BOTH the spawned dev server (Astro/Vite, or the whole Scout
+  // dev:web stack) AND the PinchTab session/tab. This is the one place that
+  // owns both resources, so it registers a single handler that runs every
+  // teardown (newest first) before re-raising the signal with default
+  // disposition (so the exit code stays signal-correct).
+  const cleanups: (() => Promise<void>)[] = [];
+  function onSignal(signal: "SIGINT" | "SIGTERM"): void {
+    process.removeListener("SIGINT", onSignal);
+    process.removeListener("SIGTERM", onSignal);
+    void (async () => {
+      for (const cleanup of [...cleanups].reverse()) {
+        try {
+          await cleanup();
+        } catch (error) {
+          console.error(
+            `toolkit screenshot: teardown during ${signal} failed: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      }
+      process.kill(process.pid, signal);
+    })();
+  }
+  process.once("SIGINT", onSignal);
+  process.once("SIGTERM", onSignal);
 
   try {
-    const authFlow: { flow: AuthFlow; discordId?: string } | undefined =
-      entry.requiresAuth === undefined
-        ? undefined
-        : options.authDiscordId === undefined
-          ? { flow: entry.requiresAuth }
-          : { flow: entry.requiresAuth, discordId: options.authDiscordId };
-
-    const { path } = await captureScreenshot({
-      baseUrl: devServer.baseUrl,
-      route,
-      outPath,
-      authFlow,
-      waitForSelector: options.waitForSelector,
-      viewport: options.viewport,
-      theme: options.theme,
-      fullPage: options.fullPage,
+    const devServer = await ensureDevServer(entry, {
+      envOverrides: options.envOverrides,
       timeoutMs: options.timeoutMs,
     });
+    cleanups.push(devServer.stop);
 
-    return {
-      path,
-      url: `${devServer.baseUrl}${route}`,
-      durationMs: Date.now() - start,
-    };
+    try {
+      const authFlow: { flow: AuthFlow; discordId?: string } | undefined =
+        entry.requiresAuth === undefined
+          ? undefined
+          : options.authDiscordId === undefined
+            ? { flow: entry.requiresAuth }
+            : { flow: entry.requiresAuth, discordId: options.authDiscordId };
+
+      const { path } = await captureScreenshot({
+        baseUrl: devServer.baseUrl,
+        route,
+        outPath,
+        authFlow,
+        waitForSelector: options.waitForSelector,
+        viewport: options.viewport,
+        theme: options.theme,
+        fullPage: options.fullPage,
+        timeoutMs: options.timeoutMs,
+        registerCleanup: (cleanup) => {
+          cleanups.push(cleanup);
+        },
+      });
+
+      return {
+        path,
+        url: `${devServer.baseUrl}${route}`,
+        durationMs: Date.now() - start,
+      };
+    } finally {
+      await devServer.stop();
+    }
   } finally {
-    await devServer.stop();
+    process.removeListener("SIGINT", onSignal);
+    process.removeListener("SIGTERM", onSignal);
   }
 }
