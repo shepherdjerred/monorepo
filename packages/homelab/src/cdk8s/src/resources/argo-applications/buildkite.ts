@@ -136,7 +136,14 @@ overrides:
   // `/buildkite/git-mirrors/<encoded-url>/objects`.
   new KubePersistentVolumeClaim(chart, "buildkite-git-mirrors-pvc", {
     metadata: {
-      name: "buildkite-git-mirrors",
+      // -liskov: same forced-recreation rename as buildkitd-cache-liskov /
+      // turbo-cache-liskov. The original buildkite-git-mirrors claim was
+      // (re)created during the liskov migration hours before #1663 switched
+      // this definition to the lz4 class, and storageClassName is immutable
+      // on a bound claim — ArgoCD sync failed on the diff forever (build
+      // 6306). A new name binds fresh on the lz4 class; the old claim is
+      // pruned by the argocd-sync step's `sync apps --prune`.
+      name: "buildkite-git-mirrors-liskov",
       namespace: "buildkite",
       labels: {
         "velero.io/backup": "disabled",
@@ -203,9 +210,12 @@ overrides:
               "default-checkout-params": {
                 gitMirrors: {
                   volume: {
+                    // Pod-level volume NAME stays stable — pipeline.yml's
+                    // container volumeMounts reference it. Only the claim
+                    // behind it moves to the -liskov lz4 PVC.
                     name: "buildkite-git-mirrors",
                     persistentVolumeClaim: {
-                      claimName: "buildkite-git-mirrors",
+                      claimName: "buildkite-git-mirrors-liskov",
                     },
                   },
                   lockTimeout: 300,
