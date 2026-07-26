@@ -84,6 +84,32 @@ describe("getPatchChangeset", () => {
   });
 });
 
+describe("changelogHighlights", () => {
+  test("defaults to [] for assets written before the field existed", () => {
+    // buildChangeset() omits changelogHighlights, mirroring an older asset.
+    expect(buildChangeset().changelogHighlights).toEqual([]);
+  });
+
+  test("accepts up to four Scout-capability bullets", () => {
+    const changeset = PatchChangesetSchema.parse({
+      ...buildChangeset(),
+      changelogHighlights: ["Ranked 5v5 is now supported"],
+    });
+    expect(changeset.changelogHighlights).toEqual([
+      "Ranked 5v5 is now supported",
+    ]);
+  });
+
+  test("rejects more than four bullets", () => {
+    expect(() =>
+      PatchChangesetSchema.parse({
+        ...buildChangeset(),
+        changelogHighlights: ["a", "b", "c", "d", "e"],
+      }),
+    ).toThrow();
+  });
+});
+
 describe("selectRelevantPatchChanges", () => {
   test("keeps only changes touching the player's champs, role, and items", () => {
     const changeset = buildChangeset();

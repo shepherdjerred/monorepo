@@ -58,8 +58,13 @@ export const PatchChangesetSchema = z.object({
   // player changed, so the reviewer still has something to riff on.
   overview: z.string().min(1),
   themes: z.array(z.string().min(1)).default([]),
-  // Short highlight bullets — also consumed by the "What's New" changelog.
+  // Short, balance-focused highlight bullets — consumed by the AI review.
   summary: z.array(z.string().min(1)).min(1),
+  // Scout-capability-focused bullets for the public "What's New" changelog,
+  // kept separate from `summary` (which stays balance-focused for the review).
+  // Usually empty — most patches only refresh data. `.default([])` keeps older
+  // committed patch-notes.json assets (written before this field existed) valid.
+  changelogHighlights: z.array(z.string().min(1)).max(4).default([]),
   champions: z.array(PatchChampionChangeSchema).default([]),
   items: z.array(PatchItemChangeSchema).default([]),
   systems: z.array(PatchSystemChangeSchema).default([]),

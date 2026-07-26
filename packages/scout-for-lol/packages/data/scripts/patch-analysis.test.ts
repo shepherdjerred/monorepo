@@ -49,6 +49,14 @@ describe("buildAnalysisPrompt", () => {
     expect(prompt).toContain("champions");
     expect(prompt).toContain("Output ONLY the JSON object");
   });
+
+  test("asks for changelogHighlights separate from the balance summary", () => {
+    const prompt = buildAnalysisPrompt(PATCH);
+    expect(prompt).toContain("changelogHighlights");
+    // The changelog field must be steered toward Scout capabilities, not balance.
+    expect(prompt).toContain("new champion");
+    expect(prompt).toContain("AT MOST ONE");
+  });
 });
 
 describe("parsePatchAnalysis", () => {
@@ -64,6 +72,31 @@ describe("parsePatchAnalysis", () => {
     expect(changeset.date).toBe("2026 07 01");
     expect(changeset.champions[0]?.name).toBe("Lee Sin");
     expect(changeset.systems[0]?.area).toBe("Jungle");
+  });
+
+  test("round-trips changelogHighlights when the model provides them", () => {
+    const withHighlights = {
+      ...VALID_ANALYSIS,
+      changelogHighlights: ["Ranked 5v5 is now supported"],
+    };
+    const changeset = parsePatchAnalysis(
+      claudeStdout(withHighlights),
+      PATCH,
+      DATE,
+    );
+    expect(changeset.changelogHighlights).toEqual([
+      "Ranked 5v5 is now supported",
+    ]);
+  });
+
+  test("defaults changelogHighlights to [] when the model omits it", () => {
+    // VALID_ANALYSIS has no changelogHighlights — the common data-only patch.
+    const changeset = parsePatchAnalysis(
+      claudeStdout(VALID_ANALYSIS),
+      PATCH,
+      DATE,
+    );
+    expect(changeset.changelogHighlights).toEqual([]);
   });
 
   test("tolerates a fenced code block around the JSON", () => {
