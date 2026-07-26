@@ -26,6 +26,16 @@ const checks: readonly AssetCheck[] = [
     ],
   },
   {
+    // Mirrors MAX_SPLASH_IMAGE_BYTES in
+    // packages/data/scripts/update-data-dragon.ts — keep both in sync.
+    label: "Data Dragon champion splash image",
+    maxBytes: 2 * BYTES_PER_MIB,
+    patterns: [
+      "packages/data/src/data-dragon/assets/img/champion-splash/*.jpg",
+      "packages/data/src/data-dragon/assets/img/champion-splash/*.jpeg",
+    ],
+  },
+  {
     label: "Scout top-level image asset",
     maxBytes: 5 * BYTES_PER_MIB,
     patterns: [

@@ -2,6 +2,7 @@ import {
   getChampionList,
   validateChampionImage,
   validateChampionLoadingImage,
+  validateChampionSplashImage,
 } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import { getAllChampions, resolveChampionKey } from "#src/utils/champion.ts";
@@ -44,6 +45,12 @@ export async function validateChampionAssets(): Promise<void> {
     } catch (error) {
       failures.push(error instanceof Error ? error : new Error(String(error)));
     }
+
+    try {
+      await validateChampionSplashImage(key);
+    } catch (error) {
+      failures.push(error instanceof Error ? error : new Error(String(error)));
+    }
   }
 
   for (const { id } of dataDragonChampions) {
@@ -55,6 +62,12 @@ export async function validateChampionAssets(): Promise<void> {
 
     try {
       await validateChampionLoadingImage(id);
+    } catch (error) {
+      failures.push(error instanceof Error ? error : new Error(String(error)));
+    }
+
+    try {
+      await validateChampionSplashImage(id);
     } catch (error) {
       failures.push(error instanceof Error ? error : new Error(String(error)));
     }
