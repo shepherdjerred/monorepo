@@ -21,7 +21,7 @@ node exists: CI/prod failure-domain isolation). The node is tainted
 | `patches/watchdog.yaml` | hardware watchdog                                     | `sp5100_tco` (AMD) instead of `iTCO_wdt` — **live-verify before arming, see file** |
 
 Tailscale: create a real `patches/tailscale.yaml` from
-`../patches/tailscale.example.yaml` with a fresh auth key (gitignored, never
+`patches/tailscale.example.yaml` with a fresh auth key (gitignored, never
 committed).
 
 ## Join runbook
@@ -53,10 +53,26 @@ committed).
 4. **Verify join**: node `Ready`; `kubectl describe node liskov` shows the
    `ci=only:NoSchedule` taint; tailscale up; SecureBoot on
    (`talosctl -n liskov get securitystate`).
-5. **Create the cache pool** on the 2TB disk. The openebs zfs-localpv node pod
-   already runs on liskov (it tolerates the taint) and carries the `zpool`/`zfs`
-   binaries with host disk access, so create the pool through it — the same
-   exec path the repo uses for every other on-node ZFS op (see
+5. **Create the cache pool** on the 2TB disk. Before this PR merges, bridge
+   the `ci=only` taint by appending its toleration to the live OpenEBS
+   zfs-localpv node DaemonSet. The declarative toleration in this PR replaces
+   this temporary patch at merge. Inspect the existing list first; the JSON
+   patch deliberately appends instead of replacing other tolerations.
+
+   ```bash
+   ZFS_NODE_DS=$(kubectl -n openebs get daemonset \
+     -l role=openebs-zfs,app=openebs-zfs-node \
+     -o jsonpath='{.items[0].metadata.name}')
+   kubectl -n openebs get daemonset "$ZFS_NODE_DS" \
+     -o jsonpath='{.spec.template.spec.tolerations}{"\n"}'
+   kubectl -n openebs patch daemonset "$ZFS_NODE_DS" --type=json \
+     -p='[{"op":"add","path":"/spec/template/spec/tolerations/-","value":{"key":"ci","operator":"Equal","value":"only","effect":"NoSchedule"}}]'
+   kubectl -n openebs rollout status daemonset "$ZFS_NODE_DS" --timeout=5m
+   ```
+
+   The OpenEBS node pod now carries the `zpool`/`zfs` binaries with host disk
+   access, so create the pool through it — the same exec path the repo uses
+   for every other on-node ZFS op (see
    `packages/docs/guides/2026-05-05_velero-orphan-snapshot-remediation.md`).
 
    ```bash
@@ -97,7 +113,15 @@ committed).
 8. **Confirm**: first builds run on liskov (`kubectl get pods -n buildkite
 -o wide`); new buildkite Jobs are NOT `suspend: true` and the kueue-system
    namespace is gone (cancel/retry any build whose Job was left suspended by
-   the Kueue teardown — nothing will ever unsuspend it); Grafana node
+   the Kueue teardown — nothing will ever unsuspend it); the new
+   `buildkitd-cache-liskov` PVC is bound on liskov and buildkitd is Ready.
+   Then remove the retired cache claim still bound to torvalds:
+
+   ```bash
+   kubectl delete pvc buildkitd-cache -n buildkitd
+   ```
+
+   Grafana node
    dashboards show both nodes; smartctl/nvme/zfs collector pods present on
    liskov.
 

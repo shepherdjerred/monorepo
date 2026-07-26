@@ -6,6 +6,8 @@ import {
   Deployment,
   DeploymentStrategy,
   Namespace,
+  Node,
+  NodeLabelQuery,
   PersistentVolumeAccessMode,
   PersistentVolumeClaim,
   PersistentVolumeMode,
@@ -22,6 +24,10 @@ import {
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { NVME_STORAGE_CLASS_LZ4 } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import {
+  CI_NODE_HOSTNAME,
+  ciNodeTaintedNode,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 // Plaintext gRPC port. BuildKit serves the build API here; the buildx `remote`
@@ -84,13 +90,16 @@ export function createBuildkitdDeployment(chart: Chart) {
 
   // Rebuildable cache — explicitly excluded from Velero backup (a cache is
   // pointless to restore, and it can be large).
-  const cache = new PersistentVolumeClaim(chart, "buildkitd-cache", {
+  const cache = new PersistentVolumeClaim(chart, "buildkitd-cache-liskov", {
     storageClassName: NVME_STORAGE_CLASS_LZ4,
     accessModes: [PersistentVolumeAccessMode.READ_WRITE_ONCE],
     volumeMode: PersistentVolumeMode.FILE_SYSTEM,
     storage: CACHE_PVC,
     metadata: {
-      name: "buildkitd-cache",
+      // The old buildkitd-cache claim is node-affined to torvalds. A new name
+      // lets WaitForFirstConsumer bind this replacement cache on liskov
+      // without taking the image builder down before the cutover.
+      name: "buildkitd-cache-liskov",
       labels: {
         "velero.io/backup": "disabled",
         "velero.io/exclude-from-backup": "true",
@@ -103,6 +112,10 @@ export function createBuildkitdDeployment(chart: Chart) {
     // A single writer owns the RWO cache volume; never run two at once.
     strategy: DeploymentStrategy.recreate(),
   });
+  deployment.scheduling.attract(
+    Node.labeled(NodeLabelQuery.is("kubernetes.io/hostname", CI_NODE_HOSTNAME)),
+  );
+  deployment.scheduling.tolerate(ciNodeTaintedNode());
 
   deployment.addContainer(
     withCommonProps({

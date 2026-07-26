@@ -9,7 +9,8 @@
  * timeouts are preserved.
  *
  * Usage:
- *   bun packages/homelab/scripts/argocd.ts sync <app> [--timeout <s>] [--dry-run]
+ *   bun packages/homelab/scripts/argocd.ts sync <app> [--prune] [--timeout <s>] [--dry-run]
+ *   bun packages/homelab/scripts/argocd.ts delete-application <app> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts health-wait <app> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts tree-health-wait <app> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts wait-deletion <app> \
@@ -83,10 +84,15 @@ async function sync(
   appName: string,
   timeoutSeconds: number,
   dryRun: boolean,
+  prune: boolean,
 ): Promise<void> {
-  console.log(`--- argocd sync: ${appName}${dryRun ? " (dry run)" : ""}`);
+  console.log(
+    `--- argocd sync: ${appName}${prune ? " (prune)" : ""}${dryRun ? " (dry run)" : ""}`,
+  );
   if (dryRun) {
-    console.log(`DRYRUN: would POST sync for ArgoCD app ${appName}`);
+    console.log(
+      `DRYRUN: would POST sync for ArgoCD app ${appName}${prune ? " with pruning" : ""}`,
+    );
     return;
   }
   const token = requireEnv("ARGOCD_TOKEN");
@@ -99,6 +105,7 @@ async function sync(
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
+    body: JSON.stringify({ prune }),
   });
   if (!res.ok) {
     const body = (await res.text()).slice(0, 1024);
@@ -140,6 +147,76 @@ async function sync(
   }
   throw new Error(
     `Timeout: sync operation for ${appName} did not complete within ${timeoutSeconds.toString()}s`,
+  );
+}
+
+/**
+ * Delete an ArgoCD child Application with foreground cascading deletion, then
+ * wait for the Application object to disappear. A missing application is
+ * already in the desired state, which keeps teardown reruns idempotent.
+ */
+async function deleteApplication(
+  appName: string,
+  timeoutSeconds: number,
+  dryRun: boolean,
+): Promise<void> {
+  console.log(
+    `--- argocd delete-application: ${appName}${dryRun ? " (dry run)" : ""}`,
+  );
+  if (dryRun) {
+    console.log(
+      `DRYRUN: would foreground-cascade delete ArgoCD app ${appName}`,
+    );
+    return;
+  }
+
+  const token = requireEnv("ARGOCD_TOKEN");
+  const url =
+    `${serverUrl()}/api/v1/applications/${encodeURIComponent(appName)}` +
+    "?cascade=true&propagationPolicy=foreground";
+  const res = await fetch(url, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (res.status !== 404 && !res.ok) {
+    const body = (await res.text()).slice(0, 1024);
+    throw new Error(
+      `Application deletion failed: HTTP ${res.status.toString()} ${res.statusText}\n${body}`,
+    );
+  }
+  if (res.status === 404) {
+    console.log(`already deleted: ${appName}`);
+    return;
+  }
+
+  const getUrl = `${serverUrl()}/api/v1/applications/${encodeURIComponent(appName)}`;
+  const deadline = Date.now() + timeoutSeconds * 1000;
+  let elapsed = 0;
+  while (Date.now() < deadline) {
+    const getRes = await fetch(getUrl, {
+      headers: { Authorization: `Bearer ${token}` },
+      redirect: "follow",
+    });
+    if (getRes.status === 404) {
+      console.log(`deleted: ${appName}`);
+      return;
+    }
+    if (getRes.status !== 200) {
+      const body = (await getRes.text()).slice(0, 1024);
+      throw new Error(
+        `ERROR: ${getUrl} returned HTTP ${getRes.status.toString()}\n` +
+          `Response body (first 1KB): ${body}`,
+      );
+    }
+    console.log(
+      `${appName}: deletion pending ` +
+        `(${elapsed.toString()}/${timeoutSeconds.toString()}s)`,
+    );
+    await Bun.sleep(POLL_INTERVAL_MS);
+    elapsed += POLL_INTERVAL_MS / 1000;
+  }
+  throw new Error(
+    `Timeout: ${appName} was not deleted within ${timeoutSeconds.toString()}s`,
   );
 }
 
@@ -257,6 +334,8 @@ function usage(): never {
   console.error(
     "Usage:\n" +
       "  bun packages/homelab/scripts/argocd.ts sync <app> " +
+      "[--prune] [--timeout <s>] [--dry-run]\n" +
+      "  bun packages/homelab/scripts/argocd.ts delete-application <app> " +
       "[--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts health-wait <app> " +
       "[--timeout <s>] [--dry-run]\n" +
@@ -306,7 +385,19 @@ async function main(): Promise<void> {
 
   switch (subcommand) {
     case "sync":
-      await sync(app, timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S, dryRun);
+      await sync(
+        app,
+        timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
+        dryRun,
+        argv.includes("--prune"),
+      );
+      return;
+    case "delete-application":
+      await deleteApplication(
+        app,
+        timeoutOverride ?? DEFAULT_DELETION_TIMEOUT_S,
+        dryRun,
+      );
       return;
     case "health-wait":
       await healthWait(

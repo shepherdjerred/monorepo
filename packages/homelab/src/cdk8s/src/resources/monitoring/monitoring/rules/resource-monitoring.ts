@@ -3,25 +3,14 @@ import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s
 import { escapePrometheusTemplate } from "./shared.ts";
 import { getSystemHealthRuleGroups } from "./resource-monitoring-system.ts";
 import { CI_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
-import { BUILDKITE_JOB_POD_PATTERN } from "./buildkite.ts";
 
 // The dedicated CI node runs at high CPU by design (that's its job), so
 // sustained-usage alerts exclude it via the `node` label added by the
 // node-exporter ServiceMonitor relabeling (prometheus.ts).
 const NOT_CI_NODE = `node!="${CI_NODE_HOSTNAME}"`;
 // ...but the CI node is not a security blind spot. Where we need to still
-// watch it (crypto-mining), we scope to it explicitly and distinguish
-// legitimate CI load from an attacker with a liskov-specific signal instead.
+// watch it (crypto-mining), we scope to it explicitly.
 const CI_NODE_ONLY = `node="${CI_NODE_HOSTNAME}"`;
-
-// Truthy (returns a single, label-less `1`) exactly when there is NO running
-// Buildkite job pod anywhere in the cluster. Because every Buildkite step pod
-// is pinned to liskov (nodeSelector + `ci=only` toleration), "no job running"
-// is equivalent to "liskov should be idle" — so sustained high CPU + network
-// egress during that window is not explained by legitimate CI.
-const NO_BUILDKITE_JOB_RUNNING = `absent(
-    kube_pod_status_phase{namespace="buildkite", pod=~"${BUILDKITE_JOB_POD_PATTERN}", phase="Running"} == 1
-  )`;
 
 export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
@@ -381,7 +370,7 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
             // Non-CI nodes: any sustained high CPU + egress is suspicious. The
             // CI node is excluded here (it runs hot by design) and covered by
             // the CI-node-specific rule below instead — it is NOT unmonitored.
-            `(100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle", ${NOT_CI_NODE}}[5m])) * 100)) > 90 and rate(node_network_transmit_bytes_total{${NOT_CI_NODE}}[5m]) > 1048576`,
+            `(100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle", ${NOT_CI_NODE}}[5m])) * 100)) > 90 and sum by (instance) (rate(node_network_transmit_bytes_total{${NOT_CI_NODE}}[5m])) > 1048576`,
           ),
           for: "30m",
           labels: { severity: "critical" },
@@ -389,21 +378,18 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           // Security: the CI node is excluded from the generic rule above
           // because legitimate CI pins its CPU hot, but excluding it entirely
-          // would let a compromised Buildkite step mine undetected. So we keep
-          // watching liskov with the SAME CPU + egress thresholds, gated on a
-          // liskov-specific signal: fire only when NO Buildkite job pod is
-          // running. Sustained mining-like load for 30m while the CI node
-          // should be idle is not explained by legitimate CI and still pages.
+          // would let a compromised Buildkite step mine undetected. Keep the
+          // same compound CPU + egress signal active even while a job runs:
+          // job presence is attacker-controlled and cannot be an exemption.
           alert: "PotentialCryptoMiningCiNode",
           annotations: {
             description: escapePrometheusTemplate(
-              "CI node {{ $labels.instance }} shows potential crypto mining activity: sustained high CPU with unusual network egress while no Buildkite job is running",
+              "CI node {{ $labels.instance }} shows potential crypto mining activity: sustained high CPU with unusual network egress",
             ),
-            summary:
-              "Potential crypto mining activity on the CI node while idle",
+            summary: "Potential crypto mining activity on the CI node",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `((100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle", ${CI_NODE_ONLY}}[5m])) * 100)) > 90 and rate(node_network_transmit_bytes_total{${CI_NODE_ONLY}}[5m]) > 1048576) and on () ${NO_BUILDKITE_JOB_RUNNING}`,
+            `(100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle", ${CI_NODE_ONLY}}[5m])) * 100)) > 90 and sum by (instance) (rate(node_network_transmit_bytes_total{${CI_NODE_ONLY}}[5m])) > 1048576`,
           ),
           for: "30m",
           labels: { severity: "critical" },
