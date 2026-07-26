@@ -175,7 +175,92 @@ describe("RENDER clause — leaderboard top-3 mentions", () => {
     expect(output.content).toContain("4. Delta");
     expect(output.content).not.toContain(`<@${testAccountId("1004")}>`);
   });
+});
 
+describe("RENDER clause — leaderboard mentions option", () => {
+  test("RENDER leaderboard WITH (mentions = 1) only mentions rank 1", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        fact({ player: 1, alias: "Alpha", matchId: "NA1_n1", win: true }),
+        fact({ player: 1, alias: "Alpha", matchId: "NA1_n2", win: true }),
+        fact({ player: 1, alias: "Alpha", matchId: "NA1_n3", win: true }),
+        fact({ player: 1, alias: "Alpha", matchId: "NA1_n4", win: true }),
+        fact({ player: 2, alias: "Bravo", matchId: "NA1_n5", win: true }),
+        fact({ player: 2, alias: "Bravo", matchId: "NA1_n6", win: true }),
+        fact({ player: 2, alias: "Bravo", matchId: "NA1_n7", win: true }),
+      ],
+    });
+    const result = await executeReportQuery({
+      prisma,
+      serverId,
+      queryText: `${BASE_QUERY} RENDER leaderboard WITH (mentions = 1)`,
+      now,
+    });
+    const output = await renderReportOutput({
+      title: TITLE,
+      result,
+      startedAt: now,
+      aliasToDiscordId: new Map([
+        ["Alpha", testAccountId("6001")],
+        ["Bravo", testAccountId("6002")],
+      ]),
+    });
+    expect(output.content).toContain(`1. <@${testAccountId("6001")}>`);
+    // mentions = 1 overrides the default top-3 — rank 2 stays a plain alias
+    // even though it has a linked Discord ID.
+    expect(output.content).toContain("2. Bravo");
+    expect(output.content).not.toContain(`<@${testAccountId("6002")}>`);
+  });
+
+  test("RENDER leaderboard WITH (mentions = all) mentions every row", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        fact({ player: 1, alias: "Alpha", matchId: "NA1_o1", win: true }),
+        fact({ player: 1, alias: "Alpha", matchId: "NA1_o2", win: true }),
+        fact({ player: 2, alias: "Bravo", matchId: "NA1_o3", win: true }),
+      ],
+    });
+    const result = await executeReportQuery({
+      prisma,
+      serverId,
+      queryText: `${BASE_QUERY} RENDER leaderboard WITH (mentions = all)`,
+      now,
+    });
+    const output = await renderReportOutput({
+      title: TITLE,
+      result,
+      startedAt: now,
+      aliasToDiscordId: new Map([
+        ["Alpha", testAccountId("7001")],
+        ["Bravo", testAccountId("7002")],
+      ]),
+    });
+    expect(output.content).toContain(`1. <@${testAccountId("7001")}>`);
+    expect(output.content).toContain(`2. <@${testAccountId("7002")}>`);
+  });
+
+  test("RENDER leaderboard WITH (mentions = 0) disables mentions entirely", async () => {
+    await seedFacts();
+    const result = await executeReportQuery({
+      prisma,
+      serverId,
+      queryText: `${BASE_QUERY} RENDER leaderboard WITH (mentions = 0)`,
+      now,
+    });
+    const output = await renderReportOutput({
+      title: TITLE,
+      result,
+      startedAt: now,
+      aliasToDiscordId: new Map([["Alpha", testAccountId("8001")]]),
+    });
+    expect(output.content).toContain("1. Alpha");
+    expect(output.content).not.toContain(`<@${testAccountId("8001")}>`);
+  });
+});
+
+describe("RENDER clause — leaderboard mention fallbacks", () => {
   test("a player with no linked Discord ID falls back to their alias", async () => {
     await seedFacts();
     const output = await renderReportOutput({

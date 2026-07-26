@@ -133,6 +133,19 @@ export const ReportChartOptionsSchema = z
   })
   .strict();
 
+export type ReportLeaderboardOptions = z.infer<
+  typeof ReportLeaderboardOptionsSchema
+>;
+export const ReportLeaderboardOptionsSchema = z
+  .object({
+    // Rows to `@mention` instead of showing a plain alias: a non-negative
+    // integer (0 disables mentions), or "all" to mention every rendered row.
+    mentions: z
+      .union([z.number().int().nonnegative(), z.literal("all")])
+      .optional(),
+  })
+  .strict();
+
 /**
  * Declarative display spec parsed from a query's trailing `RENDER` clause.
  * Discriminated on `kind`: text kinds carry no encoding; chart kinds carry
@@ -143,7 +156,10 @@ export type ReportRenderSpec = z.infer<typeof ReportRenderSpecSchema>;
 export const ReportRenderSpecSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("LIST") }),
   z.object({ kind: z.literal("TABLE") }),
-  z.object({ kind: z.literal("LEADERBOARD") }),
+  z.object({
+    kind: z.literal("LEADERBOARD"),
+    options: ReportLeaderboardOptionsSchema.default({}),
+  }),
   z.object({
     kind: z.literal("BAR_CHART"),
     encoding: ReportRenderChannelSchema.default({}),

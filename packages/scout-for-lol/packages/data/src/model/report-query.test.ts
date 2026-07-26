@@ -294,7 +294,61 @@ describe("RENDER clause", () => {
     const plan = parseAndCompile(
       "SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard",
     );
-    expect(plan.render).toEqual({ kind: "LEADERBOARD" });
+    expect(plan.render).toEqual({ kind: "LEADERBOARD", options: {} });
+  });
+
+  test("parses a leaderboard mentions count", () => {
+    const plan = parseAndCompile(
+      "SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard WITH (mentions = 5)",
+    );
+    expect(plan.render).toEqual({
+      kind: "LEADERBOARD",
+      options: { mentions: 5 },
+    });
+  });
+
+  test("parses a leaderboard mentions of all", () => {
+    const plan = parseAndCompile(
+      "SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard WITH (mentions = all)",
+    );
+    expect(plan.render).toEqual({
+      kind: "LEADERBOARD",
+      options: { mentions: "all" },
+    });
+  });
+
+  test("parses a leaderboard mentions of 0 to disable mentions", () => {
+    const plan = parseAndCompile(
+      "SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard WITH (mentions = 0)",
+    );
+    expect(plan.render).toEqual({
+      kind: "LEADERBOARD",
+      options: { mentions: 0 },
+    });
+  });
+
+  test("rejects an unknown leaderboard WITH option", () => {
+    expect(() =>
+      parseAndCompile(
+        "SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard WITH (theme = dark)",
+      ),
+    ).toThrow('Unknown RENDER option "theme"');
+  });
+
+  test("rejects a negative leaderboard mentions count", () => {
+    expect(() =>
+      parseAndCompile(
+        "SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard WITH (mentions = -1)",
+      ),
+    ).toThrow('must be a non-negative integer or "all"');
+  });
+
+  test("rejects a non-integer leaderboard mentions count", () => {
+    expect(() =>
+      parseAndCompile(
+        "SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard WITH (mentions = 3.5)",
+      ),
+    ).toThrow('must be a non-negative integer or "all"');
   });
 
   test("ignores keywords inside a quoted render title", () => {

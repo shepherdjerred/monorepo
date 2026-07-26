@@ -263,6 +263,12 @@ export const REPORT_RENDER_OPTIONS: ReportRenderOptionInfo[] = [
     syntax: "smooth = true|false",
     description: "Smooth line and area curves.",
   },
+  {
+    id: "mentions",
+    syntax: "mentions = <n>|all",
+    description:
+      "For RENDER leaderboard: @mention the top <n> ranked rows (or every row with 'all'). Defaults to top 3.",
+  },
 ];
 
 const RENDER_KIND_DATA: [string, string, string, boolean][] = [

@@ -109,3 +109,72 @@ params.report.serverId)` before rendering and passes the result through —
 - The mention feature applies to every `LEADERBOARD`-rendered report (system
   and user-created), not just the Common Denominator reports, since that is
   where the shared renderer lives.
+
+## Implementation — Part 3 (configurable top-N / all)
+
+Follow-up request: make the top-3 mention count configurable instead of
+hardcoded. Followed the existing precedent — every other render knob (chart
+`title`, `theme`, `sort`, `smooth`, …) is a `key = value` pair inside the
+query's trailing `RENDER <kind> WITH (...)` clause, so `mentions` became
+a new `WITH` option scoped to `RENDER leaderboard`, not a new Prisma column
+or slash-command flag. Full design in
+`~/.claude/plans/for-the-mention-whimsical-nova.md`.
+
+- `packages/scout-for-lol/packages/data/src/model/report.ts`: added
+  `ReportLeaderboardOptionsSchema` (`mentions: number | "all"`, mirroring the
+  existing `ReportGroupSizeSchema` `number | "all"` precedent) and gave the
+  `LEADERBOARD` member of `ReportRenderSpecSchema` a defaulted `options`
+  field (previously a bare `{ kind: "LEADERBOARD" }` literal).
+- `packages/scout-for-lol/packages/data/src/model/report-query-render.ts`:
+  split `LEADERBOARD` out of the "non-chart kinds reject any WITH clause"
+  branch into its own `parseLeaderboardRenderWith`, which accepts only
+  `mentions` (any other key, e.g. `theme`, throws
+  `Unknown RENDER option "..." for RENDER leaderboard`) and validates the
+  value is a non-negative integer or the literal `all`.
+- `packages/scout-for-lol/packages/data/src/model/report-query-registry.ts`:
+  added a `mentions` docs-registry entry alongside the existing chart options
+  (that registry doesn't scope options per-kind today; left that pre-existing
+  gap alone).
+- `packages/scout-for-lol/packages/backend/src/reports/mention-format.ts`:
+  renamed the hardcoded `TOP_MENTION_COUNT` to `DEFAULT_MENTION_COUNT`
+  (fallback only) and added `resolveMentionCount(mentionsOption, totalRows)`
+  — `"all"` resolves to every row, `undefined` falls back to the default,
+  `0` naturally disables mentions via the existing `index >= mentionCount`
+  check.
+- `packages/scout-for-lol/packages/backend/src/reports/output.ts`:
+  `formatTextReport` now takes the full narrowed `render` spec (typed
+  `Exclude<ReportRenderSpec, ChartRender>`) instead of just `render.kind`, so
+  it can read `render.options.mentions` when the kind is `LEADERBOARD`;
+  bundled `aliasToDiscordId` into a small `MentionOptions` object to stay
+  under the repo's 4-param ESLint limit.
+- Tests: 6 new parser-level tests in `report-query.test.ts` (count, `all`,
+  `0`, unknown-option rejection, negative/non-integer rejection) plus updated
+  the two existing bare-`LEADERBOARD` assertions (`report.test.ts`,
+  `report-query.test.ts`) for the new `options: {}` default. 3 new
+  integration tests in `report-render.integration.test.ts` covering
+  `mentions = 1`, `mentions = all`, and `mentions = 0` end-to-end; split the
+  describe block that grew past the repo's 200-line-per-function ESLint cap
+  into three smaller, purpose-named blocks.
+- Cleaned up a local, gitignored `packages/scout-for-lol/packages/backend/logs/app.log`
+  test-run artifact that was tripping `gitleaks`' `generic-api-key` heuristic
+  on a benign S3 key path (`prematch/2026/07/26/...`) — not part of the diff,
+  gitleaks scans the working tree regardless of `.gitignore`.
+- Verified: data-package `bun run typecheck` + `bun test` (494 pass, 0 fail,
+  includes the 6 new tests), backend `bun run typecheck` + full
+  `bun run test` (1193 pass, 6 skip, 0 fail, up from 1190), `bunx eslint` on
+  every changed file (0 errors, pre-existing duplication warnings only), and
+  root `bun run verify -- --affected` (51/51 tasks green).
+
+### Remaining (updated)
+
+- Same as before — no code work left in scope. Worth confirming
+  `RENDER leaderboard WITH (mentions = ...)` end-to-end in a real Discord
+  channel next time a report is created/edited with it, alongside the
+  original top-3 spot-check.
+
+### Caveats (updated)
+
+- The live seeded Common Denominator reports on `scout-beta` were
+  deliberately left untouched (still bare `RENDER leaderboard`, defaulting to
+  top 3) — bumping them to a different `mentions` value is a manual
+  `/report update` follow-up, not part of this change.

@@ -2,7 +2,6 @@ import {
   REPORT_METRICS,
   formatReportDisplayValue,
   reportResultColumns,
-  type ReportOutputFormat,
   type ReportRenderSpec,
 } from "@scout-for-lol/data";
 import { analyticsChartToImage } from "@scout-for-lol/report";
@@ -10,7 +9,10 @@ import type {
   ReportQueryResult,
   ReportResultRow,
 } from "#src/reports/query-engine.ts";
-import { formatRankedLabel } from "#src/reports/mention-format.ts";
+import {
+  formatRankedLabel,
+  resolveMentionCount,
+} from "#src/reports/mention-format.ts";
 
 export type RenderedReportOutput = {
   content: string;
@@ -73,40 +75,43 @@ function renderReportOutputSync(
     return renderAnalyticsChart(params, render);
   }
   return {
-    content: formatTextReport(
-      params.title,
-      render.kind,
-      params.result,
-      params.aliasToDiscordId ?? new Map(),
-    ),
+    content: formatTextReport(params.title, render, params.result, {
+      aliasToDiscordId: params.aliasToDiscordId ?? new Map(),
+    }),
     image: null,
   };
 }
 
+type MentionOptions = { aliasToDiscordId: Map<string, string> };
+
 function formatTextReport(
   title: string,
-  kind: ReportOutputFormat,
+  render: Exclude<ReportRenderSpec, ChartRender>,
   result: ReportQueryResult,
-  aliasToDiscordId: Map<string, string>,
+  mentions: MentionOptions,
 ): string {
   if (result.rows.length === 0) {
     return `**${title}**\nNo rows matched this report.`;
   }
 
-  if (kind === "TABLE") {
+  if (render.kind === "TABLE") {
     return `**${title}**\n${formatTable(result)}`;
   }
 
-  if (kind === "LIST") {
+  if (render.kind === "LIST") {
     return `**${title}**\n${result.rows
       .map((row) => `- ${row.label}: ${formatValues(result, row)}`)
       .join("\n")}`;
   }
 
+  const mentionCount = resolveMentionCount(
+    render.options.mentions,
+    result.rows.length,
+  );
   return `**${title}**\n${result.rows
     .map(
       (row, index) =>
-        `${(index + 1).toString()}. ${formatRankedLabel(row.label, index, aliasToDiscordId)} — ${formatValues(result, row)}`,
+        `${(index + 1).toString()}. ${formatRankedLabel(row.label, index, mentions.aliasToDiscordId, mentionCount)} — ${formatValues(result, row)}`,
     )
     .join("\n")}`;
 }

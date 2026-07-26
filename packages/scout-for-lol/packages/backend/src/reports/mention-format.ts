@@ -1,19 +1,33 @@
-// How many top-ranked rows of a ranked (non-TABLE, non-LIST) text report get
-// `@mention`s instead of plain alias text.
-export const TOP_MENTION_COUNT = 3;
+// Fallback rank count used when a `RENDER leaderboard` clause doesn't specify
+// `WITH (mentions = ...)`.
+export const DEFAULT_MENTION_COUNT = 3;
 
 /**
- * Render a ranked row's label, `@mention`ing its player(s) for the top
- * `TOP_MENTION_COUNT` ranks. Group labels (e.g. "Danny + Aaron + Kendrick")
- * mention each member independently; a member without a linked Discord ID
- * falls back to their plain alias.
+ * Resolve a report's `RENDER leaderboard WITH (mentions = ...)` option (a
+ * count, "all", or unset) to the concrete number of ranked rows to mention.
+ */
+export function resolveMentionCount(
+  mentionsOption: number | "all" | undefined,
+  totalRows: number,
+): number {
+  return mentionsOption === "all"
+    ? totalRows
+    : (mentionsOption ?? DEFAULT_MENTION_COUNT);
+}
+
+/**
+ * Render a ranked row's label, `@mention`ing its player(s) for ranks below
+ * `mentionCount`. Group labels (e.g. "Danny + Aaron + Kendrick") mention each
+ * member independently; a member without a linked Discord ID falls back to
+ * their plain alias.
  */
 export function formatRankedLabel(
   label: string,
   index: number,
   aliasToDiscordId: Map<string, string>,
+  mentionCount: number,
 ): string {
-  if (index >= TOP_MENTION_COUNT) {
+  if (index >= mentionCount) {
     return label;
   }
   return label
