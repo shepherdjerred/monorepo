@@ -96,3 +96,31 @@ test("banner — 10-player squad", async () => {
   await writeOutputs("banner_squad_10", svg, png);
   expect(hashSvg(svg)).toMatchSnapshot();
 });
+
+test("banner — 11-player squad spans three groups", async () => {
+  // Cross-guild duplicate configs track the same puuid more than once, so
+  // match.players can exceed the ten distinct participants in a real game.
+  // splitSquad(11) yields three groups ([4, 4, 3] — see squad-layout.test.ts),
+  // which pushes this banner past the two-column layout it was originally
+  // sized for. Reuse the first tracked player as an eleventh entry to
+  // reproduce that without a fixture rewrite.
+  const match = rankedFixture({
+    queueType: "flex",
+    trackedCount: 10,
+    outcome: "Victory",
+  });
+  const extraPlayer = match.players[0];
+  if (extraPlayer === undefined) {
+    throw new Error("Missing expected banner hero fixture");
+  }
+  const elevenPlayerMatch = {
+    ...match,
+    players: [...match.players, extraPlayer],
+  };
+  const svg = await matchToSvg(elevenPlayerMatch, {
+    designOverride: "banner",
+  });
+  const png = await svgToPng(svg);
+  await writeOutputs("banner_squad_11", svg, png);
+  expect(hashSvg(svg)).toMatchSnapshot();
+});

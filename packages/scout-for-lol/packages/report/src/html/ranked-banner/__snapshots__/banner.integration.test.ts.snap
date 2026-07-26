@@ -8,6 +8,8 @@ exports[`banner — 3-player squad with public champion name 1`] = `"0e2be28f31f
 
 exports[`banner — 5-player squad 1`] = `"f1097f5a9afe5a329b6f58b90a6b3efebd84265bd9a0de687ba25205b8b8b715"`;
 
-exports[`banner — 6-player squad 1`] = `"da2b30dee88f6469220bb91412b2fd1fdaf2c9018f2828b853850f9f5a1ca255"`;
+exports[`banner — 6-player squad 1`] = `"6d2622fa50ae02c418b6c31d7f341bbbdfcb33732ab56f27dbcbca5126306762"`;
 
-exports[`banner — 10-player squad 1`] = `"745b7f91e60df06a37c4f66d892e874e719f358e1b073a3a879eaab3d0c86708"`;
+exports[`banner — 10-player squad 1`] = `"6df57de568ec989f796d85c39085a64b7cb82974fe60563b31b2602e364bd8ab"`;
+
+exports[`banner — 11-player squad spans three groups 1`] = `"8dc9b508414e6c31313ba0670646ba20107bd1b11543761fe263a5dd60cb55e0"`;

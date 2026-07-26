@@ -25,6 +25,20 @@ import { splitSquad } from "#src/html/shared/squad-layout.ts";
 export const BANNER_WIDTH = 4760;
 export const BANNER_HEIGHT = 1500;
 
+/**
+ * Width for one squad-group column in the large-squad row layout. Cross-guild
+ * duplicate configs can push `splitSquad` past two groups (see
+ * squad-layout.ts), so this sizes off the actual group count instead of a
+ * hardcoded 50% — matches the `squadCardWidth` pattern in ranked-square's
+ * report.tsx. The -1.5 fudge keeps the columns' gap from overflowing 100%.
+ */
+function squadGroupWidth(groupCount: number): string {
+  if (groupCount <= 1) {
+    return "100%";
+  }
+  return `${(100 / groupCount - 1.5).toString()}%`;
+}
+
 function CornerBracket({ corner }: { corner: "tl" | "tr" | "bl" | "br" }) {
   const len = "10rem";
   const thickness = "0.4rem";
@@ -319,7 +333,7 @@ export function RankedBannerReport({ match }: { match: CompletedMatch }) {
                       display: "flex",
                       flexDirection: "column",
                       gap: "1rem",
-                      width: isLargeSquad ? "50%" : "100%",
+                      width: squadGroupWidth(squadGroups.length),
                     }}
                   >
                     {group.map((player) => (
