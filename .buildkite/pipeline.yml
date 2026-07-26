@@ -985,6 +985,8 @@ steps:
       # (PUSH_CACHE stays false — only main writes the buildcache refs).
       # Executes no-exporter in-image smoke targets against remote BuildKit.
       CADDYFILE_SMOKE_PATH=/tmp/caddyfile.generated bash .buildkite/scripts/bake-images.sh --affected
+    artifact_paths:
+      - "image-selection-report.json"
     retry: *retry
     plugins:
       - kubernetes:
@@ -1010,6 +1012,9 @@ steps:
       . .buildkite/scripts/buildkit-env.sh
       buildkite-agent artifact download "caddyfile.generated" /tmp --step verify
       CADDYFILE_SMOKE_PATH=/tmp/caddyfile.generated bash .buildkite/scripts/bake-images.sh --push
+    artifact_paths:
+      - "image-selection-report.json"
+      - "image-push-outcomes.json"
     retry: *retry
     plugins:
       - kubernetes:

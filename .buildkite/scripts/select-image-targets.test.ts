@@ -13,6 +13,7 @@ import {
   parseLockfile,
   patchedDependencyKey,
   selectImageTargets,
+  selectImageTargetsWithReasons,
   type LockfilePair,
   type SelectorInputs,
 } from "./select-image-targets.ts";
@@ -443,5 +444,75 @@ describe("changedPathsSince", () => {
     } finally {
       await rm(fixture, { force: true, recursive: true });
     }
+  });
+});
+
+describe("selection reasons", () => {
+  test("a closure hit records the matching path and directory", async () => {
+    const { targets, report } = await selectImageTargetsWithReasons(
+      ["packages/tasknotes-server/src/index.ts"],
+      REPO_ROOT,
+    );
+    expect(targets).toEqual(["tasknotes-server"]);
+    expect(report.mode).toBe("selected");
+    expect(report.globalReason).toBeNull();
+    expect(report.changedPaths).toEqual([
+      "packages/tasknotes-server/src/index.ts",
+    ]);
+    expect(report.targets["tasknotes-server"]).toEqual([
+      "workspace closure: packages/tasknotes-server/src/index.ts under packages/tasknotes-server/",
+    ]);
+  });
+
+  test("a configured extra input records its prefix", async () => {
+    const { report } = await selectImageTargetsWithReasons(
+      ["packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts"],
+      REPO_ROOT,
+    );
+    expect(report.mode).toBe("selected");
+    const reasons = report.targets["infra"];
+    if (reasons === undefined) throw new Error("infra should be selected");
+    expect(reasons.join("\n")).toContain("configured extra input");
+  });
+
+  test("a global image input flips to ALL with the trigger named", async () => {
+    const { targets, report } = await selectImageTargetsWithReasons(
+      ["docker-bake.hcl"],
+      REPO_ROOT,
+    );
+    expect(targets).toEqual(ALL_IMAGE_TARGETS);
+    expect(report.mode).toBe("all");
+    expect(report.globalReason).toContain("docker-bake.hcl");
+    expect(Object.keys(report.targets).sort()).toEqual(ALL_IMAGE_TARGETS);
+    for (const reasons of Object.values(report.targets)) {
+      expect(reasons).toEqual([report.globalReason ?? ""]);
+    }
+  });
+
+  test("a lockfile fail-open reports the failure as the global reason", async () => {
+    const { targets, report } = await selectImageTargetsWithReasons(
+      ["bun.lock"],
+      REPO_ROOT,
+    );
+    expect(targets).toEqual(ALL_IMAGE_TARGETS);
+    expect(report.mode).toBe("all");
+    expect(report.globalReason).toContain("lockfile attribution failed");
+  });
+
+  test("an unselecting change yields an empty report", async () => {
+    const { targets, report } = await selectImageTargetsWithReasons(
+      ["packages/docs/logs/example.md"],
+      REPO_ROOT,
+    );
+    expect(targets).toEqual([]);
+    expect(report.mode).toBe("selected");
+    expect(report.targets).toEqual({});
+  });
+
+  test("the wrapper returns exactly the reasoned targets", async () => {
+    const paths = ["packages/llm-models/src/models.ts"];
+    const wrapped = await select(paths);
+    const { targets } = await selectImageTargetsWithReasons(paths, REPO_ROOT);
+    expect(wrapped).toEqual(targets);
   });
 });

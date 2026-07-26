@@ -39,12 +39,28 @@ if ! git merge-base --is-ancestor "$base" HEAD; then
   exit 0
 fi
 
+# Record this lane's run/skip decision as build meta-data so the main-only
+# build-summary step can render one lane-decision table for the whole build.
+# Best-effort by design: a meta-data failure must never change this script's
+# exit code — the explicit if handles that one specific failure and keeps it
+# out of the ERR trap's reach.
+record_decision() {
+  if [ "${BUILDKITE:-}" != "true" ]; then
+    return 0
+  fi
+  if ! buildkite-agent meta-data set "ci-lane-decision-${lane}" "$1"; then
+    echo "WARN: could not record lane decision for ${lane}" >&2
+  fi
+}
+
 if [ "$lane" = "images" ]; then
   targets=$(bun --no-install .buildkite/scripts/select-image-targets.ts --base "$base")
   if [ "$targets" = "[]" ]; then
+    record_decision "skipped — no image closure affected since ${base}"
     echo "${lane}: unchanged since ${base}; skipping"
     exit 78
   fi
+  record_decision "ran — selected targets ${targets}"
   echo "${lane}: selected targets ${targets}"
   exit 0
 fi
@@ -219,12 +235,20 @@ case "$lane" in
 esac
 
 if git diff --quiet "$base" HEAD -- "${global_paths[@]}" "${lane_paths[@]}"; then
+  record_decision "skipped — unchanged since ${base}"
   echo "${lane}: unchanged since ${base}; skipping"
   exit 78
 else
   status=$?
 fi
 if [ "$status" -eq 1 ]; then
+  decision="ran — changed since ${base}"
+  if changed_files=$(git diff --name-only "$base" HEAD -- "${global_paths[@]}" "${lane_paths[@]}"); then
+    changed_count=$(printf '%s\n' "$changed_files" | sed '/^$/d' | wc -l | tr -d ' ')
+    changed_sample=$(printf '%s\n' "$changed_files" | head -3 | tr '\n' ' ')
+    decision="ran — ${changed_count} matching change(s) since ${base}: ${changed_sample}"
+  fi
+  record_decision "$decision"
   echo "${lane}: changed since ${base}; running"
   exit 0
 fi

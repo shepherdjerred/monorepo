@@ -649,17 +649,74 @@ function lockfileChangedTargets(
   return changed;
 }
 
-export async function selectImageTargets(
+/**
+ * Why each target was (or every target had to be) selected. The reasons are a
+ * byproduct of the selection walk itself — this report is the ONLY place they
+ * survive; stdout stays the bare target array for the shell consumers.
+ */
+export interface SelectionReport {
+  /** Git ref the diff was computed against (null when unknown to the caller). */
+  base: string | null;
+  changedPaths: string[];
+  /** "all" = a fail-open or global input forced every target. */
+  mode: "selected" | "all";
+  /** Set exactly when mode === "all": the single reason everything rebuilds. */
+  globalReason: string | null;
+  /** Per-target reasons; in "all" mode every target carries the global reason. */
+  targets: Record<string, string[]>;
+}
+
+export interface SelectionResult {
+  targets: string[];
+  report: SelectionReport;
+}
+
+function allTargetsResult(
+  changedPaths: readonly string[],
+  globalReason: string,
+): SelectionResult {
+  return {
+    targets: [...ALL_IMAGE_TARGETS],
+    report: {
+      base: null,
+      changedPaths: [...changedPaths],
+      mode: "all",
+      globalReason,
+      targets: Object.fromEntries(
+        ALL_IMAGE_TARGETS.map((target) => [target, [globalReason]]),
+      ),
+    },
+  };
+}
+
+function addReason(
+  reasons: Map<string, string[]>,
+  target: string,
+  reason: string,
+): void {
+  const existing = reasons.get(target);
+  if (existing === undefined) {
+    reasons.set(target, [reason]);
+  } else if (!existing.includes(reason)) {
+    existing.push(reason);
+  }
+}
+
+export async function selectImageTargetsWithReasons(
   changedPaths: readonly string[],
   repoRoot = process.cwd(),
   inputs?: SelectorInputs,
-): Promise<string[]> {
-  if (
-    changedPaths.some((path) =>
-      GLOBAL_IMAGE_INPUTS.some((prefix) => pathMatchesPrefix(path, prefix)),
-    )
-  ) {
-    return ALL_IMAGE_TARGETS;
+): Promise<SelectionResult> {
+  for (const path of changedPaths) {
+    const prefix = GLOBAL_IMAGE_INPUTS.find((candidate) =>
+      pathMatchesPrefix(path, candidate),
+    );
+    if (prefix !== undefined) {
+      return allTargetsResult(
+        changedPaths,
+        `global image input changed: ${path} (matches ${prefix})`,
+      );
+    }
   }
 
   // Root manifests: global unless the delta is confined to attributable keys
@@ -673,13 +730,22 @@ export async function selectImageTargets(
   ];
   for (const [path, pair] of manifestPairs) {
     if (!changedPaths.includes(path)) continue;
-    if (pair === undefined || manifestChangeIsGlobal(pair)) {
-      return ALL_IMAGE_TARGETS;
+    if (pair === undefined) {
+      return allTargetsResult(
+        changedPaths,
+        `${path} changed but base/head contents were unavailable (fail-open)`,
+      );
+    }
+    if (manifestChangeIsGlobal(pair)) {
+      return allTargetsResult(
+        changedPaths,
+        `${path} changed outside attributable keys (devDependencies/scripts)`,
+      );
     }
   }
 
   const packages = await loadWorkspaces(repoRoot);
-  const selected = new Set<string>();
+  const reasons = new Map<string, string[]>();
 
   for (const [target, owner] of Object.entries(TARGET_OWNERS)) {
     const closure = dependencyClosure(owner, packages);
@@ -692,18 +758,28 @@ export async function selectImageTargets(
       }
       return pkg.dir;
     });
-    if (changedPaths.some((path) => dirs.some((dir) => path.startsWith(dir)))) {
-      selected.add(target);
+    for (const path of changedPaths) {
+      const dir = dirs.find((candidate) => path.startsWith(candidate));
+      if (dir !== undefined) {
+        addReason(reasons, target, `workspace closure: ${path} under ${dir}`);
+        break;
+      }
     }
   }
 
   for (const [target, prefixes] of Object.entries(TARGET_PATH_PREFIXES)) {
-    if (
-      changedPaths.some((path) =>
-        prefixes.some((prefix) => pathMatchesPrefix(path, prefix)),
-      )
-    ) {
-      selected.add(target);
+    for (const path of changedPaths) {
+      const prefix = prefixes.find((candidate) =>
+        pathMatchesPrefix(path, candidate),
+      );
+      if (prefix !== undefined) {
+        addReason(
+          reasons,
+          target,
+          `configured extra input: ${path} (matches ${prefix})`,
+        );
+        break;
+      }
     }
   }
 
@@ -736,7 +812,13 @@ export async function selectImageTargets(
           throw new Error(`no patchedDependencies entry for ${path}`);
         }
         for (const [target, ids] of closureIds) {
-          if (ids.has(key)) selected.add(target);
+          if (ids.has(key)) {
+            addReason(
+              reasons,
+              target,
+              `patched dependency ${key} (${path}) in closure`,
+            );
+          }
         }
       }
     } catch (error) {
@@ -744,7 +826,10 @@ export async function selectImageTargets(
       console.error(
         `select-image-targets: patch attribution failed (${message}); selecting ALL targets`,
       );
-      return ALL_IMAGE_TARGETS;
+      return allTargetsResult(
+        changedPaths,
+        `patch attribution failed (${message}); fail-open`,
+      );
     }
   }
 
@@ -757,18 +842,56 @@ export async function selectImageTargets(
       if (inputs?.lockfiles === undefined)
         throw new Error("bun.lock changed but no lockfile contents provided");
       for (const target of lockfileChangedTargets(inputs.lockfiles, packages)) {
-        selected.add(target);
+        addReason(
+          reasons,
+          target,
+          "resolved dependency closure changed in bun.lock",
+        );
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(
         `select-image-targets: lockfile attribution failed (${message}); selecting ALL targets`,
       );
-      return ALL_IMAGE_TARGETS;
+      return allTargetsResult(
+        changedPaths,
+        `lockfile attribution failed (${message}); fail-open`,
+      );
     }
   }
 
-  return [...selected].sort();
+  const targets = [...reasons.keys()].sort();
+  return {
+    targets,
+    report: {
+      base: null,
+      changedPaths: [...changedPaths],
+      mode: "selected",
+      globalReason: null,
+      targets: Object.fromEntries(
+        targets.map((target) => {
+          const targetReasons = reasons.get(target);
+          if (targetReasons === undefined) {
+            throw new Error(`missing reasons for selected target ${target}`);
+          }
+          return [target, targetReasons];
+        }),
+      ),
+    },
+  };
+}
+
+export async function selectImageTargets(
+  changedPaths: readonly string[],
+  repoRoot = process.cwd(),
+  inputs?: SelectorInputs,
+): Promise<string[]> {
+  const { targets } = await selectImageTargetsWithReasons(
+    changedPaths,
+    repoRoot,
+    inputs,
+  );
+  return targets;
 }
 
 export async function changedPathsSince(
@@ -818,7 +941,18 @@ async function main(): Promise<void> {
   const baseFlag = Bun.argv.indexOf("--base");
   const base = baseFlag === -1 ? undefined : Bun.argv[baseFlag + 1];
   if (base === undefined || base === "") {
-    console.error("Usage: select-image-targets.ts --base <git-ref>");
+    console.error(
+      "Usage: select-image-targets.ts --base <git-ref> [--reasons-out <file>]",
+    );
+    process.exit(2);
+  }
+  // Justification side channel: stdout is a strict one-line JSON-array
+  // contract (bake-images.sh jq-validates it; ci-changed.sh string-compares
+  // it), so the per-target reasons report goes to a file instead.
+  const reasonsFlag = Bun.argv.indexOf("--reasons-out");
+  const reasonsOut = reasonsFlag === -1 ? undefined : Bun.argv[reasonsFlag + 1];
+  if (reasonsFlag !== -1 && (reasonsOut === undefined || reasonsOut === "")) {
+    console.error("--reasons-out requires a file path");
     process.exit(2);
   }
   const changedPaths = await changedPathsSince(base);
@@ -835,11 +969,15 @@ async function main(): Promise<void> {
       "scripts/package.json",
     );
   }
-  console.log(
-    JSON.stringify(
-      await selectImageTargets(changedPaths, process.cwd(), inputs),
-    ),
+  const { targets, report } = await selectImageTargetsWithReasons(
+    changedPaths,
+    process.cwd(),
+    inputs,
   );
+  if (reasonsOut !== undefined) {
+    await Bun.write(reasonsOut, JSON.stringify({ ...report, base }, null, 2));
+  }
+  console.log(JSON.stringify(targets));
 }
 
 if (import.meta.main) {
