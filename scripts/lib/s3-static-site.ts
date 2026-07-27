@@ -4,7 +4,7 @@
  * lockstep deploy scripts share the exact same sync semantics).
  */
 
-import { run } from "./run.ts";
+import { run, runAllowExit } from "./run.ts";
 
 export const SEAWEEDFS_ENDPOINT = "https://seaweedfs-s3.tailnet-1a49.ts.net";
 
@@ -20,6 +20,148 @@ export const SEAWEEDFS_AWS_ENV: Record<string, string> = {
   AWS_REQUEST_CHECKSUM_CALCULATION: "WHEN_REQUIRED",
   AWS_RESPONSE_CHECKSUM_VALIDATION: "WHEN_REQUIRED",
 };
+
+/** Refuse to sync a partial static site that would delete a live entrypoint. */
+export async function assertStaticSiteComplete(
+  dir: string,
+  label: string,
+): Promise<void> {
+  for (const path of ["index.html", "app/index.html"]) {
+    if (!(await Bun.file(`${dir}/${path}`).exists())) {
+      throw new Error(`${label}: ${dir}/${path} is missing — refusing to sync`);
+    }
+  }
+}
+
+/** Read a release marker; a missing marker deliberately triggers a full sync. */
+export async function readS3Marker(opts: {
+  bucket: string;
+  key: string;
+  endpoint: string;
+  env: Record<string, string>;
+}): Promise<string | null> {
+  const result = await runAllowExit(
+    [
+      "aws",
+      "s3",
+      "cp",
+      `s3://${opts.bucket}/${opts.key}`,
+      "-",
+      "--endpoint-url",
+      opts.endpoint,
+    ],
+    { env: opts.env, capture: true },
+  );
+  if (result.exitCode !== 0) {
+    console.log(
+      `marker s3://${opts.bucket}/${opts.key} missing or unreadable (exit ${result.exitCode.toString()}) — treating as out of date`,
+    );
+    return null;
+  }
+  return result.stdout.trim();
+}
+
+/** AWS CLI's stable missing-key diagnostics for `s3 cp` object reads. */
+export function isMissingS3Object(stderr: string): boolean {
+  return (
+    stderr.includes("NoSuchKey") ||
+    (stderr.includes("404") && stderr.includes("does not exist"))
+  );
+}
+
+/**
+ * Build the forced mutable-file copy used for release archives materialized
+ * locally from S3. Unlike `aws s3 sync`, `cp --recursive` overwrites matching
+ * destination keys even when archive timestamps make the sync comparator think
+ * a changed entrypoint is current.
+ */
+export function forceMutableUploadCommand(opts: {
+  source: string;
+  dest: string;
+  endpoint: string;
+  excludes: string[];
+  dryRun: boolean;
+}): string[] {
+  return [
+    "aws",
+    "s3",
+    "cp",
+    opts.source,
+    opts.dest,
+    "--recursive",
+    "--endpoint-url",
+    opts.endpoint,
+    ...opts.excludes.flatMap((pattern) => ["--exclude", pattern]),
+    "--cache-control",
+    "no-cache",
+    ...(opts.dryRun ? ["--dryrun"] : []),
+  ];
+}
+
+/**
+ * Read stage-bucket objects back and require them to be byte-identical to the
+ * source release. Deployment markers must not advance when an S3 comparator
+ * skipped a changed mutable entrypoint.
+ */
+export async function firstS3ObjectMismatch(opts: {
+  sourceDir: string;
+  bucket: string;
+  paths: readonly string[];
+  scratchDir: string;
+  endpoint: string;
+  env: Record<string, string>;
+}): Promise<string | undefined> {
+  for (const path of opts.paths) {
+    const expectedPath = `${opts.sourceDir}/${path}`;
+    const servedPath = `${opts.scratchDir}/served/${path}`;
+    const parentDir = servedPath.slice(0, servedPath.lastIndexOf("/"));
+    await Bun.$`mkdir -p ${parentDir}`.quiet();
+    const download = await runAllowExit(
+      [
+        "aws",
+        "s3",
+        "cp",
+        `s3://${opts.bucket}/${path}`,
+        servedPath,
+        "--endpoint-url",
+        opts.endpoint,
+      ],
+      { env: opts.env, capture: true },
+    );
+    if (download.exitCode !== 0) {
+      if (isMissingS3Object(download.stderr)) {
+        return path;
+      }
+      throw new Error(
+        `could not read s3://${opts.bucket}/${path} for release verification (exit ${download.exitCode.toString()}): ${download.stderr.trim()}`,
+      );
+    }
+    const [expected, served] = await Promise.all([
+      Bun.file(expectedPath).text(),
+      Bun.file(servedPath).text(),
+    ]);
+    if (expected !== served) {
+      return path;
+    }
+  }
+  return undefined;
+}
+
+export async function assertS3ObjectsMatchSource(opts: {
+  sourceDir: string;
+  bucket: string;
+  paths: readonly string[];
+  scratchDir: string;
+  endpoint: string;
+  env: Record<string, string>;
+}): Promise<void> {
+  const mismatchedPath = await firstS3ObjectMismatch(opts);
+  if (mismatchedPath !== undefined) {
+    throw new Error(
+      `s3://${opts.bucket}/${mismatchedPath} differs from the selected source release`,
+    );
+  }
+}
 
 /**
  * Sync `source` to `s3://bucket/`, setting `Cache-Control` as S3 object
@@ -37,6 +179,12 @@ export const SEAWEEDFS_AWS_ENV: Record<string, string> = {
  * objects the deploy does not own and must never prune (e.g. the scout
  * `.release-version` marker, which is written separately after a successful
  * sync).
+ *
+ * `forceMutableUpload` is for deployments materialized from an S3 archive.
+ * The archive download preserves object timestamps, so `aws s3 sync` can
+ * incorrectly retain a changed mutable entrypoint when its size and timestamp
+ * compare equal to the destination. When enabled, a recursive `aws s3 cp`
+ * uploads every non-immutable object before the normal deleting sync.
  */
 export async function s3SyncStaticSite(opts: {
   source: string;
@@ -44,12 +192,21 @@ export async function s3SyncStaticSite(opts: {
   endpoint: string;
   immutablePrefixes: string[];
   extraExcludes?: string[];
+  forceMutableUpload?: boolean;
   cwd: string;
   env: Record<string, string>;
   dryRun: boolean;
   haveCreds: boolean;
 }): Promise<void> {
-  const { source, bucket, endpoint, immutablePrefixes, cwd, env } = opts;
+  const {
+    source,
+    bucket,
+    endpoint,
+    immutablePrefixes,
+    cwd,
+    env,
+    forceMutableUpload = false,
+  } = opts;
   const extraExcludes = opts.extraExcludes ?? [];
   const dest = `s3://${bucket}/`;
   const deletePassExcludes = [
@@ -61,8 +218,9 @@ export async function s3SyncStaticSite(opts: {
     const plan =
       immutablePrefixes.length > 0
         ? `pass 1 [${immutablePrefixes.join(", ")}] immutable (no --delete); ` +
-          `pass 2 everything else no-cache (--delete, excluding immutable prefixes)`
-        : `single pass no-cache (--delete)`;
+          `${forceMutableUpload ? "force-copy " : "sync "}everything else no-cache ` +
+          `(--delete, excluding immutable prefixes)`
+        : `${forceMutableUpload ? "force-copy " : "sync "}everything no-cache (--delete)`;
     console.log(
       `DRYRUN: would sync ${source} -> ${dest} via ${endpoint} — ${plan}`,
     );
@@ -91,6 +249,18 @@ export async function s3SyncStaticSite(opts: {
           "public, max-age=31536000, immutable",
           "--dryrun",
         ],
+        { cwd, env },
+      );
+    }
+    if (forceMutableUpload) {
+      await run(
+        forceMutableUploadCommand({
+          source,
+          dest,
+          endpoint,
+          excludes: deletePassExcludes,
+          dryRun: true,
+        }),
         { cwd, env },
       );
     }
@@ -131,6 +301,19 @@ export async function s3SyncStaticSite(opts: {
         "--cache-control",
         "public, max-age=31536000, immutable",
       ],
+      { cwd, env },
+    );
+  }
+
+  if (forceMutableUpload) {
+    await run(
+      forceMutableUploadCommand({
+        source,
+        dest,
+        endpoint,
+        excludes: deletePassExcludes,
+        dryRun: false,
+      }),
       { cwd, env },
     );
   }
