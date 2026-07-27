@@ -1,0 +1,6 @@
+literal:discord/
+literal:packages/discord-plays-pokemon/docs/
+glob:packages/discord-plays-pokemon/**/pokeemerald.wasm
+literal:packages/scout-for-lol/assets/banner.jpeg
+literal:packages/scout-for-lol/assets/beta.jpeg
+literal:packages/scout-for-lol/assets/scout.jpeg
