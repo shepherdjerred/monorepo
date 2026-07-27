@@ -20,6 +20,7 @@ import {
   SearchIcon,
   TriangleAlertIcon,
   UserCheckIcon,
+  WrenchIcon,
 } from "lucide-react";
 import { useMemo } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router";
@@ -129,7 +130,12 @@ function BoardCard({
           ) : null}
           {document.verification === "human" ? (
             <Badge variant="secondary">
-              <UserCheckIcon /> human
+              <UserCheckIcon /> acceptance
+            </Badge>
+          ) : null}
+          {document.verification === "operator" ? (
+            <Badge variant="secondary">
+              <WrenchIcon /> operator
             </Badge>
           ) : null}
         </div>

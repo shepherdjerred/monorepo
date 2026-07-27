@@ -2,9 +2,7 @@
 id: plan-2026-04-25-shared-glitter-context-package
 type: plan
 status: complete
-board: true
-verification: agent
-disposition: deferred
+board: false
 ---
 
 # Shared Glitter-Context Package

@@ -5,7 +5,7 @@ status: in-progress
 board: true
 verification: agent
 disposition: active
-origin: packages/docs/plans/2026-07-04_llm-observability-gaps.md
+origin: packages/docs/archive/completed/2026-07-04_llm-observability-gaps.md
 ---
 
 # Trace scout's Mastra report-query agent
@@ -27,4 +27,20 @@ without Mastra observability.
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `Trace scout's Mastra report-query agent`.
+- [ ] Choose and document the archive behavior: Mastra-native Tempo-only spans,
+      or `traceTextStream` so prompt/response bodies reach the existing S3
+      archive processor.
+- [ ] Instrument `report-query-agent.ts` with the selected path and cover
+      success, stream failure, token usage, model/provider attributes, and
+      parent-context propagation in tests.
+- [ ] Run a report-query request against beta and confirm the span is queryable
+      in Tempo and, if selected, the body object exists in the LLM archive.
+
+## Comment Log
+
+### 2026-07-27 — board audit reconciliation
+
+- Retained as a real residual after archiving the shipped LLM observability umbrella.
+- Current-tree audit confirms `report-query-agent.ts` remains the deployed LLM
+  call site without the standard tracing/archive wrapper; restored this card to
+  active implementation status.

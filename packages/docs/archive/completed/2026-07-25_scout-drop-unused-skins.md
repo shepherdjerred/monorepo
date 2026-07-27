@@ -2,9 +2,7 @@
 id: scout-drop-unused-skins
 type: plan
 status: complete
-board: true
-verification: human
-disposition: active
+board: false
 ---
 
 # Scout: stop downloading unused champion skins + retire skin plumbing
@@ -91,7 +89,7 @@ The standalone skins-only callback was superseded by the coordinated repo-wide p
 which treats champion-loading as one target and preserves the full remote/local ref
 graph. Do not execute a narrower rewrite from this predecessor plan.
 
-## Remaining
+## Closure
 
 - [x] Handed off the deferred history rewrite to the active repo-wide plan
       [`2026-07-25_repo-history-slim.md`](./2026-07-25_repo-history-slim.md); this plan's own deliverable (the

@@ -2,9 +2,7 @@
 id: plan-2026-07-09-torvalds-ci-freeze-hardening
 type: reference
 status: complete
-board: true
-verification: agent
-disposition: active
+board: false
 ---
 
 # Torvalds CI-Freeze Hardening: Node / K8s / Dagger-Buildkite Protections

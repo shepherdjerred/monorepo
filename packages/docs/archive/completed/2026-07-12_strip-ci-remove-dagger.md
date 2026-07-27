@@ -2,9 +2,7 @@
 id: plan-2026-07-12-strip-ci-remove-dagger
 type: reference
 status: complete
-board: true
-verification: agent
-disposition: active
+board: false
 ---
 
 # Strip CI — Remove Dagger, Buildkite Pipeline, and All Hooks

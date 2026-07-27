@@ -72,7 +72,7 @@ Both `retryState: RETRY_STATE_MAXIMUM_ATTEMPTS_REACHED` — retries can't help; 
 ### Done
 
 - All three root causes fixed and proven locally; see
-  [2026-07-11_fix-temporal-weekly-refreshes](../plans/2026-07-11_fix-temporal-weekly-refreshes.md)
+  [2026-07-11_fix-temporal-weekly-refreshes](../archive/completed/2026-07-11_fix-temporal-weekly-refreshes.md)
   for the fixes, the `temporal-schedule-rehearsal` CI step, and the full local
   verification record.
 

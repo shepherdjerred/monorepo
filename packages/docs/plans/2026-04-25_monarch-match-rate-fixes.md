@@ -111,4 +111,15 @@ Promote the scattered `[WARN]` lines for missing Conservice/USAA/Costco input di
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `Monarch Match Rate Fixes`.
+- [ ] Anchor Apple receipt total parsing so `TOTAL` cannot match `SUBTOTAL`, and reject missing totals instead of returning zero.
+- [ ] Add SUBTOTAL/TAX/TOTAL fixtures and parser regression tests.
+- [ ] Model Amazon multi-shipment orders so charges and refunds reconcile against the correct transaction amounts.
+- [ ] Collect and report all missing-input/matching failures in one deterministic diagnostic result.
+- [ ] Add end-to-end fixtures for successful matches, multi-shipment orders, refunds, and missing inputs.
+- [ ] Run Monarch tests, typecheck, lint, and affected repository verification.
+
+## Comment Log
+
+- 2026-07-27 — Board audit confirmed `apple/parser.ts` still uses an
+  unanchored `/TOTAL:/i` match with a zero fallback, and no SUBTOTAL regression
+  fixture exists. Amazon multi-shipment and consolidated diagnostics also remain

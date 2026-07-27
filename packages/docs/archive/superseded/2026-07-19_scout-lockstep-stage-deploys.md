@@ -2,9 +2,7 @@
 id: plan-2026-07-19-scout-lockstep-stage-deploys
 type: plan
 status: complete
-board: true
-verification: agent
-disposition: active
+board: false
 ---
 
 # Scout-for-LoL: Lockstep (In-Step) Stage Deploys
@@ -20,7 +18,7 @@ disposition: active
 ## Context
 
 Prod incident (Bugsink `TypeError: … (reading 'filters')`, root-caused in
-[2026-07-19_bugsink-open-issues-root-cause](../logs/2026-07-19_bugsink-open-issues-root-cause.md))
+[2026-07-19_bugsink-open-issues-root-cause](../../logs/2026-07-19_bugsink-open-issues-root-cause.md))
 exposed **structural version skew**: the marketing site + SPA redeploy to the
 prod bucket on every main build while the prod backend image is pinned
 (`2.0.0-4791`, ~990 builds behind). The SPA compiles against the backend tRPC

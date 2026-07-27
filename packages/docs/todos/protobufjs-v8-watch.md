@@ -1,10 +1,10 @@
 ---
 id: protobufjs-v8-watch
 type: todo
-status: awaiting-human
+status: planned
 board: true
-verification: human
-disposition: active
+verification: agent
+disposition: blocked
 origin: PR
 source_marker: false
 ---
@@ -13,17 +13,17 @@ source_marker: false
 
 ## What
 
-The `protobufjs: ^7.5.7` override in `packages/temporal/package.json` is load-bearing — it forces the entire Bun workspace onto protobufjs v7 because `@temporalio/proto@1.18.1` (current latest) pins `protobufjs: 7.5.8` exact, and `@temporalio/worker` / `@grpc/proto-loader` / `proto3-json-serializer` all use `^7.x`. Forcing v8 (Edition-2024 rewrite, breaking) via the override would silently replace the v7 build that `@temporalio/proto` was compiled against and break Temporal payload (de)serialization at runtime — no source code in `packages/temporal/src` imports protobufjs directly, so typecheck/lint won't catch it. The previous attempt landed as PR #1215 (`bca5ef7fc`) and was reverted by `acc7320dc fix(temporal): keep protobufjs override at ^7.5.7 — v8 incompatible with Temporal SDK`. PR #1227 is Renovate reopening the same upgrade.
+The `protobufjs: ^7.5.7` override in the root `package.json` is load-bearing — it forces the entire Bun workspace onto protobufjs v7 because `@temporalio/proto@1.18.1` pins `protobufjs: 7.5.8` exact, and `@temporalio/worker` / `@grpc/proto-loader` / `proto3-json-serializer` all use `^7.x`. Forcing v8 (Edition-2024 rewrite, breaking) via the override would silently replace the v7 build that `@temporalio/proto` was compiled against and break Temporal payload (de)serialization at runtime — no source code in `packages/temporal/src` imports protobufjs directly, so typecheck/lint won't catch it. The previous attempt landed as PR #1215 (`bca5ef7fc`) and was reverted by `acc7320dc fix(temporal): keep protobufjs override at ^7.5.7 — v8 incompatible with Temporal SDK`. PR #1227 is Renovate reopening the same upgrade.
 
 A `renovate.json` packageRule (`allowedVersions: "<8"`) now stops Renovate from auto-opening this PR every Sunday. The v8 bump surfaces on the Dependency Dashboard issue as an ignored entry — passive backstop visibility without gating v7 patches.
 
 The agent task below polls `https://registry.npmjs.org/@temporalio/proto/latest` weekly and emails only when the pin moves off `7.x`.
 
-## Human Verification
+## Remaining
 
-- Email arrives with subject `protobufjs v8 unblocked` (or an out-of-band heads-up that upstream shipped a release widening the pin).
-- The override in `packages/temporal/package.json` and the Renovate `<8` rule in `renovate.json` are both removed in a single PR, lockfile regenerated, smoke-tested locally that the worker boots and signs a workflow into Temporal cleanly.
-- This todo file is deleted in that same PR, and `temporal schedule delete --schedule-id protobufjs-v8-watch-weekly` is run against the live cluster.
+- [ ] Monitor `@temporalio/proto` until its declared `protobufjs` dependency accepts v8.
+- [ ] Once unblocked, remove the root override and Renovate `<8` rule, regenerate the lockfile, and prove the Temporal worker can process a workflow payload.
+- [ ] After that cleanup ships, hand the live schedule removal to `protobufjs-v8-schedule-cleanup`.
 
 ## How to schedule
 
@@ -35,7 +35,14 @@ TEMPORAL_ADDRESS=localhost:7233 bun run scripts/schedule-agent-task.ts \
   --from-doc ../../packages/docs/todos/protobufjs-v8-watch.md
 ```
 
-Caveat: this depends on `agentTaskWorkflow` actually running. As of 2026-06-14 the only deployed instance (`homelab-audit-daily`) has failed 8/8 of the last 8 days with `activity StartToClose timeout` — see `packages/docs/todos/agent-task-workflow-broken.md`. A 5-second curl-and-email task is mechanically very different from the multi-hour homelab audit and should not hit the same timeout, but until the broader infra is green again the Renovate dashboard pin is the authoritative signal; the email is best-effort.
+Caveat: this depends on `agentTaskWorkflow` actually running. The historical
+failure umbrella is archived at
+`packages/docs/archive/superseded/agent-task-workflow-broken.md`; current
+production proof is tracked by
+`packages/docs/todos/homelab-audit-agent-task-production-verification.md`. A
+five-second curl-and-email task is mechanically different from the full
+homelab audit, but the Renovate dashboard pin remains authoritative until the
+shared path has current green evidence.
 
 <!-- temporal-agent-task
 {
@@ -58,3 +65,11 @@ Caveat: this depends on `agentTaskWorkflow` actually running. As of 2026-06-14 t
 - Renovate PR that triggered this watch: #1227 (closed without merging)
 - protobufjs v8 changelog: <https://github.com/protobufjs/protobuf.js/releases/tag/protobufjs-v8.0.0> (Edition 2024 rewrite, breaking)
 - `@temporalio/proto` npm: <https://www.npmjs.com/package/@temporalio/proto>
+
+## Comment Log
+
+### 2026-07-27 — Awaiting-human audit
+
+Reclassified as an agent-owned upstream watch. Local source still shows the root
+protobufjs v7 override, the Renovate `<8` guard, and an exact v7 dependency in
+the lockfile; no user acceptance decision is pending.

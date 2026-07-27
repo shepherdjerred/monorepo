@@ -2,16 +2,14 @@
 id: plan-2026-07-11-fix-temporal-weekly-refreshes
 type: reference
 status: complete
-board: true
-verification: agent
-disposition: active
+board: false
 ---
 
 # Fix weekly Temporal workflow failures (scout-data-dragon, scout-season-refresh, readme-refresh)
 
 ## Context
 
-Three Temporal schedules failed every week for 2–4 weeks (all `RETRY_STATE_MAXIMUM_ATTEMPTS_REACHED` — deterministic environment gaps in the worker's ephemeral `/tmp` clone, not flakes). Diagnosis: [2026-07-11_scout-temporal-workflow-failures.md](../logs/2026-07-11_scout-temporal-workflow-failures.md).
+Three Temporal schedules failed every week for 2–4 weeks (all `RETRY_STATE_MAXIMUM_ATTEMPTS_REACHED` — deterministic environment gaps in the worker's ephemeral `/tmp` clone, not flakes). Diagnosis: [2026-07-11_scout-temporal-workflow-failures.md](../../logs/2026-07-11_scout-temporal-workflow-failures.md).
 
 | Workflow                           | Failing since | Root cause                                                                                                                                                        |
 | ---------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |

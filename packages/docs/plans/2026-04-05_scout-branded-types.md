@@ -115,4 +115,14 @@ After each step:
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `Add Missing Branded Types to scout-for-lol`.
+- [ ] Define Zod-branded IDs for champions, items, arena augments, summoner spells, and runes in the shared model layer.
+- [ ] Parse external Data Dragon/API values at boundaries instead of asserting types.
+- [ ] Migrate model, backend, report, and frontend call sites without compatibility casts or duplicate brands.
+- [ ] Add schema tests for accepted IDs and rejected non-numeric/invalid boundary data.
+- [ ] Run Scout build, typecheck, tests, lint, and affected repository verification.
+
+## Comment Log
+
+- 2026-07-27 — Board audit confirmed the core models still use plain `number`
+  fields in `model/champion.ts`, `model/arena/augment.ts`, `model/state.ts`, and
+  `data-dragon/runes.ts`. Existing loading-screen rune/spell brands should be

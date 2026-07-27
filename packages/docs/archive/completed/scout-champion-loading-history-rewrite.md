@@ -2,9 +2,7 @@
 id: scout-champion-loading-history-rewrite
 type: todo
 status: complete
-board: true
-verification: human
-disposition: active
+board: false
 origin: packages/docs/archive/completed/2026-07-25_scout-drop-unused-skins.md
 source_marker: false
 ---

@@ -279,7 +279,7 @@ const { callService } = proxyActivities<typeof activities>({
 
 **Risk:** timeout bump is risk-free; activity retry cap is a pure improvement (prevents silent retry storms when HA is partially down). The 5/8 failing run had a `continuedFailure` from a prior HA `500 Internal Server Error` on `set_temperature` — without the retry cap, the HA-down path also burns the whole timeout.
 
-Cross-reference: [`2026-05-05_mysa-max-temp-cap.md`](../plans/2026-05-05_mysa-max-temp-cap.md) is the upstream-PR cap (`MORNING_HEAT_TEMP_C = 30`); related but does not address the timeout issue.
+Cross-reference: [`2026-05-05_mysa-max-temp-cap.md`](../archive/completed/2026-05-05_mysa-max-temp-cap.md) is the upstream-PR cap (`MORNING_HEAT_TEMP_C = 30`); related but does not address the timeout issue.
 
 ## Cross-Cutting Items
 

@@ -1,10 +1,10 @@
 ---
 id: glitter-corpus-worker-credentials
 type: todo
-status: awaiting-human
+status: planned
 board: true
-verification: human
-disposition: active
+verification: operator
+disposition: blocked
 origin: packages/docs/logs/2026-07-26_pr-1700-glitter-shared-context.md
 source_marker: false
 ---
@@ -33,29 +33,30 @@ This step is **operator-blocked**: wiring the vars as required secret refs makes
 needs the real Glitter Discord bot token, guild id/slug, denylist channel ids, and
 the SeaweedFS/S3 + Cloudflare R2 corpus credentials — values only the operator has.
 
-## Human Verification
+## Remaining
 
 All remaining work is operator-gated (1Password provisioning + deploy):
 
-1. Add these 12 fields to the `temporal-temporal-worker-1p` 1Password item with
-   real values:
-   - `GLITTER_DISCORD_TOKEN`
-   - `GLITTER_DISCORD_GUILD_ID`
-   - `GLITTER_DISCORD_GUILD_SLUG`
-   - `GLITTER_DISCORD_DENYLIST_CHANNEL_IDS`
-   - `GLITTER_CORPUS_S3_ENDPOINT`, `GLITTER_CORPUS_S3_BUCKET`,
-     `GLITTER_CORPUS_S3_ACCESS_KEY_ID`, `GLITTER_CORPUS_S3_SECRET_ACCESS_KEY`
-   - `GLITTER_CORPUS_R2_ENDPOINT`, `GLITTER_CORPUS_R2_BUCKET`,
-     `GLITTER_CORPUS_R2_ACCESS_KEY_ID`, `GLITTER_CORPUS_R2_SECRET_ACCESS_KEY`
-2. Refresh the vault snapshot:
-   `cd packages/homelab/src/cdk8s && bun run scripts/snapshot-1password-vault.ts`
-   and commit `onepassword-vault-snapshot.json`.
-3. Wire a `glitterCorpusEnv(secret)` block (`requiredSecretEnv(secret, [...])` of
-   the 12 keys) into the worker container env in `worker.ts`, spread alongside
-   `homelabAuditEnv(secret)`. Confirm `check:1password` passes.
-4. After deploy, confirm both schedules transition from the
-   "credentials-configured" pause note to their `initialPauseNote`
-   (operator-approval) state, then unpause in the Temporal UI when ready.
+- [ ] Add these 12 fields to the `temporal-temporal-worker-1p` 1Password item
+      with real values:
+  - [ ] `GLITTER_DISCORD_TOKEN`
+  - [ ] `GLITTER_DISCORD_GUILD_ID`
+  - [ ] `GLITTER_DISCORD_GUILD_SLUG`
+  - [ ] `GLITTER_DISCORD_DENYLIST_CHANNEL_IDS`
+  - [ ] `GLITTER_CORPUS_S3_ENDPOINT`, `GLITTER_CORPUS_S3_BUCKET`,
+        `GLITTER_CORPUS_S3_ACCESS_KEY_ID`, `GLITTER_CORPUS_S3_SECRET_ACCESS_KEY`
+  - [ ] `GLITTER_CORPUS_R2_ENDPOINT`, `GLITTER_CORPUS_R2_BUCKET`,
+        `GLITTER_CORPUS_R2_ACCESS_KEY_ID`, `GLITTER_CORPUS_R2_SECRET_ACCESS_KEY`
+- [ ] Refresh the vault snapshot with
+      `cd packages/homelab/src/cdk8s && bun run scripts/snapshot-1password-vault.ts`
+      and commit `onepassword-vault-snapshot.json`.
+- [ ] Wire a `glitterCorpusEnv(secret)` block
+      (`requiredSecretEnv(secret, [...])` of the 12 keys) into the worker
+      container env in `worker.ts`, spread alongside `homelabAuditEnv(secret)`.
+      Confirm `check:1password` passes.
+- [ ] After deploy, confirm both schedules transition from the
+      "credentials-configured" pause note to their `initialPauseNote`
+      (operator-approval) state, then unpause in the Temporal UI when ready.
 
 ## Comment Log
 

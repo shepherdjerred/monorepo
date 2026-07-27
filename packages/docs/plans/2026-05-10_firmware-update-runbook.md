@@ -1,10 +1,10 @@
 ---
 id: plan-2026-05-10-firmware-update-runbook
 type: plan
-status: in-progress
+status: planned
 board: true
-verification: agent
-disposition: active
+verification: operator
+disposition: blocked
 ---
 
 # NVMe Firmware Update — `torvalds` (Samsung 990 PRO 4 TB × 2)
@@ -144,4 +144,19 @@ After Phase 4 all-pass:
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `NVMe Firmware Update — torvalds (Samsung 990 PRO 4 TB × 2)`.
+- [ ] Schedule an authorized maintenance window and complete the runbook preflight: current Samsung firmware, IPMI access, etcd snapshot, and a tested Velero restore.
+- [ ] Execute the two-drive firmware update and record the post-reboot workload, PVC, firmware, and Buildkite checks.
+
+## Session Log — 2026-07-27
+
+### Done
+
+- No repository or operational record shows that the physical NVMe firmware maintenance was executed; the work requires privileged hardware access and downtime.
+
+### Remaining
+
+- See the current `## Remaining` checklist above.
+
+### Caveats
+
+- The 2026-07-27 board audit replaced generic or stale completion language with current ownership and verification semantics.

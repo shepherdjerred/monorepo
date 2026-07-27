@@ -1,10 +1,10 @@
 ---
 id: golink-fork-ghcr-cleanup
 type: todo
-status: awaiting-human
+status: planned
 board: true
-verification: human
-disposition: active
+verification: operator
+disposition: blocked
 origin: packages/docs/logs/2026-07-25_ghcr-stale-package-cleanup.md
 source_marker: false
 ---
@@ -17,7 +17,7 @@ PR #1635 repoints the homelab golink Deployment from our fork
 package must **not** be deleted until that repoint is live in-cluster — a golink
 pod restart before ArgoCD syncs would fail to pull a deleted fork image.
 
-## Human Verification
+## Remaining
 
 - [ ] After PR #1635 merges and ArgoCD syncs, confirm the `golink` pod is
       `Running` on `ghcr.io/tailscale/golink:main@sha256:dc62e0d3…`
@@ -34,3 +34,9 @@ pod restart before ArgoCD syncs would fail to pull a deleted fork image.
 - 2026-07-25 — Created alongside PR #1635. Fork deletion deferred to post-deploy;
   the dotfiles GHCR package was safe to delete immediately (dev-only) and already
   removed this session.
+
+### 2026-07-27 — Awaiting-human audit
+
+PR #1635 is on main and source now points at `ghcr.io/tailscale/golink`. The
+remaining package deletion requires explicit `delete:packages` authorization,
+so it is blocked operator work rather than UAT.

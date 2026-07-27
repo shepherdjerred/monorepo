@@ -85,7 +85,7 @@ horizon) backtests to ~18:10 on this incident — ~70 minutes of lead time.
 immutable and ArgoCD explicitly ignores them, so the live STS (created
 2026-04-05) still carries the original **1Ti** template even though code says 2Ti.
 The fresh PVC was provisioned from the live template. Fix: STS orphan-recreate op
-in the [resize runbook](../guides/2026-06-07_dagger-engine-pvc-resize.md).
+in the [resize runbook](../archive/dagger-migration/2026-06-07_dagger-engine-pvc-resize.md).
 
 ### Log signatures (engine)
 
@@ -129,7 +129,7 @@ kubectl -n dagger exec dagger-dagger-helm-engine-0 -- df -h /var/lib/dagger
 ## Recovery — corrected order
 
 Full procedures live in the
-[resize runbook](../guides/2026-06-07_dagger-engine-pvc-resize.md). Summary of
+[resize runbook](../archive/dagger-migration/2026-06-07_dagger-engine-pvc-resize.md). Summary of
 what was learned:
 
 1. **Online PVC expand — do this FIRST** (it was discovered last during this
@@ -186,7 +186,7 @@ retried with `bk job retry` (preserves the green jobs on that build).
 ## Follow-ups
 
 Durable fixes implemented in the fixes PR (see
-[plan](../plans/2026-07-03_dagger-disk-full-root-cause-and-fixes.md)):
+[plan](../archive/dagger-migration/2026-07-03_dagger-disk-full-root-cause-and-fixes.md)):
 
 - ~~Configure a Dagger engine cache GC / keep-storage limit~~ — **dropped: it
   already existed and was live during the outage** (the original draft's root
@@ -201,7 +201,7 @@ Durable fixes implemented in the fixes PR (see
 - **[OPS PENDING]** Bake 2Ti into the live STS template (orphan-recreate), reload
   GC config (rollout restart, off-peak), delete Released PV `pvc-5e89054d-…` —
   exact commands in the
-  [runbook's pending-ops checklist](../guides/2026-06-07_dagger-engine-pvc-resize.md#pending-ops-checklist-2026-07-03-fixes).
+  [runbook's pending-ops checklist](../archive/dagger-migration/2026-06-07_dagger-engine-pvc-resize.md#pending-ops-checklist-2026-07-03-fixes).
 - **[LOW, unchanged]** Regenerate `packages/scout-for-lol/bun.lock` on Linux to fix
   the stale entries from #1383.
 

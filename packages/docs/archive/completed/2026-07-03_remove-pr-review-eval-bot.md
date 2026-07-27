@@ -2,9 +2,7 @@
 id: plan-2026-07-03-remove-pr-review-eval-bot
 type: reference
 status: complete
-board: true
-verification: agent
-disposition: active
+board: false
 ---
 
 # Remove the PR Review Eval Bot

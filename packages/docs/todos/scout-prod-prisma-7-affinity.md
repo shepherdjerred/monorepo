@@ -1,10 +1,10 @@
 ---
 id: scout-prod-prisma-7-affinity
 type: todo
-status: awaiting-human
+status: planned
 board: true
-verification: human
-disposition: active
+verification: operator
+disposition: blocked
 origin: packages/docs/logs/2026-05-13_scout-beta-missing-daily-update.md
 source_marker: false
 ---
@@ -28,14 +28,22 @@ is why this stays `waiting-on-verification`:
 - ✅ Regression test: the "libsql affinity regression" case in `lifecycle.integration.test.ts`.
 - ⏳ Prod-data inspection/repair (below) — needs a live `scout-prod` DB check, not visible in the repo.
 
-## Human Verification
+## Remaining
 
-- Prod `db.sqlite` `Competition` rows inspected: any active competition whose `endProcessedAt` was set on `2026-05-12T07:45*` (or any post-deploy lifecycle tick) and whose `endDate > now` is either repaired (`endProcessedAt`, `endNotifiedAt`, `endNotificationMessageId` nulled; `nextScheduledUpdateAt` re-seeded) or confirmed not present.
-- Long-term fix landed (migration `20260514120000_revert_libsql_datetime_to_unixepoch`).
-- Regression test added (`lifecycle.integration.test.ts` "libsql affinity regression").
+- [ ] With explicit production-data access approval, inspect `Competition` rows for an active competition whose `endProcessedAt` was set by the faulty lifecycle tick while `endDate > now`.
+- [ ] Record that no affected row exists, or obtain separate mutation approval and repair only the identified rows (`endProcessedAt`, `endNotifiedAt`, and `endNotificationMessageId` cleared; `nextScheduledUpdateAt` re-seeded).
+- [ ] Record the before/after row counts and archive this todo.
 
 ## References
 
 - Originating log: `packages/docs/logs/2026-05-13_scout-beta-missing-daily-update.md`
 - Trigger commit: `d040b0b23` (renovate-481 Prisma 6→7 bump)
 - Affected paths: `packages/scout-for-lol/packages/backend/src/.../scheduled-update-dispatcher.ts:42`, `.../lifecycle.ts:319`
+
+## Comment Log
+
+### 2026-07-27 — Awaiting-human audit
+
+The migration and regression test are present on main. The only remaining work
+is privileged production-data inspection and a conditional repair, so this is
+an operator prerequisite rather than UAT.

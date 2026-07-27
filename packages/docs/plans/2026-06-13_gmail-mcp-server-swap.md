@@ -46,4 +46,16 @@ So it's the `@automatearmy/email-reader-mcp@1.0.3` server itself, not creds/netw
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `Plan: replace the Gmail MCP server (mcp-gateway)`.
+- [ ] Evaluate maintained Gmail MCP servers against read/search/thread support, OAuth security, release cadence, and container/runtime compatibility.
+- [ ] Record the selected server and credential model before changing the gateway.
+- [ ] Replace `@automatearmy/email-reader-mcp` and remove `panicIfInvalid: false` rather than carrying an invalid configuration fallback.
+- [ ] Add gateway configuration validation and update credential/runbook documentation.
+- [ ] Run gateway tests and configuration validation. Credential provisioning,
+      deployment, and mailbox operations are tracked separately in
+      `gmail-mcp-production-activation`.
+
+## Comment Log
+
+- 2026-07-27 — Board audit confirmed the gateway still uses
+  `@automatearmy/email-reader-mcp` with `panicIfInvalid: false`. The replacement
+  remains active, but selection must be re-researched before implementation.

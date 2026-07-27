@@ -2,9 +2,7 @@
 id: plan-2026-06-13-discord-style-cards-extraction-daily-pipeline
 type: plan
 status: complete
-board: true
-verification: agent
-disposition: deferred
+board: false
 ---
 
 # Plan: Extract `discord-style-cards` package + daily Temporal refresh pipeline

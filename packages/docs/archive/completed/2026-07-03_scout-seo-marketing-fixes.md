@@ -2,9 +2,7 @@
 id: plan-2026-07-03-scout-seo-marketing-fixes
 type: reference
 status: complete
-board: true
-verification: agent
-disposition: active
+board: false
 ---
 
 # Scout Marketing Site — SEO + Usability Fixes

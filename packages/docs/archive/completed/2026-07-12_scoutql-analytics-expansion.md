@@ -2,9 +2,7 @@
 id: plan-2026-07-12-scoutql-analytics-expansion
 type: reference
 status: complete
-board: true
-verification: agent
-disposition: active
+board: false
 ---
 
 # ScoutQL Analytics and Visualization Expansion

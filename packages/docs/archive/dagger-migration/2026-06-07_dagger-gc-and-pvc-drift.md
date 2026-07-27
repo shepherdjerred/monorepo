@@ -91,10 +91,10 @@ in production:
 - **New decision — smooth the input**: `prConcurrentLimit: 3` in `renovate.json`
   caps how many dep branches can be open (and thus rebase/rebuild at once).
 
-Post-mortem: [2026-07-03_dagger-engine-disk-full-outage.md](../logs/2026-07-03_dagger-engine-disk-full-outage.md)
+Post-mortem: [2026-07-03_dagger-engine-disk-full-outage.md](../../logs/2026-07-03_dagger-engine-disk-full-outage.md)
 
 ## References
 
-- Runbook: [2026-06-07_dagger-engine-pvc-resize.md](../guides/2026-06-07_dagger-engine-pvc-resize.md)
+- Runbook: [2026-06-07_dagger-engine-pvc-resize.md](./2026-06-07_dagger-engine-pvc-resize.md)
 - Prior art: [2026-02-23_dagger-disk-write-amplification.md](./2026-02-23_dagger-disk-write-amplification.md)
 - [Dagger engine GC config](https://docs.dagger.io/reference/configuration/engine/), dagger#7711 / #10504

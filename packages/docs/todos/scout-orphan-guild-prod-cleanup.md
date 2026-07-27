@@ -1,17 +1,17 @@
 ---
 id: scout-orphan-guild-prod-cleanup
 type: todo
-status: awaiting-human
+status: planned
 board: true
-verification: human
-disposition: active
+verification: operator
+disposition: blocked
 origin: packages/docs/archive/completed/2026-06-19_scout-guild-removal-lifecycle.md
 source_marker: false
 ---
 
 # Scout: clean up the orphaned `_hydr0o_` guild in prod + resolve Bugsink
 
-## Human Verification
+## Evidence
 
 The `TRPCError: You are not a member of that guild` Bugsink issue
 (`58109652-0f3a-4a4d-9ae7-7c77e28ba83b`) is **resolved**, last seen **2026-06-26** (quiet 2 days),
@@ -48,3 +48,18 @@ After the guild-removal-lifecycle PR deploys to `scout-prod`:
 
 - Sanity check `DmAuditLog` is recording rows (e.g. any outreach/abandonment
   DMs) to confirm the audit chokepoint works end-to-end in prod.
+
+## Remaining
+
+- [ ] With explicit production-data access approval, confirm whether guild `1345142904942760018` still has orphaned rows.
+- [ ] If rows remain, obtain separate mutation approval and run the shared `cleanupRemovedGuild` routine only for that guild.
+- [ ] Record the cleanup summary, confirm the associated Bugsink issue remains quiet, and verify a representative `DmAuditLog` row exists.
+- [ ] Archive this todo after the one-shot cleanup is proven unnecessary or completed.
+
+## Comment Log
+
+### 2026-07-27 — Awaiting-human audit
+
+The user-facing Bugsink symptom is already resolved and PR #1269 is deployed.
+The remaining one-shot database cleanup is a privileged operator action, not
+user acceptance.

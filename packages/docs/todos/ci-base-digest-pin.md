@@ -5,7 +5,7 @@ status: planned
 board: true
 verification: agent
 disposition: active
-origin: packages/docs/plans/2026-07-25_ci-write-reduction-impl.md
+origin: packages/docs/archive/completed/2026-07-25_ci-write-reduction-impl.md
 ---
 
 # Pin ci-base by digest; drop `imagePullPolicy: Always`
@@ -40,6 +40,18 @@ write win of the reduction levers.
 
 ## Remaining
 
-- [ ] Implement the digest pin + bump loop per the sketch
-- [ ] Prove one full cycle on main (image change → bump PR → auto-merge →
-      pods pull pinned digest with IfNotPresent)
+- [ ] Replace all five `.buildkite/pipeline.yml` `ci-base:latest` references with one validated digest-pinned reference and `IfNotPresent`.
+- [ ] Teach the CI image refresh/version-bump flow to carry the built digest into a narrow bump PR without an unpinned intermediate state.
+- [ ] Make pipeline validation reject mutable or divergent CI base references.
+- [ ] Add tests for no-change, changed-digest, and failed-bump behavior.
+- [ ] Prove one main-branch image change produces and lands a digest bump before pods consume it.
+
+## Comment Log
+
+- 2026-07-27 — Board audit confirmed five static Buildkite pod definitions still
+  use `ghcr.io/shepherdjerred/ci-base:latest` with `imagePullPolicy: Always`.
+  The task remains active and now names the validation and no-gap requirements.
+
+### 2026-07-27 — board audit reconciliation
+
+- Confirmed as the only accepted residual from the completed CI write-reduction implementation plan; implementation must target the current static pipeline.

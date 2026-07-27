@@ -1,17 +1,17 @@
 ---
 id: mk64-emulator-worker-thread
 type: todo
-status: awaiting-human
+status: planned
 board: true
-verification: human
-disposition: active
+verification: operator
+disposition: blocked
 origin: packages/docs/archive/completed/2026-06-19_mk64-stream-backpressure.md
 source_marker: false
 ---
 
 # MK64: move the emulator to a Worker thread to restore 30fps
 
-## Human Verification
+## Operator procedure
 
 The decision gate here is a live fps measurement during a real Mario Kart `/play` session
 (`stream_ffmpeg_fps`, `emulator_ticks_total`, drops, sink-buffer). Prometheus currently exposes
@@ -56,3 +56,14 @@ If it stays well below 30 (sustained drops), do the work below.
 
 - `packages/docs/plans/2026-06-19_mk64-stream-backpressure.md`
 - `packages/docs/plans/2026-06-13_mk64-perf-test.md`
+
+## Remaining
+
+- [ ] Run an authorized live Mario Kart `/play` session on the merged Worker implementation and capture delivered FPS, frame drops, and input-apply delay.
+- [ ] Archive this TODO if the stream holds approximately 28–30 FPS; otherwise file a concrete performance defect with the captured metrics.
+
+## Comment Log
+
+### 2026-07-27 — board audit reconciliation
+
+- Reclassified from human UAT: starting a production game and reading its telemetry are operator checks; PR #1698 already completed the code implementation.

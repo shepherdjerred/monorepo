@@ -4,7 +4,7 @@ type: todo
 status: planned
 board: true
 verification: agent
-disposition: active
+disposition: deferred
 origin: packages/docs/logs/2026-06-13_new-todos-batch.md
 source_marker: false
 ---
@@ -33,5 +33,14 @@ new ranking/search to surface current events. None of that exists.
 
 ## Remaining
 
-- [ ] A new source kind / provider lets a user find and stream a live sports event,
-      with status embeds reflecting live state.
+- [ ] Select and document a legal, reliable live-sports discovery/playback provider with acceptable authentication, terms, and event coverage.
+- [ ] Define event identity, search/ranking, live/upcoming/finished status, and failure semantics independently of yt-dlp URL search.
+- [ ] After those decisions, add a typed sports source/provider, live-status embeds, tests, and operational observability.
+- [ ] Verify discovery and playback against provider fixtures plus an authorized live event.
+
+## Comment Log
+
+- 2026-07-27 — Board audit confirmed `Source` remains a `file`/`url`/`search`
+  union and no sports provider exists. The feature cannot be implemented
+  responsibly until provider legality, API access, and event semantics are
+  selected, so it remains deferred.

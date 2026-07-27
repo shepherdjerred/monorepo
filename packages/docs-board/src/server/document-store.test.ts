@@ -308,8 +308,84 @@ describe("DocumentStore", () => {
     await iterator.return?.();
     store.close();
   });
+});
 
+describe("DocumentStore archive", () => {
   test("archives completed TODOs and preserves their audit log", async () => {
+    const completedTodo = `---
+id: fixture-todo
+type: todo
+status: complete
+board: true
+verification: agent
+disposition: active
+---
+
+# Fixture TODO
+
+[Dependent](dependent-todo.md)
+`;
+    const dependentTodo = `---
+id: dependent-todo
+type: todo
+status: planned
+board: true
+verification: agent
+disposition: active
+origin: packages/docs/todos/fixture-todo.md
+---
+
+# Dependent TODO
+
+## Remaining
+
+- [ ] Complete the follow-up.
+
+[Source](fixture-todo.md)
+`;
+    const root = await fixtureRepository(
+      completedTodo,
+      "todos/fixture-todo.md",
+    );
+    await Bun.write(
+      `${root}/packages/docs/todos/dependent-todo.md`,
+      dependentTodo,
+    );
+    const store = new DocumentStore({ repoRoot: root, watchFiles: false });
+    const original = await store.get("fixture-todo");
+    const archived = DocumentDetailSchema.parse(
+      await store.archive(original.id, original.revision, "Agent"),
+    );
+    const dependent = await store.get("dependent-todo");
+
+    expect(archived.path).toBe("archive/completed/fixture-todo.md");
+    expect(archived.markdown).toContain(
+      "Archived to `packages/docs/archive/completed/`",
+    );
+    expect(archived.frontmatter.board).toBe(false);
+    expect(archived.frontmatter.verification).toBeUndefined();
+    expect(archived.frontmatter.disposition).toBeUndefined();
+    expect(
+      await Bun.file(`${root}/packages/docs/todos/fixture-todo.md`).exists(),
+    ).toBe(false);
+    expect(
+      await Bun.file(
+        `${root}/packages/docs/archive/completed/fixture-todo.md`,
+      ).exists(),
+    ).toBe(true);
+    expect(dependent.frontmatter.origin).toBe(
+      "packages/docs/archive/completed/fixture-todo.md",
+    );
+    expect(dependent.markdown).toContain(
+      "[Source](../archive/completed/fixture-todo.md)",
+    );
+    expect(archived.markdown).toContain(
+      "[Dependent](../../todos/dependent-todo.md)",
+    );
+    store.close();
+  });
+
+  test("preserves the source document when archive setup fails", async () => {
     const completedTodo = `---
 id: fixture-todo
 type: todo
@@ -325,24 +401,17 @@ disposition: active
       completedTodo,
       "todos/fixture-todo.md",
     );
+    await Bun.write(`${root}/packages/docs/archive`, "directory collision");
     const store = new DocumentStore({ repoRoot: root, watchFiles: false });
     const original = await store.get("fixture-todo");
-    const archived = DocumentDetailSchema.parse(
-      await store.archive(original.id, original.revision, "Agent"),
-    );
 
-    expect(archived.path).toBe("archive/completed/fixture-todo.md");
-    expect(archived.markdown).toContain(
-      "Archived to `packages/docs/archive/completed/`",
-    );
-    expect(
-      await Bun.file(`${root}/packages/docs/todos/fixture-todo.md`).exists(),
-    ).toBe(false);
-    expect(
-      await Bun.file(
-        `${root}/packages/docs/archive/completed/fixture-todo.md`,
-      ).exists(),
-    ).toBe(true);
+    await expect(
+      store.archive(original.id, original.revision, "Agent"),
+    ).rejects.toThrow("mkdir");
+
+    const source = Bun.file(`${root}/packages/docs/todos/fixture-todo.md`);
+    expect(await source.exists()).toBe(true);
+    expect(await source.text()).toBe(completedTodo);
     store.close();
   });
 });

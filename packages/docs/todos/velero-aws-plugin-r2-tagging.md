@@ -1,11 +1,11 @@
 ---
 id: velero-aws-plugin-r2-tagging
 type: todo
-status: in-progress
+status: planned
 board: true
 verification: agent
-disposition: active
-origin: packages/docs/plans/2026-06-28_velero-r2-tagging-outage.md
+disposition: deferred
+origin: packages/docs/archive/completed/2026-06-28_velero-r2-tagging-outage.md
 source_marker: false
 ---
 
@@ -64,4 +64,18 @@ StatusCode: 501 ... NotImplemented: Header 'x-amz-tagging' with value '' not imp
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `Unpin velero-plugin-for-aws once R2 stops rejecting x-amz-tagging`.
+- [ ] Check the next plugin release notes/commit ancestry for #299 or an
+      equivalent conditional-tagging fix; do not infer compatibility from the
+      version number alone.
+- [ ] Validate the candidate image against a throwaway R2 object before changing
+      production pins.
+- [ ] Bump the image, remove the Renovate version ceiling, deploy, and record a
+      completed six-hourly backup with its metadata tarball present in R2.
+
+## Comment Log
+
+### 2026-07-27 — board audit reconciliation
+
+- The outage plan is complete. This follow-up is intentionally deferred until a
+  released plugin contains the R2 tagging fix; the working v1.14.0 pin remains
+  the production safeguard meanwhile.

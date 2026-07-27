@@ -17,7 +17,7 @@ ENOENT: failed opening cache/package/version dir for package @shepherdjerred/esl
 Failed to install 1 package
 ```
 
-[2026-05-20_main-ci-five-hard-failures.md](../plans/2026-05-20_main-ci-five-hard-failures.md) and commit `20e230261` fixed the WORKSPACE_DEPS lookup so `--dep-names eslint-config --dep-dirs ./packages/eslint-config` now reaches the dagger call. The remaining failure is a deeper layout bug.
+[2026-05-20_main-ci-five-hard-failures.md](../archive/completed/2026-05-20_main-ci-five-hard-failures.md) and commit `20e230261` fixed the WORKSPACE_DEPS lookup so `--dep-names eslint-config --dep-dirs ./packages/eslint-config` now reaches the dagger call. The remaining failure is a deeper layout bug.
 
 ## Root cause
 

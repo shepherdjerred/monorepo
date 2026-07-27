@@ -9,6 +9,7 @@ import {
   splitFrontmatter,
 } from "#shared/markdown";
 import {
+  archiveFrontmatter,
   DispositionSchema,
   DocumentStatusSchema,
   DocumentTypeSchema,
@@ -18,19 +19,18 @@ import {
   type DocumentStatus,
 } from "#shared/schema";
 
+import {
+  rewriteMovedReferences,
+  type MigrationResult,
+} from "./migration-results.ts";
+import { getBoolean, getPlainString } from "./loose-values.ts";
+
 const REPO_ROOT = decodeURIComponent(
   new URL("../../../..", import.meta.url).pathname.replace(/\/$/, ""),
 );
 const DOCS_ROOT = `${REPO_ROOT}/packages/docs`;
 const DRY_RUN = Bun.argv.includes("--dry-run");
 const CHECK = Bun.argv.includes("--check");
-
-type MigrationResult = {
-  relativePath: string;
-  targetRelativePath: string;
-  content: string;
-  changed: boolean;
-};
 
 function slugify(value: string): string {
   return value
@@ -289,20 +289,16 @@ export function normalizeWorkflowSection(
   return normalized;
 }
 
-function getPlainString(
-  values: Record<string, unknown>,
-  key: string,
-): string | undefined {
-  const value = values[key];
-  return typeof value === "string" ? value : undefined;
-}
-
-function getBoolean(
-  values: Record<string, unknown>,
-  key: string,
-): boolean | undefined {
-  const value = values[key];
-  return typeof value === "boolean" ? value : undefined;
+function resolveDocumentType(
+  relativePath: string,
+  loose: Record<string, unknown>,
+): DocumentFrontmatter["type"] {
+  const inferredType = inferType(relativePath);
+  if (!relativePath.startsWith("archive/")) return inferredType;
+  const existingType = DocumentTypeSchema.safeParse(
+    getPlainString(loose, "type"),
+  );
+  return existingType.success ? existingType.data : inferredType;
 }
 
 export function createFrontmatter(
@@ -310,7 +306,7 @@ export function createFrontmatter(
   loose: Record<string, unknown>,
   body: string,
 ): DocumentFrontmatter {
-  const type = inferType(relativePath);
+  const type = resolveDocumentType(relativePath, loose);
   const existingId = getPlainString(loose, "id");
   const basename = relativePath.split("/").at(-1)?.replace(/\.md$/u, "");
   const pathSegments = relativePath.split("/");
@@ -330,10 +326,9 @@ export function createFrontmatter(
     body,
   });
   const existingBoard = getBoolean(loose, "board");
-  const board =
-    existingBoard ??
-    (type === "todo" ||
-      (type === "plan" && !relativePath.startsWith("archive/")));
+  const board = relativePath.startsWith("archive/")
+    ? false
+    : (existingBoard ?? (type === "todo" || type === "plan"));
   const candidate: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(loose)) {
     if (
@@ -363,29 +358,34 @@ export function createFrontmatter(
     const existingVerification = VerificationSchema.safeParse(
       getPlainString(loose, "verification"),
     );
-    candidate["verification"] =
+    const verification =
       status === "awaiting-human"
         ? "human"
         : existingVerification.success
           ? existingVerification.data
           : "agent";
+    candidate["verification"] = verification;
     const existingDisposition = DispositionSchema.safeParse(
       getPlainString(loose, "disposition"),
     );
-    candidate["disposition"] = existingDisposition.success
-      ? existingDisposition.data
-      : existingStatus === "blocked"
+    candidate["disposition"] =
+      verification === "operator"
         ? "blocked"
-        : existingStatus === "deferred"
-          ? "deferred"
-          : "active";
+        : existingDisposition.success
+          ? existingDisposition.data
+          : existingStatus === "blocked"
+            ? "blocked"
+            : existingStatus === "deferred"
+              ? "deferred"
+              : "active";
   }
   return FrontmatterSchema.parse(candidate);
 }
 
-async function migrateFile(relativePath: string): Promise<MigrationResult> {
-  const absolutePath = `${DOCS_ROOT}/${relativePath}`;
-  const raw = await Bun.file(absolutePath).text();
+export function migrateDocument(
+  relativePath: string,
+  raw: string,
+): MigrationResult {
   const split = splitFrontmatter(raw);
   const loose = split === null ? {} : parseLooseFrontmatter(split.yaml);
   let body = split?.body ?? raw;
@@ -401,7 +401,6 @@ async function migrateFile(relativePath: string): Promise<MigrationResult> {
     frontmatter.board,
     title,
   );
-  const content = serializeMarkdownDocument(frontmatter, body);
   const shouldArchive =
     frontmatter.status === "complete" &&
     (frontmatter.type === "plan" || frontmatter.type === "todo") &&
@@ -410,6 +409,10 @@ async function migrateFile(relativePath: string): Promise<MigrationResult> {
   const targetRelativePath = shouldArchive
     ? `archive/completed/${relativePath.split("/").at(-1) ?? relativePath}`
     : relativePath;
+  const migratedFrontmatter = shouldArchive
+    ? archiveFrontmatter(frontmatter)
+    : frontmatter;
+  const content = serializeMarkdownDocument(migratedFrontmatter, body);
   return {
     relativePath,
     targetRelativePath,
@@ -418,13 +421,19 @@ async function migrateFile(relativePath: string): Promise<MigrationResult> {
   };
 }
 
+async function migrateFile(relativePath: string): Promise<MigrationResult> {
+  const absolutePath = `${DOCS_ROOT}/${relativePath}`;
+  return migrateDocument(relativePath, await Bun.file(absolutePath).text());
+}
+
 export async function migrateDocs(): Promise<MigrationResult[]> {
   const glob = new Bun.Glob("**/*.md");
   const paths = [...glob.scanSync({ cwd: DOCS_ROOT, onlyFiles: true })].sort();
-  const results: MigrationResult[] = [];
+  const initialResults: MigrationResult[] = [];
   for (const relativePath of paths) {
-    results.push(await migrateFile(relativePath));
+    initialResults.push(await migrateFile(relativePath));
   }
+  const results = rewriteMovedReferences(initialResults);
   const ids = new Map<string, string>();
   for (const result of results) {
     const parsed = splitFrontmatter(result.content);

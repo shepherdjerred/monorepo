@@ -3,15 +3,15 @@ id: ha-integration-reauth
 type: todo
 status: planned
 board: true
-verification: agent
-disposition: active
-origin: packages/docs/plans/2026-07-09_ha-registry-cleanup.md
+verification: operator
+disposition: blocked
+origin: packages/docs/archive/completed/2026-07-09_ha-registry-cleanup.md
 source_marker: false
 ---
 
-# Broken HA integrations: econet (upstream cert), roborock (needs restart)
+# Econet integration blocked by Rheem certificate chain
 
-## Status 2026-07-09 (investigated — original "re-auth" framing was wrong)
+## Investigation
 
 - **smartthings**: RESOLVED — user re-authed, entry `loaded`.
 - **econet**: NOT an auth problem. `rheem.clearblade.com` chains to the legacy
@@ -29,13 +29,13 @@ source_marker: false
 
 ## Remaining
 
-- [x] Restart HA → roborock loads. Resolved: the Roborock integration is healthy and
-      serving all units. The Q7 Max has since been retired and replaced by three
-      Roborock Saros 10R (one per floor) — see
-      `plan-2026-07-25-roborock-saros-fleet-migration`. Vacuums now reach Apple Home
-      via native Matter, not the HomeKit bridge, so the old "returns to HomeKit" note
-      no longer applies.
-- [ ] Watch home-assistant/core#172228 / Rheem for the econet chain fix; re-check the
-      water heater after any Rheem-side change.
-- [ ] After econet recovers: check whether the doubled `Heat Pump Water Heater_*`
-      friendly names self-heal; fix if not.
+- [ ] Wait for Rheem to serve a certificate chain trusted by current Home Assistant/certifi, tracked by home-assistant/core#172228.
+- [ ] After an upstream change, have an operator reload econet and verify the water-heater entities update without a local distrusted-root workaround.
+- [ ] If econet recovers, reconcile any duplicated `Heat Pump Water Heater_*` friendly names.
+
+## Comment Log
+
+- 2026-07-27 — Board audit confirmed SmartThings and Roborock are resolved. The
+  only remaining problem is Rheem's upstream certificate chain, not reauth.
+  Classified blocked and operator-verified because recovery requires live Home
+  Assistant access after an external fix.

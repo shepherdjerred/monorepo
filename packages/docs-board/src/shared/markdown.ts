@@ -1,4 +1,4 @@
-import type { Heading, Root } from "mdast";
+import type { Heading, Link, Root } from "mdast";
 import { toString } from "mdast-util-to-string";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
@@ -132,6 +132,57 @@ export function parseMarkdownBody(body: string): MarkdownMetadata {
       commentLogMarkdown: sectionMarkdown(body, headings, "Comment Log"),
     }),
   };
+}
+
+export function extractMarkdownLinks(body: string): string[] {
+  const tree: Root = unified().use(remarkParse).use(remarkGfm).parse(body);
+  const links: string[] = [];
+  visit(tree, "link", (link: Link) => {
+    links.push(link.url);
+  });
+  return links;
+}
+
+export function rewriteMarkdownLinks(
+  body: string,
+  rewrite: (url: string) => string | undefined,
+): string {
+  const tree: Root = unified().use(remarkParse).use(remarkGfm).parse(body);
+  const replacements: { start: number; end: number; value: string }[] = [];
+  visit(tree, "link", (link: Link) => {
+    const value = rewrite(link.url);
+    if (value === undefined || value === link.url) return;
+    const startOffset = link.position?.start.offset;
+    const endOffset = link.position?.end.offset;
+    if (startOffset === undefined || endOffset === undefined) {
+      throw new Error(
+        `cannot rewrite Markdown link without offsets: ${link.url}`,
+      );
+    }
+    const source = body.slice(startOffset, endOffset);
+    const destinationMarker = source.indexOf("](");
+    const searchStart = destinationMarker === -1 ? 0 : destinationMarker + 2;
+    const relativeStart = source.indexOf(link.url, searchStart);
+    if (relativeStart === -1) {
+      throw new Error(`cannot locate Markdown link destination: ${link.url}`);
+    }
+    const start = startOffset + relativeStart;
+    replacements.push({
+      start,
+      end: start + link.url.length,
+      value,
+    });
+  });
+  let rewritten = body;
+  for (const replacement of replacements.sort(
+    (left, right) => right.start - left.start,
+  )) {
+    rewritten =
+      rewritten.slice(0, replacement.start) +
+      replacement.value +
+      rewritten.slice(replacement.end);
+  }
+  return rewritten;
 }
 
 export function sectionMarkdown(

@@ -213,4 +213,21 @@ dormant in this PR, the god secret still exists, so revert is instant with no re
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `Plan: Shrink the blast radius of the Buildkite CI Secrets god item`.
+- [ ] Inventory the exact credentials consumed by each current static Buildkite lane and define the minimal secret matrix.
+- [ ] Create the scoped 1Password-backed Kubernetes Secrets and replace every broad `buildkite-ci-secrets` `envFrom` in `.buildkite/pipeline.yml`.
+- [ ] Extend static pipeline validation to reject the god secret in job pods, then run `check:1password`, pipeline validation, and `bun run verify -- --affected`.
+- [ ] Remove the dormant god-secret projection only after all current lanes resolve their scoped keys.
+
+## Session Log — 2026-07-27
+
+### Done
+
+- The current static pipeline still injects `buildkite-ci-secrets` broadly, so the security gap is real; the old generated-pipeline file map is no longer usable.
+
+### Remaining
+
+- See the current `## Remaining` checklist above.
+
+### Caveats
+
+- The 2026-07-27 board audit replaced generic or stale completion language with current ownership and verification semantics.

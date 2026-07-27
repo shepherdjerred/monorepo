@@ -1,11 +1,11 @@
 ---
 id: tasks-for-obsidian-context-menu-rn85
 type: todo
-status: in-progress
+status: planned
 board: true
 verification: agent
-disposition: active
-origin: packages/docs/plans/2026-07-03_tasknotes-first-in-class.md
+disposition: deferred
+origin: packages/docs/archive/completed/2026-07-03_tasknotes-first-in-class.md
 source_marker: false
 ---
 
@@ -27,13 +27,12 @@ which uses iOS-16-only API unguarded).
 
 ## Remaining
 
-Either:
-
-- [ ] upstream ships RN 0.85-compatible releases → bump, drop the bun patch and
-      the context-menu post_install deployment-target pin, or
-- [ ] the app replaces zeego's iOS context menus (used in
-      `src/components/task/TaskRow.tsx` and `src/components/common/KanbanCard.tsx`)
-      with an alternative, and the deps are removed.
+- [ ] At the next `zeego` / `react-native-ios-context-menu` /
+      `react-native-ios-utilities` release, verify RN compatibility and either
+      upgrade and remove both local workarounds, or document that the upstream
+      blocker remains.
+- [ ] If no compatible release exists when the patch next conflicts, replace
+      the two Zeego context-menu call sites and remove the dependency chain.
 
 ## Context
 
@@ -42,3 +41,10 @@ build working (plan P0). The committed iOS native state had drifted ~2 RN
 minor versions behind package.json (Renovate bumps without local builds);
 the same drift also broke fresh `pod install` (stale Sentry pin — fixed) and
 would have failed the next Xcode Cloud build.
+
+## Comment Log
+
+### 2026-07-27 — in-progress board audit
+
+- Deferred intentionally: the committed patch is a working compatibility fix,
+  and there is no current app failure that warrants replacing the menu stack.

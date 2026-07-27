@@ -34,17 +34,18 @@ resolves.
 
 ## Remaining
 
-- [ ] Decide the intended source tree for the bespoke rollback audit's
-      preflight: clone a fresh checkout (mirroring `bot-clone.ts` /
-      `agentTaskWorkflow`) before the tofu check, or drop the in-image
-      Cloudflare drift check and lean fully on the generic-clone path.
-- [ ] Implement, and make the preflight path resolution explicit (repo-root
-      parameter or cloned-workdir parameter) instead of CWD-relative.
+- [ ] Make the bespoke rollback audit clone/use an explicit repository root, matching `agentTaskWorkflow`, before running Cloudflare drift checks.
+- [ ] Replace the invalid `packages/homelab/src/cdk8s/src/tofu/cloudflare` path with the actual `packages/homelab/src/tofu/cloudflare` module resolved from that root.
+- [ ] Add tests that run from a non-repository CWD and fail clearly when the checkout or module is absent.
 - [ ] Confirm one live `homelab-audit-daily` run reports the Cloudflare drift
-      section (or its removal is documented in the runbook).
+      section from the cloned checkout.
 
 ## Comment Log
 
 - 2026-07-25: Filed from the PR #1668 review cycle (docker image slimming);
   behavior verified pre-existing via CWD analysis, not a regression of the
   scoped-COPY images.
+- 2026-07-27 — Board audit confirmed the code still combines an invalid doubled
+  `src/cdk8s/src/tofu` path with CWD-relative resolution. The primary generic
+  workflow's clone does not make the bespoke preflight correct; both assumptions
+  are now explicit acceptance criteria.

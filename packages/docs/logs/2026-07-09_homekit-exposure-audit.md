@@ -191,11 +191,13 @@ the user but left untouched pending a deliberate decision.
   by a restart; reconstructed from history) with README covering the
   entitlement/TCC/scene-lifecycle gotchas.
 - Plan archived to `packages/docs/archive/completed/`; deliberate leftovers in
-  `packages/docs/todos/homekit-refresh-followups.md`.
+  `packages/docs/archive/superseded/homekit-refresh-followups.md`; the 2026-07-27
+  board audit split its current actions into focused TODO records.
 
 ### Remaining
 
-- Everything open is tracked in `todos/homekit-refresh-followups.md`,
+- Everything originally open was tracked in the now-superseded
+  `homekit-refresh-followups` umbrella; current actions are split by outcome,
   `todos/litter-robot-sonoff.md`, and `todos/ha-integration-reauth.md`.
 
 ### Caveats

@@ -28,4 +28,15 @@ Wire the already-created native iOS pieces into the Xcode project so the widget,
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `Tasks for Obsidian iOS Target Wiring`.
+- [ ] Inventory the widget, App Intent, and share-extension Swift sources and define which targets own each file.
+- [ ] Add the widget extension target, product, build phases, entitlements, and app-extension embedding to the Xcode project.
+- [ ] Add a share extension only if its implementation sources are present; otherwise split that feature into a separate todo.
+- [ ] Configure shared App Group/capabilities consistently across the app and extensions.
+- [ ] Add deterministic project validation for target membership and required build settings.
+- [ ] Build the app and extensions for an iOS simulator and run affected repository verification.
+
+## Comment Log
+
+- 2026-07-27 — Board audit confirmed widget and Intent sources exist, but
+  `project.pbxproj` defines only the main `TasksForObsidian` native target. The
+  refreshed work avoids assuming that an unwritten share extension already
