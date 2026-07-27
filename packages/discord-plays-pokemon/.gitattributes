@@ -1,1 +1,5 @@
-packages/frontend/public/emulatorjs/ linguist-generated=true
+# Committed game-data generator output.
+packages/backend/src/game/**/generated/** linguist-generated=true
+
+# Vendored EmulatorJS build output.
+packages/frontend/public/emulatorjs/** linguist-generated=true
