@@ -249,6 +249,9 @@ export function GuildAccess() {
                     setNewRole("viewer");
                     setNewCustomPermissions([]);
                   },
+                  onError: () => {
+                    track("access_granted");
+                  },
                 },
               );
             }}
@@ -346,6 +349,9 @@ export function GuildAccess() {
                               },
                               {
                                 onSuccess: () => {
+                                  track("access_updated");
+                                },
+                                onError: () => {
                                   track("access_updated");
                                 },
                               },
@@ -459,6 +465,9 @@ export function GuildAccess() {
                                   onSuccess: () => {
                                     track("access_updated");
                                     setEditingUserId(null);
+                                  },
+                                  onError: () => {
+                                    track("access_updated");
                                   },
                                 },
                               );

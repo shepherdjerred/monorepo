@@ -184,7 +184,7 @@ export function normalizePath(pathname: string): string {
       "/reports/:reportId",
     );
   const knownRoute =
-    /^(?:\/|\/(?:login|welcome|installed)|\/g\/:guildId(?:\/(?:subscriptions|players(?:\/:alias)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?)?)?)$/;
+    /^(?:\/|\/(?:login|welcome|installed)|\/g\/:guildId(?:\/(?:access|audit|subscriptions|players(?:\/:alias)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?)?)?)$/;
   return knownRoute.test(normalized) ? normalized : "/not-found";
 }
 
