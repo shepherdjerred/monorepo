@@ -31,12 +31,12 @@ import {
   type ChannelStateResult,
   type InventoryResult,
 } from "./glitter-corpus-activity-types.ts";
+import { discoverGuildInventory } from "./glitter-corpus-discord.ts";
 import {
   DiscordRestClient,
-  discoverGuildInventory,
   type DiscordRestClientHooks,
   type DiscordRestProgress,
-} from "./glitter-corpus-discord.ts";
+} from "./glitter-corpus-discord-client.ts";
 import { readOrCaptureDiscordPage } from "./glitter-corpus-capture-page.ts";
 import {
   glitterCorpusRuntimeConfig,
@@ -54,8 +54,8 @@ import {
   finalizeGlitterCorpusSnapshot,
   loadGlitterCorpusDailyBaseline,
 } from "./glitter-corpus-snapshot.ts";
+import { createCorpusStoresFromEnv } from "./glitter-corpus-store.ts";
 import {
-  createCorpusStoresFromEnv,
   putMirroredImmutableObject,
   readMirroredObject,
 } from "./glitter-corpus-storage.ts";
@@ -353,6 +353,8 @@ async function verifyGlitterCorpusChannel(
     guildId: input.guildId,
     channelId: input.channelId,
     verifiedAt: input.verifiedAt,
+    lineageDepth: 0,
+    seedPrefix: input.seedPrefix ?? null,
     backwardProof: {
       direction: "backward",
       pageManifestKeys: input.backwardPageManifestKeys,
@@ -370,7 +372,6 @@ async function verifyGlitterCorpusChannel(
       upperBoundMessageId: input.forwardUpperBoundMessageId ?? null,
     },
     observationCount: observations.length,
-    seedPrefix: input.seedPrefix ?? null,
     seedObservationCount: observations.length - backward.observations.length,
     duplicateObservationCount: observations.length - projection.length,
     ...projectionStateFields({
@@ -464,6 +465,8 @@ async function applyGlitterCorpusOverlap(
     guildId: input.guildId,
     channelId: input.channelId,
     verifiedAt: input.verifiedAt,
+    lineageDepth: baseline.lineageDepth + 1,
+    seedPrefix: baseline.seedPrefix,
     baselineManifestKey: input.baselineManifestKey,
     overlapPageManifestKeys: input.pageManifestKeys,
     overlapCutoff: input.overlapCutoff,

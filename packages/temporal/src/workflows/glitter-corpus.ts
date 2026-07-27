@@ -9,6 +9,7 @@ import type {
 
 const PAGE_LIMIT_SAFETY_CEILING = 100_000;
 const OVERLAP_DAYS = 7;
+const MAX_OVERLAP_LINEAGE_DEPTH = 6;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const {
@@ -417,7 +418,10 @@ export async function runGlitterCorpusDaily(): Promise<GlitterCorpusSnapshotResu
 
   for (const entry of currentIncluded) {
     const baselineState = findBaselineState(baseline, entry.channelId);
-    if (baselineState === undefined) {
+    if (
+      baselineState === undefined ||
+      baselineState.lineageDepth >= MAX_OVERLAP_LINEAGE_DEPTH
+    ) {
       states.push(
         await executeChild(runGlitterCorpusChannelBackfill, {
           workflowId: `glitter-corpus-backfill-${snapshotId}-${entry.channelId}`,
@@ -428,6 +432,10 @@ export async function runGlitterCorpusDaily(): Promise<GlitterCorpusSnapshotResu
               guildSlug: currentInventory.inventory.guildSlug,
               channelId: entry.channelId,
               verifiedAt: createdAt,
+              ...(baselineState?.seedPrefix === undefined ||
+              baselineState.seedPrefix === null
+                ? {}
+                : { seedPrefix: baselineState.seedPrefix }),
               maxPages: PAGE_LIMIT_SAFETY_CEILING,
             },
           ],

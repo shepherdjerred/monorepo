@@ -4,7 +4,7 @@ import {
   effectiveChannelPermissions,
   scopeEntry,
 } from "./glitter-corpus-scope.ts";
-import { requireMessageContentIntent } from "./glitter-corpus-discord.ts";
+import { requireMessageContentIntent } from "./glitter-corpus-discord-client.ts";
 
 const VIEW_AND_HISTORY = String((1n << 10n) | (1n << 16n));
 

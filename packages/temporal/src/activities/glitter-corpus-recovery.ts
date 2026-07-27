@@ -18,8 +18,8 @@ import {
   readSeedChannelObservations,
   readTraversal,
 } from "./glitter-corpus-io.ts";
+import { createCorpusStoresFromEnv } from "./glitter-corpus-store.ts";
 import {
-  createCorpusStoresFromEnv,
   LatestSnapshotPointerSchema,
   readMirroredObject,
 } from "./glitter-corpus-storage.ts";

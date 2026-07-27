@@ -23,8 +23,13 @@ export function buildScheduleState(
   }
   if (
     previous?.paused === true &&
-    previous.note?.startsWith(CONFIGURATION_PAUSE_NOTE) !== true
+    previous.note?.startsWith(CONFIGURATION_PAUSE_NOTE) === true
   ) {
+    return schedule.initialPauseNote === undefined
+      ? previous
+      : { paused: true, note: schedule.initialPauseNote };
+  }
+  if (previous?.paused === true) {
     return previous.note === undefined
       ? { paused: true }
       : { paused: true, note: previous.note };

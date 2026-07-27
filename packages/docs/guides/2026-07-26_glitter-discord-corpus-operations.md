@@ -36,6 +36,9 @@ contracts.
 - The daily job covers at least seven days and must also cross the previous
   snapshot's newest message boundary. A long outage therefore expands work
   instead of silently leaving a gap.
+- After six overlap states, the next daily run performs complete backward and
+  forward traversals for every visible channel. This bounds recovery lineage
+  and re-observes edits or mutable metadata on messages older than seven days.
 - Previously captured messages remain in the projection after deletion.
   Messages Discord deleted before their first successful observation cannot be
   recovered and are outside the attainable contract.
@@ -219,9 +222,9 @@ bun run glitter:verify-corpus
 
 This command reads every referenced object from both stores, validates mirror
 parity and snapshot receipts, reconstructs complete channels from raw backward
-and forward pages plus the trusted seed, recursively replays daily overlap
-states, and requires the rebuilt projection checksums and message count to
-match the published snapshot.
+and forward pages plus the trusted seed, replays at most six daily overlap
+states, and requires the rebuilt projection checksums and message count to match
+the published snapshot.
 
 After it passes, unpause `glitter-corpus-daily` in Temporal. Run one manual
 daily cycle and repeat recovery verification before relying on the schedule:

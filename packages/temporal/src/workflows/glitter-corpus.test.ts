@@ -253,6 +253,8 @@ describe("Glitter corpus daily overlap workflows", () => {
               manifestObject: stateObject,
               uniqueMessageCount: 3,
               newestMessageId: "100",
+              lineageDepth: 1,
+              seedPrefix: null,
             },
           },
         }),
@@ -333,6 +335,8 @@ describe("Glitter corpus daily overlap workflows", () => {
               manifestObject: stateObject,
               uniqueMessageCount: 0,
               newestMessageId: null,
+              lineageDepth: 1,
+              seedPrefix: null,
             },
           },
         }),
@@ -388,5 +392,76 @@ describe("Glitter corpus daily overlap workflows", () => {
     expect(overlapInputs).toHaveLength(1);
     expect(overlapInputs[0]?.baselineNewestMessageId).toBeNull();
     expect(overlapInputs[0]?.stoppedBecause).toBe("empty-channel");
+  }, 30_000);
+});
+
+describe("Glitter corpus periodic full refresh", () => {
+  it("resets a six-overlap lineage with a complete traversal and retains the seed", async () => {
+    const captured: CapturePageInput[] = [];
+    const verified: z.input<typeof VerifyChannelInputSchema>[] = [];
+    const baselineInventory = inventory(["10"]);
+    const stateObject = mirroredObject("states/deep-baseline.json");
+    const worker = await Worker.create({
+      connection: testEnvironment.nativeConnection,
+      taskQueue: TASK_QUEUE,
+      workflowsPath: new URL("index.ts", import.meta.url).pathname,
+      activities: {
+        loadGlitterCorpusDailyBaseline: async () => ({
+          inventory: baselineInventory,
+          inventoryObject: mirroredObject("inventory-deep-baseline.json"),
+          states: {
+            "10": {
+              manifestKey: stateObject.key,
+              manifestObject: stateObject,
+              uniqueMessageCount: 2,
+              newestMessageId: "2",
+              lineageDepth: 6,
+              seedPrefix: "seed/approved",
+            },
+          },
+        }),
+        inventoryGlitterGuild: async () => ({
+          inventory: baselineInventory,
+          inventoryKey: "inventory-current-deep-baseline.json",
+          inventoryObject: mirroredObject(
+            "inventory-current-deep-baseline.json",
+          ),
+        }),
+        captureGlitterCorpusPage: async (rawInput: CapturePageInput) => {
+          const input = CapturePageInputSchema.parse(rawInput);
+          captured.push(input);
+          return pageResult(input, [], []);
+        },
+        verifyGlitterCorpusChannel: async (
+          rawInput: z.input<typeof VerifyChannelInputSchema>,
+        ) => {
+          const input = VerifyChannelInputSchema.parse(rawInput);
+          verified.push(input);
+          const manifestKey = `states/${input.snapshotId}.json`;
+          return {
+            channelId: input.channelId,
+            manifestKey,
+            manifestObject: mirroredObject(manifestKey),
+            uniqueMessageCount: 2,
+          };
+        },
+        finalizeGlitterCorpusSnapshot: finalSnapshot,
+      },
+    });
+
+    await worker.runUntil(
+      testEnvironment.client.workflow.execute(runGlitterCorpusDaily, {
+        args: [],
+        taskQueue: TASK_QUEUE,
+        workflowId: "glitter-corpus-daily-full-refresh-test",
+      }),
+    );
+
+    expect(captured.map((page) => page.direction)).toEqual([
+      "backward",
+      "forward",
+    ]);
+    expect(verified).toHaveLength(1);
+    expect(verified[0]?.seedPrefix).toBe("seed/approved");
   }, 30_000);
 });

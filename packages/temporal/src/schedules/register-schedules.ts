@@ -341,13 +341,14 @@ export const SCHEDULES: ScheduleDefinition[] = [
     taskQueue: TASK_QUEUES.GLITTER_CORPUS,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "6 hours",
-    memo: "Daily seven-day-overlap Discord REST capture for the verified Glitter corpus",
+    memo: "Daily Discord REST capture with seven-day overlap and a full historical refresh after six overlaps",
     initialPauseNote:
       "Awaiting operator approval of the first complete mirrored snapshot",
     requiredEnvironment: [
       "GLITTER_DISCORD_TOKEN",
       "GLITTER_DISCORD_GUILD_ID",
       "GLITTER_DISCORD_GUILD_SLUG",
+      "GLITTER_DISCORD_DENYLIST_CHANNEL_IDS",
       "GLITTER_CORPUS_S3_ENDPOINT",
       "GLITTER_CORPUS_S3_BUCKET",
       "GLITTER_CORPUS_S3_ACCESS_KEY_ID",

@@ -218,6 +218,20 @@ describe("Glitter corpus schedule", () => {
     ).toEqual({ paused: true, note: "manual safety hold" });
   });
 
+  test("moves the configuration pause to the explicit approval hold", () => {
+    const schedule = findScheduleById("glitter-corpus-daily");
+    const configured = configuredEnvironment(schedule);
+    expect(
+      buildScheduleState(schedule, configured, {
+        paused: true,
+        note: "Paused automatically until required Glitter corpus credentials are configured: GLITTER_DISCORD_TOKEN",
+      }),
+    ).toEqual({
+      paused: true,
+      note: "Awaiting operator approval of the first complete mirrored snapshot",
+    });
+  });
+
   test("preserves an operator unpause after the first snapshot", () => {
     const schedule = findScheduleById("glitter-corpus-daily");
     const configured = configuredEnvironment(schedule);

@@ -15,10 +15,8 @@ import {
   serializeProjection,
   sha256,
 } from "#shared/glitter-corpus-projection.ts";
-import {
-  createCorpusStoresFromEnv,
-  putMirroredImmutableObject,
-} from "./glitter-corpus-storage.ts";
+import { createCorpusStoresFromEnv } from "./glitter-corpus-store.ts";
+import { putMirroredImmutableObject } from "./glitter-corpus-storage.ts";
 
 const EXPECTED_SEED_MESSAGES = 76_762;
 const CsvRowsSchema = z.array(z.record(z.string(), z.string()));

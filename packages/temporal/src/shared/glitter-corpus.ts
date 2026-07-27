@@ -6,7 +6,6 @@ export const Sha256Schema = z.string().regex(/^[0-9a-f]{64}$/);
 
 export const CorpusSourceSchema = z.enum(["seed", "discord-rest"]);
 export type CorpusSource = z.infer<typeof CorpusSourceSchema>;
-
 export const DiscordAttachmentSchema = z
   .object({
     id: DiscordSnowflakeSchema,
@@ -22,7 +21,6 @@ export const DiscordAttachmentSchema = z
   })
   .strict();
 export type DiscordAttachment = z.infer<typeof DiscordAttachmentSchema>;
-
 export const DiscordAuthorSchema = z
   .object({
     id: DiscordSnowflakeSchema,
@@ -34,7 +32,6 @@ export const DiscordAuthorSchema = z
   })
   .strict();
 export type DiscordAuthor = z.infer<typeof DiscordAuthorSchema>;
-
 export const CorpusObservationSchema = z
   .object({
     schemaVersion: z.literal(1),
@@ -59,7 +56,6 @@ export const CorpusObservationSchema = z
   })
   .strict();
 export type CorpusObservation = z.infer<typeof CorpusObservationSchema>;
-
 export const CurrentMessageSchema = CorpusObservationSchema.omit({
   sourceKey: true,
   observedAt: true,
@@ -70,7 +66,6 @@ export const CurrentMessageSchema = CorpusObservationSchema.omit({
   rawSha256: Sha256Schema,
 });
 export type CurrentMessage = z.infer<typeof CurrentMessageSchema>;
-
 export const DiscordChannelTypeSchema = z.union([
   z.literal(0),
   z.literal(2),
@@ -85,7 +80,6 @@ export const DiscordChannelTypeSchema = z.union([
   z.literal(16),
 ]);
 export type DiscordChannelType = z.infer<typeof DiscordChannelTypeSchema>;
-
 export const CorpusScopeDecisionSchema = z.enum([
   "include",
   "exclude-denylist",
@@ -94,7 +88,6 @@ export const CorpusScopeDecisionSchema = z.enum([
   "exclude-no-history-permission",
 ]);
 export type CorpusScopeDecision = z.infer<typeof CorpusScopeDecisionSchema>;
-
 export const ChannelInventoryEntrySchema = z
   .object({
     guildId: DiscordSnowflakeSchema,
@@ -109,7 +102,6 @@ export const ChannelInventoryEntrySchema = z
   })
   .strict();
 export type ChannelInventoryEntry = z.infer<typeof ChannelInventoryEntrySchema>;
-
 export const GuildInventorySchema = z
   .object({
     schemaVersion: z.literal(1),
@@ -123,14 +115,12 @@ export const GuildInventorySchema = z
   })
   .strict();
 export type GuildInventory = z.infer<typeof GuildInventorySchema>;
-
 export const TraversalDirectionSchema = z.enum([
   "backward",
   "forward",
   "daily-overlap",
 ]);
 export type TraversalDirection = z.infer<typeof TraversalDirectionSchema>;
-
 export const DiscordRateLimitSchema = z
   .object({
     limit: z.number().int().nonnegative().nullable(),
@@ -268,6 +258,8 @@ const ChannelStateBaseSchema = z.object({
   guildId: DiscordSnowflakeSchema,
   channelId: DiscordSnowflakeSchema,
   verifiedAt: IsoTimestampSchema,
+  lineageDepth: z.number().int().nonnegative(),
+  seedPrefix: z.string().min(1).nullable(),
   observationCount: z.number().int().nonnegative(),
   uniqueMessageCount: z.number().int().nonnegative(),
   oldestMessageId: DiscordSnowflakeSchema.nullable(),
@@ -280,16 +272,22 @@ const ChannelStateBaseSchema = z.object({
 export const ChannelCompletenessManifestSchema = ChannelStateBaseSchema.extend({
   backwardProof: TraversalProofSchema,
   forwardProof: TraversalProofSchema,
-  seedPrefix: z.string().min(1).nullable(),
   seedObservationCount: z.number().int().nonnegative(),
   duplicateObservationCount: z.number().int().nonnegative(),
 })
   .strict()
-  .superRefine(validateProjectionBounds);
+  .superRefine((value, context) => {
+    validateProjectionBounds(value, context);
+    if (value.lineageDepth !== 0) {
+      context.addIssue({
+        code: "custom",
+        message: "complete channel state must reset lineageDepth to zero",
+      });
+    }
+  });
 export type ChannelCompletenessManifest = z.infer<
   typeof ChannelCompletenessManifestSchema
 >;
-
 export const ChannelOverlapManifestSchema = ChannelStateBaseSchema.extend({
   baselineManifestKey: z.string().min(1),
   overlapPageManifestKeys: z.array(z.string().min(1)).min(1),
@@ -302,6 +300,12 @@ export const ChannelOverlapManifestSchema = ChannelStateBaseSchema.extend({
   .strict()
   .superRefine((value, context) => {
     validateProjectionBounds(value, context);
+    if (value.lineageDepth === 0) {
+      context.addIssue({
+        code: "custom",
+        message: "overlap channel state must advance lineageDepth",
+      });
+    }
     if (
       value.stoppedBecause === "cutoff-reached" &&
       (value.oldestObservedTimestamp === null ||
@@ -329,13 +333,11 @@ export const ChannelOverlapManifestSchema = ChannelStateBaseSchema.extend({
 export type ChannelOverlapManifest = z.infer<
   typeof ChannelOverlapManifestSchema
 >;
-
 export const ChannelStateManifestSchema = z.union([
   ChannelCompletenessManifestSchema,
   ChannelOverlapManifestSchema,
 ]);
 export type ChannelStateManifest = z.infer<typeof ChannelStateManifestSchema>;
-
 export const MirrorObjectReceiptSchema = z
   .object({
     store: z.enum(["seaweedfs", "r2"]),
@@ -347,7 +349,6 @@ export const MirrorObjectReceiptSchema = z
   })
   .strict();
 export type MirrorObjectReceipt = z.infer<typeof MirrorObjectReceiptSchema>;
-
 export const MirroredObjectSchema = z
   .object({
     key: z.string().min(1),
@@ -373,7 +374,6 @@ export const MirroredObjectSchema = z
     }
   });
 export type MirroredObject = z.infer<typeof MirroredObjectSchema>;
-
 export const GuildSnapshotSchema = z
   .object({
     schemaVersion: z.literal(1),
@@ -409,7 +409,6 @@ export const GuildSnapshotSchema = z
     }
   });
 export type GuildSnapshot = z.infer<typeof GuildSnapshotSchema>;
-
 export const SeedImportManifestSchema = z
   .object({
     schemaVersion: z.literal(1),

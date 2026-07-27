@@ -105,6 +105,8 @@ export const DailyBaselineSchema = z
           manifestObject: MirroredObjectSchema,
           uniqueMessageCount: z.number().int().nonnegative(),
           newestMessageId: z.string().regex(/^\d+$/).nullable(),
+          lineageDepth: z.number().int().nonnegative(),
+          seedPrefix: z.string().min(1).nullable(),
         })
         .strict(),
     ),

@@ -79,8 +79,9 @@ unless an independently discovered safety constraint makes it necessary.
   pause, retry, and resume without losing its cursor or duplicating evidence.
 - Run one channel at a time for the initial backfill. A manual inventory review
   gates the full scrape.
-- Run the steady-state REST capture daily with a seven-day overlap. Do not use a
-  Gateway capture path in the first version.
+- Run the steady-state REST capture daily with a seven-day overlap, resetting
+  every channel with a complete historical traversal after six overlaps. Do not
+  use a Gateway capture path in the first version.
 
 ### Storage and recovery
 
@@ -196,11 +197,11 @@ unless an independently discovered safety constraint makes it necessary.
   `19aaca11be85b99d8034e48cfaf45e50e9739e9760da116d7262a6fd7588cc92`,
   and projection SHA-256
   `8bad3bee568dfb5eb60d6524eee6b3c75d6ea3b1ac8f545887bac60cc8db572f`.
-- Passed the affected repository verification surface, including 665 Temporal
-  tests, plus focused cdk8s, Terraform/OpenTofu, documentation, and dashboard
-  query tests. The explicit 1Password contract check correctly remains red
-  until the seven new Discord/R2 fields are populated and its hashed snapshot
-  is refreshed.
+- Passed the initial affected repository verification surface, including 665
+  Temporal tests, plus focused cdk8s, Terraform/OpenTofu, documentation, and
+  dashboard query tests. Credential projection was preserved outside the
+  branch because the seven new Discord/R2 fields and corresponding non-secret
+  1Password snapshot are not yet available.
 - Published the two planned draft pull requests: corpus and capture safety in
   [#1693](https://github.com/shepherdjerred/monorepo/pull/1693), followed by the
   shared context and weekly refresh in
@@ -221,14 +222,22 @@ unless an independently discovered safety constraint makes it necessary.
   trusted-seed checksum and inventory coverage gates, monotonic conditional
   latest-pointer publication, full object-graph recovery before publication,
   and snapshot metric restoration after worker restart.
-- Re-ran the focused correctness suite with 29 passing tests and the complete
-  Temporal typecheck. The post-remediation affected repository gate passed all
-  33 tasks.
+- Remediated the delayed current-head review findings that did not require live
+  credentials: the denylist is an explicit required decision, the configuration
+  pause transitions to an operator approval hold instead of auto-unpausing,
+  Discord request starts use a persisted SeaweedFS compare-and-swap lease across
+  worker processes, overlap lineage is bounded at six before a complete
+  historical refresh, older edits are therefore re-observed, and failed metric
+  restoration no longer prevents unrelated Temporal queues from starting.
+- Re-ran the focused correctness suite with 80 passing tests, the complete
+  Temporal suite with 670 passing tests, Temporal typecheck and lint, and the
+  post-remediation affected repository gate. All 67 affected tasks passed,
+  including 1Password contract validation, recovery rehearsal, documentation,
+  cdk8s, and Scout consumer gates.
 
 ### Remaining
 
-- Commit and publish the final review remediations to the existing two-PR
-  stack, then confirm the new Buildkite builds and automated reviews are clean.
+- Confirm the republished Buildkite builds and automated reviews are clean.
 - Populate the Temporal worker's seven Discord/R2 fields in 1Password, refresh
   the non-secret vault snapshot, then run inventory and obtain explicit scope
   approval before any full-history Discord request.
@@ -242,9 +251,9 @@ unless an independently discovered safety constraint makes it necessary.
 - A Discord message deleted before any successful observation cannot be
   recovered through the REST history API.
 - The daily REST overlap re-observes at least seven days and proves continuity
-  past the previous newest message ID. An edit older than the overlap is not
-  observable until a deliberate historical rescan; raw observations already
-  captured are never removed.
+  past the previous newest message ID. The complete traversal after six
+  overlaps discovers older edits and bounds recovery lineage; raw observations
+  already captured are never removed.
 - Local `op` is not signed in, and no Discord/R2 credentials have been supplied
   in this session. The schedule is created paused and the full backfill is
   inventory-approval-gated, so this cannot accidentally start scraping.

@@ -15,8 +15,8 @@ import {
 } from "#shared/glitter-corpus-projection.ts";
 import { normalizeDiscordMessage } from "./glitter-corpus-normalize.ts";
 import { assertDiscordPageOrder } from "./glitter-corpus-page-order.ts";
+import { createCorpusStoresFromEnv } from "./glitter-corpus-store.ts";
 import {
-  createCorpusStoresFromEnv,
   putMirroredImmutableObject,
   readMirroredObject,
   readVerifiedMirroredObject,
@@ -31,8 +31,8 @@ export function requireGlitterCorpusEnv(name: string): string {
   return value;
 }
 
-function parseDenylist(value: string | undefined): string[] {
-  if (value === undefined || value.trim() === "") {
+function parseDenylist(value: string): string[] {
+  if (value.trim() === "") {
     return [];
   }
   return z
@@ -46,6 +46,12 @@ export function glitterCorpusRuntimeConfig(): {
   guildSlug: string;
   denylistedChannelIds: string[];
 } {
+  const denylist = Bun.env["GLITTER_DISCORD_DENYLIST_CHANNEL_IDS"];
+  if (denylist === undefined) {
+    throw new Error(
+      "GLITTER_DISCORD_DENYLIST_CHANNEL_IDS must be present; use an explicit blank value for no exclusions",
+    );
+  }
   return {
     token: requireGlitterCorpusEnv("GLITTER_DISCORD_TOKEN"),
     guildId: z
@@ -53,9 +59,7 @@ export function glitterCorpusRuntimeConfig(): {
       .regex(/^\d+$/)
       .parse(requireGlitterCorpusEnv("GLITTER_DISCORD_GUILD_ID")),
     guildSlug: requireGlitterCorpusEnv("GLITTER_DISCORD_GUILD_SLUG"),
-    denylistedChannelIds: parseDenylist(
-      Bun.env["GLITTER_DISCORD_DENYLIST_CHANNEL_IDS"],
-    ),
+    denylistedChannelIds: parseDenylist(denylist),
   };
 }
 

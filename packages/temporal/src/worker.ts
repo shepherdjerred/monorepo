@@ -91,6 +91,19 @@ function formatError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+async function restoreGlitterCorpusMetricsAfterWorkerStart(): Promise<void> {
+  try {
+    await restoreGlitterCorpusSnapshotMetrics();
+  } catch (error: unknown) {
+    Sentry.captureException(error);
+    jsonLog(
+      "error",
+      "Glitter corpus snapshot metric restoration failed; corpus operations fail closed while other queues continue",
+      { error: formatError(error) },
+    );
+  }
+}
+
 function classifyEventBridgeStartFailure(error: unknown): string {
   const message = formatError(error).toLowerCase();
   if (message.includes("websocket") || message.includes("web socket")) {
@@ -196,7 +209,6 @@ async function main(): Promise<void> {
   initSentry();
   initializeTracing();
   startMetricsServer();
-  await restoreGlitterCorpusSnapshotMetrics();
 
   const address = Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_ADDRESS;
   jsonLog("info", "Connecting to Temporal server", { address });
@@ -398,14 +410,16 @@ async function main(): Promise<void> {
     void shutdown("SIGINT");
   });
 
-  await Promise.all([
+  const workerRuns = [
     worker.run(),
     prReviewWorker.run(),
     prSummaryWorker.run(),
     agentTaskWorker.run(),
     prBabysitWorker.run(),
     glitterCorpusWorker.run(),
-  ]);
+  ];
+  void restoreGlitterCorpusMetricsAfterWorkerStart();
+  await Promise.all(workerRuns);
 }
 
 void (async () => {

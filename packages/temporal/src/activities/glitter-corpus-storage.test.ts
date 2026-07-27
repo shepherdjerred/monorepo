@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { discordRequestLeaseDelayMs } from "./glitter-corpus-rate-limit.ts";
 import {
   LatestSnapshotPointerSchema,
   latestSnapshotPointerNeedsUpdate,
@@ -47,5 +48,22 @@ describe("Glitter corpus latest snapshot pointer", () => {
     expect(() => latestSnapshotPointerNeedsUpdate(first, second)).toThrow(
       "conflicting",
     );
+  });
+});
+
+describe("Glitter Discord distributed request lease", () => {
+  test("waits until the persisted cross-process ceiling and never returns a negative delay", () => {
+    expect(
+      discordRequestLeaseDelayMs(
+        "2026-01-01T00:00:01.000Z",
+        Date.parse("2026-01-01T00:00:00.250Z"),
+      ),
+    ).toBe(750);
+    expect(
+      discordRequestLeaseDelayMs(
+        "2026-01-01T00:00:01.000Z",
+        Date.parse("2026-01-01T00:00:02.000Z"),
+      ),
+    ).toBe(0);
   });
 });

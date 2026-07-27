@@ -8,10 +8,10 @@ import type { CapturePageInput } from "./glitter-corpus-activity-types.ts";
 import type {
   DiscordRestClient,
   DiscordRestResponse,
-} from "./glitter-corpus-discord.ts";
+} from "./glitter-corpus-discord-client.ts";
 import { jsonBytes } from "./glitter-corpus-io.ts";
+import { createCorpusStoresFromEnv } from "./glitter-corpus-store.ts";
 import {
-  createCorpusStoresFromEnv,
   putMirroredImmutableObject,
   readAndRepairMirroredImmutableObject,
 } from "./glitter-corpus-storage.ts";

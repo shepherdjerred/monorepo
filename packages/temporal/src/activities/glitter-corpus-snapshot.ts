@@ -2,7 +2,6 @@ import type { z } from "zod/v4";
 import {
   GuildInventorySchema,
   GuildSnapshotSchema,
-  type MirroredObject,
 } from "#shared/glitter-corpus.ts";
 import { compareSnowflakes } from "#shared/glitter-corpus-projection.ts";
 import {
@@ -20,8 +19,8 @@ import {
   jsonBytes,
   loadStateManifest,
 } from "./glitter-corpus-io.ts";
+import { createCorpusStoresFromEnv } from "./glitter-corpus-store.ts";
 import {
-  createCorpusStoresFromEnv,
   LatestSnapshotPointerSchema,
   publishLatestSnapshotPointer,
   putMirroredImmutableObject,
@@ -175,15 +174,7 @@ export async function loadGlitterCorpusDailyBaseline(): Promise<DailyBaseline> {
   const inventory = GuildInventorySchema.parse(
     JSON.parse(new TextDecoder().decode(inventoryBytes)),
   );
-  const states: Record<
-    string,
-    {
-      manifestKey: string;
-      manifestObject: MirroredObject;
-      uniqueMessageCount: number;
-      newestMessageId: string | null;
-    }
-  > = {};
+  const states: DailyBaseline["states"] = {};
   for (const object of snapshot.channelManifestObjects) {
     const manifest = await loadStateManifest(object.key);
     states[manifest.channelId] = {
@@ -191,6 +182,8 @@ export async function loadGlitterCorpusDailyBaseline(): Promise<DailyBaseline> {
       manifestObject: object,
       uniqueMessageCount: manifest.uniqueMessageCount,
       newestMessageId: manifest.newestMessageId,
+      lineageDepth: manifest.lineageDepth,
+      seedPrefix: manifest.seedPrefix,
     };
   }
   return DailyBaselineSchema.parse({
