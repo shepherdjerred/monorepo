@@ -53,6 +53,12 @@ describe("normalizePath", () => {
     expect(normalizePath("/g/123456789012345678/subscriptions")).toBe(
       "/g/:guildId/subscriptions",
     );
+    expect(normalizePath("/g/123456789012345678/audit")).toBe(
+      "/g/:guildId/audit",
+    );
+    expect(normalizePath("/g/123456789012345678/access")).toBe(
+      "/g/:guildId/access",
+    );
   });
 
   test("templates player alias, report id, and competition id", () => {

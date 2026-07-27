@@ -65,19 +65,20 @@ export async function runReport(
 
   try {
     // executeReportQuery parses the query itself and records the query-run
-    // metric — with an honest `source="unknown"` even on a parse failure. Read
-    // the render kind (the `output_format` metric label, from the RENDER clause)
-    // off its returned compiled plan rather than parsing a second time here: a
-    // separate pre-parse would throw before executeReportQuery ran, excluding
-    // malformed stored queries from the query error-rate metric.
+    // metric — with an honest `source="unknown"` even on a parse failure. Its
+    // onPlan callback fires after parsing but before execution, preserving the
+    // render kind for execution failures without separately pre-parsing and
+    // excluding malformed stored queries from the query error-rate metric.
     const result = await executeReportQuery({
       prisma: params.prisma,
       serverId: params.report.serverId,
       queryText: params.report.queryText,
       sourceCompetitionId: params.report.sourceCompetitionId,
       now: startedAt,
+      onPlan: (plan) => {
+        renderKind = plan.render.kind;
+      },
     });
-    renderKind = result.plan.render.kind;
     const playerDiscordIds = await loadPlayerDiscordIds(
       params.prisma,
       params.report.serverId,

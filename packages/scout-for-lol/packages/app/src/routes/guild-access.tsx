@@ -244,10 +244,13 @@ export function GuildAccess() {
                 },
                 {
                   onSuccess: () => {
-                    track("access_granted");
+                    track("access_granted", { outcome: "success" });
                     setNewUserId("");
                     setNewRole("viewer");
                     setNewCustomPermissions([]);
+                  },
+                  onError: () => {
+                    track("access_granted", { outcome: "error" });
                   },
                 },
               );
@@ -341,7 +344,14 @@ export function GuildAccess() {
                               },
                               {
                                 onSuccess: () => {
-                                  track("access_updated");
+                                  track("access_updated", {
+                                    outcome: "success",
+                                  });
+                                },
+                                onError: () => {
+                                  track("access_updated", {
+                                    outcome: "error",
+                                  });
                                 },
                               },
                             );
@@ -452,8 +462,15 @@ export function GuildAccess() {
                                 },
                                 {
                                   onSuccess: () => {
-                                    track("access_updated");
+                                    track("access_updated", {
+                                      outcome: "success",
+                                    });
                                     setEditingUserId(null);
+                                  },
+                                  onError: () => {
+                                    track("access_updated", {
+                                      outcome: "error",
+                                    });
                                   },
                                 },
                               );

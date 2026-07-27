@@ -58,6 +58,7 @@ type ExecuteReportQueryParams = {
   queryText: string;
   sourceCompetitionId?: number | null;
   now?: Date;
+  onPlan?: ((plan: ReportQueryPlan) => void) | undefined;
 };
 
 /**
@@ -80,6 +81,7 @@ export async function executeReportQuery(
   try {
     const plan = parseAndCompile(params.queryText);
     source = plan.source;
+    params.onPlan?.(plan);
     const result = await runReportQueryPlan(params, plan);
     recordReportQueryMetrics(source, "success", startedAt);
     return result;
