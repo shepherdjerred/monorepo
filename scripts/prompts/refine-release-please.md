@@ -167,7 +167,12 @@ Only include `<details>` blocks for packages that were actually bumped.
 <!-- /release-refiner-result -->
 ```
 
-If you encountered a recoverable issue (e.g., no bumped packages, no PR open), still exit 0 with a descriptive `"status"`. Only exit non-zero on hard failures (auth error, git push rejected, etc.).
+The only successful result statuses are `"refined"` (including
+`"packagesRefined":[]` when the release PR needed no CHANGELOG edits) and
+`"no-open-release-pr"`. Only exit non-zero on hard failures (auth error,
+missing required tool, git push rejected, etc.). Never emit a
+`"hard-failure-*"` status and then exit 0; a hard failure must terminate the
+process non-zero.
 
 ## Hard rules
 

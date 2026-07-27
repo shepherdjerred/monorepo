@@ -22,6 +22,10 @@ if [ -n "${GH_TOKEN:-}" ]; then
 fi
 mise trust .mise.toml
 mise install --yes
+# Runtime installs can add a tool without creating its executable shim on a
+# stale ci-base image. Rebuild shims so commands such as gh are reachable
+# through the PATH exported above (release build 6529).
+mise reshim
 
 # System tools the tasks shell out to that mise doesn't manage. Baked into
 # the fresh ci-base; bootstrapped here on a stale image.

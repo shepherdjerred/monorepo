@@ -6,6 +6,8 @@ const CODEX_MODEL = "gpt-5.6-sol";
 const OUTPUT_TAIL_LIMIT = 16_384;
 const CLAUDE_QUOTA_PATTERN =
   /\b(?:hit|reached|exceeded) (?:your )?(?:weekly|monthly|usage)(?: usage)? limit\b/i;
+const REFINER_RESULT_START = "<!-- release-refiner-result -->";
+const REFINER_RESULT_END = "<!-- /release-refiner-result -->";
 
 const ClaudeResultSchema = z
   .object({
@@ -14,6 +16,20 @@ const ClaudeResultSchema = z
     result: z.string().optional(),
   })
   .loose();
+
+const ReleaseRefinerResultSchema = z.discriminatedUnion("status", [
+  z
+    .object({
+      status: z.literal("refined"),
+      prNumber: z.number().int().positive(),
+      packagesRefined: z.array(
+        z.enum(["astro-opengraph-images", "webring", "helm-types"]),
+      ),
+      commitSha: z.string().regex(/^[0-9a-f]{40}$/),
+    })
+    .strict(),
+  z.object({ status: z.literal("no-open-release-pr") }).strict(),
+]);
 
 export type RefinerProvider = "claude" | "codex";
 
@@ -97,6 +113,30 @@ function parseClaudeResult(
   }
 }
 
+function parseReleaseRefinerResult(
+  output: string,
+): z.infer<typeof ReleaseRefinerResultSchema> | null {
+  let envelope: string | null = null;
+  let offset = 0;
+  for (;;) {
+    const start = output.indexOf(REFINER_RESULT_START, offset);
+    if (start === -1) break;
+    const contentStart = start + REFINER_RESULT_START.length;
+    const end = output.indexOf(REFINER_RESULT_END, contentStart);
+    if (end === -1) return null;
+    envelope = output.slice(contentStart, end).trim();
+    offset = end + REFINER_RESULT_END.length;
+  }
+  if (envelope === null) return null;
+  try {
+    const raw: unknown = JSON.parse(envelope);
+    const parsed = ReleaseRefinerResultSchema.safeParse(raw);
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
+
 export function isClaudeQuotaExhaustion(result: RunResult): boolean {
   if (result.exitCode === 0) return false;
   const parsed = parseClaudeResult(result.stdout);
@@ -113,6 +153,17 @@ function outputTail(value: string): string {
   return trimmed.length <= OUTPUT_TAIL_LIMIT
     ? trimmed
     : trimmed.slice(-OUTPUT_TAIL_LIMIT);
+}
+
+function requireSuccessfulResult(provider: string, output: string): void {
+  if (parseReleaseRefinerResult(output) === null) {
+    throw new Error(
+      `${provider} release refiner exited 0 without a valid success envelope` +
+        (output.trim() === ""
+          ? ""
+          : `\n--- stdout (tail) ---\n${outputTail(output)}`),
+    );
+  }
 }
 
 function commandFailure(provider: string, result: RunResult): Error {
@@ -152,6 +203,7 @@ async function runCodex(
   if (result.exitCode !== 0) {
     throw commandFailure("Codex", result);
   }
+  requireSuccessfulResult("Codex", result.stdout);
 }
 
 export async function runReleaseRefiner(
@@ -178,7 +230,7 @@ export async function runReleaseRefiner(
   });
   if (claude.exitCode === 0) {
     const parsed = parseClaudeResult(claude.stdout);
-    if (parsed === null || parsed.is_error) {
+    if (parsed === null || parsed.is_error || parsed.result === undefined) {
       throw new Error(
         "Claude release refiner exited 0 without a valid non-error JSON result" +
           (claude.stdout.trim() === ""
@@ -186,6 +238,7 @@ export async function runReleaseRefiner(
             : `\n--- stdout (tail) ---\n${outputTail(claude.stdout)}`),
       );
     }
+    requireSuccessfulResult("Claude", parsed.result);
     return "claude";
   }
   if (!isClaudeQuotaExhaustion(claude)) {
