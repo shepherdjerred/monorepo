@@ -24,6 +24,7 @@ describe("parseQueueType", () => {
     [720, "aram clash"],
     [900, "arurf"],
     [1700, "arena"],
+    [1740, "arena"],
     [1750, "arena"],
     [1900, "urf"],
     [2300, "brawl"],
@@ -32,7 +33,7 @@ describe("parseQueueType", () => {
     [3220, "aram mayhem"],
     [3270, "aram mayhem"],
     [3100, "custom"],
-    [3130, "easy doom bots"],
+    [3130, "custom"],
     [4220, "normal doom bots"],
     [4250, "hard doom bots"],
   ];

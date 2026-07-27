@@ -32,39 +32,48 @@ const ARENA_GAME_MODE = "CHERRY";
 // which Riot's published queues.json still labels as the long-defunct original.
 //
 // Arena churns its queue ID between reworks (1700 was the original Soul Fighter
-// launch; Riot moved live Arena to 1750 around mid-2026). Both map to "arena"
+// launch; 1750 and 1740 appeared around mid-2026 — 1740 observed live with an
+// 18-player CHERRY lobby). Both map to "arena"
 // here, but the durable classifier is `resolveQueueTypeFromGame` below, which
 // keys off `gameMode === "CHERRY"` and is immune to the next ID change.
 export function parseQueueType(input: number): QueueType | undefined {
-  return match(input)
-    .returnType<QueueType | undefined>()
-    .with(0, () => "custom")
-    .with(420, () => "solo")
-    .with(400, () => "draft pick")
-    .with(440, () => "flex")
-    .with(450, () => "aram")
-    .with(700, () => "clash")
-    .with(710, () => "ranked 5s")
-    .with(720, () => "aram clash")
-    .with(480, () => "swiftplay")
-    .with(490, () => "quickplay")
-    .with(900, () => "arurf")
-    .with(ARENA_QUEUE_ID, () => "arena")
-    .with(1750, () => "arena")
-    .with(2300, () => "brawl")
-    .with(2400, () => "aram mayhem")
-    .with(3200, () => "aram mayhem")
-    .with(3220, () => "aram mayhem")
-    .with(3270, () => "aram mayhem")
-    .with(3100, () => "custom")
-    .with(1900, () => "urf")
-    .with(3130, () => "easy doom bots")
-    .with(4220, () => "normal doom bots")
-    .with(4250, () => "hard doom bots")
-    .otherwise((): QueueType | undefined => {
-      console.error(`unknown queue type: ${input.toString()}`);
-      return;
-    });
+  return (
+    match(input)
+      .returnType<QueueType | undefined>()
+      .with(0, () => "custom")
+      .with(420, () => "solo")
+      .with(400, () => "draft pick")
+      .with(440, () => "flex")
+      .with(450, () => "aram")
+      .with(700, () => "clash")
+      .with(710, () => "ranked 5s")
+      .with(720, () => "aram clash")
+      .with(480, () => "swiftplay")
+      .with(490, () => "quickplay")
+      .with(900, () => "arurf")
+      .with(ARENA_QUEUE_ID, () => "arena")
+      .with(1740, () => "arena")
+      .with(1750, () => "arena")
+      .with(2300, () => "brawl")
+      .with(2400, () => "aram mayhem")
+      .with(3200, () => "aram mayhem")
+      .with(3220, () => "aram mayhem")
+      .with(3270, () => "aram mayhem")
+      .with(3100, () => "custom")
+      // 3130 was previously mapped to easy doom bots, but every lake match with
+      // this id is a custom lobby (gameType CUSTOM_GAME, gameMode CLASSIC).
+      .with(3130, () => "custom")
+      .with(1900, () => "urf")
+      // 4220/4250 have never been observed in the match lake; they are kept
+      // from the 2025 Doom Bots run's spectator payloads. If the mode returns
+      // on different ids, the queue-windows watcher flags them as unknown.
+      .with(4220, () => "normal doom bots")
+      .with(4250, () => "hard doom bots")
+      .otherwise((): QueueType | undefined => {
+        console.error(`unknown queue type: ${input.toString()}`);
+        return;
+      })
+  );
 }
 
 export function isArenaQueueOrMode(queueId: number, gameMode: string): boolean {

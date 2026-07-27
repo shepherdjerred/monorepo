@@ -140,9 +140,8 @@ describe("proposeQueueWindowEdits", () => {
       "hard doom bots": [["2025-08-27", "2025-10-22"]],
     });
     const { edits, next } = propose(file, {
-      "3130": { "2026-07-06": 2 },
-      "4220": { "2026-07-07": 2 },
-      "4250": { "2026-07-08": 1 },
+      "4220": { "2026-07-06": 2 },
+      "4250": { "2026-07-07": 1 },
     });
     expect(edits).toHaveLength(3);
     expect(edits.every((edit) => edit.kind === "open")).toBe(true);
