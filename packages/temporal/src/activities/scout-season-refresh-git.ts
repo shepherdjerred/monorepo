@@ -158,21 +158,25 @@ export async function openSeasonRefreshPr(
       redactOutput: true,
     },
   );
-  const prUrl = await runCommand(
+  // Idempotency across activity retries: if a PR for this head branch already
+  // exists (a prior attempt created it, then timed out or the worker died
+  // before Temporal recorded completion), reuse it instead of creating a
+  // duplicate. The force-with-lease push above already updated its branch.
+  const existingPrOutput = await runCommand(
     [
       "gh",
       "pr",
-      "create",
+      "list",
       "--repo",
       input.repoSlug,
-      "--base",
-      input.mainBranch,
       "--head",
       input.branch,
-      "--title",
-      input.title,
-      "--body",
-      input.body,
+      "--state",
+      "open",
+      "--json",
+      "url",
+      "--jq",
+      '.[0].url // ""',
     ],
     {
       cwd: input.repoDir,
@@ -180,5 +184,31 @@ export async function openSeasonRefreshPr(
       redactOutput: true,
     },
   );
+  const existingPrUrl = existingPrOutput.trim();
+  const prUrl =
+    existingPrUrl.length > 0
+      ? existingPrUrl
+      : await runCommand(
+          [
+            "gh",
+            "pr",
+            "create",
+            "--repo",
+            input.repoSlug,
+            "--base",
+            input.mainBranch,
+            "--head",
+            input.branch,
+            "--title",
+            input.title,
+            "--body",
+            input.body,
+          ],
+          {
+            cwd: input.repoDir,
+            env: { GH_TOKEN: input.ghToken },
+            redactOutput: true,
+          },
+        );
   return { commitHash, prUrl };
 }

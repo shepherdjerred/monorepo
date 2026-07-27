@@ -429,6 +429,18 @@ export function proposeQueueWindowEdits(
     if (primaryKey === undefined) {
       throw new Error("unreachable: queue unit has no keys");
     }
+
+    // A future-announced window (last window starts after today, e.g. a mode
+    // manually recorded ahead of its start with end:null) is not yet active.
+    // Skip drift evaluation entirely: treating it as open would emit a
+    // misleading sparse-no-close warning every day, and an "open" append with
+    // enough pre-start observations would insert an out-of-order window that
+    // fails schema validation. Nothing to do until its start date arrives.
+    const lastWindow = unit.windows.at(-1);
+    if (lastWindow !== undefined && lastWindow.start > today) {
+      continue;
+    }
+
     const unitObs = mergeUnitObservations(unit, perQueue);
 
     const openChange = tryOpenOrReopen({

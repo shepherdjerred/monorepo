@@ -28,6 +28,11 @@ function errorDetail(error: unknown): string | null {
  * without a Sentry incident. Only unexpected (5xx / unclassified) errors report.
  */
 function isExpectedRouteError(error: unknown): boolean {
+  // A malformed path param (e.g. /reports/not-a-number) makes the route's Zod
+  // param hook throw a ZodError — routine boundary input, not an incident.
+  if (error instanceof z.ZodError) {
+    return true;
+  }
   if (isRouteErrorResponse(error)) {
     return error.status >= 400 && error.status < 500;
   }

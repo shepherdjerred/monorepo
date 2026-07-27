@@ -419,6 +419,7 @@ export function GuildSubscriptions() {
         onOpenChange={setAddOpen}
         onAdded={() => {
           void queryClient.invalidateQueries({ queryKey: subsKey });
+          invalidatePlayerSurfaces();
           setAddOpen(false);
         }}
       />
@@ -434,6 +435,7 @@ export function GuildSubscriptions() {
           setError(null);
           setChannelAction(null);
           void queryClient.invalidateQueries({ queryKey: subsKey });
+          invalidatePlayerSurfaces();
         }}
       />
       <SubscriptionFilterDialog
@@ -448,6 +450,7 @@ export function GuildSubscriptions() {
           setError(null);
           setFilterAction(null);
           void queryClient.invalidateQueries({ queryKey: subsKey });
+          invalidatePlayerSurfaces();
         }}
       />
     </div>

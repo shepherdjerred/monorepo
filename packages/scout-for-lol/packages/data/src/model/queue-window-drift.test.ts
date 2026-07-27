@@ -105,6 +105,21 @@ describe("proposeQueueWindowEdits", () => {
     expect(warnings[0]?.total).toBe(1);
   });
 
+  test("skips a future-announced window (start after today)", () => {
+    // A window recorded ahead of its start with end:null is not yet active.
+    // Even with pre-start observations (which would otherwise append an
+    // out-of-order open window and fail schema validation), no drift is
+    // proposed and no sparse warning is emitted until the start date arrives.
+    const file = makeFile({ urf: [["2026-08-01", null]] });
+    const { edits, warnings, next } = propose(file, {
+      "1900": { "2026-07-10": 2, "2026-07-12": 2 },
+    });
+    expect(edits).toHaveLength(0);
+    expect(warnings).toHaveLength(0);
+    // Unchanged — still the single future window.
+    expect(next.queues["urf"]).toEqual(file.queues["urf"]);
+  });
+
   test("throws when Doom Bots difficulties fall out of lockstep", () => {
     const file = makeFile({
       "easy doom bots": [["2025-08-27", "2025-10-22"]],
