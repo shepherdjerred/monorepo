@@ -1,7 +1,14 @@
 # ~/.bashrc - Sourced by interactive non-login shells
 
-# Source environment setup (PATH, mise)
+# Source environment setup (PATH, mise) — needed by every shell, including
+# non-interactive ones, so it stays above the interactivity guard.
 [[ -f ~/.bash_env ]] && source ~/.bash_env
+
+# Everything below is interactive-only. ~/.bash_profile sources this file for
+# ALL login shells (even non-interactive ones like an agent's `bash -l`), and
+# without this guard the exports below (EDITOR=nvim, SHELL=bash) leak into
+# agent shells and make them open nvim on e.g. plain `git commit`.
+[[ $- == *i* ]] || return 0
 
 # Aliases (interactive only)
 alias vim=nvim

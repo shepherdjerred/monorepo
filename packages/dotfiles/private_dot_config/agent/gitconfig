@@ -1,0 +1,66 @@
+# Agent gitconfig — pointed at by GIT_CONFIG_GLOBAL in AI-agent sessions
+# (Claude Code via packages/dotfiles/claude-managed/managed-settings.json,
+# Codex via packages/dotfiles/private_dot_codex/private_config.toml,
+# OpenCode via the fish opencode() wrapper in
+# packages/dotfiles/private_dot_config/private_fish/config.fish.tmpl).
+#
+# A curated subset of ~/.gitconfig (private_dot_gitconfig.tmpl) that keeps
+# everything agents need to operate — identity, GitHub credentials, git-spice
+# settings, fetch/push/pull behavior — while dropping the interactive
+# customizations that confuse agents: delta pager, difftastic external diff,
+# column UI, aliases, and sort-order overrides. Note git cannot UNSET a key
+# via env-based config (GIT_CONFIG_KEY_n/GIT_CONFIG_VALUE_n), which is why
+# this file exists: an empty diff.external is an error, not an unset.
+[user]
+	name = Jerred Shepherd
+	email = github@sjer.red
+
+[core]
+	pager = cat
+	excludesFile = ~/.gitignore
+	autocrlf = false
+	eol = lf
+	fsmonitor = true
+	untrackedCache = true
+
+[credential "https://github.com"]
+	helper =
+	helper = !/opt/homebrew/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !/opt/homebrew/bin/gh auth git-credential
+
+[http]
+	postBuffer = 524288000
+
+[push]
+	autoSetupRemote = true
+	default = simple
+	followTags = true
+[pull]
+	rebase = true
+[rebase]
+	autoSquash = true
+	autoStash = true
+	updateRefs = true
+[fetch]
+	prune = true
+	pruneTags = true
+	all = true
+[init]
+	defaultBranch = main
+[merge]
+	conflictstyle = zdiff3
+[diff]
+	algorithm = histogram
+	renames = true
+[rerere]
+	enabled = true
+	autoupdate = true
+
+# git-spice stacked-branch workflow (mirrors ~/.gitconfig; agents drive
+# git-spice per the git-spice-helper skill).
+[spice "branchCreate"]
+	commit = false
+[spice "submit"]
+	skipRestackCheck = trunk
