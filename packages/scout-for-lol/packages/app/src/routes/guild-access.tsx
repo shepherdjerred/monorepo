@@ -12,7 +12,7 @@ import {
   permissionsForRole,
 } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
-import { analyticsMeta } from "#src/lib/analytics.ts";
+import { analyticsMeta, track } from "#src/lib/analytics.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import { Badge } from "#src/components/ui/badge.tsx";
@@ -142,9 +142,13 @@ export function GuildAccess() {
       { enabled: guildId !== undefined },
     ),
   );
+  // roles.set backs both new grants AND edits (role changes, custom-permission
+  // saves, downgrades). A static `meta` would tag every one of those
+  // `access_granted`, inflating the grant metric and hiding privilege changes —
+  // so this mutation carries no meta and each call site tracks the right event
+  // (`access_granted` for a new member, `access_updated` for an edit).
   const setMutation = useMutation(
     trpc.roles.set.mutationOptions({
-      meta: analyticsMeta("access_granted"),
       onSuccess: invalidate,
     }),
   );
@@ -240,6 +244,7 @@ export function GuildAccess() {
                 },
                 {
                   onSuccess: () => {
+                    track("access_granted");
                     setNewUserId("");
                     setNewRole("viewer");
                     setNewCustomPermissions([]);
@@ -333,11 +338,18 @@ export function GuildAccess() {
                               return;
                             }
                             setEditingUserId(null);
-                            setMutation.mutate({
-                              guildId,
-                              discordUserId: member.discordUserId,
-                              permissions: permissionsForRole(selection),
-                            });
+                            setMutation.mutate(
+                              {
+                                guildId,
+                                discordUserId: member.discordUserId,
+                                permissions: permissionsForRole(selection),
+                              },
+                              {
+                                onSuccess: () => {
+                                  track("access_updated");
+                                },
+                              },
+                            );
                           }}
                         >
                           <SelectTrigger
@@ -445,6 +457,7 @@ export function GuildAccess() {
                                 },
                                 {
                                   onSuccess: () => {
+                                    track("access_updated");
                                     setEditingUserId(null);
                                   },
                                 },

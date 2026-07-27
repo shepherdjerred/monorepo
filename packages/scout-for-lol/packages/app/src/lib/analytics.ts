@@ -99,6 +99,7 @@ const SCOUT_ANALYTICS_EVENTS = [
   "competition_leaderboard_refreshed",
   // Access (RBAC)
   "access_granted",
+  "access_updated",
   "access_revoked",
   // Funnel / entry
   "onboarding_step",
