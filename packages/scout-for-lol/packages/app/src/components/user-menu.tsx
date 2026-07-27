@@ -1,9 +1,18 @@
-import { Bug, ChevronDown, LogOut, Monitor, Moon, Sun } from "lucide-react";
+import {
+  Bug,
+  ChevronDown,
+  ExternalLink,
+  LogOut,
+  Monitor,
+  Moon,
+  Sun,
+} from "lucide-react";
 import { Button } from "#src/components/ui/button.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
@@ -87,6 +96,13 @@ export function UserMenu(props: { username: string }) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={8} className="w-56">
+        <DropdownMenuLabel className="font-normal">
+          <span className="block text-sm font-medium">@{props.username}</span>
+          <span className="block text-xs text-muted-foreground">
+            Signed in with Discord
+          </span>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
         <DropdownMenuSub>
           <DropdownMenuSubTrigger className="gap-2">
             <CurrentThemeIcon className="h-4 w-4" aria-hidden="true" />
@@ -124,10 +140,14 @@ export function UserMenu(props: { username: string }) {
           <a href={SUPPORT_URL} target="_blank" rel="noreferrer">
             <Bug className="h-4 w-4" aria-hidden="true" />
             Report a bug
+            <ExternalLink
+              className="ml-auto h-3 w-3 opacity-60"
+              aria-hidden="true"
+            />
           </a>
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem
-          className="gap-2"
           onSelect={() => {
             void logout();
           }}

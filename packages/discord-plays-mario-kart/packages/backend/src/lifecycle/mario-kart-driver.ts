@@ -7,7 +7,7 @@ import type {
   SessionStopReason,
 } from "@shepherdjerred/discord-stream-lifecycle/session/session.ts";
 import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client.ts";
-import { N64Emulator } from "#src/emulator/n64-emulator.ts";
+import { WorkerEmulator } from "#src/emulator/worker/worker-emulator.ts";
 import type { ScreenMode } from "#src/emulator/mk64-memory.ts";
 import { GameStreamer } from "#src/stream/game-streamer.ts";
 import { applyStreamOverlays } from "#src/overlay/composite.ts";
@@ -27,7 +27,7 @@ import type { LeaderboardResponse } from "@discord-plays-mario-kart/common";
 
 export type ActiveSessionRuntime = {
   readonly session: Session<SelfbotPooledUserbot>;
-  readonly emulator: N64Emulator;
+  readonly emulator: WorkerEmulator;
   readonly streamer: GameStreamer;
   readonly seatManager: SeatManager;
   readonly leaderboardStore: LeaderboardStore;
@@ -88,18 +88,24 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
     const seats = config.emulator.seats;
     const seatManager = new SeatManager(seats);
 
-    // Per-guild emulator save isolation: N64Emulator snapshots MEMFS into
+    // Per-guild emulator save isolation: the emulator snapshots MEMFS into
     // savesDir on stop and rehydrates from it on init. Server A's mempak/EEPROM
     // can never leak into server B's because each lives under its own
     // saves/<guildId>/emulator/ tree.
+    //
+    // WorkerEmulator runs the N64Emulator on a Worker thread so the synchronous
+    // ~12–30ms-per-frame wasm stepping stays OFF this (main) event loop, leaving
+    // it free for ffmpeg stdin/stdout, demux, and the Discord RTP send. That is
+    // what restores full-rate streaming (see plans/2026-07-26_mk64-emulator-worker-thread.md).
     const savesDir = path.join(session.sessionDir, "emulator");
-    const emulator = new N64Emulator({
+    const emulator = new WorkerEmulator({
       wasmDir: config.emulator.wasm_dir,
       romPath: config.emulator.rom_path,
       fps: config.emulator.fps,
       software: config.emulator.software_render,
       seats,
       savesDir,
+      snapshotEveryNFrames: config.leaderboard.poll_every_n_frames,
     });
     await emulator.init();
     emulator.start();
@@ -142,28 +148,32 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
     // closure so the RaceTracker can pick up the real broadcast once it's set.
     let broadcast: () => Promise<void> = () => Promise.resolve();
     const raceTracker = new RaceTracker({
-      emulator,
       seatNames: () => seatManager.names(),
       store: leaderboardStore,
-      pollEveryNFrames: config.leaderboard.poll_every_n_frames,
       onRaceRecorded: () => {
         void broadcast();
       },
     });
+    // Race snapshots are decoded in the Worker (RDRAM lives there) and posted
+    // every snapshotEveryNFrames frames; feed each to the tracker.
+    emulator.onSnapshot((snap) => {
+      raceTracker.updateFromSnapshot(snap);
+    });
 
     const overlayContext: StreamOverlayContextProvider = () => ({
       epochMs: Date.now(),
-      seatActivity: emulator.seatActivity(),
+      // Seat activity + height come from the most recent frame message (the
+      // Worker no longer exposes live getters).
+      seatActivity: emulator.latestSeatActivity,
       mode: raceTracker.latestScreenMode() ?? fallbackScreenMode(seats),
       seats,
       nameOverlay,
     });
 
-    // Per-frame pipeline: overlay → stream → race poll.
+    // Per-frame pipeline: overlay → stream. Race decoding happens in the Worker.
     emulator.onFrame((frame) => {
-      applyStreamOverlays(frame, emulator.height, overlayContext());
-      streamer.pushFrame(frame);
-      raceTracker.onFrame();
+      applyStreamOverlays(frame.rgba, frame.height, overlayContext());
+      streamer.pushFrame(frame.rgba);
     });
     emulator.onAudio((pcm) => {
       streamer.pushAudio(pcm);
@@ -222,7 +232,7 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
       logger.error("emulator persistSaves failed", error);
     }
     try {
-      runtime.emulator.stop();
+      await runtime.emulator.stop();
     } catch (error) {
       logger.error("emulator stop failed", error);
     }

@@ -6,7 +6,11 @@ import {
   type PromptContext,
 } from "./codex-command.ts";
 
-const baseConfig = { codexBinary: "codex", model: "gpt-5.4-nano" };
+const baseConfig = {
+  codexBinary: "codex",
+  model: "gpt-5.6-luna",
+  reasoningEffort: "medium" as const,
+};
 
 const baseContext: PromptContext = {
   gameStateSummary:
@@ -16,7 +20,7 @@ const baseContext: PromptContext = {
 };
 
 describe("buildCodexArgs", () => {
-  test("disables apps/plugins/multi_agent so gpt-5.4-nano accepts the toolset", () => {
+  test("disables apps/plugins/multi_agent so small models accept the toolset", () => {
     const args = buildCodexArgs({
       config: baseConfig,
       goal: "advance dialog",
@@ -58,14 +62,14 @@ describe("buildCodexArgs", () => {
       context: baseContext,
     });
     expect(args).toContain("--model");
-    expect(args).toContain("gpt-5.4-nano");
+    expect(args).toContain("gpt-5.6-luna");
     expect(args).toContain("--cd");
     expect(args).toContain("/run");
     expect(args).toContain("--output-last-message");
     expect(args).toContain("/out");
   });
 
-  test("keeps the sandbox bypass + reasoning-effort knobs", () => {
+  test("keeps the sandbox bypass + configured reasoning-effort knobs", () => {
     const args = buildCodexArgs({
       config: baseConfig,
       goal: "advance dialog",
@@ -74,7 +78,18 @@ describe("buildCodexArgs", () => {
       context: baseContext,
     });
     expect(args).toContain("--dangerously-bypass-approvals-and-sandbox");
-    expect(args).toContain('model_reasoning_effort="low"');
+    expect(args).toContain('model_reasoning_effort="medium"');
+  });
+
+  test("honors a non-default reasoning effort", () => {
+    const args = buildCodexArgs({
+      config: { ...baseConfig, reasoningEffort: "high" },
+      goal: "advance dialog",
+      runtimeDirectory: "/run",
+      outputPath: "/out",
+      context: baseContext,
+    });
+    expect(args).toContain('model_reasoning_effort="high"');
   });
 
   test("appends the rendered prompt as the final positional argument", () => {

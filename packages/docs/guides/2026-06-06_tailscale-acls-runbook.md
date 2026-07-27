@@ -93,3 +93,11 @@ Today all `*.ts.net` ingresses share `tag:k8s`, so ACLs can't distinguish e.g. a
 ## Gotcha: golink runs its own node tagged `tag:k8s-operator`
 
 golink (`go.tailnet-1a49.ts.net`) runs its **own embedded tsnet node** tagged **`tag:k8s-operator`** (`src/cdk8s/src/resources/golink.ts` → `TS_ADVERTISE_TAGS`), NOT an operator-created ingress proxy (those are `tag:k8s`). The deny-by-default ACL only granted `tag:k8s → tag:k8s:443`, so reaching golink over the tailnet needs an **explicit `tag:k8s → tag:k8s-operator:443` grant** — otherwise deny-by-default silently drops it and the caller hangs ~133s then `ConnectionRefused`. This broke `golink-sync` (the temporal-worker egresses as `tag:k8s`) daily from 2026-06-14 until PR #1287 added the grant. Signature: the worker reaches `tag:k8s` ingresses (chartmuseum/seaweedfs) fine but times out on golink; `autogroup:admin` reaches it from your Mac, so it works locally but not from the cluster.
+
+## Gotcha: multi-node node-exporter scrapes need `tag:k8s → tag:k8s:9100`
+
+Both cluster nodes report their **Tailscale address as `InternalIP`**. Prometheus scrapes kubelet and node-exporter on those IPs over the tailnet, so the path is **`tag:k8s → tag:k8s:<port>`**, not the `tag:monitoring → tag:server:9100` rule (nodes are not `tag:server`).
+
+The multi-node InternalIP grant originally allowed only **6443 + 10250** (API + kubelet). That was enough for a single-node cluster (Prometheus and node-exporter share a host, so scrapes never leave the node). When **liskov** joined, Prometheus on torvalds began scraping `liskov:9100` cross-node — Tailscale deny-by-default dropped it (`context deadline exceeded`) while `liskov:10250` (kubelet) stayed UP. Laptop admin access to `:9100` still worked (`autogroup:admin → *:*`), which made the failure look like a host/firewall bug.
+
+**Fix:** include `9100` on the `tag:k8s → tag:k8s` grant and the matching ACL test (PR #1686 grant; test completed in the follow-up). Signature: node-exporter pod Running + ready on the worker, Prometheus target DOWN with scrape timeout, kubelet target on the same IP UP, curl from admin laptop succeeds.

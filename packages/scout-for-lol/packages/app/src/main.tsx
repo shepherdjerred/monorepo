@@ -7,6 +7,7 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import * as Sentry from "@sentry/react";
+import { z } from "zod";
 import { App } from "#src/app.tsx";
 import { TRPCProvider, trpcClient } from "#src/lib/trpc.ts";
 import { ThemeProvider } from "#src/lib/use-theme.tsx";
@@ -53,9 +54,24 @@ globalThis.addEventListener("vite:preloadError", () => {
   globalThis.location.reload();
 });
 
+const HttpStatusErrorSchema = z.object({
+  data: z.object({ httpStatus: z.number() }),
+});
+
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { retry: 1, staleTime: 30_000 },
+    queries: {
+      // Retry once, but never for client errors — auth/permission/validation
+      // failures (4xx) won't succeed on retry.
+      retry: (failureCount, error) => {
+        const parsed = HttpStatusErrorSchema.safeParse(error);
+        if (parsed.success && parsed.data.data.httpStatus < 500) {
+          return false;
+        }
+        return failureCount < 1;
+      },
+      staleTime: 30_000,
+    },
   },
   // Fire an analytics event for any mutation whose meta was built with
   // analyticsMeta(), labeled by outcome. Runs alongside each mutation's own

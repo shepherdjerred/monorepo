@@ -29,6 +29,7 @@ import {
 } from "@opentelemetry/sdk-logs";
 import { ExportResultCode, type ExportResult } from "@opentelemetry/core";
 import { buildArchiveSpanProcessor } from "@shepherdjerred/llm-observability";
+import { createStructuredLogger } from "./logging.ts";
 
 const DEFAULT_OTLP_ENDPOINT = "http://tempo.tempo.svc.cluster.local:4318";
 const DEFAULT_LOKI_OTLP_LOGS_ENDPOINT = "http://loki-gateway.loki/otlp/v1/logs";
@@ -40,21 +41,7 @@ let batchProcessor: BatchSpanProcessor | undefined;
 let loggerProvider: LoggerProvider | undefined;
 let logRecordProcessor: BatchLogRecordProcessor | undefined;
 
-function jsonLog(
-  level: "info" | "warning" | "error",
-  message: string,
-  fields: Record<string, unknown> = {},
-): void {
-  console.warn(
-    JSON.stringify({
-      level,
-      msg: message,
-      component: "temporal-worker",
-      module: "observability.tracing",
-      ...fields,
-    }),
-  );
-}
+const jsonLog = createStructuredLogger("observability.tracing");
 
 const diagLogger: DiagLogger = {
   // verbose / debug are intentionally silenced — too noisy for production logs

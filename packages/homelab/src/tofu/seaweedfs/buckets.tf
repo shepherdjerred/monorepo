@@ -58,6 +58,18 @@ resource "aws_s3_bucket" "glitter_boys_ppl" {
   bucket = "glitter-boys-ppl"
 }
 
+# Private, loss-intolerant raw Discord corpus. Immutable response pages,
+# manifests, and projections are mirrored to R2 before a snapshot pointer is
+# advanced. No expiry: Discord history and captured deletions are not reliably
+# reconstructible.
+resource "aws_s3_bucket" "glitter_discord_corpus" {
+  bucket = "glitter-discord-corpus"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 # Document CRDT state + attachments for the self-hosted Relay Server (Obsidian
 # real-time collaboration). See packages/homelab/src/cdk8s/src/resources/relay.
 #

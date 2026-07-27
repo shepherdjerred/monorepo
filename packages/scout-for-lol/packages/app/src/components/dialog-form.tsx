@@ -8,7 +8,11 @@ import { DialogFooter } from "#src/components/ui/dialog.tsx";
  */
 export function DialogFormError(props: { error: string | null }) {
   if (props.error === null) return null;
-  return <p className="text-sm text-destructive">{props.error}</p>;
+  return (
+    <p role="alert" className="text-sm text-destructive">
+      {props.error}
+    </p>
+  );
 }
 
 /**

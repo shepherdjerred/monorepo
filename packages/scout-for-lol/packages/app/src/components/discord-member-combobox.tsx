@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { useDebouncedValue } from "#src/hooks/use-debounced-value.ts";
 import { Combobox } from "#src/components/ui/combobox.tsx";
@@ -37,7 +37,10 @@ export function DiscordMemberCombobox(props: {
   const search = useQuery(
     trpc.discord.searchMembers.queryOptions(
       { guildId: props.guildId, query: debounced.trim() },
-      { enabled: debounced.trim().length > 0 },
+      {
+        enabled: debounced.trim().length > 0,
+        placeholderData: keepPreviousData,
+      },
     ),
   );
 
@@ -50,7 +53,15 @@ export function DiscordMemberCombobox(props: {
         // without selecting a search result.
         props.onChange(SNOWFLAKE.test(text.trim()) ? text.trim() : "");
       }}
-      items={search.data ?? []}
+      // Hide stale results for a superseded query — both while the input is
+      // still debouncing (query !== debounced, so the query key hasn't caught
+      // up) and while the new request is in flight (keepPreviousData) — so the
+      // previous query's members can't be selected for the new search.
+      items={
+        query.trim() !== debounced.trim() || search.isPlaceholderData
+          ? []
+          : (search.data ?? [])
+      }
       isLoading={search.isFetching}
       getKey={(member) => member.id}
       onSelect={(member) => {

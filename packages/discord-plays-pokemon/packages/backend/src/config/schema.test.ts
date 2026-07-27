@@ -78,7 +78,8 @@ describe("ConfigSchema goal config", () => {
     const parsed = ConfigSchema.parse(validConfigWithoutGoal());
     expect(parsed.game.goal).toEqual({
       enabled: false,
-      model: "gpt-5.4-nano",
+      model: "gpt-5.6-luna",
+      reasoning_effort: "medium",
       codex_binary: "codex",
       runtime_directory: ".",
       screenshot_dir: "goal-screenshots",
@@ -95,6 +96,30 @@ describe("ConfigSchema goal config", () => {
         chord_max_total: 200,
       },
     });
+  });
+
+  test("accepts reasoning_effort enum values", () => {
+    const config = validConfigWithoutGoal();
+    const parsed = ConfigSchema.parse({
+      ...config,
+      game: {
+        ...config.game,
+        goal: { reasoning_effort: "high" },
+      },
+    });
+    expect(parsed.game.goal.reasoning_effort).toBe("high");
+  });
+
+  test("rejects unknown reasoning_effort", () => {
+    const config = validConfigWithoutGoal();
+    const result = ConfigSchema.safeParse({
+      ...config,
+      game: {
+        ...config.game,
+        goal: { reasoning_effort: "max" },
+      },
+    });
+    expect(result.success).toBe(false);
   });
 
   test("fills command_limits defaults from a partial table", () => {

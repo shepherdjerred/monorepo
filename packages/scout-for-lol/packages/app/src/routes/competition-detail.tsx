@@ -1,6 +1,10 @@
 import { Link, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CompetitionIdSchema, visibilityToString } from "@scout-for-lol/data";
+import {
+  CompetitionIdSchema,
+  visibilityToString,
+  visibilityDescription,
+} from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { formatDate, channelLabel } from "#src/lib/format.ts";
@@ -149,6 +153,9 @@ export function CompetitionDetail() {
                 <div>
                   <span className="text-muted-foreground">Visibility</span>
                   <p>{visibilityToString(competition.visibility)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {visibilityDescription(competition.visibility)}
+                  </p>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Channel</span>

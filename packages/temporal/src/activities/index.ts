@@ -23,6 +23,7 @@ import { homelabCrdImportsRefreshActivities } from "./homelab-crd-imports-refres
 import { pokeemeraldDataRefreshActivities } from "./dpp-pokeemerald-data-refresh.ts";
 import { scoutShowcaseRefreshActivities } from "./scout-showcase-refresh.ts";
 import { observeReviewSignalsActivities } from "./observe-review-signals.ts";
+import { glitterCorpusActivities } from "./glitter-corpus.ts";
 
 export const activities = {
   ...fetcherActivities,
@@ -50,4 +51,5 @@ export const activities = {
   ...pokeemeraldDataRefreshActivities,
   ...scoutShowcaseRefreshActivities,
   ...observeReviewSignalsActivities,
+  ...glitterCorpusActivities,
 };

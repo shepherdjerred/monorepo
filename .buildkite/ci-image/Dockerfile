@@ -13,7 +13,7 @@ RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
 
 # Docker CLI + buildx for image-build steps (BuildKit runs in-pod)
 COPY --from=docker:28-cli@sha256:625d9431a9f54c5a2bc90f24f0e1c3d55b1349fd857dd85035f98c2c9acbdd4d /usr/local/bin/docker /usr/local/bin/docker
-COPY --from=docker/buildx-bin:0.30.1@sha256:cc16bd35c1bbdde2c9d4ee08cf33be55b17e6ed2188816292dbde51064105e25 /buildx /usr/local/lib/docker/cli-plugins/docker-buildx
+COPY --from=docker/buildx-bin:0.35.0@sha256:917570d8d0ae91ae49251f84f848a6801eedd114554c56a4fdf7ec88cac48eeb /buildx /usr/local/lib/docker/cli-plugins/docker-buildx
 
 # swiftlint from the official release zip: the -static build is
 # self-contained (the dynamic binary needs Swift runtime libs neither the
@@ -27,6 +27,7 @@ RUN curl -fsSL "https://github.com/realm/SwiftLint/releases/download/${SWIFTLINT
     && rm /tmp/swiftlint.zip
 
 # mise, pinned; tools come from the repo's .mise.toml
+# renovate: datasource=github-releases depName=jdx/mise
 ENV MISE_VERSION="v2026.7.1" \
     MISE_DATA_DIR=/opt/mise \
     PATH="/opt/mise/shims:/root/.local/bin:${PATH}"
@@ -41,6 +42,7 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # claude CLI for the release CHANGELOG-refinement step (scripts/release.ts);
 # same pinned recipe as packages/birmel/Dockerfile.
+# renovate: datasource=npm depName=@anthropic-ai/claude-code
 ARG CLAUDE_CODE_VERSION=2.1.175
 ENV BUN_INSTALL=/usr/local
 RUN bun add -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" && claude --version

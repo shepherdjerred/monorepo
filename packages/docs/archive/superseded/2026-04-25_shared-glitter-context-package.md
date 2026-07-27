@@ -1,13 +1,17 @@
 ---
 id: plan-2026-04-25-shared-glitter-context-package
 type: plan
-status: planned
+status: complete
 board: true
 verification: agent
-disposition: active
+disposition: deferred
 ---
 
 # Shared Glitter-Context Package
+
+> Superseded by
+> `plans/2026-07-26_glitter-discord-source-of-truth.md`, which consolidates the
+> shared package with the verified Discord corpus and weekly refresh design.
 
 ## Motivation
 
@@ -74,4 +78,19 @@ packages/glitter-context/
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `Shared Glitter-Context Package`.
+- [x] Superseded by the consolidated Glitter Discord source-of-truth plan.
+
+## Session Log — 2026-07-26
+
+### Done
+
+- Consolidated this design into the source-of-truth implementation plan and
+  archived this older plan as superseded.
+
+### Remaining
+
+- None in this document; follow the consolidated plan.
+
+### Caveats
+
+- Historical design details remain here for context but are not authoritative.

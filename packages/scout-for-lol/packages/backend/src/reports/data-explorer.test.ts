@@ -67,6 +67,47 @@ describe("report data explorer", () => {
     ).rejects.toThrow("is not available");
   });
 
+  test("normalizes timestamp columns to ISO strings", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        {
+          playerId: 1,
+          playerAlias: "Lux Player",
+          matchId: "NA1_explorer_ts",
+          puuid: testPuuid("report-explorer-ts"),
+          queue: "solo",
+          championId: 99,
+          championName: "Lux",
+          win: true,
+          surrendered: false,
+          kills: 8,
+          deaths: 2,
+          assists: 11,
+          gameCreationAt: new Date("2026-07-12T12:00:00.000Z"),
+        },
+      ],
+    });
+
+    const result = await browseReportData({
+      serverId,
+      input: ReportDataBrowseInputSchema.parse({
+        table: "match_participants",
+        columns: ["player_alias", "game_creation_at"],
+        filters: [],
+        sort: null,
+        cursor: null,
+        pageSize: 25,
+      }),
+    });
+
+    // DuckDB returns TIMESTAMP columns as value objects; the explorer must
+    // normalize them to ISO strings instead of throwing.
+    expect(result.rows[0]?.["game_creation_at"]).toBe(
+      "2026-07-12T12:00:00.000Z",
+    );
+  });
+
   test("browses filtered guild rows through the report lake", async () => {
     await writeTestLake(lakeDir, {
       serverId,

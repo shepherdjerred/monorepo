@@ -1,6 +1,6 @@
 import { useEffect, useReducer, type ReactElement } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { match } from "ts-pattern";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { track } from "#src/lib/analytics.ts";
@@ -22,6 +22,7 @@ import { OnboardingCompetitionStep } from "#src/components/onboarding/onboarding
 
 export function OnboardingWizard() {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   // Arriving from the post-install /installed page (?guild=…) skips the
@@ -110,7 +111,9 @@ export function OnboardingWizard() {
         guildCount={guilds.length}
         isLoading={guildsQuery.isLoading}
         onRefresh={() => {
-          void guildsQuery.refetch();
+          void queryClient.invalidateQueries({
+            queryKey: trpc.guild.listManageable.pathKey(),
+          });
         }}
         onContinue={() => {
           const first = guilds[0];
@@ -158,7 +161,9 @@ export function OnboardingWizard() {
           discordId={meQuery.data?.discordId ?? ""}
           existingSubs={[]}
           onAdded={() => {
-            void subsQuery.refetch();
+            void queryClient.invalidateQueries({
+              queryKey: trpc.subscription.list.pathKey(),
+            });
           }}
           onContinue={() => {
             dispatch({ type: "next" });
@@ -184,7 +189,9 @@ export function OnboardingWizard() {
             channelId: s.channelId,
           }))}
           onAdded={() => {
-            void subsQuery.refetch();
+            void queryClient.invalidateQueries({
+              queryKey: trpc.subscription.list.pathKey(),
+            });
           }}
           onContinue={() => {
             dispatch({ type: "next" });
