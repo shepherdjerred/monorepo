@@ -77,20 +77,33 @@ defaultRoute, readyPath?, requiresAuth?}` for `sjer-red`, `stocks-sjer-red`,
   `scout-app` (`requiresAuth: "scout-dev-login"`). `astro-opengraph-images`
   omitted (no dev script). `resolvePackage(alias)` throws a
   known-aliases-listing error for typos.
-- **`lib/screenshot/dev-server.ts`** — `ensureDevServer`: fast-probe-and-reuse
-  (skipped when `--env` overrides are given — a running server can't pick up
-  new env vars), else `Bun.spawn` + regex-match the bound `http://localhost:<port>/`
-  banner from stdout/stderr + poll `readyPath`. Uses the existing
-  `lib/deployed/git.ts` `repoRoot()` helper (git rev-parse-based) to resolve
-  `cwd` — not `import.meta.url` introspection, which would break under
-  `bun build --compile`.
+- **`lib/screenshot/dev-server.ts`** — `ensureDevServer`: **fixed-port,
+  deterministic** (the bound port is NEVER parsed from stdout — dev commands
+  print inconsistent/hard-coded banners, so an output-derived port can't be
+  trusted). Flow: reuse a running server only when its `expectedPort` is unique
+  in the catalog, no `--env` overrides are given, and the entry isn't
+  auth-gated (a hand-started stack may lack `ENABLE_DEV_LOGIN`); otherwise the
+  port must be free (TCP-connect occupancy check on 127.0.0.1 + ::1) and a
+  fresh `Bun.spawn` (`detached`, `BROWSER=none`) binds exactly `expectedPort`.
+  If the port is occupied when a fresh spawn is needed, **fail fast** rather
+  than auto-bumping to an unknown port or capturing whatever is there. Readiness
+  = poll `readyPath` on `expectedPort`, watching `proc.exitCode` to fail fast if
+  the child dies first. `stop()` signals the whole process group (descendants
+  too). Uses the existing `lib/deployed/git.ts` `repoRoot()` helper (git
+  rev-parse-based) to resolve `cwd` — not `import.meta.url` introspection, which
+  would break under `bun build --compile`.
 - **`lib/screenshot/pinchtab-driver.ts`** — `captureScreenshot`: creates a
-  session, navigates (through the auth flow URL first if the package
-  requires one — PinchTab's `nav` follows redirects, so one navigation
-  covers both sign-in and arrival), optional viewport/theme, polls
-  `countSelector` for `--wait-for-selector` (or a fixed 1s settle delay),
-  screenshots, closes the tab, revokes the session in a `finally` (so a
-  failed run never leaks a session).
+  session, opens a blank tab and applies viewport + `prefers-color-scheme`
+  emulation **before** navigating (so pages that read `matchMedia` once at load
+  honor `--theme`), then navigates (through the auth flow URL first if the
+  package requires one — PinchTab's `nav` follows redirects, so one navigation
+  covers both sign-in and arrival), polls `countSelector` for
+  `--wait-for-selector` (or a fixed 1s settle delay), screenshots, closes the
+  tab, and revokes the session on both the happy and error paths (a nonzero
+  revoke on the happy path is a hard error). It also registers the session's
+  revoke with the orchestrator via `registerCleanup` so a SIGINT/SIGTERM tears
+  the session down too — signal teardown is coordinated in `screenshotCommand`,
+  which owns both the dev server and the session.
 - **`commands/screenshot/screenshot.ts`** + **`handlers/screenshot.ts`** +
   routing in **`src/index.ts`** — new top-level `screenshot` command.
 
