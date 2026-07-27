@@ -6,13 +6,29 @@
 // path null-traps `fseek`. The GL calls go to a no-op stub (no real GPU) — the
 // frame is read out of wasm memory via _neilGetVideoBuffer, not via GL.
 import { createRequire } from "node:module";
+import path from "node:path";
 
 type Globals = Record<string, unknown>;
+
+export type WasmHostOptions = {
+  readonly wasmDir: string;
+  readonly print: (message: string) => void;
+  readonly printErr: (message: string) => void;
+};
+
+export type WasmHostRuntime = {
+  readonly module: object;
+  readonly fs: object;
+};
 
 // Shared no-op for the many browser/DOM methods the glue calls but we ignore.
 const noop = (): void => {
   /* intentional shim no-op */
 };
+
+class WebGLRenderingContextStub {
+  readonly headless = true;
+}
 
 const rect = () => ({
   left: 0,
@@ -91,6 +107,13 @@ export function installBrowserStubs(): void {
   setGlobal("require", createRequire(import.meta.url));
   setGlobal("__filename", import.meta.path);
   setGlobal("__dirname", import.meta.dir);
+  // Emscripten's Safari WebGL compatibility check uses this constructor as the
+  // right-hand side of instanceof. Bun Workers do not provide the browser
+  // global, so omitting it crashes before the core can initialize. The fake
+  // WebGL2 context deliberately is not an instance: for a "webgl2" request,
+  // the generated predicate accepts the context when both comparisons are
+  // false.
+  setGlobal("WebGLRenderingContext", WebGLRenderingContextStub);
 
   const glStub = makeGLStub();
   const el = (): Globals => ({
@@ -180,4 +203,49 @@ export function installBrowserStubs(): void {
 /** The fake canvas to hand to Module.canvas (after installBrowserStubs). */
 export function getFakeCanvas(): unknown {
   return fakeCanvas;
+}
+
+function requireObject(value: unknown, name: string): object {
+  if (typeof value !== "object" || value === null) {
+    throw new TypeError(`${name} is not an object`);
+  }
+  return value;
+}
+
+/**
+ * Load and initialize the browser-built Emscripten runtime in the headless
+ * worker environment. This stops before callMain so image smoke can validate
+ * the generated glue and wasm without shipping a copyrighted ROM.
+ */
+export async function initializeWasmHost(
+  options: WasmHostOptions,
+): Promise<WasmHostRuntime> {
+  installBrowserStubs();
+
+  const wasmBinary = new Uint8Array(
+    await Bun.file(path.join(options.wasmDir, "n64wasm.wasm")).arrayBuffer(),
+  );
+  const glue = await Bun.file(path.join(options.wasmDir, "n64wasm.js")).text();
+
+  const ready = new Promise<void>((resolve) => {
+    setGlobal("Module", {
+      wasmBinary,
+      canvas: getFakeCanvas(),
+      noInitialRun: true,
+      print: options.print,
+      printErr: options.printErr,
+      onRuntimeInitialized: resolve,
+      locateFile: (filename: string) => path.join(options.wasmDir, filename),
+    });
+  });
+
+  // Run the browser-built glue at global scope. It augments globalThis.Module
+  // with the wasm exports and creates the global FS object.
+  (0, eval)(glue);
+  await ready;
+
+  return {
+    module: requireObject(Reflect.get(globalThis, "Module"), "Module"),
+    fs: requireObject(Reflect.get(globalThis, "FS"), "FS"),
+  };
 }

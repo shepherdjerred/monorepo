@@ -104,6 +104,31 @@ async function removeContainer(): Promise<void> {
 async function main(configPath: string): Promise<void> {
   await removeContainer();
 
+  const wasmSmoke = await sh([
+    "docker",
+    "run",
+    "--rm",
+    "--user",
+    "1000:1000",
+    "--env",
+    "HOME=/tmp",
+    "--workdir",
+    "/app/packages/discord-plays-mario-kart/packages/backend",
+    IMAGE,
+    "bun",
+    "run",
+    "smoke:wasm-host",
+  ]);
+  if (wasmSmoke.code !== 0) {
+    throw new Error(
+      `WASM host smoke failed:\n${wasmSmoke.stdout}\n${wasmSmoke.stderr}`,
+    );
+  }
+  const wasmSmokeOutput = `${wasmSmoke.stdout}\n${wasmSmoke.stderr}`.trim();
+  if (wasmSmokeOutput.length > 0) {
+    console.error(wasmSmokeOutput);
+  }
+
   // docker cp streams the config through the daemon API instead of a host
   // bind mount — in CI the daemon is a dind sidecar that cannot see this
   // container's filesystem, so a -v mount silently materializes as an empty

@@ -28,6 +28,7 @@
     "e2e:scenario": "bun run scripts/e2e-scenario.ts",
     "e2e:audio": "bun run scripts/e2e-audio.ts",
     "e2e:worker": "bun run scripts/e2e-worker.ts",
+    "smoke:wasm-host": "bun run scripts/smoke-wasm-host.ts",
     "generate": "bunx --trust prisma generate",
     "db:push": "bunx prisma db push",
     "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/discord-plays-mario-kart:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t discord-plays-mario-kart:dev -f ../../Dockerfile ../../../..",
