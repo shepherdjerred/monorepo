@@ -66,11 +66,54 @@ function parseParenList(source: string, marker: string): string[] {
     .filter((token) => token.length > 0);
 }
 
+// Top-level `name=( … )` array definitions in the selector (e.g.
+// `site_sjer_red_paths=(...)`). Lane case arms reference them as
+// "${name[@]}" (the per-site lists are defined once and the aggregate
+// `sites` lane is their union) — mirrors validate-pipeline-lib.ts's
+// selectorArrays, which expands the same references for its own checks.
+function loadTopLevelArrays(source: string): Map<string, string[]> {
+  const arrays = new Map<string, string[]>();
+  for (const match of source.matchAll(/^([a-z0-9_]+)=\(([\s\S]*?)\)/gm)) {
+    const [, name, contents] = match;
+    if (name === undefined || contents === undefined) continue;
+    arrays.set(
+      name,
+      contents
+        .split(/\s+/)
+        .map((token) => token.trim())
+        .filter((token) => token.length > 0),
+    );
+  }
+  return arrays;
+}
+
+function expandLanePaths(
+  rawTokens: readonly string[],
+  arrays: ReadonlyMap<string, string[]>,
+): string[] {
+  const expanded: string[] = [];
+  for (const token of rawTokens) {
+    const reference = /^"\$\{([a-z0-9_]+)\[@\]\}"$/.exec(token);
+    const name = reference?.[1];
+    if (name === undefined) {
+      expanded.push(token);
+      continue;
+    }
+    const contents = arrays.get(name);
+    if (contents === undefined) {
+      throw new Error(`lane path references undefined array ${token}`);
+    }
+    expanded.push(...contents);
+  }
+  return expanded;
+}
+
 async function loadSelectorLanes(): Promise<SelectorLanes> {
   const source = await Bun.file(
     `${REPO_ROOT}/.buildkite/scripts/ci-changed.sh`,
   ).text();
   const globalPaths = parseParenList(source, "global_paths=(");
+  const arrays = loadTopLevelArrays(source);
   const lanePaths = new Map<string, string[]>();
   // Case arms look like `  <lane>)\n    lane_paths=( ... )\n    ;;`
   const armPattern = /^ {2}([a-z0-9-]+)\)$/gm;
@@ -81,7 +124,10 @@ async function loadSelectorLanes(): Promise<SelectorLanes> {
     if (armEnd === -1) throw new Error(`lane ${lane} has no terminator`);
     const arm = source.slice(match.index, armEnd);
     if (!arm.includes("lane_paths=(")) continue;
-    lanePaths.set(lane, parseParenList(arm, "lane_paths=("));
+    lanePaths.set(
+      lane,
+      expandLanePaths(parseParenList(arm, "lane_paths=("), arrays),
+    );
   }
   return { globalPaths, lanePaths };
 }

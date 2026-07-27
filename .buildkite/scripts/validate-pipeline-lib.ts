@@ -234,7 +234,7 @@ export function selectorLane(ciChanged: string, lane: string): string {
   const arrays = selectorArrays(ciChanged);
   return ciChanged
     .slice(blockStart, blockEnd)
-    .replace(/"\$\{([a-z0-9_]+)\[@\]\}"/g, (_reference, name: string) => {
+    .replaceAll(/"\$\{([a-z0-9_]+)\[@\]\}"/g, (_reference, name: string) => {
       const contents = arrays.get(name);
       if (contents === undefined) {
         fail(
