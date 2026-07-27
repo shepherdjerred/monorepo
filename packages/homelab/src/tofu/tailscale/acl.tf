@@ -150,12 +150,12 @@ resource "tailscale_acl" "homelab" {
         deny   = ["tag:server:22"]
       },
       # CRITICAL: the cluster node + proxies (tag:k8s) MUST reach tailnet ingresses
-      # on 443, the control-plane API endpoint on 6443, and worker kubelets on
-      # 10250. A future edit that drops any path fails here before it can break
-      # cluster operations.
+      # on 443, the control-plane API endpoint on 6443, worker kubelets on 10250,
+      # and node-exporter on 9100 (cross-node InternalIP scrapes). A future edit
+      # that drops any path fails here before it can break cluster operations.
       {
         src    = "tag:k8s"
-        accept = ["tag:k8s:443", "tag:k8s:6443", "tag:k8s:10250"]
+        accept = ["tag:k8s:443", "tag:k8s:6443", "tag:k8s:10250", "tag:k8s:9100"]
         deny   = ["tag:k8s:22"]
       },
       # NOTE: the "non-admin members reach only the published web apps" invariant
