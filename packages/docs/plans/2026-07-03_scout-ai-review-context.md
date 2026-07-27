@@ -425,3 +425,13 @@ Add to Writing Style:
 - Pre-existing environment gap: `@shepherdjerred/llm-models` must be built (`bun run build` in
   `packages/llm-models`) + `bun install` re-copied before scout `data`/`temporal` typecheck;
   `scripts/setup.ts` doesn't build it. Did this manually this session.
+
+## Comment Log
+
+### 2026-07-27T17:47:00.184Z - Jerred Shepherd
+
+I've confirmed that there are enriched comments, but they often seem incorrect. E.g. they will say I'm playing a new champion but I have played the champion before.
+
+---
+
+It does seem to get win/loss streaks correct though

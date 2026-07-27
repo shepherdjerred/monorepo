@@ -77,3 +77,9 @@ No changes needed to `scout-season-refresh.ts` or `readme-refresh.ts` — they i
 
 - The exact corruption mechanism inside the shared Bun cache was never forensically confirmed — the pod that failed this morning was replaced by a new deploy before this investigation started, so the corrupted cache entry itself is gone. The architectural hazard (shared, pod-lifetime cache across all activities) is confirmed fact; the precise failure mode inside it is not. Per-run isolation is the correct fix regardless.
 - Local rehearsal testing against your own dev worktree gives a false "hooks" canary failure, because `scripts/setup.ts`'s root install (no `--ignore-scripts`) already armed real lefthook hooks — unlike a genuine ephemeral bot clone. Test against a fresh `git clone` (or a plain directory copy of uncommitted changes) instead, as this session had to learn the hard way.
+
+## Comment Log
+
+### 2026-07-27T17:48:41.770Z - Jerred Shepherd
+
+I think we've seen this workflow pass often

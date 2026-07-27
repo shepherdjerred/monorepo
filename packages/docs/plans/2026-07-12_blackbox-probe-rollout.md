@@ -88,3 +88,9 @@ Added an ingress rule allowing the `prometheus` namespace (matching the existing
 - **Module-level registry state leaks across independent `App`/`setupCharts()` invocations in the same process** — this is inherent to the design (a plain exported `Map`/array), not a bug introduced by a specific call site. It only matters because the test suite's ~28 files each build their own `App` and call `setupCharts()` (or an individual chart function) within one bun:test process. Fixed by calling `resetProbeRegistry()` at the top of `setupCharts()`, which is safe in production too (a single real run just clears an already-empty registry). If a future test calls an individual chart-creation function directly (bypassing `setupCharts()` entirely) many times in a row, its registrations would sit unconsumed until the next `setupCharts()`-based test resets them away — harmless, since `createServiceProbesChart` is only ever invoked from inside `setupCharts()`.
 - The plan's "64 Probe resources" estimate was off by one category: it didn't account for `s3-static-sites` opting out of _both_ the backend and public auto-probe (only the public-probe opt-out was originally planned for); the actual, correct count is 63 backend+public probes total, verified against the rendered manifest.
 - Did not independently re-verify every single Service `metadata.name` before this session (a few — home-assistant, zwave-js-ui, bugsink, plausible, birmel-oauth, postal-web — were flagged as unconfirmed during planning); all were read directly from source during implementation, not assumed.
+
+## Comment Log
+
+### 2026-07-27T17:47:52.440Z - Jerred Shepherd
+
+I think we have probes working. I have seen a lot of PagerDuty alerts during true outages

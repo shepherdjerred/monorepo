@@ -7,7 +7,8 @@
     },
     "scripts": {
       "entry": ["*.ts", "observability/**/*.ts"],
-      "project": ["**/*.ts"]
+      "project": ["**/*.ts"],
+      "ignoreDependencies": ["@openai/codex"]
     },
     "packages/birmel": {
       "entry": ["src/index.ts"],
@@ -60,7 +61,8 @@
     },
     "packages/glitter-context": {
       "entry": ["src/index.ts", "test/**/*.ts", "scripts/**/*.ts"],
-      "project": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts"]
+      "project": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts"],
+      "ignoreDependencies": ["eslint"]
     },
     "packages/llm-observability": {
       "entry": ["src/index.ts", "test/**/*.ts"],
@@ -461,6 +463,7 @@
   "ignoreBinaries": [
     "HEAD",
     "argocd",
+    "codex",
     "docker",
     "ffmpeg",
     "ffprobe",

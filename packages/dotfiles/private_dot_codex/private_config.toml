@@ -1,0 +1,162 @@
+model = "gpt-5.6-sol"
+model_reasoning_effort = "high"
+plan_mode_reasoning_effort = "xhigh"
+approval_policy = "never"
+sandbox_mode = "danger-full-access"
+project_doc_fallback_filenames = ["CLAUDE.md"]
+project_doc_max_bytes = 65536
+personality = "pragmatic"
+
+notify = ["/Users/jerred/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended"]
+
+[notice]
+  [notice.model_migrations]
+    "gpt-5.1-codex-max" = "gpt-5.4"
+
+[projects]
+  [projects."/Users/jerred/git"]
+    trust_level = "trusted"
+  [projects."/Users/jerred/git/monorepo"]
+    trust_level = "trusted"
+  [projects."/Users/jerred/git/scout-for-lol"]
+    trust_level = "trusted"
+
+[projects."/Users/jerred"]
+trust_level = "trusted"
+
+[projects."/Users/jerred/Desktop/plants"]
+trust_level = "trusted"
+
+[projects."/Users/jerred/git/6422-workspace"]
+trust_level = "trusted"
+
+[plugins."github@openai-curated"]
+enabled = true
+
+[plugins."documents@openai-primary-runtime"]
+enabled = true
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = true
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = true
+
+[plugins."sites@openai-bundled"]
+enabled = true
+
+[plugins."visualize@openai-bundled"]
+enabled = true
+
+[plugins."browser@openai-bundled"]
+enabled = true
+
+[tui]
+theme = "catppuccin-latte"
+vim_mode_default = true
+
+[tui.model_availability_nux]
+"gpt-5.5" = 4
+"gpt-5.6-sol" = 4
+
+[marketplaces.openai-bundled]
+last_updated = "2026-07-19T20:12:38Z"
+source_type = "local"
+source = "/Users/jerred/.codex/.tmp/bundled-marketplaces/openai-bundled"
+
+[marketplaces.openai-primary-runtime]
+last_updated = "2026-06-01T18:47:47Z"
+source_type = "local"
+source = "/Users/jerred/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
+
+[mcp_servers.mcp-gateway-fastmail]
+command = "npx"
+args = ["-y", "mcp-remote", "https://mcp-gateway.tailnet-1a49.ts.net/fastmail/sse", "--transport", "sse-only"]
+enabled = false
+
+[mcp_servers.mcp-gateway-github]
+command = "npx"
+args = ["-y", "mcp-remote", "https://mcp-gateway.tailnet-1a49.ts.net/github/sse", "--transport", "sse-only"]
+enabled = false
+
+[mcp_servers.node_repl]
+args = []
+command = "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl"
+startup_timeout_sec = 120
+
+[mcp_servers.node_repl.env]
+NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
+NODE_REPL_NODE_MODULE_DIRS = "/Applications/ChatGPT.app/Contents/Resources/cua_node/lib/node_modules"
+NODE_REPL_NODE_PATH = "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node"
+NODE_REPL_TRUSTED_CODE_PATHS = "/Users/jerred/.codex"
+CODEX_HOME = "/Users/jerred/.codex"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "461c4ba94b821ec805da79c8e8138fe510b1b3358609fc93da47387a2cf3fbf3,6d25aa7656feac858f3a3bdaea5bcbab0dbfd426c9de8e6931ce90c399ee8e4f"
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
+NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
+NODE_REPL_INSTRUCTIONS_USE_CASE_COMPUTER_USE = "Control desktop apps on macOS through Computer Use."
+BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
+BROWSER_USE_CODEX_APP_VERSION = "26.715.31925"
+CODEX_CLI_PATH = "/Applications/ChatGPT.app/Contents/Resources/codex"
+
+[mcp_servers.computer-use]
+command = "./Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient"
+args = ["mcp"]
+cwd = "."
+enabled = false
+
+[features]
+memories = true
+js_repl = false
+
+hooks = true
+[memories]
+generate_memories = true
+use_memories = true
+
+[desktop]
+appearanceTheme = "system"
+usePointerCursors = true
+followUpQueueMode = "queue"
+git-show-sidebar-pr-icons = true
+selected-avatar-id = "seedy"
+dock-icon-preference = "codex-system"
+conversationDetailMode = "STEPS_PROSE"
+
+[desktop.appearanceLightChromeTheme]
+accent = "#0285ff"
+contrast = 45
+ink = "#0d0d0d"
+opaqueWindows = false
+surface = "#ffffff"
+
+[desktop.appearanceLightChromeTheme.fonts]
+code = "Berkeley Mono"
+
+[desktop.appearanceLightChromeTheme.semanticColors]
+diffAdded = "#00a240"
+diffRemoved = "#ba2623"
+skill = "#924ff7"
+
+[desktop.appearanceDarkChromeTheme]
+accent = "#339cff"
+contrast = 60
+ink = "#ffffff"
+opaqueWindows = false
+surface = "#181818"
+
+[desktop.appearanceDarkChromeTheme.fonts]
+code = "Berkeley Mono"
+
+[desktop.appearanceDarkChromeTheme.semanticColors]
+diffAdded = "#40c977"
+diffRemoved = "#fa423e"
+skill = "#ad7bf9"
+
+[desktop.open-in-target-preferences]
+global = "zed"
+
+[shell_environment_policy.set]
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "461c4ba94b821ec805da79c8e8138fe510b1b3358609fc93da47387a2cf3fbf3,6d25aa7656feac858f3a3bdaea5bcbab0dbfd426c9de8e6931ce90c399ee8e4f"
+NODE_REPL_TRUSTED_CODE_PATHS = "/Users/jerred/.codex"
