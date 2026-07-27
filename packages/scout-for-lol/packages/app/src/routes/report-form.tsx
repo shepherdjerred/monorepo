@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ReportIdSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
@@ -23,6 +23,7 @@ function previewTitle(title: string): string {
 export function ReportForm() {
   const { guildId, reportId: idParam } = useParams();
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const safeGuildId = guildId ?? "";
 
@@ -68,6 +69,12 @@ export function ReportForm() {
     trpc.report.create.mutationOptions({
       meta: analyticsMeta("report_created"),
       onSuccess: (created) => {
+        // The reports list carries a long staleTime, so invalidate it before
+        // navigating — otherwise the newly created report is absent from the
+        // list for up to STALE_TIME_SLOW_LIST.
+        void queryClient.invalidateQueries({
+          queryKey: trpc.report.list.pathKey(),
+        });
         void navigate(`/g/${safeGuildId}/reports/${created.id.toString()}`);
       },
       onError: (err) => {
@@ -79,6 +86,9 @@ export function ReportForm() {
     trpc.report.update.mutationOptions({
       meta: analyticsMeta("report_updated"),
       onSuccess: () => {
+        void queryClient.invalidateQueries({
+          queryKey: trpc.report.list.pathKey(),
+        });
         void navigate(`/g/${safeGuildId}/reports/${reportId.toString()}`);
       },
       onError: (err) => {

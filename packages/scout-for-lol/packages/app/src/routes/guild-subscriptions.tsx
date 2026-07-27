@@ -7,10 +7,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { MoreHorizontal } from "lucide-react";
-import {
-  queueTypeToDisplayString,
-  subscriptionFilterQueues,
-} from "@scout-for-lol/data";
+
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta, track } from "#src/lib/analytics.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
@@ -23,7 +20,11 @@ import {
   SubscriptionFilterDialog,
   type SubscriptionFilterAction,
 } from "#src/components/subscription-filter-dialog.tsx";
-import { Badge } from "#src/components/ui/badge.tsx";
+import { FilterSummary } from "#src/components/subscription-filter-summary.tsx";
+import {
+  muteResultOutcome,
+  removeResultOutcome,
+} from "#src/lib/subscription-result-messages.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import {
   DropdownMenu,
@@ -41,6 +42,7 @@ import {
   TableHeader,
   TableRow,
 } from "#src/components/ui/table.tsx";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 
 function accountLabel(account: {
   alias: string;
@@ -53,42 +55,6 @@ function accountLabel(account: {
       ? account.alias
       : `${account.riotGameName}#${account.riotTagLine ?? ""}`;
   return `${name} (${account.region})`;
-}
-
-/** Queue filters as compact badges: up to two, then a "+N more" summary. */
-function FilterSummary(props: {
-  filters: Parameters<typeof subscriptionFilterQueues>[0];
-  isMuted: boolean;
-}) {
-  const queues = subscriptionFilterQueues(props.filters);
-  const shown = queues.slice(0, 2);
-  const extra = queues.length - shown.length;
-  return (
-    <span className="inline-flex flex-wrap items-center gap-1">
-      {queues.length === 0 ? (
-        <span>All queues</span>
-      ) : (
-        <>
-          {shown.map((queue) => (
-            <Badge key={queue} variant="secondary" className="font-normal">
-              {queueTypeToDisplayString(queue)}
-            </Badge>
-          ))}
-          {extra > 0 && (
-            <span
-              className="text-xs"
-              title={queues
-                .map((queue) => queueTypeToDisplayString(queue))
-                .join(", ")}
-            >
-              +{extra.toString()} more
-            </span>
-          )}
-        </>
-      )}
-      {props.isMuted && <Badge variant="outline">Muted</Badge>}
-    </span>
-  );
 }
 
 export function GuildSubscriptions() {
@@ -111,6 +77,15 @@ export function GuildSubscriptions() {
   // pathKey matches both the regular and infinite query caches for this
   // procedure, so invalidation refreshes the paginated list.
   const subsKey = trpc.subscription.list.pathKey();
+  const invalidatePlayerSurfaces = () => {
+    // Keep the player page + Players list in sync with tab edits.
+    void queryClient.invalidateQueries({
+      queryKey: trpc.player.getPlayer.pathKey(),
+    });
+    void queryClient.invalidateQueries({
+      queryKey: trpc.player.listPlayers.pathKey(),
+    });
+  };
   const subsOptions = trpc.subscription.list.infiniteQueryOptions(
     { guildId: safeGuildId, limit: 50 },
     {
@@ -124,29 +99,22 @@ export function GuildSubscriptions() {
   const channelsQuery = useQuery(
     trpc.guild.listChannels.queryOptions(
       { guildId: safeGuildId },
-      { enabled: guildId !== undefined },
+      { enabled: guildId !== undefined, staleTime: STALE_TIME_SLOW_LIST },
     ),
   );
   const removeMutation = useMutation(
     trpc.subscription.remove.mutationOptions({
       meta: analyticsMeta("subscription_removed"),
       onSuccess: (result) => {
-        switch (result.kind) {
-          case "removed":
-            setMessage("Subscription removed.");
-            setError(null);
-            void queryClient.invalidateQueries({ queryKey: subsKey });
-            return;
-          case "player-not-found":
-            setError("Player not found.");
-            return;
-          case "not-subscribed-in-channel":
-            setError("Player is not subscribed in that channel.");
-            return;
-          case "internal-error":
-            setError(result.message);
-            return;
+        const outcome = removeResultOutcome(result);
+        if (outcome.ok) {
+          setMessage(outcome.message);
+          setError(null);
+          void queryClient.invalidateQueries({ queryKey: subsKey });
+          invalidatePlayerSurfaces();
+          return;
         }
+        setError(outcome.message);
       },
       onError: (err) => {
         setError(err.message);
@@ -185,28 +153,16 @@ export function GuildSubscriptions() {
         if (result.kind !== "updated" && context.previous !== undefined) {
           queryClient.setQueryData(subsOptions.queryKey, context.previous);
         }
-        switch (result.kind) {
-          case "updated":
-            track(
-              variables.isMuted ? "subscription_muted" : "subscription_unmuted",
-            );
-            setMessage(
-              variables.isMuted
-                ? "Subscription muted — no more match notifications."
-                : "Subscription unmuted.",
-            );
-            setError(null);
-            return;
-          case "player-not-found":
-            setError("Player not found.");
-            return;
-          case "not-subscribed-in-channel":
-            setError("Player is not subscribed in that channel.");
-            return;
-          case "internal-error":
-            setError(result.message);
-            return;
+        const outcome = muteResultOutcome(result, variables.isMuted);
+        if (outcome.ok) {
+          track(
+            variables.isMuted ? "subscription_muted" : "subscription_unmuted",
+          );
+          setMessage(outcome.message);
+          setError(null);
+          return;
         }
+        setError(outcome.message);
       },
       onError: (err, _variables, context) => {
         if (context?.previous !== undefined) {
@@ -216,6 +172,7 @@ export function GuildSubscriptions() {
       },
       onSettled: () => {
         void queryClient.invalidateQueries({ queryKey: subsKey });
+        invalidatePlayerSurfaces();
       },
     }),
   );
@@ -293,6 +250,10 @@ export function GuildSubscriptions() {
       {subsQuery.data && subscriptions.length > 0 && (
         <div className="rounded-md border border-border">
           <Table>
+            <caption className="sr-only">
+              Subscriptions: tracked players and the channels their match
+              reports post to
+            </caption>
             <TableHeader>
               <TableRow>
                 <TableHead>Alias</TableHead>
@@ -458,6 +419,7 @@ export function GuildSubscriptions() {
         onOpenChange={setAddOpen}
         onAdded={() => {
           void queryClient.invalidateQueries({ queryKey: subsKey });
+          invalidatePlayerSurfaces();
           setAddOpen(false);
         }}
       />
@@ -473,6 +435,7 @@ export function GuildSubscriptions() {
           setError(null);
           setChannelAction(null);
           void queryClient.invalidateQueries({ queryKey: subsKey });
+          invalidatePlayerSurfaces();
         }}
       />
       <SubscriptionFilterDialog
@@ -487,6 +450,7 @@ export function GuildSubscriptions() {
           setError(null);
           setFilterAction(null);
           void queryClient.invalidateQueries({ queryKey: subsKey });
+          invalidatePlayerSurfaces();
         }}
       />
     </div>

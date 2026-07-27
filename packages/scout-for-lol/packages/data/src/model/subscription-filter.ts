@@ -2,7 +2,7 @@ import { z } from "zod";
 import { match } from "ts-pattern";
 import {
   QueueTypeSchema,
-  queueTypeToDisplayString,
+  queueDisplayLabels,
   type QueueType,
 } from "./state.ts";
 
@@ -137,7 +137,7 @@ export function describeSubscriptionFilters(
   if (queues.length === 0) {
     return "all queues";
   }
-  return queues.map((queue) => queueTypeToDisplayString(queue)).join(", ");
+  return queueDisplayLabels(queues).join(", ");
 }
 
 /**

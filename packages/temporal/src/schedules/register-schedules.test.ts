@@ -83,6 +83,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // S3 downloads + PR on drift). No workflow-level sleeps; the activity
   // carries its own startToCloseTimeout + retry budget.
   "runScoutShowcaseRefresh",
+  "runScoutQueueWindowsWatch",
   "runScoutSeasonRefreshWorkflow",
   "runZfsMaintenanceWorkflow",
   "runBugsinkHousekeepingWorkflow",

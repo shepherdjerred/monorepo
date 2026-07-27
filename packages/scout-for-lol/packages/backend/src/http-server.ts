@@ -268,6 +268,11 @@ const server = Bun.serve({
           endpoint: "/trpc",
           req: request,
           router: appRouter,
+          // Allow the client to send read queries over POST (methodOverride) so
+          // large inputs — e.g. the report preview's up-to-4,000-char ScoutQL —
+          // travel in the request body instead of a GET URL that Cloudflare/Caddy
+          // could reject for length. Mutations already POST.
+          allowMethodOverride: true,
           createContext: () => createContext(request),
           onError({ error, path }) {
             logger.error(`tRPC error on ${path ?? "unknown"}:`, error);

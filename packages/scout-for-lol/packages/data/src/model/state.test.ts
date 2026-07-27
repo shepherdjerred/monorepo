@@ -24,6 +24,7 @@ describe("parseQueueType", () => {
     [720, "aram clash"],
     [900, "arurf"],
     [1700, "arena"],
+    [1740, "arena"],
     [1750, "arena"],
     [1900, "urf"],
     [2300, "brawl"],
@@ -32,9 +33,11 @@ describe("parseQueueType", () => {
     [3220, "aram mayhem"],
     [3270, "aram mayhem"],
     [3100, "custom"],
-    [3130, "easy doom bots"],
-    [4220, "normal doom bots"],
-    [4250, "hard doom bots"],
+    [3130, "custom"],
+    [4250, "easy doom bots"],
+    [4240, "normal doom bots"],
+    [4220, "hard doom bots"],
+    [4260, "hard doom bots"],
   ];
 
   test.each(cases)("queue id %i parses to %s", (id, expected) => {
@@ -118,13 +121,13 @@ describe("queueTypeToDisplayString", () => {
     ["urf", "URF"],
     ["arena", "arena"],
     ["brawl", "brawl"],
-    ["aram mayhem", "ARAM mayhem"],
+    ["aram mayhem", "ARAM: Mayhem"],
     ["draft pick", "draft pick"],
     ["quickplay", "quickplay"],
     ["swiftplay", "swiftplay"],
-    ["easy doom bots", "doom bots"],
-    ["normal doom bots", "doom bots"],
-    ["hard doom bots", "doom bots"],
+    ["easy doom bots", "Easy Doom Bots"],
+    ["normal doom bots", "Normal Doom Bots"],
+    ["hard doom bots", "Hard Doom Bots"],
     ["custom", "custom"],
   ];
 

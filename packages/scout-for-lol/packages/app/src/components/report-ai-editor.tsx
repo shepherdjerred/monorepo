@@ -1,6 +1,6 @@
 import { useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { AlertCircle, Check, Square, WandSparkles } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   DiscordGuildIdSchema,
   type ReportAiEditStatus,
@@ -36,6 +36,7 @@ export function ReportAiEditor(props: {
   setState: Dispatch<SetStateAction<ReportFormState>>;
 }) {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const abortRef = useRef<AbortController | null>(null);
   const [instructions, setInstructions] = useState("");
   const [running, setRunning] = useState(false);
@@ -106,7 +107,9 @@ export function ReportAiEditor(props: {
     } finally {
       setRunning(false);
       abortRef.current = null;
-      void statusQuery.refetch();
+      void queryClient.invalidateQueries({
+        queryKey: trpc.report.aiEditStatus.pathKey(),
+      });
     }
   }
 
@@ -140,7 +143,9 @@ export function ReportAiEditor(props: {
       case "final": {
         setFinalDraft(event.draft);
         appendProgress("Draft ready.", "success");
-        void statusQuery.refetch();
+        void queryClient.invalidateQueries({
+          queryKey: trpc.report.aiEditStatus.pathKey(),
+        });
         break;
       }
       case "error": {

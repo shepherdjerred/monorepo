@@ -596,6 +596,29 @@ Discord OAuth in the browser (see **Web UI (Local end-to-end)** above).
 
 ---
 
+## Queue availability windows (committed, bot-refreshed)
+
+Limited-time queue availability lives in
+`packages/data/src/model/queue-windows.json` (validated by
+`queue-windows.schema.ts`; loaded by `queue-availability.ts` — end dates are
+inclusive through the whole UTC day). The `scout-queue-windows-daily` Temporal
+schedule (06:45 PT, `packages/temporal/src/activities/scout-queue-windows.ts`)
+scans the `scout-prod` match lake for a 21-day lookback and proposes edits via
+the pure drift engine (`queue-window-drift.ts`): window opens/reopens auto-merge;
+window closes open a plain PR for human confirmation against patch notes;
+warnings-only runs (unknown queue ids, sparse modes) send an email.
+
+Local dry-run (no writes):
+
+```bash
+cd packages/backend
+AWS_PROFILE=seaweedfs bun run update-queue-windows -- --bucket scout-prod --lookback-days 21 --dry-run
+```
+
+New modes with unmapped queue ids surface as "new mode?" warnings — add the
+QueueType enum value + `parseQueueType` mapping by hand, then the watcher
+maintains its windows.
+
 ## Marketing showcase assets (committed, bot-refreshed)
 
 The marketing homepage's screenshots live as committed generator output:

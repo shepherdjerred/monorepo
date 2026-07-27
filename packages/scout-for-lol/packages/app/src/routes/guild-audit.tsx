@@ -59,6 +59,7 @@ export function GuildAudit() {
       {query.data && rows.length > 0 && (
         <div className="rounded-md border border-border">
           <Table>
+            <caption className="sr-only">Subscription audit log</caption>
             <TableHeader>
               <TableRow>
                 <TableHead>When</TableHead>

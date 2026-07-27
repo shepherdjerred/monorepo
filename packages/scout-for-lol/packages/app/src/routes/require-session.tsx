@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { Link, Navigate, Outlet, useLocation } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { UserMenu } from "#src/components/user-menu.tsx";
+import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
 
 /**
  * Route guard that redirects to /login if the user has no valid web
@@ -51,7 +53,9 @@ export function RequireSession() {
         </div>
       </header>
       <main className="flex-1">
-        <Outlet />
+        <Suspense fallback={<SectionSkeleton />}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   );

@@ -146,7 +146,7 @@ describe("buildLoadingScreenData layout variants", () => {
 
     const parsed = LoadingScreenDataSchema.parse(result);
     expect(parsed.queueType).toBe("aram mayhem");
-    expect(String(parsed.queueDisplayName)).toBe("ARAM mayhem");
+    expect(String(parsed.queueDisplayName)).toBe("ARAM: Mayhem");
     expect(parsed.layout).toBe("aram");
     expect(parsed.mapName).toBe("Howling Abyss");
     expect(parsed.bans).toHaveLength(0);

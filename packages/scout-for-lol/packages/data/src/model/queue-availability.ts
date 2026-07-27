@@ -1,18 +1,21 @@
-import type { QueueType } from "#src/model/state.ts";
+import queueWindowsJson from "#src/model/queue-windows.json" with { type: "json" };
+import { QueueTypeSchema, type QueueType } from "#src/model/state.ts";
+import { QueueWindowsFileSchema } from "#src/model/queue-windows.schema.ts";
 import type { CompetitionQueueType } from "#src/model/competition.ts";
 
 /**
  * Availability windows for limited-time queues.
  *
- * Like SEASONS (src/seasons.ts) this is a hand-maintained, append-only record:
- * when Riot announces a mode run, append a window; when a mode goes permanent,
- * switch it to `{ kind: "permanent" }`. An open-ended current run uses
- * `end: null` — close it when Riot turns the mode off.
+ * The window data is a hand-maintained, append-only record stored in the
+ * language-neutral source of truth `queue-windows.json` (validated by
+ * `queue-windows.schema.ts`): when Riot announces a mode run, append a window;
+ * when a mode goes permanent, move it to the permanent list below. An open-ended
+ * current run uses `end: null` — close it when Riot turns the mode off.
  *
- * Sources: wiki.leagueoflegends.com per-mode availability history + Riot patch
- * notes (researched 2026-07-26). Pre-2024 windows are approximate on the end
- * date (runs typically last until the next patch); they exist for context —
- * only the current-window check drives UI behavior.
+ * The JSON is edited both by hand and by the queue-windows watcher
+ * (`packages/temporal` + backend `update-queue-windows`), which proposes
+ * observed windows from real match volume. Only the current-window check drives
+ * UI behavior; older windows exist for context.
  */
 
 export type QueueAvailabilityWindow = {
@@ -27,26 +30,30 @@ export type QueueAvailability =
 
 const PERMANENT: QueueAvailability = { kind: "permanent" };
 
-function limited(
-  windows: [start: string, end: string | null][],
-): QueueAvailability {
+const rawQueueWindows: unknown = queueWindowsJson;
+const queueWindowsFile = QueueWindowsFileSchema.parse(rawQueueWindows);
+
+/**
+ * Convert the JSON windows for a limited queue into the runtime shape. Throws
+ * (fail fast) when the queue has no entry in `queue-windows.json`.
+ */
+function limitedFromJson(queue: QueueType): QueueAvailability {
+  const windows = queueWindowsFile.queues[queue];
+  if (windows === undefined) {
+    throw new Error(
+      `queue-windows.json is missing window data for limited queue "${queue}"`,
+    );
+  }
   return {
     kind: "limited",
-    windows: windows.map(([start, end]) => ({
-      start: new Date(start),
+    windows: windows.map((window) => ({
+      start: new Date(window.start),
       // End dates are inclusive through the entire (UTC) end day — a bare
       // date would parse to midnight and exclude almost all of the last day.
-      end: end === null ? null : new Date(`${end}T23:59:59.999Z`),
+      end: window.end === null ? null : new Date(`${window.end}T23:59:59.999Z`),
     })),
   };
 }
-
-// The 2025 Doom Bots revival ("Trials of Twilight" Act I, V25.17-V25.20).
-// The 2016-17 rotating-game-mode weekends used different queue IDs that
-// predate this app's queue model, so they are not represented here.
-const DOOM_BOTS_2025: QueueAvailability = limited([
-  ["2025-08-27", "2025-10-22"],
-]);
 
 export const QUEUE_AVAILABILITY: Record<QueueType, QueueAvailability> = {
   solo: PERMANENT,
@@ -58,44 +65,35 @@ export const QUEUE_AVAILABILITY: Record<QueueType, QueueAvailability> = {
   clash: PERMANENT,
   "aram clash": PERMANENT,
   aram: PERMANENT,
-  arurf: limited([
-    // Ends approximate (~the following patch) for pre-2025 runs.
-    ["2021-02-03", "2021-03-03"],
-    ["2022-01-26", "2022-02-23"],
-    ["2023-01-11", "2023-02-08"],
-    ["2025-01-23", "2025-02-20"],
-    ["2025-07-30", "2025-08-27"],
-    ["2026-01-22", "2026-02-18"],
-  ]),
-  urf: limited([
-    ["2014-04-03", "2014-04-13"],
-    ["2019-10-28", "2019-11-08"],
-    ["2025-11-19", "2025-12-10"],
-  ]),
+  arurf: limitedFromJson("arurf"),
+  urf: limitedFromJson("urf"),
   quickplay: PERMANENT,
   swiftplay: PERMANENT,
-  arena: limited([
-    ["2023-07-20", "2023-08-28"],
-    ["2023-12-07", "2024-01-08"],
-    ["2024-05-01", "2024-09-24"],
-    ["2025-03-01", "2025-05-14"],
-    // Current run (patch 25.13): committed for at least 12 months and still
-    // live as of July 2026 with no announced end.
-    ["2025-06-25", null],
-  ]),
-  brawl: limited([
-    ["2025-05-14", "2025-11-19"],
-    ["2026-03-04", "2026-04-28"],
-  ]),
-  // Launched with Trials of Twilight Act II and extended indefinitely after
-  // positive reception; still live as of July 2026.
-  "aram mayhem": limited([["2025-10-22", null]]),
+  arena: limitedFromJson("arena"),
+  brawl: limitedFromJson("brawl"),
+  "aram mayhem": limitedFromJson("aram mayhem"),
   "draft pick": PERMANENT,
-  "easy doom bots": DOOM_BOTS_2025,
-  "normal doom bots": DOOM_BOTS_2025,
-  "hard doom bots": DOOM_BOTS_2025,
+  "easy doom bots": limitedFromJson("easy doom bots"),
+  "normal doom bots": limitedFromJson("normal doom bots"),
+  "hard doom bots": limitedFromJson("hard doom bots"),
   custom: PERMANENT,
 };
+
+// Fail fast if the JSON carries a key that is not a known QueueType, or window
+// data for a queue we treat as permanent — either is a data/model mismatch.
+for (const key of Object.keys(queueWindowsFile.queues)) {
+  const parsedKey = QueueTypeSchema.safeParse(key);
+  if (!parsedKey.success) {
+    throw new Error(
+      `queue-windows.json has key "${key}" that is not a known QueueType`,
+    );
+  }
+  if (QUEUE_AVAILABILITY[parsedKey.data].kind !== "limited") {
+    throw new Error(
+      `queue-windows.json has window data for "${key}", which is not a limited queue`,
+    );
+  }
+}
 
 function isWithinWindow(window: QueueAvailabilityWindow, now: Date): boolean {
   if (now < window.start) {

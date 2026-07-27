@@ -6,8 +6,17 @@ import {
   participantStatusToString,
   visibilityToString,
 } from "@scout-for-lol/data";
+import { MoreHorizontal } from "lucide-react";
 import { Button } from "#src/components/ui/button.tsx";
 import { DiscordUser } from "#src/components/discord-user.tsx";
+import { FilterSummary } from "#src/components/subscription-filter-summary.tsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "#src/components/ui/dropdown-menu.tsx";
 import {
   Table,
   TableBody,
@@ -66,28 +75,50 @@ function competitionTitleSuffix(competition: {
     : "";
 }
 
+export type PlayerSubscriptionRow = {
+  id: number;
+  channelId: string;
+  creatorDiscordId: string;
+  creatorDiscordUser: DiscordName;
+  createdTime: Date | string;
+  filters: Parameters<typeof FilterSummary>[0]["filters"];
+  isMuted: boolean;
+};
+
 export function PlayerSubscriptionsTable(props: {
-  subscriptions: {
-    id: number;
-    channelId: string;
-    creatorDiscordId: string;
-    creatorDiscordUser: DiscordName;
-    createdTime: Date | string;
-  }[];
+  subscriptions: PlayerSubscriptionRow[];
   channels: { id: string; name: string }[] | undefined;
+  canUpdate: boolean;
+  canCreate: boolean;
+  canDelete: boolean;
+  mutationPending: boolean;
+  onEditFilters: (subscription: PlayerSubscriptionRow) => void;
+  onMove: (subscription: PlayerSubscriptionRow) => void;
+  onToggleMute: (subscription: PlayerSubscriptionRow) => void;
+  onAddChannel: (subscription: PlayerSubscriptionRow) => void;
+  onRemove: (subscription: PlayerSubscriptionRow) => void;
 }) {
+  const hasActions = props.canUpdate || props.canCreate || props.canDelete;
   if (props.subscriptions.length === 0) {
     return (
-      <p className="p-3 text-sm text-muted-foreground">No subscriptions.</p>
+      <p className="p-3 text-sm text-muted-foreground">
+        No subscriptions — this player&apos;s matches aren&apos;t posted
+        anywhere yet.
+      </p>
     );
   }
   return (
     <Table>
+      <caption className="sr-only">
+        Channel subscriptions for this player
+      </caption>
       <TableHeader>
         <TableRow>
           <TableHead>Channel</TableHead>
+          <TableHead>Filters</TableHead>
           <TableHead>Created by</TableHead>
           <TableHead>Created</TableHead>
+          {hasActions && <TableHead className="w-1" />}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -96,6 +127,12 @@ export function PlayerSubscriptionsTable(props: {
             <TableCell>
               {channelLabel(props.channels, subscription.channelId)}
             </TableCell>
+            <TableCell className="text-muted-foreground">
+              <FilterSummary
+                filters={subscription.filters}
+                isMuted={subscription.isMuted}
+              />
+            </TableCell>
             <TableCell>
               <DiscordUser
                 id={subscription.creatorDiscordId}
@@ -103,6 +140,80 @@ export function PlayerSubscriptionsTable(props: {
               />
             </TableCell>
             <TableCell>{formatDate(subscription.createdTime)}</TableCell>
+            {hasActions && (
+              <TableCell>
+                <div className="flex items-center justify-end gap-1">
+                  {props.canUpdate && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        props.onEditFilters(subscription);
+                      }}
+                    >
+                      Edit filters
+                    </Button>
+                  )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Subscription actions"
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {props.canUpdate && (
+                        <>
+                          <DropdownMenuItem
+                            onSelect={() => {
+                              props.onMove(subscription);
+                            }}
+                          >
+                            Move to another channel
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={props.mutationPending}
+                            onSelect={() => {
+                              props.onToggleMute(subscription);
+                            }}
+                          >
+                            {subscription.isMuted ? "Unmute" : "Mute"}
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      {props.canCreate && (
+                        <DropdownMenuItem
+                          onSelect={() => {
+                            props.onAddChannel(subscription);
+                          }}
+                        >
+                          Add channel
+                        </DropdownMenuItem>
+                      )}
+                      {props.canDelete && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            disabled={props.mutationPending}
+                            className="text-destructive focus:text-destructive"
+                            onSelect={() => {
+                              props.onRemove(subscription);
+                            }}
+                          >
+                            Remove
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </TableCell>
+            )}
           </TableRow>
         ))}
       </TableBody>
@@ -125,6 +236,7 @@ export function PlayerAccountsTable(props: {
   }
   return (
     <Table>
+      <caption className="sr-only">Riot accounts for this player</caption>
       <TableHeader>
         <TableRow>
           <TableHead>Alias</TableHead>
@@ -264,6 +376,9 @@ export function CompetitionSection(props: {
         <p className="p-3 text-sm text-muted-foreground">None.</p>
       ) : (
         <Table>
+          <caption className="sr-only">
+            Competitions this player participates in
+          </caption>
           <TableHeader>
             <TableRow>
               <TableHead>Competition</TableHead>

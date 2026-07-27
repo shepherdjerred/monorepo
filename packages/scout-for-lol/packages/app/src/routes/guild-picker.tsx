@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import {
@@ -17,6 +17,7 @@ import {
   markOnboardingSeen,
 } from "#src/lib/onboarding-storage.ts";
 import { trackOutboundClick } from "#src/lib/analytics.ts";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 
 /**
  * Kicks off the bot-install flow. Points at the backend route (not an
@@ -52,8 +53,10 @@ export function GuildPicker() {
   const meQuery = useQuery(
     trpc.auth.meWeb.queryOptions(undefined, { retry: false }),
   );
-  const { data, isLoading, error } = useQuery(
-    trpc.guild.listManageable.queryOptions(),
+  const { data } = useSuspenseQuery(
+    trpc.guild.listManageable.queryOptions(undefined, {
+      staleTime: STALE_TIME_SLOW_LIST,
+    }),
   );
   const discordId = meQuery.data?.discordId ?? null;
   const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -86,25 +89,7 @@ export function GuildPicker() {
     />
   ) : null;
 
-  if (isLoading) {
-    return (
-      <Shell>
-        <p className="text-sm text-muted-foreground">Loading guilds…</p>
-      </Shell>
-    );
-  }
-
-  if (error) {
-    return (
-      <Shell>
-        <p className="text-sm text-destructive">
-          Failed to load guilds: {error.message}
-        </p>
-      </Shell>
-    );
-  }
-
-  if (data === undefined || data.length === 0) {
+  if (data.length === 0) {
     return (
       <Shell>
         {banner}
@@ -132,7 +117,7 @@ export function GuildPicker() {
     <Shell>
       {banner}
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-xl font-semibold tracking-tight">Pick a guild</h2>
+        <h1 className="text-xl font-semibold tracking-tight">Pick a guild</h1>
         <div className="flex items-center gap-3">
           <Link
             to="/welcome"

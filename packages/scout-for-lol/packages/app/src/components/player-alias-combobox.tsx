@@ -3,6 +3,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { useDebouncedValue } from "#src/hooks/use-debounced-value.ts";
 import { Combobox } from "#src/components/ui/combobox.tsx";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 
 type PlayerSummary = { id: number; alias: string };
 
@@ -29,6 +30,7 @@ export function PlayerAliasCombobox(props: {
       {
         enabled: debounced.trim().length > 0,
         placeholderData: keepPreviousData,
+        staleTime: STALE_TIME_SLOW_LIST,
       },
     ),
   );

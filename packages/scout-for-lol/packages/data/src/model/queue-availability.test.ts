@@ -81,9 +81,7 @@ describe("queueAvailabilityNote", () => {
   test("present for limited queues that are not live", () => {
     const now = new Date("2026-07-26T00:00:00Z");
     expect(queueAvailabilityNote("urf", now)).toContain("Limited-time");
-    expect(queueAvailabilityNote("normal doom bots", now)).toContain(
-      "Limited-time",
-    );
+    expect(queueAvailabilityNote("brawl", now)).toContain("Limited-time");
   });
 });
 

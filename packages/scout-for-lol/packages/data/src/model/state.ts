@@ -32,39 +32,59 @@ const ARENA_GAME_MODE = "CHERRY";
 // which Riot's published queues.json still labels as the long-defunct original.
 //
 // Arena churns its queue ID between reworks (1700 was the original Soul Fighter
-// launch; Riot moved live Arena to 1750 around mid-2026). Both map to "arena"
+// launch; 1750 and 1740 appeared around mid-2026 — 1740 observed live with an
+// 18-player CHERRY lobby). Both map to "arena"
 // here, but the durable classifier is `resolveQueueTypeFromGame` below, which
 // keys off `gameMode === "CHERRY"` and is immune to the next ID change.
 export function parseQueueType(input: number): QueueType | undefined {
-  return match(input)
-    .returnType<QueueType | undefined>()
-    .with(0, () => "custom")
-    .with(420, () => "solo")
-    .with(400, () => "draft pick")
-    .with(440, () => "flex")
-    .with(450, () => "aram")
-    .with(700, () => "clash")
-    .with(710, () => "ranked 5s")
-    .with(720, () => "aram clash")
-    .with(480, () => "swiftplay")
-    .with(490, () => "quickplay")
-    .with(900, () => "arurf")
-    .with(ARENA_QUEUE_ID, () => "arena")
-    .with(1750, () => "arena")
-    .with(2300, () => "brawl")
-    .with(2400, () => "aram mayhem")
-    .with(3200, () => "aram mayhem")
-    .with(3220, () => "aram mayhem")
-    .with(3270, () => "aram mayhem")
-    .with(3100, () => "custom")
-    .with(1900, () => "urf")
-    .with(3130, () => "easy doom bots")
-    .with(4220, () => "normal doom bots")
-    .with(4250, () => "hard doom bots")
-    .otherwise((): QueueType | undefined => {
-      console.error(`unknown queue type: ${input.toString()}`);
-      return;
-    });
+  return (
+    match(input)
+      .returnType<QueueType | undefined>()
+      .with(0, () => "custom")
+      .with(420, () => "solo")
+      .with(400, () => "draft pick")
+      .with(440, () => "flex")
+      .with(450, () => "aram")
+      .with(700, () => "clash")
+      .with(710, () => "ranked 5s")
+      .with(720, () => "aram clash")
+      .with(480, () => "swiftplay")
+      .with(490, () => "quickplay")
+      .with(900, () => "arurf")
+      .with(ARENA_QUEUE_ID, () => "arena")
+      .with(1740, () => "arena")
+      .with(1750, () => "arena")
+      .with(2300, () => "brawl")
+      .with(2400, () => "aram mayhem")
+      .with(3200, () => "aram mayhem")
+      .with(3220, () => "aram mayhem")
+      .with(3270, () => "aram mayhem")
+      .with(3100, () => "custom")
+      // 3130 was previously mapped to easy doom bots, but every lake match with
+      // this id is a custom lobby (gameType CUSTOM_GAME, gameMode CLASSIC).
+      .with(3130, () => "custom")
+      .with(1900, () => "urf")
+      // Doom Bots ids per the game-client queue catalog (CommunityDragon):
+      // 4250/4251/4252 = "Veigar's Evil!" (Trial 1, the introductory tier),
+      // 4240/4241/4242 = "Veigar's Curse!" (Trial 2), 4220 = "Doom Bots -
+      // Hard", 4260/4261/4262 = "Veigar's Doom!" (Trial 3). None observed in
+      // the match lake yet; team-size variants (4200-4210) stay unmapped and
+      // surface via the queue-windows watcher when played.
+      .with(4250, () => "easy doom bots")
+      .with(4251, () => "easy doom bots")
+      .with(4252, () => "easy doom bots")
+      .with(4240, () => "normal doom bots")
+      .with(4241, () => "normal doom bots")
+      .with(4242, () => "normal doom bots")
+      .with(4220, () => "hard doom bots")
+      .with(4260, () => "hard doom bots")
+      .with(4261, () => "hard doom bots")
+      .with(4262, () => "hard doom bots")
+      .otherwise((): QueueType | undefined => {
+        console.error(`unknown queue type: ${input.toString()}`);
+        return;
+      })
+  );
 }
 
 export function isArenaQueueOrMode(queueId: number, gameMode: string): boolean {
@@ -114,13 +134,48 @@ export function queueTypeToDisplayString(queueType: QueueType): string {
     .with("urf", () => "URF")
     .with("arena", () => "arena")
     .with("brawl", () => "brawl")
-    .with("aram mayhem", () => "ARAM mayhem")
-    .with("easy doom bots", () => "doom bots")
-    .with("normal doom bots", () => "doom bots")
-    .with("hard doom bots", () => "doom bots")
+    .with("aram mayhem", () => "ARAM: Mayhem")
+    .with("easy doom bots", () => "Easy Doom Bots")
+    .with("normal doom bots", () => "Normal Doom Bots")
+    .with("hard doom bots", () => "Hard Doom Bots")
     .with("custom", () => "custom")
     .with("draft pick", () => "draft pick")
     .with("quickplay", () => "quickplay")
     .with("swiftplay", () => "swiftplay")
     .exhaustive();
+}
+
+/**
+ * The three Doom Bots difficulties present as ONE mode to users. Pickers and
+ * filter summaries collapse the trio into a single "Doom Bots" entry; the
+ * distinct per-difficulty names above remain for match-specific displays.
+ */
+export const DOOM_BOTS_QUEUES: readonly QueueType[] = [
+  "easy doom bots",
+  "normal doom bots",
+  "hard doom bots",
+];
+
+const DOOM_BOTS_GROUP_LABEL = "Doom Bots";
+
+/**
+ * Display labels for a queue list, collapsing the full Doom Bots trio into a
+ * single "Doom Bots" label (partial selections keep the per-difficulty names).
+ * Order follows the input; the collapsed label sits at the first trio member.
+ */
+export function queueDisplayLabels(queues: readonly QueueType[]): string[] {
+  const hasAllDoomBots = DOOM_BOTS_QUEUES.every((queue) =>
+    queues.includes(queue),
+  );
+  const labels: string[] = [];
+  for (const queue of queues) {
+    if (hasAllDoomBots && DOOM_BOTS_QUEUES.includes(queue)) {
+      if (!labels.includes(DOOM_BOTS_GROUP_LABEL)) {
+        labels.push(DOOM_BOTS_GROUP_LABEL);
+      }
+      continue;
+    }
+    labels.push(queueTypeToDisplayString(queue));
+  }
+  return labels;
 }

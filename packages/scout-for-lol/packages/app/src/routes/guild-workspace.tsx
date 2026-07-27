@@ -7,7 +7,8 @@ import {
   useParams,
 } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
+import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
 import type { Permission } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { cn } from "#src/lib/cn.ts";
@@ -18,6 +19,7 @@ import {
 } from "#src/components/forbidden-panel.tsx";
 import { permissionsForGuildActionRoute } from "#src/lib/guild-route-permissions.ts";
 import type { QueryError } from "#src/lib/permission-query-state.ts";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 
 const NAV_ITEMS: {
   to: string;
@@ -62,7 +64,11 @@ export function GuildWorkspace() {
   const trpc = useTRPC();
   // Reuse the guild list already fetched by the picker (same query key →
   // served from cache; auto-fetches if the user deep-linked here).
-  const { data: guilds } = useQuery(trpc.guild.listManageable.queryOptions());
+  const { data: guilds } = useQuery(
+    trpc.guild.listManageable.queryOptions(undefined, {
+      staleTime: STALE_TIME_SLOW_LIST,
+    }),
+  );
   const guild = guilds?.find((g) => g.id === guildId);
   const { perms, isLoading, hasAccess, error } = usePermissions(guildId);
 
@@ -157,7 +163,9 @@ export function GuildWorkspace() {
             message={`Ask a Scout admin to grant you ${activeNav.label} access.`}
           />
         ) : (
-          <Outlet />
+          <Suspense fallback={<SectionSkeleton />}>
+            <Outlet />
+          </Suspense>
         )
       ) : (
         <PermissionLoadError error={error} />

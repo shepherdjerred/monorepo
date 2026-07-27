@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { parseSubscriptionFilters } from "@scout-for-lol/data/index.ts";
 import {
   type CompetitionWithSeason,
   getCompetitionStatus,
@@ -94,6 +95,8 @@ export function serializePlayerDetail(
       channelId: string;
       creatorDiscordId: string;
       createdTime: Date;
+      filters: string | null;
+      isMuted: boolean;
     }[];
     competitionParticipants: {
       id: number;
@@ -136,6 +139,10 @@ export function serializePlayerDetail(
           creatorDiscordId: subscription.creatorDiscordId,
           creatorDiscordUser: lookupUser(names, subscription.creatorDiscordId),
           createdTime: subscription.createdTime,
+          // Same parsed shape the subscriptions tab renders, so the player
+          // page can host the identical filter/mute controls.
+          filters: parseSubscriptionFilters(subscription.filters),
+          isMuted: subscription.isMuted,
         }))
       : [],
     competitions: permissions.can("competitions", "read")

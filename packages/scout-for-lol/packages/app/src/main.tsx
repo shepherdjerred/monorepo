@@ -1,17 +1,13 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router";
-import {
-  MutationCache,
-  QueryClient,
-  QueryClientProvider,
-} from "@tanstack/react-query";
+import { RouterProvider } from "react-router";
+import { QueryClientProvider } from "@tanstack/react-query";
 import * as Sentry from "@sentry/react";
-import { z } from "zod";
-import { App } from "#src/app.tsx";
 import { TRPCProvider, trpcClient } from "#src/lib/trpc.ts";
+import { queryClient } from "#src/lib/query-client.ts";
+import { createAppRouter } from "#src/router.tsx";
 import { ThemeProvider } from "#src/lib/use-theme.tsx";
-import { initAnalytics, trackMutationMeta } from "#src/lib/analytics.ts";
+import { initAnalytics } from "#src/lib/analytics.ts";
 import "#src/styles/global.css";
 
 // VITE_SENTRY_RELEASE is injected at build time by the CI site-deploy step
@@ -54,54 +50,19 @@ globalThis.addEventListener("vite:preloadError", () => {
   globalThis.location.reload();
 });
 
-const HttpStatusErrorSchema = z.object({
-  data: z.object({ httpStatus: z.number() }),
-});
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      // Retry once, but never for client errors — auth/permission/validation
-      // failures (4xx) won't succeed on retry.
-      retry: (failureCount, error) => {
-        const parsed = HttpStatusErrorSchema.safeParse(error);
-        if (parsed.success && parsed.data.data.httpStatus < 500) {
-          return false;
-        }
-        return failureCount < 1;
-      },
-      staleTime: 30_000,
-    },
-  },
-  // Fire an analytics event for any mutation whose meta was built with
-  // analyticsMeta(), labeled by outcome. Runs alongside each mutation's own
-  // onSuccess/onError; trackMutationMeta validates the meta and no-ops otherwise.
-  // The resolved result is passed on success so mutations that resolve a
-  // discriminated business failure (e.g. `player-not-found`) are recorded by
-  // their real `kind`, not as a blanket success.
-  mutationCache: new MutationCache({
-    onSuccess: (data, _variables, _context, mutation) => {
-      trackMutationMeta(mutation.meta, "success", data);
-    },
-    onError: (_error, _variables, _context, mutation) => {
-      trackMutationMeta(mutation.meta, "error");
-    },
-  }),
-});
-
 const container = document.querySelector("#root");
 if (container === null) {
   throw new Error("Missing #root mount point in index.html");
 }
+
+const router = createAppRouter();
 
 createRoot(container).render(
   <StrictMode>
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-          <BrowserRouter basename="/app">
-            <App />
-          </BrowserRouter>
+          <RouterProvider router={router} />
         </TRPCProvider>
       </QueryClientProvider>
     </ThemeProvider>
