@@ -268,6 +268,10 @@ for (const required of [
   'exclude: "sandbox/**"',
   "--skip-dirs node_modules",
   "--skip-dirs sandbox",
+  "--skip-db-update",
+  "claimName: buildkite-trivy-db",
+  "mountPath: /buildkite/trivy-db",
+  "readOnly: true",
 ]) {
   requireIncludes(
     trivy,

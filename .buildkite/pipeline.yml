@@ -661,10 +661,10 @@ steps:
     # Excluding unshipped scratch also avoids traversing and resolving the
     # archived Maven graphs on every scan (build 5980 exhausted Maven Central's
     # shared-IP rate limit while resolving sandbox/archive/castle-casters).
-    # PR Pods run before the GitOps-managed shared PVC exists on a newly
-    # provisioned cluster. Keep their database local and let Trivy download a
-    # fresh copy rather than making the PR depend on a post-merge sync.
-    command: trivy fs --cache-backend memory --cache-dir /buildkite/trivy-db --scanners vuln --severity HIGH,CRITICAL --exit-code 7 --skip-dirs node_modules --skip-dirs sandbox .
+    # The trusted CronJob refreshes the shared database. PR scans mount that
+    # database read-only and keep only scan results in memory, avoiding both
+    # concurrent BoltDB writers and per-PR database downloads.
+    command: trivy fs --cache-backend memory --cache-dir /buildkite/trivy-db --skip-db-update --scanners vuln --severity HIGH,CRITICAL --exit-code 7 --skip-dirs node_modules --skip-dirs sandbox .
     plugins:
       - kubernetes:
           metadata:
@@ -704,6 +704,13 @@ steps:
                   - name: buildkite-git-mirrors
                     mountPath: /buildkite/git-mirrors
                     readOnly: true
+                  - name: trivy-db
+                    mountPath: /buildkite/trivy-db
+                    readOnly: true
+            volumes:
+              - name: trivy-db
+                persistentVolumeClaim:
+                  claimName: buildkite-trivy-db
 
   - label: ":mag: semgrep"
     key: semgrep
