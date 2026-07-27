@@ -33,7 +33,10 @@ Remaining:
    412s) and a Buildkite build's turbo summary shows `REMOTE` hits.
 2. Operator: delete the now-unused `turbo-cache-r2` 1Password item (Homelab
    (Kubernetes) vault) — no OnePasswordItem CRD references it anymore. Refresh
-   the vault snapshot afterward if the linter flags it.
+   the vault snapshot afterward unconditionally: the item is already
+   unreferenced, so `check-1password-items.ts` won't flag its deletion on its
+   own, and a stale snapshot entry would let a future accidental reference to
+   the deleted item pass CI despite failing at deployment.
 3. Consider enabling artifact signing (`remoteCache.signature: true` in
    `turbo.json` + `TURBO_REMOTE_CACHE_SIGNATURE_KEY` on clients and server).
 
