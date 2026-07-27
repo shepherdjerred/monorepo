@@ -1,7 +1,7 @@
 ---
 id: review-gate-fastforward-reaction-binding
 type: todo
-status: planned
+status: complete
 board: true
 verification: human
 disposition: active
@@ -51,11 +51,25 @@ bare-👍 signal: [[verify-codex-clean-reaction-surface]].
 
 ## Remaining
 
-- [ ] Reassess if GitHub ever exposes a per-ref-update timestamp (PR timeline
-      `PullRequestCommit` / a synchronize-event time) that covers fast-forwards.
-- [ ] If Codex ever emits a head-bound clean signal (a review object or a
-      status/check on a clean PR), switch the clean path to it and drop the
-      timestamp heuristic entirely.
-- [ ] Re-evaluate whether a shorter default `REVIEW_WAIT_TIMEOUT_SECONDS` plus a
-      required `@codex review` re-trigger is preferable to the heuristic for the
-      default blocking gate.
+- [x] Reassess if GitHub exposes a per-ref-update timestamp that covers
+      fast-forwards — YES: the **Repository Activity API**
+      (`GET /repos/{owner}/{repo}/activity`) reports a `push` /
+      `force_push` / `branch_creation` event whose `after` is the head, with a
+      real `timestamp`. That is the ref-update instant the residual said was
+      unavailable.
+- [x] Not needed — the timestamp heuristic is now correct with the real
+      ref-update time, so switching to a hypothetical Codex head-bound signal is
+      no longer required to close this.
+- [x] Not needed — the heuristic is now sound; no shorter-timeout / mandatory
+      re-trigger workaround required.
+
+## Comment Log
+
+- 2026-07-26 — Resolved by PR #1704. `resolveHeadPushedAt`
+  (`packages/code-review/src/head-pushed-at.ts`, extracted from `github.ts`) now
+  takes the LATEST of `pushedDate`, the `HeadRefForcePushedEvent`, and the
+  Repository Activity API ref-update timestamp (`fetchRefUpdateTime` +
+  `pickRefUpdateTime`). The fast-forward-to-preexisting-commit case is covered:
+  the Activity event gives the real instant the ref became the head, so a stale
+  👍 left for the previous head predates it and no longer binds. The premise that
+  "no API primitive exists" is superseded. Archived to `archive/completed/`.

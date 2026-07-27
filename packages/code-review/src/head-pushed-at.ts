@@ -6,6 +6,7 @@
  * under its size budget.
  */
 
+import { z } from "zod";
 import {
   arrayField,
   asRecord,
@@ -16,6 +17,17 @@ import {
   splitRepo,
   stringField,
 } from "./github-http.ts";
+
+// One Repository-Activity item — only the fields we depend on. Extra keys
+// (activity_type, ref, actor, before, id) are stripped, but a response that is
+// not an array of objects carrying these two string fields is a contract
+// regression and must fail loudly (see fetchRefUpdateTime) rather than be
+// silently treated as "no activity" — which would masquerade as a review
+// timeout.
+const RepositoryActivitySchema = z.object({
+  after: z.string(),
+  timestamp: z.string(),
+});
 
 const HEAD_REF_UPDATED_AT_QUERY = `
 query($owner: String!, $name: String!, $oid: GitObjectID!, $number: Int!) {
@@ -62,6 +74,17 @@ function latestIso(candidates: readonly (string | null)[]): string | null {
  * head — the real instant the ref was moved to this commit (a `push`,
  * `force_push`, or `branch_creation`). Exported for tests.
  */
+/**
+ * Validate one Repository-Activity API page, THROWING on a contract regression
+ * (a non-array payload or an item missing `after`/`timestamp`) rather than
+ * silently reducing it to "no activity". Exported for tests.
+ */
+export function parseActivityPage(
+  payload: unknown,
+): z.infer<typeof RepositoryActivitySchema>[] {
+  return z.array(RepositoryActivitySchema).parse(payload);
+}
+
 export function pickRefUpdateTime(
   activities: readonly unknown[],
   sha: string,
@@ -131,17 +154,21 @@ async function fetchRefUpdateTime(input: {
   sha: string;
   token: string;
 }): Promise<string | null> {
+  // `time_period=year` (the widest documented window) — the endpoint otherwise
+  // defaults to the last day, which would miss the ref update when a build is
+  // retried >24h after the head was pushed and leave the clean 👍 unbindable. A
+  // head older than a year yields null (gate stays reviewing) rather than a
+  // false bind, which is the safe direction.
   let url: string | null =
-    `${GITHUB_API_URL}/repos/${input.repo}/activity?ref=${encodeURIComponent(input.ref)}&per_page=100`;
-  const activities: Record<string, unknown>[] = [];
+    `${GITHUB_API_URL}/repos/${input.repo}/activity?ref=${encodeURIComponent(input.ref)}&per_page=100&time_period=year`;
+  const activities: z.infer<typeof RepositoryActivitySchema>[] = [];
   let pages = 0;
   while (url !== null && pages < MAX_ACTIVITY_PAGES) {
     const { payload, linkNext } = await getJsonWithLink(url, input.token);
-    const page = Array.isArray(payload) ? payload : [];
-    for (const raw of page) {
-      const activity = asRecord(raw);
-      if (activity !== null) activities.push(activity);
-    }
+    // Throw on a contract regression rather than silently reduce a malformed
+    // response to "no activity" → a false review timeout. An empty page ([]) is
+    // valid and yields null.
+    for (const item of parseActivityPage(payload)) activities.push(item);
     url = linkNext;
     pages += 1;
   }

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  parseActivityPage,
   pickRefUpdateTime,
   reactionBoundToHead,
   resolveHeadPushedAt,
@@ -129,6 +130,34 @@ describe("pickRefUpdateTime", () => {
       ),
     ).toBeNull();
     expect(pickRefUpdateTime([], HEAD)).toBeNull();
+  });
+});
+
+describe("parseActivityPage", () => {
+  test("accepts a valid page (extra keys stripped) and an empty page", () => {
+    expect(
+      parseActivityPage([
+        {
+          after: HEAD,
+          timestamp: "2026-07-26T23:00:00Z",
+          activity_type: "push",
+          ref: "refs/heads/x",
+        },
+      ]),
+    ).toEqual([{ after: HEAD, timestamp: "2026-07-26T23:00:00Z" }]);
+    expect(parseActivityPage([])).toEqual([]);
+  });
+
+  test("throws on a non-array payload (contract regression)", () => {
+    expect(() => parseActivityPage({ message: "Not Found" })).toThrow();
+    expect(() => parseActivityPage(null)).toThrow();
+  });
+
+  test("throws on an item missing required fields", () => {
+    expect(() => parseActivityPage([{ after: HEAD }])).toThrow();
+    expect(() =>
+      parseActivityPage([{ timestamp: "2026-07-26T23:00:00Z" }]),
+    ).toThrow();
   });
 });
 
