@@ -24,9 +24,9 @@
     "@scout-for-lol/data": "workspace:*",
     "chroma-js": "^3.2.0",
     "echarts": "^6.0.0",
-    "react": "19.2.7",
+    "react": "19.2.8",
     "remeda": "^2.21.2",
-    "satori": "^0.26.0",
+    "satori": "^0.28.0",
     "ts-pattern": "^5.7.0",
     "yoga-wasm-web": "^0.3.3",
     "zod": "^4.4.3"

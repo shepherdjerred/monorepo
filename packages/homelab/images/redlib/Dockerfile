@@ -23,7 +23,7 @@
 ########################
 # Matches upstream Dockerfile.ubuntu's RUST_BUILDER_VERSION=slim-bookworm.
 # renovate: datasource=docker depName=rust
-FROM rust:slim-bookworm@sha256:fce20672592cce86737723a62b080aa59896e09e452ab1876fd9e990eaa80e5f AS builder
+FROM rust:slim-bookworm@sha256:99e09cb2284e2ddbb73a995deee3e91783fd04d177602ccf6eab326d778ee777 AS builder
 
 RUN apt-get update \
   && apt-get -y install --no-install-recommends git ca-certificates build-essential cmake libclang-dev \

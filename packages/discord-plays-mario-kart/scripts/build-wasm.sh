@@ -13,7 +13,8 @@ set -euo pipefail
 PKG_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$PKG_ROOT/wasm-src"
 OUT="$PKG_ROOT/packages/backend/assets/n64wasm"
-EMSDK_IMAGE="${EMSDK_IMAGE:-emscripten/emsdk:2.0.7}"
+# renovate: datasource=docker depName=emscripten/emsdk versioning=docker
+EMSDK_IMAGE="${EMSDK_IMAGE:-emscripten/emsdk:2.0.34}"
 
 build="$(mktemp -d)"
 trap 'rm -rf "$build"' EXIT

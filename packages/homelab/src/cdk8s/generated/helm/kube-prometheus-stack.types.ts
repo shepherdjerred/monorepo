@@ -4186,7 +4186,7 @@ export type KubeprometheusstackHelmValuesKubeScheduler = {
    */
   service?: KubeprometheusstackHelmValuesKubeSchedulerService;
   /**
-   * @default {...} (18 keys)
+   * @default {...} (19 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesKubeSchedulerServiceMonitor;
 };
@@ -4285,6 +4285,10 @@ export type KubeprometheusstackHelmValuesKubeSchedulerServiceMonitor = {
    */
   additionalLabels?: KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorAdditionalLabels;
   targetLabels?: unknown[];
+  /**
+   * @default {...} (4 keys)
+   */
+  resource?: KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorResource;
 };
 
 export type KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorSelector =
@@ -4292,6 +4296,24 @@ export type KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorSelector =
 
 export type KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorAdditionalLabels =
   object;
+
+export type KubeprometheusstackHelmValuesKubeSchedulerServiceMonitorResource = {
+  /**
+   * Enable scraping /metrics/resource from kube-scheduler
+   * https://kubernetes.io/docs/concepts/cluster-administration/system-metrics/#kube-scheduler-metrics
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Scrape interval. If not set, the Prometheus default scrape interval is used.
+   *
+   * @default ""
+   */
+  interval?: string;
+  metricRelabelings?: unknown[];
+  relabelings?: unknown[];
+};
 
 export type KubeprometheusstackHelmValuesKubeProxy = {
   /**
@@ -8462,7 +8484,7 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v3.13.0-distroless"
+   * @default "v3.13.1-distroless"
    */
   tag?: string;
   /**
@@ -10303,6 +10325,10 @@ export type KubeprometheusstackHelmParameters = {
   "kubeScheduler.serviceMonitor.metricRelabelings"?: string;
   "kubeScheduler.serviceMonitor.relabelings"?: string;
   "kubeScheduler.serviceMonitor.targetLabels"?: string;
+  "kubeScheduler.serviceMonitor.resource.enabled"?: string;
+  "kubeScheduler.serviceMonitor.resource.interval"?: string;
+  "kubeScheduler.serviceMonitor.resource.metricRelabelings"?: string;
+  "kubeScheduler.serviceMonitor.resource.relabelings"?: string;
   "kubeProxy.enabled"?: string;
   "kubeProxy.jobNameOverride"?: string;
   "kubeProxy.endpoints"?: string;

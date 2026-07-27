@@ -7,7 +7,8 @@ import {
   KubeServiceAccount,
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-const EVENT_EXPORTER_IMAGE = "ghcr.io/resmoio/kubernetes-event-exporter:v1.7";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+const EVENT_EXPORTER_IMAGE = `ghcr.io/resmoio/kubernetes-event-exporter:${versions["resmoio/kubernetes-event-exporter"]}`;
 
 // Escapes Go template syntax for JSON-rendered Helm templates (cdk8s outputs JSON).
 // Uses backtick-based Go template strings which survive JSON encoding, unlike

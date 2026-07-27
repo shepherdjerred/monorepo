@@ -1,6 +1,6 @@
 services:
   tempo:
-    image: grafana/tempo:2.10.6@sha256:6ea351a2186822a044d5e326ed4c7a43d019378e4c033c271b89584216db03e7
+    image: grafana/tempo:3.0.2@sha256:cda87c212d8c584dc0b89e337e7ed648a5100feb657e5d528480ee4fa03dbbe3
     ports:
       - "3200:3200" # query API
       - "4318:4318" # OTLP HTTP
@@ -17,7 +17,7 @@ services:
       - ./loki.yaml:/etc/loki/local-config.yaml:ro
 
   grafana:
-    image: grafana/grafana:13.0.2@sha256:5dad0df181cb644a14e13617b913b261a54f7d4fd4510721dba420929f35bea2
+    image: grafana/grafana:13.1.0@sha256:121a7a9ece6dc10b969f1f96eed64b4f07dfac0d0b8abc070f7cb83bbde86f63
     ports:
       - "3000:3000"
     environment:

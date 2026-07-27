@@ -25,7 +25,7 @@
 # Pinned emscripten 2.0.7: the exact toolchain the legacy SDL2/GLES2 core
 # compiles with (a newer emsdk silently breaks it).
 # ---------------------------------------------------------------------------
-FROM emscripten/emsdk:2.0.7@sha256:cbeeb7cccd2e7915fe0596345f10bfdec5578cc0386aaa823ad6f1d41910619f AS wasm-builder
+FROM emscripten/emsdk:2.0.34@sha256:3a5cec571c533e448f1d2bcba9757382f9122771e74394106c4acd6235b026f5 AS wasm-builder
 
 WORKDIR /src
 # Copy only the vendored wasm source tree (patches + the pristine `code/` tree).

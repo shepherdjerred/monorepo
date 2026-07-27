@@ -1,7 +1,7 @@
 name: llm-obs-e2e
 services:
   tempo:
-    image: grafana/tempo:2.10.6@sha256:6ea351a2186822a044d5e326ed4c7a43d019378e4c033c271b89584216db03e7
+    image: grafana/tempo:3.0.2@sha256:cda87c212d8c584dc0b89e337e7ed648a5100feb657e5d528480ee4fa03dbbe3
     command: ["-config.file=/etc/tempo.yaml"]
     # `configs` ships the file CONTENT through the compose API instead of a
     # host bind mount — required in CI, where the docker daemon is a dind

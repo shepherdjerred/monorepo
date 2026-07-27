@@ -55,7 +55,9 @@ FROM base AS runtime
 # --- gh CLI + Claude Code CLI (editor sub-agent) ---
 # BUN_INSTALL=/usr/local drops `bun add -g` binaries into /usr/local/bin
 # (world-readable, on PATH). gh is fetched from the release tarball.
+# renovate: datasource=github-releases depName=cli/cli
 ARG GH_CLI_VERSION=2.96.0
+# renovate: datasource=npm depName=@anthropic-ai/claude-code
 ARG CLAUDE_CODE_VERSION=2.1.175
 ENV BUN_INSTALL=/usr/local
 RUN set -e; \
