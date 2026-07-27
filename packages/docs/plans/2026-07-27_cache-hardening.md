@@ -35,6 +35,7 @@ Implement offline-first local Turbo caching and reliable shared CI caching.
 - Added local-only Turbo defaults plus explicit remote-mode helpers for Fish, Bash, Zsh, and agent shells; applied and verified the managed local targets.
 - Added Turbo cache write readiness, local-backend chart wording, bounded BuildKit GC, uv/Trivy CI cache PVCs and maintenance jobs, and an internal Playwright runner build.
 - Verified the Buildkite pipeline, shell scripts, and the complete CDK8s package test suite.
+- Opened draft PR #1712 from `feature/cache-hardening` after the affected verification passed.
 
 ### Remaining
 
@@ -51,3 +52,4 @@ Implement offline-first local Turbo caching and reliable shared CI caching.
 ## Comment Log
 
 - 2026-07-27: User will merge the cache-hardening PR later. Keep this plan `in-progress` until the green-main release deploys the chart changes and live cache write/read verification completes.
+- 2026-07-27: Published draft PR #1712; the user will merge after the independent main fix is green.
