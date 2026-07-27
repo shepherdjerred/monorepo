@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.3](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.17.2...astro-opengraph-images-v1.17.3) (2026-07-27)
+
+
+### Bug Fixes
+
+* **deps:** revive twisted champion patch (ZAAHEN+LOCKE), drop dead satori patch ([#1699](https://github.com/shepherdjerred/monorepo/issues/1699)) ([0218d1c](https://github.com/shepherdjerred/monorepo/commit/0218d1cb8ab9b63897d248dacb9cedbe0e2f726c))
+
 ## [1.17.2](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.17.1...astro-opengraph-images-v1.17.2) (2026-07-26)
 
 No public API changes.
