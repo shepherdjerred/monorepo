@@ -19,7 +19,6 @@ import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   PlayerIdSchema,
-  SeasonIdSchema,
   getCompetitionStatus,
   type CompetitionId,
   type CompetitionWithCriteria,
@@ -27,6 +26,11 @@ import {
 import { CompetitionCronSchema } from "@scout-for-lol/data/model/competition-cron.ts";
 import { computeNextScheduledUpdateAt } from "@scout-for-lol/data/model/competition-cron.ts";
 import { CompetitionDatesSchema } from "#src/database/competition/validation.ts";
+import {
+  CompetitionEditInputSchema,
+  WebCompetitionDatesSchema,
+  buildCompetitionUpdateInput,
+} from "#src/trpc/router/competition-edit-input.ts";
 import { router } from "#src/trpc/trpc.ts";
 import { assertChannelInGuild } from "#src/trpc/guild-guard.ts";
 import {
@@ -40,7 +44,6 @@ import {
   getCompetitionById,
   getCompetitionsByServerPaginated,
   updateCompetition,
-  type UpdateCompetitionInput,
 } from "#src/database/competition/queries.ts";
 import {
   addParticipant,
@@ -66,20 +69,6 @@ const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 const CompetitionIdInput = GuildInput.extend({
   competitionId: CompetitionIdSchema,
 });
-
-/**
- * Web date input. The tRPC link carries no superjson transformer, so `Date`s
- * arrive as ISO strings — coerce them, then the existing duration/ordering
- * rules apply via `CompetitionDatesSchema.parse` in the handler.
- */
-const WebCompetitionDatesSchema = z.discriminatedUnion("type", [
-  z.object({
-    type: z.literal("FIXED_DATES"),
-    startDate: z.coerce.date(),
-    endDate: z.coerce.date(),
-  }),
-  z.object({ type: z.literal("SEASON"), seasonId: SeasonIdSchema }),
-]);
 
 const CompetitionWriteSchema = z.object({
   channelId: DiscordChannelIdSchema,
@@ -110,41 +99,6 @@ async function loadCompetitionOr404(
     });
   }
   return competition;
-}
-
-const CompetitionEditInputSchema = CompetitionIdInput.extend({
-  channelId: DiscordChannelIdSchema.optional(),
-  title: z.string().trim().min(1).max(100).optional(),
-  description: z.string().trim().min(1).max(500).optional(),
-  visibility: CompetitionVisibilitySchema.optional(),
-  maxParticipants: z.number().int().min(2).max(100).optional(),
-  dates: WebCompetitionDatesSchema.optional(),
-  criteria: CompetitionCriteriaSchema.optional(),
-});
-
-/**
- * Build the sparse update payload — only the keys the caller actually provided,
- * as required by exactOptionalPropertyTypes. Extracted from the `edit` handler
- * so the mutation stays under the cyclomatic-complexity limit.
- */
-function buildCompetitionUpdateInput(
-  input: z.infer<typeof CompetitionEditInputSchema>,
-): UpdateCompetitionInput {
-  return {
-    ...(input.title === undefined ? {} : { title: input.title }),
-    ...(input.description === undefined
-      ? {}
-      : { description: input.description }),
-    ...(input.channelId === undefined ? {} : { channelId: input.channelId }),
-    ...(input.visibility === undefined ? {} : { visibility: input.visibility }),
-    ...(input.maxParticipants === undefined
-      ? {}
-      : { maxParticipants: input.maxParticipants }),
-    ...(input.dates === undefined
-      ? {}
-      : { dates: CompetitionDatesSchema.parse(input.dates) }),
-    ...(input.criteria === undefined ? {} : { criteria: input.criteria }),
-  };
 }
 
 export const competitionRouter = router({
@@ -310,12 +264,13 @@ export const competitionRouter = router({
         });
       }
 
-      // Switching an existing competition to SERVER_WIDE bulk-enrolls every
-      // tracked player, so it requires the same invite permission the create
-      // path enforces for that visibility.
+      // Bulk-enroll (invite-permission gated) when a competition becomes
+      // SERVER_WIDE, or an already-SERVER_WIDE cap is raised (refill the slots).
       const enrollsServerWide =
-        input.visibility === "SERVER_WIDE" &&
-        competition.visibility !== "SERVER_WIDE";
+        (input.visibility ?? competition.visibility) === "SERVER_WIDE" &&
+        (competition.visibility !== "SERVER_WIDE" ||
+          (input.maxParticipants !== undefined &&
+            input.maxParticipants > competition.maxParticipants));
       if (enrollsServerWide && !ctx.permissions.can("competitions", "invite")) {
         throw new TRPCError({
           code: "FORBIDDEN",
@@ -470,11 +425,14 @@ export const competitionRouter = router({
     .input(CompetitionIdInput)
     .mutation(async ({ input }) => {
       await loadCompetitionOr404(input.competitionId, input.guildId);
-      return bulkEnrollTrackedPlayers({
-        prisma,
-        competitionId: input.competitionId,
-        guildId: input.guildId,
-      });
+      // One transaction (like create/edit) so a mid-batch failure rolls back.
+      return prisma.$transaction((tx) =>
+        bulkEnrollTrackedPlayers({
+          prisma: tx,
+          competitionId: input.competitionId,
+          guildId: input.guildId,
+        }),
+      );
     }),
 
   updateSchedule: guildMutationProcedure("competitions", "schedule")

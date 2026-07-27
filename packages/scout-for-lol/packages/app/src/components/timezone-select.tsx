@@ -146,6 +146,14 @@ export function TimezoneSelect(props: {
           props.onChange(canonical);
         }
       }}
+      onBlur={() => {
+        // Reconcile the field with what's actually committed once editing ends:
+        // a valid typed zone was already committed above (so this shows its
+        // canonical label); invalid/incomplete text reverts to the current
+        // selection instead of silently displaying a value the payload never
+        // saved.
+        setQuery(selectedLabel);
+      }}
       items={items}
       isLoading={false}
       openOnEmptyQuery

@@ -196,3 +196,23 @@ fixed:
 
 Verified: app typecheck + lint clean. (main advanced but merge-tree is clean —
 no restack needed.)
+
+## Re-review round 6 (cycle 7) — 3 P2s on head 0d43a4fe3
+
+All follow-ups to earlier fixes:
+
+- **P2 refill cap increase:** the edit path only enrolled on a visibility flip.
+  Now `enrollsServerWide` is also true when an already-SERVER_WIDE competition's
+  cap is raised, so the freed slots are refilled from tracked players.
+- **P2 addAllMembers transaction:** the manual bulk-enroll still used the global
+  Prisma client. Wrapped it in `prisma.$transaction` like the create/edit paths
+  so a mid-batch failure rolls back.
+- **P2 invalid timezone text:** typing an invalid/incomplete zone left the field
+  showing text the payload never saved. Added an `onBlur` to the shared Combobox
+  and TimezoneSelect now reverts the field to the committed label on blur.
+- Extracted `WebCompetitionDatesSchema` / `CompetitionEditInputSchema` /
+  `buildCompetitionUpdateInput` to `competition-edit-input.ts` to keep
+  `competition.router.ts` under the 500-line limit (self-contained, no circular
+  imports).
+
+Verified: backend+app typecheck + lint clean, `competition-create` tests 3/3.

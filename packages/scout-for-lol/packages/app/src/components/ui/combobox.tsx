@@ -30,6 +30,9 @@ export function Combobox<T>(props: {
   // pinned/default list on focus). Defaults to false so existing consumers keep
   // the "only open once there's a query" behavior.
   openOnEmptyQuery?: boolean | undefined;
+  // Fired when the input loses focus — lets a consumer reconcile uncommitted
+  // free text (e.g. revert to the committed value) once editing ends.
+  onBlur?: (() => void) | undefined;
 }) {
   const [open, setOpen] = useState(false);
   const listId = useId();
@@ -70,6 +73,9 @@ export function Combobox<T>(props: {
           }}
           onFocus={() => {
             setOpen(true);
+          }}
+          onBlur={() => {
+            props.onBlur?.();
           }}
         />
       </PopoverAnchor>
