@@ -31,6 +31,7 @@ import {
   SHARED_POD_ANCHORS,
   CHECKOUT_CONTAINER_ALIAS,
 } from "./validate-pipeline-lib.ts";
+import { validateCaddySmokeContracts } from "./validate-pipeline-caddy.ts";
 const PIPELINE_PATH = ".buildkite/pipeline.yml";
 const GLOBAL_IF_CHANGED = [
   '".buildkite/**"',
@@ -496,28 +497,7 @@ if (
   fail("build-ci-image.sh must use the remote production BuildKit builder");
 }
 
-const caddyCheck = await Bun.file(
-  "packages/homelab/src/cdk8s/scripts/check-caddyfile.ts",
-).text();
-requireNonePresent(
-  caddyCheck,
-  ['"docker"', "caddy-s3proxy:dev", "docker buildx", "imageExists"],
-  (hiddenBuild) =>
-    `check-caddyfile.ts restored hidden build path ${hiddenBuild}`,
-);
-
-const caddyDockerfile = await Bun.file(
-  "packages/homelab/images/caddy-s3proxy/Dockerfile",
-).text();
-requireAllPresent(
-  caddyDockerfile,
-  [
-    "FROM runtime AS smoke",
-    "--mount=type=secret,id=caddyfile",
-    "caddy adapt --config /run/secrets/caddyfile --adapter caddyfile",
-  ],
-  (required) => `Caddy in-image smoke is missing contract ${required}`,
-);
+await validateCaddySmokeContracts();
 
 console.log(
   `[validate-pipeline] ${keys.size.toString()} command steps have unique keys, exact pod labels, and bounded installs`,

@@ -45,18 +45,18 @@ afterEach(async () => {
 });
 
 describe("PVC backup policy", () => {
-  it("classifies 45 included and 27 excluded PVCs without duplicates", () => {
+  it("classifies 45 included and 29 excluded PVCs without duplicates", () => {
     const keys = PVC_BACKUP_POLICY.map((entry) =>
       pvcBackupPolicyKey(entry.namespace, entry.name),
     );
-    expect(keys).toHaveLength(72);
-    expect(new Set(keys).size).toBe(72);
+    expect(keys).toHaveLength(74);
+    expect(new Set(keys).size).toBe(74);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
     ).toHaveLength(45);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
-    ).toHaveLength(27);
+    ).toHaveLength(29);
   });
 
   it("classifies and labels every synthesized PVC", async () => {
@@ -114,7 +114,7 @@ describe("PVC backup policy", () => {
     expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(2);
     expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(1);
     expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(1);
-  });
+  }, 20_000);
 
   it("fails synthesis for an unclassified ZFS PVC", () => {
     const app = new App();

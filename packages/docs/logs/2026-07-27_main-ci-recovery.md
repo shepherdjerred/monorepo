@@ -231,3 +231,28 @@ through its downstream release and version paths.
 ### Caveats
 
 - The failed Codex invocation used a login shell with a different `PATH`; parent-process `gh --version` alone cannot prove delegated-agent availability. Main's runtime repair arrived concurrently, so this branch is now limited to keeping fresh CI images equivalent and tested.
+
+## Session Log — 2026-07-27 (Temporal and ArgoCD recovery)
+
+### Done
+
+- Re-fetched the latest authoritative `main` build [#6567](https://buildkite.com/sjerred/monorepo/builds/6567) and isolated its hard failure to the ArgoCD sync-and-wait lane.
+- Verified the live Temporal worker was crash-looping during startup because Temporal Core rejected a one-poller workflow configuration while workflow caching remained enabled.
+- Made the workflow-task poller behavior explicit for every worker queue with the SDK's normal maximum of 10, preserving caching and avoiding the Bun/Core default-translation failure.
+- Verified the live Loki PVC already has the required excluded-backup labels. The remaining drift is limited to immutable StatefulSet PVC-template labels, so the repair delegates only those template label paths to the existing admission policy and removes ArgoCD replace mode rather than recreating Loki storage.
+- Declared Kubernetes' `matchPolicy: Equivalent` default in the admission-policy source to converge the two MutatingAdmissionPolicies without an ignore rule.
+- Added regression tests for the Temporal worker option, policy default, and Loki ArgoCD application behavior. Temporal typecheck/lint and focused tests passed; cdk8s typecheck/lint/build and focused tests passed.
+- Passed `bun run verify -- --affected` (32/32 tasks), including the complete Temporal and cdk8s test suites, repository policy checks, and the Temporal bot-clone rehearsal.
+- Restacked the repair with git-spice onto current `main` at `22d924739657a80d499ec9955d999a3473dc0928`. Main already contained the explicit admission-policy defaults, so its stronger exact-default assertion was retained; the rebased head passed the affected gate again (32/32 tasks).
+- Published draft PR [#1733](https://github.com/shepherdjerred/monorepo/pull/1733) from the verified git-spice branch.
+- The subsequent current-main cache-hardening merge added `buildkite-uv-cache` and `buildkite-trivy-db` without the required PVC backup-policy entries, and extended the pipeline validator past its 500-line lint limit. Added both rebuildable-cache exclusions, updated the exact policy-count test, and extracted the Caddy contract check into a focused validator module. The policy test, cdk8s typecheck/lint, root-scripts lint, and pipeline validator pass.
+
+### Remaining
+
+- Follow PR #1733 through Buildkite and current-head review, merge it after all required gates are green, then verify its generated `main` build.
+- Merge the repair, then verify the generated main build deploys a healthy Temporal worker and reaches a fully green ArgoCD sync-and-wait lane.
+
+### Caveats
+
+- The affected verification includes an intentionally uncached bot-clone rehearsal and took several minutes locally; it completed successfully.
+- No direct cluster mutation or StatefulSet recreation was performed; all intended changes are declarative and GitOps-managed.

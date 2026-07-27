@@ -354,12 +354,28 @@ export function createLokiApp(chart: Chart) {
         server: "https://kubernetes.default.svc",
         namespace: "loki",
       },
+      // StatefulSet volume-claim templates are immutable after creation.
+      // PVC backup labels are instead enforced by the cluster-wide admission
+      // policy, which already owns the live PVC labels. Keep ArgoCD from
+      // attempting to replace only this immutable template metadata.
+      ignoreDifferences: [
+        {
+          group: "apps",
+          kind: "StatefulSet",
+          name: "loki",
+          namespace: "loki",
+          jsonPointers: [
+            "/spec/volumeClaimTemplates/0/metadata/labels/velero.io~1backup",
+            "/spec/volumeClaimTemplates/0/metadata/labels/velero.io~1exclude-from-backup",
+          ],
+        },
+      ],
       syncPolicy: {
         automated: {},
         syncOptions: [
           "CreateNamespace=true",
           "ServerSideApply=true",
-          "Replace=true",
+          "RespectIgnoreDifferences=true",
         ],
       },
     },
