@@ -46,15 +46,16 @@ describe("createUsageTracker", () => {
     const tracker = createUsageTracker("claude-haiku-4-5-20251001");
     tracker.record(1_000_000, 100_000);
     const summary = tracker.getSummary();
-    // 1M input * $1/1M + 100K output * $5/1M = $1 + $0.50 = $1.50
-    expect(summary.estimatedCost).toBeCloseTo(1.5, 2);
+    // 1M input * $0.90/1M + 100K output * $4.50/1M = $0.90 + $0.45 = $1.35
+    expect(summary.estimatedCost).toBeCloseTo(1.35, 2);
   });
 
   test("uses default pricing for unknown models", () => {
     const tracker = createUsageTracker("unknown-model");
     tracker.record(1_000_000, 100_000);
     const summary = tracker.getSummary();
-    // Uses sonnet pricing as default
-    expect(summary.estimatedCost).toBeCloseTo(4.5, 2);
+    // Uses claude-sonnet-5 pricing as default:
+    // 1M input * $2/1M + 100K output * $10/1M = $2 + $1 = $3
+    expect(summary.estimatedCost).toBeCloseTo(3, 2);
   });
 });

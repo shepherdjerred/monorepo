@@ -98,7 +98,8 @@ describe("pricing accessors", () => {
   });
 
   test("Anthropic cache read/write bill separately from input (temporal parity)", () => {
-    // Haiku: input $1, output $5, cacheRead $0.1, cacheWrite $1.25 per 1M.
+    // Haiku snapshot: input $0.90, output $4.50, cacheRead $0.10,
+    // cacheWrite $1.25 per 1M.
     // 10k input + 100k cacheRead + 5k cacheWrite + 2k output.
     const cost = costForTextUsage("claude-haiku-4-5-20251001", {
       inputTokens: 10_000,
@@ -107,7 +108,7 @@ describe("pricing accessors", () => {
       cacheWriteTokens: 5000,
     });
     const expected =
-      (10_000 * 1 + 100_000 * 0.1 + 5000 * 1.25 + 2000 * 5) / 1_000_000;
+      (10_000 * 0.9 + 100_000 * 0.1 + 5000 * 1.25 + 2000 * 4.5) / 1_000_000;
     expect(cost).toBeCloseTo(expected, 9);
   });
 
