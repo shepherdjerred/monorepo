@@ -195,3 +195,39 @@ through its downstream release and version paths.
 - The local Turbo cache accepted reads but returned HTTP 412 warnings on some
   writes; all authoritative local verification tasks still completed
   successfully.
+
+## Session Log — 2026-07-27 (continuation)
+
+### Done
+
+- Re-fetched `origin/main` and confirmed Buildkite [#6552](https://buildkite.com/sjerred/monorepo/builds/6552) for `964e2031368eed6d436df139cc97a72e1f253eb0` is the newest authoritative build.
+- Confirmed its blocking verify lane passed; no hard-failed main lane has appeared.
+- Inspected the release and version commit-back logs. Release is still performing its required merge-history backfill, while the commit-back job has cloned the current `main` commit and begun `scripts/update-versions.ts`.
+- Created the isolated `fix/main-ci-recovery` worktree without changing the user's dirty main checkout.
+
+### Remaining
+
+- Follow Buildkite #6552 through sites, ArgoCD, Scout tag/reconcile, Cloudflare, release, version commit-back, and any generated successor build.
+- If a hard lane fails, isolate its exact command and repair it without weakening the gate.
+
+### Caveats
+
+- Buildkite #6552 remains running; a green predecessor or partial lane result is insufficient to claim `main` is green.
+
+## Session Log — 2026-07-27 (release login-shell repair)
+
+### Done
+
+- Re-fetched Buildkite #6552 and isolated its only hard failure to `release-please`; the verify lane had passed and the downstream lanes were canceled as a consequence.
+- Retrieved the exact failure: Codex's delegated `/bin/bash -lc` command could not find `gh` despite the parent release process successfully preflighting the Mise shim.
+- While restacking, incorporated main's independently merged runtime repair (#1720), which exposes the Mise-owned `gh` binary at `/usr/local/bin/gh` for stale images.
+- Added the matching freshly built CI-image exposure and regression coverage for both runtime and image paths, so the next base-image refresh cannot regress delegated login shells.
+- Passed the toolchain test, static pipeline validation, shellcheck, root-scripts typecheck/test/lint, whitespace validation, and affected repository verification (21/21 tasks).
+
+### Remaining
+
+- Publish the CI-image completion, then follow the current-head Buildkite build through all release and generated successor lanes.
+
+### Caveats
+
+- The failed Codex invocation used a login shell with a different `PATH`; parent-process `gh --version` alone cannot prove delegated-agent availability. Main's runtime repair arrived concurrently, so this branch is now limited to keeping fresh CI images equivalent and tested.

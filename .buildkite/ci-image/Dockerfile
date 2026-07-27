@@ -35,7 +35,9 @@ RUN curl -fsSL https://mise.run | sh
 
 COPY .mise.toml /workspace/.mise.toml
 WORKDIR /workspace
-RUN mise trust .mise.toml && mise install && mise reshim
+RUN mise trust .mise.toml && mise install && mise reshim \
+    && ln -sf "$(mise which gh)" /usr/local/bin/gh \
+    && gh --version
 
 # uv/uvx for the python checks (ruff via uvx, pyright bootstraps a venv)
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
