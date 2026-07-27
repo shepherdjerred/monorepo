@@ -87,7 +87,7 @@ const versions = {
   // Books patch, then version commit-back replaces this seed after the first
   // push. Switch the Deployment only after the real digest resolves publicly.
   "shepherdjerred/bindery":
-    "2.0.0-6529@sha256:661cde3b4d79fbd43f730b4e0f2832b4e7172bf5fd631f35d32f4c535429a58a",
+    "2.0.0-6567@sha256:54d52e90697f225af108b59809895ce3b89490b36c6bd721d5e7f02608e30e0c",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   // Calibre-Web Automated — library + ingest + Send-to-Kindle path
   "crocodilestick/calibre-web-automated":
@@ -159,7 +159,7 @@ const versions = {
   openebs: "4.5.1",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
-    "2.0.0-6529@sha256:513a70ed76aae0e188fe56cca3edf52bbf9ae727a7e2bcc05d8fbac03704e880",
+    "2.0.0-6567@sha256:8ca2a24dbc01d8a12e8e189b502dbc833e1d5cd5a41aa1c20ca22c7fbcd5aeab",
   // Prod promotion = merging the Renovate PR for this pin. Each 2.0.0-<n>
   // tag is minted by the scout-tag-release CI step only after site version
   // <n> is archived, pointing at the backend digest beta serves it against —
