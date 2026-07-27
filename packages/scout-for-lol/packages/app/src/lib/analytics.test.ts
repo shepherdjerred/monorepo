@@ -3,6 +3,7 @@ import {
   analyticsMeta,
   normalizePath,
   track,
+  trackAndFlush,
   trackMutationMeta,
   trackOutboundClick,
   trackPageview,
@@ -218,5 +219,18 @@ describe("trackOutboundClick", () => {
     trackOutboundClick(click, "bot_install_click", "/api/discord/install");
     expect(click.prevented).toBe(false);
     expect(calls).toEqual([["bot_install_click", undefined]]);
+  });
+});
+
+describe("trackAndFlush", () => {
+  test("emits the event and resolves when analytics is disabled", async () => {
+    // No VITE_PLAUSIBLE_DOMAIN in the test build, so it fires fire-and-forget and
+    // resolves immediately rather than waiting on a callback that never comes.
+    const calls: [string, unknown][] = [];
+    globalThis.plausible = (event, options) => {
+      calls.push([event, options]);
+    };
+    await trackAndFlush("sign_out");
+    expect(calls).toEqual([["sign_out", undefined]]);
   });
 });

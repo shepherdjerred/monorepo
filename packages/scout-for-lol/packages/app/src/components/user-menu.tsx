@@ -14,7 +14,7 @@ import {
 } from "#src/components/ui/dropdown-menu.tsx";
 import { SUPPORT_URL } from "#src/lib/support.ts";
 import { useTheme, type ThemePreference } from "#src/lib/use-theme.tsx";
-import { track } from "#src/lib/analytics.ts";
+import { trackAndFlush } from "#src/lib/analytics.ts";
 
 type ThemeOption = {
   value: ThemePreference;
@@ -49,7 +49,10 @@ function parseThemePreference(value: string): ThemePreference {
 }
 
 async function logout() {
-  track("sign_out");
+  // Flush the sign-out event before we navigate away — the `location.assign`
+  // below would otherwise destroy a still-queued or in-flight analytics request
+  // (same race the login / bot-install links handle via trackOutboundClick).
+  await trackAndFlush("sign_out");
   // Always navigate to /app/login, even if the fetch fails — the user
   // expects "Sign out" to land them on the login page regardless.
   try {

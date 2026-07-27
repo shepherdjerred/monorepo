@@ -275,6 +275,33 @@ type NavigationClick = {
  * analytics-disabled case keep native navigation: the page isn't unloading, so a
  * fire-and-forget {@link track} is enough (or there's nothing to send).
  */
+// How long to wait for Plausible's completion callback before continuing anyway.
+// Short enough to never feel like a hang; long enough for a loaded tracker to
+// flush its request.
+const FLUSH_TIMEOUT_MS = 150;
+
+/**
+ * Emit an event, then invoke `onFlushed` on whichever comes first: Plausible's
+ * completion callback or a short timeout. `onFlushed` runs at most once. The
+ * shared core behind {@link trackOutboundClick} and {@link trackAndFlush} — used
+ * whenever an event must get its best chance to send before the page navigates
+ * away (which would tear down the in-memory stub queue or an in-flight request).
+ */
+function emitThenFlush(
+  event: string,
+  props: AnalyticsProps | undefined,
+  onFlushed: () => void,
+): void {
+  let flushed = false;
+  const done = (): void => {
+    if (flushed) return;
+    flushed = true;
+    onFlushed();
+  };
+  emit(event, props, done);
+  globalThis.setTimeout(done, FLUSH_TIMEOUT_MS);
+}
+
 export function trackOutboundClick(
   clickEvent: NavigationClick,
   event: ScoutAnalyticsEvent,
@@ -294,14 +321,30 @@ export function trackOutboundClick(
     return;
   }
   clickEvent.preventDefault();
-  let navigated = false;
-  const go = (): void => {
-    if (navigated) return;
-    navigated = true;
+  emitThenFlush(event, props, () => {
     globalThis.location.href = href;
-  };
-  emit(event, props, go);
-  globalThis.setTimeout(go, 150);
+  });
+}
+
+/**
+ * Track an event and resolve once it has had its best chance to send — on
+ * Plausible's completion callback or a short timeout. Use before a programmatic
+ * navigation that isn't a plain anchor click (e.g. the sign-out flow, which
+ * POSTs then `location.assign`s): awaiting this first keeps the event from being
+ * lost to the redirect. Resolves immediately when analytics is disabled. Never
+ * rejects — instrumentation must not break the user action it precedes.
+ */
+export function trackAndFlush(
+  event: ScoutAnalyticsEvent,
+  props?: AnalyticsProps,
+): Promise<void> {
+  if (config.domain === undefined) {
+    emit(event, props);
+    return Promise.resolve();
+  }
+  return new Promise<void>((resolve) => {
+    emitThenFlush(event, props, resolve);
+  });
 }
 
 /**
