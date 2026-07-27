@@ -2,10 +2,9 @@
 
 ## [1.17.3](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.17.2...astro-opengraph-images-v1.17.3) (2026-07-27)
 
+No library behavior changes. The shipped code is identical to 1.17.2; this release exists only because of repo-level housekeeping that release-please picked up.
 
-### Bug Fixes
-
-* **deps:** revive twisted champion patch (ZAAHEN+LOCKE), drop dead satori patch ([#1699](https://github.com/shepherdjerred/monorepo/issues/1699)) ([0218d1c](https://github.com/shepherdjerred/monorepo/commit/0218d1cb8ab9b63897d248dacb9cedbe0e2f726c))
+- Removed a dead `satori@0.18.3` patch. It no longer applied (the package now depends on `satori@^0.26.0`) and was never part of the published tarball anyway (`patches/` is not in `files`), so npm consumers are unaffected ([0218d1c](https://github.com/shepherdjerred/monorepo/commit/0218d1cb8ab9b63897d248dacb9cedbe0e2f726c))
 
 ## [1.17.2](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.17.1...astro-opengraph-images-v1.17.2) (2026-07-26)
 
