@@ -108,6 +108,9 @@ const WorkerMessageSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("audio"), pcm: BytesSchema }),
   z.object({ kind: z.literal("snapshot"), snapshot: SnapshotSchema }),
   z.object({ kind: z.literal("metrics"), batch: MetricBatchSchema }),
+  // Backpressure: the worker acks each drained controller input so the main
+  // facade can bound in-flight input posts and coalesce the rest per seat.
+  z.object({ kind: z.literal("inputAck") }),
   z.object({
     kind: z.literal("renderFrameResult"),
     id: z.number(),

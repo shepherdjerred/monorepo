@@ -31,6 +31,12 @@ function bufferView(u8: Uint8Array): Buffer {
   return Buffer.from(u8.buffer, u8.byteOffset, u8.byteLength);
 }
 
+// How many controller-input posts may be unacked before the facade stops
+// sending and only coalesces (see setPlayerInput). Small: inputs are tiny and
+// only the latest per seat matters, so this just keeps the port from backing up
+// when a client posts faster than the worker (busy 12–30ms/tick) drains.
+const MAX_INPUT_IN_FLIGHT = 4;
+
 export class WorkerEmulator {
   private readonly opts: WorkerInitOpts;
   private worker: Worker | undefined;
@@ -44,6 +50,15 @@ export class WorkerEmulator {
   private onSnapshotCb: ((snapshot: Mk64Snapshot) => void) | undefined;
   private lastHeight = HEIGHT;
   private lastSeatActivity: boolean[] = [];
+  // Coalesced controller input: newest state per seat awaiting a send, plus the
+  // count of unacked input posts. The worker's inputAck paces the sends so the
+  // port never holds unbounded (cloned) input objects and clear/stop are never
+  // stuck behind a backlog of stale updates.
+  private readonly pendingInput = new Map<
+    number,
+    { state: PlayerInputState; receivedAt: number }
+  >();
+  private inputInFlight = 0;
 
   constructor(opts: WorkerInitOpts) {
     this.opts = opts;
@@ -115,6 +130,8 @@ export class WorkerEmulator {
     await stopped;
     worker.terminate();
     this.worker = undefined;
+    this.pendingInput.clear();
+    this.inputInFlight = 0;
     this.failPending(new Error("emulator worker stopped"));
   }
 
@@ -126,16 +143,45 @@ export class WorkerEmulator {
     // Fire-and-forget: after stop() the session is gone and input is a no-op,
     // matching the pre-worker "no active runtime" behaviour.
     if (this.worker === undefined) return;
+    // Coalesce to the newest state per seat but keep the EARLIEST unsent arrival
+    // time (worst-case latency is the honest one, matching InputLatencyTracker).
     // Stamp arrival on THIS (main) thread so the worker's latency metric spans
-    // backend-arrival→applying-tick, including the main→worker transit. The
-    // clock is absolute epoch ms so it stays comparable across threads.
-    const receivedAt = performance.timeOrigin + performance.now();
-    this.post({ kind: "setPlayerInput", seat, state, receivedAt });
+    // backend-arrival→applying-tick including the main→worker transit; the clock
+    // is absolute epoch ms so it stays comparable across threads.
+    const existing = this.pendingInput.get(seat);
+    const receivedAt =
+      existing?.receivedAt ?? performance.timeOrigin + performance.now();
+    this.pendingInput.set(seat, { state, receivedAt });
+    this.flushInput();
   }
 
   clearPlayerInput(seat: number): void {
     if (this.worker === undefined) return;
+    // Drop any buffered (unsent) input for this seat — the clear supersedes it —
+    // then send the clear directly so a disconnect isn't queued behind input.
+    this.pendingInput.delete(seat);
     this.post({ kind: "clearPlayerInput", seat });
+  }
+
+  /**
+   * Send buffered inputs up to the in-flight bound; the worker's `inputAck`
+   * resumes this as slots free. Under a flood this caps the port at
+   * MAX_INPUT_IN_FLIGHT posts while the per-seat map holds only the latest
+   * state, so stale intermediate inputs are dropped rather than queued.
+   */
+  private flushInput(): void {
+    if (this.worker === undefined) {
+      this.pendingInput.clear();
+      return;
+    }
+    while (this.inputInFlight < MAX_INPUT_IN_FLIGHT) {
+      const next = this.pendingInput.entries().next();
+      if (next.done === true) return;
+      const [seat, { state, receivedAt }] = next.value;
+      this.pendingInput.delete(seat);
+      this.inputInFlight += 1;
+      this.post({ kind: "setPlayerInput", seat, state, receivedAt });
+    }
   }
 
   /** Current frame as RGBA (screenshot path). Rejects if the worker is gone. */
@@ -161,7 +207,7 @@ export class WorkerEmulator {
         });
       },
     );
-    this.post({ kind: "renderFrame", id });
+    this.postForPending(id, { kind: "renderFrame", id });
     return result;
   }
 
@@ -186,7 +232,7 @@ export class WorkerEmulator {
         reject,
       });
     });
-    this.post({ kind: "persistSaves", id });
+    this.postForPending(id, { kind: "persistSaves", id });
     return result;
   }
 
@@ -211,6 +257,22 @@ export class WorkerEmulator {
     worker.postMessage(msg);
   }
 
+  /**
+   * Post a request whose `id` was just registered in `pending`. If the worker
+   * was torn down between registering and posting (teardown clears it), `post`
+   * throws — drop the entry we just added and reject its promise so a stopped
+   * worker can't accumulate orphaned pending requests + closures.
+   */
+  private postForPending(id: number, msg: MainToWorker): void {
+    try {
+      this.post(msg);
+    } catch (error) {
+      const entry = this.pending.get(id);
+      this.pending.delete(id);
+      entry?.reject(error instanceof Error ? error : new Error(String(error)));
+    }
+  }
+
   private failPending(error: Error): void {
     const pending = [...this.pending.values()];
     this.pending.clear();
@@ -230,6 +292,8 @@ export class WorkerEmulator {
       this.worker.terminate();
       this.worker = undefined;
     }
+    this.pendingInput.clear();
+    this.inputInFlight = 0;
     this.failPending(error);
   }
 
@@ -283,19 +347,9 @@ export class WorkerEmulator {
       case "frame":
         this.deliverFrame(msg);
         return;
-      case "audio": {
-        // Ack first (same rationale as frames) so the worker's audio in-flight
-        // bound reflects "dequeued" regardless of what the consumer does.
-        if (this.worker !== undefined) this.post({ kind: "audioAck" });
-        const cb = this.onAudioCb;
-        if (cb !== undefined) {
-          const pcm = bufferView(msg.pcm);
-          this.safeInvoke("audio", () => {
-            cb(pcm);
-          });
-        }
+      case "audio":
+        this.deliverAudio(msg);
         return;
-      }
       case "snapshot": {
         const cb = this.onSnapshotCb;
         if (cb !== undefined) {
@@ -308,6 +362,12 @@ export class WorkerEmulator {
       }
       case "metrics":
         replayMetricBatch(msg.batch);
+        return;
+      case "inputAck":
+        // A buffered input was drained by the worker; free a slot and send the
+        // next coalesced input(s).
+        this.inputInFlight = Math.max(0, this.inputInFlight - 1);
+        this.flushInput();
         return;
       case "renderFrameResult":
       case "persistSavesResult": {
@@ -323,6 +383,20 @@ export class WorkerEmulator {
       case "error":
         this.handleWorkerError(msg);
         return;
+    }
+  }
+
+  /** Ack and hand received audio to the consumer (contained). */
+  private deliverAudio(msg: Extract<WorkerToMain, { kind: "audio" }>): void {
+    // Ack first (same rationale as frames) so the worker's audio in-flight
+    // bound reflects "dequeued" regardless of what the consumer does.
+    if (this.worker !== undefined) this.post({ kind: "audioAck" });
+    const cb = this.onAudioCb;
+    if (cb !== undefined) {
+      const pcm = bufferView(msg.pcm);
+      this.safeInvoke("audio", () => {
+        cb(pcm);
+      });
     }
   }
 

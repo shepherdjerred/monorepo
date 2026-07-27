@@ -166,6 +166,9 @@ async function handle(data: unknown): Promise<void> {
       return;
     case "setPlayerInput":
       requireEmulator().setPlayerInput(msg.seat, msg.state, msg.receivedAt);
+      // Ack so the main facade frees an in-flight slot and sends the next
+      // coalesced input; bounds the port queue under a controller flood.
+      post({ kind: "inputAck" });
       return;
     case "clearPlayerInput":
       requireEmulator().clearPlayerInput(msg.seat);
