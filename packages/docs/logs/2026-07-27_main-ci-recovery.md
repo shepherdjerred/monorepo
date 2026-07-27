@@ -75,6 +75,26 @@ through its downstream release and version paths.
 - The sites lane now selects `--filter glitter` whenever its Glitter selector
   runs, installing the consumer's declared workspace dependency closure. Static
   pipeline validation holds that install invariant.
+- PR [#1716](https://github.com/shepherdjerred/monorepo/pull/1716) merged as
+  `ec51d6ff403ea6569af59125e81c057295e47835`. Its authoritative `main`
+  Buildkite build
+  [#6529](https://buildkite.com/sjerred/monorepo/builds/6529) passed, including
+  the formerly failing aggregate sites lane and all downstream publish,
+  image, infrastructure, and Scout lanes.
+- Build #6529 exercised the intended provider fallback: Claude returned the
+  validated weekly-quota 429, then Codex ran. Codex could not find the required
+  `gh` executable and emitted a `hard-failure-missing-gh` result while exiting
+  zero. The wrapper incorrectly treated that zero exit as refinement success,
+  so the green build exposed a fail-open contract rather than proving the
+  release path healthy.
+- The release wrapper now accepts a zero exit only when the provider output
+  contains a strict success envelope (`refined` with verified fields, or
+  `no-open-release-pr`). A zero-exit hard-failure, malformed envelope, or
+  missing envelope fails the release lane.
+- The shared runtime toolchain now runs `mise reshim` after `mise install`, and
+  the release driver preflights `gh --version` before release-please can mutate
+  a release PR. This addresses stale CI images where mise installed `gh` but
+  had not exposed its shim.
 
 ## Session Log — 2026-07-27
 
@@ -111,12 +131,25 @@ through its downstream release and version paths.
 - Passed static pipeline validation, selector and lane-coverage tests,
   markdownlint, the exact filtered-install/build reproduction, and
   `bun run verify -- --affected` (21/21 tasks).
+- Published and merged PR #1716, then followed authoritative `main` build #6529
+  through every downstream lane.
+- Confirmed the Glitter filtered-install repair on `main`: the aggregate sites
+  lane and the complete build passed.
+- Inspected the live release log and reproduced its zero-exit
+  `hard-failure-missing-gh` output as a regression fixture.
+- Added strict provider result-envelope validation, a pre-mutation `gh`
+  preflight, runtime mise reshim, prompt contract clarification, and focused
+  regression coverage on `fix/main-ci-release-refiner-contract`.
+- Passed `bun run verify -- --affected` for the contract/toolchain fix (27/27
+  tasks), including typecheck, tests, lint, shellcheck, markdownlint, the
+  quality ratchet, and repository policy checks.
 
 ### Remaining
 
-- Verify, publish, review, and merge the aggregate-sites install fix.
-- Re-fetch `origin/main` and verify every resulting build through
-  release-please, version commit-back, and generated release/tag lanes.
+- Publish, review, and merge the release refiner contract/toolchain fix.
+- Re-fetch `origin/main` and prove the real Claude-to-Codex fallback through a
+  valid success envelope, then follow version commit-back and generated
+  release/tag lanes.
 
 ### Caveats
 
