@@ -111,6 +111,15 @@ through its downstream release and version paths.
   `fdc78c83a70a9258112584544c3947e5126d858f` advanced `main`; Buildkite
   [#6549](https://buildkite.com/sjerred/monorepo/builds/6549) is the resulting
   authoritative build.
+- Build #6549 passed verify, Playwright, resume, observability, sites, publish,
+  Helm, OpenTofu, and CI-image refresh. Its release lane failed closed because
+  Codex still could not execute `gh`. The outer preflight found mise's shim,
+  but Codex tool calls run through `/bin/bash -lc`; the CI image's login profile
+  replaced `PATH` and hid the shim.
+- The toolchain now links `mise which gh` into `/usr/local/bin/gh` after install
+  and reshim. The release preflight invokes `gh --version` through the same
+  `/bin/bash -lc` boundary, so this class of path mismatch fails before
+  release-please can mutate a PR.
 
 ## Session Log — 2026-07-27
 
@@ -167,6 +176,11 @@ through its downstream release and version paths.
 - Passed focused release-refiner tests (13/13), the complete root-scripts test
   suite (142/142), and `bun run verify -- --affected` (6/6 tasks) on the latest
   generated `main`.
+- Followed authoritative build #6549 to its earliest hard failure and confirmed
+  that the new result contract rejected Codex's missing-envelope hard failure.
+- Added the login-shell `gh` exposure and exact-boundary preflight after PR
+  #1719 merged; the focused toolchain test, shellcheck, and root-scripts
+  lint/typecheck/test surface pass.
 
 ### Remaining
 
