@@ -1,10 +1,10 @@
 ---
 id: repo-history-slim
 type: plan
-status: planned
+status: awaiting-human
 board: true
 verification: human
-disposition: active
+disposition: blocked
 ---
 
 # Slim the monorepo git history
@@ -40,12 +40,12 @@ Recorded 2026-07-27:
 
 This 2026-07-27 snapshot is evidence, not the cutover manifest. Recompute every value after writers freeze.
 
-- Current `main`: `a6f8a7afc7ff6e68b6faf1ff6605dbe4cf547659`.
+- Rehearsal source `main`: `058f4b44cbd6f046e054b1e232b3e270af5e6e0d`.
 - PR #1642 was last synchronized at `265ab686a9f99ea7097b04c3d7847dc809b3e39f`; the branch was restacked through
   `8202ff6ae5c70d94e9c600216477bfe8519baf05`. The one later `main` commit was separately inspected, does not touch a
   rewrite target, and leaves the PR mergeable.
-- Remote controlled refs: 14 heads, 314 tags, and one `refs/renovate/*` ref.
-- GitHub-owned refs: 1,600 `refs/pull/*` refs.
+- Remote controlled refs: 13 heads, 314 tags, and one `refs/renovate/*` ref.
+- GitHub-owned refs: 1,601 `refs/pull/*` refs.
 - Open PRs: 11; none currently report a merge conflict.
 - Every one of the 314 tags is lightweight and backs one of 314 GitHub Releases.
 - Local state: 1,253 refs, including 666 local branches, 100 `refs/codex/*`, 148
@@ -101,8 +101,11 @@ All boxes must be complete before the real push:
 - [ ] Pick a maintenance window and publish a notice to all clone users.
 - [ ] Merge/close or cleanly restack every open PR onto `main`; freeze with zero conflicting or behind branches. Every
       retained PR must be same-repository and target `main` or another retained parent branch.
-- [ ] Produce a clean rehearsal report from the same `main`, path-file hash, tool versions, and ref disposition policy.
-- [ ] Review measured savings after exact release-tag restoration; cancel if the benefit no longer justifies cutover.
+- [x] Complete the no-push core rehearsal for `main`, all release tags, filter paths, ref retirement, pruning, fsck, and
+      clean clone measurements.
+- [ ] Review the measured 5.29% maximum reduction under exact release-tree preservation and decide whether to cancel
+      the rewrite or allow historical release source trees to change.
+- [ ] If continuing, produce a full rehearsal from a new freeze after retained PR branches are cleanly restacked.
 - [ ] Verify an off-host remote mirror, an off-host local-state mirror, exported GitHub metadata, and restoration tests.
 - [ ] Confirm all worktrees are clean and all repository writers are paused.
 - [ ] Receive a separate explicit owner instruction to execute the cutover.
@@ -354,9 +357,42 @@ sensitive-data removal, not this non-sensitive size optimization. Server-reporte
 large even when normal clones improve. Acceptance is based on fresh-clone transfer/size and retained-ref correctness,
 not GitHub's storage meter.
 
+## Core Rehearsal - 2026-07-27
+
+The no-push rehearsal used the push-disabled clone `~/git/monorepo-history-rewrite` and frozen source mirror
+`~/git/monorepo-history-rewrite-source.git` at `058f4b44cbd6f046e054b1e232b3e270af5e6e0d`. The source mirror contained
+13 controlled heads, 314 lightweight release tags, one Renovate ref, and 1,601 excluded GitHub pull refs.
+
+The local harness imported only controlled refs, ran the two approved filter files, restored exact `main` with
+`git commit-tree`, and tested both tag policies. It never had a working push remote.
+
+| Rehearsal result                      | Fresh-clone pack |           Reduction | Release tag trees    |
+| ------------------------------------- | ---------------: | ------------------: | -------------------- |
+| Baseline                              |       658.09 MiB |                   - | 314 exact            |
+| Preserve exact release trees          |       623.29 MiB |   34.80 MiB (5.29%) | 314 exact            |
+| Keep tags but filter historical trees |       424.82 MiB | 233.27 MiB (35.45%) | 3 exact, 311 changed |
+
+Exact release preservation required 179 deduplicated tree-envelope commits and retained 198.47 MiB that the relaxed
+variant removed. Reintroducing the 11 open-PR heads can only reduce the exact-policy savings further, so 34.80 MiB is
+an upper bound for the selected policy, not the final expected gain.
+
+Both variants passed the applicable core assertions:
+
+- `main` tree identity was exact; all 173 live `champion-splash` files remained.
+- Collapse targets had one restored version in `main` history; delete targets were absent from `main`.
+- All 314 tag names remained lightweight commit refs. The exact-policy variant matched every original tag tree.
+- Non-main heads and the Renovate ref were retired in the disposable result.
+- Temporary original refs/reflogs were removed, the original `main` commit was pruned, and `git fsck --full` passed.
+- Normal and mirror clones of the exact-policy result both measured 623.29 MiB.
+
+The open-PR reparenting phase was deliberately not run. The exact-tag result fails the plan's value gate before that
+coordination cost is justified.
+
 ## Human Verification
 
-- Review the rehearsal report and exact savings after preserving all release-tag trees.
+- Choose one disposition:
+  - Cancel the rewrite while retaining exact historical release trees (recommended for a 5.29% maximum reduction).
+  - Accept changed source trees for 311 historical release tags and continue toward the 35.45% core reduction.
 - Confirm the maintenance window, notice, integration owners, and backup locations.
 - Confirm every open PR is same-repository, based on a retained ref, and closed/merged or cleanly restacked on frozen
   `main`, with no conflicts or behind heads.
@@ -365,11 +401,7 @@ not GitHub's storage meter.
 
 ## Remaining
 
-- [ ] Merge PR #1642.
-- [ ] Implement and run the no-push rehearsal, including automated release-tag restoration and PR diff checks.
-- [ ] Review the rehearsal report and decide whether measured savings justify cutover.
-- [ ] Schedule the writer freeze and receive explicit cutover confirmation.
-- [ ] Execute Phases 1-3 and record accept-or-rollback evidence.
+- Await the owner disposition under Human Verification. Agent work resumes only if the rewrite continues.
 
 ## Prior Work
 
@@ -397,7 +429,25 @@ refs. It also corrects the live `champion-splash/` deletion bug and the deployme
 
 ### Caveats
 
-- Exact preservation of all 314 release-tag trees will retain more data than the original estimate. The actual benefit
-  is unknown until rehearsal measures fresh clones.
+- Exact preservation of all 314 release-tag trees produced only a 34.80 MiB (5.29%) core reduction.
 - GitHub-owned PR refs may retain old objects indefinitely.
 - The actual history rewrite and force-push have not been run.
+
+## Session Log - 2026-07-27 (core rehearsal)
+
+### Done
+
+- Created a frozen mirror plus push-disabled working clone under `~/git`.
+- Implemented and ran the no-push core harness for exact and relaxed release-tag policies.
+- Verified exact `main`/release trees, filter scope, ref retirement, old-ancestry pruning, fsck, and clean clones.
+- Measured 658.09 MiB baseline, 623.29 MiB exact-tag result, and 424.82 MiB relaxed-tag result.
+
+### Remaining
+
+- Decide whether a maximum 5.29% reduction warrants the rewrite or whether historical release trees may change.
+- Run PR-head migration rehearsal only if the policy/value decision allows cutover work to continue.
+
+### Caveats
+
+- Open PR heads were excluded from the core result; retaining them can only reduce the measured exact-policy savings.
+- No GitHub refs, integrations, or existing development clones were modified.
