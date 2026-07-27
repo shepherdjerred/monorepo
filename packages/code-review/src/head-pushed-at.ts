@@ -59,6 +59,13 @@ query($owner: String!, $name: String!, $number: Int!) {
   }
 }`;
 
+const HEAD_REF_OID_QUERY = `
+query($owner: String!, $name: String!, $number: Int!) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $number) { headRefOid }
+  }
+}`;
+
 // Cap Activity-API pagination. The query is filtered to a single PR branch, so
 // its push/force-push/branch-creation history is tiny and newest-first; the
 // head's ref update is on page 1. The cap only guards a pathological branch and,
@@ -200,12 +207,33 @@ async function fetchRefUpdateTime(input: {
   return pickRefUpdateTime(activities, input.sha);
 }
 
+/** The PR's current head-commit OID, or null when it cannot be read. */
+async function fetchHeadRefOid(input: {
+  repo: string;
+  prNumber: number;
+  token: string;
+}): Promise<string | null> {
+  const { owner, name } = splitRepo(input.repo);
+  const payload = await graphqlRequest(
+    HEAD_REF_OID_QUERY,
+    { owner, name, number: input.prNumber },
+    input.token,
+  );
+  const payloadRecord = asRecord(payload);
+  const data =
+    payloadRecord === null ? null : recordField(payloadRecord, "data");
+  const repository = data === null ? null : recordField(data, "repository");
+  const pullRequest =
+    repository === null ? null : recordField(repository, "pullRequest");
+  return pullRequest === null ? null : stringField(pullRequest, "headRefOid");
+}
+
 /**
  * The ISO time the PR's head REF became `sha` — the reference point for
  * review-latency and for binding a clean 👍 reaction to the current head.
  * Returns null when it cannot be determined. See {@link resolveHeadPushedAt}
- * for the resolution order (pushedDate → force-push event → activity ref-update
- * time).
+ * for the resolution order (force-push event → activity ref-update time), which
+ * also requires `sha` to be the PR head.
  */
 export async function fetchHeadPushedAt(input: {
   repo: string;
@@ -244,6 +272,16 @@ export async function fetchHeadPushedAt(input: {
           sha: input.sha,
           token: input.token,
         });
+  // Re-read the head AFTER the activity snapshot (the GraphQL headRefOid above
+  // was taken BEFORE the REST call): if the PR advanced during the activity
+  // fetch, the timestamp we found is for the now-old sha and a later 👍 for the
+  // new head must not be attributed to it. Leave unbound on any advance.
+  const currentHeadRefOid = await fetchHeadRefOid({
+    repo: input.repo,
+    prNumber: input.prNumber,
+    token: input.token,
+  });
+  if (currentHeadRefOid !== input.sha) return null;
   return resolveHeadPushedAt(repository, input.sha, refUpdateTime);
 }
 
