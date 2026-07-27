@@ -65,8 +65,9 @@ work already merged or superseded.
 - Addressed automated review by enforcing operator-blocked pairing, repairing
   active types from canonical directories, preserving archived provenance, and
   keeping source cards unchanged when archive setup or movement fails.
-- Made archive transactions rewrite inbound provenance with rollback and made
-  migration clear board metadata plus rewrite moved origins in one pass.
+- Made archive transactions rewrite inbound provenance and Markdown links with
+  rollback, and made migration clear board metadata plus rewrite moved
+  references in one pass.
 - Verified the docs-board package and the full affected repository surface; all
   gates pass. Captured board, user-acceptance, and operator-action screenshots
   for PR #1732; the prerequisite docs-board UI commit landed through PR #1713.

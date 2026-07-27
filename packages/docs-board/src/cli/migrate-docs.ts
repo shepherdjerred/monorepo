@@ -20,7 +20,7 @@ import {
 } from "#shared/schema";
 
 import {
-  rewriteMovedOrigins,
+  rewriteMovedReferences,
   type MigrationResult,
 } from "./migration-results.ts";
 import { getBoolean, getPlainString } from "./loose-values.ts";
@@ -433,7 +433,7 @@ export async function migrateDocs(): Promise<MigrationResult[]> {
   for (const relativePath of paths) {
     initialResults.push(await migrateFile(relativePath));
   }
-  const results = rewriteMovedOrigins(initialResults);
+  const results = rewriteMovedReferences(initialResults);
   const ids = new Map<string, string>();
   for (const result of results) {
     const parsed = splitFrontmatter(result.content);

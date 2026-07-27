@@ -8,7 +8,7 @@ import {
   migrateDocument,
   normalizeWorkflowSection,
 } from "./migrate-docs.ts";
-import { rewriteMovedOrigins } from "./migration-results.ts";
+import { rewriteMovedReferences } from "./migration-results.ts";
 
 describe("createFrontmatter", () => {
   test("preserves an explicit board review policy", () => {
@@ -197,7 +197,7 @@ disposition: active
     expect(parsed.frontmatter.disposition).toBeUndefined();
   });
 
-  test("rewrites origins that point to documents moved by the migration", () => {
+  test("rewrites origins and links for documents moved by the migration", () => {
     const source = migrateDocument(
       "plans/source.md",
       `---
@@ -210,6 +210,8 @@ disposition: active
 ---
 
 # Source
+
+[Dependent](../todos/dependent.md)
 `,
     );
     const dependent = migrateDocument(
@@ -229,9 +231,13 @@ origin: packages/docs/plans/source.md
 ## Remaining
 
 - [ ] Complete the follow-up.
+
+[Source](../plans/source.md#goal)
+
+[Unmoved](./unmoved.md)
 `,
     );
-    const rewritten = rewriteMovedOrigins([source, dependent]);
+    const rewritten = rewriteMovedReferences([source, dependent]);
     const rewrittenDependent = rewritten.find(
       (result) => result.relativePath === "todos/dependent.md",
     );
@@ -242,6 +248,19 @@ origin: packages/docs/plans/source.md
     expect(
       parseMarkdownDocument(rewrittenDependent.content).frontmatter.origin,
     ).toBe("packages/docs/archive/completed/source.md");
+    expect(rewrittenDependent.content).toContain(
+      "[Source](../archive/completed/source.md#goal)",
+    );
+    expect(rewrittenDependent.content).toContain("[Unmoved](./unmoved.md)");
+    const rewrittenSource = rewritten.find(
+      (result) => result.relativePath === "plans/source.md",
+    );
+    if (rewrittenSource === undefined) {
+      throw new Error("source migration result was not found");
+    }
+    expect(rewrittenSource.content).toContain(
+      "[Dependent](../../todos/dependent.md)",
+    );
   });
 });
 

@@ -322,6 +322,8 @@ disposition: active
 ---
 
 # Fixture TODO
+
+[Dependent](dependent-todo.md)
 `;
     const dependentTodo = `---
 id: dependent-todo
@@ -338,6 +340,8 @@ origin: packages/docs/todos/fixture-todo.md
 ## Remaining
 
 - [ ] Complete the follow-up.
+
+[Source](fixture-todo.md)
 `;
     const root = await fixtureRepository(
       completedTodo,
@@ -371,6 +375,12 @@ origin: packages/docs/todos/fixture-todo.md
     ).toBe(true);
     expect(dependent.frontmatter.origin).toBe(
       "packages/docs/archive/completed/fixture-todo.md",
+    );
+    expect(dependent.markdown).toContain(
+      "[Source](../archive/completed/fixture-todo.md)",
+    );
+    expect(archived.markdown).toContain(
+      "[Dependent](../../todos/dependent-todo.md)",
     );
     store.close();
   });

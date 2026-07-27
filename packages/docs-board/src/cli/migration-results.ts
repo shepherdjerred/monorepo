@@ -3,6 +3,7 @@ import {
   serializeMarkdownDocument,
   splitFrontmatter,
 } from "#shared/markdown";
+import { rewriteDocumentLinks } from "#lib/document-links";
 import { FrontmatterSchema } from "#shared/schema";
 
 export type MigrationResult = {
@@ -12,16 +13,13 @@ export type MigrationResult = {
   changed: boolean;
 };
 
-export function rewriteMovedOrigins(
+export function rewriteMovedReferences(
   results: MigrationResult[],
 ): MigrationResult[] {
-  const movedOrigins = new Map(
+  const movedPaths = new Map(
     results
       .filter((result) => result.relativePath !== result.targetRelativePath)
-      .map((result) => [
-        `packages/docs/${result.relativePath}`,
-        `packages/docs/${result.targetRelativePath}`,
-      ]),
+      .map((result) => [result.relativePath, result.targetRelativePath]),
   );
   return results.map((result) => {
     const split = splitFrontmatter(result.content);
@@ -33,14 +31,22 @@ export function rewriteMovedOrigins(
     const rewrittenOrigin =
       frontmatter.origin === undefined
         ? undefined
-        : movedOrigins.get(frontmatter.origin);
-    if (rewrittenOrigin === undefined) return result;
-    const content = serializeMarkdownDocument(
-      FrontmatterSchema.parse({
-        ...frontmatter,
-        origin: rewrittenOrigin,
-      }),
+        : movedPaths.get(frontmatter.origin.replace(/^packages\/docs\//u, ""));
+    const body = rewriteDocumentLinks(
       split.body,
+      result.relativePath,
+      result.targetRelativePath,
+      movedPaths,
+    );
+    if (rewrittenOrigin === undefined && body === split.body) return result;
+    const content = serializeMarkdownDocument(
+      rewrittenOrigin === undefined
+        ? frontmatter
+        : FrontmatterSchema.parse({
+            ...frontmatter,
+            origin: `packages/docs/${rewrittenOrigin}`,
+          }),
+      body,
     );
     return {
       ...result,

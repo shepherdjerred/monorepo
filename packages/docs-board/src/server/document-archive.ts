@@ -1,11 +1,12 @@
 import type { DocumentIndexSnapshot, ParsedFile } from "#server/document-index";
+import { rewriteDocumentLinks } from "#lib/document-links";
 import {
   parseMarkdownDocument,
   serializeMarkdownDocument,
 } from "#shared/markdown";
-import { FrontmatterSchema } from "#shared/schema";
+import { FrontmatterSchema, type DocumentFrontmatter } from "#shared/schema";
 
-type OriginUpdate = {
+type ReferenceUpdate = {
   absolutePath: string;
   path: string;
   raw: string;
@@ -17,7 +18,8 @@ type ArchiveFilesInput = {
   docsRoot: string;
   file: ParsedFile;
   archivedPath: string;
-  archivedContent: string;
+  archivedFrontmatter: DocumentFrontmatter;
+  archivedBody: string;
   snapshot: DocumentIndexSnapshot;
 };
 
@@ -63,31 +65,36 @@ export async function atomicWrite(
   }
 }
 
-async function collectOriginUpdates(
+async function collectReferenceUpdates(
   input: ArchiveFilesInput,
   sourceOrigin: string,
   targetOrigin: string,
-): Promise<OriginUpdate[]> {
-  const updates: OriginUpdate[] = [];
+  movedPaths: ReadonlyMap<string, string>,
+): Promise<ReferenceUpdate[]> {
+  const updates: ReferenceUpdate[] = [];
   for (const candidate of input.snapshot.valid) {
-    if (
-      candidate.detail.path === input.file.detail.path ||
-      candidate.detail.frontmatter.origin !== sourceOrigin
-    ) {
-      continue;
-    }
+    if (candidate.detail.path === input.file.detail.path) continue;
     const raw = await Bun.file(candidate.absolutePath).text();
     const parsed = parseMarkdownDocument(raw);
-    if (parsed.frontmatter.origin !== sourceOrigin) continue;
-    const frontmatter = FrontmatterSchema.parse({
-      ...parsed.frontmatter,
-      origin: targetOrigin,
-    });
+    const frontmatter =
+      parsed.frontmatter.origin === sourceOrigin
+        ? FrontmatterSchema.parse({
+            ...parsed.frontmatter,
+            origin: targetOrigin,
+          })
+        : parsed.frontmatter;
+    const body = rewriteDocumentLinks(
+      parsed.body,
+      candidate.detail.path,
+      candidate.detail.path,
+      movedPaths,
+    );
+    if (frontmatter === parsed.frontmatter && body === parsed.body) continue;
     updates.push({
       absolutePath: candidate.absolutePath,
       path: candidate.detail.path,
       raw,
-      content: serializeMarkdownDocument(frontmatter, parsed.body),
+      content: serializeMarkdownDocument(frontmatter, body),
     });
   }
   return updates;
@@ -100,18 +107,29 @@ export async function archiveDocumentFiles(
   const target = `${input.docsRoot}/${input.archivedPath}`;
   const sourceOrigin = `packages/docs/${input.file.detail.path}`;
   const targetOrigin = `packages/docs/${input.archivedPath}`;
-  const originUpdates = await collectOriginUpdates(
+  const movedPaths = new Map([[input.file.detail.path, input.archivedPath]]);
+  const archivedContent = serializeMarkdownDocument(
+    input.archivedFrontmatter,
+    rewriteDocumentLinks(
+      input.archivedBody,
+      input.file.detail.path,
+      input.archivedPath,
+      movedPaths,
+    ),
+  );
+  const referenceUpdates = await collectReferenceUpdates(
     input,
     sourceOrigin,
     targetOrigin,
+    movedPaths,
   );
   await commandValue(input.repoRoot, ["mkdir", "-p", "--", targetDirectory]);
-  const appliedOriginUpdates: OriginUpdate[] = [];
+  const appliedReferenceUpdates: ReferenceUpdate[] = [];
   let sourceMoved = false;
   try {
-    for (const update of originUpdates) {
+    for (const update of referenceUpdates) {
       await atomicWrite(input.repoRoot, update.absolutePath, update.content);
-      appliedOriginUpdates.push(update);
+      appliedReferenceUpdates.push(update);
     }
     await commandValue(input.repoRoot, [
       "mv",
@@ -120,7 +138,7 @@ export async function archiveDocumentFiles(
       target,
     ]);
     sourceMoved = true;
-    await atomicWrite(input.repoRoot, target, input.archivedContent);
+    await atomicWrite(input.repoRoot, target, archivedContent);
   } catch (archiveError) {
     const restoreErrors: unknown[] = [];
     if (sourceMoved) {
@@ -135,7 +153,7 @@ export async function archiveDocumentFiles(
         restoreErrors.push(restoreError);
       }
     }
-    for (const update of appliedOriginUpdates.reverse()) {
+    for (const update of appliedReferenceUpdates.reverse()) {
       try {
         await atomicWrite(input.repoRoot, update.absolutePath, update.raw);
       } catch (restoreError) {
@@ -151,5 +169,5 @@ export async function archiveDocumentFiles(
     }
     throw archiveError;
   }
-  return originUpdates.map((update) => update.path);
+  return referenceUpdates.map((update) => update.path);
 }

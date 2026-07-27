@@ -470,18 +470,19 @@ export class DocumentStore {
         "Archived to `packages/docs/archive/completed/`.",
         new Date().toISOString(),
       );
-      const originPaths = await archiveDocumentFiles({
+      const referencePaths = await archiveDocumentFiles({
         repoRoot: this.repoRoot,
         docsRoot: this.docsRoot,
         file,
         archivedPath,
-        archivedContent: serializeMarkdownDocument(archivedFrontmatter, body),
+        archivedFrontmatter,
+        archivedBody: body,
         snapshot: await this.scan(),
       });
       await this.refreshCachedPaths([
         file.detail.path,
         archivedPath,
-        ...originPaths,
+        ...referencePaths,
       ]);
       const updated = await this.get(id);
       this.publishChange(id);
