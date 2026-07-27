@@ -11,6 +11,7 @@ import {
   ReportHexColorSchema,
   ReportRenderSpecSchema,
   type ReportChartOptions,
+  type ReportLeaderboardOptions,
   type ReportOutputFormat,
   type ReportRenderChannel,
   type ReportRenderSpec,
@@ -74,6 +75,10 @@ export function parseRenderClause(
   }
 
   if (!CHART_RENDER_KINDS.has(kind)) {
+    if (kind === "LEADERBOARD") {
+      const options = parseLeaderboardRenderWith(withText);
+      return ReportRenderSpecSchema.parse({ kind, options });
+    }
     if (withText.length > 0) {
       throw new Error(
         `RENDER ${normalizeToken(kindToken)} does not take a WITH clause.`,
@@ -93,6 +98,56 @@ export function parseRenderClause(
   }
   validateRenderShape(spec, outputColumns, groupBys);
   return spec;
+}
+
+function parseLeaderboardRenderWith(
+  withText: string,
+): ReportLeaderboardOptions {
+  const options: ReportLeaderboardOptions = {};
+  if (withText.length === 0) return options;
+
+  const withMatch = RENDER_WITH_PATTERN.exec(withText);
+  if (withMatch?.groups === undefined) {
+    throw new Error(
+      "Invalid RENDER options. Expected: WITH (mentions = <n> | all).",
+    );
+  }
+  const body = withMatch.groups["body"] ?? "";
+  const pairs = splitRenderPairs(body);
+  if (pairs.length === 0) {
+    // `WITH ()` or a comma-only body supplied a clause but no option. Reject it
+    // instead of silently falling back to the default top-three mentions, which
+    // would ping players the author never intended to configure.
+    throw new Error(
+      "RENDER leaderboard WITH (...) requires an option, e.g. WITH (mentions = 3).",
+    );
+  }
+  for (const pair of pairs) {
+    const { key, value } = RenderPairSchema.parse(pair);
+    if (normalizeToken(key) !== "mentions") {
+      throw new Error(
+        `Unknown RENDER option "${key}" for RENDER leaderboard. Expected: mentions.`,
+      );
+    }
+    const normalized = normalizeColumnRef(value);
+    if (normalized.length === 0) {
+      throw new Error(
+        'RENDER mentions must be a non-negative integer or "all".',
+      );
+    }
+    if (normalized === "all") {
+      options.mentions = "all";
+      continue;
+    }
+    const parsed = Number(normalized);
+    if (!Number.isInteger(parsed) || parsed < 0) {
+      throw new Error(
+        'RENDER mentions must be a non-negative integer or "all".',
+      );
+    }
+    options.mentions = parsed;
+  }
+  return options;
 }
 
 function validateRenderShape(

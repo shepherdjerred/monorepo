@@ -22,10 +22,22 @@ export type ReportResultValue = {
   value: number | string | null;
 };
 
+export type ReportMentionIdentity =
+  | {
+      kind: "player";
+      playerId: number | null;
+      alias: string;
+      discordId: string | null;
+    }
+  | {
+      kind: "group";
+      members: { playerId: number; alias: string }[];
+    };
+
 export type ReportResultRow = {
   label: string;
   dimensions: string[];
-  discordId: string | null;
+  mentionIdentity: ReportMentionIdentity | null;
   values: ReportResultValue[];
 };
 
@@ -156,7 +168,16 @@ async function executeCompetitionRankReport(
     rows: leaderboard.slice(0, limit).map((entry) => ({
       label: entry.playerName,
       dimensions: [entry.playerName],
-      discordId: entry.discordId ?? null,
+      mentionIdentity: {
+        kind: "player",
+        // Preserve the leaderboard's player id so the live playerDiscordIds map
+        // stays authoritative: a player who unlinks between leaderboard
+        // calculation and map load falls back to the alias instead of pinging
+        // the stale snapshot discordId (same handling as lake-backed reports).
+        playerId: entry.playerId,
+        alias: entry.playerName,
+        discordId: entry.discordId ?? null,
+      },
       values: plan.metrics.map((metric) => {
         const column = reportColumnForMetric(metric);
         return {

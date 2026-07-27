@@ -8,7 +8,9 @@ import type { ReportQueryResult } from "#src/reports/query-engine.ts";
 
 export type AggregateRow = {
   label: string;
+  playerId: number | null;
   discordId: string | null;
+  groupMembers: { playerId: number; alias: string }[] | null;
   games: number;
   wins: number;
   surrenders: number;
@@ -75,7 +77,17 @@ export function rowsFromAggregates(
     rows: rows.slice(0, limit).map((row) => ({
       label: row.label,
       dimensions: row.label.split(" • "),
-      discordId: row.discordId,
+      mentionIdentity:
+        plan.groupBy === "group"
+          ? groupMentionIdentity(row)
+          : plan.groupBys.length === 1 && plan.groupBys[0] === "player"
+            ? {
+                kind: "player",
+                playerId: row.playerId,
+                alias: row.label,
+                discordId: row.discordId,
+              }
+            : null,
       values: plan.selectItems.map((item) => ({
         column: item.key,
         value: evaluateExpression(row, item.expression),
@@ -83,6 +95,18 @@ export function rowsFromAggregates(
     })),
     rowsScanned,
   };
+}
+
+function groupMentionIdentity(
+  row: AggregateRow,
+): Extract<
+  ReportQueryResult["rows"][number]["mentionIdentity"],
+  { kind: "group" }
+> {
+  if (row.groupMembers === null) {
+    throw new Error("Group aggregate is missing member identities.");
+  }
+  return { kind: "group", members: row.groupMembers };
 }
 
 export function cappedLimit(plan: ReportQueryPlan, maxRows: number): number {

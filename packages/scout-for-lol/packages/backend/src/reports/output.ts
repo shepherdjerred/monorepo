@@ -1,8 +1,6 @@
 import {
-  REPORT_METRICS,
   formatReportDisplayValue,
   reportResultColumns,
-  type ReportOutputFormat,
   type ReportRenderSpec,
 } from "@scout-for-lol/data";
 import { analyticsChartToImage } from "@scout-for-lol/report";
@@ -10,6 +8,18 @@ import type {
   ReportQueryResult,
   ReportResultRow,
 } from "#src/reports/query-engine.ts";
+import {
+  formatRankedLabel,
+  resolveMentionCount,
+} from "#src/reports/mention-format.ts";
+import {
+  chartNumber,
+  chartSeries,
+  columnDisplay,
+  formattedChartValue,
+  uniqueDimensions,
+  type MetricDisplay,
+} from "#src/reports/report-chart-values.ts";
 
 export type RenderedReportOutput = {
   content: string;
@@ -20,6 +30,12 @@ type RenderReportOutputParams = {
   title: string;
   result: ReportQueryResult;
   startedAt: Date;
+  /**
+   * Player ID → Discord ID, used for structured player-group mentions in
+   * ranked text reports. Omitted for chart-only render paths (e.g. the tRPC
+   * preview mutation), which never reach `formatTextReport`.
+   */
+  playerDiscordIds?: Map<number, string>;
 };
 
 type ChartRender = Extract<
@@ -66,34 +82,53 @@ function renderReportOutputSync(
     return renderAnalyticsChart(params, render);
   }
   return {
-    content: formatTextReport(params.title, render.kind, params.result),
+    content: formatTextReport(params.title, render, params.result, {
+      ...(params.playerDiscordIds === undefined
+        ? {}
+        : { playerDiscordIds: params.playerDiscordIds }),
+    }),
     image: null,
   };
 }
 
+type MentionOptions = { playerDiscordIds?: Map<number, string> };
+
 function formatTextReport(
   title: string,
-  kind: ReportOutputFormat,
+  render: Exclude<ReportRenderSpec, ChartRender>,
   result: ReportQueryResult,
+  mentions: MentionOptions,
 ): string {
   if (result.rows.length === 0) {
     return `**${title}**\nNo rows matched this report.`;
   }
 
-  if (kind === "TABLE") {
+  if (render.kind === "TABLE") {
     return `**${title}**\n${formatTable(result)}`;
   }
 
-  if (kind === "LIST") {
+  if (render.kind === "LIST") {
     return `**${title}**\n${result.rows
       .map((row) => `- ${row.label}: ${formatValues(result, row)}`)
       .join("\n")}`;
   }
 
+  const mentionCount = resolveMentionCount(
+    render.options.mentions,
+    result.rows.length,
+  );
   return `**${title}**\n${result.rows
     .map(
       (row, index) =>
-        `${(index + 1).toString()}. ${row.label} — ${formatValues(result, row)}`,
+        `${(index + 1).toString()}. ${formatRankedLabel({
+          label: row.label,
+          index,
+          mentionIdentity: row.mentionIdentity,
+          ...(mentions.playerDiscordIds === undefined
+            ? {}
+            : { playerDiscordIds: mentions.playerDiscordIds }),
+          mentionCount,
+        })} — ${formatValues(result, row)}`,
     )
     .join("\n")}`;
 }
@@ -136,8 +171,6 @@ function formatValues(result: ReportQueryResult, row: ReportResultRow): string {
     })
     .join(", ");
 }
-
-type MetricDisplay = { label: string; percent: boolean };
 
 function renderBarChart(
   params: RenderReportOutputParams,
@@ -424,55 +457,6 @@ function requireFirst(columns: string[]): string {
   if (first === undefined)
     throw new Error("Chart requires at least one Y column.");
   return first;
-}
-
-function columnDisplay(column: string): MetricDisplay {
-  const metric = REPORT_METRICS.find((entry) => entry.id === column);
-  if (metric !== undefined) {
-    return { label: metric.label, percent: metric.kind === "rate" };
-  }
-  return {
-    label: column
-      .split("_")
-      .map((word) => `${word.slice(0, 1).toUpperCase()}${word.slice(1)}`)
-      .join(" "),
-    percent: column.endsWith("_rate") || column.endsWith("_percent"),
-  };
-}
-
-function chartSeries(rows: ReportResultRow[], columns: string[]) {
-  return columns.map((column) => ({
-    name: columnDisplay(column).label,
-    values: rows.map((row) => nullableChartNumber(row, column)),
-  }));
-}
-
-function nullableChartNumber(
-  row: ReportResultRow,
-  column: string,
-): number | null {
-  const value = row.values.find((entry) => entry.column === column)?.value;
-  if (value === null || value === undefined) return null;
-  if (typeof value !== "number")
-    throw new Error(`Chart column ${column} is not numeric.`);
-  return columnDisplay(column).percent ? value * 100 : value;
-}
-
-function chartNumber(row: ReportResultRow, column: string): number {
-  return nullableChartNumber(row, column) ?? 0;
-}
-
-function formattedChartValue(row: ReportResultRow, column: string): string {
-  const value = nullableChartNumber(row, column);
-  if (value === null) return "—";
-  const formatted = Number.isInteger(value)
-    ? value.toLocaleString("en-US")
-    : value.toFixed(2);
-  return `${formatted}${columnDisplay(column).percent ? "%" : ""}`;
-}
-
-function uniqueDimensions(rows: ReportResultRow[], index: number): string[] {
-  return [...new Set(rows.map((row) => row.dimensions[index] ?? ""))];
 }
 
 function chartRows(

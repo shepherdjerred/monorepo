@@ -146,7 +146,7 @@ describe("Report render spec", () => {
 
   test("accepts a text kind with no encoding", () => {
     const parsed = ReportRenderSpecSchema.parse({ kind: "LEADERBOARD" });
-    expect(parsed).toEqual({ kind: "LEADERBOARD" });
+    expect(parsed).toEqual({ kind: "LEADERBOARD", options: {} });
   });
 
   test("defaults chart encoding and options to empty objects", () => {

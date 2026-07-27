@@ -224,7 +224,12 @@ function addGroupRow(
 function emptyGroupAggregate(group: GroupFactRow[]): AggregateRow {
   return {
     label: group.map((member) => member.playerAlias).join(" + "),
+    playerId: null,
     discordId: null,
+    groupMembers: group.map((member) => ({
+      playerId: member.playerId,
+      alias: member.playerAlias,
+    })),
     games: 0,
     wins: 0,
     surrenders: 0,

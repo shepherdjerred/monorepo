@@ -437,6 +437,14 @@ Scheduled/user-authored ScoutQL reports execute as **compiled SQL on embedded
 DuckDB** (`@duckdb/node-api`, lazy-loaded) over a local Parquet "report lake"
 (`REPORT_LAKE_DIR`, prod `/data/report-lake`) — not over SQLite fact tables.
 
+### Leaderboard mentions
+
+`RENDER leaderboard` @mentions the first three player or player-group rows by
+default. Set `WITH (mentions = <n>)` to choose a non-negative number of ranked
+rows, `WITH (mentions = all)` to mention every eligible row, or
+`WITH (mentions = 0)` to opt out. Rows grouped by non-player dimensions never
+produce mentions, even when their labels match a player alias.
+
 - Lake layout & compaction: `backend/src/report-lake/` (two-tier: 15-min
   staging fold + nightly full rebuild enumerating the canonical raw match /
   prematch JSON from **S3** (SeaweedFS); atomic `CURRENT`-pointer publish; the

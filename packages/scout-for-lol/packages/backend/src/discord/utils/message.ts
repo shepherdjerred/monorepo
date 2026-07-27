@@ -156,6 +156,81 @@ function splitLargeSection(
   return { chunks, currentChunk };
 }
 
+function fencedCodeBlockParts(message: string): {
+  prefix: string;
+  openingFence: string;
+  body: string;
+  closingFence: string;
+} | null {
+  // Parse with plain string scans instead of a single regex: matching an
+  // arbitrary prefix, an opening fence, a greedy body, and a trailing fence in
+  // one pattern makes the quantifiers ambiguous over backtick runs, which
+  // trips `regexp/no-super-linear-backtracking`. indexOf/endsWith are linear.
+  const closingFence = "\n```";
+  const openFenceStart = message.indexOf("```");
+  if (openFenceStart === -1 || !message.endsWith(closingFence)) {
+    return null;
+  }
+  const openFenceEnd = message.indexOf("\n", openFenceStart);
+  const closingFenceStart = message.length - closingFence.length;
+  // The opening fence needs its own newline positioned before the closing
+  // fence; otherwise a lone "```…```" is not a well-formed block to split.
+  if (openFenceEnd === -1 || openFenceEnd >= closingFenceStart) {
+    return null;
+  }
+  return {
+    prefix: message.slice(0, openFenceStart),
+    openingFence: message.slice(openFenceStart, openFenceEnd + 1),
+    body: message.slice(openFenceEnd + 1, closingFenceStart),
+    closingFence,
+  };
+}
+
+function splitFencedCodeBlock(
+  message: string,
+  maxLength: number,
+): string[] | null {
+  const parts = fencedCodeBlockParts(message);
+  if (parts === null) {
+    return null;
+  }
+  const chunks: string[] = [];
+  let prefix = parts.prefix;
+  let body = parts.body;
+  while (body.length > 0) {
+    const available =
+      maxLength -
+      prefix.length -
+      parts.openingFence.length -
+      parts.closingFence.length;
+    if (available <= 0) {
+      throw new Error(
+        "Discord message limit cannot accommodate the fenced code block.",
+      );
+    }
+    // When the remaining body already fits, take all of it: otherwise
+    // `lastIndexOf` would still cut at its final newline and emit a needless
+    // trailing chunk holding only the last row.
+    let splitAt: number;
+    if (body.length <= available) {
+      splitAt = body.length;
+    } else {
+      const boundary = body.lastIndexOf("\n", available);
+      splitAt = boundary > 0 ? boundary : available;
+    }
+    const chunkBody = body.slice(0, splitAt);
+    chunks.push(
+      `${prefix}${parts.openingFence}${chunkBody}${parts.closingFence}`,
+    );
+    body = body.slice(splitAt);
+    if (body.startsWith("\n")) {
+      body = body.slice(1);
+    }
+    prefix = "";
+  }
+  return chunks;
+}
+
 /**
  * Split a message into chunks that respect Discord's character limit
  *
@@ -179,6 +254,11 @@ export function splitMessageIntoChunks(
   // If message fits in one chunk, return it as-is
   if (message.length <= maxLength) {
     return [message];
+  }
+
+  const fencedCodeChunks = splitFencedCodeBlock(message, maxLength);
+  if (fencedCodeChunks !== null) {
+    return fencedCodeChunks;
   }
 
   let chunks: string[] = [];

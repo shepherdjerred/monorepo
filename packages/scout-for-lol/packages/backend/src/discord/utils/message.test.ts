@@ -84,6 +84,37 @@ describe("splitMessageIntoChunks", () => {
     }
   });
 
+  test("keeps a fenced table valid in every chunk", () => {
+    const tableRows = Array.from(
+      { length: 12 },
+      (_, index) => `Player ${index.toString()} | ${"value".repeat(8)}`,
+    ).join("\n");
+    const message = `**Weekly table**\n\`\`\`\nPlayer | Score\n--- | ---\n${tableRows}\n\`\`\``;
+    const chunks = splitMessageIntoChunks(message, 100);
+
+    expect(chunks.length).toBeGreaterThan(1);
+    for (const chunk of chunks) {
+      expect(chunk.length).toBeLessThanOrEqual(100);
+      expect(chunk.match(/```/g)).toHaveLength(2);
+    }
+    expect(chunks.join("\n")).toContain("Player 11");
+  });
+
+  test("does not emit an extra chunk when the fenced remainder fits", () => {
+    // 4 rows; with maxLength 30 the first chunk takes rows 0-1 and the
+    // remaining rows 2-3 fit within one more chunk. A naive lastIndexOf split
+    // would peel off the final row into a needless third message.
+    const message = "```\nrow00000\nrow11111\nrow22222\nrow33333\n```";
+    const chunks = splitMessageIntoChunks(message, 30);
+
+    expect(chunks).toHaveLength(2);
+    for (const chunk of chunks) {
+      expect(chunk.length).toBeLessThanOrEqual(30);
+      expect(chunk.match(/```/g)).toHaveLength(2);
+    }
+    expect(chunks.join("\n")).toContain("row33333");
+  });
+
   test("splits at section boundaries when possible", () => {
     const section1 = "## Section 1\nContent for section 1";
     const section2 = "## Section 2\nContent for section 2";

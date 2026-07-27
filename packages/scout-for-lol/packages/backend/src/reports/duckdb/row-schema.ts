@@ -23,6 +23,7 @@ const LakeCountSchema = z
 
 export const LakeAggregateRowSchema = z.object({
   label: z.string(),
+  player_id: LakeCountSchema.nullable(),
   discord_id: z.string().nullable(),
   games: LakeCountSchema,
   wins: LakeCountSchema,
