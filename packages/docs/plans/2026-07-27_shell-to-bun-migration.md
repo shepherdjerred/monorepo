@@ -386,6 +386,10 @@ The inventory exposed several ineffective or missing GitHub Linguist rules.
   an absent Xcode `DerivedData` directory as an empty cleanup target. Focused
   tests, strict typechecking, lint, migration ownership, and aggregate coverage
   all pass.
+- Reproduced Buildkite #6617's Playwright bootstrap failure in the pinned
+  Playwright container and scoped APT refreshes to the signed Ubuntu source,
+  preventing the unrelated NodeSource feed from blocking Bun's `unzip`
+  prerequisite.
 
 ### Remaining
 

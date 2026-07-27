@@ -324,8 +324,10 @@ steps:
         - "scripts/lib/run.ts"
     cancel_on_build_failing: true
     command: |
-      rm -f /etc/apt/sources.list.d/nodesource.list /etc/apt/sources.list.d/nodesource.sources
-      apt-get update -qq && apt-get install -y -qq --no-install-recommends unzip
+      # The Playwright image adds NodeSource, but Bun only needs unzip from
+      # Ubuntu. Keep an unavailable third-party feed from blocking bootstrap.
+      apt-get update -qq -o Dir::Etc::sourcelist="sources.list.d/ubuntu.sources" -o Dir::Etc::sourceparts="-"
+      apt-get install -y -qq --no-install-recommends unzip
       curl -fsSL https://bun.sh/install | bash -s -- bun-v1.3.14
       export PATH="/root/.bun/bin:$$PATH"
       bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/monorepo'
@@ -366,8 +368,10 @@ steps:
     cancel_on_build_failing: true
     command: |
       if [ "$(buildkite-agent meta-data get ci-lane-run-playwright --default true)" != true ]; then exit 0; fi
-      rm -f /etc/apt/sources.list.d/nodesource.list /etc/apt/sources.list.d/nodesource.sources
-      apt-get update -qq && apt-get install -y -qq --no-install-recommends unzip
+      # The Playwright image adds NodeSource, but Bun only needs unzip from
+      # Ubuntu. Keep an unavailable third-party feed from blocking bootstrap.
+      apt-get update -qq -o Dir::Etc::sourcelist="sources.list.d/ubuntu.sources" -o Dir::Etc::sourceparts="-"
+      apt-get install -y -qq --no-install-recommends unzip
       curl -fsSL https://bun.sh/install | bash -s -- bun-v1.3.14
       export PATH="/root/.bun/bin:$$PATH"
       bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/monorepo'
