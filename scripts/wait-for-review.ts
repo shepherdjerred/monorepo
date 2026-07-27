@@ -30,8 +30,8 @@ import {
   type ReviewSignalEvent,
   type ReviewThread,
 } from "@shepherdjerred/code-review";
+import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
 import {
-  fetchHeadPushedAt,
   fetchReviewThreads,
   resolveReviewState,
   type ReviewStateResult,
