@@ -24,7 +24,7 @@ The cutover must satisfy all of these invariants:
 - Every other local or remote branch is retired. The old clone remains an offline rollback artifact until acceptance.
 - No repository writer or deployment-capable automation runs between manifest capture and accept-or-rollback.
 - Every remote ref update or deletion is one atomic, lease-protected transaction.
-- The rewritten repository is adopted through a fresh clone, not by repairing the 1,248-ref shared clone in place.
+- The rewritten repository is adopted through a fresh clone, not by repairing the large shared clone in place.
 
 ## Owner Decisions
 
@@ -40,15 +40,16 @@ Recorded 2026-07-27:
 
 This 2026-07-27 snapshot is evidence, not the cutover manifest. Recompute every value after writers freeze.
 
-- Current `main`: `8202ff6ae5c70d94e9c600216477bfe8519baf05`.
-- PR #1642 was last synchronized at `265ab686a9f99ea7097b04c3d7847dc809b3e39f`; 32 newer `main` commits were
-  incorporated by restacking this plan branch.
-- Remote controlled refs: 12 heads, 314 tags, and one `refs/renovate/*` ref.
-- GitHub-owned refs: 1,595 `refs/pull/*` refs.
-- Open PRs: 9. Three currently report merge conflicts: #1688, #1689, and #1700.
+- Current `main`: `a6f8a7afc7ff6e68b6faf1ff6605dbe4cf547659`.
+- PR #1642 was last synchronized at `265ab686a9f99ea7097b04c3d7847dc809b3e39f`; the branch was restacked through
+  `8202ff6ae5c70d94e9c600216477bfe8519baf05`. The one later `main` commit was separately inspected, does not touch a
+  rewrite target, and leaves the PR mergeable.
+- Remote controlled refs: 14 heads, 314 tags, and one `refs/renovate/*` ref.
+- GitHub-owned refs: 1,600 `refs/pull/*` refs.
+- Open PRs: 11; none currently report a merge conflict.
 - Every one of the 314 tags is lightweight and backs one of 314 GitHub Releases.
-- Local state: 1,248 refs, including 663 local branches, 100 `refs/codex/*`, 148
-  `refs/conductor-checkpoints/*`, 8 `refs/prfleet/*`, and `refs/spice/data`; 6 registered worktrees, one detached;
+- Local state: 1,253 refs, including 666 local branches, 100 `refs/codex/*`, 148
+  `refs/conductor-checkpoints/*`, 8 `refs/prfleet/*`, and `refs/spice/data`; 9 registered worktrees, one detached;
   no stash at observation time.
 - Active GitHub push webhooks: Buildkite and `pr-bot.sjer.red`.
 - Active `main` ruleset `11098884` blocks deletion and non-fast-forward pushes, requires linear history and the
@@ -301,7 +302,7 @@ refs unchanged. Never split deletions or namespaces into later pushes.
 
 ### 3. Adopt a fresh local clone
 
-Do not reset or prune the old 1,248-ref clone in place.
+Do not reset or prune the old shared clone in place.
 
 1. Ensure every worktree in the old clone is clean.
 2. Disable its push URL and rename the entire clone as a read-only rollback artifact.
@@ -309,7 +310,7 @@ Do not reset or prune the old 1,248-ref clone in place.
 4. Check out only `main` and retained open-PR branches.
 5. Initialize git-spice and track retained branches parent-first using the frozen topology manifest.
 6. Verify each local branch against the post-rewrite manifest, every PR association, and `git-spice log long --all`.
-7. Keep the old clone and both off-host mirrors until final acceptance. Do not copy its 654 discarded branches or
+7. Keep the old clone and both off-host mirrors until final acceptance. Do not copy discarded local-only branches or
    custom checkpoint refs into the fresh clone.
 
 ### 4. Accept and unfreeze
@@ -374,7 +375,7 @@ not GitHub's storage meter.
 
 The 2026-07-25 plan established the aggressive rewrite, all-ref publication, exact tree oracles, local recovery,
 signature inventory, and atomic rollback requirements through multiple hosted reviews. The 2026-07-27 reconciliation
-supersedes its stale counts and recovery strategy after `main` added 32 commits and the shared clone grew to 1,248
+supersedes its stale counts and recovery strategy after `main` added 33 commits and the shared clone grew beyond 1,200
 refs. It also corrects the live `champion-splash/` deletion bug and the deployment-capable CI freeze gap.
 
 ## Session Log - 2026-07-27
