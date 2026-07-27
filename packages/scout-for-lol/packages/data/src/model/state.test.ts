@@ -34,8 +34,10 @@ describe("parseQueueType", () => {
     [3270, "aram mayhem"],
     [3100, "custom"],
     [3130, "custom"],
-    [4220, "normal doom bots"],
-    [4250, "hard doom bots"],
+    [4250, "easy doom bots"],
+    [4240, "normal doom bots"],
+    [4220, "hard doom bots"],
+    [4260, "hard doom bots"],
   ];
 
   test.each(cases)("queue id %i parses to %s", (id, expected) => {

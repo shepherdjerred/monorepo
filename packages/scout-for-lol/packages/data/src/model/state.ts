@@ -64,11 +64,22 @@ export function parseQueueType(input: number): QueueType | undefined {
       // this id is a custom lobby (gameType CUSTOM_GAME, gameMode CLASSIC).
       .with(3130, () => "custom")
       .with(1900, () => "urf")
-      // 4220/4250 have never been observed in the match lake; they are kept
-      // from the 2025 Doom Bots run's spectator payloads. If the mode returns
-      // on different ids, the queue-windows watcher flags them as unknown.
-      .with(4220, () => "normal doom bots")
-      .with(4250, () => "hard doom bots")
+      // Doom Bots ids per the game-client queue catalog (CommunityDragon):
+      // 4250/4251/4252 = "Veigar's Evil!" (Trial 1, the introductory tier),
+      // 4240/4241/4242 = "Veigar's Curse!" (Trial 2), 4220 = "Doom Bots -
+      // Hard", 4260/4261/4262 = "Veigar's Doom!" (Trial 3). None observed in
+      // the match lake yet; team-size variants (4200-4210) stay unmapped and
+      // surface via the queue-windows watcher when played.
+      .with(4250, () => "easy doom bots")
+      .with(4251, () => "easy doom bots")
+      .with(4252, () => "easy doom bots")
+      .with(4240, () => "normal doom bots")
+      .with(4241, () => "normal doom bots")
+      .with(4242, () => "normal doom bots")
+      .with(4220, () => "hard doom bots")
+      .with(4260, () => "hard doom bots")
+      .with(4261, () => "hard doom bots")
+      .with(4262, () => "hard doom bots")
       .otherwise((): QueueType | undefined => {
         console.error(`unknown queue type: ${input.toString()}`);
         return;
