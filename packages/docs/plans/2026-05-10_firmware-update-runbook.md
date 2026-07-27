@@ -4,7 +4,7 @@ type: plan
 status: planned
 board: true
 verification: operator
-disposition: deferred
+disposition: blocked
 ---
 
 # NVMe Firmware Update — `torvalds` (Samsung 990 PRO 4 TB × 2)

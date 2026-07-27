@@ -36,7 +36,7 @@ type ValidationContext = {
   todoDocs: Map<string, { path: string; sourceMarker: boolean }>;
   paths: Set<string>;
   localLinks: { path: string; target: string }[];
-  boardOrigins: { path: string; origin: string }[];
+  origins: { path: string; origin: string }[];
 };
 
 function errorMessage(error: unknown): string {
@@ -192,8 +192,8 @@ function collectDocumentReferences(
   parsed: ParsedMarkdownDocument,
   context: ValidationContext,
 ): void {
-  if (parsed.frontmatter.board && parsed.frontmatter.origin !== undefined) {
-    context.boardOrigins.push({ path, origin: parsed.frontmatter.origin });
+  if (parsed.frontmatter.origin !== undefined) {
+    context.origins.push({ path, origin: parsed.frontmatter.origin });
   }
   for (const link of extractMarkdownLinks(parsed.body)) {
     const withoutFragment = link.split(/[?#]/u, 1)[0];
@@ -283,7 +283,7 @@ export async function validateDocs(): Promise<ValidationError[]> {
     todoDocs: new Map<string, { path: string; sourceMarker: boolean }>(),
     paths: new Set(paths),
     localLinks: [],
-    boardOrigins: [],
+    origins: [],
   };
 
   for (const path of paths) {
@@ -319,7 +319,7 @@ export async function validateDocs(): Promise<ValidationError[]> {
       });
     }
   }
-  for (const item of context.boardOrigins) {
+  for (const item of context.origins) {
     const prefix = "packages/docs/";
     if (
       item.origin.startsWith(prefix) &&
@@ -327,7 +327,7 @@ export async function validateDocs(): Promise<ValidationError[]> {
     ) {
       context.errors.push({
         path: item.path,
-        message: `board origin does not exist: ${item.origin}`,
+        message: `origin does not exist: ${item.origin}`,
       });
     }
   }

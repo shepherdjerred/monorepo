@@ -4,7 +4,7 @@ type: todo
 status: planned
 board: true
 verification: operator
-disposition: active
+disposition: blocked
 origin: packages/docs/archive/superseded/2026-06-27_bazarr-subtitles-chinese-gating.md
 source_marker: false
 ---

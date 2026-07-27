@@ -4,7 +4,7 @@ type: todo
 status: planned
 board: true
 verification: operator
-disposition: deferred
+disposition: blocked
 origin: packages/docs/todos/babysit-phase4-live-retest.md
 source_marker: false
 ---

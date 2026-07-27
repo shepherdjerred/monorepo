@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
+import { FrontmatterSchema } from "#shared/schema";
+
 import { createFrontmatter, normalizeWorkflowSection } from "./migrate-docs.ts";
 
 describe("createFrontmatter", () => {
@@ -28,13 +30,43 @@ describe("createFrontmatter", () => {
         status: "planned",
         board: true,
         verification: "operator",
-        disposition: "blocked",
+        disposition: "active",
       },
       "# Fixture\n\n## Remaining\n\n- [ ] Approve the production change.\n",
     );
 
     expect(frontmatter.verification).toBe("operator");
     expect(frontmatter.disposition).toBe("blocked");
+  });
+
+  test("rejects operator actions that are not blocked", () => {
+    expect(() =>
+      FrontmatterSchema.parse({
+        id: "fixture",
+        type: "todo",
+        status: "planned",
+        board: true,
+        verification: "operator",
+        disposition: "deferred",
+      }),
+    ).toThrow("operator documents require blocked disposition");
+  });
+
+  test("repairs active document types from their canonical directory", () => {
+    const frontmatter = createFrontmatter(
+      "plans/fixture.md",
+      {
+        id: "plan-fixture",
+        type: "log",
+        status: "planned",
+        board: true,
+        verification: "agent",
+        disposition: "active",
+      },
+      "# Fixture\n\n## Remaining\n\n- [ ] Implement it.\n",
+    );
+
+    expect(frontmatter.type).toBe("plan");
   });
 
   test("preserves archived types while clearing board metadata", () => {

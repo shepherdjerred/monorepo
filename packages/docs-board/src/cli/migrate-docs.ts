@@ -305,17 +305,24 @@ function getBoolean(
   return typeof value === "boolean" ? value : undefined;
 }
 
+function resolveDocumentType(
+  relativePath: string,
+  loose: Record<string, unknown>,
+): DocumentFrontmatter["type"] {
+  const inferredType = inferType(relativePath);
+  if (!relativePath.startsWith("archive/")) return inferredType;
+  const existingType = DocumentTypeSchema.safeParse(
+    getPlainString(loose, "type"),
+  );
+  return existingType.success ? existingType.data : inferredType;
+}
+
 export function createFrontmatter(
   relativePath: string,
   loose: Record<string, unknown>,
   body: string,
 ): DocumentFrontmatter {
-  const existingType = DocumentTypeSchema.safeParse(
-    getPlainString(loose, "type"),
-  );
-  const type = existingType.success
-    ? existingType.data
-    : inferType(relativePath);
+  const type = resolveDocumentType(relativePath, loose);
   const existingId = getPlainString(loose, "id");
   const basename = relativePath.split("/").at(-1)?.replace(/\.md$/u, "");
   const pathSegments = relativePath.split("/");
@@ -367,22 +374,26 @@ export function createFrontmatter(
     const existingVerification = VerificationSchema.safeParse(
       getPlainString(loose, "verification"),
     );
-    candidate["verification"] =
+    const verification =
       status === "awaiting-human"
         ? "human"
         : existingVerification.success
           ? existingVerification.data
           : "agent";
+    candidate["verification"] = verification;
     const existingDisposition = DispositionSchema.safeParse(
       getPlainString(loose, "disposition"),
     );
-    candidate["disposition"] = existingDisposition.success
-      ? existingDisposition.data
-      : existingStatus === "blocked"
+    candidate["disposition"] =
+      verification === "operator"
         ? "blocked"
-        : existingStatus === "deferred"
-          ? "deferred"
-          : "active";
+        : existingDisposition.success
+          ? existingDisposition.data
+          : existingStatus === "blocked"
+            ? "blocked"
+            : existingStatus === "deferred"
+              ? "deferred"
+              : "active";
   }
   return FrontmatterSchema.parse(candidate);
 }

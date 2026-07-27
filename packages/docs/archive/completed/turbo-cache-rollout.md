@@ -3,7 +3,7 @@ id: turbo-cache-rollout
 type: todo
 status: complete
 board: false
-origin: packages/docs/plans/2026-07-13_ci-parity-implementation.md
+origin: packages/docs/archive/completed/2026-07-13_ci-parity-implementation.md
 ---
 
 # Roll out the turbo remote-cache server

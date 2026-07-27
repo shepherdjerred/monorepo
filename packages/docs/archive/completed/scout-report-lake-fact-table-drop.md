@@ -3,7 +3,7 @@ id: scout-report-lake-fact-table-drop
 type: todo
 status: complete
 board: false
-origin: packages/docs/plans/2026-07-12_scout-s3-canonical-part3.md
+origin: packages/docs/archive/completed/2026-07-12_scout-s3-canonical-part3.md
 ---
 
 # Drop the scout report-store match/fact tables (S3-canonical cutover)

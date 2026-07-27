@@ -61,6 +61,13 @@ export const FrontmatterSchema = z
         message: "awaiting-human documents require human verification",
       });
     }
+    if (value.verification === "operator" && value.disposition !== "blocked") {
+      context.addIssue({
+        code: "custom",
+        path: ["disposition"],
+        message: "operator documents require blocked disposition",
+      });
+    }
   });
 
 export type DocumentFrontmatter = z.infer<typeof FrontmatterSchema>;

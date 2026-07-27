@@ -4,7 +4,7 @@ type: todo
 status: planned
 board: true
 verification: operator
-disposition: deferred
+disposition: blocked
 origin: packages/docs/todos/mac-mini-buildkite-agent.md
 source_marker: false
 ---

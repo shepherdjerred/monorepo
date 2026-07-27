@@ -4,7 +4,7 @@ type: todo
 status: planned
 board: true
 verification: operator
-disposition: active
+disposition: blocked
 origin: packages/docs/logs/2026-07-03_finish-seerr-migration.md
 ---
 
