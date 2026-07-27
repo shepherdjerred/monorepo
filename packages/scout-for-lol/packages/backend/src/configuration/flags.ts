@@ -62,6 +62,7 @@ export type LimitName =
   | "reports_per_server";
 
 const ME = DiscordAccountIdSchema.parse("160509172704739328");
+export { ME };
 export const MY_SERVER = DiscordGuildIdSchema.parse("1337623164146155593");
 
 /**

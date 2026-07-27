@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DEV_PLACEHOLDER } from "@scout-for-lol/data/build-identity.ts";
 
 /**
  * Build identity stamped into this bundle at site-release build time
@@ -18,8 +19,6 @@ export type BuildInfo = {
   contractHash: string;
 };
 
-export const DEV_PLACEHOLDER = "dev";
-
 function readBuildInfo(): BuildInfo {
   const parsed = EnvSchema.safeParse(import.meta.env);
   const env = parsed.success ? parsed.data : {};
@@ -38,6 +37,8 @@ export const VersionResponseSchema = z.object({
   version: z.string().min(1),
   gitSha: z.string().min(1),
   contractHash: z.string().min(1),
+  // Older backend images predate this owner-only diagnostic capability.
+  canViewContractMismatch: z.boolean().default(false),
 });
 
 export type VersionResponse = z.infer<typeof VersionResponseSchema>;

@@ -1,4 +1,40 @@
 import configuration from "#src/configuration.ts";
+import { getFlag } from "#src/configuration/flags.ts";
+import { DiscordAccountIdSchema } from "@scout-for-lol/data";
+import { DEV_PLACEHOLDER } from "@scout-for-lol/data/build-identity.ts";
+import { SESSION_COOKIE } from "#src/trpc/context.ts";
+import { verifySession } from "#src/trpc/jwt.ts";
+
+function sessionCookie(request: Request): string | undefined {
+  const cookieHeader = request.headers.get("Cookie");
+  if (cookieHeader === null) {
+    return undefined;
+  }
+  for (const part of cookieHeader.split(";")) {
+    const [name, value] = part.trim().split("=", 2);
+    if (name === SESSION_COOKIE && value !== undefined) {
+      try {
+        return decodeURIComponent(value);
+      } catch {
+        return undefined;
+      }
+    }
+  }
+  return undefined;
+}
+
+async function canViewContractMismatch(request: Request): Promise<boolean> {
+  const session = sessionCookie(request);
+  if (session === undefined || session.length === 0) {
+    return false;
+  }
+  const claims = await verifySession(session);
+  if (claims === null) {
+    return false;
+  }
+  const discordId = DiscordAccountIdSchema.safeParse(claims.sub);
+  return discordId.success && getFlag("debug", { user: discordId.data });
+}
 
 /**
  * Body of GET /api/version — the deploy identity of this backend process.
@@ -29,8 +65,27 @@ export function versionBody(): {
  * `corsHeadersFor(request)` so the SPA origin can read it cross-origin in
  * dev.
  */
-export function handleVersion(corsHeaders: Record<string, string>): Response {
-  return Response.json(versionBody(), {
-    headers: { "Cache-Control": "no-store", ...corsHeaders },
-  });
+export async function handleVersion(
+  request: Request,
+  corsHeaders: Record<string, string>,
+): Promise<Response> {
+  const canView = await canViewContractMismatch(request);
+  const body = versionBody();
+  return Response.json(
+    {
+      ...body,
+      // The contract-mismatch banner is an owner-only developer diagnostic.
+      // A pre-owner-gating SPA bundle still open across a redeploy ignores
+      // `canViewContractMismatch` and renders its banner from `contractHash`
+      // alone, so owner-gating on the client is not enough. Hand non-owners
+      // the client's no-mismatch sentinel as the hash: every bundle
+      // generation (new gated chip and legacy full-width banner) then treats
+      // it as "no mismatch" and stays silent. Owners get the real hash.
+      contractHash: canView ? body.contractHash : DEV_PLACEHOLDER,
+      canViewContractMismatch: canView,
+    },
+    {
+      headers: { "Cache-Control": "no-store", ...corsHeaders },
+    },
+  );
 }

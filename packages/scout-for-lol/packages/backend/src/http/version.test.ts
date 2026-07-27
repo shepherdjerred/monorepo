@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { DEV_PLACEHOLDER } from "@scout-for-lol/data/build-identity.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
+import { ME } from "#src/configuration/flags.ts";
 import { handleVersion, versionBody } from "#src/http/version.ts";
+import { signSession } from "#src/trpc/jwt.ts";
 
 function setBuildEnv(values: {
   VERSION: string;
@@ -10,6 +13,11 @@ function setBuildEnv(values: {
   Bun.env["VERSION"] = values.VERSION;
   Bun.env["GIT_SHA"] = values.GIT_SHA;
   Bun.env["CONTRACT_HASH"] = values.CONTRACT_HASH;
+  // JWT_SIGNING_SECRET is owned by test-setup.ts for the whole suite (a valid
+  // >= 32 char throwaway key). Do NOT set or delete it here: the owner-session
+  // test only needs sign/verify to round-trip against the same configuration,
+  // and deleting it in afterEach would wipe the secret for every sibling e2e
+  // test file that runs afterward (rbac-http, ai/http-route), failing them.
   resetConfigurationForTests();
 }
 
@@ -36,24 +44,72 @@ describe("versionBody", () => {
 });
 
 describe("handleVersion", () => {
-  test("serves JSON with no-store and the provided CORS headers", async () => {
+  test("serves JSON with no-store and the provided CORS headers, and neutralizes the contract hash for anonymous clients", async () => {
     setBuildEnv({
       VERSION: "2.0.0-1234",
       GIT_SHA: "abcdef1234567890",
       CONTRACT_HASH: "cafebabe",
     });
-    const response = handleVersion({
-      "Access-Control-Allow-Origin": "https://scout-for-lol.com",
-    });
+    const response = await handleVersion(
+      new Request("https://scout-for-lol.com/api/version"),
+      {
+        "Access-Control-Allow-Origin": "https://scout-for-lol.com",
+      },
+    );
     expect(response.status).toBe(200);
     expect(response.headers.get("Cache-Control")).toBe("no-store");
     expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
       "https://scout-for-lol.com",
     );
+    // No session → non-owner → the real contract hash is withheld and the
+    // client's no-mismatch sentinel is returned so no bundle shows the banner.
+    expect(await response.json()).toEqual({
+      version: "2.0.0-1234",
+      gitSha: "abcdef1234567890",
+      contractHash: DEV_PLACEHOLDER,
+      canViewContractMismatch: false,
+    });
+  });
+
+  test("authorizes the contract diagnostic and returns the real hash for the signed owner session", async () => {
+    setBuildEnv({
+      VERSION: "2.0.0-1234",
+      GIT_SHA: "abcdef1234567890",
+      CONTRACT_HASH: "cafebabe",
+    });
+    const { jwt } = await signSession({ discordId: ME });
+    const response = await handleVersion(
+      new Request("https://scout-for-lol.com/api/version", {
+        headers: { Cookie: `scout_session=${jwt}` },
+      }),
+      {},
+    );
+
     expect(await response.json()).toEqual({
       version: "2.0.0-1234",
       gitSha: "abcdef1234567890",
       contractHash: "cafebabe",
+      canViewContractMismatch: true,
+    });
+  });
+
+  test("treats a malformed session cookie as unauthenticated and withholds the hash", async () => {
+    setBuildEnv({
+      VERSION: "2.0.0-1234",
+      GIT_SHA: "abcdef1234567890",
+      CONTRACT_HASH: "cafebabe",
+    });
+    const response = await handleVersion(
+      new Request("https://scout-for-lol.com/api/version", {
+        headers: { Cookie: "scout_session=%E0%A4%A" },
+      }),
+      {},
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      contractHash: DEV_PLACEHOLDER,
+      canViewContractMismatch: false,
     });
   });
 });
