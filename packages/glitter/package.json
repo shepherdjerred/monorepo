@@ -4,6 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "bun run scripts/build.ts",
+    "test": "bun test test",
     "deploy": "bun ../../scripts/deploy-site.ts glitter"
+  },
+  "dependencies": {
+    "@shepherdjerred/glitter-context": "workspace:*"
   }
 }

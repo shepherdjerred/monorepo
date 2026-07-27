@@ -32,4 +32,9 @@ export const TASK_QUEUES = {
    * invariant for the initial multi-year backfill and steady-state overlap.
    */
   GLITTER_CORPUS: "glitter-corpus",
+  /**
+   * Weekly GPT-5.6 Sol context generation is isolated from the latency-sensitive
+   * Discord capture queue. One run at a time bounds clone, model, and disk use.
+   */
+  GLITTER_CONTEXT: "glitter-context",
 } as const;

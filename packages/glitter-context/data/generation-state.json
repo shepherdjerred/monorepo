@@ -1,0 +1,99 @@
+{
+  "$schema": "../schema/generation-state.schema.json",
+  "schemaVersion": 1,
+  "relationshipSourceSnapshotChecksum": null,
+  "relationshipRefreshedAt": null,
+  "people": [
+    {
+      "personId": "aaron",
+      "lastMessageId": null,
+      "sourceSnapshotChecksum": null,
+      "messageCount": 0,
+      "refreshedAt": null
+    },
+    {
+      "personId": "brian",
+      "lastMessageId": null,
+      "sourceSnapshotChecksum": null,
+      "messageCount": 0,
+      "refreshedAt": null
+    },
+    {
+      "personId": "caitlyn",
+      "lastMessageId": null,
+      "sourceSnapshotChecksum": null,
+      "messageCount": 0,
+      "refreshedAt": null
+    },
+    {
+      "personId": "colin",
+      "lastMessageId": null,
+      "sourceSnapshotChecksum": null,
+      "messageCount": 0,
+      "refreshedAt": null
+    },
+    {
+      "personId": "danny",
+      "lastMessageId": null,
+      "sourceSnapshotChecksum": null,
+      "messageCount": 0,
+      "refreshedAt": null
+    },
+    {
+      "personId": "edward",
+      "lastMessageId": null,
+      "sourceSnapshotChecksum": null,
+      "messageCount": 0,
+      "refreshedAt": null
+    },
+    {
+      "personId": "hirza",
+      "lastMessageId": null,
+      "sourceSnapshotChecksum": null,
+      "messageCount": 0,
+      "refreshedAt": null
+    },
+    {
+      "personId": "irfan",
+      "lastMessageId": null,
+      "sourceSnapshotChecksum": null,
+      "messageCount": 0,
+      "refreshedAt": null
+    },
+    {
+      "personId": "jerred",
+      "lastMessageId": null,
+      "sourceSnapshotChecksum": null,
+      "messageCount": 0,
+      "refreshedAt": null
+    },
+    {
+      "personId": "long",
+      "lastMessageId": null,
+      "sourceSnapshotChecksum": null,
+      "messageCount": 0,
+      "refreshedAt": null
+    },
+    {
+      "personId": "richard",
+      "lastMessageId": null,
+      "sourceSnapshotChecksum": null,
+      "messageCount": 0,
+      "refreshedAt": null
+    },
+    {
+      "personId": "ryan",
+      "lastMessageId": null,
+      "sourceSnapshotChecksum": null,
+      "messageCount": 0,
+      "refreshedAt": null
+    },
+    {
+      "personId": "virmel",
+      "lastMessageId": null,
+      "sourceSnapshotChecksum": null,
+      "messageCount": 0,
+      "refreshedAt": null
+    }
+  ]
+}

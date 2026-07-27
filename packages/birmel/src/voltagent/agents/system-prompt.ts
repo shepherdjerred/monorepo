@@ -1,5 +1,7 @@
-import GLITTER_BOYS_HISTORY from "@shepherdjerred/birmel/lore/glitter-boys-history.txt";
-import GLITTER_BOYS_RELATIONSHIPS from "@shepherdjerred/birmel/lore/relationships.txt";
+import {
+  friendGroupHistory,
+  relationshipContextText,
+} from "@shepherdjerred/glitter-context";
 
 /**
  * Reusable persona block builder. Returns a markdown section that can be
@@ -16,12 +18,9 @@ export type PersonaContext = {
 };
 
 /**
- * Static "Glitter Boys" lore: shared friend-group history (multi-year
- * timeline) plus a Graphviz DOT relationship graph. Loaded at module init
- * via Bun's text-import support so it can be embedded synchronously in the
- * system prompt — both files are bundled with the bot and never change at
- * runtime.
+ * Static "Glitter Boys" lore from the shared, validated context package.
  */
+const GLITTER_BOYS_RELATIONSHIPS = relationshipContextText();
 const GLITTER_BOYS_LORE_BLOCK = `
 
 ## Friend group context (Glitter Boys)
@@ -32,9 +31,9 @@ When someone asks directly about a specific event, person, or relationship from 
 
 ### Shared history
 
-${GLITTER_BOYS_HISTORY.trim()}
+${friendGroupHistory.trim()}
 
-### How everyone knows each other (Graphviz DOT)
+### How everyone knows each other
 
 ${GLITTER_BOYS_RELATIONSHIPS.trim()}`;
 

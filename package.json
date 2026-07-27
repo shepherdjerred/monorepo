@@ -57,6 +57,7 @@
     "packages/docs-board",
     "packages/eslint-config",
     "packages/glitter",
+    "packages/glitter-context",
     "packages/home-assistant",
     "packages/homelab",
     "packages/homelab/src/cdk8s",

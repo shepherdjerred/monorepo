@@ -551,6 +551,26 @@ export const glitterCorpusMirrorDivergenceTotal = new Counter({
   registers: [register],
 });
 
+export const glitterContextRefreshRunsTotal = new Counter({
+  name: "glitter_context_refresh_runs_total",
+  help: "Weekly verified Glitter context refresh runs by outcome",
+  labelNames: ["outcome"] as const,
+  registers: [register],
+});
+
+export const glitterContextRefreshPeople = new Gauge({
+  name: "glitter_context_refresh_people",
+  help: "People eligible for or refreshed by the latest Glitter context run",
+  labelNames: ["state"] as const,
+  registers: [register],
+});
+
+export const glitterContextRefreshRelationshipProposals = new Gauge({
+  name: "glitter_context_refresh_relationship_proposals",
+  help: "Evidence-backed relationship updates in the latest Glitter context run",
+  registers: [register],
+});
+
 let server: ReturnType<typeof Bun.serve> | undefined;
 
 const jsonLog = createStructuredLogger("observability.metrics");

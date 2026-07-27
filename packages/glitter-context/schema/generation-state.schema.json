@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.sjer.red/glitter-context/generation-state.schema.json",
+  "title": "Glitter context generation state",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "relationshipSourceSnapshotChecksum",
+    "relationshipRefreshedAt",
+    "people"
+  ],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "relationshipSourceSnapshotChecksum": {
+      "oneOf": [
+        { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        { "type": "null" }
+      ]
+    },
+    "relationshipRefreshedAt": {
+      "oneOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }]
+    },
+    "people": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "personId",
+          "lastMessageId",
+          "sourceSnapshotChecksum",
+          "messageCount",
+          "refreshedAt"
+        ],
+        "properties": {
+          "personId": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "lastMessageId": {
+            "oneOf": [
+              { "type": "string", "pattern": "^\\d{17,20}$" },
+              { "type": "null" }
+            ]
+          },
+          "sourceSnapshotChecksum": {
+            "oneOf": [
+              { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+              { "type": "null" }
+            ]
+          },
+          "messageCount": { "type": "integer", "minimum": 0 },
+          "refreshedAt": {
+            "oneOf": [
+              { "type": "string", "format": "date-time" },
+              { "type": "null" }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

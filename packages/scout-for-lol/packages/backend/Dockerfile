@@ -31,9 +31,12 @@ FROM deps AS build
 COPY --parents \
   tsconfig.base.json \
   packages/scout-for-lol/tsconfig.base.json \
+  packages/glitter-context \
   packages/llm-models \
   packages/scout-for-lol/packages/backend \
   ./
+# @shepherdjerred/glitter-context also publishes a gitignored `dist/`.
+RUN cd packages/glitter-context && bun run build
 # @shepherdjerred/llm-models' package `main`/`types` resolve to a gitignored
 # `dist/`, so any consumer (scout's data package imports it) crashes at
 # startup with `Cannot find module '@shepherdjerred/llm-models'` unless the
@@ -82,6 +85,7 @@ COPY --parents \
 # Mirrors the discord-plays-mario-kart runtime fix (2.0.0-6322 crash-loop).
 RUN cd packages/scout-for-lol/packages/backend && bunx --trust prisma generate
 # Built artifacts from the build stage.
+COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/dist
 COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
 COPY --from=build /app/packages/scout-for-lol/packages/backend/generated packages/scout-for-lol/packages/backend/generated
 

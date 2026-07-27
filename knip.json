@@ -58,6 +58,10 @@
       "entry": ["src/index.ts", "test/**/*.ts"],
       "project": ["src/**/*.ts", "test/**/*.ts"]
     },
+    "packages/glitter-context": {
+      "entry": ["src/index.ts", "test/**/*.ts", "scripts/**/*.ts"],
+      "project": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts"]
+    },
     "packages/llm-observability": {
       "entry": ["src/index.ts", "test/**/*.ts"],
       "project": ["src/**/*.ts", "test/**/*.ts"]
@@ -471,6 +475,7 @@
     "pinchtab",
     "rg",
     "tsc",
+    "uv",
     "uvx",
     "velero"
   ]

@@ -114,137 +114,23 @@
     <svg id="chart"></svg>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="./context-data.js"></script>
     <script>
-      const groupNodes = [
-        { id: "SPU", label: "SPU" },
-        { id: "HighSchool", label: "High School (Edward's)" },
-        { id: "COD", label: "Modern Warfares" },
-        { id: "DesertHotSprings", label: "Desert Hot Springs" },
-        { id: "SeattleU", label: "Seattle U" },
-        { id: "Google", label: "Google" },
-        { id: "Elementary", label: "Elementary (Justin's)" },
-        { id: "HighSchool3", label: "High School (Hirza's)" },
-        { id: "UW1", label: "UW" },
-        { id: "Roommates", label: "UW Roommates" },
-        { id: "Truongs", label: "Truong Family" },
-        { id: "OtherHighSchool", label: "High School (Richard's)" },
-        { id: "Kims", label: "Kim Family" },
-        { id: "MiddleSchool", label: "Middle School" },
-        { id: "Elementary2", label: "Elementary (Esther's)" },
-      ];
-
-      const labeledPeople = {
-        DanielTruong: "Daniel",
-        DavidTruong: "David",
-        DanKim: "Dan Kim",
-        SamKim: "Sam Kim",
-        EstherKim: "Esther Kim",
-        Kowun: "Ko-wun",
-      };
-
-      const linksRaw = [
-        ["Mark", "SPU"],
-        ["Matt", "SPU"],
-        ["Erkin", "SPU"],
-        ["Virmel", "SPU"],
-        ["Emily", "SPU"],
-        ["Sean", "SPU"],
-        ["Andrew", "SPU"],
-        ["Edward", "HighSchool"],
-        ["Joel", "HighSchool"],
-        ["Wyatt", "HighSchool"],
-        ["Danny", "HighSchool"],
-        ["Virmel", "HighSchool"],
-        ["Edward", "Cjay", "Cousins", true],
-        ["Edward", "Lawrence", "Brothers", true],
-        ["Edward", "Chadwick", "Coworkers @ Lakes HS", true],
-        ["Joel", "Zach", "Roommates", true],
-        ["Danny", "Hannah", "WWU", true],
-        ["Matt", "Jerred", "Church", true],
-        ["Jerred", "Shuxin", "Dating", true],
-        ["Erkin", "Aaron", "Cousins", true],
-        ["Virmel", "COD"],
-        ["Jake", "COD"],
-        ["Brian", "COD"],
-        ["Eddie", "COD"],
-        ["Nathan", "COD"],
-        ["Eddie", "DesertHotSprings"],
-        ["Jordy", "DesertHotSprings"],
-        ["James", "DesertHotSprings"],
-        ["GayRyan", "DesertHotSprings"],
-        ["Santana", "DesertHotSprings"],
-        ["Juan", "DesertHotSprings"],
-        ["Virmel", "SeattleU"],
-        ["Justin", "SeattleU"],
-        ["Justin", "Google"],
-        ["Kowun", "Google"],
-        ["Joanne", "Google"],
-        ["Adrian", "Joanne", "Married", true],
-        ["Justin", "Colin", "Hood", true],
-        ["Justin", "Elementary"],
-        ["Hirza", "Elementary"],
-        ["Hirza", "Irfan", "Favela Neighbors", true],
-        ["Hirza", "HighSchool3"],
-        ["SamKim", "HighSchool3"],
-        ["Justin", "UW1"],
-        ["Hirza", "UW1"],
-        ["Irfan", "UW1"],
-        ["SamKim", "UW1"],
-        ["Justin", "Roommates"],
-        ["SamKim", "Roommates"],
-        ["DanielTruong", "Roommates"],
-        ["DanielTruong", "Truongs"],
-        ["DavidTruong", "Truongs"],
-        ["DanielTruong", "UW1"],
-        ["DavidTruong", "Sarah", "Dating", true],
-        ["DanielTruong", "Caitlyn", "Elementary", true],
-        ["Caitlyn", "Richard", "Exes", true],
-        ["Richard", "Cole"],
-        ["Richard", "Kevin"],
-        ["Richard", "OtherHighSchool"],
-        ["NekoRyan", "OtherHighSchool"],
-        ["Lisa", "OtherHighSchool"],
-        ["Lisa", "Spencer", "Married", true],
-        ["Lisa", "Teddy", "Coworkers", true],
-        ["Lisa", "Zack", "Salsa", true],
-        ["NekoRyan", "Olivia", "IG Meetup", true],
-        ["Sarah", "Alyza", "Best Friends", true],
-        ["SamKim", "MiddleSchool"],
-        ["Justin", "MiddleSchool"],
-        ["DanKim", "Kims"],
-        ["SamKim", "Kims"],
-        ["EstherKim", "Kims"],
-        ["EstherKim", "Elementary2"],
-        ["Long", "Elementary2"],
-        ["Long", "Aaron", "Friends", true],
-        ["DanielTruong", "Irfan", "Enemies", true],
-        ["Sydney", "NekoRyan", "Skating", true],
-        ["Andrea", "Edward", '"Friends"', false],
-        ["Allison", "Andrea"],
-        ["NekoRyan", "Allison", "Not the father", true],
-      ];
-
-      const groupIds = new Set(groupNodes.map((g) => g.id));
-      const nodeMap = new Map();
-      for (const g of groupNodes) {
-        nodeMap.set(g.id, { id: g.id, label: g.label, group: true });
-      }
-      for (const [id, label] of Object.entries(labeledPeople)) {
-        nodeMap.set(id, { id, label, group: false });
-      }
-      for (const link of linksRaw) {
-        for (const id of [link[0], link[1]]) {
-          if (!nodeMap.has(id))
-            nodeMap.set(id, { id, label: id, group: false });
-        }
+      const context = globalThis.GLITTER_CONTEXT;
+      if (context === undefined) {
+        throw new Error("Glitter context data did not load");
       }
 
-      const nodes = [...nodeMap.values()];
-      const links = linksRaw.map((l) => ({
-        source: l[0],
-        target: l[1],
-        label: l[2] || "",
-        bidir: !!l[3],
+      const nodes = context.people.map((person) => ({
+        id: person.id,
+        label: person.displayName,
+        group: person.kind === "group",
+      }));
+      const links = context.relationships.map((relationship) => ({
+        source: relationship.sourceId,
+        target: relationship.targetId,
+        label: relationship.label,
+        bidir: relationship.direction === "undirected",
       }));
 
       const svg = d3.select("#chart");

@@ -68,12 +68,30 @@ export async function buildLlmModels(repoDir: string): Promise<void> {
 }
 
 /**
- * Install the scout-for-lol workspace in a bot clone: build the llm-models
- * producer first, then install at the workspace root so the built `file:`
- * dep is copied in.
+ * Build the browser/node-safe Glitter context package inside an ephemeral
+ * clone. Its exports point at gitignored dist files, so Scout and Temporal
+ * consumers must never run before this producer has been generated and built.
+ */
+export async function buildGlitterContext(repoDir: string): Promise<void> {
+  const pkgDir = `${repoDir}/packages/glitter-context`;
+  const cacheDir = botCloneCacheDir(repoDir);
+  await runCommand(["bun", "install", "--frozen-lockfile"], {
+    cwd: pkgDir,
+    env: { BUN_INSTALL_CACHE_DIR: cacheDir },
+  });
+  await runCommand(["bun", "run", "build"], {
+    cwd: pkgDir,
+    env: { BUN_INSTALL_CACHE_DIR: cacheDir },
+  });
+}
+
+/**
+ * Install the scout-for-lol workspace in a bot clone after building both
+ * generated shared-package producers.
  */
 export async function installScoutWorkspace(repoDir: string): Promise<void> {
   await buildLlmModels(repoDir);
+  await buildGlitterContext(repoDir);
   await runCommand(["bun", "install", "--frozen-lockfile"], {
     cwd: `${repoDir}/packages/scout-for-lol`,
     env: { BUN_INSTALL_CACHE_DIR: botCloneCacheDir(repoDir) },

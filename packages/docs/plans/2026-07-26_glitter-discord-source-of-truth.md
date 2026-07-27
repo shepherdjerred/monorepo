@@ -115,7 +115,7 @@ unless an independently discovered safety constraint makes it necessary.
   meaningful style-card and relationship changes.
 - Refresh a person's style card after at least 20 newly captured messages and at
   least quarterly even when the threshold is not met.
-- Use GPT-5.5 through the shared traced LLM helpers. Validate all generated JSON
+- Use GPT-5.6 Sol through the shared traced LLM helpers. Validate all generated JSON
   and reject incomplete or schema-invalid output.
 - Permit the model to propose relationship event changes in the pull request,
   with corpus evidence. It must not mutate canonical relationship data outside
@@ -177,8 +177,10 @@ unless an independently discovered safety constraint makes it necessary.
 ## Remaining
 
 - [x] Implement, verify, and publish both draft pull requests.
-- [ ] Provision credentials and run controlled Discord, Temporal, SeaweedFS, R2,
-      and pull-request acceptance tests.
+- [ ] Populate the Discord/R2 credentials and run controlled Discord, Temporal,
+      SeaweedFS, R2, OpenAI, and pull-request acceptance tests.
+- [ ] Review the Discord inventory and explicitly approve its public
+      channel/thread scope before starting the full-history scrape.
 
 ## Session Log — 2026-07-26
 
@@ -210,7 +212,7 @@ unless an independently discovered safety constraint makes it necessary.
   people, 80 relationship events, 13 style cards, JSON Schema, Zod, and
   Pydantic validation. Birmel, Scout, and Glitter now consume that package;
   Caitlyn and Richard retain historical Dating and project to current Exes.
-- Added the paused weekly GPT-5.5 Temporal proposal workflow, deterministic
+- Added the paused weekly GPT-5.6 Sol Temporal proposal workflow, deterministic
   sampling, evidence requirements, isolated queue, observability, rehearsal,
   and human-only pull-request publication.
 - Hardened the corpus after automated review: direction-aware Discord page
@@ -234,6 +236,31 @@ unless an independently discovered safety constraint makes it necessary.
   post-remediation affected repository gate. All 67 affected tasks passed,
   including 1Password contract validation, recovery rehearsal, documentation,
   cdk8s, and Scout consumer gates.
+- Passed the post-restack top-of-stack affected verification gate: 76 of 76
+  tasks across the corpus, shared package, Birmel, Scout, Glitter, Temporal,
+  cdk8s, and repository checks.
+- Passed focused package and consumer verification, including 667 Temporal
+  tests, 1,185 Scout backend tests, 494 Scout data tests, the shared-package
+  TypeScript and Pydantic suites, cdk8s checks, the worker-image smoke build,
+  and a PinchTab inspection of the rendered Glitter relationship graph.
+- Diagnosed Buildkite #6410's Birmel image-smoke failure: the production image
+  installed the new workspace dependency but did not build or copy its
+  gitignored `dist`. Updated `packages/birmel/Dockerfile` to build and ship the
+  shared package, passed the exact Birmel in-image smoke locally, and passed
+  the complete affected verification surface with all 71 tasks green.
+- Diagnosed Buildkite #6417's analogous Scout image-smoke failure and updated
+  `packages/scout-for-lol/packages/backend/Dockerfile` to build and ship the
+  shared package. The exact Scout in-image smoke then passed locally.
+- Restacked the final corpus guarantees into the shared-context layer, repaired
+  its extracted storage import and schedule-registry boundary, and passed the
+  resulting top-of-stack gate with all 71 affected tasks green.
+- Restacked both pull requests onto `main` at `fdad4cf18`, confirmed
+  the five style cards called out by review exactly retain their newer Scout
+  records, and passed the current-main gate with all 72 affected tasks green.
+- Restacked again onto current `main` at `121187c93`, preserved the intentional
+  removal of Scout's retired Python generator, and migrated the weekly workflow
+  to the new current flagship, GPT-5.6 Sol. The focused Temporal/shared-package
+  gate passed all nine tasks, and Pydantic validated all 17 catalog models.
 
 ### Remaining
 
@@ -241,8 +268,9 @@ unless an independently discovered safety constraint makes it necessary.
 - Populate the Temporal worker's seven Discord/R2 fields in 1Password, refresh
   the non-secret vault snapshot, then run inventory and obtain explicit scope
   approval before any full-history Discord request.
-- Run the controlled Discord canary, mirrored seed publication, Temporal,
-  SeaweedFS, R2, recovery, and pull-request acceptance tests.
+- Run the controlled Discord canary, mirrored seed publication, Temporal
+  recovery, real GPT-5.6 Sol dry run and pull-request generation, and live Birmel
+  acceptance tests.
 
 ### Caveats
 
@@ -260,3 +288,5 @@ unless an independently discovered safety constraint makes it necessary.
 - The credential projection remains preserved outside the branch in
   `refs/codex/glitter-corpus-secret-wiring` and a named stash. It must not land
   until the real 1Password fields and non-secret snapshot can be verified.
+- Credentialed Discord, object-storage, Temporal, OpenAI, and live-bot
+  acceptance has therefore not run yet.

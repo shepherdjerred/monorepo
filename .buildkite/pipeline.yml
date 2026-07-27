@@ -892,6 +892,7 @@ steps:
         - "packages/stocks-sjer-red/**"
         - "packages/better-skill-capped/**"
         - "packages/glitter/**"
+        - "packages/glitter-context/**"
         - "packages/scout-for-lol/**"
     depends_on: verify
     cancel_on_build_failing: true

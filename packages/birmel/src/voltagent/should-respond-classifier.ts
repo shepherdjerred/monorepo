@@ -53,7 +53,7 @@ export async function classifyShouldRespond(
     { guildId, channelId, userId, operation: "classifyShouldRespond" },
     async (span) => {
       try {
-        const personaPrompt = await buildPersonaPrompt(persona);
+        const personaPrompt = buildPersonaPrompt(persona);
         const personaBlock =
           personaPrompt == null
             ? `You are "${persona}".`

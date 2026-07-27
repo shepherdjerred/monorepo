@@ -14,8 +14,9 @@
     "src"
   ],
   "scripts": {
-    "start": "bun run generate && bunx prisma db push && bun run src/index.ts",
-    "dev": "bun run --watch src/index.ts",
+    "start": "bun run build:context && bun run generate && bunx prisma db push && bun run src/index.ts",
+    "dev": "bun run build:context && bun run --watch src/index.ts",
+    "build:context": "bunx turbo run build --filter=@shepherdjerred/glitter-context",
     "generate": "bun run scripts/generate-prisma.ts",
     "test": "bun --env-file=.env.test run generate && bun --env-file=.env.test test",
     "test:e2e:music": "bun run e2e/music-playback.ts",
@@ -45,6 +46,7 @@
     "@prisma/client-runtime-utils": "7.8.0",
     "@sentry/bun": "10.68.0",
     "@shepherdjerred/llm-observability": "workspace:*",
+    "@shepherdjerred/glitter-context": "workspace:*",
     "@snazzah/davey": "^0.1.11",
     "@voltagent/core": "^2.7.4",
     "@voltagent/libsql": "^2.1.2",

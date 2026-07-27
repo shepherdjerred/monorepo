@@ -35,7 +35,9 @@ FROM deps AS build
 COPY --parents \
   tsconfig.base.json \
   packages/birmel \
+  packages/glitter-context \
   ./
+RUN cd packages/glitter-context && bun run build
 RUN cd packages/birmel && bun run generate
 
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
@@ -113,6 +115,7 @@ COPY --parents \
   packages/llm-observability \
   ./
 COPY --from=build /app/packages/birmel/generated packages/birmel/generated
+COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/dist
 
 ARG VERSION=dev
 ARG GIT_SHA=unknown

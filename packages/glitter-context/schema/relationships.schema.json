@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.sjer.red/glitter-context/relationships.schema.json",
+  "title": "Glitter relationship events",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "events"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "sourceId",
+          "targetId",
+          "kind",
+          "label",
+          "direction",
+          "status",
+          "effectiveAt",
+          "recordedAt",
+          "supersedesEventId",
+          "provenance"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "sourceId": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "targetId": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "kind": {
+            "enum": [
+              "membership",
+              "friendship",
+              "family",
+              "romantic",
+              "professional",
+              "social",
+              "adversarial",
+              "other"
+            ]
+          },
+          "label": { "type": "string" },
+          "direction": { "enum": ["undirected", "source-to-target"] },
+          "status": { "enum": ["current", "historical"] },
+          "effectiveAt": {
+            "oneOf": [
+              { "type": "string", "format": "date" },
+              { "type": "null" }
+            ]
+          },
+          "recordedAt": { "type": "string", "format": "date-time" },
+          "supersedesEventId": {
+            "oneOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+              },
+              { "type": "null" }
+            ]
+          },
+          "provenance": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "reference", "messageIds"],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "legacy-graph",
+                    "maintainer-assertion",
+                    "corpus-evidence"
+                  ]
+                },
+                "reference": { "type": "string", "minLength": 1 },
+                "messageIds": {
+                  "type": "array",
+                  "items": { "type": "string", "pattern": "^\\d{17,20}$" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
