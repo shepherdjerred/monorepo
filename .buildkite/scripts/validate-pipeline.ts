@@ -31,7 +31,6 @@ import {
   SHARED_POD_ANCHORS,
   CHECKOUT_CONTAINER_ALIAS,
 } from "./validate-pipeline-lib.ts";
-
 const PIPELINE_PATH = ".buildkite/pipeline.yml";
 const GLOBAL_IF_CHANGED = [
   '".buildkite/**"',
@@ -51,7 +50,6 @@ const PATH_GATED_PR_KEYS = new Set([
   "images-pr",
   "pr-dryrun",
 ]);
-
 const pipeline = await Bun.file(PIPELINE_PATH).text();
 const lines = pipeline.split("\n");
 
@@ -106,7 +104,6 @@ for (const key of [
     `main selector consumer ${key} does not wait for ci-selector-base`,
   );
 }
-
 const selectorStep = stepBlocks.get("ci-selector-base");
 if (
   selectorStep === undefined ||

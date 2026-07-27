@@ -11,34 +11,14 @@
  * tRPC contract than the pinned prod backend (the `filters` crash). These
  * subcommands keep each stage's site content in lockstep with its backend:
  *
- *   archive --version 2.0.0-<n>      Build the PROD-flavored site and archive
- *                                    it byte-for-byte to
- *                                    s3://scout-site-releases/<version>/, then
- *                                    upload the sibling <version>.json
- *                                    manifest LAST (its existence certifies a
- *                                    complete archive).
- *   deploy-beta --version 2.0.0-<n>  Build the BETA-flavored site, sync it to
- *                                    the live beta bucket (beta stays
- *                                    continuous — it is the canary), then
- *                                    write the `.release-version` marker.
- *   reconcile-prod                   Compare the site version derived from the
- *                                    `shepherdjerred/scout-for-lol/prod` pin's
- *                                    tag portion against the prod bucket's
- *                                    `.release-version` marker; on mismatch,
- *                                    sync the pinned archived artifact to the
- *                                    prod bucket (no rebuild — byte-identical
- *                                    to what beta validated). No-op when the
- *                                    marker matches.
- *   tag-release --version 2.0.0-<n>  Mint the versioned GHCR tag
- *                                    ghcr.io/shepherdjerred/scout-for-lol:<n>
- *                                    pointing at the paired backend digest
- *                                    (this build's pushed digest via --digest,
- *                                    else the committed beta pin). The tag is
- *                                    the atomic backend+site release pair that
- *                                    Renovate discovers for prod promotion; it
- *                                    is minted only after the version's site
- *                                    archive manifest exists, so every
- *                                    discoverable tag is promotable.
+ * - archive: build the prod flavor, archive it byte-for-byte, then write its
+ *   manifest last; its manifest certifies a complete archive.
+ * - deploy-beta: build and continuously sync the beta flavor, then write its
+ *   release marker.
+ * - reconcile-prod: sync the archive selected by the production image pin,
+ *   verify the mutable entrypoints, then write its release marker.
+ * - tag-release: mint the paired backend+site GHCR tag only after the archive
+ *   manifest exists, making every Renovate-discoverable tag promotable.
  *
  * Promotion = merging the Renovate PR that bumps the prod image pin (each
  * minted 2.0.0-<n> tag is an atomic backend+site pair — see tag-release).
@@ -57,10 +37,15 @@ import {
   tmpBase,
 } from "./lib/run.ts";
 import {
+  assertS3ObjectsMatchSource,
+  assertStaticSiteComplete,
+  firstS3ObjectMismatch,
+  readS3Marker,
   s3SyncStaticSite,
   SEAWEEDFS_ENDPOINT,
   SEAWEEDFS_AWS_ENV,
 } from "./lib/s3-static-site.ts";
+import { imageLayers } from "./lib/container-registry.ts";
 import versions from "@homelab/cdk8s/src/versions.ts";
 
 const RELEASES_BUCKET = "scout-site-releases";
@@ -77,6 +62,7 @@ const DIST_DIR = "packages/scout-for-lol/packages/frontend/dist";
 // Astro marketing (`_astro/`) + the Vite SPA bundle (`app/assets/`) are
 // content-hashed → immutable; everything else is no-cache + --delete.
 const IMMUTABLE_PREFIXES = ["_astro/", "app/assets/"];
+const RELEASE_ENTRYPOINTS = ["index.html", "app/index.html"] as const;
 // Analytics pixels intentionally omitted for beta — beta traffic must not
 // inflate prod Pinterest/Reddit conversion data.
 const BETA_PIXEL_PLACEHOLDERS: Readonly<Record<string, string>> = {
@@ -189,19 +175,6 @@ async function buildSite(
   });
 }
 
-/**
- * Refuse to ship a half-built bucket dir: both site halves' entry points must
- * exist (marketing `index.html`, SPA `app/index.html`). A missing half with
- * `--delete` would wipe that half from the live bucket.
- */
-async function assertSiteComplete(dir: string, label: string): Promise<void> {
-  for (const rel of ["index.html", "app/index.html"]) {
-    if (!(await Bun.file(`${dir}/${rel}`).exists())) {
-      throw new Error(`${label}: ${dir}/${rel} is missing — refusing to sync`);
-    }
-  }
-}
-
 function parseVersionArg(args: string[]): string {
   const index = args.indexOf("--version");
   const version = index === -1 ? undefined : args[index + 1];
@@ -237,35 +210,6 @@ async function writeMarker(bucket: string, version: string): Promise<void> {
   await Bun.file(markerFile).delete();
 }
 
-/**
- * Read a bucket's `.release-version` marker. Returns null when the marker is
- * missing or unreadable — both mean "state unknown", and the caller's answer
- * to unknown state is a (idempotent) full sync that rewrites the marker, so
- * transient read failures self-heal rather than abort. A genuine outage will
- * fail the subsequent sync loudly anyway.
- */
-async function readMarker(bucket: string): Promise<string | null> {
-  const result = await runAllowExit(
-    [
-      "aws",
-      "s3",
-      "cp",
-      `s3://${bucket}/${MARKER_KEY}`,
-      "-",
-      "--endpoint-url",
-      SEAWEEDFS_ENDPOINT,
-    ],
-    { env: SEAWEEDFS_AWS_ENV, capture: true },
-  );
-  if (result.exitCode !== 0) {
-    console.log(
-      `marker s3://${bucket}/${MARKER_KEY} missing or unreadable (exit ${result.exitCode.toString()}) — treating as out of date`,
-    );
-    return null;
-  }
-  return result.stdout.trim();
-}
-
 // ---------------------------------------------------------------------------
 // archive
 // ---------------------------------------------------------------------------
@@ -286,7 +230,7 @@ async function archive(version: string, dryRun: boolean): Promise<void> {
     return;
   }
 
-  await assertSiteComplete(dist, "archive");
+  await assertStaticSiteComplete(dist, "archive");
   // Plain archive copy — exact mirror of the dist (Cache-Control is applied
   // at prod-deploy time by reconcile-prod, not baked into the archive).
   await run(
@@ -337,7 +281,7 @@ async function deployBeta(version: string, dryRun: boolean): Promise<void> {
 
   const dist = `${repoRoot()}/${DIST_DIR}`;
   if (!dryRun) {
-    await assertSiteComplete(dist, "deploy-beta");
+    await assertStaticSiteComplete(dist, "deploy-beta");
   }
   await s3SyncStaticSite({
     source: dist,
@@ -369,41 +313,35 @@ async function reconcileProd(dryRun: boolean): Promise<void> {
   const imagePin = versions["shepherdjerred/scout-for-lol/prod"];
   const pin = imagePin.split("@")[0];
   console.log(`--- reconcile-prod (pin: ${pin ?? "<empty>"})`);
-
   if (pin === undefined || !VERSION_PATTERN.test(pin)) {
     throw new Error(
       `shepherdjerred/scout-for-lol/prod pin "${imagePin}" has no tag matching ${VERSION_PATTERN.toString()} — ` +
         `pin a minted release tag (tag-release) so the site version can be derived`,
     );
   }
+  const dryRunPlan =
+    `DRYRUN: would force-copy mutable files and sync immutable files from ` +
+    `s3://${RELEASES_BUCKET}/${pin}/ to s3://${PROD_BUCKET}/, byte-verify both entrypoints, then write the marker`;
   requireCredsForLiveRun(dryRun);
   if (dryRun && !haveCreds()) {
-    console.log(
-      `DRYRUN: would compare the prod marker against ${pin} and, on mismatch, ` +
-        `sync s3://${RELEASES_BUCKET}/${pin}/ -> s3://${PROD_BUCKET}/ (two-pass) + write the marker`,
-    );
+    console.log(dryRunPlan);
     return;
   }
-
-  const marker = await readMarker(PROD_BUCKET);
-  if (marker === pin) {
-    console.log(`prod already serves ${pin} — no-op`);
-    return;
-  }
-  console.log(`prod serves ${marker ?? "<unknown>"}, pin is ${pin} — syncing`);
+  const marker = await readS3Marker({
+    bucket: PROD_BUCKET,
+    key: MARKER_KEY,
+    endpoint: SEAWEEDFS_ENDPOINT,
+    env: SEAWEEDFS_AWS_ENV,
+  });
   if (dryRun) {
-    console.log(
-      `DRYRUN: would sync s3://${RELEASES_BUCKET}/${pin}/ -> s3://${PROD_BUCKET}/ (two-pass) + write the marker`,
-    );
+    console.log(dryRunPlan);
     return;
   }
-
   const scratch = `${tmpBase()}/scout-site-release-${pin}-${process.pid.toString()}`;
   // Create the scratch workspace explicitly so the downloads below write into a
   // directory that is guaranteed to exist, rather than depending on the aws CLI
   // to materialise intermediate parents on the first `cp`.
   await Bun.$`mkdir -p ${scratch}`.quiet();
-
   // Manifest first: it was uploaded last at archive time, so its presence
   // certifies the versioned prefix is complete. A missing manifest means the
   // archive never finished, never ran, or expired past retention — fail
@@ -427,7 +365,6 @@ async function reconcileProd(dryRun: boolean): Promise<void> {
         `Promote a version that exists in s3://${RELEASES_BUCKET}/.`,
     );
   }
-
   await run(
     [
       "aws",
@@ -440,18 +377,48 @@ async function reconcileProd(dryRun: boolean): Promise<void> {
     ],
     { env: SEAWEEDFS_AWS_ENV },
   );
-  await assertSiteComplete(`${scratch}/site`, "reconcile-prod");
-
+  await assertStaticSiteComplete(`${scratch}/site`, "reconcile-prod");
+  const entrypointMismatch = await firstS3ObjectMismatch({
+    sourceDir: `${scratch}/site`,
+    bucket: PROD_BUCKET,
+    paths: RELEASE_ENTRYPOINTS,
+    scratchDir: scratch,
+    endpoint: SEAWEEDFS_ENDPOINT,
+    env: SEAWEEDFS_AWS_ENV,
+  });
+  if (marker === pin && entrypointMismatch === undefined) {
+    await Bun.$`rm -rf ${scratch}`.quiet();
+    console.log(`prod already serves ${pin} — entrypoints verified, no-op`);
+    return;
+  }
+  if (marker === pin) {
+    console.log(
+      `prod marker is ${pin}, but ${entrypointMismatch ?? "an entrypoint"} is stale — repairing`,
+    );
+  } else {
+    console.log(
+      `prod serves ${marker ?? "<unknown>"}, pin is ${pin} — syncing`,
+    );
+  }
   await s3SyncStaticSite({
     source: `${scratch}/site`,
     bucket: PROD_BUCKET,
     endpoint: SEAWEEDFS_ENDPOINT,
     immutablePrefixes: IMMUTABLE_PREFIXES,
     extraExcludes: [MARKER_KEY],
+    forceMutableUpload: true,
     cwd: repoRoot(),
     env: SEAWEEDFS_AWS_ENV,
     dryRun: false,
     haveCreds: true,
+  });
+  await assertS3ObjectsMatchSource({
+    sourceDir: `${scratch}/site`,
+    bucket: PROD_BUCKET,
+    paths: RELEASE_ENTRYPOINTS,
+    scratchDir: scratch,
+    endpoint: SEAWEEDFS_ENDPOINT,
+    env: SEAWEEDFS_AWS_ENV,
   });
   // Marker last: a crash anywhere above leaves the old marker in place, so
   // the next build's reconcile retries — the flow converges.
@@ -507,27 +474,6 @@ async function assertArchived(version: string): Promise<void> {
         `${IMAGE_REPO}:${version}: only archived site versions may become promotable tags.`,
     );
   }
-}
-
-/**
- * Uncompressed rootfs layer chain (DiffIDs) of an image ref — the content
- * identity the images step's version gate uses (config-only rebuilds keep
- * identical layers, so digests may differ while content matches).
- */
-async function imageLayers(ref: string): Promise<string> {
-  const result = await run(
-    [
-      "docker",
-      "buildx",
-      "imagetools",
-      "inspect",
-      ref,
-      "--format",
-      "{{json .Image.RootFS.DiffIDs}}",
-    ],
-    { capture: true },
-  );
-  return result.stdout.trim();
 }
 
 /**
