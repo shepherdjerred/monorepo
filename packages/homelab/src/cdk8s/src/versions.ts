@@ -22,7 +22,7 @@ const versions = {
   // not managed by renovate — built from packages/streambot; CI's version commit-back fills the
   // real tag@digest after the first image push. Seed digest is a placeholder until then.
   "shepherdjerred/streambot":
-    "2.0.0-6451@sha256:0b53b04f57c8785bce173d907409d28cf500b122d90109cd1ee0666c7c364f00",
+    "2.0.0-6529@sha256:15d55080a91fa8dd501e8c8be6a5cc8009b1264d7dcccd2108c62b9d78432e46",
   // not managed by renovate — built from upstream redlib's glibc Dockerfile.ubuntu
   // at REDLIB_SOURCE_REF (pinned in the since-removed CI pipeline). The published image is
   // musl/Alpine, which Reddit blocks during OAuth (redlib-org/redlib#551 —
@@ -30,7 +30,7 @@ const versions = {
   // CI's version commit-back fills the real tag@digest after the first image
   // push; the seed digest below is a placeholder until then.
   "shepherdjerred/redlib":
-    "2.0.0-6322@sha256:e023160c0b9e7c5a79185f86984e701ff10e01c29f3d8c1c33dd3d2568ee313b",
+    "2.0.0-6529@sha256:3ecba21c949f061927024019ec0c8a34e43ecc56df2bc0c8bcbf94b355564347",
   // not managed by renovate — built from upstream selmant/shelfbridge at
   // SHELFBRIDGE_SOURCE_REF (packages/homelab/images/shelfbridge/Dockerfile);
   // upstream publishes goreleaser binaries only, no container image.
@@ -87,7 +87,7 @@ const versions = {
   // Books patch, then version commit-back replaces this seed after the first
   // push. Switch the Deployment only after the real digest resolves publicly.
   "shepherdjerred/bindery":
-    "2.0.0-6451@sha256:e6dffc8a6239a173c123436cdc3cf7b3cf798891cc09037f5fc084deb6d13a5e",
+    "2.0.0-6529@sha256:661cde3b4d79fbd43f730b4e0f2832b4e7172bf5fd631f35d32f4c535429a58a",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   // Calibre-Web Automated — library + ingest + Send-to-Kindle path
   "crocodilestick/calibre-web-automated":
@@ -159,7 +159,7 @@ const versions = {
   openebs: "4.5.1",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
-    "2.0.0-6451@sha256:e128f2814fcd806bf2926d23fc7391319d2024b736440ecf725f0c3ac68e9163",
+    "2.0.0-6529@sha256:513a70ed76aae0e188fe56cca3edf52bbf9ae727a7e2bcc05d8fbac03704e880",
   // Prod promotion = merging the Renovate PR for this pin. Each 2.0.0-<n>
   // tag is minted by the scout-tag-release CI step only after site version
   // <n> is archived, pointing at the backend digest beta serves it against —
@@ -172,20 +172,20 @@ const versions = {
     "2.0.0-6365@sha256:a7b22d5d52f6895cc264df9930e80b876e998ccf7009bdd30594ffb91a303b37",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
-    "2.0.0-6451@sha256:50de1bcf1bc80f38d424eeb0baff49653a686fece8438d3da62c1f2614da4232",
+    "2.0.0-6529@sha256:f264607c7bf8fcca4a1d88bfdf9c36baf32623bed373f9925323fc35369c521c",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/starlight-karma-bot
   "shepherdjerred/starlight-karma-bot/prod":
     "2.0.0-4777@sha256:6a94f1d598bef983189c3f0b74d24f1c2c94ea4ba260dc2a5203d2d4bd735402",
   // not managed by renovate
   "shepherdjerred/birmel":
-    "2.0.0-6451@sha256:8846db391c77b267a5b2feac1b53a292bae93d9c5d455719127023d71d8b8f84",
+    "2.0.0-6529@sha256:f1170d0809f95143a6c11060de651bc2a06fa266d49d3788498ccc031d78e7da",
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
-    "2.0.0-6451@sha256:fcb3ee6847d4264aa0ae498280905c459f7ded904365bd24ac197217ed4b85f0",
+    "2.0.0-6529@sha256:8060b132fb0007cb9e9c3ba0c16601600bfaa1cea24913dec650fe7b6e4f9a88",
   // not managed by renovate — placeholder digest; CI version-commit-back fills
   // the real digest after the first successful image push.
   "shepherdjerred/discord-plays-mario-kart":
-    "2.0.0-6451@sha256:b729ee6edd6d835626af8eac820e29da3c9b669a4d6b1170358a1076ea75f9ef",
+    "2.0.0-6529@sha256:2d2dd8d2b4358d8f4cce252ceadf5f45837eed0f379807e1b779deeb5d5fcb29",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "freshrss/freshrss":
     "1.29.1@sha256:ab6b363102ccdbc39f6a62db926f567c61a5289bf25ba460f1c34423d8cc1a4d",
@@ -312,15 +312,15 @@ const versions = {
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
-    "2.0.0-6451@sha256:6dc3672f29d768dbc587a36a2004bf684e3d92e954032a237e0f5ebffa0e796f",
+    "2.0.0-6529@sha256:8becab44fe5ca4f6ec72ce20c33720b15396c2ad9ab982fa4ac1c1a5a67157b2",
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
-    "2.0.0-6088@sha256:d52738a3bb967cbd22cc608aa1e0bb18b75c57ac8621e7865e9cab6f85704ff7",
+    "2.0.0-6529@sha256:fd1e89af7747c0b0ad2c650c6eab0c60452464e83dfcfb3bedbf967f15e7e645",
   // Custom mcp-gateway image - tbxark/mcp-proxy + prebuilt edstem-mcp (rob-9/edstem-mcp)
   // not managed by renovate
   "shepherdjerred/mcp-gateway":
-    "2.0.0-6088@sha256:6bb67d5cf0d4674f73322713eaa8888104671d0b0552c0964e9723ab1a437c48",
+    "2.0.0-6529@sha256:aa5f55114c503a724f529fc817a600ad693516b04d044be6df22c7fbac64ca23",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/auto-setup":
     "1.29.7@sha256:f14912b699cf73015ad5c4fc18d522d4b014db90e794039214dfb7c022c2644f",
@@ -333,11 +333,11 @@ const versions = {
   // Custom temporal-worker image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/temporal-worker":
-    "2.0.0-6451@sha256:8aff9e3ac72c55680f12830719f590929fc9c97dad138ffe6171a8eeb506ed8d",
+    "2.0.0-6529@sha256:fcd1c68af8acd97971e1e7876661c2311835db41528874c8b5bb7a1f7a4a732e",
   // Custom TRMNL dashboard image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/trmnl-dashboard":
-    "2.0.0-6451@sha256:c4c348930bacc2da83fba93f48840f2589ece3aabe3698eefc05caa6c5bf9dcb",
+    "2.0.0-6529@sha256:4ff4998a441a4e13c9f3bf06b2817507784bb8d0565d7a34829708e718311c8d",
 };
 
 /**
