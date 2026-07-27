@@ -26,26 +26,39 @@ teardown).
 - ✅ **R2 removed** (`2026-07-26`): `src/tofu/cloudflare/turbo-cache.tf` deleted
   (bucket emptied first so `tofu apply` deletes it cleanly). R2 was the backend
   only until the local cutover; nothing writes to it now.
+- ✅ **Dev token consumer retargeted** (`2026-07-26`): the dev-shell
+  `TURBO_TOKEN` in `config.fish.tmpl` read from the `turbo-cache-r2` item
+  (`jdhq6ptnbds2x55fshah6n2hyi`), the same item the operator step below
+  deletes — deleting it first would have broken every dev machine's remote
+  cache auth. Retargeted to the shared `buildkite-ci-secrets` item
+  (`rzk3lawpk4yspyyu5rxlz44ssi`, same vault), which already carries the same
+  `TURBO_TOKEN` value.
 
 ## Human Verification
 
 - [ ] Post-deploy: confirm the turbo-cache pod writes `/cache/monorepo/*` (no
       more 412s) and a Buildkite build's turbo summary shows `REMOTE` hits.
       Record evidence in the Comment Log.
-- [ ] Operator: delete the now-unused `turbo-cache-r2` 1Password item (Homelab
-      (Kubernetes) vault) — no OnePasswordItem CRD references it anymore.
-      Refresh the vault snapshot afterward unconditionally: the item is
-      already unreferenced, so `check-1password-items.ts` won't flag its
-      deletion on its own, and a stale snapshot entry would let a future
-      accidental reference to the deleted item pass CI despite failing at
-      deployment.
-- [ ] Operator: revoke the account-wide **Workers R2 Storage → Edit**
-      permission added to the "Cloudflare API Token (Tofu - Full)" token for
-      this rollout (`packages/docs/logs/2026-07-16_turbo-cache-rollout.md`
-      lines 40-46, 69-73). Removing `src/tofu/cloudflare/turbo-cache.tf` was
-      the last `cloudflare_r2_*` resource using that permission — leaving it
-      in place would let compromise of the general CI Tofu credential mutate
-      unrelated R2 data (e.g. the Velero backup bucket).
+- [ ] Operator: after `chezmoi apply`, confirm dev-shell `$TURBO_TOKEN` is
+      still populated (now sourced from `buildkite-ci-secrets`) before
+      proceeding — then delete the now-unused `turbo-cache-r2` 1Password item
+      (Homelab (Kubernetes) vault). No OnePasswordItem CRD references it
+      anymore and the dev-shell template no longer does either. Refresh the
+      vault snapshot afterward unconditionally: the item is already
+      unreferenced, so `check-1password-items.ts` won't flag its deletion on
+      its own, and a stale snapshot entry would let a future accidental
+      reference to the deleted item pass CI despite failing at deployment.
+- [ ] Operator: **only after** a `tofu-cloudflare` Buildkite step
+      (`.buildkite/pipeline.yml`, runs post-merge on `main`) has successfully
+      applied the `turbo-cache.tf` removal and destroyed the bucket, revoke
+      the account-wide **Workers R2 Storage → Edit** permission on the
+      "Cloudflare API Token (Tofu - Full)" token added for this rollout
+      (`packages/docs/logs/2026-07-16_turbo-cache-rollout.md` lines 40-46,
+      69-73). That token previously 403'd on all R2 endpoints without this
+      permission, so revoking it before the destroy apply runs would fail the
+      apply and leave the bucket in state. Once revoked, the general CI Tofu
+      credential no longer retains unnecessary mutation access to unrelated
+      R2 data (e.g. the Velero backup bucket).
 - [ ] Consider enabling artifact signing (`remoteCache.signature: true` in
       `turbo.json` + `TURBO_REMOTE_CACHE_SIGNATURE_KEY` on clients and
       server).

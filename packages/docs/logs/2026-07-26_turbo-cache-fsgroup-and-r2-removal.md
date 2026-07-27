@@ -97,6 +97,19 @@ r2`) and deleted `src/tofu/cloudflare/turbo-cache.tf`.
   `fsGroup` on the Deployment (default is `ALWAYS`, which would recursively
   relabel the whole 256 GiB PVC on every restart once it's populated).
   Matches the seerr/bindery/jellyfin idiom.
+- Found and fixed a real breakage the 1Password-deletion checklist item would
+  have caused: `packages/dotfiles/private_dot_config/private_fish/config.fish.tmpl`
+  reads the dev-shell `TURBO_TOKEN` from the `turbo-cache-r2` item
+  (`jdhq6ptnbds2x55fshah6n2hyi`) — deleting that item per the todo would break
+  remote-cache auth on every dev machine, since only OnePasswordItem CRDs were
+  checked for references, not this non-Kubernetes consumer. Retargeted the
+  template to the shared `buildkite-ci-secrets` item
+  (`rzk3lawpk4yspyyu5rxlz44ssi`), which already holds the same token value.
+- Made the Workers R2 Storage → Edit permission revocation explicitly
+  contingent on the post-merge `tofu-cloudflare` Buildkite step actually
+  destroying the bucket first — that token 403'd on all R2 endpoints without
+  the permission, so revoking it before the destroy apply runs would fail the
+  apply and strand the bucket.
 - cdk8s `build test` and `tofu validate` (backend disabled) both green
   locally.
 
@@ -107,7 +120,14 @@ r2`) and deleted `src/tofu/cloudflare/turbo-cache.tf`.
   now-unnecessary Workers R2 Storage → Edit permission on the shared Tofu
   token, and considering artifact signing) are tracked as a checklist in
   `packages/docs/todos/turbo-cache-rollout.md`'s `## Human Verification`
-  section.
+  section, now with the correct ordering dependencies between them.
+- The live `~/.config/fish/config.fish` on this machine still has the
+  rendered (pre-retarget) `TURBO_TOKEN` value baked in from a prior `chezmoi
+apply`. Not edited here — it holds a resolved secret value, not the
+  template, and I didn't want to touch 1Password-derived state without the
+  operator present. Re-running `chezmoi apply` after this PR merges will
+  pick up the new source item (value is unchanged, so it's a no-op unless the
+  old item is deleted first).
 
 ### Caveats
 
