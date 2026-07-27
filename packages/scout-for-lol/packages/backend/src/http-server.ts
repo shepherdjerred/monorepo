@@ -5,12 +5,9 @@ import { createLogger } from "#src/logger.ts";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter } from "#src/trpc/router/index.ts";
 import { createContext } from "#src/trpc/context.ts";
-import {
-  handleDiscordCallback,
-  handleDiscordInstall,
-  handleDiscordStart,
-  handleWebLogout,
-} from "#src/trpc/auth-web.ts";
+import { handleAuthRoutes } from "#src/trpc/auth-web.ts";
+import { handleDevLogin } from "#src/trpc/dev-login.ts";
+import { prisma } from "#src/database/index.ts";
 import { handleImageRoute } from "#src/trpc/image-routes.ts";
 import { handleReportAiRoute } from "#src/reports/ai/http-route.ts";
 import { handleVersion } from "#src/http/version.ts";
@@ -158,7 +155,12 @@ function handleHealthz(request: Request): Response {
  */
 const server = Bun.serve({
   port: configuration.port,
-  hostname: "0.0.0.0",
+  // Bind to loopback whenever dev login is enabled so the unauthenticated
+  // /api/dev/login route (which mints a session for any Discord ID) is only
+  // reachable from this machine, never from another host on the network. In
+  // beta/prod enableDevLogin is false, so the server binds all interfaces to
+  // receive ingress traffic as usual.
+  hostname: configuration.enableDevLogin ? "127.0.0.1" : "0.0.0.0",
   async fetch(request) {
     const url = new URL(request.url);
 
@@ -220,56 +222,24 @@ const server = Bun.serve({
       }
     }
 
-    // Web auth: kick off Discord OAuth (sets the state cookie + 302)
-    if (url.pathname === "/api/auth/discord/start") {
-      try {
-        return handleDiscordStart(request);
-      } catch (error) {
-        logger.error("❌ OAuth start error:", error);
-        Sentry.captureException(error, { tags: { source: "auth-web-start" } });
-        return new Response("OAuth start failed", {
-          status: 500,
-          headers: { "Content-Type": "text/plain" },
-        });
-      }
+    // Web auth: Discord OAuth start/install/callback/logout — see
+    // handleAuthRoutes for the individual routes and their error handling.
+    const authResponse = await handleAuthRoutes(request, url);
+    if (authResponse !== null) {
+      return authResponse;
     }
 
-    // Bot install: 302 to Discord's add-to-server screen for a
-    // signed-in admin, returning to /app/installed with guild_id.
-    if (url.pathname === "/api/discord/install") {
-      try {
-        return await handleDiscordInstall(request);
-      } catch (error) {
-        logger.error("❌ Bot install redirect error:", error);
-        Sentry.captureException(error, {
-          tags: { source: "auth-web-install" },
-        });
-        return new Response("Bot install redirect failed", {
-          status: 500,
-          headers: { "Content-Type": "text/plain" },
-        });
-      }
-    }
-
-    // Web auth: Discord OAuth callback
-    if (url.pathname === "/api/auth/discord/callback") {
-      try {
-        return await handleDiscordCallback(request);
-      } catch (error) {
-        logger.error("❌ OAuth callback error:", error);
-        Sentry.captureException(error, {
-          tags: { source: "auth-web-callback" },
-        });
-        return new Response("OAuth callback failed", {
-          status: 500,
-          headers: { "Content-Type": "text/plain" },
-        });
-      }
-    }
-
-    // Web auth: logout
-    if (url.pathname === "/api/auth/logout" && request.method === "POST") {
-      return handleWebLogout(request);
+    // Dev-only instant sign-in (no Discord OAuth round-trip). Gated on BOTH
+    // environment=dev AND the explicit, default-off ENABLE_DEV_LOGIN flag, so a
+    // beta/prod deploy that omits ENVIRONMENT (which defaults to "dev") still
+    // fails closed rather than exposing an unauthenticated session-minting
+    // endpoint. Set only by scripts/dev-web.sh.
+    if (
+      configuration.environment === "dev" &&
+      configuration.enableDevLogin &&
+      url.pathname === "/api/dev/login"
+    ) {
+      return await handleDevLogin(request, prisma);
     }
 
     const reportAiResponse = await handleReportAiRoute(

@@ -110,6 +110,42 @@ plaintext credentials are written to disk. You must be `op signin`'d.
 - The bot only sees guilds it has been invited to. To populate the guild
   picker, make sure your test guild has the BETA bot in it.
 
+### Local UI screenshots (no manual OAuth click-through)
+
+`GET /api/dev/login[?discordId=...&username=...&returnTo=/app/...]`
+(`packages/backend/src/trpc/dev-login.ts`) mints a real signed session for a
+chosen — or fake default — Discord user without the OAuth round-trip.
+**Registered only when `configuration.environment === "dev"` AND the explicit
+`ENABLE_DEV_LOGIN` flag is set** (both checked inline in `http-server.ts`'s
+route dispatch) — genuinely absent from beta/prod, not just gated behind a
+runtime `if` inside an always-present handler. The extra flag matters because
+`ENVIRONMENT` defaults to `"dev"` when unset, so gating on environment alone
+would fail _open_ (expose an unauthenticated session-minting route) on any
+deploy that forgot to set it; `ENABLE_DEV_LOGIN` defaults off, so an omitted
+config fails closed. `scripts/dev-web.sh` sets it for local runs. When
+`ENABLE_DEV_LOGIN` is set, the backend also binds `127.0.0.1` (loopback) instead
+of `0.0.0.0`, so the unauthenticated dev-login route can't be reached from
+another host on the network.
+
+Driving this by hand: with `dev:web` running, visiting
+`http://localhost:5180/api/dev/login?discordId=<id>&returnTo=/app/g/123` in
+a browser signs you in as that user and lands on the given route. Omit
+`discordId` for a stable fake test user; pass a real Discord ID (e.g. the
+owner's) to see UI gated to a specific account (PR #1676 adds one such
+example, a version-mismatch banner in
+`packages/app/src/components/version-info.tsx`).
+
+The `toolkit screenshot` command (`packages/toolkit`, `screenshot` skill)
+wraps this into one call:
+
+```bash
+toolkit screenshot scout-app /app/ --discord-id 160509172704739328
+```
+
+This does not, by itself, reproduce every possible backend-driven state —
+see the `screenshot` skill's Limitations section (no network-response
+mocking in v1).
+
 ### Desktop Package
 
 ```bash

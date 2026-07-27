@@ -468,6 +468,7 @@
     "kubectl",
     "mktemp",
     "op",
+    "pinchtab",
     "rg",
     "tsc",
     "uvx",

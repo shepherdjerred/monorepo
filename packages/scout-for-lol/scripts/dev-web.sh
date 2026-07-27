@@ -62,6 +62,11 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
+# Enable the dev-only instant-login route (/api/dev/login) for this local
+# session. It's gated on this explicit flag (default off) in addition to
+# environment=dev, so it never ships enabled to beta/prod.
+export ENABLE_DEV_LOGIN=true
+
 echo "▶️  Starting backend (${BACKEND_DIR})"
 ( cd "${BACKEND_DIR}" && bun --watch src/index.ts ) &
 backend_pid=$!

@@ -69,6 +69,13 @@ function computeConfiguration() {
     contractHash: getRequiredEnvVar("CONTRACT_HASH"),
     sentryDsn: getOptionalEnvVar("SENTRY_DSN"),
     environment: resolveEnvironment(),
+    // Separate, default-off opt-in for the dev-only instant-login route
+    // (/api/dev/login). `environment` defaults to "dev" when ENVIRONMENT is
+    // unset, so gating the route on `environment === "dev"` alone would fail
+    // open on a beta/prod deploy that forgot to set ENVIRONMENT — an
+    // unauthenticated session-minting endpoint. Requiring this explicit flag
+    // (set only by scripts/dev-web.sh) means an omitted config fails closed.
+    enableDevLogin: env.get("ENABLE_DEV_LOGIN").default("false").asBool(),
     discordToken: getRequiredEnvVar("DISCORD_TOKEN"),
     applicationId: getRequiredEnvVar("APPLICATION_ID"),
     discordClientSecret: getOptionalEnvVar("DISCORD_CLIENT_SECRET"),
@@ -154,6 +161,9 @@ const configuration: Configuration = {
   },
   get environment() {
     return getConfiguration().environment;
+  },
+  get enableDevLogin() {
+    return getConfiguration().enableDevLogin;
   },
   get discordToken() {
     return getConfiguration().discordToken;
