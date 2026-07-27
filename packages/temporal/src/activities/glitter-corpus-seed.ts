@@ -19,6 +19,18 @@ import { createCorpusStoresFromEnv } from "./glitter-corpus-store.ts";
 import { putMirroredImmutableObject } from "./glitter-corpus-storage.ts";
 
 const EXPECTED_SEED_MESSAGES = 76_762;
+// Independent acceptance pins for the ONE trusted archive (see
+// packages/docs/guides/2026-07-26_glitter-discord-corpus-operations.md). The
+// row count alone is not identity: a truncated or substituted archive can
+// preserve 76,762 unique IDs while changing message text, authors, timestamps,
+// or IDs. Production (`--mirror=true`) imports must match both the archive
+// bytes' SHA-256 and the deterministic projection SHA-256, so a different
+// archive can never be mirrored under its own self-declared hash and become
+// canonical.
+const TRUSTED_SEED_ARCHIVE_SHA256 =
+  "19aaca11be85b99d8034e48cfaf45e50e9739e9760da116d7262a6fd7588cc92";
+const TRUSTED_SEED_PROJECTION_SHA256 =
+  "8bad3bee568dfb5eb60d6524eee6b3c75d6ea3b1ac8f545887bac60cc8db572f";
 const CsvRowsSchema = z.array(z.record(z.string(), z.string()));
 const GuildMapSchema = z.record(z.string().min(1), z.string().regex(/^\d+$/));
 
@@ -372,6 +384,16 @@ export async function runSeedImporter(argv: readonly string[]): Promise<void> {
   }
 
   if (parseArg(argv, "mirror", false) === "true") {
+    if (result.manifest.archiveSha256 !== TRUSTED_SEED_ARCHIVE_SHA256) {
+      throw new Error(
+        `refusing to mirror untrusted seed: archive SHA-256 ${result.manifest.archiveSha256} does not match the pinned trusted archive ${TRUSTED_SEED_ARCHIVE_SHA256}`,
+      );
+    }
+    if (result.manifest.projectionSha256 !== TRUSTED_SEED_PROJECTION_SHA256) {
+      throw new Error(
+        `refusing to mirror untrusted seed: projection SHA-256 ${result.manifest.projectionSha256} does not match the pinned trusted projection ${TRUSTED_SEED_PROJECTION_SHA256}`,
+      );
+    }
     const stores = createCorpusStoresFromEnv();
     const prefix = `seed/${result.manifest.archiveSha256}`;
     await putMirroredImmutableObject({
