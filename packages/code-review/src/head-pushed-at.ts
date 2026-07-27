@@ -25,7 +25,11 @@ import {
 // silently treated as "no activity" — which would masquerade as a review
 // timeout.
 const RepositoryActivitySchema = z.object({
-  after: z.string(),
+  // `after` is null for activities with no resulting commit (e.g. a
+  // branch_deletion). Such rows never match the head SHA and are ignored by
+  // pickRefUpdateTime, but the value is legitimately null so the schema must
+  // permit it (a missing key, by contrast, is still a contract regression).
+  after: z.string().nullable(),
   timestamp: z.string(),
 });
 
@@ -37,11 +41,8 @@ const RepositoryActivitySchema = z.object({
 const HeadRepositorySchema = z.object({ nameWithOwner: z.string() }).nullable();
 
 const HEAD_REF_UPDATED_AT_QUERY = `
-query($owner: String!, $name: String!, $oid: GitObjectID!, $number: Int!) {
+query($owner: String!, $name: String!, $number: Int!) {
   repository(owner: $owner, name: $name) {
-    object(oid: $oid) {
-      ... on Commit { pushedDate }
-    }
     pullRequest(number: $number) {
       headRefName
       headRepository { nameWithOwner }
@@ -120,29 +121,26 @@ export function pickRefUpdateTime(
  * Pure resolution of the head-push time from the parsed GraphQL `repository`
  * record plus an independently-derived ref-update timestamp (`refUpdateTime`,
  * from the Repository Activity API — see {@link pickRefUpdateTime}). Returns the
- * LATEST of: the commit's `pushedDate`, the `createdAt` of any matching
- * `HeadRefForcePushedEvent`, and `refUpdateTime`; null when none is available,
- * so callers treat the reaction as unbound (gate stays `reviewing`). Exported
- * for tests.
+ * LATEST of `refUpdateTime` and the `createdAt` of any matching
+ * `HeadRefForcePushedEvent` — both true ref-update instants — or null when
+ * neither is available, so callers treat the reaction as unbound (gate stays
+ * `reviewing`). Exported for tests.
  *
- * We deliberately do NOT fall back to the commit's `committedDate`. Commit time
- * PRECEDES push time, so a 👍 left for a PRIOR head — in the window between a
- * new commit's local commit-time and its later push — would be newer than the
- * new head's `committedDate` and would falsely bind the unreviewed new head as
- * reviewed-clean. The Activity-API `refUpdateTime` is the real ref-update
- * instant and closes that window: `pushedDate` alone is frequently null for an
- * ordinary fast-forward push (which previously left clean PRs hung to timeout),
- * and the force-push timeline only covers force-moves.
+ * We deliberately use ONLY ref-update signals — never the commit's `pushedDate`
+ * or `committedDate`. Both can PRECEDE the moment the commit became this PR's
+ * head (`pushedDate` for a fast-forward of the ref to a pre-existing commit;
+ * `committedDate` always), so a stale 👍 left for a PRIOR head could bind the
+ * unreviewed new head as reviewed-clean. When no ref-update signal is available
+ * (e.g. the Activity event is outside the query window or not yet exposed) we
+ * return null and stay unbound rather than fall back to an unreliable timestamp
+ * — correct-but-unmeasured beats a false completion.
  */
 export function resolveHeadPushedAt(
   repository: Record<string, unknown> | null,
   sha: string,
   refUpdateTime: string | null,
 ): string | null {
-  const object = repository === null ? null : recordField(repository, "object");
-  const pushedDate = object === null ? null : stringField(object, "pushedDate");
-
-  const candidates: (string | null)[] = [pushedDate, refUpdateTime];
+  const candidates: (string | null)[] = [refUpdateTime];
   const pullRequest =
     repository === null ? null : recordField(repository, "pullRequest");
   const timeline =
@@ -208,7 +206,7 @@ export async function fetchHeadPushedAt(input: {
   const { owner, name } = splitRepo(input.repo);
   const payload = await graphqlRequest(
     HEAD_REF_UPDATED_AT_QUERY,
-    { owner, name, oid: input.sha, number: input.prNumber },
+    { owner, name, number: input.prNumber },
     input.token,
   );
   const payloadRecord = asRecord(payload);

@@ -12,13 +12,12 @@ const OTHER = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 
 /** Build a `data.repository` record matching HEAD_REF_UPDATED_AT_QUERY. */
 function repository(input: {
-  pushedDate?: string | null;
   forcePushes?: { createdAt: string; afterCommit: string }[];
 }): Record<string, unknown> {
   return {
-    object: { pushedDate: input.pushedDate ?? null },
     pullRequest: {
       headRefName: "feature/x",
+      headRepository: { nameWithOwner: "octocat/repo" },
       timelineItems: {
         nodes: (input.forcePushes ?? []).map((f) => ({
           createdAt: f.createdAt,
@@ -30,34 +29,32 @@ function repository(input: {
 }
 
 describe("resolveHeadPushedAt", () => {
-  test("uses pushedDate when it is the only/latest signal", () => {
+  test("uses the activity ref-update time when it is the only signal", () => {
+    // The ordinary fast-forward case: the Activity-API timestamp is the real
+    // head-push time. (Previously null → the at-head 👍 could never bind.)
     expect(
-      resolveHeadPushedAt(
-        repository({ pushedDate: "2026-07-26T23:30:00Z" }),
-        HEAD,
-        null,
-      ),
+      resolveHeadPushedAt(repository({}), HEAD, "2026-07-26T23:30:00Z"),
     ).toBe("2026-07-26T23:30:00Z");
   });
 
-  test("uses the activity ref-update time on a fast-forward push (null pushedDate)", () => {
-    // GitHub returns a null pushedDate and no force event; the Activity-API
-    // timestamp is the real head-push time and must be used. Previously this
-    // returned null and the at-head 👍 could never bind, hanging the gate.
-    expect(
-      resolveHeadPushedAt(
-        repository({ pushedDate: null }),
-        HEAD,
-        "2026-07-26T23:30:00Z",
-      ),
-    ).toBe("2026-07-26T23:30:00Z");
-  });
-
-  test("takes the LATEST of pushedDate, force-push event, and ref-update time", () => {
+  test("uses a matching force-push event when there is no ref-update time", () => {
     expect(
       resolveHeadPushedAt(
         repository({
-          pushedDate: "2026-07-26T20:00:00Z",
+          forcePushes: [
+            { createdAt: "2026-07-26T23:45:00Z", afterCommit: HEAD },
+          ],
+        }),
+        HEAD,
+        null,
+      ),
+    ).toBe("2026-07-26T23:45:00Z");
+  });
+
+  test("takes the LATEST of the ref-update time and a force-push event", () => {
+    expect(
+      resolveHeadPushedAt(
+        repository({
           forcePushes: [
             { createdAt: "2026-07-26T23:45:00Z", afterCommit: HEAD },
           ],
@@ -72,7 +69,6 @@ describe("resolveHeadPushedAt", () => {
     expect(
       resolveHeadPushedAt(
         repository({
-          pushedDate: "2026-07-26T20:00:00Z",
           forcePushes: [
             { createdAt: "2026-07-26T23:45:00Z", afterCommit: OTHER },
           ],
@@ -80,20 +76,20 @@ describe("resolveHeadPushedAt", () => {
         HEAD,
         null,
       ),
-    ).toBe("2026-07-26T20:00:00Z");
-  });
-
-  test("returns null when no signal at all is available", () => {
-    expect(
-      resolveHeadPushedAt(repository({ pushedDate: null }), HEAD, null),
     ).toBeNull();
   });
 
-  test("still honors the ref-update time when the repository record is null", () => {
+  test("returns null (unbound) when no ref-update signal is available", () => {
+    // Must NOT fall back to any commit-embedded timestamp: staying unbound is
+    // the safe direction (gate keeps reviewing) vs. a false completion.
+    expect(resolveHeadPushedAt(repository({}), HEAD, null)).toBeNull();
+    expect(resolveHeadPushedAt(null, HEAD, null)).toBeNull();
+  });
+
+  test("honors the ref-update time even when the repository record is null", () => {
     expect(resolveHeadPushedAt(null, HEAD, "2026-07-26T23:30:00Z")).toBe(
       "2026-07-26T23:30:00Z",
     );
-    expect(resolveHeadPushedAt(null, HEAD, null)).toBeNull();
   });
 });
 
@@ -123,6 +119,18 @@ describe("pickRefUpdateTime", () => {
     ).toBe("2026-07-26T23:30:00Z");
   });
 
+  test("ignores rows with a null `after` (e.g. branch_deletion)", () => {
+    expect(
+      pickRefUpdateTime(
+        [
+          { after: null, timestamp: "2026-07-27T00:00:00Z" },
+          { after: HEAD, timestamp: "2026-07-26T23:00:00Z" },
+        ],
+        HEAD,
+      ),
+    ).toBe("2026-07-26T23:00:00Z");
+  });
+
   test("returns null when no activity targets the head", () => {
     expect(
       pickRefUpdateTime(
@@ -135,7 +143,7 @@ describe("pickRefUpdateTime", () => {
 });
 
 describe("parseActivityPage", () => {
-  test("accepts a valid page (extra keys stripped) and an empty page", () => {
+  test("accepts a valid page (extra keys stripped), a null `after`, and an empty page", () => {
     expect(
       parseActivityPage([
         {
@@ -144,8 +152,12 @@ describe("parseActivityPage", () => {
           activity_type: "push",
           ref: "refs/heads/x",
         },
+        { after: null, timestamp: "2026-07-26T22:00:00Z" },
       ]),
-    ).toEqual([{ after: HEAD, timestamp: "2026-07-26T23:00:00Z" }]);
+    ).toEqual([
+      { after: HEAD, timestamp: "2026-07-26T23:00:00Z" },
+      { after: null, timestamp: "2026-07-26T22:00:00Z" },
+    ]);
     expect(parseActivityPage([])).toEqual([]);
   });
 
@@ -154,7 +166,9 @@ describe("parseActivityPage", () => {
     expect(() => parseActivityPage(null)).toThrow();
   });
 
-  test("throws on an item missing required fields", () => {
+  test("throws on an item missing a required field", () => {
+    // A missing `after` KEY (vs. an explicit null) is still a contract
+    // regression, as is a missing timestamp.
     expect(() => parseActivityPage([{ after: HEAD }])).toThrow();
     expect(() =>
       parseActivityPage([{ timestamp: "2026-07-26T23:00:00Z" }]),
@@ -184,9 +198,6 @@ describe("reactionBoundToHead", () => {
   const headPushedAt = "2026-07-26T23:30:00Z";
 
   test("a 👍 created before the real head-push time stays stale (does NOT bind)", () => {
-    // The finding's scenario: a 👍 left for a PRIOR head, before this head was
-    // actually pushed, must not bind. Because headPushedAt is now the real
-    // ref-update time (not the earlier commit time), it correctly stays unbound.
     expect(reactionBoundToHead("2026-07-26T23:00:00Z", headPushedAt)).toBe(
       false,
     );
