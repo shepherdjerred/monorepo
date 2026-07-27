@@ -20,6 +20,7 @@ import {
 import { readPositiveIntegerEnv } from "./shared/env.ts";
 import { createStructuredLogger } from "./observability/logging.ts";
 import { restoreGlitterCorpusSnapshotMetrics } from "./activities/glitter-corpus-snapshot.ts";
+import { WORKFLOW_TASK_POLLER_BEHAVIOR } from "./shared/worker-options.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -216,13 +217,17 @@ async function main(): Promise<void> {
   const connection = await NativeConnection.connect({ address });
 
   const workflowsPath = new URL("workflows/index.ts", import.meta.url).pathname;
-
-  const worker = await Worker.create({
+  const commonWorkerOptions = {
     connection,
     namespace: "default",
-    taskQueue: TASK_QUEUES.DEFAULT,
     workflowsPath,
     activities,
+    workflowTaskPollerBehavior: WORKFLOW_TASK_POLLER_BEHAVIOR,
+  };
+
+  const worker = await Worker.create({
+    ...commonWorkerOptions,
+    taskQueue: TASK_QUEUES.DEFAULT,
   });
 
   jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.DEFAULT });
@@ -237,11 +242,8 @@ async function main(): Promise<void> {
   // long-running multi-specialist LLM activities can't head-of-line block
   // HA / cron workflows. See packages/docs/plans/2026-05-10_sota-pr-review-bot.md.
   const prReviewWorker = await Worker.create({
-    connection,
-    namespace: "default",
+    ...commonWorkerOptions,
     taskQueue: TASK_QUEUES.PR_REVIEW,
-    workflowsPath,
-    activities,
     maxConcurrentActivityTaskExecutions: prReviewMaxConcurrentActivities,
   });
 
@@ -255,11 +257,8 @@ async function main(): Promise<void> {
   // 5xx) can't block the cheap, fast Haiku summary — operators still see
   // "what changed in this PR?" even when the deep review is degraded.
   const prSummaryWorker = await Worker.create({
-    connection,
-    namespace: "default",
+    ...commonWorkerOptions,
     taskQueue: TASK_QUEUES.PR_SUMMARY,
-    workflowsPath,
-    activities,
   });
 
   jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.PR_SUMMARY });
@@ -268,11 +267,8 @@ async function main(): Promise<void> {
   // These can run for tens of minutes and must not head-of-line block HA,
   // schedule registration, PR summaries, or PR review specialist traffic.
   const agentTaskWorker = await Worker.create({
-    connection,
-    namespace: "default",
+    ...commonWorkerOptions,
     taskQueue: TASK_QUEUES.AGENT_TASK,
-    workflowsPath,
-    activities,
   });
 
   jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.AGENT_TASK });
@@ -287,11 +283,8 @@ async function main(): Promise<void> {
     defaultValue: 2,
   });
   const prBabysitWorker = await Worker.create({
-    connection,
-    namespace: "default",
+    ...commonWorkerOptions,
     taskQueue: TASK_QUEUES.PR_BABYSIT,
-    workflowsPath,
-    activities,
     maxConcurrentActivityTaskExecutions: prBabysitMaxConcurrentActivities,
   });
 
@@ -301,11 +294,8 @@ async function main(): Promise<void> {
   });
 
   const glitterCorpusWorker = await Worker.create({
-    connection,
-    namespace: "default",
+    ...commonWorkerOptions,
     taskQueue: TASK_QUEUES.GLITTER_CORPUS,
-    workflowsPath,
-    activities,
     maxConcurrentActivityTaskExecutions: 1,
     maxConcurrentWorkflowTaskExecutions: 1,
   });
@@ -316,11 +306,8 @@ async function main(): Promise<void> {
   });
 
   const glitterContextWorker = await Worker.create({
-    connection,
-    namespace: "default",
+    ...commonWorkerOptions,
     taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
-    workflowsPath,
-    activities,
     maxConcurrentActivityTaskExecutions: 1,
     maxConcurrentWorkflowTaskExecutions: 1,
   });
