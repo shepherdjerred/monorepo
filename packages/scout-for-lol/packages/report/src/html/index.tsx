@@ -29,6 +29,13 @@ export type MatchRenderOptions = {
    * applies when the queue is ranked solo/flex; ignored otherwise.
    */
   designOverride?: RankedDesign;
+  /**
+   * Gate the new ranked banner/square designs. When `false`, ranked solo/flex
+   * matches fall back to the legacy 4760×3500 report. Defaults to `true`.
+   * The backend sets this to `false` in prod so the redesign only ships to
+   * beta + local dev until it's promoted.
+   */
+  enableRankedDesigns?: boolean;
 };
 
 export async function matchToImage(
@@ -51,7 +58,12 @@ export async function matchToSvg(
 
   const fonts = [...(await bunBeaufortFonts()), ...(await bunSpiegelFonts())];
 
-  if (isRankedQueue(match.queueType) && match.players.length > 0) {
+  const rankedDesignsEnabled = options.enableRankedDesigns ?? true;
+  if (
+    rankedDesignsEnabled &&
+    isRankedQueue(match.queueType) &&
+    match.players.length > 0
+  ) {
     const design = options.designOverride ?? pickRankedDesign(match);
     const hero = heroPlayer(match.players);
     await preloadChampionSplashImages([hero.champion.championName]);

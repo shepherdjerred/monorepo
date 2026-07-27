@@ -31,6 +31,7 @@ const config = [
         "src/goal/goal-manager.test.ts",
         "src/goal/goal-memory.test.ts",
         "src/goal/history-summary.test.ts",
+        "src/goal/movement-outcome.test.ts",
         "src/goal/pricing.test.ts",
         "src/stream/stream-machine.test.ts",
         "src/stream/orchestrator-machine.test.ts",

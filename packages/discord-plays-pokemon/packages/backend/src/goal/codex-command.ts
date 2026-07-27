@@ -2,9 +2,12 @@
 // Kept as pure functions (no GoalManager state beyond the passed config fields)
 // so goal-manager.ts stays focused on lifecycle/concurrency.
 
+export type CodexReasoningEffort = "low" | "medium" | "high" | "xhigh";
+
 export type CodexCommandConfig = {
   codexBinary: string;
   model: string;
+  reasoningEffort: CodexReasoningEffort;
 };
 
 export type PromptContext = {
@@ -42,10 +45,9 @@ export function buildCodexArgs(input: BuildCodexArgsInput): string[] {
     // implies approval_policy=never, so we no longer need to set that.
     "--dangerously-bypass-approvals-and-sandbox",
     "--config",
-    'model_reasoning_effort="low"',
-    // gpt-5.4-nano rejects the tool_search tool that ships with apps/plugins/multi_agent
-    // (`Tool 'tool_search' is not supported with gpt-5.4-nano`). Disable them. Goal mode
-    // only needs the shell tool to drive pokemonctl, which stays on.
+    `model_reasoning_effort="${config.reasoningEffort}"`,
+    // Small models reject the tool_search tool that ships with apps/plugins/multi_agent.
+    // Disable them. Goal mode only needs the shell tool to drive pokemonctl, which stays on.
     "--disable",
     "apps",
     "--disable",

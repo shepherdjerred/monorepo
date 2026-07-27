@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.sjer.red/glitter-context/style-card.schema.json",
+  "title": "Glitter style card",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "author",
+    "coverage",
+    "voice",
+    "style_markers",
+    "topics",
+    "relationships",
+    "behaviors",
+    "personality",
+    "humor_or_tone",
+    "quotes",
+    "summary",
+    "likes_dislikes",
+    "league",
+    "other_games",
+    "how_to_mimic",
+    "sample_messages"
+  ],
+  "properties": {
+    "author": { "type": "string", "minLength": 1 },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["messages", "date_range", "notes"],
+      "properties": {
+        "messages": { "type": "integer", "minimum": 0 },
+        "date_range": { "type": "string" },
+        "truncated": { "type": "boolean" },
+        "truncated?": { "type": "boolean" },
+        "notes": { "type": "string" }
+      }
+    },
+    "voice": { "$ref": "#/$defs/stringList" },
+    "style_markers": { "$ref": "#/$defs/stringList" },
+    "topics": { "$ref": "#/$defs/stringList" },
+    "relationships": { "$ref": "#/$defs/stringList" },
+    "behaviors": { "$ref": "#/$defs/stringList" },
+    "personality": { "$ref": "#/$defs/stringList" },
+    "humor_or_tone": { "$ref": "#/$defs/stringList" },
+    "quotes": { "$ref": "#/$defs/stringList" },
+    "summary": {
+      "oneOf": [{ "type": "string" }, { "$ref": "#/$defs/stringList" }]
+    },
+    "likes_dislikes": { "$ref": "#/$defs/stringList" },
+    "league": {
+      "type": "object",
+      "additionalProperties": {
+        "oneOf": [
+          { "type": "string" },
+          { "$ref": "#/$defs/stringList" },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["likes", "dislikes"],
+            "properties": {
+              "likes": { "$ref": "#/$defs/stringList" },
+              "dislikes": { "$ref": "#/$defs/stringList" }
+            }
+          }
+        ]
+      }
+    },
+    "other_games": { "$ref": "#/$defs/stringList" },
+    "how_to_mimic": { "$ref": "#/$defs/stringList" },
+    "sample_messages": { "$ref": "#/$defs/stringList" },
+    "concerns": { "$ref": "#/$defs/stringList" }
+  },
+  "$defs": {
+    "stringList": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

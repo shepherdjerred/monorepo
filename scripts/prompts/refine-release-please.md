@@ -6,11 +6,11 @@ A human will review and merge — you do **not** merge.
 
 ## Environment
 
-- You are in a Debian-based container with `git`, `gh`, `bun`, `release-please`, and `claude` installed.
+- You are in a Debian-based container with `git`, `gh`, `bun`, `release-please`, `claude`, and `codex` installed.
 - `GH_TOKEN` is set in the environment with write access to the repo (minted from a GitHub App installation token).
 - `GIT_ASKPASS` is configured so `git push` to `https://github.com/shepherdjerred/monorepo.git` authenticates automatically.
 - The monorepo source is mounted at `/workspace` but **without `.git`** (Dagger excludes it). You must clone a fresh copy to do git operations.
-- Set `git config user.name` and `git config user.email` in your fresh clone before committing — use `"release-please-refiner[bot]"` and `"release-please-refiner@users.noreply.github.com"`. Co-author the user on every commit with a `Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>` trailer.
+- Set `git config user.name` and `git config user.email` in your fresh clone before committing — use `"release-please-refiner[bot]"` and `"release-please-refiner@users.noreply.github.com"`. The bot is the commit author; do not add a model-specific co-author trailer.
 
 ## Procedure
 
@@ -20,7 +20,7 @@ A human will review and merge — you do **not** merge.
 gh pr list --repo shepherdjerred/monorepo --base main --label "autorelease: pending" --state open --json number,headRefName,body --limit 1
 ```
 
-If no PR is returned, exit 0 with `<!-- claude-result -->{"status":"no-open-release-pr"}<!-- /claude-result -->`. There is nothing to refine until release-please creates one.
+If no PR is returned, exit 0 with `<!-- release-refiner-result -->{"status":"no-open-release-pr"}<!-- /release-refiner-result -->`. There is nothing to refine until release-please creates one.
 
 Capture `number` (PR number), `headRefName` (release branch — typically `release-please--branches--main`), and `body` (current PR body).
 
@@ -114,9 +114,7 @@ git add packages/astro-opengraph-images/CHANGELOG.md \
 git commit -m "chore(root): refine release notes for <YYYY-MM-DD>
 
 Replace release-please's auto-generated entries with a library-consumer
-view of what actually shipped in each package.
-
-Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
+view of what actually shipped in each package."
 git push origin <headRefName>
 ```
 
@@ -153,7 +151,7 @@ cat > /tmp/pr-body.md <<'EOF'
 </details>
 
 ---
-Originally generated with [Release Please](https://github.com/googleapis/release-please); release notes refined automatically in CI by `.dagger/prompts/refine-release-please.md`.
+Originally generated with [Release Please](https://github.com/googleapis/release-please); release notes refined automatically in CI by `scripts/prompts/refine-release-please.md`.
 EOF
 
 gh pr edit <pr-number> --repo shepherdjerred/monorepo --body-file /tmp/pr-body.md
@@ -164,9 +162,9 @@ Only include `<details>` blocks for packages that were actually bumped.
 ### 9. Emit the result envelope and exit 0
 
 ```text
-<!-- claude-result -->
+<!-- release-refiner-result -->
 {"status":"refined","prNumber":<N>,"packagesRefined":["astro-opengraph-images","webring","helm-types"],"commitSha":"<full-sha>"}
-<!-- /claude-result -->
+<!-- /release-refiner-result -->
 ```
 
 If you encountered a recoverable issue (e.g., no bumped packages, no PR open), still exit 0 with a descriptive `"status"`. Only exit non-zero on hard failures (auth error, git push rejected, etc.).

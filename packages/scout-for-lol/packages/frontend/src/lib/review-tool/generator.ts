@@ -276,7 +276,7 @@ export async function generateMatchReview(
     const personality = resolvePersonality(config);
     if (!personality.styleCard || personality.styleCard.trim().length === 0) {
       throw new Error(
-        `Style card missing for personality "${personality.id}". Add a corresponding file under packages/analysis/llm-out/<name>_style.json and wire it into the personality loader.`,
+        `Style card missing for personality "${personality.id}". Add it to @shepherdjerred/glitter-context and wire the person alias into the shared roster.`,
       );
     }
 

@@ -35,7 +35,9 @@ FROM deps AS build
 COPY --parents \
   tsconfig.base.json \
   packages/birmel \
+  packages/glitter-context \
   ./
+RUN cd packages/glitter-context && bun run build
 RUN cd packages/birmel && bun run generate
 
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
@@ -55,7 +57,9 @@ FROM base AS runtime
 # --- gh CLI + Claude Code CLI (editor sub-agent) ---
 # BUN_INSTALL=/usr/local drops `bun add -g` binaries into /usr/local/bin
 # (world-readable, on PATH). gh is fetched from the release tarball.
+# renovate: datasource=github-releases depName=cli/cli
 ARG GH_CLI_VERSION=2.96.0
+# renovate: datasource=npm depName=@anthropic-ai/claude-code
 ARG CLAUDE_CODE_VERSION=2.1.175
 ENV BUN_INSTALL=/usr/local
 RUN set -e; \
@@ -111,6 +115,7 @@ COPY --parents \
   packages/llm-observability \
   ./
 COPY --from=build /app/packages/birmel/generated packages/birmel/generated
+COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/dist
 
 ARG VERSION=dev
 ARG GIT_SHA=unknown

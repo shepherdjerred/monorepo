@@ -422,7 +422,7 @@ export type LokiHelmValuesLokiImage = {
   /**
    * Overrides the image tag whose default is the chart's appVersion
    *
-   * @default "3.6.7"
+   * @default "3.6.8"
    */
   tag?: string;
   digest?: unknown;
@@ -571,7 +571,7 @@ export type LokiHelmValuesLokiCommonConfig = {
    */
   replication_factor?: number;
   /**
-   * The gRPC address of the compactor. The use of compactor_grpc_address is prefered over compactor_address.
+   * The gRPC address of the compactor. The use of compactor_grpc_address is preferred over compactor_address.
    * If a customized compactor_address is set, compactor_grpc_address should be set to an empty string.
    *
    * @default "{{ include "loki.compactorAddress" . }}"
@@ -1158,7 +1158,7 @@ export type LokiHelmValuesEnterprise = {
   /**
    * Default version of GEL to deploy
    *
-   * @default "3.6.6"
+   * @default "3.6.8"
    */
   version?: string;
   cluster_name?: unknown;
@@ -1257,7 +1257,7 @@ export type LokiHelmValuesEnterpriseImage = {
   /**
    * Docker image tag
    *
-   * @default "3.6.6"
+   * @default "3.6.8"
    */
   tag?: string;
   digest?: unknown;
@@ -3768,7 +3768,7 @@ export type LokiHelmValuesRead = {
   };
   /**
    * liveness probe settings for read pods. If empty, applies no livenessProbe
-   * statup probe for the read pods. If empty, applies no startupProbe
+   * startup probe for the read pods. If empty, applies no startupProbe
    *
    * @default {}
    */
@@ -4441,7 +4441,7 @@ export type LokiHelmValuesIngester = {
    */
   trafficDistribution?: string;
   /**
-   * Enabling zone awareness on ingesters will create 3 statefulests where all writes will send a replica to each zone.
+   * Enabling zone awareness on ingesters will create 3 StatefulSets where all writes will send a replica to each zone.
    * This is primarily intended to accelerate rollout operations by allowing for multiple ingesters within a single
    * zone to be shutdown and restart simultaneously (the remaining 2 zones will be guaranteed to have at least one copy
    * of the data).
@@ -8250,7 +8250,7 @@ export type LokiHelmValuesChunksCacheL2 = {
    */
   suffix?: string;
   /**
-   * The age of chunks should be transfered from l1 cache to l2
+   * The age of chunks should be transferred from l1 cache to l2
    * 4 days
    *
    * @default "345600s"

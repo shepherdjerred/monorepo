@@ -22,19 +22,16 @@ import { buildPromptVariables, extractMatchData } from "./generator-helpers.ts";
 import type { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
 import {
+  friendGroupHistory,
+  relationshipContextText,
+} from "@shepherdjerred/glitter-context";
+import {
   minifyJson,
   replacePromptVariables,
   callOpenAI,
 } from "./pipeline-utils.ts";
-// Static "Glitter Boys" lore: shared friend-group history (multi-year
-// timeline) and Graphviz DOT relationship graph. Bundled with the data
-// package and embedded into the review system prompt at runtime so the
-// reviewer personality can drop in references and callbacks naturally.
-import FRIEND_GROUP_HISTORY_RAW from "./prompts/context/glitter-boys-history.txt";
-import RELATIONSHIP_GRAPH_RAW from "./prompts/context/relationships.txt";
-
-const FRIEND_GROUP_HISTORY = FRIEND_GROUP_HISTORY_RAW.trim();
-const RELATIONSHIP_GRAPH = RELATIONSHIP_GRAPH_RAW.trim();
+const FRIEND_GROUP_HISTORY = friendGroupHistory.trim();
+const RELATIONSHIP_GRAPH = relationshipContextText();
 
 // ============================================================================
 // Stage 1a: Timeline Summary

@@ -116,6 +116,8 @@ test("attachCodexTrace honors span prefix, root attrs, and tool events", () => {
   expect(tool.attributes["pokemon.tool.command"]).toBe("ls -la");
   expect(tool.attributes["pokemon.tool.exit_code"]).toBe(0);
   expect(tool.attributes["pokemon.tool.stdout_snippet"]).toBe("files");
+  expect(tool.attributes["gen_ai.tool.stdout"]).toBe("files");
+  expect(tool.attributes["gen_ai.tool.stderr"]).toBe("");
 
   // Turn index keeps dpp's historical attribute name (prefix-derived).
   const turn = spans.find((s) => s.name === "pokemon.goal.turn")!;
@@ -123,6 +125,111 @@ test("attachCodexTrace honors span prefix, root attrs, and tool events", () => {
 
   const root = spans.find((s) => s.name === "pokemon.goal.run")!;
   expect(root.attributes["pokemon.goal.id"]).toBe("goal-42");
+});
+
+test("handles modern item-based command_execution events (codex 0.13x+)", () => {
+  exporter.reset();
+  const parser = createCodexJsonlParser();
+  const codexTrace = attachCodexTrace(parser, {
+    service: "discord-plays-pokemon",
+    callSite: "goal-run",
+    model: "gpt-5.6-luna",
+    spanPrefix: "pokemon.goal",
+    toolAttributePrefix: "pokemon.tool",
+    rootAttributes: { "pokemon.goal.id": "goal-99" },
+  });
+
+  // Real shape emitted by `codex exec --json`: item.started / item.completed
+  // wrapping a command_execution item, output in aggregated_output.
+  const lines = [
+    { type: "turn.started" },
+    {
+      type: "item.started",
+      item: { id: "item_3", type: "command_execution", command: "ls -la" },
+    },
+    {
+      type: "item.completed",
+      item: {
+        id: "item_3",
+        type: "command_execution",
+        command: "ls -la",
+        aggregated_output: "total 0\nfile.txt",
+        exit_code: 0,
+        status: "completed",
+      },
+    },
+    { type: "turn.completed", usage: { input_tokens: 5, output_tokens: 2 } },
+  ];
+  parser.push(lines.map((l) => JSON.stringify(l)).join("\n") + "\n");
+  codexTrace.end();
+
+  const spans = exporter.getFinishedSpans();
+  const tool = spans.find((s) => s.name === "pokemon.goal.tool");
+  expect(tool).toBeDefined();
+  expect(tool!.attributes["pokemon.tool.command"]).toBe("ls -la");
+  expect(tool!.attributes["pokemon.tool.exit_code"]).toBe(0);
+  expect(tool!.attributes["pokemon.tool.stdout_snippet"]).toBe(
+    "total 0\nfile.txt",
+  );
+  expect(tool!.attributes["gen_ai.tool.stdout"]).toBe("total 0\nfile.txt");
+
+  // Finding #3: identity + correlation attrs must live on the tool span itself
+  // (OTel does not inherit them), so archived tool bodies stay attributable.
+  expect(tool!.attributes["gen_ai.system"]).toBe("openai");
+  expect(tool!.attributes["gen_ai.request.model"]).toBe("gpt-5.6-luna");
+  expect(tool!.attributes["llm.service"]).toBe("discord-plays-pokemon");
+  expect(tool!.attributes["llm.call_site"]).toBe("goal-run");
+  expect(tool!.attributes["pokemon.goal.id"]).toBe("goal-99");
+});
+
+test("redacts credentials from tool command, stdout, and stderr", () => {
+  exporter.reset();
+  // Composed from fragments so the literal doesn't trip the no-secrets rule.
+  const apiKey = ["sk", "proj", "aaa", "bbb", "ccc"].join("-");
+  Bun.env["OPENAI_API_KEY"] = apiKey;
+  const parser = createCodexJsonlParser();
+  const codexTrace = attachCodexTrace(parser, {
+    service: "discord-plays-pokemon",
+    callSite: "goal-run",
+    model: "gpt-5.6-luna",
+    spanPrefix: "pokemon.goal",
+    toolAttributePrefix: "pokemon.tool",
+  });
+
+  const tokenValue = ["abcd", "ef01", "2345", "6789"].join("");
+  const command = `pokemonctl --token=${tokenValue} status`;
+  const lines = [
+    { type: "turn.started" },
+    {
+      type: "item.started",
+      item: { id: "item_1", type: "command_execution", command },
+    },
+    {
+      type: "item.completed",
+      item: {
+        id: "item_1",
+        type: "command_execution",
+        command,
+        aggregated_output: `OPENAI_API_KEY=${apiKey}\nAuthorization: Bearer live-tok-999`,
+        exit_code: 0,
+        status: "completed",
+      },
+    },
+  ];
+  parser.push(lines.map((l) => JSON.stringify(l)).join("\n") + "\n");
+  codexTrace.end();
+  delete Bun.env["OPENAI_API_KEY"];
+
+  const tool = exporter
+    .getFinishedSpans()
+    .find((s) => s.name === "pokemon.goal.tool")!;
+  const toolCommand = String(tool.attributes["pokemon.tool.command"]);
+  const stdout = String(tool.attributes["gen_ai.tool.stdout"]);
+  expect(toolCommand).toContain("--token=[REDACTED]");
+  expect(toolCommand).not.toContain(tokenValue);
+  expect(stdout).not.toContain(apiKey);
+  expect(stdout).toContain("[REDACTED]");
+  expect(stdout).toContain("Bearer [REDACTED]");
 });
 
 test("end() is idempotent and closes dangling turn/tool spans", () => {

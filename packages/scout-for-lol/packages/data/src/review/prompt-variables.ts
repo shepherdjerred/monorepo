@@ -112,7 +112,7 @@ export const STAGE_PROMPT_VARIABLES = {
       {
         name: "RELATIONSHIP_GRAPH",
         description:
-          "Graphviz DOT graph describing how friend group members know each other",
+          "Current projection describing how friend group members know each other",
       },
     ],
     user: [

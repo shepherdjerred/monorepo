@@ -10,8 +10,8 @@ import {
   type ReviewProvider,
   type ReviewSignalEvent,
 } from "@shepherdjerred/code-review";
+import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
 import {
-  fetchHeadPushedAt,
   fetchReviewThreads,
   resolveReviewState,
 } from "@shepherdjerred/code-review/github";

@@ -29,6 +29,7 @@ import { SCENARIOS } from "./lib/scenarios.ts";
 import type { N64Emulator } from "#src/emulator/n64-emulator.ts";
 import { createSocket } from "#src/webserver/socket.ts";
 import { handleRequest } from "#src/webserver/dispatch.ts";
+import type { EmulatorControls } from "#src/webserver/dispatch.ts";
 import { SeatManager } from "#src/input/seat-manager.ts";
 import { registry } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
 import { MAX_SEATS } from "#src/emulator/constants.ts";
@@ -184,8 +185,27 @@ async function startServer(emu: N64Emulator): Promise<{
   const http = createServer();
   const seatManager = new SeatManager(MAX_SEATS);
   const obs = createSocket({ server: http, isCorsEnabled: false });
+  // In production the dispatch talks to the WorkerEmulator facade, whose
+  // renderFrame is async (a Worker round-trip). This harness drives the
+  // in-process N64Emulator directly, so adapt its sync renderFrame to the
+  // async EmulatorControls contract.
+  //
+  // NOTE: because setPlayerInput here calls the in-process emulator directly,
+  // these spam scenarios measure the wasm tick loop itself — they do NOT cross
+  // the main→postMessage→Zod→worker-tick boundary and so cannot detect worker
+  // port-queue growth or tick-timer starvation. That boundary is exercised
+  // under controller spam by scripts/e2e-worker.ts.
+  const emulator: EmulatorControls = {
+    setPlayerInput: (seat, state) => {
+      emu.setPlayerInput(seat, state);
+    },
+    clearPlayerInput: (seat) => {
+      emu.clearPlayerInput(seat);
+    },
+    renderFrame: () => Promise.resolve(emu.renderFrame()),
+  };
   const sub = obs.events.subscribe((event) => {
-    handleRequest(event, { seatManager, emulator: emu });
+    handleRequest(event, { seatManager, emulator });
   });
   await new Promise<void>((resolve) => {
     http.listen(0, resolve);

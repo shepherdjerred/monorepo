@@ -57,15 +57,15 @@ function FocusCard({
           <div className="mb-1 flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
             <ShieldCheckIcon className="size-4" />
           </div>
-          <CardTitle className="text-xl">Ready for your verification</CardTitle>
+          <CardTitle className="text-xl">Ready for user acceptance</CardTitle>
           <CardDescription>
-            These are the checks the agent needs you to perform before signing
-            off.
+            Try the described behavior and decide whether it works as intended.
+            Engineering checks are already complete.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <MarkdownContent
-            emptyMessage="No verification instructions were recorded. Request changes so the agent can add concrete checks."
+            emptyMessage="No acceptance scenario was recorded. Request changes so the agent can describe the behavior to evaluate."
             markdown={document.workflow.humanVerificationMarkdown}
           />
         </CardContent>
@@ -199,7 +199,7 @@ export function DocumentPage(): React.JSX.Element {
                 </Badge>
                 {document.verification === "human" ? (
                   <Badge>
-                    <ShieldCheckIcon /> Human verification
+                    <ShieldCheckIcon /> User acceptance
                   </Badge>
                 ) : null}
               </div>

@@ -92,10 +92,11 @@ save_path = "saves/pokeemerald.flash"
 # enable Codex goal mode and the /goal slash command
 enabled = false
 # runtime must provide CODEX_API_KEY, CODEX_ACCESS_TOKEN, OPENAI_API_KEY, or a mounted Codex auth cache.
-# NOTE: gpt-5.4-nano requires API-key auth — Codex with a ChatGPT-account session 400s
-# with "The 'gpt-5.4-nano' model is not supported when using Codex with a ChatGPT account".
-# lower-cost model used by the long-running Codex loop
-model = "gpt-5.4-nano"
+# NOTE: some smaller models require API-key auth — Codex with a ChatGPT-account session 400s.
+# Cheapest GPT-5.6 tier (nano-class successor) for the long-running Codex loop.
+model = "gpt-5.6-luna"
+# Codex model_reasoning_effort: low | medium | high | xhigh
+reasoning_effort = "medium"
 codex_binary = "codex"
 # Codex runs from this directory; screenshots/state paths are relative to it
 runtime_directory = "."

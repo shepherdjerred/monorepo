@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.sjer.red/glitter-context/lore.schema.json",
+  "title": "Glitter lore",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "historyMarkdown"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "historyMarkdown": { "type": "string", "minLength": 1 }
+  }
+}

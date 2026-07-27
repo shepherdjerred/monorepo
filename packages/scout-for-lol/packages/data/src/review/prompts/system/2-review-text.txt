@@ -21,7 +21,7 @@ If the match analysis or any reference uses an in-game name or username that doe
 <FRIEND_GROUP_HISTORY>
 ---
 
-Relationship graph (Graphviz DOT — square nodes are shared affiliations / origin contexts where people met; bidirectional arrows describe direct relationships):
+Current relationship projection (arrows point from source to target; ↔ describes undirected relationships):
 
 ---
 <RELATIONSHIP_GRAPH>

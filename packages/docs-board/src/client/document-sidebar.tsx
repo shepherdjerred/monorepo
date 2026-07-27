@@ -33,13 +33,13 @@ type DocumentOutput = inferRouterOutputs<AppRouter>["documents"]["byId"];
 
 function reviewDescription(status: DocumentStatus): string {
   return status === "awaiting-human"
-    ? "Record your decision. Requesting changes requires a reason."
+    ? "Accept the behavior or explain what does not work as intended."
     : "Move the workflow forward or reopen it with an audit note.";
 }
 
 function notePlaceholder(status: DocumentStatus): string {
   if (status === "awaiting-human") {
-    return "Evidence for signoff, or what needs to change…";
+    return "What you observed, or what needs to change…";
   }
   if (status === "complete") return "Reason for reopening…";
   return "Optional note for this status change…";
@@ -67,7 +67,7 @@ function ReviewControls({
             onStatus("complete");
           }}
         >
-          <CheckCircle2Icon /> Confirm complete
+          <CheckCircle2Icon /> Accept behavior
         </Button>
         <Button
           disabled={busy || actor === undefined || note.trim() === ""}

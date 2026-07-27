@@ -11,6 +11,7 @@ import {
 import { encodeScreenshotPng } from "#src/emulator/screenshot.ts";
 import { applyStreamOverlays } from "#src/overlay/composite.ts";
 import type { MarioKartGameDriver } from "#src/lifecycle/mario-kart-driver.ts";
+import { logger } from "#src/logger.ts";
 
 export const screenshotCommand = new SlashCommandBuilder()
   .setName("screenshot")
@@ -36,7 +37,22 @@ export function makeScreenshot(driver: MarioKartGameDriver, botClient: Client) {
       });
       return;
     }
-    const frame = runtime.emulator.renderFrame();
+    // renderFrame() is a Worker round-trip that now rejects on a worker crash
+    // or render failure. handleInteraction runs this handler with `void`, so an
+    // uncaught rejection here becomes an unhandled promise rejection and the
+    // user sees a timed-out command — catch it and reply ephemerally instead.
+    let frame: Awaited<ReturnType<typeof runtime.emulator.renderFrame>>;
+    try {
+      frame = await runtime.emulator.renderFrame();
+    } catch (error) {
+      logger.warn("screenshot renderFrame failed", error);
+      await interaction.reply({
+        flags: MessageFlags.Ephemeral,
+        content:
+          "Couldn't capture a screenshot right now — the emulator is unavailable. Try again in a moment.",
+      });
+      return;
+    }
     if (frame.height === 0 || frame.width === 0) {
       await interaction.reply({
         flags: MessageFlags.Ephemeral,

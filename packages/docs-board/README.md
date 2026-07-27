@@ -33,19 +33,21 @@ from disk before writing to preserve revision-conflict protection.
 
 The board columns map directly to canonical frontmatter statuses:
 
-| Column                                  | Frontmatter status |
-| --------------------------------------- | ------------------ |
-| Planned                                 | `planned`          |
-| In Progress                             | `in-progress`      |
-| Completed (Awaiting Human Confirmation) | `awaiting-human`   |
-| Complete                                | `complete`         |
+| Column                   | Frontmatter status |
+| ------------------------ | ------------------ |
+| Planned                  | `planned`          |
+| In Progress              | `in-progress`      |
+| Awaiting User Acceptance | `awaiting-human`   |
+| Complete                 | `complete`         |
 
 Board documents use `## Remaining`, `## Human Verification`, and append-only
 `## Comment Log` sections. Writes use content revisions and atomic replacement
 so an external edit produces a visible conflict instead of being overwritten.
-Awaiting-human pages expose explicit **Confirm complete** and **Request
-changes** actions; requesting changes requires a reason and moves the document
-back to `in-progress` in the same audited Markdown update.
+Awaiting-human is reserved for user acceptance of observable behavior, after
+the agent has completed typecheck, lint, tests, CI, merge, deployment, and other
+deterministic verification. Pages expose explicit **Accept behavior** and
+**Request changes** actions; requesting changes requires a reason and moves the
+document back to `in-progress` in the same audited Markdown update.
 
 ## Verification
 

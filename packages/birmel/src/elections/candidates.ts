@@ -1,20 +1,11 @@
-import path from "node:path";
-import { readdir } from "node:fs/promises";
+import { listStyleCardNames } from "@shepherdjerred/glitter-context";
 
-export async function getAllCandidates(): Promise<string[]> {
-  const styleCardsDir = path.join(import.meta.dir, "../persona/style-cards");
-  const files = await readdir(styleCardsDir);
-
-  return files
-    .filter((f) => f.endsWith("_style.json"))
-    .map((f) => f.replace("_style.json", ""));
+export function getAllCandidates(): string[] {
+  return listStyleCardNames();
 }
 
-export async function selectRandomCandidates(
-  min = 3,
-  max = 5,
-): Promise<string[]> {
-  const allCandidates = await getAllCandidates();
+export function selectRandomCandidates(min = 3, max = 5): string[] {
+  const allCandidates = getAllCandidates();
   const count = Math.floor(Math.random() * (max - min + 1)) + min;
 
   // Shuffle and select

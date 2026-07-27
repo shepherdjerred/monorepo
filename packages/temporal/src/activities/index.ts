@@ -24,6 +24,7 @@ import { pokeemeraldDataRefreshActivities } from "./dpp-pokeemerald-data-refresh
 import { scoutShowcaseRefreshActivities } from "./scout-showcase-refresh.ts";
 import { observeReviewSignalsActivities } from "./observe-review-signals.ts";
 import { glitterCorpusActivities } from "./glitter-corpus.ts";
+import { glitterContextRefreshActivities } from "./glitter-context-refresh.ts";
 
 export const activities = {
   ...fetcherActivities,
@@ -52,4 +53,5 @@ export const activities = {
   ...scoutShowcaseRefreshActivities,
   ...observeReviewSignalsActivities,
   ...glitterCorpusActivities,
+  ...glitterContextRefreshActivities,
 };
