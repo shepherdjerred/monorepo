@@ -34,13 +34,12 @@ asuswrt_system.be86u	system
 EOF
 )
 
-# Empty on first run (no state file yet); handle that explicitly without
-# suppressing stderr.
-if existing="$(tofu -chdir=asuswrt state list 2>&1)"; then
-  :
-else
-  existing=""
-fi
+# `state list` exits 0 with empty output for a state with zero resources
+# (a brand-new backend nothing has been imported/applied into yet), so no
+# empty-state special-casing is needed here: a nonzero exit is always a real
+# failure (auth, connectivity, or a corrupt state) and must abort the script
+# rather than being treated as "nothing imported yet" and masked.
+existing="$(tofu -chdir=asuswrt state list)"
 
 while IFS=$'\t' read -r addr id; do
   [ -z "$addr" ] && continue

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -135,6 +136,15 @@ func (r *wirelessNetworkResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
+	// Optional+Computed attributes the config omitted are still Unknown after
+	// applyWireless. Terraform requires every attribute to be known after
+	// apply, so read the router back to resolve them to their real (or null)
+	// value.
+	resp.Diagnostics.Append(r.readWireless(ctx, band, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -147,34 +157,11 @@ func (r *wirelessNetworkResource) Read(ctx context.Context, req resource.ReadReq
 	}
 
 	band := int(state.Band.ValueInt64())
-	prefix := fmt.Sprintf("wl%d_", band)
 
-	keys := []string{
-		prefix + "ssid",
-		prefix + "auth_mode_x",
-		prefix + "crypto",
-		prefix + "wpa_psk",
-		prefix + "chanspec",
-		prefix + "bw",
-		prefix + "closed",
-	}
-
-	result, err := r.client.NvramGet(ctx, keys)
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to read wireless settings", err.Error())
-
+	resp.Diagnostics.Append(r.readWireless(ctx, band, &state)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	state.SSID = types.StringValue(result[prefix+"ssid"])
-	state.AuthMode = types.StringValue(result[prefix+"auth_mode_x"])
-
-	readOptionalString(&state.Crypto, result, prefix+"crypto")
-	readOptionalInt64(&state.Channel, result, prefix+"chanspec", parseChannel)
-	readOptionalInt64FromString(&state.Bandwidth, result, prefix+"bw")
-	readOptionalBoolFromFlag(&state.Hidden, result, prefix+"closed")
-
-	// WPA passphrase is write-only; we don't read it back to avoid state drift.
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -196,7 +183,50 @@ func (r *wirelessNetworkResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	resp.Diagnostics.Append(r.readWireless(ctx, band, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+// readWireless populates model from the router's current NVRAM values for the
+// given band. Used by Read to refresh state, and by Create/Update to resolve
+// Computed attributes the plan left Unknown into a known value (the router's
+// actual value, or null when the router has none). WPA passphrase is
+// write-only; it is never read back to avoid state drift.
+func (r *wirelessNetworkResource) readWireless(ctx context.Context, band int, model *wirelessNetworkResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	prefix := fmt.Sprintf("wl%d_", band)
+
+	keys := []string{
+		prefix + "ssid",
+		prefix + "auth_mode_x",
+		prefix + "crypto",
+		prefix + "wpa_psk",
+		prefix + "chanspec",
+		prefix + "bw",
+		prefix + "closed",
+	}
+
+	result, err := r.client.NvramGet(ctx, keys)
+	if err != nil {
+		diags.AddError("Failed to read wireless settings", err.Error())
+
+		return diags
+	}
+
+	model.SSID = types.StringValue(result[prefix+"ssid"])
+	model.AuthMode = types.StringValue(result[prefix+"auth_mode_x"])
+
+	readOptionalString(&model.Crypto, result, prefix+"crypto")
+	readOptionalInt64(&model.Channel, result, prefix+"chanspec", parseChannel)
+	readOptionalInt64FromString(&model.Bandwidth, result, prefix+"bw")
+	readOptionalBoolFromFlag(&model.Hidden, result, prefix+"closed")
+
+	return diags
 }
 
 func (r *wirelessNetworkResource) Delete(_ context.Context, _ resource.DeleteRequest, _ *resource.DeleteResponse) {
@@ -262,29 +292,59 @@ func setOptionalString(values map[string]string, key string, attr types.String) 
 	}
 }
 
-// readOptionalInt64 reads an NVRAM value and applies a transform to get an int64.
-// Populates from a non-empty value regardless of whether the target is null (so
-// imported state reflects the router); empty NVRAM values are left as null.
+// readOptionalInt64 reads an NVRAM value and applies a transform to get an
+// int64. Populates from a non-empty value regardless of whether the target is
+// null (so imported/Computed-Unknown state reflects the router); an empty
+// NVRAM value clears the target to null unless it's already null, so a value
+// cleared on the router (rather than merely unconfigured) surfaces as drift
+// instead of leaving a stale target.
 func readOptionalInt64(target *types.Int64, result map[string]string, key string, transform func(string) int) {
-	if v, ok := result[key]; ok && v != "" {
+	v, ok := result[key]
+	if !ok {
+		return
+	}
+
+	if v != "" {
 		*target = types.Int64Value(int64(transform(v)))
+	} else if !target.IsNull() {
+		*target = types.Int64Null()
 	}
 }
 
-// readOptionalInt64FromString reads a numeric string from NVRAM into an int64 attribute.
+// readOptionalInt64FromString reads a numeric string from NVRAM into an int64
+// attribute, applying the same empty-clears-stale-state behavior as
+// readOptionalInt64.
 func readOptionalInt64FromString(target *types.Int64, result map[string]string, key string) {
-	if v, ok := result[key]; ok && v != "" {
-		if parsed, err := strconv.ParseInt(v, 10, 64); err == nil {
-			*target = types.Int64Value(parsed)
+	v, ok := result[key]
+	if !ok {
+		return
+	}
+
+	if v == "" {
+		if !target.IsNull() {
+			*target = types.Int64Null()
 		}
+
+		return
+	}
+
+	if parsed, err := strconv.ParseInt(v, 10, 64); err == nil {
+		*target = types.Int64Value(parsed)
 	}
 }
 
-// readOptionalBoolFromFlag reads a "0"/"1" NVRAM flag into a bool attribute.
-// Skips empty values so an unset flag leaves the attribute null.
+// readOptionalBoolFromFlag reads a "0"/"1" NVRAM flag into a bool attribute,
+// applying the same empty-clears-stale-state behavior as readOptionalInt64.
 func readOptionalBoolFromFlag(target *types.Bool, result map[string]string, key string) {
-	if v, ok := result[key]; ok && v != "" {
+	v, ok := result[key]
+	if !ok {
+		return
+	}
+
+	if v != "" {
 		*target = types.BoolValue(v == "1")
+	} else if !target.IsNull() {
+		*target = types.BoolNull()
 	}
 }
 
