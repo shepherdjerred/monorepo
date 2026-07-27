@@ -474,10 +474,6 @@ export class DocumentStore {
         "Archived to `packages/docs/archive/completed/`.",
         new Date().toISOString(),
       );
-      await this.atomicWrite(
-        file.absolutePath,
-        serializeMarkdownDocument(archivedFrontmatter, body),
-      );
       await commandValue(this.repoRoot, ["mkdir", "-p", "--", targetDirectory]);
       await commandValue(this.repoRoot, [
         "mv",
@@ -485,6 +481,10 @@ export class DocumentStore {
         file.absolutePath,
         target,
       ]);
+      await this.atomicWrite(
+        target,
+        serializeMarkdownDocument(archivedFrontmatter, body),
+      );
       const archivedPath = `archive/completed/${basename}`;
       await this.refreshCachedPaths([file.detail.path, archivedPath]);
       const updated = await this.get(id);

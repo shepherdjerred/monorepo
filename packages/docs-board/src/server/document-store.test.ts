@@ -348,4 +348,34 @@ disposition: active
     ).toBe(true);
     store.close();
   });
+
+  test("preserves the source document when archive setup fails", async () => {
+    const completedTodo = `---
+id: fixture-todo
+type: todo
+status: complete
+board: true
+verification: agent
+disposition: active
+---
+
+# Fixture TODO
+`;
+    const root = await fixtureRepository(
+      completedTodo,
+      "todos/fixture-todo.md",
+    );
+    await Bun.write(`${root}/packages/docs/archive`, "directory collision");
+    const store = new DocumentStore({ repoRoot: root, watchFiles: false });
+    const original = await store.get("fixture-todo");
+
+    await expect(
+      store.archive(original.id, original.revision, "Agent"),
+    ).rejects.toThrow("mkdir");
+
+    const source = Bun.file(`${root}/packages/docs/todos/fixture-todo.md`);
+    expect(await source.exists()).toBe(true);
+    expect(await source.text()).toBe(completedTodo);
+    store.close();
+  });
 });

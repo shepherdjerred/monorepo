@@ -61,7 +61,10 @@ work already merged or superseded.
 - Added `verification: operator`, renamed the UI state to Awaiting User
   Acceptance, and made archival clear board-only metadata.
 - Made migration idempotent for archived document types and added validation for
-  archived board cards, active origins, and local Markdown links.
+  archived board cards, all document origins, and local Markdown links.
+- Addressed automated review by enforcing operator-blocked pairing, repairing
+  active types from canonical directories, preserving archived provenance, and
+  keeping source cards unchanged when archive setup or movement fails.
 - Verified the docs-board package and the full affected repository surface; all
   gates pass. Captured board, user-acceptance, and operator-action screenshots
   for PR #1732; the prerequisite docs-board UI commit landed through PR #1713.
