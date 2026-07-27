@@ -16,7 +16,7 @@ import {
   markOnboardingComplete,
   markOnboardingSeen,
 } from "#src/lib/onboarding-storage.ts";
-import { track } from "#src/lib/analytics.ts";
+import { trackOutboundClick } from "#src/lib/analytics.ts";
 
 /**
  * Kicks off the bot-install flow. Points at the backend route (not an
@@ -36,8 +36,8 @@ function AddServerButton({
     <Button asChild variant={variant}>
       <a
         href={INSTALL_URL}
-        onClick={() => {
-          track("bot_install_click");
+        onClick={(clickEvent) => {
+          trackOutboundClick(clickEvent, "bot_install_click", INSTALL_URL);
         }}
       >
         {children}

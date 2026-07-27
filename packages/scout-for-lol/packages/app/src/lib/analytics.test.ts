@@ -4,8 +4,43 @@ import {
   normalizePath,
   track,
   trackMutationMeta,
+  trackOutboundClick,
   trackPageview,
 } from "#src/lib/analytics.ts";
+
+function fakeClick(
+  overrides: Partial<{
+    defaultPrevented: boolean;
+    button: number;
+    metaKey: boolean;
+    ctrlKey: boolean;
+    shiftKey: boolean;
+    altKey: boolean;
+  }> = {},
+): {
+  preventDefault: () => void;
+  prevented: boolean;
+  defaultPrevented: boolean;
+  button: number;
+  metaKey: boolean;
+  ctrlKey: boolean;
+  shiftKey: boolean;
+  altKey: boolean;
+} {
+  return {
+    prevented: false,
+    preventDefault() {
+      this.prevented = true;
+    },
+    defaultPrevented: false,
+    button: 0,
+    metaKey: false,
+    ctrlKey: false,
+    shiftKey: false,
+    altKey: false,
+    ...overrides,
+  };
+}
 
 afterEach(() => {
   globalThis.plausible = undefined;
@@ -110,6 +145,44 @@ describe("analyticsMeta + trackMutationMeta", () => {
     ]);
   });
 
+  test("records the discriminated result kind instead of a blanket success", () => {
+    const calls: [string, unknown][] = [];
+    globalThis.plausible = (event, options) => {
+      calls.push([event, options]);
+    };
+    // A resolved business failure must not be recorded as `outcome: "success"`.
+    trackMutationMeta(analyticsMeta("subscription_removed"), "success", {
+      kind: "player-not-found",
+    });
+    trackMutationMeta(analyticsMeta("subscription_removed"), "success", {
+      kind: "removed",
+    });
+    // A thrown error always records `outcome: "error"`, ignoring any data.
+    trackMutationMeta(analyticsMeta("subscription_removed"), "error", {
+      kind: "removed",
+    });
+    expect(calls).toEqual([
+      ["subscription_removed", { props: { kind: "player-not-found" } }],
+      ["subscription_removed", { props: { kind: "removed" } }],
+      ["subscription_removed", { props: { outcome: "error" } }],
+    ]);
+  });
+
+  test("falls back to outcome when the result carries no kind", () => {
+    const calls: [string, unknown][] = [];
+    globalThis.plausible = (event, options) => {
+      calls.push([event, options]);
+    };
+    trackMutationMeta(analyticsMeta("player_account_added"), "success", {
+      id: "abc",
+    });
+    trackMutationMeta(analyticsMeta("player_account_added"), "success");
+    expect(calls).toEqual([
+      ["player_account_added", { props: { outcome: "success" } }],
+      ["player_account_added", { props: { outcome: "success" } }],
+    ]);
+  });
+
   test("no-ops on absent, empty, or unknown-event meta", () => {
     const calls: string[] = [];
     globalThis.plausible = (event) => {
@@ -119,5 +192,31 @@ describe("analyticsMeta + trackMutationMeta", () => {
     trackMutationMeta({}, "success");
     trackMutationMeta({ analyticsEvent: "not_a_real_event" }, "success");
     expect(calls).toEqual([]);
+  });
+});
+
+describe("trackOutboundClick", () => {
+  test("emits without preventing native navigation when analytics is disabled", () => {
+    // No VITE_PLAUSIBLE_DOMAIN in the test build, so the click keeps default
+    // behavior (the browser navigates) and the event fires fire-and-forget.
+    const calls: [string, unknown][] = [];
+    globalThis.plausible = (event, options) => {
+      calls.push([event, options]);
+    };
+    const click = fakeClick();
+    trackOutboundClick(click, "login_click", "/api/auth/discord/start");
+    expect(click.prevented).toBe(false);
+    expect(calls).toEqual([["login_click", undefined]]);
+  });
+
+  test("keeps native behavior for modified clicks (open-in-new-tab)", () => {
+    const calls: [string, unknown][] = [];
+    globalThis.plausible = (event, options) => {
+      calls.push([event, options]);
+    };
+    const click = fakeClick({ metaKey: true });
+    trackOutboundClick(click, "bot_install_click", "/api/discord/install");
+    expect(click.prevented).toBe(false);
+    expect(calls).toEqual([["bot_install_click", undefined]]);
   });
 });

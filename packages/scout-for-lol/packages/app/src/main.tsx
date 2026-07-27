@@ -60,9 +60,12 @@ const queryClient = new QueryClient({
   // Fire an analytics event for any mutation whose meta was built with
   // analyticsMeta(), labeled by outcome. Runs alongside each mutation's own
   // onSuccess/onError; trackMutationMeta validates the meta and no-ops otherwise.
+  // The resolved result is passed on success so mutations that resolve a
+  // discriminated business failure (e.g. `player-not-found`) are recorded by
+  // their real `kind`, not as a blanket success.
   mutationCache: new MutationCache({
-    onSuccess: (_data, _variables, _context, mutation) => {
-      trackMutationMeta(mutation.meta, "success");
+    onSuccess: (data, _variables, _context, mutation) => {
+      trackMutationMeta(mutation.meta, "success", data);
     },
     onError: (_error, _variables, _context, mutation) => {
       trackMutationMeta(mutation.meta, "error");

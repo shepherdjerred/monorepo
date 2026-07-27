@@ -1,6 +1,6 @@
 import { useSearchParams } from "react-router";
 import { Button } from "#src/components/ui/button.tsx";
-import { track } from "#src/lib/analytics.ts";
+import { trackOutboundClick } from "#src/lib/analytics.ts";
 
 /**
  * The "Sign in with Discord" anchor points at the backend's
@@ -32,8 +32,8 @@ export function Login() {
         <Button asChild size="lg" className="w-full">
           <a
             href={startUrl}
-            onClick={() => {
-              track("login_click");
+            onClick={(clickEvent) => {
+              trackOutboundClick(clickEvent, "login_click", startUrl);
             }}
           >
             Sign in with Discord
