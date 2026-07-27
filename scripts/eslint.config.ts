@@ -23,12 +23,19 @@ const config: ReturnType<typeof recommended> = [
     },
   },
   {
-    // CI scripts run dependency-free via `bun --no-install` BEFORE any
-    // workspace install (image selection happens pre-toolchain), so Zod
-    // cannot exist there — type-guard narrowing is the only available
-    // validation. These patterns only match on the repo-root lint pass (see
-    // the lint script); the in-workspace `eslint .` run never sees them.
-    files: [".buildkite/scripts/**/*.ts"],
+    // `.buildkite/scripts` is not a workspace member (no package.json), so
+    // Zod is unreachable from any file there under the isolated linker,
+    // regardless of install state — a type predicate is the only way to
+    // narrow parsed JSON without an `as` cast, which `no-type-assertions`
+    // bans outright. Enumerate the files that actually declare one instead
+    // of a directory-wide `.buildkite/scripts/**/*.ts` glob, so a future
+    // script that doesn't need this escape hatch doesn't inherit it silently
+    // — adding a file here is a visible, reviewable diff line.
+    files: [
+      ".buildkite/scripts/select-image-targets-lockfile.ts",
+      ".buildkite/scripts/annotate-image-summary.ts",
+      ".buildkite/scripts/ci-lane-coverage.test.ts",
+    ],
     rules: {
       "custom-rules/no-type-guards": "off",
     },

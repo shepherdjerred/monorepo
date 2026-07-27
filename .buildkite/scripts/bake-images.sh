@@ -322,6 +322,19 @@ if [ "$PUSH" = true ]; then
   fi
 fi
 
+# Every fail-open path above (unresolvable merge-base/last-green lookup, or a
+# distrusted selector result) leaves scope="all" without a $SELECTION_REPORT —
+# both callers declare that file as a required artifact_paths entry, and an
+# unmatched artifact path fails the step even after a successful full build.
+# Reconstruct a mode="all" report here so the file always exists whenever this
+# script produces output, regardless of which fallback triggered "all".
+if [ "$scope" = "all" ] && [ ! -f "$SELECTION_REPORT" ]; then
+  jq -n --argjson targets "$KNOWN_TARGETS_JSON" --arg reason "$fallback_reason" \
+    '{base: null, changedPaths: [], mode: "all", globalReason: $reason,
+      targets: ($targets | map({(.): [$reason]}) | add)}' \
+    > "$SELECTION_REPORT"
+fi
+
 # Build-page justification: render the selection reasons (and push outcomes on
 # main) as the `images` annotation. Never affects the step's exit code.
 annotate_args=()
