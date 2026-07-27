@@ -6,6 +6,11 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { MoreHorizontal } from "lucide-react";
+import {
+  queueTypeToDisplayString,
+  subscriptionFilterQueues,
+} from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { AddSubscriptionDialog } from "#src/components/add-subscription-dialog.tsx";
@@ -17,9 +22,15 @@ import {
   SubscriptionFilterDialog,
   type SubscriptionFilterAction,
 } from "#src/components/subscription-filter-dialog.tsx";
-import { summarizeFilters } from "#src/components/subscription-filter-fields.tsx";
 import { Badge } from "#src/components/ui/badge.tsx";
 import { Button } from "#src/components/ui/button.tsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "#src/components/ui/dropdown-menu.tsx";
 import { LoadMore } from "#src/components/load-more.tsx";
 import {
   Table,
@@ -43,6 +54,42 @@ function accountLabel(account: {
   return `${name} (${account.region})`;
 }
 
+/** Queue filters as compact badges: up to two, then a "+N more" summary. */
+function FilterSummary(props: {
+  filters: Parameters<typeof subscriptionFilterQueues>[0];
+  isMuted: boolean;
+}) {
+  const queues = subscriptionFilterQueues(props.filters);
+  const shown = queues.slice(0, 2);
+  const extra = queues.length - shown.length;
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1">
+      {queues.length === 0 ? (
+        <span>All queues</span>
+      ) : (
+        <>
+          {shown.map((queue) => (
+            <Badge key={queue} variant="secondary" className="font-normal">
+              {queueTypeToDisplayString(queue)}
+            </Badge>
+          ))}
+          {extra > 0 && (
+            <span
+              className="text-xs"
+              title={queues
+                .map((queue) => queueTypeToDisplayString(queue))
+                .join(", ")}
+            >
+              +{extra.toString()} more
+            </span>
+          )}
+        </>
+      )}
+      {props.isMuted && <Badge variant="outline">Muted</Badge>}
+    </span>
+  );
+}
+
 export function GuildSubscriptions() {
   const { guildId } = useParams();
   const trpc = useTRPC();
@@ -63,15 +110,14 @@ export function GuildSubscriptions() {
   // pathKey matches both the regular and infinite query caches for this
   // procedure, so invalidation refreshes the paginated list.
   const subsKey = trpc.subscription.list.pathKey();
-  const subsQuery = useInfiniteQuery(
-    trpc.subscription.list.infiniteQueryOptions(
-      { guildId: safeGuildId, limit: 50 },
-      {
-        enabled: guildId !== undefined,
-        getNextPageParam: (lastPage) => lastPage.nextCursor,
-      },
-    ),
+  const subsOptions = trpc.subscription.list.infiniteQueryOptions(
+    { guildId: safeGuildId, limit: 50 },
+    {
+      enabled: guildId !== undefined,
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    },
   );
+  const subsQuery = useInfiniteQuery(subsOptions);
   const subscriptions =
     subsQuery.data?.pages.flatMap((page) => page.items) ?? [];
   const channelsQuery = useQuery(
@@ -107,7 +153,36 @@ export function GuildSubscriptions() {
   );
   const muteMutation = useMutation(
     trpc.subscription.setMuted.mutationOptions({
-      onSuccess: (result, variables) => {
+      // Optimistic toggle: flip isMuted in the cached list immediately,
+      // roll back on error, reconcile with the server on settle.
+      onMutate: async (variables) => {
+        await queryClient.cancelQueries({ queryKey: subsKey });
+        const previous = queryClient.getQueryData(subsOptions.queryKey);
+        queryClient.setQueryData(subsOptions.queryKey, (data) =>
+          data === undefined
+            ? data
+            : {
+                ...data,
+                pages: data.pages.map((page) => ({
+                  ...page,
+                  items: page.items.map((item) =>
+                    item.player.alias === variables.alias &&
+                    item.channelId === variables.channelId
+                      ? { ...item, isMuted: variables.isMuted }
+                      : item,
+                  ),
+                })),
+              },
+        );
+        return { previous };
+      },
+      onSuccess: (result, variables, context) => {
+        // Application-level failures come back as a normal result (not a throw),
+        // so onError's rollback never runs — undo the optimistic mute flip here
+        // before the invalidation refetch reconciles.
+        if (result.kind !== "updated" && context.previous !== undefined) {
+          queryClient.setQueryData(subsOptions.queryKey, context.previous);
+        }
         switch (result.kind) {
           case "updated":
             setMessage(
@@ -116,7 +191,6 @@ export function GuildSubscriptions() {
                 : "Subscription unmuted.",
             );
             setError(null);
-            void queryClient.invalidateQueries({ queryKey: subsKey });
             return;
           case "player-not-found":
             setError("Player not found.");
@@ -129,8 +203,14 @@ export function GuildSubscriptions() {
             return;
         }
       },
-      onError: (err) => {
+      onError: (err, _variables, context) => {
+        if (context?.previous !== undefined) {
+          queryClient.setQueryData(subsOptions.queryKey, context.previous);
+        }
         setError(err.message);
+      },
+      onSettled: () => {
+        void queryClient.invalidateQueries({ queryKey: subsKey });
       },
     }),
   );
@@ -175,7 +255,9 @@ export function GuildSubscriptions() {
       </div>
 
       {subsQuery.isLoading && (
-        <p className="text-sm text-muted-foreground">Loading subscriptions…</p>
+        <p role="status" className="text-sm text-muted-foreground">
+          Loading subscriptions…
+        </p>
       )}
       {subsQuery.error && (
         <p className="text-sm text-destructive">
@@ -241,100 +323,110 @@ export function GuildSubscriptions() {
                         : `#${channel.name}`}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      <span className="inline-flex items-center gap-2">
-                        {summarizeFilters(sub.filters)}
-                        {sub.isMuted && <Badge variant="outline">Muted</Badge>}
-                      </span>
+                      <FilterSummary
+                        filters={sub.filters}
+                        isMuted={sub.isMuted}
+                      />
                     </TableCell>
                     <TableCell>
-                      <div className="flex justify-end gap-1">
+                      <div className="flex items-center justify-end gap-1">
                         {canUpdate && (
-                          <>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setFilterAction({
-                                  kind: "edit",
-                                  alias: sub.player.alias,
-                                  channelId: sub.channelId,
-                                  initial: sub.filters,
-                                });
-                              }}
-                            >
-                              Edit filters
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setChannelAction({
-                                  kind: "move",
-                                  alias: sub.player.alias,
-                                  fromChannelId: sub.channelId,
-                                });
-                              }}
-                            >
-                              Move
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              disabled={muteMutation.isPending}
-                              onClick={() => {
-                                muteMutation.mutate({
-                                  guildId,
-                                  channelId: sub.channelId,
-                                  alias: sub.player.alias,
-                                  isMuted: !sub.isMuted,
-                                });
-                              }}
-                            >
-                              {sub.isMuted ? "Unmute" : "Mute"}
-                            </Button>
-                          </>
-                        )}
-                        {canCreate && (
                           <Button
                             type="button"
                             variant="ghost"
                             size="sm"
                             onClick={() => {
-                              setChannelAction({
-                                kind: "add-channel",
+                              setFilterAction({
+                                kind: "edit",
                                 alias: sub.player.alias,
-                              });
-                            }}
-                          >
-                            Add channel
-                          </Button>
-                        )}
-                        {canDelete && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            disabled={removeMutation.isPending}
-                            onClick={() => {
-                              if (
-                                !globalThis.confirm(
-                                  `Remove "${sub.player.alias}" from this channel?`,
-                                )
-                              ) {
-                                return;
-                              }
-                              removeMutation.mutate({
-                                guildId,
                                 channelId: sub.channelId,
-                                alias: sub.player.alias,
+                                initial: sub.filters,
                               });
                             }}
                           >
-                            Remove
+                            Edit filters
                           </Button>
+                        )}
+                        {(canUpdate || canCreate || canDelete) && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                aria-label={`Actions for ${sub.player.alias}`}
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {canUpdate && (
+                                <>
+                                  <DropdownMenuItem
+                                    onSelect={() => {
+                                      setChannelAction({
+                                        kind: "move",
+                                        alias: sub.player.alias,
+                                        fromChannelId: sub.channelId,
+                                      });
+                                    }}
+                                  >
+                                    Move to another channel
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    disabled={muteMutation.isPending}
+                                    onSelect={() => {
+                                      muteMutation.mutate({
+                                        guildId,
+                                        channelId: sub.channelId,
+                                        alias: sub.player.alias,
+                                        isMuted: !sub.isMuted,
+                                      });
+                                    }}
+                                  >
+                                    {sub.isMuted ? "Unmute" : "Mute"}
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                              {canCreate && (
+                                <DropdownMenuItem
+                                  onSelect={() => {
+                                    setChannelAction({
+                                      kind: "add-channel",
+                                      alias: sub.player.alias,
+                                    });
+                                  }}
+                                >
+                                  Add channel
+                                </DropdownMenuItem>
+                              )}
+                              {canDelete && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    disabled={removeMutation.isPending}
+                                    className="text-destructive focus:text-destructive"
+                                    onSelect={() => {
+                                      if (
+                                        !globalThis.confirm(
+                                          `Remove "${sub.player.alias}" from this channel?`,
+                                        )
+                                      ) {
+                                        return;
+                                      }
+                                      removeMutation.mutate({
+                                        guildId,
+                                        channelId: sub.channelId,
+                                        alias: sub.player.alias,
+                                      });
+                                    }}
+                                  >
+                                    Remove
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         )}
                       </div>
                     </TableCell>

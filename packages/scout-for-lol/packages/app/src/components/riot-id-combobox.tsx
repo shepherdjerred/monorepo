@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { RiotIdSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import type { RegionValue } from "#src/lib/regions.ts";
@@ -46,7 +46,7 @@ export function RiotIdCombobox(props: {
   const suggestQuery = useQuery(
     trpc.riot.searchSummoners.queryOptions(
       { guildId: props.guildId, query: trimmed, region: props.region },
-      { enabled: trimmed.length >= 2 },
+      { enabled: trimmed.length >= 2, placeholderData: keepPreviousData },
     ),
   );
   const resolveQuery = useQuery(
@@ -56,6 +56,13 @@ export function RiotIdCombobox(props: {
     ),
   );
 
+  // Superseded query: the input is still debouncing (props.value hasn't reached
+  // `debounced`/`trimmed`, so the query keys haven't caught up) or a new request
+  // is in flight (keepPreviousData). In either case the visible results belong
+  // to the previous query, so surface nothing rather than a stale, selectable
+  // list.
+  const debouncePending = props.value.trim() !== trimmed;
+
   const items: RiotItem[] = [];
   const seen = new Set<string>();
   const push = (item: RiotItem) => {
@@ -64,14 +71,18 @@ export function RiotIdCombobox(props: {
     seen.add(key);
     items.push(item);
   };
-  if (resolveQuery.data?.kind === "ok") {
+  if (!debouncePending && resolveQuery.data?.kind === "ok") {
     push({
       kind: "resolved",
       gameName: resolveQuery.data.gameName,
       tagLine: resolveQuery.data.tagLine,
     });
   }
-  for (const suggestion of suggestQuery.data ?? []) {
+  const suggestions =
+    debouncePending || suggestQuery.isPlaceholderData
+      ? []
+      : (suggestQuery.data ?? []);
+  for (const suggestion of suggestions) {
     push({ kind: "suggestion", ...suggestion });
   }
 

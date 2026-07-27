@@ -1,6 +1,11 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { Copy, CornerDownLeft, Plus, Trash2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import {
+  REPORT_FILTERS,
+  REPORT_GROUP_BYS,
+  REPORT_METRICS,
+} from "@scout-for-lol/data";
 import { Button } from "#src/components/ui/button.tsx";
 import { Input } from "#src/components/ui/input.tsx";
 import {
@@ -19,6 +24,17 @@ import {
   TableRow,
 } from "#src/components/ui/table.tsx";
 import { useTRPC } from "#src/lib/trpc.ts";
+
+// Explorer columns are raw lake column names; only some coincide with valid
+// ScoutQL identifiers (metrics / group-by dimensions / filter fields). Inserting
+// a non-identifier column (e.g. `match_id`) into the query produces an
+// unknown-identifier error, so the "Insert into query" action is only offered
+// for columns that are actually part of the ScoutQL vocabulary.
+const SCOUTQL_INSERTABLE_IDS: ReadonlySet<string> = new Set<string>([
+  ...REPORT_METRICS.map((metric) => metric.id),
+  ...REPORT_GROUP_BYS.map((groupBy) => groupBy.id),
+  ...REPORT_FILTERS.map((filter) => filter.id),
+]);
 
 type ExplorerTableId = "match_participants" | "prematch_participants";
 type ExplorerOperator = "eq" | "contains" | "gte" | "lte";
@@ -51,7 +67,11 @@ export function ReportDataExplorer(props: {
     if (table === undefined) {
       return;
     }
-    setSelectedColumns(table.columns.map((column) => column.id));
+    setSelectedColumns(
+      table.columns
+        .filter((column) => column.defaultVisible)
+        .map((column) => column.id),
+    );
     setSortColumn(table.defaultSort);
     setFilters([]);
     setCursor(0);
@@ -78,7 +98,11 @@ export function ReportDataExplorer(props: {
         cursor,
         pageSize,
       },
-      { enabled: table !== undefined && selectedColumns.length > 0 },
+      {
+        enabled: table !== undefined && selectedColumns.length > 0,
+        // Keep the current rows visible while the next page/filter loads.
+        placeholderData: keepPreviousData,
+      },
     ),
   );
 
@@ -115,45 +139,60 @@ export function ReportDataExplorer(props: {
           </SelectContent>
         </Select>
 
-        <div className="flex flex-wrap gap-2">
-          {(table?.columns ?? []).map((column) => (
-            <label
-              key={column.id}
-              className="flex items-center gap-2 rounded border border-border px-2 py-1 text-xs"
-              title={column.description}
-            >
-              <input
-                type="checkbox"
-                checked={selectedColumns.includes(column.id)}
-                onChange={() => {
-                  setSelectedColumns((current) =>
-                    current.includes(column.id)
-                      ? current.filter((id) => id !== column.id)
-                      : [...current, column.id],
-                  );
-                  setCursor(0);
-                }}
-              />
-              {column.label}
-              <button
-                type="button"
-                title={`Copy ${column.id}`}
-                onClick={() => {
-                  void navigator.clipboard.writeText(column.id);
-                }}
-              >
-                <Copy className="size-3" />
-              </button>
-              <button
-                type="button"
-                title={`Insert ${column.id} into query`}
-                onClick={() => {
-                  props.onInsertIdentifier(column.id);
-                }}
-              >
-                <CornerDownLeft className="size-3" />
-              </button>
-            </label>
+        <div className="space-y-2">
+          {columnGroups(table?.columns ?? []).map(([group, columns]) => (
+            <fieldset key={group} className="space-y-1">
+              <legend className="text-xs font-medium text-muted-foreground">
+                {group}
+              </legend>
+              <div className="flex flex-wrap gap-2">
+                {columns.map((column) => (
+                  <span
+                    key={column.id}
+                    className="flex items-center gap-2 rounded border border-border px-2 py-1 text-xs"
+                    title={column.description}
+                  >
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedColumns.includes(column.id)}
+                        onChange={() => {
+                          setSelectedColumns((current) =>
+                            current.includes(column.id)
+                              ? current.filter((id) => id !== column.id)
+                              : [...current, column.id],
+                          );
+                          setCursor(0);
+                        }}
+                      />
+                      {column.label}
+                    </label>
+                    <button
+                      type="button"
+                      aria-label={`Copy ${column.id}`}
+                      title={`Copy ${column.id}`}
+                      onClick={() => {
+                        void navigator.clipboard.writeText(column.id);
+                      }}
+                    >
+                      <Copy className="size-3" />
+                    </button>
+                    {SCOUTQL_INSERTABLE_IDS.has(column.id) && (
+                      <button
+                        type="button"
+                        aria-label={`Insert ${column.id} into query`}
+                        title={`Insert ${column.id} into query`}
+                        onClick={() => {
+                          props.onInsertIdentifier(column.id);
+                        }}
+                      >
+                        <CornerDownLeft className="size-3" />
+                      </button>
+                    )}
+                  </span>
+                ))}
+              </div>
+            </fieldset>
           ))}
         </div>
       </div>
@@ -312,7 +351,7 @@ export function ReportDataExplorer(props: {
               <TableRow key={rowIndex.toString()}>
                 {(browseQuery.data?.columns ?? []).map((column) => (
                   <TableCell key={column.id} className="whitespace-nowrap">
-                    {formatExplorerValue(row[column.id])}
+                    {formatExplorerValue(row[column.id], column.type)}
                   </TableCell>
                 ))}
               </TableRow>
@@ -321,41 +360,87 @@ export function ReportDataExplorer(props: {
         </Table>
       </div>
       {browseQuery.isPending && (
-        <p className="text-sm text-muted-foreground">Loading rows…</p>
+        <p role="status" className="text-sm text-muted-foreground">
+          Loading rows…
+        </p>
       )}
-      <div className="flex justify-between">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={cursor === 0}
-          onClick={() => {
-            setCursor(Math.max(0, cursor - pageSize));
-          }}
-        >
-          Previous
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={usableCursor(browseQuery.data?.nextCursor) === null}
-          onClick={() => {
-            const next = usableCursor(browseQuery.data?.nextCursor);
-            if (next !== null) {
-              setCursor(next);
-            }
-          }}
-        >
-          Next
-        </Button>
-      </div>
+      <ExplorerPagination
+        cursor={cursor}
+        pageSize={pageSize}
+        nextCursor={browseQuery.data?.nextCursor}
+        isFetching={browseQuery.isFetching}
+        onCursor={setCursor}
+      />
     </section>
+  );
+}
+
+function ExplorerPagination(props: {
+  cursor: number;
+  pageSize: number;
+  nextCursor: number | null | undefined;
+  isFetching: boolean;
+  onCursor: (cursor: number) => void;
+}) {
+  // Disable while fetching: with keepPreviousData the visible nextCursor still
+  // belongs to the prior criteria, so paging now would apply a stale cursor to
+  // the new filter/sort/column/table result.
+  const nextCursor = usableCursor(props.nextCursor);
+  return (
+    <div className="flex justify-between">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={props.cursor === 0 || props.isFetching}
+        onClick={() => {
+          props.onCursor(Math.max(0, props.cursor - props.pageSize));
+        }}
+      >
+        Previous
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={nextCursor === null || props.isFetching}
+        onClick={() => {
+          if (nextCursor !== null) {
+            props.onCursor(nextCursor);
+          }
+        }}
+      >
+        Next
+      </Button>
+    </div>
   );
 }
 
 function usableCursor(value: number | null | undefined): number | null {
   return typeof value === "number" ? value : null;
+}
+
+type ExplorerColumnInfo = {
+  id: string;
+  label: string;
+  description: string;
+  group: string;
+  defaultVisible: boolean;
+};
+
+function columnGroups(
+  columns: ExplorerColumnInfo[],
+): [string, ExplorerColumnInfo[]][] {
+  const groups = new Map<string, ExplorerColumnInfo[]>();
+  for (const column of columns) {
+    const existing = groups.get(column.group);
+    if (existing === undefined) {
+      groups.set(column.group, [column]);
+    } else {
+      existing.push(column);
+    }
+  }
+  return [...groups.entries()];
 }
 
 function updateFilter(
@@ -373,6 +458,7 @@ function updateFilter(
 
 function formatExplorerValue(
   value: string | number | boolean | null | undefined,
+  type: string,
 ): string {
   if (value === null || value === undefined) {
     return "—";
@@ -383,6 +469,14 @@ function formatExplorerValue(
   if (typeof value === "number") {
     return value.toLocaleString();
   }
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+  // Only date-format actual timestamp columns. String columns (Riot IDs,
+  // summoner names, etc.) are shown literally — a tagline like "2026" happens
+  // to be Date-parseable and would otherwise be mangled into a date.
+  if (type === "timestamp") {
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toLocaleString();
+    }
+  }
+  return value;
 }

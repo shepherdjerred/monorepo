@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CompetitionCronSchema,
   computeUpcomingSchedule,
@@ -14,19 +14,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#src/components/ui/select.tsx";
+import { TimezoneSelect } from "#src/components/timezone-select.tsx";
 
 const CUSTOM_SCHEDULE = "custom";
-const TIMEZONES = [
-  "UTC",
-  "America/Los_Angeles",
-  "America/Denver",
-  "America/Chicago",
-  "America/New_York",
-  "Europe/London",
-  "Europe/Berlin",
-  "Asia/Tokyo",
-  "Australia/Sydney",
-];
+
+// Upcoming runs render in the viewer's local zone with an abbreviation so the
+// wall-clock time is unambiguous. dateStyle/timeStyle cannot combine with
+// timeZoneName (TypeError), so the components are listed explicitly.
+const LOCAL_RUN_FORMAT = new Intl.DateTimeFormat(undefined, {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+  timeZoneName: "short",
+});
+
+function scheduleRunTitle(date: Date, timezone: string): string {
+  const inScheduleTz = new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+    timeZone: timezone,
+  }).format(date);
+  return `${inScheduleTz} (schedule time)`;
+}
 
 export function ReportScheduleFields(props: {
   cronExpression: string;
@@ -34,9 +49,27 @@ export function ReportScheduleFields(props: {
   onCronChange: (value: string) => void;
   onTimezoneChange: (value: string) => void;
 }) {
-  const preset =
-    CronPresets.find((entry) => entry.value === props.cronExpression)?.value ??
-    CUSTOM_SCHEDULE;
+  const matchingPreset = CronPresets.find(
+    (entry) => entry.value === props.cronExpression,
+  )?.value;
+  const [customSelected, setCustomSelected] = useState(
+    () => matchingPreset === undefined,
+  );
+  const cronInputRef = useRef<HTMLInputElement>(null);
+  const pendingCronFocus = useRef(false);
+
+  useEffect(() => {
+    if (customSelected && pendingCronFocus.current) {
+      pendingCronFocus.current = false;
+      cronInputRef.current?.focus();
+    }
+  }, [customSelected]);
+
+  // Derived, not just state: a report hydrated with a custom cron (edit page)
+  // must show the cron input even though the user never clicked "Custom cron".
+  const isCustom = customSelected || matchingPreset === undefined;
+  const selectValue = isCustom ? CUSTOM_SCHEDULE : matchingPreset;
+
   const upcoming = useMemo(
     () => schedulePreview(props.cronExpression, props.scheduleTimezone),
     [props.cronExpression, props.scheduleTimezone],
@@ -47,11 +80,15 @@ export function ReportScheduleFields(props: {
       <Label>Schedule</Label>
       <div className="grid gap-3 sm:grid-cols-2">
         <Select
-          value={preset}
+          value={selectValue}
           onValueChange={(value) => {
-            if (value !== CUSTOM_SCHEDULE) {
-              props.onCronChange(value);
+            if (value === CUSTOM_SCHEDULE) {
+              pendingCronFocus.current = true;
+              setCustomSelected(true);
+              return;
             }
+            setCustomSelected(false);
+            props.onCronChange(value);
           }}
         >
           <SelectTrigger aria-label="Schedule preset">
@@ -66,41 +103,44 @@ export function ReportScheduleFields(props: {
             <SelectItem value={CUSTOM_SCHEDULE}>Custom cron</SelectItem>
           </SelectContent>
         </Select>
-        <Select
+        <TimezoneSelect
+          id="report-schedule-timezone"
           value={props.scheduleTimezone}
-          onValueChange={props.onTimezoneChange}
-        >
-          <SelectTrigger aria-label="Schedule timezone">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {TIMEZONES.map((timezone) => (
-              <SelectItem key={timezone} value={timezone}>
-                {timezone.replaceAll("_", " ")}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={props.onTimezoneChange}
+        />
       </div>
-      <Input
-        aria-label="Cron expression"
-        className="font-mono"
-        value={props.cronExpression}
-        onChange={(event) => {
-          props.onCronChange(event.target.value);
-        }}
-      />
+      {isCustom && (
+        <div className="space-y-1">
+          <Input
+            ref={cronInputRef}
+            aria-label="Cron expression"
+            className="font-mono"
+            value={props.cronExpression}
+            onChange={(event) => {
+              props.onCronChange(event.target.value);
+            }}
+          />
+          <p className="text-xs text-muted-foreground">
+            Runs at most once per day — exactly one minute and one hour (e.g.{" "}
+            <code>30 18 * * 1</code>).
+          </p>
+        </div>
+      )}
       {upcoming.ok ? (
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-          {upcoming.dates.map((date) => (
-            <span key={date.toISOString()}>
-              {date.toLocaleString(undefined, {
-                timeZone: props.scheduleTimezone,
-                dateStyle: "medium",
-                timeStyle: "short",
-              })}
-            </span>
-          ))}
+        <div className="space-y-1">
+          <p className="text-xs font-medium text-muted-foreground">
+            Next 3 runs
+          </p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            {upcoming.dates.map((date) => (
+              <span
+                key={date.toISOString()}
+                title={scheduleRunTitle(date, props.scheduleTimezone)}
+              >
+                {LOCAL_RUN_FORMAT.format(date)}
+              </span>
+            ))}
+          </div>
         </div>
       ) : (
         <p className="text-xs text-destructive">{upcoming.message}</p>

@@ -7,13 +7,15 @@ export const DEFAULT_SCHEDULE_TIMEZONE = "UTC";
 const MIN_FIRE_GAP_MS = 23 * 60 * 60 * 1000;
 const FIRE_SAMPLE_COUNT = 10;
 
+// Labels are timezone-neutral: presets fire in the schedule's own timezone
+// (web defaults to the creator's zone; Discord takes an explicit option).
 export const CronPresets = [
-  { label: "Daily — midnight UTC", value: "0 0 * * *" },
-  { label: "Daily — 9am UTC", value: "0 9 * * *" },
-  { label: "Daily — noon UTC", value: "0 12 * * *" },
-  { label: "Weekly — Sunday midnight UTC", value: "0 0 * * 0" },
-  { label: "Weekly — Monday midnight UTC", value: "0 0 * * 1" },
-  { label: "Monthly — 1st midnight UTC", value: "0 0 1 * *" },
+  { label: "Daily — midnight", value: "0 0 * * *" },
+  { label: "Daily — 9am", value: "0 9 * * *" },
+  { label: "Daily — noon", value: "0 12 * * *" },
+  { label: "Weekly — Sunday midnight", value: "0 0 * * 0" },
+  { label: "Weekly — Monday midnight", value: "0 0 * * 1" },
+  { label: "Monthly — 1st midnight", value: "0 0 1 * *" },
 ] as const;
 
 export const CompetitionCronSchema = z

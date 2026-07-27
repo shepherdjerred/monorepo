@@ -39,7 +39,11 @@ export function isUniqueConstraintError(error: unknown): boolean {
 export const playerDetailInclude = {
   accounts: true,
   subscriptions: true,
-  competitionParticipants: { include: { competition: true } },
+  // Season must be joined so parseCompetition can resolve effective dates for
+  // season-based competitions (their own startDate/endDate columns are null).
+  competitionParticipants: {
+    include: { competition: { include: { season: true } } },
+  },
 } satisfies Prisma.PlayerInclude;
 
 export async function getPlayerOrThrow(input: {

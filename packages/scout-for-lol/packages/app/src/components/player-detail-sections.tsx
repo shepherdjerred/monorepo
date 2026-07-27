@@ -1,4 +1,11 @@
 import { Link } from "react-router";
+import {
+  CompetitionStatusSchema,
+  CompetitionVisibilitySchema,
+  ParticipantStatusSchema,
+  participantStatusToString,
+  visibilityToString,
+} from "@scout-for-lol/data";
 import { Button } from "#src/components/ui/button.tsx";
 import { DiscordUser } from "#src/components/discord-user.tsx";
 import {
@@ -34,6 +41,29 @@ function channelLabel(
 ): string {
   const channel = channels?.find((candidate) => candidate.id === channelId);
   return channel === undefined ? channelId : `#${channel.name}`;
+}
+
+// Fail loud on an unknown persisted enum rather than rendering the raw value:
+// an out-of-enum status/visibility is a contract violation (corrupt row or API
+// drift), so surface it instead of masking it.
+function participantStatusLabel(status: string): string {
+  return participantStatusToString(ParticipantStatusSchema.parse(status));
+}
+
+function visibilityLabel(visibility: string): string {
+  return visibilityToString(CompetitionVisibilitySchema.parse(visibility));
+}
+
+function competitionTitleSuffix(competition: {
+  isCancelled: boolean;
+  status: string;
+}): string {
+  if (competition.isCancelled) return " (cancelled)";
+  // Parse (throw) rather than a raw string compare: an out-of-enum status is a
+  // contract violation that should surface, not be silently treated as active.
+  return CompetitionStatusSchema.parse(competition.status) === "ENDED"
+    ? " (ended)"
+    : "";
 }
 
 export function PlayerSubscriptionsTable(props: {
@@ -149,7 +179,7 @@ export function PlayerAccountsTable(props: {
                       disabled={account.riotGameName === null}
                       title={
                         account.riotGameName === null
-                          ? "Riot ID not resolved yet — reload to enable transfer"
+                          ? "Waiting for the Riot ID to resolve — this refreshes automatically"
                           : undefined
                       }
                       onClick={() => {
@@ -169,7 +199,7 @@ export function PlayerAccountsTable(props: {
                       }
                       title={
                         account.riotGameName === null
-                          ? "Riot ID not resolved yet — reload to enable delete"
+                          ? "Waiting for the Riot ID to resolve — this refreshes automatically"
                           : undefined
                       }
                       onClick={() => {
@@ -222,6 +252,7 @@ export function CompetitionSection(props: {
       title: string;
       visibility: string;
       isCancelled: boolean;
+      status: string;
       startDate: Date | string | null;
       endDate: Date | string | null;
     };
@@ -252,10 +283,14 @@ export function CompetitionSection(props: {
                   >
                     {participant.competition.title}
                   </Link>
-                  {participant.competition.isCancelled ? " (cancelled)" : ""}
+                  {competitionTitleSuffix(participant.competition)}
                 </TableCell>
-                <TableCell>{participant.status}</TableCell>
-                <TableCell>{participant.competition.visibility}</TableCell>
+                <TableCell>
+                  {participantStatusLabel(participant.status)}
+                </TableCell>
+                <TableCell>
+                  {visibilityLabel(participant.competition.visibility)}
+                </TableCell>
                 <TableCell className="text-muted-foreground">
                   {formatDate(participant.competition.startDate)} to{" "}
                   {formatDate(participant.competition.endDate)}

@@ -237,7 +237,14 @@ export type CompetitionCriteria = z.infer<typeof CompetitionCriteriaSchema>;
 // Competition Status (Calculated, Not Stored)
 // ============================================================================
 
-export type CompetitionStatus = "DRAFT" | "ACTIVE" | "ENDED" | "CANCELLED";
+export const CompetitionStatusSchema = z.enum([
+  "DRAFT",
+  "ACTIVE",
+  "ENDED",
+  "CANCELLED",
+]);
+
+export type CompetitionStatus = z.infer<typeof CompetitionStatusSchema>;
 
 /**
  * Calculate competition status based on dates and cancellation flag.
@@ -329,6 +336,22 @@ export function visibilityToString(visibility: CompetitionVisibility): string {
     .with("OPEN", () => "Open to All")
     .with("INVITE_ONLY", () => "Invite Only")
     .with("SERVER_WIDE", () => "Server-Wide")
+    .exhaustive();
+}
+
+/**
+ * Describe what a visibility setting means for participants
+ */
+export function visibilityDescription(
+  visibility: CompetitionVisibility,
+): string {
+  return match(visibility)
+    .with("OPEN", () => "Anyone in the server can join themselves (opt-in).")
+    .with("INVITE_ONLY", () => "Players join only when invited.")
+    .with(
+      "SERVER_WIDE",
+      () => "Every tracked player is entered automatically (opt-out).",
+    )
     .exhaustive();
 }
 
