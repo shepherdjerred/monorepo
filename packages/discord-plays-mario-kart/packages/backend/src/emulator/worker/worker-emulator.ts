@@ -78,19 +78,26 @@ export class WorkerEmulator {
           : "emulator worker errored";
       logger.error("emulator worker error", { message });
       Sentry.captureMessage(message, "error");
-      // Tear the dead worker down and mark it terminal. Otherwise a later
-      // stop() would post `stop` to a corpse and await a `stopped` ack that can
-      // never arrive, hanging session teardown and userbot release.
-      worker.terminate();
-      this.worker = undefined;
-      this.failPending(new Error(message));
+      // The worker is dead — tear it down (see teardown) so a later stop()
+      // doesn't post to a corpse and await an unreachable `stopped` ack.
+      this.teardown(new Error(message));
     });
     const ready = new Promise<void>((resolve, reject) => {
       this.readyResolve = resolve;
       this.readyReject = reject;
     });
     this.post({ kind: "init", opts: this.opts });
-    await ready;
+    try {
+      await ready;
+    } catch (error) {
+      // Init failed (missing ROM, corrupt wasm, worker crash). The worker is
+      // still running with partially-initialized wasm; terminate it here or
+      // each /play retry leaks another worker (the driver never published this
+      // runtime, so its cleanup can't reach us).
+      const err = error instanceof Error ? error : new Error(String(error));
+      this.teardown(err);
+      throw err;
+    }
   }
 
   start(): void {
@@ -213,6 +220,20 @@ export class WorkerEmulator {
   }
 
   /**
+   * Tear down a worker that can no longer be trusted — a crash, an init
+   * failure, or a broken same-build message contract. Terminate it, drop the
+   * reference so no later post reaches a corpse, and fail every pending caller
+   * plus readiness/stop waiters. Idempotent.
+   */
+  private teardown(error: Error): void {
+    if (this.worker !== undefined) {
+      this.worker.terminate();
+      this.worker = undefined;
+    }
+    this.failPending(error);
+  }
+
+  /**
    * Run a consumer callback (overlay compose, streamer.pushFrame, RaceTracker)
    * without letting a throw escape the Worker message listener and crash the
    * Bun process. In-process this ran inside N64Emulator.loop()'s try/catch; the
@@ -236,9 +257,17 @@ export class WorkerEmulator {
     try {
       msg = parseWorkerMessage(data);
     } catch (error) {
-      logger.error("unparseable worker message", {
-        error: error instanceof Error ? error.message : String(error),
-      });
+      // A same-build worker sending an unparseable message is a broken
+      // contract, not recoverable input: terminate and fail readiness/pending
+      // rather than swallowing it and leaving init()/renderFrame()/persistSaves()
+      // hung forever.
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error("unparseable worker message", { error: message });
+      Sentry.captureMessage(
+        `emulator worker protocol error: ${message}`,
+        "error",
+      );
+      this.teardown(new Error(`emulator worker protocol error: ${message}`));
       return;
     }
     switch (msg.kind) {
@@ -255,6 +284,9 @@ export class WorkerEmulator {
         this.deliverFrame(msg);
         return;
       case "audio": {
+        // Ack first (same rationale as frames) so the worker's audio in-flight
+        // bound reflects "dequeued" regardless of what the consumer does.
+        if (this.worker !== undefined) this.post({ kind: "audioAck" });
         const cb = this.onAudioCb;
         if (cb !== undefined) {
           const pcm = bufferView(msg.pcm);

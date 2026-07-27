@@ -62,6 +62,14 @@ let snapshotEveryNFrames = 10;
 const MAX_FRAMES_IN_FLIGHT = 3;
 let framesInFlight = 0;
 
+// Same backpressure for audio. Without it the worker keeps draining PCM every
+// tick while a stalled main event loop can't dequeue, so chunks pile in the
+// port queue and later replay as stale audio into the transport sink (growing
+// A/V latency + memory). Bounded in step with frames so audio and video drop
+// together and stay roughly aligned under load.
+const MAX_AUDIO_IN_FLIGHT = 3;
+let audioInFlight = 0;
+
 function requireEmulator(): N64Emulator {
   const emu = emulator;
   if (emu === undefined) {
@@ -120,6 +128,11 @@ async function handleInit(opts: WorkerInitOpts): Promise<void> {
     );
   });
   emu.onAudio((pcm) => {
+    if (audioInFlight >= MAX_AUDIO_IN_FLIGHT) {
+      // Main thread is behind; drop this chunk rather than growing the queue.
+      return;
+    }
+    audioInFlight += 1;
     post({ kind: "audio", pcm }, transferListFor(pcm));
   });
 
@@ -159,6 +172,9 @@ async function handle(data: unknown): Promise<void> {
       return;
     case "frameAck":
       framesInFlight = Math.max(0, framesInFlight - 1);
+      return;
+    case "audioAck":
+      audioInFlight = Math.max(0, audioInFlight - 1);
       return;
     case "renderFrame": {
       // Correlate a failure to msg.id so the facade rejects that pending

@@ -71,6 +71,14 @@ async function emitLeaderboard(
   }
 }
 
+// At most one screenshot render in flight per socket. `screenshot` is a public,
+// unauthenticated Socket.IO request that starts a Worker round-trip (a 640×240
+// RGBA response + synchronous PNG encode) and returns immediately, so without a
+// bound a client can enqueue unbounded renderFrame requests — exhausting memory
+// and queuing ahead of controller input on the shared worker port. Duplicates
+// while a render is pending for the same socket are dropped (coalesced).
+const screenshotInFlight = new Set<string>();
+
 /** Render the current frame (now a Worker round-trip), overlay it, and emit the
  *  PNG to a single socket (fire-and-forget). */
 async function emitScreenshot(
@@ -78,6 +86,8 @@ async function emitScreenshot(
   emulator: EmulatorControls,
   overlayContext: StreamOverlayContextProvider | undefined,
 ): Promise<void> {
+  if (screenshotInFlight.has(sock.id)) return; // coalesce spam from one socket
+  screenshotInFlight.add(sock.id);
   try {
     const frame = await emulator.renderFrame();
     if (frame.height === 0) return;
@@ -93,6 +103,8 @@ async function emitScreenshot(
     sock.emit("response", response);
   } catch (error) {
     logger.warn("screenshot render failed", error);
+  } finally {
+    screenshotInFlight.delete(sock.id);
   }
 }
 

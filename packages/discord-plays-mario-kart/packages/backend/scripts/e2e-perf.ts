@@ -189,6 +189,12 @@ async function startServer(emu: N64Emulator): Promise<{
   // renderFrame is async (a Worker round-trip). This harness drives the
   // in-process N64Emulator directly, so adapt its sync renderFrame to the
   // async EmulatorControls contract.
+  //
+  // NOTE: because setPlayerInput here calls the in-process emulator directly,
+  // these spam scenarios measure the wasm tick loop itself — they do NOT cross
+  // the main→postMessage→Zod→worker-tick boundary and so cannot detect worker
+  // port-queue growth or tick-timer starvation. That boundary is exercised
+  // under controller spam by scripts/e2e-worker.ts.
   const emulator: EmulatorControls = {
     setPlayerInput: (seat, state) => {
       emu.setPlayerInput(seat, state);

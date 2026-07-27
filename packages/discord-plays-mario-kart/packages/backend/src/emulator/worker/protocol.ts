@@ -87,9 +87,11 @@ const MainMessageSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("clearPlayerInput"), seat: z.number() }),
   z.object({ kind: z.literal("renderFrame"), id: z.number() }),
   z.object({ kind: z.literal("persistSaves"), id: z.number() }),
-  // Backpressure: the main thread acks each frame it dequeues so the worker can
-  // bound how many frames are in flight (see MAX_FRAMES_IN_FLIGHT).
+  // Backpressure: the main thread acks each frame/audio chunk it dequeues so
+  // the worker can bound how many are in flight (see MAX_FRAMES_IN_FLIGHT /
+  // MAX_AUDIO_IN_FLIGHT).
   z.object({ kind: z.literal("frameAck") }),
+  z.object({ kind: z.literal("audioAck") }),
 ]);
 export type MainToWorker = z.infer<typeof MainMessageSchema>;
 
