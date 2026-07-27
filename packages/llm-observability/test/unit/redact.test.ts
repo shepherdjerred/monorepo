@@ -137,6 +137,21 @@ test("redactText masks secret-shaped NAME=value assignments structurally", () =>
   expect(out).not.toContain("abc123xyz");
 });
 
+test("redactText masks quoted JSON secret fields (e.g. cat auth.json)", () => {
+  const accessTok = ["aaa", "bbb", "ccc", "ddd"].join(".");
+  const refreshTok = ["eee", "fff", "ggg"].join(".");
+  // Mimics `cat auth.json` output — quote between field name and colon dodges
+  // the unquoted NAME=value pass, and these tokens aren't env vars.
+  const body = `{"access_token":"${accessTok}", "refresh_token" : "${refreshTok}", "expiry": 123}`;
+  const out = redactText(body);
+  expect(out).not.toContain(accessTok);
+  expect(out).not.toContain(refreshTok);
+  expect(out).toContain('"access_token":"[REDACTED]"');
+  expect(out).toContain('"refresh_token" : "[REDACTED]"');
+  // Non-secret fields are untouched.
+  expect(out).toContain('"expiry": 123');
+});
+
 test("redactText masks Bearer tokens", () => {
   // Token interpolated (not a string literal) so gitleaks doesn't flag it.
   const bearer = ["sk", "live", "xyz123"].join("-");
