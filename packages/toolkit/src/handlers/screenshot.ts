@@ -114,14 +114,28 @@ export async function handleScreenshotCommand(
     process.exit(1);
   }
 
+  // Reject non-finite / non-positive timeouts up front: `--timeout Infinity`
+  // (or a huge value) would make the readiness/selector loops wait forever, and
+  // `--timeout nope` → NaN would surface a misleading "within NaNms" error.
+  let timeoutMs: number | undefined;
+  if (values.timeout !== undefined) {
+    const parsed = Number(values.timeout);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      console.error(
+        `--timeout must be a positive integer number of milliseconds, got "${values.timeout}"`,
+      );
+      process.exit(1);
+    }
+    timeoutMs = parsed;
+  }
+
   try {
     const result = await screenshotCommand({
       alias: subcommand,
       route,
       out: values.out,
       waitForSelector: values["wait-for-selector"],
-      timeoutMs:
-        values.timeout === undefined ? undefined : Number(values.timeout),
+      timeoutMs,
       authDiscordId: discordId,
       envOverrides: parseEnvOverrides(values.env),
       viewport:

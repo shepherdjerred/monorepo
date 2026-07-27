@@ -74,13 +74,20 @@ export async function screenshotCommand(
   }
   process.once("SIGINT", onSignal);
   process.once("SIGTERM", onSignal);
+  const registerCleanup = (cleanup: () => Promise<void>) => {
+    cleanups.push(cleanup);
+  };
 
   try {
+    // ensureDevServer registers its own stop() via registerCleanup the moment
+    // it spawns — before it waits for readiness — so a signal during startup
+    // still tears the child down (no window where the process is alive but
+    // unregistered).
     const devServer = await ensureDevServer(entry, {
       envOverrides: options.envOverrides,
       timeoutMs: options.timeoutMs,
+      registerCleanup,
     });
-    cleanups.push(devServer.stop);
 
     try {
       const authFlow: { flow: AuthFlow; discordId?: string } | undefined =
@@ -100,9 +107,7 @@ export async function screenshotCommand(
         theme: options.theme,
         fullPage: options.fullPage,
         timeoutMs: options.timeoutMs,
-        registerCleanup: (cleanup) => {
-          cleanups.push(cleanup);
-        },
+        registerCleanup,
       });
 
       return {

@@ -63,6 +63,12 @@ export async function ensureDevServer(
   options: {
     envOverrides?: Record<string, string> | undefined;
     timeoutMs?: number | undefined;
+    /**
+     * Register the spawned server's teardown with the orchestrator the moment
+     * it exists — before we start waiting for readiness — so a SIGINT during
+     * the startup interval still stops the child. See screenshotCommand.
+     */
+    registerCleanup?: ((cleanup: () => Promise<void>) => void) | undefined;
   } = {},
 ): Promise<DevServerHandle> {
   const timeoutMs = options.timeoutMs ?? 60_000;
@@ -108,11 +114,14 @@ export async function ensureDevServer(
       "Not inside the monorepo (git rev-parse --show-toplevel failed or versions.ts is missing) — toolkit screenshot must run from within the repo checkout.",
     );
   }
+  // `detached` puts the child in its own process group so `stop()` can signal
+  // the whole tree (dev commands spawn descendants — see stop()).
   const proc = Bun.spawn(entry.devCommand, {
     cwd: `${root}/${entry.cwd}`,
     env: { ...Bun.env, ...options.envOverrides },
     stdout: "pipe",
     stderr: "pipe",
+    detached: true,
   });
 
   // Drain stdout/stderr purely for diagnostics — the bound port is known
@@ -132,7 +141,18 @@ export async function ensureDevServer(
   const stderrDone = readStream(proc.stderr);
 
   const stop = async () => {
-    proc.kill();
+    // The dev command may spawn descendants (docs-board's dev.ts starts
+    // separate API + Vite children; scout's dev-web.sh starts backend + Vite).
+    // The child is a group leader (spawned `detached`), so signal the whole
+    // group with a negative PID — killing only `bun run` would orphan those
+    // servers and leave their ports occupied for the next run.
+    try {
+      process.kill(-proc.pid, "SIGTERM");
+    } catch {
+      // No such group (already exited, or a platform without process groups)
+      // — fall back to signaling the child directly.
+      proc.kill();
+    }
     // Clear the loser of the race: if the process exits promptly, an
     // un-cleared 5s timer would keep Bun's event loop (and thus the CLI)
     // alive for the full 5s after cleanup.
@@ -147,6 +167,10 @@ export async function ensureDevServer(
       clearTimeout(killTimer);
     }
   };
+
+  // Register teardown NOW — before the readiness wait — so a signal delivered
+  // during startup still tears the child (and its group) down.
+  options.registerCleanup?.(stop);
 
   // Wait until the freshly-spawned server answers on the expected port, the
   // process exits (fail fast — e.g. missing tool, `op` not signed in), or we

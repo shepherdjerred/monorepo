@@ -21,7 +21,14 @@ DISCORD_TOKEN=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/DISCORD
 DISCORD_CLIENT_SECRET=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/DISCORD_CLIENT_SECRET
 
 # ── Web session signing ───────────────────────────────────────────────
-JWT_SIGNING_SECRET=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/JWT_SIGNING_SECRET
+# Local-only signing secret — deliberately NOT the beta 1Password secret.
+# The dev-login route (ENABLE_DEV_LOGIN, below) mints a session for any
+# caller-chosen Discord ID; if it signed with the beta JWT_SIGNING_SECRET, that
+# cookie would verify against the deployed beta backend (same iss/aud), letting
+# anyone who can reach this machine's :3000 replay it as any beta user. A
+# distinct local secret means dev-minted cookies are worthless off this machine.
+# Any ≥32-char value works; this one is intentionally low-entropy and public.
+JWT_SIGNING_SECRET=local-dev-only-jwt-signing-secret-not-for-any-deployed-env
 
 # ── Where the SPA lives (browser-visible origin) ──────────────────────
 # Vite dev server runs at :5180 and proxies /trpc + /api to the backend.
