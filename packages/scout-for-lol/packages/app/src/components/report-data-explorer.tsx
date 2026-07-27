@@ -1,6 +1,11 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { Copy, CornerDownLeft, Plus, Trash2 } from "lucide-react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import {
+  REPORT_FILTERS,
+  REPORT_GROUP_BYS,
+  REPORT_METRICS,
+} from "@scout-for-lol/data";
 import { Button } from "#src/components/ui/button.tsx";
 import { Input } from "#src/components/ui/input.tsx";
 import {
@@ -19,6 +24,17 @@ import {
   TableRow,
 } from "#src/components/ui/table.tsx";
 import { useTRPC } from "#src/lib/trpc.ts";
+
+// Explorer columns are raw lake column names; only some coincide with valid
+// ScoutQL identifiers (metrics / group-by dimensions / filter fields). Inserting
+// a non-identifier column (e.g. `match_id`) into the query produces an
+// unknown-identifier error, so the "Insert into query" action is only offered
+// for columns that are actually part of the ScoutQL vocabulary.
+const SCOUTQL_INSERTABLE_IDS: ReadonlySet<string> = new Set<string>([
+  ...REPORT_METRICS.map((metric) => metric.id),
+  ...REPORT_GROUP_BYS.map((groupBy) => groupBy.id),
+  ...REPORT_FILTERS.map((filter) => filter.id),
+]);
 
 type ExplorerTableId = "match_participants" | "prematch_participants";
 type ExplorerOperator = "eq" | "contains" | "gte" | "lte";
@@ -161,16 +177,18 @@ export function ReportDataExplorer(props: {
                     >
                       <Copy className="size-3" />
                     </button>
-                    <button
-                      type="button"
-                      aria-label={`Insert ${column.id} into query`}
-                      title={`Insert ${column.id} into query`}
-                      onClick={() => {
-                        props.onInsertIdentifier(column.id);
-                      }}
-                    >
-                      <CornerDownLeft className="size-3" />
-                    </button>
+                    {SCOUTQL_INSERTABLE_IDS.has(column.id) && (
+                      <button
+                        type="button"
+                        aria-label={`Insert ${column.id} into query`}
+                        title={`Insert ${column.id} into query`}
+                        onClick={() => {
+                          props.onInsertIdentifier(column.id);
+                        }}
+                      >
+                        <CornerDownLeft className="size-3" />
+                      </button>
+                    )}
                   </span>
                 ))}
               </div>

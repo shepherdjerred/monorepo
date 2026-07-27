@@ -53,9 +53,15 @@ export function DiscordMemberCombobox(props: {
         // without selecting a search result.
         props.onChange(SNOWFLAKE.test(text.trim()) ? text.trim() : "");
       }}
-      // Hide stale results (keepPreviousData) while a new query is loading, so
-      // the previous query's members can't be selected for the new search.
-      items={search.isPlaceholderData ? [] : (search.data ?? [])}
+      // Hide stale results for a superseded query — both while the input is
+      // still debouncing (query !== debounced, so the query key hasn't caught
+      // up) and while the new request is in flight (keepPreviousData) — so the
+      // previous query's members can't be selected for the new search.
+      items={
+        query.trim() !== debounced.trim() || search.isPlaceholderData
+          ? []
+          : (search.data ?? [])
+      }
       isLoading={search.isFetching}
       getKey={(member) => member.id}
       onSelect={(member) => {

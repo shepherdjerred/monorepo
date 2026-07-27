@@ -82,6 +82,24 @@ function labelForValue(value: string): string {
   return makeZone(value).label;
 }
 
+// `Intl.supportedValuesOf("timeZone")` omits aliases (e.g. `US/Pacific`,
+// `Etc/UTC`) and SEARCHABLE_ZONES matching is case-sensitive, but
+// `Intl.DateTimeFormat` accepts and canonicalizes any valid IANA id/alias. This
+// returns the canonical id for a complete, valid zone string, or undefined for
+// partial/invalid input (which throws a RangeError).
+function canonicalizeTimezone(value: string): string | undefined {
+  if (value.length === 0) {
+    return undefined;
+  }
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      timeZone: value,
+    }).resolvedOptions().timeZone;
+  } catch {
+    return undefined;
+  }
+}
+
 export function TimezoneSelect(props: {
   value: string;
   onChange: (tz: string) => void;
@@ -113,15 +131,19 @@ export function TimezoneSelect(props: {
       onValueChange={(text) => {
         setQuery(text);
         // Commit as soon as the typed/pasted text is itself a complete, valid
-        // zone (id or full label) — without this, typing an exact IANA name
-        // and submitting without clicking a result silently keeps the old
-        // timezone. Partial text matches nothing, so this never fires mid-type.
+        // zone — without this, typing a valid IANA name and submitting without
+        // clicking a result silently keeps the old timezone. Match the pinned/
+        // supported list first (id or full label), then fall back to
+        // canonicalizing via Intl so aliases and differently-cased ids (e.g.
+        // `US/Pacific`, `america/los_angeles`) also commit. Partial text
+        // resolves to nothing, so this never fires mid-type.
         const trimmedText = text.trim();
-        const exact = SEARCHABLE_ZONES.find(
-          (zone) => zone.id === trimmedText || zone.label === trimmedText,
-        );
-        if (exact !== undefined && exact.id !== props.value) {
-          props.onChange(exact.id);
+        const canonical =
+          SEARCHABLE_ZONES.find(
+            (zone) => zone.id === trimmedText || zone.label === trimmedText,
+          )?.id ?? canonicalizeTimezone(trimmedText);
+        if (canonical !== undefined && canonical !== props.value) {
+          props.onChange(canonical);
         }
       }}
       items={items}

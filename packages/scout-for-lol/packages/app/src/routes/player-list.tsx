@@ -216,6 +216,12 @@ export function PlayerList() {
           void queryClient.invalidateQueries({
             queryKey: trpc.subscription.list.pathKey(),
           });
+          // Tracking yourself links a player to the signed-in Discord ID; the
+          // current-linked-player query may be cached as null, so invalidate it
+          // too or "My linked player" stays disabled until a later refetch.
+          void queryClient.invalidateQueries({
+            queryKey: trpc.player.getCurrentLinkedPlayer.pathKey(),
+          });
           setAddOpen(false);
         }}
       />

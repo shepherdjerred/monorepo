@@ -56,6 +56,13 @@ export function RiotIdCombobox(props: {
     ),
   );
 
+  // Superseded query: the input is still debouncing (props.value hasn't reached
+  // `debounced`/`trimmed`, so the query keys haven't caught up) or a new request
+  // is in flight (keepPreviousData). In either case the visible results belong
+  // to the previous query, so surface nothing rather than a stale, selectable
+  // list.
+  const debouncePending = props.value.trim() !== trimmed;
+
   const items: RiotItem[] = [];
   const seen = new Set<string>();
   const push = (item: RiotItem) => {
@@ -64,18 +71,17 @@ export function RiotIdCombobox(props: {
     seen.add(key);
     items.push(item);
   };
-  if (resolveQuery.data?.kind === "ok") {
+  if (!debouncePending && resolveQuery.data?.kind === "ok") {
     push({
       kind: "resolved",
       gameName: resolveQuery.data.gameName,
       tagLine: resolveQuery.data.tagLine,
     });
   }
-  // Hide stale suggestions (keepPreviousData) while a new query is loading, so
-  // the previous query's summoners can't be selected for the new search.
-  const suggestions = suggestQuery.isPlaceholderData
-    ? []
-    : (suggestQuery.data ?? []);
+  const suggestions =
+    debouncePending || suggestQuery.isPlaceholderData
+      ? []
+      : (suggestQuery.data ?? []);
   for (const suggestion of suggestions) {
     push({ kind: "suggestion", ...suggestion });
   }

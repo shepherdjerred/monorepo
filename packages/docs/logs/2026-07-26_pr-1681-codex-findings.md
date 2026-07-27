@@ -172,3 +172,27 @@ All peripheral edges, all fixed:
 
 Verified: data+backend+app typecheck clean, lint clean, `competition-create`
 tests 3/3 pass.
+
+## Re-review round 5 (cycle 6) — 4 P2s on head fe2faf62f
+
+After a standby (non-convergence + gate bug surfaced to the user), unpaused. All
+fixed:
+
+- **P2 combobox debounce window:** the cycle-5 `isPlaceholderData` guard didn't
+  cover the debounce window (query key hasn't updated yet). Now all three
+  comboboxes also hide results while `query.trim() !== debounced.trim()`.
+- **P2 typed timezone aliases/case:** exact-list matching missed aliases
+  (`US/Pacific`, `Etc/UTC`) and differing case (`america/los_angeles`). Added
+  `canonicalizeTimezone` (via `Intl.DateTimeFormat`) as a fallback so any
+  complete valid zone commits, canonicalized.
+- **P2 ScoutQL-insertable columns:** the explorer's "Insert into query" appended
+  raw lake column ids (e.g. `match_id`) that aren't ScoutQL identifiers, breaking
+  the query. The Insert action is now only shown for columns whose id is in the
+  ScoutQL vocabulary (`REPORT_METRICS` ∪ `REPORT_GROUP_BYS` ∪ `REPORT_FILTERS`);
+  Copy stays for all.
+- **P2 track-self cache:** the Track-player success handler now also invalidates
+  `getCurrentLinkedPlayer`, so "My linked player" enables immediately after
+  tracking yourself instead of waiting for a later refetch.
+
+Verified: app typecheck + lint clean. (main advanced but merge-tree is clean —
+no restack needed.)
