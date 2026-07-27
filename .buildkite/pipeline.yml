@@ -1024,11 +1024,19 @@ steps:
     command: |
       if ! bash .buildkite/scripts/ci-changed.sh images; then
         jq -n '{}' | buildkite-agent meta-data set image-digests
-        # bake-images.sh never runs on this path, so it never produces the two
-        # artifact_paths below. Write skip-shaped reports ourselves — an empty
-        # artifact_paths match fails the step even though the skip itself is fine.
-        jq -n '{base: null, changedPaths: [], mode: "selected", globalReason: "no image-owning packages changed since last green main build", targets: {}}' > image-selection-report.json
+        # bake-images.sh never runs on this path, so it never produces
+        # image-push-outcomes.json — write the empty array ourselves; an
+        # unmatched artifact_paths entry fails the step even though the skip
+        # itself is fine. image-selection-report.json is DIFFERENT: the
+        # ci-changed.sh call above already wrote it (via select-image-targets.ts
+        # --reasons-out) with the real base/changedPaths/targets that produced
+        # this skip — fabricating a second, evidence-free one here would only
+        # overwrite genuine data. Fall back to a synthetic report only in the
+        # (should-never-happen) case that write didn't happen.
         jq -n '[]' > image-push-outcomes.json
+        if [ ! -f image-selection-report.json ]; then
+          jq -n '{base: null, changedPaths: [], mode: "selected", globalReason: "no image-owning packages changed since last green main build", targets: {}}' > image-selection-report.json
+        fi
         if ! bun --no-install .buildkite/scripts/annotate-image-summary.ts --report image-selection-report.json --outcomes image-push-outcomes.json; then
           echo "WARN: image summary annotation failed (non-fatal)" >&2
         fi
@@ -1065,6 +1073,17 @@ steps:
       # BOTH selectors agree nothing site-shaped changed.
       if ! bash .buildkite/scripts/ci-changed.sh sites &&
         ! bash .buildkite/scripts/ci-changed.sh site-scout; then
+        # The per-site lanes below never run on this early-exit path, so their
+        # own ci-changed.sh calls (and the record_decision inside them) never
+        # fire even though the aggregate answer applies to every one of them —
+        # check each explicitly so build-summary shows a real "skipped"
+        # instead of a misleading "not recorded" for every site-* row. The
+        # result is discarded (all of them are unaffected by construction);
+        # only the recorded decision matters here.
+        for site_lane in site-sjer-red site-resume site-webring site-cooklang \
+          site-stocks site-better-skill-capped site-glitter; do
+          if bash .buildkite/scripts/ci-changed.sh "$$site_lane"; then :; fi
+        done
         exit 0
       fi
       . .buildkite/scripts/toolchain.sh

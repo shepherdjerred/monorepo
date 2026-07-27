@@ -16,7 +16,7 @@ if [ -z "$lane" ]; then
   exit 0
 fi
 
-trap 'status=$?; trap - ERR; echo "WARN: CI change selector failed for ${lane} (exit ${status}); running lane" >&2; exit 0' ERR
+trap 'status=$?; trap - ERR; echo "WARN: CI change selector failed for ${lane} (exit ${status}); running lane" >&2; declare -F record_decision >/dev/null && record_decision "ran — selector failed with exit ${status} (fail-open)"; exit 0' ERR
 
 # Record this lane's run/skip decision as build meta-data so the main-only
 # build-summary step can render one lane-decision table for the whole build.
@@ -61,7 +61,13 @@ if ! git merge-base --is-ancestor "$base" HEAD; then
 fi
 
 if [ "$lane" = "images" ]; then
-  targets=$(bun --no-install .buildkite/scripts/select-image-targets.ts --base "$base")
+  # --reasons-out writes the real base/changedPaths/targets to the same
+  # filename bake-images.sh uses as its own SELECTION_REPORT. bake-images.sh
+  # never runs on the skip path below, so this call is the ONLY producer of
+  # that artifact then — without it, the pipeline step had to fabricate an
+  # empty base/changedPaths, discarding the actual diff evidence this lookup
+  # just computed.
+  targets=$(bun --no-install .buildkite/scripts/select-image-targets.ts --base "$base" --reasons-out image-selection-report.json)
   if [ "$targets" = "[]" ]; then
     record_decision "skipped — no image closure affected since ${base}"
     echo "${lane}: unchanged since ${base}; skipping"
@@ -267,4 +273,5 @@ if [ "$status" -eq 1 ]; then
 fi
 
 echo "WARN: git diff failed for ${lane} (exit ${status}); running lane" >&2
+record_decision "ran — git diff exited ${status} for ${lane} (fail-open)"
 exit 0
