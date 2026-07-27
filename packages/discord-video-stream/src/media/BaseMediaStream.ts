@@ -79,6 +79,12 @@ export class BaseMediaStream extends Writable {
   ): Promise<void> {
     throw new Error("Not implemented");
   }
+  protected now(): number {
+    return performance.now();
+  }
+  protected wait(milliseconds: number): Promise<void> {
+    return setTimeout(milliseconds);
+  }
   private ptsDelta() {
     if (this.pts !== undefined && this.syncStream?.pts !== undefined)
       return this.pts - this.syncStream.pts;
@@ -117,9 +123,9 @@ export class BaseMediaStream extends Writable {
 
     const frametime = (Number(duration) / timeBase.den) * timeBase.num * 1000;
 
-    const start_sendFrame = performance.now();
+    const start_sendFrame = this.now();
     await this._sendFrame(Buffer.from(data), frametime);
-    const end_sendFrame = performance.now();
+    const end_sendFrame = this.now();
 
     this._pts = (Number(pts) / timeBase.den) * timeBase.num * 1000;
     this.emit("pts", this._pts);
@@ -200,7 +206,7 @@ export class BaseMediaStream extends Writable {
       // full frametime per event. The old whole-frametime wait leaked ≤ 33 ms of schedule per
       // ahead-event, which on heavy scenes (frequent events) compounded into sustained sub-realtime
       // production — the 2026-07-18 stutter root cause.
-      const waitStart = performance.now();
+      const waitStart = this.now();
       do {
         const delta = this.ptsDelta();
         if (delta === undefined) break;
@@ -217,9 +223,9 @@ export class BaseMediaStream extends Writable {
           },
           `Stream is ahead. Waiting for ${excess}ms`,
         );
-        await setTimeout(Math.min(excess, frametime));
+        await this.wait(Math.min(excess, frametime));
       } while (this.sync && this.isAhead());
-      syncWaitMs = performance.now() - waitStart;
+      syncWaitMs = this.now() - waitStart;
       this.resetTimingCompensation();
       reportSendStats();
       callback(null);
@@ -237,7 +243,7 @@ export class BaseMediaStream extends Writable {
         `Sleeping for ${sleep}ms`,
       );
       reportSendStats();
-      setTimeout(sleep).then(() => callback(null));
+      this.wait(sleep).then(() => callback(null));
     }
     frame.free();
   }

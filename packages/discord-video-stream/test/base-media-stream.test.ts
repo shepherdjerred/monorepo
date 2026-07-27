@@ -8,13 +8,49 @@ import type { SendStats, StreamObserver } from "../src/media/StreamObserver.ts";
  * (behindMs / syncWaitMs / syncEvent) through the observer seam.
  */
 
+class ManualClock {
+  private time = 0;
+
+  now(): number {
+    return this.time;
+  }
+
+  advance(milliseconds: number): void {
+    this.time += milliseconds;
+  }
+}
+
 class TestStream extends BaseMediaStream {
-  sent: number[] = [];
-  protected override async _sendFrame(
+  private readonly clock: ManualClock | undefined;
+  onWait: ((milliseconds: number) => Promise<void>) | undefined;
+  waits: number[] = [];
+
+  constructor(
+    type: SendStats["kind"],
+    noSleep = false,
+    observer?: StreamObserver,
+    clock?: ManualClock,
+  ) {
+    super(type, noSleep, observer);
+    this.clock = clock;
+  }
+
+  protected override _sendFrame(
     _frame: Buffer,
     _frametime: number,
   ): Promise<void> {
-    this.sent.push(performance.now());
+    return Promise.resolve();
+  }
+
+  protected override now(): number {
+    return this.clock?.now() ?? super.now();
+  }
+
+  protected override wait(milliseconds: number): Promise<void> {
+    if (!this.clock) return super.wait(milliseconds);
+    this.waits.push(milliseconds);
+    this.clock.advance(milliseconds);
+    return this.onWait?.(milliseconds) ?? Promise.resolve();
   }
 }
 
@@ -48,58 +84,47 @@ function collectStats(): { stats: SendStats[]; observer: StreamObserver } {
 describe("BaseMediaStream pacing telemetry", () => {
   test("reports behindMs=0 and no syncEvent for an on-schedule unsynced stream", async () => {
     const { stats, observer } = collectStats();
-    const stream = new TestStream("video", true, observer);
+    const clock = new ManualClock();
+    const stream = new TestStream("video", true, observer, clock);
     await writeFrame(stream, 0);
+    clock.advance(33);
     await writeFrame(stream, 100 / 3);
     expect(stats).toHaveLength(2);
     for (const s of stats) {
-      expect(s.behindMs).toBeLessThan(5);
+      expect(s.behindMs).toBe(0);
       expect(s.syncWaitMs).toBe(0);
       expect(s.syncEvent).toBeUndefined();
     }
     stream.destroy();
   });
 
-  // retry: the assertions below bound WALL-CLOCK waits, and a loaded CI node
-  // (verify runs the whole turbo graph concurrently) can starve the event loop
-  // past the 150ms budget (291ms observed, build 6306) — a transient spike
-  // passes on retry, while a genuine pacing regression (the old
-  // sleep-whole-frametimes behavior) is deterministic and fails all attempts.
-  test(
-    "ahead correction waits only the excess beyond tolerance and reports it",
-    async () => {
+  test("ahead correction waits only the excess beyond tolerance and reports it", async () => {
     const { stats, observer } = collectStats();
-    const video = new TestStream("video", false, observer);
-    const audio = new TestStream("audio", true);
+    const clock = new ManualClock();
+    const video = new TestStream("video", false, observer, clock);
+    const audio = new TestStream("audio", true, undefined, clock);
     video.syncStream = audio;
     video.syncTolerance = 60;
 
     // Anchor both streams.
     await writeFrame(audio, 0);
     await writeFrame(video, 0);
+    video.waits.length = 0;
 
-    // Video jumps 150 ms ahead of audio (delta 150 > tolerance 60 → ahead branch, excess 90 ms).
-    // Advance audio past the tolerance boundary while video waits so the loop can exit.
-    const audioAdvance = (async () => {
-      await Bun.sleep(40);
-      await writeFrame(audio, 120); // delta becomes 30 < 60 → video may proceed
-    })();
-    const start = performance.now();
-    await writeFrame(video, 150);
-    const waited = performance.now() - start;
-    await audioAdvance;
+    // Video jumps 70 ms ahead of audio. The excess beyond the 60 ms tolerance
+    // is exactly 10 ms, less than one 33 ms frame. Move audio forward during
+    // that wait so the correction exits after one precise sleep.
+    video.onWait = async () => {
+      await writeFrame(audio, 20);
+    };
+    await writeFrame(video, 70);
 
     const videoStats = stats.filter((s) => s.kind === "video");
     const aheadStat = videoStats.find((s) => s.syncEvent === "ahead");
     if (!aheadStat) throw new Error("expected an ahead sync event");
-    expect(aheadStat.syncWaitMs).toBeGreaterThan(0);
-    // The old implementation slept whole 33ms frametimes past the boundary and could not exit
-    // before the partner advanced by a full quantum; the precise wait must complete well under
-    // the excess (90 ms) plus one frametime of slop.
-    expect(waited).toBeLessThan(150);
+    expect(video.waits).toEqual([10]);
+    expect(aheadStat.syncWaitMs).toBe(10);
     video.destroy();
     audio.destroy();
-    },
-    { retry: 2 },
-  );
+  });
 });
