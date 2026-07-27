@@ -61,9 +61,12 @@ async function main(): Promise<void> {
   // Codex is an intentional quota fallback, not an optional best-effort path.
   const claudeToken = requireEnv("CLAUDE_CODE_OAUTH_TOKEN");
   const openAiApiKey = requireEnv("OPENAI_API_KEY");
-  // The reviewed refinement prompt requires gh. Verify that the runtime mise
-  // install exposed its shim before release-please can create or update a PR.
-  await run(["gh", "--version"], { cwd: root, capture: true });
+  // Codex runs tool calls through a login shell. Verify that exact boundary,
+  // not only this process's mise-aware PATH, before release-please mutates a PR.
+  await run(["/bin/bash", "-lc", "gh --version"], {
+    cwd: root,
+    capture: true,
+  });
   const auth = await setupGitAuth(root);
   const env = auth.env;
 
