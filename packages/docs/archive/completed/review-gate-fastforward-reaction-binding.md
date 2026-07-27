@@ -67,9 +67,11 @@ bare-👍 signal: [[verify-codex-clean-reaction-surface]].
 
 - 2026-07-26 — Resolved by PR #1704. `resolveHeadPushedAt`
   (`packages/code-review/src/head-pushed-at.ts`, extracted from `github.ts`) now
-  takes the LATEST of `pushedDate`, the `HeadRefForcePushedEvent`, and the
-  Repository Activity API ref-update timestamp (`fetchRefUpdateTime` +
-  `pickRefUpdateTime`). The fast-forward-to-preexisting-commit case is covered:
+  takes the LATEST of the Repository Activity API ref-update timestamp
+  (`fetchRefUpdateTime` + `pickRefUpdateTime`) and any matching
+  `HeadRefForcePushedEvent` — true ref-update instants only, never the commit's
+  `pushedDate`/`committedDate`, which can predate the ref move. The
+  fast-forward-to-preexisting-commit case is covered:
   the Activity event gives the real instant the ref became the head, so a stale
   👍 left for the previous head predates it and no longer binds. The premise that
   "no API primitive exists" is superseded. Archived to `archive/completed/`.

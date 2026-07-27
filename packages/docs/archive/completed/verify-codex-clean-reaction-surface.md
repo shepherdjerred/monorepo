@@ -61,9 +61,11 @@ the surface was "probe-confirmed" was softened to this open caveat. See
   stale and the gate hung to timeout on every clean PR. Fixed in
   `packages/code-review/src/head-pushed-at.ts` (extracted from `github.ts`) by
   deriving the real ref-update instant from the GitHub Repository Activity API
-  (`resolveHeadPushedAt` takes the latest of `pushedDate`, the force-push event,
-  and the Activity `push`/`force_push`/`branch_creation` timestamp whose `after`
-  is the head), with unit tests. An earlier `committedDate` fallback was rejected
-  in review (PR #1704 P1): commit time precedes push time, so a stale 👍 for a
-  prior head could falsely bind — the Activity timestamp avoids that. Archived to
+  (`resolveHeadPushedAt` takes the latest of the Activity
+  `push`/`force_push`/`branch_creation` timestamp whose `after` is the head and
+  any matching force-push event — never the commit's `pushedDate`/`committedDate`,
+  which can predate the ref move), with unit tests. Earlier `committedDate` and
+  `pushedDate`-fallback variants were rejected in review (PR #1704): commit/first-
+  push time precedes the ref move, so a stale 👍 for a prior head could falsely
+  bind — the Activity timestamp avoids that. Archived to
   `archive/completed/` in the fix commit.

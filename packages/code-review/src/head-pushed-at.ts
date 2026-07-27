@@ -220,15 +220,16 @@ export async function fetchHeadPushedAt(input: {
   const headRepo =
     pullRequest === null ? null : parseHeadRepo(pullRequest["headRepository"]);
   const refUpdateTime =
-    headRefName === null
+    headRefName === null || headRepo === null
       ? null
       : await fetchRefUpdateTime({
-          // A fork PR's head branch lives in the head repository, not the base
-          // repo (`input.repo`); query the ref activity there. Same-repo PRs
-          // (this repo's git-spice flow) resolve `headRepo === input.repo`;
-          // fall back to the base repo only if the head repo is unknown
-          // (e.g. a deleted fork), where the lookup yields null anyway.
-          repo: headRepo ?? input.repo,
+          // The head branch lives in the HEAD repository — the base repo for a
+          // same-repo PR (this repo's git-spice flow), or the fork for a fork
+          // PR. Never fall back to the base repo when the head repo is unknown
+          // (a deleted fork): a same-named branch there could carry an
+          // unrelated activity whose `after` coincides with this SHA and
+          // falsely bind the reaction. Unknown head repo → leave unbound.
+          repo: headRepo,
           ref: `refs/heads/${headRefName}`,
           sha: input.sha,
           token: input.token,
