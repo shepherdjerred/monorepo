@@ -117,7 +117,15 @@ async function rebuildCompleteState(
       `recovery seed count mismatch for channel ${manifest.channelId}`,
     );
   }
-  const observations = [...backward.observations, ...seed];
+  // Rebuild from both traversals plus the seed, matching the verify activity's
+  // projection inputs (see glitter-corpus.ts). The forward pass carries any
+  // edit observed between the two reads, so recovery must ingest it too or the
+  // reconstructed observation/duplicate counts would diverge from the manifest.
+  const observations = [
+    ...backward.observations,
+    ...forward.observations,
+    ...seed,
+  ];
   const projection = buildCurrentProjection(observations);
   if (
     observations.length !== manifest.observationCount ||

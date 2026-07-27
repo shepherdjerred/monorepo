@@ -13,6 +13,10 @@
     "./github": {
       "types": "./src/github.ts",
       "default": "./src/github.ts"
+    },
+    "./head-pushed-at": {
+      "types": "./src/head-pushed-at.ts",
+      "default": "./src/head-pushed-at.ts"
     }
   },
   "scripts": {

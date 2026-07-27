@@ -21,7 +21,8 @@ async function createRuntimeDirectory(): Promise<string> {
 function makeGoalConfig(runtimeDirectory: string): Config["game"]["goal"] {
   return {
     enabled: true,
-    model: "gpt-5.4-nano",
+    model: "gpt-5.6-luna",
+    reasoning_effort: "medium",
     codex_binary: "codex",
     runtime_directory: runtimeDirectory,
     screenshot_dir: "screenshots",

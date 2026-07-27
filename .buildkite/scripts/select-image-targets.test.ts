@@ -1,21 +1,24 @@
 import { describe, expect, test } from "bun:test";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import nodePath from "node:path";
 
 import {
   ALL_IMAGE_TARGETS,
   changedPathsSince,
+  selectImageTargets,
+  selectImageTargetsWithReasons,
+  type SelectorInputs,
+} from "./select-image-targets.ts";
+import {
   closureFingerprint,
   closurePackageIds,
   manifestChangeIsGlobal,
   parseJsonc,
   parseLockfile,
   patchedDependencyKey,
-  selectImageTargets,
   type LockfilePair,
-  type SelectorInputs,
-} from "./select-image-targets.ts";
+} from "./select-image-targets-lockfile.ts";
 
 const REPO_ROOT = new URL("../..", import.meta.url).pathname;
 
@@ -209,7 +212,7 @@ describe("lockfile attribution", () => {
     // contains it; resume/sjer.red-class targets must stay unselected.
     const entry =
       /"discord\.js": \["discord\.js@[^"]+", [^\n]*"(sha512-[^"]+)"\]/;
-    const match = real.match(entry);
+    const match = entry.exec(real);
     expect(match).not.toBeNull();
     if (match === null) throw new Error("unreachable");
     const mutated = real.replace(match[1] ?? "", "sha512-mutated");
@@ -228,7 +231,7 @@ describe("lockfile attribution", () => {
     const real = await Bun.file(`${REPO_ROOT}/bun.lock`).text();
     const entry =
       /"asciinema-player": \["asciinema-player@[^"]+", [^\n]*"(sha512-[^"]+)"\]/;
-    const match = real.match(entry);
+    const match = entry.exec(real);
     expect(match).not.toBeNull();
     if (match === null) throw new Error("unreachable");
     const mutated = real.replace(match[1] ?? "", "sha512-mutated");
@@ -419,7 +422,7 @@ function runGit(repoRoot: string, args: readonly string[]): void {
 
 describe("changedPathsSince", () => {
   test("reports both sides of a rename so the source image is rebuilt", async () => {
-    const fixture = await mkdtemp(join(tmpdir(), "ci-image-rename-"));
+    const fixture = await mkdtemp(nodePath.join(tmpdir(), "ci-image-rename-"));
     try {
       runGit(fixture, ["init", "-q"]);
       runGit(fixture, ["config", "user.email", "ci-selector@example.invalid"]);
@@ -443,5 +446,75 @@ describe("changedPathsSince", () => {
     } finally {
       await rm(fixture, { force: true, recursive: true });
     }
+  });
+});
+
+describe("selection reasons", () => {
+  test("a closure hit records the matching path and directory", async () => {
+    const { targets, report } = await selectImageTargetsWithReasons(
+      ["packages/tasknotes-server/src/index.ts"],
+      REPO_ROOT,
+    );
+    expect(targets).toEqual(["tasknotes-server"]);
+    expect(report.mode).toBe("selected");
+    expect(report.globalReason).toBeNull();
+    expect(report.changedPaths).toEqual([
+      "packages/tasknotes-server/src/index.ts",
+    ]);
+    expect(report.targets["tasknotes-server"]).toEqual([
+      "workspace closure: packages/tasknotes-server/src/index.ts under packages/tasknotes-server/",
+    ]);
+  });
+
+  test("a configured extra input records its prefix", async () => {
+    const { report } = await selectImageTargetsWithReasons(
+      ["packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts"],
+      REPO_ROOT,
+    );
+    expect(report.mode).toBe("selected");
+    const reasons = report.targets["infra"];
+    if (reasons === undefined) throw new Error("infra should be selected");
+    expect(reasons.join("\n")).toContain("configured extra input");
+  });
+
+  test("a global image input flips to ALL with the trigger named", async () => {
+    const { targets, report } = await selectImageTargetsWithReasons(
+      ["docker-bake.hcl"],
+      REPO_ROOT,
+    );
+    expect(targets).toEqual(ALL_IMAGE_TARGETS);
+    expect(report.mode).toBe("all");
+    expect(report.globalReason).toContain("docker-bake.hcl");
+    expect(Object.keys(report.targets).sort()).toEqual(ALL_IMAGE_TARGETS);
+    for (const reasons of Object.values(report.targets)) {
+      expect(reasons).toEqual([report.globalReason ?? ""]);
+    }
+  });
+
+  test("a lockfile fail-open reports the failure as the global reason", async () => {
+    const { targets, report } = await selectImageTargetsWithReasons(
+      ["bun.lock"],
+      REPO_ROOT,
+    );
+    expect(targets).toEqual(ALL_IMAGE_TARGETS);
+    expect(report.mode).toBe("all");
+    expect(report.globalReason).toContain("lockfile attribution failed");
+  });
+
+  test("an unselecting change yields an empty report", async () => {
+    const { targets, report } = await selectImageTargetsWithReasons(
+      ["packages/docs/logs/example.md"],
+      REPO_ROOT,
+    );
+    expect(targets).toEqual([]);
+    expect(report.mode).toBe("selected");
+    expect(report.targets).toEqual({});
+  });
+
+  test("the wrapper returns exactly the reasoned targets", async () => {
+    const paths = ["packages/llm-models/src/models.ts"];
+    const wrapped = await select(paths);
+    const { targets } = await selectImageTargetsWithReasons(paths, REPO_ROOT);
+    expect(wrapped).toEqual(targets);
   });
 });

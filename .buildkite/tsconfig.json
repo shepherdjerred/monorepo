@@ -1,0 +1,16 @@
+{
+  // Discovery shim for typescript-eslint's project service (and editors):
+  // these files are typechecked by the root-scripts workspace
+  // (scripts/tsconfig.json includes ../.buildkite/scripts/*.ts), but the
+  // project service walks UP from a file's directory and never finds that
+  // config, so typed linting of .buildkite/scripts needs a tsconfig here.
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    // The isolated linker hoists nothing to the repo root, so Bun's types
+    // resolve from the root-scripts workspace that owns these files.
+    "typeRoots": ["../scripts/node_modules/@types"],
+    "types": ["bun"],
+    "noEmit": true
+  },
+  "include": ["scripts/*.ts"]
+}

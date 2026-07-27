@@ -296,11 +296,9 @@ async function verifyGlitterCorpusChannel(
     phase: "verify-forward",
     channelId: input.channelId,
   });
-  const oldestBackwardMessageId =
-    backward.messageIds.toSorted(compareSnowflakes)[0];
-  const newestBackwardMessageId = backward.messageIds
-    .toSorted(compareSnowflakes)
-    .at(-1);
+  const backwardIds = backward.messageIds.toSorted(compareSnowflakes);
+  const oldestBackwardMessageId = backwardIds[0];
+  const newestBackwardMessageId = backwardIds.at(-1);
   if (newestBackwardMessageId !== input.forwardUpperBoundMessageId) {
     throw new Error(
       `frozen forward boundary for ${input.channelId} does not match the backward traversal`,
@@ -324,7 +322,6 @@ async function verifyGlitterCorpusChannel(
       : { upperBoundInclusive: input.forwardUpperBoundMessageId }),
     pageManifestKeys: input.forwardPageManifestKeys,
   });
-  const backwardIds = backward.messageIds.toSorted(compareSnowflakes);
   const forwardIds = forward.messageIds.toSorted(compareSnowflakes);
   if (JSON.stringify(backwardIds) !== JSON.stringify(forwardIds)) {
     throw new Error(
@@ -332,8 +329,13 @@ async function verifyGlitterCorpusChannel(
     );
   }
 
+  // Include both traversals' observations: a message edited between the
+  // backward and forward reads has a newer payload only on the forward pass,
+  // and buildCurrentProjection dedups by message ID and keeps the latest
+  // version, so carrying both is safe and avoids publishing a stale version.
   const observations = [
     ...backward.observations,
+    ...forward.observations,
     ...(await readSeedChannelObservations({
       seedPrefix: input.seedPrefix,
       channelId: input.channelId,
@@ -372,7 +374,10 @@ async function verifyGlitterCorpusChannel(
       upperBoundMessageId: input.forwardUpperBoundMessageId ?? null,
     },
     observationCount: observations.length,
-    seedObservationCount: observations.length - backward.observations.length,
+    seedObservationCount:
+      observations.length -
+      backward.observations.length -
+      forward.observations.length,
     duplicateObservationCount: observations.length - projection.length,
     ...projectionStateFields({
       projection,

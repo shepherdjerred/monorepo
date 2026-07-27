@@ -190,8 +190,8 @@ const commands: Record<
       "set +e",
       'output="$(timeout 30s bun run src/index.ts 2>&1)"',
       "status=$?",
-      "printf '%s\\n' \"$output\"",
-      '[ "$status" -eq 124 ] || printf "%s\\n" "$output" | grep -iE "' +
+      String.raw`printf '%s\n' "$output"`,
+      String.raw`[ "$status" -eq 124 ] || printf "%s\n" "$output" | grep -iE "` +
         discordAuthPattern +
         '"',
     ].join("\n"),
@@ -213,8 +213,8 @@ const commands: Record<
       "set +e",
       'output="$(timeout 30s bun src/index.ts 2>&1)"',
       "status=$?",
-      "printf '%s\\n' \"$output\"",
-      '[ "$status" -eq 0 ] || printf "%s\\n" "$output" | grep -iE "' +
+      String.raw`printf '%s\n' "$output"`,
+      String.raw`[ "$status" -eq 0 ] || printf "%s\n" "$output" | grep -iE "` +
         discordAuthPattern +
         '"',
     ].join("\n"),
@@ -235,8 +235,8 @@ const commands: Record<
       "set +e",
       'output="$(timeout 30s bun run src/index.ts 2>&1)"',
       "status=$?",
-      "printf '%s\\n' \"$output\"",
-      '[ "$status" -eq 124 ] || printf "%s\\n" "$output" | grep -iE "' +
+      String.raw`printf '%s\n' "$output"`,
+      String.raw`[ "$status" -eq 124 ] || printf "%s\n" "$output" | grep -iE "` +
         discordAuthPattern +
         '"',
     ].join("\n"),
@@ -289,8 +289,8 @@ const commands: Record<
       "set +e",
       'output="$(timeout 60s bun src/worker.ts 2>&1)"',
       "status=$?",
-      "printf '%s\\n' \"$output\"",
-      '[ "$status" -ne 124 ] && printf "%s\\n" "$output" | grep -F "Connecting to Temporal server" && printf "%s\\n" "$output" | grep -iE "connection refused|connect|econnrefused|transport error|failed to connect|tcp connect error|deadline"',
+      String.raw`printf '%s\n' "$output"`,
+      String.raw`[ "$status" -ne 124 ] && printf "%s\n" "$output" | grep -F "Connecting to Temporal server" && printf "%s\n" "$output" | grep -iE "connection refused|connect|econnrefused|transport error|failed to connect|tcp connect error|deadline"`,
     ].join("\n"),
     env: { TEMPORAL_ADDRESS: "127.0.0.1:7233", SENTRY_DSN: "" },
   },
@@ -320,10 +320,10 @@ const commands: Record<
       "set -eu",
       "cd /app/packages/scout-for-lol/packages/backend",
       "set +e",
-      'output="$(timeout 45s sh -c \"bunx prisma migrate deploy && bun run src/index.ts\" 2>&1)"',
+      'output="$(timeout 45s sh -c "bunx prisma migrate deploy && bun run src/index.ts" 2>&1)"',
       "status=$?",
-      "printf '%s\\n' \"$output\"",
-      '[ "$status" -eq 0 ] || [ "$status" -eq 124 ] || printf "%s\\n" "$output" | grep -iE "' +
+      String.raw`printf '%s\n' "$output"`,
+      String.raw`[ "$status" -eq 0 ] || [ "$status" -eq 124 ] || printf "%s\n" "$output" | grep -iE "` +
         discordAuthPattern +
         '"',
     ].join("\n"),
@@ -342,8 +342,8 @@ const commands: Record<
       "set +e",
       'output="$(timeout 60s bun packages/backend/src/index.ts 2>&1)"',
       "status=$?",
-      "printf '%s\\n' \"$output\"",
-      '[ "$status" -eq 0 ] || [ "$status" -eq 124 ] || printf "%s\\n" "$output" | grep -iE "' +
+      String.raw`printf '%s\n' "$output"`,
+      String.raw`[ "$status" -eq 0 ] || [ "$status" -eq 124 ] || printf "%s\n" "$output" | grep -iE "` +
         discordAuthPattern +
         '|used disallowed intents"',
     ].join("\n"),
@@ -354,10 +354,10 @@ const commands: Record<
       "set -eu",
       "cd /app/packages/discord-plays-mario-kart",
       "set +e",
-      'output="$(timeout 60s sh -c \"cd packages/backend && bunx prisma db push && cd /app/packages/discord-plays-mario-kart && exec bun packages/backend/src/index.ts\" 2>&1)"',
+      'output="$(timeout 60s sh -c "cd packages/backend && bunx prisma db push && cd /app/packages/discord-plays-mario-kart && exec bun packages/backend/src/index.ts" 2>&1)"',
       "status=$?",
-      "printf '%s\\n' \"$output\"",
-      '[ "$status" -eq 0 ] || [ "$status" -eq 124 ] || printf "%s\\n" "$output" | grep -iE "' +
+      String.raw`printf '%s\n' "$output"`,
+      String.raw`[ "$status" -eq 0 ] || [ "$status" -eq 124 ] || printf "%s\n" "$output" | grep -iE "` +
         discordAuthPattern +
         '|used disallowed intents"',
     ].join("\n"),

@@ -55,6 +55,22 @@ KNOWN_TARGETS_JSON=$(printf '%s\n' "${APP_TARGETS[@]%%|*}" infra | jq -R . | jq 
 bake_targets=()
 push_images=()
 
+# Build-page justification side channel. The selector writes WHY each target
+# was picked to this file; annotate-image-summary.ts renders it (and the push
+# outcomes on main) as the `images` annotation. Both files are uploaded as
+# build artifacts via the step's artifact_paths. Annotation failures must
+# never change this script's exit code — the guard below handles that one
+# specific failure explicitly and downgrades it to a warning.
+SELECTION_REPORT="image-selection-report.json"
+PUSH_OUTCOMES="image-push-outcomes.json"
+rm -f "$SELECTION_REPORT" "$PUSH_OUTCOMES"
+
+annotate_summary() {
+  if ! bun --no-install .buildkite/scripts/annotate-image-summary.ts "$@"; then
+    echo "WARN: image summary annotation failed (non-fatal)" >&2
+  fi
+}
+
 # Scope selection. PRs diff against their merge-base with origin/main. Main
 # diffs against the LAST GREEN MAIN BUILD's commit: every
 # image validated+pushed at that commit is guaranteed output-identical here
@@ -64,11 +80,13 @@ push_images=()
 # work, never a silent skip.
 scope="all"
 scope_base=""
+fallback_reason="full build requested (no --affected/--push scoping)"
 if [ "$AFFECTED_ONLY" = true ]; then
   if scope_base=$(git merge-base origin/main HEAD); then
     scope="affected"
   else
     echo "WARN: could not resolve merge-base with origin/main — building ALL images"
+    fallback_reason="could not resolve merge-base with origin/main"
   fi
 elif [ "$PUSH" = true ]; then
   if resp=$(curl -fsS --connect-timeout 5 --max-time 20 --retry 2 --retry-delay 1 \
@@ -82,6 +100,7 @@ elif [ "$PUSH" = true ]; then
     echo "images scoped to changes since last green main build ($last_green)"
   else
     echo "WARN: could not resolve last green main build — building ALL images"
+    fallback_reason="could not resolve last green main build"
   fi
 fi
 
@@ -89,13 +108,15 @@ if [ "$scope" = "affected" ]; then
   # The dependency-free selector returns a deterministic JSON target list.
   # Any selector/tool/schema failure builds everything: selection can only
   # save work, never omit a required image.
-  if selected_json=$(bun --no-install .buildkite/scripts/select-image-targets.ts --base "$scope_base") \
+  if selected_json=$(bun --no-install .buildkite/scripts/select-image-targets.ts --base "$scope_base" --reasons-out "$SELECTION_REPORT") \
     && printf '%s' "$selected_json" | jq -e --argjson known "$KNOWN_TARGETS_JSON" \
       'type == "array" and all(.[]; type == "string" and (. as $target | $known | index($target) != null))' >/dev/null; then
     echo "selected image targets: $selected_json"
   else
     echo "WARN: image selector failed — building ALL images"
     scope="all"
+    fallback_reason="image selector failed (fail-open)"
+    rm -f "$SELECTION_REPORT"
   fi
 
 fi
@@ -121,9 +142,17 @@ if [ "$scope" = "affected" ]; then
   fi
   if [ "${#bake_targets[@]}" -eq 0 ]; then
     echo "no image-owning packages affected — nothing to build"
+    annotate_summary --report "$SELECTION_REPORT"
     if [ "$PUSH" = true ]; then
       # The version commit-back step reads this unconditionally.
       jq -n '{}' | buildkite-agent meta-data set image-digests
+      # ci-changed.sh images and this script diff against different bases (a
+      # stale ci-changed-base vs. the freshest last-green-main lookup here), so
+      # this script can still find nothing to push even when the outer gate
+      # said "run". The images step declares image-push-outcomes.json as a
+      # required artifact unconditionally — write the empty array so that
+      # otherwise-successful no-op doesn't fail on artifact upload.
+      jq -n '[]' > "$PUSH_OUTCOMES"
     fi
     exit 0
   fi
@@ -226,6 +255,7 @@ if [ "$PUSH" = true ]; then
   # the paired site archive exists.
   VERSIONED_TAG_IMAGES=(starlight-karma-bot)
   digest_args=()
+  outcome_entries=()
   echo "--- :arrow_up: push production targets ${bake_targets[*]}"
   VERSION="$BUILD_NUMBER" GIT_SHA="$SHA" CONTRACT_HASH="$CONTRACT_HASH" PUSH_CACHE=true PUSH_IMAGES=true \
     docker buildx bake --builder ci --push "${bake_targets[@]}"
@@ -269,14 +299,18 @@ if [ "$PUSH" = true ]; then
         new_layers=$(docker buildx imagetools inspect "${REGISTRY}/${name}:${SHA}" --format '{{json .Image.RootFS.DiffIDs}}' | jq -c .)
         if [ "$old_layers" = "$new_layers" ]; then
           echo "content unchanged vs pinned ${pinned} (identical rootfs) — no version bump for ${name}"
+          outcome_entries+=("${name}|content-unchanged")
           continue
         fi
         echo "content CHANGED vs pinned ${pinned} — will bump ${name}"
+        outcome_entries+=("${name}|bumped")
       else
         echo "pinned digest ${pinned} for ${name} not resolvable — treating as changed"
+        outcome_entries+=("${name}|pin-unresolvable-bumped")
       fi
     else
       echo "no existing versions.ts pin found for ${name} — will bump"
+      outcome_entries+=("${name}|no-pin-bumped")
     fi
     for versioned in "${VERSIONED_TAG_IMAGES[@]}"; do
       if [ "$name" = "$versioned" ]; then
@@ -289,4 +323,34 @@ if [ "$PUSH" = true ]; then
   # meta-data, consumed by the version commit-back step. May be empty when
   # no image's content changed — the commit-back then no-ops.
   jq -n '$ARGS.named' "${digest_args[@]}" | buildkite-agent meta-data set image-digests
+  if [ "${#outcome_entries[@]}" -gt 0 ]; then
+    printf '%s\n' "${outcome_entries[@]}" \
+      | jq -R 'split("|") | {image: .[0], outcome: .[1]}' | jq -s . > "$PUSH_OUTCOMES"
+  fi
 fi
+
+# Every fail-open path above (unresolvable merge-base/last-green lookup, or a
+# distrusted selector result) leaves scope="all" without a $SELECTION_REPORT —
+# both callers declare that file as a required artifact_paths entry, and an
+# unmatched artifact path fails the step even after a successful full build.
+# Reconstruct a mode="all" report here so the file always exists whenever this
+# script produces output, regardless of which fallback triggered "all".
+if [ "$scope" = "all" ] && [ ! -f "$SELECTION_REPORT" ]; then
+  jq -n --argjson targets "$KNOWN_TARGETS_JSON" --arg reason "$fallback_reason" \
+    '{base: null, changedPaths: [], mode: "all", globalReason: $reason,
+      targets: ($targets | map({(.): [$reason]}) | add)}' \
+    > "$SELECTION_REPORT"
+fi
+
+# Build-page justification: render the selection reasons (and push outcomes on
+# main) as the `images` annotation. Never affects the step's exit code.
+annotate_args=()
+if [ -f "$SELECTION_REPORT" ]; then
+  annotate_args+=(--report "$SELECTION_REPORT")
+else
+  annotate_args+=(--fallback "$fallback_reason")
+fi
+if [ -f "$PUSH_OUTCOMES" ]; then
+  annotate_args+=(--outcomes "$PUSH_OUTCOMES")
+fi
+annotate_summary "${annotate_args[@]}"

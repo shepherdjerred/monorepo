@@ -37,6 +37,11 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 // ingress to the buildkite namespace.
 const PORT = 1234;
 
+// HTTP debug endpoint: serves Prometheus /metrics (and pprof). Scraped by the
+// buildkitd ServiceMonitor (see resources/monitoring/buildkitd.ts); the
+// NetworkPolicy below opens it to the prometheus namespace only.
+const DEBUG_PORT = 6060;
+
 // Keep the on-disk build cache bounded well under the PVC size so BuildKit's GC
 // always has headroom and the volume can never fill. 240 GiB kept of a 300 GiB
 // PVC. This is large enough to retain hot production-image layers without
@@ -127,8 +132,16 @@ export function createBuildkitdDeployment(chart: Chart) {
     withCommonProps({
       name: "buildkitd",
       image: `moby/buildkit:${versions["moby/buildkit"]}`,
-      args: ["--config", "/etc/buildkit/buildkitd.toml"],
-      ports: [{ name: "buildkit", number: PORT }],
+      args: [
+        "--config",
+        "/etc/buildkit/buildkitd.toml",
+        "--debugaddr",
+        `0.0.0.0:${String(DEBUG_PORT)}`,
+      ],
+      ports: [
+        { name: "buildkit", number: PORT },
+        { name: "metrics", number: DEBUG_PORT },
+      ],
       securityContext: {
         // Rootful buildkitd needs privileged for the OCI worker.
         privileged: true,
@@ -187,8 +200,14 @@ export function createBuildkitdDeployment(chart: Chart) {
   setRevisionHistoryLimit(deployment);
 
   const service = new Service(chart, "buildkitd-service", {
+    // The ServiceMonitor selects this Service by label — cdk8s-plus puts no
+    // labels on the Service itself, only on the pods, so set one explicitly.
+    metadata: { labels: { app: "buildkitd" } },
     selector: deployment,
-    ports: [{ port: PORT, name: "buildkit" }],
+    ports: [
+      { port: PORT, name: "buildkit" },
+      { port: DEBUG_PORT, name: "metrics" },
+    ],
   });
 
   // The gRPC endpoint is plaintext and privileged — restrict ingress to the
@@ -210,6 +229,19 @@ export function createBuildkitdDeployment(chart: Chart) {
             },
           ],
           ports: [{ port: IntOrString.fromNumber(PORT), protocol: "TCP" }],
+        },
+        {
+          // Prometheus scrapes the debug endpoint (/metrics, pprof) only.
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+            },
+          ],
+          ports: [
+            { port: IntOrString.fromNumber(DEBUG_PORT), protocol: "TCP" },
+          ],
         },
       ],
     },

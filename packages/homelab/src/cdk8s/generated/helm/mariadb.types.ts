@@ -2781,7 +2781,7 @@ export type MariadbHelmValuesMetricsServiceMonitor = {
    */
   honorLabels?: boolean;
   /**
-   * ref: https://github.com/bitnami/charts/tree/main/bitnami/prometheus-operator#prometheus-configuration
+   * ref: https://techdocs.broadcom.com/us/en/vmware-tanzu/bitnami-secure-images/bitnami-secure-images/services/bsi-app-doc/apps-charts-kube-prometheus-index.html#-additional-scrape-configurations
    *
    * @default {}
    */

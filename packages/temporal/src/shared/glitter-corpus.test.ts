@@ -18,6 +18,12 @@ function overlapManifest() {
     baselineManifestKey: "baseline.json",
     overlapPageManifestKeys: ["page.json"],
     overlapCutoff: TIMESTAMP,
+    // Overlap states must carry a nonzero lineage depth and an explicit seed
+    // prefix (nullable). Without these the base fixture fails schema parsing on
+    // its own, which would make every mutation test below pass for the wrong
+    // reason — so each mutation stays the sole cause of a parse failure.
+    lineageDepth: 1,
+    seedPrefix: null,
     baselineNewestMessageId: "10",
     oldestObservedTimestamp: TIMESTAMP,
     oldestObservedMessageId: "10",
@@ -33,6 +39,11 @@ function overlapManifest() {
 }
 
 describe("Glitter corpus proof schemas", () => {
+  test("the base overlap fixture is schema-valid", () => {
+    const result = ChannelOverlapManifestSchema.safeParse(overlapManifest());
+    expect(result.success).toBe(true);
+  });
+
   test("a cutoff overlap must cross the previous newest-message boundary", () => {
     const result = ChannelOverlapManifestSchema.safeParse({
       ...overlapManifest(),

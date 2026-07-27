@@ -14,6 +14,8 @@ import {
   EMPTY_STATE,
   type FormState,
 } from "#src/components/competition-form-fields.tsx";
+import { CompetitionPresets } from "#src/components/competition-presets.tsx";
+import type { CompetitionExample } from "#src/lib/onboarding-examples.ts";
 import { validateForm } from "#src/lib/competition-form-state.ts";
 
 export function CompetitionForm() {
@@ -87,6 +89,21 @@ export function CompetitionForm() {
     );
   }
 
+  function handleUsePreset(example: CompetitionExample) {
+    setState((prev) => {
+      const chosenChannelId = prev.channelId;
+      const channelId =
+        chosenChannelId === ""
+          ? (channelsQuery.data?.[0]?.id ?? "")
+          : chosenChannelId;
+      const built = example.build(channelId);
+      // Preserve a channel the user already picked before applying the preset.
+      return chosenChannelId === ""
+        ? built
+        : { ...built, channelId: chosenChannelId };
+    });
+  }
+
   function handleSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
     setError(null);
@@ -131,6 +148,8 @@ export function CompetitionForm() {
           <Link to={`/g/${guildId}/competitions`}>Back</Link>
         </Button>
       </div>
+
+      {!isEdit && <CompetitionPresets onUsePreset={handleUsePreset} />}
 
       <CompetitionFormFields
         guildId={guildId}

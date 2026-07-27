@@ -94,14 +94,14 @@ export function SubscriptionFields(props: {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-alias`}>Alias</Label>
+        <Label htmlFor={`${idPrefix}-alias`}>Player name</Label>
         <Input
           id={`${idPrefix}-alias`}
           value={value.alias}
           onChange={(e) => {
             onChange({ ...value, alias: e.target.value });
           }}
-          placeholder="How it shows up in Scout"
+          placeholder="How this person shows up in Scout"
           required
         />
       </div>

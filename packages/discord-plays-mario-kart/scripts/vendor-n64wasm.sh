@@ -16,6 +16,7 @@ set -euo pipefail
 UPSTREAM_URL="https://github.com/nbarkhina/N64Wasm.git"
 # Pinned upstream baseline. Recovered 2026-06-07 by hash-matching the vendored tree
 # against upstream history: it is master @ this commit, minus vendor-excludes.txt.
+# renovate: datasource=git-refs depName=n64wasm-source branch=master
 UPSTREAM_SHA="bfac222f8a27287022844b47000328531834e9c1"
 
 PKG_ROOT="$(cd "$(dirname "$0")/.." && pwd)"

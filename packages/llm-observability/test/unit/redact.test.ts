@@ -1,6 +1,6 @@
-import { test, expect } from "bun:test";
+import { test, expect, afterEach } from "bun:test";
 import { z } from "zod";
-import { redactSecrets } from "#src/redact.ts";
+import { redactSecrets, redactText } from "#src/redact.ts";
 
 const FlatSecretsSchema = z.object({
   Authorization: z.string(),
@@ -99,4 +99,63 @@ test("does not redact Discord-style snowflake IDs or usernames", () => {
   const redacted = DiscordSchema.parse(redactSecrets(input));
   expect(redacted.discord.user_id).toBe("123456789012345678");
   expect(redacted.discord.username).toBe("jerred");
+});
+
+afterEach(() => {
+  delete Bun.env["OPENAI_API_KEY"];
+});
+
+// Composed from fragments so no single string literal trips the no-secrets rule.
+const FAKE_SECRET = ["sk", "proj", "aaa", "bbb", "ccc"].join("-");
+
+test("redactText masks known secret env-var values in any format", () => {
+  Bun.env["OPENAI_API_KEY"] = FAKE_SECRET;
+  // Mimics `env` / `echo $OPENAI_API_KEY` output reaching a tool body — the raw
+  // value appears both in a NAME=value line and bare on a later line.
+  const body = `OPENAI_API_KEY=${FAKE_SECRET}\nnext line: ${FAKE_SECRET}`;
+  const out = redactText(body);
+  expect(out).not.toContain(FAKE_SECRET);
+  expect(out).toContain("[REDACTED]");
+});
+
+test("redactText does not mask short env values that could hit unrelated text", () => {
+  Bun.env["OPENAI_API_KEY"] = "short";
+  expect(redactText("the word short appears here")).toBe(
+    "the word short appears here",
+  );
+});
+
+test("redactText masks secret-shaped NAME=value assignments structurally", () => {
+  const out = redactText(
+    "CODEX_ACCESS_TOKEN=deadbeefcafe POKEMONCTL_TOKEN: abc123xyz PATH=/usr/bin",
+  );
+  expect(out).toContain("CODEX_ACCESS_TOKEN=[REDACTED]");
+  expect(out).toContain("POKEMONCTL_TOKEN: [REDACTED]");
+  // Non-secret assignments are left intact.
+  expect(out).toContain("PATH=/usr/bin");
+  expect(out).not.toContain("deadbeefcafe");
+  expect(out).not.toContain("abc123xyz");
+});
+
+test("redactText masks quoted JSON secret fields (e.g. cat auth.json)", () => {
+  const accessTok = ["aaa", "bbb", "ccc", "ddd"].join(".");
+  const refreshTok = ["eee", "fff", "ggg"].join(".");
+  // Mimics `cat auth.json` output — quote between field name and colon dodges
+  // the unquoted NAME=value pass, and these tokens aren't env vars.
+  const body = `{"access_token":"${accessTok}", "refresh_token" : "${refreshTok}", "expiry": 123}`;
+  const out = redactText(body);
+  expect(out).not.toContain(accessTok);
+  expect(out).not.toContain(refreshTok);
+  expect(out).toContain('"access_token":"[REDACTED]"');
+  expect(out).toContain('"refresh_token" : "[REDACTED]"');
+  // Non-secret fields are untouched.
+  expect(out).toContain('"expiry": 123');
+});
+
+test("redactText masks Bearer tokens", () => {
+  // Token interpolated (not a string literal) so gitleaks doesn't flag it.
+  const bearer = ["sk", "live", "xyz123"].join("-");
+  expect(redactText(`curl -H 'Authorization: Bearer ${bearer}'`)).toBe(
+    "curl -H 'Authorization: Bearer [REDACTED]'",
+  );
 });

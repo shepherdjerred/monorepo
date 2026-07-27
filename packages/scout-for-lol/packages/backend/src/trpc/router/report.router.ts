@@ -49,6 +49,7 @@ import {
   reportDataExplorerSchema,
   ReportDataBrowseInputSchema,
 } from "#src/reports/data-explorer.ts";
+import { ACCOUNT_IDENTITY_COLUMN_IDS } from "#src/reports/data-explorer-columns.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 const ReportIdInput = GuildInput.extend({ reportId: ReportIdSchema });
@@ -107,7 +108,27 @@ export const reportRouter = router({
 
   browseData: guildProcedure("reports", "read")
     .input(GuildInput.extend(ReportDataBrowseInputSchema.shape))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
+      // Riot identity columns expose account metadata the player surface gates
+      // behind accounts:read; require the same permission when any is selected,
+      // filtered, or sorted so reports:read alone can't bypass it.
+      const referencedColumns = [
+        ...input.columns,
+        ...input.filters.map((filter) => filter.column),
+        ...(input.sort === null ? [] : [input.sort.column]),
+      ];
+      if (
+        referencedColumns.some((column) =>
+          ACCOUNT_IDENTITY_COLUMN_IDS.has(column),
+        ) &&
+        !ctx.permissions.can("accounts", "read")
+      ) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            "Viewing Riot ID or summoner-name columns requires the accounts permission.",
+        });
+      }
       try {
         return await browseReportData({
           serverId: input.guildId,

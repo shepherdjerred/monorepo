@@ -19,7 +19,6 @@ import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   PlayerIdSchema,
-  SeasonIdSchema,
   getCompetitionStatus,
   type CompetitionId,
   type CompetitionWithCriteria,
@@ -27,6 +26,11 @@ import {
 import { CompetitionCronSchema } from "@scout-for-lol/data/model/competition-cron.ts";
 import { computeNextScheduledUpdateAt } from "@scout-for-lol/data/model/competition-cron.ts";
 import { CompetitionDatesSchema } from "#src/database/competition/validation.ts";
+import {
+  CompetitionEditInputSchema,
+  WebCompetitionDatesSchema,
+  buildCompetitionUpdateInput,
+} from "#src/trpc/router/competition-edit-input.ts";
 import { router } from "#src/trpc/trpc.ts";
 import { assertChannelInGuild } from "#src/trpc/guild-guard.ts";
 import {
@@ -40,10 +44,10 @@ import {
   getCompetitionById,
   getCompetitionsByServerPaginated,
   updateCompetition,
-  type UpdateCompetitionInput,
 } from "#src/database/competition/queries.ts";
 import {
   addParticipant,
+  bulkEnrollTrackedPlayers,
   removeParticipant,
 } from "#src/database/competition/participants.ts";
 import {
@@ -65,20 +69,6 @@ const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 const CompetitionIdInput = GuildInput.extend({
   competitionId: CompetitionIdSchema,
 });
-
-/**
- * Web date input. The tRPC link carries no superjson transformer, so `Date`s
- * arrive as ISO strings — coerce them, then the existing duration/ordering
- * rules apply via `CompetitionDatesSchema.parse` in the handler.
- */
-const WebCompetitionDatesSchema = z.discriminatedUnion("type", [
-  z.object({
-    type: z.literal("FIXED_DATES"),
-    startDate: z.coerce.date(),
-    endDate: z.coerce.date(),
-  }),
-  z.object({ type: z.literal("SEASON"), seasonId: SeasonIdSchema }),
-]);
 
 const CompetitionWriteSchema = z.object({
   channelId: DiscordChannelIdSchema,
@@ -212,17 +202,46 @@ export const competitionRouter = router({
         asBadRequest(error);
       }
 
-      const competition = await createCompetition(prisma, {
-        serverId: input.guildId,
-        ownerId,
-        channelId: input.channelId,
-        title: input.title,
-        description: input.description,
-        visibility: input.visibility,
-        maxParticipants: input.maxParticipants,
-        dates,
-        criteria: input.criteria,
-        updateCronExpression: input.updateCronExpression,
+      // SERVER_WIDE bulk-enrolls every tracked player, which is participant
+      // management — gate it on competitions:invite (the permission the invite /
+      // add-all-members procedures already require) rather than letting the
+      // create permission alone bypass it. Checked before insertion so a
+      // denied request never leaves a competition behind.
+      if (
+        input.visibility === "SERVER_WIDE" &&
+        !ctx.permissions.can("competitions", "invite")
+      ) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            "Server-wide competitions enroll every tracked player, which requires the invite permission.",
+        });
+      }
+
+      // Creation and SERVER_WIDE enrollment run in one transaction so an
+      // enrollment failure rolls the new competition back rather than leaving a
+      // partial/orphaned row the client would retry into a duplicate.
+      const competition = await prisma.$transaction(async (tx) => {
+        const created = await createCompetition(tx, {
+          serverId: input.guildId,
+          ownerId,
+          channelId: input.channelId,
+          title: input.title,
+          description: input.description,
+          visibility: input.visibility,
+          maxParticipants: input.maxParticipants,
+          dates,
+          criteria: input.criteria,
+          updateCronExpression: input.updateCronExpression,
+        });
+        if (input.visibility === "SERVER_WIDE") {
+          await bulkEnrollTrackedPlayers({
+            prisma: tx,
+            competitionId: created.id,
+            guildId: input.guildId,
+          });
+        }
+        return created;
       });
       if (!ctx.permissions.isRoot) {
         recordCreation(input.guildId, ownerId);
@@ -231,18 +250,8 @@ export const competitionRouter = router({
     }),
 
   edit: guildMutationProcedure("competitions", "update")
-    .input(
-      CompetitionIdInput.extend({
-        channelId: DiscordChannelIdSchema.optional(),
-        title: z.string().trim().min(1).max(100).optional(),
-        description: z.string().trim().min(1).max(500).optional(),
-        visibility: CompetitionVisibilitySchema.optional(),
-        maxParticipants: z.number().int().min(2).max(100).optional(),
-        dates: WebCompetitionDatesSchema.optional(),
-        criteria: CompetitionCriteriaSchema.optional(),
-      }),
-    )
-    .mutation(async ({ input }) => {
+    .input(CompetitionEditInputSchema)
+    .mutation(async ({ ctx, input }) => {
       const competition = await loadCompetitionOr404(
         input.competitionId,
         input.guildId,
@@ -252,6 +261,21 @@ export const competitionRouter = router({
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: `A ${status} competition cannot be edited.`,
+        });
+      }
+
+      // Bulk-enroll (invite-permission gated) when a competition becomes
+      // SERVER_WIDE, or an already-SERVER_WIDE cap is raised (refill the slots).
+      const enrollsServerWide =
+        (input.visibility ?? competition.visibility) === "SERVER_WIDE" &&
+        (competition.visibility !== "SERVER_WIDE" ||
+          (input.maxParticipants !== undefined &&
+            input.maxParticipants > competition.maxParticipants));
+      if (enrollsServerWide && !ctx.permissions.can("competitions", "invite")) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            "Server-wide competitions enroll every tracked player, which requires the invite permission.",
         });
       }
 
@@ -283,35 +307,31 @@ export const competitionRouter = router({
         });
       }
 
-      // exactOptionalPropertyTypes: only set keys that were actually provided.
-      const updateInput: UpdateCompetitionInput = {
-        ...(input.title === undefined ? {} : { title: input.title }),
-        ...(input.description === undefined
-          ? {}
-          : { description: input.description }),
-        ...(input.channelId === undefined
-          ? {}
-          : { channelId: input.channelId }),
-        ...(input.visibility === undefined
-          ? {}
-          : { visibility: input.visibility }),
-        ...(input.maxParticipants === undefined
-          ? {}
-          : { maxParticipants: input.maxParticipants }),
-        ...(input.dates === undefined
-          ? {}
-          : { dates: CompetitionDatesSchema.parse(input.dates) }),
-        ...(input.criteria === undefined ? {} : { criteria: input.criteria }),
-      };
+      const updateInput = buildCompetitionUpdateInput(input);
+      // Persist the update and (when flipping to SERVER_WIDE) enroll the whole
+      // server in one transaction, so an enrollment failure rolls the
+      // visibility change back and a retry still satisfies enrollsServerWide.
+      let updated: CompetitionWithCriteria;
       try {
-        return await updateCompetition(
-          prisma,
-          input.competitionId,
-          updateInput,
-        );
+        updated = await prisma.$transaction(async (tx) => {
+          const result = await updateCompetition(
+            tx,
+            input.competitionId,
+            updateInput,
+          );
+          if (enrollsServerWide) {
+            await bulkEnrollTrackedPlayers({
+              prisma: tx,
+              competitionId: input.competitionId,
+              guildId: input.guildId,
+            });
+          }
+          return result;
+        });
       } catch (error) {
         asBadRequest(error);
       }
+      return updated;
     }),
 
   cancel: guildMutationProcedure("competitions", "cancel")
@@ -405,23 +425,14 @@ export const competitionRouter = router({
     .input(CompetitionIdInput)
     .mutation(async ({ input }) => {
       await loadCompetitionOr404(input.competitionId, input.guildId);
-      const players = await prisma.player.findMany({
-        where: { serverId: input.guildId },
-      });
-      const results = await Promise.allSettled(
-        players.map((player) =>
-          addParticipant({
-            prisma,
-            competitionId: input.competitionId,
-            playerId: PlayerIdSchema.parse(player.id),
-            status: "JOINED",
-          }),
-        ),
+      // One transaction (like create/edit) so a mid-batch failure rolls back.
+      return prisma.$transaction((tx) =>
+        bulkEnrollTrackedPlayers({
+          prisma: tx,
+          competitionId: input.competitionId,
+          guildId: input.guildId,
+        }),
       );
-      const added = results.filter(
-        (result) => result.status === "fulfilled",
-      ).length;
-      return { added, failed: results.length - added };
     }),
 
   updateSchedule: guildMutationProcedure("competitions", "schedule")

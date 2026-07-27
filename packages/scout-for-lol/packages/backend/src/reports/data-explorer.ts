@@ -16,6 +16,11 @@ import {
   withDuckDBConnection,
   type DuckDBSession,
 } from "#src/reports/duckdb/instance.ts";
+import {
+  MATCH_COLUMNS,
+  PREMATCH_COLUMNS,
+  type ExplorerColumn,
+} from "#src/reports/data-explorer-columns.ts";
 
 const ExplorerTableSchema = z.enum([
   "match_participants",
@@ -27,7 +32,7 @@ const ExplorerSortDirectionSchema = z.enum(["asc", "desc"]);
 export const ReportDataBrowseInputSchema = z
   .object({
     table: ExplorerTableSchema,
-    columns: z.array(z.string().min(1)).min(1).max(12),
+    columns: z.array(z.string().min(1)).min(1).max(80),
     filters: z
       .array(
         z
@@ -55,13 +60,6 @@ export const ReportDataBrowseInputSchema = z
 
 export type ReportDataBrowseInput = z.infer<typeof ReportDataBrowseInputSchema>;
 
-type ExplorerColumnType = "string" | "number" | "boolean" | "timestamp";
-type ExplorerColumn = {
-  id: string;
-  label: string;
-  type: ExplorerColumnType;
-  description: string;
-};
 type ExplorerTable = {
   id: z.infer<typeof ExplorerTableSchema>;
   label: string;
@@ -69,66 +67,6 @@ type ExplorerTable = {
   defaultSort: string;
   columns: ExplorerColumn[];
 };
-
-const MATCH_COLUMNS: ExplorerColumn[] = [
-  columnDefinition("player_alias", "Player", "string", "Tracked Scout player."),
-  columnDefinition(
-    "game_creation_at",
-    "Played at",
-    "timestamp",
-    "Match creation time.",
-  ),
-  columnDefinition("queue", "Queue", "string", "Normalized queue type."),
-  columnDefinition(
-    "champion_name",
-    "Champion",
-    "string",
-    "Champion display name.",
-  ),
-  columnDefinition("win", "Win", "boolean", "Whether the player's team won."),
-  columnDefinition("kills", "Kills", "number", "Champion kills."),
-  columnDefinition("deaths", "Deaths", "number", "Champion deaths."),
-  columnDefinition("assists", "Assists", "number", "Champion assists."),
-  columnDefinition(
-    "creep_score",
-    "Creep score",
-    "number",
-    "Minions and monsters killed.",
-  ),
-  columnDefinition(
-    "total_damage_dealt_to_champions",
-    "Champion damage",
-    "number",
-    "Damage dealt to enemy champions.",
-  ),
-  columnDefinition(
-    "gold_earned",
-    "Gold earned",
-    "number",
-    "Total gold earned.",
-  ),
-  columnDefinition("vision_score", "Vision score", "number", "Vision score."),
-];
-
-const PREMATCH_COLUMNS: ExplorerColumn[] = [
-  columnDefinition("player_alias", "Player", "string", "Tracked Scout player."),
-  columnDefinition(
-    "observed_at",
-    "Observed at",
-    "timestamp",
-    "Lobby observation time.",
-  ),
-  columnDefinition("queue", "Queue", "string", "Normalized queue type."),
-  columnDefinition(
-    "champion_id",
-    "Champion ID",
-    "number",
-    "Selected champion ID.",
-  ),
-  columnDefinition("riot_id", "Riot ID", "string", "Observed Riot ID."),
-  columnDefinition("team_id", "Team", "number", "Riot team identifier."),
-  columnDefinition("game_mode", "Game mode", "string", "Riot game mode."),
-];
 
 const TABLES: ExplorerTable[] = [
   {
@@ -297,6 +235,14 @@ function normalizeRow(
   );
 }
 
+/**
+ * DuckDB returns TIMESTAMP columns as value objects (DuckDBTimestampValue)
+ * carrying epoch microseconds. The class can't be imported statically here —
+ * "@duckdb/node-api" is loaded lazily (see duckdb/instance.ts) — so detect the
+ * shape structurally instead of via instanceof.
+ */
+const DuckDBTimestampLikeSchema = z.object({ micros: z.bigint() });
+
 function normalizeValue(value: unknown): string | number | boolean | null {
   if (
     value === null ||
@@ -313,6 +259,10 @@ function normalizeValue(value: unknown): string | number | boolean | null {
   }
   if (value instanceof Date) {
     return value.toISOString();
+  }
+  const timestamp = DuckDBTimestampLikeSchema.safeParse(value);
+  if (timestamp.success) {
+    return new Date(Number(timestamp.data.micros / 1000n)).toISOString();
   }
   throw new Error(`Unsupported report explorer value type: ${typeof value}`);
 }
@@ -340,13 +290,4 @@ function requireColumn(table: ExplorerTable, id: string): ExplorerColumn {
     throw new Error(`Column ${id} is not available on ${table.id}.`);
   }
   return columnInfo;
-}
-
-function columnDefinition(
-  id: string,
-  label: string,
-  type: ExplorerColumnType,
-  description: string,
-): ExplorerColumn {
-  return { id, label, type, description };
 }

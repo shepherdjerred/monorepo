@@ -115,6 +115,7 @@ export type AlloyHelmValuesAlloy = {
   enableReporting?: boolean;
   extraEnv?: unknown[];
   envFrom?: unknown[];
+  command?: unknown[];
   extraArgs?: unknown[];
   extraPorts?: unknown[];
   hostAliases?: unknown[];
@@ -910,7 +911,7 @@ export type AlloyHelmValues = {
    * chart, this field may also be called "agent". Naming this field "agent" is
    * deprecated and will be removed in a future release.
    *
-   * @default {...} (22 keys)
+   * @default {...} (23 keys)
    */
   alloy?: AlloyHelmValuesAlloy;
   /**
@@ -983,6 +984,7 @@ export type AlloyHelmParameters = {
   "alloy.enableReporting"?: string;
   "alloy.extraEnv"?: string;
   "alloy.envFrom"?: string;
+  "alloy.command"?: string;
   "alloy.extraArgs"?: string;
   "alloy.extraPorts"?: string;
   "alloy.hostAliases"?: string;
