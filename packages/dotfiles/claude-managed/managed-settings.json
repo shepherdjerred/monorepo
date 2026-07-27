@@ -1,4 +1,12 @@
 {
+  "env": {
+    "EDITOR": "true",
+    "VISUAL": "true",
+    "GIT_EDITOR": "true",
+    "PAGER": "cat",
+    "GIT_PAGER": "cat",
+    "GIT_CONFIG_GLOBAL": "/Users/jerred/.config/agent/gitconfig"
+  },
   "permissions": {
     "deny": [
       "Bash(sudo *)",

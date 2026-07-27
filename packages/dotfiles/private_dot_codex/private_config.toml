@@ -160,3 +160,13 @@ global = "zed"
 BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
 NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "461c4ba94b821ec805da79c8e8138fe510b1b3358609fc93da47387a2cf3fbf3,6d25aa7656feac858f3a3bdaea5bcbab0dbfd426c9de8e6931ce90c399ee8e4f"
 NODE_REPL_TRUSTED_CODE_PATHS = "/Users/jerred/.codex"
+# Plain tool defaults for agent shells: no nvim editor, no pagers, and a
+# curated agent gitconfig (no delta pager, no difftastic external diff) that
+# keeps identity, gh credentials, and git-spice settings. Modern tools stay
+# on PATH as opt-in — nothing is restricted.
+EDITOR = "true"
+VISUAL = "true"
+GIT_EDITOR = "true"
+PAGER = "cat"
+GIT_PAGER = "cat"
+GIT_CONFIG_GLOBAL = "/Users/jerred/.config/agent/gitconfig"
