@@ -20,7 +20,7 @@ pre-commit:
             run: gitleaks protect --staged --redact --no-banner
 
           - name: merge-conflicts
-            run: bash scripts/check-merge-conflicts.sh
+            run: bun scripts/check-merge-conflicts.ts
 
           - name: large-files
             run: bun scripts/check-large-files.ts
@@ -34,7 +34,7 @@ pre-commit:
               - "sandbox/archive/**"
               - "**/generated/**"
               - "**/node_modules/**"
-            run: bash scripts/check-env-var-names.sh {staged_files}
+            run: bun scripts/check-env-var-names.ts
 
           - name: check-suppressions
             run: bun scripts/check-suppressions.ts
@@ -60,7 +60,7 @@ pre-commit:
               # CLAUDE.md is a symlink to AGENTS.md everywhere; prettier
               # errors on explicitly-passed symlinks. AGENTS.md is linted.
               - "**/CLAUDE.md"
-            run: bash scripts/prettier-staged.sh {staged_files}
+            run: bun scripts/prettier-staged.ts {staged_files}
             stage_fixed: true
 
     # The full verification surface (build/typecheck/test/lint + every repo

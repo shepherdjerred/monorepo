@@ -83,6 +83,23 @@
         ".buildkite/scripts/select-image-targets.ts"
       ]
     },
+    "//#check-script-migrations": {
+      "inputs": [
+        "scripts/script-migrations.json",
+        "scripts/script-migrations.schema.json",
+        "scripts/check-script-migrations.ts",
+        "scripts/**/*.ts",
+        ".buildkite/scripts/**",
+        "packages/**/*.sh",
+        "packages/**/*.ts",
+        "packages/**/package.json",
+        "packages/**/tsconfig*.json",
+        "packages/**/eslint.config.ts",
+        "!**/node_modules/**",
+        "!**/dist/**",
+        "!**/generated/**"
+      ]
+    },
     "//#markdownlint": {
       "inputs": ["**/*.md", ".markdownlint*", "!**/node_modules/**"]
     },
@@ -99,7 +116,7 @@
       ]
     },
     "//#shellcheck": {
-      "inputs": ["**/*.sh", "!**/node_modules/**", "scripts/shellcheck.sh"]
+      "inputs": ["**/*.sh", "!**/node_modules/**", "scripts/shellcheck.ts"]
     },
     "//#knip": {
       "inputs": [
@@ -165,7 +182,7 @@
     "//#merge-conflicts": {
       "inputs": [
         ".conflictignore",
-        "scripts/check-merge-conflicts.sh",
+        "scripts/check-merge-conflicts.ts",
         "**/*.{ts,tsx,rs,json,yaml,yml,md,sh,astro,toml}",
         "!**/node_modules/**",
         "!**/dist/**",
@@ -175,7 +192,7 @@
     },
     "//#env-var-names": {
       "inputs": [
-        "scripts/check-env-var-names.sh",
+        "scripts/check-env-var-names.ts",
         "**/*.{ts,rs,py,fish,tmpl,yaml,yml,env,md,sh,swift}",
         "!**/node_modules/**",
         "!**/generated/**"
@@ -229,7 +246,7 @@
     "//#pyright": {
       "inputs": [
         "pyrightconfig.json",
-        "scripts/pyright-check.sh",
+        "scripts/pyright-check.ts",
         "scripts/python-dev-requirements.txt",
         "**/*.py",
         "!**/node_modules/**",

@@ -29,9 +29,9 @@ adding it, and retain shell where the execution contract requires it.
 
 | Disposition                          |  Count |
 | ------------------------------------ | -----: |
-| Port to Bun                          |     35 |
+| Port to Bun                          |     34 |
 | Remove redundant shell wrapper       |      1 |
-| Delete or replace without Bun        |      9 |
+| Delete or replace without Bun        |     10 |
 | Retain as shell                      |     17 |
 | **Tracked `.sh` outside `sandbox/`** | **62** |
 
@@ -42,9 +42,8 @@ justify Bun as an explicit dependency.
 
 ### Buildkite
 
-The pipeline sources `toolchain.sh` before these execute. `docker-env.sh` needs
-one structural change: declare `DOCKER_HOST` in the Buildkite step environment
-instead of relying on a sourced child script to mutate its parent.
+These execute in Buildkite images that already include Bun. Preserve the
+pipeline's exit-status, artifact, metadata, and fail-open/fail-closed contracts.
 
 - `.buildkite/scripts/annotate-build-summary.sh`
 - `.buildkite/scripts/bake-images.sh`
@@ -54,7 +53,6 @@ instead of relying on a sourced child script to mutate its parent.
 - `.buildkite/scripts/buildkit-env.sh`
 - `.buildkite/scripts/ci-changed.sh`
 - `.buildkite/scripts/ci-changed.test.sh`
-- `.buildkite/scripts/docker-env.sh`
 - `.buildkite/scripts/prepare-ci-changed-base.sh`
 
 ### Package tooling
@@ -98,6 +96,12 @@ and state handling, it clears the size and maintainability threshold.
 
 - `scripts/quality-ratchet.sh` — callers already use
   `bun scripts/quality-ratchet.ts`; delete the three-line wrapper.
+
+### Delete obsolete Buildkite compatibility
+
+- `.buildkite/scripts/docker-env.sh` — no executable caller remains after the
+  remote BuildKit cutover. Remove the stale validator and image-selection
+  references with it rather than preserving a dead Docker-in-Docker contract.
 
 ### Delete unused vendored scripts
 
@@ -231,17 +235,17 @@ script part of `bun run verify`.
 
 ### Workspace ownership
 
-| Script surface                            | Quality-gate owner                                                                                                                                                               |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Root `scripts/` and `.buildkite/scripts/` | Existing `@shepherdjerred/root-scripts`; replace the remaining Bash test invocations with `*.test.ts` under its strict typecheck, ESLint, and Bun test tasks.                    |
-| Ordinary package-local scripts            | The package that owns the behavior; update its tsconfig includes and standard `typecheck`, `lint`, and `test` tasks in the same phase.                                           |
-| Discord Plays top-level scripts           | Move under the applicable backend workspace instead of leaving TypeScript outside a workspace.                                                                                   |
-| Homelab operational scripts               | Move under an existing verified homelab workspace or make the top-level homelab script surface a verified workspace; do not put ports in the currently ESLint-ignored directory. |
-| Tasks for Obsidian scripts                | Add a strict Bun-oriented script tsconfig alongside the app tsconfig and run both from the package typecheck task.                                                               |
-| Astro OpenGraph script                    | Add a strict script tsconfig, or move reusable logic into `src/` and retain only a tested thin entrypoint.                                                                       |
-| Toolkit installer                         | Put reusable logic under the existing typed source tree or explicitly include `scripts/` in the package quality gates.                                                           |
-| Anki generator                            | Own the small generator from `@shepherdjerred/root-scripts` rather than creating a new package dependency surface.                                                               |
-| Dotfiles git cleanup                      | Create a dedicated verified dotfiles-script workspace; split the 771-line implementation into typed modules that remain within shared lint limits.                               |
+| Script surface                            | Quality-gate owner                                                                                                                                            |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Root `scripts/` and `.buildkite/scripts/` | Existing `@shepherdjerred/root-scripts`; replace the remaining Bash test invocations with `*.test.ts` under its strict typecheck, ESLint, and Bun test tasks. |
+| Ordinary package-local scripts            | The package that owns the behavior; update its tsconfig includes and standard `typecheck`, `lint`, and `test` tasks in the same phase.                        |
+| Discord Plays top-level scripts           | Add verified parent tooling workspaces for Pokémon and Mario Kart; the repository already supports parent and nested workspaces where ownership is distinct.  |
+| Homelab operational scripts               | Add a strict top-level homelab script config and standard tasks; remove the current ESLint ignore for owned operational scripts.                              |
+| Tasks for Obsidian scripts                | Add a strict Bun-oriented script tsconfig alongside the app tsconfig and run both from the package typecheck task.                                            |
+| Astro OpenGraph script                    | Add a strict script tsconfig, or move reusable logic into `src/` and retain only a tested thin entrypoint.                                                    |
+| Toolkit installer                         | Put reusable logic under the existing typed source tree or explicitly include `scripts/` in the package quality gates.                                        |
+| Anki generator                            | Own the small generator from `@shepherdjerred/root-scripts` rather than creating a new package dependency surface.                                            |
+| Dotfiles git cleanup                      | Create a dedicated verified dotfiles-script workspace; split the 771-line implementation into typed modules that remain within shared lint limits.            |
 
 Before the first port, add a repository check that maps each migrated script
 entrypoint to its workspace and verifies that it is included by that workspace's
@@ -258,6 +262,58 @@ escaping the quality gates.
   caller changes in the same commit.
 - Preserve exit codes, stdout/stderr routing, signal behavior, dry-run modes,
   and fail-fast semantics before removing the shell original.
+
+## Public Interface Changes
+
+### Dotfiles Git cleanup
+
+`git_cleanup [directory]` becomes report-only by default. Mutations require
+`--apply`; non-interactive mutation additionally requires `--yes`. Preserve
+`--no-prs`, `--include-closed-prs`, `--remove-clean-worktrees`,
+`--stale-pr-days`, `--summary`, `--verbose`, and `--no-color`.
+
+- Never clear stashes implicitly.
+- Do not provide an override that force-deletes unpushed branches.
+- Never fall back to direct recursive deletion when `git worktree remove`
+  refuses.
+- Exit nonzero when any requested operation fails.
+
+### Velero backup operations
+
+Consolidate the two shell entrypoints under:
+
+```text
+bun run velero:backups -- inspect
+bun run velero:backups -- delete-r2 --target backups|zfs|all --apply
+bun run velero:backups -- delete-all --apply
+```
+
+Destructive operations require `--apply` plus an exact interactive
+confirmation, or an explicit non-interactive confirmation flag. Verify the
+postcondition and exit nonzero if any backup or object remains unexpectedly.
+
+### Package scaffolding
+
+`scripts/new-package.ts <kebab-name>` creates a strict workspace, updates the
+sorted root workspace list, and refreshes the single root lockfile.
+
+## Migration Phases
+
+All phases land in the existing single draft PR, with a verified commit pushed
+after each coherent phase:
+
+1. Add the manifest/schema/ownership/coverage guard and strict workspace
+   ownership.
+2. Port root and small package utilities.
+3. Port operational scripts and process supervisors.
+4. Port WASM vendoring/build workflows with language-neutral upstream pin JSON.
+5. Port Buildkite helpers and replace shell-parsing tests with independent
+   fixtures/oracles.
+6. Port and harden dotfiles Git cleanup.
+7. Delete stale/vendored shell, update all callers/docs, and prove the final
+   inventory.
+8. Run full verification, attach terminal recordings for visible CLI behavior,
+   update the draft PR, and confirm current-head Buildkite is green.
 
 ## Git Attribute Cleanup
 
@@ -299,13 +355,15 @@ The inventory exposed several ineffective or missing GitHub Linguist rules.
 
 - [ ] Add the common script-quality scaffolding and ownership check.
 - [ ] Implement the port/delete/retain classification in reviewable phases.
+- [ ] Harden the dotfiles cleanup and Velero destructive interfaces.
+- [ ] Record and attach terminal demonstrations for changed CLI behavior.
 
 ### Caveats
 
 - Bootstrap scripts may remain shell even when large because they install or
   precede Bun itself.
-- `docker-env.sh` can move to Bun only after `DOCKER_HOST` is declared outside
-  the child process.
+- `docker-env.sh` has no executable caller and will be deleted with its stale
+  validator/image-selection references.
 - The Apple HIG scraper wrapper is already stale; its replacement depends on
   whether scraper maintenance is still desired.
 - Several package script directories are not currently covered by their

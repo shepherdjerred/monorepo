@@ -1,0 +1,556 @@
+{
+  "$schema": "./script-migrations.schema.json",
+  "version": 1,
+  "scripts": [
+    {
+      "source": ".buildkite/scripts/annotate-build-summary.sh",
+      "disposition": "port",
+      "reason": "Buildkite runtime includes Bun",
+      "replacement": ".buildkite/scripts/annotate-build-summary.ts",
+      "owner": {
+        "packageJson": "scripts/package.json",
+        "tsconfig": "scripts/tsconfig.json",
+        "eslintConfig": "scripts/eslint.config.ts"
+      },
+      "tests": [".buildkite/scripts/annotate-build-summary.test.ts"]
+    },
+    {
+      "source": ".buildkite/scripts/bake-images.sh",
+      "disposition": "port",
+      "reason": "Complex image orchestration benefits from typed process handling",
+      "replacement": ".buildkite/scripts/bake-images.ts",
+      "owner": {
+        "packageJson": "scripts/package.json",
+        "tsconfig": "scripts/tsconfig.json",
+        "eslintConfig": "scripts/eslint.config.ts"
+      },
+      "tests": [".buildkite/scripts/bake-images.test.ts"]
+    },
+    {
+      "source": ".buildkite/scripts/bake-retry.sh",
+      "disposition": "port",
+      "reason": "Retry classification is shared with the typed image workflow",
+      "replacement": ".buildkite/scripts/bake-retry.ts",
+      "owner": {
+        "packageJson": "scripts/package.json",
+        "tsconfig": "scripts/tsconfig.json",
+        "eslintConfig": "scripts/eslint.config.ts"
+      },
+      "tests": [".buildkite/scripts/bake-retry.test.ts"]
+    },
+    {
+      "source": ".buildkite/scripts/bake-retry.test.sh",
+      "disposition": "port",
+      "reason": "Bun test replaces the shell harness",
+      "replacement": ".buildkite/scripts/bake-retry.test.ts",
+      "owner": {
+        "packageJson": "scripts/package.json",
+        "tsconfig": "scripts/tsconfig.json",
+        "eslintConfig": "scripts/eslint.config.ts"
+      },
+      "tests": [".buildkite/scripts/bake-retry.test.ts"]
+    },
+    {
+      "source": ".buildkite/scripts/build-ci-image.sh",
+      "disposition": "port",
+      "reason": "Buildkite runtime includes Bun",
+      "replacement": ".buildkite/scripts/build-ci-image.ts",
+      "owner": {
+        "packageJson": "scripts/package.json",
+        "tsconfig": "scripts/tsconfig.json",
+        "eslintConfig": "scripts/eslint.config.ts"
+      },
+      "tests": [".buildkite/scripts/build-ci-image.test.ts"]
+    },
+    {
+      "source": ".buildkite/scripts/buildkit-env.sh",
+      "disposition": "port",
+      "reason": "The sourced file only performs registry login and exports nothing",
+      "replacement": ".buildkite/scripts/buildkit-env.ts",
+      "owner": {
+        "packageJson": "scripts/package.json",
+        "tsconfig": "scripts/tsconfig.json",
+        "eslintConfig": "scripts/eslint.config.ts"
+      },
+      "tests": [".buildkite/scripts/buildkit-env.test.ts"]
+    },
+    {
+      "source": ".buildkite/scripts/ci-changed.sh",
+      "disposition": "port",
+      "reason": "Large lane selector benefits from typed data and fixtures",
+      "replacement": ".buildkite/scripts/ci-changed.ts",
+      "owner": {
+        "packageJson": "scripts/package.json",
+        "tsconfig": "scripts/tsconfig.json",
+        "eslintConfig": "scripts/eslint.config.ts"
+      },
+      "tests": [".buildkite/scripts/ci-changed.test.ts"]
+    },
+    {
+      "source": ".buildkite/scripts/ci-changed.test.sh",
+      "disposition": "port",
+      "reason": "Bun test replaces the shell harness",
+      "replacement": ".buildkite/scripts/ci-changed.test.ts",
+      "owner": {
+        "packageJson": "scripts/package.json",
+        "tsconfig": "scripts/tsconfig.json",
+        "eslintConfig": "scripts/eslint.config.ts"
+      },
+      "tests": [".buildkite/scripts/ci-changed.test.ts"]
+    },
+    {
+      "source": ".buildkite/scripts/docker-env.sh",
+      "disposition": "delete",
+      "reason": "Remote BuildKit cutover removed every executable caller"
+    },
+    {
+      "source": ".buildkite/scripts/prepare-ci-changed-base.sh",
+      "disposition": "port",
+      "reason": "Buildkite runtime includes Bun",
+      "replacement": ".buildkite/scripts/prepare-ci-changed-base.ts",
+      "owner": {
+        "packageJson": "scripts/package.json",
+        "tsconfig": "scripts/tsconfig.json",
+        "eslintConfig": "scripts/eslint.config.ts"
+      },
+      "tests": [".buildkite/scripts/prepare-ci-changed-base.test.ts"]
+    },
+    {
+      "source": ".buildkite/scripts/toolchain.sh",
+      "disposition": "retain",
+      "reason": "Sourced bootstrap installs Bun and exports into the parent shell"
+    },
+    {
+      "source": ".buildkite/scripts/upload-pipeline.sh",
+      "disposition": "retain",
+      "reason": "Buildkite bootstrap runs before the repository runtime is guaranteed"
+    },
+    {
+      "source": ".buildkite/scripts/upload-pipeline.test.sh",
+      "disposition": "retain",
+      "reason": "Tests the minimal shell bootstrap contract"
+    },
+    {
+      "source": ".claude/hooks/trust-mise.sh",
+      "disposition": "retain",
+      "reason": "Lifecycle hook runs before Bun is guaranteed"
+    },
+    {
+      "source": ".claude/hooks/worktree-reminder.sh",
+      "disposition": "retain",
+      "reason": "Lifecycle hook runs before Bun is guaranteed"
+    },
+    {
+      "source": "packages/anki/generate.sh",
+      "disposition": "port",
+      "reason": "Generation already requires Bun",
+      "replacement": "scripts/generate-anki.ts",
+      "owner": {
+        "packageJson": "scripts/package.json",
+        "tsconfig": "scripts/tsconfig.json",
+        "eslintConfig": "scripts/eslint.config.ts"
+      },
+      "tests": ["scripts/generate-anki.test.ts"]
+    },
+    {
+      "source": "packages/astro-opengraph-images/generate_readme.sh",
+      "disposition": "port",
+      "reason": "Package runtime already includes Bun",
+      "replacement": "packages/astro-opengraph-images/generate-readme.ts",
+      "owner": {
+        "packageJson": "packages/astro-opengraph-images/package.json",
+        "tsconfig": "packages/astro-opengraph-images/tsconfig.scripts.json",
+        "eslintConfig": "packages/astro-opengraph-images/eslint.config.ts"
+      },
+      "tests": ["packages/astro-opengraph-images/generate-readme.test.ts"]
+    },
+    {
+      "source": "packages/discord-plays-mario-kart/scripts/build-wasm.sh",
+      "disposition": "port",
+      "reason": "Complex reproducible WASM build already requires Bun tooling",
+      "replacement": "packages/discord-plays-mario-kart/scripts/build-wasm.ts",
+      "owner": {
+        "packageJson": "packages/discord-plays-mario-kart/package.json",
+        "tsconfig": "packages/discord-plays-mario-kart/tsconfig.json",
+        "eslintConfig": "packages/discord-plays-mario-kart/eslint.config.ts"
+      },
+      "tests": ["packages/discord-plays-mario-kart/scripts/build-wasm.test.ts"]
+    },
+    {
+      "source": "packages/discord-plays-mario-kart/scripts/vendor-n64wasm.sh",
+      "disposition": "port",
+      "reason": "Vendoring requires structured validation and deterministic pruning",
+      "replacement": "packages/discord-plays-mario-kart/scripts/vendor-n64wasm.ts",
+      "owner": {
+        "packageJson": "packages/discord-plays-mario-kart/package.json",
+        "tsconfig": "packages/discord-plays-mario-kart/tsconfig.json",
+        "eslintConfig": "packages/discord-plays-mario-kart/eslint.config.ts"
+      },
+      "tests": [
+        "packages/discord-plays-mario-kart/scripts/vendor-n64wasm.test.ts"
+      ]
+    },
+    {
+      "source": "packages/discord-plays-pokemon/scripts/build-wasm.sh",
+      "disposition": "port",
+      "reason": "Complex reproducible WASM build already requires Bun tooling",
+      "replacement": "packages/discord-plays-pokemon/scripts/build-wasm.ts",
+      "owner": {
+        "packageJson": "packages/discord-plays-pokemon/package.json",
+        "tsconfig": "packages/discord-plays-pokemon/tsconfig.json",
+        "eslintConfig": "packages/discord-plays-pokemon/eslint.config.ts"
+      },
+      "tests": ["packages/discord-plays-pokemon/scripts/build-wasm.test.ts"]
+    },
+    {
+      "source": "packages/dotfiles/bin/executable_chezmoi_watchman.sh",
+      "disposition": "retain",
+      "reason": "Five-line command shim runs during bootstrap"
+    },
+    {
+      "source": "packages/dotfiles/bin/executable_git_cleanup.sh",
+      "disposition": "port",
+      "reason": "Large stateful Git workflow benefits from typed planning and safety",
+      "replacement": "packages/dotfiles/bin/executable_git_cleanup.ts",
+      "owner": {
+        "packageJson": "packages/dotfiles/scripts/package.json",
+        "tsconfig": "packages/dotfiles/scripts/tsconfig.json",
+        "eslintConfig": "packages/dotfiles/scripts/eslint.config.ts"
+      },
+      "tests": ["packages/dotfiles/scripts/git-cleanup.test.ts"]
+    },
+    {
+      "source": "packages/dotfiles/bin/executable_sync-theme.sh",
+      "disposition": "retain",
+      "reason": "Chezmoi apply can run before Bun is installed"
+    },
+    {
+      "source": "packages/dotfiles/bin/executable_write_brewfile.sh",
+      "disposition": "retain",
+      "reason": "Eleven-line command shim does not justify a runtime dependency"
+    },
+    {
+      "source": "packages/dotfiles/claude-managed/install-managed-settings.sh",
+      "disposition": "retain",
+      "reason": "Small sudo installer does not justify a runtime dependency"
+    },
+    {
+      "source": "packages/dotfiles/dot_agents/skills/apple-hig-helper/scrape.sh",
+      "disposition": "delete",
+      "reason": "Wrapper targets a missing Python scraper and stale paths"
+    },
+    {
+      "source": "packages/dotfiles/install.sh",
+      "disposition": "retain",
+      "reason": "Bootstrap installs the toolchain including Bun"
+    },
+    {
+      "source": "packages/dotfiles/install_macos.sh",
+      "disposition": "retain",
+      "reason": "Platform bootstrap precedes Bun"
+    },
+    {
+      "source": "packages/homelab/mac-ci/bootstrap.sh",
+      "disposition": "retain",
+      "reason": "Machine bootstrap precedes Bun"
+    },
+    {
+      "source": "packages/homelab/scripts/helm-set-version.sh",
+      "disposition": "port",
+      "reason": "Homelab tooling already requires Bun",
+      "replacement": "packages/homelab/scripts/helm-set-version.ts",
+      "owner": {
+        "packageJson": "packages/homelab/package.json",
+        "tsconfig": "packages/homelab/tsconfig.scripts.json",
+        "eslintConfig": "packages/homelab/eslint.config.ts"
+      },
+      "tests": ["packages/homelab/scripts/helm-set-version.test.ts"]
+    },
+    {
+      "source": "packages/homelab/scripts/lint-helm.sh",
+      "disposition": "port",
+      "reason": "Homelab tooling already requires Bun",
+      "replacement": "packages/homelab/scripts/lint-helm.ts",
+      "owner": {
+        "packageJson": "packages/homelab/package.json",
+        "tsconfig": "packages/homelab/tsconfig.scripts.json",
+        "eslintConfig": "packages/homelab/eslint.config.ts"
+      },
+      "tests": ["packages/homelab/scripts/lint-helm.test.ts"]
+    },
+    {
+      "source": "packages/homelab/scripts/velero/cleanup-r2-bucket.sh",
+      "disposition": "port",
+      "reason": "Destructive backup maintenance needs typed planning and confirmations",
+      "replacement": "packages/homelab/scripts/velero-backups.ts",
+      "owner": {
+        "packageJson": "packages/homelab/package.json",
+        "tsconfig": "packages/homelab/tsconfig.scripts.json",
+        "eslintConfig": "packages/homelab/eslint.config.ts"
+      },
+      "tests": ["packages/homelab/scripts/velero-backups.test.ts"]
+    },
+    {
+      "source": "packages/homelab/scripts/velero/delete-all-backups.sh",
+      "disposition": "port",
+      "reason": "Destructive backup maintenance needs typed planning and confirmations",
+      "replacement": "packages/homelab/scripts/velero-backups.ts",
+      "owner": {
+        "packageJson": "packages/homelab/package.json",
+        "tsconfig": "packages/homelab/tsconfig.scripts.json",
+        "eslintConfig": "packages/homelab/eslint.config.ts"
+      },
+      "tests": ["packages/homelab/scripts/velero-backups.test.ts"]
+    },
+    {
+      "source": "packages/homelab/src/cdk8s/src/resources/configs/qbittorrent/check-config-drift.sh",
+      "disposition": "retain",
+      "reason": "Embedded minimal init-container script"
+    },
+    {
+      "source": "packages/homelab/src/cdk8s/src/resources/configs/qbittorrent/hitandrun-share-limit.sh",
+      "disposition": "retain",
+      "reason": "qBittorrent hook contract explicitly invokes Bash"
+    },
+    {
+      "source": "packages/homelab/src/cdk8s/src/resources/monitoring/scripts/node_os_info.sh",
+      "disposition": "delete",
+      "reason": "No live caller exists"
+    },
+    {
+      "source": "packages/homelab/src/cdk8s/src/resources/monitoring/scripts/zfs_zpool.sh",
+      "disposition": "retain",
+      "reason": "Embedded minimal node collector"
+    },
+    {
+      "source": "packages/homelab/src/cdk8s/src/resources/monitoring/smartmon.sh",
+      "disposition": "retain",
+      "reason": "Upstream-derived script embedded in a minimal collector image"
+    },
+    {
+      "source": "packages/llm-observability/test/e2e/run-ci.sh",
+      "disposition": "port",
+      "reason": "Package test runtime already includes Bun",
+      "replacement": "packages/llm-observability/test/e2e/run-ci.ts",
+      "owner": {
+        "packageJson": "packages/llm-observability/package.json",
+        "tsconfig": "packages/llm-observability/tsconfig.json",
+        "eslintConfig": "packages/llm-observability/eslint.config.ts"
+      },
+      "tests": ["packages/llm-observability/test/e2e/runner.test.ts"]
+    },
+    {
+      "source": "packages/llm-observability/test/e2e/run.sh",
+      "disposition": "port",
+      "reason": "Package test runtime already includes Bun",
+      "replacement": "packages/llm-observability/test/e2e/run.ts",
+      "owner": {
+        "packageJson": "packages/llm-observability/package.json",
+        "tsconfig": "packages/llm-observability/tsconfig.json",
+        "eslintConfig": "packages/llm-observability/eslint.config.ts"
+      },
+      "tests": ["packages/llm-observability/test/e2e/runner.test.ts"]
+    },
+    {
+      "source": "packages/scout-for-lol/packages/desktop/src-tauri/icons/create_minimal_png.sh",
+      "disposition": "port",
+      "reason": "Scout tooling already requires Bun",
+      "replacement": "packages/scout-for-lol/scripts/create-minimal-png.ts",
+      "owner": {
+        "packageJson": "packages/scout-for-lol/package.json",
+        "tsconfig": "packages/scout-for-lol/tsconfig.scripts.json",
+        "eslintConfig": "packages/scout-for-lol/eslint.config.ts"
+      },
+      "tests": ["packages/scout-for-lol/scripts/create-minimal-png.test.ts"]
+    },
+    {
+      "source": "packages/scout-for-lol/scripts/dev-web.sh",
+      "disposition": "port",
+      "reason": "Long-lived process supervision needs explicit typed signal handling",
+      "replacement": "packages/scout-for-lol/scripts/dev-web.ts",
+      "owner": {
+        "packageJson": "packages/scout-for-lol/package.json",
+        "tsconfig": "packages/scout-for-lol/tsconfig.scripts.json",
+        "eslintConfig": "packages/scout-for-lol/eslint.config.ts"
+      },
+      "tests": ["packages/scout-for-lol/scripts/dev-web.test.ts"]
+    },
+    {
+      "source": "packages/scout-for-lol/scripts/install_pkgs.sh",
+      "disposition": "port",
+      "reason": "Workspace setup already requires Bun",
+      "replacement": "packages/scout-for-lol/scripts/install-pkgs.ts",
+      "owner": {
+        "packageJson": "packages/scout-for-lol/package.json",
+        "tsconfig": "packages/scout-for-lol/tsconfig.scripts.json",
+        "eslintConfig": "packages/scout-for-lol/eslint.config.ts"
+      },
+      "tests": ["packages/scout-for-lol/scripts/install-pkgs.test.ts"]
+    },
+    {
+      "source": "packages/tasks-for-obsidian/ios/ci_scripts/ci_post_clone.sh",
+      "disposition": "retain",
+      "reason": "Required Xcode Cloud shell entrypoint installs Bun"
+    },
+    {
+      "source": "packages/tasks-for-obsidian/scripts/clean-ios.sh",
+      "disposition": "port",
+      "reason": "App tooling already requires Bun",
+      "replacement": "packages/tasks-for-obsidian/scripts/clean-ios.ts",
+      "owner": {
+        "packageJson": "packages/tasks-for-obsidian/package.json",
+        "tsconfig": "packages/tasks-for-obsidian/scripts/tsconfig.json",
+        "eslintConfig": "packages/tasks-for-obsidian/eslint.config.ts"
+      },
+      "tests": ["packages/tasks-for-obsidian/scripts/clean-ios.test.ts"]
+    },
+    {
+      "source": "packages/tasks-for-obsidian/scripts/ios-logs.sh",
+      "disposition": "port",
+      "reason": "App tooling already requires Bun",
+      "replacement": "packages/tasks-for-obsidian/scripts/ios-logs.ts",
+      "owner": {
+        "packageJson": "packages/tasks-for-obsidian/package.json",
+        "tsconfig": "packages/tasks-for-obsidian/scripts/tsconfig.json",
+        "eslintConfig": "packages/tasks-for-obsidian/eslint.config.ts"
+      },
+      "tests": ["packages/tasks-for-obsidian/scripts/ios-logs.test.ts"]
+    },
+    {
+      "source": "packages/toolkit/install.sh",
+      "disposition": "port",
+      "reason": "Toolkit build already requires Bun",
+      "replacement": "packages/toolkit/scripts/install.ts",
+      "owner": {
+        "packageJson": "packages/toolkit/package.json",
+        "tsconfig": "packages/toolkit/tsconfig.json",
+        "eslintConfig": "packages/toolkit/eslint.config.ts"
+      },
+      "tests": ["packages/toolkit/test/install.test.ts"]
+    },
+    {
+      "source": "scripts/check-env-var-names.sh",
+      "disposition": "port",
+      "reason": "Repository checks already require Bun",
+      "replacement": "scripts/check-env-var-names.ts",
+      "owner": {
+        "packageJson": "scripts/package.json",
+        "tsconfig": "scripts/tsconfig.json",
+        "eslintConfig": "scripts/eslint.config.ts"
+      },
+      "tests": ["scripts/check-env-var-names.test.ts"]
+    },
+    {
+      "source": "scripts/check-merge-conflicts.sh",
+      "disposition": "port",
+      "reason": "Repository checks already require Bun",
+      "replacement": "scripts/check-merge-conflicts.ts",
+      "owner": {
+        "packageJson": "scripts/package.json",
+        "tsconfig": "scripts/tsconfig.json",
+        "eslintConfig": "scripts/eslint.config.ts"
+      },
+      "tests": ["scripts/check-merge-conflicts.test.ts"]
+    },
+    {
+      "source": "scripts/compliance-check.sh",
+      "disposition": "port",
+      "reason": "Repository checks already require Bun",
+      "replacement": "scripts/compliance-check.ts",
+      "owner": {
+        "packageJson": "scripts/package.json",
+        "tsconfig": "scripts/tsconfig.json",
+        "eslintConfig": "scripts/eslint.config.ts"
+      },
+      "tests": ["scripts/compliance-check.test.ts"]
+    },
+    {
+      "source": "scripts/new-package.sh",
+      "disposition": "port",
+      "reason": "Workspace scaffolding should emit strict Bun packages",
+      "replacement": "scripts/new-package.ts",
+      "owner": {
+        "packageJson": "scripts/package.json",
+        "tsconfig": "scripts/tsconfig.json",
+        "eslintConfig": "scripts/eslint.config.ts"
+      },
+      "tests": ["scripts/new-package.test.ts"]
+    },
+    {
+      "source": "scripts/prettier-staged.sh",
+      "disposition": "port",
+      "reason": "Repository hooks already require Bun",
+      "replacement": "scripts/prettier-staged.ts",
+      "owner": {
+        "packageJson": "scripts/package.json",
+        "tsconfig": "scripts/tsconfig.json",
+        "eslintConfig": "scripts/eslint.config.ts"
+      },
+      "tests": ["scripts/prettier-staged.test.ts"]
+    },
+    {
+      "source": "scripts/pyright-check.sh",
+      "disposition": "port",
+      "reason": "Repository checks already require Bun",
+      "replacement": "scripts/pyright-check.ts",
+      "owner": {
+        "packageJson": "scripts/package.json",
+        "tsconfig": "scripts/tsconfig.json",
+        "eslintConfig": "scripts/eslint.config.ts"
+      },
+      "tests": ["scripts/pyright-check.test.ts"]
+    },
+    {
+      "source": "scripts/quality-ratchet.sh",
+      "disposition": "remove-wrapper",
+      "reason": "Every caller already invokes the TypeScript implementation"
+    },
+    {
+      "source": "scripts/shellcheck.sh",
+      "disposition": "port",
+      "reason": "Repository checks already require Bun",
+      "replacement": "scripts/shellcheck.ts",
+      "owner": {
+        "packageJson": "scripts/package.json",
+        "tsconfig": "scripts/tsconfig.json",
+        "eslintConfig": "scripts/eslint.config.ts"
+      },
+      "tests": ["scripts/shellcheck.test.ts"]
+    },
+    {
+      "source": "packages/discord-plays-mario-kart/wasm-src/code/build.sh",
+      "disposition": "delete",
+      "reason": "Unused vendored convenience wrapper"
+    },
+    {
+      "source": "packages/discord-plays-mario-kart/wasm-src/code/start_emc.sh",
+      "disposition": "delete",
+      "reason": "Unused vendored convenience wrapper"
+    },
+    {
+      "source": "packages/discord-plays-mario-kart/wasm-src/code/src/mupen64plus-core/tools/build_bundle_bin.sh",
+      "disposition": "delete",
+      "reason": "Unused vendored release wrapper"
+    },
+    {
+      "source": "packages/discord-plays-mario-kart/wasm-src/code/src/mupen64plus-core/tools/build_bundle_src.sh",
+      "disposition": "delete",
+      "reason": "Unused vendored release wrapper"
+    },
+    {
+      "source": "packages/discord-plays-mario-kart/wasm-src/code/src/mupen64plus-core/tools/build_modules_src.sh",
+      "disposition": "delete",
+      "reason": "Unused vendored release wrapper"
+    },
+    {
+      "source": "packages/discord-plays-mario-kart/wasm-src/code/src/mupen64plus-core/tools/install_binary_bundle.sh",
+      "disposition": "delete",
+      "reason": "Unused vendored release wrapper"
+    },
+    {
+      "source": "packages/discord-plays-mario-kart/wasm-src/code/src/mupen64plus-core/tools/uninstall_binary_bundle.sh",
+      "disposition": "delete",
+      "reason": "Unused vendored release wrapper"
+    }
+  ]
+}
