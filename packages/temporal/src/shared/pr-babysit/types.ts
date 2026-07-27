@@ -73,7 +73,7 @@ export const PrBabysitInputSchema = z.object({
   /** Free-text goal / steering from the triggering comment, if any. */
   goal: z.string().min(1).optional(),
   /** Model for the mutating agent. */
-  model: z.string().min(1).default("claude-opus-4-8"),
+  model: z.string().min(1).default("claude-opus-5"),
   /** Severity at/above which an unresolved review thread blocks the DoD. */
   blockingSeverity: ReviewSeveritySchema.default(DEFAULT_BLOCKING_SEVERITY),
   budget: PrBabysitBudgetSchema.default(DEFAULT_PR_BABYSIT_BUDGET),

@@ -23,7 +23,7 @@ import {
   type SpecialistRunResult,
 } from "./runner.ts";
 
-export const PERF_MODEL = "claude-opus-4-8";
+export const PERF_MODEL = "claude-opus-5";
 export const PERF_EFFORT = "high" as const;
 export const PERF_MAX_TOKENS = 16_000;
 const MAX_FILES_IN_PROMPT = 150;

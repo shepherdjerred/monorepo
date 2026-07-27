@@ -47,7 +47,7 @@ bun run src/index.ts --apply --interactive
 | `--interactive`                  | Approve each change individually                        |
 | `--limit <n>`                    | Limit transactions to process                           |
 | `--batch-size <n>`               | Batch size for Claude API calls (default: 25)           |
-| `--model <id>`                   | Claude model (default: `claude-sonnet-4-6`)             |
+| `--model <id>`                   | Claude model (default: `claude-sonnet-5`)               |
 | `--output <path>`                | Save proposed changes to JSON                           |
 | `--checkpoint-file <path>`       | Override Tier 2 recovery checkpoint path                |
 | `--sample <n>`                   | Sample N merchant groups for testing                    |

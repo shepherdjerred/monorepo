@@ -11,7 +11,7 @@ export function getReportAiEditStatus(params: {
   guildId: DiscordGuildId;
   userId: DiscordAccountId;
 }): ReportAiEditStatus {
-  const model = configuration.reportAiModel ?? "openai/gpt-5.5";
+  const model = configuration.reportAiModel ?? "openai/gpt-5.6-sol";
   const featureEnabled = getFlag("ai_reports_enabled", {
     server: params.guildId,
     user: params.userId,

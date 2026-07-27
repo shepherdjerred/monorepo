@@ -1,9 +1,66 @@
 {
+  "gpt-5.6-sol": {
+    "id": "gpt-5.6-sol",
+    "provider": "openai",
+    "displayName": "GPT-5.6 Sol",
+    "description": "OpenAI flagship (current). Successor to gpt-5.5.",
+    "pricing": {
+      "modality": "text",
+      "input": 5,
+      "cachedInput": 0.5,
+      "output": 30
+    },
+    "contextWindow": 1050000,
+    "capabilities": {
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "maxTokens": 128000
+    },
+    "status": "current"
+  },
+  "gpt-5.6-terra": {
+    "id": "gpt-5.6-terra",
+    "provider": "openai",
+    "displayName": "GPT-5.6 Terra",
+    "description": "Balanced GPT-5.6 tier (~2x cheaper than Sol).",
+    "pricing": {
+      "modality": "text",
+      "input": 2.5,
+      "cachedInput": 0.25,
+      "output": 15
+    },
+    "contextWindow": 1050000,
+    "capabilities": {
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "maxTokens": 128000
+    },
+    "status": "current"
+  },
+  "gpt-5.6-luna": {
+    "id": "gpt-5.6-luna",
+    "provider": "openai",
+    "displayName": "GPT-5.6 Luna",
+    "description": "Fastest, most cost-effective GPT-5.6 tier.",
+    "pricing": {
+      "modality": "text",
+      "input": 1,
+      "cachedInput": 0.1,
+      "output": 6
+    },
+    "contextWindow": 1050000,
+    "capabilities": {
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "maxTokens": 128000
+    },
+    "status": "current"
+  },
   "gpt-5.5": {
     "id": "gpt-5.5",
     "provider": "openai",
     "displayName": "GPT-5.5",
-    "description": "OpenAI flagship (current).",
+    "description": "Previous OpenAI flagship (superseded by gpt-5.6-sol). Pricing retained for historical cost attribution.",
     "pricing": {
       "modality": "text",
       "input": 5,
@@ -16,7 +73,7 @@
       "supportsTopP": false,
       "maxTokens": 400000
     },
-    "status": "current"
+    "status": "deprecated"
   },
   "gpt-5.4-mini": {
     "id": "gpt-5.4-mini",
@@ -67,11 +124,11 @@
     "status": "current",
     "category": "embedding"
   },
-  "claude-opus-4-8": {
-    "id": "claude-opus-4-8",
+  "claude-opus-5": {
+    "id": "claude-opus-5",
     "provider": "anthropic",
-    "displayName": "Claude Opus 4.8",
-    "description": "Most capable Opus-tier model; adaptive thinking only.",
+    "displayName": "Claude Opus 5",
+    "description": "Current Opus-tier model for complex agentic coding and enterprise work; adaptive thinking only.",
     "pricing": {
       "modality": "text",
       "input": 5,
@@ -89,11 +146,77 @@
     },
     "status": "current"
   },
+  "claude-sonnet-5": {
+    "id": "claude-sonnet-5",
+    "provider": "anthropic",
+    "displayName": "Claude Sonnet 5",
+    "description": "Best speed/intelligence balance; adaptive thinking on by default, rejects temperature/top_p. Standard $3/$15; introductory $2/$10 per MTok through 2026-08-31.",
+    "pricing": {
+      "modality": "text",
+      "input": 3,
+      "output": 15,
+      "cacheRead": 0.3,
+      "cacheWrite": 3.75
+    },
+    "contextWindow": 1000000,
+    "pinnedContextWindow": true,
+    "capabilities": {
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "adaptiveThinking": true,
+      "effortTiers": ["low", "medium", "high", "xhigh", "max"]
+    },
+    "status": "current"
+  },
+  "claude-fable-5": {
+    "id": "claude-fable-5",
+    "provider": "anthropic",
+    "displayName": "Claude Fable 5",
+    "description": "Anthropic's most capable widely released model for long-running agents; adaptive thinking always on.",
+    "pricing": {
+      "modality": "text",
+      "input": 10,
+      "output": 50,
+      "cacheRead": 1,
+      "cacheWrite": 12.5
+    },
+    "contextWindow": 1000000,
+    "pinnedContextWindow": true,
+    "capabilities": {
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "adaptiveThinking": true,
+      "effortTiers": ["low", "medium", "high", "xhigh", "max"]
+    },
+    "status": "current"
+  },
+  "claude-opus-4-8": {
+    "id": "claude-opus-4-8",
+    "provider": "anthropic",
+    "displayName": "Claude Opus 4.8",
+    "description": "Legacy Opus-tier model (superseded by claude-opus-5); adaptive thinking only. Pricing retained for historical cost attribution.",
+    "pricing": {
+      "modality": "text",
+      "input": 5,
+      "output": 25,
+      "cacheRead": 0.5,
+      "cacheWrite": 6.25
+    },
+    "contextWindow": 1000000,
+    "pinnedContextWindow": true,
+    "capabilities": {
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "adaptiveThinking": true,
+      "effortTiers": ["low", "medium", "high", "xhigh", "max"]
+    },
+    "status": "deprecated"
+  },
   "claude-sonnet-4-6": {
     "id": "claude-sonnet-4-6",
     "provider": "anthropic",
     "displayName": "Claude Sonnet 4.6",
-    "description": "Best speed/intelligence balance; adaptive thinking.",
+    "description": "Legacy Sonnet-tier model (superseded by claude-sonnet-5); adaptive thinking. Pricing retained for historical cost attribution.",
     "pricing": {
       "modality": "text",
       "input": 3,
@@ -108,7 +231,7 @@
       "adaptiveThinking": true,
       "effortTiers": ["low", "medium", "high", "max"]
     },
-    "status": "current"
+    "status": "deprecated"
   },
   "claude-haiku-4-5": {
     "id": "claude-haiku-4-5",

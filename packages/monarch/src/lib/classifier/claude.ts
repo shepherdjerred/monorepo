@@ -21,7 +21,7 @@ import type { UsageSummary } from "../usage.ts";
 import { createUsageTracker } from "../usage.ts";
 
 let client: Anthropic | undefined;
-let modelId = "claude-sonnet-4-6";
+let modelId = "claude-sonnet-5";
 let tracker: ReturnType<typeof createUsageTracker> | undefined;
 let webSearchEnabled = false;
 

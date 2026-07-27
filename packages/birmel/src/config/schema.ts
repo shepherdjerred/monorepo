@@ -7,7 +7,7 @@ export const DiscordConfigSchema = z.object({
 
 export const OpenAIConfigSchema = z.object({
   apiKey: z.string().min(1, "OPENAI_API_KEY is required"),
-  model: z.string().default("gpt-5.5"),
+  model: z.string().default("gpt-5.6-sol"),
   classifierModel: z.string().default("gpt-5.4-nano"),
   reasoningEffort: z
     .enum(["minimal", "low", "medium", "high"])

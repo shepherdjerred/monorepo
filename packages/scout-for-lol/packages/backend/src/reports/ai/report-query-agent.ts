@@ -80,7 +80,7 @@ type RunState = {
 export async function streamReportQueryAgent(
   params: ReportQueryAgentParams,
 ): Promise<ReportAiFinalDraft> {
-  const model = configuration.reportAiModel ?? "openai/gpt-5.5";
+  const model = configuration.reportAiModel ?? "openai/gpt-5.6-sol";
   if (model.startsWith("openai/")) {
     assertWithinBudget();
   }

@@ -13,7 +13,7 @@
  * Usage:
  *   CLAUDE_CODE_OAUTH_TOKEN=… bun run scripts/run-pr-babysit-local.ts --pr 1234
  *   … --pr 1234 --dry-run               # agent runs + commits locally, never pushes
- *   … --pr 1234 --max-iterations 3 --model claude-opus-4-8 --goal "keep the refactor intent"
+ *   … --pr 1234 --max-iterations 3 --model claude-opus-5 --goal "keep the refactor intent"
  *
  * The repo defaults to shepherdjerred/monorepo; override with --repo owner/name.
  */

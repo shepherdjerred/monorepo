@@ -112,7 +112,7 @@ async function main(): Promise<void> {
         "--max-turns",
         "80",
         "--model",
-        "claude-opus-4-8",
+        "claude-opus-5",
       ],
       {
         cwd: root,

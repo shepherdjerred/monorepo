@@ -22,7 +22,7 @@ import {
   type SpecialistRunResult,
 } from "./runner.ts";
 
-export const CONVENTION_MODEL = "claude-sonnet-4-6";
+export const CONVENTION_MODEL = "claude-sonnet-5";
 export const CONVENTION_EFFORT = "medium" as const;
 export const CONVENTION_MAX_TOKENS = 16_000;
 const MAX_FILES_IN_PROMPT = 200;
