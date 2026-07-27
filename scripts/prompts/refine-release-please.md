@@ -102,7 +102,10 @@ Cite the actual commits that introduced each kept change (resolve via `git log -
 
 ### 7. Commit and push (only if anything changed)
 
-If `git diff` shows no changes after your edits, do **not** create an empty commit. Emit the result envelope (step 9) with `"packagesRefined": []` and exit 0.
+If `git diff` shows no changes after your edits, do **not** create an empty
+commit and do **not** claim successful refinement. Exit non-zero so the release
+lane stops for investigation; a `"refined"` result must identify a new,
+independently verifiable refiner commit and at least one changed CHANGELOG.
 
 Otherwise:
 
@@ -167,12 +170,11 @@ Only include `<details>` blocks for packages that were actually bumped.
 <!-- /release-refiner-result -->
 ```
 
-The only successful result statuses are `"refined"` (including
-`"packagesRefined":[]` when the release PR needed no CHANGELOG edits) and
-`"no-open-release-pr"`. Only exit non-zero on hard failures (auth error,
-missing required tool, git push rejected, etc.). Never emit a
-`"hard-failure-*"` status and then exit 0; a hard failure must terminate the
-process non-zero.
+The only successful result statuses are `"refined"` (with at least one unique
+package in `"packagesRefined"`) and `"no-open-release-pr"`. Only exit non-zero
+on hard failures (auth error, missing required tool, no verifiable CHANGELOG
+edit, git push rejected, etc.). Never emit a `"hard-failure-*"` status and then
+exit 0; a hard failure must terminate the process non-zero.
 
 ## Hard rules
 
