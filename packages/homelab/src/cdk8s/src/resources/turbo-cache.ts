@@ -5,6 +5,7 @@ import {
   Deployment,
   DeploymentStrategy,
   EnvValue,
+  FsGroupChangePolicy,
   Node,
   NodeLabelQuery,
   PersistentVolumeAccessMode,
@@ -77,6 +78,12 @@ export function createTurboCacheDeployment(chart: Chart) {
     replicas: 1,
     securityContext: {
       fsGroup: APP_GID,
+      // Default is ALWAYS, which recursively chgrps/chmods the whole 256 GiB
+      // PVC on every pod (re)start. Once the cache is populated that's a long
+      // outage on every restart; ON_ROOT_MISMATCH still repairs a fresh/wrong
+      // volume root but skips the full walk once it already matches. Matches
+      // the seerr/bindery/jellyfin idiom.
+      fsGroupChangePolicy: FsGroupChangePolicy.ON_ROOT_MISMATCH,
     },
     strategy: DeploymentStrategy.recreate(),
   });

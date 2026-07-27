@@ -82,22 +82,32 @@ R2 anymore. The only references to the bucket are
 
 - Diagnosed the write-dead local turbo-cache PVC (root:root mount, uid/gid
   1001 container) and fixed it with `securityContext.fsGroup: 1001` on the
-  Deployment in `packages/homelab/src/cdk8s/src/cdk8s-charts/turbo-cache.ts`.
-  Dropped the stale bucket-scoped-token comment.
+  Deployment in `packages/homelab/src/cdk8s/src/resources/turbo-cache.ts`
+  (`createTurboCacheDeployment`; the chart file at
+  `src/cdk8s/src/cdk8s-charts/turbo-cache.ts` only registers the chart and
+  calls that function). Dropped the stale bucket-scoped-token comment.
 - Emptied the R2 bucket (`aws s3 rm s3://turbo-cache/ --recursive --profile
 r2`) and deleted `src/tofu/cloudflare/turbo-cache.tf`.
 - Updated `packages/docs/todos/turbo-cache-rollout.md` to reflect the local
-  backend and R2 teardown.
+  backend and R2 teardown, and restructured its pending work into a
+  `## Human Verification` checklist (the plain `Remaining:` prose list wasn't
+  a recognized `## Remaining` heading, so docs-board tooling was reporting
+  zero pending items on an `awaiting-human` doc).
+- Set `fsGroupChangePolicy: FsGroupChangePolicy.ON_ROOT_MISMATCH` alongside
+  `fsGroup` on the Deployment (default is `ALWAYS`, which would recursively
+  relabel the whole 256 GiB PVC on every restart once it's populated).
+  Matches the seerr/bindery/jellyfin idiom.
 - cdk8s `build test` and `tofu validate` (backend disabled) both green
   locally.
 
 ### Remaining
 
-- Post-deploy: confirm the turbo-cache pod writes `/cache/monorepo/*` (no
-  more 412s) and a Buildkite build's turbo summary shows `REMOTE` hits — see
-  `packages/docs/todos/turbo-cache-rollout.md` remaining item 1.
-- Operator: delete the unused `turbo-cache-r2` 1Password item and refresh the
-  vault snapshot — see the same todo, remaining item 2.
+- All outstanding follow-ups (post-deploy cache-hit confirmation, deleting the
+  `turbo-cache-r2` 1Password item + snapshot refresh, revoking the
+  now-unnecessary Workers R2 Storage → Edit permission on the shared Tofu
+  token, and considering artifact signing) are tracked as a checklist in
+  `packages/docs/todos/turbo-cache-rollout.md`'s `## Human Verification`
+  section.
 
 ### Caveats
 

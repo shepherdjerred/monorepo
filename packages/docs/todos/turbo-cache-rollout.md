@@ -27,21 +27,25 @@ teardown).
   (bucket emptied first so `tofu apply` deletes it cleanly). R2 was the backend
   only until the local cutover; nothing writes to it now.
 
-Remaining:
-
-1. Post-deploy: confirm the turbo-cache pod writes `/cache/monorepo/*` (no more
-   412s) and a Buildkite build's turbo summary shows `REMOTE` hits.
-2. Operator: delete the now-unused `turbo-cache-r2` 1Password item (Homelab
-   (Kubernetes) vault) — no OnePasswordItem CRD references it anymore. Refresh
-   the vault snapshot afterward unconditionally: the item is already
-   unreferenced, so `check-1password-items.ts` won't flag its deletion on its
-   own, and a stale snapshot entry would let a future accidental reference to
-   the deleted item pass CI despite failing at deployment.
-3. Consider enabling artifact signing (`remoteCache.signature: true` in
-   `turbo.json` + `TURBO_REMOTE_CACHE_SIGNATURE_KEY` on clients and server).
-
 ## Human Verification
 
-- Confirm remote cache hits end-to-end after the fsGroup fix deploys, and that
-  R2 teardown applied without breaking `tofu apply (cloudflare)`. Record
-  evidence in the Comment Log.
+- [ ] Post-deploy: confirm the turbo-cache pod writes `/cache/monorepo/*` (no
+      more 412s) and a Buildkite build's turbo summary shows `REMOTE` hits.
+      Record evidence in the Comment Log.
+- [ ] Operator: delete the now-unused `turbo-cache-r2` 1Password item (Homelab
+      (Kubernetes) vault) — no OnePasswordItem CRD references it anymore.
+      Refresh the vault snapshot afterward unconditionally: the item is
+      already unreferenced, so `check-1password-items.ts` won't flag its
+      deletion on its own, and a stale snapshot entry would let a future
+      accidental reference to the deleted item pass CI despite failing at
+      deployment.
+- [ ] Operator: revoke the account-wide **Workers R2 Storage → Edit**
+      permission added to the "Cloudflare API Token (Tofu - Full)" token for
+      this rollout (`packages/docs/logs/2026-07-16_turbo-cache-rollout.md`
+      lines 40-46, 69-73). Removing `src/tofu/cloudflare/turbo-cache.tf` was
+      the last `cloudflare_r2_*` resource using that permission — leaving it
+      in place would let compromise of the general CI Tofu credential mutate
+      unrelated R2 data (e.g. the Velero backup bucket).
+- [ ] Consider enabling artifact signing (`remoteCache.signature: true` in
+      `turbo.json` + `TURBO_REMOTE_CACHE_SIGNATURE_KEY` on clients and
+      server).
