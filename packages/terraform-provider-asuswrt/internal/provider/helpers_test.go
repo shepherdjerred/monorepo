@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -158,6 +159,47 @@ func TestReadOptionalString(t *testing.T) {
 			t.Errorf("expected target to remain %q, got %q", "old", target.ValueString())
 		}
 	})
+
+	t.Run("key-present-empty-clears-stale-value", func(t *testing.T) {
+		t.Parallel()
+
+		// The router cleared a previously-managed value out-of-band; this must
+		// surface as drift (null) rather than leaving the stale prior value.
+		target := types.StringValue("old")
+		result := map[string]string{"hostname": ""}
+		readOptionalString(&target, result, "hostname")
+
+		if !target.IsNull() {
+			t.Errorf("expected target to be cleared to null, got %q", target.ValueString())
+		}
+	})
+
+	t.Run("key-present-empty-unknown-resolves-to-null", func(t *testing.T) {
+		t.Parallel()
+
+		// Optional+Computed: an Unknown target (plan left it unresolved because
+		// config omitted it) must resolve to a known value after apply; an empty
+		// router value means "resolve to null", not "stay Unknown".
+		target := types.StringUnknown()
+		result := map[string]string{"hostname": ""}
+		readOptionalString(&target, result, "hostname")
+
+		if target.IsUnknown() || !target.IsNull() {
+			t.Errorf("expected target to resolve to null, got unknown=%v null=%v", target.IsUnknown(), target.IsNull())
+		}
+	})
+
+	t.Run("key-present-empty-already-null-no-change", func(t *testing.T) {
+		t.Parallel()
+
+		target := types.StringNull()
+		result := map[string]string{"hostname": ""}
+		readOptionalString(&target, result, "hostname")
+
+		if !target.IsNull() {
+			t.Errorf("expected target to remain null, got %q", target.ValueString())
+		}
+	})
 }
 
 func TestReadOptionalBoolFromFlag(t *testing.T) {
@@ -211,6 +253,18 @@ func TestReadOptionalBoolFromFlag(t *testing.T) {
 			t.Errorf("expected target to remain true")
 		}
 	})
+
+	t.Run("key-present-empty-clears-stale-value", func(t *testing.T) {
+		t.Parallel()
+
+		target := types.BoolValue(true)
+		result := map[string]string{"enabled": ""}
+		readOptionalBoolFromFlag(&target, result, "enabled")
+
+		if !target.IsNull() {
+			t.Errorf("expected target to be cleared to null, got %v", target.ValueBool())
+		}
+	})
 }
 
 func TestReadOptionalInt64FromString(t *testing.T) {
@@ -262,6 +316,78 @@ func TestReadOptionalInt64FromString(t *testing.T) {
 
 		if target.IsNull() || target.ValueInt64() != 42 {
 			t.Errorf("expected target to be populated 42, got null=%v value=%d", target.IsNull(), target.ValueInt64())
+		}
+	})
+
+	t.Run("key-present-empty-clears-stale-value", func(t *testing.T) {
+		t.Parallel()
+
+		target := types.Int64Value(42)
+		result := map[string]string{"port": ""}
+		readOptionalInt64FromString(&target, result, "port")
+
+		if !target.IsNull() {
+			t.Errorf("expected target to be cleared to null, got %d", target.ValueInt64())
+		}
+	})
+}
+
+func TestReadOptionalInt64(t *testing.T) {
+	t.Parallel()
+
+	identity := func(s string) int {
+		n, _ := strconv.Atoi(s)
+
+		return n
+	}
+
+	t.Run("key-present-target-set-updates", func(t *testing.T) {
+		t.Parallel()
+
+		target := types.Int64Value(1)
+		result := map[string]string{"channel": "6"}
+		readOptionalInt64(&target, result, "channel", identity)
+
+		if target.ValueInt64() != 6 {
+			t.Errorf("expected target to be 6, got %d", target.ValueInt64())
+		}
+	})
+
+	t.Run("target-unknown-resolves-via-transform", func(t *testing.T) {
+		t.Parallel()
+
+		// Optional+Computed: Unknown (plan left it unresolved on Create) must
+		// resolve to a known value from the router's read-back.
+		target := types.Int64Unknown()
+		result := map[string]string{"channel": "36"}
+		readOptionalInt64(&target, result, "channel", identity)
+
+		if target.IsUnknown() || target.ValueInt64() != 36 {
+			t.Errorf("expected target to resolve to 36, got unknown=%v value=%d", target.IsUnknown(), target.ValueInt64())
+		}
+	})
+
+	t.Run("key-present-empty-clears-stale-value", func(t *testing.T) {
+		t.Parallel()
+
+		target := types.Int64Value(6)
+		result := map[string]string{"channel": ""}
+		readOptionalInt64(&target, result, "channel", identity)
+
+		if !target.IsNull() {
+			t.Errorf("expected target to be cleared to null, got %d", target.ValueInt64())
+		}
+	})
+
+	t.Run("key-missing-no-change", func(t *testing.T) {
+		t.Parallel()
+
+		target := types.Int64Value(6)
+		result := map[string]string{}
+		readOptionalInt64(&target, result, "channel", identity)
+
+		if target.ValueInt64() != 6 {
+			t.Errorf("expected target to remain 6, got %d", target.ValueInt64())
 		}
 	})
 }
