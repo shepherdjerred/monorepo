@@ -308,7 +308,9 @@ describe("DocumentStore", () => {
     await iterator.return?.();
     store.close();
   });
+});
 
+describe("DocumentStore archive", () => {
   test("archives completed TODOs and preserves their audit log", async () => {
     const completedTodo = `---
 id: fixture-todo
@@ -321,15 +323,36 @@ disposition: active
 
 # Fixture TODO
 `;
+    const dependentTodo = `---
+id: dependent-todo
+type: todo
+status: planned
+board: true
+verification: agent
+disposition: active
+origin: packages/docs/todos/fixture-todo.md
+---
+
+# Dependent TODO
+
+## Remaining
+
+- [ ] Complete the follow-up.
+`;
     const root = await fixtureRepository(
       completedTodo,
       "todos/fixture-todo.md",
+    );
+    await Bun.write(
+      `${root}/packages/docs/todos/dependent-todo.md`,
+      dependentTodo,
     );
     const store = new DocumentStore({ repoRoot: root, watchFiles: false });
     const original = await store.get("fixture-todo");
     const archived = DocumentDetailSchema.parse(
       await store.archive(original.id, original.revision, "Agent"),
     );
+    const dependent = await store.get("dependent-todo");
 
     expect(archived.path).toBe("archive/completed/fixture-todo.md");
     expect(archived.markdown).toContain(
@@ -346,6 +369,9 @@ disposition: active
         `${root}/packages/docs/archive/completed/fixture-todo.md`,
       ).exists(),
     ).toBe(true);
+    expect(dependent.frontmatter.origin).toBe(
+      "packages/docs/archive/completed/fixture-todo.md",
+    );
     store.close();
   });
 

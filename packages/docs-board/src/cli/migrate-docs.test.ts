@@ -1,8 +1,14 @@
 import { describe, expect, test } from "bun:test";
 
+import { parseMarkdownDocument } from "#shared/markdown";
 import { FrontmatterSchema } from "#shared/schema";
 
-import { createFrontmatter, normalizeWorkflowSection } from "./migrate-docs.ts";
+import {
+  createFrontmatter,
+  migrateDocument,
+  normalizeWorkflowSection,
+} from "./migrate-docs.ts";
+import { rewriteMovedOrigins } from "./migration-results.ts";
 
 describe("createFrontmatter", () => {
   test("preserves an explicit board review policy", () => {
@@ -164,6 +170,78 @@ describe("createFrontmatter", () => {
 
     expect(frontmatter.status).toBe("in-progress");
     expect(frontmatter.verification).toBe("agent");
+  });
+});
+
+describe("migration archival", () => {
+  test("clears board metadata in the same pass that archives a document", () => {
+    const result = migrateDocument(
+      "plans/fixture.md",
+      `---
+id: plan-fixture
+type: plan
+status: complete
+board: true
+verification: agent
+disposition: active
+---
+
+# Fixture
+`,
+    );
+    const parsed = parseMarkdownDocument(result.content);
+
+    expect(result.targetRelativePath).toBe("archive/completed/fixture.md");
+    expect(parsed.frontmatter.board).toBe(false);
+    expect(parsed.frontmatter.verification).toBeUndefined();
+    expect(parsed.frontmatter.disposition).toBeUndefined();
+  });
+
+  test("rewrites origins that point to documents moved by the migration", () => {
+    const source = migrateDocument(
+      "plans/source.md",
+      `---
+id: plan-source
+type: plan
+status: complete
+board: true
+verification: agent
+disposition: active
+---
+
+# Source
+`,
+    );
+    const dependent = migrateDocument(
+      "todos/dependent.md",
+      `---
+id: dependent
+type: todo
+status: planned
+board: true
+verification: agent
+disposition: active
+origin: packages/docs/plans/source.md
+---
+
+# Dependent
+
+## Remaining
+
+- [ ] Complete the follow-up.
+`,
+    );
+    const rewritten = rewriteMovedOrigins([source, dependent]);
+    const rewrittenDependent = rewritten.find(
+      (result) => result.relativePath === "todos/dependent.md",
+    );
+    if (rewrittenDependent === undefined) {
+      throw new Error("dependent migration result was not found");
+    }
+
+    expect(
+      parseMarkdownDocument(rewrittenDependent.content).frontmatter.origin,
+    ).toBe("packages/docs/archive/completed/source.md");
   });
 });
 

@@ -1,3 +1,4 @@
+import { archiveDocumentFiles, atomicWrite } from "#server/document-archive";
 import {
   createDocumentSnapshot,
   readDocumentPath,
@@ -306,22 +307,6 @@ export class DocumentStore {
     }
   }
 
-  private async atomicWrite(path: string, content: string): Promise<void> {
-    const temporaryPath = `${path}.docs-board-${crypto.randomUUID()}.tmp`;
-    await Bun.write(temporaryPath, content);
-    try {
-      await commandValue(this.repoRoot, ["mv", "--", temporaryPath, path]);
-    } catch (error) {
-      try {
-        const temporaryFile = Bun.file(temporaryPath);
-        if (await temporaryFile.exists()) await temporaryFile.delete();
-      } catch (cleanupError) {
-        console.error("failed to clean temporary docs file", cleanupError);
-      }
-      throw error;
-    }
-  }
-
   private validateRevision(file: ParsedFile, revision: string): void {
     if (file.detail.revision !== revision) {
       throw new DocumentConflictError(
@@ -389,7 +374,8 @@ export class DocumentStore {
         audit,
         new Date().toISOString(),
       );
-      await this.atomicWrite(
+      await atomicWrite(
+        this.repoRoot,
         file.absolutePath,
         serializeMarkdownDocument(frontmatter, body),
       );
@@ -417,7 +403,8 @@ export class DocumentStore {
         comment,
         new Date().toISOString(),
       );
-      await this.atomicWrite(
+      await atomicWrite(
+        this.repoRoot,
         file.absolutePath,
         serializeMarkdownDocument(parsed.frontmatter, body),
       );
@@ -459,34 +446,43 @@ export class DocumentStore {
       const basename = file.detail.path.split("/").at(-1);
       if (basename === undefined)
         throw new DocumentWorkflowError("Invalid document path.");
-      const targetDirectory = `${this.docsRoot}/archive/completed`;
-      const target = `${targetDirectory}/${basename}`;
+      const archivedPath = `archive/completed/${basename}`;
+      const sourceOrigin = `packages/docs/${file.detail.path}`;
+      const targetOrigin = `packages/docs/${archivedPath}`;
+      const target = `${this.docsRoot}/${archivedPath}`;
       if (await Bun.file(target).exists()) {
         throw new DocumentWorkflowError(
           `Archive target already exists: ${basename}`,
         );
       }
       const parsed = parseMarkdownDocument(file.raw);
-      const archivedFrontmatter = archiveFrontmatter(parsed.frontmatter);
+      const archivedBase = archiveFrontmatter(parsed.frontmatter);
+      const archivedFrontmatter =
+        archivedBase.origin === sourceOrigin
+          ? FrontmatterSchema.parse({
+              ...archivedBase,
+              origin: targetOrigin,
+            })
+          : archivedBase;
       const body = appendCommentLog(
         parsed.body,
         actor,
         "Archived to `packages/docs/archive/completed/`.",
         new Date().toISOString(),
       );
-      await commandValue(this.repoRoot, ["mkdir", "-p", "--", targetDirectory]);
-      await commandValue(this.repoRoot, [
-        "mv",
-        "--",
-        file.absolutePath,
-        target,
+      const originPaths = await archiveDocumentFiles({
+        repoRoot: this.repoRoot,
+        docsRoot: this.docsRoot,
+        file,
+        archivedPath,
+        archivedContent: serializeMarkdownDocument(archivedFrontmatter, body),
+        snapshot: await this.scan(),
+      });
+      await this.refreshCachedPaths([
+        file.detail.path,
+        archivedPath,
+        ...originPaths,
       ]);
-      await this.atomicWrite(
-        target,
-        serializeMarkdownDocument(archivedFrontmatter, body),
-      );
-      const archivedPath = `archive/completed/${basename}`;
-      await this.refreshCachedPaths([file.detail.path, archivedPath]);
       const updated = await this.get(id);
       this.publishChange(id);
       return updated;
