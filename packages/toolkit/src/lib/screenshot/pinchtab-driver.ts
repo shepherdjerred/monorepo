@@ -101,6 +101,11 @@ function unwrap<T>(
   return result.data;
 }
 
+/** Normalize a path for comparison: drop a single trailing slash (keep "/"). */
+function stripTrailingSlash(path: string): string {
+  return path.length > 1 && path.endsWith("/") ? path.slice(0, -1) : path;
+}
+
 /**
  * Everything between session-create and session-revoke: open a tab, configure
  * viewport/media emulation *before* loading the target page, wait for
@@ -190,10 +195,15 @@ async function runCapture(
       await currentUrl(session.sessionToken, tabId),
       "pinchtab url",
     );
-    const prefix = AUTH_ROUTE_PREFIX[options.authFlow.flow];
-    if (!new URL(landedUrl).pathname.startsWith(prefix)) {
+    // Compare the exact landing path with the requested route (trailing slash
+    // aside), not just the app prefix: the SPA's catch-all redirects an unknown
+    // /app/... path to the app root, so a prefix-only check would accept it and
+    // screenshot the wrong page. A login failure (tab left on /api/dev/login)
+    // also mismatches here.
+    const landedPath = new URL(landedUrl).pathname;
+    if (stripTrailingSlash(landedPath) !== stripTrailingSlash(options.route)) {
       throw new Error(
-        `${options.authFlow.flow}: expected to land on a path under "${prefix}" but the tab is at "${landedUrl}" — the login redirect likely failed (e.g. /api/dev/login returned an error).`,
+        `${options.authFlow.flow}: expected to land on "${options.route}" but the tab is at "${landedUrl}" — the route may not exist (the app redirected it) or the login redirect failed.`,
       );
     }
   }

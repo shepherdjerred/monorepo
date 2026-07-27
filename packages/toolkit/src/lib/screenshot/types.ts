@@ -15,11 +15,12 @@ export type PackageEntry = {
   /** Command + args to boot the dev server, e.g. ["bun", "run", "dev"]. */
   devCommand: string[];
   /**
-   * The port the dev server is expected to bind. It is authoritative, not a
-   * hint: reuse detection probes it, and a fresh spawn must bind exactly it
-   * (we don't parse an auto-bumped port back from stdout — dev commands print
-   * inconsistent/hard-coded banners). If the port is already in use when a
-   * fresh spawn is needed, `ensureDevServer` fails fast rather than guessing.
+   * The port the dev server must bind. It is authoritative, not a hint: every
+   * run spawns a fresh server that must bind exactly this port (we never reuse
+   * an already-running one — a probe can't verify it's the right app — and we
+   * don't parse an auto-bumped port back from stdout, since dev commands print
+   * inconsistent/hard-coded banners). If the port is already in use,
+   * `ensureDevServer` fails fast rather than guessing.
    */
   expectedPort: number;
   /** Path navigated to when no route is given on the CLI. */

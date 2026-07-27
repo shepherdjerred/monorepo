@@ -1,25 +1,13 @@
 /**
- * Boot (or reuse) a registered package's dev server for `toolkit screenshot`.
+ * Boot a registered package's dev server for `toolkit screenshot`.
  */
 import { repoRoot } from "#lib/deployed/git.ts";
-import { PACKAGES } from "./catalog.ts";
 import type { PackageEntry } from "./types.ts";
 
 export type DevServerHandle = {
   baseUrl: string;
-  spawnedByUs: boolean;
   stop: () => Promise<void>;
 };
-
-// Ports claimed by more than one catalog entry. A bare "is something serving
-// on :4321?" probe can't tell sjer-red from stocks-sjer-red (both bind 4321),
-// so reusing whatever is already there could silently capture the wrong app.
-// Reuse is only attempted when a package's expected port is unique to it.
-const SHARED_PORTS = new Set(
-  PACKAGES.map((p) => p.expectedPort).filter(
-    (port, _i, all) => all.indexOf(port) !== all.lastIndexOf(port),
-  ),
-);
 
 /** Readiness probe: a non-5xx response on `url` means the app is up. */
 async function probeReady(url: string, timeoutMs: number): Promise<boolean> {
@@ -91,47 +79,22 @@ export async function ensureDevServer(
 ): Promise<DevServerHandle> {
   const timeoutMs = options.timeoutMs ?? 60_000;
   const readyPath = entry.readyPath ?? entry.defaultRoute;
-  const hasEnvOverrides =
-    options.envOverrides !== undefined &&
-    Object.keys(options.envOverrides).length > 0;
   const baseUrl = `http://localhost:${String(entry.expectedPort)}`;
 
-  // Reuse an already-running server only when:
-  //  - its expected port is unique to this package (a shared-port probe can't
-  //    confirm identity),
-  //  - no --env overrides force a fresh process (a running server can't
-  //    retroactively pick up new env vars like VITE_CONTRACT_HASH=...), and
-  //  - the entry isn't auth-gated. A manually started stack may not have the
-  //    dev-login route enabled (ENABLE_DEV_LOGIN defaults off; only the
-  //    catalog's spawned dev:web turns it on), so /api/version can pass while
-  //    /api/dev/login 404s — reusing it would screenshot the auth error. Always
-  //    spawn our own for auth-gated entries so dev-login is guaranteed present.
-  const canReuse =
-    !hasEnvOverrides &&
-    !SHARED_PORTS.has(entry.expectedPort) &&
-    entry.requiresAuth === undefined;
-  if (canReuse && (await probeReady(`${baseUrl}${readyPath}`, 500))) {
-    return { baseUrl, spawnedByUs: false, stop: () => Promise.resolve() };
-  }
-
-  // We must spawn our own server, and it has to bind `expectedPort` for the URL
-  // to be trustworthy. We deliberately do NOT read an auto-bumped port back
-  // from stdout: dev commands print inconsistent/hard-coded banners (scout's
-  // dev-web.sh prints a static http://localhost:5180, several print multiple
-  // services), so a bound port parsed from output can't be trusted to be the
-  // browser-facing server. Instead, require the expected port to be free and
-  // let the child bind exactly it; if it's occupied, fail fast rather than
-  // auto-bump to an unknown port or capture whatever is already there.
+  // Always spawn a fresh, isolated dev server on the package's fixed
+  // `expectedPort` — never reuse whatever is already listening there. A status
+  // probe can't prove the running server is actually the requested app: an
+  // unrelated process, a stale build, or (for auth-gated entries) a stack
+  // started without ENABLE_DEV_LOGIN could be on that port. Dev commands also
+  // print inconsistent/hard-coded banners, so the bound port can't be read
+  // back from stdout either. So: require the port to be free and let the child
+  // bind exactly it; if it's occupied, fail fast rather than capture the wrong
+  // server or auto-bump to an unknown port.
   if (await isPortInUse(entry.expectedPort)) {
-    const why = hasEnvOverrides
-      ? "a fresh spawn is required to apply --env overrides, but the port is taken"
-      : SHARED_PORTS.has(entry.expectedPort)
-        ? "another catalog app shares this port"
-        : "something is already bound there";
     throw new Error(
-      `${entry.alias}: port ${String(entry.expectedPort)} is already in use (${why}). ` +
-        `Stop whatever is on :${String(entry.expectedPort)} (or screenshot that app) and retry — ` +
-        `toolkit screenshot binds a fixed port so it never captures the wrong server.`,
+      `${entry.alias}: port ${String(entry.expectedPort)} is already in use. ` +
+        `toolkit screenshot always spawns its own server on this fixed port (it can't verify an already-running one is the right app), ` +
+        `so stop whatever is on :${String(entry.expectedPort)} and retry.`,
     );
   }
 
@@ -210,7 +173,7 @@ export async function ensureDevServer(
     if (await probeReady(`${baseUrl}${readyPath}`, 2000)) {
       void stdoutDone;
       void stderrDone;
-      return { baseUrl, spawnedByUs: true, stop };
+      return { baseUrl, stop };
     }
     // `exitCode` is null until the child exits — a non-null value means it
     // died before becoming ready (missing tool, `op` not signed in, …), so

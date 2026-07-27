@@ -1,6 +1,6 @@
 ---
 name: screenshot
-description: Boot a package's dev server (or attach to a running one), drive a real Chrome instance via PinchTab to a route, and capture a screenshot — the happy-path way to visually verify a frontend change in this monorepo.
+description: Boot a fresh isolated dev server for a package, drive a real Chrome instance via PinchTab to a route, and capture a screenshot — the happy-path way to visually verify a frontend change in this monorepo.
 user-invocable: true
 allowed-tools:
   - Bash
@@ -10,8 +10,9 @@ allowed-tools:
 # Screenshot Skill
 
 Visually verify a frontend change without a manual browser session: boots
-(or reuses) a package's dev server, drives a real PinchTab-controlled Chrome
-tab to a route, screenshots it, and cleans up after itself.
+a package's dev server (a fresh, isolated one on its fixed port — never
+reused), drives a real PinchTab-controlled Chrome tab to a route,
+screenshots it, and cleans up after itself.
 
 Prerequisite: PinchTab must already be running (`pinchtab health`). See the
 `pinchtab-helper` skill for setup — this tool is a thin wrapper around the
@@ -30,7 +31,7 @@ toolkit screenshot --list          # print the registry
 | `--wait-for-selector <s>` | CSS selector to poll for before capturing (default: fixed settle delay)                                                                                       |
 | `--timeout <ms>`          | Default 60000                                                                                                                                                 |
 | `--discord-id <id>`       | Authenticate as this Discord ID, for packages that require it (e.g. `scout-app`); defaults to a fake test user. Pass the real owner ID to see owner-gated UI. |
-| `--env KEY=VALUE`         | Repeatable; forces a fresh dev-server spawn (a reused server can't pick up new env vars)                                                                      |
+| `--env KEY=VALUE`         | Repeatable; passes env vars to the spawned dev server (e.g. `VITE_CONTRACT_HASH=…`)                                                                           |
 | `--viewport <WxH>`        | e.g. `1280x800`                                                                                                                                               |
 | `--theme <light\|dark>`   | CSS `prefers-color-scheme` emulation                                                                                                                          |
 | `--full-page`             | Capture the full scrollable page, not just the viewport                                                                                                       |

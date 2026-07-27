@@ -100,7 +100,7 @@ us and are encoded in the code:
 
 ## `screenshot` — visually verify a frontend change
 
-`toolkit screenshot <package> [route] [options]` boots (or reuses) a
+`toolkit screenshot <package> [route] [options]` boots a
 registered package's dev server and drives a real PinchTab-controlled
 Chrome tab to a route to capture a screenshot — the happy-path way to
 confirm a UI change actually renders, without a manual browser session.
@@ -116,16 +116,17 @@ Full flag reference and recipes: the `screenshot` skill.
 --profile default --mode headless` if `pinchtab instances` is empty) —
   the daemon itself doesn't auto-start one.
 - **Registry:** `src/lib/screenshot/catalog.ts` — alias → `cwd`/`devCommand`/
-  `expectedPort`/`defaultRoute`/optional `requiresAuth`. `expectedPort` is
-  authoritative: reuse detection probes it (only for ports unique to one
-  catalog entry — a shared-port probe can't confirm identity), and a fresh
-  spawn must bind exactly it. The bound port is **not** parsed from stdout
-  (dev commands print inconsistent/hard-coded banners — scout's `dev-web.sh`
-  prints a static `:5180`), so if the expected port is already in use when a
-  fresh spawn is needed, `ensureDevServer` **fails fast** instead of
-  auto-bumping to an unknown port or capturing whatever is already there.
-  `--env KEY=VALUE` always forces a fresh spawn — a reused server can't pick
-  up new env vars.
+  `expectedPort`/`defaultRoute`/optional `requiresAuth`. Every run **spawns its
+  own** isolated dev server on the fixed `expectedPort` — it never reuses an
+  already-running one, because a status probe can't verify that server is
+  actually the requested app (an unrelated process, a stale build, or an
+  auth-gated stack started without `ENABLE_DEV_LOGIN` could be on that port).
+  The bound port is also **not** parsed from stdout (dev commands print
+  inconsistent/hard-coded banners — scout's `dev-web.sh` prints a static
+  `:5180`). So `expectedPort` must be free: if it's already in use,
+  `ensureDevServer` **fails fast** rather than capturing the wrong server or
+  auto-bumping to an unknown port. `--env KEY=VALUE` is applied to the spawned
+  server's environment.
 - **Auth:** `scout-app` is the one auth-gated entry (`requiresAuth:
 "scout-dev-login"`) — see `packages/scout-for-lol/AGENTS.md`'s dev-login
   section. `--discord-id` only matters for entries that declare `requiresAuth`.

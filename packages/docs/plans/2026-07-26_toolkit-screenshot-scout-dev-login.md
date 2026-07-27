@@ -78,16 +78,17 @@ defaultRoute, readyPath?, requiresAuth?}` for `sjer-red`, `stocks-sjer-red`,
   omitted (no dev script). `resolvePackage(alias)` throws a
   known-aliases-listing error for typos.
 - **`lib/screenshot/dev-server.ts`** — `ensureDevServer`: **fixed-port,
-  deterministic** (the bound port is NEVER parsed from stdout — dev commands
-  print inconsistent/hard-coded banners, so an output-derived port can't be
-  trusted). Flow: reuse a running server only when its `expectedPort` is unique
-  in the catalog, no `--env` overrides are given, and the entry isn't
-  auth-gated (a hand-started stack may lack `ENABLE_DEV_LOGIN`); otherwise the
-  port must be free (TCP-connect occupancy check on 127.0.0.1 + ::1) and a
-  fresh `Bun.spawn` (`detached`, `BROWSER=none`) binds exactly `expectedPort`.
-  If the port is occupied when a fresh spawn is needed, **fail fast** rather
-  than auto-bumping to an unknown port or capturing whatever is there. Readiness
-  = poll `readyPath` on `expectedPort`, watching `proc.exitCode` to fail fast if
+  deterministic, always spawns fresh** (the bound port is NEVER parsed from
+  stdout — dev commands print inconsistent/hard-coded banners, so an
+  output-derived port can't be trusted). Flow: it never reuses an
+  already-running server (a status probe can't verify that server is actually
+  the requested app — an unrelated process, a stale build, or an auth-gated
+  stack started without `ENABLE_DEV_LOGIN` could be on the port), so
+  `expectedPort` must be free (TCP-connect occupancy check on 127.0.0.1 + ::1)
+  and a fresh `Bun.spawn` (`detached`, `BROWSER=none`) binds exactly
+  `expectedPort`. If the port is occupied, **fail fast** rather than
+  auto-bumping to an unknown port or capturing whatever is there. Readiness =
+  poll `readyPath` on `expectedPort`, watching `proc.exitCode` to fail fast if
   the child dies first. `stop()` signals the whole process group (descendants
   too). Uses the existing `lib/deployed/git.ts` `repoRoot()` helper (git
   rev-parse-based) to resolve `cwd` — not `import.meta.url` introspection, which
