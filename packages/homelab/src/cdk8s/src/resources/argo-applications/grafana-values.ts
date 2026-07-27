@@ -140,6 +140,7 @@ export function createGrafanaValues(
       storageClassName: NVME_STORAGE_CLASS,
       labels: {
         "velero.io/backup": "enabled",
+        "velero.io/exclude-from-backup": "false",
       },
     },
     useStatefulSet: true,

@@ -13,6 +13,10 @@ export function createTemporalPostgreSQLDatabase(chart: Chart) {
   return new Postgresql(chart, "temporal-postgresql", {
     metadata: {
       name: "temporal-postgresql",
+      labels: {
+        "velero.io/backup": "enabled",
+        "velero.io/exclude-from-backup": "false",
+      },
       annotations: {
         // Prevent ArgoCD from deleting this resource during sync - data loss protection
         "argocd.argoproj.io/sync-options": "Delete=false",

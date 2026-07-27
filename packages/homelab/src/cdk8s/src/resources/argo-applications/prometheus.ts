@@ -163,6 +163,7 @@ export async function createPrometheusApp(chart: Chart) {
                 // Kyverno velero-label mutation (the chart templates volumeClaimTemplate
                 // metadata onto the PVC, same as prometheusSpec above).
                 "velero.io/backup": "enabled",
+                "velero.io/exclude-from-backup": "false",
               },
             },
             spec: {

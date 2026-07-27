@@ -2,9 +2,8 @@ import { proxyActivities } from "@temporalio/workflow";
 import type { VeleroOrphanAuditActivities } from "#activities/velero-orphan-audit.ts";
 
 const { runVeleroOrphanAudit } = proxyActivities<VeleroOrphanAuditActivities>({
-  // Listing ZFS snapshots cluster-wide is bounded by:
-  //   ~90 datasets × 2 zfs list calls × ~0.5s each ≈ 90s under typical load.
-  // Heartbeats fire per-pool and per-dataset so a worker death surfaces in <90s.
+  // The activity performs one zfs inventory command per Ready OpenEBS node.
+  // Heartbeats fire per node so a worker death surfaces promptly.
   startToCloseTimeout: "10 minutes",
   heartbeatTimeout: "90 seconds",
   retry: {
@@ -34,6 +33,7 @@ export async function runVeleroOrphanAuditWorkflow(): Promise<void> {
       orphansByDataset: result.datasets
         .filter((d) => d.orphanCount > 0)
         .map((d) => ({
+          node: d.node,
           dataset: d.dataset,
           orphanCount: d.orphanCount,
           orphanBytes: d.orphanBytes,
