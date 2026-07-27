@@ -22,6 +22,51 @@ export function redactSecrets(value: unknown): unknown {
   return walk(value);
 }
 
+/**
+ * Env var names whose *values* must never reach logs or S3 archives. Codex/agent
+ * subprocesses deliberately inherit these, so an attacker-controlled goal or a
+ * troubleshooting command (`env`, `cat auth.json`, `echo $OPENAI_API_KEY`) can
+ * emit a live credential on stdout/stderr. We redact by literal value — that
+ * catches the secret in any output format, not just `NAME=value`.
+ */
+const SECRET_ENV_NAMES = [
+  "CODEX_API_KEY",
+  "CODEX_ACCESS_TOKEN",
+  "OPENAI_API_KEY",
+  "ANTHROPIC_API_KEY",
+  "POKEMONCTL_TOKEN",
+  "GH_TOKEN",
+] as const;
+
+// `NAME=value` / `NAME: value` where NAME is secret-shaped. Structural backstop
+// for credentials we don't know by env-var name (matches the object-key rule
+// above, applied to flat text). The name is preserved; only the value is masked.
+const SECRET_ASSIGNMENT_PATTERN =
+  /\b(\w*(?:API[_-]?KEY|ACCESS[_-]?KEY|SECRET|PASSWORD|TOKEN|CREDENTIAL)\w*)(\s*[=:]\s*)\S+/gi;
+
+/**
+ * Redact secrets from a flat text body (command line, stdout, stderr) before it
+ * is logged or archived. Three passes:
+ *   1. Literal values of known secret env vars (only when ≥8 chars, so short/
+ *      empty values can't blank out unrelated substrings).
+ *   2. `NAME=value` assignments with secret-shaped names.
+ *   3. `Bearer <token>` substrings.
+ */
+export function redactText(value: string): string {
+  let out = value;
+  for (const name of SECRET_ENV_NAMES) {
+    const secret = Bun.env[name];
+    if (secret !== undefined && secret.length >= 8) {
+      out = out.split(secret).join("[REDACTED]");
+    }
+  }
+  out = out.replaceAll(
+    SECRET_ASSIGNMENT_PATTERN,
+    (_match, name: string, sep: string) => `${name}${sep}[REDACTED]`,
+  );
+  return out.replaceAll(BEARER_PATTERN, "Bearer [REDACTED]");
+}
+
 function walk(value: unknown): unknown {
   if (typeof value === "string") {
     return value.replaceAll(BEARER_PATTERN, "Bearer [REDACTED]");

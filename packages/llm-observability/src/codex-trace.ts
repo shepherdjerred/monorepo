@@ -11,6 +11,7 @@
 import { context, trace, type Span, type Tracer } from "@opentelemetry/api";
 import { z } from "zod";
 import { getLlmTracer } from "./span-helpers.ts";
+import { redactText } from "./redact.ts";
 import {
   type CodexLogger,
   type CodexEvent,
@@ -89,6 +90,20 @@ export function attachCodexTrace(
   const logger = options.logger ?? noopLogger;
   const spanPrefix = options.spanPrefix ?? "codex.agent";
   const toolAttrPrefix = options.toolAttributePrefix ?? `${spanPrefix}.tool`;
+
+  // Copied onto every tool span. OTel span attributes are NOT inherited from
+  // the parent, yet the archive processor reads gen_ai.system,
+  // gen_ai.request.model, and llm.call_site off each span it uploads — without
+  // these, tool-body archives land under provider "unknown" with no model or
+  // correlation context (e.g. pokemon.goal.id). Root attributes go first so the
+  // reserved identity keys below always win.
+  const toolSpanIdentity: Record<string, string | number | boolean> = {
+    ...options.rootAttributes,
+    "gen_ai.system": SYSTEM,
+    "gen_ai.request.model": options.model,
+    "llm.service": options.service,
+    "llm.call_site": options.callSite,
+  };
 
   // Root span: covers the whole codex exec invocation.
   const rootSpan = tracer.startSpan(`${spanPrefix}.run`, {
@@ -180,6 +195,7 @@ export function attachCodexTrace(
           event,
           spanName: `${spanPrefix}.tool`,
           attrPrefix: toolAttrPrefix,
+          spanIdentity: toolSpanIdentity,
           logger,
           nextId: () => {
             toolCounter += 1;
@@ -223,76 +239,158 @@ type ToolHandlerArgs = {
   event: Extract<CodexEvent, { kind: "other" }>;
   spanName: string;
   attrPrefix: string;
+  /** Identity/correlation attrs copied onto each tool span (not parent-inherited). */
+  spanIdentity: Record<string, string | number | boolean>;
   nextId: () => string;
   logger: CodexLogger;
 };
 
 const RecordSchema = z.record(z.string(), z.unknown());
 
+// Nested `item` payload of the item.started / item.completed events emitted by
+// codex-cli's experimental JSON output (the shape the production Dockerfile pin
+// @openai/codex@0.139.0 uses). A command's combined output lives in
+// `aggregated_output`; separate stdout/stderr are present on some versions.
+const CommandItemSchema = z.looseObject({
+  id: z.string().optional(),
+  type: z.string().optional(),
+  command: z.union([z.string(), z.array(z.unknown())]).optional(),
+  aggregated_output: z.string().optional(),
+  stdout: z.string().optional(),
+  stderr: z.string().optional(),
+  exit_code: z.number().optional(),
+});
+
 /**
- * Bridge for tool-call events. Codex's `--json` output uses event types like
- * `ExecCommandBegin` / `ExecCommandEnd` which the parser surfaces as `other`
- * events (we don't pin to specific types so the parser tolerates schema
- * drift). We pattern-match by raw shape.
+ * Bridge for tool-call events. Two wire formats reach us as `other` events
+ * (the parser doesn't pin types, so it tolerates schema drift):
+ *   - Modern codex-cli (≥ ~0.13x): `item.started` / `item.completed` wrapping a
+ *     `command_execution` item, correlated by `item.id`, output in
+ *     `aggregated_output`.
+ *   - Legacy: top-level `ExecCommandBegin` / `ExecCommandEnd`, correlated by
+ *     `call_id`, output in top-level `stdout` / `stderr`.
+ * We pattern-match by raw shape and normalize both into begin/end.
  */
 function handleToolEvents(args: ToolHandlerArgs): void {
-  const { tracer, rootCtx, openTools, event, spanName, attrPrefix, nextId } =
-    args;
-  const parsed = RecordSchema.safeParse(event.raw);
+  const parsed = RecordSchema.safeParse(args.event.raw);
   if (!parsed.success) return;
   const record = parsed.data;
   const type = typeof record["type"] === "string" ? record["type"] : "";
 
-  if (type === "ExecCommandBegin" || type === "exec_command_begin") {
-    const callId = stringField(record, "call_id") ?? nextId();
-    const fullCommand = collapseCommand(record, /* snip */ false);
-    const command = snippet(fullCommand);
-    const span = tracer.startSpan(
-      spanName,
-      {
-        attributes: {
-          [`${attrPrefix}.command`]: command,
-          [`${attrPrefix}.call_id`]: callId,
-        },
-      },
-      rootCtx,
-    );
-    openTools.set(callId, {
-      span,
-      command: fullCommand,
-      startedAtMs: Date.now(),
-    });
-    // Structured log for live kubectl/Loki blackbox (full command, not snipped).
-    args.logger.info?.(`codex tool begin: ${fullCommand}`);
+  if (type === "item.started" || type === "item.completed") {
+    handleItemEvent(args, type, record);
     return;
   }
+  handleLegacyEvent(args, type, record);
+}
 
+// Modern codex-cli: item.started / item.completed wrapping a command_execution
+// item, correlated by item.id, output in aggregated_output.
+function handleItemEvent(
+  args: ToolHandlerArgs,
+  type: string,
+  record: Record<string, unknown>,
+): void {
+  const item = CommandItemSchema.safeParse(record["item"]);
+  if (!item.success || item.data.type !== "command_execution") return;
+  const callId = item.data.id ?? args.nextId();
+  if (type === "item.started") {
+    beginTool(args, callId, commandToString(item.data.command));
+    return;
+  }
+  // `aggregated_output` is the combined stream; fall back through it when a
+  // version doesn't split stdout/stderr.
+  endTool(args, callId, {
+    exitCode: item.data.exit_code ?? -1,
+    stdout: item.data.stdout ?? item.data.aggregated_output ?? "",
+    stderr: item.data.stderr ?? "",
+  });
+}
+
+// Legacy codex-cli: top-level ExecCommandBegin / ExecCommandEnd, correlated by
+// call_id, output in top-level stdout / stderr.
+function handleLegacyEvent(
+  args: ToolHandlerArgs,
+  type: string,
+  record: Record<string, unknown>,
+): void {
+  if (type === "ExecCommandBegin" || type === "exec_command_begin") {
+    const callId = stringField(record, "call_id") ?? args.nextId();
+    beginTool(args, callId, collapseCommand(record));
+    return;
+  }
   if (type === "ExecCommandEnd" || type === "exec_command_end") {
     const callId = stringField(record, "call_id");
     if (callId === undefined) return;
-    const open = openTools.get(callId);
-    if (open === undefined) return;
-    const exitCode = numberField(record, "exit_code") ?? -1;
-    const durationMs = Date.now() - open.startedAtMs;
-    const stdout = stringField(record, "stdout") ?? "";
-    const stderr = stringField(record, "stderr") ?? "";
-    // Dual-track: short snippets stay on Tempo-bound attrs; full bodies use
-    // gen_ai.tool.* keys that LlmArchiveSpanProcessor strips to S3.
-    open.span.setAttributes({
-      [`${attrPrefix}.exit_code`]: exitCode,
-      [`${attrPrefix}.duration_ms`]: durationMs,
-      [`${attrPrefix}.stdout_snippet`]: snippet(stdout),
-      [`${attrPrefix}.stderr_snippet`]: snippet(stderr),
-      "gen_ai.tool.stdout": bodyForArchive(stdout),
-      "gen_ai.tool.stderr": bodyForArchive(stderr),
+    endTool(args, callId, {
+      exitCode: numberField(record, "exit_code") ?? -1,
+      stdout: stringField(record, "stdout") ?? "",
+      stderr: stringField(record, "stderr") ?? "",
     });
-    open.span.end();
-    openTools.delete(callId);
-    args.logger.info?.(
-      `codex tool end: exit=${String(exitCode)} durationMs=${String(durationMs)} cmd=${open.command} stdout=${bodyForArchive(stdout)} stderr=${bodyForArchive(stderr)}`,
-    );
-    return;
   }
+}
+
+type ToolResult = { exitCode: number; stdout: string; stderr: string };
+
+function beginTool(
+  args: ToolHandlerArgs,
+  callId: string,
+  rawCommand: string,
+): void {
+  const { tracer, rootCtx, openTools, spanName, attrPrefix, spanIdentity } =
+    args;
+  // Redact before anything is stored or logged: an attacker-controlled goal can
+  // put a credential on the command line (e.g. `pokemonctl --token=…`).
+  const fullCommand = redactText(rawCommand);
+  const span = tracer.startSpan(
+    spanName,
+    {
+      attributes: {
+        ...spanIdentity,
+        [`${attrPrefix}.command`]: snippet(fullCommand),
+        [`${attrPrefix}.call_id`]: callId,
+      },
+    },
+    rootCtx,
+  );
+  openTools.set(callId, {
+    span,
+    command: fullCommand,
+    startedAtMs: Date.now(),
+  });
+  // Structured log for live kubectl/Loki blackbox (full command, not snipped).
+  args.logger.info?.(`codex tool begin: ${fullCommand}`);
+}
+
+function endTool(
+  args: ToolHandlerArgs,
+  callId: string,
+  result: ToolResult,
+): void {
+  const { openTools, attrPrefix } = args;
+  const { exitCode } = result;
+  const open = openTools.get(callId);
+  if (open === undefined) return;
+  const durationMs = Date.now() - open.startedAtMs;
+  // Redact before both live logging and S3 archival: a tool run can dump
+  // credentials (`env`, `cat auth.json`) onto stdout/stderr.
+  const stdout = redactText(result.stdout);
+  const stderr = redactText(result.stderr);
+  // Dual-track: short snippets stay on Tempo-bound attrs; full bodies use
+  // gen_ai.tool.* keys that LlmArchiveSpanProcessor strips to S3.
+  open.span.setAttributes({
+    [`${attrPrefix}.exit_code`]: exitCode,
+    [`${attrPrefix}.duration_ms`]: durationMs,
+    [`${attrPrefix}.stdout_snippet`]: snippet(stdout),
+    [`${attrPrefix}.stderr_snippet`]: snippet(stderr),
+    "gen_ai.tool.stdout": bodyForArchive(stdout),
+    "gen_ai.tool.stderr": bodyForArchive(stderr),
+  });
+  open.span.end();
+  openTools.delete(callId);
+  args.logger.info?.(
+    `codex tool end: exit=${String(exitCode)} durationMs=${String(durationMs)} cmd=${open.command} stdout=${bodyForArchive(stdout)} stderr=${bodyForArchive(stderr)}`,
+  );
 }
 
 function stringField(
@@ -311,17 +409,16 @@ function numberField(
   return typeof value === "number" ? value : undefined;
 }
 
-function collapseCommand(record: Record<string, unknown>, snip = true): string {
-  const raw = record["command"];
-  let value: string;
-  if (typeof raw === "string") {
-    value = raw;
-  } else if (Array.isArray(raw)) {
-    value = raw.map(String).join(" ");
-  } else {
-    return "<unknown>";
-  }
-  return snip ? snippet(value) : value;
+function collapseCommand(record: Record<string, unknown>): string {
+  return commandToString(record["command"]);
+}
+
+// A codex command is either a string or an argv array. Returns the full,
+// un-snipped command (callers snippet where needed).
+function commandToString(raw: unknown): string {
+  if (typeof raw === "string") return raw;
+  if (Array.isArray(raw)) return raw.map(String).join(" ");
+  return "<unknown>";
 }
 
 function snippet(value: string): string {
