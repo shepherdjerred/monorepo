@@ -63,6 +63,10 @@ export const REPORT_EXAMPLES: ReportExample[] = [
 ];
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+// Fixed-date competitions are capped at 90 calendar days
+// (MAX_COMPETITION_DURATION_DAYS), so a "year-long" fixed preset can't validate;
+// a 60-day sprint stays comfortably inside the limit.
+const SIXTY_DAYS_MS = 60 * 24 * 60 * 60 * 1000;
 // The season active right now; falls back to the nearest joinable one between
 // seasons (getSeasonChoices filters out ended seasons but includes future
 // ones and is newest-start-first, so `.at(-1)` is the nearest upcoming one, not
@@ -108,28 +112,31 @@ export const COMPETITION_EXAMPLES: CompetitionExample[] = [
     ? []
     : [buildRankPreset(CURRENT_SEASON_ID)]),
   {
-    id: "games-2026",
-    label: "Most games in 2026",
+    id: "games-sprint",
+    label: "Most games — 2-month sprint",
     description:
-      "A year-long race to see who grinds the most games across every queue.",
-    build: (channelId) => ({
-      ...EMPTY_STATE,
-      title: "Most games in 2026",
-      description: "Rack up the most games this year.",
-      channelId,
-      criteria: {
-        criteriaType: "MOST_GAMES_PLAYED",
-        queue: "ALL",
-        championId: "",
-        minGames: "10",
-      },
-      dates: {
-        mode: "FIXED_DATES",
-        startDate: "2026-01-01",
-        endDate: "2026-12-31",
-        seasonId: "",
-      },
-    }),
+      "A two-month race to see who grinds the most games across every queue.",
+    build: (channelId) => {
+      const now = new Date();
+      return {
+        ...EMPTY_STATE,
+        title: "Most games — 2-month sprint",
+        description: "Rack up the most games over the next two months.",
+        channelId,
+        criteria: {
+          criteriaType: "MOST_GAMES_PLAYED",
+          queue: "ALL",
+          championId: "",
+          minGames: "10",
+        },
+        dates: {
+          mode: "FIXED_DATES",
+          startDate: toIsoDate(now),
+          endDate: toIsoDate(new Date(now.getTime() + SIXTY_DAYS_MS)),
+          seasonId: "",
+        },
+      };
+    },
   },
   {
     id: "yuumi",

@@ -128,3 +128,19 @@ Codex surfaced 7 more across the large diff; all fixed:
 
 Verified: backend+app typecheck clean, lint clean, `competition-create.router`
 tests 3/3 pass (transaction path exercised against the offline harness DB).
+
+## Re-review round 3 (cycle 4) — 2 P2s on head 3986173e9
+
+Converging (no P1s). Both fixed:
+
+- **P2 default-selected gated Riot ID:** the prematch `riot_id` column was
+  `defaultVisible`, so a `reports:read`-only caller auto-hit the new
+  `accounts:read` gate on the first `browseData` after switching tables. Made
+  `riot_id` non-default so the 403 only happens on explicit opt-in (manually
+  selecting a gated column is the intended gate, not a bug).
+- **P2 invalid year-long preset:** "Most games in 2026" used a Jan 1–Dec 31
+  fixed range, which fails `CompetitionDatesSchema`'s 90-day cap
+  (`MAX_COMPETITION_DURATION_DAYS`). Replaced it with a valid rolling 60-day
+  "2-month sprint" (dynamic start = today) so the preset actually creates.
+
+Verified: backend+app typecheck clean, lint clean.

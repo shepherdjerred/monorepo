@@ -288,7 +288,10 @@ export const PREMATCH_COLUMNS: ExplorerColumn[] = [
     ],
     ["queue", "Queue", "string", "Normalized queue type.", true],
     ["champion_id", "Champion ID", "number", "Selected champion ID.", true],
-    ["riot_id", "Riot ID", "string", "Observed Riot ID.", true],
+    // Not default-visible: it's an ACCOUNT_IDENTITY_COLUMN gated on
+    // accounts:read, so auto-selecting it would 403 a reports:read-only caller
+    // who never opted into Riot identity data.
+    ["riot_id", "Riot ID", "string", "Observed Riot ID."],
     ["team_id", "Team", "number", "Riot team identifier.", true],
     ["game_mode", "Game mode", "string", "Riot game mode.", true],
   ]),
