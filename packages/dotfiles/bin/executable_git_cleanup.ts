@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
 import {
+  branchDeletionFlag,
   type CleanupOptions,
   formatStatus,
   isSafeWorktree,
@@ -72,6 +73,24 @@ async function commitsAheadOfUpstream(worktree: string): Promise<number> {
   return Number(count.stdout);
 }
 
+async function commitsAheadOfDefaultBranch(
+  worktree: string,
+  defaultBranch: string,
+): Promise<number> {
+  const count = await command(worktree, [
+    "git",
+    "rev-list",
+    "--count",
+    `origin/${defaultBranch}..HEAD`,
+  ]);
+  if (count.exitCode !== 0 || !/^\d+$/.test(count.stdout)) {
+    throw new Error(
+      `Could not count commits ahead of origin/${defaultBranch} in ${worktree}`,
+    );
+  }
+  return Number(count.stdout);
+}
+
 type WorktreeInspection = {
   readonly eligible: boolean;
   readonly safe: boolean;
@@ -99,15 +118,17 @@ async function inspectWorktree(
   const pullRequestResult = options.checkPullRequests
     ? await pullRequest(repo, worktree.branch)
     : { state: "NONE" as const };
-  const eligible =
+  const eligibleByBranchState =
     merged ||
     pullRequestResult.state === "MERGED" ||
-    (options.includeClosedPullRequests &&
-      pullRequestResult.state === "CLOSED") ||
-    options.removeCleanWorktrees;
+    (options.includeClosedPullRequests && pullRequestResult.state === "CLOSED");
+  const commitsAheadOfDefault =
+    options.removeCleanWorktrees && !eligibleByBranchState
+      ? await commitsAheadOfDefaultBranch(worktree.path, defaultBranch)
+      : undefined;
   return {
-    eligible,
-    safe: isSafeWorktree(status.stdout, ahead),
+    eligible: eligibleByBranchState || options.removeCleanWorktrees,
+    safe: isSafeWorktree(status.stdout, ahead, commitsAheadOfDefault),
     pullRequest: pullRequestResult,
   };
 }
@@ -157,14 +178,10 @@ async function removeWorktree(
   if (remove.exitCode !== 0) {
     throw new Error(`git worktree remove failed for ${worktree.path}`);
   }
-  const branchFlag =
-    pullRequestResult.state === "CLOSED" && options.includeClosedPullRequests
-      ? "-D"
-      : "-d";
   const removeBranch = await command(repo, [
     "git",
     "branch",
-    branchFlag,
+    branchDeletionFlag(pullRequestResult, options.includeClosedPullRequests),
     worktree.branch,
   ]);
   if (removeBranch.exitCode !== 0) {

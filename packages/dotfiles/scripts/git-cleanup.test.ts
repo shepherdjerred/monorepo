@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import {
+  branchDeletionFlag,
   formatStatus,
   isSafeWorktree,
   parseCleanupArguments,
@@ -79,10 +80,21 @@ test("rejects invalid argument combinations", () => {
   expect(() => parseCleanupArguments(["--help"], "/home")).toThrow("help");
 });
 
-test("dirty or unpushed worktrees are never safe", () => {
+test("dirty, unpushed, or unmerged worktrees are never safe", () => {
   expect(isSafeWorktree(" M file", 0)).toBe(false);
   expect(isSafeWorktree("", 1)).toBe(false);
+  expect(isSafeWorktree("", 0, 1)).toBe(false);
+  expect(isSafeWorktree("", 0, 0)).toBe(true);
   expect(isSafeWorktree("", 0)).toBe(true);
+});
+
+test("force-deletes only branches whose PR state proves deletion is safe", () => {
+  const updatedAt = new Date("2026-07-01T00:00:00.000Z");
+  expect(branchDeletionFlag({ state: "MERGED", updatedAt }, false)).toBe("-D");
+  expect(branchDeletionFlag({ state: "CLOSED", updatedAt }, true)).toBe("-D");
+  expect(branchDeletionFlag({ state: "CLOSED", updatedAt }, false)).toBe("-d");
+  expect(branchDeletionFlag({ state: "OPEN", updatedAt }, true)).toBe("-d");
+  expect(branchDeletionFlag({ state: "NONE" }, true)).toBe("-d");
 });
 
 test("parses porcelain worktrees without relying on spaces", () => {

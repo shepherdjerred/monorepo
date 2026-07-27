@@ -134,8 +134,27 @@ export function parseWorktrees(output: string): Worktree[] {
     });
 }
 
-export function isSafeWorktree(status: string, commitsAhead: number): boolean {
-  return status.length === 0 && commitsAhead === 0;
+export function isSafeWorktree(
+  status: string,
+  commitsAheadOfUpstream: number,
+  commitsAheadOfDefaultBranch?: number,
+): boolean {
+  return (
+    status.length === 0 &&
+    commitsAheadOfUpstream === 0 &&
+    (commitsAheadOfDefaultBranch === undefined ||
+      commitsAheadOfDefaultBranch === 0)
+  );
+}
+
+export function branchDeletionFlag(
+  pullRequest: PullRequest,
+  includeClosedPullRequests: boolean,
+): "-d" | "-D" {
+  return pullRequest.state === "MERGED" ||
+    (pullRequest.state === "CLOSED" && includeClosedPullRequests)
+    ? "-D"
+    : "-d";
 }
 
 export function parsePullRequest(output: string): PullRequest {
