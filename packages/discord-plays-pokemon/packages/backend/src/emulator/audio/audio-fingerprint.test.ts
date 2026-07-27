@@ -146,7 +146,7 @@ function chromaFingerprint(
 
 // Skip when explicitly disabled, or when the wasm isn't present (plain
 // `bun run test` on a clean checkout — the wasm is built from source in the
-// Dagger image build and locally by scripts/build-wasm.sh, where this gate runs).
+// Dagger image build and locally by scripts/build-wasm.ts, where this gate runs).
 // `Bun.file().size` is synchronous and returns 0 for a missing file — used
 // instead of node:fs (banned by the bun-runtime lint rule).
 if (Bun.env.SKIP_AUDIO_FINGERPRINT === "1" || Bun.file(WASM_PATH).size === 0) {

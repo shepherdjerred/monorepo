@@ -4,7 +4,11 @@ import {
   LeaguePuuidSchema,
 } from "@scout-for-lol/data";
 import { matchToSvg, svgToPng } from "#src/html/index.tsx";
-import { test, expect } from "bun:test";
+import { expect, setDefaultTimeout, test } from "bun:test";
+
+// Each case performs a full Satori + resvg render. Whole-repo verification
+// deliberately runs packages concurrently, so cold renders need CI headroom.
+setDefaultTimeout(30_000);
 
 function hashSvg(svg: string): string {
   const hasher = new Bun.CryptoHasher("sha256");

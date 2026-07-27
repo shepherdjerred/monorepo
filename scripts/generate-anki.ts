@@ -1,4 +1,5 @@
 import { run } from "./lib/run.ts";
+import { deckCommand } from "./migration-core.ts";
 
 const DECKS = [
   "book_high_performance_web_applications",
@@ -6,17 +7,6 @@ const DECKS = [
   "bytes",
   "interview",
 ];
-
-export function deckCommand(deck: string): string[] {
-  return [
-    "bunx",
-    "mdanki",
-    `${deck}.md`,
-    `${deck}.apkg`,
-    "--config",
-    "settings.json",
-  ];
-}
 
 export async function generateAnkiDecks(): Promise<void> {
   const cwd = `${import.meta.dir}/../packages/anki`;

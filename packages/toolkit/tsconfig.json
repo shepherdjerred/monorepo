@@ -6,6 +6,7 @@
   },
   "include": [
     "src/**/*",
+    "scripts/**/*",
     "test/**/*",
     "test-integration/**/*",
     "eslint.config.ts"

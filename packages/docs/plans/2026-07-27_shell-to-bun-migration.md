@@ -229,9 +229,10 @@ script part of `bun run verify`.
 - Use exact assertions; do not skip tests or replace precise expectations with
   truthiness checks.
 - Run Bun's built-in coverage for migrated modules and require at least 90%
-  line, function, and statement coverage. Every migrated entrypoint must be
-  loaded by a smoke or black-box test so an unimported file cannot disappear
-  from the coverage result.
+  line and function coverage for each owner. Bun reports executable source
+  coverage as lines rather than a separate statement metric. Every migrated
+  entrypoint must be loaded by a smoke or black-box test so an unimported file
+  cannot disappear from the coverage result.
 
 ### Workspace ownership
 
@@ -328,44 +329,61 @@ The inventory exposed several ineffective or missing GitHub Linguist rules.
 
 ## Remaining
 
-- [ ] Establish workspace ownership, strict script tsconfigs, shared ESLint
+- [x] Establish workspace ownership, strict script tsconfigs, shared ESLint
       coverage, test/coverage commands, and the migrated-script ownership check
       before landing the first port.
-- [ ] Implement the port/delete/retain classification in reviewable phases.
-- [ ] Verify each replacement against the original script's observable behavior
+- [x] Implement the port/delete/retain classification in reviewable phases.
+- [x] Verify each replacement against the original script's observable behavior
       before deleting the shell implementation.
-- [ ] Update every package, Buildkite, documentation, and test caller alongside
+- [x] Update every package, Buildkite, documentation, and test caller alongside
       its migrated entrypoint.
+- [ ] Obtain human review and merge draft PR #1710 after current-head Buildkite
+      verification is green.
 
 ## Session Log — 2026-07-27
 
 ### Done
 
-- Inventoried and classified all 62 tracked `.sh` files outside `sandbox/`.
-- Established the runtime-availability and script-size decision rules.
-- Added and verified effective Linguist attributes for the discovered generated
-  and vendored paths.
-- Made strict TypeScript, shared type-aware ESLint, Prettier, behavior tests, and
-  90% coverage mandatory deletion gates for every Bun replacement.
-- Assigned each planned port surface to a verified workspace and identified the
-  package configurations that must be expanded before those ports land.
-- Published the attribute cleanup and migration design in draft PR #1710.
+- Ported all 34 selected shell scripts to typed Bun entrypoints, removed one
+  redundant wrapper and ten stale or vendored scripts, and retained the 17
+  scripts whose bootstrap, platform, sourced-shell, or minimal-container
+  contracts still justify shell.
+- Added `scripts/script-migrations.json`,
+  `scripts/check-script-migrations.ts`, strict owner tsconfigs, shared
+  type-aware ESLint, exact behavior tests, entrypoint smoke tests, and aggregate
+  per-owner coverage enforcement.
+- Hardened the destructive Git cleanup and Velero interfaces with report-only
+  defaults, explicit mutation confirmation, refusal paths, and postcondition
+  checks.
+- Replaced Buildkite shell helpers and shell-parsing tests with Bun modules,
+  independent fixtures, and pipeline validation.
+- Moved WASM upstream pins to language-neutral JSON plus JSON Schema, removed
+  unused vendored wrappers, and updated callers, documentation, Docker inputs,
+  Renovate, and Git attributes.
+- Applied the new dotfiles `git_cleanup` command to the live chezmoi-managed
+  path and recorded its report-only terminal behavior.
+- Fixed a repository-wide verification race by excluding Bun's atomic
+  `.*.bun-build` compiler artifacts from the Temporal rehearsal copy; twelve
+  concurrent toolkit compilations plus the full rehearsal passed.
+- Passed the full repository verification surface: 211 of 211 Turbo tasks,
+  including builds, typechecks, tests, lint, migration ownership, coverage,
+  shellcheck, docs, supply-chain checks, infrastructure validation, and the
+  Temporal rehearsal.
+- Published the implementation in draft PR #1710.
 
 ### Remaining
 
-- [ ] Add the common script-quality scaffolding and ownership check.
-- [ ] Implement the port/delete/retain classification in reviewable phases.
-- [ ] Harden the dotfiles cleanup and Velero destructive interfaces.
-- [ ] Record and attach terminal demonstrations for changed CLI behavior.
+- [ ] Confirm current-head Buildkite is green, attach the terminal recording,
+      and promote PR #1710 from draft to ready for human review.
+- [ ] Human review and merge.
 
 ### Caveats
 
-- Bootstrap scripts may remain shell even when large because they install or
-  precede Bun itself.
-- `docker-env.sh` has no executable caller and will be deleted with its stale
-  validator/image-selection references.
-- The Apple HIG scraper wrapper is already stale; its replacement depends on
-  whether scraper maintenance is still desired.
-- Several package script directories are not currently covered by their
-  package's tsconfig or ESLint configuration; their ports cannot begin until the
-  ownership changes above are in place.
+- Bun exposes line and function coverage, so the enforced line metric is the
+  executable-source proxy for the plan's original statement-coverage intent.
+- The 17 retained scripts remain intentionally classified and guarded; adding
+  Bun only for those bootstrap or minimal-runtime contracts would violate the
+  migration's dependency threshold.
+- The Apple HIG scraper wrapper was deleted because its Python target and
+  documented paths no longer exist; restoring scraper maintenance is a separate
+  product decision, not an incomplete Bun port.

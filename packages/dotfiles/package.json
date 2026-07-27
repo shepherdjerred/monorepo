@@ -1,0 +1,19 @@
+{
+  "name": "@shepherdjerred/dotfiles-scripts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "test": "bun test scripts",
+    "test:coverage": "bun test --config ../../scripts/bunfig.coverage.toml --coverage scripts/git-cleanup.test.ts",
+    "lint": "eslint bin/executable_git_cleanup.ts bin/git_cleanup_core.ts scripts/*.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@types/bun": "^1.3.14",
+    "eslint": "^10.7.0",
+    "jiti": "^2.7.0",
+    "typescript": "^6.0.3"
+  }
+}

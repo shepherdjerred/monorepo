@@ -25,7 +25,7 @@ Fully headless — no browser, no emulator UI, no GPU, no desktop:
   detect-only shadow mode; `"send"` to post).
 
 The WASM is **built from source** (ottohg pinned at `OTTOHG_SHA` +
-our export patch) by `scripts/build-wasm.sh`. It is not committed; Renovate
+our export patch) by `scripts/build-wasm.ts`. It is not committed; Renovate
 advances the upstream pin. See `wasm-src/PATCHES.md`.
 
 ## Deployment

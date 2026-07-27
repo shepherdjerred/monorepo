@@ -1,6 +1,6 @@
 # discord-plays-pokemon — agent notes
 
-Headless Pokémon Emerald (pokeemerald-wasm, ottohg fork with the C m4a audio engine) running in Bun, streamed to a Discord voice channel via `@shepherdjerred/discord-video-stream`. See `README.md` for the architecture; this file is the agent quick-reference. The WASM is built from source by `scripts/build-wasm.sh` (invoked during the Docker image build; CI builds + smokes + pushes the image via `.buildkite/pipeline.yml`) — never committed; Renovate advances the `OTTOHG_SHA` pin in that script. See `wasm-src/PATCHES.md`.
+Headless Pokémon Emerald (pokeemerald-wasm, ottohg fork with the C m4a audio engine) running in Bun, streamed to a Discord voice channel via `@shepherdjerred/discord-video-stream`. See `README.md` for the architecture; this file is the agent quick-reference. The WASM is built from source by `scripts/build-wasm.ts` (invoked during the Docker image build; CI builds + smokes + pushes the image via `.buildkite/pipeline.yml`) — never committed; Renovate advances the commit in `wasm-src/upstream.json`. See `wasm-src/PATCHES.md`.
 
 The tracing/metrics wiring, loopback audio transport, Go-Live streamer base class, web server, and bot entrypoint are shared with discord-plays-mario-kart in **`@shepherdjerred/discord-plays-core`** (`packages/discord-plays-core`, source-only, subpath imports) — see its `AGENTS.md`. This backend supplies the Pokémon-specific pieces: the emulator, `PokemonGameDriver`, the goal system, `copyMs` + game-event/notification metrics, the socket dispatch, and the llm-observability span-processor wrap passed to `bootGameBot`.
 
@@ -10,11 +10,11 @@ The tracing/metrics wiring, loopback audio transport, Go-Live streamer base clas
 `packages/backend/src/game/spatial/generated/map-names.ts` are committed
 generator output — never hand-edit. `scripts/generate-species-data.ts` and
 `scripts/generate-map-names.ts` fetch from `ottohg/pokeemerald-wasm` at the
-`OTTOHG_SHA` pin in `scripts/build-wasm.sh` (single source of truth, read via
+`commit` pin in `wasm-src/upstream.json` (single source of truth, read via
 `scripts/lib/pokeemerald-pin.ts`; Renovate advances the pin plus the
 Dockerfile's `ENV` copy). Freshness:
 
-- `build-wasm.sh` re-runs both generators after every wasm build, so a manual
+- `build-wasm.ts` re-runs both generators after every wasm build, so a manual
   wasm refresh can't leave the tables stale.
 - The `dpp-pokeemerald-data-daily` Temporal schedule (04:30 PT,
   `packages/temporal/src/activities/dpp-pokeemerald-data-refresh.ts`)

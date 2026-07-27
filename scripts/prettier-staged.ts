@@ -1,14 +1,5 @@
 import { run } from "./lib/run.ts";
-
-export async function existingFiles(paths: string[]): Promise<string[]> {
-  const checks = await Promise.all(
-    paths.map(async (path) => ({
-      exists: await Bun.file(path).exists(),
-      path,
-    })),
-  );
-  return checks.filter(({ exists }) => exists).map(({ path }) => path);
-}
+import { existingFiles } from "./migration-core.ts";
 
 export async function checkStagedFormatting(paths: string[]): Promise<void> {
   const files = await existingFiles(paths);

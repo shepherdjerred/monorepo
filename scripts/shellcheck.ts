@@ -1,13 +1,5 @@
 import { run } from "./lib/run.ts";
-
-export function isShellcheckCandidate(path: string): boolean {
-  return !(
-    path.includes("/archive/") ||
-    path.includes("wasm-src/") ||
-    path.includes("/Pods/") ||
-    path.includes("/target/")
-  );
-}
+import { isShellcheckCandidate } from "./migration-core.ts";
 
 export async function checkShellScripts(): Promise<void> {
   const result = await run(["git", "ls-files", "-z", "*.sh"], {

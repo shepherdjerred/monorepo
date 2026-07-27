@@ -12,7 +12,7 @@
     "lint:helm": {
       "dependsOn": ["@homelab/cdk8s#build"],
       "inputs": [
-        "scripts/lint-helm.sh",
+        "scripts/lint-helm.ts",
         "src/cdk8s/**",
         "!src/cdk8s/node_modules/**",
         "!src/cdk8s/dist/**"

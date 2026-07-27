@@ -100,6 +100,27 @@
         "!**/generated/**"
       ]
     },
+    "//#script-coverage": {
+      "dependsOn": ["//#check-script-migrations"],
+      "inputs": [
+        "scripts/bunfig.coverage.toml",
+        "scripts/check-script-coverage.ts",
+        "scripts/migration-core.ts",
+        "scripts/**/*.test.ts",
+        ".buildkite/scripts/**/*.ts",
+        "packages/astro-opengraph-images/generate-readme*.ts",
+        "packages/discord-plays-mario-kart/scripts/**/*.ts",
+        "packages/discord-plays-pokemon/scripts/**/*.ts",
+        "packages/dotfiles/bin/executable_git_cleanup.ts",
+        "packages/dotfiles/scripts/**/*.ts",
+        "packages/homelab/scripts/**/*.ts",
+        "packages/llm-observability/test/e2e/**/*.ts",
+        "packages/scout-for-lol/scripts/**/*.ts",
+        "packages/tasks-for-obsidian/scripts/**/*.ts",
+        "packages/toolkit/scripts/**/*.ts",
+        "packages/{astro-opengraph-images,discord-plays-mario-kart,discord-plays-pokemon,dotfiles,homelab,llm-observability,scout-for-lol,tasks-for-obsidian,toolkit}/package.json"
+      ]
+    },
     "//#markdownlint": {
       "inputs": ["**/*.md", ".markdownlint*", "!**/node_modules/**"]
     },
@@ -163,7 +184,7 @@
     },
     "//#compliance-check": {
       "inputs": [
-        "scripts/compliance-check.sh",
+        "scripts/compliance-check.ts",
         "packages/*/package.json",
         "packages/*/packages/*/package.json",
         "packages/*/eslint.config.*",

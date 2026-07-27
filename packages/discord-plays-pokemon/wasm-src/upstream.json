@@ -1,0 +1,6 @@
+{
+  "$schema": "./upstream.schema.json",
+  "repository": "https://github.com/ottohg/pokeemerald-wasm.git",
+  "branch": "master",
+  "commit": "c101be5ac2ae53c5d18ee063f16eeeda751639f8"
+}

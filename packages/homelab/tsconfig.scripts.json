@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["bun"]
+  },
+  "include": [
+    "scripts/helm-set-version.ts",
+    "scripts/helm-set-version.test.ts",
+    "scripts/lint-helm.ts",
+    "scripts/lint-helm.test.ts",
+    "scripts/migration-core.ts",
+    "scripts/migration-smoke.test.ts",
+    "scripts/velero-backups.ts",
+    "scripts/velero-backups.test.ts"
+  ]
+}

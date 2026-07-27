@@ -6,7 +6,7 @@ import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
 // resolve and a snapshot read doesn't throw. It's the canary for renamed/moved
 // symbols before they reach production. The wasm is no longer committed — it's
 // built from source in the Dagger image build (and locally by
-// scripts/build-wasm.sh), where this gate runs against the real artifact. When
+// scripts/build-wasm.ts), where this gate runs against the real artifact. When
 // the wasm is absent (plain `bun run test` on a clean checkout), skip.
 
 const WASM_PATH = new URL("../../assets/pokeemerald.wasm", import.meta.url)

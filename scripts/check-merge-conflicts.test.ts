@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 
-import { parseConflictIgnore } from "./check-merge-conflicts.ts";
+import { parseConflictIgnore } from "./migration-core.ts";
 
 test("parseConflictIgnore removes comments, blanks, and surrounding whitespace", () => {
   expect(

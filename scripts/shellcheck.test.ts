@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 
-import { isShellcheckCandidate } from "./shellcheck.ts";
+import { isShellcheckCandidate } from "./migration-core.ts";
 
 test("isShellcheckCandidate excludes vendored and generated shell surfaces", () => {
   expect(isShellcheckCandidate("packages/a/run.sh")).toBe(true);

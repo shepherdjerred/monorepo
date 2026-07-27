@@ -22,7 +22,7 @@ bun run typecheck
 bun test
 
 # Install globally
-./install.sh                               # Installs to ~/.local/bin/toolkit
+bun scripts/install.ts                    # Installs to ~/.local/bin/toolkit
 ```
 
 ## Structure
@@ -122,7 +122,7 @@ Full flag reference and recipes: the `screenshot` skill.
   actually the requested app (an unrelated process, a stale build, or an
   auth-gated stack started without `ENABLE_DEV_LOGIN` could be on that port).
   The bound port is also **not** parsed from stdout (dev commands print
-  inconsistent/hard-coded banners — scout's `dev-web.sh` prints a static
+  inconsistent/hard-coded banners — scout's `dev-web.ts` prints a static
   `:5180`). So `expectedPort` must be free: if it's already in use,
   `ensureDevServer` **fails fast** rather than capturing the wrong server or
   auto-bumping to an unknown port. `--env KEY=VALUE` is applied to the spawned

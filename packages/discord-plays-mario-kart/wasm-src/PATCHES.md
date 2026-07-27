@@ -29,7 +29,7 @@ wasm-src/
 > [!WARNING]
 > Because `code/` is pristine, a bare `make` inside `code/` compiles **without**
 > our exports and produces a wasm the host can't drive. **Always build via
-> `scripts/build-wasm.sh`** (or the Dagger image build), which applies `patches/`
+> `scripts/build-wasm.ts`** (or the Dagger image build), which applies `patches/`
 > first.
 
 ## Patches (`patches/`)
@@ -119,12 +119,12 @@ keep the tree lean and under the repo's 5 MB per-file limit.
 
 ## Updating upstream
 
-1. Edit `UPSTREAM_SHA` in `scripts/vendor-n64wasm.sh` to the new commit.
-2. Run `scripts/vendor-n64wasm.sh` — it re-clones, applies excludes, refreshes the
+1. Edit `commit` in `wasm-src/upstream.json` to the new commit.
+2. Run `scripts/vendor-n64wasm.ts` — it re-clones, applies excludes, refreshes the
    pristine `code/` tree, and verifies the patch series still applies. If a patch
    no longer applies, it stops and names the offending patch; re-base that
    `.patch` against the new source.
-3. Rebuild: `scripts/build-wasm.sh`.
+3. Rebuild: `scripts/build-wasm.ts`.
 4. Smoke-test: `bun wasm-src/run.reference.mjs` (MK64 boots, frames render,
    4-controller input works).
 
@@ -133,7 +133,7 @@ on demand when you want a specific upstream fix.
 
 ## Build
 
-`scripts/build-wasm.sh` stages pristine `code/`, applies `patches/`, and runs
+`scripts/build-wasm.ts` stages pristine `code/`, applies `patches/`, and runs
 `make` inside `emscripten/emsdk` (pinned 2.0.7), emitting `n64wasm.js` +
 `n64wasm.wasm` and copying them (plus the MEMFS assets `shader_vert.hlsl`,
 `shader_frag.hlsl`, `overlay.png`, `res/arial.ttf`) into the backend's

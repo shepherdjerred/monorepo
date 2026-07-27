@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 
-import { existingFiles } from "./prettier-staged.ts";
+import { existingFiles } from "./migration-core.ts";
 
 test("existingFiles omits missing paths while preserving input order", async () => {
   expect(

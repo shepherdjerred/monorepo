@@ -1,6 +1,5 @@
 import { run } from "./lib/run.ts";
-
-export const PYRIGHT_VERSION = "1.1.411";
+import { PYRIGHT_VERSION } from "./migration-core.ts";
 
 export async function checkPythonTypes(): Promise<void> {
   if (!(await Bun.file(".venv/bin/python").exists())) {

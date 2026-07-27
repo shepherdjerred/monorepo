@@ -1,5 +1,5 @@
 # Static Buildkite pipeline — no generator. PR lanes use Buildkite's native
-# `if_changed`; main lanes use the fail-open, dependency-free ci-changed.sh
+# `if_changed`; main lanes use the fail-open, dependency-free ci-changed.ts
 # selector against the last green main commit before installing dependencies.
 #
 # Invariant (scope-creep guard): verify is the only full-root install. Other
@@ -252,7 +252,7 @@ steps:
     if: build.branch == pipeline.default_branch
     soft_fail: true
     timeout_in_minutes: 2
-    command: bash .buildkite/scripts/prepare-ci-changed-base.sh
+    command: bun --no-install .buildkite/scripts/prepare-ci-changed-base.ts
     plugins:
       - kubernetes:
           <<: *pod_light_kubernetes
@@ -365,7 +365,7 @@ steps:
     depends_on: ci-selector-base
     cancel_on_build_failing: true
     command: |
-      if ! bash .buildkite/scripts/ci-changed.sh playwright; then exit 0; fi
+      if [ "$(buildkite-agent meta-data get ci-lane-run-playwright --default true)" != true ]; then exit 0; fi
       rm -f /etc/apt/sources.list.d/nodesource.list /etc/apt/sources.list.d/nodesource.sources
       apt-get update -qq && apt-get install -y -qq --no-install-recommends unzip
       curl -fsSL https://bun.sh/install | bash -s -- bun-v1.3.14
@@ -460,7 +460,7 @@ steps:
     depends_on: ci-selector-base
     cancel_on_build_failing: true
     command: |
-      if ! bash .buildkite/scripts/ci-changed.sh resume; then exit 0; fi
+      if [ "$(buildkite-agent meta-data get ci-lane-run-resume --default true)" != true ]; then exit 0; fi
       export PATH="$(dirname "$(find /usr/local/texlive -name xelatex | head -1)"):$$PATH"
       cd packages/resume
       xelatex resume.tex
@@ -564,7 +564,7 @@ steps:
     depends_on: ci-selector-base
     cancel_on_build_failing: true
     command: |
-      if ! bash .buildkite/scripts/ci-changed.sh docker-e2e; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts docker-e2e; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile --filter '@shepherdjerred/llm-observability'
       bun --no-install run --cwd packages/llm-observability test:e2e:ci
@@ -861,7 +861,7 @@ steps:
   # effects (the old pipeline's --dryrun plumbing). Replaces five micro-steps
   # (tofu-plan, sites-pr, helm-pr, release-pr, helm-types-drift-check), each
   # of which paid pod + checkout + install overhead for seconds of real work.
-  # Sections self-gate with ci-changed.sh against the PR merge-base
+  # Sections self-gate with ci-changed.ts against the PR merge-base
   # (CI_CHANGED_BASE override), so the two sections that do real work — the
   # tofu plans and the helm-types drift regen — still only run when their
   # inputs changed; the deploy rehearsals are print-only and always run.
@@ -914,7 +914,7 @@ steps:
     command: |
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter '@homelab/cdk8s'
-      # Merge-base for section gating; unresolvable → empty → ci-changed.sh
+      # Merge-base for section gating; unresolvable → empty → ci-changed.ts
       # fails open and every section runs (extra work, never lost coverage).
       if ! CI_CHANGED_BASE=$(git merge-base origin/main HEAD); then
         CI_CHANGED_BASE=""
@@ -925,7 +925,7 @@ steps:
       # main tree). Renovate chart bumps touching versions.ts fail here until
       # someone pushes the regen commit (--check prints the command; hosted
       # Renovate cannot run it). helm comes from the ci-image's mise toolchain.
-      if bash .buildkite/scripts/ci-changed.sh helm-types; then
+      if bun --no-install .buildkite/scripts/ci-changed.ts helm-types; then
         bun --no-install run --cwd packages/homelab/src/cdk8s generate-helm-types --check
       fi
       # Tofu plans — the only expensive section; gated on tofu inputs. The
@@ -935,7 +935,7 @@ steps:
       # `aws s3 sync --dryrun` against a dist/ that was never built (the build
       # is stubbed in dry-run), which fails "path does not exist". These lanes
       # used to be separate pods; merging them into one made the leak possible.
-      if bash .buildkite/scripts/ci-changed.sh tofu; then
+      if bun --no-install .buildkite/scripts/ci-changed.ts tofu; then
         (
           export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
           export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
@@ -1013,12 +1013,12 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      . .buildkite/scripts/buildkit-env.sh
+      bun --no-install .buildkite/scripts/buildkit-env.ts
       buildkite-agent artifact download "caddyfile.generated" /tmp --step verify
       # Affected-scoped parallel bake + smoke, no push, cache read-only
       # (PUSH_CACHE stays false — only main writes the buildcache refs).
       # Executes no-exporter in-image smoke targets against remote BuildKit.
-      CADDYFILE_SMOKE_PATH=/tmp/caddyfile.generated bash .buildkite/scripts/bake-images.sh --affected
+      CADDYFILE_SMOKE_PATH=/tmp/caddyfile.generated bun --no-install .buildkite/scripts/bake-images.ts --affected
     artifact_paths:
       - "image-selection-report.json"
     retry: *retry
@@ -1038,13 +1038,13 @@ steps:
     concurrency: 1
     concurrency_group: monorepo/image-push
     command: |
-      if ! bash .buildkite/scripts/ci-changed.sh images; then
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts images; then
         jq -n '{}' | buildkite-agent meta-data set image-digests
-        # bake-images.sh never runs on this path, so it never produces
+        # bake-images.ts never runs on this path, so it never produces
         # image-push-outcomes.json — write the empty array ourselves; an
         # unmatched artifact_paths entry fails the step even though the skip
         # itself is fine. image-selection-report.json is DIFFERENT: the
-        # ci-changed.sh call above already wrote it (via select-image-targets.ts
+        # ci-changed.ts call above already wrote it (via select-image-targets.ts
         # --reasons-out) with the real base/changedPaths/targets that produced
         # this skip — fabricating a second, evidence-free one here would only
         # overwrite genuine data. Fall back to a synthetic report only in the
@@ -1059,9 +1059,9 @@ steps:
         exit 0
       fi
       . .buildkite/scripts/toolchain.sh
-      . .buildkite/scripts/buildkit-env.sh
+      bun --no-install .buildkite/scripts/buildkit-env.ts
       buildkite-agent artifact download "caddyfile.generated" /tmp --step verify
-      CADDYFILE_SMOKE_PATH=/tmp/caddyfile.generated bash .buildkite/scripts/bake-images.sh --push
+      CADDYFILE_SMOKE_PATH=/tmp/caddyfile.generated bun --no-install .buildkite/scripts/bake-images.ts --push
     artifact_paths:
       - "image-selection-report.json"
       - "image-push-outcomes.json"
@@ -1087,10 +1087,10 @@ steps:
       # mint the deferred scout release pair — build 6281 hard-failed when
       # this early exit swallowed that build's archive), so only skip when
       # BOTH selectors agree nothing site-shaped changed.
-      if ! bash .buildkite/scripts/ci-changed.sh sites &&
-        ! bash .buildkite/scripts/ci-changed.sh site-scout; then
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts sites &&
+        ! bun --no-install .buildkite/scripts/ci-changed.ts site-scout; then
         # The per-site lanes below never run on this early-exit path, so their
-        # own ci-changed.sh calls (and the record_decision inside them) never
+        # own ci-changed.ts calls (and the recordDecision inside them) never
         # fire even though the aggregate answer applies to every one of them —
         # check each explicitly so build-summary shows a real "skipped"
         # instead of a misleading "not recorded" for every site-* row. The
@@ -1098,7 +1098,7 @@ steps:
         # only the recorded decision matters here.
         for site_lane in site-sjer-red site-resume site-webring site-cooklang \
           site-stocks site-better-skill-capped site-glitter; do
-          if bash .buildkite/scripts/ci-changed.sh "$$site_lane"; then :; fi
+          if bun --no-install .buildkite/scripts/ci-changed.ts "$$site_lane"; then :; fi
         done
         exit 0
       fi
@@ -1112,34 +1112,34 @@ steps:
       site_better_skill_capped=false
       site_glitter=false
       site_scout=false
-      if bash .buildkite/scripts/ci-changed.sh site-sjer-red; then
+      if bun --no-install .buildkite/scripts/ci-changed.ts site-sjer-red; then
         site_sjer=true
       fi
-      if bash .buildkite/scripts/ci-changed.sh site-resume; then site_resume=true; fi
-      if bash .buildkite/scripts/ci-changed.sh site-webring; then
+      if bun --no-install .buildkite/scripts/ci-changed.ts site-resume; then site_resume=true; fi
+      if bun --no-install .buildkite/scripts/ci-changed.ts site-webring; then
         site_webring=true
         filters+=(--filter webring)
       fi
-      if bash .buildkite/scripts/ci-changed.sh site-cooklang; then
+      if bun --no-install .buildkite/scripts/ci-changed.ts site-cooklang; then
         site_cooklang=true
         filters+=(--filter '@shepherdjerred/cooklang-rich-preview')
       fi
-      if bash .buildkite/scripts/ci-changed.sh site-stocks; then
+      if bun --no-install .buildkite/scripts/ci-changed.ts site-stocks; then
         site_stocks=true
         filters+=(--filter stocks-sjer-red)
       fi
-      if bash .buildkite/scripts/ci-changed.sh site-better-skill-capped; then
+      if bun --no-install .buildkite/scripts/ci-changed.ts site-better-skill-capped; then
         site_better_skill_capped=true
         filters+=(--filter better-skill-capped)
       fi
-      if bash .buildkite/scripts/ci-changed.sh site-glitter; then
+      if bun --no-install .buildkite/scripts/ci-changed.ts site-glitter; then
         site_glitter=true
         # The build imports @shepherdjerred/glitter-context through Glitter's
         # declared workspace dependency. Under Bun's isolated linker the
         # consumer must be selected so its production closure is installed.
         filters+=(--filter glitter)
       fi
-      if bash .buildkite/scripts/ci-changed.sh site-scout; then
+      if bun --no-install .buildkite/scripts/ci-changed.ts site-scout; then
         site_scout=true
         filters+=(--filter '@scout-for-lol/frontend')
         filters+=(--filter '@scout-for-lol/app')
@@ -1208,8 +1208,8 @@ steps:
     command: |
       npm_changed=true
       cooklang_changed=true
-      if ! bash .buildkite/scripts/ci-changed.sh npm; then npm_changed=false; fi
-      if ! bash .buildkite/scripts/ci-changed.sh cooklang; then cooklang_changed=false; fi
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts npm; then npm_changed=false; fi
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts cooklang; then cooklang_changed=false; fi
       if ! $$npm_changed && ! $$cooklang_changed; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       filters=()
@@ -1244,7 +1244,7 @@ steps:
     depends_on: verify
     cancel_on_build_failing: true
     command: |
-      if ! bash .buildkite/scripts/ci-changed.sh helm; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts helm; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       # cdk8s synth output is flat (`dist/<chart>.k8s.yaml`), so `dist/*` matches
       # it. The former `dist/**/*` download failed fatally here: buildkite-agent's
@@ -1267,7 +1267,7 @@ steps:
     depends_on: [verify, helm-push]
     cancel_on_build_failing: true
     command: |
-      if ! bash .buildkite/scripts/ci-changed.sh tofu; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       (
         export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
@@ -1295,7 +1295,7 @@ steps:
     # No automatic retry: GitHub API mutations are not idempotent on partial
     # failure (same policy as the old pipeline).
     command: |
-      if ! bash .buildkite/scripts/ci-changed.sh tofu; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       (
         export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
@@ -1316,7 +1316,7 @@ steps:
     depends_on: [images, helm-push, tofu-apply]
     cancel_on_build_failing: true
     command: |
-      if ! bash .buildkite/scripts/ci-changed.sh argocd; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts argocd; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile --filter '@homelab/cdk8s' --production
       # The CI secret uses the argocd CLI's canonical ARGOCD_AUTH_TOKEN name;
@@ -1393,7 +1393,7 @@ steps:
     concurrency: 1
     concurrency_group: monorepo/site-deploys
     command: |
-      if ! bash .buildkite/scripts/ci-changed.sh scout-reconcile; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts scout-reconcile; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
@@ -1416,8 +1416,8 @@ steps:
     # Fail-closed: the SeaweedFS TunnelBinding finalizer must complete before
     # the Cloudflare DNS tunnel route is removed (same gate as the old CI).
     command: |
-      if ! bash .buildkite/scripts/ci-changed.sh tofu; then
-        if ! bash .buildkite/scripts/ci-changed.sh argocd; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then
+        if ! bun --no-install .buildkite/scripts/ci-changed.ts argocd; then exit 0; fi
       fi
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile --filter '@homelab/cdk8s' --production
@@ -1495,10 +1495,10 @@ steps:
     depends_on: verify
     cancel_on_build_failing: true
     command: |
-      if ! bash .buildkite/scripts/ci-changed.sh ci-image; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts ci-image; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      . .buildkite/scripts/buildkit-env.sh
-      bash .buildkite/scripts/build-ci-image.sh
+      bun --no-install .buildkite/scripts/buildkit-env.ts
+      bun --no-install .buildkite/scripts/build-ci-image.ts
     retry: *retry
     plugins:
       - kubernetes:
@@ -1529,7 +1529,7 @@ steps:
       - scout-prod-reconcile
       - ci-image-refresh
     allow_dependency_failure: true
-    command: bash .buildkite/scripts/annotate-build-summary.sh
+    command: bun --no-install .buildkite/scripts/annotate-build-summary.ts
     plugins:
       - kubernetes:
           <<: *pod_light_kubernetes

@@ -12,7 +12,10 @@
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
-      "tests": [".buildkite/scripts/annotate-build-summary.test.ts"]
+      "tests": [
+        ".buildkite/scripts/annotate-build-summary.test.ts",
+        ".buildkite/scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": ".buildkite/scripts/bake-images.sh",
@@ -24,7 +27,10 @@
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
-      "tests": [".buildkite/scripts/bake-images.test.ts"]
+      "tests": [
+        ".buildkite/scripts/bake-images.test.ts",
+        ".buildkite/scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": ".buildkite/scripts/bake-retry.sh",
@@ -36,7 +42,10 @@
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
-      "tests": [".buildkite/scripts/bake-retry.test.ts"]
+      "tests": [
+        ".buildkite/scripts/bake-retry.test.ts",
+        ".buildkite/scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": ".buildkite/scripts/bake-retry.test.sh",
@@ -48,7 +57,10 @@
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
-      "tests": [".buildkite/scripts/bake-retry.test.ts"]
+      "tests": [
+        ".buildkite/scripts/bake-retry.test.ts",
+        ".buildkite/scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": ".buildkite/scripts/build-ci-image.sh",
@@ -60,7 +72,10 @@
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
-      "tests": [".buildkite/scripts/build-ci-image.test.ts"]
+      "tests": [
+        ".buildkite/scripts/build-ci-image.test.ts",
+        ".buildkite/scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": ".buildkite/scripts/buildkit-env.sh",
@@ -72,7 +87,10 @@
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
-      "tests": [".buildkite/scripts/buildkit-env.test.ts"]
+      "tests": [
+        ".buildkite/scripts/buildkit-env.test.ts",
+        ".buildkite/scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": ".buildkite/scripts/ci-changed.sh",
@@ -84,7 +102,10 @@
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
-      "tests": [".buildkite/scripts/ci-changed.test.ts"]
+      "tests": [
+        ".buildkite/scripts/ci-changed.test.ts",
+        ".buildkite/scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": ".buildkite/scripts/ci-changed.test.sh",
@@ -96,7 +117,10 @@
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
-      "tests": [".buildkite/scripts/ci-changed.test.ts"]
+      "tests": [
+        ".buildkite/scripts/ci-changed.test.ts",
+        ".buildkite/scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": ".buildkite/scripts/docker-env.sh",
@@ -113,7 +137,10 @@
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
-      "tests": [".buildkite/scripts/prepare-ci-changed-base.test.ts"]
+      "tests": [
+        ".buildkite/scripts/prepare-ci-changed-base.test.ts",
+        ".buildkite/scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": ".buildkite/scripts/toolchain.sh",
@@ -150,7 +177,10 @@
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
-      "tests": ["scripts/generate-anki.test.ts"]
+      "tests": [
+        "scripts/generate-anki.test.ts",
+        "scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": "packages/astro-opengraph-images/generate_readme.sh",
@@ -162,7 +192,10 @@
         "tsconfig": "packages/astro-opengraph-images/tsconfig.scripts.json",
         "eslintConfig": "packages/astro-opengraph-images/eslint.config.ts"
       },
-      "tests": ["packages/astro-opengraph-images/generate-readme.test.ts"]
+      "tests": [
+        "packages/astro-opengraph-images/generate-readme.test.ts",
+        "packages/astro-opengraph-images/generate-readme-smoke.test.ts"
+      ]
     },
     {
       "source": "packages/discord-plays-mario-kart/scripts/build-wasm.sh",
@@ -174,7 +207,10 @@
         "tsconfig": "packages/discord-plays-mario-kart/tsconfig.json",
         "eslintConfig": "packages/discord-plays-mario-kart/eslint.config.ts"
       },
-      "tests": ["packages/discord-plays-mario-kart/scripts/build-wasm.test.ts"]
+      "tests": [
+        "packages/discord-plays-mario-kart/scripts/build-wasm.test.ts",
+        "packages/discord-plays-mario-kart/scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": "packages/discord-plays-mario-kart/scripts/vendor-n64wasm.sh",
@@ -187,7 +223,8 @@
         "eslintConfig": "packages/discord-plays-mario-kart/eslint.config.ts"
       },
       "tests": [
-        "packages/discord-plays-mario-kart/scripts/vendor-n64wasm.test.ts"
+        "packages/discord-plays-mario-kart/scripts/vendor-n64wasm.test.ts",
+        "packages/discord-plays-mario-kart/scripts/migration-smoke.test.ts"
       ]
     },
     {
@@ -200,7 +237,10 @@
         "tsconfig": "packages/discord-plays-pokemon/tsconfig.json",
         "eslintConfig": "packages/discord-plays-pokemon/eslint.config.ts"
       },
-      "tests": ["packages/discord-plays-pokemon/scripts/build-wasm.test.ts"]
+      "tests": [
+        "packages/discord-plays-pokemon/scripts/build-wasm.test.ts",
+        "packages/discord-plays-pokemon/scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": "packages/dotfiles/bin/executable_chezmoi_watchman.sh",
@@ -213,11 +253,14 @@
       "reason": "Large stateful Git workflow benefits from typed planning and safety",
       "replacement": "packages/dotfiles/bin/executable_git_cleanup.ts",
       "owner": {
-        "packageJson": "packages/dotfiles/scripts/package.json",
-        "tsconfig": "packages/dotfiles/scripts/tsconfig.json",
-        "eslintConfig": "packages/dotfiles/scripts/eslint.config.ts"
+        "packageJson": "packages/dotfiles/package.json",
+        "tsconfig": "packages/dotfiles/tsconfig.json",
+        "eslintConfig": "packages/dotfiles/eslint.config.ts"
       },
-      "tests": ["packages/dotfiles/scripts/git-cleanup.test.ts"]
+      "tests": [
+        "packages/dotfiles/scripts/git-cleanup.test.ts",
+        "packages/dotfiles/scripts/git-cleanup-smoke.test.ts"
+      ]
     },
     {
       "source": "packages/dotfiles/bin/executable_sync-theme.sh",
@@ -264,7 +307,10 @@
         "tsconfig": "packages/homelab/tsconfig.scripts.json",
         "eslintConfig": "packages/homelab/eslint.config.ts"
       },
-      "tests": ["packages/homelab/scripts/helm-set-version.test.ts"]
+      "tests": [
+        "packages/homelab/scripts/helm-set-version.test.ts",
+        "packages/homelab/scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": "packages/homelab/scripts/lint-helm.sh",
@@ -276,7 +322,10 @@
         "tsconfig": "packages/homelab/tsconfig.scripts.json",
         "eslintConfig": "packages/homelab/eslint.config.ts"
       },
-      "tests": ["packages/homelab/scripts/lint-helm.test.ts"]
+      "tests": [
+        "packages/homelab/scripts/lint-helm.test.ts",
+        "packages/homelab/scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": "packages/homelab/scripts/velero/cleanup-r2-bucket.sh",
@@ -288,7 +337,10 @@
         "tsconfig": "packages/homelab/tsconfig.scripts.json",
         "eslintConfig": "packages/homelab/eslint.config.ts"
       },
-      "tests": ["packages/homelab/scripts/velero-backups.test.ts"]
+      "tests": [
+        "packages/homelab/scripts/velero-backups.test.ts",
+        "packages/homelab/scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": "packages/homelab/scripts/velero/delete-all-backups.sh",
@@ -300,7 +352,10 @@
         "tsconfig": "packages/homelab/tsconfig.scripts.json",
         "eslintConfig": "packages/homelab/eslint.config.ts"
       },
-      "tests": ["packages/homelab/scripts/velero-backups.test.ts"]
+      "tests": [
+        "packages/homelab/scripts/velero-backups.test.ts",
+        "packages/homelab/scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": "packages/homelab/src/cdk8s/src/resources/configs/qbittorrent/check-config-drift.sh",
@@ -337,7 +392,10 @@
         "tsconfig": "packages/llm-observability/tsconfig.json",
         "eslintConfig": "packages/llm-observability/eslint.config.ts"
       },
-      "tests": ["packages/llm-observability/test/e2e/runner.test.ts"]
+      "tests": [
+        "packages/llm-observability/test/e2e/run.test.ts",
+        "packages/llm-observability/test/e2e/run-smoke.test.ts"
+      ]
     },
     {
       "source": "packages/llm-observability/test/e2e/run.sh",
@@ -349,7 +407,10 @@
         "tsconfig": "packages/llm-observability/tsconfig.json",
         "eslintConfig": "packages/llm-observability/eslint.config.ts"
       },
-      "tests": ["packages/llm-observability/test/e2e/runner.test.ts"]
+      "tests": [
+        "packages/llm-observability/test/e2e/run.test.ts",
+        "packages/llm-observability/test/e2e/run-smoke.test.ts"
+      ]
     },
     {
       "source": "packages/scout-for-lol/packages/desktop/src-tauri/icons/create_minimal_png.sh",
@@ -361,7 +422,10 @@
         "tsconfig": "packages/scout-for-lol/tsconfig.scripts.json",
         "eslintConfig": "packages/scout-for-lol/eslint.config.ts"
       },
-      "tests": ["packages/scout-for-lol/scripts/create-minimal-png.test.ts"]
+      "tests": [
+        "packages/scout-for-lol/scripts/create-minimal-png.test.ts",
+        "packages/scout-for-lol/scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": "packages/scout-for-lol/scripts/dev-web.sh",
@@ -373,7 +437,10 @@
         "tsconfig": "packages/scout-for-lol/tsconfig.scripts.json",
         "eslintConfig": "packages/scout-for-lol/eslint.config.ts"
       },
-      "tests": ["packages/scout-for-lol/scripts/dev-web.test.ts"]
+      "tests": [
+        "packages/scout-for-lol/scripts/dev-web.test.ts",
+        "packages/scout-for-lol/scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": "packages/scout-for-lol/scripts/install_pkgs.sh",
@@ -385,7 +452,10 @@
         "tsconfig": "packages/scout-for-lol/tsconfig.scripts.json",
         "eslintConfig": "packages/scout-for-lol/eslint.config.ts"
       },
-      "tests": ["packages/scout-for-lol/scripts/install-pkgs.test.ts"]
+      "tests": [
+        "packages/scout-for-lol/scripts/install-pkgs.test.ts",
+        "packages/scout-for-lol/scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": "packages/tasks-for-obsidian/ios/ci_scripts/ci_post_clone.sh",
@@ -402,7 +472,10 @@
         "tsconfig": "packages/tasks-for-obsidian/scripts/tsconfig.json",
         "eslintConfig": "packages/tasks-for-obsidian/eslint.config.ts"
       },
-      "tests": ["packages/tasks-for-obsidian/scripts/clean-ios.test.ts"]
+      "tests": [
+        "packages/tasks-for-obsidian/scripts/clean-ios.test.ts",
+        "packages/tasks-for-obsidian/scripts/ios-scripts-smoke.test.ts"
+      ]
     },
     {
       "source": "packages/tasks-for-obsidian/scripts/ios-logs.sh",
@@ -414,7 +487,10 @@
         "tsconfig": "packages/tasks-for-obsidian/scripts/tsconfig.json",
         "eslintConfig": "packages/tasks-for-obsidian/eslint.config.ts"
       },
-      "tests": ["packages/tasks-for-obsidian/scripts/ios-logs.test.ts"]
+      "tests": [
+        "packages/tasks-for-obsidian/scripts/ios-logs.test.ts",
+        "packages/tasks-for-obsidian/scripts/ios-scripts-smoke.test.ts"
+      ]
     },
     {
       "source": "packages/toolkit/install.sh",
@@ -426,7 +502,10 @@
         "tsconfig": "packages/toolkit/tsconfig.json",
         "eslintConfig": "packages/toolkit/eslint.config.ts"
       },
-      "tests": ["packages/toolkit/test/install.test.ts"]
+      "tests": [
+        "packages/toolkit/scripts/install.test.ts",
+        "packages/toolkit/scripts/install-smoke.test.ts"
+      ]
     },
     {
       "source": "scripts/check-env-var-names.sh",
@@ -438,7 +517,10 @@
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
-      "tests": ["scripts/check-env-var-names.test.ts"]
+      "tests": [
+        "scripts/check-env-var-names.test.ts",
+        "scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": "scripts/check-merge-conflicts.sh",
@@ -450,7 +532,10 @@
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
-      "tests": ["scripts/check-merge-conflicts.test.ts"]
+      "tests": [
+        "scripts/check-merge-conflicts.test.ts",
+        "scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": "scripts/compliance-check.sh",
@@ -462,7 +547,10 @@
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
-      "tests": ["scripts/compliance-check.test.ts"]
+      "tests": [
+        "scripts/compliance-check.test.ts",
+        "scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": "scripts/new-package.sh",
@@ -474,7 +562,10 @@
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
-      "tests": ["scripts/new-package.test.ts"]
+      "tests": [
+        "scripts/new-package.test.ts",
+        "scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": "scripts/prettier-staged.sh",
@@ -486,7 +577,10 @@
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
-      "tests": ["scripts/prettier-staged.test.ts"]
+      "tests": [
+        "scripts/prettier-staged.test.ts",
+        "scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": "scripts/pyright-check.sh",
@@ -498,7 +592,10 @@
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
-      "tests": ["scripts/pyright-check.test.ts"]
+      "tests": [
+        "scripts/pyright-check.test.ts",
+        "scripts/migration-smoke.test.ts"
+      ]
     },
     {
       "source": "scripts/quality-ratchet.sh",
@@ -515,7 +612,7 @@
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
-      "tests": ["scripts/shellcheck.test.ts"]
+      "tests": ["scripts/shellcheck.test.ts", "scripts/migration-smoke.test.ts"]
     },
     {
       "source": "packages/discord-plays-mario-kart/wasm-src/code/build.sh",

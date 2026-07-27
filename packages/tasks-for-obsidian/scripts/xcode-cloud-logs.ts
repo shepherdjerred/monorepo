@@ -226,8 +226,8 @@ function statusGlyph(status: string): string {
  * a build reads "RUNNING" until every action reports a completionStatus.
  */
 function overallStatus(a: {
-  completionStatus?: string | null;
-  executionProgress?: string | null;
+  completionStatus?: string | null | undefined;
+  executionProgress?: string | null | undefined;
 }): string {
   return a.completionStatus ?? a.executionProgress ?? "?";
 }

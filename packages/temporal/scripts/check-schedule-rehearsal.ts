@@ -80,6 +80,11 @@ async function copyRepoTree(dest: string): Promise<void> {
       "--exclude=.eslintcache",
       "--exclude=.turbo",
       "--exclude=.venv",
+      // `bun build --compile --outfile <path>` creates a sibling
+      // `.<hash>.bun-build` file and removes it after the atomic rename. A
+      // concurrent repo-wide build can otherwise make rsync observe the
+      // short-lived directory entry after Bun has already removed it.
+      "--exclude=.*.bun-build",
       `${REPO_ROOT}/`,
       `${dest}/`,
     ],

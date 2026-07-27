@@ -1,0 +1,7 @@
+{
+  "$schema": "./upstream.schema.json",
+  "repository": "https://github.com/nbarkhina/N64Wasm.git",
+  "branch": "master",
+  "commit": "bfac222f8a27287022844b47000328531834e9c1",
+  "emsdkImage": "emscripten/emsdk:2.0.34"
+}

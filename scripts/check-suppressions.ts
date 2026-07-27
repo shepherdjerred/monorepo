@@ -33,7 +33,6 @@ const EXCLUDED_FILES = [
   // its @ts-expect-error comments (matched as a path prefix).
   "packages/discord-video-stream/",
   "scripts/check-suppressions.ts",
-  "scripts/quality-ratchet.sh",
   "CHANGELOG.md",
   "Cargo.toml",
   "clippy.toml",
@@ -101,9 +100,6 @@ const EXCLUDED_FILES = [
   // Intentional: Sentry ErrorBoundary class types incompatible with React 19
   // (same pattern as discord-plays-pokemon/packages/frontend/src/main.tsx)
   "packages/discord-plays-mario-kart/packages/frontend/src/main.tsx",
-  // Upstream vendored mupen64plus build script — `2>/dev/null` is part of the
-  // original build system's install detection logic; not ours to lint.
-  "packages/discord-plays-mario-kart/wasm-src/code/src/mupen64plus-core/tools/install_binary_bundle.sh",
 ];
 
 type Finding = {

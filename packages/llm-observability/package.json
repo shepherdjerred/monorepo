@@ -21,9 +21,10 @@
   "scripts": {
     "typecheck": "bunx tsc --noEmit",
     "lint": "bunx eslint --cache .",
-    "test": "bun test test/unit",
-    "test:e2e": "bash test/e2e/run.sh",
-    "test:e2e:ci": "bash test/e2e/run-ci.sh",
+    "test": "bun test test/unit test/e2e/run*.test.ts",
+    "test:coverage": "bun test --config ../../scripts/bunfig.coverage.toml --coverage test/e2e/run.test.ts",
+    "test:e2e": "bun test/e2e/run.ts",
+    "test:e2e:ci": "bun test/e2e/run-ci.ts",
     "test:e2e:debug": "docker compose -f test/e2e/compose.yaml up -d --wait && bun test test/e2e --watch"
   },
   "dependencies": {

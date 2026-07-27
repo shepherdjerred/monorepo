@@ -19,6 +19,7 @@ const config = [
       "./packages/report/tsconfig.json",
       "./packages/desktop/tsconfig.json",
       "./packages/ui/tsconfig.json",
+      "./tsconfig.scripts.json",
     ],
     ignores: [
       "**/generated/**/*",
@@ -28,7 +29,6 @@ const config = [
       "**/node_modules/**/*",
       "**/.astro/**/*",
       "**/src-tauri/target/**/*",
-      "**/scripts/**/*",
       "**/*.md",
       "**/*.mdx",
       "**/*.mjs",

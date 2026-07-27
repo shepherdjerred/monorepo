@@ -8,7 +8,7 @@ packages/frontend/public/emulatorjs/** linguist-generated=true
 # attributed to us.
 wasm-src/code/** linguist-vendored=true
 # Vendored tree is uniformly LF text. Overrides the repo-root `*.vcxproj eol=crlf`
-# rule for this subtree so re-vendoring (scripts/vendor-n64wasm.sh writes LF) leaves
+# rule for this subtree so re-vendoring (scripts/vendor-n64wasm.ts writes LF) leaves
 # a clean working tree instead of CRLF eol churn. Kept as text (not `-text`) so the
 # C/C++ stays diffable and searchable.
 wasm-src/code/** text=auto eol=lf

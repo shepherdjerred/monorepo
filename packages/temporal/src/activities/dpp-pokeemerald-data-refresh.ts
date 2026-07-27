@@ -13,8 +13,8 @@ const REPO_SLUG = "shepherdjerred/monorepo";
 const MAIN_BRANCH = "main";
 const DPP_ROOT = "packages/discord-plays-pokemon";
 // The ONLY paths this job is allowed to stage: the committed species/map data
-// tables derived from the pokeemerald-wasm source pin (OTTOHG_SHA in
-// scripts/build-wasm.sh, Renovate-advanced). Steady state is no-diff; the
+// tables derived from the pokeemerald-wasm source pin (`commit` in
+// wasm-src/upstream.json, Renovate-advanced). Steady state is no-diff; the
 // job's purpose is the follow-up regen PR the morning after a Renovate pin
 // bump merges — hosted (Mend) Renovate cannot run the generators inside its
 // own PR.
@@ -99,7 +99,7 @@ export const pokeemeraldDataRefreshActivities = {
         "(`dpp-pokeemerald-data-daily`).",
         "",
         "Regenerated the committed species/map tables from the current",
-        "`OTTOHG_SHA` pin in `scripts/build-wasm.sh` — usually the follow-up",
+        "`commit` pin in `wasm-src/upstream.json` — usually the follow-up",
         "to a merged Renovate pin bump (hosted Renovate cannot run the",
         "generators itself).",
         "",

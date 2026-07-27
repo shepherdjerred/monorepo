@@ -6,7 +6,7 @@
  * disappear from the step-key observability or restore a full-root install.
  *
  * Division of labor: this file spot-checks specific critical inputs by string
- * matching at upload time; the generic "every ci-changed.sh lane path is
+ * matching at upload time; the generic "every ci-changed.ts lane path is
  * covered by its PR step's if_changed globs" subset property is owned by
  * ci-lane-coverage.test.ts (run in the root-scripts test suite).
  *
@@ -23,15 +23,15 @@ import {
   containerBlock,
   fail,
   hasTrimmedLine,
-  requireAllPresent,
   requireIncludes,
-  requireNonePresent,
-  selectorLane,
   sharedPodAnchorBlock,
   SHARED_POD_ANCHORS,
   CHECKOUT_CONTAINER_ALIAS,
 } from "./validate-pipeline-lib.ts";
 import { validateCaddySmokeContracts } from "./validate-pipeline-caddy.ts";
+import { validateImageMigrationContracts } from "./validate-image-migration.ts";
+import { lanePaths } from "./migration-core.ts";
+
 const PIPELINE_PATH = ".buildkite/pipeline.yml";
 const GLOBAL_IF_CHANGED = [
   '".buildkite/**"',
@@ -109,7 +109,7 @@ const selectorStep = stepBlocks.get("ci-selector-base");
 if (
   selectorStep === undefined ||
   !selectorStep.includes("soft_fail: true") ||
-  !selectorStep.includes("prepare-ci-changed-base.sh")
+  !selectorStep.includes("prepare-ci-changed-base.ts")
 ) {
   fail("ci-selector-base must be a soft-fail metadata preparation step");
 }
@@ -155,8 +155,8 @@ for (const required of [
   '- "packages/homelab/src/cdk8s/**"',
   '- "packages/homelab/src/helm-types/**"',
   "generate-helm-types --check",
-  "ci-changed.sh helm-types",
-  "ci-changed.sh tofu",
+  "ci-changed.ts helm-types",
+  "ci-changed.ts tofu",
   "scripts/deploy-site.ts",
   "scripts/scout-site-release.ts",
   "helm-push.ts",
@@ -169,8 +169,12 @@ for (const required of [
   );
 }
 
-const ciChanged = await Bun.file(".buildkite/scripts/ci-changed.sh").text();
-const ciChangedCommands = ciChanged
+const ciChanged = await Bun.file(".buildkite/scripts/ci-changed.ts").text();
+const ciChangedCore = await Bun.file(
+  ".buildkite/scripts/migration-core.ts",
+).text();
+const ciChangedConfiguration = `${ciChanged}\n${ciChangedCore}`;
+const ciChangedCommands = ciChangedConfiguration
   .split("\n")
   .filter((line) => !/^\s*#/.test(line))
   .join("\n");
@@ -180,17 +184,20 @@ for (const forbidden of ["curl ", "jq ", "BUILDKITE_API_TOKEN"]) {
   }
 }
 for (const required of [
-  "buildkite-agent meta-data get ci-changed-base",
+  '"ci-changed-base"',
   "scripts/lib/s3-static-site.ts",
   "scripts/lib/run.ts",
 ]) {
-  if (!ciChanged.includes(required)) {
+  if (!ciChangedConfiguration.includes(required)) {
     fail(`runtime CI selector is missing ${required}`);
   }
 }
 
 for (const lane of ["site-scout", "sites", "scout-reconcile"]) {
-  const block = selectorLane(ciChanged, lane);
+  const block = lanePaths[lane];
+  if (block === undefined) {
+    fail(`runtime CI selector is missing lane ${lane}`);
+  }
   for (const dependency of [
     "packages/astro-opengraph-images",
     "packages/llm-models",
@@ -376,7 +383,7 @@ if (
 ) {
   fail("publish restored an unnecessary root-scripts install");
 }
-for (const required of ["ci-changed.sh npm", "ci-changed.sh cooklang"]) {
+for (const required of ["ci-changed.ts npm", "ci-changed.ts cooklang"]) {
   if (!publish.includes(required)) {
     fail(`publish is missing section gate ${required}`);
   }
@@ -397,11 +404,10 @@ if (jsonHelpers.includes('from "zod"')) {
 }
 
 const selectorPreparation = await Bun.file(
-  ".buildkite/scripts/prepare-ci-changed-base.sh",
+  ".buildkite/scripts/prepare-ci-changed-base.ts",
 ).text();
 if (
-  !selectorPreparation.includes("--connect-timeout") ||
-  !selectorPreparation.includes("--max-time") ||
+  !selectorPreparation.includes("AbortSignal.timeout") ||
   !selectorStep.includes("timeout_in_minutes: 2")
 ) {
   fail("main selector API lookup is not time-bounded");
@@ -429,11 +435,11 @@ assertUnfilteredInstallBelongsToVerify(lines, stepStarts);
 // runtime invocation to disable auto-install explicitly; intentional installs
 // remain visible as `bun install`. bunx must also use --no-install so a missing
 // filtered dependency fails instead of populating Bun's global cache.
-const bakeImages = await Bun.file(".buildkite/scripts/bake-images.sh").text();
+const bakeImages = await Bun.file(".buildkite/scripts/bake-images.ts").text();
 assertNoImplicitBunRuntime([
   { path: PIPELINE_PATH, source: pipeline },
-  { path: ".buildkite/scripts/ci-changed.sh", source: ciChanged },
-  { path: ".buildkite/scripts/bake-images.sh", source: bakeImages },
+  { path: ".buildkite/scripts/ci-changed.ts", source: ciChanged },
+  { path: ".buildkite/scripts/bake-images.ts", source: bakeImages },
 ]);
 
 await assertNoNestedBunRuntime([
@@ -470,49 +476,7 @@ await assertPackageTokens([
   ],
 ]);
 
-if (bakeImages.includes("ALWAYS_ON_TARGETS")) {
-  fail("bake-images.sh restored the always-on image target workaround");
-}
-requireAllPresent(
-  bakeImages,
-  ["docker buildx bake --builder ci", "CADDYFILE_SMOKE_PATH"],
-  (required) =>
-    `bake-images.sh is missing production image contract ${required}`,
-);
-requireNonePresent(
-  bakeImages,
-  ["CI_BUILDX_", "--target", "image-build-manifest"],
-  (forbidden) =>
-    `bake-images.sh retained rejected Buildx experiment ${forbidden}`,
-);
-for (const forbidden of [
-  "--load",
-  "docker-env.sh",
-  "DOCKER_HOST",
-  "docker:28-dind",
-]) {
-  if (pipeline.includes(forbidden) || bakeImages.includes(forbidden)) {
-    fail(`CI retained forbidden Docker-in-Docker path ${forbidden}`);
-  }
-}
-
-const dockerBake = await Bun.file("docker-bake.hcl").text();
-if (dockerBake.includes('variable "READ_CACHE"')) {
-  fail("docker-bake.hcl retained the rejected Buildx experiment cache mode");
-}
-
-const buildCiImage = await Bun.file(
-  ".buildkite/scripts/build-ci-image.sh",
-).text();
-if (
-  !buildCiImage.includes(
-    "docker buildx create --name ci --driver remote tcp://buildkitd-buildkitd-service.buildkitd.svc.cluster.local:1234",
-  ) ||
-  !buildCiImage.includes("--builder ci")
-) {
-  fail("build-ci-image.sh must use the remote production BuildKit builder");
-}
-
+await validateImageMigrationContracts(pipeline, bakeImages);
 await validateCaddySmokeContracts();
 
 console.log(

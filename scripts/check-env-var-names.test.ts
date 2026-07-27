@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
-import { findEnvironmentVariableViolations } from "./check-env-var-names.ts";
+import { findEnvironmentVariableViolations } from "./environment-variable-rules.ts";
+import { parseCoverageSummaries } from "./migration-core.ts";
 
 describe("findEnvironmentVariableViolations", () => {
   test("reports a simple banned name with its canonical replacement", () => {
@@ -34,4 +35,28 @@ describe("findEnvironmentVariableViolations", () => {
       ),
     ).toEqual([]);
   });
+
+  test("reports the generic GitHub token", () => {
+    expect(
+      findEnvironmentVariableViolations(
+        "example.ts",
+        "const GITHUB_TOKEN = value",
+      ),
+    ).toEqual([
+      {
+        path: "example.ts",
+        line: 1,
+        pattern: "GITHUB_TOKEN",
+        replacement: "GH_TOKEN",
+        text: "const GITHUB_TOKEN = value",
+      },
+    ]);
+  });
+});
+
+test("parses Bun coverage summaries for the strict gate", () => {
+  expect(
+    parseCoverageSummaries("All files |  95.50 |  91.25 |\nnot a coverage row"),
+  ).toEqual([{ functions: 95.5, lines: 91.25 }]);
+  expect(parseCoverageSummaries("no summary")).toEqual([]);
 });

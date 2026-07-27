@@ -8,7 +8,18 @@ const config = [
       "vitest.config.mts",
     ],
   },
-  ...recommended({ tsconfigRootDir: import.meta.dirname }),
+  ...recommended({
+    tsconfigRootDir: import.meta.dirname,
+    projectService: {
+      allowDefaultProject: [
+        "generate-readme.ts",
+        "generate-readme-core.ts",
+        "generate-readme.test.ts",
+        "generate-readme-smoke.test.ts",
+      ],
+    },
+    tsconfigPaths: ["./tsconfig.json", "./tsconfig.scripts.json"],
+  }),
   {
     files: ["src/index.ts"],
     rules: {

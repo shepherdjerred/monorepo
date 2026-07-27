@@ -112,13 +112,25 @@ async function validateCompletedPort(
       errors.push(`missing migration test ${testPath} for ${entry.source}`);
     }
   }
+  const replacementName = path.basename(entry.replacement);
+  const testSources = await Promise.all(
+    entry.tests.map((testPath) =>
+      Bun.file(path.resolve(REPOSITORY_ROOT, testPath)).text(),
+    ),
+  );
+  if (
+    !entry.tests.includes(entry.replacement) &&
+    !testSources.some((source) => source.includes(replacementName))
+  ) {
+    errors.push(`${entry.replacement} is not loaded by its migration tests`);
+  }
 
   const packageData = PackageSchema.parse(
     await Bun.file(
       path.resolve(REPOSITORY_ROOT, entry.owner.packageJson),
     ).json(),
   );
-  for (const task of ["typecheck", "lint", "test"]) {
+  for (const task of ["typecheck", "lint", "test", "test:coverage"]) {
     if (packageData.scripts[task] === undefined) {
       errors.push(
         `${entry.owner.packageJson} does not define the standard ${task} task`,

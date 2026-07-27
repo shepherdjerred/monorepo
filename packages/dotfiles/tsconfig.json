@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["bun"]
+  },
+  "include": [
+    "bin/executable_git_cleanup.ts",
+    "bin/git_cleanup_core.ts",
+    "scripts/*.ts"
+  ]
+}

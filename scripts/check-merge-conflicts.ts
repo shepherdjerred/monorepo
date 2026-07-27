@@ -1,4 +1,5 @@
 import { runAllowExit } from "./lib/run.ts";
+import { parseConflictIgnore } from "./migration-core.ts";
 
 const SOURCE_PATHS = [
   "*.ts",
@@ -12,13 +13,6 @@ const SOURCE_PATHS = [
   "*.astro",
   "*.toml",
 ];
-
-export function parseConflictIgnore(source: string): string[] {
-  return source
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line !== "" && !line.startsWith("#"));
-}
 
 export async function checkMergeConflicts(): Promise<void> {
   const ignoreFile = Bun.file(".conflictignore");

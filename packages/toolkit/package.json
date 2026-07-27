@@ -16,7 +16,9 @@
   "scripts": {
     "build": "bun build ./src/index.ts --compile --external ffmpeg-static --outfile=dist/toolkit",
     "test": "bun run test:unit",
-    "test:unit": "bun test test/lib test/bugsink test/s3 test/deployed test/screenshot",
+    "test:coverage": "bun test --config ../../scripts/bunfig.coverage.toml --coverage scripts/install.test.ts",
+    "test:unit": "bun test test/lib test/bugsink test/s3 test/deployed test/screenshot scripts",
+    "install:local": "bun scripts/install.ts",
     "test:integration": "bun test test-integration",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
