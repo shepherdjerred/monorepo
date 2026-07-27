@@ -10,7 +10,7 @@ import {
   type QueueType,
   type SubscriptionFilterSpec,
 } from "@scout-for-lol/data";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, Minus } from "lucide-react";
 import { Button } from "#src/components/ui/button.tsx";
 import {
   Popover,
@@ -82,13 +82,16 @@ function entryNote(entry: PickerEntry): string | undefined {
 function EntryRow(props: {
   entry: PickerEntry;
   isSelected: boolean;
+  // A multi-queue entry (Doom Bots) whose queues are only partially selected —
+  // e.g. a legacy filter created when the difficulties were independent picks.
+  isPartial: boolean;
   onToggle: (entry: PickerEntry) => void;
 }) {
   const note = entryNote(props.entry);
   return (
     <button
       type="button"
-      aria-pressed={props.isSelected}
+      aria-pressed={props.isPartial ? "mixed" : props.isSelected}
       className={cn(
         "flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground",
         note !== undefined && "text-muted-foreground",
@@ -101,7 +104,11 @@ function EntryRow(props: {
         <span>{props.entry.label}</span>
         {note !== undefined && <span className="text-xs">{note}</span>}
       </span>
-      {props.isSelected ? <Check className="h-4 w-4 shrink-0" /> : null}
+      {props.isSelected ? (
+        <Check className="h-4 w-4 shrink-0" />
+      ) : props.isPartial ? (
+        <Minus className="h-4 w-4 shrink-0" />
+      ) : null}
     </button>
   );
 }
@@ -124,19 +131,29 @@ export function SubscriptionFilterFields(props: {
   const selected = subscriptionFilterQueues(props.value);
   const selectedSet = new Set<QueueType>(selected);
 
-  const entrySelected = (entry: PickerEntry) =>
+  // "Has any selection" drives visibility (so a partially-selected group stays
+  // reachable); "fully selected" drives the checkmark and toggle direction. A
+  // multi-queue entry (Doom Bots) can be partial when a legacy filter selected
+  // only some difficulties back when they were independent picks.
+  const entryHasSelection = (entry: PickerEntry) =>
     entry.queues.some((queue) => selectedSet.has(queue));
+  const entryFullySelected = (entry: PickerEntry) =>
+    entry.queues.every((queue) => selectedSet.has(queue));
 
   const unavailableCount = PICKER_ENTRIES.filter(
-    (entry) => !entryAvailable(entry) && !entrySelected(entry),
+    (entry) => !entryAvailable(entry) && !entryHasSelection(entry),
   ).length;
   // Selected-but-unavailable entries always stay visible (deselect path).
   const visibleEntries = PICKER_ENTRIES.filter(
-    (entry) => showUnavailable || entryAvailable(entry) || entrySelected(entry),
+    (entry) =>
+      showUnavailable || entryAvailable(entry) || entryHasSelection(entry),
   );
 
   const toggle = (entry: PickerEntry) => {
-    const next = entrySelected(entry)
+    // Fully selected → clear the whole group. Partial or none → complete it by
+    // adding the missing queues (so clicking a legacy partial Doom Bots filter
+    // fills the group in rather than clearing the difficulties already chosen).
+    const next = entryFullySelected(entry)
       ? selected.filter((queue) => !entry.queues.includes(queue))
       : [
           ...selected,
@@ -195,7 +212,8 @@ export function SubscriptionFilterFields(props: {
           <EntryRow
             key={entry.key}
             entry={entry}
-            isSelected={entrySelected(entry)}
+            isSelected={entryFullySelected(entry)}
+            isPartial={entryHasSelection(entry) && !entryFullySelected(entry)}
             onToggle={toggle}
           />
         ))}

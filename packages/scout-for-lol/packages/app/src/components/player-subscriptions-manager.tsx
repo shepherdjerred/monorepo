@@ -83,7 +83,14 @@ export function PlayerSubscriptionsManager(props: {
         );
         return { previous };
       },
-      onSuccess: (result, variables) => {
+      onSuccess: (result, variables, context) => {
+        // Application-level failures (not-subscribed-in-channel, internal-error)
+        // come back as a normal result, not a throw, so onError's rollback never
+        // runs — undo the optimistic mute flip here before the onSettled refetch
+        // reconciles (and so it isn't left stale if that refetch fails).
+        if (result.kind !== "updated" && context.previous !== undefined) {
+          queryClient.setQueryData(playerKey, context.previous);
+        }
         const outcome = muteResultOutcome(result, variables.isMuted);
         setActionError(outcome.ok ? null : outcome.message);
       },

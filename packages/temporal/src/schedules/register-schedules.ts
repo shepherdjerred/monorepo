@@ -304,7 +304,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "45 6 * * *",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "45 minutes",
+    // 65 min: the 30-min startToCloseTimeout plus the 2-min retry backoff plus a
+    // second full 30-min attempt is 62 min; 45 min would terminate the retry
+    // (only 13 min left after the first attempt + backoff), so give the
+    // configured maximumAttempts=2 room to actually run the serial 21-day scan.
+    workflowExecutionTimeout: "65 minutes",
     memo: "Daily LoL limited-queue window watcher — proposes queue-windows.json edits from scout-prod match volume; auto-merge on open/reopen, plain PR on close",
   },
   {

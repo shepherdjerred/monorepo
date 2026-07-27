@@ -87,6 +87,25 @@ function appendNote(existing: string | undefined, addition: string): string {
     : `${existing}; ${addition}`;
 }
 
+/** Structural equality of two window histories (field-by-field, in order). */
+function windowsEqual(a: QueueWindow[], b: QueueWindow[]): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+  return a.every((window, index) => {
+    const other = b[index];
+    if (other === undefined) {
+      return false;
+    }
+    return (
+      window.start === other.start &&
+      window.end === other.end &&
+      window.source === other.source &&
+      window.note === other.note
+    );
+  });
+}
+
 /** A processing unit: one limited queue, or the Doom Bots trio in lockstep. */
 type QueueUnit = {
   keys: QueueType[];
@@ -128,6 +147,25 @@ function buildUnits(file: QueueWindowsFile): QueueUnit[] {
       throw new Error(
         `queue-windows file is missing windows for "${firstKey}"`,
       );
+    }
+    // Doom Bots difficulties move in lockstep — every difficulty must carry an
+    // identical window history. A divergent manual edit is a broken invariant,
+    // not something to silently paper over by adopting the first difficulty's
+    // windows (which the next open/reopen/close would then overwrite across all
+    // three, destroying the divergent data). Fail loudly instead.
+    for (const key of doomBotsKeys) {
+      const keyWindows = file.queues[key];
+      if (keyWindows === undefined) {
+        throw new Error(`queue-windows file is missing windows for "${key}"`);
+      }
+      if (!windowsEqual(keyWindows, windows)) {
+        throw new Error(
+          `Doom Bots difficulties are out of lockstep: "${key}" window history ` +
+            `differs from "${firstKey}". All Doom Bots queues must share an ` +
+            `identical history; reconcile the divergent manual edit before the ` +
+            `watcher runs.`,
+        );
+      }
     }
     units.push({ keys: [...doomBotsKeys], windows });
   }
@@ -198,18 +236,37 @@ type UnitChange = {
 
 type OpenInput = {
   windows: QueueWindow[];
-  observedDates: string[];
-  distinctDays: number;
-  totalMatches: number;
+  unitObs: Map<string, number>;
   today: string;
 };
 
 function tryOpenOrReopen(input: OpenInput): UnitChange | undefined {
-  const { windows, observedDates, distinctDays, totalMatches, today } = input;
+  const { windows, unitObs, today } = input;
   if (windows.some((window) => windowCoversDate(window, today))) {
     return undefined;
   }
+
+  const lastWindow = windows.at(-1);
+  const priorEnd = lastWindow?.end;
+
+  // Only observations strictly after the last window's (inclusive) end count as
+  // NEW activity. Matches on or before `priorEnd` are already covered by that
+  // closed window; counting them would make a just-closed window's own stale
+  // volume satisfy the open thresholds and reopen it on the next daily run
+  // (the reopen gap would even be negative — always within the limit).
+  const newObs = [...unitObs.entries()].filter(([date]) =>
+    priorEnd == null ? true : date > priorEnd,
+  );
+  const observedDates = newObs
+    .map(([date]) => date)
+    .sort((a, b) => a.localeCompare(b));
   const firstSeen = observedDates[0];
+  let totalMatches = 0;
+  for (const [, count] of newObs) {
+    totalMatches += count;
+  }
+  const distinctDays = observedDates.length;
+
   if (
     firstSeen === undefined ||
     distinctDays < OPEN_MIN_DISTINCT_DAYS ||
@@ -218,8 +275,6 @@ function tryOpenOrReopen(input: OpenInput): UnitChange | undefined {
     return undefined;
   }
 
-  const lastWindow = windows.at(-1);
-  const priorEnd = lastWindow?.end;
   const gapWithinReopen =
     priorEnd != null &&
     parseUtcDate(firstSeen) - parseUtcDate(priorEnd) <=
@@ -269,7 +324,6 @@ type CloseOutcome =
 function tryClose(
   windows: QueueWindow[],
   unitObs: Map<string, number>,
-  lastSeen: string | undefined,
   todayMs: number,
 ): CloseOutcome | undefined {
   const lastWindow = windows.at(-1);
@@ -277,10 +331,19 @@ function tryClose(
     return undefined;
   }
 
+  // Only matches within the current open window (on/after its start) are
+  // evidence about whether THIS window is still live. Earlier matches belong to
+  // prior windows; counting them would let a preceding run's volume satisfy the
+  // 20-match close baseline and close the new window on a single stray day.
+  const windowStart = lastWindow.start;
+  const windowObs = [...unitObs.entries()].filter(
+    ([date]) => date >= windowStart,
+  );
+
   const trailingStartMs = todayMs - CLOSE_TRAILING_EMPTY_DAYS * DAY_MS;
   let trailingTotal = 0;
   let earlierTotal = 0;
-  for (const [date, count] of unitObs) {
+  for (const [date, count] of windowObs) {
     if (parseUtcDate(date) >= trailingStartMs) {
       trailingTotal += count;
     } else {
@@ -292,10 +355,13 @@ function tryClose(
     return undefined;
   }
 
+  const lastSeen = windowObs
+    .map(([date]) => date)
+    .sort((a, b) => a.localeCompare(b))
+    .at(-1);
+
   const closeEnd =
-    earlierTotal >= CLOSE_MIN_VOLUME_BASELINE &&
-    lastSeen !== undefined &&
-    lastSeen >= lastWindow.start
+    earlierTotal >= CLOSE_MIN_VOLUME_BASELINE && lastSeen !== undefined
       ? lastSeen
       : undefined;
 
@@ -364,27 +430,16 @@ export function proposeQueueWindowEdits(
       throw new Error("unreachable: queue unit has no keys");
     }
     const unitObs = mergeUnitObservations(unit, perQueue);
-    const observedDates = [...unitObs.keys()].sort((a, b) =>
-      a.localeCompare(b),
-    );
-    const distinctDays = observedDates.length;
-    let totalMatches = 0;
-    for (const count of unitObs.values()) {
-      totalMatches += count;
-    }
-    const lastSeen = observedDates.at(-1);
 
     const openChange = tryOpenOrReopen({
       windows: unit.windows,
-      observedDates,
-      distinctDays,
-      totalMatches,
+      unitObs,
       today,
     });
 
     let change: UnitChange | undefined = openChange;
     if (change === undefined) {
-      const closeOutcome = tryClose(unit.windows, unitObs, lastSeen, todayMs);
+      const closeOutcome = tryClose(unit.windows, unitObs, todayMs);
       if (closeOutcome !== undefined) {
         if (closeOutcome.type === "close") {
           change = closeOutcome.change;

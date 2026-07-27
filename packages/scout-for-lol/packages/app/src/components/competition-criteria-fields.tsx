@@ -66,57 +66,53 @@ function QueueSelect(props: {
   );
 
   return (
-    <Select
-      value={props.value}
-      disabled={props.disabled ?? false}
-      onValueChange={props.onChange}
-    >
-      <SelectTrigger id={props.id}>
-        <SelectValue placeholder="Pick a queue" />
-      </SelectTrigger>
-      <SelectContent>
-        {unavailableCount > 0 && (
-          <>
-            <label className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground">
-              <input
-                type="checkbox"
-                checked={showUnavailable}
-                // Radix Select listens for pointer/key events to drive item
-                // highlight + typeahead; keep checkbox interaction local.
-                onPointerDown={(event) => {
-                  event.stopPropagation();
-                }}
-                onKeyDown={(event) => {
-                  event.stopPropagation();
-                }}
-                onChange={(event) => {
-                  setShowUnavailable(event.target.checked);
-                }}
-              />
-              Show unavailable queues ({unavailableCount})
-            </label>
-            <div className="my-1 h-px bg-border" />
-          </>
-        )}
-        {props.includeAny === true && (
-          <SelectItem value="__ANY__">Any queue</SelectItem>
-        )}
-        {visibleOptions.map((queue) => (
-          <SelectItem key={queue} value={queue}>
-            <span
-              className={
-                isAvailableChoice(queue) ? undefined : "text-muted-foreground"
-              }
-            >
-              {competitionQueueTypeToString(
-                CompetitionQueueTypeSchema.parse(queue),
-              )}
-              {isAvailableChoice(queue) ? "" : " (not currently live)"}
-            </span>
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <div className="space-y-1.5">
+      <Select
+        value={props.value}
+        disabled={props.disabled ?? false}
+        onValueChange={props.onChange}
+      >
+        <SelectTrigger id={props.id}>
+          <SelectValue placeholder="Pick a queue" />
+        </SelectTrigger>
+        <SelectContent>
+          {props.includeAny === true && (
+            <SelectItem value="__ANY__">Any queue</SelectItem>
+          )}
+          {visibleOptions.map((queue) => (
+            <SelectItem key={queue} value={queue}>
+              <span
+                className={
+                  isAvailableChoice(queue) ? undefined : "text-muted-foreground"
+                }
+              >
+                {competitionQueueTypeToString(
+                  CompetitionQueueTypeSchema.parse(queue),
+                )}
+                {isAvailableChoice(queue) ? "" : " (not currently live)"}
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {/* Rendered outside the Select: Radix moves focus among its SelectItem
+          collection and blocks Tab within the open listbox, so a checkbox
+          inside SelectContent is unreachable by keyboard. Placing it in normal
+          flow keeps it Tab-focusable. */}
+      {unavailableCount > 0 && (
+        <label className="flex w-fit cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={showUnavailable}
+            disabled={props.disabled ?? false}
+            onChange={(event) => {
+              setShowUnavailable(event.target.checked);
+            }}
+          />
+          Show unavailable queues ({unavailableCount})
+        </label>
+      )}
+    </div>
   );
 }
 

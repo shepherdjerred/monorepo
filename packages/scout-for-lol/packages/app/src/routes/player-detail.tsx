@@ -231,6 +231,12 @@ export function PlayerDetail() {
     trpc.player.deletePlayer.mutationOptions({
       meta: analyticsMeta("player_deleted"),
       onSuccess: () => {
+        // The players list carries a long staleTime; invalidate it before
+        // navigating back so the just-deleted player doesn't linger in the list
+        // for up to STALE_TIME_SLOW_LIST.
+        void queryClient.invalidateQueries({
+          queryKey: trpc.player.listPlayers.pathKey(),
+        });
         void navigate(`/g/${guildId}/players`);
       },
       onError: (err) => {

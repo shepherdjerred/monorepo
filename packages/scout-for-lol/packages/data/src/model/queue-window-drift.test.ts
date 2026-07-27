@@ -78,6 +78,42 @@ describe("proposeQueueWindowEdits", () => {
     expect(last?.note).toContain("reopened by watcher 2026-07-26");
   });
 
+  test("does not reopen a closed window from its own pre-close (stale) volume", () => {
+    // All observed matches fall on/before the window's close date, so they are
+    // already covered by the just-closed window. A negative reopen gap must not
+    // count as "within 7 days" and reopen the window on the next daily run.
+    const file = makeFile({ urf: [["2026-07-01", "2026-07-10"]] });
+    const { edits, warnings } = propose(file, {
+      "1900": { "2026-07-05": 2, "2026-07-08": 2 },
+    });
+    expect(edits).toHaveLength(0);
+    expect(warnings).toHaveLength(0);
+  });
+
+  test("does not close a fresh window from a prior run's pre-window volume", () => {
+    // The open window started at 2026-07-14; the 20 matches on 2026-07-08 belong
+    // to a previous window and must not satisfy the close baseline. Only the
+    // single in-window match on 2026-07-15 counts, so this warns rather than
+    // closing the new window off stale activity.
+    const file = makeFile({ arena: [["2026-07-14", null]] });
+    const { edits, warnings } = propose(file, {
+      "1700": { "2026-07-08": 20, "2026-07-15": 1 },
+    });
+    expect(edits).toHaveLength(0);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]?.kind).toBe("no-volume-baseline");
+    expect(warnings[0]?.total).toBe(1);
+  });
+
+  test("throws when Doom Bots difficulties fall out of lockstep", () => {
+    const file = makeFile({
+      "easy doom bots": [["2025-08-27", "2025-10-22"]],
+      "normal doom bots": [["2025-08-27", "2025-10-23"]],
+      "hard doom bots": [["2025-08-27", "2025-10-22"]],
+    });
+    expect(() => propose(file, {})).toThrow(/lockstep/);
+  });
+
   test("closes an open-ended window with a volume baseline and no recent matches", () => {
     const file = makeFile({ arena: [["2025-06-25", null]] });
     const { edits, next } = propose(file, {

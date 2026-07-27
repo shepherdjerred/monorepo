@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CompetitionIdSchema,
   type CompetitionCriteria,
@@ -22,6 +22,7 @@ import { validateForm } from "#src/lib/competition-form-state.ts";
 export function CompetitionForm() {
   const { guildId, competitionId: idParam } = useParams();
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const safeGuildId = guildId ?? "";
 
@@ -63,6 +64,12 @@ export function CompetitionForm() {
     trpc.competition.create.mutationOptions({
       meta: analyticsMeta("competition_created"),
       onSuccess: (created) => {
+        // The competitions list carries a long staleTime; invalidate it before
+        // navigating so the new competition isn't missing from the list for up
+        // to STALE_TIME_SLOW_LIST.
+        void queryClient.invalidateQueries({
+          queryKey: trpc.competition.list.pathKey(),
+        });
         void navigate(
           `/g/${safeGuildId}/competitions/${created.id.toString()}`,
         );
@@ -76,6 +83,9 @@ export function CompetitionForm() {
     trpc.competition.edit.mutationOptions({
       meta: analyticsMeta("competition_edited"),
       onSuccess: () => {
+        void queryClient.invalidateQueries({
+          queryKey: trpc.competition.list.pathKey(),
+        });
         void navigate(
           `/g/${safeGuildId}/competitions/${competitionId.toString()}`,
         );

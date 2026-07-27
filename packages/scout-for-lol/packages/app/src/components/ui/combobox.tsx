@@ -17,8 +17,9 @@ import { cn } from "#src/lib/cn.ts";
  * Implements the ARIA combobox + listbox pattern: the input owns
  * `aria-activedescendant`, the `<ul>` is the `role="listbox"` referenced by
  * `aria-controls`, and each result is a `role="option"`. Keyboard navigation
- * (arrows / Home / End / Enter / Escape) moves a virtual active option without
- * moving DOM focus out of the input.
+ * (arrows / Enter / Escape) moves a virtual active option without moving DOM
+ * focus out of the input. Home/End are intentionally left to the input so the
+ * caret can jump to the start/end of a long value being edited.
  */
 export function Combobox<T>(props: {
   value: string;
@@ -68,8 +69,12 @@ export function Combobox<T>(props: {
     setActiveIndex(showPopover && itemCount > 0 ? 0 : -1);
   }, [showPopover, itemCount, itemsSignature]);
 
+  // While a new search is loading, `items` may still hold the previous
+  // response (keepPreviousData). Do not resolve a committable active option in
+  // that state: the visible highlight (aria-selected below) can stay put, but
+  // Enter must not commit a stale result from the prior search.
   const activeItem =
-    activeIndex >= 0 && activeIndex < itemCount
+    !props.isLoading && activeIndex >= 0 && activeIndex < itemCount
       ? props.items[activeIndex]
       : undefined;
   const activeOptionId =
@@ -89,6 +94,10 @@ export function Combobox<T>(props: {
     // Only take over navigation keys while the listbox is visible; otherwise
     // leave normal typing/caret behavior alone.
     if (!showPopover) return;
+    // Never hijack keys mid-IME-composition: an Enter that confirms a CJK
+    // composition still fires here with `isComposing` set, and intercepting it
+    // would select an option instead of committing the composed text.
+    if (event.nativeEvent.isComposing) return;
     const lastIndex = itemCount - 1;
     switch (event.key) {
       case "ArrowDown":
@@ -101,18 +110,9 @@ export function Combobox<T>(props: {
         event.preventDefault();
         setActiveIndex((index) => (index < 0 ? 0 : Math.max(index - 1, 0)));
         break;
-      case "Home":
-        if (itemCount > 0) {
-          event.preventDefault();
-          setActiveIndex(0);
-        }
-        break;
-      case "End":
-        if (itemCount > 0) {
-          event.preventDefault();
-          setActiveIndex(lastIndex);
-        }
-        break;
+      // Home/End are deliberately not handled: they must move the text caret to
+      // the start/end of the value being edited (a long Riot ID, alias, or
+      // timezone search), not the virtual option highlight.
       case "Enter":
         // Only intercept Enter when there is an active option to commit —
         // otherwise let it behave normally (e.g. submit an enclosing form).

@@ -34,7 +34,20 @@ export function ReportQueryPreview(props: {
         queryText: debounced.queryText,
         title: debounced.title,
       },
-      { enabled: hasQuery, placeholderData: keepPreviousData },
+      {
+        enabled: hasQuery,
+        placeholderData: keepPreviousData,
+        // A live editor pauses on invalid/incomplete ScoutQL constantly; those
+        // are deterministic parse/execution errors, so retrying just delays the
+        // error message and repeats the embedded DuckDB/Parquet work.
+        retry: false,
+        // Each debounced query text/title is a distinct cache entry, and a
+        // successful preview carries the full PNG in `imageBase64`. Evict
+        // inactive entries immediately so paused edits don't leave many large
+        // encoded images resident in browser memory (keepPreviousData still
+        // holds the last result on screen during the next fetch).
+        gcTime: 0,
+      },
     ),
   );
 

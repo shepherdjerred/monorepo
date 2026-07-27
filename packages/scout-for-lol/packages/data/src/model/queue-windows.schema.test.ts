@@ -27,6 +27,27 @@ describe("QueueWindowsFileSchema", () => {
     expect(result.success).toBe(false);
   });
 
+  test("rejects shape-valid but impossible calendar dates", () => {
+    for (const bad of [
+      "2026-13-40",
+      "2026-02-30",
+      "2026-00-10",
+      "2026-06-31",
+    ]) {
+      const result = QueueWindowsArraySchema.safeParse([
+        { start: bad, end: null },
+      ]);
+      expect(result.success).toBe(false);
+    }
+  });
+
+  test("accepts a real leap-day date", () => {
+    const result = QueueWindowsArraySchema.safeParse([
+      { start: "2024-02-29", end: null },
+    ]);
+    expect(result.success).toBe(true);
+  });
+
   test("rejects windows that are not sorted ascending by start", () => {
     const result = QueueWindowsArraySchema.safeParse([
       { start: "2025-03-01", end: "2025-03-10" },

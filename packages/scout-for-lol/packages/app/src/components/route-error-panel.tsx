@@ -1,16 +1,42 @@
 import { useEffect } from "react";
-import { useLocation, useNavigate, useRouteError } from "react-router";
+import {
+  isRouteErrorResponse,
+  useLocation,
+  useNavigate,
+  useRouteError,
+} from "react-router";
 import * as Sentry from "@sentry/react";
 import { z } from "zod";
 import { Button } from "#src/components/ui/button.tsx";
 import { queryClient } from "#src/lib/query-client.ts";
 
 const ErrorMessageSchema = z.object({ message: z.string() });
+const HttpStatusErrorSchema = z.object({
+  data: z.object({ httpStatus: z.number() }),
+});
 
 /** Best-effort human-readable detail from an unknown thrown value. */
 function errorDetail(error: unknown): string | null {
   const parsed = ErrorMessageSchema.safeParse(error);
   return parsed.success ? parsed.data.message : null;
+}
+
+/**
+ * Expected client-side failures — a malformed detail URL, or a link to a
+ * deleted report/competition/player (a tRPC NOT_FOUND / 4xx). These are routine
+ * boundary input, not actionable exceptions, so they show the friendly panel
+ * without a Sentry incident. Only unexpected (5xx / unclassified) errors report.
+ */
+function isExpectedRouteError(error: unknown): boolean {
+  if (isRouteErrorResponse(error)) {
+    return error.status >= 400 && error.status < 500;
+  }
+  const parsed = HttpStatusErrorSchema.safeParse(error);
+  return (
+    parsed.success &&
+    parsed.data.data.httpStatus >= 400 &&
+    parsed.data.data.httpStatus < 500
+  );
 }
 
 /**
@@ -25,6 +51,7 @@ export function RouteErrorPanel() {
   const location = useLocation();
 
   useEffect(() => {
+    if (isExpectedRouteError(error)) return;
     Sentry.captureException(error);
   }, [error]);
 
