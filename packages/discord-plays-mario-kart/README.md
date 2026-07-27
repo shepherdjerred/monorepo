@@ -55,7 +55,7 @@ records the pinned baseline, the patches, and the update procedure. Our changes:
 
 [`scripts/build-wasm.sh`](./scripts/build-wasm.sh) compiles
 the core into `packages/backend/assets/n64wasm/` using the pinned
-`emscripten/emsdk:2.0.7` image — the only build path since the Dagger CI stage was removed 2026-07.
+`emscripten/emsdk:2.0.34` image.
 
 > **Do not define `window`.** The emscripten glue must detect
 > `ENVIRONMENT_IS_NODE` only; if it also detects a web environment its FS path
@@ -70,6 +70,7 @@ is covered at three levels:
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | --------- |
 | Frontend mapping | `KeyboardEvent.code` → the `PlayerInputState` the browser ships (KEYMAP / `computeState`, schema-valid)                                                                                    | [`frontend/src/input-map.test.ts`](./packages/frontend/src/input-map.test.ts)                 | ✅        |
 | Server plumbing  | a real Socket.IO client → `createSocket` (schema parse) → `handleRequest` → `emulator.setPlayerInput` with the right state; seat gating, schema rejection, release/disconnect clears input | [`backend/src/webserver/dispatch.test.ts`](./packages/backend/src/webserver/dispatch.test.ts) | ✅        |
+| WASM host        | the production Emscripten glue initializes inside a Bun Worker, exposes the required runtime API, and needs no ROM                                                                         | [`backend/scripts/smoke-wasm-host.ts`](./packages/backend/scripts/smoke-wasm-host.ts)         | ✅        |
 | Game effect      | input actually advances the running game (boots the real emulator + ROM; holding START moves the title screen → GAME SELECT menu)                                                          | [`backend/scripts/e2e-input.ts`](./packages/backend/scripts/e2e-input.ts)                     | ⛔ manual |
 
 Run the automated tests:
@@ -89,6 +90,8 @@ resolved** from, in order: an explicit `--rom`/positional arg → `MK64_ROM` env
 ```bash
 cd packages/backend
 bun run build:wasm            # compile the core into assets/n64wasm (once)
+bun run smoke:wasm-host       # ROM-free Worker + generated-runtime smoke
+bun run e2e:worker            # full production Worker path: frames, audio, input, metrics
 
 # Scenario harness — drive the game to a known state and screenshot it.
 bun run e2e:scenario                       # list scenarios (menu, 1p, 2p, 3p, 4p)
@@ -112,7 +115,8 @@ N controllers.
 
 Runs on the homelab Kubernetes cluster via ArgoCD
 (`packages/homelab/src/cdk8s/src/resources/mario-kart.ts`). Image builds and
-pushes are manual (the CI pipeline was removed 2026-07); configuration is a mounted `config.toml` — see
+smokes run in Buildkite; main builds push the deployable image. Configuration
+is a mounted `config.toml` — see
 [`config.example.toml`](./config.example.toml). The web UI is reachable at
 `mariokart.sjer.red` (and via Tailscale as `mariokart`); the Go-Live stream is
 outbound-only.

@@ -352,6 +352,8 @@ const commands: Record<
   "discord-plays-mario-kart": {
     command: [
       "set -eu",
+      "cd /app/packages/discord-plays-mario-kart/packages/backend",
+      "bun run smoke:wasm-host",
       "cd /app/packages/discord-plays-mario-kart",
       "set +e",
       'output="$(timeout 60s sh -c "cd packages/backend && bunx prisma db push && cd /app/packages/discord-plays-mario-kart && exec bun packages/backend/src/index.ts" 2>&1)"',

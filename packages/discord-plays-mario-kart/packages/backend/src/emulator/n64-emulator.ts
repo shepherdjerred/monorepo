@@ -5,7 +5,7 @@ import {
   restoreHostToMemfs,
   type FsModule,
 } from "./save-persistence.ts";
-import { installBrowserStubs, getFakeCanvas } from "./wasm-host.ts";
+import { initializeWasmHost } from "./wasm-host.ts";
 import { buildConfigTxt } from "./config-txt.ts";
 import { drainRing } from "./audio-ring.ts";
 import {
@@ -83,12 +83,6 @@ export type N64EmulatorOptions = {
   metrics?: MetricSink;
 };
 
-function requireObject(u: unknown, what: string): object {
-  if (typeof u !== "object" || u === null) {
-    throw new TypeError(`${what} is not an object`);
-  }
-  return u;
-}
 function requireFn(
   host: object,
   name: string,
@@ -151,44 +145,17 @@ export class N64Emulator {
   }
 
   async init(): Promise<void> {
-    installBrowserStubs();
     const { wasmDir, romPath, software } = this.opts;
-
-    const wasmBinary = new Uint8Array(
-      await Bun.file(path.join(wasmDir, "n64wasm.wasm")).arrayBuffer(),
-    );
-    const glue = await Bun.file(path.join(wasmDir, "n64wasm.js")).text();
     const rom = new Uint8Array(await Bun.file(romPath).arrayBuffer());
-
-    const ready = new Promise<void>((resolve) => {
-      Object.defineProperty(globalThis, "Module", {
-        configurable: true,
-        writable: true,
-        value: {
-          wasmBinary,
-          canvas: getFakeCanvas(),
-          noInitialRun: true,
-          print: (s: string) => {
-            logger.info(`[n64] ${s}`);
-          },
-          printErr: (s: string) => {
-            logger.warn(`[n64] ${s}`);
-          },
-          onRuntimeInitialized: () => {
-            resolve();
-          },
-          locateFile: (p: string) => path.join(wasmDir, p),
-        },
-      });
+    const { module: mod, fs } = await initializeWasmHost({
+      wasmDir,
+      print: (message) => {
+        logger.info(`[n64] ${message}`);
+      },
+      printErr: (message) => {
+        logger.warn(`[n64] ${message}`);
+      },
     });
-
-    // Run the (browser-built) emscripten glue at global scope; it augments
-    // globalThis.Module with the wasm exports and sets the global FS.
-    (0, eval)(glue);
-    await ready;
-
-    const mod = requireObject(Reflect.get(globalThis, "Module"), "Module");
-    const fs = requireObject(Reflect.get(globalThis, "FS"), "FS");
 
     // Build the typed runtime facade (validated FFI wrappers).
     const malloc = requireFn(mod, "_malloc");
