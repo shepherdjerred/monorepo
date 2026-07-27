@@ -394,6 +394,9 @@ export function PlayerDetail() {
           onOpenChange={setRenameOpen}
           onRenamed={(newAlias) => {
             setRenameOpen(false);
+            void queryClient.invalidateQueries({
+              queryKey: trpc.player.listPlayers.pathKey(),
+            });
             void navigate(
               `/g/${guildId}/players/${encodeURIComponent(newAlias)}`,
             );
@@ -408,6 +411,9 @@ export function PlayerDetail() {
           onOpenChange={setMergeOpen}
           onMerged={(targetAlias) => {
             setMergeOpen(false);
+            void queryClient.invalidateQueries({
+              queryKey: trpc.player.listPlayers.pathKey(),
+            });
             void navigate(
               `/g/${guildId}/players/${encodeURIComponent(targetAlias)}`,
             );
@@ -427,6 +433,9 @@ export function PlayerDetail() {
             }}
             onTransferred={(toPlayerAlias) => {
               setTransferAccount(null);
+              void queryClient.invalidateQueries({
+                queryKey: trpc.player.listPlayers.pathKey(),
+              });
               void navigate(
                 `/g/${guildId}/players/${encodeURIComponent(toPlayerAlias)}`,
               );

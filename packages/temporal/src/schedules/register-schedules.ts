@@ -620,7 +620,6 @@ export async function registerSchedules(client: Client): Promise<void> {
       console.warn(`Created schedule: ${schedule.id}`);
     }
   }
-
   // After reconciling the declared set, surface any live schedule that is no
   // longer represented in source (renamed/removed but not added to the delete
   // list). Non-fatal — see detectOrphanSchedules.

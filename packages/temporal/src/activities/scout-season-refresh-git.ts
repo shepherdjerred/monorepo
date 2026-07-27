@@ -134,6 +134,25 @@ export async function openSeasonRefreshPr(
   await runCommand(["git", "config", "user.name", "CI Bot"], {
     cwd: input.repoDir,
   });
+  // A retry (or a later scheduled run reusing an open proposal branch) starts
+  // from a shallow main-only clone. Fetch the existing branch first so
+  // --force-with-lease has an actual remote-tracking value to protect against
+  // overwriting a concurrent update.
+  const remoteBranch = await runCommand(
+    ["git", "ls-remote", "--heads", "origin", input.branch],
+    { cwd: input.repoDir, env: gitEnv, redactOutput: true },
+  );
+  if (remoteBranch.length > 0) {
+    await runCommand(
+      [
+        "git",
+        "fetch",
+        "origin",
+        `refs/heads/${input.branch}:refs/remotes/origin/${input.branch}`,
+      ],
+      { cwd: input.repoDir, env: gitEnv, redactOutput: true },
+    );
+  }
   await runCommand(["git", "checkout", "-B", input.branch], {
     cwd: input.repoDir,
   });

@@ -2,7 +2,6 @@ import { Context } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
 import { z } from "zod/v4";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
-import { requiredRunId } from "#activities/temporal-context.ts";
 import { rootInstallWithoutHooks, installScoutWorkspace } from "./bot-clone.ts";
 import {
   changedFilesInPaths,
@@ -249,13 +248,12 @@ export const scoutQueueWindowsActivities = {
       }
 
       const autoMerge = canAutoMerge(report.edits);
-      // Derive the branch from the Temporal run id (stable across activity
-      // retries within this scheduled run) rather than a fresh random UUID, so a
-      // retry after openSeasonRefreshPr already created the PR reuses the same
-      // branch instead of opening a duplicate. openSeasonRefreshPr reuses an
-      // existing open PR for that branch.
-      const runId = requiredRunId(Context.current().info);
-      const branch = `chore/scout-queue-windows-${runId.slice(0, 8)}`;
+      // All daily runs reuse one proposal branch. A close proposal needs human
+      // review and may outlive a schedule interval; reopening it updates the
+      // same PR rather than generating a duplicate each day. The shared Git
+      // helper fetches the branch before its force-with-lease push, so retries
+      // and later runs retain the remote lease.
+      const branch = "chore/scout-queue-windows";
       const title = "chore(scout-for-lol): update queue availability windows";
       const body = buildPrBody(report, autoMerge);
 
