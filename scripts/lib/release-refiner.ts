@@ -22,14 +22,44 @@ const ReleaseRefinerResultSchema = z.discriminatedUnion("status", [
     .object({
       status: z.literal("refined"),
       prNumber: z.number().int().positive(),
-      packagesRefined: z.array(
-        z.enum(["astro-opengraph-images", "webring", "helm-types"]),
-      ),
+      packagesRefined: z
+        .array(z.enum(["astro-opengraph-images", "webring", "helm-types"]))
+        .min(1)
+        .refine(
+          (packages) => new Set(packages).size === packages.length,
+          "packagesRefined must contain unique package names",
+        ),
       commitSha: z.string().regex(/^[0-9a-f]{40}$/),
     })
     .strict(),
   z.object({ status: z.literal("no-open-release-pr") }).strict(),
 ]);
+const ReleasePrSchema = z
+  .object({
+    number: z.number().int().positive(),
+    state: z.literal("OPEN"),
+    baseRefName: z.literal("main"),
+    headRefName: z.literal("release-please--branches--main"),
+    headRefOid: z.string().regex(/^[0-9a-f]{40}$/),
+    labels: z.array(z.object({ name: z.string() }).loose()),
+    body: z.string(),
+  })
+  .loose();
+const RefinerCommitSchema = z
+  .object({
+    sha: z.string().regex(/^[0-9a-f]{40}$/),
+    commit: z
+      .object({
+        author: z.object({
+          name: z.literal("release-please-refiner[bot]"),
+          email: z.literal("release-please-refiner@users.noreply.github.com"),
+        }),
+        message: z.string(),
+      })
+      .loose(),
+    files: z.array(z.object({ filename: z.string() }).loose()),
+  })
+  .loose();
 
 export type RefinerProvider = "claude" | "codex";
 
@@ -155,8 +185,12 @@ function outputTail(value: string): string {
     : trimmed.slice(-OUTPUT_TAIL_LIMIT);
 }
 
-function requireSuccessfulResult(provider: string, output: string): void {
-  if (parseReleaseRefinerResult(output) === null) {
+function requireSuccessfulResult(
+  provider: string,
+  output: string,
+): z.infer<typeof ReleaseRefinerResultSchema> {
+  const result = parseReleaseRefinerResult(output);
+  if (result === null) {
     throw new Error(
       `${provider} release refiner exited 0 without a valid success envelope` +
         (output.trim() === ""
@@ -164,6 +198,7 @@ function requireSuccessfulResult(provider: string, output: string): void {
           : `\n--- stdout (tail) ---\n${outputTail(output)}`),
     );
   }
+  return result;
 }
 
 function commandFailure(provider: string, result: RunResult): Error {
@@ -182,7 +217,7 @@ function commandFailure(provider: string, result: RunResult): Error {
 async function runCodex(
   input: RunReleaseRefinerInput,
   execute: RefinerCommandRunner,
-): Promise<void> {
+): Promise<z.infer<typeof ReleaseRefinerResultSchema>> {
   const result = await execute(codexCommand(input.prompt, input.root), {
     cwd: input.root,
     capture: true,
@@ -203,7 +238,129 @@ async function runCodex(
   if (result.exitCode !== 0) {
     throw commandFailure("Codex", result);
   }
-  requireSuccessfulResult("Codex", result.stdout);
+  return requireSuccessfulResult("Codex", result.stdout);
+}
+
+function packageChangelog(
+  packageName: "astro-opengraph-images" | "webring" | "helm-types",
+): string {
+  switch (packageName) {
+    case "astro-opengraph-images":
+      return "packages/astro-opengraph-images/CHANGELOG.md";
+    case "webring":
+      return "packages/webring/CHANGELOG.md";
+    case "helm-types":
+      return "packages/homelab/src/helm-types/CHANGELOG.md";
+  }
+}
+
+async function verifiedCommand(
+  input: RunReleaseRefinerInput,
+  execute: RefinerCommandRunner,
+  command: string[],
+): Promise<string> {
+  const result = await execute(command, {
+    cwd: input.root,
+    capture: true,
+    env: input.env,
+    unsetEnv: [
+      "OPENAI_API_KEY",
+      "CODEX_API_KEY",
+      "CODEX_ACCESS_TOKEN",
+      "CODEX_REFRESH_TOKEN",
+      "CODEX_ID_TOKEN",
+      "CODEX_ACCOUNT_ID",
+      "CLAUDE_CODE_OAUTH_TOKEN",
+      "ANTHROPIC_API_KEY",
+    ],
+  });
+  if (result.exitCode !== 0) {
+    throw commandFailure("Release refiner verification", result);
+  }
+  return result.stdout;
+}
+
+async function verifyReleaseRefinerResult(
+  input: RunReleaseRefinerInput,
+  result: z.infer<typeof ReleaseRefinerResultSchema>,
+  execute: RefinerCommandRunner,
+): Promise<void> {
+  if (result.status === "no-open-release-pr") {
+    const stdout = await verifiedCommand(input, execute, [
+      "gh",
+      "pr",
+      "list",
+      "--repo",
+      "shepherdjerred/monorepo",
+      "--base",
+      "main",
+      "--label",
+      "autorelease: pending",
+      "--state",
+      "open",
+      "--json",
+      "number",
+      "--limit",
+      "1",
+    ]);
+    const openReleasePrs = z
+      .array(z.object({ number: z.number().int().positive() }).loose())
+      .parse(JSON.parse(stdout));
+    if (openReleasePrs.length > 0) {
+      throw new Error(
+        "Release refiner reported no open release PR, but GitHub has one",
+      );
+    }
+    return;
+  }
+
+  const prStdout = await verifiedCommand(input, execute, [
+    "gh",
+    "pr",
+    "view",
+    result.prNumber.toString(),
+    "--repo",
+    "shepherdjerred/monorepo",
+    "--json",
+    "number,state,baseRefName,headRefName,headRefOid,labels,body",
+  ]);
+  const releasePr = ReleasePrSchema.parse(JSON.parse(prStdout));
+  if (
+    releasePr.number !== result.prNumber ||
+    releasePr.headRefOid !== result.commitSha ||
+    !releasePr.labels.some((label) => label.name === "autorelease: pending")
+  ) {
+    throw new Error(
+      "Release refiner result does not match the open pending release PR head",
+    );
+  }
+
+  const commitStdout = await verifiedCommand(input, execute, [
+    "gh",
+    "api",
+    `repos/shepherdjerred/monorepo/commits/${result.commitSha}`,
+  ]);
+  const commit = RefinerCommitSchema.parse(JSON.parse(commitStdout));
+  const expectedFiles = new Set(
+    result.packagesRefined.map((packageName) => packageChangelog(packageName)),
+  );
+  const actualFiles = new Set(commit.files.map((file) => file.filename));
+  if (
+    commit.sha !== result.commitSha ||
+    !/^chore\(root\): refine release notes for \d{4}-\d{2}-\d{2}(?:\n|$)/.test(
+      commit.commit.message,
+    ) ||
+    actualFiles.size !== expectedFiles.size ||
+    [...actualFiles].some((file) => !expectedFiles.has(file)) ||
+    result.packagesRefined.some(
+      (packageName) =>
+        !releasePr.body.includes(`<details><summary>${packageName}:`),
+    )
+  ) {
+    throw new Error(
+      "Release refiner result does not match the remote refiner commit and PR body",
+    );
+  }
 }
 
 export async function runReleaseRefiner(
@@ -238,7 +395,8 @@ export async function runReleaseRefiner(
             : `\n--- stdout (tail) ---\n${outputTail(claude.stdout)}`),
       );
     }
-    requireSuccessfulResult("Claude", parsed.result);
+    const result = requireSuccessfulResult("Claude", parsed.result);
+    await verifyReleaseRefinerResult(input, result, execute);
     return "claude";
   }
   if (!isClaudeQuotaExhaustion(claude)) {
@@ -248,6 +406,7 @@ export async function runReleaseRefiner(
   console.warn(
     `Claude release refiner quota is exhausted; falling back to Codex ${CODEX_MODEL}.`,
   );
-  await runCodex(input, execute);
+  const result = await runCodex(input, execute);
+  await verifyReleaseRefinerResult(input, result, execute);
   return "codex";
 }

@@ -95,6 +95,22 @@ through its downstream release and version paths.
   the release driver preflights `gh --version` before release-please can mutate
   a release PR. This addresses stale CI images where mise installed `gh` but
   had not exposed its shim.
+- PR [#1718](https://github.com/shepherdjerred/monorepo/pull/1718) merged as
+  `813f6718e96c830f5faeef8087e9a7dc55986c63`. Its PR Buildkite build
+  [#6535](https://buildkite.com/sjerred/monorepo/builds/6535) passed verify,
+  Playwright, resume, observability, security, deploy dry-run, and image
+  dry-run, but the Codex review gate correctly reported a P1: a
+  schema-valid provider envelope was still the same provider's untrusted claim.
+- The follow-up independently queries GitHub before accepting success.
+  `no-open-release-pr` must match the actual open pending-PR list. A `refined`
+  result must match the open `release-please--branches--main` PR head, its
+  pending label, a bot-authored refiner commit changing exactly the reported
+  CHANGELOG files, and corresponding package sections in the remote PR body.
+  Empty or unverifiable refinement now fails closed.
+- After #1718 merged, generated Scout version commit
+  `fdc78c83a70a9258112584544c3947e5126d858f` advanced `main`; Buildkite
+  [#6549](https://buildkite.com/sjerred/monorepo/builds/6549) is the resulting
+  authoritative build.
 
 ## Session Log — 2026-07-27
 
@@ -143,10 +159,18 @@ through its downstream release and version paths.
 - Passed `bun run verify -- --affected` for the contract/toolchain fix (27/27
   tasks), including typecheck, tests, lint, shellcheck, markdownlint, the
   quality ratchet, and repository policy checks.
+- Published and merged PR #1718, then inspected its current-head Codex P1
+  rather than treating the otherwise-green mechanical lanes as sufficient.
+- Implemented independent remote-state verification on
+  `fix/main-ci-release-refiner-verification`, with acceptance and rejection
+  fixtures for both success statuses.
+- Passed focused release-refiner tests (13/13), the complete root-scripts test
+  suite (142/142), and `bun run verify -- --affected` (6/6 tasks) on the latest
+  generated `main`.
 
 ### Remaining
 
-- Publish, review, and merge the release refiner contract/toolchain fix.
+- Publish, review, and merge the independent release-refiner verification fix.
 - Re-fetch `origin/main` and prove the real Claude-to-Codex fallback through a
   valid success envelope, then follow version commit-back and generated
   release/tag lanes.

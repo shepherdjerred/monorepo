@@ -7,8 +7,10 @@ import {
 } from "./release-refiner.ts";
 import type { RunResult } from "./run.ts";
 
-const refinedEnvelope =
-  '<!-- release-refiner-result -->\n{"status":"refined","prNumber":1720,"packagesRefined":["webring"],"commitSha":"0123456789abcdef0123456789abcdef01234567"}\n<!-- /release-refiner-result -->';
+const refinedCommitSha = "0123456789abcdef0123456789abcdef01234567";
+const refinedEnvelope = `<!-- release-refiner-result -->\n{"status":"refined","prNumber":1720,"packagesRefined":["webring"],"commitSha":"${refinedCommitSha}"}\n<!-- /release-refiner-result -->`;
+const noOpenReleasePrEnvelope =
+  '<!-- release-refiner-result -->{"status":"no-open-release-pr"}<!-- /release-refiner-result -->';
 
 const claudeSuccess: RunResult = {
   stdout: JSON.stringify({
@@ -22,6 +24,37 @@ const claudeSuccess: RunResult = {
 };
 const codexSuccess: RunResult = {
   stdout: refinedEnvelope,
+  stderr: "",
+  exitCode: 0,
+};
+const releasePr: RunResult = {
+  stdout: JSON.stringify({
+    number: 1720,
+    state: "OPEN",
+    baseRefName: "main",
+    headRefName: "release-please--branches--main",
+    headRefOid: refinedCommitSha,
+    labels: [{ name: "autorelease: pending" }],
+    body: [
+      ":robot: Release notes hand-refined",
+      "<details><summary>webring: 2.0.0</summary>",
+    ].join("\n"),
+  }),
+  stderr: "",
+  exitCode: 0,
+};
+const refinerCommit: RunResult = {
+  stdout: JSON.stringify({
+    sha: refinedCommitSha,
+    commit: {
+      author: {
+        name: "release-please-refiner[bot]",
+        email: "release-please-refiner@users.noreply.github.com",
+      },
+      message: "chore(root): refine release notes for 2026-07-27",
+    },
+    files: [{ filename: "packages/webring/CHANGELOG.md" }],
+  }),
   stderr: "",
   exitCode: 0,
 };
@@ -76,11 +109,11 @@ describe("release refiner provider selection", () => {
   test("uses Claude when the primary refiner succeeds", async () => {
     const calls: RecordedCall[] = [];
     const provider = await runReleaseRefiner(
-      input(runner([claudeSuccess], calls)),
+      input(runner([claudeSuccess, releasePr, refinerCommit], calls)),
     );
 
     expect(provider).toBe("claude");
-    expect(calls).toHaveLength(1);
+    expect(calls).toHaveLength(3);
     expect(calls[0]?.command[0]).toBe("claude");
     expect(calls[0]?.env["CLAUDE_CODE_OAUTH_TOKEN"]).toBe("claude-token");
     expect(calls[0]?.env["CODEX_API_KEY"]).toBeUndefined();
@@ -93,16 +126,31 @@ describe("release refiner provider selection", () => {
       "CODEX_ACCOUNT_ID",
       "ANTHROPIC_API_KEY",
     ]);
+    expect(calls[1]?.command).toEqual([
+      "gh",
+      "pr",
+      "view",
+      "1720",
+      "--repo",
+      "shepherdjerred/monorepo",
+      "--json",
+      "number,state,baseRefName,headRefName,headRefOid,labels,body",
+    ]);
+    expect(calls[2]?.command).toEqual([
+      "gh",
+      "api",
+      `repos/shepherdjerred/monorepo/commits/${refinedCommitSha}`,
+    ]);
   });
 
   test("falls back to Codex only for a validated Claude usage quota", async () => {
     const calls: RecordedCall[] = [];
     const provider = await runReleaseRefiner(
-      input(runner([quota, codexSuccess], calls)),
+      input(runner([quota, codexSuccess, releasePr, refinerCommit], calls)),
     );
 
     expect(provider).toBe("codex");
-    expect(calls).toHaveLength(2);
+    expect(calls).toHaveLength(4);
     expect(calls[1]?.command.slice(0, 7)).toEqual([
       "bun",
       "--no-install",
@@ -131,6 +179,132 @@ describe("release refiner provider selection", () => {
     ]);
   });
 
+  test("independently verifies a no-open-release-pr result", async () => {
+    const calls: RecordedCall[] = [];
+    const provider = await runReleaseRefiner(
+      input(
+        runner(
+          [
+            {
+              stdout: JSON.stringify({
+                is_error: false,
+                result: noOpenReleasePrEnvelope,
+              }),
+              stderr: "",
+              exitCode: 0,
+            },
+            { stdout: "[]", stderr: "", exitCode: 0 },
+          ],
+          calls,
+        ),
+      ),
+    );
+
+    expect(provider).toBe("claude");
+    expect(calls).toHaveLength(2);
+    expect(calls[1]?.command).toEqual([
+      "gh",
+      "pr",
+      "list",
+      "--repo",
+      "shepherdjerred/monorepo",
+      "--base",
+      "main",
+      "--label",
+      "autorelease: pending",
+      "--state",
+      "open",
+      "--json",
+      "number",
+      "--limit",
+      "1",
+    ]);
+  });
+});
+
+describe("release refiner remote verification", () => {
+  test("rejects a no-open result when GitHub has a pending release PR", async () => {
+    const calls: RecordedCall[] = [];
+    const execute = runner(
+      [
+        {
+          stdout: JSON.stringify({
+            is_error: false,
+            result: noOpenReleasePrEnvelope,
+          }),
+          stderr: "",
+          exitCode: 0,
+        },
+        { stdout: JSON.stringify([{ number: 1720 }]), stderr: "", exitCode: 0 },
+      ],
+      calls,
+    );
+
+    await expect(runReleaseRefiner(input(execute))).rejects.toThrow(
+      "reported no open release PR, but GitHub has one",
+    );
+    expect(calls).toHaveLength(2);
+  });
+
+  test("rejects a refined result that does not match the release PR head", async () => {
+    const calls: RecordedCall[] = [];
+    const execute = runner(
+      [
+        claudeSuccess,
+        {
+          ...releasePr,
+          stdout: JSON.stringify({
+            number: 1720,
+            state: "OPEN",
+            baseRefName: "main",
+            headRefName: "release-please--branches--main",
+            headRefOid: "abcdef0123456789abcdef0123456789abcdef01",
+            labels: [{ name: "autorelease: pending" }],
+            body: "<details><summary>webring: 2.0.0</summary>",
+          }),
+        },
+      ],
+      calls,
+    );
+
+    await expect(runReleaseRefiner(input(execute))).rejects.toThrow(
+      "does not match the open pending release PR head",
+    );
+    expect(calls).toHaveLength(2);
+  });
+
+  test("rejects a refined result whose remote commit changed other files", async () => {
+    const calls: RecordedCall[] = [];
+    const execute = runner(
+      [
+        claudeSuccess,
+        releasePr,
+        {
+          ...refinerCommit,
+          stdout: JSON.stringify({
+            sha: refinedCommitSha,
+            commit: {
+              author: {
+                name: "release-please-refiner[bot]",
+                email: "release-please-refiner@users.noreply.github.com",
+              },
+              message: "chore(root): refine release notes for 2026-07-27",
+            },
+            files: [{ filename: "scripts/release.ts" }],
+          }),
+        },
+      ],
+      calls,
+    );
+
+    await expect(runReleaseRefiner(input(execute))).rejects.toThrow(
+      "does not match the remote refiner commit and PR body",
+    );
+    expect(calls).toHaveLength(3);
+  });
+});
+
+describe("release refiner failure handling", () => {
   test("does not treat an arbitrary 429 as usage exhaustion", () => {
     expect(
       isClaudeQuotaExhaustion({
