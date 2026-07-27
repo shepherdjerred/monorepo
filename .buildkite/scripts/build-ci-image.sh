@@ -6,7 +6,6 @@ set -euo pipefail
 # every main build — no VERSION file, no commit-back PR (unlike the old
 # ci-base lifecycle). Steps always pull :latest.
 
-IMAGE="ghcr.io/shepherdjerred/ci-base"
 SHA="${BUILDKITE_COMMIT:?BUILDKITE_COMMIT is required}"
 
 # The shared BuildKit daemon writes the cache once to its bounded PVC and
@@ -15,12 +14,20 @@ if ! docker buildx inspect ci; then
   docker buildx create --name ci --driver remote tcp://buildkitd-buildkitd-service.buildkitd.svc.cluster.local:1234
 fi
 
-docker buildx build \
-  --builder ci \
-  --file .buildkite/ci-image/Dockerfile \
-  --cache-from "type=registry,ref=${IMAGE}:buildcache" \
-  --cache-to "type=registry,ref=${IMAGE}:buildcache,mode=max,image-manifest=true" \
-  --tag "${IMAGE}:${SHA}" \
-  --tag "${IMAGE}:latest" \
-  --push \
-  .
+build_and_push() {
+  local image=$1
+  local dockerfile=$2
+
+  docker buildx build \
+    --builder ci \
+    --file "$dockerfile" \
+    --cache-from "type=registry,ref=${image}:buildcache" \
+    --cache-to "type=registry,ref=${image}:buildcache,mode=max,image-manifest=true" \
+    --tag "${image}:${SHA}" \
+    --tag "${image}:latest" \
+    --push \
+    .
+}
+
+build_and_push "ghcr.io/shepherdjerred/ci-base" ".buildkite/ci-image/Dockerfile"
+build_and_push "ghcr.io/shepherdjerred/ci-playwright" ".buildkite/ci-playwright/Dockerfile"

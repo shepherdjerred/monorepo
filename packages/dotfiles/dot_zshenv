@@ -5,3 +5,8 @@
 # silently kills commands like `rm -f out/*.tmp` or `ls config*` when nothing matches — bash
 # passes the literal pattern through instead. This restores bash-like behavior for the Bash tool.
 setopt no_nomatch
+
+# Local-only is the safe default for mobile and unreliable networks. This file
+# is private chezmoi output; it contains the remote credentials only for an
+# explicit `turbo_cache_remote` session switch.
+[[ -f "$HOME/.config/turbo-cache/env.sh" ]] && source "$HOME/.config/turbo-cache/env.sh"

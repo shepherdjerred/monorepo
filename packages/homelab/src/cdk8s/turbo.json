@@ -25,6 +25,18 @@
     },
     "build": {
       "dependsOn": ["^build"],
+      "inputs": [
+        "src/**",
+        "scripts/**",
+        "config/**",
+        "helm/**",
+        "package.json",
+        "turbo.json",
+        "tsconfig.json",
+        "onepassword-vault-snapshot.json",
+        "!dist/**",
+        "!node_modules/**"
+      ],
       "outputs": ["dist/**"]
     },
     // `build` replaces dist/ while ESLint walks the package root. Serialize

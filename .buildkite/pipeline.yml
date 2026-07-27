@@ -273,6 +273,9 @@ steps:
       . .buildkite/scripts/toolchain.sh
       bun --no-install .buildkite/scripts/validate-pipeline.ts
       bun install --frozen-lockfile
+      # CI is the cross-machine cache producer/consumer. Developer shells use
+      # local-only caching by default to avoid large transfers on weak Wi-Fi.
+      export TURBO_CACHE="local:rw,remote:rw"
       if [ "$BUILDKITE_BRANCH" = "main" ]; then SCOPE=""; else SCOPE="--affected"; fi
       set +e
       bun --no-install run verify -- $$SCOPE --filter='!sjer.red' --filter='!@shepherdjerred/resume' --concurrency=6 --output-logs=errors-only --summarize
@@ -658,7 +661,7 @@ steps:
     # Excluding unshipped scratch also avoids traversing and resolving the
     # archived Maven graphs on every scan (build 5980 exhausted Maven Central's
     # shared-IP rate limit while resolving sandbox/archive/castle-casters).
-    command: trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 7 --skip-dirs node_modules --skip-dirs sandbox .
+    command: trivy fs --cache-backend memory --cache-dir /buildkite/trivy-db --skip-db-update --skip-java-db-update --scanners vuln --severity HIGH,CRITICAL --exit-code 7 --skip-dirs node_modules --skip-dirs sandbox .
     plugins:
       - kubernetes:
           metadata:
@@ -698,6 +701,13 @@ steps:
                   - name: buildkite-git-mirrors
                     mountPath: /buildkite/git-mirrors
                     readOnly: true
+                  - name: buildkite-trivy-db
+                    mountPath: /buildkite/trivy-db
+                    readOnly: true
+                volumes:
+                  - name: buildkite-trivy-db
+                    persistentVolumeClaim:
+                      claimName: buildkite-trivy-db
 
   - label: ":mag: semgrep"
     key: semgrep

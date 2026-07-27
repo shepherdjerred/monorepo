@@ -140,11 +140,16 @@ export function createTurboCacheDeployment(chart: Chart) {
         initialDelaySeconds: Duration.seconds(10),
         periodSeconds: Duration.seconds(30),
       }),
-      readiness: Probe.fromTcpSocket({
-        port: PORT,
-        initialDelaySeconds: Duration.seconds(5),
-        periodSeconds: Duration.seconds(10),
-      }),
+      // A listening HTTP port is not enough: a root-owned fresh PVC used to
+      // make every cache upload fail even while this TCP probe passed. Exercise
+      // the mounted backend as the application user on every readiness check.
+      readiness: Probe.fromCommand(
+        ["sh", "-ec", "touch /cache/.readiness && rm /cache/.readiness"],
+        {
+          initialDelaySeconds: Duration.seconds(5),
+          periodSeconds: Duration.seconds(10),
+        },
+      ),
     }),
   );
 

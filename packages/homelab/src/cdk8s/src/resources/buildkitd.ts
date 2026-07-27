@@ -43,11 +43,13 @@ const PORT = 1234;
 const DEBUG_PORT = 6060;
 
 // Keep the on-disk build cache bounded well under the PVC size so BuildKit's GC
-// always has headroom and the volume can never fill. 240 GiB kept of a 300 GiB
-// PVC. This is large enough to retain hot production-image layers without
-// letting an unbounded build cache consume the CI node.
+// always has headroom and the volume can never fill. Limit usage to 240 GiB of
+// a 300 GiB PVC, retaining 60 GiB of free space for active solves and metadata.
+// This is large enough to retain hot production-image layers without letting an
+// unbounded build cache consume the CI node.
 const CACHE_PVC = Size.gibibytes(300);
-const GC_KEEP_BYTES = 240 * 1024 * 1024 * 1024;
+const GC_MAX_USED_BYTES = 240 * 1024 * 1024 * 1024;
+const GC_MIN_FREE_BYTES = 60 * 1024 * 1024 * 1024;
 
 // buildkitd.toml: listen on tcp for the remote driver, and cap the cache with a
 // GC policy so the compressed ZFS volume stays bounded (the whole point vs the
@@ -66,9 +68,12 @@ debug = false
   # 12Gi limit (PR #1668 build 6303). Every fan-out needs a concurrency
   # bound; 8 matches the CPU limit and keeps peak memory proportional.
   max-parallelism = 8
-  # Reserve the kept-cache floor; GC prunes above it. Keeps the volume bounded.
+  # Enforce both an upper cache bound and free-space reserve. keepBytes is a
+  # retention floor, not a capacity ceiling, and therefore cannot prevent a
+  # warm cache from filling the PVC.
   [[worker.oci.gcpolicy]]
-    keepBytes = ${String(GC_KEEP_BYTES)}
+    maxUsedSpace = ${String(GC_MAX_USED_BYTES)}
+    minFreeSpace = ${String(GC_MIN_FREE_BYTES)}
     keepDuration = 0
     all = true
 

@@ -2,6 +2,7 @@
 
 # Source environment for all login shells
 [[ -f ~/.bash_env ]] && source ~/.bash_env
+[[ -f ~/.config/turbo-cache/env.sh ]] && source ~/.config/turbo-cache/env.sh
 
 # Source bashrc for interactive login shells
 [[ -f ~/.bashrc ]] && source ~/.bashrc

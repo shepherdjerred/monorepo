@@ -1,0 +1,15 @@
+{{ if lookPath "op" -}}
+# Managed by chezmoi. Local-only is the default for unreliable networks.
+set -gx TURBO_API 'https://turbo-cache.tailnet-1a49.ts.net'
+set -gx TURBO_TEAM 'monorepo'
+set -gx TURBO_TOKEN '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/rzk3lawpk4yspyyu5rxlz44ssi/TURBO_TOKEN" }}'
+set -gx TURBO_CACHE 'local:rw'
+
+function turbo_cache_local
+    set -gx TURBO_CACHE 'local:rw'
+end
+
+function turbo_cache_remote
+    set -gx TURBO_CACHE 'local:rw,remote:rw'
+end
+{{ end -}}
