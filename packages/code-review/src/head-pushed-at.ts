@@ -37,6 +37,7 @@ query($owner: String!, $name: String!, $oid: GitObjectID!, $number: Int!) {
     }
     pullRequest(number: $number) {
       headRefName
+      headRepository { nameWithOwner }
       timelineItems(last: 50, itemTypes: [HEAD_REF_FORCE_PUSHED_EVENT]) {
         nodes {
           ... on HeadRefForcePushedEvent {
@@ -202,11 +203,22 @@ export async function fetchHeadPushedAt(input: {
     repository === null ? null : recordField(repository, "pullRequest");
   const headRefName =
     pullRequest === null ? null : stringField(pullRequest, "headRefName");
+  const headRepository =
+    pullRequest === null ? null : recordField(pullRequest, "headRepository");
+  const headRepo =
+    headRepository === null
+      ? null
+      : stringField(headRepository, "nameWithOwner");
   const refUpdateTime =
     headRefName === null
       ? null
       : await fetchRefUpdateTime({
-          repo: input.repo,
+          // A fork PR's head branch lives in the head repository, not the base
+          // repo (`input.repo`); query the ref activity there. Same-repo PRs
+          // (this repo's git-spice flow) resolve `headRepo === input.repo`;
+          // fall back to the base repo only if the head repo is unknown
+          // (e.g. a deleted fork), where the lookup yields null anyway.
+          repo: headRepo ?? input.repo,
           ref: `refs/heads/${headRefName}`,
           sha: input.sha,
           token: input.token,
