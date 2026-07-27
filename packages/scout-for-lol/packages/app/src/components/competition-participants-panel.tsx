@@ -9,6 +9,7 @@ import {
   PlayerIdSchema,
 } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { formatDate } from "#src/lib/format.ts";
 import { useDiscordNames } from "#src/hooks/use-discord-names.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
@@ -61,6 +62,7 @@ export function CompetitionParticipantsPanel(props: {
 
   const inviteMutation = useMutation(
     trpc.competition.invite.mutationOptions({
+      meta: analyticsMeta("competition_participant_invited"),
       onSuccess: () => {
         setInviteId("");
         setError(null);
@@ -73,6 +75,7 @@ export function CompetitionParticipantsPanel(props: {
   );
   const addAllMutation = useMutation(
     trpc.competition.addAllMembers.mutationOptions({
+      meta: analyticsMeta("competition_members_added_all"),
       onSuccess: () => {
         setError(null);
         props.onChanged();
@@ -84,6 +87,7 @@ export function CompetitionParticipantsPanel(props: {
   );
   const removeMutation = useMutation(
     trpc.competition.removeParticipant.mutationOptions({
+      meta: analyticsMeta("competition_participant_removed"),
       onSuccess: () => {
         setError(null);
         props.onChanged();

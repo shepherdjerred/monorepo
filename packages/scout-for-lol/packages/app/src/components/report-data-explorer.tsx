@@ -24,6 +24,7 @@ import {
   TableRow,
 } from "#src/components/ui/table.tsx";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { track } from "#src/lib/analytics.ts";
 
 // Explorer columns are raw lake column names; only some coincide with valid
 // ScoutQL identifiers (metrics / group-by dimensions / filter fields). Inserting
@@ -124,6 +125,7 @@ export function ReportDataExplorer(props: {
               value === "prematch_participants"
             ) {
               setTableId(value);
+              track("data_explorer_action", { action: "table_switch" });
             }
           }}
         >
@@ -173,6 +175,9 @@ export function ReportDataExplorer(props: {
                       title={`Copy ${column.id}`}
                       onClick={() => {
                         void navigator.clipboard.writeText(column.id);
+                        track("data_explorer_action", {
+                          action: "copy_column_id",
+                        });
                       }}
                     >
                       <Copy className="size-3" />
@@ -184,6 +189,9 @@ export function ReportDataExplorer(props: {
                         title={`Insert ${column.id} into query`}
                         onClick={() => {
                           props.onInsertIdentifier(column.id);
+                          track("data_explorer_action", {
+                            action: "insert_identifier",
+                          });
                         }}
                       >
                         <CornerDownLeft className="size-3" />

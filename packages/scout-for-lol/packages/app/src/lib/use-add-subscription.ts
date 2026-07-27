@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { RiotIdSchema, type SubscriptionFilterSpec } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { track } from "#src/lib/analytics.ts";
 import type { RegionValue } from "#src/lib/regions.ts";
 
 /**
@@ -47,6 +48,10 @@ export function useAddSubscription(opts: {
   const mutation = useMutation(
     trpc.subscription.add.mutationOptions({
       onSuccess: (result) => {
+        // Rich outcome taxonomy from the discriminated result — richer than the
+        // generic success/error the MutationCache meta wiring would give, so
+        // this mutation tracks explicitly and carries no `meta.analyticsEvent`.
+        track("subscription_add", { kind: result.kind });
         switch (result.kind) {
           case "created":
           case "subscription-already-exists":
@@ -77,6 +82,7 @@ export function useAddSubscription(opts: {
         }
       },
       onError: (err) => {
+        track("subscription_add", { kind: "error" });
         setError(err.message);
       },
     }),

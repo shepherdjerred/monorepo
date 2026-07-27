@@ -1,5 +1,4 @@
 import {
-  parseAndCompile,
   ReportRunTriggerSchema,
   type Report,
   type ReportOutputFormat,
@@ -65,10 +64,12 @@ export async function runReport(
   let renderKind: ReportMetricLabel = "UNKNOWN";
 
   try {
-    // The render kind lives in the query's RENDER clause; deriving it here (a)
-    // surfaces a malformed stored query through the error-handled path and (b)
-    // yields the `output_format` metric label.
-    renderKind = parseAndCompile(params.report.queryText).render.kind;
+    // executeReportQuery parses the query itself and records the query-run
+    // metric — with an honest `source="unknown"` even on a parse failure. Read
+    // the render kind (the `output_format` metric label, from the RENDER clause)
+    // off its returned compiled plan rather than parsing a second time here: a
+    // separate pre-parse would throw before executeReportQuery ran, excluding
+    // malformed stored queries from the query error-rate metric.
     const result = await executeReportQuery({
       prisma: params.prisma,
       serverId: params.report.serverId,
@@ -76,6 +77,7 @@ export async function runReport(
       sourceCompetitionId: params.report.sourceCompetitionId,
       now: startedAt,
     });
+    renderKind = result.plan.render.kind;
     const playerDiscordIds = await loadPlayerDiscordIds(
       params.prisma,
       params.report.serverId,

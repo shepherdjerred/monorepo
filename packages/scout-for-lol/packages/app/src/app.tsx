@@ -1,4 +1,6 @@
-import { Navigate, Route, Routes } from "react-router";
+import { useEffect } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router";
+import { normalizePath, trackPageview } from "#src/lib/analytics.ts";
 import { Login } from "#src/routes/login.tsx";
 import { GuildPicker } from "#src/routes/guild-picker.tsx";
 import { GuildSubscriptions } from "#src/routes/guild-subscriptions.tsx";
@@ -28,6 +30,14 @@ import {
 import { GUILD_ACTION_ROUTE_PERMISSIONS } from "#src/lib/guild-route-permissions.ts";
 
 export function App() {
+  const location = useLocation();
+  // Report a templated pageview on every route change (no-op unless analytics
+  // is configured — prod/beta only). Dynamic segments are collapsed so pages
+  // group by shape, not by guild/report/player id.
+  useEffect(() => {
+    trackPageview(normalizePath(location.pathname));
+  }, [location.pathname]);
+
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <ContractMismatchBanner />

@@ -87,6 +87,13 @@ const PROD_PIXEL_ENV_VARS = [
   "PUBLIC_PINTEREST_TAG_ID",
   "PUBLIC_REDDIT_PIXEL_ID",
 ];
+// Plausible site domain the app SPA reports product-analytics events under
+// (lib/analytics.ts). Per-flavor so beta traffic lands in its own Plausible
+// site and never mixes with prod. A public domain string, not a secret.
+const PLAUSIBLE_DOMAIN_BY_FLAVOR: Readonly<Record<"prod" | "beta", string>> = {
+  prod: "scout-for-lol.com",
+  beta: "beta.scout-for-lol.com",
+};
 const VERSION_PATTERN = /^2\.0\.0-\d+$/;
 
 /** Repo root = two levels up from this file (scripts/scout-site-release.ts). */
@@ -134,10 +141,10 @@ function requireCredsForLiveRun(dryRun: boolean): void {
 
 /**
  * Build the site bucket dir in the requested stage flavor. The two flavors
- * differ ONLY in analytics pixel env vars; both stamp the Sentry release env
- * vars (`VITE_SENTRY_RELEASE` for the SPA, `PUBLIC_SENTRY_RELEASE` for the
- * marketing site) with the build version so Bugsink events are attributable
- * to a deploy.
+ * differ only in analytics env vars — the marketing pixel IDs and the app-SPA
+ * Plausible domain (prod vs beta site). Both stamp the Sentry release env vars
+ * (`VITE_SENTRY_RELEASE` for the SPA, `PUBLIC_SENTRY_RELEASE` for the marketing
+ * site) with the build version so Bugsink events are attributable to a deploy.
  */
 async function buildSite(
   flavor: "prod" | "beta",
@@ -155,6 +162,8 @@ async function buildSite(
     VITE_CONTRACT_HASH: await contractHash(),
     PUBLIC_APP_VERSION: version,
     PUBLIC_GIT_SHA: gitSha,
+    // Enable app-SPA product analytics per flavor (prod vs beta Plausible site).
+    VITE_PLAUSIBLE_DOMAIN: PLAUSIBLE_DOMAIN_BY_FLAVOR[flavor],
   };
   if (flavor === "prod") {
     for (const name of PROD_PIXEL_ENV_VARS) {

@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CompetitionStatusSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { nextRiotIdPollInterval } from "#src/lib/riot-id-poll.ts";
 import { findRegion, type RegionValue } from "#src/lib/regions.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
@@ -204,6 +205,7 @@ export function PlayerDetail() {
 
   const unlinkMutation = useMutation(
     trpc.player.unlinkDiscord.mutationOptions({
+      meta: analyticsMeta("player_discord_unlinked"),
       onSuccess: () => {
         setActionError(null);
         refresh();
@@ -215,6 +217,7 @@ export function PlayerDetail() {
   );
   const deleteAccountMutation = useMutation(
     trpc.player.deleteAccount.mutationOptions({
+      meta: analyticsMeta("player_account_deleted"),
       onSuccess: () => {
         setActionError(null);
         refresh();
@@ -226,6 +229,7 @@ export function PlayerDetail() {
   );
   const deletePlayerMutation = useMutation(
     trpc.player.deletePlayer.mutationOptions({
+      meta: analyticsMeta("player_deleted"),
       onSuccess: () => {
         void navigate(`/g/${safeGuildId}/players`);
       },

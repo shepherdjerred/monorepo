@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import {
   Dialog,
   DialogContent,
@@ -60,6 +61,7 @@ export function SubscriptionChannelDialog(props: Props) {
 
   const addChannelMutation = useMutation(
     trpc.subscription.addChannel.mutationOptions({
+      meta: analyticsMeta("subscription_channel_added"),
       onSuccess: (result) => {
         switch (result.kind) {
           case "added":
@@ -86,6 +88,7 @@ export function SubscriptionChannelDialog(props: Props) {
 
   const moveMutation = useMutation(
     trpc.subscription.move.mutationOptions({
+      meta: analyticsMeta("subscription_moved"),
       onSuccess: (result) => {
         switch (result.kind) {
           case "moved":

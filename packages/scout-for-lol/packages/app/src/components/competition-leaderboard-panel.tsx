@@ -7,6 +7,7 @@ import {
   rankToString,
 } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { formatDate } from "#src/lib/format.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "#src/components/ui/button.tsx";
@@ -55,6 +56,7 @@ export function CompetitionLeaderboardPanel(props: {
   );
   const refreshMutation = useMutation(
     trpc.competition.refreshLeaderboard.mutationOptions({
+      meta: analyticsMeta("competition_leaderboard_refreshed"),
       onSuccess: () => {
         void queryClient.invalidateQueries({ queryKey: leaderboardKey });
         setChartBust((prev) => prev + 1);

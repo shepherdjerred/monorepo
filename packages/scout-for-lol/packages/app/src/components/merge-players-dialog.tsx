@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { PlayerAliasCombobox } from "#src/components/player-alias-combobox.tsx";
 import {
   Dialog,
@@ -32,6 +33,7 @@ export function MergePlayersDialog(props: {
   const [error, setError] = useState<string | null>(null);
   const mutation = useMutation(
     trpc.player.mergePlayers.mutationOptions({
+      meta: analyticsMeta("players_merged"),
       onSuccess: (result) => {
         props.onMerged(result.targetAlias);
       },

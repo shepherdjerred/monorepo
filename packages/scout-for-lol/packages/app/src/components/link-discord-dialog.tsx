@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { DiscordMemberCombobox } from "#src/components/discord-member-combobox.tsx";
 import {
   Dialog,
@@ -28,6 +29,7 @@ export function LinkDiscordDialog(props: {
   const [error, setError] = useState<string | null>(null);
   const mutation = useMutation(
     trpc.player.linkDiscord.mutationOptions({
+      meta: analyticsMeta("player_discord_linked"),
       onSuccess: () => {
         props.onLinked();
       },

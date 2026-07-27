@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { RiotIdSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { findRegion, type RegionValue } from "#src/lib/regions.ts";
 import { Label } from "#src/components/ui/label.tsx";
 import { RegionSelect } from "#src/components/region-select.tsx";
@@ -32,6 +33,7 @@ export function AddAccountDialog(props: {
   const [error, setError] = useState<string | null>(null);
   const mutation = useMutation(
     trpc.player.addAccount.mutationOptions({
+      meta: analyticsMeta("player_account_added"),
       onSuccess: () => {
         props.onAdded();
       },

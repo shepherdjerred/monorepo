@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ReportIdSchema } from "@scout-for-lol/data";
 import { CronPresets } from "@scout-for-lol/data/model/competition-cron.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import { Badge } from "#src/components/ui/badge.tsx";
@@ -41,6 +42,7 @@ export function ReportList() {
   );
   const setEnabledMutation = useMutation(
     trpc.report.setEnabled.mutationOptions({
+      meta: analyticsMeta("report_enabled_toggled"),
       onSuccess: () => {
         void queryClient.invalidateQueries({ queryKey: listKey });
       },

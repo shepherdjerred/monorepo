@@ -12,6 +12,7 @@ import {
   subscriptionFilterQueues,
 } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { analyticsMeta, track } from "#src/lib/analytics.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { AddSubscriptionDialog } from "#src/components/add-subscription-dialog.tsx";
 import {
@@ -128,6 +129,7 @@ export function GuildSubscriptions() {
   );
   const removeMutation = useMutation(
     trpc.subscription.remove.mutationOptions({
+      meta: analyticsMeta("subscription_removed"),
       onSuccess: (result) => {
         switch (result.kind) {
           case "removed":
@@ -185,6 +187,9 @@ export function GuildSubscriptions() {
         }
         switch (result.kind) {
           case "updated":
+            track(
+              variables.isMuted ? "subscription_muted" : "subscription_unmuted",
+            );
             setMessage(
               variables.isMuted
                 ? "Subscription muted — no more match notifications."

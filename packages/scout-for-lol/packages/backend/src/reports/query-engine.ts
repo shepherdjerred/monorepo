@@ -10,6 +10,10 @@ import {
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { calculateLeaderboard } from "#src/league/competition/leaderboard.ts";
+import {
+  scoutReportQueryDurationSeconds,
+  scoutReportQueryRunsTotal,
+} from "#src/metrics/report-query.ts";
 import { runLakeAggregation } from "#src/reports/duckdb/execute.ts";
 import {
   cappedLimit,
@@ -69,8 +73,26 @@ type ExecuteReportQueryParams = {
 export async function executeReportQuery(
   params: ExecuteReportQueryParams,
 ): Promise<ReportQueryResult> {
-  const plan = parseAndCompile(params.queryText);
+  const startedAt = Date.now();
+  // Labeled "unknown" until the plan compiles, so a parse failure still
+  // records an error datapoint (with an honest source) rather than nothing.
+  let source = "unknown";
+  try {
+    const plan = parseAndCompile(params.queryText);
+    source = plan.source;
+    const result = await runReportQueryPlan(params, plan);
+    recordReportQueryMetrics(source, "success", startedAt);
+    return result;
+  } catch (error) {
+    recordReportQueryMetrics(source, "error", startedAt);
+    throw error;
+  }
+}
 
+async function runReportQueryPlan(
+  params: ExecuteReportQueryParams,
+  plan: ReportQueryPlan,
+): Promise<ReportQueryResult> {
   if (plan.source === "competition_rank" || plan.source === "rank_current") {
     return await executeCompetitionRankReport(params, plan);
   }
@@ -96,6 +118,18 @@ export async function executeReportQuery(
     sortedAggregates(plan, result.aggregates),
     result.rowsScanned,
     REPORT_MAX_ROWS_LIMIT,
+  );
+}
+
+function recordReportQueryMetrics(
+  source: string,
+  outcome: "success" | "error",
+  startedAt: number,
+): void {
+  scoutReportQueryRunsTotal.inc({ source, outcome });
+  scoutReportQueryDurationSeconds.observe(
+    { source, outcome },
+    (Date.now() - startedAt) / 1000,
   );
 }
 

@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ReportIdSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import { ReportQueryPreview } from "#src/components/report-query-preview.tsx";
 import {
@@ -65,6 +66,7 @@ export function ReportForm() {
 
   const createMutation = useMutation(
     trpc.report.create.mutationOptions({
+      meta: analyticsMeta("report_created"),
       onSuccess: (created) => {
         void navigate(`/g/${safeGuildId}/reports/${created.id.toString()}`);
       },
@@ -75,6 +77,7 @@ export function ReportForm() {
   );
   const updateMutation = useMutation(
     trpc.report.update.mutationOptions({
+      meta: analyticsMeta("report_updated"),
       onSuccess: () => {
         void navigate(`/g/${safeGuildId}/reports/${reportId.toString()}`);
       },
