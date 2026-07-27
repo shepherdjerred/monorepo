@@ -185,6 +185,17 @@ FROM runtime AS smoke
 COPY .buildkite/scripts/smoke-app-in-image.ts /app/.buildkite/scripts/smoke-app-in-image.ts
 ARG SMOKE_TARGET=discord-plays-mario-kart
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
+# The smoke harness writes its temporary config at the application's normal
+# CWD. Prepare that file while this stage is still root, then let the deploy
+# uid replace its contents during the actual smoke.
+RUN touch /app/packages/discord-plays-mario-kart/config.toml \
+  && chown 1000:1000 /app/packages/discord-plays-mario-kart/config.toml
+# Smoke runs as the non-root deploy uid (1000, the app deployment convention),
+# never root: a root smoke cannot see uid-1000-only failures — the Prisma
+# engines EACCES crash-loop (#1682) passed root smoke and died in prod. HOME
+# points at /tmp so any tool cache has a writable target.
+USER 1000:1000
+ENV HOME=/tmp
 RUN bun /app/.buildkite/scripts/smoke-app-in-image.ts
 
 FROM runtime AS image

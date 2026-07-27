@@ -60,7 +60,14 @@ describe("BaseMediaStream pacing telemetry", () => {
     stream.destroy();
   });
 
-  test("ahead correction waits only the excess beyond tolerance and reports it", async () => {
+  // retry: the assertions below bound WALL-CLOCK waits, and a loaded CI node
+  // (verify runs the whole turbo graph concurrently) can starve the event loop
+  // past the 150ms budget (291ms observed, build 6306) — a transient spike
+  // passes on retry, while a genuine pacing regression (the old
+  // sleep-whole-frametimes behavior) is deterministic and fails all attempts.
+  test(
+    "ahead correction waits only the excess beyond tolerance and reports it",
+    async () => {
     const { stats, observer } = collectStats();
     const video = new TestStream("video", false, observer);
     const audio = new TestStream("audio", true);
@@ -92,5 +99,7 @@ describe("BaseMediaStream pacing telemetry", () => {
     expect(waited).toBeLessThan(150);
     video.destroy();
     audio.destroy();
-  });
+    },
+    { retry: 2 },
+  );
 });

@@ -25,7 +25,10 @@
 
 import { requireEnv, optionalEnv } from "../../../scripts/lib/run.ts";
 import { runMain } from "../../../scripts/lib/transient.ts";
-import { applicationReadiness } from "../src/cdk8s/src/argocd-application-readiness.ts";
+import {
+  applicationReadiness,
+  unreadyApplicationSummaries,
+} from "../src/cdk8s/src/argocd-application-readiness.ts";
 
 const DEFAULT_SERVER_URL = "https://argocd.sjer.red";
 const DEFAULT_HEALTH_TIMEOUT_S = 300;
@@ -273,6 +276,30 @@ async function healthWait(
     }
     await Bun.sleep(POLL_INTERVAL_MS);
     elapsed += POLL_INTERVAL_MS / 1000;
+  }
+  // Name the culprits before failing: the bare timeout message forced manual
+  // kubectl archaeology on every incident wait (builds 6296–6333). Diagnostics
+  // only — a listing failure is logged loudly and the timeout still throws.
+  try {
+    const url = `${serverUrl()}/api/v1/applications`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+      redirect: "follow",
+    });
+    if (res.status === 200) {
+      for (const line of unreadyApplicationSummaries(
+        await res.json(),
+        requireSynced,
+      )) {
+        console.error(`not ${requirement}: ${line}`);
+      }
+    } else {
+      console.error(
+        `diagnostics listing failed: ${url} returned HTTP ${res.status.toString()}`,
+      );
+    }
+  } catch (error) {
+    console.error("diagnostics listing failed:", error);
   }
   throw new Error(
     `Timeout: ${appName} did not become ${requirement} within ${timeoutSeconds.toString()}s`,

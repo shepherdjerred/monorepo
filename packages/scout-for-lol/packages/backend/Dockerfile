@@ -72,6 +72,15 @@ COPY --parents \
   packages/llm-models \
   packages/llm-observability \
   ./
+# Bake the Prisma engines into the production tree. prod-deps installs
+# without lifecycle scripts, so @prisma/engines ships empty and the CLI
+# downloads engines on FIRST USE — but the pod (and the non-root smoke) runs
+# as uid 1000 over this root-owned node_modules, so the startup
+# `prisma migrate deploy` died with "Can't write to …@prisma+engines…".
+# Running generate here (as root, schema present from the source COPY above)
+# fetches them at build time; uid 1000 then only reads them at runtime.
+# Mirrors the discord-plays-mario-kart runtime fix (2.0.0-6322 crash-loop).
+RUN cd packages/scout-for-lol/packages/backend && bunx --trust prisma generate
 # Built artifacts from the build stage.
 COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
 COPY --from=build /app/packages/scout-for-lol/packages/backend/generated packages/scout-for-lol/packages/backend/generated
@@ -108,6 +117,12 @@ FROM runtime AS smoke
 COPY .buildkite/scripts/smoke-app-in-image.ts /app/.buildkite/scripts/smoke-app-in-image.ts
 ARG SMOKE_TARGET=scout-for-lol
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
+# Smoke runs as the non-root deploy uid (1000, the app deployment convention),
+# never root: a root smoke cannot see uid-1000-only failures — the Prisma
+# engines EACCES crash-loop (#1682) passed root smoke and died in prod. HOME
+# points at /tmp so any tool cache has a writable target.
+USER 1000:1000
+ENV HOME=/tmp
 RUN bun /app/.buildkite/scripts/smoke-app-in-image.ts
 
 FROM runtime AS image

@@ -69,6 +69,12 @@ FROM runtime AS smoke
 COPY .buildkite/scripts/smoke-app-in-image.ts /app/.buildkite/scripts/smoke-app-in-image.ts
 ARG SMOKE_TARGET=starlight-karma-bot
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
+# Smoke runs as the non-root deploy uid (1000, the app deployment convention),
+# never root: a root smoke cannot see uid-1000-only failures — the Prisma
+# engines EACCES crash-loop (#1682) passed root smoke and died in prod. HOME
+# points at /tmp so any tool cache has a writable target.
+USER 1000:1000
+ENV HOME=/tmp
 RUN bun /app/.buildkite/scripts/smoke-app-in-image.ts
 
 FROM runtime AS image
