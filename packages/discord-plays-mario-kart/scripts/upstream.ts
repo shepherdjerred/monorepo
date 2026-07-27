@@ -19,3 +19,22 @@ export function parseVendorExcludes(source: string): string[] {
     .map((line) => line.split("#", 1)[0]?.trim() ?? "")
     .filter((line) => line.length > 0);
 }
+
+export function upstreamFetchCommand(
+  clone: string,
+  commit: string,
+): readonly string[] {
+  return [
+    "git",
+    "-C",
+    clone,
+    "-c",
+    "http.postBuffer=524288000",
+    "fetch",
+    "--quiet",
+    "--depth",
+    "1",
+    "origin",
+    commit,
+  ];
+}

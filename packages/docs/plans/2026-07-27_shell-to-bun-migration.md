@@ -380,6 +380,12 @@ The inventory exposed several ineffective or missing GitHub Linguist rules.
   fail open to all images, changed both destructive confirmations to
   newline-oriented reads, and corrected Scout icon generation to resolve from
   the package root. The focused regression suite passes 62 tests.
+- Addressed the follow-up current-head findings: the N64Wasm fetch now passes
+  Git a valid decimal configuration value, the migration guard tracks every
+  repository shell path outside the sandbox, and first-run iOS cleanup treats
+  an absent Xcode `DerivedData` directory as an empty cleanup target. Focused
+  tests, strict typechecking, lint, migration ownership, and aggregate coverage
+  all pass.
 
 ### Remaining
 

@@ -90,12 +90,13 @@
         "scripts/check-script-migrations.ts",
         "scripts/**/*.ts",
         ".buildkite/scripts/**",
-        "packages/**/*.sh",
+        "**/*.sh",
         "packages/**/*.ts",
         "packages/**/package.json",
         "packages/**/tsconfig*.json",
         "packages/**/eslint.config.ts",
         "!**/node_modules/**",
+        "!sandbox/**",
         "!**/dist/**",
         "!**/generated/**"
       ]

@@ -2,17 +2,21 @@ import { cp, lstat, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { applyPatch } from "./build-wasm.ts";
-import { parseN64Upstream, parseVendorExcludes } from "./upstream.ts";
+import {
+  parseN64Upstream,
+  parseVendorExcludes,
+  upstreamFetchCommand,
+} from "./upstream.ts";
 
-async function run(command: string[]): Promise<number> {
-  const subprocess = Bun.spawn(command, {
+async function run(command: readonly string[]): Promise<number> {
+  const subprocess = Bun.spawn([...command], {
     stdout: "inherit",
     stderr: "inherit",
   });
   return await subprocess.exited;
 }
 
-async function runRequired(command: string[]): Promise<void> {
+async function runRequired(command: readonly string[]): Promise<void> {
   const exitCode = await run(command);
   if (exitCode !== 0) {
     throw new Error(
@@ -42,19 +46,7 @@ if (import.meta.main) {
     ]);
     let fetched = false;
     for (let attempt = 1; attempt <= 4; attempt += 1) {
-      const exitCode = await run([
-        "git",
-        "-C",
-        clone,
-        "-c",
-        "http.postBuffer=524_288_000",
-        "fetch",
-        "--quiet",
-        "--depth",
-        "1",
-        "origin",
-        upstream.commit,
-      ]);
+      const exitCode = await run(upstreamFetchCommand(clone, upstream.commit));
       if (exitCode === 0) {
         fetched = true;
         break;
