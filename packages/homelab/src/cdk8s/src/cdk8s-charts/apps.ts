@@ -68,6 +68,7 @@ import { createServiceProbesApp } from "@shepherdjerred/homelab/cdk8s/src/resour
 import { createTrmnlDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/trmnl-dashboard.ts";
 import { createTurboCacheApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/turbo-cache.ts";
 import { createBuildkitdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/buildkitd.ts";
+import { createPvcBackupAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/pvc-backup-admission.ts";
 
 export async function createAppsChart(app: App) {
   const chart = new Chart(app, "apps", {
@@ -77,6 +78,7 @@ export async function createAppsChart(app: App) {
 
   createStorageClasses(chart);
   createPriorityClasses(chart);
+  createPvcBackupAdmissionPolicies(chart);
 
   new Namespace(chart, `maintenance-namespace`, {
     metadata: {

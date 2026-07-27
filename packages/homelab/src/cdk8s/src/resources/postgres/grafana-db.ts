@@ -19,6 +19,7 @@ export function createGrafanaPostgreSQLDatabase(chart: Chart) {
         // it onto the pgdata PVC via inherited_labels (postgres-operator.ts); this
         // replaces the removed Kyverno velero-label mutation.
         "velero.io/backup": "enabled",
+        "velero.io/exclude-from-backup": "false",
       },
       annotations: {
         // Prevent ArgoCD from deleting this resource during sync - data loss protection

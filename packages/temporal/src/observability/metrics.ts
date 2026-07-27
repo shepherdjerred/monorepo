@@ -277,14 +277,14 @@ export const veleroOrphanAuditDurationSeconds = new Histogram({
 export const veleroOrphanLocalSnapshots = new Gauge({
   name: "velero_orphan_local_snapshots",
   help: "Local ZFS snapshots that have no matching live Velero Backup CR (per dataset)",
-  labelNames: ["pool", "dataset"] as const,
+  labelNames: ["node", "pool", "dataset"] as const,
   registers: [register],
 });
 
 export const veleroOrphanLocalBytes = new Gauge({
   name: "velero_orphan_local_bytes",
   help: "Bytes consumed by local orphan ZFS snapshots (per dataset)",
-  labelNames: ["pool", "dataset"] as const,
+  labelNames: ["node", "pool", "dataset"] as const,
   registers: [register],
 });
 
@@ -309,7 +309,7 @@ export const veleroLiveBackupCount = new Gauge({
 export const zfsDatasetSnapshotCount = new Gauge({
   name: "zfs_dataset_snapshot_count",
   help: "Total ZFS snapshot count per PVC dataset (live + orphan)",
-  labelNames: ["pool", "dataset"] as const,
+  labelNames: ["node", "pool", "dataset"] as const,
   registers: [register],
 });
 

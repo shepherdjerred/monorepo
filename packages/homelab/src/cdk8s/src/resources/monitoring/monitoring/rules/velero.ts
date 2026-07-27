@@ -3,33 +3,6 @@ import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s
 import { escapePrometheusTemplate } from "./shared.ts";
 import { VELERO_SCHEDULES } from "@shepherdjerred/homelab/cdk8s/src/resources/velero-schedules.ts";
 
-export const REVIEWED_LARGE_PVC_BACKUP_POLICY_MATCHERS = [
-  { namespace: "gickup", persistentvolumeclaim: "gickup-backup-pvc" },
-  { namespace: "media", persistentvolumeclaim: "plex-movies-hdd-pvc" },
-  { namespace: "media", persistentvolumeclaim: "plex-tv-hdd-pvc" },
-  { namespace: "media", persistentvolumeclaim: "qbittorrent-hdd-pvc" },
-  {
-    namespace: "prometheus",
-    persistentvolumeclaim:
-      "prometheus-prometheus-kube-prometheus-prometheus-db-prometheus-prometheus-kube-prometheus-prometheus-0",
-  },
-  { namespace: "seaweedfs", persistentvolumeclaim: "data-seaweedfs-volume-0" },
-];
-
-const largePvcBackupPolicyReviewedSelector =
-  REVIEWED_LARGE_PVC_BACKUP_POLICY_MATCHERS.map(
-    ({ namespace, persistentvolumeclaim }) =>
-      `kube_persistentvolumeclaim_resource_requests_storage_bytes{namespace="${namespace}",persistentvolumeclaim="${persistentvolumeclaim}"}`,
-  ).join("\n  or ");
-
-export const largePvcMayImpactBackupsExpr = `(
-  kube_persistentvolumeclaim_resource_requests_storage_bytes > 200 * 1024 * 1024 * 1024
-)
-unless on (namespace, persistentvolumeclaim)
-(
-  ${largePvcBackupPolicyReviewedSelector}
-)`;
-
 export function getVeleroRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
     // Velero backup size monitoring
@@ -47,22 +20,6 @@ export function getVeleroRuleGroups(): PrometheusRuleSpecGroups[] {
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             `sum(kube_persistentvolumeclaim_resource_requests_storage_bytes)`,
           ),
-        },
-        {
-          alert: "VeleroLargePVCMayImpactBackups",
-          annotations: {
-            summary: "Large PVC may impact Velero backups",
-            message: escapePrometheusTemplate(
-              "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} requests {{ $value | humanize1024 }}B. kube-state-metrics is not exporting velero.io labels, so review the PVC backup policy manually.",
-            ),
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            largePvcMayImpactBackupsExpr,
-          ),
-          for: "5m",
-          labels: {
-            severity: "warning",
-          },
         },
         {
           alert: "VeleroTotalPVCSizeExcessive",
@@ -439,13 +396,13 @@ function getVeleroOrphanSnapshotRuleGroup(): PrometheusRuleSpecGroups {
         annotations: {
           summary: "PVC dataset has excessive ZFS snapshot count",
           message: escapePrometheusTemplate(
-            "Dataset {{ $labels.dataset }} has {{ $value }} ZFS snapshots; expected at most ~26 (sum of schedule retention slots). May indicate orphan accumulation; cross-check with velero_orphan_local_snapshots.",
+            "Dataset {{ $labels.dataset }} on {{ $labels.node }} has {{ $value }} ZFS snapshots; expected at most ~26 (sum of schedule retention slots). May indicate orphan accumulation; cross-check with velero_orphan_local_snapshots.",
           ),
         },
         // Backstop: catches accumulation regardless of whether the audit workflow runs.
         // Threshold is generous — 35 = 26 expected + 35% headroom for transient overlap.
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          "max by (dataset) (zfs_dataset_snapshot_count) > 35",
+          "max by (node, dataset) (zfs_dataset_snapshot_count) > 35",
         ),
         for: "6h",
         labels: {

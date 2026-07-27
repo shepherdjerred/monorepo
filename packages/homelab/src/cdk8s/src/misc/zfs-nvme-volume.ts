@@ -1,3 +1,4 @@
+import { Chart } from "cdk8s";
 import { merge } from "lodash";
 import type { PersistentVolumeClaimProps } from "cdk8s-plus-31";
 import {
@@ -8,7 +9,10 @@ import {
 import { Construct } from "constructs";
 import { NVME_STORAGE_CLASS } from "./storage-classes.ts";
 import type { SetRequired } from "type-fest";
-import { Size } from "cdk8s";
+import {
+  getPvcBackupLabels,
+  getPvcBackupPolicy,
+} from "@shepherdjerred/homelab/cdk8s/src/backup-policy/pvc-backup-policy.ts";
 
 export class ZfsNvmeVolume extends Construct {
   public readonly claim: PersistentVolumeClaim;
@@ -22,10 +26,11 @@ export class ZfsNvmeVolume extends Construct {
   ) {
     super(scope, id);
 
-    // Check if storage is under 200GB for backup labeling
-    // Use native CDK8s Size conversion methods for accurate comparison
-    const shouldBackup =
-      props.storage.toKibibytes() < Size.gibibytes(200).toKibibytes();
+    const namespace = Chart.of(scope).namespace;
+    if (namespace === undefined) {
+      throw new Error(`ZFS PVC ${id} must belong to a namespaced chart`);
+    }
+    const backupLabels = getPvcBackupLabels(getPvcBackupPolicy(namespace, id));
 
     const baseProps: PersistentVolumeClaimProps = {
       storage: props.storage,
@@ -34,10 +39,7 @@ export class ZfsNvmeVolume extends Construct {
       volumeMode: PersistentVolumeMode.FILE_SYSTEM,
       metadata: {
         name: id,
-        labels: {
-          "velero.io/backup": shouldBackup ? "enabled" : "disabled",
-          "velero.io/exclude-from-backup": shouldBackup ? "false" : "true",
-        },
+        labels: backupLabels,
       },
     };
 

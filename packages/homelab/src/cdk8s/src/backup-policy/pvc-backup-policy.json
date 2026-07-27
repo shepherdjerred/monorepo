@@ -1,0 +1,434 @@
+[
+  {
+    "namespace": "birmel",
+    "name": "birmel-pvc",
+    "backup": "enabled",
+    "reason": "Discord bot application state"
+  },
+  {
+    "namespace": "bugsink",
+    "name": "pgdata-bugsink-postgresql-0",
+    "backup": "enabled",
+    "reason": "Bugsink PostgreSQL database"
+  },
+  {
+    "namespace": "buildkitd",
+    "name": "buildkitd-cache-liskov",
+    "backup": "disabled",
+    "reason": "Rebuildable BuildKit cache"
+  },
+  {
+    "namespace": "buildkite",
+    "name": "buildkite-bun-cache",
+    "backup": "disabled",
+    "reason": "Rebuildable Bun package cache"
+  },
+  {
+    "namespace": "buildkite",
+    "name": "buildkite-git-mirrors-liskov",
+    "backup": "disabled",
+    "reason": "Rebuildable Git mirror cache"
+  },
+  {
+    "namespace": "buildkite",
+    "name": "buildkite-tofu-plugin-cache",
+    "backup": "disabled",
+    "reason": "Rebuildable OpenTofu plugin cache"
+  },
+  {
+    "namespace": "chartmuseum",
+    "name": "chartmuseum",
+    "backup": "disabled",
+    "reason": "Published charts are reproducible from Git"
+  },
+  {
+    "namespace": "freshrss",
+    "name": "freshrss-data",
+    "backup": "enabled",
+    "reason": "FreshRSS application and subscription state"
+  },
+  {
+    "namespace": "freshrss",
+    "name": "freshrss-extensions",
+    "backup": "enabled",
+    "reason": "FreshRSS extension state"
+  },
+  {
+    "namespace": "gickup",
+    "name": "gickup-backup-pvc",
+    "backup": "disabled",
+    "reason": "Replicated Git repository data"
+  },
+  {
+    "namespace": "golink",
+    "name": "golink-pvc",
+    "backup": "enabled",
+    "reason": "Golink application state"
+  },
+  {
+    "namespace": "home",
+    "name": "eufy-security-ws-pvc",
+    "backup": "enabled",
+    "reason": "Eufy bridge persistent state"
+  },
+  {
+    "namespace": "home",
+    "name": "homeassistant-pvc",
+    "backup": "enabled",
+    "reason": "Home Assistant configuration and history"
+  },
+  {
+    "namespace": "home",
+    "name": "scrypted-pvc",
+    "backup": "enabled",
+    "reason": "Scrypted configuration and device state"
+  },
+  {
+    "namespace": "home",
+    "name": "zwave-js-ui-pvc",
+    "backup": "enabled",
+    "reason": "Z-Wave network configuration and keys"
+  },
+  {
+    "namespace": "loki",
+    "name": "storage-loki-0",
+    "backup": "disabled",
+    "reason": "Replaceable observability log data"
+  },
+  {
+    "namespace": "mario-kart",
+    "name": "mario-kart-data-volume",
+    "backup": "enabled",
+    "reason": "Mario Kart application data"
+  },
+  {
+    "namespace": "mario-kart",
+    "name": "mario-kart-rom-volume",
+    "backup": "enabled",
+    "reason": "Mario Kart runtime ROM state"
+  },
+  {
+    "namespace": "mario-kart",
+    "name": "mario-kart-volume",
+    "backup": "enabled",
+    "reason": "Mario Kart emulator and game state"
+  },
+  {
+    "namespace": "media",
+    "name": "bazarr-pvc",
+    "backup": "enabled",
+    "reason": "Bazarr configuration and database"
+  },
+  {
+    "namespace": "media",
+    "name": "bindery-pvc",
+    "backup": "enabled",
+    "reason": "Bindery application state"
+  },
+  {
+    "namespace": "media",
+    "name": "cwa-pvc",
+    "backup": "enabled",
+    "reason": "CWA application state"
+  },
+  {
+    "namespace": "media",
+    "name": "ebooks-hdd-pvc",
+    "backup": "enabled",
+    "reason": "User-managed ebook library"
+  },
+  {
+    "namespace": "media",
+    "name": "jellyfin-cache-pvc",
+    "backup": "disabled",
+    "reason": "Rebuildable Jellyfin cache"
+  },
+  {
+    "namespace": "media",
+    "name": "jellyfin-config-pvc",
+    "backup": "disabled",
+    "reason": "Jellyfin is not a critical recovery target"
+  },
+  {
+    "namespace": "media",
+    "name": "maintainerr-pvc",
+    "backup": "enabled",
+    "reason": "Maintainerr configuration and database"
+  },
+  {
+    "namespace": "media",
+    "name": "plex-movies-hdd-pvc",
+    "backup": "disabled",
+    "reason": "Large replaceable movie library"
+  },
+  {
+    "namespace": "media",
+    "name": "plex-pvc",
+    "backup": "enabled",
+    "reason": "Plex configuration and metadata"
+  },
+  {
+    "namespace": "media",
+    "name": "plex-tv-hdd-pvc",
+    "backup": "disabled",
+    "reason": "Large replaceable TV library"
+  },
+  {
+    "namespace": "media",
+    "name": "prowlarr-pvc",
+    "backup": "enabled",
+    "reason": "Prowlarr configuration and database"
+  },
+  {
+    "namespace": "media",
+    "name": "qbittorrent-hdd-pvc",
+    "backup": "disabled",
+    "reason": "Large replaceable download data"
+  },
+  {
+    "namespace": "media",
+    "name": "qbittorrent-pvc",
+    "backup": "enabled",
+    "reason": "qBittorrent configuration and session state"
+  },
+  {
+    "namespace": "media",
+    "name": "radarr-pvc",
+    "backup": "enabled",
+    "reason": "Radarr configuration and database"
+  },
+  {
+    "namespace": "media",
+    "name": "recyclarr-pvc",
+    "backup": "enabled",
+    "reason": "Recyclarr configuration"
+  },
+  {
+    "namespace": "media",
+    "name": "seerr-pvc",
+    "backup": "enabled",
+    "reason": "Seerr configuration and database"
+  },
+  {
+    "namespace": "media",
+    "name": "sonarr-pvc",
+    "backup": "enabled",
+    "reason": "Sonarr configuration and database"
+  },
+  {
+    "namespace": "media",
+    "name": "streambot-state-pvc",
+    "backup": "enabled",
+    "reason": "Streambot durable state"
+  },
+  {
+    "namespace": "media",
+    "name": "streambot-subs-cache-pvc",
+    "backup": "enabled",
+    "reason": "Streambot subtitle state"
+  },
+  {
+    "namespace": "media",
+    "name": "tautulli-pvc",
+    "backup": "enabled",
+    "reason": "Tautulli configuration and history"
+  },
+  {
+    "namespace": "minecraft-allofcreate",
+    "name": "datadir-minecraft-allofcreate-0",
+    "backup": "disabled",
+    "reason": "Non-critical Minecraft instance"
+  },
+  {
+    "namespace": "minecraft-allthemons",
+    "name": "datadir-minecraft-allthemons-0",
+    "backup": "disabled",
+    "reason": "Non-critical Minecraft instance"
+  },
+  {
+    "namespace": "minecraft-bettermc",
+    "name": "datadir-minecraft-bettermc-0",
+    "backup": "disabled",
+    "reason": "Non-critical Minecraft instance"
+  },
+  {
+    "namespace": "minecraft-ftbskies2",
+    "name": "datadir-minecraft-ftbskies2-0",
+    "backup": "disabled",
+    "reason": "Non-critical Minecraft instance"
+  },
+  {
+    "namespace": "minecraft-shuxin",
+    "name": "datadir-minecraft-shuxin-0",
+    "backup": "enabled",
+    "reason": "Selected Minecraft world"
+  },
+  {
+    "namespace": "minecraft-sjerred",
+    "name": "datadir-minecraft-sjerred-0",
+    "backup": "enabled",
+    "reason": "Selected Minecraft world"
+  },
+  {
+    "namespace": "minecraft-stoneblock4",
+    "name": "datadir-minecraft-stoneblock4-0",
+    "backup": "disabled",
+    "reason": "Non-critical Minecraft instance"
+  },
+  {
+    "namespace": "minecraft-tsmc",
+    "name": "datadir-minecraft-tsmc-0",
+    "backup": "enabled",
+    "reason": "Selected Minecraft world"
+  },
+  {
+    "namespace": "pinchtab",
+    "name": "pinchtab-data",
+    "backup": "disabled",
+    "reason": "Replaceable browser automation state"
+  },
+  {
+    "namespace": "plausible",
+    "name": "clickhouse-data",
+    "backup": "enabled",
+    "reason": "Plausible analytics event data"
+  },
+  {
+    "namespace": "plausible",
+    "name": "pgdata-plausible-postgresql-0",
+    "backup": "enabled",
+    "reason": "Plausible PostgreSQL database"
+  },
+  {
+    "namespace": "pokemon",
+    "name": "pokemon-volume",
+    "backup": "enabled",
+    "reason": "Pokemon game and application state"
+  },
+  {
+    "namespace": "postal",
+    "name": "data-postal-mariadb-0",
+    "backup": "enabled",
+    "reason": "Postal MariaDB database"
+  },
+  {
+    "namespace": "postal",
+    "name": "postal-pvc",
+    "backup": "enabled",
+    "reason": "Postal application state"
+  },
+  {
+    "namespace": "prometheus",
+    "name": "alertmanager-prometheus-kube-prometheus-alertmanager-db-alertmanager-prometheus-kube-prometheus-alertmanager-0",
+    "backup": "enabled",
+    "reason": "Alertmanager configuration and silences"
+  },
+  {
+    "namespace": "prometheus",
+    "name": "pgdata-grafana-postgresql-0",
+    "backup": "enabled",
+    "reason": "Grafana PostgreSQL database"
+  },
+  {
+    "namespace": "prometheus",
+    "name": "prometheus-prometheus-kube-prometheus-prometheus-db-prometheus-prometheus-kube-prometheus-prometheus-0",
+    "backup": "disabled",
+    "reason": "Replaceable Prometheus time-series data"
+  },
+  {
+    "namespace": "prometheus",
+    "name": "storage-prometheus-grafana-0",
+    "backup": "enabled",
+    "reason": "Grafana configuration and local state"
+  },
+  {
+    "namespace": "pyroscope",
+    "name": "data-pyroscope-0",
+    "backup": "disabled",
+    "reason": "Replaceable profiling data"
+  },
+  {
+    "namespace": "scout-beta",
+    "name": "scout-storage-claim",
+    "backup": "enabled",
+    "reason": "Scout beta database and application state"
+  },
+  {
+    "namespace": "scout-prod",
+    "name": "scout-storage-claim",
+    "backup": "enabled",
+    "reason": "Scout production database and application state"
+  },
+  {
+    "namespace": "seaweedfs",
+    "name": "data-filer-seaweedfs-filer-0",
+    "backup": "disabled",
+    "reason": "SeaweedFS data is intentionally outside Velero volume backup"
+  },
+  {
+    "namespace": "seaweedfs",
+    "name": "data-seaweedfs-seaweedfs-master-0",
+    "backup": "disabled",
+    "reason": "SeaweedFS data is intentionally outside Velero volume backup"
+  },
+  {
+    "namespace": "seaweedfs",
+    "name": "data-seaweedfs-volume-0",
+    "backup": "disabled",
+    "reason": "SeaweedFS data is intentionally outside Velero volume backup"
+  },
+  {
+    "namespace": "seaweedfs",
+    "name": "idx-seaweedfs-volume-0",
+    "backup": "disabled",
+    "reason": "SeaweedFS data is intentionally outside Velero volume backup"
+  },
+  {
+    "namespace": "starlight-karma-bot-beta",
+    "name": "starlight-karma-bot-storage-claim",
+    "backup": "enabled",
+    "reason": "Karma bot beta database"
+  },
+  {
+    "namespace": "starlight-karma-bot-prod",
+    "name": "starlight-karma-bot-storage-claim",
+    "backup": "enabled",
+    "reason": "Karma bot production database"
+  },
+  {
+    "namespace": "syncthing",
+    "name": "syncthing-config",
+    "backup": "enabled",
+    "reason": "Syncthing configuration and device identity"
+  },
+  {
+    "namespace": "syncthing",
+    "name": "syncthing-data",
+    "backup": "disabled",
+    "reason": "Replicated Syncthing bulk data"
+  },
+  {
+    "namespace": "tasknotes",
+    "name": "tasknotes-vault-pvc",
+    "backup": "enabled",
+    "reason": "Tasknotes user vault"
+  },
+  {
+    "namespace": "tempo",
+    "name": "storage-tempo-0",
+    "backup": "disabled",
+    "reason": "Replaceable trace data; configuration is stored in Git"
+  },
+  {
+    "namespace": "temporal",
+    "name": "pgdata-temporal-postgresql-0",
+    "backup": "enabled",
+    "reason": "Temporal PostgreSQL database"
+  },
+  {
+    "namespace": "turbo-cache",
+    "name": "turbo-cache-liskov",
+    "backup": "disabled",
+    "reason": "Rebuildable Turbo cache"
+  }
+]

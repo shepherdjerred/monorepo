@@ -29,14 +29,35 @@ const ZFS_NODE_CONTAINER = "openebs-zfs-plugin";
 const VELERO_API_GROUP = "velero.io";
 const VELERO_API_VERSION = "v1";
 const VELERO_NAMESPACE = "velero";
-const POOLS = ["zfspv-pool-nvme", "zfspv-pool-hdd"] as const;
 
 export type VeleroOrphanDataset = {
+  node: string;
   pool: string;
   dataset: string;
   orphanCount: number;
   orphanBytes: number;
   liveCount: number;
+};
+
+type ZfsNodePod = {
+  node: string;
+  pod: string;
+};
+
+type ZfsNodePodCandidate = {
+  metadata?: {
+    name?: string;
+  };
+  spec?: {
+    nodeName?: string;
+  };
+  status?: {
+    phase?: string;
+    conditions?: {
+      type: string;
+      status: string;
+    }[];
+  };
 };
 
 export type VeleroOrphanAuditResult = {
@@ -58,11 +79,11 @@ export const veleroOrphanAuditActivities = {
       Context.current().heartbeat({ phase: "list-velero-backups" });
       const liveBackups = await listLiveVeleroBackups();
 
-      Context.current().heartbeat({ phase: "find-zfs-node-pod" });
-      const nodePod = await findZfsNodePod();
+      Context.current().heartbeat({ phase: "find-zfs-node-pods" });
+      const nodePods = await findZfsNodePods();
 
       Context.current().heartbeat({ phase: "list-zfs-orphans" });
-      const datasets = await listZfsOrphanSnapshots(nodePod, liveBackups);
+      const datasets = await listZfsOrphanSnapshots(nodePods, liveBackups);
 
       const totalOrphanCount = datasets.reduce(
         (sum, d) => sum + d.orphanCount,
@@ -84,15 +105,15 @@ export const veleroOrphanAuditActivities = {
       zfsDatasetSnapshotCount.reset();
       for (const d of datasets) {
         veleroOrphanLocalSnapshots.set(
-          { pool: d.pool, dataset: d.dataset },
+          { node: d.node, pool: d.pool, dataset: d.dataset },
           d.orphanCount,
         );
         veleroOrphanLocalBytes.set(
-          { pool: d.pool, dataset: d.dataset },
+          { node: d.node, pool: d.pool, dataset: d.dataset },
           d.orphanBytes,
         );
         zfsDatasetSnapshotCount.set(
-          { pool: d.pool, dataset: d.dataset },
+          { node: d.node, pool: d.pool, dataset: d.dataset },
           d.orphanCount + d.liveCount,
         );
       }
@@ -161,97 +182,193 @@ async function listLiveVeleroBackups(): Promise<string[]> {
   return names.toSorted();
 }
 
-async function findZfsNodePod(): Promise<string> {
+async function findZfsNodePods(): Promise<ZfsNodePod[]> {
   const pods = await loadCoreApi().listNamespacedPod({
     namespace: NAMESPACE_OPENEBS,
     labelSelector: ZFS_NODE_LABEL,
   });
-  const pod = pods.items.find((p) => p.status?.phase === "Running");
-  const name = pod?.metadata?.name;
-  if (name === undefined) {
-    throw new Error(
-      `No Running openebs-zfs-localpv-node pod found in ${NAMESPACE_OPENEBS} (label selector: ${ZFS_NODE_LABEL})`,
-    );
-  }
-  return name;
+  return selectZfsNodePods(pods.items);
 }
 
-// Calls `zfs list` on each pool's datasets and snapshots, then computes per-dataset
-// orphan counts and bytes by diffing snapshot names against the live Velero Backup set.
+export function selectZfsNodePods(
+  pods: readonly ZfsNodePodCandidate[],
+): ZfsNodePod[] {
+  const nodePods = new Map<string, string>();
+  for (const pod of pods) {
+    const isReady = pod.status?.conditions?.some(
+      (condition) => condition.type === "Ready" && condition.status === "True",
+    );
+    if (pod.status?.phase !== "Running" || isReady !== true) {
+      continue;
+    }
+    const name = pod.metadata?.name;
+    const node = pod.spec?.nodeName;
+    if (name === undefined || node === undefined) {
+      throw new Error(
+        "Running and Ready openebs-zfs-localpv-node pod is missing metadata.name or spec.nodeName",
+      );
+    }
+    const existingPod = nodePods.get(node);
+    if (existingPod !== undefined) {
+      throw new Error(
+        `Multiple Running and Ready openebs-zfs-localpv-node pods found for node ${node}: ${existingPod}, ${name}`,
+      );
+    }
+    nodePods.set(node, name);
+  }
+  if (nodePods.size === 0) {
+    throw new Error(
+      `No Running and Ready openebs-zfs-localpv-node pods found in ${NAMESPACE_OPENEBS} (label selector: ${ZFS_NODE_LABEL})`,
+    );
+  }
+  return [...nodePods.entries()]
+    .map(([node, pod]) => ({ node, pod }))
+    .toSorted((left, right) => left.node.localeCompare(right.node));
+}
+
 async function listZfsOrphanSnapshots(
-  nodePod: string,
+  nodePods: readonly ZfsNodePod[],
   liveBackups: readonly string[],
 ): Promise<VeleroOrphanDataset[]> {
-  // The `zfs` command isn't on PATH in this container — invoke via absolute paths.
-  // /usr/local/sbin and /usr/sbin are the typical install paths in the openebs image.
-  // Filtering happens in TypeScript so we don't need shell pipelines that can
-  // mask non-zero exit codes; execInPod surfaces real errors verbatim.
-  const liveSet = new Set(liveBackups);
   const datasets: VeleroOrphanDataset[] = [];
-
-  for (const pool of POOLS) {
-    Context.current().heartbeat({ phase: "list-pool", pool });
-
-    // Lists ALL items under the pool — we filter in TS to find PVC datasets
-    // (skip snapshot lines containing '@', skip the pool itself).
-    const allItems = await execInPod(
-      nodePod,
-      `PATH=$PATH:/usr/local/sbin:/usr/sbin:/sbin zfs list -H -o name -r '${pool}'`,
+  for (const nodePod of nodePods) {
+    Context.current().heartbeat({
+      phase: "list-node-zfs",
+      node: nodePod.node,
+      pod: nodePod.pod,
+    });
+    const inventory = await execInPod(
+      nodePod.pod,
+      "PATH=$PATH:/usr/local/sbin:/usr/sbin:/sbin zfs list -H -p -t filesystem,volume,snapshot -o name,type,used",
     );
-    const datasetNames = allItems
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0)
-      .filter((name) => !name.includes("@"))
-      .filter((name) => name.includes("/pvc-"));
+    datasets.push(...parseZfsInventory(nodePod.node, inventory, liveBackups));
+  }
+  return datasets.toSorted(
+    (left, right) =>
+      left.node.localeCompare(right.node) ||
+      left.dataset.localeCompare(right.dataset),
+  );
+}
 
-    for (const dataset of datasetNames) {
-      Context.current().heartbeat({ phase: "list-snapshots", pool, dataset });
+type MutableDatasetSummary = {
+  node: string;
+  pool: string;
+  dataset: string;
+  orphanCount: number;
+  orphanBytes: number;
+  liveCount: number;
+};
 
-      // -p emits machine-parseable bytes; -t snapshot lists snapshots only.
-      // A dataset with zero snapshots returns empty stdout + exit 0, so no
-      // suppression is needed.
-      const snapshotList = await execInPod(
-        nodePod,
-        `PATH=$PATH:/usr/local/sbin:/usr/sbin:/sbin zfs list -t snapshot -H -p -o name,used '${dataset}'`,
-      );
+type ZfsInventoryRow = {
+  name: string;
+  type: "filesystem" | "snapshot" | "volume";
+  used: number;
+};
 
-      let orphanCount = 0;
-      let orphanBytes = 0;
-      let liveCount = 0;
+function parseZfsInventoryRow(
+  node: string,
+  rowNumber: number,
+  line: string,
+): ZfsInventoryRow {
+  const fields = line.split("\t");
+  if (fields.length !== 3) {
+    throw new TypeError(
+      `Malformed zfs list row ${String(rowNumber)} on ${node}: expected 3 tab-separated fields`,
+    );
+  }
+  const [name, type, usedString] = fields;
+  if (name === undefined || type === undefined || usedString === undefined) {
+    throw new TypeError(
+      `Malformed zfs list row ${String(rowNumber)} on ${node}: missing field`,
+    );
+  }
+  if (type !== "filesystem" && type !== "snapshot" && type !== "volume") {
+    throw new TypeError(`Unexpected ZFS object type on ${node}: ${type}`);
+  }
+  if (!/^\d+$/.test(usedString)) {
+    throw new TypeError(
+      `Malformed zfs list row ${String(rowNumber)} on ${node}: used bytes is not an integer`,
+    );
+  }
+  const used = Number.parseInt(usedString, 10);
+  if (!Number.isSafeInteger(used)) {
+    throw new TypeError(
+      `Malformed zfs list row ${String(rowNumber)} on ${node}: used bytes exceeds safe integer range`,
+    );
+  }
+  return { name, type, used };
+}
 
-      for (const line of snapshotList.split("\n")) {
-        const trimmed = line.trim();
-        if (trimmed.length === 0) {
-          continue;
-        }
-        const [fullName, usedStr] = trimmed.split("\t");
-        if (fullName === undefined) {
-          continue;
-        }
-        const atIdx = fullName.indexOf("@");
-        if (atIdx === -1) {
-          continue;
-        }
-        const snapName = fullName.slice(atIdx + 1);
-        const used = Number.parseInt(usedStr ?? "0", 10);
-        if (Number.isNaN(used)) {
-          continue;
-        }
+export function parseZfsInventory(
+  node: string,
+  inventory: string,
+  liveBackups: readonly string[],
+): VeleroOrphanDataset[] {
+  const liveSet = new Set(liveBackups);
+  const datasets = new Map<string, MutableDatasetSummary>();
+  const snapshots: { dataset: string; snapshot: string; used: number }[] = [];
 
-        if (liveSet.has(snapName)) {
-          liveCount += 1;
-        } else {
-          orphanCount += 1;
-          orphanBytes += used;
-        }
+  for (const [index, line] of inventory.split("\n").entries()) {
+    if (line.trim().length === 0) {
+      continue;
+    }
+    const row = parseZfsInventoryRow(node, index + 1, line);
+
+    if (row.type === "snapshot") {
+      const separator = row.name.indexOf("@");
+      if (separator <= 0 || separator === row.name.length - 1) {
+        throw new TypeError(
+          `Malformed ZFS snapshot name on ${node}: ${row.name}`,
+        );
       }
+      const dataset = row.name.slice(0, separator);
+      if (dataset.includes("/pvc-")) {
+        snapshots.push({
+          dataset,
+          snapshot: row.name.slice(separator + 1),
+          used: row.used,
+        });
+      }
+      continue;
+    }
+    if (!row.name.includes("/pvc-")) {
+      continue;
+    }
+    const slash = row.name.indexOf("/");
+    if (slash <= 0) {
+      throw new TypeError(`Malformed PVC dataset name on ${node}: ${row.name}`);
+    }
+    if (datasets.has(row.name)) {
+      throw new TypeError(`Duplicate PVC dataset row on ${node}: ${row.name}`);
+    }
+    datasets.set(row.name, {
+      node,
+      pool: row.name.slice(0, slash),
+      dataset: row.name,
+      orphanCount: 0,
+      orphanBytes: 0,
+      liveCount: 0,
+    });
+  }
 
-      datasets.push({ pool, dataset, orphanCount, orphanBytes, liveCount });
+  for (const snapshot of snapshots) {
+    const dataset = datasets.get(snapshot.dataset);
+    if (dataset === undefined) {
+      throw new Error(
+        `Snapshot ${snapshot.dataset}@${snapshot.snapshot} on ${node} has no dataset row`,
+      );
+    }
+    if (liveSet.has(snapshot.snapshot)) {
+      dataset.liveCount += 1;
+    } else {
+      dataset.orphanCount += 1;
+      dataset.orphanBytes += snapshot.used;
     }
   }
 
-  return datasets;
+  return [...datasets.values()].toSorted((left, right) =>
+    left.dataset.localeCompare(right.dataset),
+  );
 }
 
 async function execInPod(podName: string, command: string): Promise<string> {

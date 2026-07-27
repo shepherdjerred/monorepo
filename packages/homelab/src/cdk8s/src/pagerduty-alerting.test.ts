@@ -257,11 +257,11 @@ describe("PagerDuty alert rendering (high-fidelity, real Go template engine)", (
     }
   });
 
-  it("renders a clean single-line title for a multi-PVC Velero group (was a 260-char blob)", async () => {
+  it("renders a clean single-line title for a multi-PVC backup-policy group", async () => {
     const data = group({
-      alertname: "VeleroLargePVCMayImpactBackups",
+      alertname: "PvcBackupPolicyViolation",
       namespace: "immich",
-      summary: "Large PVC may impact Velero backups",
+      summary: "PVC backup policy violation",
       firing: [
         { message: "PVC immich/immich-data requests 412GiB." },
         { message: "PVC immich/immich-cache requests 190GiB." },
@@ -277,7 +277,7 @@ describe("PagerDuty alert rendering (high-fidelity, real Go template engine)", (
     const title = r.get("title")?.output ?? "";
     expect(r.get("title")?.error).toBe("");
     // Clean, single line, well under PagerDuty's truncation cap.
-    expect(title).toBe("Large PVC may impact Velero backups [immich] (x3)");
+    expect(title).toBe("PVC backup policy violation [immich] (x3)");
     expect(title).not.toContain("\n");
     expect(title.length).toBeLessThan(PD_TITLE_MAX);
     // No literal backslash-n and no Helm-escape artifacts leaked into the title.

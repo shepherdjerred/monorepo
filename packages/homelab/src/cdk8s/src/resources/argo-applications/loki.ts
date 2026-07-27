@@ -237,7 +237,8 @@ export function createLokiApp(chart: Chart) {
         storageClass: NVME_STORAGE_CLASS,
         size: Size.gibibytes(128).asString(),
         labels: {
-          "velero.io/backup": "enabled",
+          "velero.io/backup": "disabled",
+          "velero.io/exclude-from-backup": "true",
         },
       },
       extraVolumes: [
