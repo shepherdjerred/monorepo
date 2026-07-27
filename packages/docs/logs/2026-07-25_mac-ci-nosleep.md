@@ -112,3 +112,40 @@ displaysleep 0 powernap 0 womp 1 autorestart 1`).
 
 - The restoration script intentionally fails if the saved pre-bootstrap profile
   is absent or malformed rather than guessing system defaults.
+
+## Session Log — 2026-07-26 (Codex review-gate cycle)
+
+### Done
+
+- Addressed 3 P2 Codex findings on PR #1655 at head `2d471e330`:
+  - `plans/2026-07-03_mac-mini-buildkite-agent.md` Comment Log/Remaining —
+    softened "no macOS agent has ever connected" to "not currently connected"
+    (matches the wording already fixed in the README/this log).
+  - `mac-ci/README.md` "Activating the first job" — the `if_changed.include`
+    example now carries the same global CI/toolchain closure as the
+    `playwright-e2e-pr` step (`.buildkite/**`, `.mise.toml`, `bun.lock`,
+    `bunfig.toml`, `package.json`, `patches/**`, `turbo.json`) alongside the
+    iOS path, so a change to the macOS step itself would still run it.
+  - `mac-ci/README.md` same section — pointed at
+    `packages/tasks-for-obsidian`'s existing `lint:swift` script (scoped to
+    `ios/TasksForObsidian ios/TasksWidget`) instead of a bare
+    `swiftlint --strict`, which run from the repo root would also lint the
+    155 unrelated Swift files under `sandbox/archive`.
+- A prior round of 4 P2/P1 findings (teardown restore scope, `if_changed` vs
+  `if:`, per-step required-status pitfall, agent-history inference) had
+  already been fixed in `fc5759a71`/`2d471e330`; their threads were stale
+  (`isOutdated: true`) and resolved with justification rather than re-fixed.
+- Codex's review-at-head signal was flaky on this PR: the first `@codex
+review` nudge comment got no 👀 reaction and no review landed for 4.5h
+  across two pushes; a second nudge got an immediate 👀 and a review within
+  minutes.
+
+### Remaining
+
+- Push this commit, confirm Codex re-reviews clean at the new head, and
+  confirm the `robot-face-review-gate` required check goes green.
+
+### Caveats
+
+- If Codex drops a future re-review trigger again, re-post `@codex review`
+  and confirm the 👀 reaction before assuming the gate will unblock.

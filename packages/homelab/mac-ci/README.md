@@ -101,9 +101,17 @@ a missing agent):
    path filters are `if_changed:`, not `if:` (`if:` only evaluates boolean
    build/pipeline expressions and can't match a changed-file glob; see the
    neighboring `playwright-e2e-pr` step for the `if:` + `if_changed:` pattern
-   to copy). Run `swiftlint --strict` (or the iOS build / Maestro suite) as
-   the command — it executes on the agent's native checkout, **not** via the
-   kubernetes plugin the Linux steps use.
+   to copy). Include the same global CI/toolchain closure that step's
+   `if_changed.include` carries (`.buildkite/**`, `.mise.toml`, `bun.lock`,
+   `bunfig.toml`, `package.json`, `patches/**`, `turbo.json`) alongside the
+   iOS path, so a change to the macOS step itself or the shared toolchain
+   still runs it. Run `packages/tasks-for-obsidian`'s existing `lint:swift`
+   script (`swiftlint lint --strict --quiet ios/TasksForObsidian
+ios/TasksWidget`) — or the iOS build / Maestro suite — as the command, not
+   a bare `swiftlint --strict`: run from the repo root, that has no input
+   paths and would also lint the 155 unrelated Swift files under
+   `sandbox/archive`. It executes on the agent's native checkout, **not** via
+   the kubernetes plugin the Linux steps use.
 2. Leave it `soft_fail: true` until it's green, then drop `soft_fail`. Do
    **not** add a macOS-specific required status check — the replatformed
    pipeline posts only a single aggregate `buildkite/monorepo/pr` commit
