@@ -59,6 +59,22 @@ through its downstream release and version paths.
   - `bunx turbo run typecheck test lint
 --filter=@shepherdjerred/root-scripts --output-logs=errors-only` (6/6 tasks)
   - `bun run verify -- --affected` (47/47 tasks)
+- PR [#1714](https://github.com/shepherdjerred/monorepo/pull/1714) passed every
+  substantive Buildkite lane on
+  [#6524](https://buildkite.com/sjerred/monorepo/builds/6524), received a
+  clean current-head Codex review, and merged as
+  `9f2f9f893c5ec48d16a6ae8ded43138e49e7f060`.
+- A subsequent merge advanced `main` to
+  `058f4b44cbd6f046e054b1e232b3e270af5e6e0d`, making
+  [#6526](https://buildkite.com/sjerred/monorepo/builds/6526) authoritative.
+  Its repo-wide verification passed, then the aggregate sites job failed while
+  building Glitter because the filtered Bun install did not select the
+  `glitter` consumer workspace. Under the isolated linker,
+  `@shepherdjerred/glitter-context` was therefore absent. The release,
+  image, and infrastructure jobs were canceled as downstream fallout.
+- The sites lane now selects `--filter glitter` whenever its Glitter selector
+  runs, installing the consumer's declared workspace dependency closure. Static
+  pipeline validation holds that install invariant.
 
 ## Session Log — 2026-07-27
 
@@ -83,11 +99,23 @@ through its downstream release and version paths.
   in the isolated `feature/main-ci-release-refiner` worktree.
 - Pinned the Codex CLI at the root-scripts production dependency boundary and
   passed the full affected repository verification surface.
+- Published and merged PR #1714 after green substantive PR gates and a clean
+  current-head Codex review.
+- Re-fetched `origin/main`, followed the newer authoritative #6526 build, and
+  isolated its earliest hard failure to the aggregate sites job.
+- Reproduced the isolated-linker failure locally: the Glitter context link was
+  absent before the filtered install, present after `--filter glitter`, and the
+  exact context-build plus Glitter-build sequence then passed.
+- Added the missing Glitter install filter and a static pipeline regression
+  invariant on `fix/main-ci-glitter-site-install`.
+- Passed static pipeline validation, selector and lane-coverage tests,
+  markdownlint, the exact filtered-install/build reproduction, and
+  `bun run verify -- --affected` (21/21 tasks).
 
 ### Remaining
 
-- Publish and drive the second fix through PR review and Buildkite.
-- After merge, re-fetch `origin/main` and verify every resulting build through
+- Verify, publish, review, and merge the aggregate-sites install fix.
+- Re-fetch `origin/main` and verify every resulting build through
   release-please, version commit-back, and generated release/tag lanes.
 
 ### Caveats
