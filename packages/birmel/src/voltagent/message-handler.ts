@@ -125,7 +125,7 @@ ${memoryContext}`;
     const messageContent = await buildMessageContent(context, prompt);
 
     // 6. Get a routing agent for this persona (cached per persona).
-    const personaPrompt = await buildPersonaPrompt(persona);
+    const personaPrompt = buildPersonaPrompt(persona);
     const agent = getRoutingAgent(personaPrompt);
 
     // 8. Stream response with progressive Discord updates

@@ -8,6 +8,7 @@ import {
   buildSchedulePolicies,
 } from "./register-schedules.ts";
 import { isOrphanSchedule } from "./orphan-detection.ts";
+import { buildScheduleState } from "./schedule-state.ts";
 
 const DYNAMIC_AGENT_TASK_MEMO = {
   [DYNAMIC_AGENT_TASK_MEMO_KEY]: true,
@@ -19,6 +20,14 @@ function findScheduleById(id: string) {
     throw new Error(`Missing schedule ${id}`);
   }
   return schedule;
+}
+
+function configuredEnvironment(
+  schedule: ReturnType<typeof findScheduleById>,
+): Record<string, string> {
+  return Object.fromEntries(
+    (schedule.requiredEnvironment ?? []).map((name) => [name, "set"]),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -86,6 +95,8 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // GitHub reads + one S3 NDJSON write). No workflow-level sleeps; the
   // activity carries its own startToCloseTimeout + retry budget.
   "observeReviewSignalsWorkflow",
+  "runGlitterCorpusDaily",
+  "runGlitterContextRefresh",
 ]);
 
 const SLACK_MS = 5 * ONE_MINUTE;
@@ -178,6 +189,83 @@ describe("DELETED_SCHEDULE_IDS", () => {
     for (const deletedId of DELETED_SCHEDULE_IDS) {
       expect(activeIds).not.toContain(deletedId);
     }
+  });
+});
+
+describe("Glitter corpus schedule", () => {
+  test("uses the dedicated queue and pauses until every credential is present", () => {
+    const schedule = findScheduleById("glitter-corpus-daily");
+    expect(schedule.taskQueue).toBe("glitter-corpus");
+    expect(schedule.cronExpression).toBe("15 4 * * *");
+    const paused = buildScheduleState(schedule, {});
+    expect(paused.paused).toBe(true);
+    expect(paused.note).toContain("GLITTER_DISCORD_TOKEN");
+
+    const configured = configuredEnvironment(schedule);
+    expect(buildScheduleState(schedule, configured)).toEqual({
+      paused: true,
+      note: "Awaiting operator approval of the first complete mirrored snapshot",
+    });
+  });
+
+  test("preserves an operator pause after configuration", () => {
+    const schedule = findScheduleById("glitter-corpus-daily");
+    const configured = configuredEnvironment(schedule);
+    expect(
+      buildScheduleState(schedule, configured, {
+        paused: true,
+        note: "manual safety hold",
+      }),
+    ).toEqual({ paused: true, note: "manual safety hold" });
+  });
+
+  test("moves the configuration pause to the explicit approval hold", () => {
+    const schedule = findScheduleById("glitter-corpus-daily");
+    const configured = configuredEnvironment(schedule);
+    expect(
+      buildScheduleState(schedule, configured, {
+        paused: true,
+        note: "Paused automatically until required Glitter corpus credentials are configured: GLITTER_DISCORD_TOKEN",
+      }),
+    ).toEqual({
+      paused: true,
+      note: "Awaiting operator approval of the first complete mirrored snapshot",
+    });
+  });
+
+  test("preserves an operator unpause after the first snapshot", () => {
+    const schedule = findScheduleById("glitter-corpus-daily");
+    const configured = configuredEnvironment(schedule);
+    expect(
+      buildScheduleState(schedule, configured, {
+        paused: false,
+      }),
+    ).toEqual({ paused: false });
+  });
+});
+
+describe("Glitter context refresh schedule", () => {
+  test("uses its isolated queue and remains paused through credential setup", () => {
+    const schedule = findScheduleById("glitter-context-refresh-weekly");
+    expect(schedule.taskQueue).toBe("glitter-context");
+    expect(schedule.cronExpression).toBe("0 11 * * 1");
+    expect(schedule.args).toEqual([{}]);
+    expect(buildScheduleState(schedule, {}).paused).toBe(true);
+    expect(
+      buildScheduleState(schedule, configuredEnvironment(schedule)),
+    ).toEqual({
+      paused: true,
+      note: "Awaiting credentialed dry-run against the first approved complete snapshot",
+    });
+  });
+
+  test("preserves the operator unpause after acceptance", () => {
+    const schedule = findScheduleById("glitter-context-refresh-weekly");
+    expect(
+      buildScheduleState(schedule, configuredEnvironment(schedule), {
+        paused: false,
+      }),
+    ).toEqual({ paused: false });
   });
 });
 

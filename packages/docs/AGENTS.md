@@ -58,7 +58,9 @@ docs/
 - Every Markdown file has canonical YAML frontmatter: globally unique `id`, `type`, `status`, and `board`
 - Board items additionally require `verification` (`agent` or `human`) and `disposition` (`active`, `blocked`, or `deferred`)
 - Use only `planned`, `in-progress`, `awaiting-human`, or `complete` for workflow status; do not add a `## Status` section
-- Use unchecked tasks under `## Remaining` for agent work, `## Human Verification` for delayed signoff, and append-only entries under `## Comment Log` for steering and audit history
+- Use unchecked tasks under `## Remaining` for agent work and append-only entries under `## Comment Log` for steering and audit history
+- Reserve `status: awaiting-human` and `## Human Verification` for user acceptance testing: describe an observable action, expected behavior, and acceptance decision. Never assign typecheck, lint, tests, CI, merge checks, routine deployment checks, logs, metrics, traces, or other deterministic verification to the human reviewer
+- Complete every safe agent-operable check before requesting acceptance. If no subjective acceptance remains, mark the item complete directly. Split physical or privileged operator prerequisites into separate blocked work instead of presenting the operation itself as UAT
 - Keep `index.md` stable: do not add individual entries for `plans/`, `logs/`, or `todos/`
 - Prefer updating existing docs over creating new ones
 - Plans must be raw Markdown — do not generate PDF or Typst renderings alongside `.md` files

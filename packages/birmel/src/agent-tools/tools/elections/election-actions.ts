@@ -142,8 +142,8 @@ export async function handleGetStats(
   };
 }
 
-export async function handleGetCandidates(): Promise<ElectionResult> {
-  const candidates = await getAllCandidates();
+export function handleGetCandidates(): ElectionResult {
+  const candidates = getAllCandidates();
   return {
     success: true,
     message: `Found ${candidates.length.toString()} candidates`,

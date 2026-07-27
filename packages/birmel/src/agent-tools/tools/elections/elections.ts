@@ -66,7 +66,7 @@ export const manageElectionTool = createTool({
           case "get-stats":
             return await handleGetStats(ctx.guildId);
           case "get-candidates":
-            return await handleGetCandidates();
+            return handleGetCandidates();
           case "get-by-id":
             return await handleGetById(ctx.electionId);
           case "get-candidate-stats":

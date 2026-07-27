@@ -12,6 +12,7 @@ export * from "./match.ts";
 export * from "./match-helpers.ts";
 export * from "./player.ts";
 export * from "./player-config.ts";
+export * from "./queue-availability.ts";
 export * from "./rank.ts";
 export * from "./report.ts";
 export * from "./report-query-spec.ts";

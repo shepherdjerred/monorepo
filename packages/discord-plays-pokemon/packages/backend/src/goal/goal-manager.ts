@@ -3,20 +3,15 @@ import { z } from "zod";
 import { logger } from "#src/logger.ts";
 import type { Config } from "#src/config/schema.ts";
 import { hasCodexCredential } from "./codex-auth.ts";
-import { prepareRuntimeTools, buildEnvironment } from "./goal-runtime-env.ts";
 import type { GameSnapshot } from "#src/game/events/types.ts";
 import type { SpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
-import { buildCodexArgs } from "./codex-command.ts";
-import {
-  createCodexJsonlParser,
-  pumpCodexStdout,
-  type CodexJsonlParser,
-} from "@shepherdjerred/llm-observability/codex-jsonl";
-import { attachCodexTrace, type CodexTrace } from "./codex-trace.ts";
+import type { CodexJsonlParser } from "@shepherdjerred/llm-observability/codex-jsonl";
+import type { CodexTrace } from "./codex-trace.ts";
 import { sanitizeDiscordText, truncateForDiscord } from "./discord-message.ts";
 import { formatGameStateForPrompt } from "./game-state-summary.ts";
 import { formatHistoryForPrompt } from "./history-summary.ts";
 import { computeCost, formatCostLine } from "./pricing.ts";
+import { spawnGoalCodex } from "./spawn-goal-codex.ts";
 
 import {
   appendToHistory,
@@ -125,7 +120,7 @@ type GoalManagerOptions = {
   spatialSnapshotProvider?: () => SpatialSnapshot | null;
 };
 
-import { defaultSpawner, streamToLog } from "./goal-process-helpers.ts";
+import { defaultSpawner } from "./goal-process-helpers.ts";
 
 export class GoalManager {
   private active: ActiveGoal | undefined;
@@ -290,72 +285,24 @@ export class GoalManager {
     const deadline = new Date(
       now.getTime() + this.config.max_runtime_minutes * 60_000,
     ).toISOString();
-    const runtimeDirectory = path.resolve(this.config.runtime_directory);
-    const screenshotDirectory = this.resolveRuntimePath(
-      this.config.screenshot_dir,
-    );
-    await Bun.write(path.join(screenshotDirectory, ".keep"), "", {
-      createPath: true,
-    });
-    const helperDirectory = await prepareRuntimeTools(runtimeDirectory);
-    const outputPath = path.join(screenshotDirectory, `${id}-final.txt`);
-    // Snapshot + 3 most-recent goals as the static prompt context. The model
-    // can refresh both at any time via `pokemonctl state` / `pokemonctl history`.
+    // Snapshot + recent goals seed the prompt; model refreshes via pokemonctl.
     const gameStateSummary = formatGameStateForPrompt(
       this.snapshotProvider(),
       this.spatialSnapshotProvider(),
     );
-    const promptContext = {
-      gameStateSummary,
-      recentGoalsSummary: formatHistoryForPrompt(this.getHistory(3)),
-      // Curated long-term memory for THIS save, injected verbatim. Empty until
-      // a session writes it; buildPrompt renders the placeholder in that case.
-      memory: await this.memory.readMemory(),
-    };
-    const args = buildCodexArgs({
-      config: {
-        codexBinary: this.config.codex_binary,
-        model: this.config.model,
-      },
-      goal,
-      runtimeDirectory,
-      outputPath,
-      context: promptContext,
-    });
-
-    const process = this.spawner(args, {
-      cwd: runtimeDirectory,
-      env: buildEnvironment({
-        runtimeDirectory,
-        helperDirectory,
-        controlHost: this.config.control_host,
-        controlPort: this.config.control_port,
-        controlToken: this.controlToken,
-      }),
-    });
-    const jsonl = createCodexJsonlParser({
-      warn: (message) => {
-        logger.warn(message);
-      },
-      info: (message) => {
-        logger.info(message);
-      },
-    });
-    // Span synthesis: subscribe before stdout pumping starts so no events are
-    // missed. End the trace from every terminal path below.
-    const trace = attachCodexTrace(jsonl, {
+    const spawned = await spawnGoalCodex({
+      config: this.config,
+      controlToken: this.controlToken,
       goalId: id,
       goal,
-      model: this.config.model,
       requestedBy: input.requesterId,
-      gameStateSummary,
-      initialPrompt: `goal=${goal}\nstate=${gameStateSummary}`,
+      promptContext: {
+        gameStateSummary,
+        recentGoalsSummary: formatHistoryForPrompt(this.getHistory(3)),
+        memory: await this.memory.readMemory(),
+      },
+      spawner: this.spawner,
     });
-    // Store the pump promise so observeProcess() can await it before reading
-    // jsonl.total(). The last turn.completed usage event is often the final
-    // line Codex writes; the pump must fully drain before we tally the cost.
-    const stdoutPump = pumpCodexStdout(process.stdout, jsonl);
-    void streamToLog(process.stderr, "stderr");
 
     const state: GoalState = {
       id,
@@ -373,13 +320,13 @@ export class GoalManager {
 
     this.active = {
       state,
-      process,
+      process: spawned.process,
       timeout,
       lastProgressSentAt: 0,
-      outputPath,
-      jsonl,
-      stdoutPump,
-      trace,
+      outputPath: spawned.outputPath,
+      jsonl: spawned.jsonl,
+      stdoutPump: spawned.stdoutPump,
+      trace: spawned.trace,
     };
     await this.persistState(state);
     void this.observeProcess(id);

@@ -7,21 +7,22 @@
  * minted from env creds.
  *
  * Pipeline order (matches the old helper): release-pr → refine → github-release.
- * The refine step runs a Claude agent (prompt: scripts/prompts/refine-release-please.md,
- * recovered verbatim from the old .dagger/prompts/) that rewrites the
- * just-generated CHANGELOG entries into a consumer-focused view and pushes a
- * cleanup commit to the release PR. It exits 0 with a status envelope when
- * there is no open release PR or nothing to refine.
+ * The refine step runs an agent (Claude primary, Codex fallback on validated
+ * Claude quota exhaustion) using scripts/prompts/refine-release-please.md. It
+ * rewrites the just-generated CHANGELOG entries into a consumer-focused view
+ * and pushes a cleanup commit to the release PR. It exits 0 with a status
+ * envelope when there is no open release PR or nothing to refine.
  *
  * Usage:
  *   bun scripts/release.ts [--dry-run]
  *
  * Env: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID, GITHUB_APP_PRIVATE_KEY,
- *      CLAUDE_CODE_OAUTH_TOKEN (refine step)
+ *      CLAUDE_CODE_OAUTH_TOKEN, OPENAI_API_KEY (refine step)
  */
 
-import { run } from "./lib/run.ts";
+import { requireEnv, run } from "./lib/run.ts";
 import { setupGitAuth } from "./lib/github-auth.ts";
+import { runReleaseRefiner } from "./lib/release-refiner.ts";
 import { runMain } from "./lib/transient.ts";
 
 const MONOREPO_REPO = "shepherdjerred/monorepo";
@@ -46,8 +47,9 @@ async function main(): Promise<void> {
   console.log(`--- release-please${dryRun ? " (dry run)" : ""}`);
   if (dryRun) {
     console.log(
-      "DRYRUN: would run `release-please release-pr`, the Claude CHANGELOG " +
-        "refinement (scripts/prompts/refine-release-please.md), then " +
+      "DRYRUN: would run `release-please release-pr`, the dual-provider " +
+        "CHANGELOG refinement (Claude primary, Codex quota fallback; " +
+        "scripts/prompts/refine-release-please.md), then " +
         "`release-please github-release` against " +
         `${MONOREPO_REPO} (target-branch=main).`,
     );
@@ -55,6 +57,10 @@ async function main(): Promise<void> {
   }
 
   const root = repoRoot();
+  // Validate both providers before release-please mutates the release PR.
+  // Codex is an intentional quota fallback, not an optional best-effort path.
+  const claudeToken = requireEnv("CLAUDE_CODE_OAUTH_TOKEN");
+  const openAiApiKey = requireEnv("OPENAI_API_KEY");
   const auth = await setupGitAuth(root);
   const env = auth.env;
 
@@ -83,44 +89,25 @@ async function main(): Promise<void> {
     // Refine the just-generated CHANGELOGs. The prompt is the source of truth
     // for the agent's behavior; it exits 0 with a status envelope when there
     // is no open release PR, no bumped packages, or nothing to refine.
-    // The agent runs arbitrary git/gh Bash commands non-interactively, so it
-    // needs --dangerously-skip-permissions; its write access is bounded by
-    // the fixed, code-reviewed prompt and the GitHub App token's repo scope —
-    // re-evaluate if the prompt ever becomes dynamic. IS_SANDBOX=1 is Claude
-    // Code's documented escape hatch for trusted ephemeral automation
-    // containers (the flag refuses to run as root without it).
+    // Both agents run arbitrary git/gh commands non-interactively. Their write
+    // access is bounded by the fixed, code-reviewed prompt, the GitHub App
+    // token's repo scope, and the externally isolated ephemeral CI pod.
+    // Unknown Claude failures remain hard failures; only a parsed 429
+    // usage-quota result selects Codex.
     console.log("--- refine CHANGELOGs");
-    const claudeToken = Bun.env["CLAUDE_CODE_OAUTH_TOKEN"];
-    if (claudeToken === undefined || claudeToken === "") {
-      throw new Error(
-        "CLAUDE_CODE_OAUTH_TOKEN is required for the CHANGELOG refinement step",
-      );
-    }
     const prompt = await Bun.file(
       new URL("prompts/refine-release-please.md", import.meta.url).pathname,
     ).text();
-    await run(
-      [
-        "claude",
-        "-p",
-        prompt,
-        "--output-format",
-        "json",
-        "--allowed-tools",
-        "Bash,Read,Edit,Write,Grep,Glob",
-        "--dangerously-skip-permissions",
-        "--max-turns",
-        "80",
-        "--model",
-        "claude-opus-5",
-      ],
-      {
-        cwd: root,
-        // auth.env carries GH_TOKEN + the GIT_ASKPASS helper the agent's
-        // git clone/push needs (the old helper's withAskpass: true).
-        env: { ...env, IS_SANDBOX: "1" },
-      },
-    );
+    const provider = await runReleaseRefiner({
+      root,
+      prompt,
+      // auth.env carries GH_TOKEN + the GIT_ASKPASS helper the agent's
+      // git clone/push needs (the old helper's withAskpass: true).
+      env,
+      claudeToken,
+      openAiApiKey,
+    });
+    console.log(`--- CHANGELOG refinement complete (provider=${provider})`);
 
     await releasePlease("github-release");
     console.log("--- release-please complete");

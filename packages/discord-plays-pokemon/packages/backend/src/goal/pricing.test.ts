@@ -71,6 +71,16 @@ describe("computeCost", () => {
     }
     expect(mini / nano).toBeCloseTo(3.71, 1);
   });
+
+  test("gpt-5.6-luna bills at $1/$6 per 1M", () => {
+    // 1M uncached input → $1; 1M output → $6
+    expect(
+      computeCost("gpt-5.6-luna", usage({ inputTokens: 1_000_000 })),
+    ).toBeCloseTo(1, 6);
+    expect(
+      computeCost("gpt-5.6-luna", usage({ outputTokens: 1_000_000 })),
+    ).toBeCloseTo(6, 6);
+  });
 });
 
 describe("formatCostLine", () => {

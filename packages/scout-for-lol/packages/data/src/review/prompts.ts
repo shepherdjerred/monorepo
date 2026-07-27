@@ -37,7 +37,7 @@ export type Personality = {
   metadata: PersonalityMetadata;
   instructions: string;
   /**
-   * Style card loaded from analysis/llm-out to help match voice
+   * Style card loaded from the shared Glitter context package
    */
   styleCard: string;
   filename?: string;

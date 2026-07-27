@@ -1,0 +1,1526 @@
+{
+  "$schema": "../schema/relationships.schema.json",
+  "schemaVersion": 1,
+  "events": [
+    {
+      "id": "caitlyn-richard-dating",
+      "sourceId": "caitlyn",
+      "targetId": "richard",
+      "kind": "romantic",
+      "label": "Dating",
+      "direction": "undirected",
+      "status": "historical",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "maintainer-assertion",
+          "reference": "Maintainer-confirmed prior relationship",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-001",
+      "sourceId": "mark",
+      "targetId": "group-spu",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-002",
+      "sourceId": "matt",
+      "targetId": "group-spu",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-003",
+      "sourceId": "erkin",
+      "targetId": "group-spu",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-004",
+      "sourceId": "virmel",
+      "targetId": "group-spu",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-005",
+      "sourceId": "emily",
+      "targetId": "group-spu",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-006",
+      "sourceId": "sean",
+      "targetId": "group-spu",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-007",
+      "sourceId": "andrew",
+      "targetId": "group-spu",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-008",
+      "sourceId": "edward",
+      "targetId": "group-highschool",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-009",
+      "sourceId": "joel",
+      "targetId": "group-highschool",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-010",
+      "sourceId": "wyatt",
+      "targetId": "group-highschool",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-011",
+      "sourceId": "danny",
+      "targetId": "group-highschool",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-012",
+      "sourceId": "virmel",
+      "targetId": "group-highschool",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-013",
+      "sourceId": "edward",
+      "targetId": "cjay",
+      "kind": "family",
+      "label": "Cousins",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-014",
+      "sourceId": "edward",
+      "targetId": "lawrence",
+      "kind": "family",
+      "label": "Brothers",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-015",
+      "sourceId": "edward",
+      "targetId": "chadwick",
+      "kind": "professional",
+      "label": "Coworkers @ Lakes HS",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-016",
+      "sourceId": "joel",
+      "targetId": "zach",
+      "kind": "social",
+      "label": "Roommates",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-017",
+      "sourceId": "danny",
+      "targetId": "hannah",
+      "kind": "social",
+      "label": "WWU",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-018",
+      "sourceId": "matt",
+      "targetId": "jerred",
+      "kind": "social",
+      "label": "Church",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-019",
+      "sourceId": "jerred",
+      "targetId": "shuxin",
+      "kind": "romantic",
+      "label": "Dating",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-020",
+      "sourceId": "erkin",
+      "targetId": "aaron",
+      "kind": "family",
+      "label": "Cousins",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-021",
+      "sourceId": "virmel",
+      "targetId": "group-cod",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-022",
+      "sourceId": "jake",
+      "targetId": "group-cod",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-023",
+      "sourceId": "brian",
+      "targetId": "group-cod",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-024",
+      "sourceId": "eddie",
+      "targetId": "group-cod",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-025",
+      "sourceId": "nathan",
+      "targetId": "group-cod",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-026",
+      "sourceId": "eddie",
+      "targetId": "group-deserthotsprings",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-027",
+      "sourceId": "jordy",
+      "targetId": "group-deserthotsprings",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-028",
+      "sourceId": "james",
+      "targetId": "group-deserthotsprings",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-029",
+      "sourceId": "gayryan",
+      "targetId": "group-deserthotsprings",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-030",
+      "sourceId": "santana",
+      "targetId": "group-deserthotsprings",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-031",
+      "sourceId": "juan",
+      "targetId": "group-deserthotsprings",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-032",
+      "sourceId": "virmel",
+      "targetId": "group-seattleu",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-033",
+      "sourceId": "justin",
+      "targetId": "group-seattleu",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-034",
+      "sourceId": "justin",
+      "targetId": "group-google",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-035",
+      "sourceId": "kowun",
+      "targetId": "group-google",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-036",
+      "sourceId": "joanne",
+      "targetId": "group-google",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-037",
+      "sourceId": "adrian",
+      "targetId": "joanne",
+      "kind": "romantic",
+      "label": "Married",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-038",
+      "sourceId": "justin",
+      "targetId": "colin",
+      "kind": "social",
+      "label": "Hood",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-039",
+      "sourceId": "justin",
+      "targetId": "group-elementary",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-040",
+      "sourceId": "hirza",
+      "targetId": "group-elementary",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-041",
+      "sourceId": "hirza",
+      "targetId": "irfan",
+      "kind": "social",
+      "label": "Favela Neighbors",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-042",
+      "sourceId": "hirza",
+      "targetId": "group-highschool3",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-043",
+      "sourceId": "samkim",
+      "targetId": "group-highschool3",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-044",
+      "sourceId": "justin",
+      "targetId": "group-uw1",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-045",
+      "sourceId": "hirza",
+      "targetId": "group-uw1",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-046",
+      "sourceId": "irfan",
+      "targetId": "group-uw1",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-047",
+      "sourceId": "samkim",
+      "targetId": "group-uw1",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-048",
+      "sourceId": "justin",
+      "targetId": "group-roommates",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-049",
+      "sourceId": "samkim",
+      "targetId": "group-roommates",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-050",
+      "sourceId": "danieltruong",
+      "targetId": "group-roommates",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-051",
+      "sourceId": "danieltruong",
+      "targetId": "group-truongs",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-052",
+      "sourceId": "davidtruong",
+      "targetId": "group-truongs",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-053",
+      "sourceId": "danieltruong",
+      "targetId": "group-uw1",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-054",
+      "sourceId": "davidtruong",
+      "targetId": "sarah",
+      "kind": "romantic",
+      "label": "Dating",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-055",
+      "sourceId": "danieltruong",
+      "targetId": "caitlyn",
+      "kind": "social",
+      "label": "Elementary",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "caitlyn-richard-exes",
+      "sourceId": "caitlyn",
+      "targetId": "richard",
+      "kind": "romantic",
+      "label": "Exes",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": "caitlyn-richard-dating",
+      "provenance": [
+        {
+          "kind": "maintainer-assertion",
+          "reference": "Maintainer-confirmed breakup",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-057",
+      "sourceId": "richard",
+      "targetId": "cole",
+      "kind": "social",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-058",
+      "sourceId": "richard",
+      "targetId": "kevin",
+      "kind": "social",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-059",
+      "sourceId": "richard",
+      "targetId": "group-otherhighschool",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-060",
+      "sourceId": "ryan",
+      "targetId": "group-otherhighschool",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-061",
+      "sourceId": "lisa",
+      "targetId": "group-otherhighschool",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-062",
+      "sourceId": "lisa",
+      "targetId": "spencer",
+      "kind": "romantic",
+      "label": "Married",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-063",
+      "sourceId": "lisa",
+      "targetId": "teddy",
+      "kind": "professional",
+      "label": "Coworkers",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-064",
+      "sourceId": "lisa",
+      "targetId": "zack",
+      "kind": "social",
+      "label": "Salsa",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-065",
+      "sourceId": "ryan",
+      "targetId": "olivia",
+      "kind": "social",
+      "label": "IG Meetup",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-066",
+      "sourceId": "sarah",
+      "targetId": "alyza",
+      "kind": "friendship",
+      "label": "Best Friends",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-067",
+      "sourceId": "samkim",
+      "targetId": "group-middleschool",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-068",
+      "sourceId": "justin",
+      "targetId": "group-middleschool",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-069",
+      "sourceId": "dankim",
+      "targetId": "group-kims",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-070",
+      "sourceId": "samkim",
+      "targetId": "group-kims",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-071",
+      "sourceId": "estherkim",
+      "targetId": "group-kims",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-072",
+      "sourceId": "estherkim",
+      "targetId": "group-elementary2",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-073",
+      "sourceId": "long",
+      "targetId": "group-elementary2",
+      "kind": "membership",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-074",
+      "sourceId": "long",
+      "targetId": "aaron",
+      "kind": "friendship",
+      "label": "Friends",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-075",
+      "sourceId": "danieltruong",
+      "targetId": "irfan",
+      "kind": "adversarial",
+      "label": "Enemies",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-076",
+      "sourceId": "sydney",
+      "targetId": "ryan",
+      "kind": "social",
+      "label": "Skating",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-077",
+      "sourceId": "andrea",
+      "targetId": "edward",
+      "kind": "friendship",
+      "label": "\"Friends\"",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-078",
+      "sourceId": "allison",
+      "targetId": "andrea",
+      "kind": "social",
+      "label": "",
+      "direction": "source-to-target",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-relationship-079",
+      "sourceId": "ryan",
+      "targetId": "allison",
+      "kind": "social",
+      "label": "Not the father",
+      "direction": "undirected",
+      "status": "current",
+      "effectiveAt": null,
+      "recordedAt": "2026-07-26T00:00:00-07:00",
+      "supersedesEventId": null,
+      "provenance": [
+        {
+          "kind": "legacy-graph",
+          "reference": "packages/glitter/public/index.html legacy graph",
+          "messageIds": []
+        }
+      ]
+    }
+  ]
+}

@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import {
   CompetitionVisibilitySchema,
   visibilityToString,
+  visibilityDescription,
   type CompetitionVisibility,
 } from "@scout-for-lol/data";
 import { Button } from "#src/components/ui/button.tsx";
@@ -137,7 +138,12 @@ export function CompetitionFormFields(props: {
             <SelectContent>
               {CompetitionVisibilitySchema.options.map((option) => (
                 <SelectItem key={option} value={option}>
-                  {visibilityToString(option)}
+                  <span className="flex flex-col">
+                    <span>{visibilityToString(option)}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {visibilityDescription(option)}
+                    </span>
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>

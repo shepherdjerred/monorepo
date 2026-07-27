@@ -19,8 +19,8 @@ import {
   tallyFindings,
   type ReviewSignalEvent,
 } from "@shepherdjerred/code-review";
+import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
 import {
-  fetchHeadPushedAt,
   fetchLatestProviderReview,
   fetchProviderThumbsUp,
   fetchReviewThreads,

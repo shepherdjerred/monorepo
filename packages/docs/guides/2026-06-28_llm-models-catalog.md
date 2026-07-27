@@ -18,7 +18,7 @@ board: false
 
 ## Consumers
 
-Each deleted its local model map and imports the catalog: monarch `usage.ts`, temporal `pr-review/summary-cost.ts`, dpp `goal/pricing.ts`, scout `data/review/models.ts` (thin adapter keeping the old `OPENAI_MODELS`/`GEMINI_PRICING`/`getModelInfo` surface), scout python `ai_analyze_llm.py`.
+Each deleted its local model map and imports the catalog: monarch `usage.ts`, temporal `pr-review/summary-cost.ts`, dpp `goal/pricing.ts`, and scout `data/review/models.ts` (thin adapter keeping the old `OPENAI_MODELS`/`GEMINI_PRICING`/`getModelInfo` surface).
 
 ## Auto-refresh
 

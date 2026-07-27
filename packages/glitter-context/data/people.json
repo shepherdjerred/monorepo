@@ -1,0 +1,503 @@
+{
+  "$schema": "../schema/people.schema.json",
+  "schemaVersion": 1,
+  "people": [
+    {
+      "id": "aaron",
+      "displayName": "Aaron",
+      "kind": "person",
+      "aliases": ["Gex", "gexisangry"],
+      "discordUserIds": ["186665676134547461"]
+    },
+    {
+      "id": "adrian",
+      "displayName": "Adrian",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "allison",
+      "displayName": "Allison",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "alyza",
+      "displayName": "Alyza",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "andrea",
+      "displayName": "Andrea",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "andrew",
+      "displayName": "Andrew",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "brian",
+      "displayName": "Brian",
+      "kind": "person",
+      "aliases": ["blohsh", "billibillie"],
+      "discordUserIds": ["202595851678384137"]
+    },
+    {
+      "id": "caitlyn",
+      "displayName": "Caitlyn",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": ["331238905619677185"]
+    },
+    {
+      "id": "chadwick",
+      "displayName": "Chadwick",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "cjay",
+      "displayName": "Cjay",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "cole",
+      "displayName": "Cole",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "colin",
+      "displayName": "Colin",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": ["171455587517857796"]
+    },
+    {
+      "id": "danieltruong",
+      "displayName": "Daniel",
+      "kind": "person",
+      "aliases": ["DanielTruong"],
+      "discordUserIds": []
+    },
+    {
+      "id": "dankim",
+      "displayName": "Dan Kim",
+      "kind": "person",
+      "aliases": ["DanKim"],
+      "discordUserIds": []
+    },
+    {
+      "id": "danny",
+      "displayName": "Danny",
+      "kind": "person",
+      "aliases": ["dannydelito."],
+      "discordUserIds": ["263577791105073152"]
+    },
+    {
+      "id": "davidtruong",
+      "displayName": "David",
+      "kind": "person",
+      "aliases": ["DavidTruong"],
+      "discordUserIds": []
+    },
+    {
+      "id": "eddie",
+      "displayName": "Eddie",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "edward",
+      "displayName": "Edward",
+      "kind": "person",
+      "aliases": ["snipzar"],
+      "discordUserIds": ["208404668026454016"]
+    },
+    {
+      "id": "emily",
+      "displayName": "Emily",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "erkin",
+      "displayName": "Erkin",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "estherkim",
+      "displayName": "Esther Kim",
+      "kind": "person",
+      "aliases": ["EstherKim"],
+      "discordUserIds": []
+    },
+    {
+      "id": "gayryan",
+      "displayName": "GayRyan",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "group-cod",
+      "displayName": "Modern Warfares",
+      "kind": "group",
+      "aliases": ["COD"],
+      "discordUserIds": []
+    },
+    {
+      "id": "group-deserthotsprings",
+      "displayName": "Desert Hot Springs",
+      "kind": "group",
+      "aliases": ["DesertHotSprings"],
+      "discordUserIds": []
+    },
+    {
+      "id": "group-elementary",
+      "displayName": "Elementary (Justin's)",
+      "kind": "group",
+      "aliases": ["Elementary"],
+      "discordUserIds": []
+    },
+    {
+      "id": "group-elementary2",
+      "displayName": "Elementary (Esther's)",
+      "kind": "group",
+      "aliases": ["Elementary2"],
+      "discordUserIds": []
+    },
+    {
+      "id": "group-google",
+      "displayName": "Google",
+      "kind": "group",
+      "aliases": ["Google"],
+      "discordUserIds": []
+    },
+    {
+      "id": "group-highschool",
+      "displayName": "High School (Edward's)",
+      "kind": "group",
+      "aliases": ["HighSchool"],
+      "discordUserIds": []
+    },
+    {
+      "id": "group-highschool3",
+      "displayName": "High School (Hirza's)",
+      "kind": "group",
+      "aliases": ["HighSchool3"],
+      "discordUserIds": []
+    },
+    {
+      "id": "group-kims",
+      "displayName": "Kim Family",
+      "kind": "group",
+      "aliases": ["Kims"],
+      "discordUserIds": []
+    },
+    {
+      "id": "group-middleschool",
+      "displayName": "Middle School",
+      "kind": "group",
+      "aliases": ["MiddleSchool"],
+      "discordUserIds": []
+    },
+    {
+      "id": "group-otherhighschool",
+      "displayName": "High School (Richard's)",
+      "kind": "group",
+      "aliases": ["OtherHighSchool"],
+      "discordUserIds": []
+    },
+    {
+      "id": "group-roommates",
+      "displayName": "UW Roommates",
+      "kind": "group",
+      "aliases": ["Roommates"],
+      "discordUserIds": []
+    },
+    {
+      "id": "group-seattleu",
+      "displayName": "Seattle U",
+      "kind": "group",
+      "aliases": ["SeattleU"],
+      "discordUserIds": []
+    },
+    {
+      "id": "group-spu",
+      "displayName": "SPU",
+      "kind": "group",
+      "aliases": ["SPU"],
+      "discordUserIds": []
+    },
+    {
+      "id": "group-truongs",
+      "displayName": "Truong Family",
+      "kind": "group",
+      "aliases": ["Truongs"],
+      "discordUserIds": []
+    },
+    {
+      "id": "group-uw1",
+      "displayName": "UW",
+      "kind": "group",
+      "aliases": ["UW1"],
+      "discordUserIds": []
+    },
+    {
+      "id": "hannah",
+      "displayName": "Hannah",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "hirza",
+      "displayName": "Hirza",
+      "kind": "person",
+      "aliases": ["yuzka"],
+      "discordUserIds": ["528096854831792159"]
+    },
+    {
+      "id": "irfan",
+      "displayName": "Irfan",
+      "kind": "person",
+      "aliases": ["wishingenie"],
+      "discordUserIds": ["410595870380392458"]
+    },
+    {
+      "id": "jake",
+      "displayName": "Jake",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "james",
+      "displayName": "James",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "jerred",
+      "displayName": "Jerred",
+      "kind": "person",
+      "aliases": ["sjerred"],
+      "discordUserIds": ["160509172704739328"]
+    },
+    {
+      "id": "joanne",
+      "displayName": "Joanne",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "joel",
+      "displayName": "Joel",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "jordy",
+      "displayName": "Jordy",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "juan",
+      "displayName": "Juan",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "justin",
+      "displayName": "Justin",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "kevin",
+      "displayName": "Kevin",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "kowun",
+      "displayName": "Ko-wun",
+      "kind": "person",
+      "aliases": ["Kowun"],
+      "discordUserIds": []
+    },
+    {
+      "id": "lawrence",
+      "displayName": "Lawrence",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "lisa",
+      "displayName": "Lisa",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "long",
+      "displayName": "Long",
+      "kind": "person",
+      "aliases": ["longngn"],
+      "discordUserIds": ["251485022429642752"]
+    },
+    {
+      "id": "mark",
+      "displayName": "Mark",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "matt",
+      "displayName": "Matt",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "nathan",
+      "displayName": "Nathan",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "olivia",
+      "displayName": "Olivia",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "richard",
+      "displayName": "Richard",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": ["121887985896521732"]
+    },
+    {
+      "id": "ryan",
+      "displayName": "NekoRyan",
+      "kind": "person",
+      "aliases": ["Ryan"],
+      "discordUserIds": ["200067001035653131"]
+    },
+    {
+      "id": "samkim",
+      "displayName": "Sam Kim",
+      "kind": "person",
+      "aliases": ["SamKim"],
+      "discordUserIds": []
+    },
+    {
+      "id": "santana",
+      "displayName": "Santana",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "sarah",
+      "displayName": "Sarah",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "sean",
+      "displayName": "Sean",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "shuxin",
+      "displayName": "Shuxin",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "spencer",
+      "displayName": "Spencer",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "sydney",
+      "displayName": "Sydney",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "teddy",
+      "displayName": "Teddy",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "virmel",
+      "displayName": "Virmel",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": ["208425244128444418"]
+    },
+    {
+      "id": "wyatt",
+      "displayName": "Wyatt",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "zach",
+      "displayName": "Zach",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    },
+    {
+      "id": "zack",
+      "displayName": "Zack",
+      "kind": "person",
+      "aliases": [],
+      "discordUserIds": []
+    }
+  ]
+}

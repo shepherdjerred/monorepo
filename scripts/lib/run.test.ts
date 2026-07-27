@@ -97,6 +97,23 @@ describe("run stderr capture", () => {
     expect(result.stderr).toContain("live-forwarded-line");
   });
 
+  test("removes explicitly unset environment variables after layering env", async () => {
+    const result = await runAllowExit(
+      [
+        process.execPath,
+        "-e",
+        'process.stdout.write(process.env["REFINER_TEST_SECRET"] === undefined ? "unset" : "present");',
+      ],
+      {
+        capture: true,
+        secret: true,
+        env: { REFINER_TEST_SECRET: "must-not-reach-child" },
+        unsetEnv: ["REFINER_TEST_SECRET"],
+      },
+    );
+    expect(result.stdout).toBe("unset");
+  });
+
   test("large stderr is drained concurrently (no pipe-buffer deadlock) and the tail is bounded", async () => {
     // Emit far more than the OS pipe buffer (~64KiB) to prove the concurrent
     // drain in teeStderr keeps the child from blocking. The retained tail must

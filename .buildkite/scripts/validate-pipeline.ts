@@ -324,6 +324,7 @@ for (const [stepKey, step] of [
 
 const sites = stepBlocks.get("sites");
 for (const required of [
+  "filters+=(--filter glitter)",
   "--filter '@scout-for-lol/frontend'",
   "--filter '@scout-for-lol/app'",
   "--filter astro-opengraph-images",

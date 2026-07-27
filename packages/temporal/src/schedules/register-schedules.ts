@@ -7,6 +7,8 @@ import type { Duration } from "@temporalio/common";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
 import { detectOrphanSchedules } from "./orphan-detection.ts";
+import { buildScheduleState } from "./schedule-state.ts";
+import { GLITTER_CORPUS_STORAGE_ENV } from "./glitter-schedule-environment.ts";
 
 // All cron expressions below are wall-clock local time for the homelab.
 const SCHEDULE_TIMEZONE = "America/Los_Angeles";
@@ -95,6 +97,8 @@ type ScheduleDefinition = {
   // literal union (not `Duration`) to stay off the error-typed `Duration` path
   // under CI's Node16 `ms` resolution — see the constants' comment.
   catchupWindow?: CatchupWindow;
+  requiredEnvironment?: readonly string[];
+  initialPauseNote?: string;
 };
 
 const SCOUT_LANE_PRIOR_UPDATE_CONFIG = {
@@ -328,6 +332,49 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Daily GC of Scout images: delete .png/.svg older than 30d under games/ & prematch/ in scout-prod + scout-beta (SeaweedFS), keeping JSON. See packages/docs/plans/2026-07-03_scout-s3-image-retention.md",
   },
   {
+    id: "glitter-corpus-daily",
+    workflowType: "runGlitterCorpusDaily",
+    args: [],
+    // 04:15 PT — after the maintenance window starts and before the other
+    // data-refresh jobs. The dedicated queue enforces one Discord request at
+    // a time regardless of other Temporal activity traffic.
+    cronExpression: "15 4 * * *",
+    taskQueue: TASK_QUEUES.GLITTER_CORPUS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "6 hours",
+    memo: "Daily Discord REST capture with seven-day overlap and a full historical refresh after six overlaps",
+    initialPauseNote:
+      "Awaiting operator approval of the first complete mirrored snapshot",
+    requiredEnvironment: [
+      "GLITTER_DISCORD_TOKEN",
+      "GLITTER_DISCORD_GUILD_ID",
+      "GLITTER_DISCORD_GUILD_SLUG",
+      "GLITTER_DISCORD_DENYLIST_CHANNEL_IDS",
+      ...GLITTER_CORPUS_STORAGE_ENV,
+    ],
+  },
+  {
+    id: "glitter-context-refresh-weekly",
+    workflowType: "runGlitterContextRefresh",
+    args: [{}],
+    // Monday 11:00 PT, isolated from Discord capture and after other PR jobs.
+    cronExpression: "0 11 * * 1",
+    taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "3 hours",
+    memo: "Weekly GPT-5.6 Sol refresh of shared Glitter style cards and evidence-backed relationship history from the verified mirrored corpus",
+    initialPauseNote:
+      "Awaiting credentialed dry-run against the first approved complete snapshot",
+    requiredEnvironment: [
+      "GLITTER_DISCORD_GUILD_ID",
+      ...GLITTER_CORPUS_STORAGE_ENV,
+      "OPENAI_API_KEY",
+      "GITHUB_APP_ID",
+      "GITHUB_APP_INSTALLATION_ID",
+      "GITHUB_APP_PRIVATE_KEY",
+    ],
+  },
+  {
     id: "velero-orphan-audit",
     workflowType: "runVeleroOrphanAuditWorkflow",
     args: [],
@@ -495,6 +542,25 @@ export function buildSchedulePolicies(schedule: ScheduleDefinition): {
   };
 }
 
+function buildScheduleConfiguration(schedule: ScheduleDefinition) {
+  return {
+    spec: {
+      cronExpressions: [schedule.cronExpression],
+      timezone: SCHEDULE_TIMEZONE,
+    },
+    action: {
+      type: "startWorkflow" as const,
+      workflowType: schedule.workflowType,
+      args: schedule.args,
+      taskQueue: schedule.taskQueue,
+      ...(schedule.workflowExecutionTimeout === undefined
+        ? {}
+        : { workflowExecutionTimeout: schedule.workflowExecutionTimeout }),
+    },
+    policies: buildSchedulePolicies(schedule),
+  };
+}
+
 export async function registerSchedules(client: Client): Promise<void> {
   const scheduleClient = client.schedule;
 
@@ -515,20 +581,8 @@ export async function registerSchedules(client: Client): Promise<void> {
       // Update the existing schedule
       await handle.update((prev) => ({
         ...prev,
-        spec: {
-          cronExpressions: [schedule.cronExpression],
-          timezone: SCHEDULE_TIMEZONE,
-        },
-        action: {
-          type: "startWorkflow",
-          workflowType: schedule.workflowType,
-          args: schedule.args,
-          taskQueue: schedule.taskQueue,
-          ...(schedule.workflowExecutionTimeout === undefined
-            ? {}
-            : { workflowExecutionTimeout: schedule.workflowExecutionTimeout }),
-        },
-        policies: buildSchedulePolicies(schedule),
+        ...buildScheduleConfiguration(schedule),
+        state: buildScheduleState(schedule, Bun.env, prev.state),
       }));
 
       console.warn(`Updated schedule: ${schedule.id}`);
@@ -539,21 +593,9 @@ export async function registerSchedules(client: Client): Promise<void> {
       // Schedule doesn't exist yet — create it
       await scheduleClient.create({
         scheduleId: schedule.id,
-        spec: {
-          cronExpressions: [schedule.cronExpression],
-          timezone: SCHEDULE_TIMEZONE,
-        },
-        action: {
-          type: "startWorkflow",
-          workflowType: schedule.workflowType,
-          args: schedule.args,
-          taskQueue: schedule.taskQueue,
-          ...(schedule.workflowExecutionTimeout === undefined
-            ? {}
-            : { workflowExecutionTimeout: schedule.workflowExecutionTimeout }),
-        },
-        policies: buildSchedulePolicies(schedule),
+        ...buildScheduleConfiguration(schedule),
         memo: { description: schedule.memo },
+        state: buildScheduleState(schedule, Bun.env),
       });
 
       console.warn(`Created schedule: ${schedule.id}`);

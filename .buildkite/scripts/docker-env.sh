@@ -28,7 +28,7 @@ fi
 
 if ! docker buildx version >/dev/null 2>&1; then
   # renovate: datasource=github-releases depName=docker/buildx
-  BUILDX_VERSION="0.30.1"
+  BUILDX_VERSION="0.35.0"
   mkdir -p /usr/local/lib/docker/cli-plugins
   curl -fsSL "https://github.com/docker/buildx/releases/download/v${BUILDX_VERSION}/buildx-v${BUILDX_VERSION}.linux-amd64"     -o /usr/local/lib/docker/cli-plugins/docker-buildx
   chmod +x /usr/local/lib/docker/cli-plugins/docker-buildx

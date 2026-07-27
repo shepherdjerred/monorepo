@@ -1,5 +1,10 @@
 import { z } from "zod";
-import type { PermissionSet } from "@scout-for-lol/data";
+import {
+  type CompetitionWithSeason,
+  getCompetitionStatus,
+  parseCompetition,
+  type PermissionSet,
+} from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import {
   GuildIdInput,
@@ -97,15 +102,7 @@ export function serializePlayerDetail(
       invitedAt: Date | null;
       joinedAt: Date | null;
       leftAt: Date | null;
-      competition: {
-        id: number;
-        title: string;
-        isCancelled: boolean;
-        visibility: string;
-        startDate: Date | null;
-        endDate: Date | null;
-        seasonId: string | null;
-      };
+      competition: CompetitionWithSeason;
     }[];
   },
   names: DiscordNames,
@@ -142,16 +139,30 @@ export function serializePlayerDetail(
         }))
       : [],
     competitions: permissions.can("competitions", "read")
-      ? player.competitionParticipants.map((participant) => ({
-          id: participant.id,
-          status: participant.status,
-          invitedBy: participant.invitedBy,
-          invitedByUser: lookupUser(names, participant.invitedBy),
-          invitedAt: participant.invitedAt,
-          joinedAt: participant.joinedAt,
-          leftAt: participant.leftAt,
-          competition: participant.competition,
-        }))
+      ? player.competitionParticipants.map((participant) => {
+          // Resolves effective dates for season-based competitions so the
+          // client never sees a null endDate on an ended competition.
+          const competition = parseCompetition(participant.competition);
+          return {
+            id: participant.id,
+            status: participant.status,
+            invitedBy: participant.invitedBy,
+            invitedByUser: lookupUser(names, participant.invitedBy),
+            invitedAt: participant.invitedAt,
+            joinedAt: participant.joinedAt,
+            leftAt: participant.leftAt,
+            competition: {
+              id: competition.id,
+              title: competition.title,
+              isCancelled: competition.isCancelled,
+              visibility: competition.visibility,
+              startDate: competition.startDate,
+              endDate: competition.endDate,
+              seasonId: competition.seasonId,
+              status: getCompetitionStatus(competition),
+            },
+          };
+        })
       : [],
   };
 }

@@ -8,6 +8,7 @@
     "types": ["@types/bun"],
     "moduleResolution": "Node16",
     "module": "Node16",
+    "target": "ES2022",
     "noEmit": true,
     "allowImportingTsExtensions": true
   }

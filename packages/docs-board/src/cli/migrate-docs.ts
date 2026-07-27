@@ -105,6 +105,17 @@ type StatusInference = {
   body: string;
 };
 
+function inferTodoStatus(existingStatus: string | undefined): DocumentStatus {
+  if (existingStatus === "resolved") return "complete";
+  if (
+    existingStatus === "active" ||
+    existingStatus === "waiting-on-verification"
+  ) {
+    return "in-progress";
+  }
+  return "planned";
+}
+
 function inferStatus(input: StatusInference): DocumentStatus {
   const { existingStatus, statusText, type, relativePath, body } = input;
   const canonical = DocumentStatusSchema.safeParse(existingStatus);
@@ -112,15 +123,15 @@ function inferStatus(input: StatusInference): DocumentStatus {
   if (relativePath.startsWith("archive/")) return "complete";
   if (type !== "plan" && type !== "todo") return "complete";
 
-  if (type === "todo") {
-    if (existingStatus === "waiting-on-verification") return "awaiting-human";
-    if (existingStatus === "resolved") return "complete";
-    return existingStatus === "active" ? "in-progress" : "planned";
-  }
+  if (type === "todo") return inferTodoStatus(existingStatus);
 
   const value = `${existingStatus ?? ""} ${statusText}`.trim().toLowerCase();
-  const pending =
-    /await|pending|not yet merged|pr open|post[- ]deploy|live (?:test|verification)|human (?:test|verification)/u.test(
+  const awaitingAcceptance =
+    /(?:awaiting|pending) (?:human|owner|user) (?:acceptance|review|signoff)|user acceptance|\buat\b/u.test(
+      value,
+    );
+  const pendingAgentWork =
+    /await|pending|not yet merged|pr open|post[- ]deploy|live (?:test|verification)|verification/u.test(
       value,
     );
   const uncheckedTasks = body.match(/^\s*[-*] \[ \]/gmu)?.length ?? 0;
@@ -129,10 +140,11 @@ function inferStatus(input: StatusInference): DocumentStatus {
     return "in-progress";
   }
   if (/^(?:complete|implemented|done|shipped|resolved)/u.test(value)) {
-    if (pending) return "awaiting-human";
+    if (awaitingAcceptance) return "awaiting-human";
+    if (pendingAgentWork) return "in-progress";
     return uncheckedTasks === 0 ? "complete" : "in-progress";
   }
-  if (pending && /complete|implemented|done|shipped/u.test(value)) {
+  if (awaitingAcceptance && /complete|implemented|done|shipped/u.test(value)) {
     return "awaiting-human";
   }
   if (/implementation complete|code complete/u.test(value)) {

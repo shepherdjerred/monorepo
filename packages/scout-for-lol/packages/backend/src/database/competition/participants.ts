@@ -1,12 +1,15 @@
 import {
   type CompetitionId,
   type DiscordAccountId,
+  type DiscordGuildId,
   type ParticipantStatus,
   ParticipantStatusSchema,
   type PlayerId,
+  PlayerIdSchema,
 } from "@scout-for-lol/data";
 import type { CompetitionParticipant } from "#generated/prisma/client/index.js";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import type { Db } from "#src/lib/audit/index.ts";
 import { isCompetitionActive } from "#src/database/competition/validation.ts";
 import { match } from "ts-pattern";
 
@@ -30,7 +33,7 @@ function participantKey(
  * none exists. Callers apply their own not-found / status handling.
  */
 function findParticipant(
-  prisma: ExtendedPrismaClient,
+  prisma: Db,
   competitionId: number,
   playerId: number,
 ): Promise<CompetitionParticipant | null> {
@@ -56,7 +59,7 @@ function findParticipant(
  * @throws If competition not found, participant limit reached, or duplicate participant
  */
 export async function addParticipant(options: {
-  prisma: ExtendedPrismaClient;
+  prisma: Db;
   competitionId: CompetitionId;
   playerId: PlayerId;
   status: ParticipantStatus;
@@ -129,6 +132,96 @@ export async function addParticipant(options: {
   });
 }
 
+/**
+ * Enroll every tracked player in a guild into a competition as JOINED, up to
+ * the competition's participant cap. Backs SERVER_WIDE competitions (opt-out
+ * visibility) and the manual "add all members" action.
+ *
+ * Eligibility is checked up front — an inactive (ended/cancelled) competition,
+ * players who are already participants, players who previously LEFT, and the
+ * participant cap are all handled here — so `addParticipant` is only called for
+ * players that can actually be enrolled. Consequently there is no per-player
+ * catch: any error `addParticipant` throws is an unexpected (infrastructure or
+ * programming) failure and is left to propagate so it fails the enclosing
+ * mutation rather than silently reporting a partial roster as success.
+ *
+ * An inactive competition (e.g. a SERVER_WIDE created with an already-past date
+ * range) enrolls nobody instead of throwing, so a create-then-enroll caller is
+ * never left retrying against an orphaned row. Candidates are scanned
+ * oldest-first and ineligible ones are skipped without consuming a slot, so a
+ * `LEFT` row among the oldest players never blocks a later eligible player from
+ * filling the cap.
+ */
+export async function bulkEnrollTrackedPlayers(options: {
+  prisma: Db;
+  competitionId: CompetitionId;
+  guildId: DiscordGuildId;
+}): Promise<{ added: number }> {
+  const { prisma, competitionId, guildId } = options;
+
+  const { getCompetitionById } = await import("./queries.js");
+  const competition = await getCompetitionById(prisma, competitionId);
+  if (!competition) {
+    throw new Error(`Competition ${competitionId.toString()} not found`);
+  }
+  if (
+    !isCompetitionActive(
+      competition.isCancelled,
+      competition.endDate,
+      new Date(),
+    )
+  ) {
+    return { added: 0 };
+  }
+
+  const existing = await prisma.competitionParticipant.findMany({
+    where: { competitionId },
+    select: { playerId: true, status: true },
+  });
+  const knownPlayerIds = new Set(existing.map((row) => row.playerId));
+
+  // Pending invitations become full members — SERVER_WIDE is opt-out, so an
+  // outstanding invite is treated as acceptance (otherwise the row keeps
+  // joinedAt = null and the leaderboard excludes it). LEFT is the explicit
+  // opt-out and stays untouched. Promoting INVITED does not change the active
+  // count (INVITED already counts as non-LEFT), so it never affects the cap.
+  for (const row of existing) {
+    if (row.status === "INVITED") {
+      await acceptInvitation(prisma, competitionId, row.playerId);
+    }
+  }
+  let activeCount = existing.filter((row) => row.status !== "LEFT").length;
+
+  // Scan all tracked players oldest-first, enrolling those not yet on the
+  // roster until the cap is filled. Already-known rows (JOINED / INVITED /
+  // LEFT, all handled above) are skipped without consuming a slot, so the cap
+  // is filled with eligible players rather than cut short by ineligible ones.
+  const players = await prisma.player.findMany({
+    where: { serverId: guildId },
+    select: { id: true },
+    orderBy: { id: "asc" },
+  });
+
+  let added = 0;
+  for (const player of players) {
+    if (activeCount >= competition.maxParticipants) {
+      break;
+    }
+    if (knownPlayerIds.has(player.id)) {
+      continue;
+    }
+    await addParticipant({
+      prisma,
+      competitionId,
+      playerId: PlayerIdSchema.parse(player.id),
+      status: "JOINED",
+    });
+    activeCount += 1;
+    added += 1;
+  }
+  return { added };
+}
+
 // ============================================================================
 // Update Participant Status
 // ============================================================================
@@ -143,7 +236,7 @@ export async function addParticipant(options: {
  * @throws If participant not found or not in INVITED status
  */
 export async function acceptInvitation(
-  prisma: ExtendedPrismaClient,
+  prisma: Db,
   competitionId: number,
   playerId: number,
 ): Promise<CompetitionParticipant> {

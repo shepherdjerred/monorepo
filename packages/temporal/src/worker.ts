@@ -18,24 +18,13 @@ import {
   stopMetricsServer,
 } from "./observability/metrics.ts";
 import { readPositiveIntegerEnv } from "./shared/env.ts";
+import { createStructuredLogger } from "./observability/logging.ts";
+import { restoreGlitterCorpusSnapshotMetrics } from "./activities/glitter-corpus-snapshot.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
 
-function jsonLog(
-  level: "info" | "warning" | "error",
-  message: string,
-  fields: Record<string, unknown> = {},
-): void {
-  console.warn(
-    JSON.stringify({
-      level,
-      msg: message,
-      component: "temporal-worker",
-      ...fields,
-    }),
-  );
-}
+const jsonLog = createStructuredLogger();
 
 function installRuntime(): void {
   const metricsAddress =
@@ -100,6 +89,19 @@ async function sleepUnlessClosed(
 
 function formatError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+async function restoreGlitterCorpusMetricsAfterWorkerStart(): Promise<void> {
+  try {
+    await restoreGlitterCorpusSnapshotMetrics();
+  } catch (error: unknown) {
+    Sentry.captureException(error);
+    jsonLog(
+      "error",
+      "Glitter corpus snapshot metric restoration failed; corpus operations fail closed while other queues continue",
+      { error: formatError(error) },
+    );
+  }
 }
 
 function classifyEventBridgeStartFailure(error: unknown): string {
@@ -298,6 +300,36 @@ async function main(): Promise<void> {
     maxConcurrentActivityTaskExecutions: prBabysitMaxConcurrentActivities,
   });
 
+  const glitterCorpusWorker = await Worker.create({
+    connection,
+    namespace: "default",
+    taskQueue: TASK_QUEUES.GLITTER_CORPUS,
+    workflowsPath,
+    activities,
+    maxConcurrentActivityTaskExecutions: 1,
+    maxConcurrentWorkflowTaskExecutions: 1,
+  });
+
+  jsonLog("info", "Worker created", {
+    taskQueue: TASK_QUEUES.GLITTER_CORPUS,
+    maxConcurrentActivityTaskExecutions: 1,
+  });
+
+  const glitterContextWorker = await Worker.create({
+    connection,
+    namespace: "default",
+    taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
+    workflowsPath,
+    activities,
+    maxConcurrentActivityTaskExecutions: 1,
+    maxConcurrentWorkflowTaskExecutions: 1,
+  });
+
+  jsonLog("info", "Worker created", {
+    taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
+    maxConcurrentActivityTaskExecutions: 1,
+  });
+
   const clientConnection = await Connection.connect({ address });
   const client = new Client({ connection: clientConnection });
   await registerSchedules(client);
@@ -372,6 +404,26 @@ async function main(): Promise<void> {
         state: prBabysitState,
       });
     }
+    const glitterCorpusState = glitterCorpusWorker.getState();
+    if (glitterCorpusState === "RUNNING") {
+      glitterCorpusWorker.shutdown();
+    } else {
+      jsonLog(
+        "info",
+        "glitter-corpus worker not RUNNING, skipping shutdown()",
+        { state: glitterCorpusState },
+      );
+    }
+    const glitterContextState = glitterContextWorker.getState();
+    if (glitterContextState === "RUNNING") {
+      glitterContextWorker.shutdown();
+    } else {
+      jsonLog(
+        "info",
+        "glitter-context worker not RUNNING, skipping shutdown()",
+        { state: glitterContextState },
+      );
+    }
     await stopMetricsServer();
     await shutdownTracing();
   };
@@ -383,13 +435,17 @@ async function main(): Promise<void> {
     void shutdown("SIGINT");
   });
 
-  await Promise.all([
+  const workerRuns = [
     worker.run(),
     prReviewWorker.run(),
     prSummaryWorker.run(),
     agentTaskWorker.run(),
     prBabysitWorker.run(),
-  ]);
+    glitterCorpusWorker.run(),
+    glitterContextWorker.run(),
+  ];
+  void restoreGlitterCorpusMetricsAfterWorkerStart();
+  await Promise.all(workerRuns);
 }
 
 void (async () => {

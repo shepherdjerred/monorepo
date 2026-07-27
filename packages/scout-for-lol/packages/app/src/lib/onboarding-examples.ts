@@ -1,4 +1,4 @@
-import { getSeasonChoices } from "@scout-for-lol/data";
+import { getCurrentSeason, getSeasonChoices } from "@scout-for-lol/data";
 import {
   EMPTY_REPORT_STATE,
   type ReportFormState,
@@ -22,6 +22,7 @@ export type ReportExample = {
 export type CompetitionExample = {
   id: string;
   label: string;
+  description: string;
   build: (channelId: string) => FormState;
 };
 
@@ -62,17 +63,25 @@ export const REPORT_EXAMPLES: ReportExample[] = [
 ];
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-// Latest currently-joinable season (getSeasonChoices filters out ended ones).
-const CURRENT_SEASON_ID = getSeasonChoices()[0]?.value ?? "";
+// Fixed-date competitions are capped at 90 calendar days
+// (MAX_COMPETITION_DURATION_DAYS), so a "year-long" fixed preset can't validate;
+// a 60-day sprint stays comfortably inside the limit.
+const SIXTY_DAYS_MS = 60 * 24 * 60 * 60 * 1000;
+// The season active right now; falls back to the nearest joinable one between
+// seasons (getSeasonChoices filters out ended seasons but includes future
+// ones and is newest-start-first, so `.at(-1)` is the nearest upcoming one, not
+// the furthest-future `[0]`). `undefined` when the catalog has no current-or-
+// future season — the season-based "rank" preset is then omitted rather than
+// seeding an empty seasonId that submits into a "Pick a season." error.
+const CURRENT_SEASON_ID: string | undefined =
+  getCurrentSeason()?.id ?? getSeasonChoices().at(-1)?.value;
 
-function toIsoDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
-
-export const COMPETITION_EXAMPLES: CompetitionExample[] = [
-  {
+function buildRankPreset(seasonId: string): CompetitionExample {
+  return {
     id: "rank",
     label: "Highest rank this season",
+    description:
+      "Rank everyone by their peak Solo Queue rank before the season ends.",
     build: (channelId) => ({
       ...EMPTY_STATE,
       title: "Highest Solo Queue rank this season",
@@ -88,35 +97,58 @@ export const COMPETITION_EXAMPLES: CompetitionExample[] = [
         mode: "SEASON",
         startDate: "",
         endDate: "",
-        seasonId: CURRENT_SEASON_ID,
+        seasonId,
       },
     }),
-  },
+  };
+}
+
+function toIsoDate(date: Date): string {
+  // Use the browser-local calendar day, not the UTC slice of the ISO string:
+  // `toISOString().slice(0,10)` shifts to the previous/next day for viewers far
+  // from UTC, so a rolling "starts today" preset would seed the wrong date.
+  const year = date.getFullYear().toString();
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export const COMPETITION_EXAMPLES: CompetitionExample[] = [
+  ...(CURRENT_SEASON_ID === undefined
+    ? []
+    : [buildRankPreset(CURRENT_SEASON_ID)]),
   {
-    id: "games-2026",
-    label: "Most games in 2026",
-    build: (channelId) => ({
-      ...EMPTY_STATE,
-      title: "Most games in 2026",
-      description: "Rack up the most games this year.",
-      channelId,
-      criteria: {
-        criteriaType: "MOST_GAMES_PLAYED",
-        queue: "ALL",
-        championId: "",
-        minGames: "10",
-      },
-      dates: {
-        mode: "FIXED_DATES",
-        startDate: "2026-01-01",
-        endDate: "2026-12-31",
-        seasonId: "",
-      },
-    }),
+    id: "games-sprint",
+    label: "Most games — 2-month sprint",
+    description:
+      "A two-month race to see who grinds the most games across every queue.",
+    build: (channelId) => {
+      const now = new Date();
+      return {
+        ...EMPTY_STATE,
+        title: "Most games — 2-month sprint",
+        description: "Rack up the most games over the next two months.",
+        channelId,
+        criteria: {
+          criteriaType: "MOST_GAMES_PLAYED",
+          queue: "ALL",
+          championId: "",
+          minGames: "10",
+        },
+        dates: {
+          mode: "FIXED_DATES",
+          startDate: toIsoDate(now),
+          endDate: toIsoDate(new Date(now.getTime() + SIXTY_DAYS_MS)),
+          seasonId: "",
+        },
+      };
+    },
   },
   {
     id: "yuumi",
     label: "Most wins on Yuumi",
+    description:
+      "A one-month sprint for the most wins on a single champion (Yuumi).",
     build: (channelId) => {
       const now = new Date();
       return {

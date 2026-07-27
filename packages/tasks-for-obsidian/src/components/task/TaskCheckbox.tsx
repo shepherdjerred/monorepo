@@ -23,7 +23,7 @@ type TaskCheckboxProps = {
   onToggle: () => void;
 };
 
-export const TaskCheckbox = React.memo(function TaskCheckbox({
+export const TaskCheckbox = React.memo(function TaskCheckboxComponent({
   status,
   priority,
   onToggle,

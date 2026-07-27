@@ -45,10 +45,12 @@
  */
 import {
   botCloneCacheDir,
+  buildGlitterContext,
   disarmGitHooks,
   installScoutWorkspace,
   rootInstallWithoutHooks,
 } from "#activities/bot-clone.ts";
+import { isAllowedGlitterContextRefreshPath } from "#activities/glitter-context-refresh-paths.ts";
 import { runCommand } from "#activities/data-dragon-shell.ts";
 import { COG_TARGETS } from "#activities/readme-refresh.ts";
 import {
@@ -94,11 +96,22 @@ async function ensureScratchGitRepo(repoDir: string): Promise<void> {
 }
 
 async function rehearseScoutWorkspace(repoDir: string): Promise<void> {
-  console.error("[rehearsal] scout: installScoutWorkspace (builds llm-models)");
+  console.error(
+    "[rehearsal] scout: installScoutWorkspace (builds shared producers)",
+  );
   await installScoutWorkspace(repoDir);
   console.error("[rehearsal] scout: resolving @shepherdjerred/llm-models");
   await runCommand(
     ["bun", "-e", "await import('@shepherdjerred/llm-models')"],
+    { cwd: `${repoDir}/${DATA_PACKAGE}` },
+  );
+  console.error("[rehearsal] scout: resolving shared Glitter context");
+  await runCommand(
+    [
+      "bun",
+      "-e",
+      "const context = await import('@shepherdjerred/glitter-context'); if (context.listStyleCardNames().length !== 13) process.exit(1)",
+    ],
     { cwd: `${repoDir}/${DATA_PACKAGE}` },
   );
   console.error(`[rehearsal] scout: bun test ${REALDATA_TEST}`);
@@ -108,6 +121,82 @@ async function rehearseScoutWorkspace(repoDir: string): Promise<void> {
     cwd: `${repoDir}/${REPORT_PACKAGE}`,
     env: { ENVIRONMENT: undefined },
   });
+}
+
+async function rehearseGlitterContextRefresh(repoDir: string): Promise<void> {
+  console.error(
+    "[rehearsal] glitter-context: deterministic generated package + path scope",
+  );
+  await buildGlitterContext(repoDir);
+  const { GenerationStateDocumentSchema } =
+    await import("@shepherdjerred/glitter-context/schema");
+  const statePath = `${repoDir}/packages/glitter-context/data/generation-state.json`;
+  const generatedPath = `${repoDir}/packages/glitter-context/src/generated-data.ts`;
+  const originalState = await Bun.file(statePath).text();
+  const originalGenerated = await Bun.file(generatedPath).text();
+  const state = GenerationStateDocumentSchema.parse(JSON.parse(originalState));
+  state.relationshipRefreshedAt = "2026-01-01T00:00:00.000Z";
+  await Bun.write(statePath, `${JSON.stringify(state, null, 2)}\n`);
+
+  const packageDir = `${repoDir}/packages/glitter-context`;
+  await runCommand(["bun", "run", "scripts/generate.ts"], { cwd: packageDir });
+  await runCommand(
+    [
+      "bunx",
+      "prettier",
+      "--write",
+      "data/generation-state.json",
+      "src/generated-data.ts",
+    ],
+    { cwd: packageDir },
+  );
+  const firstState = await Bun.file(statePath).text();
+  const firstGenerated = await Bun.file(generatedPath).text();
+  await runCommand(["bun", "run", "scripts/generate.ts"], { cwd: packageDir });
+  await runCommand(
+    [
+      "bunx",
+      "prettier",
+      "--write",
+      "data/generation-state.json",
+      "src/generated-data.ts",
+    ],
+    { cwd: packageDir },
+  );
+  if (
+    (await Bun.file(statePath).text()) !== firstState ||
+    (await Bun.file(generatedPath).text()) !== firstGenerated
+  ) {
+    throw new Error("Glitter context generation is not byte-idempotent");
+  }
+  const status = await runCommand(["git", "status", "--porcelain"], {
+    cwd: repoDir,
+    trimStdout: false,
+  });
+  const changed = status
+    .split("\n")
+    .filter((line) => line.length > 3)
+    .map((line) => line.slice(3));
+  const disallowed = changed.filter(
+    (path) => !isAllowedGlitterContextRefreshPath(path),
+  );
+  if (disallowed.length > 0) {
+    throw new Error(
+      `Glitter context rehearsal changed disallowed paths: ${disallowed.join(", ")}`,
+    );
+  }
+  if (
+    isAllowedGlitterContextRefreshPath("packages/birmel/package.json") ||
+    !isAllowedGlitterContextRefreshPath(
+      "packages/glitter-context/data/style-cards/virmel_style.json",
+    )
+  ) {
+    throw new Error("Glitter context refresh path allowlist is invalid");
+  }
+
+  await Bun.write(statePath, originalState);
+  await Bun.write(generatedPath, originalGenerated);
+  console.error("[rehearsal] glitter-context: idempotence + path scope OK");
 }
 
 async function rehearseSnapshotRefresh(repoDir: string): Promise<void> {
@@ -325,6 +414,7 @@ async function main(): Promise<void> {
   const repoDir = parseRepoArg(process.argv.slice(2));
   await ensureScratchGitRepo(repoDir);
   await rehearseScoutWorkspace(repoDir);
+  await rehearseGlitterContextRefresh(repoDir);
   await rehearseSnapshotRefresh(repoDir);
   await rehearseHookFreeCommit(repoDir);
   await rehearseCogTargets(repoDir);

@@ -18,6 +18,7 @@
  */
 
 import { z } from "zod";
+import * as Sentry from "@sentry/bun";
 import { prisma } from "#src/database/index.ts";
 import { CSRF_COOKIE, SESSION_COOKIE } from "#src/trpc/context.ts";
 import { signSession, verifySession } from "#src/trpc/jwt.ts";
@@ -65,7 +66,7 @@ const DiscordUserSchema = z.object({
   avatar: z.string().nullable(),
 });
 
-function buildCookie(params: {
+export function buildCookie(params: {
   name: string;
   value: string;
   maxAgeSeconds: number;
@@ -115,7 +116,7 @@ function parseCookies(header: string | null): Map<string, string> {
  * Caddy which terminates TLS, so request.url's protocol is `http:` and
  * MUST NOT be used to derive Discord redirect URIs.
  */
-function getAppOrigin(): string {
+export function getAppOrigin(): string {
   const origin = configuration.webAppOrigin;
   if (origin === undefined || origin.length === 0) {
     throw new Error("WEB_APP_ORIGIN is not configured");
@@ -135,11 +136,18 @@ function checkStateNonce(
   return state.startsWith(`${expectedNonce}|`);
 }
 
-function safeReturnTo(value: string | null): string {
+export function safeReturnTo(value: string | null): string {
   if (value === null) return "/app/";
   // Only allow same-app paths. Prevents open-redirect via returnTo.
   if (value.startsWith("/app/")) return value;
   return "/app/";
+}
+
+/** 32 random bytes, hex-encoded. Shared by every flow that mints a CSRF token. */
+export function generateCsrfToken(): string {
+  const bytes = new Uint8Array(32);
+  globalThis.crypto.getRandomValues(bytes);
+  return [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 /**
@@ -387,11 +395,7 @@ export async function handleDiscordCallback(
   });
 
   const { jwt } = await signSession({ discordId });
-  const csrfBytes = new Uint8Array(32);
-  globalThis.crypto.getRandomValues(csrfBytes);
-  const csrfToken = [...csrfBytes]
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+  const csrfToken = generateCsrfToken();
 
   // Extract returnTo from state — already verified to start with `${nonce}|`.
   const pipe = state.indexOf("|");
@@ -456,4 +460,65 @@ export function handleWebLogout(_request: Request): Response {
     buildClearCookie(CSRF_COOKIE, isHttps, "Strict"),
   );
   return new Response(null, { status: 204, headers });
+}
+
+/**
+ * Single dispatch point for every route this file owns, following the
+ * same `(request, url) => Response | null` delegate pattern as
+ * `handleImageRoute`/`handleReportAiRoute` — `http-server.ts` calls this
+ * once instead of one `if` per route, keeping its own dispatcher's
+ * cyclomatic complexity from growing unbounded as auth routes are added.
+ */
+export async function handleAuthRoutes(
+  request: Request,
+  url: URL,
+): Promise<Response | null> {
+  if (url.pathname === "/api/auth/discord/start") {
+    try {
+      return handleDiscordStart(request);
+    } catch (error) {
+      logger.error("❌ OAuth start error:", error);
+      Sentry.captureException(error, { tags: { source: "auth-web-start" } });
+      return new Response("OAuth start failed", {
+        status: 500,
+        headers: { "Content-Type": "text/plain" },
+      });
+    }
+  }
+
+  if (url.pathname === "/api/discord/install") {
+    try {
+      return await handleDiscordInstall(request);
+    } catch (error) {
+      logger.error("❌ Bot install redirect error:", error);
+      Sentry.captureException(error, {
+        tags: { source: "auth-web-install" },
+      });
+      return new Response("Bot install redirect failed", {
+        status: 500,
+        headers: { "Content-Type": "text/plain" },
+      });
+    }
+  }
+
+  if (url.pathname === "/api/auth/discord/callback") {
+    try {
+      return await handleDiscordCallback(request);
+    } catch (error) {
+      logger.error("❌ OAuth callback error:", error);
+      Sentry.captureException(error, {
+        tags: { source: "auth-web-callback" },
+      });
+      return new Response("OAuth callback failed", {
+        status: 500,
+        headers: { "Content-Type": "text/plain" },
+      });
+    }
+  }
+
+  if (url.pathname === "/api/auth/logout" && request.method === "POST") {
+    return handleWebLogout(request);
+  }
+
+  return null;
 }

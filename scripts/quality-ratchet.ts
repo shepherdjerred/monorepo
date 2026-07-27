@@ -8,7 +8,6 @@
  * file (or exceeding the allowed count in an existing file) fails the check.
  */
 
-import { $ } from "bun";
 import { z } from "zod";
 
 const countMap = z.record(z.string(), z.number());
@@ -90,12 +89,40 @@ const RULES: GrepRule[] = [
 ];
 
 async function grepSuppressions(rule: GrepRule): Promise<Map<string, number>> {
-  const includeArgs = rule.includes.flatMap((g) => ["--include", g]);
-  const excludeDirArgs = rule.excludeDirs.flatMap((e) => ["--exclude-dir", e]);
-
-  // grep returns exit code 1 when no matches found — that's fine
-  const result =
-    await $`grep -rE ${rule.pattern} ${rule.searchPaths} ${includeArgs} ${excludeDirArgs} 2>/dev/null || true`.text();
+  const includeArgs = rule.includes.flatMap((glob) => ["--glob", glob]);
+  const excludeDirArgs = rule.excludeDirs.flatMap((directory) => [
+    "--glob",
+    `!**/${directory}/**`,
+  ]);
+  const process = Bun.spawn(
+    [
+      "rg",
+      "--line-number",
+      "--with-filename",
+      "--color=never",
+      "--hidden",
+      "--no-ignore",
+      "--regexp",
+      rule.pattern,
+      ...includeArgs,
+      ...excludeDirArgs,
+      ...rule.searchPaths,
+    ],
+    {
+      stdout: "pipe",
+      stderr: "pipe",
+    },
+  );
+  const [result, stderr, exitCode] = await Promise.all([
+    new Response(process.stdout).text(),
+    new Response(process.stderr).text(),
+    process.exited,
+  ]);
+  if (exitCode !== 0 && exitCode !== 1) {
+    throw new Error(
+      `rg failed for ${rule.key} (exit ${String(exitCode)}): ${stderr.trim()}`,
+    );
+  }
 
   const counts = new Map<string, number>();
 

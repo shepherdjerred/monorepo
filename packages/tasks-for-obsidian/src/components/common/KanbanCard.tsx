@@ -21,7 +21,7 @@ type Props = {
   onMoveTo?: ((columnKey: string) => void) | undefined;
 };
 
-export const KanbanCard = React.memo(function KanbanCard({
+export const KanbanCard = React.memo(function KanbanCardComponent({
   task,
   onPress,
   onToggle,

@@ -341,7 +341,7 @@ export class DocumentStore {
       if (change.status === "awaiting-human") {
         if (parsed.frontmatter.verification !== "human") {
           throw new DocumentWorkflowError(
-            "Only documents with human verification can await human confirmation.",
+            "Only documents with user acceptance can await user acceptance.",
           );
         }
         if (
@@ -349,7 +349,7 @@ export class DocumentStore {
           !parsed.metadata.hasHumanVerification
         ) {
           throw new DocumentWorkflowError(
-            "Clear Remaining and add Human Verification before requesting confirmation.",
+            "Complete agent work and add a behavioral Human Verification scenario before requesting acceptance.",
           );
         }
       }
@@ -369,7 +369,7 @@ export class DocumentStore {
           parsed.frontmatter.status !== "awaiting-human"
         ) {
           throw new DocumentWorkflowError(
-            "Human-verified work must pass through Awaiting Human Confirmation.",
+            "Human-accepted work must pass through Awaiting User Acceptance.",
           );
         }
       }

@@ -10,6 +10,8 @@ export type RunOptions = {
   cwd?: string;
   /** Extra env vars layered on top of the current process env. */
   env?: Record<string, string>;
+  /** Env vars removed after layering `env`, for least-privilege subprocesses. */
+  unsetEnv?: string[];
   /**
    * When true, capture stdout and return it instead of inheriting the parent's
    * stdout. stderr is always streamed live to the operator regardless (and a
@@ -80,11 +82,17 @@ export async function runAllowExit(
     throw new Error("run: empty command");
   }
   const capture = opts.capture === true;
+  const layeredEnv =
+    opts.env === undefined ? Bun.env : { ...Bun.env, ...opts.env };
+  const unsetEnv = new Set(opts.unsetEnv);
+  const childEnv = Object.fromEntries(
+    Object.entries(layeredEnv).filter(([name]) => !unsetEnv.has(name)),
+  );
   const proc = Bun.spawn([bin, ...args], {
     // `exactOptionalPropertyTypes` forbids passing `cwd: undefined`; spread the
     // key in only when a cwd was actually provided.
     ...(opts.cwd === undefined ? {} : { cwd: opts.cwd }),
-    env: opts.env === undefined ? Bun.env : { ...Bun.env, ...opts.env },
+    env: childEnv,
     stdout: capture ? "pipe" : "inherit",
     // Always pipe stderr so we can retain a tail for diagnostics / transient
     // classification. `teeStderr` forwards every chunk to the parent's stderr

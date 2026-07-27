@@ -236,6 +236,17 @@ cd packages/<name> && bunx eslint . --fix
 # Check CI status via Buildkite CLI or web UI, never `gh run`
 ```
 
+### Release refinement providers
+
+The main-only `release-please` lane runs `scripts/release.ts`. Its CHANGELOG
+refiner uses Claude first and falls back to Codex only when Claude returns a
+validated usage-quota error. Both `CLAUDE_CODE_OAUTH_TOKEN` and
+`OPENAI_API_KEY` are required; unknown provider failures and fallback failures
+remain hard CI failures. Codex is a pinned production dependency of
+`@shepherdjerred/root-scripts`, so the lane's filtered install provides the
+binary without depending on a future CI-base image rollout. Keep the
+provider-neutral procedure in `scripts/prompts/refine-release-please.md`.
+
 ## GitHub CLI in Codex
 
 `gh` works from Codex, but GitHub network access is sandboxed. Do not conclude that

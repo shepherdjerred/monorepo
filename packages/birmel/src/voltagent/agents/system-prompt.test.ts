@@ -5,8 +5,12 @@ import {
   buildSubAgentPrompt,
   buildSupervisorPrompt,
 } from "@shepherdjerred/birmel/voltagent/agents/system-prompt.ts";
-import GLITTER_BOYS_HISTORY from "@shepherdjerred/birmel/lore/glitter-boys-history.txt";
-import GLITTER_BOYS_RELATIONSHIPS from "@shepherdjerred/birmel/lore/relationships.txt";
+import {
+  friendGroupHistory,
+  relationshipContextText,
+} from "@shepherdjerred/glitter-context";
+
+const GLITTER_BOYS_RELATIONSHIPS = relationshipContextText();
 
 const persona: PersonaContext = {
   name: "TestPersona",
@@ -16,9 +20,9 @@ const persona: PersonaContext = {
 };
 
 function firstHistoryLine(): string {
-  const line = GLITTER_BOYS_HISTORY.trim().split("\n")[0];
+  const line = friendGroupHistory.trim().split("\n")[0];
   if (line === undefined || line.length === 0) {
-    throw new Error("glitter-boys-history.txt unexpectedly empty");
+    throw new Error("shared Glitter history unexpectedly empty");
   }
   return line;
 }
@@ -26,7 +30,7 @@ function firstHistoryLine(): string {
 function firstRelationshipLine(): string {
   const line = GLITTER_BOYS_RELATIONSHIPS.trim().split("\n")[0];
   if (line === undefined || line.length === 0) {
-    throw new Error("relationships.txt unexpectedly empty");
+    throw new Error("shared relationship projection unexpectedly empty");
   }
   return line;
 }
@@ -74,9 +78,7 @@ describe("buildSupervisorPrompt", () => {
     expect(prompt).toContain("- terse");
     expect(prompt).toContain("## Friend group context (Glitter Boys)");
     expect(prompt).toContain(firstHistoryLine());
-    expect(prompt).toContain(
-      "### How everyone knows each other (Graphviz DOT)",
-    );
+    expect(prompt).toContain("### How everyone knows each other");
     expect(prompt).toContain(firstRelationshipLine());
   });
 
@@ -126,12 +128,12 @@ describe("buildSubAgentPrompt", () => {
 
 describe("bundled glitter lore content sanity", () => {
   test("history file starts with the expected title (catches accidental clear/replace)", () => {
-    expect(GLITTER_BOYS_HISTORY.trim().length).toBeGreaterThan(100);
-    expect(GLITTER_BOYS_HISTORY).toContain("Glitter Boys");
+    expect(friendGroupHistory.trim().length).toBeGreaterThan(100);
+    expect(friendGroupHistory).toContain("Glitter Boys");
   });
 
-  test("relationship graph contains a Graphviz digraph declaration", () => {
+  test("relationship projection includes the current Caitlyn and Richard state", () => {
     expect(GLITTER_BOYS_RELATIONSHIPS.trim().length).toBeGreaterThan(100);
-    expect(GLITTER_BOYS_RELATIONSHIPS).toContain("digraph");
+    expect(GLITTER_BOYS_RELATIONSHIPS).toContain("Caitlyn ↔ Richard (Exes)");
   });
 });

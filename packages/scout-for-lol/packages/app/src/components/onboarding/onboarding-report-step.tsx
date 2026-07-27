@@ -76,6 +76,7 @@ export function OnboardingReportStep(props: {
           state={state}
           setState={setState}
           channels={props.channels}
+          queryEditorDisclosure="collapsed"
         />
         {error !== null && <p className="text-sm text-destructive">{error}</p>}
         <div className="flex items-center justify-between">

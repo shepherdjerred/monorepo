@@ -8,8 +8,8 @@
 """Validate catalog.json with Pydantic — the Python view of the shared LLM model catalog.
 
 This proves the language-neutral JSON is consumable from Python. Other Python
-tools (e.g. scout's ai_analyze_llm.py) can import these models or copy the
-loader. Run: `uv run packages/llm-models/python/validate_catalog.py`
+tools can import these models or copy the loader.
+Run: `uv run packages/llm-models/python/validate_catalog.py`
 """
 
 from __future__ import annotations
