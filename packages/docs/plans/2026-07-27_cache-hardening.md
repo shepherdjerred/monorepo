@@ -44,12 +44,20 @@ Implement offline-first local Turbo caching and reliable shared CI caching.
 - After the first main run publishes `ci-playwright:latest`, switch the Playwright lanes from the public image to the internal runner in a follow-up commit; changing consumers before publication would make this branch's PR e2e job unable to pull the image.
 - Verify the live Turbo service accepts writes and that CI has remote cache hits after the deployment reaches the cluster.
 - Submit the scoped commits and inspect the new Buildkite review-gate outcomes.
+- Provision `buildkite-trivy-db` through the GitOps rollout before enabling the
+  PR-scanner mount: the live cluster currently has no such PVC, so a consumer
+  in this PR would leave the PR's own Trivy pod Pending before the PVC-producing
+  chart can merge. Once the claim is present and the refresh job has populated
+  it, publish the read-only mount plus `--skip-db-update` consumer change.
 
 ### Caveats
 
 - `origin/main` currently contains the user's separate main failure; this work must not modify that fix.
 - The current remote Turbo cache still returns HTTP 412 on writes until the existing fsGroup source fix is released through the green-main Helm/ArgoCD path.
 - The Trivy database refresh is scheduled every six hours after deployment; if its shared cache is empty before the first scheduled refresh, the existing fail-fast Trivy lane will require an immediate refresh rather than silently downloading during the PR build.
+- Live check on 2026-07-27: `kubectl get pvc -n buildkite buildkite-trivy-db`
+  returned NotFound. The reviewed pipeline consumer is implemented locally but
+  intentionally not published until the PVC rollout order is safe.
 - The main checkout had unrelated user changes and was not modified.
 
 ## Comment Log
