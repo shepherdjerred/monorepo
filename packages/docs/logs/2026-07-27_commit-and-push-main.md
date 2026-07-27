@@ -20,6 +20,10 @@ an intentional commit and push.
 - Passed the complete `bun run verify -- --affected` surface after declaring the
   intentional dynamic Codex release-refiner integration and package-local ESLint
   runner to Knip.
+- Merged the concurrently published release-refiner CI fix before the final
+  push, then re-ran the complete affected verification successfully.
+- Verified the later OpenCode model-price configuration update matches its live
+  chezmoi-managed target before including it in the follow-up commit.
 
 ### Remaining
 

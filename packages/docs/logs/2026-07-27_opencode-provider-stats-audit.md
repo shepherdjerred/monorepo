@@ -131,16 +131,19 @@ The local `~/git/opencode-quota` build now:
 - Retains historical pricing keys across snapshot refreshes so saved Cursor/Copilot usage remains priceable.
 - Prefers isolated OpenCode package-cache Kimi companions before the development link, preventing tests from reaching the live account.
 - Keeps `partial` visible in narrow sidebars and renders positive sub-cent estimates as `<$0.01` instead of `$0.00`.
+- Restores API-list prices to effective OpenAI OAuth models after Codex zeroes them, matching Grok's native Context `spent` semantics for new messages.
+- Adds native Kimi prices to live and chezmoi-managed model config and maps Kimi OAuth model IDs to Moonshot pricing IDs.
 
 The screenshot's `Test message` session (`ses_05b1104adffeXaLIuzH0Lx6gtU`) was verified against the built `dist` output: 24K new input, 95K cached input, 453 output, and `API eq. $0.19` (`$0.194405` before display rounding).
 
+The mixed Kimi/Grok/Codex session (`ses_05af1f93effeC45ds9MjbVFwf4`) now resolves all three models and renders `API eq. $0.13` (`$0.1330364`) without a partial marker. Fresh model-catalog processes show nonzero native costs for `openai/gpt-5.6-sol` and `kimi-for-coding-oauth/k3`.
+
 ## Remaining Fix Order
 
-1. Map all Kimi OAuth provider/model IDs to current Moonshot pricing IDs and add live-history regression tests.
-2. Render all provider-native limit families and balances, preserving unknown named windows instead of dropping them.
-3. Add refresh-safe OpenAI and xAI quota clients using the same single-flight/persist pattern as Kimi.
-4. Add `k3-256k` to static config, investigate why discovery does not expose it, and merge discovered variants into the effective model config.
-5. Record pricing snapshot timestamp/source in reports and optionally preserve per-message native list-price estimates for historical comparison.
+1. Render all provider-native limit families and balances, preserving unknown named windows instead of dropping them.
+2. Add refresh-safe OpenAI and xAI quota clients using the same single-flight/persist pattern as Kimi.
+3. Add `k3-256k` to static config, investigate why discovery does not expose it, and merge discovered variants into the effective model config.
+4. Record pricing snapshot timestamp/source in reports and optionally preserve per-message native list-price estimates for historical comparison.
 
 ## Sources
 
@@ -170,6 +173,8 @@ The screenshot's `Test message` session (`ses_05b1104adffeXaLIuzH0Lx6gtU`) was v
 - Verified the screenshot's session renders `API eq. $0.19` from the built plugin.
 - Completed adversarial review with no remaining P0-P2 findings.
 - Verified session `ses_05af1f93effeC45ds9MjbVFwf4` completed successfully with Kimi K3 variant `medium` and recorded reasoning tokens.
+- Implemented the selected built-in `spent` behavior for Codex and Kimi and verified effective model costs in fresh OpenCode processes.
+- Fixed Kimi API-equivalent pricing aliases; the mixed-provider session now renders a complete `$0.13` estimate.
 
 ### Remaining
 
@@ -181,5 +186,6 @@ The screenshot's `Test message` session (`ses_05b1104adffeXaLIuzH0Lx6gtU`) was v
 - Anthropic, ChatGPT, Kimi, and Grok subscription endpoints used by the plugins are private or semi-private contracts and can change independently of OpenCode.
 - Exact plan entitlements remain account-specific even when a model appears in a provider catalog.
 - The exact reason `k3-256k` is absent from the effective OpenCode catalog remains unknown.
-- OpenCode's native Context row will continue to say `$0.00 spent` for subscription OAuth; the meaningful estimate appears in the plugin's session-token section as `API eq.`.
+- Native Context `spent` and the quota panel's `API eq.` now both represent public API-list-price equivalents for new Codex, Kimi, and Grok messages; neither is an actual subscription charge.
+- Historical Codex and Kimi messages retain their already-persisted zero native cost; only new messages use restored native prices.
 - Kimi's discovery endpoint advertises `low/high/max`, but OpenCode's synthesized `medium` K3 variant was accepted successfully by the live provider.
