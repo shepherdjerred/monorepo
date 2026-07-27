@@ -8,6 +8,7 @@ import {
   RelationshipsDocumentSchema,
   StyleCardSchema,
   type GenerationStateDocument,
+  type GenerationStateEntry,
 } from "@shepherdjerred/glitter-context/schema";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import {
@@ -138,6 +139,36 @@ function updateGenerationState(input: {
   const candidateByPerson = new Map(
     input.candidates.map((candidate) => [candidate.person.id, candidate]),
   );
+  const refreshedEntryFor = (personId: string): GenerationStateEntry => {
+    const candidate = candidateByPerson.get(personId);
+    const lastMessage = candidate?.messages.at(-1);
+    if (candidate === undefined || lastMessage === undefined) {
+      throw new Error(`missing refreshed candidate state for ${personId}`);
+    }
+    return {
+      personId,
+      lastMessageId: lastMessage.messageId,
+      sourceSnapshotChecksum: input.snapshotSha256,
+      messageCount: candidate.totalMessageCount,
+      refreshedAt: input.refreshedAt,
+    };
+  };
+  const existingPersonIds = new Set(
+    input.state.people.map((entry) => entry.personId),
+  );
+  const updatedExisting = input.state.people.map((entry) =>
+    input.refreshedPeople.has(entry.personId)
+      ? { ...entry, ...refreshedEntryFor(entry.personId) }
+      : entry,
+  );
+  // A person can become a refresh candidate without a pre-existing state entry
+  // (new Discord ID + style card). Without appending their watermark here, every
+  // later weekly run would treat them as never-refreshed and regenerate their
+  // card from the entire corpus. Record state for those newly refreshed people.
+  const appended = [...input.refreshedPeople]
+    .filter((personId) => !existingPersonIds.has(personId))
+    .toSorted()
+    .map((personId) => refreshedEntryFor(personId));
   return GenerationStateDocumentSchema.parse({
     ...input.state,
     relationshipSourceSnapshotChecksum: input.relationshipsEvaluated
@@ -146,25 +177,7 @@ function updateGenerationState(input: {
     relationshipRefreshedAt: input.relationshipsEvaluated
       ? input.refreshedAt
       : input.state.relationshipRefreshedAt,
-    people: input.state.people.map((entry) => {
-      if (!input.refreshedPeople.has(entry.personId)) {
-        return entry;
-      }
-      const candidate = candidateByPerson.get(entry.personId);
-      const lastMessage = candidate?.messages.at(-1);
-      if (candidate === undefined || lastMessage === undefined) {
-        throw new Error(
-          `missing refreshed candidate state for ${entry.personId}`,
-        );
-      }
-      return {
-        ...entry,
-        lastMessageId: lastMessage.messageId,
-        sourceSnapshotChecksum: input.snapshotSha256,
-        messageCount: candidate.totalMessageCount,
-        refreshedAt: input.refreshedAt,
-      };
-    }),
+    people: [...updatedExisting, ...appended],
   });
 }
 

@@ -27,6 +27,7 @@ export const PeopleDocumentSchema = z
   .superRefine((document, context) => {
     const ids = new Set<string>();
     const aliases = new Set<string>();
+    const discordUserIds = new Set<string>();
     for (const person of document.people) {
       if (ids.has(person.id)) {
         context.addIssue({
@@ -48,6 +49,15 @@ export const PeopleDocumentSchema = z
           });
         }
         aliases.add(normalized);
+      }
+      for (const discordUserId of person.discordUserIds) {
+        if (discordUserIds.has(discordUserId)) {
+          context.addIssue({
+            code: "custom",
+            message: `duplicate Discord user id: ${discordUserId}`,
+          });
+        }
+        discordUserIds.add(discordUserId);
       }
     }
   });

@@ -21,6 +21,30 @@ function unorderedPair(first: string, second: string): string {
   return [first, second].toSorted().join(":");
 }
 
+/**
+ * Endpoint list for a relationship, direction-aware. Undirected relationships
+ * are order-independent (`A ↔ B` === `B ↔ A`), but directed `source-to-target`
+ * relationships must preserve endpoint order so that reversing the direction
+ * (`A → B` becoming `B → A`) is recognized as a distinct, superseding event.
+ */
+function endpointList(
+  sourceId: string,
+  targetId: string,
+  direction: RelationshipEvent["direction"],
+): string[] {
+  return direction === "undirected"
+    ? [sourceId, targetId].toSorted()
+    : [sourceId, targetId];
+}
+
+function endpointKey(
+  sourceId: string,
+  targetId: string,
+  direction: RelationshipEvent["direction"],
+): string {
+  return endpointList(sourceId, targetId, direction).join(":");
+}
+
 export function selectRelationshipEvidence(input: {
   people: readonly Person[];
   messages: readonly CurrentMessage[];
@@ -45,7 +69,11 @@ export function selectRelationshipEvidence(input: {
 }
 
 function proposalId(proposal: RelationshipProposal): string {
-  const pair = [proposal.sourceId, proposal.targetId].toSorted();
+  const pair = endpointList(
+    proposal.sourceId,
+    proposal.targetId,
+    proposal.direction,
+  );
   const digest = sha256(
     new TextEncoder().encode(
       JSON.stringify({
@@ -65,12 +93,12 @@ function isSameRelationship(
   proposal: RelationshipProposal,
 ): boolean {
   return (
-    unorderedPair(event.sourceId, event.targetId) ===
-      unorderedPair(proposal.sourceId, proposal.targetId) &&
+    event.direction === proposal.direction &&
+    endpointKey(event.sourceId, event.targetId, event.direction) ===
+      endpointKey(proposal.sourceId, proposal.targetId, proposal.direction) &&
     event.kind === proposal.kind &&
     event.label.trim().toLocaleLowerCase() ===
-      proposal.label.trim().toLocaleLowerCase() &&
-    event.direction === proposal.direction
+      proposal.label.trim().toLocaleLowerCase()
   );
 }
 

@@ -76,7 +76,11 @@ site_webring_paths=(packages/webring scripts/deploy-site.ts scripts/lib/s3-stati
 site_cooklang_paths=(packages/cooklang-rich-preview scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
 site_stocks_paths=(packages/stocks-sjer-red scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
 site_better_skill_capped_paths=(packages/better-skill-capped scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
-site_glitter_paths=(packages/glitter scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
+# glitter-context is a bundled workspace dependency of the glitter site (its
+# people/relationship data is baked into the build), so a context-only refresh
+# must redeploy the site. The images lane already covers the Birmel/Scout/
+# temporal images via the workspace dependency closure in select-image-targets.ts.
+site_glitter_paths=(packages/glitter packages/glitter-context scripts/deploy-site.ts scripts/lib/s3-static-site.ts scripts/lib/run.ts)
 # docker-bake.hcl and .dockerignore are scout image-content inputs: a bake
 # config change can alter the backend image without touching the scout
 # tree, and the release-pair tag mint (scout-tag-release) requires a fresh
@@ -85,6 +89,9 @@ site_scout_paths=(
   packages/scout-for-lol
   packages/astro-opengraph-images
   packages/llm-models
+  # scout's frontend/data packages bundle glitter-context, so a context-only
+  # refresh must rebuild + redeploy the scout site.
+  packages/glitter-context
   packages/homelab/src/cdk8s/src/versions.ts
   scripts/package.json
   scripts/scout-site-release.ts

@@ -144,7 +144,13 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     name: "glitter",
     url: "https://ppl.glitter-boys.com",
     buildDir: "packages/glitter",
-    buildCmd: "bun --no-install run build",
+    // The glitter site imports `@shepherdjerred/glitter-context`, whose `dist/`
+    // is gitignored and not produced by `bun install`. Build the shared-context
+    // producer first (its own build runs codegen + tsc) so a clean-checkout
+    // deploy can resolve the dependency — mirrors how the site-scout lane builds
+    // its workspace producers before the consumer.
+    buildCmd:
+      "bun --no-install run --cwd ../glitter-context build && bun --no-install run build",
     distDir: "packages/glitter/dist",
     target: "s3",
     immutablePrefixes: [],

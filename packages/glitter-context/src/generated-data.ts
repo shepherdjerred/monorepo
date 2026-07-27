@@ -3,19 +3,19 @@ import generationStateJson from "#data/generation-state.json" with { type: "json
 import loreJson from "#data/lore.json" with { type: "json" };
 import peopleJson from "#data/people.json" with { type: "json" };
 import relationshipsJson from "#data/relationships.json" with { type: "json" };
-import aaronCard from "#data/style-cards/aaron_style.json" with { type: "json" };
-import brianCard from "#data/style-cards/brian_style.json" with { type: "json" };
-import caitlynCard from "#data/style-cards/caitlyn_style.json" with { type: "json" };
-import colinCard from "#data/style-cards/colin_style.json" with { type: "json" };
-import dannyCard from "#data/style-cards/danny_style.json" with { type: "json" };
-import edwardCard from "#data/style-cards/edward_style.json" with { type: "json" };
-import hirzaCard from "#data/style-cards/hirza_style.json" with { type: "json" };
-import irfanCard from "#data/style-cards/irfan_style.json" with { type: "json" };
-import jerredCard from "#data/style-cards/jerred_style.json" with { type: "json" };
-import longCard from "#data/style-cards/long_style.json" with { type: "json" };
-import richardCard from "#data/style-cards/richard_style.json" with { type: "json" };
-import ryanCard from "#data/style-cards/ryan_style.json" with { type: "json" };
-import virmelCard from "#data/style-cards/virmel_style.json" with { type: "json" };
+import styleCard0 from "#data/style-cards/aaron_style.json" with { type: "json" };
+import styleCard1 from "#data/style-cards/brian_style.json" with { type: "json" };
+import styleCard2 from "#data/style-cards/caitlyn_style.json" with { type: "json" };
+import styleCard3 from "#data/style-cards/colin_style.json" with { type: "json" };
+import styleCard4 from "#data/style-cards/danny_style.json" with { type: "json" };
+import styleCard5 from "#data/style-cards/edward_style.json" with { type: "json" };
+import styleCard6 from "#data/style-cards/hirza_style.json" with { type: "json" };
+import styleCard7 from "#data/style-cards/irfan_style.json" with { type: "json" };
+import styleCard8 from "#data/style-cards/jerred_style.json" with { type: "json" };
+import styleCard9 from "#data/style-cards/long_style.json" with { type: "json" };
+import styleCard10 from "#data/style-cards/richard_style.json" with { type: "json" };
+import styleCard11 from "#data/style-cards/ryan_style.json" with { type: "json" };
+import styleCard12 from "#data/style-cards/virmel_style.json" with { type: "json" };
 import {
   GenerationStateDocumentSchema,
   LoreDocumentSchema,
@@ -31,17 +31,17 @@ export const generationStateDocument =
   GenerationStateDocumentSchema.parse(generationStateJson);
 export const loreDocument = LoreDocumentSchema.parse(loreJson);
 export const styleCards = StyleCardsDocumentSchema.parse({
-  aaron: aaronCard,
-  brian: brianCard,
-  caitlyn: caitlynCard,
-  colin: colinCard,
-  danny: dannyCard,
-  edward: edwardCard,
-  hirza: hirzaCard,
-  irfan: irfanCard,
-  jerred: jerredCard,
-  long: longCard,
-  richard: richardCard,
-  ryan: ryanCard,
-  virmel: virmelCard,
+  aaron: styleCard0,
+  brian: styleCard1,
+  caitlyn: styleCard2,
+  colin: styleCard3,
+  danny: styleCard4,
+  edward: styleCard5,
+  hirza: styleCard6,
+  irfan: styleCard7,
+  jerred: styleCard8,
+  long: styleCard9,
+  richard: styleCard10,
+  ryan: styleCard11,
+  virmel: styleCard12,
 });

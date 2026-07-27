@@ -10,15 +10,31 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, model_validator
+from pydantic import (
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    Field,
+    TypeAdapter,
+    model_validator,
+)
 
 PACKAGE_ROOT = Path(__file__).resolve().parent.parent
 DATA_ROOT = PACKAGE_ROOT / "data"
 IDENTIFIER_PATTERN = r"^[a-z0-9]+(?:-[a-z0-9]+)*$"
 DISCORD_ID_PATTERN = r"^\d{17,20}$"
+CHECKSUM_PATTERN = r"^[a-f0-9]{64}$"
+
+# Constrained scalar types mirroring the canonical Zod/JSON-Schema contract so
+# that the independent Python validator rejects exactly what the shared schema
+# rejects (Discord IDs, SHA-256 checksums, and offset-aware ISO timestamps).
+Identifier = Annotated[str, Field(pattern=IDENTIFIER_PATTERN)]
+DiscordId = Annotated[str, Field(pattern=DISCORD_ID_PATTERN)]
+Checksum = Annotated[str, Field(pattern=CHECKSUM_PATTERN)]
 
 
 class DocumentModel(BaseModel):
@@ -29,11 +45,11 @@ class DocumentModel(BaseModel):
 
 class Person(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    id: str = Field(pattern=IDENTIFIER_PATTERN)
+    id: Identifier
     displayName: str = Field(min_length=1)
     kind: Literal["person", "group"]
     aliases: list[str]
-    discordUserIds: list[str]
+    discordUserIds: list[DiscordId]
 
 
 class PeopleDocument(DocumentModel):
@@ -43,6 +59,7 @@ class PeopleDocument(DocumentModel):
     def validate_unique_people(self) -> PeopleDocument:
         ids: set[str] = set()
         aliases: set[str] = set()
+        discord_ids: set[str] = set()
         for person in self.people:
             if person.id in ids:
                 raise ValueError(f"duplicate person id: {person.id}")
@@ -58,8 +75,9 @@ class PeopleDocument(DocumentModel):
                 )
             aliases.update(person_aliases)
             for discord_id in person.discordUserIds:
-                if not discord_id.isdigit() or not 17 <= len(discord_id) <= 20:
-                    raise ValueError(f"invalid Discord user id: {discord_id}")
+                if discord_id in discord_ids:
+                    raise ValueError(f"duplicate Discord user id: {discord_id}")
+                discord_ids.add(discord_id)
         return self
 
 
@@ -67,7 +85,7 @@ class Provenance(BaseModel):
     model_config = ConfigDict(extra="forbid")
     kind: Literal["legacy-graph", "maintainer-assertion", "corpus-evidence"]
     reference: str = Field(min_length=1)
-    messageIds: list[str]
+    messageIds: list[DiscordId]
 
 
 class RelationshipEvent(BaseModel):
@@ -88,8 +106,8 @@ class RelationshipEvent(BaseModel):
     label: str
     direction: Literal["undirected", "source-to-target"]
     status: Literal["current", "historical"]
-    effectiveAt: str | None
-    recordedAt: str
+    effectiveAt: date | None
+    recordedAt: AwareDatetime
     supersedesEventId: str | None
     provenance: list[Provenance] = Field(min_length=1)
 
@@ -154,16 +172,16 @@ class StyleCard(BaseModel):
 
 class GenerationStateEntry(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    personId: str = Field(pattern=IDENTIFIER_PATTERN)
-    lastMessageId: str | None
-    sourceSnapshotChecksum: str | None
+    personId: Identifier
+    lastMessageId: DiscordId | None
+    sourceSnapshotChecksum: Checksum | None
     messageCount: int = Field(ge=0)
-    refreshedAt: str | None
+    refreshedAt: AwareDatetime | None
 
 
 class GenerationStateDocument(DocumentModel):
-    relationshipSourceSnapshotChecksum: str | None
-    relationshipRefreshedAt: str | None
+    relationshipSourceSnapshotChecksum: Checksum | None
+    relationshipRefreshedAt: AwareDatetime | None
     people: list[GenerationStateEntry]
 
 

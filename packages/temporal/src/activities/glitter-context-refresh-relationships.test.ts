@@ -135,6 +135,65 @@ describe("relationship history application", () => {
     ]);
   });
 
+  test("records a reversed directed relationship as a superseding event", () => {
+    const directed = RelationshipsDocumentSchema.parse({
+      schemaVersion: 1,
+      events: [
+        {
+          id: "richard-caitlyn-reports",
+          sourceId: "richard",
+          targetId: "caitlyn",
+          kind: "professional",
+          label: "Reports to",
+          direction: "source-to-target",
+          status: "current",
+          effectiveAt: null,
+          recordedAt: "2025-01-01T00:00:00.000Z",
+          supersedesEventId: null,
+          provenance: [
+            {
+              kind: "maintainer-assertion",
+              reference: "maintainer",
+              messageIds: [],
+            },
+          ],
+        },
+      ],
+    });
+    const reversed: RelationshipProposal = {
+      sourceId: "caitlyn",
+      targetId: "richard",
+      kind: "professional",
+      label: "Reports to",
+      direction: "source-to-target",
+      effectiveAt: "2026-06-01",
+      evidenceMessageIds: ["60000000000000001", "60000000000000002"],
+      confidence: 1,
+      rationale: "The reporting direction flipped.",
+    };
+    const result = applyRelationshipProposals({
+      document: directed,
+      proposals: [reversed],
+      people,
+      evidence: relationshipEvidence,
+      snapshotSha256: "b".repeat(64),
+      recordedAt: "2026-07-26T00:00:00.000Z",
+    });
+    expect(result.appliedCount).toBe(1);
+    expect(
+      result.document.events.find(
+        (event) => event.id === "richard-caitlyn-reports",
+      )?.status,
+    ).toBe("historical");
+    const current = result.document.events.filter(
+      (event) => event.status === "current",
+    );
+    expect(current).toHaveLength(1);
+    expect(current[0]?.sourceId).toBe("caitlyn");
+    expect(current[0]?.targetId).toBe("richard");
+    expect(current[0]?.supersedesEventId).toBe("richard-caitlyn-reports");
+  });
+
   test("is deterministic and skips a relationship already current", () => {
     const first = applyRelationshipProposals({
       document: relationships,
