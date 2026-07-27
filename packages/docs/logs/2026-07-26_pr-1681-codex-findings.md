@@ -94,3 +94,37 @@ maxParticipants` could fill the raw list with `LEFT`/existing rows and finish
 Verified: backend+app typecheck clean, lint clean, `competition-create.router`
 tests 3/3 pass. The helper's return type narrowed from `{added, failed}` to
 `{added}` (no consumer read `failed`).
+
+## Re-review round 2 — 7 findings on head b803449f4
+
+Codex surfaced 7 more across the large diff; all fixed:
+
+- **P1 atomicity (router):** create+enroll and update+enroll now each run inside
+  one `prisma.$transaction`. Followed the codebase's existing tx pattern — the
+  `Db` tx-client type from `lib/audit/index.ts` — retyping `createCompetition`,
+  `updateCompetition`, `getCompetitionById`, `addParticipant`, `findParticipant`,
+  `acceptInvitation`, and `bulkEnrollTrackedPlayers` from `ExtendedPrismaClient`
+  to `Db` (the full client is still assignable, so every other caller is
+  unchanged). An enrollment failure now rolls the competition/visibility change
+  back — no orphaned/partial row, and a retry still satisfies `enrollsServerWide`.
+- **P2 promote INVITED (bulkEnroll):** existing INVITED rows are now promoted to
+  JOINED (via `acceptInvitation`) during server-wide enrollment so they get a
+  non-null `joinedAt` and appear on the leaderboard; LEFT stays the opt-out.
+- **P1 hover prefetch (player-list):** removed the `onMouseEnter` prefetch of
+  `getPlayer` — that read triggers a synchronous Riot ID refresh, so hovering a
+  list fanned out Riot API calls. No side-effect-free detail endpoint exists.
+- **P2 explorer date mangling (report-data-explorer):** `formatExplorerValue`
+  now takes the column type and only date-formats `timestamp` columns, so string
+  identity values like the tagline "2026" render literally.
+- **P2 empty season preset (onboarding-examples):** the season-based "rank"
+  preset is omitted entirely when the catalog has no current/upcoming season
+  (`CURRENT_SEASON_ID` is now `string | undefined`), instead of seeding `""`.
+- **P1 identity columns permission (report.router):** `browseData` now requires
+  `accounts:read` when any Riot-identity column (`ACCOUNT_IDENTITY_COLUMN_IDS`)
+  is selected, filtered, or sorted — matching the player serializer's redaction.
+- **P2 optimistic mute rollback (guild-subscriptions):** `onSuccess` now rolls
+  back the optimistic cache for every non-`updated` result (application-level
+  failures return as data, so `onError` never fired).
+
+Verified: backend+app typecheck clean, lint clean, `competition-create.router`
+tests 3/3 pass (transaction path exercised against the offline harness DB).

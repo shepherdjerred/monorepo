@@ -333,7 +333,7 @@ export function ReportDataExplorer(props: {
               <TableRow key={rowIndex.toString()}>
                 {(browseQuery.data?.columns ?? []).map((column) => (
                   <TableCell key={column.id} className="whitespace-nowrap">
-                    {formatExplorerValue(row[column.id])}
+                    {formatExplorerValue(row[column.id], column.type)}
                   </TableCell>
                 ))}
               </TableRow>
@@ -419,6 +419,7 @@ function updateFilter(
 
 function formatExplorerValue(
   value: string | number | boolean | null | undefined,
+  type: string,
 ): string {
   if (value === null || value === undefined) {
     return "—";
@@ -429,6 +430,14 @@ function formatExplorerValue(
   if (typeof value === "number") {
     return value.toLocaleString();
   }
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+  // Only date-format actual timestamp columns. String columns (Riot IDs,
+  // summoner names, etc.) are shown literally — a tagline like "2026" happens
+  // to be Date-parseable and would otherwise be mangled into a date.
+  if (type === "timestamp") {
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toLocaleString();
+    }
+  }
+  return value;
 }

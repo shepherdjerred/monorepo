@@ -40,6 +40,19 @@ function columnGroup(group: string, specs: ColumnSpec[]): ExplorerColumn[] {
   }));
 }
 
+/**
+ * Explorer columns that surface Riot account identity (game name / tagline /
+ * summoner name). The player serializer redacts this data unless the caller has
+ * `accounts:read`, so `browseData` applies the same gate when any of these is
+ * selected, filtered, or sorted.
+ */
+export const ACCOUNT_IDENTITY_COLUMN_IDS: ReadonlySet<string> = new Set([
+  "riot_id_game_name",
+  "riot_id_tagline",
+  "summoner_name",
+  "riot_id",
+]);
+
 export const MATCH_COLUMNS: ExplorerColumn[] = [
   ...columnGroup("Core", [
     ["player_alias", "Player", "string", "Tracked Scout player.", true],

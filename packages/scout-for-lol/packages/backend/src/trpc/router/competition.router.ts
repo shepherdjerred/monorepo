@@ -264,29 +264,31 @@ export const competitionRouter = router({
         });
       }
 
-      const competition = await createCompetition(prisma, {
-        serverId: input.guildId,
-        ownerId,
-        channelId: input.channelId,
-        title: input.title,
-        description: input.description,
-        visibility: input.visibility,
-        maxParticipants: input.maxParticipants,
-        dates,
-        criteria: input.criteria,
-        updateCronExpression: input.updateCronExpression,
-      });
-      // SERVER_WIDE competitions enroll every tracked player up front — the
-      // visibility's opt-out semantics. Enrollment is tolerant and never
-      // throws, so a partial failure cannot orphan the just-created
-      // competition (see bulkEnrollTrackedPlayers).
-      if (input.visibility === "SERVER_WIDE") {
-        await bulkEnrollTrackedPlayers({
-          prisma,
-          competitionId: competition.id,
-          guildId: input.guildId,
+      // Creation and SERVER_WIDE enrollment run in one transaction so an
+      // enrollment failure rolls the new competition back rather than leaving a
+      // partial/orphaned row the client would retry into a duplicate.
+      const competition = await prisma.$transaction(async (tx) => {
+        const created = await createCompetition(tx, {
+          serverId: input.guildId,
+          ownerId,
+          channelId: input.channelId,
+          title: input.title,
+          description: input.description,
+          visibility: input.visibility,
+          maxParticipants: input.maxParticipants,
+          dates,
+          criteria: input.criteria,
+          updateCronExpression: input.updateCronExpression,
         });
-      }
+        if (input.visibility === "SERVER_WIDE") {
+          await bulkEnrollTrackedPlayers({
+            prisma: tx,
+            competitionId: created.id,
+            guildId: input.guildId,
+          });
+        }
+        return created;
+      });
       if (!ctx.permissions.isRoot) {
         recordCreation(input.guildId, ownerId);
       }
@@ -351,27 +353,28 @@ export const competitionRouter = router({
       }
 
       const updateInput = buildCompetitionUpdateInput(input);
+      // Persist the update and (when flipping to SERVER_WIDE) enroll the whole
+      // server in one transaction, so an enrollment failure rolls the
+      // visibility change back and a retry still satisfies enrollsServerWide.
       let updated: CompetitionWithCriteria;
       try {
-        updated = await updateCompetition(
-          prisma,
-          input.competitionId,
-          updateInput,
-        );
+        updated = await prisma.$transaction(async (tx) => {
+          const result = await updateCompetition(
+            tx,
+            input.competitionId,
+            updateInput,
+          );
+          if (enrollsServerWide) {
+            await bulkEnrollTrackedPlayers({
+              prisma: tx,
+              competitionId: input.competitionId,
+              guildId: input.guildId,
+            });
+          }
+          return result;
+        });
       } catch (error) {
         asBadRequest(error);
-      }
-
-      // Enroll the whole server once the visibility flip has persisted so the
-      // opt-out promise holds for drafts converted to SERVER_WIDE, not just
-      // ones created that way. Tolerant: players already in the roster are
-      // skipped, and the cap is enforced by the enroll helper.
-      if (enrollsServerWide) {
-        await bulkEnrollTrackedPlayers({
-          prisma,
-          competitionId: input.competitionId,
-          guildId: input.guildId,
-        });
       }
       return updated;
     }),

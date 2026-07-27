@@ -11,6 +11,7 @@ import {
 import type { Prisma } from "#generated/prisma/client/index.js";
 import { match } from "ts-pattern";
 import { type ExtendedPrismaClient } from "#src/database/index.ts";
+import type { Db } from "#src/lib/audit/index.ts";
 import { type CompetitionDates } from "#src/database/competition/validation.ts";
 import { competitionWithSeasonInclude } from "#src/database/competition/include.ts";
 
@@ -71,7 +72,7 @@ export type CreateCompetitionInput = {
  * @returns Created competition with parsed criteria
  */
 export async function createCompetition(
-  prisma: ExtendedPrismaClient,
+  prisma: Db,
   input: CreateCompetitionInput,
 ): Promise<CompetitionWithCriteria> {
   const now = new Date();
@@ -131,7 +132,7 @@ export async function createCompetition(
  * @returns Competition with parsed criteria, or null if not found
  */
 export async function getCompetitionById(
-  prisma: ExtendedPrismaClient,
+  prisma: Db,
   id: number,
 ): Promise<CompetitionWithCriteria | undefined> {
   const raw = await prisma.competition.findUnique({
@@ -306,7 +307,7 @@ export type UpdateCompetitionInput = {
  * @throws {Error} if competition not found
  */
 export async function updateCompetition(
-  prisma: ExtendedPrismaClient,
+  prisma: Db,
   id: number,
   input: UpdateCompetitionInput,
 ): Promise<CompetitionWithCriteria> {

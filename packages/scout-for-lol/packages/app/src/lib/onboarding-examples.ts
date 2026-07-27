@@ -63,18 +63,17 @@ export const REPORT_EXAMPLES: ReportExample[] = [
 ];
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-// The season active right now; falls back to the next joinable one between
+// The season active right now; falls back to the nearest joinable one between
 // seasons (getSeasonChoices filters out ended seasons but includes future
-// ones, so [0] alone could pick a not-yet-started season).
-const CURRENT_SEASON_ID =
-  getCurrentSeason()?.id ?? getSeasonChoices().at(-1)?.value ?? "";
+// ones and is newest-start-first, so `.at(-1)` is the nearest upcoming one, not
+// the furthest-future `[0]`). `undefined` when the catalog has no current-or-
+// future season — the season-based "rank" preset is then omitted rather than
+// seeding an empty seasonId that submits into a "Pick a season." error.
+const CURRENT_SEASON_ID: string | undefined =
+  getCurrentSeason()?.id ?? getSeasonChoices().at(-1)?.value;
 
-function toIsoDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
-
-export const COMPETITION_EXAMPLES: CompetitionExample[] = [
-  {
+function buildRankPreset(seasonId: string): CompetitionExample {
+  return {
     id: "rank",
     label: "Highest rank this season",
     description:
@@ -94,10 +93,20 @@ export const COMPETITION_EXAMPLES: CompetitionExample[] = [
         mode: "SEASON",
         startDate: "",
         endDate: "",
-        seasonId: CURRENT_SEASON_ID,
+        seasonId,
       },
     }),
-  },
+  };
+}
+
+function toIsoDate(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+export const COMPETITION_EXAMPLES: CompetitionExample[] = [
+  ...(CURRENT_SEASON_ID === undefined
+    ? []
+    : [buildRankPreset(CURRENT_SEASON_ID)]),
   {
     id: "games-2026",
     label: "Most games in 2026",

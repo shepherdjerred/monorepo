@@ -176,7 +176,13 @@ export function GuildSubscriptions() {
         );
         return { previous };
       },
-      onSuccess: (result, variables) => {
+      onSuccess: (result, variables, context) => {
+        // Application-level failures come back as a normal result (not a throw),
+        // so onError's rollback never runs — undo the optimistic mute flip here
+        // before the invalidation refetch reconciles.
+        if (result.kind !== "updated" && context.previous !== undefined) {
+          queryClient.setQueryData(subsOptions.queryKey, context.previous);
+        }
         switch (result.kind) {
           case "updated":
             setMessage(

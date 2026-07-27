@@ -159,17 +159,13 @@ export function PlayerList() {
               {players.map((player) => (
                 <TableRow key={player.id}>
                   <TableCell className="font-medium">
+                    {/* No hover prefetch of getPlayer: that read triggers a
+                        synchronous Riot ID refresh server-side, so hovering a
+                        long list would fan out dozens of Riot API calls without
+                        the user opening any player. */}
                     <Link
                       className="underline"
                       to={`/g/${guildId}/players/${encodeURIComponent(player.alias)}`}
-                      onMouseEnter={() => {
-                        void queryClient.prefetchQuery(
-                          trpc.player.getPlayer.queryOptions({
-                            guildId: safeGuildId,
-                            alias: player.alias,
-                          }),
-                        );
-                      }}
                     >
                       {player.alias}
                     </Link>
