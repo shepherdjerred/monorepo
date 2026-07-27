@@ -27,6 +27,31 @@ const AUTH_LOGIN_PATHS: Record<AuthFlow, string> = {
 };
 
 /**
+ * The path prefix each auth flow's post-login `returnTo` is constrained to.
+ * Scout's `safeReturnTo` rewrites anything outside `/app/` back to `/app/`
+ * (open-redirect guard), so a requested route outside this prefix can't
+ * actually be reached through the login redirect.
+ */
+const AUTH_ROUTE_PREFIX: Record<AuthFlow, string> = {
+  "scout-dev-login": "/app/",
+};
+
+/**
+ * Reject a route that the auth flow's redirect would rewrite — otherwise the
+ * command would sign in, land on the rewritten page (e.g. `/app/`), and report
+ * success for the requested URL (e.g. `/`) while having screenshotted a
+ * different page. Fail fast with an actionable message instead.
+ */
+export function assertAuthRouteReachable(flow: AuthFlow, route: string): void {
+  const prefix = AUTH_ROUTE_PREFIX[flow];
+  if (!route.startsWith(prefix)) {
+    throw new Error(
+      `Route "${route}" can't be reached through the ${flow} auth flow: the login redirect only lands on paths under "${prefix}" (anything else is rewritten to "${prefix}"). Request a "${prefix}…" route.`,
+    );
+  }
+}
+
+/**
  * Builds the URL to navigate to first for a given auth flow — PinchTab's
  * `nav` follows redirects itself, so one navigation to this URL both signs
  * the tab in and lands it on `route` once the flow's own redirect resolves.

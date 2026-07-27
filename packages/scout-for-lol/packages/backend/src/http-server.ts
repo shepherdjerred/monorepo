@@ -155,7 +155,12 @@ function handleHealthz(request: Request): Response {
  */
 const server = Bun.serve({
   port: configuration.port,
-  hostname: "0.0.0.0",
+  // Bind to loopback whenever dev login is enabled so the unauthenticated
+  // /api/dev/login route (which mints a session for any Discord ID) is only
+  // reachable from this machine, never from another host on the network. In
+  // beta/prod enableDevLogin is false, so the server binds all interfaces to
+  // receive ingress traffic as usual.
+  hostname: configuration.enableDevLogin ? "127.0.0.1" : "0.0.0.0",
   async fetch(request) {
     const url = new URL(request.url);
 

@@ -8,7 +8,10 @@ import { tmpdir } from "node:os";
 import nodePath from "node:path";
 import { resolvePackage } from "#lib/screenshot/catalog.ts";
 import { ensureDevServer } from "#lib/screenshot/dev-server.ts";
-import { captureScreenshot } from "#lib/screenshot/pinchtab-driver.ts";
+import {
+  assertAuthRouteReachable,
+  captureScreenshot,
+} from "#lib/screenshot/pinchtab-driver.ts";
 import type { AuthFlow } from "#lib/screenshot/types.ts";
 
 export type ScreenshotCommandOptions = {
@@ -42,6 +45,21 @@ export async function screenshotCommand(
   const start = Date.now();
   const entry = resolvePackage(options.alias);
   const route = options.route ?? entry.defaultRoute;
+
+  const authFlow: { flow: AuthFlow; discordId?: string } | undefined =
+    entry.requiresAuth === undefined
+      ? undefined
+      : options.authDiscordId === undefined
+        ? { flow: entry.requiresAuth }
+        : { flow: entry.requiresAuth, discordId: options.authDiscordId };
+
+  // Fail fast (before spawning anything) if the requested route can't be
+  // reached through the auth flow's post-login redirect — otherwise we'd
+  // screenshot the rewritten landing page while reporting the requested URL.
+  if (authFlow !== undefined) {
+    assertAuthRouteReachable(authFlow.flow, route);
+  }
+
   const outPath = options.out ?? defaultOutPath(options.alias, route);
   // `dirname` resolves the parent correctly for bare filenames too — a plain
   // `--out screenshot.png` yields "." (cwd), not a bogus `screenshot.pn/` dir
@@ -90,13 +108,6 @@ export async function screenshotCommand(
     });
 
     try {
-      const authFlow: { flow: AuthFlow; discordId?: string } | undefined =
-        entry.requiresAuth === undefined
-          ? undefined
-          : options.authDiscordId === undefined
-            ? { flow: entry.requiresAuth }
-            : { flow: entry.requiresAuth, discordId: options.authDiscordId };
-
       const { path } = await captureScreenshot({
         baseUrl: devServer.baseUrl,
         route,

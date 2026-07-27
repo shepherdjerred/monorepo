@@ -122,7 +122,10 @@ runtime `if` inside an always-present handler. The extra flag matters because
 `ENVIRONMENT` defaults to `"dev"` when unset, so gating on environment alone
 would fail _open_ (expose an unauthenticated session-minting route) on any
 deploy that forgot to set it; `ENABLE_DEV_LOGIN` defaults off, so an omitted
-config fails closed. `scripts/dev-web.sh` sets it for local runs.
+config fails closed. `scripts/dev-web.sh` sets it for local runs. When
+`ENABLE_DEV_LOGIN` is set, the backend also binds `127.0.0.1` (loopback) instead
+of `0.0.0.0`, so the unauthenticated dev-login route can't be reached from
+another host on the network.
 
 Driving this by hand: with `dev:web` running, visiting
 `http://localhost:5180/api/dev/login?discordId=<id>&returnTo=/app/g/123` in
