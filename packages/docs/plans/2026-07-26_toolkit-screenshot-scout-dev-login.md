@@ -107,9 +107,13 @@ set media prefers-color-scheme` — so included rather than cut), `--full-page`
 script exists in that package's `package.json`, alias uniqueness,
 `resolvePackage` error/success). `test-integration/screenshot.integration.test.ts`
 boots `stocks-sjer-red` for real against a live PinchTab daemon and asserts
-a real PNG (magic-byte check); `describe.skipIf(!pinchtabAvailable)` so it
-degrades gracefully when no daemon is running (personal-machine tool, not
-CI infra) instead of being a permanent red X.
+a real PNG (magic-byte check). PinchTab is a **mandatory prerequisite**: the
+suite throws at module load with an actionable message if the health check
+fails, rather than green-skipping (which would make "tests passed"
+indistinguishable from "browser unavailable"). This suite lives in the
+local-only `bun run test:integration` command — deliberately NOT part of
+`bun run verify`/CI, which has no browser instance — so a hard failure when
+PinchTab is absent is the correct fail-fast behavior, not a permanent red X.
 
 **Live-verified this session** (real PinchTab daemon, real dev server):
 `toolkit screenshot stocks-sjer-red /` produced a real 3200×1514 PNG of the

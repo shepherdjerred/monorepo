@@ -78,11 +78,20 @@ export async function ensureDevServer(
     Object.keys(options.envOverrides).length > 0;
   const baseUrl = `http://localhost:${String(entry.expectedPort)}`;
 
-  // Reuse an already-running server only when its expected port is unique to
-  // this package (a shared-port probe can't confirm identity) and no --env
-  // overrides force a fresh process (a running server can't retroactively pick
-  // up new env vars like VITE_CONTRACT_HASH=...).
-  const canReuse = !hasEnvOverrides && !SHARED_PORTS.has(entry.expectedPort);
+  // Reuse an already-running server only when:
+  //  - its expected port is unique to this package (a shared-port probe can't
+  //    confirm identity),
+  //  - no --env overrides force a fresh process (a running server can't
+  //    retroactively pick up new env vars like VITE_CONTRACT_HASH=...), and
+  //  - the entry isn't auth-gated. A manually started stack may not have the
+  //    dev-login route enabled (ENABLE_DEV_LOGIN defaults off; only the
+  //    catalog's spawned dev:web turns it on), so /api/version can pass while
+  //    /api/dev/login 404s — reusing it would screenshot the auth error. Always
+  //    spawn our own for auth-gated entries so dev-login is guaranteed present.
+  const canReuse =
+    !hasEnvOverrides &&
+    !SHARED_PORTS.has(entry.expectedPort) &&
+    entry.requiresAuth === undefined;
   if (canReuse && (await probeReady(`${baseUrl}${readyPath}`, 500))) {
     return { baseUrl, spawnedByUs: false, stop: () => Promise.resolve() };
   }
@@ -116,9 +125,12 @@ export async function ensureDevServer(
   }
   // `detached` puts the child in its own process group so `stop()` can signal
   // the whole tree (dev commands spawn descendants — see stop()).
+  // `BROWSER=none` stops a dev command that auto-opens a browser (docs-board's
+  // dev.ts runs `vite --open`) from popping the user's default browser — Vite
+  // honors this env var — since we drive an isolated PinchTab tab instead.
   const proc = Bun.spawn(entry.devCommand, {
     cwd: `${root}/${entry.cwd}`,
-    env: { ...Bun.env, ...options.envOverrides },
+    env: { ...Bun.env, ...options.envOverrides, BROWSER: "none" },
     stdout: "pipe",
     stderr: "pipe",
     detached: true,
