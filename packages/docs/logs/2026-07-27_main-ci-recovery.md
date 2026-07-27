@@ -256,3 +256,21 @@ through its downstream release and version paths.
 
 - The affected verification includes an intentionally uncached bot-clone rehearsal and took several minutes locally; it completed successfully.
 - No direct cluster mutation or StatefulSet recreation was performed; all intended changes are declarative and GitOps-managed.
+
+## Session Log — 2026-07-27 (current-main reconciliation)
+
+### Done
+
+- Rebased PR #1733 onto the user-merged `main` commit `6090e15acffd81d46f3f34fe438698c9d690533d`, resolving the validator overlap by retaining both main's Scout reconciliation contract and the extracted Caddy contract validator.
+- Passed `bun run verify -- --affected` on the exact rebased head `409a7dc417b954791acf144967ca20da45bd529a`: 32/32 tasks, including Temporal's isolated bot-clone schedule rehearsal and homelab Helm lint.
+- Published the rebased head to PR #1733, which triggered Buildkite #6605.
+- Verified the merged-main build #6594 failed first on the same missing `buildkite/buildkite-uv-cache` backup-policy entry; the PR includes that repair and the companion rebuildable Trivy cache entry.
+
+### Remaining
+
+- Follow Buildkite #6605 and current-head review to green, merge PR #1733, then inspect the successor `main` build through its deployment and generated release lanes.
+- Confirm live Temporal worker readiness and a fully converged ArgoCD sync after the merged GitOps change applies.
+
+### Caveats
+
+- Buildkite #6605 is still running at handoff time; local verification is green but does not replace the authoritative remote build.
