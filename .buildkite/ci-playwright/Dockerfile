@@ -7,7 +7,8 @@ FROM oven/bun:1.3.14 AS bun
 FROM mcr.microsoft.com/playwright:v1.61.1-noble
 
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
-RUN apt-get update \
+RUN rm -f /etc/apt/sources.list.d/nodesource.list /etc/apt/sources.list.d/nodesource.sources \
+  && apt-get update \
   && apt-get install --yes --no-install-recommends unzip \
   && rm -rf /var/lib/apt/lists/*
 
