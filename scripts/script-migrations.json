@@ -148,6 +148,11 @@
       "reason": "Sourced bootstrap installs Bun and exports into the parent shell"
     },
     {
+      "source": ".buildkite/scripts/toolchain.test.sh",
+      "disposition": "retain",
+      "reason": "Thirty-three-line test directly validates the shell bootstrap contract"
+    },
+    {
       "source": ".buildkite/scripts/upload-pipeline.sh",
       "disposition": "retain",
       "reason": "Buildkite bootstrap runs before the repository runtime is guaranteed"

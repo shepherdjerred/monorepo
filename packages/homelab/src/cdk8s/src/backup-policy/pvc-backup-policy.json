@@ -48,6 +48,18 @@
     "reason": "Rebuildable OpenTofu plugin cache"
   },
   {
+    "namespace": "buildkite",
+    "name": "buildkite-trivy-db",
+    "backup": "disabled",
+    "reason": "Rebuildable vulnerability database cache"
+  },
+  {
+    "namespace": "buildkite",
+    "name": "buildkite-uv-cache",
+    "backup": "disabled",
+    "reason": "Rebuildable Python package cache"
+  },
+  {
     "namespace": "chartmuseum",
     "name": "chartmuseum",
     "backup": "disabled",
