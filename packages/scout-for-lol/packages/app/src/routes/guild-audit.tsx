@@ -12,7 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "#src/components/ui/table.tsx";
-import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 
 export function GuildAudit() {
   const { guildId } = useParams();
@@ -24,7 +23,6 @@ export function GuildAudit() {
       {
         enabled: guildId !== undefined,
         getNextPageParam: (lastPage) => lastPage.nextCursor,
-        staleTime: STALE_TIME_SLOW_LIST,
       },
     ),
   );

@@ -149,14 +149,22 @@ export async function collectQueueActivity(
 ): Promise<QueueActivityCounts> {
   const config = QueueActivityS3ConfigSchema.parse(rawConfig);
   const client = createClient(config);
-  const matches: RawMatch[] = [];
+  const counts: QueueActivityCounts = {};
 
   for (const prefix of datePrefixes(config.startDate, config.endDate)) {
     const keys = await listMatchKeysForPrefix(client, config.bucket, prefix);
     for (const key of keys) {
-      matches.push(await fetchMatch(client, config.bucket, key));
+      const match = await fetchMatch(client, config.bucket, key);
+      if (match.info.gameType.toUpperCase().startsWith("CUSTOM")) {
+        continue;
+      }
+      const queueId = match.info.queueId.toString();
+      const date = matchDateString(match);
+      const byDate = counts[queueId] ?? {};
+      byDate[date] = (byDate[date] ?? 0) + 1;
+      counts[queueId] = byDate;
     }
   }
 
-  return aggregateQueueActivity(matches);
+  return counts;
 }

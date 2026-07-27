@@ -159,6 +159,9 @@ export function ReportDetail() {
     trpc.report.delete.mutationOptions({
       meta: analyticsMeta("report_deleted"),
       onSuccess: () => {
+        void queryClient.invalidateQueries({
+          queryKey: trpc.report.list.pathKey(),
+        });
         void navigate(`/g/${guildId}/reports`);
       },
     }),

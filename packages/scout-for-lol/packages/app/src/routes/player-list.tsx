@@ -66,7 +66,7 @@ export function PlayerList() {
   const currentPlayerQuery = useQuery(
     trpc.player.getCurrentLinkedPlayer.queryOptions(
       { guildId: safeGuildId },
-      { enabled: guildId !== undefined, staleTime: STALE_TIME_SLOW_LIST },
+      { enabled: guildId !== undefined },
     ),
   );
   const channelsQuery = useQuery(
