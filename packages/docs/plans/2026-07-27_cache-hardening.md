@@ -19,9 +19,13 @@ Implement offline-first local Turbo caching and reliable shared CI caching.
 
 ## Remaining
 
-- [ ] Implement infrastructure, pipeline, task-cache, and dotfile changes.
-- [ ] Verify local shell modes, cache concurrency, generated manifests, and scoped affected checks.
-- [ ] Publish the branch only after the user's independent main fix is green.
+- [x] Implement infrastructure, pipeline, task-cache, and dotfile changes.
+- [x] Verify local shell modes, generated manifests, and scoped affected checks.
+- [ ] After merge, verify the live remote-cache write/read path and the first scheduled Trivy database refresh.
+
+## Human Verification
+
+- [ ] Merge this branch after the independent main fix is green.
 
 ## Session Log — 2026-07-27
 
@@ -42,3 +46,8 @@ Implement offline-first local Turbo caching and reliable shared CI caching.
 
 - `origin/main` currently contains the user's separate main failure; this work must not modify that fix.
 - The current remote Turbo cache still returns HTTP 412 on writes until the existing fsGroup source fix is released through the green-main Helm/ArgoCD path.
+- The Trivy database refresh is scheduled every six hours after deployment; if its shared cache is empty before the first scheduled refresh, the existing fail-fast Trivy lane will require an immediate refresh rather than silently downloading during the PR build.
+
+## Comment Log
+
+- 2026-07-27: User will merge the cache-hardening PR later. Keep this plan `in-progress` until the green-main release deploys the chart changes and live cache write/read verification completes.
