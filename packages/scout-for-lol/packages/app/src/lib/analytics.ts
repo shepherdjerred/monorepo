@@ -75,6 +75,7 @@ const SCOUT_ANALYTICS_EVENTS = [
   "subscription_add",
   "subscription_removed",
   "subscription_muted",
+  "subscription_unmuted",
   "subscription_filters_set",
   "subscription_channel_filters_set",
   "subscription_channel_added",
@@ -171,7 +172,7 @@ export function initAnalytics(): void {
  * preserved. Input is the react-router pathname (basename `/app` stripped).
  */
 export function normalizePath(pathname: string): string {
-  return pathname
+  const normalized = pathname
     .replace(/^\/g\/[^/]+/, "/g/:guildId")
     .replace(/\/players\/[^/]+/, "/players/:alias")
     .replace(
@@ -182,6 +183,9 @@ export function normalizePath(pathname: string): string {
       /\/reports\/(?!new(?:\/|$)|help(?:\/|$))[^/]+/,
       "/reports/:reportId",
     );
+  const knownRoute =
+    /^(?:\/|\/(?:login|welcome|installed)|\/g\/:guildId(?:\/(?:subscriptions|players(?:\/:alias)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?)?)?)$/;
+  return knownRoute.test(normalized) ? normalized : "/not-found";
 }
 
 /** Build the canonical, templated event URL for an already-normalized path. */
@@ -368,6 +372,7 @@ const MutationMetaSchema = z.object({
 // failures as successes — corrupting the usage data. When the result carries a
 // string `kind`, report that instead.
 const ResultKindSchema = z.object({ kind: z.string() });
+const AddedFailedSchema = z.object({ added: z.number(), failed: z.number() });
 
 /**
  * Fire the event carried by a mutation's `meta` (from {@link analyticsMeta}),
@@ -389,6 +394,19 @@ export function trackMutationMeta(
   const event = parsed.data.analyticsEvent;
   if (event === undefined || !EVENT_SET.has(event)) return;
   if (outcome === "success") {
+    const bulkResult = AddedFailedSchema.safeParse(data);
+    if (bulkResult.success) {
+      const result = bulkResult.data;
+      emit(event, {
+        outcome:
+          result.failed === 0
+            ? "success"
+            : result.added === 0
+              ? "error"
+              : "partial",
+      });
+      return;
+    }
     const result = ResultKindSchema.safeParse(data);
     if (result.success) {
       emit(event, { kind: result.data.kind });
