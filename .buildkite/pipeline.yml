@@ -1119,6 +1119,10 @@ steps:
       fi
       if bash .buildkite/scripts/ci-changed.sh site-glitter; then
         site_glitter=true
+        # The build imports @shepherdjerred/glitter-context through Glitter's
+        # declared workspace dependency. Under Bun's isolated linker the
+        # consumer must be selected so its production closure is installed.
+        filters+=(--filter glitter)
       fi
       if bash .buildkite/scripts/ci-changed.sh site-scout; then
         site_scout=true
