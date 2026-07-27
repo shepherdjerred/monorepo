@@ -40,4 +40,12 @@ if ! awk '
   exit 1
 fi
 
+if ! rg -Fq 'ARG MISE_MINISIGN_PUBLIC_KEY=' "$CI_IMAGE" ||
+  ! rg -Fq 'minisign -V -P "${MISE_MINISIGN_PUBLIC_KEY}"' "$CI_IMAGE" ||
+  ! rg -Fq 'checksum_line="$(grep -F "  ./${mise_asset}" SHASUMS256.txt)"' "$CI_IMAGE" ||
+  rg -q '^ARG MISE_(AMD64|ARM64)_SHA256=' "$CI_IMAGE"; then
+  echo "ci image must derive mise asset checksums from the signed release manifest" >&2
+  exit 1
+fi
+
 echo "toolchain login-shell test passed"
