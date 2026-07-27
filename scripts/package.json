@@ -3,12 +3,14 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "release-refiner:codex": "codex",
     "lint": "bunx --no-install eslint --cache . && bun lint-buildkite.ts",
     "test": "bun test . ../.buildkite/scripts/select-image-targets.test.ts ../.buildkite/scripts/ci-lane-coverage.test.ts && bash ../.buildkite/scripts/ci-changed.test.sh && bash ../.buildkite/scripts/upload-pipeline.test.sh && bash ../.buildkite/scripts/bake-retry.test.sh",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@homelab/cdk8s": "workspace:*",
+    "@openai/codex": "0.145.0",
     "@shepherdjerred/code-review": "workspace:*",
     "zod": "^4.4.3"
   },
