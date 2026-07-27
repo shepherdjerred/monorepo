@@ -60,9 +60,108 @@ unknown PVCs, and apply consistent Velero labels.
 
 ## Remaining
 
-- [ ] Implement and test the policy source, synthesis integration, and admission enforcement.
-- [ ] Repair and deploy the multi-node orphan audit.
+- [x] Implement and test the policy source, synthesis integration, and admission enforcement.
+- [x] Repair the multi-node orphan audit.
 - [ ] Align live PVC labels through GitOps and an exact guarded backfill.
-- [ ] Verify the newest backup and R2 object set.
-- [ ] Quarantine confirmed orphan datasets and record the seven-day hold.
+- [x] Verify the newest backup and R2 object set.
+- [x] Quarantine confirmed orphan datasets and record the seven-day hold.
 - [ ] Re-audit after the hold and obtain human approval before final deletion.
+
+## Human Verification
+
+- [ ] Review and merge PR #1715.
+- [ ] Confirm Argo CD has deployed the admission policies and Temporal audit update.
+- [ ] Run the guarded PVC label backfill, then verify that the next completed
+      backup contains the exact 45 included PVCs.
+- [ ] On or after 2026-08-03 12:30 PDT, review the quarantine re-audit and
+      explicitly approve or reject final deletion.
+
+## Quarantine Hold
+
+- Dataset root: `zfspv-pool-nvme/quarantine-2026-07-27`
+- Created: 2026-07-27 12:30 PDT
+- Hold expires: 2026-08-03 12:30 PDT
+- Contents: 28 unmounted filesystem datasets, 17.022 GiB allocated
+- Original sources: 28 unmounted datasets, 23.556 GiB allocated
+- Provenance: each child stores `sjer.red:quarantine-source`,
+  `sjer.red:quarantine-created`, `sjer.red:quarantine-hold-until`, and the
+  verified send/receive snapshot GUID in
+  `sjer.red:quarantine-snapshot-guid`.
+- Source removal: 11 ZFSVolume resources were deleted through their OpenEBS
+  finalizers; 17 objectless sources were destroyed by exact, non-recursive name.
+- Transfer snapshots were removed after GUID verification so the quarantine does
+  not create false orphan-snapshot alerts.
+
+Post-cleanup invariants:
+
+- 72 live ZFS PVs = 72 ZFSVolume resources = 72 ordinary ZFS datasets.
+- No live PV is missing a dataset or ZFSVolume resource.
+- No ordinary dataset or ZFSVolume resource exists without a live PV.
+- Both nodes report all ZFS pools healthy.
+- 1,175 retained Velero snapshots map to the 27 retained Backup resources; zero
+  orphan snapshots remain.
+
+## Backup Verification
+
+The newest completed backup at implementation time was
+`6hourly-backup-20260727181524`.
+
+- 160/160 Kubernetes items backed up.
+- 45/45 ZFS volume snapshots completed.
+- R2 contains 45 metadata objects plus 45 non-empty data objects totaling
+  1.365 GiB.
+- The current live labels still differ from the requested policy: the backup is
+  missing the three retained Minecraft volumes plus Postal and Temporal
+  databases, while it still includes Jellyfin cache/config, PinchTab,
+  Syncthing data, and Tempo data.
+- Restoreability remains unproven because a live restore was intentionally not
+  performed.
+
+<!-- temporal-agent-task
+{
+  "title": "Re-audit PVC backup policy and ZFS quarantine hold",
+  "provider": "codex",
+  "mode": "report-only",
+  "runAt": "2026-08-03T12:30:00-07:00",
+  "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "source": {
+    "docPath": "packages/docs/plans/2026-07-27_pvc-backup-policy-zfs-cleanup.md"
+  },
+  "prompt": "Read Human Verification, Quarantine Hold, and Backup Verification. Re-audit all live PVC labels, the newest completed Velero backup and exact R2 volume objects, ZFS pool health, the 72 live PV/ZFSVolume/dataset equality, retained snapshots, and every child of zfspv-pool-nvme/quarantine-2026-07-27. Confirm the hold has expired and report whether final deletion is safe. Do not delete datasets, edit files, or mutate any live system; final deletion requires explicit human approval."
+}
+-->
+
+## Session Log — 2026-07-27
+
+### Done
+
+- Added the 72-entry explicit PVC backup policy, fail-closed admission
+  enforcement, guarded live-label migration, synthesis coverage, and source
+  label alignment.
+- Repaired the Temporal orphan audit to inspect every ready OpenEBS node and
+  every imported pool, with node-aware metrics and strict parsing.
+- Removed the redundant size-based Velero alert.
+- Verified affected build, typecheck, tests, lint, repository checks, server-side
+  admission dry-run, the newest Velero backup, and its exact R2 object set.
+- Published draft PR #1715 from commit `00e3d443c`.
+- Quarantined and removed all 28 confirmed orphan source datasets, then verified
+  the post-cleanup live storage invariants recorded above.
+- Scheduled report-only Temporal workflow
+  `agent-task-re-audit-pvc-backup-policy-and-zfs-quarantine-ho-08861eca19c3e507e05f`
+  for the end of the hold.
+
+### Remaining
+
+- Merge PR #1715, allow Argo CD to deploy it, and run the guarded 28-PVC label
+  backfill.
+- Verify the first post-migration backup contains exactly the 45 included PVCs.
+- After the seven-day hold, obtain explicit human approval before deleting the
+  quarantine root.
+
+### Caveats
+
+- The current backup is healthy but reflects the old labels and therefore has
+  five desired-set misses and five undesired inclusions.
+- No live restore was performed, so restoreability is not proven.
+- The quarantine datasets are intentionally retained until the human-gated
+  deletion decision on or after 2026-08-03 12:30 PDT.
