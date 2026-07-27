@@ -28,3 +28,24 @@ One stacked PR on `feature/scout-followups` (atop `feature/scout-ui-burndown` / 
 ## Verification
 
 Per-commit pre-commit gate (verify --affected); new unit suites (drift engine, schema+loader equivalence, CLI fixtures, router tests, result-messages, serializer roundtrips); watcher dry-run vs scout-prod expecting no-diff; dev:web + PinchTab e2e walk incl. error-panel and hub actions; screenshots via toolkit pr asset. Draft PR after item 1; promote when everything passes.
+
+## Session Log — 2026-07-26 (evening)
+
+### Done
+
+- All 11 items implemented and committed on `feature/scout-followups` (PR #1689, draft), restacked over the base's three Codex-fix commits (incl. the parallel session's bulk-enroll + riot-id-poll work). `bun run verify -- --affected` green on the tip (48/48).
+- Codex findings on #1681 fixed on the base branch (SERVER_WIDE now auto-enrolls on web create per operator decision, with offline-harness tests; tz-neutral preset labels; custom-cron hydration; end-of-day-inclusive windows; current-season preset).
+- Watcher shakedown against the real scout-prod lake: first run caught custom lobbies masquerading as Doom Bots (queue id 3130, gameType CUSTOM_GAME) — operator-confirmed false positive, fixed by skipping CUSTOM\* game types (regression-tested). Post-fix dry-run: 0 edits, 3 legitimate warnings (unknown ids 1740/890, sparse mayhem no-close).
+- Two impl agents died at the session limit mid-work; their remains were audited, completed (temporal workflow/schedule/rehearsal/docs, a malformed-JSX fix, end-of-day loader semantics), and committed.
+
+### Remaining
+
+- dev:web + PinchTab screenshot pass for the new UI surfaces (checkbox picker, Doom Bots row, player-hub actions, concepts explainer, skeleton/error panel) — blocked twice on 1Password authorization timeouts; run when the operator can approve, then attach via `toolkit pr asset 1689` and promote the PR from draft.
+- Operator decisions: map queue id 1740 (likely new Arena variant); decide whether 3130/4220/4250 are real Doom Bots ids or custom-lobby artifacts worth remapping in parseQueueType.
+- Watch CI + Codex review on both PRs; merge bottom-up (#1681 then #1689), then `git-spice repo sync` and remove the two worktrees (`scout-ui-burndown`, `scout-codex-fixes`).
+
+### Caveats
+
+- The suspense commit's file state includes the hub manager import one commit early (path-scoped staging captured final file states); the stack tip is consistent and every commit passed the verify gate.
+- `scout-codex-fixes` worktree contains ANOTHER session's uncommitted staged work (bulk-enroll refactor follow-ups) — do not remove that worktree without checking its status.
+- The watcher's oracle is tracked-player matches only; 890/1740 warnings will repeat daily (email) until the enum decisions are made.
