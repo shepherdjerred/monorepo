@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   parseActivityPage,
+  parseHeadRepo,
   pickRefUpdateTime,
   reactionBoundToHead,
   resolveHeadPushedAt,
@@ -158,6 +159,24 @@ describe("parseActivityPage", () => {
     expect(() =>
       parseActivityPage([{ timestamp: "2026-07-26T23:00:00Z" }]),
     ).toThrow();
+  });
+});
+
+describe("parseHeadRepo", () => {
+  test("returns nameWithOwner for a valid head repository", () => {
+    expect(parseHeadRepo({ nameWithOwner: "octocat/fork" })).toBe(
+      "octocat/fork",
+    );
+  });
+
+  test("returns null when the head repo is gone (null)", () => {
+    expect(parseHeadRepo(null)).toBeNull();
+  });
+
+  test("throws on a malformed head-repository shape (contract regression)", () => {
+    expect(() => parseHeadRepo({ full_name: "octocat/fork" })).toThrow();
+    expect(() => parseHeadRepo({ nameWithOwner: 123 })).toThrow();
+    expect(() => parseHeadRepo("octocat/fork")).toThrow();
   });
 });
 

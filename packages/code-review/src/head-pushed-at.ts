@@ -29,6 +29,13 @@ const RepositoryActivitySchema = z.object({
   timestamp: z.string(),
 });
 
+// The PR's head repository. Present as `{ nameWithOwner }` for same-repo and
+// fork PRs; `null` only when the head repo is gone (e.g. a deleted fork). A
+// present-but-malformed value is a contract regression and must throw (so it is
+// not silently reduced to "unknown head repo" → a wrong-repo activity lookup →
+// a false review timeout).
+const HeadRepositorySchema = z.object({ nameWithOwner: z.string() }).nullable();
+
 const HEAD_REF_UPDATED_AT_QUERY = `
 query($owner: String!, $name: String!, $oid: GitObjectID!, $number: Int!) {
   repository(owner: $owner, name: $name) {
@@ -71,11 +78,6 @@ function latestIso(candidates: readonly (string | null)[]): string | null {
 }
 
 /**
- * Pure: the latest Repository-Activity `timestamp` whose `after` SHA equals the
- * head — the real instant the ref was moved to this commit (a `push`,
- * `force_push`, or `branch_creation`). Exported for tests.
- */
-/**
  * Validate one Repository-Activity API page, THROWING on a contract regression
  * (a non-array payload or an item missing `after`/`timestamp`) rather than
  * silently reducing it to "no activity". Exported for tests.
@@ -86,6 +88,20 @@ export function parseActivityPage(
   return z.array(RepositoryActivitySchema).parse(payload);
 }
 
+/**
+ * Validate the PR's `headRepository` GraphQL field, returning `nameWithOwner`
+ * (or null when the head repo is gone) and THROWING on a malformed shape.
+ * Exported for tests.
+ */
+export function parseHeadRepo(value: unknown): string | null {
+  return HeadRepositorySchema.parse(value)?.nameWithOwner ?? null;
+}
+
+/**
+ * Pure: the latest Repository-Activity `timestamp` whose `after` SHA equals the
+ * head — the real instant the ref was moved to this commit (a `push`,
+ * `force_push`, or `branch_creation`). Exported for tests.
+ */
 export function pickRefUpdateTime(
   activities: readonly unknown[],
   sha: string,
@@ -203,12 +219,8 @@ export async function fetchHeadPushedAt(input: {
     repository === null ? null : recordField(repository, "pullRequest");
   const headRefName =
     pullRequest === null ? null : stringField(pullRequest, "headRefName");
-  const headRepository =
-    pullRequest === null ? null : recordField(pullRequest, "headRepository");
   const headRepo =
-    headRepository === null
-      ? null
-      : stringField(headRepository, "nameWithOwner");
+    pullRequest === null ? null : parseHeadRepo(pullRequest["headRepository"]);
   const refUpdateTime =
     headRefName === null
       ? null
