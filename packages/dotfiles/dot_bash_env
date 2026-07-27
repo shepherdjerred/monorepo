@@ -24,3 +24,4 @@ fi
 # Fix gRPC DNS resolution for Tailscale split DNS on macOS
 # Required for tools like talosctl to resolve Tailscale hostnames
 export GRPC_DNS_RESOLVER=native
+[[ -f "$HOME/.config/turbo-cache/env.sh" ]] && source "$HOME/.config/turbo-cache/env.sh"

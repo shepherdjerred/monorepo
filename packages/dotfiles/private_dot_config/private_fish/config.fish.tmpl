@@ -68,13 +68,10 @@ set -gx HASS_BASE_URL 'https://homeassistant.sjer.red'
 function opencode --wraps opencode
     env -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u OPENAI_API_KEY (command -s opencode) --auto $argv
 end
-{{ if lookPath "op" -}}
-# Turborepo remote cache (self-hosted ducktors server on the tailnet).
-# Turbo enables remote caching only when API+TEAM+TOKEN are all set.
-set -gx TURBO_API 'https://turbo-cache.tailnet-1a49.ts.net'
-set -gx TURBO_TEAM 'monorepo'
-set -gx TURBO_TOKEN '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/rzk3lawpk4yspyyu5rxlz44ssi/TURBO_TOKEN" }}'
-{{ else -}}
+if test -f ~/.config/turbo-cache/env.fish
+    source ~/.config/turbo-cache/env.fish
+end
+{{ if not (lookPath "op") -}}
 # 1Password CLI (op) not available - secrets not loaded
 # Install op and run 'chezmoi apply' to load secrets
 set -gx GRAFANA_URL 'https://grafana.tailnet-1a49.ts.net'

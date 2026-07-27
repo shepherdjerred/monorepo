@@ -246,7 +246,7 @@ case "$lane" in
     lane_paths=(packages/cooklang-for-obsidian)
     ;;
   ci-image)
-    lane_paths=(.buildkite/ci-image .buildkite/scripts/build-ci-image.sh .mise.toml)
+    lane_paths=(.buildkite/ci-image .buildkite/ci-playwright .buildkite/scripts/build-ci-image.sh .mise.toml)
     ;;
   *)
     echo "WARN: unknown CI selector lane ${lane}; running it" >&2
