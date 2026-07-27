@@ -342,7 +342,9 @@ per-iteration + cumulative `$` — those numbers set the Phase-4 budget defaults
   `PR_BABYSIT` queue + `issue_comment` webhook ingress + authz, all dormant behind
   `PR_BABYSIT_ENABLED`). Remaining: **Phase 4** (live test against a real PR) and **Phase 5** (enable
   the kill switch) — both owner actions._
-- Greptile "comments outside of diff" coverage — see `packages/docs/todos/babysit-greptile-outside-diff.md`.
+- Historical Greptile "comments outside of diff" coverage was retired with the
+  provider-neutral review-gate cutover; see
+  `packages/docs/archive/superseded/babysit-greptile-outside-diff.md`.
 
 ### Caveats
 
@@ -356,4 +358,20 @@ per-iteration + cumulative `$` — those numbers set the Phase-4 budget defaults
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `PR Babysitter Bot — GitHub-native "get this green" automation`.
+- [ ] Reconcile the original Phase 4 failure against the current #1374 and #1636 implementation and add deterministic regression coverage for a greater-than-60-second iteration, rulesets-only fallback, and in-place status-comment updates.
+- [ ] Run the Temporal integration/rehearsal path and prove the workflow completes or continues-as-new without a heartbeat timeout or lost workdir.
+- [ ] Update `todos/babysit-phase4-live-retest.md` with the exact operator trigger after the automated gates pass; archive this plan before requesting the privileged production exercise.
+
+## Session Log — 2026-07-27
+
+### Done
+
+- The first live Phase 4 run failed at the heartbeat boundary. Later fixes merged, but the production completion claim remains unproven and needs agent-owned regression coverage before another operator run.
+
+### Remaining
+
+- See the current `## Remaining` checklist above.
+
+### Caveats
+
+- The 2026-07-27 board audit replaced generic or stale completion language with current ownership and verification semantics.

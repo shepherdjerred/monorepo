@@ -36,9 +36,15 @@ leaderboards.
 
 ## Remaining
 
-- [ ] Both backends complete a real Discord OAuth flow and derive `discordId` /
-      `discordUsername` from the verified session, not a constant.
-- [ ] A shared OAuth helper is used across both backends if practical (they share the
-      placeholder pattern).
-- [ ] MK64's `TODO(todo:mario-kart-web-auth)` marker is removed and
-      `mario-kart-web-auth.md` resolved in the same change.
+- [ ] Define one session/callback contract and state/CSRF handling for both web controllers.
+- [ ] Implement Discord OAuth in MK64 and Pokémon so the server derives identity from a verified session rather than constants.
+- [ ] Share the OAuth implementation where package boundaries permit without coupling emulator-specific authorization.
+- [ ] Add callback/session/logout/invalid-state tests for both backends.
+- [ ] Remove MK64's `TODO(todo:mario-kart-web-auth)` marker and resolve its child record in the same change.
+
+## Comment Log
+
+- 2026-07-27 — Board audit confirmed both controllers still return hardcoded
+  identities. This record is now the canonical implementation record for both
+  apps; `mario-kart-web-auth.md` is retained only as the required source-marker
+  child until the MK64 marker is removed.

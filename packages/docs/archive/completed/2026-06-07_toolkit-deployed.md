@@ -11,7 +11,7 @@ board: false
 
 Tracing a commit through the homelab deploy pipeline (build → version bump →
 `versions.ts` → ArgoCD sync → running pod) was a manual, multi-step chore
-documented in [guides/2026-04-06_is-commit-deployed.md](../guides/2026-04-06_is-commit-deployed.md).
+documented in [guides/2026-04-06_is-commit-deployed.md](../../guides/2026-04-06_is-commit-deployed.md).
 `toolkit deployed [<selector>]` automates it end to end, answering "is my
 change/service deployed to the homelab k8s?" in one call. Scope: homelab/K8s
 services (static sites + npm are out of v1); data sources auto-degrade

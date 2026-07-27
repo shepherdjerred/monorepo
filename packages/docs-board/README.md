@@ -48,6 +48,8 @@ the agent has completed typecheck, lint, tests, CI, merge, deployment, and other
 deterministic verification. Pages expose explicit **Accept behavior** and
 **Request changes** actions; requesting changes requires a reason and moves the
 document back to `in-progress` in the same audited Markdown update.
+Physical or privileged prerequisites use `verification: operator` on a separate
+blocked item so they are not mislabeled as acceptance testing.
 
 ## Verification
 

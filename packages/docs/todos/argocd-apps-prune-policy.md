@@ -1,10 +1,10 @@
 ---
 id: argocd-apps-prune-policy
 type: todo
-status: in-progress
+status: planned
 board: true
 verification: agent
-disposition: active
+disposition: blocked
 origin: packages/docs/logs/2026-07-18_ci-green-verify-hardening.md
 ---
 
@@ -60,4 +60,16 @@ recommended path.
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `ArgoCD apps never prunes — orphaned resources accumulate; decide a prune policy`.
+- [ ] Implement the approved policy in CDK8s/CI: enable prune with any required
+      resource-specific safeguards, or formalize manual deletion and remove
+      gates that assume automatic pruning.
+- [ ] Add regression coverage and document the selected policy. Inventory
+      approval and the supervised sync are tracked in
+      `argocd-apps-prune-policy-rollout`.
+
+## Comment Log
+
+### 2026-07-27 — in-progress board audit
+
+- Reclassified as planned and blocked. An agent can implement a policy only
+  after `argocd-apps-prune-policy-rollout` records explicit deletion approval.

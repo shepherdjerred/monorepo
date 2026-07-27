@@ -23,9 +23,16 @@ The originating session was an inspection-only review of the Common Denominator 
 
 ## Remaining
 
-- [ ] `generateAbbreviatedSection` (or wherever the rank label is computed) shows the global leaderboard rank for each entry in the Arena/ARAM "Worst Pairings" section.
-- [ ] The `individualStats` schema docstring matches the actual implementation (or the implementation is changed to match the docstring).
-- [ ] Focused tests added for `calculatePairingStats` and the weekly message formatter that lock in the rank-label behavior.
+- [ ] Assign each reversed bottom-three entry its true global leaderboard rank instead of incrementing from `length - 2` after reversal.
+- [ ] Make the `individualStats` schema documentation agree with the actual all-games calculation.
+- [ ] Add focused tests for `calculatePairingStats`, bottom-three ordering/ranks, and weekly Arena/ARAM message formatting.
+- [ ] Run Scout backend tests, typecheck, lint, and affected repository verification.
+
+## Comment Log
+
+- 2026-07-27 — Board audit reproduced the contradiction: `weekly-update.ts`
+  reverses the bottom three while assigning ranks upward from `length - 2`, and
+  `pairing-stats.ts` says solo-only while `calculate-pairings.ts` uses all games.
 
 ## References
 

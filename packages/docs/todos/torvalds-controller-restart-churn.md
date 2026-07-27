@@ -5,7 +5,7 @@ status: in-progress
 board: true
 verification: agent
 disposition: active
-origin: packages/docs/plans/2026-07-18_ci-speed.md
+origin: packages/docs/archive/completed/2026-07-18_ci-speed.md
 ---
 
 # Control-plane-wide restart churn on torvalds under CI load (probe-stall waves); webhook outages have Fail blast radius
@@ -80,8 +80,13 @@ Work items:
 
 ## Remaining
 
-- [ ] After the liskov cutover (PR #1629), verify the churn actually stopped: controller restart counts flat over ≥48h of normal CI volume, no synchronized probe-failure waves in Grafana during builds.
-- [ ] If churn persists without CI on the node, the txg-sync/IO-stall hypothesis needs a non-CI culprit — reopen work items 1/3 (apiserver latency, memory overcommit audit).
+- [ ] Observe at least 48 hours of normal production and CI volume after the
+      liskov cutover; record controller restart deltas and Grafana evidence for
+      synchronized probe-failure waves on torvalds.
+- [ ] If counts remain flat, close this card with the observation window and
+      dashboard queries. If churn recurs, correlate the timestamps with disk
+      latency, ZFS txg activity, apiserver latency, and node memory before
+      selecting remediation.
 
 ## Comment Log
 
@@ -95,3 +100,15 @@ Work items:
   webhook was already descoped from CI namespaces (kyverno.ts exclusion
   list). This todo now tracks post-cutover verification that the churn is
   gone, not active remediation.
+- 2026-07-27: Board audit retained this as an agent-owned production observation,
+  not operator work. The code cutover is complete; only a bounded live evidence
+  window can confirm that the original synchronized restart signature stopped.
+- 2026-07-27 production query at `2026-07-27T19:45:40.770Z`: the correct
+  node join showed approximately 75 container restarts over the preceding 48
+  hours, so the close condition failed. The largest deltas were
+  `kube-scheduler-torvalds` (27.05), `kube-controller-manager-torvalds`
+  (24.04), the Intel device-plugin operator (5.00), the Cloudflare operator
+  (5.00), and the OpenEBS local-PV provisioner (4.00). This is a recurrence of
+  the control-plane-heavy signature after CI moved to liskov; correlate these
+  timestamps with disk, ZFS, apiserver, and node-memory data before choosing a
+  remediation.

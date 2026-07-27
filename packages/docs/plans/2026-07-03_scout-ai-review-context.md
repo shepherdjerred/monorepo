@@ -1,9 +1,9 @@
 ---
 id: plan-2026-07-03-scout-ai-review-context
 type: plan
-status: awaiting-human
+status: in-progress
 board: true
-verification: human
+verification: agent
 disposition: active
 ---
 
@@ -328,28 +328,16 @@ Add to Writing Style:
 
 ## Human Verification
 
-- **Unit tests (pure):**
-  - `player-history.test.ts` — feed synthetic fact/rank/co-tracked rows to
-    `computePlayerHistorySignals`; assert loss/win-streak, last-10 record, gamesToday/thisWeek,
-    rank-N-games-ago, champion-pool ordering + off-pool flag, main-lane mode + off-role flag,
-    duo winrates; then `formatPlayerHistory` snapshot + empty-input → `""`.
-  - `patch-notes.test.ts` — changeset asset parses (Zod); `selectRelevantPatchChanges` keeps
-    only changes matching given champs/lane/items and drops the rest; `formatPatchNotes`
-    snapshot; no-match → `overview` + `summary` fallback; ranks major changes first;
-    missing changeset → `""`.
-  - `patch-analysis.test.ts` — the structured-extraction parser validates a sample notes page
-    into the changeset schema (off-spec output fails validation).
-- **Typecheck/lint:** `bun run typecheck` + `bunx eslint .` in `data` and `backend`
-  (watch `max-params`, `no-type-assertions`, Zod-naming). Run `bun install` at scout root first.
-- **End-to-end (review tool):** use the frontend review tool
-  (`packages/frontend/src/lib/review-tool/`) or `dev:web` to generate a review and eyeball that
-  the history/patch context appears in the Stage-2 trace and influences the text. Optionally add
-  temporary textareas in the review tool to inject sample history/patch strings.
-- **Backend smoke:** run the postmatch path against a tracked player with existing
-  `MatchParticipantFact` rows; confirm `prompts.playerHistory` is populated (S3 trace) and the
-  `<PLAYER HISTORY>` placeholder is fully replaced (not leaked).
-- **PR media:** include a before/after of a generated review showing a history/patch callout
-  (per repo PR-media convention).
+- **Action:** After the correction below ships, read several generated reviews for players with known recent champion histories, including one champion played only outside the recent window and one genuinely never played.
+- **Expected behavior:** Streak and champion-history statements match the known records; the review never calls an older champion “new”; patch references are relevant to the player and match.
+- **Acceptance decision:** Accept if the enriched comments are consistently accurate and useful. Request changes with the incorrect sentence and expected fact if any review invents or overstates history.
+
+## Remaining
+
+- [ ] Replace the current `firstTime` claim, which is derived only from the bounded recent window, with either a full-history query or wording that explicitly says the champion is absent from the recent window.
+- [ ] Add regression coverage for a champion played before the recent-window cutoff.
+- [ ] Generate controlled reviews for true-new, old-but-not-recent, and recent-main champions and verify their prompt facts before requesting UAT again.
+- [ ] Refresh the historical Session Log statements that still say the feature is uncommitted and backed by `MatchParticipantFact`; the feature shipped in #1380 and history now reads from the report lake.
 
 ## Out of scope / follow-ups
 
@@ -435,3 +423,11 @@ I've confirmed that there are enriched comments, but they often seem incorrect. 
 ---
 
 It does seem to get win/loss streaks correct though
+
+### 2026-07-27 — UAT failed
+
+The owner confirmed that enriched comments and win/loss streaks appear, but the
+review sometimes calls a champion “new” even when it was played before. Source
+inspection found `firstTime` is currently computed from the bounded recent
+window (`currentChampRecord.games === 0`), so the plan returned to
+`in-progress` for a semantic fix before another acceptance pass.

@@ -2,9 +2,7 @@
 id: plan-2026-07-12-scout-reporting-editor-improvements
 type: plan
 status: complete
-board: true
-verification: agent
-disposition: active
+board: false
 ---
 
 # Scout Reporting Editor Improvements

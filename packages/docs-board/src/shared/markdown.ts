@@ -1,4 +1,4 @@
-import type { Heading, Root } from "mdast";
+import type { Heading, Link, Root } from "mdast";
 import { toString } from "mdast-util-to-string";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
@@ -132,6 +132,15 @@ export function parseMarkdownBody(body: string): MarkdownMetadata {
       commentLogMarkdown: sectionMarkdown(body, headings, "Comment Log"),
     }),
   };
+}
+
+export function extractMarkdownLinks(body: string): string[] {
+  const tree: Root = unified().use(remarkParse).use(remarkGfm).parse(body);
+  const links: string[] = [];
+  visit(tree, "link", (link: Link) => {
+    links.push(link.url);
+  });
+  return links;
 }
 
 export function sectionMarkdown(

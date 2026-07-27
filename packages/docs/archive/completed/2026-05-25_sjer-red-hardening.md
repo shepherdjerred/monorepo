@@ -9,7 +9,7 @@ board: false
 
 ## Context
 
-The 2026-05-25 pen test ([packages/docs/logs/2026-05-25_sjer-red-pentest.md](packages/docs/logs/2026-05-25_sjer-red-pentest.md)) surfaced a long list of findings. This plan addresses **five specific ones**:
+The 2026-05-25 pen test ([packages/docs/logs/2026-05-25_sjer-red-pentest.md](../../logs/2026-05-25_sjer-red-pentest.md)) surfaced a long list of findings. This plan addresses **five specific ones**:
 
 1. `temporal.sjer.red` runs publicly with `Auth.Enabled: false` (P0).
 2. Cloudflare edge accepts TLS 1.0/1.1 across all 9 zones (P1).
@@ -276,7 +276,7 @@ This requires a `tls-reports@sjer.red` alias in Fastmail (analogous to `dmarc@sj
 
 ### Done
 
-- **Bundled into a single PR** per user direction (override of the four-PR sequencing in the plan). All five plan items addressed except MTA-STS (4c), which has been deferred to [packages/docs/todos/sjer-red-mta-sts.md](packages/docs/todos/sjer-red-mta-sts.md) because it needs new SeaweedFS buckets, content publication, and per-zone reverse-proxy wiring that doesn't fit a single-PR scope.
+- **Bundled into a single PR** per user direction (override of the four-PR sequencing in the plan). All five plan items addressed except MTA-STS (4c), which has been deferred to [packages/docs/todos/sjer-red-mta-sts.md](../../todos/sjer-red-mta-sts.md) because it needs new SeaweedFS buckets, content publication, and per-zone reverse-proxy wiring that doesn't fit a single-PR scope.
 - **Item 1 (Temporal UI):** removed `createCloudflareTunnelBinding` and dropped the now-dead `https://temporal.sjer.red` CORS origin from [packages/homelab/src/cdk8s/src/resources/temporal/ui.ts](packages/homelab/src/cdk8s/src/resources/temporal/ui.ts); deleted `sjer_red_cname_temporal` from [packages/homelab/src/tofu/cloudflare/sjer-red.tf](packages/homelab/src/tofu/cloudflare/sjer-red.tf). `cdk8s build` confirms the rendered `temporal.k8s.yaml` no longer contains the FQDN or TunnelBinding; TailscaleIngress for `temporal-ui` still present.
 - **Item 2 (TLS+HSTS):** added `cloudflare_zone_setting` resources (`min_tls_version = "1.2"` + `security_header` HSTS at `max_age = 86400`, `include_subdomains`, `nosniff`) to all 10 zone files. Used the typed-object form per the v5.19 provider docs (the plan was uncertain — typed object is the correct shape). `tofu validate` green.
 - **Item 3 (timing-safe bearer):** added `bearerMatches()` helper in [packages/temporal/src/event-bridge/agent-task-api.ts](packages/temporal/src/event-bridge/agent-task-api.ts) using `node:crypto.timingSafeEqual`; replaced the `!==` compare in `/agent-tasks`. New test case in [packages/temporal/src/event-bridge/agent-task-api.test.ts](packages/temporal/src/event-bridge/agent-task-api.test.ts) covers the same-length-wrong-token branch; all 4 tests pass. `bun run typecheck` + `bun run lint` clean.
@@ -287,7 +287,7 @@ This requires a `tls-reports@sjer.red` alias in Fastmail (analogous to `dmarc@sj
 
 ### Remaining
 
-- **MTA-STS (Item 4c)** deferred to [packages/docs/todos/sjer-red-mta-sts.md](packages/docs/todos/sjer-red-mta-sts.md). The deferred work: add per-zone `mta-sts.<zone>` static sites to [packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts](packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts), publish the `.well-known/mta-sts.txt` policy to the corresponding SeaweedFS buckets, add `_mta-sts.<zone>` TXT records, add `mta-sts.<zone>` CNAMEs.
+- **MTA-STS (Item 4c)** deferred to [packages/docs/todos/sjer-red-mta-sts.md](../../todos/sjer-red-mta-sts.md). The deferred work: add per-zone `mta-sts.<zone>` static sites to [packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts](packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts), publish the `.well-known/mta-sts.txt` policy to the corresponding SeaweedFS buckets, add `_mta-sts.<zone>` TXT records, add `mta-sts.<zone>` CNAMEs.
 - **HSTS ramp:** after 1 week of clean traffic, follow-up PR should bump `max_age` from 86400 → 31536000.
 - The other P0 findings from the audit (origin-IP leak via Minecraft DDNS; Birmel OAuth state weakness) and the P3 transform-rule security headers are still outstanding — each will need its own plan.
 

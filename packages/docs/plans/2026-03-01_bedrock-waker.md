@@ -147,4 +147,15 @@ Following the sentinel pattern (`cdk8s-plus-31` constructs):
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `Plan: bedrock-waker — UDP proxy to wake sleeping Minecraft Bedrock servers`.
+- [ ] Add a Bun workspace package that proxies Bedrock UDP, queues packets while the server wakes, and fails loudly on timeout.
+- [ ] Replace the direct Bedrock NodePort path in `minecraft-shuxin.ts` with the proxy while preserving the external UDP port.
+- [ ] Add unit tests for packet buffering, wake coalescing, timeout handling, and replay order.
+- [ ] Add deployment health/metrics and update the Minecraft operations guide for sleep/wake behavior.
+- [ ] Run package tests plus affected repository verification. Production
+      activation is tracked separately in `bedrock-waker-production-activation`.
+
+## Comment Log
+
+- 2026-07-27 — Board audit confirmed this remains active: `minecraft-shuxin.ts`
+  still exposes UDP 19132 directly and documents that Bedrock cannot wake a
+  stopped server. Removed obsolete Bazel-era framing from the actionable work;

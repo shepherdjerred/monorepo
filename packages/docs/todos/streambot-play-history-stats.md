@@ -27,8 +27,17 @@ Current state:
 
 ## Remaining
 
-- [ ] A persistent store records timestamped play events:
-      `{ userId/requesterId, title, sourceKind (file|url|search), playedAt,
-durationSeconds, completed }`.
-- [ ] History/stats are queryable (e.g. a `/stream history` command, per-user and
-      per-title play counts).
+- [ ] Define and migrate a durable play-event store with requester, title,
+      source kind, start timestamp, duration, and completion outcome; write it
+      from the actual playback lifecycle rather than queue insertion.
+- [ ] Add repository tests for starts, successful completion, interruption,
+      replay, and restart persistence.
+- [ ] Expose bounded `/stream history` output plus per-requester and per-title
+      counts, with Discord command tests for empty and populated histories.
+
+## Comment Log
+
+### 2026-07-27 — in-progress board audit
+
+- Retained as active. Current persistence still stores resume/queue state only;
+  Prometheus playback metrics do not provide durable user-facing history.

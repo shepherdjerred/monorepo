@@ -2,9 +2,7 @@
 id: plan-2026-07-11-streambot-subtitle-track-picker
 type: reference
 status: complete
-board: true
-verification: agent
-disposition: active
+board: false
 ---
 
 # Streambot: Subtitle Track-Picker Select Menu

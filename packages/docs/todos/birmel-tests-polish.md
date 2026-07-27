@@ -32,14 +32,24 @@ Current state (`packages/birmel`, VoltAgent + Claude AI):
 
 ## Remaining
 
-- [ ] Integration tests cover agent delegation + tool execution and persona
-      injection.
-- [ ] An e2e test exercises the happy path: user message → routing-agent → specialist
-      → tool → response.
-- [ ] New functionality added per the roadmap, with the bot verified working on a
-      real Discord server.
+- [ ] Add deterministic integration coverage for routing-agent delegation,
+      specialist persona injection, and tool execution with model and Discord
+      boundaries faked explicitly.
+- [ ] Add a repeatable happy-path harness for user message → routing agent →
+      specialist → tool → response, including failure assertions at each handoff.
+- [ ] Run the package test suite and exercise the same happy path through the
+      deployed bot on the agent-accessible Discord test server; record the
+      command/message and observed response here.
 
 ## References
 
 - `packages/birmel/AGENTS.md` (architecture)
 - Supervisor: `packages/birmel/src/voltagent/agents/routing-agent.ts`
+
+## Comment Log
+
+### 2026-07-27 — in-progress board audit
+
+- Retained as active. The repository still has broad unit coverage and several
+  component e2e scripts, but no committed deterministic message-to-tool
+  delegation test or recorded full Discord happy-path proof.

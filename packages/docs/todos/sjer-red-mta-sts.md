@@ -65,4 +65,14 @@ Three mail-receiving zones (`sjer.red`, `shepherdjerred.com`, `ts-mc.net`). For 
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `Publish MTA-STS policies for mail-receiving zones`.
+- [ ] Add per-zone `mta-sts` static-site infrastructure and publish the RFC 8461 policy at `/.well-known/mta-sts.txt`.
+- [ ] Add `_mta-sts` TXT records with an explicit policy ID rotation procedure.
+- [ ] Add local validation for policy syntax, content type, and declared MX
+      patterns. Production deployment, report review, and enforcement are
+      tracked in `sjer-red-mta-sts-rollout`.
+
+## Comment Log
+
+- 2026-07-27 — Board audit found no MTA-STS DNS, policy-site, or bucket
+  infrastructure. Repository implementation remains active; privileged DNS
+  deployment and enforcement are split into a separate operator card.

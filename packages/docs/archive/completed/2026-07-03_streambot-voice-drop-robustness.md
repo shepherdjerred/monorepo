@@ -2,9 +2,7 @@
 id: plan-2026-07-03-streambot-voice-drop-robustness
 type: reference
 status: complete
-board: true
-verification: agent
-disposition: active
+board: false
 ---
 
 # Streambot: robust handling of Discord voice-session drops

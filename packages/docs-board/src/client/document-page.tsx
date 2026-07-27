@@ -5,6 +5,7 @@ import {
   CircleDotDashedIcon,
   FileTextIcon,
   ShieldCheckIcon,
+  WrenchIcon,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Link, useParams, useSearchParams } from "react-router";
@@ -200,6 +201,11 @@ export function DocumentPage(): React.JSX.Element {
                 {document.verification === "human" ? (
                   <Badge>
                     <ShieldCheckIcon /> User acceptance
+                  </Badge>
+                ) : null}
+                {document.verification === "operator" ? (
+                  <Badge variant="outline">
+                    <WrenchIcon /> Operator action
                   </Badge>
                 ) : null}
               </div>

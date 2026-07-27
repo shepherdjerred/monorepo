@@ -34,7 +34,16 @@ attachment. Scout's `competition-chart` color/palette logic is a good reference.
 
 ## Remaining
 
-- [ ] Leaderboard rendered as an image/chart embed (not plain text).
-- [ ] Karma-over-time graphs and richer history views.
-- [ ] Tests added (replace the `"true"` test script with real coverage of the karma
-      tally + render path).
+- [ ] Extract and test deterministic leaderboard/history view models from the
+      TypeORM query results, including ties, empty guilds, and long names.
+- [ ] Render leaderboard and karma-over-time images with the established
+      Satori/resvg stack and send them as bounded Discord attachments.
+- [ ] Replace the placeholder `"true"` test script with database tally,
+      rendering, and command-response coverage.
+
+## Comment Log
+
+### 2026-07-27 — in-progress board audit
+
+- Retained as active. The current commands remain text-only and the package
+  still lacks executable tests for either tallying or rendering.

@@ -5,7 +5,7 @@ status: planned
 board: true
 verification: agent
 disposition: active
-origin: packages/docs/plans/2026-07-25_roborock-saros-fleet-migration.md
+origin: packages/docs/archive/completed/2026-07-25_roborock-saros-fleet-migration.md
 ---
 
 # Dead `ha_workflow_*` Prometheus metric family — orphaned alerts + dashboard
@@ -37,3 +37,12 @@ as out of scope for that change.
 - [ ] Same for `packages/homelab/src/cdk8s/grafana/ha-workflow-dashboard.ts` — repoint
       or retire the panels.
 - [ ] Confirm no Alertmanager/PagerDuty routing depends on the removed alert names.
+- [ ] Add synth/unit coverage that prevents dashboards or rules from querying removed `ha_workflow_*` series.
+- [ ] Run homelab synth, tests, lint, and affected repository verification.
+
+## Comment Log
+
+- 2026-07-27 — Board audit confirmed the rules and dashboard still consume
+  `ha_workflow_*`, while Temporal emits `temporal_workflow_outcome_total` and
+  activity failure signals. Alertmanager inhibition also retains old alert-name
+  dependencies, so rules, panels, and routing must migrate together.

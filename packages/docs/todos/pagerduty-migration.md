@@ -37,14 +37,26 @@ integration, not just the Alertmanager receiver.
 
 ## Remaining
 
-- [ ] Alert routing, on-call schedules/escalation, and incident query are all served
-      by the chosen platform.
-- [ ] All 7 integration points above migrated (or retired). (An 8th, the Temporal
-      alert-remediation incident collection, was retired outright — the workflow was
-      removed; see logs/2026-07-02_gut-alert-remediation.md.)
-- [ ] PagerDuty decommissioned and its token removed from 1Password.
+- [ ] Select the replacement and record how it provides Alertmanager delivery,
+      escalation/on-call ownership, acknowledgement, and incident queries.
+- [ ] Migrate or retire each of the seven inventoried integrations with tests or
+      rendered configuration proving the replacement path.
+- [ ] Verify a test alert reaches the replacement and can be queried by the
+      toolkit/dashboard consumers before removing PagerDuty routing.
+- [ ] Remove PagerDuty credentials and resources from code and 1Password only
+      after the replacement has carried production alerts successfully.
 
 ## Related
 
-- [pagerduty-velero-alert-formatting.md](pagerduty-velero-alert-formatting.md)
-  — fold into / re-validate against the new platform's templating.
+- [PagerDuty Velero alert formatting](../archive/completed/pagerduty-velero-alert-formatting.md)
+  is production-verified; preserve its title and Custom Details behavior in any
+  replacement platform.
+
+## Comment Log
+
+### 2026-07-27 — board audit reconciliation
+
+- Consolidated the Postal/Alertmanager design from the superseded migration plan here; this TODO is the sole active owner for removing all current PagerDuty integrations.
+- Current-tree audit found the Alertmanager receiver, toolkit handler, Temporal
+  audit input, worker secret, TRMNL client, and helper surface still present;
+  this remains genuine migration work.

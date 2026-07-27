@@ -3,8 +3,6 @@ id: pr-1514-merge-safety-review
 type: log
 status: in-progress
 board: false
-verification: human
-disposition: active
 ---
 
 # Driving PR #1514 (scout S3-canonical drop) gate — beta done, prod blocked

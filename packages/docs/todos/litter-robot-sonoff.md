@@ -1,11 +1,11 @@
 ---
 id: litter-robot-sonoff
 type: todo
-status: in-progress
+status: planned
 board: true
 verification: agent
-disposition: active
-origin: packages/docs/plans/2026-07-09_ha-registry-cleanup.md
+disposition: blocked
+origin: packages/docs/archive/completed/2026-07-09_ha-registry-cleanup.md
 source_marker: false
 ---
 
@@ -20,16 +20,20 @@ exposes fault states to automate against.
 
 ## Remaining
 
-- [ ] **(user, physical)** Plug the spare Sonoff S31 into the Litter-Robot's outlet,
-      pair it in the eWeLink app (same flow as the numbered plugs), name it
-      "Litter-Robot". HA discovers it via the Sonoff LAN integration.
-- [ ] Verify the new `switch.*` entity appears in HA and lands in the Laundry area
-      with a canonical name.
-- [ ] Optional automation (Temporal, `packages/temporal/src/workflows/ha/`):
-      when `sensor.litter_robot_4_status_code` reports a fault state for >N minutes,
-      power-cycle the plug (off → 10s → on), with a notification and a
-      once-per-day guard. Model on the reconcile-lock reconciler pattern.
+- [ ] After operator approval, document the supported fault states and bounded
+      recovery policy.
+- [ ] Implement the fault-duration trigger, notification, ten-second cycle, and
+      once-per-day guard with workflow tests.
+- [ ] Run Home Assistant validation and affected repository verification.
 
 ## Blocked on
 
-Step 1 — the physical install.
+Physical installation and automation approval are tracked in
+`litter-robot-sonoff-installation`.
+
+## Comment Log
+
+### 2026-07-27 — in-progress board audit
+
+- Reclassified as planned and operator-blocked because the first action is a
+  physical mains-power installation at the house.

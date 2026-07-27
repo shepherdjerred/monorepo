@@ -16,12 +16,12 @@ via Torznab and grab webseed torrents through qBittorrent.
 
 ## Shipped
 
-| Item           | Ref                                                                                                   |
-| -------------- | ----------------------------------------------------------------------------------------------------- |
-| Stacked PR     | [#1587](https://github.com/shepherdjerred/monorepo/pull/1587) (base #1581)                            |
-| Plan           | [`plans/2026-07-19_shelfbridge-torznab-ebooks.md`](../plans/2026-07-19_shelfbridge-torznab-ebooks.md) |
-| Operator guide | [`guides/2026-07-19_ebook-stack-bindery-cwa.md`](../guides/2026-07-19_ebook-stack-bindery-cwa.md)     |
-| 1Password item | `shelfbridge` in vault `Homelab (Kubernetes)` (id `kdre4uvjpjeyaccfhrxfvs5rqy`) — field `API_KEY`     |
+| Item           | Ref                                                                                                                           |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Stacked PR     | [#1587](https://github.com/shepherdjerred/monorepo/pull/1587) (base #1581)                                                    |
+| Plan           | [`archive/completed/2026-07-19_shelfbridge-torznab-ebooks.md`](../archive/completed/2026-07-19_shelfbridge-torznab-ebooks.md) |
+| Operator guide | [`guides/2026-07-19_ebook-stack-bindery-cwa.md`](../guides/2026-07-19_ebook-stack-bindery-cwa.md)                             |
+| 1Password item | `shelfbridge` in vault `Homelab (Kubernetes)` (id `kdre4uvjpjeyaccfhrxfvs5rqy`) — field `API_KEY`                             |
 
 ## Post-deploy checklist
 

@@ -110,4 +110,16 @@ temporal operator cluster health
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `Expose Temporal gRPC over Tailscale (no port-forward)`.
+- [ ] Revalidate the current Temporal frontend service name, ports, NetworkPolicy, and Tailscale operator API.
+- [ ] Add a Tailscale-managed raw TCP service for Temporal gRPC without exposing the web UI publicly.
+- [ ] Restrict ingress to the required operator/Tailscale path and preserve in-cluster clients.
+- [ ] Update Temporal operations docs to use the stable tailnet endpoint instead of `kubectl port-forward`.
+- [ ] Run synth/manifest checks and affected repository verification. Production
+      activation is tracked separately in
+      `temporal-tailscale-production-activation`.
+
+## Comment Log
+
+- 2026-07-27 — Board audit found no `TailscaleService` or raw-TCP
+  `loadBalancerClass: tailscale` implementation. Current operations guides still
+  instruct operators to use `kubectl port-forward`, so the goal remains valid.

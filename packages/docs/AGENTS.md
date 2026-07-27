@@ -56,7 +56,7 @@ docs/
 - Use markdown with code examples where helpful
 - Name files with `<date>_kebab-case` (e.g., `2026-02-22_ci-pipeline.md`)
 - Every Markdown file has canonical YAML frontmatter: globally unique `id`, `type`, `status`, and `board`
-- Board items additionally require `verification` (`agent` or `human`) and `disposition` (`active`, `blocked`, or `deferred`)
+- Board items additionally require `verification` (`agent`, `human`, or `operator`) and `disposition` (`active`, `blocked`, or `deferred`). Use `operator` for physical or privileged actions that require explicit authorization but are not UAT
 - Use only `planned`, `in-progress`, `awaiting-human`, or `complete` for workflow status; do not add a `## Status` section
 - Use unchecked tasks under `## Remaining` for agent work and append-only entries under `## Comment Log` for steering and audit history
 - Reserve `status: awaiting-human` and `## Human Verification` for user acceptance testing: describe an observable action, expected behavior, and acceptance decision. Never assign typecheck, lint, tests, CI, merge checks, routine deployment checks, logs, metrics, traces, or other deterministic verification to the human reviewer

@@ -1,10 +1,10 @@
 ---
 id: plan-2026-04-25-renovate-blocked-majors
 type: plan
-status: in-progress
+status: planned
 board: true
 verification: agent
-disposition: active
+disposition: deferred
 ---
 
 # Renovate Blocked Majors
@@ -23,4 +23,19 @@ disposition: active
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `Renovate Blocked Majors`.
+- [ ] Re-audit the currently blocked Gradle 9 and Java 25 upgrades against the live dependency dashboard.
+- [ ] Create one focused migration item per still-blocked JVM/Birmel media major; close this tracker when every current major has an owner or explicit rejection.
+
+## Session Log — 2026-07-27
+
+### Done
+
+- TypeScript 6, Zod 4, ESLint 10, Astro 6, Prisma 7, and React Native 0.85 are already merged; only independent major migrations remain.
+
+### Remaining
+
+- See the current `## Remaining` checklist above.
+
+### Caveats
+
+- The 2026-07-27 board audit replaced generic or stale completion language with current ownership and verification semantics.

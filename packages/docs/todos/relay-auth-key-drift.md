@@ -1,10 +1,10 @@
 ---
 id: relay-auth-key-drift
 type: todo
-status: in-progress
+status: planned
 board: true
 verification: agent
-disposition: active
+disposition: deferred
 origin: packages/docs/archive/completed/2026-07-04_homelab-relay-server.md
 source_marker: true
 ---
@@ -50,4 +50,17 @@ private `docker.system3.md` registry in CI.
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `Relay auth public keys must stay in sync with the image on every upgrade`.
+- [ ] On every relay-server image bump, extract `/app/relay.toml`, compare every
+      `key_id` and public key to `resources/relay/index.ts`, update any drift,
+      and verify a client connection after rollout.
+- [ ] When authenticated registry access is available to CI without exposing
+      credentials, add a drift check that compares the pinned image config to
+      the rendered ConfigMap.
+
+## Comment Log
+
+### 2026-07-27 — in-progress board audit
+
+- Deferred because no image bump or observed key mismatch is pending. Retained
+  `source_marker: true` and the source marker in relay configuration so every
+  future image change surfaces the manual invariant.

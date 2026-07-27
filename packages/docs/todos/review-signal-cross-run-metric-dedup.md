@@ -67,3 +67,12 @@ recorded is skipped — which is why both concerns share this todo.
 - [ ] Extend `src/shared/review-signals.test.ts` (or a new test) to cover the
       dedup: the same `(provider, pr, head)` observed across two runs increments
       each counter once.
+- [ ] Bound and test retention/compaction so the seen set cannot grow without limit.
+- [ ] Run Temporal tests, typecheck, lint, and affected repository verification.
+
+## Comment Log
+
+- 2026-07-27 — Board audit confirmed the collector has no persistent seen set
+  and `shared/s3.ts` exposes PUT only. The six-hour collector can therefore
+  increment Prometheus counters again for the same provider/PR/head across runs
+  and Temporal retries.

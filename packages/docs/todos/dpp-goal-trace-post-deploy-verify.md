@@ -1,11 +1,11 @@
 ---
 id: dpp-goal-trace-post-deploy-verify
 type: todo
-status: awaiting-human
+status: planned
 board: true
-verification: human
-disposition: active
-origin: packages/docs/plans/2026-07-04_llm-observability-gaps.md
+verification: operator
+disposition: blocked
+origin: packages/docs/archive/completed/2026-07-04_llm-observability-gaps.md
 ---
 
 # Verify dpp goal-mode tracing after next deploy + goal run
@@ -33,6 +33,17 @@ envelopes dated after the deploy. If still dark, check pod logs for
 "duplicate registration" or archive upload warnings
 (`{namespace="pokemon"} |~ "llm-observability|archive"`).
 
-## Human Verification
+## Operator procedure
 
 - Verify `Verify dpp goal-mode tracing after next deploy + goal run` in its intended environment and record evidence in the Comment Log.
+
+## Remaining
+
+- [ ] Run one authorized Discord goal session after deploy and inspect Tempo plus the restricted `llm-archive` prefix for fresh `pokemon.goal.*` spans and envelopes.
+- [ ] Record the trace/archive evidence and archive this TODO, or file a concrete agent defect if the signal is still absent.
+
+## Comment Log
+
+### 2026-07-27 — board audit reconciliation
+
+- Reclassified from human UAT: running a production Discord goal and reading Tempo/S3 are privileged operator checks, not subjective acceptance.

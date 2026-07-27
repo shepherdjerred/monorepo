@@ -5,7 +5,7 @@ status: in-progress
 board: true
 verification: agent
 disposition: active
-origin: packages/docs/plans/2026-07-04_llm-observability-gaps.md
+origin: packages/docs/archive/completed/2026-07-04_llm-observability-gaps.md
 ---
 
 # LLM cost rollup — tokens → dollars
@@ -26,4 +26,19 @@ Deliberately kept out of the capture PR to keep it reviewable.
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `LLM cost rollup — tokens → dollars`.
+- [ ] Add a language-neutral, validated pricing lookup from the shared LLM model
+      catalog that computes input, output, cache-read, and cache-write cost for
+      SDK span usage without double-counting CLI-reported `llm.cost_usd`.
+- [ ] Emit monotonic cost counters labeled by service, call site, provider, and
+      billing system, with tests covering unknown models and pricing changes.
+- [ ] Add Grafana totals and rates for API-billed versus subscription-billed
+      usage, then verify representative SDK and CLI calls populate the expected
+      series.
+
+## Comment Log
+
+### 2026-07-27 — board audit reconciliation
+
+- Retained as an independent accounting feature rather than an unchecked tail on the completed capture plan.
+- The capture layer is present, but no current code joins SDK token usage to
+  model pricing or exports dollar rollups; restored this card to active status.

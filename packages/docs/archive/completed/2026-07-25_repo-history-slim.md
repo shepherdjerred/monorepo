@@ -2,9 +2,7 @@
 id: repo-history-slim
 type: plan
 status: complete
-board: true
-verification: human
-disposition: active
+board: false
 ---
 
 # Slim the monorepo git history

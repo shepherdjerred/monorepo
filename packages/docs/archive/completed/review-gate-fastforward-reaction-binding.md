@@ -2,9 +2,7 @@
 id: review-gate-fastforward-reaction-binding
 type: todo
 status: complete
-board: true
-verification: human
-disposition: active
+board: false
 origin: packages/docs/logs/2026-07-25_pr-1657-review-gate-hardening.md
 source_marker: false
 ---

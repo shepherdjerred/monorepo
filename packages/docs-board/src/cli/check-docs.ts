@@ -1,8 +1,10 @@
 #!/usr/bin/env bun
 
+import nodePath from "node:path";
 import { z } from "zod";
 
 import {
+  extractMarkdownLinks,
   parseMarkdownDocument,
   parseLooseFrontmatter,
   splitFrontmatter,
@@ -32,6 +34,9 @@ type ValidationContext = {
   errors: ValidationError[];
   ids: Map<string, string>;
   todoDocs: Map<string, { path: string; sourceMarker: boolean }>;
+  paths: Set<string>;
+  localLinks: { path: string; target: string }[];
+  boardOrigins: { path: string; origin: string }[];
 };
 
 function errorMessage(error: unknown): string {
@@ -137,37 +142,17 @@ function validateBoard(
   }
 }
 
-function validateParsed(
+function validateDocumentPlacement(
   path: string,
   parsed: ParsedMarkdownDocument,
   context: ValidationContext,
 ): void {
-  const previous = context.ids.get(parsed.frontmatter.id);
-  if (previous === undefined) {
-    context.ids.set(parsed.frontmatter.id, path);
-  } else {
+  if (path.startsWith("archive/") && parsed.frontmatter.board) {
     context.errors.push({
       path,
-      message: `duplicate id '${parsed.frontmatter.id}' also used by ${previous}`,
+      message: "archived documents cannot remain on the active board",
     });
   }
-  if (parsed.metadata.h1Count !== 1) {
-    context.errors.push({
-      path,
-      message: `expected exactly one semantic H1, found ${String(parsed.metadata.h1Count)}`,
-    });
-  }
-  if (
-    parsed.metadata.headings.some(
-      (heading) => heading.depth === 2 && heading.text === "Status",
-    )
-  ) {
-    context.errors.push({
-      path,
-      message: "workflow status must live in frontmatter",
-    });
-  }
-  validateBoard(path, parsed, context);
   if (
     path.startsWith("plans/") &&
     parsed.frontmatter.type === "plan" &&
@@ -202,6 +187,69 @@ function validateParsed(
   }
 }
 
+function collectDocumentReferences(
+  path: string,
+  parsed: ParsedMarkdownDocument,
+  context: ValidationContext,
+): void {
+  if (parsed.frontmatter.board && parsed.frontmatter.origin !== undefined) {
+    context.boardOrigins.push({ path, origin: parsed.frontmatter.origin });
+  }
+  for (const link of extractMarkdownLinks(parsed.body)) {
+    const withoutFragment = link.split(/[?#]/u, 1)[0];
+    if (
+      withoutFragment === undefined ||
+      withoutFragment === "" ||
+      withoutFragment.startsWith("/") ||
+      /^[a-z][a-z0-9+.-]*:/iu.test(withoutFragment) ||
+      !withoutFragment.endsWith(".md")
+    ) {
+      continue;
+    }
+    const target = nodePath.posix.normalize(
+      nodePath.posix.join(nodePath.posix.dirname(path), withoutFragment),
+    );
+    if (!target.startsWith("../")) {
+      context.localLinks.push({ path, target });
+    }
+  }
+}
+
+function validateParsed(
+  path: string,
+  parsed: ParsedMarkdownDocument,
+  context: ValidationContext,
+): void {
+  const previous = context.ids.get(parsed.frontmatter.id);
+  if (previous === undefined) {
+    context.ids.set(parsed.frontmatter.id, path);
+  } else {
+    context.errors.push({
+      path,
+      message: `duplicate id '${parsed.frontmatter.id}' also used by ${previous}`,
+    });
+  }
+  if (parsed.metadata.h1Count !== 1) {
+    context.errors.push({
+      path,
+      message: `expected exactly one semantic H1, found ${String(parsed.metadata.h1Count)}`,
+    });
+  }
+  if (
+    parsed.metadata.headings.some(
+      (heading) => heading.depth === 2 && heading.text === "Status",
+    )
+  ) {
+    context.errors.push({
+      path,
+      message: "workflow status must live in frontmatter",
+    });
+  }
+  validateBoard(path, parsed, context);
+  validateDocumentPlacement(path, parsed, context);
+  collectDocumentReferences(path, parsed, context);
+}
+
 async function validateFile(
   path: string,
   context: ValidationContext,
@@ -233,6 +281,9 @@ export async function validateDocs(): Promise<ValidationError[]> {
     errors: [],
     ids: new Map<string, string>(),
     todoDocs: new Map<string, { path: string; sourceMarker: boolean }>(),
+    paths: new Set(paths),
+    localLinks: [],
+    boardOrigins: [],
   };
 
   for (const path of paths) {
@@ -257,6 +308,26 @@ export async function validateDocs(): Promise<ValidationError[]> {
       context.errors.push({
         path: todo.path,
         message: `source_marker: true but TODO(todo:${id}) was not found`,
+      });
+    }
+  }
+  for (const link of context.localLinks) {
+    if (!context.paths.has(link.target)) {
+      context.errors.push({
+        path: link.path,
+        message: `local Markdown link target does not exist: ${link.target}`,
+      });
+    }
+  }
+  for (const item of context.boardOrigins) {
+    const prefix = "packages/docs/";
+    if (
+      item.origin.startsWith(prefix) &&
+      !context.paths.has(item.origin.slice(prefix.length))
+    ) {
+      context.errors.push({
+        path: item.path,
+        message: `board origin does not exist: ${item.origin}`,
       });
     }
   }

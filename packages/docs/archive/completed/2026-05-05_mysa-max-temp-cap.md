@@ -2,9 +2,7 @@
 id: plan-2026-05-05-mysa-max-temp-cap
 type: reference
 status: complete
-board: true
-verification: agent
-disposition: active
+board: false
 ---
 
 # Mysa HACS integration max-temp cap

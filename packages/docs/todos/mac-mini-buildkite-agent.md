@@ -4,8 +4,8 @@ type: todo
 status: planned
 board: true
 verification: agent
-disposition: active
-origin: packages/docs/plans/2026-07-03_tasknotes-first-in-class.md
+disposition: deferred
+origin: packages/docs/archive/completed/2026-07-03_tasknotes-first-in-class.md
 source_marker: false
 ---
 
@@ -36,5 +36,20 @@ When picked up, this promotes two gates from local/manual to CI merge gates:
 
 ## Remaining
 
-- [ ] App PRs run iOS build + Maestro suite on the Mini automatically.
-- [ ] Agent health is monitored (it going quiet should be visible, not silent).
+- [ ] Reconcile `packages/homelab/mac-ci/README.md` with the current static Buildkite pipeline; remove deleted generator/`MACOS_CI_ENABLED` instructions.
+- [ ] Add current static-pipeline steps for the Tasks for Obsidian iOS build/Maestro suite and TaskNotes differential test.
+- [ ] Add agent-offline health monitoring before making a Mac-only check required.
+- [ ] Add repository validation for the queue steps and monitoring. Physical
+      enrollment and a native build are tracked in
+      `mac-mini-buildkite-enrollment`.
+
+## Comment Log
+
+- 2026-07-27 — Board audit found this todo and the dated plan describe the same
+  Mac Mini agent outcome. The completed plan now points here for residual work,
+  so this todo is the single active record; its steps were refreshed for static
+  Buildkite and operator-owned physical provisioning.
+
+### 2026-07-27 — board audit reconciliation
+
+- The repository-side bootstrap and queue shipped in PR #1386; physical host enrollment and activation remain deliberately deferred operator work.

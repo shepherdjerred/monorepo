@@ -2,9 +2,7 @@
 id: plan-2026-05-05-homekit-vacuum-via-matter-hub
 type: plan
 status: complete
-board: true
-verification: agent
-disposition: deferred
+board: false
 ---
 
 # HomeKit Vacuum Support via Matter Hub

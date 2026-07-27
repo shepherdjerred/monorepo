@@ -20,6 +20,43 @@ describe("createFrontmatter", () => {
     expect(frontmatter.disposition).toBe("blocked");
   });
 
+  test("preserves an explicit operator action", () => {
+    const frontmatter = createFrontmatter(
+      "todos/fixture.md",
+      {
+        id: "fixture",
+        status: "planned",
+        board: true,
+        verification: "operator",
+        disposition: "blocked",
+      },
+      "# Fixture\n\n## Remaining\n\n- [ ] Approve the production change.\n",
+    );
+
+    expect(frontmatter.verification).toBe("operator");
+    expect(frontmatter.disposition).toBe("blocked");
+  });
+
+  test("preserves archived types while clearing board metadata", () => {
+    const frontmatter = createFrontmatter(
+      "archive/completed/fixture.md",
+      {
+        id: "plan-fixture",
+        type: "plan",
+        status: "complete",
+        board: true,
+        verification: "agent",
+        disposition: "active",
+      },
+      "# Fixture\n",
+    );
+
+    expect(frontmatter.type).toBe("plan");
+    expect(frontmatter.board).toBe(false);
+    expect(frontmatter.verification).toBeUndefined();
+    expect(frontmatter.disposition).toBeUndefined();
+  });
+
   test("repairs awaiting-human documents to require human verification", () => {
     const frontmatter = createFrontmatter(
       "plans/fixture.md",

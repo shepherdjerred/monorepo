@@ -177,10 +177,15 @@ unless an independently discovered safety constraint makes it necessary.
 ## Remaining
 
 - [x] Implement, verify, and publish both draft pull requests.
-- [ ] Populate the Discord/R2 credentials and run controlled Discord, Temporal,
-      SeaweedFS, R2, OpenAI, and pull-request acceptance tests.
+- [ ] Reconcile and land the shared-context/weekly-refresh change from PR #1700;
+      its implementation commit is not in current HEAD.
+- [ ] Verify the merged tree keeps the corpus consumers, paused schedule,
+      recovery gates, and secret references coherent.
 - [ ] Review the Discord inventory and explicitly approve its public
       channel/thread scope before starting the full-history scrape.
+- [ ] Hand privileged credential provisioning and live Discord/SeaweedFS/R2
+      acceptance to `todos/glitter-discord-acceptance-operator.md`; archive this
+      plan once the code tranche is merged.
 
 ## Session Log — 2026-07-26
 
@@ -290,3 +295,17 @@ unless an independently discovered safety constraint makes it necessary.
   until the real 1Password fields and non-secret snapshot can be verified.
 - Credentialed Discord, object-storage, Temporal, OpenAI, and live-bot
   acceptance has therefore not run yet.
+
+## Session Log — 2026-07-27
+
+### Done
+
+- Corpus PR #1693 is merged, but PR #1700 and its shared-context implementation are not in current HEAD.
+
+### Remaining
+
+- See the current `## Remaining` checklist above.
+
+### Caveats
+
+- The 2026-07-27 board audit replaced generic or stale completion language with current ownership and verification semantics.

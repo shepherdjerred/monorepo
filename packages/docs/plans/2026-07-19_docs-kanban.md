@@ -68,11 +68,9 @@ All other documentation remains searchable without cluttering the board.
 
 ## Human Verification
 
-- Launch `bun run docs:board` on macOS.
-- Confirm the board highlights meaningful work and that document search covers
-  the full docs corpus.
-- Confirm comments and status transitions feel useful for delayed production
-  signoff.
+- **Action:** Open the local board on macOS, find one real task through the board and one through global search, add a comment, request changes on a test item, and return to the board.
+- **Expected behavior:** The important work is easy to distinguish from reference documents; search finds the intended document; the detail view makes the next human decision obvious; comments and status changes feel predictable and preserve context.
+- **Acceptance decision:** Accept if the workflow is clear enough to use for delayed signoff without consulting Markdown source. Otherwise request changes and name the confusing navigation, prioritization, or transition.
 
 ## Session Log - 2026-07-19
 

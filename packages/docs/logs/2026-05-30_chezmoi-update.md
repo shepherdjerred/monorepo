@@ -14,7 +14,7 @@ Routine `/chezmoi-update` session that turned into a larger cleanup:
 - 14 files showed divergence in `chezmoi diff`, including theme drift (mocha/dark in source vs latte/light in live, driven by `~/bin/sync-theme.sh` flipping on macOS appearance change)
 - Codex was constantly auto-rewriting `~/.codex/config.toml`, generating perpetual drift
 - `gh/hosts.yml.tmpl` template still referenced an OAuth token via 1Password, but `gh` now uses keychain auth — live had empty `users.shepherdjerred: {}`
-- The deferred [chezmoi-theme-templating todo](../todos/chezmoi-theme-templating.md) had been open for ~2 weeks because the theme dance was about to repeat
+- The deferred `chezmoi-theme-templating` todo had been open for ~2 weeks because the theme dance was about to repeat
 
 User decision tree this session:
 

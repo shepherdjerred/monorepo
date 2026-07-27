@@ -3,15 +3,15 @@ id: overseerr-prune-after-migration
 type: todo
 status: planned
 board: true
-verification: agent
+verification: operator
 disposition: active
 origin: packages/docs/logs/2026-07-03_finish-seerr-migration.md
 ---
 
 # Prune orphaned Overseerr resources after Seerr migration
 
-**Blocked on:** PR #1385 (`feat(homelab): complete Overseerr → Seerr migration`)
-merging to `main`.
+PR #1385 (`feat(homelab): complete Overseerr → Seerr migration`) is merged; the
+remaining work is live cleanup only.
 
 ## Why this todo exists
 
@@ -72,15 +72,18 @@ safer/clearer for a one-off.
 
 ## Cloudflare note
 
-The `overseerr.sjer.red → seerr.sjer.red` redirect ruleset was already applied to
-prod from PR #1385's branch. Once #1385 is merged, `main` and prod Cloudflare
-state are consistent again. Do **not** `tofu apply` the cloudflare stack from
-`main` until #1385 is merged (it would destroy the ruleset).
+The `overseerr.sjer.red → seerr.sjer.red` redirect is deployed. PR #1385 is
+merged, so `main` and production Cloudflare state are consistent.
 
 ## Remaining
 
-- [ ] All five `media`-namespace Overseerr resources are gone and the Tailscale proxy
-      is cleaned up.
-- [ ] The Retain PV + ZFS dataset are either deleted or intentionally kept as backup
-      (note which).
-- [ ] This file is deleted in the same commit that records completion.
+- [ ] Inventory the live `media` namespace and Tailscale state, recording every remaining Overseerr-owned resource before deletion.
+- [ ] Remove all remaining Overseerr workloads/services/secrets and its Tailscale proxy without changing Seerr resources.
+- [ ] Decide whether to delete or intentionally retain the PV/ZFS dataset, and record the operator's decision and evidence.
+- [ ] Verify Seerr and the `overseerr.sjer.red` redirect remain healthy, then mark this record complete and archive it.
+
+## Comment Log
+
+- 2026-07-27 — Board audit confirmed PR #1385 merged and Overseerr is absent
+  from current manifests. The 2026-07-08 health log still observed `overseerr-pvc`,
+  so privileged live-state cleanup remains and verification is operator-owned.

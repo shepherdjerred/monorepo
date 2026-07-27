@@ -26,7 +26,7 @@ Every LLM call across the monorepo (Anthropic, OpenAI, Gemini, Claude Code) curr
 
 Birmel also **migrates from `Bun.spawn(["claude", ...])` to `@anthropic-ai/claude-agent-sdk`** as part of this work. Scout-backend gets OTel bootstrapped (currently has none). 1-year S3 retention.
 
-Rejected: Langfuse (its `LangfuseSpanProcessor` ships only to Langfuse — we'd run two backends); Helicone (proxy + their own DB — incompatible with the Tempo/SeaweedFS split). Reference: [research notes](../.claude/plans/for-temporal-scout-birmel-buzzing-gem-agent-a4f8f215e8c4427a4.md).
+Rejected: Langfuse (its `LangfuseSpanProcessor` ships only to Langfuse — we'd run two backends); Helicone (proxy + their own DB — incompatible with the Tempo/SeaweedFS split). Reference: research notes.
 
 ## Scope — call sites
 

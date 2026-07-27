@@ -1,10 +1,10 @@
 ---
 id: torvalds-tailscale-authkey-duplication
 type: todo
-status: in-progress
+status: planned
 board: true
-verification: agent
-disposition: active
+verification: operator
+disposition: blocked
 origin: packages/docs/logs/2026-07-10_torvalds-kubelet-crashloop.md
 ---
 
@@ -67,4 +67,18 @@ needed).
 
 ## Remaining
 
-- [ ] Complete and verify the work described in `torvalds: duplicate TS_AUTHKEY in live Tailscale ExtensionServiceConfig`.
+- [ ] Operator creates one replacement auth key in the Tailscale admin console
+      and records it in the approved secret/source-of-truth workflow.
+- [ ] Build a full machine-config document with one `TS_AUTHKEY` and one
+      `TS_ACCEPT_DNS`, review the diff, and apply it with
+      `talosctl apply-config --mode=no-reboot` rather than an append-style patch.
+- [ ] Verify the extension remains connected, then inspect the live machine
+      config to confirm exactly one entry of each variable remains.
+
+## Comment Log
+
+### 2026-07-27 — in-progress board audit
+
+- Reclassified as planned and operator-blocked. Current connectivity uses the
+  persisted node identity; cleanup requires privileged Tailscale key creation
+  and a live Talos machine-config apply.

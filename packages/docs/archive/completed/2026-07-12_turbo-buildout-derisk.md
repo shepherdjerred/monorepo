@@ -2,9 +2,7 @@
 id: plan-2026-07-12-turbo-buildout-derisk
 type: reference
 status: complete
-board: true
-verification: agent
-disposition: active
+board: false
 ---
 
 # Turbo Build-Out & De-Risk (pre-Phase-2)

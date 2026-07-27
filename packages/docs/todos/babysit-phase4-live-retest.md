@@ -1,11 +1,11 @@
 ---
 id: babysit-phase4-live-retest
 type: todo
-status: awaiting-human
+status: planned
 board: true
-verification: human
-disposition: active
-origin: packages/docs/plans/2026-07-03_pr-babysit-live-test-fixes.md
+verification: operator
+disposition: blocked
+origin: packages/docs/archive/completed/2026-07-03_pr-babysit-live-test-fixes.md
 source_marker: false
 ---
 
@@ -16,7 +16,7 @@ The first live babysit run (PR #1353, 2026-07-03) fired correctly but the workfl
 Temporal heartbeat. Fixed in `fix/babysit-heartbeat` (see origin plan). The fix is
 **not proven until an iteration completes in prod**.
 
-## Human Verification
+## Operator procedure
 
 - Comment `@temporal-worker help me get this green` on a throwaway PR (or re-trigger
   on a real one).
@@ -36,11 +36,19 @@ Temporal heartbeat. Fixed in `fix/babysit-heartbeat` (see origin plan). The fix 
   show `classic protection unreadable (403); using rulesets-only required checks` and the
   verdict should reflect the real rulesets-required set (not `REQUIRED_CHECKS_UNKNOWN`).
 
-## Optional / deferred
-
-- Granting the GitHub App **`Administration: read`** would let the classic-protection read
-  succeed outright (belt-and-suspenders). Not required — Fix 2 defers to rulesets, which is
-  authoritative for `main`. The App's permissions are configured in the GitHub App settings
-  UI, not in tofu (`packages/homelab/src/tofu/github/` manages only repo settings/rulesets/webhooks).
+The optional GitHub App permission change is tracked separately in
+`pr-babysit-administration-read` and does not block this live retest.
 
 Resolve this todo (delete the file) once an iteration completes cleanly in prod.
+
+## Remaining
+
+- [ ] Wait for the agent-owned heartbeat, ruleset-fallback, and status-comment regression gates in the parent plan to pass.
+- [ ] Trigger one authorized production babysit run and confirm it runs past 60 seconds, updates one status comment, and completes or continues-as-new without heartbeat failure.
+- [ ] Record evidence and archive this TODO, or file a concrete defect with the failed workflow trace.
+
+## Comment Log
+
+### 2026-07-27 — board audit reconciliation
+
+- Reclassified from human UAT: commenting on a real PR and inspecting production Temporal/Kubernetes state are privileged operator actions.

@@ -12,7 +12,7 @@ board: false
 Overnight 2026-06-14 00:42–01:38Z, six PagerDuty alerts fired on the Dagger engine cache
 PVC (`dagger/data-dagger-dagger-helm-engine-0`), escalating 88% → 96% → inode pressure,
 then auto-resolved. These were the new `DaggerEnginePVCStorage*` alerts added by the
-[06-07 hardening](../decisions/2026-06-07_dagger-gc-and-pvc-drift.md), behaving as
+[06-07 hardening](../archive/dagger-migration/2026-06-07_dagger-gc-and-pvc-drift.md), behaving as
 designed — what used to be a CI outage was an alert window with no human action needed.
 
 To get a clean baseline for the plan's "revisit `maxUsedSpace` once steady-state data
@@ -42,7 +42,7 @@ exist`.
    `OutOfSync`. Triggered a sync; PVC recreated at 20 Gi RWX immediately, pending
    pods went `Running`.
 8. **Online-expanded the Dagger PVC** to 2 Ti via the
-   [runbook](../guides/2026-06-07_dagger-engine-pvc-resize.md). Resize completed in
+   [runbook](../archive/dagger-migration/2026-06-07_dagger-engine-pvc-resize.md). Resize completed in
    ~30s. Final: `req=2Ti cap=2Ti`, filesystem `2.0T 19G 2.0T 1% /var/lib/dagger`.
 
 ## Final state
@@ -92,7 +92,7 @@ next few days is attributable to current GC config (`maxUsedSpace=800GB` /
 - Wiped Dagger engine PVC + ZFS dataset and Buildkite git-mirrors PVC + ZFS dataset.
 - Reprovisioned both PVCs cleanly; expanded Dagger PVC to 2 Ti via the runbook.
 - Verified CI returned to normal operation; logged this as the start of the
-  steady-state observation window for [the 06-07 GC retune](../plans/2026-06-07_dagger-engine-disk-hardening.md).
+  steady-state observation window for [the 06-07 GC retune](../archive/completed/2026-06-07_dagger-engine-disk-hardening.md).
 
 ### Remaining
 

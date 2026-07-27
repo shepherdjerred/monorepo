@@ -18,7 +18,7 @@ export const DOCUMENT_STATUSES = [
   "complete",
 ] as const;
 
-export const VERIFICATION_TYPES = ["agent", "human"] as const;
+export const VERIFICATION_TYPES = ["agent", "human", "operator"] as const;
 export const DISPOSITIONS = ["active", "blocked", "deferred"] as const;
 
 export const DocumentIdSchema = z.string().regex(/^[a-z0-9][a-z0-9-]*$/);
@@ -65,6 +65,18 @@ export const FrontmatterSchema = z
 
 export type DocumentFrontmatter = z.infer<typeof FrontmatterSchema>;
 export type DocumentStatus = z.infer<typeof DocumentStatusSchema>;
+
+export function archiveFrontmatter(
+  value: DocumentFrontmatter,
+): DocumentFrontmatter {
+  const entries = Object.entries(value).filter(
+    ([key]) => key !== "verification" && key !== "disposition",
+  );
+  return FrontmatterSchema.parse({
+    ...Object.fromEntries(entries),
+    board: false,
+  });
+}
 
 export const RepositoryInfoSchema = z.object({
   root: z.string(),

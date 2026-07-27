@@ -149,21 +149,9 @@ smokeBindery }` entry in `checks` (~line 524).
 
 ## Remaining
 
-Code is implemented and locally verified (patch `go test` green, image builds +
-boots, `bun run verify -- --affected` green). Left to do post-merge:
-
-- [ ] Merge the publication PR; the currently deployed upstream Bindery remains
-      available while main CI publishes the patched image.
-- [ ] Merge the `version-commit-back` follow-up PR that rewrites the all-zero
-      seed digest to the real `2.0.0-<build>@sha256:…`.
-- [ ] Flip `ghcr.io/shepherdjerred/bindery` to public and verify the seeded
-      digest can be pulled anonymously.
-- [ ] Open and merge the deployment-switch follow-up only after the digest and
-      visibility gates pass.
-- [ ] Post-deploy E2E: `POST /api/v1/author/book` with the 原子習慣 Google Books
-      result → expect **201** (was 422); confirm Wanted → ShelfBridge grab →
-      qBit → `/ingest` → CWA.
-- [ ] Confirm the Bindery UI Add Book dialog no longer 422s on Chinese picks.
+- [ ] Confirm the first-party Bindery tag@digest produced after PR #1643 is present in `versions.ts` and anonymously pullable after the operator visibility gate.
+- [ ] Replace `docker.io/vavallee/bindery` in the media deployment with the verified `shepherdjerred/bindery` pin and run affected verification.
+- [ ] After merge, hand the privileged production replay to `todos/bindery-patched-image-rollout-operator.md`; archive this plan when the deployment uses the patched image.
 
 ## Verification (end-to-end)
 
@@ -248,3 +236,17 @@ bindery:dev` succeeds; `bun packages/homelab/scripts/smoke-images.ts bindery`
 - **[P1] Canonical guide — FIXED.** The ebook-stack operator guide now records
   the patched-image code map, staged publication, visibility check, digest
   gate, and later deployment switch.
+
+## Session Log — 2026-07-27
+
+### Done
+
+- PR #1643 published the patched image path, but current `resources/torrents/bindery.ts` still deploys `docker.io/vavallee/bindery`.
+
+### Remaining
+
+- See the current `## Remaining` checklist above.
+
+### Caveats
+
+- The 2026-07-27 board audit replaced generic or stale completion language with current ownership and verification semantics.

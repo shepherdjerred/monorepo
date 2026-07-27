@@ -112,7 +112,7 @@ kubectl -n dagger exec dagger-dagger-helm-engine-0 -- df -h /var/lib/dagger
 Expect a cold cache afterward: a family of transient failures (bun `EEXIST` link
 races, snapshot-rename races, heavy-render timeouts, docker OOM `exit=-1`) that
 should be retried, not code-fixed. See the
-[2026-07-03 post-mortem](../logs/2026-07-03_dagger-engine-disk-full-outage.md).
+[2026-07-03 post-mortem](../../logs/2026-07-03_dagger-engine-disk-full-outage.md).
 
 ## Op: bake the VCT size into the live StatefulSet
 
@@ -145,7 +145,7 @@ DBs, active leases, and in-flight exec mounts are uncounted, so total dataset us
 well above `maxUsedSpace` (steady state observed 2026-07: ~1.33 Ti used vs an 800 GB cap).
 Keep every GC value **absolute** and comfortably below the quota; never use a `%`/default
 policy (it reads pool-level free space on this quota'd ZFS dataset and is unsafe). See
-[the decision record](../decisions/2026-06-07_dagger-gc-and-pvc-drift.md).
+[the decision record](./2026-06-07_dagger-gc-and-pvc-drift.md).
 
 GC also cannot stop a burst: it is a reactive, rate-limited sweeper. The 2026-07-03
 outage wrote ~670 GB in 100 minutes (a Renovate rebase wave rebuilding every dep

@@ -3,8 +3,6 @@ id: plan-2026-05-24-ranked-report-designs
 type: plan
 status: complete
 board: false
-verification: agent
-disposition: active
 ---
 
 # Two new ranked-game report designs for scout-for-lol

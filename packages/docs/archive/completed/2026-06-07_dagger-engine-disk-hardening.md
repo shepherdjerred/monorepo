@@ -13,7 +13,7 @@ main CI build [3668](https://buildkite.com/sjerred/monorepo/builds/3668) failed:
 engine PVC hit its 1 Ti ZFS quota mid-build (`disk quota exceeded`), killing 6 image pushes.
 Immediate fix: PVC expanded 1 → 2 Ti online. This change addresses the two durable gaps the
 incident exposed, plus a conservative GC retune. Full reasoning in the
-[decision record](../decisions/2026-06-07_dagger-gc-and-pvc-drift.md).
+[decision record](../dagger-migration/2026-06-07_dagger-gc-and-pvc-drift.md).
 
 (The SeaweedFS `aws: not found` failure in the same build was unrelated and fixed separately
 in [PR #1109](https://github.com/shepherdjerred/monorepo/pull/1109).)

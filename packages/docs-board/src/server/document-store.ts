@@ -10,6 +10,7 @@ import {
   serializeMarkdownDocument,
 } from "#shared/markdown";
 import {
+  archiveFrontmatter,
   DocumentListResponseSchema,
   FrontmatterSchema,
   type DocumentDetail,
@@ -466,6 +467,7 @@ export class DocumentStore {
         );
       }
       const parsed = parseMarkdownDocument(file.raw);
+      const archivedFrontmatter = archiveFrontmatter(parsed.frontmatter);
       const body = appendCommentLog(
         parsed.body,
         actor,
@@ -474,7 +476,7 @@ export class DocumentStore {
       );
       await this.atomicWrite(
         file.absolutePath,
-        serializeMarkdownDocument(parsed.frontmatter, body),
+        serializeMarkdownDocument(archivedFrontmatter, body),
       );
       await commandValue(this.repoRoot, ["mkdir", "-p", "--", targetDirectory]);
       await commandValue(this.repoRoot, [

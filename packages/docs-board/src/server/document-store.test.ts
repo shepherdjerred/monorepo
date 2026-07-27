@@ -335,6 +335,9 @@ disposition: active
     expect(archived.markdown).toContain(
       "Archived to `packages/docs/archive/completed/`",
     );
+    expect(archived.frontmatter.board).toBe(false);
+    expect(archived.frontmatter.verification).toBeUndefined();
+    expect(archived.frontmatter.disposition).toBeUndefined();
     expect(
       await Bun.file(`${root}/packages/docs/todos/fixture-todo.md`).exists(),
     ).toBe(false);

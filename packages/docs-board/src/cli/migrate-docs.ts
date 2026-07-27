@@ -310,7 +310,12 @@ export function createFrontmatter(
   loose: Record<string, unknown>,
   body: string,
 ): DocumentFrontmatter {
-  const type = inferType(relativePath);
+  const existingType = DocumentTypeSchema.safeParse(
+    getPlainString(loose, "type"),
+  );
+  const type = existingType.success
+    ? existingType.data
+    : inferType(relativePath);
   const existingId = getPlainString(loose, "id");
   const basename = relativePath.split("/").at(-1)?.replace(/\.md$/u, "");
   const pathSegments = relativePath.split("/");
@@ -330,10 +335,9 @@ export function createFrontmatter(
     body,
   });
   const existingBoard = getBoolean(loose, "board");
-  const board =
-    existingBoard ??
-    (type === "todo" ||
-      (type === "plan" && !relativePath.startsWith("archive/")));
+  const board = relativePath.startsWith("archive/")
+    ? false
+    : (existingBoard ?? (type === "todo" || type === "plan"));
   const candidate: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(loose)) {
     if (
