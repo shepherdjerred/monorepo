@@ -144,3 +144,31 @@ Converging (no P1s). Both fixed:
   "2-month sprint" (dynamic start = today) so the preset actually creates.
 
 Verified: backend+app typecheck clean, lint clean.
+
+## Re-review round 4 (cycle 5) — 5 P2s on head 6d87215be
+
+All peripheral edges, all fixed:
+
+- **P2 stale combobox results:** `keepPreviousData` left the previous query's
+  results clickable during a new search (discord-member / player-alias / riot-id
+  comboboxes) — a user could select the wrong account. Now hide results while
+  `isPlaceholderData` so "Searching…" shows until the new results land.
+- **P2 UTC-sliced preset dates:** `toIsoDate` sliced the UTC ISO string, shifting
+  "starts today" to the wrong local day for viewers far from UTC. Now formats
+  the browser-local year/month/day.
+- **P2 wall-clock-dependent test:** `competition-create.router.test.ts` used
+  fixed 2026-08/10 dates that expire (making the SERVER_WIDE competition inactive
+  after Oct 1) — switched to dates relative to `Date.now()`.
+- **P2 stale explorer pagination:** with `keepPreviousData` the visible
+  `nextCursor` belonged to the prior criteria; clicking Next applied a stale
+  cursor. Now Prev/Next are disabled while `browseQuery.isFetching` (pagination
+  footer extracted to `ExplorerPagination` to stay under the complexity limit).
+- **P2 unknown-enum fallback:** player-detail label helpers rendered raw
+  participant-status/visibility values and the active-competition logic treated
+  any unknown status as active. Now parse with the throwing schemas
+  (`ParticipantStatusSchema` / `CompetitionVisibilitySchema` / new
+  `CompetitionStatusSchema`) so a contract violation surfaces instead of being
+  masked.
+
+Verified: data+backend+app typecheck clean, lint clean, `competition-create`
+tests 3/3 pass.

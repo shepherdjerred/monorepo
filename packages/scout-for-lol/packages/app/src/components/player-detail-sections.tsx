@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import {
+  CompetitionStatusSchema,
   CompetitionVisibilitySchema,
   ParticipantStatusSchema,
   participantStatusToString,
@@ -42,14 +43,15 @@ function channelLabel(
   return channel === undefined ? channelId : `#${channel.name}`;
 }
 
+// Fail loud on an unknown persisted enum rather than rendering the raw value:
+// an out-of-enum status/visibility is a contract violation (corrupt row or API
+// drift), so surface it instead of masking it.
 function participantStatusLabel(status: string): string {
-  const result = ParticipantStatusSchema.safeParse(status);
-  return result.success ? participantStatusToString(result.data) : status;
+  return participantStatusToString(ParticipantStatusSchema.parse(status));
 }
 
 function visibilityLabel(visibility: string): string {
-  const result = CompetitionVisibilitySchema.safeParse(visibility);
-  return result.success ? visibilityToString(result.data) : visibility;
+  return visibilityToString(CompetitionVisibilitySchema.parse(visibility));
 }
 
 function competitionTitleSuffix(competition: {
@@ -57,8 +59,11 @@ function competitionTitleSuffix(competition: {
   status: string;
 }): string {
   if (competition.isCancelled) return " (cancelled)";
-  if (competition.status === "ENDED") return " (ended)";
-  return "";
+  // Parse (throw) rather than a raw string compare: an out-of-enum status is a
+  // contract violation that should surface, not be silently treated as active.
+  return CompetitionStatusSchema.parse(competition.status) === "ENDED"
+    ? " (ended)"
+    : "";
 }
 
 export function PlayerSubscriptionsTable(props: {

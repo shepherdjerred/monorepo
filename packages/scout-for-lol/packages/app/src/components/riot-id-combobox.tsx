@@ -71,7 +71,12 @@ export function RiotIdCombobox(props: {
       tagLine: resolveQuery.data.tagLine,
     });
   }
-  for (const suggestion of suggestQuery.data ?? []) {
+  // Hide stale suggestions (keepPreviousData) while a new query is loading, so
+  // the previous query's summoners can't be selected for the new search.
+  const suggestions = suggestQuery.isPlaceholderData
+    ? []
+    : (suggestQuery.data ?? []);
+  for (const suggestion of suggestions) {
     push({ kind: "suggestion", ...suggestion });
   }
 

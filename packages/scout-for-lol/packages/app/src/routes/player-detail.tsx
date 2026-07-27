@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { CompetitionStatusSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { nextRiotIdPollInterval } from "#src/lib/riot-id-poll.ts";
 import { findRegion, type RegionValue } from "#src/lib/regions.ts";
@@ -38,7 +39,9 @@ function formatDate(value: Date | string | null): string {
 }
 
 function isActiveCompetition(competition: { status: string }): boolean {
-  return competition.status !== "ENDED" && competition.status !== "CANCELLED";
+  // Parse (throw) on an unknown status rather than treating it as active.
+  const status = CompetitionStatusSchema.parse(competition.status);
+  return status !== "ENDED" && status !== "CANCELLED";
 }
 
 function Allowed(props: { when: boolean; children: ReactNode }) {

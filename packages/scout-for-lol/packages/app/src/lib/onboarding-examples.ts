@@ -104,7 +104,13 @@ function buildRankPreset(seasonId: string): CompetitionExample {
 }
 
 function toIsoDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
+  // Use the browser-local calendar day, not the UTC slice of the ISO string:
+  // `toISOString().slice(0,10)` shifts to the previous/next day for viewers far
+  // from UTC, so a rolling "starts today" preset would seed the wrong date.
+  const year = date.getFullYear().toString();
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export const COMPETITION_EXAMPLES: CompetitionExample[] = [

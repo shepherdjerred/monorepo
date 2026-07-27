@@ -237,7 +237,14 @@ export type CompetitionCriteria = z.infer<typeof CompetitionCriteriaSchema>;
 // Competition Status (Calculated, Not Stored)
 // ============================================================================
 
-export type CompetitionStatus = "DRAFT" | "ACTIVE" | "ENDED" | "CANCELLED";
+export const CompetitionStatusSchema = z.enum([
+  "DRAFT",
+  "ACTIVE",
+  "ENDED",
+  "CANCELLED",
+]);
+
+export type CompetitionStatus = z.infer<typeof CompetitionStatusSchema>;
 
 /**
  * Calculate competition status based on dates and cancellation flag.

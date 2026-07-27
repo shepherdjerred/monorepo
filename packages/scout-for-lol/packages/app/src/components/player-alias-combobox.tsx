@@ -40,7 +40,9 @@ export function PlayerAliasCombobox(props: {
         setQuery(text);
         props.onChange(text);
       }}
-      items={search.data?.items ?? []}
+      // Hide stale results (keepPreviousData) while a new query is loading, so
+      // the previous query's players can't be selected for the new search.
+      items={search.isPlaceholderData ? [] : (search.data?.items ?? [])}
       isLoading={search.isFetching}
       getKey={(player) => player.id.toString()}
       onSelect={(player) => {

@@ -346,34 +346,55 @@ export function ReportDataExplorer(props: {
           Loading rows…
         </p>
       )}
-      <div className="flex justify-between">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={cursor === 0}
-          onClick={() => {
-            setCursor(Math.max(0, cursor - pageSize));
-          }}
-        >
-          Previous
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={usableCursor(browseQuery.data?.nextCursor) === null}
-          onClick={() => {
-            const next = usableCursor(browseQuery.data?.nextCursor);
-            if (next !== null) {
-              setCursor(next);
-            }
-          }}
-        >
-          Next
-        </Button>
-      </div>
+      <ExplorerPagination
+        cursor={cursor}
+        pageSize={pageSize}
+        nextCursor={browseQuery.data?.nextCursor}
+        isFetching={browseQuery.isFetching}
+        onCursor={setCursor}
+      />
     </section>
+  );
+}
+
+function ExplorerPagination(props: {
+  cursor: number;
+  pageSize: number;
+  nextCursor: number | null | undefined;
+  isFetching: boolean;
+  onCursor: (cursor: number) => void;
+}) {
+  // Disable while fetching: with keepPreviousData the visible nextCursor still
+  // belongs to the prior criteria, so paging now would apply a stale cursor to
+  // the new filter/sort/column/table result.
+  const nextCursor = usableCursor(props.nextCursor);
+  return (
+    <div className="flex justify-between">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={props.cursor === 0 || props.isFetching}
+        onClick={() => {
+          props.onCursor(Math.max(0, props.cursor - props.pageSize));
+        }}
+      >
+        Previous
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={nextCursor === null || props.isFetching}
+        onClick={() => {
+          if (nextCursor !== null) {
+            props.onCursor(nextCursor);
+          }
+        }}
+      >
+        Next
+      </Button>
+    </div>
   );
 }
 

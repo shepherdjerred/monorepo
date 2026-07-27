@@ -54,10 +54,13 @@ function createInput(
     description: "Auto-enrollment test",
     visibility,
     maxParticipants,
+    // Relative to the test clock so the competition is always active (endDate in
+    // the future) regardless of wall-clock date; 60 days keeps it under the
+    // 90-day fixed-duration cap.
     dates: {
       type: "FIXED_DATES" as const,
-      startDate: new Date("2026-08-01T00:00:00Z"),
-      endDate: new Date("2026-10-01T00:00:00Z"),
+      startDate: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      endDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
     },
     criteria: { type: "MOST_GAMES_PLAYED" as const, queue: "FLEX" as const },
     updateCronExpression: null,
