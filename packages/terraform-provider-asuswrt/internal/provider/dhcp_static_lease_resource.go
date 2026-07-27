@@ -96,12 +96,12 @@ func (r *dhcpStaticLeaseResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	entry := client.DHCPStaticEntry{MAC: mac, IP: plan.IP.ValueString()}
-	if !plan.Hostname.IsNull() {
-		entry.Hostname = plan.Hostname.ValueString()
+	hostname := ""
+	if !plan.Hostname.IsNull() && !plan.Hostname.IsUnknown() {
+		hostname = plan.Hostname.ValueString()
 	}
 
-	entries = append(entries, entry)
+	entries = append(entries, client.DHCPStaticEntry{MAC: mac, IP: plan.IP.ValueString(), Hostname: hostname})
 
 	if err := r.writeLeases(ctx, entries); err != nil {
 		resp.Diagnostics.AddError("Failed to write DHCP leases", err.Error())
@@ -110,6 +110,16 @@ func (r *dhcpStaticLeaseResource) Create(ctx context.Context, req resource.Creat
 	}
 
 	plan.MAC = types.StringValue(mac)
+
+	// hostname is Optional+Computed: when omitted, plan.Hostname is Unknown,
+	// and Terraform requires every attribute to be known after apply. Resolve
+	// it to what was actually written, matching Read's empty-means-null
+	// convention so a later Read doesn't immediately report drift.
+	if hostname != "" {
+		plan.Hostname = types.StringValue(hostname)
+	} else {
+		plan.Hostname = types.StringNull()
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }

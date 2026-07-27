@@ -11,12 +11,14 @@ custom `terraform-provider-asuswrt` (built from `packages/terraform-provider-asu
 
 ## Local-run only (NOT in CI)
 
-This stack is **deliberately excluded from the CI drift-check** (`TOFU_STACKS` in
-`scripts/ci/src/catalog.ts`). The Dagger tofu container has tailnet egress only and
-cannot reach the LAN (`192.168.1.0/24`); wiring drift-detection would require a
-Tailscale subnet router advertising the LAN, which does not exist yet. Run this
-stack locally from a machine that is on **both** the home LAN (to reach the routers)
-and the tailnet (to reach the SeaweedFS state backend).
+This stack is **deliberately excluded from the CI drift-check** — it is absent from
+the `for stack in ...` allowlists that gate `tofu-plan` (`.buildkite/pipeline.yml`
+line ~909) and `tofu-apply` (line ~1201). CI's tofu steps run in a Kubernetes pod
+with tailnet egress only and cannot reach the LAN (`192.168.1.0/24`); wiring
+drift-detection would require a Tailscale subnet router advertising the LAN, which
+does not exist yet. Run this stack locally from a machine that is on **both** the
+home LAN (to reach the routers) and the tailnet (to reach the SeaweedFS state
+backend).
 
 State still lives in the shared SeaweedFS S3 backend (`asuswrt/terraform.tfstate`),
 so it is durable and shared.
