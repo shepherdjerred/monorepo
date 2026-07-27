@@ -1,7 +1,7 @@
 ---
 id: scout-followups
 type: plan
-status: in-progress
+status: complete
 board: false
 ---
 
@@ -49,3 +49,20 @@ Per-commit pre-commit gate (verify --affected); new unit suites (drift engine, s
 - The suspense commit's file state includes the hub manager import one commit early (path-scoped staging captured final file states); the stack tip is consistent and every commit passed the verify gate.
 - `scout-codex-fixes` worktree contains ANOTHER session's uncommitted staged work (bulk-enroll refactor follow-ups) — do not remove that worktree without checking its status.
 - The watcher's oracle is tracked-player matches only; 890/1740 warnings will repeat daily (email) until the enum decisions are made.
+
+## Session Log — 2026-07-26 (close-out)
+
+### Done
+
+- Queue-id research settled via CommunityDragon client catalog + lake inspection: 1740 = Bravery Arena, 1750 = Arena 3x6, 3130 = SR Tournament Draft (custom), full Doom Bots family remapped by trial tier (Evil→easy, Curse→normal, Hard/Doom→hard; 4200-4210 left to the watcher). Committed + pushed.
+- PR #1689 promoted to ready for review with the final body (screenshot pass waived by the operator).
+- Branch restacked twice more over the parallel session's Codex cycle-3/cycle-5 base commits (conflicts resolved keeping both sides' improvements: optimistic-mute app-level rollback, CompetitionStatusSchema validation).
+
+### Remaining
+
+- CI + code review on #1681 and #1689; merge bottom-up, then `git-spice repo sync`, remove the `scout-ui-burndown` worktree, and check `scout-codex-fixes` (holds the parallel session's work) before removing it.
+- The watcher goes live on the first main deploy after merge; expect daily no-diff runs with the 890/sparse-mayhem warnings until those are tuned or muted.
+
+### Caveats
+
+- Doom-bots trial-tier difficulty labels are ~80% confidence (Trial ordering inference); one real match settles it, and the UI collapses the trio regardless.
