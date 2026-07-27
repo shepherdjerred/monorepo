@@ -153,6 +153,16 @@ review` nudge comment got no 👀 reaction and no review landed for 4.5h
     after being fixed in commit `251575e` — resolved retroactively this
     round with a reference to that commit.
 
+- Round 4 (head `18e1624ac`) found 2 more genuine P2s, both fixed:
+  - `plans/2026-07-03_mac-mini-buildkite-agent.md` — the "Remaining" item
+    still said the macOS step should gate on `.../ios/**`; brought it in
+    line with the README's already-fixed `packages/tasks-for-obsidian/**`
+    scope.
+  - `mac-ci/README.md` — the recommended `lint:swift` package script can't
+    actually run on a freshly bootstrapped Mini: `bootstrap.sh` installs
+    `swiftlint` but not `bun`. Replaced with a `cd`-scoped raw `swiftlint`
+    invocation that only needs what's already installed.
+
 ### Remaining
 
 - Push this commit, confirm Codex re-reviews clean at the new head, and

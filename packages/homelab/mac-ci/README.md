@@ -109,13 +109,17 @@ a missing agent):
    `if_changed.include` carries (`.buildkite/**`, `.mise.toml`, `bun.lock`,
    `bunfig.toml`, `package.json`, `patches/**`, `turbo.json`) alongside the
    package path, so a change to the macOS step itself or the shared toolchain
-   still runs it. Run `packages/tasks-for-obsidian`'s existing `lint:swift`
-   script (`swiftlint lint --strict --quiet ios/TasksForObsidian
-ios/TasksWidget`) — or the iOS build / Maestro suite — as the command, not
-   a bare `swiftlint --strict`: run from the repo root, that has no input
-   paths and would also lint the 155 unrelated Swift files under
-   `sandbox/archive`. It executes on the agent's native checkout, **not** via
-   the kubernetes plugin the Linux steps use.
+   still runs it. `bootstrap.sh` installs `swiftlint` but not `bun`, so this
+   step can't invoke the `lint:swift` package script directly — run
+   `swiftlint`'s own command scoped to the package directory instead:
+   `cd packages/tasks-for-obsidian &&
+swiftlint lint --strict --quiet ios/TasksForObsidian ios/TasksWidget` — or
+   the iOS build / Maestro suite, which likely does need `bun`/Xcode
+   provisioned (add those to `bootstrap.sh` if so) — as the command. Not a
+   bare `swiftlint --strict` from the repo root: that has no input paths and
+   would also lint the 155 unrelated Swift files under `sandbox/archive`. It
+   executes on the agent's native checkout, **not** via the kubernetes
+   plugin the Linux steps use.
 2. Leave it `soft_fail: true` until it's green, then drop `soft_fail`. Do
    **not** add a macOS-specific required status check — the replatformed
    pipeline posts only a single aggregate `buildkite/monorepo/pr` commit
