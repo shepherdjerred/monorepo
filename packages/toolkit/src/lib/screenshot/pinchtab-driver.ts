@@ -7,6 +7,7 @@ import {
   closeTab,
   countSelector,
   createSession,
+  currentUrl,
   navigateNewTab,
   navigateTab,
   revokeSession,
@@ -175,6 +176,24 @@ async function runCapture(
     if (!found) {
       throw new Error(
         `selector "${selector}" never appeared within ${String(timeoutMs)}ms`,
+      );
+    }
+  }
+
+  // For auth flows, confirm we actually landed in the app before capturing —
+  // the readiness probe only checks the server is up, not that /api/dev/login
+  // succeeded. If the login endpoint errored (e.g. its upsert/JWT signing
+  // failed), the tab would sit on the error response, not the requested route,
+  // and we'd otherwise screenshot that and report success.
+  if (options.authFlow !== undefined) {
+    const landedUrl = unwrap(
+      await currentUrl(session.sessionToken, tabId),
+      "pinchtab url",
+    );
+    const prefix = AUTH_ROUTE_PREFIX[options.authFlow.flow];
+    if (!new URL(landedUrl).pathname.startsWith(prefix)) {
+      throw new Error(
+        `${options.authFlow.flow}: expected to land on a path under "${prefix}" but the tab is at "${landedUrl}" — the login redirect likely failed (e.g. /api/dev/login returned an error).`,
       );
     }
   }

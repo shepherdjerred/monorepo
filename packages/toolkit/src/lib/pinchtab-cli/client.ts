@@ -32,16 +32,37 @@ function wrapError(exitCode: number, stderr: string): PinchtabResult<never> {
   };
 }
 
+/**
+ * Build the subprocess environment for one pinchtab call. Always starts from a
+ * copy of the parent env with any inherited `PINCHTAB_SESSION` removed, then
+ * adds this call's own token (if any). This matters because passing
+ * `.env(undefined)` would let Bun Shell inherit the parent's env verbatim — so
+ * an unscoped admin call (`session create`/`revoke`/`health`) launched from a
+ * shell that already has `PINCHTAB_SESSION` set (e.g. another agent's session)
+ * would silently run under that foreign session.
+ */
+function pinchtabEnv(sessionToken: string | undefined): Record<string, string> {
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(Bun.env)) {
+    if (key !== "PINCHTAB_SESSION" && value !== undefined) {
+      env[key] = value;
+    }
+  }
+  if (sessionToken !== undefined) {
+    env["PINCHTAB_SESSION"] = sessionToken;
+  }
+  return env;
+}
+
 async function runJson<T>(
   args: string[],
   schema: z.ZodType<T>,
   sessionToken?: string,
 ): Promise<PinchtabResult<T>> {
-  const env =
-    sessionToken === undefined
-      ? undefined
-      : { ...Bun.env, PINCHTAB_SESSION: sessionToken };
-  const result = await $`pinchtab ${args}`.nothrow().quiet().env(env);
+  const result = await $`pinchtab ${args}`
+    .nothrow()
+    .quiet()
+    .env(pinchtabEnv(sessionToken));
   if (result.exitCode !== 0) {
     return wrapError(result.exitCode, result.stderr.toString());
   }
@@ -68,11 +89,10 @@ async function runRaw(
   args: string[],
   sessionToken?: string,
 ): Promise<PinchtabResult<string>> {
-  const env =
-    sessionToken === undefined
-      ? undefined
-      : { ...Bun.env, PINCHTAB_SESSION: sessionToken };
-  const result = await $`pinchtab ${args}`.nothrow().quiet().env(env);
+  const result = await $`pinchtab ${args}`
+    .nothrow()
+    .quiet()
+    .env(pinchtabEnv(sessionToken));
   if (result.exitCode !== 0) {
     return wrapError(result.exitCode, result.stderr.toString());
   }
@@ -185,6 +205,14 @@ export async function screenshot(
     args.push("--beyond-viewport");
   }
   return runRaw(args, sessionToken);
+}
+
+/** `pinchtab url --tab <id>` — the tab's current URL (after redirects/SPA nav). */
+export async function currentUrl(
+  sessionToken: string,
+  tabId: string,
+): Promise<PinchtabResult<string>> {
+  return runRaw(["url", "--tab", tabId], sessionToken);
 }
 
 /** `pinchtab tab close <id>`. */
