@@ -149,12 +149,23 @@ from `handleDiscordCallback`'s inline snippet, reused by both callers.
 const authResponse = await handleAuthRoutes(request, url);
 if (authResponse !== null) return authResponse;
 
-if (configuration.environment === "dev" && url.pathname === "/api/dev/login") {
-  return await handleDevLogin(request);
+if (
+  configuration.environment === "dev" &&
+  configuration.enableDevLogin &&
+  url.pathname === "/api/dev/login"
+) {
+  return await handleDevLogin(request, prisma);
 }
 ```
 
-Never reachable in beta/prod — `configuration.environment` is fixed at boot.
+Gated on BOTH `environment === "dev"` AND the explicit, default-off
+`ENABLE_DEV_LOGIN` flag. The extra flag is load-bearing: `ENVIRONMENT`
+defaults to `"dev"` when unset (see `resolveEnvironment`), so gating on
+environment alone would fail **open** — a beta/prod deploy that omitted
+`ENVIRONMENT` would expose an unauthenticated session-minting route.
+`ENABLE_DEV_LOGIN` defaults off, so an omitted config fails closed; only the
+catalog's spawned `dev:web` (`scripts/dev-web.sh`) turns it on. Do not drop
+the flag check when copying this dispatch.
 
 **Tests (`dev-login.test.ts`, run for real, all passing):** default fake
 user mints session + upserts row; chosen `discordId`/`username`; malformed

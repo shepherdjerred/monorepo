@@ -37,25 +37,43 @@ async function probeReady(url: string, timeoutMs: number): Promise<boolean> {
   }
 }
 
-/**
- * Occupancy probe: is *anything* bound to `url`'s port? Unlike readiness, any
- * HTTP response (even a 5xx) counts as "in use"; only a connection failure
- * means the port is free. Used to decide whether we can spawn our own server
- * on the expected port.
- */
-async function isPortInUse(url: string, timeoutMs: number): Promise<boolean> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => {
-    controller.abort();
-  }, timeoutMs);
+// Bun.connect requires socket lifecycle handlers; this probe only cares
+// whether the connection opens at all, so every handler is a no-op.
+const noopSocketHandler = (): void => undefined;
+
+/** Can we open a TCP connection to `hostname:port`? True means something is
+ * listening there. */
+async function canConnect(hostname: string, port: number): Promise<boolean> {
   try {
-    await fetch(url, { signal: controller.signal });
+    const socket = await Bun.connect({
+      hostname,
+      port,
+      socket: {
+        data: noopSocketHandler,
+        open: noopSocketHandler,
+        close: noopSocketHandler,
+        error: noopSocketHandler,
+      },
+    });
+    socket.end();
     return true;
   } catch {
+    // Connection refused (or the address is unavailable) — nothing listening.
     return false;
-  } finally {
-    clearTimeout(timer);
   }
+}
+
+/**
+ * Occupancy probe: is *anything* bound to this port? A TCP connect (not an HTTP
+ * fetch) so it detects every listener — a non-HTTP service or an HTTPS-only
+ * server would make `fetch()` reject and be misreported as free, letting a
+ * fresh Astro/Vite spawn auto-increment while we probe the wrong port until the
+ * timeout. Checks both loopback families so an IPv6-only listener still counts.
+ */
+async function isPortInUse(port: number): Promise<boolean> {
+  return (
+    (await canConnect("127.0.0.1", port)) || (await canConnect("::1", port))
+  );
 }
 
 export async function ensureDevServer(
@@ -104,7 +122,7 @@ export async function ensureDevServer(
   // browser-facing server. Instead, require the expected port to be free and
   // let the child bind exactly it; if it's occupied, fail fast rather than
   // auto-bump to an unknown port or capture whatever is already there.
-  if (await isPortInUse(`${baseUrl}/`, 500)) {
+  if (await isPortInUse(entry.expectedPort)) {
     const why = hasEnvOverrides
       ? "a fresh spawn is required to apply --env overrides, but the port is taken"
       : SHARED_PORTS.has(entry.expectedPort)
