@@ -291,3 +291,19 @@ through its downstream release and version paths.
 ### Caveats
 
 - The repair retains `apt-get update` as a hard failure for all configured Debian sources; it only removes the known-invalid inherited NodeSource source.
+
+## Session Log — 2026-07-27 (Playwright image refresh recovery)
+
+### Done
+
+- Inspected main Buildkite #6629 after runtime Playwright recovery passed and isolated the remaining hard failure to the derived `ci-playwright` image: its Dockerfile refreshed the inherited NodeSource source and received HTTP 403 before installing `unzip`.
+- Applied the same narrow source removal before the image-level package-index refresh and added a CI-image contract test for the required ordering.
+- Built the derived image with `--pull` against the current Playwright base; the package refresh, `unzip`, Bun, and Playwright all succeeded. Passed the toolchain contract test, ShellCheck, pipeline validation, and `bun run verify -- --affected` (21/21 tasks).
+
+### Remaining
+
+- Publish the repair and follow its generated `main` build through every release, tag, and version lane.
+
+### Caveats
+
+- The cache-manifest import warning is non-fatal; the BuildKit failure is specifically the inherited NodeSource APT source, which remains a hard failure for every other configured source.

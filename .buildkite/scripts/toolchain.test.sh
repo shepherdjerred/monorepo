@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 TOOLCHAIN="${SCRIPT_DIR}/toolchain.sh"
 CI_IMAGE="${SCRIPT_DIR}/../ci-image/Dockerfile"
+CI_PLAYWRIGHT_IMAGE="${SCRIPT_DIR}/../ci-playwright/Dockerfile"
 
 if ! awk '
   $0 == "mise install --yes" { install_line = NR }
@@ -27,6 +28,15 @@ fi
 if ! rg -Fq 'ln -sf "$(mise which gh)" /usr/local/bin/gh' "$CI_IMAGE" ||
   ! rg -Fq '&& gh --version' "$CI_IMAGE"; then
   echo "ci image must expose the mise-owned gh binary to login shells" >&2
+  exit 1
+fi
+
+if ! awk '
+  $0 == "RUN rm -f /etc/apt/sources.list.d/nodesource.list /etc/apt/sources.list.d/nodesource.sources \\" { remove_line = NR }
+  $0 == "  && apt-get update \\" { update_line = NR }
+  END { exit !(remove_line > 0 && update_line == remove_line + 1) }
+' "$CI_PLAYWRIGHT_IMAGE"; then
+  echo "Playwright CI image must remove the stale NodeSource APT source before updating package indexes" >&2
   exit 1
 fi
 
