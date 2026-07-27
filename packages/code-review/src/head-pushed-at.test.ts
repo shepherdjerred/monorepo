@@ -12,11 +12,13 @@ const OTHER = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 
 /** Build a `data.repository` record matching HEAD_REF_UPDATED_AT_QUERY. */
 function repository(input: {
+  headRefOid?: string;
   forcePushes?: { createdAt: string; afterCommit: string }[];
 }): Record<string, unknown> {
   return {
     pullRequest: {
       headRefName: "feature/x",
+      headRefOid: input.headRefOid ?? HEAD,
       headRepository: { nameWithOwner: "octocat/repo" },
       timelineItems: {
         nodes: (input.forcePushes ?? []).map((f) => ({
@@ -86,10 +88,20 @@ describe("resolveHeadPushedAt", () => {
     expect(resolveHeadPushedAt(null, HEAD, null)).toBeNull();
   });
 
-  test("honors the ref-update time even when the repository record is null", () => {
-    expect(resolveHeadPushedAt(null, HEAD, "2026-07-26T23:30:00Z")).toBe(
-      "2026-07-26T23:30:00Z",
-    );
+  test("returns null when the PR head has advanced past the requested sha", () => {
+    // Guards a stale build / collector list-query race: even with a ref-update
+    // time, the sha is no longer the head, so a newer 👍 must not misattribute.
+    expect(
+      resolveHeadPushedAt(
+        repository({ headRefOid: OTHER }),
+        HEAD,
+        "2026-07-26T23:30:00Z",
+      ),
+    ).toBeNull();
+  });
+
+  test("returns null when the repository snapshot is unavailable (cannot confirm head)", () => {
+    expect(resolveHeadPushedAt(null, HEAD, "2026-07-26T23:30:00Z")).toBeNull();
   });
 });
 

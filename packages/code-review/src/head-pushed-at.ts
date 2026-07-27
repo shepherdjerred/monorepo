@@ -45,6 +45,7 @@ query($owner: String!, $name: String!, $number: Int!) {
   repository(owner: $owner, name: $name) {
     pullRequest(number: $number) {
       headRefName
+      headRefOid
       headRepository { nameWithOwner }
       timelineItems(last: 50, itemTypes: [HEAD_REF_FORCE_PUSHED_EVENT]) {
         nodes {
@@ -140,9 +141,18 @@ export function resolveHeadPushedAt(
   sha: string,
   refUpdateTime: string | null,
 ): string | null {
-  const candidates: (string | null)[] = [refUpdateTime];
   const pullRequest =
     repository === null ? null : recordField(repository, "pullRequest");
+  // If the PR advanced past `sha` (a stale build, or a list/query race in the
+  // collector), the Activity lookup could still find that sha's historical ref
+  // update and a newer 👍 for the CURRENT head would be misattributed to the old
+  // sha. Only resolve a head-push time while `sha` is still the PR head;
+  // otherwise (mismatch, or a null/failed snapshot) leave it unbound.
+  const headRefOid =
+    pullRequest === null ? null : stringField(pullRequest, "headRefOid");
+  if (headRefOid !== sha) return null;
+
+  const candidates: (string | null)[] = [refUpdateTime];
   const timeline =
     pullRequest === null ? null : recordField(pullRequest, "timelineItems");
   if (timeline !== null) {

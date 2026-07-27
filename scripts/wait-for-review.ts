@@ -332,11 +332,13 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
   const deadline = startedAt + timeoutSeconds * 1000;
   let warnedMismatch = false;
   // The head push time is REQUIRED for the clean-review 👍 binding (not
-  // telemetry-only), so it is fetched INSIDE the retry loop: a transient failure
-  // on one poll must not permanently poison every later reaction as stale. Once
-  // resolved (a real push time, or a definitive null from GitHub) it is cached.
+  // telemetry-only), so it is fetched INSIDE the retry loop and CACHED only once
+  // a real timestamp resolves. A null result is deliberately NOT cached: the
+  // ref-update event can be briefly unavailable right after a push (GitHub has
+  // not exposed the Repository Activity event yet), so re-fetch on later polls
+  // rather than poison the whole wait — a transient failure or not-yet-visible
+  // event must not permanently mark every later reaction as stale.
   let headPushedAt: string | null = null;
-  let headPushedAtResolved = false;
   let lastState: ReviewStateResult | null = null;
   let lastThreads: readonly ReviewThread[] = [];
   let lastPollError: Error | null = null;
@@ -345,15 +347,12 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
     let stateResult: ReviewStateResult;
     let threadResult: { threads: ReviewThread[]; headRefOid: string | null };
     try {
-      if (!headPushedAtResolved) {
-        headPushedAt = await fetchHeadPushedAt({
-          repo,
-          sha: head,
-          prNumber: number,
-          token,
-        });
-        headPushedAtResolved = true;
-      }
+      headPushedAt ??= await fetchHeadPushedAt({
+        repo,
+        sha: head,
+        prNumber: number,
+        token,
+      });
       // Resolve completion FIRST, then fetch threads AFTER — never
       // concurrently. A concurrent thread query can be captured just before the
       // provider submits its review while the state query lands just after,
