@@ -1,6 +1,6 @@
 import { $ } from "bun";
 import { z } from "zod";
-import { packageFiles, validatePackageName } from "./migration-core.ts";
+import { validatePackageName, writePackageScaffold } from "./migration-core.ts";
 
 const RootPackageSchema = z.object({ workspaces: z.array(z.string()) }).loose();
 
@@ -11,9 +11,7 @@ if (import.meta.main) {
   if (await Bun.file(`${directory}/package.json`).exists()) {
     throw new Error(`Package ${name} already exists`);
   }
-  for (const [relativePath, contents] of Object.entries(packageFiles(name))) {
-    await Bun.write(`${directory}/${relativePath}`, contents);
-  }
+  await writePackageScaffold(directory, name);
   const rootPackage = RootPackageSchema.parse(
     await Bun.file(`${root}/package.json`).json(),
   );

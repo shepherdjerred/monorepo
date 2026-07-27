@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   parseVeleroArguments,
   readConfirmationLine,
+  requiresClusterInventory,
 } from "./migration-core.ts";
 
 const bucket = "homelab";
@@ -50,14 +51,17 @@ async function clusterBackups(): Promise<string[]> {
   return response.items.map((item) => item.metadata.name);
 }
 
-async function inventory(): Promise<{
+async function inventory(includeClusterBackups: boolean): Promise<{
   readonly backups: string[];
   readonly backupObjects: string[];
   readonly zfsObjects: string[];
 }> {
   await run(aws("ls", `s3://${bucket}/`));
+  const backupsPromise = includeClusterBackups
+    ? clusterBackups()
+    : Promise.resolve<string[]>([]);
   const [backups, backupObjects, zfsObjects] = await Promise.all([
-    clusterBackups(),
+    backupsPromise,
     listPrefix(backupPrefix),
     listPrefix(zfsPrefix),
   ]);
@@ -66,7 +70,8 @@ async function inventory(): Promise<{
 
 if (import.meta.main) {
   const options = parseVeleroArguments(Bun.argv.slice(2));
-  const before = await inventory();
+  const includeClusterBackups = requiresClusterInventory(options.command);
+  const before = await inventory(includeClusterBackups);
   console.log(JSON.stringify(before, undefined, 2));
   if (options.command === "inspect") process.exit(0);
   if (!options.apply) {
@@ -103,7 +108,7 @@ if (import.meta.main) {
   ) {
     await run(aws("rm", `s3://${bucket}/${zfsPrefix}`, "--recursive"));
   }
-  const after = await inventory();
+  const after = await inventory(includeClusterBackups);
   if (
     ((options.command === "delete-all" ||
       options.target === "backups" ||

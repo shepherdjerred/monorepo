@@ -79,6 +79,17 @@ export function packageFiles(name: string): Readonly<Record<string, string>> {
   };
 }
 
+export async function writePackageScaffold(
+  directory: string,
+  name: string,
+): Promise<void> {
+  for (const [relativePath, contents] of Object.entries(packageFiles(name))) {
+    await Bun.write(`${directory}/${relativePath}`, contents, {
+      createPath: true,
+    });
+  }
+}
+
 export async function existingFiles(
   paths: readonly string[],
 ): Promise<string[]> {

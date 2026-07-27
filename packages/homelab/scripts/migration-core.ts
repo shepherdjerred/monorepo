@@ -7,6 +7,10 @@ export type VeleroOptions = {
   readonly target?: R2Target;
 };
 
+export function requiresClusterInventory(command: VeleroCommand): boolean {
+  return command !== "delete-r2";
+}
+
 export async function readConfirmationLine(
   input: ReadableStream<Uint8Array>,
 ): Promise<string> {

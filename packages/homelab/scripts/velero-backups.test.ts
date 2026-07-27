@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import {
   parseVeleroArguments,
   readConfirmationLine,
+  requiresClusterInventory,
 } from "./migration-core.ts";
 
 function openInput(...chunks: string[]): ReadableStream<Uint8Array> {
@@ -45,6 +46,12 @@ test("R2 deletion requires and validates its target", () => {
   expect(() =>
     parseVeleroArguments(["delete-r2", "--target", "invalid"]),
   ).toThrow("requires backups");
+});
+
+test("R2-only deletion does not require cluster inventory", () => {
+  expect(requiresClusterInventory("delete-r2")).toBe(false);
+  expect(requiresClusterInventory("inspect")).toBe(true);
+  expect(requiresClusterInventory("delete-all")).toBe(true);
 });
 
 test("rejects missing commands and unknown options", () => {

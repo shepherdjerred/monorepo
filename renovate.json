@@ -115,11 +115,11 @@
     },
     {
       "customType": "regex",
-      "description": "Version pins in TypeScript scripts annotated with `# renovate:` that have no native manager",
+      "description": "Version pins in TypeScript scripts annotated with `// renovate:` that have no native manager",
       "managerFilePatterns": ["scripts/**/*.ts", "packages/*/scripts/**/*.ts"],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s*\\n\\s*(?:export\\s+)?const\\s+[A-Za-z_][A-Za-z0-9_]*\\s*=\\s*\"(?<currentValue>[^\"]+)\"",
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s*\\n[^\\n]*:(?<currentValue>[0-9][^\"'}\\s]*)"
+        "// renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s*\\n\\s*(?:export\\s+)?const\\s+[A-Za-z_][A-Za-z0-9_]*\\s*=\\s*\"(?<currentValue>[^\"]+)\"",
+        "// renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s*\\n[^\\n]*:(?<currentValue>[0-9][^\"'}\\s]*)"
       ]
     },
     {

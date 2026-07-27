@@ -1,6 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { parsePokemonUpstream } from "./lib/upstream.ts";
+import { writeWasmArtifact } from "./lib/wasm-artifact.ts";
 
 async function run(
   command: string[],
@@ -147,9 +148,9 @@ if (import.meta.main) {
     WASM_LD: linker,
   });
   const output = `${root}/packages/backend/assets/pokeemerald.wasm`;
-  await Bun.write(
+  await writeWasmArtifact(
+    `${workDirectory}/build/wasm/pokeemerald.wasm`,
     output,
-    Bun.file(`${workDirectory}/build/wasm/pokeemerald.wasm`),
   );
   console.log(
     `[build-wasm] wrote ${output} (${Bun.file(output).size.toString()} bytes)`,
