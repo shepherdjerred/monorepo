@@ -52,7 +52,7 @@ work already merged or superseded.
 
 - Audited all 134 original non-complete board items against current source,
   history, and available read-only production evidence.
-- Reconciled the active board to 98 explicit records: 74 planned, 22 in
+- Reconciled the active board to 100 explicit records: 75 planned, 23 in
   progress, and 2 awaiting user acceptance.
 - Reserved `awaiting-human` for the two genuine UAT records and split physical,
   privileged, or destructive prerequisites into operator-owned TODOs.

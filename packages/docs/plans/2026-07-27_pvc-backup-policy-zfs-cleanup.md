@@ -1,10 +1,10 @@
 ---
 id: pvc-backup-policy-zfs-cleanup
 type: plan
-status: awaiting-human
+status: planned
 board: true
-verification: human
-disposition: active
+verification: operator
+disposition: blocked
 ---
 
 # Explicit PVC Backup Policy and ZFS Cleanup
@@ -58,7 +58,7 @@ unknown PVCs, and apply consistent Velero labels.
 - Test multi-node audit parsing and failure modes.
 - Do not perform a live restore; record restoreability as unproven.
 
-## Remaining
+## Completed Implementation
 
 - [x] Implement and test the policy source, synthesis integration, and admission enforcement.
 - [x] Repair the multi-node orphan audit.
@@ -67,12 +67,8 @@ unknown PVCs, and apply consistent Velero labels.
 - [x] Quarantine confirmed orphan datasets and record the seven-day hold.
 - [x] Schedule the post-hold re-audit and human-gated deletion decision.
 
-## Human Verification
+## Remaining
 
-- [x] Review and merge PR #1715.
-- [x] Confirm Argo CD has deployed the admission policies and Temporal audit update.
-- [x] Run the guarded PVC label backfill, then verify that the next completed
-      backup contains the exact 45 included PVCs.
 - [ ] On or after 2026-08-03 12:30 PDT, review the quarantine re-audit and
       explicitly approve or reject final deletion.
 
