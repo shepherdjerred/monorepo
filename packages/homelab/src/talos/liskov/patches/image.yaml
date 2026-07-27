@@ -5,7 +5,7 @@ machine:
     # amd-ucode). The schematic hash + digest are kept in sync by
     # src/talos/update-image-id.ts (`bun run check:talos` fails on drift);
     # Renovate tracks the trailing :vX.Y.Z (regex manager in renovate.json).
-    image: factory.talos.dev/metal-installer-secureboot/d953d04c966642907c1061252288cdc30189c2973f083de93355faac1e9d54cb:v1.13.6@sha256:1f5a3170a179f47bf58c69a9df644f81b04ede643ca389c64b5354b055d9db43
+    image: factory.talos.dev/metal-installer-secureboot/d953d04c966642907c1061252288cdc30189c2973f083de93355faac1e9d54cb:v1.13.7@sha256:1f5a3170a179f47bf58c69a9df644f81b04ede643ca389c64b5354b055d9db43
     # Select the install disk by serial, never by /dev path (torvalds lesson:
     # identical NVMes get nvme0n1/nvme1n1 assigned randomly per boot, and with
     # wipe:true a path selector can destroy the data disk). liskov: the 990 Pro
