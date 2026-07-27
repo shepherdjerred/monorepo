@@ -347,12 +347,18 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
     let stateResult: ReviewStateResult;
     let threadResult: { threads: ReviewThread[]; headRefOid: string | null };
     try {
-      headPushedAt ??= await fetchHeadPushedAt({
-        repo,
-        sha: head,
-        prNumber: number,
-        token,
-      });
+      // Only the review-at-head clean-👍 path binds by head-push time; a
+      // check-run provider (e.g. Greptile) never reads it, so don't make the
+      // Activity endpoint a gate prerequisite for it — an endpoint outage must
+      // not fail/timeout a gate that would otherwise pass on a valid check-run.
+      if (provider.completion.kind === "review-at-head") {
+        headPushedAt ??= await fetchHeadPushedAt({
+          repo,
+          sha: head,
+          prNumber: number,
+          token,
+        });
+      }
       // Resolve completion FIRST, then fetch threads AFTER — never
       // concurrently. A concurrent thread query can be captured just before the
       // provider submits its review while the state query lands just after,

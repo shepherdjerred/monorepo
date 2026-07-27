@@ -40,6 +40,18 @@ const RepositoryActivitySchema = z.object({
 // a false review timeout).
 const HeadRepositorySchema = z.object({ nameWithOwner: z.string() }).nullable();
 
+// The full HEAD_REF_OID_QUERY response. Every level is required: a missing/
+// wrong-typed `repository`/`pullRequest`/`headRefOid` is a contract regression
+// that must throw, not collapse to null (which the post-activity re-check would
+// misread as a head advance → the wait loop refetches until its timeout).
+const HeadRefOidResponseSchema = z.object({
+  data: z.object({
+    repository: z.object({
+      pullRequest: z.object({ headRefOid: z.string() }),
+    }),
+  }),
+});
+
 const HEAD_REF_UPDATED_AT_QUERY = `
 query($owner: String!, $name: String!, $number: Int!) {
   repository(owner: $owner, name: $name) {
@@ -104,6 +116,15 @@ export function parseActivityPage(
  */
 export function parseHeadRepo(value: unknown): string | null {
   return HeadRepositorySchema.parse(value)?.nameWithOwner ?? null;
+}
+
+/**
+ * Extract `headRefOid` from a HEAD_REF_OID_QUERY response, THROWING on a
+ * malformed shape rather than collapsing it to null. Exported for tests.
+ */
+export function parseHeadRefOid(payload: unknown): string {
+  return HeadRefOidResponseSchema.parse(payload).data.repository.pullRequest
+    .headRefOid;
 }
 
 /**
@@ -207,25 +228,23 @@ async function fetchRefUpdateTime(input: {
   return pickRefUpdateTime(activities, input.sha);
 }
 
-/** The PR's current head-commit OID, or null when it cannot be read. */
+/**
+ * The PR's current head-commit OID. Throws on a malformed response (see
+ * {@link parseHeadRefOid}) so an API contract failure surfaces as an actionable
+ * error rather than a null the caller misreads as a head advance.
+ */
 async function fetchHeadRefOid(input: {
   repo: string;
   prNumber: number;
   token: string;
-}): Promise<string | null> {
+}): Promise<string> {
   const { owner, name } = splitRepo(input.repo);
   const payload = await graphqlRequest(
     HEAD_REF_OID_QUERY,
     { owner, name, number: input.prNumber },
     input.token,
   );
-  const payloadRecord = asRecord(payload);
-  const data =
-    payloadRecord === null ? null : recordField(payloadRecord, "data");
-  const repository = data === null ? null : recordField(data, "repository");
-  const pullRequest =
-    repository === null ? null : recordField(repository, "pullRequest");
-  return pullRequest === null ? null : stringField(pullRequest, "headRefOid");
+  return parseHeadRefOid(payload);
 }
 
 /**

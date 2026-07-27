@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   parseActivityPage,
+  parseHeadRefOid,
   parseHeadRepo,
   pickRefUpdateTime,
   reactionBoundToHead,
@@ -203,6 +204,30 @@ describe("parseHeadRepo", () => {
     expect(() => parseHeadRepo({ full_name: "octocat/fork" })).toThrow();
     expect(() => parseHeadRepo({ nameWithOwner: 123 })).toThrow();
     expect(() => parseHeadRepo("octocat/fork")).toThrow();
+  });
+});
+
+describe("parseHeadRefOid", () => {
+  test("extracts headRefOid from a valid response", () => {
+    expect(
+      parseHeadRefOid({
+        data: { repository: { pullRequest: { headRefOid: HEAD } } },
+      }),
+    ).toBe(HEAD);
+  });
+
+  test("throws on a malformed response (missing/null level or wrong type)", () => {
+    expect(() =>
+      parseHeadRefOid({ data: { repository: { pullRequest: null } } }),
+    ).toThrow();
+    expect(() => parseHeadRefOid({ data: { repository: null } })).toThrow();
+    expect(() =>
+      parseHeadRefOid({
+        data: { repository: { pullRequest: { headRefOid: 123 } } },
+      }),
+    ).toThrow();
+    expect(() => parseHeadRefOid({ errors: [{ message: "boom" }] })).toThrow();
+    expect(() => parseHeadRefOid(null)).toThrow();
   });
 });
 
