@@ -6,6 +6,6 @@
     "release-please": "release-please"
   },
   "dependencies": {
-    "release-please": "17.9.0"
+    "release-please": "17.10.0"
   }
 }

@@ -2796,7 +2796,7 @@ export type ArgocdHelmValuesRedisExporter = {
   /**
    * Prometheus redis-exporter image
    *
-   * @default {"repository":"ghcr.io/oliver006/redis_exporter","tag":"v1.87.0","imagePullPolicy":""}
+   * @default {"repository":"ghcr.io/oliver006/redis_exporter","tag":"v1.88.0","imagePullPolicy":""}
    */
   image?: ArgocdHelmValuesRedisExporterImage;
   /**
@@ -2835,7 +2835,7 @@ export type ArgocdHelmValuesRedisExporterImage = {
   /**
    * Tag to use for the redis-exporter
    *
-   * @default "v1.87.0"
+   * @default "v1.88.0"
    */
   tag?: string;
   /**
@@ -4107,7 +4107,7 @@ export type ArgocdHelmValuesServer = {
    * Requires Gateway API v1alpha2 and a controller that supports ListenerSet
    * Refer to https://gateway-api.sigs.k8s.io/reference/spec/#gateway.networking.k8s.io/v1alpha2.ListenerSet
    *
-   * @default {...} (5 keys)
+   * @default {...} (11 keys)
    */
   listenerset?: ArgocdHelmValuesServerListenerset;
   /**
@@ -5524,6 +5524,42 @@ export type ArgocdHelmValuesServerListenerset = {
    * @default {}
    */
   parentRef?: ArgocdHelmValuesServerListenersetParentRef;
+  /**
+   * Hostname for the synthesized listener. Defaults to global.domain when empty.
+   *
+   * @default ""
+   */
+  hostname?: string;
+  /**
+   * Name of the synthesized listener. Also used as sectionName in auto-derived httproute parentRefs.
+   *
+   * @default "https"
+   */
+  listenerName?: string;
+  /**
+   * Port for the synthesized listener
+   *
+   * @default 443
+   */
+  port?: number;
+  /**
+   * Protocol for the synthesized listener
+   *
+   * @default "HTTPS"
+   */
+  protocol?: string;
+  /**
+   * TLS configuration for the synthesized listener
+   *
+   * @default {"enabled":true,"mode":"Terminate","secretName":""}
+   */
+  tls?: ArgocdHelmValuesServerListenersetTls;
+  /**
+   * allowedRoutes for the synthesized listener
+   *
+   * @default {"namespaces":{"from":"Same"}}
+   */
+  allowedRoutes?: ArgocdHelmValuesServerListenersetAllowedRoutes;
   listeners?: unknown[];
 };
 
@@ -5544,6 +5580,41 @@ export type ArgocdHelmValuesServerListenersetAnnotations = {
 };
 
 export type ArgocdHelmValuesServerListenersetParentRef = object;
+
+export type ArgocdHelmValuesServerListenersetTls = {
+  /**
+   * Enable TLS on the synthesized listener
+   *
+   * @default true
+   */
+  enabled?: boolean;
+  /**
+   * TLS termination mode
+   *
+   * @default "Terminate"
+   */
+  mode?: string;
+  /**
+   * Secret name for TLS certificate. Defaults to `argocd-server-tls` when empty.
+   *
+   * @default ""
+   */
+  secretName?: string;
+};
+
+export type ArgocdHelmValuesServerListenersetAllowedRoutes = {
+  /**
+   * @default {"from":"Same"}
+   */
+  namespaces?: ArgocdHelmValuesServerListenersetAllowedRoutesNamespaces;
+};
+
+export type ArgocdHelmValuesServerListenersetAllowedRoutesNamespaces = {
+  /**
+   * @default "Same"
+   */
+  from?: string;
+};
 
 export type ArgocdHelmValuesServerClusterRoleRules = {
   /**
@@ -6715,7 +6786,7 @@ export type ArgocdHelmValuesApplicationSet = {
    */
   httproute?: ArgocdHelmValuesApplicationSetHttproute;
   /**
-   * @default {...} (5 keys)
+   * @default {...} (11 keys)
    */
   listenerset?: ArgocdHelmValuesApplicationSetListenerset;
   /**
@@ -7563,6 +7634,42 @@ export type ArgocdHelmValuesApplicationSetListenerset = {
    * @default {}
    */
   parentRef?: ArgocdHelmValuesApplicationSetListenersetParentRef;
+  /**
+   * Hostname for the synthesized listener. Defaults to global.domain when empty.
+   *
+   * @default ""
+   */
+  hostname?: string;
+  /**
+   * Name of the synthesized listener. Also used as sectionName in auto-derived httproute parentRefs.
+   *
+   * @default "https"
+   */
+  listenerName?: string;
+  /**
+   * Port for the synthesized listener
+   *
+   * @default 443
+   */
+  port?: number;
+  /**
+   * Protocol for the synthesized listener
+   *
+   * @default "HTTPS"
+   */
+  protocol?: string;
+  /**
+   * TLS configuration for the synthesized listener
+   *
+   * @default {"enabled":true,"mode":"Terminate","secretName":""}
+   */
+  tls?: ArgocdHelmValuesApplicationSetListenersetTls;
+  /**
+   * allowedRoutes for the synthesized listener
+   *
+   * @default {"namespaces":{"from":"Same"}}
+   */
+  allowedRoutes?: ArgocdHelmValuesApplicationSetListenersetAllowedRoutes;
   listeners?: unknown[];
 };
 
@@ -7583,6 +7690,41 @@ export type ArgocdHelmValuesApplicationSetListenersetAnnotations = {
 };
 
 export type ArgocdHelmValuesApplicationSetListenersetParentRef = object;
+
+export type ArgocdHelmValuesApplicationSetListenersetTls = {
+  /**
+   * Enable TLS on the synthesized listener
+   *
+   * @default true
+   */
+  enabled?: boolean;
+  /**
+   * TLS termination mode
+   *
+   * @default "Terminate"
+   */
+  mode?: string;
+  /**
+   * Secret name for TLS certificate. Defaults to `argocd-applicationset-controller-tls` when empty.
+   *
+   * @default ""
+   */
+  secretName?: string;
+};
+
+export type ArgocdHelmValuesApplicationSetListenersetAllowedRoutes = {
+  /**
+   * @default {"from":"Same"}
+   */
+  namespaces?: ArgocdHelmValuesApplicationSetListenersetAllowedRoutesNamespaces;
+};
+
+export type ArgocdHelmValuesApplicationSetListenersetAllowedRoutesNamespaces = {
+  /**
+   * @default "Same"
+   */
+  from?: string;
+};
 
 export type ArgocdHelmValuesApplicationSetNetworkPolicy = {
   /**
@@ -9649,6 +9791,14 @@ export type ArgocdHelmParameters = {
   "server.backendTLSPolicy.enabled"?: string;
   "server.backendTLSPolicy.targetRefs"?: string;
   "server.listenerset.enabled"?: string;
+  "server.listenerset.hostname"?: string;
+  "server.listenerset.listenerName"?: string;
+  "server.listenerset.port"?: string;
+  "server.listenerset.protocol"?: string;
+  "server.listenerset.tls.enabled"?: string;
+  "server.listenerset.tls.mode"?: string;
+  "server.listenerset.tls.secretName"?: string;
+  "server.listenerset.allowedRoutes.namespaces.from"?: string;
   "server.listenerset.listeners"?: string;
   "server.clusterRoleRules.enabled"?: string;
   "server.clusterRoleRules.rules"?: string;
@@ -9849,6 +9999,14 @@ export type ArgocdHelmParameters = {
   "applicationSet.httproute.rules.matches.path.type"?: string;
   "applicationSet.httproute.rules.matches.path.value"?: string;
   "applicationSet.listenerset.enabled"?: string;
+  "applicationSet.listenerset.hostname"?: string;
+  "applicationSet.listenerset.listenerName"?: string;
+  "applicationSet.listenerset.port"?: string;
+  "applicationSet.listenerset.protocol"?: string;
+  "applicationSet.listenerset.tls.enabled"?: string;
+  "applicationSet.listenerset.tls.mode"?: string;
+  "applicationSet.listenerset.tls.secretName"?: string;
+  "applicationSet.listenerset.allowedRoutes.namespaces.from"?: string;
   "applicationSet.listenerset.listeners"?: string;
   "applicationSet.allowAnyNamespace"?: string;
   "applicationSet.networkPolicy.create"?: string;

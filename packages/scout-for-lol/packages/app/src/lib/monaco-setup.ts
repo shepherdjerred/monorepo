@@ -8,7 +8,7 @@
 // not loaded unless those language IDs are activated on a model.
 import * as monaco from "monaco-editor";
 import { loader } from "@monaco-editor/react";
-import EditorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
+import EditorWorker from "monaco-editor/editor/editor.worker.js?worker";
 
 // Bundle Monaco locally. The default @monaco-editor/react loader fetches Monaco
 // from a CDN, which the app's CSP (script-src / connect-src 'self') blocks. Only

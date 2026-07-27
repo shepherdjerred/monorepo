@@ -2,12 +2,12 @@ import { test, expect, setDefaultTimeout } from "bun:test";
 import { matchToSvg, svgToPng } from "#src/html/index.tsx";
 import { rankedFixture } from "#src/html/shared/test-fixtures.ts";
 
-// Each square render is a full 4760x4760 satori pass and can exceed Bun's 5s
-// default per-test timeout on a cold CI engine, so give it headroom — the
-// render succeeds, it just needs more than 5s when caches are cold. Without
-// this, a timed-out test also drifts Bun's snapshot counter, comparing each
-// render against the next test's committed hash.
-setDefaultTimeout(30_000);
+// Each square render is a full 4760x4760 satori pass. Under the repository's
+// parallel verification load, a cold render can take about 40 seconds, so give
+// it enough headroom for the same workload in CI. Without this, a timed-out
+// test also drifts Bun's snapshot counter, comparing each render against the
+// next test's committed hash.
+setDefaultTimeout(120_000);
 
 function hashSvg(svg: string): string {
   const hasher = new Bun.CryptoHasher("sha256");

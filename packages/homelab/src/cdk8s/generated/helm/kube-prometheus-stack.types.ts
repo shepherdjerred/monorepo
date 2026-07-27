@@ -5842,7 +5842,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatc
      */
     repository?: string;
     /**
-     * @default "1.8.4"
+     * @default "1.8.5"
      */
     tag?: string;
     /**
@@ -6457,7 +6457,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorThanosImage = {
    */
   repository?: string;
   /**
-   * @default "v0.42.0"
+   * @default "v0.42.2"
    */
   tag?: string;
   /**
@@ -9389,7 +9389,7 @@ export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v0.42.0"
+   * @default "v0.42.2"
    */
   tag?: string;
   /**

@@ -41,6 +41,7 @@ Applied in order with `patch -p1` (paths are `a/code/… b/code/…`):
 | `0001-mymain-neil-host-exports.patch` | `code/mymain.cpp` | Adds the `extern "C"` host contract (below) and the ROM-from-memory `main()` path. |
 | `0002-makefile-exported-functions.patch` | `code/Makefile` | Adds the four exports to `EXPORTED_FUNCTIONS`, and keeps the build outputs in `code/` (drops upstream's `mv … ../dist/`) so the build scripts collect them. Leaves the upstream optimization flags untouched (`ASSERTIONS=0`, no profiling) for a lean prod build. |
 | `0003-rdram-export.patch` | `code/mymain.cpp`, `code/Makefile` | Adds `neilGetRdram()` / `neilGetRdramSize()` (and their `EXPORTED_FUNCTIONS` entries) — base + size of the core's `g_rdram` array (referenced directly: this build links `libretronew.c`, which has no `retro_get_memory_data`), so the host can read game state (race placements, course id, timers) for leaderboards. See the byte-order contract below. |
+| `0004-emscripten-6-pointer-types.patch` | `code/Makefile`, `code/src/libretro/neil.h`, `code/src/libretro/libretronew.c`, controller input and PIF sources | Fixes invalid pointer indirection, implicit-int declarations, a missing return, and the renamed runtime-method export setting; exposes the framebuffer as an opaque pointer so Emscripten 6 can compile the frozen upstream core without weakening diagnostics. |
 
 The `mymain.cpp` patch adds:
 

@@ -11,6 +11,12 @@ export const SHARED_POD_ANCHORS = [
   "pod_tofu_kubernetes",
 ] as const;
 export const CHECKOUT_CONTAINER_ALIAS = "- *checkout_container";
+export const FORBIDDEN_DOCKER_IN_DOCKER_PATTERNS = [
+  /--load/,
+  /docker-env\.sh/,
+  /DOCKER_HOST/,
+  /docker:(?:dind|\S+-dind)/,
+] as const;
 
 export function fail(message: string): never {
   throw new Error(`[validate-pipeline] ${message}`);
@@ -100,7 +106,7 @@ export function assertNoImplicitBunRuntime(
   sources: readonly { path: string; source: string }[],
 ): void {
   const implicitBunInstall =
-    /\bbun\s+(?!install(?:\s|$)|--no-install(?:\s|$))/g;
+    /\bbun\s+(?!install(?:\s|$)|--no-install(?:\s|$)|x\s+--no-install(?:\s|$))/g;
   const implicitBunxInstall = /\bbunx\s+(?!--no-install(?:\s|$))/g;
   for (const { path, source } of sources) {
     const commands = source

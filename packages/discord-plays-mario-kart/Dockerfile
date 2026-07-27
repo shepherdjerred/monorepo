@@ -22,10 +22,9 @@
 # (neilSetRom, neilGetVideoBuffer/Height, the per-player input export, the
 # Makefile exports) live in `wasm-src/patches/` and are applied here at build
 # time. No binaries are committed — the build is reproducible from source.
-# Pinned emscripten 2.0.7: the exact toolchain the legacy SDL2/GLES2 core
-# compiles with (a newer emsdk silently breaks it).
+# Pinned Emscripten 6 toolchain for the legacy SDL2/GLES2 core.
 # ---------------------------------------------------------------------------
-FROM emscripten/emsdk:2.0.34@sha256:3a5cec571c533e448f1d2bcba9757382f9122771e74394106c4acd6235b026f5 AS wasm-builder
+FROM emscripten/emsdk:6.0.4@sha256:3a0d11e50f072dc2c4bc92e3b05ab1340fb7d4dd152f80b8af35fc1c6f15e644 AS wasm-builder
 
 WORKDIR /src
 # Copy only the vendored wasm source tree (patches + the pristine `code/` tree).

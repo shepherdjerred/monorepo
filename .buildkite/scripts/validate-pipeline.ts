@@ -130,8 +130,8 @@ for (const key of ["playwright-e2e-pr", "playwright-e2e-main"]) {
     fail(`Playwright lane ${key} must remove the stale NodeSource APT source`);
   }
   for (const required of [
-    "bunx --no-install playwright install",
-    "bunx --no-install turbo run build lint test test:e2e",
+    "bun x --no-install playwright install",
+    "bun x --no-install turbo run build lint test test:e2e",
   ]) {
     requireIncludes(
       block,
@@ -472,11 +472,11 @@ await assertPackageTokens([
       '"format:generated-helm": "prettier --no-config"',
     ],
   ],
-  ["packages/sjer.red/package.json", ['"bunx --no-install playwright test']],
+  ["packages/sjer.red/package.json", ['"bun x --no-install playwright test']],
   ["scripts/package.json", ['"bunx --no-install eslint']],
   [
     "packages/release-tools/package.json",
-    ['"release-please": "17.9.0"', '"release-please": "release-please"'],
+    ['"release-please": "17.10.0"', '"release-please": "release-please"'],
   ],
 ]);
 

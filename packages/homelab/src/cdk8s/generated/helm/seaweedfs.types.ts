@@ -751,8 +751,13 @@ export type SeaweedfsHelmValuesVolume = {
    */
   resizeHook?: SeaweedfsHelmValuesVolumeResizeHook;
   /**
-   * or
-   * same applies to "logs"
+   * "emptyDir" is rejected for idx (the chart fails to render): an ephemeral
+   * index is wiped on every restart while the data persists, forcing a full
+   * rebuild each start (a fatal crash on older versions). "logs" may still use
+   * any of the above or emptyDir.
+   * Default {} keeps the index next to the data, so it persists with the data and
+   * needs no separate volume. Recommended unless you must split the index onto
+   * its own persistent storage.
    *
    * @default {}
    */

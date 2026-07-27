@@ -1,0 +1,43 @@
+--- a/code/src/libretro/neil.h
++++ b/code/src/libretro/neil.h
+@@ -21 +21 @@
+-uint32_t* get_video_buffer();
++void* get_video_buffer();
+--- a/code/src/libretro/libretronew.c
++++ b/code/src/libretro/libretronew.c
+@@ -1405 +1405 @@
+-    if (savestates_save_m64p(&savestate_buffer, sizeof(savestate_buffer)))
++    if (savestates_save_m64p(savestate_buffer, sizeof(savestate_buffer)))
+@@ -1407,2 +1407,2 @@
+-        gzFile* fi = (gzFile*)gzopen("savestate.gz", "wb");
+-        gzwrite(fi, &savestate_buffer, sizeof(savestate_buffer));
++        gzFile fi = gzopen("savestate.gz", "wb");
++        gzwrite(fi, savestate_buffer, sizeof(savestate_buffer));
+@@ -1452,0 +1453 @@
++    return true;
+@@ -1504,2 +1504,2 @@
+-    gzFile* fi = (gzFile*)gzopen("savestate.gz", "rb");
+-    gzread(fi, &savestate_buffer, sizeof(savestate_buffer));
++    gzFile fi = gzopen("savestate.gz", "rb");
++    gzread(fi, savestate_buffer, sizeof(savestate_buffer));
+@@ -1508 +1508 @@
+-    if (savestates_load_m64p(&savestate_buffer, sizeof(savestate_buffer)))
++    if (savestates_load_m64p(savestate_buffer, sizeof(savestate_buffer)))
+@@ -1522 +1522 @@
+-uint32_t* get_video_buffer()
++void* get_video_buffer()
+--- a/code/src/mupen64plus-core/src/plugin/emulate_game_controller_via_libretro.c
++++ b/code/src/mupen64plus-core/src/plugin/emulate_game_controller_via_libretro.c
+@@ -313 +313 @@
+-extern mouseRange;
++extern int mouseRange;
+--- a/code/src/mupen64plus-core/src/si/pif.c
++++ b/code/src/mupen64plus-core/src/si/pif.c
+@@ -84 +84 @@
+-      static  channels[] = { 0, 1, 2, 3 };
++      static int channels[] = { 0, 1, 2, 3 };
+--- a/code/Makefile
++++ b/code/Makefile
+@@ -225 +225 @@
+-	-s EXTRA_EXPORTED_RUNTIME_METHODS="['callMain','cwrap']" \
++	-s EXPORTED_RUNTIME_METHODS="['callMain','cwrap']" \

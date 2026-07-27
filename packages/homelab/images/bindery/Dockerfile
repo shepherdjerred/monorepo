@@ -22,13 +22,13 @@
 # Declared globally so every stage inherits the same value (redeclaring
 # `ARG BINDERY_SOURCE_REF` without a default in a stage pulls this default in).
 # renovate: datasource=git-refs depName=bindery-source branch=main
-ARG BINDERY_SOURCE_REF=27e9049ce4758ee7afa12c9148389934372bbadb
+ARG BINDERY_SOURCE_REF=b5a2d3e1179b5407975e79a74bf6076d355b75c4
 
 ########################
 ## source: fetch upstream + apply our patch
 ########################
 # renovate: datasource=docker depName=alpine
-FROM alpine:3.22@sha256:14358309a308569c32bdc37e2e0e9694be33a9d99e68afb0f5ff33cc1f695dce AS source
+FROM alpine:3.24@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b AS source
 
 RUN apk add --no-cache git
 
@@ -90,7 +90,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
 ########################
 ## Minimal runtime
 ########################
-FROM gcr.io/distroless/static-debian12:nonroot@sha256:aef9602f8710ec12bde19d593fed1f76c708531bb7aba205110f1029786ead7b AS release
+FROM gcr.io/distroless/static-debian12:nonroot@sha256:f5b485ea962d9bd1186b2f6b3a061191539b905b82ec395de78cbfae51f20e35 AS release
 # OCI metadata: the image is a patched build of the MIT-licensed upstream.
 LABEL org.opencontainers.image.title="Bindery (sjer.red patched)" \
       org.opencontainers.image.description="Automated book download manager — patched to add Chinese Google Books results" \

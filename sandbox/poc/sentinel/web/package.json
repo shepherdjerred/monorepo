@@ -22,7 +22,7 @@
   "devDependencies": {
     "@shepherdjerred/eslint-config": "workspace:*",
     "@tailwindcss/postcss": "^4.1.11",
-    "@types/react": "^19.2.14",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^10.3.0",
