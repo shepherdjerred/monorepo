@@ -14,7 +14,7 @@ Audit OpenCode usage-window reporting, per-session cost estimates, and model/eff
 The quota fork is useful but does not yet satisfy the requested contract of showing every relevant subscription limit and a meaningful per-session dollar estimate.
 
 - The sidebar's native `$0.00 spent` is expected for OpenAI OAuth because OpenCode deliberately zeroes subscription model prices. It is not a usage or billing statement.
-- The quota plugin calculates API-equivalent dollars, but only in `/tokens_*` reports. It does not add that estimate to the sidebar's Context section or its own session-token block.
+- The quota plugin initially calculated API-equivalent dollars only in `/tokens_*` reports. The implementation follow-up now restores list prices to native Context `spent` while keeping the custom session-token block token-only.
 - OpenAI and Grok model IDs resolve in the quota plugin, but its pricing snapshot drops Models.dev context-price tiers and materially underprices long-context turns. Kimi OAuth pricing is entirely broken because its provider/model IDs do not resolve to Models.dev keys.
 - Claude, OpenAI, and Kimi omit real secondary limit surfaces. Grok is currently unavailable because the quota plugin cannot refresh its expired OAuth token.
 - Kimi advertises K3 effort values `low`, `high`, and `max`, while K2.7 intentionally has no provider-native effort selector. The account is entitled to `k3-256k`, but the current OpenCode catalog does not expose it.
@@ -57,7 +57,7 @@ The right subscription UI has three separate fields:
 | API-equivalent cost    | Best-effort token estimate from a versioned pricing snapshot                |
 | Provider credits/quota | Provider-native credits or window percentage when exposed                   |
 
-Calling the estimate `spent` would be incorrect. The custom sidebar should add `API eq. $X` and an incomplete-pricing marker while leaving native OpenCode untouched.
+Calling the estimate billed subscription spend would be incorrect. The initial recommendation was a separate `API eq. $X` row, but the final UI decision uses native Context `spent` as the sole sidebar list-price estimate and keeps the custom session-token block token-only.
 
 ### P1: Kimi per-session cost is entirely missing
 
@@ -125,18 +125,18 @@ The Kimi companion repository passes 89 tests. The quota fork passes 1,222 tests
 
 The local `~/git/opencode-quota` build now:
 
-- Renders `API eq. $X.XX` beneath the sidebar's session token summary without calling it billed or spent.
-- Marks estimates partial when any saved message cannot be mapped to public pricing.
+- Keeps API-equivalent estimates in `/tokens_*` reports instead of duplicating them beneath sidebar session tokens.
 - Preserves and applies Models.dev context-price tiers per message, including cached prompt tokens when selecting a tier.
 - Retains historical pricing keys across snapshot refreshes so saved Cursor/Copilot usage remains priceable.
 - Prefers isolated OpenCode package-cache Kimi companions before the development link, preventing tests from reaching the live account.
-- Keeps `partial` visible in narrow sidebars and renders positive sub-cent estimates as `<$0.01` instead of `$0.00`.
 - Restores API-list prices to effective OpenAI OAuth models after Codex zeroes them, matching Grok's native Context `spent` semantics for new messages.
 - Adds native Kimi prices to live and chezmoi-managed model config and maps Kimi OAuth model IDs to Moonshot pricing IDs.
 
-The screenshot's `Test message` session (`ses_05b1104adffeXaLIuzH0Lx6gtU`) was verified against the built `dist` output: 24K new input, 95K cached input, 453 output, and `API eq. $0.19` (`$0.194405` before display rounding).
+Before the final sidebar simplification, the screenshot's `Test message` session (`ses_05b1104adffeXaLIuzH0Lx6gtU`) was verified against the built `dist` output: 24K new input, 95K cached input, 453 output, and an API-equivalent value of `$0.194405`. That value remains available in token reports but is no longer duplicated in the session-token block.
 
-The mixed Kimi/Grok/Codex session (`ses_05af1f93effeC45ds9MjbVFwf4`) now resolves all three models and renders `API eq. $0.13` (`$0.1330364`) without a partial marker. Fresh model-catalog processes show nonzero native costs for `openai/gpt-5.6-sol` and `kimi-for-coding-oauth/k3`.
+The mixed Kimi/Grok/Codex session (`ses_05af1f93effeC45ds9MjbVFwf4`) now resolves all three models at `$0.1330364` without incomplete pricing. Fresh model-catalog processes show nonzero native costs for `openai/gpt-5.6-sol` and `kimi-for-coding-oauth/k3`.
+
+OpenCode's model dialog already exposes effort variants for OpenAI, Kimi K3, and Grok. It opens the effort dialog only when the selected model has no saved variant. Clearing the saved Kimi K3 and Grok 4.5 entries from `~/.local/state/opencode/model.json` makes their next selections follow the same model-then-effort flow as a first-time OpenAI model selection; the newly chosen effort is then remembered.
 
 ## Remaining Fix Order
 
@@ -168,17 +168,24 @@ The mixed Kimi/Grok/Codex session (`ses_05af1f93effeC45ds9MjbVFwf4`) now resolve
 - Verified provider windows, balances, models, and effort controls against current first-party documentation and pinned OpenCode source.
 - Ran Kimi's 89 tests successfully and the quota fork's 1,224 tests, finding two unsafe companion-resolution failures.
 - Corrected the audit after adversarial review: the quota fork drops context-price tiers, while OpenAI and Grok effort variants are already complete in the audited catalog.
-- Implemented sidebar API-equivalent session cost, context-tier pricing, historical snapshot retention, and Kimi test isolation in `~/git/opencode-quota`.
-- Verified TypeScript, the production build, and all 1,234 quota tests.
-- Verified the screenshot's session renders `API eq. $0.19` from the built plugin.
+- Implemented context-tier pricing, historical snapshot retention, and Kimi test isolation in `~/git/opencode-quota`.
+- Verified TypeScript, the production build, and all 1,240 quota tests after removing sidebar session-cost calculation.
+- Verified the screenshot's session has an underlying `$0.194405` API-equivalent estimate in token reports.
 - Completed adversarial review with no remaining P0-P2 findings.
 - Verified session `ses_05af1f93effeC45ds9MjbVFwf4` completed successfully with Kimi K3 variant `medium` and recorded reasoning tokens.
 - Implemented the selected built-in `spent` behavior for Codex and Kimi and verified effective model costs in fresh OpenCode processes.
-- Fixed Kimi API-equivalent pricing aliases; the mixed-provider session now renders a complete `$0.13` estimate.
+- Fixed Kimi API-equivalent pricing aliases; the mixed-provider session now resolves to a complete `$0.1330364` estimate.
+- Added Codex fast-alias pricing and applied configured snapshot selection before native model costs materialize.
+- Removed the duplicate API-equivalent row from detailed and compact session-token UI while preserving `/tokens_*` cost reports and native Context `spent`.
+- Cleared saved Kimi K3 and Grok 4.5 effort choices so their next model selections explicitly open the effort picker.
+- Passed the final quota build, 1,240-test suite, targeted Prettier and Markdownlint checks, and `check-docs` validation.
+- Committed and pushed the quota implementation to `shepherdjerred/opencode-quota` as `c356aef` (`fix: restore OAuth model pricing`).
+- Completed final adversarial review with no P0-P2 findings.
+- Passed the final `bun run verify -- --affected` in the monorepo: 21 of 21 tasks successful.
 
 ### Remaining
 
-- Quit and restart OpenCode so the running TUI loads the rebuilt local plugin.
+- Quit and restart OpenCode so the running TUI loads the rebuilt local plugin and rereads model-selection state.
 
 ### Caveats
 
@@ -186,6 +193,8 @@ The mixed Kimi/Grok/Codex session (`ses_05af1f93effeC45ds9MjbVFwf4`) now resolve
 - Anthropic, ChatGPT, Kimi, and Grok subscription endpoints used by the plugins are private or semi-private contracts and can change independently of OpenCode.
 - Exact plan entitlements remain account-specific even when a model appears in a provider catalog.
 - The exact reason `k3-256k` is absent from the effective OpenCode catalog remains unknown.
-- Native Context `spent` and the quota panel's `API eq.` now both represent public API-list-price equivalents for new Codex, Kimi, and Grok messages; neither is an actual subscription charge.
+- Native Context `spent` represents public API-list-price equivalents for new Codex, Kimi, and Grok messages; it is not an actual subscription charge. The quota panel no longer duplicates this value.
 - Historical Codex and Kimi messages retain their already-persisted zero native cost; only new messages use restored native prices.
+- After `/pricing_refresh`, OpenCode must restart to rematerialize native model costs; quota reports can use refreshed pricing immediately.
 - Kimi's discovery endpoint advertises `low/high/max`, but OpenCode's synthesized `medium` K3 variant was accepted successfully by the live provider.
+- OpenCode remembers a selected effort per model. Kimi and Grok will prompt on their next selection after the state reset, then stop prompting once the new effort is saved; always prompting would require an OpenCode TUI change.
