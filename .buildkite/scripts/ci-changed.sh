@@ -18,32 +18,14 @@ fi
 
 trap 'status=$?; trap - ERR; echo "WARN: CI change selector failed for ${lane} (exit ${status}); running lane" >&2; exit 0' ERR
 
-base=${CI_CHANGED_BASE:-}
-if [ -z "$base" ]; then
-  if ! base=$(buildkite-agent meta-data get ci-changed-base); then
-    echo "WARN: ci-changed-base metadata is unavailable; running ${lane}" >&2
-    exit 0
-  fi
-  if [ -z "$base" ]; then
-    echo "WARN: ci-changed-base metadata is empty; running ${lane}" >&2
-    exit 0
-  fi
-fi
-
-if ! git cat-file -e "${base}^{commit}"; then
-  echo "WARN: selector base ${base} is unavailable; running ${lane}" >&2
-  exit 0
-fi
-if ! git merge-base --is-ancestor "$base" HEAD; then
-  echo "WARN: selector base ${base} is not an ancestor of HEAD; running ${lane}" >&2
-  exit 0
-fi
-
 # Record this lane's run/skip decision as build meta-data so the main-only
 # build-summary step can render one lane-decision table for the whole build.
 # Best-effort by design: a meta-data failure must never change this script's
 # exit code — the explicit if handles that one specific failure and keeps it
-# out of the ERR trap's reach.
+# out of the ERR trap's reach. Defined before base validation so every
+# fail-open return below (unavailable/empty/stale base) records its own
+# reason too — otherwise build-summary shows "not recorded" for exactly the
+# builds where the selector failed open, losing the one signal that matters.
 record_decision() {
   if [ "${BUILDKITE:-}" != "true" ]; then
     return 0
@@ -52,6 +34,31 @@ record_decision() {
     echo "WARN: could not record lane decision for ${lane}" >&2
   fi
 }
+
+base=${CI_CHANGED_BASE:-}
+if [ -z "$base" ]; then
+  if ! base=$(buildkite-agent meta-data get ci-changed-base); then
+    echo "WARN: ci-changed-base metadata is unavailable; running ${lane}" >&2
+    record_decision "ran — ci-changed-base metadata unavailable (fail-open)"
+    exit 0
+  fi
+  if [ -z "$base" ]; then
+    echo "WARN: ci-changed-base metadata is empty; running ${lane}" >&2
+    record_decision "ran — ci-changed-base metadata empty (fail-open)"
+    exit 0
+  fi
+fi
+
+if ! git cat-file -e "${base}^{commit}"; then
+  echo "WARN: selector base ${base} is unavailable; running ${lane}" >&2
+  record_decision "ran — selector base ${base} unavailable (fail-open)"
+  exit 0
+fi
+if ! git merge-base --is-ancestor "$base" HEAD; then
+  echo "WARN: selector base ${base} is not an ancestor of HEAD; running ${lane}" >&2
+  record_decision "ran — selector base ${base} not an ancestor of HEAD (fail-open)"
+  exit 0
+fi
 
 if [ "$lane" = "images" ]; then
   targets=$(bun --no-install .buildkite/scripts/select-image-targets.ts --base "$base")

@@ -146,6 +146,13 @@ if [ "$scope" = "affected" ]; then
     if [ "$PUSH" = true ]; then
       # The version commit-back step reads this unconditionally.
       jq -n '{}' | buildkite-agent meta-data set image-digests
+      # ci-changed.sh images and this script diff against different bases (a
+      # stale ci-changed-base vs. the freshest last-green-main lookup here), so
+      # this script can still find nothing to push even when the outer gate
+      # said "run". The images step declares image-push-outcomes.json as a
+      # required artifact unconditionally — write the empty array so that
+      # otherwise-successful no-op doesn't fail on artifact upload.
+      jq -n '[]' > "$PUSH_OUTCOMES"
     fi
     exit 0
   fi
