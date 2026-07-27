@@ -64,7 +64,7 @@ work already merged or superseded.
   archived board cards, active origins, and local Markdown links.
 - Verified the docs-board package and the full affected repository surface; all
   gates pass. Captured board, user-acceptance, and operator-action screenshots
-  for draft PR #1713.
+  for PR #1732; the prerequisite docs-board UI commit landed through PR #1713.
 
 ### Remaining
 
