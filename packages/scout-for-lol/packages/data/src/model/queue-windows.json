@@ -113,11 +113,6 @@
         "end": "2025-10-22",
         "source": "manual",
         "note": "2025 Doom Bots revival ('Trials of Twilight' Act I, V25.17-V25.20)"
-      },
-      {
-        "start": "2026-07-12",
-        "end": null,
-        "source": "observed"
       }
     ],
     "normal doom bots": [
@@ -126,11 +121,6 @@
         "end": "2025-10-22",
         "source": "manual",
         "note": "2025 Doom Bots revival ('Trials of Twilight' Act I, V25.17-V25.20)"
-      },
-      {
-        "start": "2026-07-12",
-        "end": null,
-        "source": "observed"
       }
     ],
     "hard doom bots": [
@@ -139,11 +129,6 @@
         "end": "2025-10-22",
         "source": "manual",
         "note": "2025 Doom Bots revival ('Trials of Twilight' Act I, V25.17-V25.20)"
-      },
-      {
-        "start": "2026-07-12",
-        "end": null,
-        "source": "observed"
       }
     ]
   }

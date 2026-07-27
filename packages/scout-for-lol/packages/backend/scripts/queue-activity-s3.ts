@@ -124,6 +124,12 @@ export function aggregateQueueActivity(
 ): QueueActivityCounts {
   const counts: QueueActivityCounts = {};
   for (const match of matches) {
+    // Custom lobbies reuse queue ids from real modes (observed: queueId 3130
+    // with gameType CUSTOM_GAME) — they say nothing about a mode being live,
+    // so they must not feed availability windows.
+    if (match.info.gameType.toUpperCase().startsWith("CUSTOM")) {
+      continue;
+    }
     const queueId = match.info.queueId.toString();
     const date = matchDateString(match);
     const byDate = counts[queueId] ?? {};

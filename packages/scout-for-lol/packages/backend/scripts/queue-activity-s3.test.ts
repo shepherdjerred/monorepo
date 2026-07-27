@@ -50,6 +50,16 @@ describe("queue activity aggregation", () => {
     });
   });
 
+  test("ignores custom games even when they reuse a real mode's queue id", async () => {
+    const base = await loadBaseMatch();
+    const custom = withQueueAndDate(base, 3130, "2026-07-12");
+    const customTyped: typeof custom = {
+      ...custom,
+      info: { ...custom.info, gameType: "CUSTOM_GAME" },
+    };
+    expect(aggregateQueueActivity([customTyped])).toEqual({});
+  });
+
   test("returns an empty object for no matches", () => {
     expect(aggregateQueueActivity([])).toEqual({});
   });
