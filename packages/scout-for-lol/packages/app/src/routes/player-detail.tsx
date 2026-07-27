@@ -203,6 +203,16 @@ export function PlayerDetail() {
     });
   }
 
+  function navigateAfterIdentityMutation(nextAlias: string) {
+    // Identity-moving mutations change the alias/account ownership represented
+    // by the slow player-list cache. Invalidate it before leaving this route so
+    // the next list visit cannot expose stale aliases, sources, or counts.
+    void queryClient.invalidateQueries({
+      queryKey: trpc.player.listPlayers.pathKey(),
+    });
+    void navigate(`/g/${guildId}/players/${encodeURIComponent(nextAlias)}`);
+  }
+
   const unlinkMutation = useMutation(
     trpc.player.unlinkDiscord.mutationOptions({
       meta: analyticsMeta("player_discord_unlinked"),
@@ -394,12 +404,7 @@ export function PlayerDetail() {
           onOpenChange={setRenameOpen}
           onRenamed={(newAlias) => {
             setRenameOpen(false);
-            void queryClient.invalidateQueries({
-              queryKey: trpc.player.listPlayers.pathKey(),
-            });
-            void navigate(
-              `/g/${guildId}/players/${encodeURIComponent(newAlias)}`,
-            );
+            navigateAfterIdentityMutation(newAlias);
           }}
         />
       </Allowed>
@@ -411,12 +416,7 @@ export function PlayerDetail() {
           onOpenChange={setMergeOpen}
           onMerged={(targetAlias) => {
             setMergeOpen(false);
-            void queryClient.invalidateQueries({
-              queryKey: trpc.player.listPlayers.pathKey(),
-            });
-            void navigate(
-              `/g/${guildId}/players/${encodeURIComponent(targetAlias)}`,
-            );
+            navigateAfterIdentityMutation(targetAlias);
           }}
         />
       </Allowed>
@@ -433,12 +433,7 @@ export function PlayerDetail() {
             }}
             onTransferred={(toPlayerAlias) => {
               setTransferAccount(null);
-              void queryClient.invalidateQueries({
-                queryKey: trpc.player.listPlayers.pathKey(),
-              });
-              void navigate(
-                `/g/${guildId}/players/${encodeURIComponent(toPlayerAlias)}`,
-              );
+              navigateAfterIdentityMutation(toPlayerAlias);
             }}
           />
         )}

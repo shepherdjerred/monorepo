@@ -5,6 +5,7 @@ import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { rootInstallWithoutHooks, installScoutWorkspace } from "./bot-clone.ts";
 import {
   changedFilesInPaths,
+  closeSeasonRefreshPr,
   openSeasonRefreshPr,
   runCommand,
 } from "./scout-season-refresh-git.ts";
@@ -19,6 +20,8 @@ const QUEUE_WINDOWS_PATH = `${SCOUT_ROOT}/packages/data/src/model/queue-windows.
 const GENERATED_PATHS = [QUEUE_WINDOWS_PATH];
 const BUCKET = "scout-prod";
 const LOOKBACK_DAYS = 21;
+const PROPOSAL_BRANCH = "chore/scout-queue-windows";
+const AutoMergeStateSchema = z.enum(["true", "false"]);
 
 const ReportEditSchema = z.object({
   queue: z.string(),
@@ -215,6 +218,17 @@ export const scoutQueueWindowsActivities = {
 
       const files = await changedFilesInPaths(repoDir, GENERATED_PATHS);
       if (files.length === 0) {
+        // Fresh match evidence can invalidate a close proposal that is still
+        // awaiting human review. Reconcile the shared branch's open PR before
+        // returning so an obsolete close cannot be merged after drift vanished.
+        await closeSeasonRefreshPr({
+          repoDir,
+          branch: PROPOSAL_BRANCH,
+          ghToken: githubToken,
+          repoSlug: REPO_SLUG,
+          reason:
+            "Closing this automated proposal because the latest scout-prod evidence produces no queue-window drift. A future drift run will open a fresh proposal.",
+        });
         if (report.warnings.length > 0) {
           const { recipient, sender } = resolvePostalAddresses();
           await sendPostalEmail({
@@ -253,7 +267,7 @@ export const scoutQueueWindowsActivities = {
       // same PR rather than generating a duplicate each day. The shared Git
       // helper fetches the branch before its force-with-lease push, so retries
       // and later runs retain the remote lease.
-      const branch = "chore/scout-queue-windows";
+      const branch = PROPOSAL_BRANCH;
       const title = "chore(scout-for-lol): update queue availability windows";
       const body = buildPrBody(report, autoMerge);
 
@@ -292,6 +306,42 @@ export const scoutQueueWindowsActivities = {
           // Non-fatal: the PR still exists and can be merged manually.
           console.error(
             `scout queue-windows PR auto-merge setup failed: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      } else {
+        // A shared proposal may previously have contained only additive edits
+        // and therefore have auto-merge armed. If later evidence turns that
+        // same PR into a close proposal, disable auto-merge before returning it
+        // for required human confirmation.
+        const autoMergeState = AutoMergeStateSchema.parse(
+          await runCommand(
+            [
+              "gh",
+              "pr",
+              "view",
+              prUrl,
+              "--repo",
+              REPO_SLUG,
+              "--json",
+              "autoMergeRequest",
+              "--jq",
+              ".autoMergeRequest != null",
+            ],
+            {
+              cwd: repoDir,
+              env: { GH_TOKEN: githubToken },
+              redactOutput: true,
+            },
+          ),
+        );
+        if (autoMergeState === "true") {
+          await runCommand(
+            ["gh", "pr", "merge", prUrl, "--repo", REPO_SLUG, "--disable-auto"],
+            {
+              cwd: repoDir,
+              env: { GH_TOKEN: githubToken },
+              redactOutput: true,
+            },
           );
         }
       }

@@ -9,6 +9,7 @@ import * as Sentry from "@sentry/react";
 import { z } from "zod";
 import { Button } from "#src/components/ui/button.tsx";
 import { queryClient } from "#src/lib/query-client.ts";
+import { RouteParameterError } from "#src/lib/route-params.ts";
 
 const ErrorMessageSchema = z.object({ message: z.string() });
 const HttpStatusErrorSchema = z.object({
@@ -27,10 +28,11 @@ function errorDetail(error: unknown): string | null {
  * boundary input, not actionable exceptions, so they show the friendly panel
  * without a Sentry incident. Only unexpected (5xx / unclassified) errors report.
  */
-function isExpectedRouteError(error: unknown): boolean {
-  // A malformed path param (e.g. /reports/not-a-number) makes the route's Zod
-  // param hook throw a ZodError — routine boundary input, not an incident.
-  if (error instanceof z.ZodError) {
+export function isExpectedRouteError(error: unknown): boolean {
+  // Only Zod failures explicitly wrapped by the route-param boundary are
+  // expected. Unrelated Zod errors signal application-data contract drift and
+  // must remain observable.
+  if (error instanceof RouteParameterError) {
     return true;
   }
   if (isRouteErrorResponse(error)) {

@@ -52,6 +52,8 @@ export async function runCommand(
   return stdout.trim();
 }
 
+export type GitCommandRunner = typeof runCommand;
+
 export async function writeGitAskpass(tempDir: string): Promise<string> {
   const path = `${tempDir}/git-askpass.sh`;
   await Bun.write(
@@ -118,6 +120,99 @@ export type OpenPrResult = {
   prUrl: string;
 };
 
+export type SeasonRefreshPrLocator = Pick<
+  OpenPrInput,
+  "repoDir" | "branch" | "ghToken" | "repoSlug"
+>;
+
+export async function findOpenSeasonRefreshPr(
+  input: SeasonRefreshPrLocator,
+  commandRunner: GitCommandRunner = runCommand,
+): Promise<string | undefined> {
+  const output = await commandRunner(
+    [
+      "gh",
+      "pr",
+      "list",
+      "--repo",
+      input.repoSlug,
+      "--head",
+      input.branch,
+      "--state",
+      "open",
+      "--json",
+      "url",
+      "--jq",
+      '.[0].url // ""',
+    ],
+    {
+      cwd: input.repoDir,
+      env: { GH_TOKEN: input.ghToken },
+      redactOutput: true,
+    },
+  );
+  const prUrl = output.trim();
+  return prUrl.length > 0 ? prUrl : undefined;
+}
+
+export async function refreshSeasonRefreshPrMetadata(
+  input: Pick<
+    OpenPrInput,
+    "repoDir" | "ghToken" | "repoSlug" | "title" | "body"
+  >,
+  prUrl: string,
+  commandRunner: GitCommandRunner = runCommand,
+): Promise<void> {
+  await commandRunner(
+    [
+      "gh",
+      "pr",
+      "edit",
+      prUrl,
+      "--repo",
+      input.repoSlug,
+      "--title",
+      input.title,
+      "--body",
+      input.body,
+    ],
+    {
+      cwd: input.repoDir,
+      env: { GH_TOKEN: input.ghToken },
+      redactOutput: true,
+    },
+  );
+}
+
+export async function closeSeasonRefreshPr(
+  input: SeasonRefreshPrLocator & { reason: string },
+  commandRunner: GitCommandRunner = runCommand,
+): Promise<string | undefined> {
+  const prUrl = await findOpenSeasonRefreshPr(input, commandRunner);
+  if (prUrl === undefined) {
+    return undefined;
+  }
+  await commandRunner(
+    [
+      "gh",
+      "pr",
+      "close",
+      prUrl,
+      "--repo",
+      input.repoSlug,
+      "--comment",
+      input.reason,
+      "--delete-branch",
+    ],
+    {
+      cwd: input.repoDir,
+      env: { GH_TOKEN: input.ghToken },
+      redactOutput: true,
+    },
+  );
+  return prUrl;
+}
+
 export async function openSeasonRefreshPr(
   input: OpenPrInput,
 ): Promise<OpenPrResult> {
@@ -181,21 +276,29 @@ export async function openSeasonRefreshPr(
   // exists (a prior attempt created it, then timed out or the worker died
   // before Temporal recorded completion), reuse it instead of creating a
   // duplicate. The force-with-lease push above already updated its branch.
-  const existingPrOutput = await runCommand(
+  const existingPrUrl = await findOpenSeasonRefreshPr(input);
+  if (existingPrUrl !== undefined) {
+    // The shared branch can carry new edits, warnings, patch-note evidence, or
+    // auto-merge guidance on a later scheduled run. Keep the review context in
+    // lockstep with the pushed diff instead of returning yesterday's metadata.
+    await refreshSeasonRefreshPrMetadata(input, existingPrUrl);
+    return { commitHash, prUrl: existingPrUrl };
+  }
+  const prUrl = await runCommand(
     [
       "gh",
       "pr",
-      "list",
+      "create",
       "--repo",
       input.repoSlug,
+      "--base",
+      input.mainBranch,
       "--head",
       input.branch,
-      "--state",
-      "open",
-      "--json",
-      "url",
-      "--jq",
-      '.[0].url // ""',
+      "--title",
+      input.title,
+      "--body",
+      input.body,
     ],
     {
       cwd: input.repoDir,
@@ -203,31 +306,5 @@ export async function openSeasonRefreshPr(
       redactOutput: true,
     },
   );
-  const existingPrUrl = existingPrOutput.trim();
-  const prUrl =
-    existingPrUrl.length > 0
-      ? existingPrUrl
-      : await runCommand(
-          [
-            "gh",
-            "pr",
-            "create",
-            "--repo",
-            input.repoSlug,
-            "--base",
-            input.mainBranch,
-            "--head",
-            input.branch,
-            "--title",
-            input.title,
-            "--body",
-            input.body,
-          ],
-          {
-            cwd: input.repoDir,
-            env: { GH_TOKEN: input.ghToken },
-            redactOutput: true,
-          },
-        );
   return { commitHash, prUrl };
 }
