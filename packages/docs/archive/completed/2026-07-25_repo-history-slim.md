@@ -1,10 +1,10 @@
 ---
 id: repo-history-slim
 type: plan
-status: awaiting-human
+status: complete
 board: true
 verification: human
-disposition: blocked
+disposition: active
 ---
 
 # Slim the monorepo git history
@@ -33,6 +33,7 @@ Recorded 2026-07-27:
 - Keep the aggressive, one-time cleanup model. Generated artifacts remain committed and may regrow afterward.
 - Preserve all 314 lightweight release tags with exact tip trees. Historic source archives must remain tree-identical.
 - Migrate `main` and branches with open PRs. Discard every other local and remote branch.
+- Cancel the rewrite after rehearsal showed exact release-tree preservation saves at most 5.29%.
 - Accept loss of existing commit signatures and GitHub Verified status for rewritten commits.
 - Keep `sandbox/archive/*` and the live `champion-splash/` assets. Neither is a rewrite target.
 
@@ -73,8 +74,8 @@ clone and mirror-clone measurements are the only accepted savings estimate.
 
 The only approved inputs are:
 
-- `packages/docs/plans/2026-07-25_repo-history-slim-collapse-paths.txt`
-- `packages/docs/plans/2026-07-25_repo-history-slim-delete-paths.txt`
+- `packages/docs/archive/completed/2026-07-25_repo-history-slim-collapse-paths.txt`
+- `packages/docs/archive/completed/2026-07-25_repo-history-slim-delete-paths.txt`
 
 The split encodes the different tip-state contracts. Every collapse target must exist at frozen `main`; every delete
 target must be absent. `champion-splash/` is absent from both files by design.
@@ -388,20 +389,15 @@ Both variants passed the applicable core assertions:
 The open-PR reparenting phase was deliberately not run. The exact-tag result fails the plan's value gate before that
 coordination cost is justified.
 
-## Human Verification
+## Disposition
 
-- Choose one disposition:
-  - Cancel the rewrite while retaining exact historical release trees (recommended for a 5.29% maximum reduction).
-  - Accept changed source trees for 311 historical release tags and continue toward the 35.45% core reduction.
-- Confirm the maintenance window, notice, integration owners, and backup locations.
-- Confirm every open PR is same-repository, based on a retained ref, and closed/merged or cleanly restacked on frozen
-  `main`, with no conflicts or behind heads.
-- Confirm the frozen retained/retired ref manifest, especially every open PR head and all release tags.
-- Issue a separate explicit instruction to execute the atomic cutover.
+On 2026-07-27, the owner canceled the rewrite while retaining the exact-release-tree requirement. The measured 5.29%
+maximum reduction does not justify the destructive migration. The relaxed 35.45% variant was rejected because it
+would change 311 historical release source trees.
 
 ## Remaining
 
-- Await the owner disposition under Human Verification. Agent work resumes only if the rewrite continues.
+- None. The rewrite is canceled and no cutover authorization was issued.
 
 ## Prior Work
 
@@ -419,8 +415,8 @@ refs. It also corrects the live `champion-splash/` deletion bug and the deployme
   versions, and target tip trees.
 - Recorded owner policy for release tags, branch retention, and signature loss.
 - Replaced the stale runbook with the freeze/rehearsal/cutover procedure above and added the immutable approved path
-  files `packages/docs/plans/2026-07-25_repo-history-slim-collapse-paths.txt` and
-  `packages/docs/plans/2026-07-25_repo-history-slim-delete-paths.txt`.
+  files `packages/docs/archive/completed/2026-07-25_repo-history-slim-collapse-paths.txt` and
+  `packages/docs/archive/completed/2026-07-25_repo-history-slim-delete-paths.txt`.
 
 ### Remaining
 
@@ -451,3 +447,19 @@ refs. It also corrects the live `champion-splash/` deletion bug and the deployme
 
 - Open PR heads were excluded from the core result; retaining them can only reduce the measured exact-policy savings.
 - No GitHub refs, integrations, or existing development clones were modified.
+
+## Session Log - 2026-07-27 (owner disposition)
+
+### Done
+
+- Recorded the owner's decision to cancel the history rewrite under the exact-release-tree policy.
+- Closed and archived the runbook plus its frozen collapse/delete path manifests.
+- Confirmed no destructive push, remote ref change, or development-clone rewrite occurred.
+
+### Remaining
+
+- None.
+
+### Caveats
+
+- The local push-disabled rehearsal clones and frozen source mirror remain under `~/git` for evidence or manual cleanup.

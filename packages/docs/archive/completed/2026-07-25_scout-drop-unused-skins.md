@@ -94,7 +94,7 @@ graph. Do not execute a narrower rewrite from this predecessor plan.
 ## Remaining
 
 - [x] Handed off the deferred history rewrite to the active repo-wide plan
-      [`2026-07-25_repo-history-slim.md`](../../plans/2026-07-25_repo-history-slim.md); this plan's own deliverable (the
+      [`2026-07-25_repo-history-slim.md`](./2026-07-25_repo-history-slim.md); this plan's own deliverable (the
       skins code cleanup) shipped, so it is complete and archived. The rewrite is tracked and executed there, not here.
 
 ## Session Log — 2026-07-25
@@ -141,7 +141,7 @@ graph. Do not execute a narrower rewrite from this predecessor plan.
 
 ### Remaining
 
-- Execute the coordinated rewrite through `2026-07-25_repo-history-slim.md`.
+- The coordinated rewrite in `2026-07-25_repo-history-slim.md` was canceled after rehearsal.
 
 ### Caveats
 

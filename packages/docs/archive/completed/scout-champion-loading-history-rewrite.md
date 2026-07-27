@@ -24,7 +24,7 @@ intentionally split out because it force-pushes a rewritten `main` and strands
 in-flight work.
 
 > **Superseded / absorbed** by
-> [`plans/2026-07-25_repo-history-slim.md`](../../plans/2026-07-25_repo-history-slim.md).
+> [`2026-07-25_repo-history-slim.md`](./2026-07-25_repo-history-slim.md).
 > That plan runs the same rewrite but with an **aggressive** scope — champion-loading
 > is now just one target alongside scout-showcase, report snapshots, and ~124 MB of
 > already-deleted dead content. Execute via that plan, not this todo alone; this file
@@ -46,7 +46,7 @@ in-flight work.
 ## Resolution
 
 The standalone skins-only rewrite is retired. Its remaining work was absorbed
-into `packages/docs/plans/2026-07-25_repo-history-slim.md`, which coordinates
+into `packages/docs/archive/completed/2026-07-25_repo-history-slim.md`, which coordinates
 all history-slim targets, controlled refs, backups, atomic publication, and
 git-spice recovery in one operation. Do not execute the narrower callback from
 this historical record.

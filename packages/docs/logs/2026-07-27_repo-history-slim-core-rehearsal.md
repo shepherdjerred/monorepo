@@ -50,3 +50,19 @@ variant. Since retained open-PR heads were not yet added, 34.80 MiB is an upper 
 
 - The full cutover was not rehearsed because the selected exact-tag policy failed the value gate first.
 - No remote refs were pushed or changed.
+
+## Session Log - 2026-07-27 (owner disposition)
+
+### Done
+
+- Recorded the owner's decision to cancel the rewrite rather than change historical release trees.
+- Archived the completed runbook and its frozen path manifests.
+- Left GitHub refs and existing development clones unchanged.
+
+### Remaining
+
+- None.
+
+### Caveats
+
+- The local rehearsal clones remain under `~/git` for evidence or manual cleanup.
