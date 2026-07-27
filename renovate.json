@@ -54,6 +54,19 @@
     },
     {
       "customType": "regex",
+      "description": "n64wasm-source pin — track nbarkhina/N64Wasm master HEAD for the vendored wasm baseline (UPSTREAM_SHA in vendor-n64wasm.sh). It is a manual re-vendor script, so this surfaces updates for review rather than auto-applying, mirroring the pokeemerald-source manager above.",
+      "managerFilePatterns": [
+        "packages/discord-plays-mario-kart/scripts/vendor-n64wasm.sh"
+      ],
+      "matchStrings": [
+        "#\\s*renovate:\\s*datasource=git-refs\\s+depName=n64wasm-source\\s+branch=(?<currentValue>\\S+)\\s*\\nUPSTREAM_SHA=\"(?<currentDigest>[a-f0-9]{40})\""
+      ],
+      "datasourceTemplate": "git-refs",
+      "depNameTemplate": "n64wasm",
+      "packageNameTemplate": "https://github.com/nbarkhina/N64Wasm"
+    },
+    {
+      "customType": "regex",
       "description": "redlib source pin \u2014 track upstream main HEAD for the image build (ARG REDLIB_SOURCE_REF)",
       "managerFilePatterns": ["packages/homelab/images/redlib/Dockerfile"],
       "matchStrings": [
@@ -87,6 +100,23 @@
       "depNameTemplate": "bindery-source",
       "packageNameTemplate": "https://github.com/vavallee/bindery",
       "currentValueTemplate": "main"
+    },
+    {
+      "customType": "regex",
+      "description": "Version pins in shell scripts annotated with `# renovate:` that have no native manager — e.g. PYRIGHT_VERSION in scripts/pyright-check.sh and the EMSDK_IMAGE docker tag in packages/discord-plays-mario-kart/scripts/build-wasm.sh. First matchString handles plain quoted VAR=\"version\" pins; the second handles an image:tag embedded in a shell default expansion.",
+      "managerFilePatterns": ["scripts/**/*.sh", "packages/*/scripts/**/*.sh"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s*\\n\\s*[A-Za-z_][A-Za-z0-9_]*=\"(?<currentValue>[^\"$][^\"]*)\"",
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s*\\n[^\\n]*:(?<currentValue>[0-9][^\"'}\\s]*)"
+      ]
+    },
+    {
+      "customType": "regex",
+      "description": "Amazon Corretto JDK pin in .mise.toml. Renovate's native mise/java datasource cannot resolve the corretto-X.Y.Z.B.R build string, so track corretto/corretto-25 GitHub release tags (e.g. 25.0.4.7.1) directly.",
+      "managerFilePatterns": [".mise.toml"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s*\\njava = \"corretto-(?<currentValue>[0-9.]+)\""
+      ]
     }
   ],
   "customDatasources": {

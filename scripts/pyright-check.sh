@@ -4,6 +4,7 @@
 # third-party imports resolve. Requires uv (installed by mise).
 set -euo pipefail
 
+# renovate: datasource=npm depName=pyright
 PYRIGHT_VERSION="1.1.411"
 
 if [ ! -x .venv/bin/python ]; then

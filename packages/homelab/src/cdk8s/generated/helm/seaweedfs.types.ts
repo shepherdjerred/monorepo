@@ -50,7 +50,7 @@ export type SeaweedfsHelmValuesGlobalSeaweedfs = {
   /**
    * enableSecurity (mTLS); required for the Admin UI Users tab.
    *
-   * @default {"jwtSigning":{"volumeWrite":true,"volumeRead":false,"filerWrite":false,"filerRead":false}}
+   * @default {"jwtSigning":{"volumeWrite":true,"volumeRead":false,"filerWrite":false,"filerRead":false,"expiresAfterSeconds":{"volumeWrite":0,"volumeRead":0,"filerWrite":0,"filerRead":0}}}
    */
   securityConfig?: SeaweedfsHelmValuesGlobalSeaweedfsSecurityConfig;
   /**
@@ -111,7 +111,7 @@ export type SeaweedfsHelmValuesGlobalSeaweedfsImage = {
 
 export type SeaweedfsHelmValuesGlobalSeaweedfsSecurityConfig = {
   /**
-   * @default {...} (4 keys)
+   * @default {...} (5 keys)
    */
   jwtSigning?: SeaweedfsHelmValuesGlobalSeaweedfsSecurityConfigJwtSigning;
 };
@@ -133,7 +133,34 @@ export type SeaweedfsHelmValuesGlobalSeaweedfsSecurityConfigJwtSigning = {
    * @default false
    */
   filerRead?: boolean;
+  /**
+   * Positive values override SeaweedFS token lifetime defaults.
+   * Zero keeps the runtime defaults: 10s for writes and 60s for reads.
+   *
+   * @default {...} (4 keys)
+   */
+  expiresAfterSeconds?: SeaweedfsHelmValuesGlobalSeaweedfsSecurityConfigJwtSigningExpiresAfterSeconds;
 };
+
+export type SeaweedfsHelmValuesGlobalSeaweedfsSecurityConfigJwtSigningExpiresAfterSeconds =
+  {
+    /**
+     * @default 0
+     */
+    volumeWrite?: number;
+    /**
+     * @default 0
+     */
+    volumeRead?: number;
+    /**
+     * @default 0
+     */
+    filerWrite?: number;
+    /**
+     * @default 0
+     */
+    filerRead?: number;
+  };
 
 export type SeaweedfsHelmValuesGlobalSeaweedfsServiceAccountAnnotations =
   object;
@@ -3809,7 +3836,7 @@ export type SeaweedfsHelmValuesPodAnnotations = object;
 
 export type SeaweedfsHelmValues = {
   /**
-   * @default {"imageRegistry":"","imagePullSecrets":"","seaweedfs":{"createClusterRole":true,"image":{"repository":"","name":"chrislusf/seaweedfs"},"imagePullPolicy":"IfNotPresent","restartPolicy":"Always","loggingLevel":1,"enableSecurity":false,"masterServer":null,"securityConfig":{"jwtSigning":{"volumeWrite":true,"volumeRead":false,"filerWrite":false,"filerRead":false}},"serviceAccountName":"seaweedfs","serviceAccountAnnotations":{},"automountServiceAccountToken":true,"certificates":{"duration":"87600h","renewBefore":"720h","alphacrds":false},"monitoring":{"enabled":false,"gatewayHost":null,"gatewayPort":null,"additionalLabels":{}},"enableReplication":false,"replicationPlacement":"001","extraEnvironmentVars":{"WEED_CLUSTER_DEFAULT":"sw","WEED_CLUSTER_SW_MASTER":"{{ include \"seaweedfs.cluster.masterAddress\" . }}","WEED_CLUSTER_SW_FILER":"{{ include \"seaweedfs.cluster.filerAddress\" . }}"}}}
+   * @default {"imageRegistry":"","imagePullSecrets":"","seaweedfs":{"createClusterRole":true,"image":{"repository":"","name":"chrislusf/seaweedfs"},"imagePullPolicy":"IfNotPresent","restartPolicy":"Always","loggingLevel":1,"enableSecurity":false,"masterServer":null,"securityConfig":{"jwtSigning":{"volumeWrite":true,"volumeRead":false,"filerWrite":false,"filerRead":false,"expiresAfterSeconds":{"volumeWrite":0,"volumeRead":0,"filerWrite":0,"filerRead":0}}},"serviceAccountName":"seaweedfs","serviceAccountAnnotations":{},"automountServiceAccountToken":true,"certificates":{"duration":"87600h","renewBefore":"720h","alphacrds":false},"monitoring":{"enabled":false,"gatewayHost":null,"gatewayPort":null,"additionalLabels":{}},"enableReplication":false,"replicationPlacement":"001","extraEnvironmentVars":{"WEED_CLUSTER_DEFAULT":"sw","WEED_CLUSTER_SW_MASTER":"{{ include \"seaweedfs.cluster.masterAddress\" . }}","WEED_CLUSTER_SW_FILER":"{{ include \"seaweedfs.cluster.filerAddress\" . }}"}}}
    */
   global?: SeaweedfsHelmValuesGlobal;
   /**
@@ -3897,6 +3924,10 @@ export type SeaweedfsHelmParameters = {
   "global.seaweedfs.securityConfig.jwtSigning.volumeRead"?: string;
   "global.seaweedfs.securityConfig.jwtSigning.filerWrite"?: string;
   "global.seaweedfs.securityConfig.jwtSigning.filerRead"?: string;
+  "global.seaweedfs.securityConfig.jwtSigning.expiresAfterSeconds.volumeWrite"?: string;
+  "global.seaweedfs.securityConfig.jwtSigning.expiresAfterSeconds.volumeRead"?: string;
+  "global.seaweedfs.securityConfig.jwtSigning.expiresAfterSeconds.filerWrite"?: string;
+  "global.seaweedfs.securityConfig.jwtSigning.expiresAfterSeconds.filerRead"?: string;
   "global.seaweedfs.serviceAccountName"?: string;
   "global.seaweedfs.automountServiceAccountToken"?: string;
   "global.seaweedfs.certificates.duration"?: string;

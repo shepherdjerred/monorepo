@@ -55,7 +55,7 @@ function rowAccessibilityLabel(
   return parts.join(", ");
 }
 
-export const TaskRow = React.memo(function TaskRow({
+export const TaskRow = React.memo(function TaskRowComponent({
   task,
   onPress,
   onToggle,
