@@ -22,7 +22,10 @@
     "generate:live": "bun ../home-assistant/src/codegen/cli.ts --out src/generated/ha-schema.ts --name HaSchema",
     "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/temporal-worker:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t temporal-worker:dev -f Dockerfile ../..",
     "smoke": "bun scripts/smoke.ts",
-    "check:rehearsal": "bun run scripts/check-schedule-rehearsal.ts"
+    "check:rehearsal": "bun run scripts/check-schedule-rehearsal.ts",
+    "glitter:import-seed": "bun run scripts/import-glitter-seed.ts",
+    "glitter:operate": "bun run scripts/operate-glitter-corpus.ts",
+    "glitter:verify-corpus": "bun run scripts/verify-glitter-corpus.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.0",
@@ -52,6 +55,8 @@
     "@temporalio/workflow": "1.17.2",
     "@types/sanitize-html": "^2.16.1",
     "@vscode/tree-sitter-wasm": "^0.3.1",
+    "csv-parse": "^7.0.1",
+    "fflate": "^0.8.3",
     "firebase": "^12.12.1",
     "hono": "^4.12.18",
     "marked": "^18.0.3",

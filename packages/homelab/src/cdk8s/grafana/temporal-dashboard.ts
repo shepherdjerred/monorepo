@@ -308,6 +308,102 @@ export function createTemporalDashboard() {
         w: 12,
         h: 8,
       }),
+      // -----------------------------------------------------------------
+      // Glitter Discord corpus (y >= 84)
+      // -----------------------------------------------------------------
+      statPanel({
+        id: 400,
+        title: "Glitter Corpus Messages",
+        description:
+          "Unique messages in the most recently published complete guild snapshot.",
+        expr: "max(glitter_corpus_snapshot_messages) or on() vector(0)",
+        legend: "messages",
+        x: 0,
+        y: 84,
+        w: 6,
+        h: 4,
+      }),
+      statPanel({
+        id: 401,
+        title: "Glitter Snapshot Age",
+        description:
+          "Seconds since the most recently published complete mirrored snapshot.",
+        expr: "time() - max(glitter_corpus_last_snapshot_timestamp_seconds) or on() vector(-1)",
+        legend: "age",
+        x: 6,
+        y: 84,
+        w: 6,
+        h: 4,
+        unit: "s",
+      }),
+      statPanel({
+        id: 402,
+        title: "Mirror Parity Healthy",
+        description:
+          "1 means no missing or checksum-divergent objects were detected between SeaweedFS and R2 in the last 24 hours.",
+        expr: "1 - clamp_max((sum(increase(glitter_corpus_mirror_divergence_total[24h])) or on() vector(0)), 1)",
+        legend: "healthy",
+        x: 12,
+        y: 84,
+        w: 6,
+        h: 4,
+      }),
+      statPanel({
+        id: 403,
+        title: "Discord Rate Limit Healthy",
+        description:
+          "1 means Discord returned no 429 responses in the last 24 hours under the global one-request-per-second ceiling.",
+        expr: '1 - clamp_max((sum(increase(glitter_corpus_discord_requests_total{outcome="rate-limited"}[24h])) or on() vector(0)), 1)',
+        legend: "healthy",
+        x: 18,
+        y: 84,
+        w: 6,
+        h: 4,
+      }),
+      timeseriesPanel({
+        id: 404,
+        title: "Corpus Pages And Messages",
+        description:
+          "Immutable pages and message observations captured by traversal direction.",
+        targets: [
+          {
+            expr: "sum by (direction) (increase(glitter_corpus_pages_total[1h])) or on() vector(0)",
+            legend: "pages {{direction}}",
+          },
+          {
+            expr: "sum by (direction) (increase(glitter_corpus_messages_observed_total[1h])) or on() vector(0)",
+            legend: "messages {{direction}}",
+          },
+        ],
+        x: 0,
+        y: 88,
+        w: 12,
+        h: 8,
+      }),
+      timeseriesPanel({
+        id: 405,
+        title: "Corpus Inventory And REST Outcomes",
+        description:
+          "Latest channel/thread scope decisions and Discord REST outcomes.",
+        targets: [
+          {
+            expr: "max by (decision) (glitter_corpus_inventory_entries) or on() vector(0)",
+            legend: "inventory {{decision}}",
+          },
+          {
+            expr: "max by (change) (glitter_corpus_inventory_scope_changes) or on() vector(0)",
+            legend: "scope change {{change}}",
+          },
+          {
+            expr: "sum by (outcome) (increase(glitter_corpus_discord_requests_total[1h])) or on() vector(0)",
+            legend: "REST {{outcome}}",
+          },
+        ],
+        x: 12,
+        y: 88,
+        w: 12,
+        h: 8,
+      }),
     ],
   };
 }

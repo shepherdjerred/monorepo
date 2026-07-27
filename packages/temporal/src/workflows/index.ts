@@ -70,6 +70,23 @@ import type {
 import type { PrReviewPipelineResult } from "./pr-review/index.ts";
 import type { RunSummaryResult } from "#activities/pr-review/summary.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
+import {
+  runGlitterCorpusBackfill as _runGlitterCorpusBackfill,
+  runGlitterCorpusChannelBackfill as _runGlitterCorpusChannelBackfill,
+  runGlitterCorpusChannelOverlap as _runGlitterCorpusChannelOverlap,
+  runGlitterCorpusDaily as _runGlitterCorpusDaily,
+  runGlitterCorpusInventory as _runGlitterCorpusInventory,
+} from "./glitter-corpus.ts";
+import type {
+  GlitterCorpusBackfillInput,
+  GlitterCorpusChannelBackfillInput,
+  GlitterCorpusChannelOverlapInput,
+  GlitterCorpusSnapshotResult,
+} from "./glitter-corpus.ts";
+import type {
+  ChannelStateResult,
+  InventoryResult,
+} from "#activities/glitter-corpus-activity-types.ts";
 
 export async function fetchSkillCappedManifest(): Promise<void> {
   return _fetchSkillCappedManifest();
@@ -225,4 +242,30 @@ export async function observeReviewSignalsWorkflow(
   input: ObserveReviewSignalsInput = {},
 ): Promise<ObserveReviewSignalsResult> {
   return _observeReviewSignalsWorkflow(input);
+}
+
+export async function runGlitterCorpusInventory(): Promise<InventoryResult> {
+  return _runGlitterCorpusInventory();
+}
+
+export async function runGlitterCorpusBackfill(
+  input: GlitterCorpusBackfillInput,
+): Promise<GlitterCorpusSnapshotResult> {
+  return _runGlitterCorpusBackfill(input);
+}
+
+export async function runGlitterCorpusChannelBackfill(
+  input: GlitterCorpusChannelBackfillInput,
+): Promise<ChannelStateResult> {
+  return _runGlitterCorpusChannelBackfill(input);
+}
+
+export async function runGlitterCorpusChannelOverlap(
+  input: GlitterCorpusChannelOverlapInput,
+): Promise<ChannelStateResult> {
+  return _runGlitterCorpusChannelOverlap(input);
+}
+
+export async function runGlitterCorpusDaily(): Promise<GlitterCorpusSnapshotResult> {
+  return _runGlitterCorpusDaily();
 }
