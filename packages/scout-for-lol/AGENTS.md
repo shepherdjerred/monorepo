@@ -419,6 +419,11 @@ at least one tracked player through one of two deterministic designs:
 tests and manual debugging; it is ignored for non-ranked queues, which continue
 to use the legacy 4760×3500 report.
 
+`MatchRenderOptions.enableRankedDesigns` gates the two designs above and
+defaults to `true`. The backend passes `false` in prod, so production ranked
+matches currently render the legacy 4760×3500 report too; only beta and local
+dev see the new designs until the redesign is promoted.
+
 Champion names stored on match data are Data Dragon asset keys. Keep those keys
 for image lookup and pass every user-visible champion label through
 `championNameToDisplayName`.
