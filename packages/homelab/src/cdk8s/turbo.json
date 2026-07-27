@@ -26,6 +26,7 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": [
+        "$TURBO_DEFAULT$",
         "src/**",
         "scripts/**",
         "config/**",

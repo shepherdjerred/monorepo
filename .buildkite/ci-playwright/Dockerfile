@@ -13,4 +13,4 @@ RUN apt-get update \
 
 RUN bun --version \
   && unzip -v >/dev/null \
-  && npx --yes playwright@1.61.1 --version
+  && bunx --bun --yes playwright@1.61.1 --version

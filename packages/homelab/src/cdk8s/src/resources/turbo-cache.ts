@@ -141,10 +141,15 @@ export function createTurboCacheDeployment(chart: Chart) {
         periodSeconds: Duration.seconds(30),
       }),
       // A listening HTTP port is not enough: a root-owned fresh PVC used to
-      // make every cache upload fail even while this TCP probe passed. Exercise
-      // the mounted backend as the application user on every readiness check.
+      // make every cache upload fail even while this TCP probe passed. Require
+      // both a writable mounted backend and the cache's unauthenticated status
+      // endpoint before publishing this Pod as Ready.
       readiness: Probe.fromCommand(
-        ["sh", "-ec", "touch /cache/.readiness && rm /cache/.readiness"],
+        [
+          "sh",
+          "-ec",
+          "touch /cache/.readiness && rm /cache/.readiness && node -e \"fetch('http://127.0.0.1:3000/v8/artifacts/status').then((response) => { if (!response.ok) process.exit(1); }).catch(() => process.exit(1))\"",
+        ],
         {
           initialDelaySeconds: Duration.seconds(5),
           periodSeconds: Duration.seconds(10),
