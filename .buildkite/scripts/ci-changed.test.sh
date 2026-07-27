@@ -20,7 +20,10 @@ expect_status() {
   expected=$1
   lane=$2
   set +e
-  (cd "$FIXTURE" && CI_CHANGED_BASE="$BASE" bash "$SELECTOR" "$lane")
+  # BUILDKITE is stripped so decision recording stays inert here: when this
+  # test itself runs inside a CI job, the selector must not write fixture
+  # decisions into the real build's meta-data.
+  (cd "$FIXTURE" && CI_CHANGED_BASE="$BASE" env -u BUILDKITE bash "$SELECTOR" "$lane")
   actual=$?
   set -e
   if [ "$actual" -ne "$expected" ]; then
@@ -148,5 +151,45 @@ expect_status 0 resume
 
 # A typo cannot silently omit work.
 expect_status 0 unknown-lane
+
+# Under Buildkite, each lane records its decision (with evidence) as
+# ci-lane-decision-<lane> meta-data, without changing the exit code. The
+# stubbed buildkite-agent writes the value to CI_CHANGED_METADATA_PATH.
+DECISION_PATH="$FIXTURE/lane-decision"
+run_with_decision() {
+  lane=$1
+  decision_base=$2
+  set +e
+  (
+    cd "$FIXTURE"
+    PATH="$FAKE_BIN:$PATH" \
+      CI_CHANGED_METADATA_PATH="$DECISION_PATH" \
+      CI_CHANGED_BASE="$decision_base" \
+      BUILDKITE=true \
+      bash "$SELECTOR" "$lane"
+  )
+  decision_status=$?
+  set -e
+}
+
+run_with_decision playwright "$BASE"
+if [ "$decision_status" -ne 0 ]; then
+  echo "decision-recording run expected exit 0, got ${decision_status}" >&2
+  exit 1
+fi
+if ! grep -q '^ran — .*packages/sjer.red/src/index.ts' "$DECISION_PATH"; then
+  echo "run decision missing evidence: $(cat "$DECISION_PATH")" >&2
+  exit 1
+fi
+
+run_with_decision playwright "$(git -C "$FIXTURE" rev-parse HEAD)"
+if [ "$decision_status" -ne 78 ]; then
+  echo "decision-recording skip expected exit 78, got ${decision_status}" >&2
+  exit 1
+fi
+if ! grep -q '^skipped — unchanged since' "$DECISION_PATH"; then
+  echo "skip decision not recorded: $(cat "$DECISION_PATH")" >&2
+  exit 1
+fi
 
 echo "ci-changed selector tests passed"

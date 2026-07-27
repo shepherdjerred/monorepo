@@ -314,6 +314,11 @@ steps:
         - "packages/astro-opengraph-images/**"
         - "packages/webring/**"
         - "packages/eslint-config/**"
+        # Main's playwright lane also gates on the deploy consumers of its
+        # artifact — mirror them (lane↔if_changed coverage test).
+        - "scripts/deploy-site.ts"
+        - "scripts/lib/s3-static-site.ts"
+        - "scripts/lib/run.ts"
     cancel_on_build_failing: true
     command: |
       apt-get update -qq && apt-get install -y -qq --no-install-recommends unzip
@@ -405,6 +410,11 @@ steps:
         - "patches/**"
         - "turbo.json"
         - "packages/resume/**"
+        # Main's resume lane also gates on the deploy consumers of its
+        # artifact — mirror them (lane↔if_changed coverage test).
+        - "scripts/deploy-site.ts"
+        - "scripts/lib/s3-static-site.ts"
+        - "scripts/lib/run.ts"
     cancel_on_build_failing: true
     command: |
       export PATH="$(dirname "$(find /usr/local/texlive -name xelatex | head -1)"):$$PATH"
@@ -863,8 +873,16 @@ steps:
         - "packages/homelab/src/tofu/**"
         - "packages/homelab/scripts/tofu-stack.ts"
         - "packages/homelab/scripts/helm-push.ts"
+        - "packages/homelab/scripts/argocd.ts"
         - "packages/homelab/src/cdk8s/**"
         - "packages/homelab/src/helm-types/**"
+        # Inputs of the npm, cooklang, and scout-image main lanes — mirrored
+        # here so no lane input can change without a PR-side gate (asserted by
+        # the lane↔if_changed coverage test).
+        - "scripts/publish-npm.ts"
+        - "packages/cooklang-for-obsidian/**"
+        - "docker-bake.hcl"
+        - ".dockerignore"
         - "packages/sjer.red/**"
         - "packages/resume/**"
         - "packages/webring/**"
@@ -985,6 +1003,8 @@ steps:
       # (PUSH_CACHE stays false — only main writes the buildcache refs).
       # Executes no-exporter in-image smoke targets against remote BuildKit.
       CADDYFILE_SMOKE_PATH=/tmp/caddyfile.generated bash .buildkite/scripts/bake-images.sh --affected
+    artifact_paths:
+      - "image-selection-report.json"
     retry: *retry
     plugins:
       - kubernetes:
@@ -1004,12 +1024,31 @@ steps:
     command: |
       if ! bash .buildkite/scripts/ci-changed.sh images; then
         jq -n '{}' | buildkite-agent meta-data set image-digests
+        # bake-images.sh never runs on this path, so it never produces
+        # image-push-outcomes.json — write the empty array ourselves; an
+        # unmatched artifact_paths entry fails the step even though the skip
+        # itself is fine. image-selection-report.json is DIFFERENT: the
+        # ci-changed.sh call above already wrote it (via select-image-targets.ts
+        # --reasons-out) with the real base/changedPaths/targets that produced
+        # this skip — fabricating a second, evidence-free one here would only
+        # overwrite genuine data. Fall back to a synthetic report only in the
+        # (should-never-happen) case that write didn't happen.
+        jq -n '[]' > image-push-outcomes.json
+        if [ ! -f image-selection-report.json ]; then
+          jq -n '{base: null, changedPaths: [], mode: "selected", globalReason: "no image-owning packages changed since last green main build", targets: {}}' > image-selection-report.json
+        fi
+        if ! bun --no-install .buildkite/scripts/annotate-image-summary.ts --report image-selection-report.json --outcomes image-push-outcomes.json; then
+          echo "WARN: image summary annotation failed (non-fatal)" >&2
+        fi
         exit 0
       fi
       . .buildkite/scripts/toolchain.sh
       . .buildkite/scripts/buildkit-env.sh
       buildkite-agent artifact download "caddyfile.generated" /tmp --step verify
       CADDYFILE_SMOKE_PATH=/tmp/caddyfile.generated bash .buildkite/scripts/bake-images.sh --push
+    artifact_paths:
+      - "image-selection-report.json"
+      - "image-push-outcomes.json"
     retry: *retry
     plugins:
       - kubernetes:
@@ -1034,6 +1073,17 @@ steps:
       # BOTH selectors agree nothing site-shaped changed.
       if ! bash .buildkite/scripts/ci-changed.sh sites &&
         ! bash .buildkite/scripts/ci-changed.sh site-scout; then
+        # The per-site lanes below never run on this early-exit path, so their
+        # own ci-changed.sh calls (and the record_decision inside them) never
+        # fire even though the aggregate answer applies to every one of them —
+        # check each explicitly so build-summary shows a real "skipped"
+        # instead of a misleading "not recorded" for every site-* row. The
+        # result is discarded (all of them are unaffected by construction);
+        # only the recorded decision matters here.
+        for site_lane in site-sjer-red site-resume site-webring site-cooklang \
+          site-stocks site-better-skill-capped site-glitter; do
+          if bash .buildkite/scripts/ci-changed.sh "$$site_lane"; then :; fi
+        done
         exit 0
       fi
       . .buildkite/scripts/toolchain.sh
@@ -1446,6 +1496,13 @@ steps:
       - helm-push
       - tofu-apply
       - argocd-sync
+      # These three record the npm/cooklang, scout-reconcile, and ci-image
+      # lane decisions the table below renders; without depending on them
+      # directly, build-summary can render before they finish and show a
+      # false "not recorded" for a lane that's still mid-run.
+      - publish
+      - scout-prod-reconcile
+      - ci-image-refresh
     allow_dependency_failure: true
     command: bash .buildkite/scripts/annotate-build-summary.sh
     plugins:

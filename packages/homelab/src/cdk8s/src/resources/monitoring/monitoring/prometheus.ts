@@ -24,9 +24,11 @@ import { getTemporalRuleGroups } from "./rules/temporal.ts";
 import { getPrReviewBotRuleGroups } from "./rules/pr-review-bot.ts";
 import { getStreambotRuleGroups } from "./rules/streambot.ts";
 import { createBuildkiteMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkite.ts";
+import { createBuildkitdMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkitd.ts";
 
 export function createPrometheusMonitoring(chart: Chart) {
   createBuildkiteMonitoring(chart);
+  createBuildkitdMonitoring(chart);
 
   // Create Home Assistant rules
   new PrometheusRule(chart, "prometheus-homeassistant-rules", {

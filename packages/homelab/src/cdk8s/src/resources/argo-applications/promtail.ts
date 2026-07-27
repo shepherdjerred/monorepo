@@ -3,6 +3,7 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Namespace } from "cdk8s-plus-31";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { CI_NODE_TOLERATION } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 export function createPromtailApp(chart: Chart) {
   new Namespace(chart, "promtail-namespcae", {
     metadata: {
@@ -29,6 +30,10 @@ export function createPromtailApp(chart: Chart) {
         memory: "256Mi",
       },
     },
+    // Promtail is the only Loki log shipper; without this, CI pod logs on the
+    // tainted liskov node are never collected (and KubeDaemonSetMisScheduled
+    // fires for the pre-taint pod stranded there).
+    tolerations: [CI_NODE_TOLERATION],
   };
 
   return new Application(chart, "promtail-app", {

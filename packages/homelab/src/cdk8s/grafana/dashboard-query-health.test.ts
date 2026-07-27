@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { createAiProviderDashboard } from "./ai-provider-dashboard.ts";
 import { createBuildkiteDashboard } from "./buildkite-dashboard.ts";
+import { createBuildkitdDashboard } from "./buildkitd-dashboard.ts";
 import { createDiscordPlaysDashboard } from "./discord-plays-dashboard.ts";
 import { createPrReviewBotDashboard } from "./pr-review-bot-dashboard.ts";
 import { createScoutDashboard } from "./scout-dashboard.ts";
@@ -12,6 +13,7 @@ import { createZfsDashboard } from "./zfs-dashboard.ts";
 const dashboardJson = [
   createAiProviderDashboard(),
   createBuildkiteDashboard(),
+  createBuildkitdDashboard(),
   createDiscordPlaysDashboard(),
   createPrReviewBotDashboard(),
   createScoutDashboard(),

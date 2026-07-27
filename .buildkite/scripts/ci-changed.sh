@@ -16,35 +16,64 @@ if [ -z "$lane" ]; then
   exit 0
 fi
 
-trap 'status=$?; trap - ERR; echo "WARN: CI change selector failed for ${lane} (exit ${status}); running lane" >&2; exit 0' ERR
+trap 'status=$?; trap - ERR; echo "WARN: CI change selector failed for ${lane} (exit ${status}); running lane" >&2; declare -F record_decision >/dev/null && record_decision "ran — selector failed with exit ${status} (fail-open)"; exit 0' ERR
+
+# Record this lane's run/skip decision as build meta-data so the main-only
+# build-summary step can render one lane-decision table for the whole build.
+# Best-effort by design: a meta-data failure must never change this script's
+# exit code — the explicit if handles that one specific failure and keeps it
+# out of the ERR trap's reach. Defined before base validation so every
+# fail-open return below (unavailable/empty/stale base) records its own
+# reason too — otherwise build-summary shows "not recorded" for exactly the
+# builds where the selector failed open, losing the one signal that matters.
+record_decision() {
+  if [ "${BUILDKITE:-}" != "true" ]; then
+    return 0
+  fi
+  if ! buildkite-agent meta-data set "ci-lane-decision-${lane}" "$1"; then
+    echo "WARN: could not record lane decision for ${lane}" >&2
+  fi
+}
 
 base=${CI_CHANGED_BASE:-}
 if [ -z "$base" ]; then
   if ! base=$(buildkite-agent meta-data get ci-changed-base); then
     echo "WARN: ci-changed-base metadata is unavailable; running ${lane}" >&2
+    record_decision "ran — ci-changed-base metadata unavailable (fail-open)"
     exit 0
   fi
   if [ -z "$base" ]; then
     echo "WARN: ci-changed-base metadata is empty; running ${lane}" >&2
+    record_decision "ran — ci-changed-base metadata empty (fail-open)"
     exit 0
   fi
 fi
 
 if ! git cat-file -e "${base}^{commit}"; then
   echo "WARN: selector base ${base} is unavailable; running ${lane}" >&2
+  record_decision "ran — selector base ${base} unavailable (fail-open)"
   exit 0
 fi
 if ! git merge-base --is-ancestor "$base" HEAD; then
   echo "WARN: selector base ${base} is not an ancestor of HEAD; running ${lane}" >&2
+  record_decision "ran — selector base ${base} not an ancestor of HEAD (fail-open)"
   exit 0
 fi
 
 if [ "$lane" = "images" ]; then
-  targets=$(bun --no-install .buildkite/scripts/select-image-targets.ts --base "$base")
+  # --reasons-out writes the real base/changedPaths/targets to the same
+  # filename bake-images.sh uses as its own SELECTION_REPORT. bake-images.sh
+  # never runs on the skip path below, so this call is the ONLY producer of
+  # that artifact then — without it, the pipeline step had to fabricate an
+  # empty base/changedPaths, discarding the actual diff evidence this lookup
+  # just computed.
+  targets=$(bun --no-install .buildkite/scripts/select-image-targets.ts --base "$base" --reasons-out image-selection-report.json)
   if [ "$targets" = "[]" ]; then
+    record_decision "skipped — no image closure affected since ${base}"
     echo "${lane}: unchanged since ${base}; skipping"
     exit 78
   fi
+  record_decision "ran — selected targets ${targets}"
   echo "${lane}: selected targets ${targets}"
   exit 0
 fi
@@ -219,15 +248,30 @@ case "$lane" in
 esac
 
 if git diff --quiet "$base" HEAD -- "${global_paths[@]}" "${lane_paths[@]}"; then
+  record_decision "skipped — unchanged since ${base}"
   echo "${lane}: unchanged since ${base}; skipping"
   exit 78
 else
   status=$?
 fi
 if [ "$status" -eq 1 ]; then
+  decision="ran — changed since ${base}"
+  if changed_files=$(git diff --name-only "$base" HEAD -- "${global_paths[@]}" "${lane_paths[@]}"); then
+    changed_count=$(printf '%s\n' "$changed_files" | sed '/^$/d' | wc -l | tr -d ' ')
+    # A live `printf | head -3` pipe risks SIGPIPE on large diffs: head exits
+    # after 3 lines and closes its stdin while printf may still be writing,
+    # which (under `set -o pipefail`) surfaces as this assignment failing and
+    # trips the ERR trap before record_decision below ever runs. A here-string
+    # has no concurrent producer to signal, so head reading only part of it is
+    # never an error.
+    changed_sample=$(head -3 <<<"$changed_files" | tr '\n' ' ')
+    decision="ran — ${changed_count} matching change(s) since ${base}: ${changed_sample}"
+  fi
+  record_decision "$decision"
   echo "${lane}: changed since ${base}; running"
   exit 0
 fi
 
 echo "WARN: git diff failed for ${lane} (exit ${status}); running lane" >&2
+record_decision "ran — git diff exited ${status} for ${lane} (fail-open)"
 exit 0

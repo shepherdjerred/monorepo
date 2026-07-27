@@ -4,9 +4,33 @@
  * Guard the CI work-reduction invariants that are easy to regress in a large
  * static pipeline. This runs before verify so a malformed step cannot silently
  * disappear from the step-key observability or restore a full-root install.
+ *
+ * Division of labor: this file spot-checks specific critical inputs by string
+ * matching at upload time; the generic "every ci-changed.sh lane path is
+ * covered by its PR step's if_changed globs" subset property is owned by
+ * ci-lane-coverage.test.ts (run in the root-scripts test suite).
+ *
+ * The generic parsing/checking helpers live in validate-pipeline-lib.ts; this
+ * file keeps the content-specific invariant checks about particular lanes.
  */
 
-export {};
+import {
+  assertNoImplicitBunRuntime,
+  assertNoNestedBunRuntime,
+  assertPackageTokens,
+  assertUnfilteredInstallBelongsToVerify,
+  collectStepBlocks,
+  containerBlock,
+  fail,
+  hasTrimmedLine,
+  requireAllPresent,
+  requireIncludes,
+  requireNonePresent,
+  selectorLane,
+  sharedPodAnchorBlock,
+  SHARED_POD_ANCHORS,
+  CHECKOUT_CONTAINER_ALIAS,
+} from "./validate-pipeline-lib.ts";
 
 const PIPELINE_PATH = ".buildkite/pipeline.yml";
 const GLOBAL_IF_CHANGED = [
@@ -27,36 +51,6 @@ const PATH_GATED_PR_KEYS = new Set([
   "images-pr",
   "pr-dryrun",
 ]);
-const SHARED_POD_ANCHORS = [
-  "pod_kubernetes",
-  "pod_buildkit_kubernetes",
-  "pod_verify_kubernetes",
-  "pod_light_kubernetes",
-  "pod_tofu_kubernetes",
-] as const;
-const CHECKOUT_CONTAINER_ALIAS = "- *checkout_container";
-
-function fail(message: string): never {
-  throw new Error(`[validate-pipeline] ${message}`);
-}
-
-function scalar(value: string): string {
-  const trimmed = value.trim();
-  if (
-    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
-    (trimmed.startsWith("'") && trimmed.endsWith("'"))
-  ) {
-    return trimmed.slice(1, -1);
-  }
-  return trimmed;
-}
-
-function hasTrimmedLine(block: string | undefined, expected: string): boolean {
-  return (
-    block !== undefined &&
-    block.split("\n").some((line) => line.trim() === expected)
-  );
-}
 
 const pipeline = await Bun.file(PIPELINE_PATH).text();
 const lines = pipeline.split("\n");
@@ -75,27 +69,14 @@ if (!pipeline.includes(checkoutContainerDefinition)) {
   );
 }
 
-function sharedPodAnchorBlock(anchorName: string): string {
-  const marker = `      kubernetes: &${anchorName}\n`;
-  const start = pipeline.indexOf(marker);
-  if (start === -1) {
-    fail(`pipeline is missing shared pod anchor ${anchorName}`);
-  }
-  const end = pipeline.indexOf("\n  - ", start);
-  if (end === -1) {
-    fail(`shared pod anchor ${anchorName} has no boundary`);
-  }
-  return pipeline.slice(start, end);
-}
-
 for (const anchorName of SHARED_POD_ANCHORS) {
-  const anchorBlock = sharedPodAnchorBlock(anchorName);
+  const anchorBlock = sharedPodAnchorBlock(pipeline, anchorName);
   if (!hasTrimmedLine(anchorBlock, CHECKOUT_CONTAINER_ALIAS)) {
     fail(`shared pod anchor ${anchorName} does not patch checkout resources`);
   }
 }
 
-const verifyPodAnchor = sharedPodAnchorBlock("pod_verify_kubernetes");
+const verifyPodAnchor = sharedPodAnchorBlock(pipeline, "pod_verify_kubernetes");
 for (const resourceLine of [
   'requests: { cpu: "1", memory: "14Gi", ephemeral-storage: "2Gi" }',
   'limits: { cpu: "7", memory: "20Gi", ephemeral-storage: "40Gi" }',
@@ -105,66 +86,12 @@ for (const resourceLine of [
   }
 }
 
-const stepStarts = lines
-  .map((line, index) => (/^  - label:/.test(line) ? index : -1))
-  .filter((index) => index !== -1);
-const keys = new Set<string>();
-const stepBlocks = new Map<string, string>();
-
-for (const [position, start] of stepStarts.entries()) {
-  const end = stepStarts[position + 1] ?? lines.length;
-  const blockLines = lines.slice(start, end);
-  const block = blockLines.join("\n");
-  if (!/^    command:/m.test(block)) {
-    continue;
-  }
-
-  const keyLine = blockLines.find((line) => /^    key:/.test(line));
-  if (keyLine === undefined) {
-    fail(`command step at line ${(start + 1).toString()} has no key`);
-  }
-  const key = scalar(keyLine.replace(/^    key:\s*/, ""));
-  if (!/^[a-z0-9][a-z0-9_-]*$/.test(key)) {
-    fail(`step key ${key} is not a stable lowercase identifier`);
-  }
-  if (keys.has(key)) {
-    fail(`duplicate step key ${key}`);
-  }
-  keys.add(key);
-  stepBlocks.set(key, block);
-
-  if (blockLines.find((line) => /^    if:/.test(line)) === undefined) {
-    fail(`step ${key} has no condition`);
-  }
-
-  const labels = blockLines
-    .filter((line) => /^\s+ci\.sjer\.red\/step-key:/.test(line))
-    .map((line) => scalar(line.replace(/^\s+ci\.sjer\.red\/step-key:\s*/, "")));
-  if (labels.length !== 1 || labels[0] !== key) {
-    fail(
-      `step ${key} must have exactly one ci.sjer.red/step-key label equal to its key`,
-    );
-  }
-
-  const inheritedCheckoutPatch = SHARED_POD_ANCHORS.some((anchorName) =>
-    block.includes(`<<: *${anchorName}`),
-  );
-  const directCheckoutPatch = hasTrimmedLine(block, CHECKOUT_CONTAINER_ALIAS);
-  if (!inheritedCheckoutPatch && !directCheckoutPatch) {
-    fail(`step ${key} does not patch checkout to 1Gi/2Gi`);
-  }
-
-  if (PATH_GATED_PR_KEYS.has(key)) {
-    if (!/^    if_changed:/m.test(block)) {
-      fail(`PR lane ${key} has no native if_changed gate`);
-    }
-    for (const globalPath of GLOBAL_IF_CHANGED) {
-      if (!block.includes(`- ${globalPath}`)) {
-        fail(`PR lane ${key} is missing global if_changed path ${globalPath}`);
-      }
-    }
-  }
-}
+const { stepStarts, keys, stepBlocks } = collectStepBlocks(lines, {
+  sharedPodAnchors: SHARED_POD_ANCHORS,
+  checkoutContainerAlias: CHECKOUT_CONTAINER_ALIAS,
+  pathGatedPrKeys: PATH_GATED_PR_KEYS,
+  globalIfChanged: GLOBAL_IF_CHANGED,
+});
 
 for (const key of [
   "verify",
@@ -173,9 +100,11 @@ for (const key of [
   "docker-e2e-main",
 ]) {
   const block = stepBlocks.get(key);
-  if (block === undefined || !block.includes("depends_on: ci-selector-base")) {
-    fail(`main selector consumer ${key} does not wait for ci-selector-base`);
-  }
+  requireIncludes(
+    block,
+    "depends_on: ci-selector-base",
+    `main selector consumer ${key} does not wait for ci-selector-base`,
+  );
 }
 
 const selectorStep = stepBlocks.get("ci-selector-base");
@@ -198,11 +127,11 @@ for (const key of ["playwright-e2e-pr", "playwright-e2e-main"]) {
     "bunx --no-install playwright install",
     "bunx --no-install turbo run build lint test test:e2e",
   ]) {
-    if (block === undefined || !block.includes(required)) {
-      fail(
-        `Playwright lane ${key} is missing explicit tool closure ${required}`,
-      );
-    }
+    requireIncludes(
+      block,
+      required,
+      `Playwright lane ${key} is missing explicit tool closure ${required}`,
+    );
   }
 }
 
@@ -227,9 +156,11 @@ for (const required of [
   "helm-push.ts",
   "scripts/release.ts --dry-run",
 ]) {
-  if (prDryrun === undefined || !prDryrun.includes(required)) {
-    fail(`pr-dryrun is missing section content ${required}`);
-  }
+  requireIncludes(
+    prDryrun,
+    required,
+    `pr-dryrun is missing section content ${required}`,
+  );
 }
 
 const ciChanged = await Bun.file(".buildkite/scripts/ci-changed.sh").text();
@@ -252,44 +183,8 @@ for (const required of [
   }
 }
 
-// Top-level `name=( … )` array definitions in the selector. Lane case arms
-// reference them as "${name[@]}" (the per-site lists are defined once and the
-// aggregate `sites` lane is their union), so lane blocks must be expanded
-// through this map before asserting on literal paths.
-const selectorArrays = new Map<string, string>();
-for (const match of ciChanged.matchAll(/^([a-z0-9_]+)=\(([\s\S]*?)\)/gm)) {
-  const [, name, contents] = match;
-  if (name !== undefined && contents !== undefined) {
-    selectorArrays.set(name, contents);
-  }
-}
-
-function selectorLane(lane: string): string {
-  const startMarker = `  ${lane})\n`;
-  const start = ciChanged.indexOf(startMarker);
-  if (start === -1) {
-    fail(`runtime CI selector is missing lane ${lane}`);
-  }
-  const blockStart = start + startMarker.length;
-  const blockEnd = ciChanged.indexOf("\n    ;;", blockStart);
-  if (blockEnd === -1) {
-    fail(`runtime CI selector lane ${lane} has no terminator`);
-  }
-  return ciChanged
-    .slice(blockStart, blockEnd)
-    .replace(/"\$\{([a-z0-9_]+)\[@\]\}"/g, (_reference, name: string) => {
-      const contents = selectorArrays.get(name);
-      if (contents === undefined) {
-        fail(
-          `runtime CI selector lane ${lane} references undefined array ${name}`,
-        );
-      }
-      return contents;
-    });
-}
-
 for (const lane of ["site-scout", "sites", "scout-reconcile"]) {
-  const block = selectorLane(lane);
+  const block = selectorLane(ciChanged, lane);
   for (const dependency of [
     "packages/astro-opengraph-images",
     "packages/llm-models",
@@ -327,22 +222,30 @@ const caddyConfigInputs = [
   "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts",
 ];
 const imagesPr = stepBlocks.get("images-pr");
-if (imagesPr === undefined || !imagesPr.includes('- "scripts/package.json"')) {
-  fail("images-pr path gate is missing the root-scripts workspace manifest");
-}
-if (imagesPr === undefined || !imagesPr.includes('- "tsconfig.base.json"')) {
-  fail("images-pr path gate is missing the root TypeScript config");
-}
-if (imagesPr === undefined || !imagesPr.includes(`- "${scoutTsconfig}"`)) {
-  fail("images-pr path gate is missing the Scout base TypeScript config");
-}
+requireIncludes(
+  imagesPr,
+  '- "scripts/package.json"',
+  "images-pr path gate is missing the root-scripts workspace manifest",
+);
+requireIncludes(
+  imagesPr,
+  '- "tsconfig.base.json"',
+  "images-pr path gate is missing the root TypeScript config",
+);
+requireIncludes(
+  imagesPr,
+  `- "${scoutTsconfig}"`,
+  "images-pr path gate is missing the Scout base TypeScript config",
+);
 for (const caddyConfigInput of caddyConfigInputs) {
   if (!selectImageTargets.includes(`"${caddyConfigInput}"`)) {
     fail(`main image selector is missing Caddy input ${caddyConfigInput}`);
   }
-  if (imagesPr === undefined || !imagesPr.includes(`"${caddyConfigInput}"`)) {
-    fail(`images-pr path gate is missing Caddy input ${caddyConfigInput}`);
-  }
+  requireIncludes(
+    imagesPr,
+    `"${caddyConfigInput}"`,
+    `images-pr path gate is missing Caddy input ${caddyConfigInput}`,
+  );
 }
 
 const trivy = stepBlocks.get("trivy");
@@ -355,18 +258,22 @@ for (const required of [
   '"**/bun.lock"',
   '"**/Podfile.lock"',
 ]) {
-  if (trivy === undefined || !trivy.includes(required)) {
-    fail(`Trivy path gate is missing vulnerability input ${required}`);
-  }
+  requireIncludes(
+    trivy,
+    required,
+    `Trivy path gate is missing vulnerability input ${required}`,
+  );
 }
 for (const required of [
   'exclude: "sandbox/**"',
   "--skip-dirs node_modules",
   "--skip-dirs sandbox",
 ]) {
-  if (trivy === undefined || !trivy.includes(required)) {
-    fail(`Trivy restored scanning for unshipped sandbox content: ${required}`);
-  }
+  requireIncludes(
+    trivy,
+    required,
+    `Trivy restored scanning for unshipped sandbox content: ${required}`,
+  );
 }
 
 const semgrep = stepBlocks.get("semgrep");
@@ -378,29 +285,10 @@ for (const required of [
   '"**/*.swift"',
   '"**/*.tf"',
 ]) {
-  if (semgrep === undefined || !semgrep.includes(required)) {
-    fail(`Semgrep path gate is missing supported source ${required}`);
-  }
-}
-
-function containerBlock(
-  stepKey: string,
-  step: string | undefined,
-  containerName: string,
-): string {
-  if (step === undefined) {
-    fail(`pipeline is missing step ${stepKey}`);
-  }
-  const marker = `              - name: ${containerName}\n`;
-  const start = step.indexOf(marker);
-  if (start === -1) {
-    fail(`step ${stepKey} is missing container ${containerName}`);
-  }
-  const blockStart = start + marker.length;
-  const nextContainer = step.indexOf("\n              - name:", blockStart);
-  return step.slice(
-    blockStart,
-    nextContainer === -1 ? step.length : nextContainer,
+  requireIncludes(
+    semgrep,
+    required,
+    `Semgrep path gate is missing supported source ${required}`,
   );
 }
 
@@ -411,7 +299,7 @@ for (const [stepKey, expectedRequests] of [
   ["resume-build-main", 'requests: { cpu: "1", memory: "2Gi" }'],
   ["trivy", 'requests: { cpu: "500m", memory: "1Gi" }'],
   ["semgrep", 'requests: { cpu: "500m", memory: "1Gi" }'],
-] satisfies ReadonlyArray<readonly [string, string]>) {
+] satisfies readonly (readonly [string, string])[]) {
   const commandContainer = containerBlock(
     stepKey,
     stepBlocks.get(stepKey),
@@ -427,7 +315,7 @@ for (const [stepKey, expectedRequests] of [
 for (const [stepKey, step] of [
   ["trivy", trivy],
   ["semgrep", semgrep],
-] satisfies ReadonlyArray<readonly [string, string | undefined]>) {
+] satisfies readonly (readonly [string, string | undefined])[]) {
   const scanner = containerBlock(stepKey, step, "container-0");
   if (!scanner.includes("allowPrivilegeEscalation: false")) {
     fail(`scanner container ${stepKey} permits privilege escalation`);
@@ -443,9 +331,11 @@ for (const required of [
   "bun --no-install run --cwd packages/llm-models build",
   "bun --no-install run --cwd packages/astro-opengraph-images build",
 ]) {
-  if (sites === undefined || !sites.includes(required)) {
-    fail(`sites install closure is missing ${required}`);
-  }
+  requireIncludes(
+    sites,
+    required,
+    `sites install closure is missing ${required}`,
+  );
 }
 
 for (const dependency of [
@@ -453,9 +343,11 @@ for (const dependency of [
   '"packages/llm-models/**"',
   '"scripts/package.json"',
 ]) {
-  if (prDryrun === undefined || !prDryrun.includes(dependency)) {
-    fail(`pr-dryrun path gate is missing ${dependency}`);
-  }
+  requireIncludes(
+    prDryrun,
+    dependency,
+    `pr-dryrun path gate is missing ${dependency}`,
+  );
 }
 
 const publish = stepBlocks.get("publish");
@@ -466,7 +358,7 @@ if (
   fail("publish restored an unnecessary root-scripts install");
 }
 for (const required of ["ci-changed.sh npm", "ci-changed.sh cooklang"]) {
-  if (publish === undefined || !publish.includes(required)) {
+  if (!publish.includes(required)) {
     fail(`publish is missing section gate ${required}`);
   }
 }
@@ -491,7 +383,6 @@ const selectorPreparation = await Bun.file(
 if (
   !selectorPreparation.includes("--connect-timeout") ||
   !selectorPreparation.includes("--max-time") ||
-  selectorStep === undefined ||
   !selectorStep.includes("timeout_in_minutes: 2")
 ) {
   fail("main selector API lookup is not time-bounded");
@@ -511,29 +402,7 @@ if (
   fail("pipeline upload can omit the source side of renames");
 }
 
-const unfilteredInstalls = lines
-  .map((line, index) => ({ line: line.trim(), index }))
-  .filter((entry) => entry.line === "bun install --frozen-lockfile");
-if (unfilteredInstalls.length !== 1) {
-  fail(
-    `expected one unfiltered root install, found ${unfilteredInstalls.length.toString()}`,
-  );
-}
-const verifyStart = stepStarts.find((start) =>
-  lines.slice(start, start + 4).some((line) => line === "    key: verify"),
-);
-const unfilteredInstall = unfilteredInstalls[0];
-if (verifyStart === undefined || unfilteredInstall === undefined) {
-  fail("verify or its unfiltered install disappeared");
-}
-const verifyEnd =
-  stepStarts.find((start) => start > verifyStart) ?? lines.length;
-if (
-  unfilteredInstall.index < verifyStart ||
-  unfilteredInstall.index >= verifyEnd
-) {
-  fail("the only unfiltered root install must belong to verify");
-}
+assertUnfilteredInstallBelongsToVerify(lines, stepStarts);
 
 // Bun auto-installs dependencies when a checkout has no node_modules. Every
 // Buildkite step starts from a fresh pod, so an otherwise dependency-free
@@ -542,43 +411,13 @@ if (
 // remain visible as `bun install`. bunx must also use --no-install so a missing
 // filtered dependency fails instead of populating Bun's global cache.
 const bakeImages = await Bun.file(".buildkite/scripts/bake-images.sh").text();
-const implicitBunInstall = /\bbun\s+(?!install(?:\s|$)|--no-install(?:\s|$))/g;
-const implicitBunxInstall = /\bbunx\s+(?!--no-install(?:\s|$))/g;
-const runtimeCommandSources: { path: string; source: string }[] = [
+assertNoImplicitBunRuntime([
   { path: PIPELINE_PATH, source: pipeline },
   { path: ".buildkite/scripts/ci-changed.sh", source: ciChanged },
   { path: ".buildkite/scripts/bake-images.sh", source: bakeImages },
-];
-for (const { path, source } of runtimeCommandSources) {
-  const commands = source
-    .split("\n")
-    .filter((line) => !/^\s*#/.test(line))
-    .join("\n");
-  const implicitMatch = implicitBunInstall.exec(commands);
-  implicitBunInstall.lastIndex = 0;
-  if (implicitMatch !== null) {
-    const beforeMatch = commands.slice(0, implicitMatch.index);
-    const line = beforeMatch.split("\n").length;
-    fail(
-      `Bun runtime in ${path} at filtered line ${line.toString()} can auto-install dependencies`,
-    );
-  }
-  const implicitBunxMatch = implicitBunxInstall.exec(commands);
-  implicitBunxInstall.lastIndex = 0;
-  if (implicitBunxMatch !== null) {
-    const beforeMatch = commands.slice(0, implicitBunxMatch.index);
-    const line = beforeMatch.split("\n").length;
-    fail(
-      `bunx runtime in ${path} at filtered line ${line.toString()} can auto-install dependencies`,
-    );
-  }
-}
+]);
 
-// The shell-level scan cannot see Bun processes launched by the automation
-// scripts themselves. Check every child-Bun launcher reachable from a
-// dependency-minimized pipeline lane and allow only explicit no-install
-// runtimes or Bun subcommands that do not execute repository code.
-const automationSources = [
+await assertNoNestedBunRuntime([
   "scripts/lib/github-auth.ts",
   "scripts/release.ts",
   "scripts/deploy-site.ts",
@@ -590,28 +429,9 @@ const automationSources = [
   "packages/homelab/scripts/smoke-images.ts",
   "packages/homelab/src/cdk8s/scripts/check-caddyfile.ts",
   "packages/homelab/src/cdk8s/scripts/generate-helm-types.ts",
-];
-const implicitChildBun =
-  /\[\s*"bun",(?!\s*"(?:--no-install|install|x|publish)")/s;
-const implicitChildBunx = /\[\s*"bun",\s*"x",(?!\s*"--no-install")/s;
-const implicitShellBunx = /\bbun x\s+(?!--no-install(?:\s|$))/;
-const implicitBuildCommand = /buildCmd:\s*["'`]bun\s+(?!--no-install(?:\s|$))/;
-const implicitTaggedBun =
-  /(?:Bun\.)?\$`bun\s+(?!--no-install(?:\s|$)|install(?:\s|$)|x(?:\s|$)|publish(?:\s|$))/;
-for (const path of automationSources) {
-  const source = await Bun.file(path).text();
-  if (
-    implicitChildBun.test(source) ||
-    implicitChildBunx.test(source) ||
-    implicitShellBunx.test(source) ||
-    implicitBuildCommand.test(source) ||
-    implicitTaggedBun.test(source)
-  ) {
-    fail(`nested Bun runtime in ${path} can auto-install dependencies`);
-  }
-}
+]);
 
-for (const [path, required] of [
+await assertPackageTokens([
   [
     "packages/homelab/src/cdk8s/package.json",
     [
@@ -629,31 +449,23 @@ for (const [path, required] of [
     "packages/release-tools/package.json",
     ['"release-please": "17.9.0"', '"release-please": "release-please"'],
   ],
-] satisfies ReadonlyArray<readonly [string, readonly string[]]>) {
-  const manifest = await Bun.file(path).text();
-  for (const token of required) {
-    if (!manifest.includes(token)) {
-      fail(`CI package ${path} is missing explicit tool dependency ${token}`);
-    }
-  }
-}
+]);
 
 if (bakeImages.includes("ALWAYS_ON_TARGETS")) {
   fail("bake-images.sh restored the always-on image target workaround");
 }
-for (const required of [
-  "docker buildx bake --builder ci",
-  "CADDYFILE_SMOKE_PATH",
-]) {
-  if (!bakeImages.includes(required)) {
-    fail(`bake-images.sh is missing production image contract ${required}`);
-  }
-}
-for (const forbidden of ["CI_BUILDX_", "--target", "image-build-manifest"]) {
-  if (bakeImages.includes(forbidden)) {
-    fail(`bake-images.sh retained rejected Buildx experiment ${forbidden}`);
-  }
-}
+requireAllPresent(
+  bakeImages,
+  ["docker buildx bake --builder ci", "CADDYFILE_SMOKE_PATH"],
+  (required) =>
+    `bake-images.sh is missing production image contract ${required}`,
+);
+requireNonePresent(
+  bakeImages,
+  ["CI_BUILDX_", "--target", "image-build-manifest"],
+  (forbidden) =>
+    `bake-images.sh retained rejected Buildx experiment ${forbidden}`,
+);
 for (const forbidden of [
   "--load",
   "docker-env.sh",
@@ -685,29 +497,25 @@ if (
 const caddyCheck = await Bun.file(
   "packages/homelab/src/cdk8s/scripts/check-caddyfile.ts",
 ).text();
-for (const hiddenBuild of [
-  '"docker"',
-  "caddy-s3proxy:dev",
-  "docker buildx",
-  "imageExists",
-]) {
-  if (caddyCheck.includes(hiddenBuild)) {
-    fail(`check-caddyfile.ts restored hidden build path ${hiddenBuild}`);
-  }
-}
+requireNonePresent(
+  caddyCheck,
+  ['"docker"', "caddy-s3proxy:dev", "docker buildx", "imageExists"],
+  (hiddenBuild) =>
+    `check-caddyfile.ts restored hidden build path ${hiddenBuild}`,
+);
 
 const caddyDockerfile = await Bun.file(
   "packages/homelab/images/caddy-s3proxy/Dockerfile",
 ).text();
-for (const required of [
-  "FROM runtime AS smoke",
-  "--mount=type=secret,id=caddyfile",
-  "caddy adapt --config /run/secrets/caddyfile --adapter caddyfile",
-]) {
-  if (!caddyDockerfile.includes(required)) {
-    fail(`Caddy in-image smoke is missing contract ${required}`);
-  }
-}
+requireAllPresent(
+  caddyDockerfile,
+  [
+    "FROM runtime AS smoke",
+    "--mount=type=secret,id=caddyfile",
+    "caddy adapt --config /run/secrets/caddyfile --adapter caddyfile",
+  ],
+  (required) => `Caddy in-image smoke is missing contract ${required}`,
+);
 
 console.log(
   `[validate-pipeline] ${keys.size.toString()} command steps have unique keys, exact pod labels, and bounded installs`,
