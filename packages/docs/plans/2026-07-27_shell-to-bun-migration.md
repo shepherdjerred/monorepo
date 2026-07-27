@@ -368,8 +368,8 @@ The inventory exposed several ineffective or missing GitHub Linguist rules.
 - Restacked onto current main, preserved its dual CI-image, Glitter dependency,
   Scout reconciliation, and cache contracts, and classified the new 33-line
   `toolchain.test.sh` as retained.
-- Added the two new rebuildable Buildkite caches to the explicit PVC backup
-  policy; its synthesized 74-PVC contract now passes.
+- Preserved current main's two new rebuildable Buildkite cache entries in the
+  explicit PVC backup policy; its synthesized 74-PVC contract now passes.
 - Passed every mechanical lane on current-head Buildkite build #6600, including
   verify, Semgrep, Trivy, Playwright, observability, image smoke, and deploy-path
   drift.
