@@ -36,6 +36,66 @@ describe("createFrontmatter", () => {
     expect(frontmatter.verification).toBe("human");
     expect(frontmatter.disposition).toBe("active");
   });
+
+  test("keeps completed work with an open PR in agent progress", () => {
+    const frontmatter = createFrontmatter(
+      "plans/fixture.md",
+      {
+        id: "plan-fixture",
+        status: "Complete (PR open, pending merge)",
+        board: true,
+      },
+      "# Fixture\n",
+    );
+
+    expect(frontmatter.status).toBe("in-progress");
+    expect(frontmatter.verification).toBe("agent");
+  });
+
+  test("keeps post-deploy verification as agent work", () => {
+    const frontmatter = createFrontmatter(
+      "plans/fixture.md",
+      {
+        id: "plan-fixture",
+        status: "Implemented, post-deploy verification pending",
+        board: true,
+      },
+      "# Fixture\n",
+    );
+
+    expect(frontmatter.status).toBe("in-progress");
+    expect(frontmatter.verification).toBe("agent");
+  });
+
+  test("recognizes explicit user acceptance", () => {
+    const frontmatter = createFrontmatter(
+      "plans/fixture.md",
+      {
+        id: "plan-fixture",
+        status: "Complete, awaiting user acceptance",
+        board: true,
+      },
+      "# Fixture\n",
+    );
+
+    expect(frontmatter.status).toBe("awaiting-human");
+    expect(frontmatter.verification).toBe("human");
+  });
+
+  test("keeps legacy todo verification with the agent", () => {
+    const frontmatter = createFrontmatter(
+      "todos/fixture.md",
+      {
+        id: "fixture",
+        status: "waiting-on-verification",
+        board: true,
+      },
+      "# Fixture\n",
+    );
+
+    expect(frontmatter.status).toBe("in-progress");
+    expect(frontmatter.verification).toBe("agent");
+  });
 });
 
 describe("normalizeWorkflowSection", () => {
