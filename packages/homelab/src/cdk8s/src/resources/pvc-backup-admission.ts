@@ -22,6 +22,9 @@ const INCLUDED_EXPRESSION = `${toCelList(INCLUDED_PVC_KEYS)}.exists(key, key == 
 const EXCLUDED_EXPRESSION = `${toCelList(EXCLUDED_PVC_KEYS)}.exists(key, key == variables.policyKey)`;
 
 const PVC_MATCH_CONSTRAINTS = {
+  matchPolicy: "Equivalent",
+  namespaceSelector: {},
+  objectSelector: {},
   resourceRules: [
     {
       apiGroups: [""],
