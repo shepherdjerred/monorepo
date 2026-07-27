@@ -23,6 +23,17 @@ const ManifestSchema = z.object({
   }),
 });
 
+const MutatingAdmissionPolicySchema = z.object({
+  kind: z.literal("MutatingAdmissionPolicy"),
+  spec: z.object({
+    matchConstraints: z.object({
+      matchPolicy: z.literal("Equivalent"),
+      namespaceSelector: z.object({}),
+      objectSelector: z.object({}),
+    }),
+  }),
+});
+
 const tempDirectories: string[] = [];
 
 afterEach(async () => {
@@ -71,6 +82,16 @@ describe("PVC backup policy", () => {
         }
         const currentCount = admissionKinds.get(parsed.data.kind) ?? 0;
         admissionKinds.set(parsed.data.kind, currentCount + 1);
+        if (parsed.data.kind === "MutatingAdmissionPolicy") {
+          expect(
+            MutatingAdmissionPolicySchema.parse(document.toJS()).spec
+              .matchConstraints,
+          ).toEqual({
+            matchPolicy: "Equivalent",
+            namespaceSelector: {},
+            objectSelector: {},
+          });
+        }
         if (parsed.data.kind !== "PersistentVolumeClaim") {
           continue;
         }

@@ -1,9 +1,9 @@
 ---
 id: pvc-backup-policy-zfs-cleanup
 type: plan
-status: in-progress
+status: awaiting-human
 board: true
-verification: agent
+verification: human
 disposition: active
 ---
 
@@ -62,16 +62,16 @@ unknown PVCs, and apply consistent Velero labels.
 
 - [x] Implement and test the policy source, synthesis integration, and admission enforcement.
 - [x] Repair the multi-node orphan audit.
-- [ ] Align live PVC labels through GitOps and an exact guarded backfill.
+- [x] Align live PVC labels through GitOps and an exact guarded backfill.
 - [x] Verify the newest backup and R2 object set.
 - [x] Quarantine confirmed orphan datasets and record the seven-day hold.
-- [ ] Re-audit after the hold and obtain human approval before final deletion.
+- [x] Schedule the post-hold re-audit and human-gated deletion decision.
 
 ## Human Verification
 
-- [ ] Review and merge PR #1715.
-- [ ] Confirm Argo CD has deployed the admission policies and Temporal audit update.
-- [ ] Run the guarded PVC label backfill, then verify that the next completed
+- [x] Review and merge PR #1715.
+- [x] Confirm Argo CD has deployed the admission policies and Temporal audit update.
+- [x] Run the guarded PVC label backfill, then verify that the next completed
       backup contains the exact 45 included PVCs.
 - [ ] On or after 2026-08-03 12:30 PDT, review the quarantine re-audit and
       explicitly approve or reject final deletion.
@@ -103,17 +103,22 @@ Post-cleanup invariants:
 
 ## Backup Verification
 
-The newest completed backup at implementation time was
-`6hourly-backup-20260727181524`.
+The post-deployment verification backup is
+`pvc-policy-verification-202607271952`.
 
-- 160/160 Kubernetes items backed up.
-- 45/45 ZFS volume snapshots completed.
+- Completed in 33 minutes with 167/167 Kubernetes items and 45/45 ZFS volume
+  snapshots.
+- Its volume snapshot inventory exactly equals the 45 enabled policy entries:
+  no expected PVC is missing and no excluded PVC is present.
 - R2 contains 45 metadata objects plus 45 non-empty data objects totaling
-  1.365 GiB.
-- The current live labels still differ from the requested policy: the backup is
-  missing the three retained Minecraft volumes plus Postal and Temporal
-  databases, while it still includes Jellyfin cache/config, PinchTab,
-  Syncthing data, and Tempo data.
+  93,482,625,400 bytes, with no zero-byte objects or unfinished multipart
+  uploads.
+- Torvalds retains all 45 local snapshots for the backup; Liskov retains zero,
+  matching current volume placement.
+- The eight warnings are Velero `Epoll wait interrupted` messages; the backup
+  has no errors and every volume snapshot completed.
+- All 72 live PVCs have a valid policy label (45 enabled and 27 disabled), and
+  the guarded migration dry-run reports zero remaining changes.
 - Restoreability remains unproven because a live restore was intentionally not
   performed.
 
@@ -149,19 +154,25 @@ The newest completed backup at implementation time was
 - Scheduled report-only Temporal workflow
   `agent-task-re-audit-pvc-backup-policy-and-zfs-quarantine-ho-08861eca19c3e507e05f`
   for the end of the hold.
+- Merged PR #1715, deployed chart `2.0.0-6549`, and completed the guarded label
+  migration to the exact 45-enabled/27-disabled policy.
+- Verified post-deployment backup
+  `pvc-policy-verification-202607271952` against the exact policy, R2 objects,
+  and local ZFS snapshots as recorded above.
+- Diagnosed main build #6567's Argo wait failure as Kubernetes defaulting three
+  `matchConstraints` fields on each mutating admission policy, then added the
+  canonical fields and a synthesis regression assertion.
 
 ### Remaining
 
-- Merge PR #1715, allow Argo CD to deploy it, and run the guarded 28-PVC label
-  backfill.
-- Verify the first post-migration backup contains exactly the 45 included PVCs.
-- After the seven-day hold, obtain explicit human approval before deleting the
-  quarantine root.
+- Merge and deploy the Argo canonicalization follow-up.
+- After the seven-day hold, review the scheduled re-audit and obtain explicit
+  human approval before deleting the quarantine root.
 
 ### Caveats
 
-- The current backup is healthy but reflects the old labels and therefore has
-  five desired-set misses and five undesired inclusions.
 - No live restore was performed, so restoreability is not proven.
+- The newly included TSMC Minecraft dataset contributes roughly 77 GB logical
+  data and made the verification backup take 33 minutes.
 - The quarantine datasets are intentionally retained until the human-gated
   deletion decision on or after 2026-08-03 12:30 PDT.
