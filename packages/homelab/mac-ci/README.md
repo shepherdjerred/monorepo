@@ -97,14 +97,18 @@ a missing agent):
 
 1. Add a step to `.buildkite/pipeline.yml` with `agents: { queue: "macos" }`,
    `soft_fail: true`, an `if:` gating it to PR builds, and an
-   `if_changed.include` list scoped to `packages/tasks-for-obsidian/ios/**` —
-   path filters are `if_changed:`, not `if:` (`if:` only evaluates boolean
+   `if_changed.include` list scoped to `packages/tasks-for-obsidian/**` — not
+   just `.../ios/**`, since the `lint:swift` task it runs is defined in
+   `packages/tasks-for-obsidian/package.json` and configured in
+   `packages/tasks-for-obsidian/turbo.json`, both outside `ios/`, and a
+   future `.swiftlint.yml` would likely sit at the package root too. Path
+   filters are `if_changed:`, not `if:` (`if:` only evaluates boolean
    build/pipeline expressions and can't match a changed-file glob; see the
    neighboring `playwright-e2e-pr` step for the `if:` + `if_changed:` pattern
    to copy). Include the same global CI/toolchain closure that step's
    `if_changed.include` carries (`.buildkite/**`, `.mise.toml`, `bun.lock`,
    `bunfig.toml`, `package.json`, `patches/**`, `turbo.json`) alongside the
-   iOS path, so a change to the macOS step itself or the shared toolchain
+   package path, so a change to the macOS step itself or the shared toolchain
    still runs it. Run `packages/tasks-for-obsidian`'s existing `lint:swift`
    script (`swiftlint lint --strict --quiet ios/TasksForObsidian
 ios/TasksWidget`) — or the iOS build / Maestro suite — as the command, not

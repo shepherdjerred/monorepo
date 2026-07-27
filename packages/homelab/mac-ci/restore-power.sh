@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Restore the exact AC power values saved by bootstrap.sh before it configured
-# this Mac Mini as an always-on Buildkite agent.
+# Restore the exact AC (charger) power values saved by bootstrap.sh before it
+# configured this Mac Mini as an always-on Buildkite agent. Scoped to `-c`
+# (charger profile only) to match bootstrap.sh's `-c` — never touches a
+# separately-managed UPS Power profile, if one is attached.
 
 set -euo pipefail
 
@@ -30,6 +32,6 @@ for setting in "${POWER_SETTINGS[@]}"; do
   restore_args+=("$setting" "$value")
 done
 
-sudo pmset -a "${restore_args[@]}"
+sudo pmset -c "${restore_args[@]}"
 sudo rm "$POWER_BACKUP_FILE"
 echo "==> Restored the saved pre-bootstrap power profile."

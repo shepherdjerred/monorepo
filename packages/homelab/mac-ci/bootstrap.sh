@@ -83,7 +83,10 @@ umask 022
 # A CI agent that sleeps drops off Buildkite and hangs any job dispatched to it
 # (this is why the Mini kept "falling asleep" and never held a stable agent). A
 # Mac Mini is AC-powered with no battery, so force a permanent always-on
-# profile. `-a` applies to all power sources; needs sudo (will prompt).
+# profile. `-c` scopes this to the charger (AC Power) profile only — the same
+# scope restore-power.sh captures and restores; `-a` would also stomp a
+# separately-managed UPS Power profile if one is ever attached. Needs sudo
+# (will prompt).
 #   sleep 0         never idle-sleep the system
 #   disksleep 0     never spin the disk down
 #   displaysleep 0  don't sleep the (headless) display
@@ -98,7 +101,7 @@ if ! sudo test -e "$POWER_BACKUP_FILE"; then
   rm "$power_backup"
   echo "    Saved the previous profile to $POWER_BACKUP_FILE"
 fi
-sudo pmset -a sleep 0 disksleep 0 displaysleep 0 powernap 0 womp 1 autorestart 1
+sudo pmset -c sleep 0 disksleep 0 displaysleep 0 powernap 0 womp 1 autorestart 1
 echo "    Full profile (verify sleep=0): pmset -g custom"
 
 # --- 5. Start the agent as a login service ---------------------------------

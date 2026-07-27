@@ -140,12 +140,31 @@ review` nudge comment got no 👀 reaction and no review landed for 4.5h
   across two pushes; a second nudge got an immediate 👀 and a review within
   minutes.
 
+- Round 3 (head `251575e`) found 2 more genuine P2s, both fixed:
+  - `mac-ci/README.md` — broadened the `if_changed.include` example from
+    `packages/tasks-for-obsidian/ios/**` to `packages/tasks-for-obsidian/**`,
+    since the `lint:swift` task it would run is defined/configured in
+    `package.json`/`turbo.json` at the package root, outside `ios/`.
+  - `bootstrap.sh` + `restore-power.sh` — switched `pmset -a` (all power
+    sources) to `pmset -c` (charger/AC profile only) in both directions, so
+    a Mini with a separately-managed UPS Power profile doesn't get its UPS
+    settings silently overwritten by AC-profile values on restore.
+  - A round-2 thread (README:100 `if_changed` closure) was left unresolved
+    after being fixed in commit `251575e` — resolved retroactively this
+    round with a reference to that commit.
+
 ### Remaining
 
 - Push this commit, confirm Codex re-reviews clean at the new head, and
   confirm the `robot-face-review-gate` required check goes green.
+- Fleet controller escalated a review-gate bug independently: `pmset`-fix
+  round's 👍 signal can't bind to head due to a `fetchHeadPushedAt` null on
+  fast-forward; final green is blocked on that decision, not on this PR's docs.
 
 ### Caveats
 
 - If Codex drops a future re-review trigger again, re-post `@codex review`
   and confirm the 👀 reaction before assuming the gate will unblock.
+- Resolve GitHub review threads immediately after fixing them in the same
+  cycle — round 2 left one thread unresolved despite the fix landing, which
+  cost an extra round-trip to clean up.
