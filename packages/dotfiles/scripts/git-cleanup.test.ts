@@ -6,7 +6,17 @@ import {
   parsePullRequest,
   parseWorktrees,
   pullRequestAgeInDays,
+  readConfirmationLine,
 } from "../bin/git_cleanup_core.ts";
+
+function openInput(...chunks: string[]): ReadableStream<Uint8Array> {
+  const encoder = new TextEncoder();
+  return new ReadableStream({
+    start(controller) {
+      for (const chunk of chunks) controller.enqueue(encoder.encode(chunk));
+    },
+  });
+}
 
 test("defaults to report-only mode", () => {
   expect(parseCleanupArguments([], "/home")).toEqual({
@@ -120,4 +130,10 @@ test("calculates PR age and formats status output", () => {
   expect(formatStatus("REMOVE", "branch", true)).toContain("\u001B[32m");
   expect(formatStatus("WOULD REMOVE", "branch", true)).toContain("\u001B[36m");
   expect(formatStatus("STALE", "branch", true)).toContain("\u001B[33m");
+});
+
+test("interactive confirmation resolves on the first newline without EOF", async () => {
+  await expect(
+    readConfirmationLine(openInput("AP", "PLY\nignored")),
+  ).resolves.toBe("APPLY");
 });

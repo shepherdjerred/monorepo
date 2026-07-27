@@ -7,6 +7,28 @@ export type VeleroOptions = {
   readonly target?: R2Target;
 };
 
+export async function readConfirmationLine(
+  input: ReadableStream<Uint8Array>,
+): Promise<string> {
+  const reader = input.getReader();
+  const decoder = new TextDecoder();
+  let text = "";
+  try {
+    let result = await reader.read();
+    while (!result.done) {
+      text += decoder.decode(result.value, { stream: true });
+      const newline = text.indexOf("\n");
+      if (newline !== -1) {
+        return text.slice(0, newline).replace(/\r$/, "");
+      }
+      result = await reader.read();
+    }
+    return `${text}${decoder.decode()}`.replace(/\r$/, "");
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 export function setChartVersion(source: string, version: string): string {
   const withVersion = source.replace(/^version:.*$/m, `version: ${version}`);
   return withVersion.replace(/^appVersion:.*$/m, `appVersion: ${version}`);

@@ -5,6 +5,7 @@ import {
   knownImageTargets,
   parseBakeArguments,
   parseBuildkiteCommits,
+  parseImageSelection,
   parseStringArray,
 } from "./migration-core.ts";
 
@@ -44,4 +45,18 @@ test("validates external JSON arrays", () => {
   );
   expect(() => parseBuildkiteCommits({})).toThrow("array");
   expect(() => parseBuildkiteCommits([{}])).toThrow("contain a commit");
+});
+
+test("fails open when image selection output is malformed", () => {
+  for (const output of ["not-json", "{}", '["birmel", 42]']) {
+    const result = parseImageSelection(output);
+    expect(result.targets).toEqual(knownImageTargets);
+    expect(result.fallbackReason).toContain("malformed output");
+  }
+});
+
+test("fails open when image selection names an unknown target", () => {
+  const result = parseImageSelection('["unknown-image"]');
+  expect(result.targets).toEqual(knownImageTargets);
+  expect(result.fallbackReason).toBe("image selector returned invalid targets");
 });

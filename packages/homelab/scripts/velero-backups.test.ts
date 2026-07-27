@@ -1,5 +1,17 @@
 import { expect, test } from "bun:test";
-import { parseVeleroArguments } from "./migration-core.ts";
+import {
+  parseVeleroArguments,
+  readConfirmationLine,
+} from "./migration-core.ts";
+
+function openInput(...chunks: string[]): ReadableStream<Uint8Array> {
+  const encoder = new TextEncoder();
+  return new ReadableStream({
+    start(controller) {
+      for (const chunk of chunks) controller.enqueue(encoder.encode(chunk));
+    },
+  });
+}
 
 test("inspection is non-destructive by default", () => {
   expect(parseVeleroArguments(["inspect"])).toEqual({
@@ -40,4 +52,10 @@ test("rejects missing commands and unknown options", () => {
   expect(() => parseVeleroArguments(["inspect", "--unknown"])).toThrow(
     "Unknown option",
   );
+});
+
+test("interactive confirmation resolves on the first newline without EOF", async () => {
+  await expect(
+    readConfirmationLine(openInput("DELETE ", "ALL BACKUPS\r\nignored")),
+  ).resolves.toBe("DELETE ALL BACKUPS");
 });

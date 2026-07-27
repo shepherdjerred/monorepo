@@ -90,6 +90,9 @@ describe("selectImageTargets", () => {
     expect(await select([".buildkite/scripts/bake-images.ts"])).toEqual(
       ALL_IMAGE_TARGETS,
     );
+    expect(await select([".buildkite/scripts/migration-core.ts"])).toEqual(
+      ALL_IMAGE_TARGETS,
+    );
     expect(await select([".buildkite/scripts/upload-pipeline.sh"])).toEqual([]);
   });
 

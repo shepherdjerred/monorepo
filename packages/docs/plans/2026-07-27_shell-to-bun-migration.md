@@ -375,6 +375,11 @@ The inventory exposed several ineffective or missing GitHub Linguist rules.
   drift.
 - Attached the report-only `git_cleanup` terminal recording and published the
   implementation in PR #1710.
+- Addressed all four current-head Codex findings: enrolled the shared image
+  migration helper in global selection inputs, made malformed selector output
+  fail open to all images, changed both destructive confirmations to
+  newline-oriented reads, and corrected Scout icon generation to resolve from
+  the package root. The focused regression suite passes 62 tests.
 
 ### Remaining
 

@@ -7,6 +7,7 @@ import {
   parseCleanupArguments,
   parsePullRequest,
   parseWorktrees,
+  readConfirmationLine,
   type PullRequest,
   pullRequestAgeInDays,
   type Worktree,
@@ -265,8 +266,8 @@ if (import.meta.main) {
     if (!process.stdin.isTTY)
       throw new Error("Non-interactive apply requires --yes");
     process.stdout.write("Type APPLY exactly to continue: ");
-    const confirmation = await Bun.stdin.text();
-    if (confirmation.trim() !== "APPLY") throw new Error("Apply cancelled");
+    const confirmation = await readConfirmationLine(Bun.stdin.stream());
+    if (confirmation !== "APPLY") throw new Error("Apply cancelled");
   }
   const repositories = [
     ...new Bun.Glob("*/.git").scanSync({

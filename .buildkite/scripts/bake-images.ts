@@ -7,6 +7,7 @@ import {
   knownImageTargets,
   parseBakeArguments,
   parseBuildkiteCommits,
+  parseImageSelection,
   parseStringArray,
 } from "./migration-core.ts";
 
@@ -103,17 +104,7 @@ async function selectedTargets(
       fallbackReason: "image selector failed",
     };
   }
-  const parsed = parseStringArray(
-    JSON.parse(selection.stdout.trim()),
-    "image selection",
-  );
-  if (!parsed.every((target) => knownImageTargets.includes(target))) {
-    return {
-      targets: knownImageTargets,
-      fallbackReason: "image selector returned invalid targets",
-    };
-  }
-  return { targets: parsed, fallbackReason: "" };
+  return parseImageSelection(selection.stdout);
 }
 
 async function manifestDigest(image: string): Promise<string> {

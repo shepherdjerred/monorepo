@@ -76,6 +76,31 @@ export function parseStringArray(
   return strings;
 }
 
+export function parseImageSelection(output: string): {
+  readonly targets: string[];
+  readonly fallbackReason: string;
+} {
+  try {
+    const parsed = parseStringArray(
+      JSON.parse(output.trim()),
+      "image selection",
+    );
+    if (!parsed.every((target) => knownImageTargets.includes(target))) {
+      return {
+        targets: knownImageTargets,
+        fallbackReason: "image selector returned invalid targets",
+      };
+    }
+    return { targets: parsed, fallbackReason: "" };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      targets: knownImageTargets,
+      fallbackReason: `image selector returned malformed output: ${message}`,
+    };
+  }
+}
+
 export function parseBuildkiteCommits(value: unknown): string[] {
   if (!Array.isArray(value)) {
     throw new TypeError("Buildkite response must be an array");

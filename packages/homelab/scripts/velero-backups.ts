@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { parseVeleroArguments } from "./migration-core.ts";
+import {
+  parseVeleroArguments,
+  readConfirmationLine,
+} from "./migration-core.ts";
 
 const bucket = "homelab";
 const endpoint =
@@ -78,8 +81,7 @@ if (import.meta.main) {
       throw new Error("Non-interactive deletion requires --yes");
     }
     process.stdout.write(`Type '${phrase}' exactly to proceed: `);
-    const input = await Bun.stdin.text();
-    const confirmation = input.trim();
+    const confirmation = await readConfirmationLine(Bun.stdin.stream());
     if (confirmation !== phrase) throw new Error("Deletion cancelled");
   }
   if (options.command === "delete-all") {

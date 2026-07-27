@@ -36,6 +36,17 @@ export async function filesEqual(
   );
 }
 
+export function scoutIconDirectory(scriptDirectory: string): string {
+  const suffix = "/scripts";
+  if (!scriptDirectory.endsWith(suffix)) {
+    throw new Error(
+      `Expected Scout scripts directory, received ${scriptDirectory}`,
+    );
+  }
+  const packageRoot = scriptDirectory.slice(0, -suffix.length);
+  return `${packageRoot}/packages/desktop/src-tauri/icons`;
+}
+
 export function minimalPng(): Uint8Array {
   return new Uint8Array(pngBytes);
 }
