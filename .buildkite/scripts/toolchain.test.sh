@@ -3,6 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 TOOLCHAIN="${SCRIPT_DIR}/toolchain.sh"
+CI_IMAGE="${SCRIPT_DIR}/../ci-image/Dockerfile"
 
 if ! awk '
   $0 == "mise install --yes" { install_line = NR }
@@ -20,6 +21,12 @@ if ! awk '
   }
 ' "$TOOLCHAIN"; then
   echo "toolchain must expose the installed gh binary to login shells" >&2
+  exit 1
+fi
+
+if ! rg -Fq 'ln -sf "$(mise which gh)" /usr/local/bin/gh' "$CI_IMAGE" ||
+  ! rg -Fq '&& gh --version' "$CI_IMAGE"; then
+  echo "ci image must expose the mise-owned gh binary to login shells" >&2
   exit 1
 fi
 
