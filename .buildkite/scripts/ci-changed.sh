@@ -252,7 +252,13 @@ if [ "$status" -eq 1 ]; then
   decision="ran — changed since ${base}"
   if changed_files=$(git diff --name-only "$base" HEAD -- "${global_paths[@]}" "${lane_paths[@]}"); then
     changed_count=$(printf '%s\n' "$changed_files" | sed '/^$/d' | wc -l | tr -d ' ')
-    changed_sample=$(printf '%s\n' "$changed_files" | head -3 | tr '\n' ' ')
+    # A live `printf | head -3` pipe risks SIGPIPE on large diffs: head exits
+    # after 3 lines and closes its stdin while printf may still be writing,
+    # which (under `set -o pipefail`) surfaces as this assignment failing and
+    # trips the ERR trap before record_decision below ever runs. A here-string
+    # has no concurrent producer to signal, so head reading only part of it is
+    # never an error.
+    changed_sample=$(head -3 <<<"$changed_files" | tr '\n' ' ')
     decision="ran — ${changed_count} matching change(s) since ${base}: ${changed_sample}"
   fi
   record_decision "$decision"
