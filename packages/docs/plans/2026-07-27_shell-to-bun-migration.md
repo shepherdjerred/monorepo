@@ -1,9 +1,9 @@
 ---
 id: shell-to-bun-migration
 type: plan
-status: in-progress
+status: awaiting-human
 board: true
-verification: agent
+verification: human
 disposition: active
 ---
 
@@ -32,8 +32,8 @@ adding it, and retain shell where the execution contract requires it.
 | Port to Bun                          |     34 |
 | Remove redundant shell wrapper       |      1 |
 | Delete or replace without Bun        |     10 |
-| Retain as shell                      |     17 |
-| **Tracked `.sh` outside `sandbox/`** | **62** |
+| Retain as shell                      |     18 |
+| **Tracked `.sh` outside `sandbox/`** | **63** |
 
 ## Port to Bun
 
@@ -136,6 +136,8 @@ convenience wrappers is called by repository automation.
 
 - `.buildkite/scripts/toolchain.sh` — sourced into each step, installs Bun via
   mise, and exports environment into the parent shell.
+- `.buildkite/scripts/toolchain.test.sh` — 33-line test that directly validates
+  the retained shell bootstrap contract.
 - `.buildkite/scripts/upload-pipeline.sh` — runs during Buildkite pipeline
   bootstrap before the repository toolchain or CI image is guaranteed.
 - `.buildkite/scripts/upload-pipeline.test.sh` — tests that bootstrap contract in
@@ -327,25 +329,18 @@ The inventory exposed several ineffective or missing GitHub Linguist rules.
   `linguist-vendored=true`.
 - Re-verified the existing N64Wasm, cdk8s-generated, and snapshot attributes.
 
-## Remaining
+## Human Verification
 
-- [x] Establish workspace ownership, strict script tsconfigs, shared ESLint
-      coverage, test/coverage commands, and the migrated-script ownership check
-      before landing the first port.
-- [x] Implement the port/delete/retain classification in reviewable phases.
-- [x] Verify each replacement against the original script's observable behavior
-      before deleting the shell implementation.
-- [x] Update every package, Buildkite, documentation, and test caller alongside
-      its migrated entrypoint.
-- [ ] Obtain human review and merge draft PR #1710 after current-head Buildkite
-      verification is green.
+- [ ] Review PR #1710, including the retained-shell decisions and the
+      report-only `git_cleanup` demo.
+- [ ] Merge PR #1710 after the owner is satisfied with the migration.
 
 ## Session Log — 2026-07-27
 
 ### Done
 
 - Ported all 34 selected shell scripts to typed Bun entrypoints, removed one
-  redundant wrapper and ten stale or vendored scripts, and retained the 17
+  redundant wrapper and ten stale or vendored scripts, and retained the 18
   scripts whose bootstrap, platform, sourced-shell, or minimal-container
   contracts still justify shell.
 - Added `scripts/script-migrations.json`,
@@ -365,23 +360,31 @@ The inventory exposed several ineffective or missing GitHub Linguist rules.
 - Fixed a repository-wide verification race by excluding Bun's atomic
   `.*.bun-build` compiler artifacts from the Temporal rehearsal copy; twelve
   concurrent toolkit compilations plus the full rehearsal passed.
-- Passed the full repository verification surface: 211 of 211 Turbo tasks,
+- Passed the current full repository verification surface: 217 of 217 Turbo
+  tasks,
   including builds, typechecks, tests, lint, migration ownership, coverage,
   shellcheck, docs, supply-chain checks, infrastructure validation, and the
   Temporal rehearsal.
-- Published the implementation in draft PR #1710.
+- Restacked onto current main, preserved its dual CI-image, Glitter dependency,
+  Scout reconciliation, and cache contracts, and classified the new 33-line
+  `toolchain.test.sh` as retained.
+- Added the two new rebuildable Buildkite caches to the explicit PVC backup
+  policy; its synthesized 74-PVC contract now passes.
+- Passed every mechanical lane on current-head Buildkite build #6600, including
+  verify, Semgrep, Trivy, Playwright, observability, image smoke, and deploy-path
+  drift.
+- Attached the report-only `git_cleanup` terminal recording and published the
+  implementation in PR #1710.
 
 ### Remaining
 
-- [ ] Confirm current-head Buildkite is green, attach the terminal recording,
-      and promote PR #1710 from draft to ready for human review.
-- [ ] Human review and merge.
+- Human review and merge of PR #1710.
 
 ### Caveats
 
 - Bun exposes line and function coverage, so the enforced line metric is the
   executable-source proxy for the plan's original statement-coverage intent.
-- The 17 retained scripts remain intentionally classified and guarded; adding
+- The 18 retained scripts remain intentionally classified and guarded; adding
   Bun only for those bootstrap or minimal-runtime contracts would violate the
   migration's dependency threshold.
 - The Apple HIG scraper wrapper was deleted because its Python target and
