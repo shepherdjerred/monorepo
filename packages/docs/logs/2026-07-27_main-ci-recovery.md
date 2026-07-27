@@ -274,3 +274,20 @@ through its downstream release and version paths.
 ### Caveats
 
 - Buildkite #6605 is still running at handoff time; local verification is green but does not replace the authoritative remote build.
+
+## Session Log — 2026-07-27 (Playwright APT recovery)
+
+### Done
+
+- Inspected merged-main Buildkite #6614 and isolated its first hard failure to the Playwright main lane: the inherited NodeSource APT source returned HTTP 403, preventing installation of Bun's required `unzip` dependency.
+- Removed only that stale external source before the Playwright lanes refresh Debian package indexes, and added a static pipeline contract for both PR and main lanes.
+- Verified the upstream Playwright image performs `apt-get update` and installs `unzip` successfully after the source removal; `bun run verify -- --affected`, the static pipeline validator, and the CI selector tests all passed on the rebased repair.
+- Published draft PR #1736 at `a51fff3cbe149fb681efb0554ce8d23beade8992`; its direct merge-tree against current `main` is clean and Buildkite #6627 is the authoritative pending validation.
+
+### Remaining
+
+- Follow Buildkite #6627 and current-head review to green, merge PR #1736, then re-check the generated `main` build through its release lanes.
+
+### Caveats
+
+- The repair retains `apt-get update` as a hard failure for all configured Debian sources; it only removes the known-invalid inherited NodeSource source.

@@ -121,6 +121,14 @@ for (const key of ["playwright-e2e-pr", "playwright-e2e-main"]) {
   if (!hasTrimmedLine(block, install)) {
     fail(`Playwright lane ${key} is missing exact filtered install ${install}`);
   }
+  if (
+    !hasTrimmedLine(
+      block,
+      "rm -f /etc/apt/sources.list.d/nodesource.list /etc/apt/sources.list.d/nodesource.sources",
+    )
+  ) {
+    fail(`Playwright lane ${key} must remove the stale NodeSource APT source`);
+  }
   for (const required of [
     "bunx --no-install playwright install",
     "bunx --no-install turbo run build lint test test:e2e",
