@@ -78,6 +78,11 @@ export class WorkerEmulator {
           : "emulator worker errored";
       logger.error("emulator worker error", { message });
       Sentry.captureMessage(message, "error");
+      // Tear the dead worker down and mark it terminal. Otherwise a later
+      // stop() would post `stop` to a corpse and await a `stopped` ack that can
+      // never arrive, hanging session teardown and userbot release.
+      worker.terminate();
+      this.worker = undefined;
       this.failPending(new Error(message));
     });
     const ready = new Promise<void>((resolve, reject) => {
@@ -114,7 +119,11 @@ export class WorkerEmulator {
     // Fire-and-forget: after stop() the session is gone and input is a no-op,
     // matching the pre-worker "no active runtime" behaviour.
     if (this.worker === undefined) return;
-    this.post({ kind: "setPlayerInput", seat, state });
+    // Stamp arrival on THIS (main) thread so the worker's latency metric spans
+    // backend-arrival→applying-tick, including the main→worker transit. The
+    // clock is absolute epoch ms so it stays comparable across threads.
+    const receivedAt = performance.timeOrigin + performance.now();
+    this.post({ kind: "setPlayerInput", seat, state, receivedAt });
   }
 
   clearPlayerInput(seat: number): void {
@@ -203,6 +212,25 @@ export class WorkerEmulator {
     this.stoppedResolve?.();
   }
 
+  /**
+   * Run a consumer callback (overlay compose, streamer.pushFrame, RaceTracker)
+   * without letting a throw escape the Worker message listener and crash the
+   * Bun process. In-process this ran inside N64Emulator.loop()'s try/catch; the
+   * boundary must preserve that containment so a transient stream-path failure
+   * doesn't take down the whole bot.
+   */
+  private safeInvoke(what: string, fn: () => void): void {
+    try {
+      fn();
+    } catch (error) {
+      logger.error("emulator worker callback failed", {
+        what,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      Sentry.captureException(error);
+    }
+  }
+
   private handleMessage(data: unknown): void {
     let msg: WorkerToMain;
     try {
@@ -223,23 +251,29 @@ export class WorkerEmulator {
       case "stopped":
         this.stoppedResolve?.();
         return;
-      case "frame": {
-        const frame: EmulatorFrame = {
-          rgba: bufferView(msg.rgba),
-          height: msg.height,
-          seatActivity: msg.seatActivity,
-        };
-        this.lastHeight = msg.height;
-        this.lastSeatActivity = msg.seatActivity;
-        this.onFrameCb?.(frame);
+      case "frame":
+        this.deliverFrame(msg);
+        return;
+      case "audio": {
+        const cb = this.onAudioCb;
+        if (cb !== undefined) {
+          const pcm = bufferView(msg.pcm);
+          this.safeInvoke("audio", () => {
+            cb(pcm);
+          });
+        }
         return;
       }
-      case "audio":
-        this.onAudioCb?.(bufferView(msg.pcm));
+      case "snapshot": {
+        const cb = this.onSnapshotCb;
+        if (cb !== undefined) {
+          const { snapshot } = msg;
+          this.safeInvoke("snapshot", () => {
+            cb(snapshot);
+          });
+        }
         return;
-      case "snapshot":
-        this.onSnapshotCb?.(msg.snapshot);
-        return;
+      }
       case "metrics":
         replayMetricBatch(msg.batch);
         return;
@@ -255,11 +289,46 @@ export class WorkerEmulator {
         return;
       }
       case "error":
-        logger.error("emulator worker reported error", {
-          message: msg.message,
-        });
-        Sentry.captureMessage(`emulator worker: ${msg.message}`, "error");
+        this.handleWorkerError(msg);
         return;
+    }
+  }
+
+  /** Ack, latch, and hand a received frame to the consumer (contained). */
+  private deliverFrame(msg: Extract<WorkerToMain, { kind: "frame" }>): void {
+    // Ack first — the moment the frame is off the port — so the worker's
+    // in-flight bound reflects "dequeued", independent of whether the consumer
+    // below drops or throws. Skip if the worker was already torn down (error
+    // path) while a frame was still queued.
+    if (this.worker !== undefined) this.post({ kind: "frameAck" });
+    const frame: EmulatorFrame = {
+      rgba: bufferView(msg.rgba),
+      height: msg.height,
+      seatActivity: msg.seatActivity,
+    };
+    this.lastHeight = msg.height;
+    this.lastSeatActivity = msg.seatActivity;
+    const cb = this.onFrameCb;
+    if (cb !== undefined) {
+      this.safeInvoke("frame", () => {
+        cb(frame);
+      });
+    }
+  }
+
+  private handleWorkerError(
+    msg: Extract<WorkerToMain, { kind: "error" }>,
+  ): void {
+    logger.error("emulator worker reported error", { message: msg.message });
+    Sentry.captureMessage(`emulator worker: ${msg.message}`, "error");
+    // A correlated failure (renderFrame/persistSaves) must reject its pending
+    // promise, or the caller (/screenshot, save flush) hangs until Discord
+    // times out and the map entry leaks.
+    if (msg.id === undefined) return;
+    const pending = this.pending.get(msg.id);
+    if (pending !== undefined) {
+      this.pending.delete(msg.id);
+      pending.reject(new Error(msg.message));
     }
   }
 }

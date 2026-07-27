@@ -52,6 +52,16 @@ let batching: ReturnType<typeof createBatchingMetricSink> | undefined;
 let frameCount = 0;
 let snapshotEveryNFrames = 10;
 
+// Frame backpressure. The main thread acks each frame it dequeues; the worker
+// posts a new frame only while fewer than this many are unacked. When the main
+// event loop stalls (overlay/stream load) acks stop, framesInFlight saturates,
+// and further frames are DROPPED rather than piled into the port queue — the
+// same bound-latency-degrade-fps tradeoff the main-thread sink drop-gate makes.
+// ~3 frames ≈ 100ms at 30fps: enough headroom for normal jitter, small enough
+// to keep transferred RGBA buffers from accumulating.
+const MAX_FRAMES_IN_FLIGHT = 3;
+let framesInFlight = 0;
+
 function requireEmulator(): N64Emulator {
   const emu = emulator;
   if (emu === undefined) {
@@ -93,6 +103,12 @@ async function handleInit(opts: WorkerInitOpts): Promise<void> {
         }
       }
     }
+    if (framesInFlight >= MAX_FRAMES_IN_FLIGHT) {
+      // Main thread is behind (unacked frames saturated the bound). Drop this
+      // frame instead of growing the port's transfer queue.
+      return;
+    }
+    framesInFlight += 1;
     post(
       {
         kind: "frame",
@@ -136,23 +152,32 @@ async function handle(data: unknown): Promise<void> {
       requireEmulator().restartFromStartMenu(msg.reason);
       return;
     case "setPlayerInput":
-      requireEmulator().setPlayerInput(msg.seat, msg.state);
+      requireEmulator().setPlayerInput(msg.seat, msg.state, msg.receivedAt);
       return;
     case "clearPlayerInput":
       requireEmulator().clearPlayerInput(msg.seat);
       return;
+    case "frameAck":
+      framesInFlight = Math.max(0, framesInFlight - 1);
+      return;
     case "renderFrame": {
-      const frame = requireEmulator().renderFrame();
-      post(
-        {
-          kind: "renderFrameResult",
-          id: msg.id,
-          rgba: frame.rgba,
-          width: frame.width,
-          height: frame.height,
-        },
-        transferListFor(frame.rgba),
-      );
+      // Correlate a failure to msg.id so the facade rejects that pending
+      // request rather than leaking it (the generic dispatch catch can't).
+      try {
+        const frame = requireEmulator().renderFrame();
+        post(
+          {
+            kind: "renderFrameResult",
+            id: msg.id,
+            rgba: frame.rgba,
+            width: frame.width,
+            height: frame.height,
+          },
+          transferListFor(frame.rgba),
+        );
+      } catch (error) {
+        post({ kind: "error", id: msg.id, message: errorMessage(error) });
+      }
       return;
     }
     case "persistSaves": {

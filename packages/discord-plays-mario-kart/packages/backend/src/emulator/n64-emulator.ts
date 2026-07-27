@@ -382,10 +382,17 @@ export class N64Emulator {
     return pcm;
   }
 
-  setPlayerInput(player: number, state: PlayerInputState): void {
+  setPlayerInput(
+    player: number,
+    state: PlayerInputState,
+    receivedAt?: number,
+  ): void {
     if (player < 0 || player >= MAX_SEATS) return;
     this.inputs[player] = state;
-    this.inputLatency.record(player);
+    // `receivedAt` is the absolute main-thread arrival time (see
+    // InputLatencyTracker); passing it through the Worker boundary keeps the
+    // metric measuring backend-arrival→applying-tick, not just worker-receipt.
+    this.inputLatency.record(player, receivedAt);
   }
 
   /**

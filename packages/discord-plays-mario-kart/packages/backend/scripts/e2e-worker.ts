@@ -100,6 +100,8 @@ if (frames <= expectedFrames)
     `too few frames (${String(frames)} <= ${String(expectedFrames)})`,
   );
 if (snapshots === 0) failures.push("no race snapshot arrived from the worker");
+if (audioChunks === 0)
+  failures.push("no audio arrived from the worker (silent stream)");
 if (shot.width === 0 || shot.height === 0)
   failures.push("renderFrame() returned an empty frame");
 if (tickCount === 0) failures.push("no metrics replayed from the worker");
