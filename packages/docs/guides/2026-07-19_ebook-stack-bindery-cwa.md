@@ -50,7 +50,7 @@ plan's Phase C pivot).
 
 | Component   | Image                                             | Tailscale host | Port | Namespace |
 | ----------- | ------------------------------------------------- | -------------- | ---- | --------- |
-| Bindery     | `docker.io/vavallee/bindery`                      | `bindery`      | 8787 | `media`   |
+| Bindery     | `ghcr.io/shepherdjerred/bindery` (self-built)     | `bindery`      | 8787 | `media`   |
 | CWA         | `docker.io/crocodilestick/calibre-web-automated`  | `cwa`          | 8083 | `media`   |
 | ShelfBridge | `ghcr.io/shepherdjerred/shelfbridge` (self-built) | —              | 8787 | `media`   |
 | Prowlarr    | existing                                          | `prowlarr`     | 9696 | `media`   |
@@ -64,20 +64,18 @@ Versions are pinned with digests in
 
 The repository self-builds `ghcr.io/shepherdjerred/bindery` from a pinned
 upstream commit with a local patch that lets author-named, author-ID-less
-Google Books results be added. The deployment intentionally remains on
-`docker.io/vavallee/bindery` during the publication stage:
+Google Books results be added. The staged rollout completed on 2026-07-28:
 
 1. Main CI builds, tests, smokes, and pushes the patched image.
 2. Version commit-back replaces the unused
    `shepherdjerred/bindery` seed with the real tag and digest.
 3. An operator makes the new GHCR package public and verifies the digest can be
    pulled anonymously. The cluster has no GHCR pull secret.
-4. A follow-up change switches `bindery.ts` to the verified first-party pin.
+4. `bindery.ts` deploys the verified first-party tag and digest.
 
-Do not point the deployment at the all-zero seed or a private package. Until
-all four steps are complete, Renovate continues to update the deployed
-`vavallee/bindery` pin; the first-party source commit is updated separately
-through the `bindery-source` custom manager and requires manual review.
+The first-party source commit is updated separately through the
+`bindery-source` custom manager and requires manual review. Never point the
+deployment at an all-zero seed, mutable tag, or private package.
 
 ## Storage
 
@@ -234,16 +232,29 @@ Do this once after Argo syncs `media` + `postal`.
 | Bindery health failing         | Probe is HTTP `GET /api/v1/health` on :8787                          |
 | Wrong library writer           | Never set Bindery to import into `/books` RW — mount is RO by design |
 | ShelfBridge 401 in Bindery     | API key mismatch — re-read the `shelfbridge` 1Password item          |
-| Webseed download stalls        | gluetun outbound firewall — see below                                |
+| Webseed download stalls        | gluetun route/host mapping or expired grab ID — see below            |
 | No Chinese results             | ShelfBridge upstream mirrors may be down/blocked; check pod logs     |
 
 ### Gluetun / webseed note
 
-qBittorrent runs in gluetun's netns, which today sets only
-`FIREWALL_VPN_INPUT_PORTS` — outbound to cluster-internal IPs may be dropped.
-Webseed pulls target `media-shelfbridge-service` (a ClusterIP). If ShelfBridge
-grabs stall at 0%, add `FIREWALL_OUTBOUND_SUBNETS=<pod/service CIDR>` to the
-gluetun env in `resources/torrents/qbittorrent.ts` and resync.
+qBittorrent runs in gluetun's netns. ShelfBridge torrents normally report zero
+peer seeds because their payload comes from the HTTP webseed, not BitTorrent
+peers. The deployment permits the Kubernetes Service CIDR through Gluetun and
+maps `media-shelfbridge-service` to ShelfBridge's pinned ClusterIP without
+moving public DNS outside the VPN.
+
+For a stalled ShelfBridge torrent, verify the URL from the qBittorrent pod:
+
+```bash
+kubectl exec -n media deploy/media-qbittorrent -c qbittorrent -- \
+  curl --fail --show-error http://media-shelfbridge-service:8787/health
+```
+
+`Could not resolve host` or a timeout means the live Deployment is missing the
+host alias or `FIREWALL_OUTBOUND_SUBNETS=10.96.0.0/12`. HTTP 200 with an old
+torrent still stalled usually means its in-memory ShelfBridge grab ID exceeded
+the one-hour `DOWNLOAD_TTL`; the `/file/...` webseed returns 404. Remove that
+stalled torrent and grab the result again so ShelfBridge issues a fresh ID.
 
 ## Out of scope (v1)
 

@@ -24,9 +24,14 @@ import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailsca
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import {
+  SHELFBRIDGE_SERVICE_HOSTNAME,
+  SHELFBRIDGE_SERVICE_IP,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/shelfbridge.ts";
 
 const CURRENT_FILENAME = fileURLToPath(import.meta.url);
 const CURRENT_DIRNAME = path.dirname(CURRENT_FILENAME);
+const KUBERNETES_SERVICE_CIDR = "10.96.0.0/12";
 
 export function createQBitTorrentDeployment(
   chart: Chart,
@@ -51,6 +56,15 @@ export function createQBitTorrentDeployment(
   const deployment = new Deployment(chart, "qbittorrent", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
+    // Gluetun replaces the pod's Kubernetes resolver to keep public DNS inside
+    // the VPN. Resolve only ShelfBridge locally instead of enabling
+    // DNS_KEEP_NAMESERVER, which would send every lookup through cluster DNS.
+    hostAliases: [
+      {
+        ip: SHELFBRIDGE_SERVICE_IP,
+        hostnames: [SHELFBRIDGE_SERVICE_HOSTNAME],
+      },
+    ],
     metadata: {
       annotations: {
         "ignore-check.kube-linter.io/privileged-container":
@@ -200,6 +214,9 @@ export function createQBitTorrentDeployment(
           "10.154.174.240/32,fd7d:76ee:e68f:a993:af57:e79c:b39d:9dde/128",
         ),
         FIREWALL_VPN_INPUT_PORTS: EnvValue.fromValue("17826"),
+        // ShelfBridge webseeds use its ClusterIP. This service range does not
+        // overlap AirVPN's 10.154.174.240/32 WireGuard address.
+        FIREWALL_OUTBOUND_SUBNETS: EnvValue.fromValue(KUBERNETES_SERVICE_CIDR),
       },
     }),
   );

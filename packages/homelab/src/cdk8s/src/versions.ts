@@ -73,16 +73,8 @@ const versions = {
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "linuxserver/sonarr":
     "4.0.19@sha256:24acea2956a0ccb11f103877d9f4f8576600fb34bff34820ed749c2256dab89f",
-  // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
-  // Bindery (Readarr replacement) — keep serving upstream until the patched
-  // first-party image below has a real digest and its GHCR package is public.
-  "vavallee/bindery":
-    "v1.26.2@sha256:5d898d2b0d2000465b3c5f15fc0aa918458f017558f48f111b772a59b04a819d",
-  // not managed by renovate — publication-stage pin only; no Deployment reads
-  // this key yet. Main CI builds upstream vavallee/bindery at BINDERY_SOURCE_REF
-  // (packages/homelab/images/bindery/Dockerfile), applies the Chinese Google
-  // Books patch, then version commit-back replaces this seed after the first
-  // push. Switch the Deployment only after the real digest resolves publicly.
+  // not managed by renovate — updated by version commit-back
+  // Self-built from pinned upstream source with the Chinese Google Books patch.
   "shepherdjerred/bindery":
     "2.0.0-6690@sha256:5a6c71a348d4a49ebd30ef3d00f6c8fb075f9e81f622d4f187e98fb7cf29c539",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver

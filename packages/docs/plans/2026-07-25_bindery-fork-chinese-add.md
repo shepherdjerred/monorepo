@@ -149,8 +149,8 @@ smokeBindery }` entry in `checks` (~line 524).
 
 ## Remaining
 
-- [ ] Confirm the first-party Bindery tag@digest produced after PR #1643 is present in `versions.ts` and anonymously pullable after the operator visibility gate.
-- [ ] Replace `docker.io/vavallee/bindery` in the media deployment with the verified `shepherdjerred/bindery` pin and run affected verification.
+- [x] Confirm the first-party Bindery tag@digest produced after PR #1643 is present in `versions.ts` and anonymously pullable after the operator visibility gate.
+- [ ] Merge PR #1759, which switches the deployment to the verified `shepherdjerred/bindery` pin.
 - [ ] After merge, hand the privileged production replay to `todos/bindery-patched-image-rollout-operator.md`; archive this plan when the deployment uses the patched image.
 
 ## Verification (end-to-end)
@@ -187,6 +187,19 @@ bindery:dev` succeeds; `bun packages/homelab/scripts/smoke-images.ts bindery`
   the defunct `bitterlake-homeassistant` GCP project.
 
 ## Comment Log
+
+### 2026-07-28 — public-image gate and live deployment smoke
+
+- The operator made `ghcr.io/shepherdjerred/bindery` public. Anonymous token and
+  exact pinned-manifest requests both returned HTTP 200.
+- A user-authorized direct Kubernetes override deployed
+  `2.0.0-6690@sha256:5a6c71a348d4a49ebd30ef3d00f6c8fb075f9e81f622d4f187e98fb7cf29c539`.
+  The rollout reached one ready replica with zero restarts, startup reported
+  version `6690` with Google Books enrichment enabled, and the external health
+  endpoint returned `{"status":"ok","version":"6690"}`.
+- Health proves the patched image runs with the preserved configuration. The
+  Chinese-add API/UI and downstream acquisition replay remains operator-owned
+  in `todos/bindery-patched-image-rollout-operator.md`.
 
 ### 2026-07-25 — PR #1643 review response (Codex substitute review #4780355657)
 
