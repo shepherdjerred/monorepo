@@ -191,6 +191,16 @@ function envForProvider(
     env[key] = value;
   }
   env["GH_TOKEN"] = githubAppToken;
+  // Codex CLI reads CODEX_API_KEY, not OPENAI_API_KEY (verified 0.139 in-pod:
+  // OPENAI-only → 401 Missing bearer; CODEX_API_KEY → turn.completed).
+  if (
+    provider === "codex" &&
+    (env["CODEX_API_KEY"] === undefined || env["CODEX_API_KEY"] === "") &&
+    env["OPENAI_API_KEY"] !== undefined &&
+    env["OPENAI_API_KEY"] !== ""
+  ) {
+    env["CODEX_API_KEY"] = env["OPENAI_API_KEY"];
+  }
   return env;
 }
 

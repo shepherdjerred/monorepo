@@ -71,9 +71,11 @@ async function codexCommand(
   input: AgentTaskInput,
   workdir: string,
 ): Promise<AgentTaskCommand> {
-  const apiKey = Bun.env["OPENAI_API_KEY"];
+  const apiKey = Bun.env["CODEX_API_KEY"] ?? Bun.env["OPENAI_API_KEY"];
   if (apiKey === undefined || apiKey === "") {
-    throw new Error("OPENAI_API_KEY is required for Codex agent tasks");
+    throw new Error(
+      "CODEX_API_KEY or OPENAI_API_KEY is required for Codex agent tasks",
+    );
   }
   const schemaPath = `${workdir}/agent-task-output.schema.json`;
   const outputPath = `${workdir}/agent-task-output.json`;
