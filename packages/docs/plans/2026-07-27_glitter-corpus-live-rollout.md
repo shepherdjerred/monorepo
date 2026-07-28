@@ -241,12 +241,26 @@ pass.
 - Converted traversal safety-ceiling failures to non-retryable Temporal
   application failures so an incomplete traversal terminates explicitly
   instead of retrying its workflow task forever.
+- Merged live-acceptance hardening PR
+  [#1763](https://github.com/shepherdjerred/monorepo/pull/1763) at
+  `6dcc9cd8e`; its current-head Buildkite #6722 passed every required PR gate.
+- Followed the authoritative merged-main builds through a concurrent-main
+  cancellation. Buildkite #6724 selected changes from the last green main
+  `55dfc50ce`, passed full verify and the other pre-image gates, and then
+  exposed a Buildx filesystem-entitlement failure in the production image
+  push.
+- Updated the shared image bake runner to grant the pinned generated Caddyfile
+  read entitlement during both smoke and production pushes. Added focused
+  fail-fast coverage for the required path; the seven-test bake suite,
+  root-script typecheck, lint, and formatting checks pass.
 
 ### Remaining
 
 - Publish and deploy the live-canary fixes, rerun the canary with a deliberate
   1,000-page ceiling, then complete backfill, recovery, and schedule
   acceptance.
+- Merge the image-bake entitlement correction and verify its authoritative
+  current-main image publication and Temporal worker rollout.
 - Reconcile the daily schedule from its false missing-denylist pause to its
   explicit operator-approval hold; keep both schedules paused until their
   respective acceptance gates pass.

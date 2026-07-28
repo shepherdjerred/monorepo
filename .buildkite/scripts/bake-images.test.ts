@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { caddyfileEntitlementArguments } from "./bake-images.ts";
 import {
   expandTargets,
   findPinnedDigest,
@@ -8,6 +9,19 @@ import {
   parseImageSelection,
   parseStringArray,
 } from "./migration-core.ts";
+
+test("grants caddyfile read access to smoke and push bakes", () => {
+  expect(
+    caddyfileEntitlementArguments(
+      ["birmel", "caddy-s3proxy"],
+      "/tmp/caddyfile.generated",
+    ),
+  ).toEqual(["--allow", "fs.read=/tmp/caddyfile.generated"]);
+  expect(caddyfileEntitlementArguments(["birmel"])).toEqual([]);
+  expect(() => caddyfileEntitlementArguments(["caddy-s3proxy"])).toThrow(
+    "CADDYFILE_SMOKE_PATH is required for caddy-s3proxy",
+  );
+});
 
 test("expands the infra group into invokable targets", () => {
   expect(expandTargets(["infra"])).toContain("caddy-s3proxy");
