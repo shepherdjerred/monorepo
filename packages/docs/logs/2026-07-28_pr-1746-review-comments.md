@@ -39,11 +39,12 @@ Resolve all unresolved actionable review threads on PR #1746, verify the affecte
   with implementation evidence.
 - Published follow-up PR #1757 to preserve the final live cleanup state and
   remaining operator work.
+- After PR #1757 merged, the operator deleted the five remaining `Released`
+  retired-Minecraft PV API records. Verified all five are absent and the three
+  surviving Minecraft Applications remain Healthy/Synced.
 
 ### Remaining
 
-- Remove the five `Released` retired-Minecraft PV API records during operator
-  cleanup; their ZFSVolume objects and host datasets are already gone.
 - Complete the remaining Jellyfin and post-merge checks tracked
   in `packages/docs/todos/post-merge-prune-jellyfin-minecraft.md`.
 
@@ -51,7 +52,6 @@ Resolve all unresolved actionable review threads on PR #1746, verify the affecte
 
 - The retired Minecraft world datasets are irrecoverably deleted unless an
   independent external backup exists.
-- Direct PV deletion was blocked by the execution harness.
 - Buildkite #6690's app-of-apps prune succeeded, but the build failed because
   `mcp-gateway` remained degraded and `media`/`loki` remained out of sync.
   The #1755 merge build (#6693) was superseded by main build #6694, which
