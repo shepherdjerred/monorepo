@@ -37,3 +37,23 @@ architecture checksum is obtained from the signed release metadata.
 
 - The local Docker build intentionally stopped after the modified mise layer;
   the remaining CI image layers were unchanged.
+
+## Session Log — 2026-07-27 (CI follow-up)
+
+### Done
+
+- Diagnosed Buildkite #6645's first hard failure as a pipeline-validator
+  contract violation in the Playwright lanes.
+- Restored the stale NodeSource APT-source cleanup in both Playwright commands
+  in `.buildkite/pipeline.yml`.
+- Passed the focused pipeline validator and toolchain shell contract locally.
+
+### Remaining
+
+- Push the fix to PR #1735 and confirm its replacement Buildkite build is green.
+
+### Caveats
+
+- The canceled E2E and review-gate jobs in #6645 were dependency fallout after
+  the validator failed; they need a replacement build rather than separate
+  source changes.
