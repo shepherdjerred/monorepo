@@ -25,9 +25,10 @@ function findScheduleById(id: string) {
 function configuredEnvironment(
   schedule: ReturnType<typeof findScheduleById>,
 ): Record<string, string> {
-  return Object.fromEntries(
-    (schedule.requiredEnvironment ?? []).map((name) => [name, "set"]),
-  );
+  return Object.fromEntries([
+    ...(schedule.requiredEnvironment ?? []).map((name) => [name, "set"]),
+    ...(schedule.requiredPresentEnvironment ?? []).map((name) => [name, ""]),
+  ]);
 }
 
 // ---------------------------------------------------------------------------
@@ -205,7 +206,23 @@ describe("Glitter corpus schedule", () => {
     const configured = configuredEnvironment(schedule);
     expect(buildScheduleState(schedule, configured)).toEqual({
       paused: true,
-      note: "Awaiting operator approval of the first complete snapshot",
+      note: "Awaiting operator approval of first complete snapshot",
+    });
+  });
+
+  test("accepts an explicitly blank denylist but rejects an absent denylist", () => {
+    const schedule = findScheduleById("glitter-corpus-daily");
+    const configured = configuredEnvironment(schedule);
+    expect(configured["GLITTER_DISCORD_DENYLIST_CHANNEL_IDS"]).toBe("");
+    expect(buildScheduleState(schedule, configured)).toEqual({
+      paused: true,
+      note: "Awaiting operator approval of first complete snapshot",
+    });
+
+    delete configured["GLITTER_DISCORD_DENYLIST_CHANNEL_IDS"];
+    expect(buildScheduleState(schedule, configured)).toEqual({
+      paused: true,
+      note: "Paused automatically until required Glitter corpus credentials are configured: GLITTER_DISCORD_DENYLIST_CHANNEL_IDS",
     });
   });
 
@@ -230,7 +247,7 @@ describe("Glitter corpus schedule", () => {
       }),
     ).toEqual({
       paused: true,
-      note: "Awaiting operator approval of the first complete snapshot",
+      note: "Awaiting operator approval of first complete snapshot",
     });
   });
 

@@ -14,7 +14,10 @@ import {
   sha256,
 } from "#shared/glitter-corpus-projection.ts";
 import { normalizeDiscordMessage } from "./glitter-corpus-normalize.ts";
-import { assertDiscordPageOrder } from "./glitter-corpus-page-order.ts";
+import {
+  assertDiscordPageOrder,
+  nextTraversalCursor,
+} from "./glitter-corpus-page-order.ts";
 import { createCorpusStoreFromEnv } from "./glitter-corpus-store.ts";
 import {
   putImmutableObject,
@@ -258,7 +261,11 @@ export async function readTraversal(input: {
     ) {
       reachedUpperBound = true;
     }
-    expectedCursor = page.messages.at(-1)?.id ?? expectedCursor;
+    expectedCursor = nextTraversalCursor({
+      direction: input.direction,
+      messageIds: page.messages.map((message) => message.id),
+      previousCursor: expectedCursor,
+    });
   }
   if (terminal === undefined) {
     throw new Error(

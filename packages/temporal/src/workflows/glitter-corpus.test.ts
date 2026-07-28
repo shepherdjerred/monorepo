@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import { ApplicationFailure } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import type { z } from "zod/v4";
@@ -17,6 +18,7 @@ import {
 } from "#shared/glitter-corpus.ts";
 import {
   runGlitterCorpusBackfill,
+  runGlitterCorpusChannelBackfill,
   runGlitterCorpusDaily,
 } from "./glitter-corpus.ts";
 
@@ -144,6 +146,60 @@ function finalSnapshot(rawInput: z.input<typeof FinalizeSnapshotInputSchema>) {
 }
 
 describe("Glitter corpus workflows", () => {
+  it("fails a traversal safety ceiling non-retryably", async () => {
+    const worker = await Worker.create({
+      connection: testEnvironment.nativeConnection,
+      taskQueue: TASK_QUEUE,
+      workflowsPath: new URL("index.ts", import.meta.url).pathname,
+      activities: {
+        captureGlitterCorpusPage: async (rawInput: CapturePageInput) => {
+          const input = CapturePageInputSchema.parse(rawInput);
+          return pageResult(input, ["2", "1"], [CREATED_AT, CREATED_AT]);
+        },
+      },
+    });
+
+    let failure: unknown;
+    try {
+      await worker.runUntil(
+        testEnvironment.client.workflow.execute(
+          runGlitterCorpusChannelBackfill,
+          {
+            args: [
+              {
+                snapshotId: "ceiling-test",
+                guildId: GUILD_ID,
+                guildSlug: "glitter-boys",
+                channelId: "10",
+                verifiedAt: CREATED_AT,
+                maxPages: 1,
+              },
+            ],
+            taskQueue: TASK_QUEUE,
+            workflowId: `glitter-corpus-ceiling-${crypto.randomUUID()}`,
+          },
+        ),
+      );
+    } catch (error) {
+      failure = error;
+    }
+
+    if (!(failure instanceof Error)) {
+      throw new Error("Expected workflow execution to fail");
+    }
+    const cause = failure.cause;
+    if (!(cause instanceof ApplicationFailure)) {
+      throw new TypeError(
+        "Expected workflow failure to include an ApplicationFailure cause",
+      );
+    }
+    expect(cause.type).toBe("GlitterCorpusTraversalSafetyCeilingExceeded");
+    expect(cause.nonRetryable).toBe(true);
+    expect(cause.message).toBe(
+      "backward traversal exceeded safety ceiling of 1 pages for 10; refusing to mark it complete",
+    );
+  }, 30_000);
+
   it("freezes the forward traversal at the backward pass upper bound", async () => {
     const captured: CapturePageInput[] = [];
     const verified: z.input<typeof VerifyChannelInputSchema>[] = [];

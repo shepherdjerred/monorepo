@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { glitterCorpusRuntimeConfig } from "./glitter-corpus-io.ts";
-import { assertDiscordPageOrder } from "./glitter-corpus-page-order.ts";
+import {
+  assertDiscordPageOrder,
+  nextTraversalCursor,
+} from "./glitter-corpus-page-order.ts";
 
 function withRuntimeEnvironment<T>(
   denylist: string | undefined,
@@ -31,7 +34,7 @@ function withRuntimeEnvironment<T>(
 }
 
 describe("Discord corpus page ordering", () => {
-  test("accepts Discord's direction-specific page order", () => {
+  test("accepts Discord's newest-to-oldest order for every cursor direction", () => {
     expect(() =>
       assertDiscordPageOrder({
         messageIds: ["3", "2", "1"],
@@ -41,7 +44,7 @@ describe("Discord corpus page ordering", () => {
     ).not.toThrow();
     expect(() =>
       assertDiscordPageOrder({
-        messageIds: ["1", "2", "3"],
+        messageIds: ["3", "2", "1"],
         direction: "forward",
         objectKey: "forward.json",
       }),
@@ -58,11 +61,11 @@ describe("Discord corpus page ordering", () => {
   test("rejects reversed and duplicate IDs", () => {
     expect(() =>
       assertDiscordPageOrder({
-        messageIds: ["3", "2"],
+        messageIds: ["2", "3"],
         direction: "forward",
         objectKey: "reversed.json",
       }),
-    ).toThrow("oldest-to-newest");
+    ).toThrow("newest-to-oldest");
     expect(() =>
       assertDiscordPageOrder({
         messageIds: ["2", "2"],
@@ -70,6 +73,37 @@ describe("Discord corpus page ordering", () => {
         objectKey: "duplicate.json",
       }),
     ).toThrow("newest-to-oldest");
+  });
+
+  test("advances multi-page traversal cursors from the correct page boundary", () => {
+    expect(
+      nextTraversalCursor({
+        direction: "forward",
+        messageIds: ["100", "90", "80"],
+        previousCursor: "79",
+      }),
+    ).toBe("100");
+    expect(
+      nextTraversalCursor({
+        direction: "forward",
+        messageIds: ["120", "110", "101"],
+        previousCursor: "100",
+      }),
+    ).toBe("120");
+    expect(
+      nextTraversalCursor({
+        direction: "backward",
+        messageIds: ["100", "90", "80"],
+        previousCursor: undefined,
+      }),
+    ).toBe("80");
+    expect(
+      nextTraversalCursor({
+        direction: "forward",
+        messageIds: [],
+        previousCursor: "120",
+      }),
+    ).toBe("120");
   });
 });
 

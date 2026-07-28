@@ -98,6 +98,7 @@ type ScheduleDefinition = {
   // under CI's Node16 `ms` resolution — see the constants' comment.
   catchupWindow?: CatchupWindow;
   requiredEnvironment?: readonly string[];
+  requiredPresentEnvironment?: readonly string[];
   initialPauseNote?: string;
 };
 
@@ -363,15 +364,14 @@ export const SCHEDULES: ScheduleDefinition[] = [
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "6 hours",
     memo: "Daily Discord REST capture with seven-day overlap and a full historical refresh after six overlaps",
-    initialPauseNote:
-      "Awaiting operator approval of the first complete snapshot",
+    initialPauseNote: "Awaiting operator approval of first complete snapshot",
     requiredEnvironment: [
       "GLITTER_DISCORD_TOKEN",
       "GLITTER_DISCORD_GUILD_ID",
       "GLITTER_DISCORD_GUILD_SLUG",
-      "GLITTER_DISCORD_DENYLIST_CHANNEL_IDS",
       ...GLITTER_CORPUS_STORAGE_ENV,
     ],
+    requiredPresentEnvironment: ["GLITTER_DISCORD_DENYLIST_CHANNEL_IDS"],
   },
   {
     id: "glitter-context-refresh-weekly",
