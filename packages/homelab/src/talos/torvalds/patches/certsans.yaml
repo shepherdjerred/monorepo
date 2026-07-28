@@ -2,5 +2,9 @@ machine:
   certSANs:
     - torvalds
     - torvalds.tailnet-1a49.ts.net
-    - 100.102.88.89
     - 192.168.1.81
+cluster:
+  apiServer:
+    certSANs:
+      - torvalds.tailnet-1a49.ts.net
+      - 192.168.1.81

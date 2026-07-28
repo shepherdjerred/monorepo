@@ -49,17 +49,33 @@ some things I'm proud of:
 talosctl gen config \
   --with-secrets secrets.yaml \
   --config-patch-control-plane @torvalds/patches/scheduling.yaml \
+  --config-patch-control-plane @torvalds/patches/certsans.yaml \
   --config-patch @torvalds/patches/image.yaml \
   --config-patch @torvalds/patches/tailscale.yaml \
+  --config-patch @torvalds/patches/dns.yaml \
   --config-patch @torvalds/patches/kubelet.yaml \
+  --config-patch @torvalds/patches/sysctls.yaml \
+  --config-patch @torvalds/patches/zfs.yaml \
   --config-patch @torvalds/patches/interface.yaml \
   torvalds https://192.168.1.81:6443 --force
 
 ```
 
-1. Configure `endpoints` in `talosconfig`
-   - Example: `endpoints: ["192.168.1.81"]`
-   - This allows commands to be run without the `--endpoints` argument
+The generated control-plane endpoint is an internal cluster identity. Keep it
+on the stable LAN address unless every control-plane component is deliberately
+migrated together. It does not determine the endpoint used by external
+`talosctl` or `kubectl` clients.
+
+1. Configure the normal `talosconfig` endpoint and node with the Torvalds
+   Tailscale FQDN:
+   - `endpoints: ["torvalds.tailnet-1a49.ts.net"]` — only control-plane nodes
+     are endpoints.
+   - `nodes: ["torvalds.tailnet-1a49.ts.net"]`.
+
+   Liskov's Talos API certificate also includes
+   `liskov.tailnet-1a49.ts.net`. Add it as a normal target only after the
+   tailnet policy permits the Torvalds control-plane proxy to reach Liskov on
+   TCP/50000; a worker cannot be used as its own Talos proxy endpoint.
 
 2. Move the talosconfig:
 
@@ -73,21 +89,22 @@ mv talosconfig ~/.talos/config
 1. Apply the configuration:
 
 ```bash
-talosctl apply-config --insecure --nodes 192.168.1.81 --file controlplane.yaml
+MAINTENANCE_IP=<ip-from-the-Talos-console>
+talosctl apply-config --insecure --nodes "$MAINTENANCE_IP" --file controlplane.yaml
 
 ```
 
 1. If needed, update:
 
 ```bash
-talosctl apply-config --nodes 192.168.1.81 --file controlplane.yaml
+talosctl apply-config --nodes torvalds.tailnet-1a49.ts.net --file controlplane.yaml
 
 ```
 
 Upgrade:
 
 ```bash
-talosctl upgrade --nodes 192.168.1.81 --image <image>
+talosctl upgrade --nodes torvalds.tailnet-1a49.ts.net --image <image>
 talosctl upgrade-k8s
 
 ```
@@ -95,14 +112,14 @@ talosctl upgrade-k8s
 1. Bootstrap the Kubernetes cluster:
 
 ```bash
-talosctl bootstrap --nodes 192.168.1.81
+talosctl bootstrap --nodes torvalds.tailnet-1a49.ts.net
 
 ```
 
 1. Create a Kubernetes configuration:
 
 ```bash
-talosctl kubeconfig --nodes 192.168.1.81
+talosctl kubeconfig --nodes torvalds.tailnet-1a49.ts.net
 
 ```
 
@@ -203,8 +220,9 @@ kubectl exec pod/shell -n maintenance -- \
 
 ```bash {"interpreter":"/opt/homebrew/bin/bash"}
 VERSION=v1.13.7
-# Upgrade the CI worker first. Its Talos API certificate is issued to `liskov`,
-# so use the hostname rather than its Tailscale IP.
+# Upgrade the CI worker first. The short MagicDNS name is a direct worker
+# endpoint; a worker cannot proxy its own Talos request. Use the Torvalds
+# Tailscale FQDN for all control-plane operations.
 talosctl --endpoints liskov --nodes liskov upgrade \
   --image factory.talos.dev/metal-installer-secureboot/d953d04c966642907c1061252288cdc30189c2973f083de93355faac1e9d54cb:$VERSION \
   --drain=false
@@ -227,7 +245,8 @@ VERSION=1.36.3
 # `upgrade-k8s` discovers liskov by raw Tailscale IP, which does not match
 # its hostname-only Talos API certificate. Upgrade control-plane components,
 # kube-proxy, and bootstrap manifests first, without kubelet updates.
-talosctl --nodes torvalds.tailnet-1a49.ts.net --endpoint https://torvalds:6443 \
+talosctl --endpoints torvalds.tailnet-1a49.ts.net \
+  --nodes torvalds.tailnet-1a49.ts.net \
   upgrade-k8s --to $VERSION --pre-pull-images=false --upgrade-kubelet=false
 
 # Then update each kubelet through its hostname-authenticated Talos API.

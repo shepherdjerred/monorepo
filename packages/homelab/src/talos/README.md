@@ -76,24 +76,23 @@ See `packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md` for th
 
 - `interface.yaml` - Network interface configuration
 - `scheduling.yaml` - Node scheduling settings
+- `certsans.yaml` - Talos and Kubernetes API certificate SANs for management endpoints
 - `image.yaml` - Custom system extensions and image configuration
 - `tailscale.example.yaml` - Example Tailscale configuration
 
 ## Applying Patches
 
-Patches are typically applied during cluster initialization or updates. To apply patches to an existing node:
+Patches are typically applied during cluster initialization or updates. For an
+existing node, regenerate the complete machine configuration from the same
+secrets bundle and patches, then apply that full configuration. This avoids the
+list-appending behavior of `talosctl patch machineconfig`.
 
 ```bash
-# Apply all patches
-talosctl patch machineconfig \
-  --patch @src/talos/torvalds/patches/kubelet.yaml \
-  --patch @src/talos/torvalds/patches/zfs.yaml \
-  --patch @src/talos/torvalds/patches/interface.yaml \
-  --patch @src/talos/torvalds/patches/scheduling.yaml \
-  --patch @src/talos/torvalds/patches/tailscale.yaml
-
-# Reboot to apply changes
-talosctl reboot
+# Validate the regenerated file before applying it. This example targets the
+# canonical Tailscale management endpoint and does not reboot the node.
+talosctl validate --config controlplane.yaml --mode metal
+talosctl apply-config --nodes torvalds.tailnet-1a49.ts.net \
+  --file controlplane.yaml --mode=no-reboot
 ```
 
 `watchdog.yaml` contains a `WatchdogTimerConfig` document alongside the `machine.kernel.modules` patch (separated by `---`) — apply and verify it separately and carefully (see the watchdog.yaml section above) rather than folding it into a bulk `--patch` invocation, since an armed-but-unpetted watchdog reboots immediately.
