@@ -1,0 +1,19 @@
+diff --git a/plugin/index.js b/plugin/index.js
+index 87f686f..53bc5e0 100644
+--- a/plugin/index.js
++++ b/plugin/index.js
+@@ -618 +618 @@
+-    var core_1 = require("@babel/core");
++    var core_1 = require(require.resolve("@babel/core-v7", { paths: [process.cwd()] }));
+@@ -760 +760 @@
+-    var core_1 = require("@babel/core");
++    var core_1 = require(require.resolve("@babel/core-v7", { paths: [process.cwd()] }));
+@@ -820 +820 @@
+-    var core_1 = require("@babel/core");
++    var core_1 = require(require.resolve("@babel/core-v7", { paths: [process.cwd()] }));
+@@ -946 +946 @@
+-    var core_1 = require("@babel/core");
++    var core_1 = require(require.resolve("@babel/core-v7", { paths: [process.cwd()] }));
+@@ -1004 +1004 @@
+-    var core_1 = require("@babel/core");
++    var core_1 = require(require.resolve("@babel/core-v7", { paths: [process.cwd()] }));

@@ -55,7 +55,8 @@ const resource = resourceFromAttributes({
 const logExporter = new OTLPLogExporter({
   url: "http://127.0.0.1:3100/otlp/v1/logs",
 });
-const logProcessor = new BatchLogRecordProcessor(logExporter, {
+const logProcessor = new BatchLogRecordProcessor({
+  exporter: logExporter,
   scheduledDelayMillis: 200,
 });
 const loggerProvider = new LoggerProvider({

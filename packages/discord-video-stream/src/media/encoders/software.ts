@@ -50,23 +50,25 @@ export const software = ({
   return (() => ({
     H264: {
       name: "libx264",
-      options: ["-forced-idr 1", `-tune ${x264Tune}`, `-preset ${x264Preset}`],
+      options: ["-forced-idr", "1", "-tune", x264Tune, "-preset", x264Preset],
     },
     H265: {
       name: "libx265",
       options: [
-        "-forced-idr 1",
-        ...(x265Tune ? [`-tune ${x265Tune}`] : []),
-        `-preset ${x265Preset}`,
+        "-forced-idr",
+        "1",
+        ...(x265Tune ? ["-tune", x265Tune] : []),
+        "-preset",
+        x265Preset,
       ],
     },
     VP8: {
       name: "libvpx",
-      options: ["-deadline 20000"],
+      options: ["-deadline", "20000"],
     },
     VP9: {
       name: "libvpx-vp9",
-      options: ["-deadline 20000"],
+      options: ["-deadline", "20000"],
     },
     AV1: {
       name: "libsvtav1",

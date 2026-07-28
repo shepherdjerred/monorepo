@@ -1,0 +1,9 @@
+diff --git a/lib/engines.js b/lib/engines.js
+index 766e1a4..247939d 100644
+--- a/lib/engines.js
++++ b/lib/engines.js
+@@ -16,2 +16,2 @@
+-  parse: yaml.safeLoad.bind(yaml),
+-  stringify: yaml.safeDump.bind(yaml)
++  parse: yaml.load.bind(yaml),
++  stringify: yaml.dump.bind(yaml)

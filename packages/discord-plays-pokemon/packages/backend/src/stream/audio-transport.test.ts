@@ -20,7 +20,8 @@
 
 import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { PassThrough } from "node:stream";
+import { once } from "node:events";
+import { PassThrough, type Writable } from "node:stream";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { prepareStream, Encoders } from "@shepherdjerred/discord-video-stream";
@@ -57,6 +58,13 @@ function rmsS16(pcm: Buffer): number {
     sum += s * s;
   }
   return Math.sqrt(sum / samples);
+}
+
+async function writeWithBackpressure(
+  stream: Writable,
+  chunk: Buffer,
+): Promise<void> {
+  if (!stream.write(chunk)) await once(stream, "drain");
 }
 
 /** Drive the same `prepareStream` configuration `game-streamer.ts` uses with
@@ -99,16 +107,24 @@ async function renderBroadcast(pcm: Buffer): Promise<string> {
     void writer.write(chunk);
   });
 
-  transport.sink.write(pcm);
-  transport.sink.end();
   // Push a matching run of grey frames so ffmpeg has video to mux against
   // (rawvideo's pts derives from the input framerate, so the frame count
   // and audio duration should track).
   const seconds = pcm.byteLength / (AUDIO_SAMPLE_RATE * AUDIO_CHANNELS * 4);
   const frames = Math.max(1, Math.ceil(seconds * GBA_FPS));
   const frame = Buffer.alloc(WIDTH * HEIGHT * 4, 0x80);
-  for (let i = 0; i < frames; i++) video.write(frame);
-  video.end();
+  await Promise.all([
+    (async () => {
+      await writeWithBackpressure(transport.sink, pcm);
+      transport.sink.end();
+    })(),
+    (async () => {
+      for (let i = 0; i < frames; i++) {
+        await writeWithBackpressure(video, frame);
+      }
+      video.end();
+    })(),
+  ]);
 
   await promise.catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error);

@@ -90,6 +90,7 @@ export default defineConfig({
     plugins: [tailwindcss()],
     resolve: {
       noExternal: ["entities", "rss-parser"],
+      tsconfigPaths: true,
     },
     ssr: {
       external: ["@resvg/resvg-js"],

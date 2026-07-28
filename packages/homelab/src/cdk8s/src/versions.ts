@@ -10,7 +10,7 @@ const versions = {
   // renovate: datasource=helm registryUrl=https://kubernetes-sigs.github.io/node-feature-discovery/charts versioning=semver
   "node-feature-discovery": "0.19.0",
   // renovate: datasource=helm registryUrl=https://prometheus-community.github.io/helm-charts versioning=semver
-  "kube-prometheus-stack": "87.19.2",
+  "kube-prometheus-stack": "87.20.0",
   // renovate: datasource=helm registryUrl=https://prometheus-community.github.io/helm-charts versioning=semver
   "prometheus-adapter": "5.3.0",
   // renovate: datasource=helm registryUrl=https://prometheus-community.github.io/helm-charts versioning=semver
@@ -158,13 +158,13 @@ const versions = {
   // base moves off 2.0.0-, this pin needs one manual edit).
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
-    "2.0.0-6660@sha256:296268376fd5d195a263e1e55612d8e1924882f4be1e792d3a250a34319ceb60",
+    "2.0.0-6673@sha256:1020003c3939fadb6d4c1bcd0fd362c1ada9865a427d51171fe65528120b33e7",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
     "2.0.0-6690@sha256:b4f6c9719e4ffe952e1a8b3ea3721eb19b096484b5604581426f872fb412df44",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/starlight-karma-bot
   "shepherdjerred/starlight-karma-bot/prod":
-    "2.0.0-6646@sha256:7615ba395c6f7bf4b1d0edb741748b350a9f0ae815acbe45e224d52f12333513",
+    "2.0.0-6673@sha256:4e0aaa2bc818f4e98c67462bfe95c722ea470a266b6c95f6861b7dc6a5da240f",
   // not managed by renovate
   "shepherdjerred/birmel":
     "2.0.0-6690@sha256:f413cce0255ec8d33a06d9c1490be77a8e774c5cf9804f8e59e473c451aa7f75",
@@ -183,7 +183,7 @@ const versions = {
     "0.15.0@sha256:a4d5ac974eb093adf0211389257179f4f4ca16369f91479be67bd881c376e716",
   // renovate: datasource=docker registryUrl=https://ghcr.io/buildkite/helm versioning=semver packageName=agent-stack-k8s
   "agent-stack-k8s":
-    "0.46.2@sha256:89e25e2fa0923e389cefe5457ecb6da0409989660afed3d6fe4ebbaedf97d28d",
+    "0.46.3@sha256:30742cb7d592ab48ac223b1e12004dc759eaf3a18f2e5f96eaf54b6123f944d4",
   // Self-hosted Turborepo remote cache (backs the workspace task-graph
   // replatform — packages/docs/plans/2026-07-12_workspace-taskgraph-replatform.md).
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
@@ -245,7 +245,7 @@ const versions = {
   // renovate: datasource=helm registryUrl=https://charts.bitnami.com/bitnami versioning=semver
   redis: "27.0.18",
   // renovate: datasource=helm registryUrl=https://seaweedfs.github.io/seaweedfs/helm versioning=semver
-  seaweedfs: "4.36.0",
+  seaweedfs: "4.40.0",
   // renovate: datasource=helm registryUrl=https://charts.bitnami.com/bitnami versioning=semver
   mariadb: "26.2.0",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver

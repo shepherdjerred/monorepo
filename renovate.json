@@ -67,12 +67,14 @@
     },
     {
       "customType": "regex",
-      "description": "Emscripten image used by the reproducible N64Wasm build",
+      "description": "Emscripten image used by the reproducible N64Wasm build, kept in sync across metadata and Dockerfile",
       "managerFilePatterns": [
-        "packages/discord-plays-mario-kart/wasm-src/upstream.json"
+        "packages/discord-plays-mario-kart/wasm-src/upstream.json",
+        "packages/discord-plays-mario-kart/Dockerfile"
       ],
       "matchStrings": [
-        "\"emsdkImage\":\\s*\"emscripten/emsdk:(?<currentValue>[^\"]+)\""
+        "\"emsdkImage\":\\s*\"emscripten/emsdk:(?<currentValue>[^@\"]+)@(?<currentDigest>sha256:[a-f0-9]{64})\"",
+        "FROM\\s+emscripten/emsdk:(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})\\s+AS\\s+wasm-builder"
       ],
       "datasourceTemplate": "docker",
       "depNameTemplate": "emscripten/emsdk"
@@ -189,8 +191,16 @@
       "automerge": false
     },
     {
-      "description": "Disable updates for archived and practice projects",
-      "matchFileNames": ["sandbox/archive/**", "sandbox/practice/**"],
+      "description": "Sandbox is personal scratch space outside maintained dependency automation",
+      "matchFileNames": ["sandbox/**"],
+      "enabled": false
+    },
+    {
+      "description": "React Native 0.86 and Worklets 0.11 require Babel 7 internally",
+      "matchDepNames": [
+        "@babel/core-v7",
+        "@babel/plugin-transform-export-namespace-from-v7"
+      ],
       "enabled": false
     },
     {
@@ -242,5 +252,5 @@
   "prHourlyLimit": 5,
   "prConcurrentLimit": 3,
   "reviewers": ["shepherdjerred"],
-  "ignorePaths": ["sandbox/practice/**", "sandbox/archive/**"]
+  "ignorePaths": ["sandbox/**"]
 }

@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { prepareStream } from "../src/media/newApi.ts";
+import {
+  type FfmpegProcessHandle,
+  prepareStream,
+} from "../src/media/newApi.ts";
 
 // Graph construction itself (scale/tonemap/subtitle ordering, GPU overlay branches, PTS
 // compensation) is covered exhaustively in videoGraph.test.ts against the pure builders. These
@@ -15,29 +18,12 @@ describe("prepareStream subtitleBurn + noTranscoding guard", () => {
   });
 });
 
-// fluent-ffmpeg's argument list is built synchronously from the configured inputs/outputs, so we
-// can introspect it without ffmpeg being installed. `_getArguments` is a private method (not in the
-// type defs) — reach it via Reflect rather than a cast.
-function ffmpegArgs(command: unknown): string[] {
-  if (typeof command !== "object" || command === null) {
-    throw new TypeError("prepareStream did not return a command object");
-  }
-  const fn: unknown = Reflect.get(command, "_getArguments");
-  if (typeof fn !== "function") {
-    throw new TypeError("ffmpeg command has no _getArguments method");
-  }
-  const args: unknown = Reflect.apply(fn, command, []);
-  if (!Array.isArray(args)) {
-    throw new TypeError("_getArguments did not return an array");
-  }
-  // ffmpeg args are a mix of strings and numbers (e.g. `-ar 48000`); normalize.
-  return args.map((a) => String(a));
+function ffmpegArgs(command: FfmpegProcessHandle): readonly string[] {
+  return command.args;
 }
 
-function killQuietly(command: unknown): void {
-  if (typeof command !== "object" || command === null) return;
-  const kill: unknown = Reflect.get(command, "kill");
-  if (typeof kill === "function") Reflect.apply(kill, command, ["SIGKILL"]);
+function killQuietly(command: FfmpegProcessHandle): void {
+  command.kill("SIGKILL");
 }
 
 describe("prepareStream audioInput", () => {

@@ -25,7 +25,7 @@
   "dependencies": {
     "@discord-plays-pokemon/common": "workspace:*",
     "@opentelemetry/api": "^1.9.1",
-    "@opentelemetry/sdk-node": "^0.219.0",
+    "@opentelemetry/sdk-node": "^0.221.0",
     "@opentelemetry/sdk-trace-base": "^2.7.1",
     "@opentelemetry/semantic-conventions": "^1.40.0",
     "@shepherdjerred/discord-plays-core": "workspace:*",

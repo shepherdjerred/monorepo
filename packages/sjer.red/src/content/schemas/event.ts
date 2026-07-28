@@ -9,7 +9,7 @@ export const LocationSchema = z.object({
 export const EventSchema = z.object({
   title: z.string(),
   description: z.string().optional(),
-  date: z.date(),
+  date: z.coerce.date(),
   cost: z.number().optional(),
   location: LocationSchema.default({
     text: "Jerred's house (345 N 137th St)",

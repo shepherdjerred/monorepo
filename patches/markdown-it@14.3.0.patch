@@ -1,0 +1,12 @@
+diff --git a/lib/index.mjs b/lib/index.mjs
+index 1857136..90777a3 100644
+--- a/lib/index.mjs
++++ b/lib/index.mjs
+@@ -6,6 +6,6 @@ import Renderer from './renderer.mjs'
+ import ParserCore from './parser_core.mjs'
+ import ParserBlock from './parser_block.mjs'
+ import ParserInline from './parser_inline.mjs'
+-import LinkifyIt from 'linkify-it'
++import { LinkifyIt } from 'linkify-it'
+ import * as mdurl from 'mdurl'
+ import punycode from 'punycode.js'

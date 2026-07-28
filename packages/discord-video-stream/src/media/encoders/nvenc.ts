@@ -16,10 +16,13 @@ export function nvenc({
   gpu,
 }: Partial<NvencSettings> = {}) {
   const options = [
-    `-preset ${preset}`,
-    `-spatial-aq ${spatialAq}`,
-    `-temporal-aq ${temporalAq}`,
-    ...(gpu !== undefined ? [`-gpu ${gpu}`] : []),
+    "-preset",
+    preset,
+    "-spatial-aq",
+    String(spatialAq),
+    "-temporal-aq",
+    String(temporalAq),
+    ...(gpu !== undefined ? ["-gpu", String(gpu)] : []),
   ];
   return (() => ({
     H264: {

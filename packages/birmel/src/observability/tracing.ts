@@ -233,7 +233,8 @@ export function initializeTracing(): void {
   const otlpLogExporter = new OTLPLogExporter({
     url: lokiOtlpLogsEndpoint,
   });
-  logRecordProcessor = new BatchLogRecordProcessor(otlpLogExporter, {
+  logRecordProcessor = new BatchLogRecordProcessor({
+    exporter: otlpLogExporter,
     // Match the trace pipeline cadence — same trade-off, same OTLP timeout.
     scheduledDelayMillis: 2000,
     maxExportBatchSize: 512,

@@ -1,0 +1,24 @@
+diff --git a/dist/content/loaders/file.js b/dist/content/loaders/file.js
+index f659e28..f257408 100644
+--- a/dist/content/loaders/file.js
++++ b/dist/content/loaders/file.js
+@@ -1,6 +1,6 @@
+ import { existsSync, promises as fs } from "node:fs";
+ import { fileURLToPath } from "node:url";
+-import yaml from "js-yaml";
++import * as yaml from "js-yaml";
+ import toml from "smol-toml";
+ import { FileGlobNotSupported, FileParserNotFound } from "../../core/errors/errors-data.js";
+ import { AstroError } from "../../core/errors/index.js";
+diff --git a/dist/core/config/settings.js b/dist/core/config/settings.js
+index 1fe9909..8286ceb 100644
+--- a/dist/core/config/settings.js
++++ b/dist/core/config/settings.js
+@@ -1,6 +1,6 @@
+ import path from "node:path";
+ import { fileURLToPath, pathToFileURL } from "node:url";
+-import yaml from "js-yaml";
++import * as yaml from "js-yaml";
+ import toml from "smol-toml";
+ import { getContentPaths } from "../../content/index.js";
+ import createPreferences from "../../preferences/index.js";

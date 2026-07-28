@@ -6,5 +6,8 @@ export default defineConfig({
   prefetch: true,
   vite: {
     plugins: [tailwindcss()],
+    resolve: {
+      tsconfigPaths: true,
+    },
   },
 });
