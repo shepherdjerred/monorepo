@@ -278,7 +278,7 @@ async function main(): Promise<void> {
   logger.info(`Match Type: ${options.matchType}`);
   logger.info("Review Count:", options.count);
   logger.info(`Source: S3 (last ${String(options.s3Days)} days)`);
-  logger.info();
+  logger.info("");
 
   // Generate multiple reviews
   for (let i = 0; i < options.count; i++) {
@@ -320,7 +320,7 @@ async function main(): Promise<void> {
       logger.info(
         `   Set OPENAI_API_KEY environment variable to generate AI reviews`,
       );
-      logger.info();
+      logger.info("");
       continue;
     }
 
@@ -341,7 +341,7 @@ async function main(): Promise<void> {
       logger.info(line.padEnd(79, " ") + "│");
     }
     logger.info(`└${"─".repeat(78)}┘`);
-    logger.info();
+    logger.info("");
 
     logger.info(`Stats:`);
     logger.info(`  - Length: ${String(reviewResult.text.length)} characters`);
@@ -351,11 +351,11 @@ async function main(): Promise<void> {
         `  - AI Image: Generated (${String(reviewResult.image.length)} bytes)`,
       );
     }
-    logger.info();
+    logger.info("");
 
     if (reviewResult.text.length > 400) {
       logger.info(`⚠️  Warning: Review exceeds 400 character limit!`);
-      logger.info();
+      logger.info("");
     }
 
     if (i < options.count - 1) {

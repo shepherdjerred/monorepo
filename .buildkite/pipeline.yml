@@ -346,7 +346,7 @@ steps:
               - *checkout_container
               - name: container-0
                 # renovate: datasource=docker depName=mcr.microsoft.com/playwright
-                image: "mcr.microsoft.com/playwright:v1.61.1-noble"
+                image: "mcr.microsoft.com/playwright:v1.62.0-noble@sha256:baed2032d533817f3dbe6425de795788430ba345e819a1201337009ba17c9d07"
                 resources:
                   # The checkout container separately requests its 1Gi tmpfs charge.
                   requests: { cpu: "2", memory: "5Gi" }
@@ -392,7 +392,7 @@ steps:
               - *checkout_container
               - name: container-0
                 # renovate: datasource=docker depName=mcr.microsoft.com/playwright
-                image: "mcr.microsoft.com/playwright:v1.61.1-noble"
+                image: "mcr.microsoft.com/playwright:v1.62.0-noble@sha256:baed2032d533817f3dbe6425de795788430ba345e819a1201337009ba17c9d07"
                 resources:
                   # The checkout container separately requests its 1Gi tmpfs charge.
                   requests: { cpu: "2", memory: "5Gi" }

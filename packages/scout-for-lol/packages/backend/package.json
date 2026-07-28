@@ -80,7 +80,7 @@
     "remeda": "^2.21.2",
     "sodium-native": "^5.0.10",
     "ts-pattern": "^5.7.0",
-    "tslog": "^4.10.2",
+    "tslog": "^5.1.0",
     "twisted": "^1.82.0",
     "uuid": "^14.0.0",
     "yoga-wasm-web": "^0.3.3",

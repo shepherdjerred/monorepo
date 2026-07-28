@@ -68,14 +68,14 @@
     "@types/markdown-it": "^14.1.2",
     "@types/react": "^19.2.17",
     "@types/sanitize-html": "^2.16.1",
-    "@typescript-eslint/eslint-plugin": "^8.59.0",
-    "@typescript-eslint/parser": "^8.59.0",
-    "@typescript-eslint/utils": "^8.59.3",
+    "@typescript-eslint/eslint-plugin": "^8.65.0",
+    "@typescript-eslint/parser": "^8.65.0",
+    "@typescript-eslint/utils": "^8.65.0",
     "eslint": "^10.3.0",
     "eslint-plugin-astro": "^3.0.1",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.0",
+    "typescript-eslint": "^8.65.0",
     "vite": "^7.3.2"
   }
 }

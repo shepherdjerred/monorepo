@@ -33,9 +33,9 @@
     "eslint-plugin-unicorn": "^64.0.0",
     "jiti": "^2.7.0",
     "jscpd": "^5.0.14",
-    "knip": "^6.22.0",
+    "knip": "^6.29.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.0"
+    "typescript-eslint": "^8.65.0"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

@@ -24,13 +24,13 @@
     "@shepherdjerred/eslint-config": "workspace:*",
     "@types/lodash": "^4.17.16",
     "@types/node": "^26.1.1",
-    "@typescript-eslint/eslint-plugin": "^8.28.0",
-    "@typescript-eslint/parser": "^8.28.0",
+    "@typescript-eslint/eslint-plugin": "^8.65.0",
+    "@typescript-eslint/parser": "^8.65.0",
     "eslint": "^10.3.0",
     "eslint-config-prettier": "^10.1.1",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.50.0"
+    "typescript-eslint": "^8.65.0"
   },
   "exports": {
     ".": "./src/index.ts",

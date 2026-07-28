@@ -22,10 +22,10 @@
   "devDependencies": {
     "@shepherdjerred/eslint-config": "workspace:*",
     "@types/bun": "latest",
-    "@typescript-eslint/utils": "^8.59.3",
+    "@typescript-eslint/utils": "^8.65.0",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.0"
+    "typescript-eslint": "^8.65.0"
   }
 }

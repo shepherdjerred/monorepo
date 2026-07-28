@@ -21,8 +21,8 @@
       }
     },
     "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github@GITHUB_MCP_VERSION"]
+      "command": "github-mcp-server",
+      "args": ["stdio"]
     },
     "fastmail": {
       "transportType": "streamable-http",

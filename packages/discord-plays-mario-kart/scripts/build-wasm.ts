@@ -31,10 +31,13 @@ if (import.meta.main) {
   const build = await mkdtemp(path.join(tmpdir(), "n64wasm-build-"));
   try {
     await cp(`${root}/wasm-src/code`, `${build}/code`, { recursive: true });
-    for (const patch of new Bun.Glob("*.patch").scanSync({
-      cwd: `${root}/wasm-src/patches`,
-      absolute: true,
-    })) {
+    const patches = [
+      ...new Bun.Glob("*.patch").scanSync({
+        cwd: `${root}/wasm-src/patches`,
+        absolute: true,
+      }),
+    ].sort();
+    for (const patch of patches) {
       await applyPatch(patch, build);
     }
     await $`docker run --rm -v ${`${build}:/src`} -w /src/code ${upstream.emsdkImage} bash -c make`;
