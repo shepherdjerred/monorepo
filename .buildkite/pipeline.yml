@@ -1243,7 +1243,10 @@ steps:
   - label: ":helm: helm push"
     key: helm-push
     if: build.branch == pipeline.default_branch
-    depends_on: verify
+    # Publishing the floating buildkitd chart makes Argo auto-sync it. Wait for
+    # this build's remote solves first so a daemon version/config rollout
+    # cannot send graceful_stop to its own image jobs (build 6681).
+    depends_on: [verify, images, ci-image-refresh]
     cancel_on_build_failing: true
     command: |
       if ! bun --no-install .buildkite/scripts/ci-changed.ts helm; then exit 0; fi

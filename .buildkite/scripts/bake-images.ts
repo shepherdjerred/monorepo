@@ -1,6 +1,9 @@
 import { rm } from "node:fs/promises";
 import { asRecord } from "../../scripts/lib/json.ts";
-import { bakeFailureIsTransient } from "./bake-retry.ts";
+import {
+  retryTransientBuildx,
+  type BuildxCommandResult,
+} from "./bake-retry.ts";
 import {
   expandTargets,
   findPinnedDigest,
@@ -15,16 +18,10 @@ const registry = "ghcr.io/shepherdjerred";
 const selectionReport = "image-selection-report.json";
 const pushOutcomes = "image-push-outcomes.json";
 const versionsPath = "packages/homelab/src/cdk8s/src/versions.ts";
-type CommandResult = {
-  readonly exitCode: number;
-  readonly stdout: string;
-  readonly stderr: string;
-};
-
 async function execute(
   command: readonly string[],
   environment: Readonly<Record<string, string | undefined>> = Bun.env,
-): Promise<CommandResult> {
+): Promise<BuildxCommandResult> {
   const child = Bun.spawn([...command], {
     env: environment,
     stdout: "pipe",
@@ -188,8 +185,8 @@ async function runSmoke(
   if (caddyfile !== undefined)
     smokeArguments.push("--allow", `fs.read=${caddyfile}`);
 
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
-    const result = await execute(
+  const exitCode = await retryTransientBuildx(() =>
+    execute(
       [
         "docker",
         "buildx",
@@ -206,13 +203,9 @@ async function runSmoke(
         CONTRACT_HASH: contractHash,
         PUSH_CACHE: "false",
       },
-    );
-    if (result.exitCode === 0) return;
-    const output = `${result.stdout}${result.stderr}`;
-    if (!bakeFailureIsTransient(output)) process.exit(1);
-    if (attempt === 3) process.exit(34);
-    await Bun.sleep(attempt * attempt * 15_000);
-  }
+    ),
+  );
+  if (exitCode !== 0) process.exit(exitCode);
 }
 
 type PushOutcome = {
@@ -230,18 +223,21 @@ async function pushImages(
   buildNumber: string,
   contractHash: string,
 ): Promise<void> {
-  const push = await execute(
-    ["docker", "buildx", "bake", "--builder", "ci", "--push", ...targets],
-    {
-      ...Bun.env,
-      VERSION: buildNumber,
-      GIT_SHA: commit,
-      CONTRACT_HASH: contractHash,
-      PUSH_CACHE: "true",
-      PUSH_IMAGES: "true",
-    },
+  const pushExitCode = await retryTransientBuildx(() =>
+    execute(
+      ["docker", "buildx", "bake", "--builder", "ci", "--push", ...targets],
+      {
+        ...Bun.env,
+        VERSION: buildNumber,
+        GIT_SHA: commit,
+        CONTRACT_HASH: contractHash,
+        PUSH_CACHE: "true",
+        PUSH_IMAGES: "true",
+      },
+    ),
   );
-  if (push.exitCode !== 0) throw new Error("Production image push failed");
+  if (pushExitCode === 34) process.exit(pushExitCode);
+  if (pushExitCode !== 0) throw new Error("Production image push failed");
 
   const versions = await Bun.file(versionsPath).text();
   const digests: Record<string, string> = {};
