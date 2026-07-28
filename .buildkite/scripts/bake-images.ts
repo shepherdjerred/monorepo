@@ -5,6 +5,7 @@ import {
   type BuildxCommandResult,
 } from "./bake-retry.ts";
 import {
+  caddyfileBakeArguments,
   expandTargets,
   findPinnedDigest,
   knownImageTargets,
@@ -12,23 +13,13 @@ import {
   parseBuildkiteCommits,
   parseImageSelection,
   parseStringArray,
+  productionBakeCommand,
 } from "./migration-core.ts";
 
 const registry = "ghcr.io/shepherdjerred";
 const selectionReport = "image-selection-report.json";
 const pushOutcomes = "image-push-outcomes.json";
 const versionsPath = "packages/homelab/src/cdk8s/src/versions.ts";
-
-export function caddyfileEntitlementArguments(
-  targets: readonly string[],
-  caddyfile?: string,
-): string[] {
-  if (!targets.includes("caddy-s3proxy")) return [];
-  if (caddyfile === undefined) {
-    throw new Error("CADDYFILE_SMOKE_PATH is required for caddy-s3proxy");
-  }
-  return ["--allow", `fs.read=${caddyfile}`];
-}
 
 async function execute(
   command: readonly string[],
@@ -183,6 +174,7 @@ async function ensureBuilder(): Promise<void> {
 
 async function runSmoke(
   bakeTargets: readonly string[],
+  selected: readonly string[],
   contractHash: string,
 ): Promise<void> {
   const smokeArguments = bakeTargets.flatMap((target) => [
@@ -190,10 +182,7 @@ async function runSmoke(
     `${target}.target=smoke`,
   ]);
   smokeArguments.push(
-    ...caddyfileEntitlementArguments(
-      bakeTargets,
-      Bun.env["CADDYFILE_SMOKE_PATH"],
-    ),
+    ...caddyfileBakeArguments(selected, Bun.env["CADDYFILE_SMOKE_PATH"]),
   );
 
   const exitCode = await retryTransientBuildx(() =>
@@ -228,33 +217,27 @@ type PushOutcome = {
     | "no-pin-bumped";
 };
 
-async function pushImages(
-  targets: readonly string[],
-  commit: string,
-  buildNumber: string,
-  contractHash: string,
-): Promise<void> {
-  const caddyfileArguments = caddyfileEntitlementArguments(
-    targets,
-    Bun.env["CADDYFILE_SMOKE_PATH"],
-  );
+type PushImagesOptions = {
+  readonly targets: readonly string[];
+  readonly selected: readonly string[];
+  readonly commit: string;
+  readonly buildNumber: string;
+  readonly contractHash: string;
+};
+
+async function pushImages(options: PushImagesOptions): Promise<void> {
   const pushExitCode = await retryTransientBuildx(() =>
     execute(
-      [
-        "docker",
-        "buildx",
-        "bake",
-        "--builder",
-        "ci",
-        "--push",
-        ...caddyfileArguments,
-        ...targets,
-      ],
+      productionBakeCommand(
+        options.targets,
+        options.selected,
+        Bun.env["CADDYFILE_SMOKE_PATH"],
+      ),
       {
         ...Bun.env,
-        VERSION: buildNumber,
-        GIT_SHA: commit,
-        CONTRACT_HASH: contractHash,
+        VERSION: options.buildNumber,
+        GIT_SHA: options.commit,
+        CONTRACT_HASH: options.contractHash,
         PUSH_CACHE: "true",
         PUSH_IMAGES: "true",
       },
@@ -266,15 +249,15 @@ async function pushImages(
   const versions = await Bun.file(versionsPath).text();
   const digests: Record<string, string> = {};
   const outcomes: PushOutcome[] = [];
-  for (const name of targets) {
+  for (const name of options.targets) {
     const image = `${registry}/${name}`;
-    const digest = await manifestDigest(`${image}:${commit}`);
+    const digest = await manifestDigest(`${image}:${options.commit}`);
     const pinned = findPinnedDigest(versions, name);
     if (pinned === undefined) {
       outcomes.push({ image: name, outcome: "no-pin-bumped" });
     } else {
       const oldLayers = await imageLayers(`${image}@${pinned}`);
-      const newLayers = await imageLayers(`${image}:${commit}`);
+      const newLayers = await imageLayers(`${image}:${options.commit}`);
       if (
         oldLayers !== undefined &&
         newLayers !== undefined &&
@@ -295,8 +278,8 @@ async function pushImages(
         "imagetools",
         "create",
         "--tag",
-        `${image}:2.0.0-${buildNumber}`,
-        `${image}:${commit}`,
+        `${image}:2.0.0-${options.buildNumber}`,
+        `${image}:${options.commit}`,
       ]);
       if (tag.exitCode !== 0) throw new Error(`Version tag failed for ${name}`);
     }
@@ -358,9 +341,15 @@ if (import.meta.main) {
   if (contractHashResult.exitCode !== 0)
     throw new Error("Contract hash generation failed");
   const contractHash = contractHashResult.stdout.trim();
-  await runSmoke(bakeTargets, contractHash);
+  await runSmoke(bakeTargets, selection.targets, contractHash);
   if (options.push) {
-    await pushImages(bakeTargets, commit, buildNumber, contractHash);
+    await pushImages({
+      targets: bakeTargets,
+      selected: selection.targets,
+      commit,
+      buildNumber,
+      contractHash,
+    });
   }
 
   if (!(await Bun.file(selectionReport).exists())) {

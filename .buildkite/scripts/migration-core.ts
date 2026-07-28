@@ -42,6 +42,34 @@ export function expandTargets(selected: readonly string[]): string[] {
   return targets;
 }
 
+export function caddyfileBakeArguments(
+  selected: readonly string[],
+  caddyfilePath?: string,
+): string[] {
+  if (!selected.includes("infra")) return [];
+  if (caddyfilePath === undefined || caddyfilePath.length === 0) {
+    throw new Error("CADDYFILE_SMOKE_PATH is required for infra builds");
+  }
+  return ["--allow", `fs.read=${caddyfilePath}`];
+}
+
+export function productionBakeCommand(
+  targets: readonly string[],
+  selected: readonly string[],
+  caddyfilePath?: string,
+): string[] {
+  return [
+    "docker",
+    "buildx",
+    "bake",
+    "--builder",
+    "ci",
+    ...caddyfileBakeArguments(selected, caddyfilePath),
+    "--push",
+    ...targets,
+  ];
+}
+
 export function findPinnedDigest(
   versions: string,
   imageName: string,

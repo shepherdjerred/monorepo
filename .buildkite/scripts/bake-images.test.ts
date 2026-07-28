@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { caddyfileEntitlementArguments } from "./bake-images.ts";
 import {
+  caddyfileBakeArguments,
   expandTargets,
   findPinnedDigest,
   knownImageTargets,
@@ -8,24 +8,42 @@ import {
   parseBuildkiteCommits,
   parseImageSelection,
   parseStringArray,
+  productionBakeCommand,
 } from "./migration-core.ts";
-
-test("grants caddyfile read access to smoke and push bakes", () => {
-  expect(
-    caddyfileEntitlementArguments(
-      ["birmel", "caddy-s3proxy"],
-      "/tmp/caddyfile.generated",
-    ),
-  ).toEqual(["--allow", "fs.read=/tmp/caddyfile.generated"]);
-  expect(caddyfileEntitlementArguments(["birmel"])).toEqual([]);
-  expect(() => caddyfileEntitlementArguments(["caddy-s3proxy"])).toThrow(
-    "CADDYFILE_SMOKE_PATH is required for caddy-s3proxy",
-  );
-});
 
 test("expands the infra group into invokable targets", () => {
   expect(expandTargets(["infra"])).toContain("caddy-s3proxy");
   expect(expandTargets(["infra"])).not.toContain("infra");
+});
+
+test("grants Buildx access to the generated Caddyfile for infra builds", () => {
+  expect(caddyfileBakeArguments(["infra"], "/tmp/caddyfile.generated")).toEqual(
+    ["--allow", "fs.read=/tmp/caddyfile.generated"],
+  );
+  expect(caddyfileBakeArguments(["birmel"])).toEqual([]);
+  expect(() => caddyfileBakeArguments(["infra"])).toThrow(
+    "CADDYFILE_SMOKE_PATH",
+  );
+});
+
+test("production bake grants the requested Caddyfile read entitlement", () => {
+  expect(
+    productionBakeCommand(
+      ["caddy-s3proxy"],
+      ["infra"],
+      "/tmp/caddyfile.generated",
+    ),
+  ).toEqual([
+    "docker",
+    "buildx",
+    "bake",
+    "--builder",
+    "ci",
+    "--allow",
+    "fs.read=/tmp/caddyfile.generated",
+    "--push",
+    "caddy-s3proxy",
+  ]);
 });
 
 test("reads production and beta image pins", () => {

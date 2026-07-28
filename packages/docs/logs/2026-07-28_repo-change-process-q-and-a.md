@@ -106,10 +106,28 @@ The agreed boundary is:
   one script-coverage regression. Moved the pure changed-path classifiers into
   the tested migration helper; the scripts coverage gate now passes at 92.50%
   functions and 92.70% lines.
+- PR #1761 merged as `bf72c8bccfac14d00f6a861dd37fc1598b35c613`.
+- Diagnosed merge-generated main build #6724: the production image push omitted
+  the Buildx filesystem entitlement already used by the smoke phase for
+  `/tmp/caddyfile.generated`.
+- Centralized the Caddyfile bake entitlement arguments and applied them to both
+  smoke and production push commands, with focused regression coverage.
+- Passed 8 focused Bake-image tests, the five-task root-scripts typecheck/lint
+  surface, the static pipeline validator, Markdown lint, Prettier, and
+  `git diff --check` without running the exhaustive local verification graph.
+- Restacked PR #1764 after overlapping PR #1765 merged. The merged implementation
+  imported the executable Bake CLI into its test and main build #6728 failed
+  script coverage at 80.48% functions and 80.32% lines.
+- Resolved the overlap by keeping the entitlement behavior but moving the pure
+  helper and production command builder into `migration-core.ts`; the exact
+  script-coverage suite now passes at 92.50% functions and 92.70% lines.
+- Restacked PR #1764 is conflict-free, and Buildkite build #6730 passed every PR
+  gate on commit `6805faec1fe59ab7a745f779914d40f76f22c4ed`.
 
 ### Remaining
 
-- Buildkite must pass the exhaustive repository gate on the updated PR head.
+- Merge PR #1764, then confirm its merge-generated main build passes image push,
+  release, deployment, reconciliation, and commit-back lanes.
 
 ### Caveats
 
@@ -121,3 +139,6 @@ The agreed boundary is:
 - The exhaustive docs, Knip, Gitleaks, Prettier, package, and infrastructure
   gates were intentionally not run locally; this change assigns that full
   surface to Buildkite.
+- PR #1765 fixed the production entitlement first, but its main build #6728
+  failed because its test imported the executable Bake CLI into coverage; PR
+  #1764 is the coverage-safe follow-up rather than a second runtime fix.
