@@ -89,8 +89,16 @@ async function ensureScratchGitRepo(repoDir: string): Promise<void> {
   await runCommand(["git", "config", "user.name", "CI Bot"], {
     cwd: repoDir,
   });
+  // Full monorepo trees hang under macOS git fsmonitor (daemon IPC stall) when
+  // staging the entire scratch tree. Disable fsmonitor for this repo only.
+  await runCommand(["git", "config", "core.fsmonitor", "false"], {
+    cwd: repoDir,
+  });
+  await runCommand(["git", "config", "core.untrackedCache", "false"], {
+    cwd: repoDir,
+  });
   if (hasGit) return;
-  await runCommand(["git", "add", "."], { cwd: repoDir });
+  await runCommand(["git", "add", "--", "."], { cwd: repoDir });
   await runCommand(["git", "commit", "-m", "rehearsal baseline", "--quiet"], {
     cwd: repoDir,
   });

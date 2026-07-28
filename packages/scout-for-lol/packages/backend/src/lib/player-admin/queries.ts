@@ -2,6 +2,7 @@ import { z } from "zod";
 import { parseSubscriptionFilters } from "@scout-for-lol/data/index.ts";
 import {
   type CompetitionWithSeason,
+  CompetitionStatusSchema,
   getCompetitionStatus,
   parseCompetition,
   type PermissionSet,
@@ -166,7 +167,12 @@ export function serializePlayerDetail(
               startDate: competition.startDate,
               endDate: competition.endDate,
               seasonId: competition.seasonId,
-              status: getCompetitionStatus(competition),
+              // Fail loud at the API boundary if status derivation ever drifts
+              // from the shared enum the SPA re-parses (Zod invalid_value on
+              // undefined was the previous client white-screen).
+              status: CompetitionStatusSchema.parse(
+                getCompetitionStatus(competition),
+              ),
             },
           };
         })

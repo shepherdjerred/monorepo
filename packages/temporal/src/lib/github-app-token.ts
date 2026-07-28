@@ -164,6 +164,15 @@ function parseAccessTokenResponse(
   return { token, expiresAt };
 }
 
+const RETRYABLE_TOKEN_STATUSES = new Set([429, 502, 503, 504]);
+const TOKEN_MAX_ATTEMPTS = 4;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 export async function createGitHubAppInstallationToken(
   deps: GitHubAppTokenDeps = {},
 ): Promise<GitHubAppTokenResult> {
@@ -179,27 +188,38 @@ export async function createGitHubAppInstallationToken(
     "",
   );
   const jwt = await createGitHubAppJwt({ appId, privateKey, now });
-  const response = await fetchFn(
-    `${apiBaseUrl}/app/installations/${installationId}/access_tokens`,
-    {
-      method: "POST",
-      headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: `Bearer ${jwt}`,
-        "X-GitHub-Api-Version": GITHUB_API_VERSION,
-      },
-      body: "{}",
+  const url = `${apiBaseUrl}/app/installations/${installationId}/access_tokens`;
+  const init: RequestInit = {
+    method: "POST",
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${jwt}`,
+      "X-GitHub-Api-Version": GITHUB_API_VERSION,
     },
-  );
+    body: "{}",
+  };
 
-  if (!response.ok) {
+  let lastError: Error | undefined;
+  for (let attempt = 1; attempt <= TOKEN_MAX_ATTEMPTS; attempt += 1) {
+    const response = await fetchFn(url, init);
+    if (response.ok) {
+      return parseAccessTokenResponse(await response.json(), nowMs);
+    }
     const body = await response.text();
-    throw new Error(
+    lastError = new Error(
       `GitHub App installation token request failed with ${String(response.status)} ${response.statusText}: ${body}`,
     );
+    if (
+      !RETRYABLE_TOKEN_STATUSES.has(response.status) ||
+      attempt === TOKEN_MAX_ATTEMPTS
+    ) {
+      throw lastError;
+    }
+    // Exponential backoff with light jitter: 200ms, 400ms, 800ms…
+    const delayMs = 200 * 2 ** (attempt - 1) + Math.floor(Math.random() * 100);
+    await sleep(delayMs);
   }
-
-  return parseAccessTokenResponse(await response.json(), nowMs);
+  throw lastError ?? new Error("GitHub App installation token request failed");
 }
 
 async function main(): Promise<void> {

@@ -293,28 +293,33 @@ async function main(): Promise<void> {
     maxConcurrentActivityTaskExecutions: prBabysitMaxConcurrentActivities,
   });
 
+  // Activity concurrency stays 1 (serial long work). Workflow-task concurrency
+  // must be ≥2 when sticky cache is on — Core rejects max_cached_workflows>0
+  // with a single workflow-task poller/slot (see WORKFLOW_TASK_POLLER_BEHAVIOR).
   const glitterCorpusWorker = await Worker.create({
     ...commonWorkerOptions,
     taskQueue: TASK_QUEUES.GLITTER_CORPUS,
     maxConcurrentActivityTaskExecutions: 1,
-    maxConcurrentWorkflowTaskExecutions: 1,
+    maxConcurrentWorkflowTaskExecutions: 2,
   });
 
   jsonLog("info", "Worker created", {
     taskQueue: TASK_QUEUES.GLITTER_CORPUS,
     maxConcurrentActivityTaskExecutions: 1,
+    maxConcurrentWorkflowTaskExecutions: 2,
   });
 
   const glitterContextWorker = await Worker.create({
     ...commonWorkerOptions,
     taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
     maxConcurrentActivityTaskExecutions: 1,
-    maxConcurrentWorkflowTaskExecutions: 1,
+    maxConcurrentWorkflowTaskExecutions: 2,
   });
 
   jsonLog("info", "Worker created", {
     taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
     maxConcurrentActivityTaskExecutions: 1,
+    maxConcurrentWorkflowTaskExecutions: 2,
   });
 
   const clientConnection = await Connection.connect({ address });

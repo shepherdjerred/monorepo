@@ -280,7 +280,7 @@ describe("homelab daily audit schedule config", () => {
     }
     expect(schedule.workflowExecutionTimeout).toBe("50 minutes");
     expect(schedule.args[0]).toMatchObject({
-      maxTurns: 8,
+      maxTurns: 40,
       agentTimeoutMinutes: 45,
     });
     expect(JSON.stringify(schedule.args[0])).toContain("Ignore Bugsink");

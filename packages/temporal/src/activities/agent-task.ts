@@ -1,5 +1,6 @@
 import { Context } from "@temporalio/activity";
 import * as Sentry from "@sentry/bun";
+import { agentSubprocessFailure } from "#activities/agent-task-failures.ts";
 import {
   agentSubprocessIdleSeconds,
   agentSubprocessSoftKillsTotal,
@@ -410,9 +411,7 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
 
       if (result.exitCode !== 0) {
         agentTaskRunsTotal.inc({ provider, outcome: "subprocess_failed" });
-        const error = new Error(
-          `${provider} agent task exited with code ${String(result.exitCode)} (signal=${result.signal}, durationMs=${String(result.durationMs)})`,
-        );
+        const error = agentSubprocessFailure(provider, result);
         captureWithContext(error, {
           provider,
           durationMs: result.durationMs,

@@ -14,7 +14,6 @@ import {
   updateLastProcessedMatch,
   getChannelsSubscribedToPlayers,
   getLastProcessedMatch,
-  updateLastMatchTime,
   updateLastCheckedAt,
   prisma,
 } from "#src/database/index.ts";
@@ -236,14 +235,18 @@ async function processMatchAndUpdatePlayers(
   // Mark as processed
   processedMatchIds.add(matchId);
 
-  // Update lastProcessedMatchId and lastMatchTime for all players in this match.
-  // Reached only after the authoritative S3 ingest succeeded above.
+  // Update lastProcessedMatchId and lastMatchTime for all players in this match
+  // (single updateMany per player). Reached only after authoritative S3 ingest.
   const matchCreationTime = new Date(matchData.info.gameCreation);
   for (const trackedPlayer of allTrackedPlayers) {
     const playerPuuid = trackedPlayer.league.leagueAccount.puuid;
     const brandedMatchId = MatchIdSchema.parse(matchId);
-    await updateLastProcessedMatch(playerPuuid, brandedMatchId);
-    await updateLastMatchTime(playerPuuid, matchCreationTime);
+    await updateLastProcessedMatch(
+      playerPuuid,
+      brandedMatchId,
+      undefined,
+      matchCreationTime,
+    );
   }
 }
 

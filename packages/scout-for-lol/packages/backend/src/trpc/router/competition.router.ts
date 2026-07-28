@@ -19,6 +19,7 @@ import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   PlayerIdSchema,
+  CompetitionStatusSchema,
   getCompetitionStatus,
   type CompetitionId,
   type CompetitionWithCriteria,
@@ -134,7 +135,9 @@ export const competitionRouter = router({
       return {
         items: items.map((competition) => ({
           ...competition,
-          status: getCompetitionStatus(competition),
+          status: CompetitionStatusSchema.parse(
+            getCompetitionStatus(competition),
+          ),
           participantCount: countByCompetition.get(competition.id) ?? 0,
         })),
         nextCursor,
@@ -157,7 +160,9 @@ export const competitionRouter = router({
       });
       return {
         ...competition,
-        status: getCompetitionStatus(competition),
+        status: CompetitionStatusSchema.parse(
+          getCompetitionStatus(competition),
+        ),
         participants: participants.map((participant) => ({
           id: participant.id,
           playerId: participant.playerId,
