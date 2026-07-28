@@ -84,7 +84,7 @@ through the `bindery-source` custom manager and requires manual review.
 | PVC                   | Size   | Class    | Used by                     |
 | --------------------- | ------ | -------- | --------------------------- |
 | `ebooks-hdd-pvc`      | 50 GiB | ZFS SATA | Bindery + CWA (shared)      |
-| `qbittorrent-hdd-pvc` | 1 TiB  | ZFS SATA | qBit + Bindery `/downloads` |
+| `qbittorrent-hdd-pvc` | 2 TiB  | ZFS SATA | qBit + Bindery `/downloads` |
 | `bindery-pvc`         | 8 GiB  | ZFS NVMe | Bindery `/config`           |
 | `cwa-pvc`             | 8 GiB  | ZFS NVMe | CWA `/config`               |
 

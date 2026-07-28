@@ -16,10 +16,10 @@ As of 2026-07, only the three bespoke Paper servers remain declared:
 The IaC and DNS records for the five retired pack servers (All the Mons, FTB
 StoneBlock 4, Better Minecraft, All of Create, FTB Skies 2) have been removed.
 Their live Applications, workloads, PVCs, secrets, and OpenEBS ZFS datasets
-were deleted on 2026-07-28. Five empty namespace objects and five `Released`
-PV objects remain for the normal GitOps prune/operator cleanup tracked in
-`packages/docs/todos/post-merge-prune-jellyfin-minecraft.md`; the world data
-itself is gone.
+were deleted on 2026-07-28, and the merge-time GitOps prune removed their
+namespaces. Five `Released` PV API records remain for operator cleanup tracked
+in `packages/docs/todos/post-merge-prune-jellyfin-minecraft.md`; the world
+data itself is gone.
 
 ## Operational Notes
 
