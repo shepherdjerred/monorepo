@@ -103,6 +103,15 @@ export function createPvcBackupAdmissionPolicies(chart: Chart): void {
     spec: {
       failurePolicy: "Fail",
       matchConstraints: PVC_MATCH_CONSTRAINTS,
+      // A PVC that is already terminating cannot be restored by an update.
+      // Skip validation so Kubernetes controllers and operators can remove
+      // finalizers even after the retired claim leaves the policy catalog.
+      matchConditions: [
+        {
+          name: "not-terminating",
+          expression: "object.metadata.deletionTimestamp == null",
+        },
+      ],
       variables: [
         {
           name: "policyKey",

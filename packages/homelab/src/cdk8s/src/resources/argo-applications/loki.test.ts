@@ -22,7 +22,7 @@ const LokiApplicationSchema = z.object({
 });
 
 describe("Loki Argo CD application", () => {
-  it("delegates immutable PVC-template backup labels to the admission policy", () => {
+  it("delegates immutable PVC templates to the admission policy", () => {
     const app = new App();
     const chart = new Chart(app, "test");
     createLokiApp(chart);
@@ -39,10 +39,7 @@ describe("Loki Argo CD application", () => {
         kind: "StatefulSet",
         name: "loki",
         namespace: "loki",
-        jsonPointers: [
-          "/spec/volumeClaimTemplates/0/metadata/labels/velero.io~1backup",
-          "/spec/volumeClaimTemplates/0/metadata/labels/velero.io~1exclude-from-backup",
-        ],
+        jsonPointers: ["/spec/volumeClaimTemplates"],
       },
     ]);
     expect(manifest.data.spec.syncPolicy.syncOptions).toContain(
