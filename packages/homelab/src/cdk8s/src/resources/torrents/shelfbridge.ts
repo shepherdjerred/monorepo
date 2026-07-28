@@ -21,6 +21,8 @@ import {
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 const SHELFBRIDGE_PORT = 8787;
+export const SHELFBRIDGE_SERVICE_HOSTNAME = "media-shelfbridge-service";
+export const SHELFBRIDGE_SERVICE_IP = "10.109.78.226";
 
 /**
  * ShelfBridge — Torznab bridge for direct-download book sources (LibGen,
@@ -33,8 +35,10 @@ const SHELFBRIDGE_PORT = 8787;
  * because the devopsarr/prowlarr provider has no generic Torznab resource.
  *
  * PUBLIC_BASE_URL must resolve from inside the qBittorrent pod (gluetun
- * netns) — the cluster Service DNS name, not a Tailscale name. No ingress:
- * the only consumers are in-namespace (Bindery API queries, qBit webseeds).
+ * netns). Gluetun deliberately replaces Kubernetes DNS to keep public lookups
+ * inside the VPN, so the qBittorrent pod maps this hostname to the Service's
+ * pinned ClusterIP. No ingress: the only consumers are in-namespace (Bindery
+ * API queries, qBit webseeds).
  *
  * Z-Library is enabled anonymously (no ZLIB_EMAIL/PASSWORD) — returns
  * anonymous-tier results; wire creds later by adding envs + 1Password fields.
@@ -104,7 +108,7 @@ export function createShelfbridgeDeployment(chart: Chart) {
         LISTEN_ADDR: EnvValue.fromValue(`:${String(SHELFBRIDGE_PORT)}`),
         // Webseed URLs handed to qBittorrent point back at the cluster Service.
         PUBLIC_BASE_URL: EnvValue.fromValue(
-          `http://media-shelfbridge-service:${String(SHELFBRIDGE_PORT)}`,
+          `http://${SHELFBRIDGE_SERVICE_HOSTNAME}:${String(SHELFBRIDGE_PORT)}`,
         ),
         WEBSEED_MODE: EnvValue.fromValue("proxy"),
         INDEXER_NAME: EnvValue.fromValue("shelfbridge"),
@@ -144,6 +148,10 @@ export function createShelfbridgeDeployment(chart: Chart) {
 
   new Service(chart, "shelfbridge-service", {
     selector: deployment,
+    // qBittorrent's Gluetun netns cannot use Kubernetes DNS without sending
+    // all public DNS through CoreDNS outside the VPN. Keep this address stable
+    // so qBittorrent can use a narrow /etc/hosts entry instead.
+    clusterIP: SHELFBRIDGE_SERVICE_IP,
     ports: [{ port: SHELFBRIDGE_PORT }],
   });
 }

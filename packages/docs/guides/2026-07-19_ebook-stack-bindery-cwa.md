@@ -232,16 +232,29 @@ Do this once after Argo syncs `media` + `postal`.
 | Bindery health failing         | Probe is HTTP `GET /api/v1/health` on :8787                          |
 | Wrong library writer           | Never set Bindery to import into `/books` RW — mount is RO by design |
 | ShelfBridge 401 in Bindery     | API key mismatch — re-read the `shelfbridge` 1Password item          |
-| Webseed download stalls        | gluetun outbound firewall — see below                                |
+| Webseed download stalls        | gluetun route/host mapping or expired grab ID — see below            |
 | No Chinese results             | ShelfBridge upstream mirrors may be down/blocked; check pod logs     |
 
 ### Gluetun / webseed note
 
-qBittorrent runs in gluetun's netns, which today sets only
-`FIREWALL_VPN_INPUT_PORTS` — outbound to cluster-internal IPs may be dropped.
-Webseed pulls target `media-shelfbridge-service` (a ClusterIP). If ShelfBridge
-grabs stall at 0%, add `FIREWALL_OUTBOUND_SUBNETS=<pod/service CIDR>` to the
-gluetun env in `resources/torrents/qbittorrent.ts` and resync.
+qBittorrent runs in gluetun's netns. ShelfBridge torrents normally report zero
+peer seeds because their payload comes from the HTTP webseed, not BitTorrent
+peers. The deployment permits the Kubernetes Service CIDR through Gluetun and
+maps `media-shelfbridge-service` to ShelfBridge's pinned ClusterIP without
+moving public DNS outside the VPN.
+
+For a stalled ShelfBridge torrent, verify the URL from the qBittorrent pod:
+
+```bash
+kubectl exec -n media deploy/media-qbittorrent -c qbittorrent -- \
+  curl --fail --show-error http://media-shelfbridge-service:8787/health
+```
+
+`Could not resolve host` or a timeout means the live Deployment is missing the
+host alias or `FIREWALL_OUTBOUND_SUBNETS=10.96.0.0/12`. HTTP 200 with an old
+torrent still stalled usually means its in-memory ShelfBridge grab ID exceeded
+the one-hour `DOWNLOAD_TTL`; the `/file/...` webseed returns 404. Remove that
+stalled torrent and grab the result again so ShelfBridge issues a fresh ID.
 
 ## Out of scope (v1)
 
