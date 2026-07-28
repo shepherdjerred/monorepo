@@ -151,4 +151,15 @@ describe("agentTaskActivities", () => {
       /agent_task_runs_total\{[^}]*provider="codex"[^}]*outcome="success"/,
     );
   });
+
+  it("redacts a distinct Codex API key", async () => {
+    const { agentTaskSecretTokens } = await import("./agent-task.ts");
+    const codexApiKey = "codex-distinct-secret";
+    const tokens = agentTaskSecretTokens("github-token", {
+      CODEX_API_KEY: codexApiKey,
+      OPENAI_API_KEY: "openai-distinct-secret",
+    });
+
+    expect(tokens).toContain(codexApiKey);
+  });
 });

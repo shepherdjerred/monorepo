@@ -39,9 +39,12 @@
  * full `cog -r` regeneration (needs blobless git history + Codex for new
  * packages) — those never broke; the environment around them did.
  *
- * Usage: bun run scripts/rehearse-bot-clone.ts --repo=/abs/path/to/monorepo
+ * Usage: bun run scripts/rehearse-bot-clone.ts
+ *   --repo=/abs/path/to/monorepo
+ *   --baseline-files=/abs/path/to/git-ls-files-z-output
  * The target may be a plain directory (no .git) — a scratch repo is
- * initialized so the commit canary can run.
+ * initialized from the explicit tracked-file manifest so the commit canary
+ * can run without staging local artifacts.
  */
 import {
   botCloneCacheDir,
@@ -65,15 +68,43 @@ const REPORT_PACKAGE = "packages/scout-for-lol/packages/report";
 const REALDATA_TEST = "src/html/arena/realdata.integration.test.ts";
 // The import that broke: packages/data → @shepherdjerred/llm-models.
 const DATA_PACKAGE = "packages/scout-for-lol/packages/data";
+const BASELINE_ADD_BATCH_SIZE = 250;
 
-function parseRepoArg(argv: readonly string[]): string {
+function parseArgs(argv: readonly string[]): {
+  repoDir: string;
+  baselineFiles: string;
+} {
+  let repoDir: string | undefined;
+  let baselineFiles: string | undefined;
   for (const arg of argv) {
-    if (arg.startsWith("--repo=")) return arg.slice("--repo=".length);
+    if (arg.startsWith("--repo=")) {
+      repoDir = arg.slice("--repo=".length);
+    } else if (arg.startsWith("--baseline-files=")) {
+      baselineFiles = arg.slice("--baseline-files=".length);
+    }
   }
-  throw new Error("usage: rehearse-bot-clone.ts --repo=/abs/path/to/monorepo");
+  if (repoDir === undefined || baselineFiles === undefined) {
+    throw new Error(
+      "usage: rehearse-bot-clone.ts --repo=/abs/path/to/monorepo " +
+        "--baseline-files=/abs/path/to/git-ls-files-z-output",
+    );
+  }
+  return { repoDir, baselineFiles };
 }
 
-async function ensureScratchGitRepo(repoDir: string): Promise<void> {
+async function readBaselinePaths(manifestPath: string): Promise<string[]> {
+  const manifest = await Bun.file(manifestPath).text();
+  const paths = manifest.split("\0").filter((path) => path.length > 0);
+  if (paths.length === 0) {
+    throw new Error("rehearsal baseline file manifest is empty");
+  }
+  return paths;
+}
+
+async function ensureScratchGitRepo(
+  repoDir: string,
+  baselinePaths: readonly string[],
+): Promise<void> {
   const hasGit = await Bun.file(`${repoDir}/.git/HEAD`).exists();
   if (!hasGit) {
     // CI mounts the repo tree without .git; the commit canary needs one.
@@ -98,7 +129,16 @@ async function ensureScratchGitRepo(repoDir: string): Promise<void> {
     cwd: repoDir,
   });
   if (hasGit) return;
-  await runCommand(["git", "add", "--", "."], { cwd: repoDir });
+  for (
+    let index = 0;
+    index < baselinePaths.length;
+    index += BASELINE_ADD_BATCH_SIZE
+  ) {
+    const batch = baselinePaths.slice(index, index + BASELINE_ADD_BATCH_SIZE);
+    // Some tracked .gitkeep files live under ignored runtime-data directories.
+    // Force-add only the manifest's explicit Git-tracked paths.
+    await runCommand(["git", "add", "-f", "--", ...batch], { cwd: repoDir });
+  }
   await runCommand(["git", "commit", "-m", "rehearsal baseline", "--quiet"], {
     cwd: repoDir,
   });
@@ -453,8 +493,9 @@ async function rehearseShowcaseEnvironment(repoDir: string): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const repoDir = parseRepoArg(process.argv.slice(2));
-  await ensureScratchGitRepo(repoDir);
+  const { repoDir, baselineFiles } = parseArgs(process.argv.slice(2));
+  const baselinePaths = await readBaselinePaths(baselineFiles);
+  await ensureScratchGitRepo(repoDir, baselinePaths);
   await rehearseScoutWorkspace(repoDir);
   await rehearseGlitterContextRefresh(repoDir);
   await rehearseSnapshotRefresh(repoDir);

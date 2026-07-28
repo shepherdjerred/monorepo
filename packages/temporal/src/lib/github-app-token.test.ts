@@ -179,4 +179,72 @@ describe("github-app-token", () => {
       }),
     ).rejects.toThrow("already expired");
   });
+
+  it("honors Retry-After seconds on 429 responses", async () => {
+    const pem = await testPrivateKeyPem();
+    const delays: number[] = [];
+    let attempt = 0;
+    const result = await createGitHubAppInstallationToken({
+      env: makeEnv(pem),
+      fetch: async () => {
+        attempt += 1;
+        if (attempt === 1) {
+          return new Response("rate limited", {
+            status: 429,
+            headers: { "Retry-After": "2" },
+          });
+        }
+        return Response.json(
+          {
+            token: "installation-token",
+            expires_at: "2030-01-01T00:00:00Z",
+          },
+          { status: 201 },
+        );
+      },
+      now: () => 1_800_000_000_000,
+      sleep: async (ms) => {
+        delays.push(ms);
+      },
+    });
+
+    expect(result.token).toBe("installation-token");
+    expect(attempt).toBe(2);
+    expect(delays).toEqual([2000]);
+  });
+
+  it("honors X-RateLimit-Reset on 429 responses", async () => {
+    const pem = await testPrivateKeyPem();
+    const now = 1_800_000_000_000;
+    const delays: number[] = [];
+    let attempt = 0;
+    await createGitHubAppInstallationToken({
+      env: makeEnv(pem),
+      fetch: async () => {
+        attempt += 1;
+        if (attempt === 1) {
+          return new Response("rate limited", {
+            status: 429,
+            headers: {
+              "X-RateLimit-Reset": String(now / 1000 + 5),
+            },
+          });
+        }
+        return Response.json(
+          {
+            token: "installation-token",
+            expires_at: "2030-01-01T00:00:00Z",
+          },
+          { status: 201 },
+        );
+      },
+      now: () => now,
+      sleep: async (ms) => {
+        delays.push(ms);
+      },
+    });
+
+    expect(attempt).toBe(2);
+    expect(delays).toEqual([5000]);
+  });
 });

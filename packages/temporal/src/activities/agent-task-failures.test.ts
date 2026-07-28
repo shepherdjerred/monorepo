@@ -39,6 +39,18 @@ describe("isNonRetryableAgentFailure", () => {
     ).toBe(true);
   });
 
+  test("keeps generic provider 429 responses retryable", () => {
+    expect(
+      isNonRetryableAgentFailure(
+        '{"api_error_status":429,"result":"request throttled"}',
+      ),
+    ).toBe(false);
+  });
+
+  test("keeps temporary rate limits retryable", () => {
+    expect(isNonRetryableAgentFailure("rate limit exceeded")).toBe(false);
+  });
+
   test("does not treat max_turns as non-retryable", () => {
     expect(
       isNonRetryableAgentFailure(

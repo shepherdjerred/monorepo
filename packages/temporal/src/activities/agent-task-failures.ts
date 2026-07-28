@@ -14,9 +14,7 @@ export function isNonRetryableAgentFailure(
     lower.includes("401 unauthorized") ||
     lower.includes("missing bearer") ||
     lower.includes('api_error_status":401') ||
-    lower.includes('api_error_status":429') ||
     lower.includes("weekly limit") ||
-    lower.includes("rate limit") ||
     lower.includes("insufficient_quota") ||
     lower.includes("invalid_api_key")
   );
