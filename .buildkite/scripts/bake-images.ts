@@ -18,6 +18,18 @@ const registry = "ghcr.io/shepherdjerred";
 const selectionReport = "image-selection-report.json";
 const pushOutcomes = "image-push-outcomes.json";
 const versionsPath = "packages/homelab/src/cdk8s/src/versions.ts";
+
+export function caddyfileEntitlementArguments(
+  targets: readonly string[],
+  caddyfile?: string,
+): string[] {
+  if (!targets.includes("caddy-s3proxy")) return [];
+  if (caddyfile === undefined) {
+    throw new Error("CADDYFILE_SMOKE_PATH is required for caddy-s3proxy");
+  }
+  return ["--allow", `fs.read=${caddyfile}`];
+}
+
 async function execute(
   command: readonly string[],
   environment: Readonly<Record<string, string | undefined>> = Bun.env,
@@ -171,19 +183,18 @@ async function ensureBuilder(): Promise<void> {
 
 async function runSmoke(
   bakeTargets: readonly string[],
-  selected: readonly string[],
   contractHash: string,
 ): Promise<void> {
   const smokeArguments = bakeTargets.flatMap((target) => [
     "--set",
     `${target}.target=smoke`,
   ]);
-  const caddyfile = Bun.env["CADDYFILE_SMOKE_PATH"];
-  if (selected.includes("infra") && caddyfile === undefined) {
-    throw new Error("CADDYFILE_SMOKE_PATH is required for infra smoke");
-  }
-  if (caddyfile !== undefined)
-    smokeArguments.push("--allow", `fs.read=${caddyfile}`);
+  smokeArguments.push(
+    ...caddyfileEntitlementArguments(
+      bakeTargets,
+      Bun.env["CADDYFILE_SMOKE_PATH"],
+    ),
+  );
 
   const exitCode = await retryTransientBuildx(() =>
     execute(
@@ -223,9 +234,22 @@ async function pushImages(
   buildNumber: string,
   contractHash: string,
 ): Promise<void> {
+  const caddyfileArguments = caddyfileEntitlementArguments(
+    targets,
+    Bun.env["CADDYFILE_SMOKE_PATH"],
+  );
   const pushExitCode = await retryTransientBuildx(() =>
     execute(
-      ["docker", "buildx", "bake", "--builder", "ci", "--push", ...targets],
+      [
+        "docker",
+        "buildx",
+        "bake",
+        "--builder",
+        "ci",
+        "--push",
+        ...caddyfileArguments,
+        ...targets,
+      ],
       {
         ...Bun.env,
         VERSION: buildNumber,
@@ -334,7 +358,7 @@ if (import.meta.main) {
   if (contractHashResult.exitCode !== 0)
     throw new Error("Contract hash generation failed");
   const contractHash = contractHashResult.stdout.trim();
-  await runSmoke(bakeTargets, selection.targets, contractHash);
+  await runSmoke(bakeTargets, contractHash);
   if (options.push) {
     await pushImages(bakeTargets, commit, buildNumber, contractHash);
   }
