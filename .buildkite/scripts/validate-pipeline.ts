@@ -204,6 +204,12 @@ for (const lane of ["site-scout", "sites", "scout-reconcile"]) {
   }
 }
 
+for (const lane of ["site-scout", "sites"]) {
+  if (!selectorLane(ciChanged, lane).includes("packages/glitter-context")) {
+    fail(`runtime CI selector ${lane} is missing packages/glitter-context`);
+  }
+}
+
 const selectImageTargets = await Bun.file(
   ".buildkite/scripts/select-image-targets.ts",
 ).text();
@@ -339,8 +345,10 @@ for (const required of [
   "--filter '@scout-for-lol/app'",
   "--filter astro-opengraph-images",
   "--filter '@shepherdjerred/llm-models'",
+  "--filter '@shepherdjerred/glitter-context'",
   "bun --no-install run --cwd packages/llm-models build",
   "bun --no-install run --cwd packages/astro-opengraph-images build",
+  "bun --no-install run --cwd packages/glitter-context build",
 ]) {
   requireIncludes(
     sites,

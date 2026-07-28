@@ -1145,6 +1145,10 @@ steps:
         filters+=(--filter '@scout-for-lol/app')
         filters+=(--filter astro-opengraph-images)
         filters+=(--filter '@shepherdjerred/llm-models')
+        # Scout's data workspace imports this browser-safe shared context.
+        # A filtered install links the workspace but does not produce its
+        # gitignored dist entrypoint, so build it before the Scout site.
+        filters+=(--filter '@shepherdjerred/glitter-context')
         bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       fi
       if [ "$${#filters[@]}" -gt 0 ]; then
@@ -1170,6 +1174,7 @@ steps:
       if $$site_scout; then
         bun --no-install run --cwd packages/llm-models build
         bun --no-install run --cwd packages/astro-opengraph-images build
+        bun --no-install run --cwd packages/glitter-context build
         bun --no-install scripts/scout-site-release.ts archive --version "2.0.0-$BUILDKITE_BUILD_NUMBER"
         # Record the archived version so scout-tag-release can gate on what
         # actually happened instead of re-deriving it from a second path

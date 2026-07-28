@@ -126,6 +126,15 @@ for lane in site-scout sites scout-reconcile; do
   expect_status 0 "$lane"
 done
 
+BASE=$(git -C "$FIXTURE" rev-parse HEAD)
+mkdir -p "$FIXTURE/packages/glitter-context/src"
+printf 'context\n' > "$FIXTURE/packages/glitter-context/src/context.ts"
+git -C "$FIXTURE" add packages/glitter-context/src/context.ts
+git -C "$FIXTURE" commit -qm glitter-context
+for lane in site-scout sites; do
+  expect_status 0 "$lane"
+done
+
 # Every main lane that installs the root-scripts production closure reruns when
 # that workspace manifest changes.
 BASE=$(git -C "$FIXTURE" rev-parse HEAD)
