@@ -20,6 +20,7 @@ const config: ReturnType<typeof recommended> = [
       // Standalone script dir with no package import-alias infrastructure;
       // relative parent imports are the only way to reach shared modules.
       "custom-rules/no-parent-imports": "off",
+      "import/no-relative-packages": "off",
     },
   },
   {

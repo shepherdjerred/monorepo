@@ -26,7 +26,7 @@ write win of the reduction levers.
 
 ## Design sketch (from the impl plan)
 
-- `build-ci-image.sh` already pushes an immutable `:<commit-sha>` tag; also
+- `build-ci-image.ts` already pushes an immutable `:<commit-sha>` tag; also
   capture the pushed digest.
 - Committed pin: either a `.buildkite/ci-image/DIGEST` file interpolated at
   upload time (`upload-pipeline.sh` exports `CI_BASE_IMAGE`; anchors use

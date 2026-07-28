@@ -329,7 +329,7 @@ This repository is a personal monorepo aggregating active projects, learning exp
 
 ### [anki](https://github.com/shepherdjerred/monorepo/tree/main/packages/anki) (2026-02-15)
 
-This package automates turning Markdown study notes (`book_high_performance_web_applications.md`, `book_ostep.md`, `bytes.md`, `interview.md`) into Anki decks by invoking the mdanki CLI to emit `.apkg` files. The `generate.sh` workflow relies on Node.js tooling (`npx`, `mdanki`, `sql.js`) plus a shared `settings.json` template that defines the card HTML and CSS, and it swaps in the `sql-memory-growth.js` build of sql.js before running the conversions so every deck is generated with the memory-growth WebAssembly runtime.
+This package automates turning Markdown study notes (`book_high_performance_web_applications.md`, `book_ostep.md`, `bytes.md`, `interview.md`) into Anki decks by invoking the mdanki CLI to emit `.apkg` files. The root-owned `scripts/generate-anki.ts` workflow uses Bun, `mdanki`, and `sql.js` plus a shared `settings.json` template that defines the card HTML and CSS, and it swaps in the `sql-memory-growth.js` build of sql.js before running the conversions so every deck is generated with the memory-growth WebAssembly runtime.
 
 ### [better-skill-capped](https://github.com/shepherdjerred/monorepo/tree/main/packages/better-skill-capped) (2026-02-15)
 

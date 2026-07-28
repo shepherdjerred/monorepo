@@ -22,11 +22,12 @@
     "#src/*": "./src/*"
   },
   "scripts": {
-    "lint": "eslint src --cache",
+    "lint": "eslint src generate-readme.ts generate-readme-core.ts generate-readme*.test.ts --cache",
     "build": "tsc",
     "watch": "tsc -w",
-    "test": "vitest",
-    "typecheck": "tsc --noEmit",
+    "test": "vitest src && bun test generate-readme*.test.ts",
+    "test:coverage": "bun test --config ../../scripts/bunfig.coverage.toml --coverage generate-readme.test.ts",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
     "publish:npm": "bun ../../scripts/publish-npm.ts ."
   },
   "main": "dist/index.js",

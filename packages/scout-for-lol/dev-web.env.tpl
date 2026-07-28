@@ -1,5 +1,5 @@
 # Template for local web-UI development. Resolves at runtime via:
-#   op run --env-file=dev-web.env.tpl -- ./scripts/dev-web.sh
+#   op run --env-file=dev-web.env.tpl -- ./scripts/dev-web.ts
 #
 # Secrets come from the BETA 1Password item (vault v64ocnykdqju4ui6j6pua56xw4,
 # item rtu44pohnp5ixdp2njuv5f6t2e). Non-secret config is inline.

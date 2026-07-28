@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["repository", "branch", "commit", "emsdkImage"],
+  "properties": {
+    "repository": { "type": "string", "format": "uri" },
+    "branch": { "type": "string", "minLength": 1 },
+    "commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "emsdkImage": { "type": "string", "pattern": "^emscripten/emsdk:[^ ]+$" }
+  }
+}

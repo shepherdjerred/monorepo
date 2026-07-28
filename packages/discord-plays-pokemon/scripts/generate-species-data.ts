@@ -4,8 +4,8 @@
 //   bun scripts/generate-species-data.ts
 //
 // The output is checked in. The source pin is the OTTOHG_SHA in
-// scripts/build-wasm.sh (Renovate advances it) — read via lib/pokeemerald-pin
-// so the tables can never lag the emulator binary. build-wasm.sh re-runs this
+// wasm-src/upstream.json (Renovate advances it) — read via lib/pokeemerald-pin
+// so the tables can never lag the emulator binary. build-wasm.ts re-runs this
 // generator after every wasm build.
 
 import { readOttohgSha } from "./lib/pokeemerald-pin.ts";

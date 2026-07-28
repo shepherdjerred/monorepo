@@ -53,7 +53,7 @@ records the pinned baseline, the patches, and the update procedure. Our changes:
   Without this, all input is silently dropped (frames still render). See
   [`PATCHES.md`](./wasm-src/PATCHES.md).
 
-[`scripts/build-wasm.sh`](./scripts/build-wasm.sh) compiles
+[`scripts/build-wasm.ts`](./scripts/build-wasm.ts) compiles
 the core into `packages/backend/assets/n64wasm/` using the pinned
 `emscripten/emsdk:2.0.34` image.
 
@@ -82,7 +82,7 @@ bun run --filter '*' test    # from packages/discord-plays-mario-kart
 ### Manual harness (needs a ROM + a built core)
 
 These boot the real emulator and need local assets (the ROM is copyright and
-not committed; build the core with `scripts/build-wasm.sh`). The **ROM is
+not committed; build the core with `scripts/build-wasm.ts`). The **ROM is
 resolved** from, in order: an explicit `--rom`/positional arg → `MK64_ROM` env →
 `~/syncthing/Sync/roms/mariokart64.z64` (the canonical Syncthing copy — see
 [Deployment](#one-time-provisioning)). All three failing prints where to put it.

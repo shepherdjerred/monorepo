@@ -1,9 +1,9 @@
 // Build-page justification for the images step: renders WHY each image target
 // was built or skipped (and, on main, whether its content actually changed)
-// as a Buildkite annotation. Reads the JSON side channels bake-images.sh
+// as a Buildkite annotation. Reads the JSON side channels bake-images.ts
 // produces; never touches the selector's stdout contract.
 //
-// Dependency-free on purpose: bake-images.sh runs before any workspace
+// Dependency-free on purpose: bake-images.ts runs before any workspace
 // install, so this script (like select-image-targets.ts) can only use Bun
 // built-ins — validation is manual narrowing, not Zod.
 //

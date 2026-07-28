@@ -2,7 +2,12 @@
   "name": "scout-for-lol",
   "private": true,
   "scripts": {
-    "dev:web": "op run --env-file=./dev-web.env.tpl -- ./scripts/dev-web.sh",
+    "build": "tsc --noEmit -p tsconfig.scripts.json",
+    "test": "bun test scripts",
+    "test:coverage": "bun test --config ../../scripts/bunfig.coverage.toml --coverage scripts/create-minimal-png.test.ts scripts/dev-web.test.ts scripts/install-pkgs.test.ts",
+    "lint": "eslint scripts",
+    "typecheck": "tsc --noEmit -p tsconfig.scripts.json",
+    "dev:web": "op run --env-file=./dev-web.env.tpl -- bun scripts/dev-web.ts",
     "duplication-check": "bun run scripts/check-duplication.ts",
     "check:assets": "bun run scripts/check-asset-sizes.ts"
   },

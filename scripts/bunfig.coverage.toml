@@ -1,0 +1,3 @@
+[test]
+coverageThreshold = { lines = 0.9, functions = 0.9, statements = 0.9 }
+coverageReporter = ["text"]

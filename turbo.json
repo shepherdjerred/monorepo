@@ -83,6 +83,45 @@
         ".buildkite/scripts/select-image-targets.ts"
       ]
     },
+    "//#check-script-migrations": {
+      "inputs": [
+        "scripts/script-migrations.json",
+        "scripts/script-migrations.schema.json",
+        "scripts/check-script-migrations.ts",
+        "scripts/**/*.ts",
+        ".buildkite/scripts/**",
+        "**/*.sh",
+        "packages/**/*.ts",
+        "packages/**/package.json",
+        "packages/**/tsconfig*.json",
+        "packages/**/eslint.config.ts",
+        "!**/node_modules/**",
+        "!sandbox/**",
+        "!**/dist/**",
+        "!**/generated/**"
+      ]
+    },
+    "//#script-coverage": {
+      "dependsOn": ["//#check-script-migrations"],
+      "inputs": [
+        "scripts/bunfig.coverage.toml",
+        "scripts/check-script-coverage.ts",
+        "scripts/migration-core.ts",
+        "scripts/**/*.test.ts",
+        ".buildkite/scripts/**/*.ts",
+        "packages/astro-opengraph-images/generate-readme*.ts",
+        "packages/discord-plays-mario-kart/scripts/**/*.ts",
+        "packages/discord-plays-pokemon/scripts/**/*.ts",
+        "packages/dotfiles/bin/executable_git_cleanup.ts",
+        "packages/dotfiles/scripts/**/*.ts",
+        "packages/homelab/scripts/**/*.ts",
+        "packages/llm-observability/test/e2e/**/*.ts",
+        "packages/scout-for-lol/scripts/**/*.ts",
+        "packages/tasks-for-obsidian/scripts/**/*.ts",
+        "packages/toolkit/scripts/**/*.ts",
+        "packages/{astro-opengraph-images,discord-plays-mario-kart,discord-plays-pokemon,dotfiles,homelab,llm-observability,scout-for-lol,tasks-for-obsidian,toolkit}/package.json"
+      ]
+    },
     "//#markdownlint": {
       "inputs": ["**/*.md", ".markdownlint*", "!**/node_modules/**"]
     },
@@ -99,7 +138,7 @@
       ]
     },
     "//#shellcheck": {
-      "inputs": ["**/*.sh", "!**/node_modules/**", "scripts/shellcheck.sh"]
+      "inputs": ["**/*.sh", "!**/node_modules/**", "scripts/shellcheck.ts"]
     },
     "//#knip": {
       "inputs": [
@@ -146,7 +185,7 @@
     },
     "//#compliance-check": {
       "inputs": [
-        "scripts/compliance-check.sh",
+        "scripts/compliance-check.ts",
         "packages/*/package.json",
         "packages/*/packages/*/package.json",
         "packages/*/eslint.config.*",
@@ -165,7 +204,7 @@
     "//#merge-conflicts": {
       "inputs": [
         ".conflictignore",
-        "scripts/check-merge-conflicts.sh",
+        "scripts/check-merge-conflicts.ts",
         "**/*.{ts,tsx,rs,json,yaml,yml,md,sh,astro,toml}",
         "!**/node_modules/**",
         "!**/dist/**",
@@ -175,7 +214,7 @@
     },
     "//#env-var-names": {
       "inputs": [
-        "scripts/check-env-var-names.sh",
+        "scripts/check-env-var-names.ts",
         "**/*.{ts,rs,py,fish,tmpl,yaml,yml,env,md,sh,swift}",
         "!**/node_modules/**",
         "!**/generated/**"
@@ -229,7 +268,7 @@
     "//#pyright": {
       "inputs": [
         "pyrightconfig.json",
-        "scripts/pyright-check.sh",
+        "scripts/pyright-check.ts",
         "scripts/python-dev-requirements.txt",
         "**/*.py",
         "!**/node_modules/**",

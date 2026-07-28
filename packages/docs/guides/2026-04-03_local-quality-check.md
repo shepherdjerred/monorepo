@@ -53,7 +53,7 @@ CI-blocking checks not covered by per-package scripts. Run all in parallel from 
 
 ```bash
 bun install --frozen-lockfile                  # lockfile integrity
-bash scripts/compliance-check.sh               # all packages have required scripts
+bun scripts/compliance-check.ts                # all packages have required scripts
 bun scripts/quality-ratchet.ts                 # lint metrics haven't regressed
 bun scripts/check-suppressions.ts --ci         # lint suppressions valid
 bash scripts/check-env-var-names.sh            # env var naming conventions

@@ -5,7 +5,8 @@
   "scripts": {
     "release-refiner:codex": "codex",
     "lint": "bunx --no-install eslint --cache . && bun lint-buildkite.ts",
-    "test": "bun test . ../.buildkite/scripts/select-image-targets.test.ts ../.buildkite/scripts/ci-lane-coverage.test.ts && bash ../.buildkite/scripts/ci-changed.test.sh && bash ../.buildkite/scripts/upload-pipeline.test.sh && bash ../.buildkite/scripts/bake-retry.test.sh && bash ../.buildkite/scripts/toolchain.test.sh",
+    "test": "bun test . ../.buildkite/scripts && bash ../.buildkite/scripts/upload-pipeline.test.sh && bash ../.buildkite/scripts/toolchain.test.sh",
+    "test:coverage": "bun test --config bunfig.coverage.toml --coverage generate-anki.test.ts check-env-var-names.test.ts check-merge-conflicts.test.ts compliance-check.test.ts new-package.test.ts prettier-staged.test.ts pyright-check.test.ts shellcheck.test.ts lib/json.test.ts ../.buildkite/scripts/annotate-build-summary.test.ts ../.buildkite/scripts/bake-images.test.ts ../.buildkite/scripts/bake-retry.test.ts ../.buildkite/scripts/build-ci-image.test.ts ../.buildkite/scripts/buildkit-env.test.ts ../.buildkite/scripts/ci-changed.test.ts ../.buildkite/scripts/prepare-ci-changed-base.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

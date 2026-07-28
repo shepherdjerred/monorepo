@@ -19,7 +19,7 @@
     "lint:eslint:fix": "bunx eslint . --fix",
     "test": "bun test",
     "test:watch": "bun test --watch",
-    "build:wasm": "bash ../../scripts/build-wasm.sh",
+    "build:wasm": "bun ../../scripts/build-wasm.ts",
     "e2e:input": "bun run scripts/e2e-input.ts",
     "e2e:input:check": "bun run scripts/e2e-input-assert.ts",
     "e2e:perf": "bun run scripts/e2e-perf.ts",

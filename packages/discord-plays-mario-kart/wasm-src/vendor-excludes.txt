@@ -1,4 +1,4 @@
-# Paths removed from the upstream N64Wasm clone when vendoring (see vendor-n64wasm.sh).
+# Paths removed from the upstream N64Wasm clone when vendoring (see vendor-n64wasm.ts).
 # One path per line, relative to the upstream repo root. Blank lines and #-comments ignored.
 #
 # Why these are removed:
@@ -9,3 +9,13 @@
 #   (the tree includes a 14 MB generated slangmosh.hpp shader header).
 code/src/mupen64plus-rsp-paraLLEl
 code/src/mupen64plus-video-paraLLEl
+
+# Upstream developer and release wrappers are not part of the embedded WASM
+# build and would otherwise reintroduce shell into the vendored tree.
+code/build.sh
+code/start_emc.sh
+code/src/mupen64plus-core/tools/build_bundle_bin.sh
+code/src/mupen64plus-core/tools/build_bundle_src.sh
+code/src/mupen64plus-core/tools/build_modules_src.sh
+code/src/mupen64plus-core/tools/install_binary_bundle.sh
+code/src/mupen64plus-core/tools/uninstall_binary_bundle.sh

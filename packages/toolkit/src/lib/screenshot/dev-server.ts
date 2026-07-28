@@ -135,7 +135,7 @@ export async function ensureDevServer(
 
   const stop = async () => {
     // The dev command may spawn descendants (docs-board's dev.ts starts
-    // separate API + Vite children; scout's dev-web.sh starts backend + Vite).
+    // separate API + Vite children; scout's dev-web.ts starts backend + Vite).
     // The child is a group leader (spawned `detached`), so signal the whole
     // group with a negative PID — killing only `bun run` would orphan those
     // servers and leave their ports occupied for the next run.

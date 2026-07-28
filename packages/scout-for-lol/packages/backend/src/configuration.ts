@@ -74,7 +74,7 @@ function computeConfiguration() {
     // unset, so gating the route on `environment === "dev"` alone would fail
     // open on a beta/prod deploy that forgot to set ENVIRONMENT — an
     // unauthenticated session-minting endpoint. Requiring this explicit flag
-    // (set only by scripts/dev-web.sh) means an omitted config fails closed.
+    // (set only by scripts/dev-web.ts) means an omitted config fails closed.
     enableDevLogin: env.get("ENABLE_DEV_LOGIN").default("false").asBool(),
     discordToken: getRequiredEnvVar("DISCORD_TOKEN"),
     applicationId: getRequiredEnvVar("APPLICATION_ID"),

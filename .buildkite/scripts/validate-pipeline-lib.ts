@@ -205,46 +205,6 @@ export function sharedPodAnchorBlock(
   return pipeline.slice(start, end);
 }
 
-// Top-level `name=( … )` array definitions in the selector. Lane case arms
-// reference them as "${name[@]}" (the per-site lists are defined once and the
-// aggregate `sites` lane is their union), so lane blocks must be expanded
-// through this map before asserting on literal paths.
-function selectorArrays(ciChanged: string): Map<string, string> {
-  const arrays = new Map<string, string>();
-  for (const match of ciChanged.matchAll(/^([a-z0-9_]+)=\(([\s\S]*?)\)/gm)) {
-    const [, name, contents] = match;
-    if (name !== undefined && contents !== undefined) {
-      arrays.set(name, contents);
-    }
-  }
-  return arrays;
-}
-
-export function selectorLane(ciChanged: string, lane: string): string {
-  const startMarker = `  ${lane})\n`;
-  const start = ciChanged.indexOf(startMarker);
-  if (start === -1) {
-    fail(`runtime CI selector is missing lane ${lane}`);
-  }
-  const blockStart = start + startMarker.length;
-  const blockEnd = ciChanged.indexOf("\n    ;;", blockStart);
-  if (blockEnd === -1) {
-    fail(`runtime CI selector lane ${lane} has no terminator`);
-  }
-  const arrays = selectorArrays(ciChanged);
-  return ciChanged
-    .slice(blockStart, blockEnd)
-    .replaceAll(/"\$\{([a-z0-9_]+)\[@\]\}"/g, (_reference, name: string) => {
-      const contents = arrays.get(name);
-      if (contents === undefined) {
-        fail(
-          `runtime CI selector lane ${lane} references undefined array ${name}`,
-        );
-      }
-      return contents;
-    });
-}
-
 export function containerBlock(
   stepKey: string,
   step: string | undefined,

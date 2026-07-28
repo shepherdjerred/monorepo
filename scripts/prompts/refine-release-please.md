@@ -69,7 +69,7 @@ These ship as monorepo-internal churn or never reach the npm tarball at all:
 - Line-ending or file-permission normalization
 - Test-only changes (anything under `**/*.test.ts`, `**/__tests__/`, test fixtures)
 - Example app changes (anything under `**/examples/`, `**/example/`)
-- `.gitattributes`, `.gitignore`, repo-internal scripts (`scripts/`, `generate_readme.sh`)
+- `.gitattributes`, `.gitignore`, repo-internal scripts (`scripts/`, `generate-readme.ts`)
 - ESLint config edits
 
 ### 5b. KEEP these — they are what consumers actually see when they upgrade

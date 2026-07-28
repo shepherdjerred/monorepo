@@ -94,7 +94,7 @@ already reads, byte-for-byte. The data contract is unchanged.
 1. **Add ottohg as the wasm upstream** — replace the URL in our wasm build
    pipeline (currently `pokeemerald.com/build/wasm/pokeemerald.wasm`) with a
    built artifact from ottohg's `master` HEAD. Either:
-   (a) commit the rebuilt `assets/pokeemerald.wasm`, with a `scripts/build-wasm.sh`
+   (a) commit the rebuilt `assets/pokeemerald.wasm`, with a `scripts/build-wasm.ts`
    that runs `make wasm` against a pinned ottohg SHA, or
    (b) add a Dagger task that builds it in CI from a pinned SHA.
    Option (a) matches what we already do (committed wasm asset). **~3 h.**
@@ -158,7 +158,7 @@ already reads, byte-for-byte. The data contract is unchanged.
   exercise. The fix-cadence has been ~3 fix-commits per day, so missing
   features are likely to land upstream before our scaffold matures. Mitigation:
   pin a SHA, file issues upstream, optionally maintain a local patch series
-  in `scripts/build-wasm.sh`.
+  in `scripts/build-wasm.ts`.
 - **Build env**: `clang --target=wasm32-unknown-unknown` and `wasm-ld` are
   uncommon in CI images. We'd need either a homebrew-LLVM-on-macOS workflow
   for local builds or a `clang+wasm-ld+uv` Docker image for CI (an alpine
@@ -388,7 +388,7 @@ with a real emulator.
   `src/emulator/audio/m4a-handlers-*.ts` + `m4a-memory.ts` +
   `m4a-structs.ts` once the wasm-side handlers are confirmed to run; verify
   `tickAndDrain` against the new buffer; rerun the FFmpeg→Opus harness.
-- Add a `scripts/build-wasm.sh` (or Dagger task) that clones ottohg at a
+- Add a `scripts/build-wasm.ts` (or Dagger task) that clones ottohg at a
   pinned SHA and runs `make wasm`.
 - Decide between s8 drain (current) and Float32 drain (ottohg `gWasmPcmL/R`)
   — pick Float32 unless it introduces other instability.

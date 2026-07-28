@@ -1,0 +1,22 @@
+{
+  "name": "@shepherdjerred/discord-plays-mario-kart-scripts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "test": "bun test scripts",
+    "test:coverage": "bun test --config ../../scripts/bunfig.coverage.toml --coverage scripts/build-wasm.test.ts scripts/vendor-n64wasm.test.ts",
+    "lint": "eslint --config eslint.config.ts scripts",
+    "typecheck": "tsc --noEmit",
+    "build:wasm": "bun scripts/build-wasm.ts",
+    "vendor:wasm": "bun scripts/vendor-n64wasm.ts"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@types/bun": "^1.3.14",
+    "eslint": "^10.7.0",
+    "jiti": "^2.7.0",
+    "typescript": "^6.0.3",
+    "zod": "^4.4.3"
+  }
+}

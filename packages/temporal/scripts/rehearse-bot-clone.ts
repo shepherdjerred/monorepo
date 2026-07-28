@@ -386,17 +386,24 @@ async function rehearsePokeemeraldDataEnvironment(
   repoDir: string,
 ): Promise<void> {
   // dpp-pokeemerald-data-daily runs the two generators, which read the
-  // OTTOHG_SHA pin out of build-wasm.sh and write the committed data tables.
+  // immutable pin from the language-neutral upstream manifest.
   // Assert the pin parses and every path the activity touches exists. The
   // network fetch itself is deliberately NOT rehearsed.
   console.error("[rehearsal] dpp-data: pin + generator + output paths");
   const dppRoot = `${repoDir}/packages/discord-plays-pokemon`;
-  const buildWasm = await Bun.file(`${dppRoot}/scripts/build-wasm.sh`).text();
-  if (!/^OTTOHG_SHA="[0-9a-f]{40}"$/m.test(buildWasm)) {
+  const upstream: unknown = await Bun.file(
+    `${dppRoot}/wasm-src/upstream.json`,
+  ).json();
+  if (
+    typeof upstream !== "object" ||
+    upstream === null ||
+    !("commit" in upstream) ||
+    typeof upstream.commit !== "string" ||
+    !/^[0-9a-f]{40}$/.test(upstream.commit)
+  ) {
     throw new Error(
-      "OTTOHG_SHA pin not found in packages/discord-plays-pokemon/scripts/" +
-        "build-wasm.sh — the dpp-pokeemerald-data-daily generators read the " +
-        "pin from that line and would throw.",
+      "Valid pin not found in packages/discord-plays-pokemon/wasm-src/" +
+        "upstream.json — the data generators would throw.",
     );
   }
   const requiredPaths = [

@@ -16,7 +16,7 @@ const checks: Check[] = [
       "Root workspace contains '!packages/...'. All packages must be integrated.",
   },
   {
-    file: "scripts/compliance-check.sh",
+    file: "scripts/compliance-check.ts",
     pattern: /\bcase\s+"\$PKG"\s+in|continue\s*;;/,
     message: "Compliance check contains package exemption branching.",
   },

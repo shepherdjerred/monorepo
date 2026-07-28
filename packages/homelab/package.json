@@ -19,8 +19,14 @@
     "typescript-eslint": "^8.59.0"
   },
   "scripts": {
+    "build": "tsc --noEmit -p tsconfig.scripts.json",
+    "test": "bun test scripts/helm-set-version.test.ts scripts/lint-helm.test.ts scripts/velero-backups.test.ts scripts/migration-smoke.test.ts",
+    "test:coverage": "bun test --config ../../scripts/bunfig.coverage.toml --coverage scripts/helm-set-version.test.ts scripts/lint-helm.test.ts scripts/velero-backups.test.ts",
+    "lint": "eslint scripts/helm-set-version.ts scripts/helm-set-version.test.ts scripts/lint-helm.ts scripts/lint-helm.test.ts scripts/velero-backups.ts scripts/velero-backups.test.ts scripts/migration-core.ts scripts/migration-smoke.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.scripts.json",
     "check:talos": "bun src/talos/update-image-id.ts --check",
-    "lint:helm": "bash scripts/lint-helm.sh",
+    "lint:helm": "bun scripts/lint-helm.ts",
+    "velero:backups": "bun scripts/velero-backups.ts",
     "docker:build:bindery": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/bindery:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t bindery:dev images/bindery",
     "docker:build:caddy-s3proxy": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/caddy-s3proxy:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t caddy-s3proxy:dev images/caddy-s3proxy",
     "docker:build:obsidian-headless": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/obsidian-headless:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t obsidian-headless:dev images/obsidian-headless",

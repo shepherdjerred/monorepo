@@ -25,18 +25,6 @@
   },
   {
     "namespace": "buildkite",
-    "name": "buildkite-uv-cache",
-    "backup": "disabled",
-    "reason": "Rebuildable uv artifact cache"
-  },
-  {
-    "namespace": "buildkite",
-    "name": "buildkite-trivy-db",
-    "backup": "disabled",
-    "reason": "Rebuildable Trivy vulnerability database"
-  },
-  {
-    "namespace": "buildkite",
     "name": "buildkite-git-mirrors-liskov",
     "backup": "disabled",
     "reason": "Rebuildable Git mirror cache"
@@ -46,6 +34,18 @@
     "name": "buildkite-tofu-plugin-cache",
     "backup": "disabled",
     "reason": "Rebuildable OpenTofu plugin cache"
+  },
+  {
+    "namespace": "buildkite",
+    "name": "buildkite-trivy-db",
+    "backup": "disabled",
+    "reason": "Rebuildable vulnerability database cache"
+  },
+  {
+    "namespace": "buildkite",
+    "name": "buildkite-uv-cache",
+    "backup": "disabled",
+    "reason": "Rebuildable Python package cache"
   },
   {
     "namespace": "chartmuseum",

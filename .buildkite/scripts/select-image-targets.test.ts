@@ -87,7 +87,10 @@ describe("selectImageTargets", () => {
     expect(await select(["package.json"])).toEqual(ALL_IMAGE_TARGETS);
     expect(await select(["scripts/package.json"])).toEqual(ALL_IMAGE_TARGETS);
     // Image-shaping CI scripts stay global; other CI scripts do not.
-    expect(await select([".buildkite/scripts/bake-images.sh"])).toEqual(
+    expect(await select([".buildkite/scripts/bake-images.ts"])).toEqual(
+      ALL_IMAGE_TARGETS,
+    );
+    expect(await select([".buildkite/scripts/migration-core.ts"])).toEqual(
       ALL_IMAGE_TARGETS,
     );
     expect(await select([".buildkite/scripts/upload-pipeline.sh"])).toEqual([]);

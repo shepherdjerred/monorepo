@@ -89,7 +89,7 @@ The `helm-compatibility.test.ts` test suite validates:
 2. **`helm template`** — runs real Helm on each synthesized chart
 3. **E2E content check** — verifies rendered output is correct for each consumer
 
-Lefthook pre-commit runs `lint-helm.sh` on homelab changes.
+Lefthook pre-commit runs `lint-helm.ts` on homelab changes.
 
 ## Bug History
 

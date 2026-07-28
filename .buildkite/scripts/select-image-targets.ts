@@ -5,7 +5,7 @@
  *
  * This intentionally does not call Turbo or require node_modules. Image
  * selection happens before the expensive toolchain/install/build work, and a
- * selector failure is handled by bake-images.sh by building every target.
+ * selector failure is handled by bake-images.ts by building every target.
  */
 
 import {
@@ -60,10 +60,10 @@ export const ALL_IMAGE_TARGETS = [
 //   global; other CI scripts don't change image content.
 const GLOBAL_IMAGE_INPUTS = [
   ".buildkite/pipeline.yml",
-  ".buildkite/scripts/bake-images.sh",
-  ".buildkite/scripts/bake-retry.sh",
-  ".buildkite/scripts/buildkit-env.sh",
-  ".buildkite/scripts/docker-env.sh",
+  ".buildkite/scripts/bake-images.ts",
+  ".buildkite/scripts/bake-retry.ts",
+  ".buildkite/scripts/buildkit-env.ts",
+  ".buildkite/scripts/migration-core.ts",
   ".buildkite/scripts/select-image-targets.ts",
   ".buildkite/scripts/select-image-targets-lockfile.ts",
   ".buildkite/scripts/select-image-targets-workspaces.ts",
@@ -481,7 +481,7 @@ async function main(): Promise<void> {
     process.exit(2);
   }
   // Justification side channel: stdout is a strict one-line JSON-array
-  // contract (bake-images.sh jq-validates it; ci-changed.sh string-compares
+  // contract (bake-images.ts jq-validates it; ci-changed.ts string-compares
   // it), so the per-target reasons report goes to a file instead.
   const reasonsFlag = Bun.argv.indexOf("--reasons-out");
   const reasonsOut = reasonsFlag === -1 ? undefined : Bun.argv[reasonsFlag + 1];

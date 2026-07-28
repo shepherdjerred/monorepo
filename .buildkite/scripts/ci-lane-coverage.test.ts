@@ -1,5 +1,5 @@
 // Lane↔if_changed coverage: every path the main-branch selector
-// (ci-changed.sh) treats as a lane input must be COVERED BY the corresponding
+// (ci-changed.ts) treats as a lane input must be COVERED BY the corresponding
 // PR step's `if_changed` globs, so a PR touching those inputs cannot merge
 // without the PR-side gate having run. Subset, not equality — PR globs are
 // deliberately broader (extension globs, the shared global closure).
@@ -9,6 +9,11 @@
 // subset property over every lane, parsed from the real YAML.
 
 import { describe, expect, test } from "bun:test";
+import {
+  globalPaths,
+  lanePaths as selectorLanePaths,
+  summaryLanes,
+} from "./migration-core.ts";
 
 const REPO_ROOT = new URL("../..", import.meta.url).pathname;
 
@@ -53,83 +58,12 @@ type SelectorLanes = {
   lanePaths: Map<string, string[]>;
 };
 
-function parseParenList(source: string, marker: string): string[] {
-  const start = source.indexOf(marker);
-  if (start === -1) throw new Error(`missing ${marker}`);
-  const open = source.indexOf("(", start);
-  const close = source.indexOf(")", open);
-  if (open === -1 || close === -1) throw new Error(`${marker} not a list`);
-  return source
-    .slice(open + 1, close)
-    .split(/\s+/)
-    .map((token) => token.trim())
-    .filter((token) => token.length > 0);
-}
-
-// Top-level `name=( … )` array definitions in the selector (e.g.
-// `site_sjer_red_paths=(...)`). Lane case arms reference them as
-// "${name[@]}" (the per-site lists are defined once and the aggregate
-// `sites` lane is their union) — mirrors validate-pipeline-lib.ts's
-// selectorArrays, which expands the same references for its own checks.
-function loadTopLevelArrays(source: string): Map<string, string[]> {
-  const arrays = new Map<string, string[]>();
-  for (const match of source.matchAll(/^([a-z0-9_]+)=\(([\s\S]*?)\)/gm)) {
-    const [, name, contents] = match;
-    if (name === undefined || contents === undefined) continue;
-    arrays.set(
-      name,
-      contents
-        .split(/\s+/)
-        .map((token) => token.trim())
-        .filter((token) => token.length > 0),
-    );
-  }
-  return arrays;
-}
-
-function expandLanePaths(
-  rawTokens: readonly string[],
-  arrays: ReadonlyMap<string, string[]>,
-): string[] {
-  const expanded: string[] = [];
-  for (const token of rawTokens) {
-    const reference = /^"\$\{([a-z0-9_]+)\[@\]\}"$/.exec(token);
-    const name = reference?.[1];
-    if (name === undefined) {
-      expanded.push(token);
-      continue;
-    }
-    const contents = arrays.get(name);
-    if (contents === undefined) {
-      throw new Error(`lane path references undefined array ${token}`);
-    }
-    expanded.push(...contents);
-  }
-  return expanded;
-}
-
 async function loadSelectorLanes(): Promise<SelectorLanes> {
-  const source = await Bun.file(
-    `${REPO_ROOT}/.buildkite/scripts/ci-changed.sh`,
-  ).text();
-  const globalPaths = parseParenList(source, "global_paths=(");
-  const arrays = loadTopLevelArrays(source);
   const lanePaths = new Map<string, string[]>();
-  // Case arms look like `  <lane>)\n    lane_paths=( ... )\n    ;;`
-  const armPattern = /^ {2}([a-z0-9-]+)\)$/gm;
-  for (const match of source.matchAll(armPattern)) {
-    const lane = match[1];
-    if (lane === undefined) continue;
-    const armEnd = source.indexOf(";;", match.index);
-    if (armEnd === -1) throw new Error(`lane ${lane} has no terminator`);
-    const arm = source.slice(match.index, armEnd);
-    if (!arm.includes("lane_paths=(")) continue;
-    lanePaths.set(
-      lane,
-      expandLanePaths(parseParenList(arm, "lane_paths=("), arrays),
-    );
+  for (const [lane, paths] of Object.entries(selectorLanePaths)) {
+    lanePaths.set(lane, [...paths]);
   }
-  return { globalPaths, lanePaths };
+  return { globalPaths: [...globalPaths], lanePaths };
 }
 
 // Which PR-side step gates each main lane's inputs. `images` is exempt here:
@@ -180,7 +114,7 @@ function coveredBy(path: string, globs: readonly string[]): boolean {
 }
 
 describe("lane↔if_changed coverage", () => {
-  test("every ci-changed.sh lane maps to a PR step and vice versa", async () => {
+  test("every ci-changed.ts lane maps to a PR step and vice versa", async () => {
     const { lanePaths } = await loadSelectorLanes();
     const lanes = new Set([...lanePaths.keys(), "images"]);
     expect([...lanes].sort()).toEqual(Object.keys(LANE_TO_STEP).sort());
@@ -188,7 +122,8 @@ describe("lane↔if_changed coverage", () => {
 
   test("every lane input is covered by its PR step's if_changed globs", async () => {
     const steps = await loadPipelineSteps();
-    const { globalPaths, lanePaths } = await loadSelectorLanes();
+    const { globalPaths: selectorGlobalPaths, lanePaths } =
+      await loadSelectorLanes();
     const uncovered: string[] = [];
     for (const [lane, stepKey] of Object.entries(LANE_TO_STEP)) {
       if (stepKey === null) continue;
@@ -198,9 +133,9 @@ describe("lane↔if_changed coverage", () => {
       }
       const entries = lanePaths.get(lane);
       if (entries === undefined) {
-        throw new Error(`lane ${lane} not found in ci-changed.sh`);
+        throw new Error(`lane ${lane} not found in ci-changed.ts`);
       }
-      for (const entry of [...globalPaths, ...entries]) {
+      for (const entry of [...selectorGlobalPaths, ...entries]) {
         for (const sample of await samplePaths(entry)) {
           if (!coveredBy(sample, step.include)) {
             uncovered.push(`${lane} → ${stepKey}: ${entry} (sample ${sample})`);
@@ -212,10 +147,8 @@ describe("lane↔if_changed coverage", () => {
   });
 
   test("build-summary's lane-decision table lists every lane", async () => {
-    const summary = await Bun.file(
-      `${REPO_ROOT}/.buildkite/scripts/annotate-build-summary.sh`,
-    ).text();
-    const listed = parseParenList(summary, "LANES=(");
-    expect([...listed].sort()).toEqual(Object.keys(LANE_TO_STEP).sort());
+    expect(Array.from(summaryLanes, String).sort()).toEqual(
+      Object.keys(LANE_TO_STEP).sort(),
+    );
   });
 });

@@ -11,7 +11,7 @@
 +    '_neil_set_buffer_remaining','_neil_set_endframe_callback','_neil_set_double_speed', \
 +    '_neilGetVideoBuffer','_neilGetVideoHeight','_neilSetRom','_neil_send_mobile_controls_player']" \
 +	-s INVOKE_RUN=0
-+	# outputs n64wasm.js + n64wasm.wasm in this dir; build-wasm.sh copies them.
++	# outputs n64wasm.js + n64wasm.wasm in this dir; build-wasm.ts copies them.
      
  
  %.o : %.cpp

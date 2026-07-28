@@ -19,14 +19,14 @@
 # Stage 1 — build pokeemerald.wasm from source.
 # ottohg/pokeemerald-wasm at a pinned commit + our checked-in export patch.
 # The committed asset is gitignored, so it MUST be produced here (mirrors the
-# removed Dagger `buildPokeemeraldWasm` and scripts/build-wasm.sh). The build
+# removed Dagger `buildPokeemeraldWasm` and scripts/build-wasm.ts). The build
 # uses clang wasm32-unknown-unknown + wasm-ld (LLVM, NOT emscripten): trixie's
 # clang-19 produces a Bun-loadable binary (bookworm's clang-14 does not).
 # ---------------------------------------------------------------------------
 FROM debian:trixie-slim@sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7ab59f2add76a7bd AS wasm-builder
 
 # Pinned commit of ottohg/pokeemerald-wasm. Kept in sync with the OTTOHG_SHA in
-# packages/discord-plays-pokemon/scripts/build-wasm.sh (the single source of
+# packages/discord-plays-pokemon/scripts/build-wasm.ts (the single source of
 # truth; Renovate's git-refs manager advances both).
 ENV OTTOHG_REPO=https://github.com/ottohg/pokeemerald-wasm.git
 # renovate: datasource=git-refs depName=pokeemerald-source branch=master
@@ -56,7 +56,7 @@ RUN set -e; for p in /patches/*.patch; do \
 
 # The Makefile only builds map headers as a side effect of the GBA `maps.o`
 # recipe (which the wasm target never runs), so drive mapjson ourselves —
-# mirrors scripts/build-wasm.sh.
+# mirrors scripts/build-wasm.ts.
 RUN make tools \
   && tools/mapjson/mapjson groups emerald data/maps/map_groups.json data/maps include \
   && tools/mapjson/mapjson layouts emerald data/layouts/layouts.json data/layouts include \

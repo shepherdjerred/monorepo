@@ -3,7 +3,7 @@
 # identical workspace bun-install layer the app images share — replacing the
 # serial per-image loop (45-52 min images step, build 5644/5656).
 #
-# CI (.buildkite/scripts/bake-images.sh) invokes this with
+# CI (.buildkite/scripts/bake-images.ts) invokes this with
 # VERSION/GIT_SHA/PUSH_CACHE set; local `docker buildx bake <target>` works
 # with the dev defaults (cache is read-only unless PUSH_CACHE=true — writing
 # the ghcr buildcache refs needs a docker-container builder + push creds).
