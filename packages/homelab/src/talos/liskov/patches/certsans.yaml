@@ -1,0 +1,5 @@
+# The Talos machine API certificate includes the hostname automatically, but
+# not the MagicDNS FQDN used by the management-plane client configuration.
+machine:
+  certSANs:
+    - liskov.tailnet-1a49.ts.net

@@ -20,6 +20,7 @@ own taints. The K8s side of the contract lives in `src/cdk8s/src/misc/nodes.ts`.
 | `patches/kubelet.yaml`  | reservations, eviction, pids cap, cgroup enforcement | systemReserved 32Gi (vs 40Gi), kubeReserved 4Gi (no etcd)                          |
 | `patches/sysctls.yaml`  | kptr_restrict, panic_on_rcu_stall                    | identical                                                                          |
 | `patches/watchdog.yaml` | hardware watchdog                                    | `sp5100_tco` (AMD) instead of `iTCO_wdt` — **live-verify before arming, see file** |
+| `patches/certsans.yaml` | Talos API certificate SANs                           | adds Liskov's canonical Tailscale FQDN                                             |
 
 Tailscale: create a real `patches/tailscale.yaml` from
 `patches/tailscale.example.yaml` with a fresh auth key (gitignored, never
@@ -40,8 +41,9 @@ committed).
    ```bash
    talosctl gen config --with-secrets secrets.yaml \
      --output-types worker -o liskov-worker.yaml \
-     <cluster-name> https://<controlplane-endpoint>:6443 \
+     torvalds https://torvalds.tailnet-1a49.ts.net:6443 \
      --config-patch @patches/image.yaml \
+     --config-patch @patches/certsans.yaml \
      --config-patch @patches/kubelet.yaml \
      --config-patch @patches/sysctls.yaml \
      --config-patch @patches/tailscale.yaml
@@ -52,7 +54,7 @@ committed).
    after the live verification steps in that file.)
 
 4. **Verify join**: node `Ready`; Tailscale up; and record the intended
-   Secure Boot state (`talosctl -n liskov get securitystate`).
+   Secure Boot state (`talosctl -n liskov.tailnet-1a49.ts.net get securitystate`).
 5. **Isolate the node and create the cache pool** on the 2TB disk. Before this
    PR merges, temporarily add the `ci=only` toleration to the live OpenEBS
    zfs-localpv node DaemonSet, then taint liskov. The declarative toleration in
