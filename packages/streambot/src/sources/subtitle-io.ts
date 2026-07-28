@@ -198,7 +198,7 @@ export async function listSubtitleCandidatesForFile(
  * (absolute path + byte size + mtime) and the subtitle-relative stream index. Deliberately does NOT
  * hash the file's bytes — a remux is tens of GB, so hashing it would cost more than the extraction
  * this key exists to skip. Size+mtime invalidate the entry when the file is replaced or re-encoded,
- * the same approach Plex/Jellyfin use. Returns null if the file can't be stat'd (caller falls back
+ * the same approach Plex uses. Returns null if the file can't be stat'd (caller falls back
  * to an uncached temp extraction). The `s<i>` separator keeps multi-track files from colliding.
  */
 async function embeddedCacheKey(

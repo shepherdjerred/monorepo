@@ -261,7 +261,7 @@ export function createPokemonDeployment(chart: Chart) {
 
   // Request the Intel iGPU so ffmpeg can VAAPI hardware-encode. The
   // intel-device-plugin mounts /dev/dri into the pod; non-root UID 1000 works
-  // (same as Jellyfin/streambot). cdk8s has no GPU resource field, so patch it in.
+  // (same as streambot). cdk8s has no GPU resource field, so patch it in.
   ApiObject.of(deployment).addJsonPatch(
     JsonPatch.add(
       "/spec/template/spec/containers/0/resources/limits/gpu.intel.com~1i915",

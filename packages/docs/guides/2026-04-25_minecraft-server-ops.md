@@ -9,24 +9,22 @@ board: false
 
 ## Deployed Servers
 
-All deployed servers use the `itzg/minecraft-server` Helm chart with `AUTO_CURSEFORGE` type.
-
-| Server           | Hostname               | JVM | K8s Memory | Storage |
-| ---------------- | ---------------------- | --- | ---------- | ------- |
-| All the Mons     | `allthemons.sjer.red`  | 8G  | 10Gi       | 64Gi    |
-| FTB StoneBlock 4 | `stoneblock4.sjer.red` | 6G  | 8Gi        | 32Gi    |
-| Better Minecraft | `bettermc.sjer.red`    | 6G  | 8Gi        | 32Gi    |
-| All of Create    | `allofcreate.sjer.red` | 6G  | 8Gi        | 32Gi    |
-| FTB Skies 2      | `ftbskies2.sjer.red`   | 6G  | 8Gi        | 32Gi    |
+As of 2026-07 only the three bespoke servers remain: `minecraft-sjerred`,
+`minecraft-shuxin`, and `minecraft-tsmc` (see
+`packages/homelab/src/cdk8s/src/resources/argo-applications/minecraft-*.ts`).
+The five `createModdedMinecraftApp` pack servers (All the Mons, FTB StoneBlock
+4, Better Minecraft, All of Create, FTB Skies 2) were deleted on 2026-07-27
+along with their namespaces, data, DNS records, and the shared
+`modded-minecraft.ts` helper.
 
 ## Operational Notes
 
 - Whitelist: `RiotShielder`, `vietnamesechovy`.
 - `mc-router` auto-hibernates idle servers and wakes them on connect.
 - CurseForge API key is stored in 1Password and shared across the servers.
-- DNS uses CNAMEs to `ddns.sjer.red` plus SRV records managed in OpenTofu.
-- Shared helper: `packages/homelab/src/cdk8s/src/misc/modded-minecraft.ts`.
-- Thin server definitions live in `packages/homelab/src/cdk8s/src/resources/argo-applications/`.
+- `mc.sjer.red`, `shuxin.sjer.red`, and `mc.ts-mc.net` are CNAMEs to
+  `ddns.sjer.red` managed outside OpenTofu.
+- Server definitions live in `packages/homelab/src/cdk8s/src/resources/argo-applications/`.
 
 ## Deployment Caution
 

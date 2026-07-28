@@ -151,18 +151,6 @@
   },
   {
     "namespace": "media",
-    "name": "jellyfin-cache-pvc",
-    "backup": "disabled",
-    "reason": "Rebuildable Jellyfin cache"
-  },
-  {
-    "namespace": "media",
-    "name": "jellyfin-config-pvc",
-    "backup": "disabled",
-    "reason": "Jellyfin is not a critical recovery target"
-  },
-  {
-    "namespace": "media",
     "name": "maintainerr-pvc",
     "backup": "enabled",
     "reason": "Maintainerr configuration and database"
@@ -246,30 +234,6 @@
     "reason": "Tautulli configuration and history"
   },
   {
-    "namespace": "minecraft-allofcreate",
-    "name": "datadir-minecraft-allofcreate-0",
-    "backup": "disabled",
-    "reason": "Non-critical Minecraft instance"
-  },
-  {
-    "namespace": "minecraft-allthemons",
-    "name": "datadir-minecraft-allthemons-0",
-    "backup": "disabled",
-    "reason": "Non-critical Minecraft instance"
-  },
-  {
-    "namespace": "minecraft-bettermc",
-    "name": "datadir-minecraft-bettermc-0",
-    "backup": "disabled",
-    "reason": "Non-critical Minecraft instance"
-  },
-  {
-    "namespace": "minecraft-ftbskies2",
-    "name": "datadir-minecraft-ftbskies2-0",
-    "backup": "disabled",
-    "reason": "Non-critical Minecraft instance"
-  },
-  {
     "namespace": "minecraft-shuxin",
     "name": "datadir-minecraft-shuxin-0",
     "backup": "enabled",
@@ -280,12 +244,6 @@
     "name": "datadir-minecraft-sjerred-0",
     "backup": "enabled",
     "reason": "Selected Minecraft world"
-  },
-  {
-    "namespace": "minecraft-stoneblock4",
-    "name": "datadir-minecraft-stoneblock4-0",
-    "backup": "disabled",
-    "reason": "Non-critical Minecraft instance"
   },
   {
     "namespace": "minecraft-tsmc",
