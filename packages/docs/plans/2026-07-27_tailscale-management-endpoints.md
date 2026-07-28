@@ -48,13 +48,14 @@ identity.
   after a kubelet restart and passed `/readyz?verbose`.
 - Kept normal external Talos and Kubernetes clients on Torvalds' Tailscale
   FQDN, while leaving the generated cluster identity on the LAN address.
+- Applied the managed talosconfig and kubeconfig locally and published the
+  conflict-free draft PR [#1742](https://github.com/shepherdjerred/monorepo/pull/1742).
 
 ### Remaining
 
 - Add a tailnet policy grant allowing Torvalds to reach Liskov TCP/50000, then
   validate Talos request forwarding to Liskov's Tailscale FQDN and add Liskov
   to the default Talos node list.
-- Publish the PR update.
 
 ### Caveats
 
