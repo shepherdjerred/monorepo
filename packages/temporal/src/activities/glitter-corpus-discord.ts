@@ -47,6 +47,15 @@ const ArchivedThreadListSchema = z.looseObject({
   has_more: z.boolean(),
 });
 
+function supportsPublicThreads(channel: DiscordApiChannel): boolean {
+  return (
+    channel.type === 0 ||
+    channel.type === 5 ||
+    channel.type === 15 ||
+    channel.type === 16
+  );
+}
+
 async function listArchivedPublicThreads(
   client: DiscordRestClient,
   parentChannelId: string,
@@ -97,12 +106,67 @@ function permissionChannelFor(
   return parent;
 }
 
+export function assertPreviouslyCapturedThreadParentsReadable(input: {
+  guildId: string;
+  botUserId: string;
+  roleIds: readonly string[];
+  guildRoles: readonly { id: string; permissions: string }[];
+  denylist: ReadonlySet<string>;
+  baselineInventory: GuildInventory | undefined;
+  channelsById: ReadonlyMap<string, DiscordApiChannel>;
+}): void {
+  if (input.baselineInventory === undefined) {
+    return;
+  }
+  const parentIds = new Set(
+    input.baselineInventory.entries
+      .filter(
+        (entry) =>
+          entry.scopeDecision === "include" &&
+          (entry.type === 10 || entry.type === 11) &&
+          entry.parentId !== null,
+      )
+      .map((entry) => entry.parentId)
+      .filter((parentId) => parentId !== null),
+  );
+  for (const parentId of parentIds) {
+    if (input.denylist.has(parentId)) {
+      continue;
+    }
+    const parent = input.channelsById.get(parentId);
+    if (parent === undefined) {
+      throw new Error(
+        `previously captured public-thread parent ${parentId} is no longer discoverable`,
+      );
+    }
+    if (!supportsPublicThreads(parent)) {
+      throw new Error(
+        `previously captured public-thread parent ${parentId} no longer supports archived public-thread discovery`,
+      );
+    }
+    if (
+      !canReadChannelHistory({
+        guildId: input.guildId,
+        botUserId: input.botUserId,
+        roleIds: input.roleIds,
+        guildRoles: input.guildRoles,
+        channel: parent,
+      })
+    ) {
+      throw new Error(
+        `lost Discord history permission for previously captured public-thread parent ${parentId}`,
+      );
+    }
+  }
+}
+
 export async function discoverGuildInventory(input: {
   token: string;
   guildId: string;
   guildSlug: string;
   denylistedChannelIds: readonly string[];
   discoveredAt: string;
+  baselineInventory?: GuildInventory;
   hooks?: DiscordRestClientHooks;
 }): Promise<GuildInventory> {
   const client = new DiscordRestClient(input.token, input.hooks);
@@ -141,14 +205,21 @@ export async function discoverGuildInventory(input: {
   );
 
   const denylist = new Set(input.denylistedChannelIds);
+  const guildChannelsById = new Map(
+    channelsResponse.data.map((channel) => [channel.id, channel]),
+  );
+  assertPreviouslyCapturedThreadParentsReadable({
+    guildId: input.guildId,
+    botUserId: userResponse.data.id,
+    roleIds: memberResponse.data.roles,
+    guildRoles: guildResponse.data.roles,
+    denylist,
+    baselineInventory: input.baselineInventory,
+    channelsById: guildChannelsById,
+  });
   const parentChannels = channelsResponse.data.filter((channel) => {
-    const supportsPublicThreads =
-      channel.type === 0 ||
-      channel.type === 5 ||
-      channel.type === 15 ||
-      channel.type === 16;
     return (
-      supportsPublicThreads &&
+      supportsPublicThreads(channel) &&
       !denylist.has(channel.id) &&
       canReadChannelHistory({
         guildId: input.guildId,

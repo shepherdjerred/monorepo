@@ -1,4 +1,5 @@
 import {
+  CurrentMessageSchema,
   GuildInventorySchema,
   GuildSnapshotSchema,
   type ChannelStateManifest,
@@ -6,7 +7,6 @@ import {
   type GuildSnapshot,
 } from "#shared/glitter-corpus.ts";
 import {
-  buildCurrentProjection,
   compareSnowflakes,
   mergeCurrentProjection,
   projectionChecksum,
@@ -54,6 +54,38 @@ function assertProjectionMatchesManifest(
       `rebuilt projection does not match state ${manifest.snapshotId}:${manifest.channelId}`,
     );
   }
+}
+
+async function readRetainedBaselineProjection(input: {
+  manifestKey: string;
+  guildId: string;
+  channelId: string;
+}): Promise<CurrentMessage[]> {
+  const manifest = await loadStateManifest(input.manifestKey);
+  if (
+    manifest.guildId !== input.guildId ||
+    manifest.channelId !== input.channelId
+  ) {
+    throw new Error(
+      `recovery retained baseline identity mismatch for ${input.channelId}`,
+    );
+  }
+  const bytes = await readMirroredObject({
+    stores: createCorpusStoresFromEnv(),
+    key: manifest.projectionObjectKey,
+  });
+  if (bytes === undefined || sha256(bytes) !== manifest.projectionSha256) {
+    throw new Error(
+      `recovery retained baseline projection mismatch: ${manifest.projectionObjectKey}`,
+    );
+  }
+  const projection = new TextDecoder()
+    .decode(bytes)
+    .split("\n")
+    .filter((line) => line !== "")
+    .map((line) => CurrentMessageSchema.parse(JSON.parse(line)));
+  assertProjectionMatchesManifest(manifest, projection);
+  return projection;
 }
 
 async function rebuildCompleteState(
@@ -126,10 +158,23 @@ async function rebuildCompleteState(
     ...forward.observations,
     ...seed,
   ];
-  const projection = buildCurrentProjection(observations);
+  const retainedBaseline =
+    manifest.retainedBaselineManifestKey === null
+      ? []
+      : await readRetainedBaselineProjection({
+          manifestKey: manifest.retainedBaselineManifestKey,
+          guildId: manifest.guildId,
+          channelId: manifest.channelId,
+        });
+  if (retainedBaseline.length !== manifest.retainedBaselineMessageCount) {
+    throw new Error(
+      `recovery retained baseline count mismatch for channel ${manifest.channelId}`,
+    );
+  }
+  const projection = mergeCurrentProjection(retainedBaseline, observations);
   if (
     observations.length !== manifest.observationCount ||
-    observations.length - projection.length !==
+    retainedBaseline.length + observations.length - projection.length !==
       manifest.duplicateObservationCount
   ) {
     throw new Error(

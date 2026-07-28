@@ -27,8 +27,9 @@ contracts.
   second. Stricter reset headers and `retry_after` values extend that delay.
 - Initial capture is one channel at a time. Each channel runs in a child
   workflow so a large guild cannot exhaust one Temporal history.
-- A channel is complete only after backward and forward traversals reach empty
-  terminal pages and contain the same unique message IDs.
+- A channel is complete only after its backward traversal reaches an empty
+  terminal page, its forward traversal reaches the frozen upper bound with a
+  non-empty terminal page, and both contain the same unique message IDs.
 - Every immutable write is read back and checksum-verified in both SeaweedFS
   and Cloudflare R2.
 - The mutable `latest.json` pointer advances only after both stores contain the
@@ -102,10 +103,14 @@ second_output=$(mktemp -d /tmp/glitter-seed-second.XXXXXX)
 
 bun run glitter:import-seed \
   --archive="$HOME/Downloads/glitter-boys.zip" \
-  --output="$first_output"
+  --output="$first_output" \
+  --guild-id=208425771172102144 \
+  --guild-slug=glitter-boys
 bun run glitter:import-seed \
   --archive="$HOME/Downloads/glitter-boys.zip" \
-  --output="$second_output"
+  --output="$second_output" \
+  --guild-id=208425771172102144 \
+  --guild-slug=glitter-boys
 
 sha256sum "$first_output/projection.ndjson" \
   "$second_output/projection.ndjson"
@@ -124,7 +129,7 @@ Expected trusted-seed acceptance:
 | Duplicate IDs      | 0                                                                  |
 | First timestamp    | `2016-08-03T07:15:58.632Z`                                         |
 | Last timestamp     | `2025-11-23T03:01:23.939Z`                                         |
-| Projection SHA-256 | `8bad3bee568dfb5eb60d6524eee6b3c75d6ea3b1ac8f545887bac60cc8db572f` |
+| Projection SHA-256 | `ae61f1659196d176b343dc40f19741b0df73be01466f61c2da7561f43a7e08f8` |
 
 After both buckets exist and the worker storage credentials are available,
 mirror the archive, manifest, projection, and channel partitions:
@@ -133,6 +138,8 @@ mirror the archive, manifest, projection, and channel partitions:
 bun run glitter:import-seed \
   --archive="$HOME/Downloads/glitter-boys.zip" \
   --output="$first_output" \
+  --guild-id=208425771172102144 \
+  --guild-slug=glitter-boys \
   --mirror=true
 ```
 
@@ -183,8 +190,10 @@ TEMPORAL_ADDRESS=localhost:7233 bun run glitter:operate canary \
 ```
 
 Do not begin the full backfill unless the canary completes with equal traversal
-sets, empty terminal pages, and matching mirror receipts. A safety-ceiling
-failure is not completeness; select a larger ceiling and rerun deliberately.
+ID sets, an empty backward terminal page, a non-empty forward terminal page
+whose reason is `reached-upper-bound`, and matching mirror receipts. A
+safety-ceiling failure is not completeness; select a larger ceiling and rerun
+deliberately.
 
 ## Initial backfill
 
@@ -241,10 +250,20 @@ authorization failure, mirror divergence, inventory drift, and snapshot age.
 ## Shared-context refresh acceptance
 
 Leave `glitter-context-refresh-weekly` paused until the first complete snapshot
-passes recovery verification. Then start one dry run with workflow input
-`{"dryRun":true}` and verify:
+passes recovery verification. Then run two fixed-time dry runs:
+
+```bash
+TEMPORAL_ADDRESS=localhost:7233 bun run glitter:operate context-refresh \
+  --dry-run=true \
+  --now=<fixed-iso-timestamp> \
+  --wait=true
+```
+
+Verify:
 
 - the result names the exact published snapshot checksum;
+- both runs return the same `proposalSha256`, `changedFiles`, and generated
+  result;
 - only eligible people are refreshed (20 new messages or 90 days);
 - every style sample is an exact safe corpus candidate;
 - relationship changes cite available message IDs and preserve superseded
@@ -252,10 +271,12 @@ passes recovery verification. Then start one dry run with workflow input
 - `changedFiles` contains only shared-package data and generated-data paths;
 - a second rehearsal is byte-idempotent.
 
-Run once without `dryRun` only after those checks pass. It may open one
-human-reviewed pull request and never auto-merges. A `no-diff` result opens no
-pull request. After reviewing that first PR, unpause the Monday 11:00
-America/Los_Angeles schedule.
+Run once with `--dry-run=false --wait=true` only after those checks pass. It
+may open one human-reviewed pull request and never auto-merges. Activity
+retries reuse a branch derived from the Temporal workflow run ID, so they
+update or reuse the same exact-head proposal rather than opening duplicates. A
+`no-diff` result opens no pull request. After reviewing that first PR, unpause
+the Monday 11:00 America/Los_Angeles schedule.
 
 ## Incident response
 
@@ -273,3 +294,23 @@ Never repair `latest.json` by hand.
 
 An immutable collision means the same evidence key produced different bytes.
 Treat it as a correctness event, not as an object to overwrite.
+
+## Session Log — 2026-07-27
+
+### Done
+
+- Corrected the seed commands to require guild
+  `208425771172102144`/`glitter-boys` and pinned the normalized projection
+  checksum.
+- Corrected the canary terminal proof and documented fixed-time weekly
+  rehearsals through the supported operator command.
+
+### Remaining
+
+- Complete credential projection, deployment, mirroring, inventory approval,
+  canary, backfill, recovery verification, and schedule acceptance.
+
+### Caveats
+
+- Both ZIP roots are channel-export groups in one guild; archive directory
+  names are retained as provenance and are not guild identities.

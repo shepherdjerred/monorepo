@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { DiscordApiChannelSchema } from "#shared/glitter-corpus.ts";
+import {
+  DiscordApiChannelSchema,
+  GuildInventorySchema,
+} from "#shared/glitter-corpus.ts";
+import { assertPreviouslyCapturedThreadParentsReadable } from "./glitter-corpus-discord.ts";
 import {
   effectiveChannelPermissions,
   scopeEntry,
@@ -181,5 +185,74 @@ describe("Glitter Discord content preflight", () => {
         flagsNew: String(1 << 19),
       }),
     ).toThrow("does not match bot user");
+  });
+});
+
+describe("Glitter Discord retained forum scope", () => {
+  const baselineInventory = GuildInventorySchema.parse({
+    schemaVersion: 1,
+    guildId: "123",
+    guildSlug: "glitter-boys",
+    guildName: "Glitter Boys",
+    discoveredAt: "2026-07-26T00:00:00.000Z",
+    denylistedChannelIds: [],
+    entries: [
+      {
+        guildId: "123",
+        channelId: "789",
+        parentId: "456",
+        name: "archived-public-thread",
+        type: 11,
+        archived: true,
+        locked: false,
+        scopeDecision: "include",
+        discoveredAt: "2026-07-26T00:00:00.000Z",
+      },
+    ],
+    sha256: "a".repeat(64),
+  });
+
+  function assertParents(input: {
+    parent?: ReturnType<typeof channel>;
+    denylist?: ReadonlySet<string>;
+  }): void {
+    assertPreviouslyCapturedThreadParentsReadable({
+      guildId: "123",
+      botUserId: "999",
+      roleIds: [],
+      guildRoles: [{ id: "123", permissions: VIEW_AND_HISTORY }],
+      denylist: input.denylist ?? new Set(),
+      baselineInventory,
+      channelsById:
+        input.parent === undefined
+          ? new Map()
+          : new Map([[input.parent.id, input.parent]]),
+    });
+  }
+
+  test("fails before archived enumeration when a prior parent disappears", () => {
+    expect(() => assertParents({})).toThrow("no longer discoverable");
+  });
+
+  test("fails when a prior parent loses history permission", () => {
+    expect(() =>
+      assertParents({
+        parent: channel({
+          type: 15,
+          overwrites: [
+            {
+              id: "123",
+              type: 0,
+              allow: "0",
+              deny: String(1n << 16n),
+            },
+          ],
+        }),
+      }),
+    ).toThrow("lost Discord history permission");
+  });
+
+  test("allows an explicit parent denylist decision", () => {
+    expect(() => assertParents({ denylist: new Set(["456"]) })).not.toThrow();
   });
 });

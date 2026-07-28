@@ -25,6 +25,21 @@ type RateLimitMetadata = {
   bucket: string | null;
 };
 
+type CompletedDiscordRequest = {
+  response: Response;
+  requestedAt: string;
+  completedAt: string;
+  body: string;
+  metadata: RateLimitMetadata;
+  rateLimitRetryDelayMs: number | null;
+};
+
+class DiscordNetworkRequestError extends Error {
+  public constructor(cause: unknown) {
+    super("Discord network request failed", { cause });
+  }
+}
+
 export type DiscordRestResponse<T> = {
   data: T;
   rawBody: string;
@@ -166,28 +181,75 @@ export class DiscordRestClient {
     }
   }
 
-  async #deferGlobalCeiling(
+  async #performLeasedRequest(
     path: string,
-    attempt: number,
     holder: string,
-    delayMs: number,
-  ): Promise<void> {
-    const notBeforeMs = Date.now() + delayMs;
-    for (;;) {
-      const updated = await this.#rateLimitCoordinator.tryDeferUntil({
-        holder,
-        notBeforeMs,
-      });
-      if (updated) {
-        return;
+  ): Promise<CompletedDiscordRequest> {
+    let releaseNotBeforeMs: number | undefined;
+    let outcome: { request: CompletedDiscordRequest } | { error: unknown };
+    try {
+      const requestedAt = new Date().toISOString();
+      let response: Response;
+      let body: string;
+      try {
+        const timeoutSignal = AbortSignal.timeout(30_000);
+        response = await fetch(`${API_BASE_URL}${path}`, {
+          headers: { Authorization: `Bot ${this.#token}` },
+          signal:
+            this.#hooks === undefined
+              ? timeoutSignal
+              : AbortSignal.any([
+                  this.#hooks.cancellationSignal,
+                  timeoutSignal,
+                ]),
+        });
+        body = await response.text();
+      } catch (error: unknown) {
+        throw new DiscordNetworkRequestError(error);
       }
-      await this.#wait(50, {
-        phase: "global-rate-limit-wait",
-        path,
-        attempt,
-        delayMs: 50,
-      });
+      const completedAt = new Date().toISOString();
+      const completedAtMs = Date.parse(completedAt);
+      const metadata = rateLimitMetadata(response.headers);
+      if (metadata.remaining === 0 && metadata.resetAfterSeconds !== null) {
+        releaseNotBeforeMs =
+          completedAtMs + Math.ceil(metadata.resetAfterSeconds * 1000);
+      }
+      let rateLimitRetryDelayMs: number | null = null;
+      if (response.status === 429) {
+        const limited = RateLimitResponseSchema.parse(parseJson(body));
+        rateLimitRetryDelayMs = Math.ceil(limited.retry_after * 1000);
+        releaseNotBeforeMs = Math.max(
+          releaseNotBeforeMs ?? 0,
+          completedAtMs + rateLimitRetryDelayMs,
+        );
+      }
+      outcome = {
+        request: {
+          response,
+          requestedAt,
+          completedAt,
+          body,
+          metadata,
+          rateLimitRetryDelayMs,
+        },
+      };
+    } catch (error: unknown) {
+      outcome = { error };
     }
+    const released = await this.#rateLimitCoordinator.release({
+      holder,
+      completedAtMs: Date.now(),
+      ...(releaseNotBeforeMs === undefined
+        ? {}
+        : { notBeforeMs: releaseNotBeforeMs }),
+    });
+    if (!released) {
+      throw new Error(`lost Discord request lease before release for ${path}`);
+    }
+    if ("error" in outcome) {
+      throw outcome.error;
+    }
+    return outcome.request;
   }
 
   async get<T>(
@@ -208,22 +270,14 @@ export class DiscordRestClient {
         attempt,
         delayMs: 0,
       });
-      const requestedAt = new Date().toISOString();
-      let response: Response;
+      let request: CompletedDiscordRequest;
       try {
-        const timeoutSignal = AbortSignal.timeout(30_000);
-        response = await fetch(`${API_BASE_URL}${path}`, {
-          headers: { Authorization: `Bot ${this.#token}` },
-          signal:
-            this.#hooks === undefined
-              ? timeoutSignal
-              : AbortSignal.any([
-                  this.#hooks.cancellationSignal,
-                  timeoutSignal,
-                ]),
-        });
+        request = await this.#performLeasedRequest(path, rateLimitHolder);
       } catch (error: unknown) {
         this.#hooks?.cancellationSignal.throwIfAborted();
+        if (!(error instanceof DiscordNetworkRequestError)) {
+          throw error;
+        }
         if (attempt === MAX_RETRIES) {
           glitterCorpusDiscordRequestsTotal.inc({
             outcome: "fatal-network-error",
@@ -246,52 +300,40 @@ export class DiscordRestClient {
         attempt += 1;
         continue;
       }
-      const completedAt = new Date().toISOString();
-      const body = await response.text();
-      const metadata = rateLimitMetadata(response.headers);
-      if (metadata.remaining === 0 && metadata.resetAfterSeconds !== null) {
-        await this.#deferGlobalCeiling(
-          path,
-          attempt,
-          rateLimitHolder,
-          Math.ceil(metadata.resetAfterSeconds * 1000),
-        );
-      }
 
-      if (response.status === 401 || response.status === 403) {
+      if (request.response.status === 401 || request.response.status === 403) {
         glitterCorpusDiscordRequestsTotal.inc({ outcome: "auth-failure" });
         throw new Error(
-          `Discord authorization failed with ${String(response.status)} for ${path}; refusing to continue because corpus completeness cannot be proven`,
+          `Discord authorization failed with ${String(request.response.status)} for ${path}; refusing to continue because corpus completeness cannot be proven`,
         );
       }
-      if (response.ok) {
+      if (request.response.ok) {
         glitterCorpusDiscordRequestsTotal.inc({ outcome: "success" });
         return {
-          data: schema.parse(parseJson(body)),
-          rawBody: body,
-          requestedAt,
-          completedAt,
+          data: schema.parse(parseJson(request.body)),
+          rawBody: request.body,
+          requestedAt: request.requestedAt,
+          completedAt: request.completedAt,
           retryCount: attempt,
-          rateLimit: metadata,
+          rateLimit: request.metadata,
         };
       }
-      if (!isRetryableStatus(response.status) || attempt === MAX_RETRIES) {
+      if (
+        !isRetryableStatus(request.response.status) ||
+        attempt === MAX_RETRIES
+      ) {
         glitterCorpusDiscordRequestsTotal.inc({ outcome: "fatal-error" });
         throw new Error(
-          `Discord request failed with ${String(response.status)} for ${path}: ${body.slice(0, 500)}`,
+          `Discord request failed with ${String(request.response.status)} for ${path}: ${request.body.slice(0, 500)}`,
         );
       }
 
-      if (response.status === 429) {
+      if (request.response.status === 429) {
         glitterCorpusDiscordRequestsTotal.inc({ outcome: "rate-limited" });
-        const limited = RateLimitResponseSchema.parse(parseJson(body));
-        const retryDelay = Math.ceil(limited.retry_after * 1000);
-        await this.#deferGlobalCeiling(
-          path,
-          attempt,
-          rateLimitHolder,
-          retryDelay,
-        );
+        const retryDelay = request.rateLimitRetryDelayMs;
+        if (retryDelay === null) {
+          throw new Error("Discord 429 response lacks a retry delay");
+        }
         await this.#wait(retryDelay, {
           phase: "rate-limit-wait",
           path,

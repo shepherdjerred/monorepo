@@ -4,11 +4,11 @@ import {
   CorpusObservationSchema,
   DiscordApiMessageSchema,
   PageManifestSchema,
-  SeedImportManifestSchema,
   type ChannelStateManifest,
   type CorpusObservation,
   type PageManifest,
 } from "#shared/glitter-corpus.ts";
+import { SeedImportManifestSchema } from "#shared/glitter-corpus-seed.ts";
 import {
   compareSnowflakes,
   sha256,
@@ -384,7 +384,9 @@ export async function readSeedChannelObservations(input: {
     observations.some(
       (observation) =>
         observation.channelId !== input.channelId ||
-        observation.source !== "seed",
+        observation.source !== "seed" ||
+        observation.guildId !== manifest.guildId ||
+        observation.guildSlug !== manifest.guildSlug,
     )
   ) {
     throw new Error(`seed channel partition has invalid observations: ${key}`);
@@ -394,6 +396,8 @@ export async function readSeedChannelObservations(input: {
 
 export async function validateSeedForApprovedInventory(input: {
   seedPrefix: string;
+  guildId: string;
+  guildSlug: string;
   approvedChannelIds: readonly string[];
 }): Promise<void> {
   const manifest = await readCorpusJson(
@@ -403,6 +407,14 @@ export async function validateSeedForApprovedInventory(input: {
   if (input.seedPrefix !== `seed/${manifest.archiveSha256}`) {
     throw new Error(
       `seed prefix ${input.seedPrefix} does not match archive ${manifest.archiveSha256}`,
+    );
+  }
+  if (
+    manifest.guildId !== input.guildId ||
+    manifest.guildSlug !== input.guildSlug
+  ) {
+    throw new Error(
+      `trusted seed guild ${manifest.guildId}/${manifest.guildSlug} does not match approved inventory ${input.guildId}/${input.guildSlug}`,
     );
   }
   const stores = createCorpusStoresFromEnv();

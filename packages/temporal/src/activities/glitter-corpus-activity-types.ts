@@ -51,6 +51,7 @@ export const VerifyChannelInputSchema =
     forwardPageManifestKeys: z.array(z.string().min(1)).min(1),
     forwardUpperBoundMessageId: z.string().regex(/^\d+$/).optional(),
     seedPrefix: z.string().min(1).optional(),
+    retainedBaselineManifestKey: z.string().min(1).optional(),
   });
 
 export const ChannelStateResultSchema = z

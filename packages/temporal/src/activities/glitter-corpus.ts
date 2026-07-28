@@ -3,12 +3,11 @@ import type { z } from "zod/v4";
 import {
   ChannelCompletenessManifestSchema,
   ChannelOverlapManifestSchema,
-  CurrentMessageSchema,
   GuildInventorySchema,
   PageManifestSchema,
+  type CurrentMessage,
 } from "#shared/glitter-corpus.ts";
 import {
-  buildCurrentProjection,
   compareSnowflakes,
   mergeCurrentProjection,
   serializeProjection,
@@ -31,6 +30,7 @@ import {
   type ChannelStateResult,
   type InventoryResult,
 } from "./glitter-corpus-activity-types.ts";
+import { readBaselineProjection } from "./glitter-corpus-baseline.ts";
 import { discoverGuildInventory } from "./glitter-corpus-discord.ts";
 import {
   DiscordRestClient,
@@ -41,7 +41,6 @@ import { readOrCaptureDiscordPage } from "./glitter-corpus-capture-page.ts";
 import {
   glitterCorpusRuntimeConfig,
   jsonBytes,
-  loadStateManifest,
   readCorpusJson,
   readOverlapTraversal,
   readSeedChannelObservations,
@@ -94,12 +93,17 @@ async function inventoryGlitterGuild(input: {
   baselineInventory?: z.input<typeof GuildInventorySchema>;
 }): Promise<InventoryResult> {
   const config = glitterCorpusRuntimeConfig();
+  const baselineInventory =
+    input.baselineInventory === undefined
+      ? undefined
+      : GuildInventorySchema.parse(input.baselineInventory);
   const inventory = await discoverGuildInventory({
     token: config.token,
     guildId: config.guildId,
     guildSlug: config.guildSlug,
     denylistedChannelIds: config.denylistedChannelIds,
     discoveredAt: input.discoveredAt,
+    ...(baselineInventory === undefined ? {} : { baselineInventory }),
     hooks: temporalDiscordRestHooks("inventory"),
   });
   glitterCorpusInventoryEntries.reset();
@@ -109,8 +113,8 @@ async function inventoryGlitterGuild(input: {
     });
   }
   glitterCorpusInventoryScopeChanges.reset();
-  if (input.baselineInventory !== undefined) {
-    const baseline = GuildInventorySchema.parse(input.baselineInventory);
+  if (baselineInventory !== undefined) {
+    const baseline = baselineInventory;
     const previousById = new Map(
       baseline.entries.map((entry) => [entry.channelId, entry.scopeDecision]),
     );
@@ -197,6 +201,8 @@ async function loadApprovedGlitterInventory(input: {
 
 async function validateApprovedGlitterSeed(input: {
   seedPrefix: string;
+  guildId: string;
+  guildSlug: string;
   approvedChannelIds: string[];
 }): Promise<void> {
   await validateSeedForApprovedInventory(input);
@@ -341,7 +347,16 @@ async function verifyGlitterCorpusChannel(
       channelId: input.channelId,
     })),
   ];
-  const projection = buildCurrentProjection(observations);
+  let retainedBaseline: CurrentMessage[] = [];
+  if (input.retainedBaselineManifestKey !== undefined) {
+    const retainedState = await readBaselineProjection({
+      manifestKey: input.retainedBaselineManifestKey,
+      guildId: input.guildId,
+      channelId: input.channelId,
+    });
+    retainedBaseline = retainedState.messages;
+  }
+  const projection = mergeCurrentProjection(retainedBaseline, observations);
   const projectionObject = await writeChannelProjection({
     guildId: input.guildId,
     channelId: input.channelId,
@@ -357,6 +372,8 @@ async function verifyGlitterCorpusChannel(
     verifiedAt: input.verifiedAt,
     lineageDepth: 0,
     seedPrefix: input.seedPrefix ?? null,
+    retainedBaselineManifestKey: input.retainedBaselineManifestKey ?? null,
+    retainedBaselineMessageCount: retainedBaseline.length,
     backwardProof: {
       direction: "backward",
       pageManifestKeys: input.backwardPageManifestKeys,
@@ -378,7 +395,8 @@ async function verifyGlitterCorpusChannel(
       observations.length -
       backward.observations.length -
       forward.observations.length,
-    duplicateObservationCount: observations.length - projection.length,
+    duplicateObservationCount:
+      retainedBaseline.length + observations.length - projection.length,
     ...projectionStateFields({
       projection,
       projectionObjectKey: projectionObject.key,
@@ -389,40 +407,6 @@ async function verifyGlitterCorpusChannel(
     manifest,
     projection,
   });
-}
-
-async function readBaselineProjection(input: {
-  manifestKey: string;
-  guildId: string;
-  channelId: string;
-}) {
-  const baseline = await loadStateManifest(input.manifestKey);
-  if (
-    baseline.guildId !== input.guildId ||
-    baseline.channelId !== input.channelId
-  ) {
-    throw new Error(`baseline state identity mismatch for ${input.channelId}`);
-  }
-  const bytes = await readMirroredObject({
-    stores: createCorpusStoresFromEnv(),
-    key: baseline.projectionObjectKey,
-  });
-  if (bytes === undefined) {
-    throw new Error(
-      `baseline projection missing: ${baseline.projectionObjectKey}`,
-    );
-  }
-  if (sha256(bytes) !== baseline.projectionSha256) {
-    throw new Error(
-      `baseline projection checksum mismatch: ${baseline.projectionObjectKey}`,
-    );
-  }
-  const messages = new TextDecoder()
-    .decode(bytes)
-    .split("\n")
-    .filter((line) => line !== "")
-    .map((line) => CurrentMessageSchema.parse(JSON.parse(line)));
-  return { baseline, messages };
 }
 
 async function applyGlitterCorpusOverlap(
