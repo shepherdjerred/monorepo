@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { caddyfileEntitlementArguments } from "./bake-images.ts";
 import {
+  caddyfileEntitlementArguments,
   expandTargets,
   findPinnedDigest,
   knownImageTargets,

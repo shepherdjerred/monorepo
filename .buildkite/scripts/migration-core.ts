@@ -322,6 +322,17 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   ],
 };
 
+export function caddyfileEntitlementArguments(
+  targets: readonly string[],
+  caddyfile?: string,
+): string[] {
+  if (!targets.includes("caddy-s3proxy")) return [];
+  if (caddyfile === undefined) {
+    throw new Error("CADDYFILE_SMOKE_PATH is required for caddy-s3proxy");
+  }
+  return ["--allow", `fs.read=${caddyfile}`];
+}
+
 export function selectBase(response: unknown, head: string): string {
   if (!Array.isArray(response)) {
     throw new TypeError("Buildkite response must be an array");

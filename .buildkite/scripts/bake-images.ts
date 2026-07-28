@@ -5,6 +5,7 @@ import {
   type BuildxCommandResult,
 } from "./bake-retry.ts";
 import {
+  caddyfileEntitlementArguments,
   expandTargets,
   findPinnedDigest,
   knownImageTargets,
@@ -18,17 +19,6 @@ const registry = "ghcr.io/shepherdjerred";
 const selectionReport = "image-selection-report.json";
 const pushOutcomes = "image-push-outcomes.json";
 const versionsPath = "packages/homelab/src/cdk8s/src/versions.ts";
-
-export function caddyfileEntitlementArguments(
-  targets: readonly string[],
-  caddyfile?: string,
-): string[] {
-  if (!targets.includes("caddy-s3proxy")) return [];
-  if (caddyfile === undefined) {
-    throw new Error("CADDYFILE_SMOKE_PATH is required for caddy-s3proxy");
-  }
-  return ["--allow", `fs.read=${caddyfile}`];
-}
 
 async function execute(
   command: readonly string[],

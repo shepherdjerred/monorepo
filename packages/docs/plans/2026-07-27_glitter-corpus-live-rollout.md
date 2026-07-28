@@ -253,13 +253,22 @@ pass.
   read entitlement during both smoke and production pushes. Added focused
   fail-fast coverage for the required path; the seven-test bake suite,
   root-script typecheck, lint, and formatting checks pass.
+- Merged the entitlement correction as PR
+  [#1765](https://github.com/shepherdjerred/monorepo/pull/1765). Authoritative
+  main Buildkite #6728 then caught that importing the executable bake runner
+  from its unit test pulled orchestration code into the strict script-coverage
+  set and reduced measured coverage below 90%.
+- Moved the pure entitlement argument builder into the existing covered
+  migration core, so the regression test no longer imports executable
+  orchestration while the production runner retains the same fail-fast
+  behavior.
 
 ### Remaining
 
 - Publish and deploy the live-canary fixes, rerun the canary with a deliberate
   1,000-page ceiling, then complete backfill, recovery, and schedule
   acceptance.
-- Merge the image-bake entitlement correction and verify its authoritative
+- Merge the coverage-safe image-bake correction and verify its authoritative
   current-main image publication and Temporal worker rollout.
 - Reconcile the daily schedule from its false missing-denylist pause to its
   explicit operator-approval hold; keep both schedules paused until their
