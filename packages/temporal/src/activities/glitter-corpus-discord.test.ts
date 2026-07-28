@@ -3,7 +3,10 @@ import {
   DiscordApiChannelSchema,
   GuildInventorySchema,
 } from "#shared/glitter-corpus.ts";
-import { assertPreviouslyCapturedThreadParentsReadable } from "./glitter-corpus-discord.ts";
+import {
+  assertPreviouslyCapturedThreadParentsReadable,
+  discordGuildMemberPath,
+} from "./glitter-corpus-discord.ts";
 import {
   effectiveChannelPermissions,
   scopeEntry,
@@ -153,6 +156,12 @@ describe("Glitter Discord inventory permissions", () => {
 });
 
 describe("Glitter Discord content preflight", () => {
+  test("looks up the bot's guild member by its snowflake", () => {
+    expect(discordGuildMemberPath({ guildId: "123", botUserId: "999" })).toBe(
+      "/guilds/123/members/999",
+    );
+  });
+
   test("accepts either enabled Message Content application flag", () => {
     expect(() =>
       requireMessageContentIntent({

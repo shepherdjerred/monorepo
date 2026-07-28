@@ -56,6 +56,13 @@ function supportsPublicThreads(channel: DiscordApiChannel): boolean {
   );
 }
 
+export function discordGuildMemberPath(input: {
+  guildId: string;
+  botUserId: string;
+}): string {
+  return `/guilds/${input.guildId}/members/${input.botUserId}`;
+}
+
 async function listArchivedPublicThreads(
   client: DiscordRestClient,
   parentChannelId: string,
@@ -192,7 +199,10 @@ export async function discoverGuildInventory(input: {
       : { flagsNew: applicationResponse.data.flags_new }),
   });
   const memberResponse = await client.get(
-    `/guilds/${input.guildId}/members/@me`,
+    discordGuildMemberPath({
+      guildId: input.guildId,
+      botUserId: userResponse.data.id,
+    }),
     DiscordMemberSchema,
   );
   const channelsResponse = await client.get(
