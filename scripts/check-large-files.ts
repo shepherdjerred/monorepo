@@ -11,14 +11,18 @@
 
 const MAX_BYTES = 5 * 1_048_576;
 
-const assetCheck = Bun.spawnSync(
-  [
-    "bun",
-    "--no-install",
-    "packages/scout-for-lol/scripts/check-asset-sizes.ts",
-  ],
-  { stdout: "inherit", stderr: "inherit" },
-);
+const requestedPaths = Bun.argv.slice(2);
+const fullRepositoryCheck = requestedPaths.length === 0;
+const assetCheck = fullRepositoryCheck
+  ? Bun.spawnSync(
+      [
+        "bun",
+        "--no-install",
+        "packages/scout-for-lol/scripts/check-asset-sizes.ts",
+      ],
+      { stdout: "inherit", stderr: "inherit" },
+    )
+  : null;
 
 const ignorePatterns: string[] = [];
 const largeignore = Bun.file(".largeignore");
@@ -41,7 +45,11 @@ function isIgnored(file: string): boolean {
 
 // -s gives the index mode per entry; 120000 = symlink (its "content" is the
 // target path, so size checks are meaningless — and Bun.file would follow it).
-const lsFiles = Bun.spawnSync(["git", "ls-files", "-sz"]);
+const lsFilesCommand = ["git", "ls-files", "-sz"];
+if (!fullRepositoryCheck) {
+  lsFilesCommand.push("--", ...requestedPaths);
+}
+const lsFiles = Bun.spawnSync(lsFilesCommand);
 if (lsFiles.exitCode !== 0) {
   throw new Error(`git ls-files failed: ${lsFiles.stderr.toString()}`);
 }
@@ -71,4 +79,4 @@ if (offenders.length > 0) {
   process.exit(1);
 }
 
-process.exit(assetCheck.exitCode);
+process.exit(assetCheck?.exitCode ?? 0);

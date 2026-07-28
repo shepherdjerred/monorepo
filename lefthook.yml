@@ -1,9 +1,8 @@
 glob_matcher: doublestar
 
-# Turbo-powered hooks. The old lefthook re-ran per-package eslint/typecheck/
-# test jobs on every commit; turbo replays unchanged work from cache in
-# milliseconds, so the tiers collapse into two turbo invocations plus a
-# handful of staged-file safety checks.
+# Local hooks inspect only staged files. Buildkite owns the exhaustive
+# whole-repo verification graph; developers run focused package checks while
+# iterating instead of competing for laptop resources with parallel agents.
 
 commit-msg:
   jobs:
@@ -20,10 +19,11 @@ pre-commit:
             run: gitleaks protect --staged --redact --no-banner
 
           - name: merge-conflicts
-            run: bun scripts/check-merge-conflicts.ts
+            glob: "**/*.{ts,tsx,rs,json,yaml,yml,md,sh,astro,toml}"
+            run: bun scripts/check-merge-conflicts.ts {staged_files}
 
           - name: large-files
-            run: bun scripts/check-large-files.ts
+            run: bun scripts/check-large-files.ts {staged_files}
 
           - name: line-endings
             run: bun scripts/check-line-endings.ts {staged_files}
@@ -34,23 +34,17 @@ pre-commit:
               - "sandbox/archive/**"
               - "**/generated/**"
               - "**/node_modules/**"
-            run: bun scripts/check-env-var-names.ts
+            run: bun scripts/check-env-var-names.ts {staged_files}
 
           - name: check-suppressions
             run: bun scripts/check-suppressions.ts
-
-          - name: check-todos
-            run: bun run check-todos
-
-          - name: migration-guard
-            run: bun scripts/guard-no-package-exclusions.ts
 
           - name: lockfile-check
             glob: "**/package.json"
             run: bun install --frozen-lockfile --dry-run
 
-          # Formatters fix + restage; everything else formatting-related is
-          # caught by `//#prettier` in verify below.
+          # Formatting is intentionally staged-file-only locally. CI runs the
+          # full `//#prettier` task over the repository.
           - name: prettier
             glob: "**/*.{ts,tsx,js,jsx,json,jsonc,yaml,yml,md,css,astro,html,graphql}"
             exclude:
@@ -62,9 +56,3 @@ pre-commit:
               - "**/CLAUDE.md"
             run: bun scripts/prettier-staged.ts {staged_files}
             stage_fixed: true
-
-    # The full verification surface (build/typecheck/test/lint + every repo
-    # check), affected-scoped. Identical command surface to CI; warm-cache
-    # replay is near-instant.
-    - name: verify-affected
-      run: bun run verify -- --affected --concurrency=4 --output-logs=errors-only

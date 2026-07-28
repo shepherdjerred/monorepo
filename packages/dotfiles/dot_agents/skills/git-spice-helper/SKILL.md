@@ -96,8 +96,9 @@ CI only.
 
 ## Core workflow (the daily loop)
 
-All commands run inside the stack's worktree. Verify each branch
-(`bun run verify -- --affected`) before you submit it.
+All commands run inside the stack's worktree. Before submitting, run focused
+build/typecheck/test/lint tasks for the packages you changed. The commit hook
+checks staged files only; Buildkite runs the exhaustive whole-repo gate.
 
 ### 1. Start / extend a stack
 
@@ -185,7 +186,9 @@ git-spice rebase abort               # (gs rba) revert to the pre-rebase state
   own `buildkite/monorepo/pr` run, and every restack re-pushes → re-runs CI on
   the affected PRs. The **root of the stack must be independently landable**;
   feature-flag anything that would break a lower PR's CI on its own.
-- **Verify before every submit:** `bun run verify -- --affected` on each branch.
+- **Verify before every submit:** run focused package checks and commit through
+  the staged-file pre-commit hook. Do not run the root verification graph
+  locally by default; Buildkite runs it exhaustively for every PR.
 - **`repo sync` / `repo restack` are repo-global.** In a multi-worktree session
   they act on all tracked branches; know what other stacks exist before running them.
 - **Stack state is local and never pushed.** A fresh clone / CI / a teammate has
