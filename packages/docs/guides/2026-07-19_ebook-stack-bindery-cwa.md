@@ -50,7 +50,7 @@ plan's Phase C pivot).
 
 | Component   | Image                                             | Tailscale host | Port | Namespace |
 | ----------- | ------------------------------------------------- | -------------- | ---- | --------- |
-| Bindery     | `docker.io/vavallee/bindery`                      | `bindery`      | 8787 | `media`   |
+| Bindery     | `ghcr.io/shepherdjerred/bindery` (self-built)     | `bindery`      | 8787 | `media`   |
 | CWA         | `docker.io/crocodilestick/calibre-web-automated`  | `cwa`          | 8083 | `media`   |
 | ShelfBridge | `ghcr.io/shepherdjerred/shelfbridge` (self-built) | —              | 8787 | `media`   |
 | Prowlarr    | existing                                          | `prowlarr`     | 9696 | `media`   |
@@ -64,20 +64,18 @@ Versions are pinned with digests in
 
 The repository self-builds `ghcr.io/shepherdjerred/bindery` from a pinned
 upstream commit with a local patch that lets author-named, author-ID-less
-Google Books results be added. The deployment intentionally remains on
-`docker.io/vavallee/bindery` during the publication stage:
+Google Books results be added. The staged rollout completed on 2026-07-28:
 
 1. Main CI builds, tests, smokes, and pushes the patched image.
 2. Version commit-back replaces the unused
    `shepherdjerred/bindery` seed with the real tag and digest.
 3. An operator makes the new GHCR package public and verifies the digest can be
    pulled anonymously. The cluster has no GHCR pull secret.
-4. A follow-up change switches `bindery.ts` to the verified first-party pin.
+4. `bindery.ts` deploys the verified first-party tag and digest.
 
-Do not point the deployment at the all-zero seed or a private package. Until
-all four steps are complete, Renovate continues to update the deployed
-`vavallee/bindery` pin; the first-party source commit is updated separately
-through the `bindery-source` custom manager and requires manual review.
+The first-party source commit is updated separately through the
+`bindery-source` custom manager and requires manual review. Never point the
+deployment at an all-zero seed, mutable tag, or private package.
 
 ## Storage
 

@@ -107,7 +107,7 @@ export function createBinderyDeployment(
 
   deployment.addContainer(
     withCommonProps({
-      image: `docker.io/vavallee/bindery:${versions["vavallee/bindery"]}`,
+      image: `ghcr.io/shepherdjerred/bindery:${versions["shepherdjerred/bindery"]}`,
       ports: [{ number: BINDERY_PORT, name: "http", protocol: Protocol.TCP }],
       securityContext: {
         user: LINUXSERVER_UID,
