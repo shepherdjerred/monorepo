@@ -50,6 +50,21 @@ describe("temporal homelab audit tooling", () => {
     expect(yaml).not.toContain("name: HOMELAB_AUDIT_ARCHIVE_BUCKET");
   });
 
+  it("wires Starlight and SeaweedFS for the Glitter corpus", async () => {
+    const yaml = await synthesizeApp();
+
+    expect(yaml).toContain(
+      "itemPath: vaults/v64ocnykdqju4ui6j6pua56xw4/items/cmp6si6n5syhr4smxew3qfcmfi",
+    );
+    expect(yaml).toContain("name: GLITTER_DISCORD_TOKEN");
+    expect(yaml).toContain("name: GLITTER_DISCORD_GUILD_ID");
+    expect(yaml).toContain('value: "208425771172102144"');
+    expect(yaml).toContain("name: GLITTER_CORPUS_S3_ENDPOINT");
+    expect(yaml).toContain("name: GLITTER_CORPUS_S3_BUCKET");
+    expect(yaml).toContain("value: glitter-discord-corpus");
+    expect(yaml).not.toContain("name: GLITTER_CORPUS_R2_");
+  });
+
   it("enables Temporal worker observability dynamic config with v1.29 key casing", async () => {
     const resources = parseResources(await synthesizeApp());
     const dynamicConfig = resources.find(

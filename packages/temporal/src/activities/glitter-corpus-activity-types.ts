@@ -1,7 +1,7 @@
 import { z } from "zod/v4";
 import {
   GuildInventorySchema,
-  MirroredObjectSchema,
+  StoredObjectSchema,
   PageManifestSchema,
 } from "#shared/glitter-corpus.ts";
 
@@ -29,7 +29,7 @@ export type CapturePageInput = z.input<typeof CapturePageInputSchema>;
 export const CapturePageResultSchema = z
   .object({
     manifestKey: z.string().min(1),
-    manifestObject: MirroredObjectSchema,
+    manifestObject: StoredObjectSchema,
     page: PageManifestSchema,
     messageIds: z.array(z.string().regex(/^\d+$/)),
     messageTimestamps: z.array(z.iso.datetime({ offset: true })),
@@ -58,7 +58,7 @@ export const ChannelStateResultSchema = z
   .object({
     channelId: z.string().regex(/^\d+$/),
     manifestKey: z.string().min(1),
-    manifestObject: MirroredObjectSchema,
+    manifestObject: StoredObjectSchema,
     uniqueMessageCount: z.number().int().nonnegative(),
   })
   .strict();
@@ -79,7 +79,7 @@ export const FinalizeSnapshotInputSchema = z
     snapshotId: z.uuid(),
     guildId: z.string().regex(/^\d+$/),
     createdAt: z.iso.datetime({ offset: true }),
-    inventoryObject: MirroredObjectSchema,
+    inventoryObject: StoredObjectSchema,
     expectedChannelIds: z.array(z.string().regex(/^\d+$/)),
     channelStates: z.array(ChannelStateResultSchema),
   })
@@ -89,7 +89,7 @@ export const InventoryResultSchema = z
   .object({
     inventory: GuildInventorySchema,
     inventoryKey: z.string().min(1),
-    inventoryObject: MirroredObjectSchema,
+    inventoryObject: StoredObjectSchema,
   })
   .strict();
 export type InventoryResult = z.infer<typeof InventoryResultSchema>;
@@ -97,13 +97,13 @@ export type InventoryResult = z.infer<typeof InventoryResultSchema>;
 export const DailyBaselineSchema = z
   .object({
     inventory: GuildInventorySchema,
-    inventoryObject: MirroredObjectSchema,
+    inventoryObject: StoredObjectSchema,
     states: z.record(
       z.string().regex(/^\d+$/),
       z
         .object({
           manifestKey: z.string().min(1),
-          manifestObject: MirroredObjectSchema,
+          manifestObject: StoredObjectSchema,
           uniqueMessageCount: z.number().int().nonnegative(),
           newestMessageId: z.string().regex(/^\d+$/).nullable(),
           lineageDepth: z.number().int().nonnegative(),

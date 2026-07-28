@@ -350,9 +350,9 @@ export const ChannelStateManifestSchema = z.union([
   ChannelOverlapManifestSchema,
 ]);
 export type ChannelStateManifest = z.infer<typeof ChannelStateManifestSchema>;
-export const MirrorObjectReceiptSchema = z
+export const StoredObjectReceiptSchema = z
   .object({
-    store: z.enum(["seaweedfs", "r2"]),
+    store: z.literal("seaweedfs"),
     bucket: z.string().min(1),
     key: z.string().min(1),
     sha256: Sha256Schema,
@@ -360,40 +360,34 @@ export const MirrorObjectReceiptSchema = z
     writtenAt: IsoTimestampSchema,
   })
   .strict();
-export type MirrorObjectReceipt = z.infer<typeof MirrorObjectReceiptSchema>;
-export const MirroredObjectSchema = z
+export type StoredObjectReceipt = z.infer<typeof StoredObjectReceiptSchema>;
+export const StoredObjectSchema = z
   .object({
     key: z.string().min(1),
     sha256: Sha256Schema,
-    receipts: z.tuple([MirrorObjectReceiptSchema, MirrorObjectReceiptSchema]),
+    receipt: StoredObjectReceiptSchema,
   })
   .strict()
   .superRefine((value, context) => {
-    const stores = new Set(value.receipts.map((receipt) => receipt.store));
-    if (!stores.has("seaweedfs") || !stores.has("r2")) {
+    if (
+      value.receipt.key !== value.key ||
+      value.receipt.sha256 !== value.sha256
+    ) {
       context.addIssue({
         code: "custom",
-        message: "mirrored object must have one SeaweedFS and one R2 receipt",
+        message: "storage receipt key and checksum must match the object",
       });
     }
-    for (const receipt of value.receipts) {
-      if (receipt.key !== value.key || receipt.sha256 !== value.sha256) {
-        context.addIssue({
-          code: "custom",
-          message: "mirror receipt key and checksum must match the object",
-        });
-      }
-    }
   });
-export type MirroredObject = z.infer<typeof MirroredObjectSchema>;
+export type StoredObject = z.infer<typeof StoredObjectSchema>;
 export const GuildSnapshotSchema = z
   .object({
     schemaVersion: z.literal(1),
     snapshotId: z.uuid(),
     guildId: DiscordSnowflakeSchema,
     createdAt: IsoTimestampSchema,
-    inventoryObject: MirroredObjectSchema,
-    channelManifestObjects: z.array(MirroredObjectSchema),
+    inventoryObject: StoredObjectSchema,
+    channelManifestObjects: z.array(StoredObjectSchema),
     expectedChannelIds: z.array(DiscordSnowflakeSchema),
     completeChannelIds: z.array(DiscordSnowflakeSchema),
     uniqueMessageCount: z.number().int().nonnegative(),

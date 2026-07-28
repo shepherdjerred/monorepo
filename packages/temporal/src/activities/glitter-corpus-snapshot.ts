@@ -19,13 +19,14 @@ import {
   jsonBytes,
   loadStateManifest,
 } from "./glitter-corpus-io.ts";
-import { createCorpusStoresFromEnv } from "./glitter-corpus-store.ts";
+import { createCorpusStoreFromEnv } from "./glitter-corpus-store.ts";
 import {
   LatestSnapshotPointerSchema,
   publishLatestSnapshotPointer,
-  putMirroredImmutableObject,
-  readMirroredObject,
-  readVerifiedMirroredObject,
+  putImmutableObject,
+  readObject,
+  readRequiredObject,
+  readVerifiedObject,
 } from "./glitter-corpus-storage.ts";
 import { verifyGlitterCorpusSnapshotGraph } from "./glitter-corpus-recovery.ts";
 
@@ -35,10 +36,6 @@ const SNAPSHOT_METRICS_ENVIRONMENT = [
   "GLITTER_CORPUS_S3_BUCKET",
   "GLITTER_CORPUS_S3_ACCESS_KEY_ID",
   "GLITTER_CORPUS_S3_SECRET_ACCESS_KEY",
-  "GLITTER_CORPUS_R2_ENDPOINT",
-  "GLITTER_CORPUS_R2_BUCKET",
-  "GLITTER_CORPUS_R2_ACCESS_KEY_ID",
-  "GLITTER_CORPUS_R2_SECRET_ACCESS_KEY",
 ] as const;
 
 export async function restoreGlitterCorpusSnapshotMetrics(): Promise<void> {
@@ -54,9 +51,9 @@ export async function restoreGlitterCorpusSnapshotMetrics(): Promise<void> {
   if (guildId === undefined || guildId === "") {
     throw new Error("configured Glitter corpus metrics have no guild ID");
   }
-  const stores = createCorpusStoresFromEnv();
+  const store = createCorpusStoreFromEnv();
   const pointerKey = `guilds/${guildId}/snapshots/latest.json`;
-  const pointerBytes = await readMirroredObject({ stores, key: pointerKey });
+  const pointerBytes = await readObject({ store, key: pointerKey });
   if (pointerBytes === undefined) {
     return;
   }
@@ -66,8 +63,8 @@ export async function restoreGlitterCorpusSnapshotMetrics(): Promise<void> {
   if (pointer.guildId !== guildId) {
     throw new Error(`latest corpus pointer belongs to ${pointer.guildId}`);
   }
-  const snapshotBytes = await readVerifiedMirroredObject({
-    stores,
+  const snapshotBytes = await readVerifiedObject({
+    store,
     key: pointer.snapshotKey,
     expectedSha256: pointer.snapshotSha256,
   });
@@ -103,9 +100,9 @@ export async function finalizeGlitterCorpusSnapshot(
     ),
     complete: true,
   });
-  const stores = createCorpusStoresFromEnv();
-  const inventoryBytes = await readVerifiedMirroredObject({
-    stores,
+  const store = createCorpusStoreFromEnv();
+  const inventoryBytes = await readVerifiedObject({
+    store,
     key: snapshot.inventoryObject.key,
     expectedSha256: snapshot.inventoryObject.sha256,
   });
@@ -120,15 +117,15 @@ export async function finalizeGlitterCorpusSnapshot(
     guildSlug: inventory.guildSlug,
   });
   const snapshotKey = `guilds/${input.guildId}/snapshots/${input.snapshotId}.json`;
-  const snapshotObject = await putMirroredImmutableObject({
-    stores,
+  const snapshotObject = await putImmutableObject({
+    store,
     key: snapshotKey,
     body: jsonBytes(snapshot),
     contentType: "application/json",
     writtenAt: input.createdAt,
   });
   await publishLatestSnapshotPointer({
-    stores,
+    store,
     pointer: {
       schemaVersion: 1,
       guildId: input.guildId,
@@ -147,27 +144,22 @@ export async function finalizeGlitterCorpusSnapshot(
 
 export async function loadGlitterCorpusDailyBaseline(): Promise<DailyBaseline> {
   const config = glitterCorpusRuntimeConfig();
-  const stores = createCorpusStoresFromEnv();
+  const store = createCorpusStoreFromEnv();
   const pointerKey = `guilds/${config.guildId}/snapshots/latest.json`;
-  const pointerBytes = await readMirroredObject({ stores, key: pointerKey });
-  if (pointerBytes === undefined) {
-    throw new Error(
-      `daily capture has no verified baseline snapshot: ${pointerKey}`,
-    );
-  }
+  const pointerBytes = await readRequiredObject({ store, key: pointerKey });
   const pointer = LatestSnapshotPointerSchema.parse(
     JSON.parse(new TextDecoder().decode(pointerBytes)),
   );
-  const snapshotBytes = await readVerifiedMirroredObject({
-    stores,
+  const snapshotBytes = await readVerifiedObject({
+    store,
     key: pointer.snapshotKey,
     expectedSha256: pointer.snapshotSha256,
   });
   const snapshot = GuildSnapshotSchema.parse(
     JSON.parse(new TextDecoder().decode(snapshotBytes)),
   );
-  const inventoryBytes = await readVerifiedMirroredObject({
-    stores,
+  const inventoryBytes = await readVerifiedObject({
+    store,
     key: snapshot.inventoryObject.key,
     expectedSha256: snapshot.inventoryObject.sha256,
   });

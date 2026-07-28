@@ -361,14 +361,14 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
       name: "glitter-discord-corpus",
       rules: [
         {
-          alert: "GlitterCorpusMirrorDivergence",
+          alert: "GlitterCorpusStorageIntegrityFailure",
           annotations: {
-            summary: "Glitter Discord corpus mirrors diverged",
+            summary: "Glitter Discord corpus storage integrity failed",
             description:
-              "SeaweedFS and Cloudflare R2 are missing different objects or returned different checksums. Snapshot publication is blocked; inspect the failed Glitter corpus activity before retrying.",
+              "SeaweedFS returned a missing, collided, or checksum-invalid corpus object. Snapshot publication is blocked; inspect the failed Glitter corpus activity before retrying.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "increase(glitter_corpus_mirror_divergence_total[15m]) > 0",
+            "increase(glitter_corpus_storage_integrity_failures_total[15m]) > 0",
           ),
           for: "1m",
           labels: {

@@ -13,7 +13,7 @@ import {
 import {
   GuildInventorySchema,
   GuildSnapshotSchema,
-  MirroredObjectSchema,
+  StoredObjectSchema,
 } from "#shared/glitter-corpus.ts";
 import {
   runGlitterCorpusBackfill,
@@ -34,28 +34,18 @@ afterAll(async () => {
   await testEnvironment.teardown();
 });
 
-function mirroredObject(key: string) {
-  return MirroredObjectSchema.parse({
+function storedObject(key: string) {
+  return StoredObjectSchema.parse({
     key,
     sha256: SHA256,
-    receipts: [
-      {
-        store: "seaweedfs",
-        bucket: "corpus",
-        key,
-        sha256: SHA256,
-        etag: "seaweed-etag",
-        writtenAt: CREATED_AT,
-      },
-      {
-        store: "r2",
-        bucket: "corpus",
-        key,
-        sha256: SHA256,
-        etag: "r2-etag",
-        writtenAt: CREATED_AT,
-      },
-    ],
+    receipt: {
+      store: "seaweedfs",
+      bucket: "corpus",
+      key,
+      sha256: SHA256,
+      etag: "seaweed-etag",
+      writtenAt: CREATED_AT,
+    },
   });
 }
 
@@ -93,7 +83,7 @@ function pageResult(
     `${input.direction}/${input.requestId}.json`;
   return CapturePageResultSchema.parse({
     manifestKey,
-    manifestObject: mirroredObject(manifestKey),
+    manifestObject: storedObject(manifestKey),
     page: {
       schemaVersion: 1,
       requestId: input.requestId,
@@ -149,7 +139,7 @@ function finalSnapshot(rawInput: z.input<typeof FinalizeSnapshotInputSchema>) {
       complete: true,
     }),
     snapshotKey,
-    snapshotObject: mirroredObject(snapshotKey),
+    snapshotObject: storedObject(snapshotKey),
   };
 }
 
@@ -166,7 +156,7 @@ describe("Glitter corpus workflows", () => {
         loadApprovedGlitterInventory: async () => ({
           inventory: approvedInventory,
           inventoryKey: "inventory.json",
-          inventoryObject: mirroredObject("inventory.json"),
+          inventoryObject: storedObject("inventory.json"),
         }),
         captureGlitterCorpusPage: async (rawInput: CapturePageInput) => {
           const input = CapturePageInputSchema.parse(rawInput);
@@ -196,7 +186,7 @@ describe("Glitter corpus workflows", () => {
           return {
             channelId: input.channelId,
             manifestKey,
-            manifestObject: mirroredObject(manifestKey),
+            manifestObject: storedObject(manifestKey),
             uniqueMessageCount: 2,
           };
         },
@@ -238,7 +228,7 @@ describe("Glitter corpus daily overlap workflows", () => {
     const overlapInputs: z.input<typeof ApplyOverlapInputSchema>[] = [];
     const captured: CapturePageInput[] = [];
     const baselineInventory = inventory(["10"]);
-    const stateObject = mirroredObject("states/baseline.json");
+    const stateObject = storedObject("states/baseline.json");
     const worker = await Worker.create({
       connection: testEnvironment.nativeConnection,
       taskQueue: TASK_QUEUE,
@@ -246,7 +236,7 @@ describe("Glitter corpus daily overlap workflows", () => {
       activities: {
         loadGlitterCorpusDailyBaseline: async () => ({
           inventory: baselineInventory,
-          inventoryObject: mirroredObject("inventory-baseline.json"),
+          inventoryObject: storedObject("inventory-baseline.json"),
           states: {
             "10": {
               manifestKey: stateObject.key,
@@ -261,7 +251,7 @@ describe("Glitter corpus daily overlap workflows", () => {
         inventoryGlitterGuild: async () => ({
           inventory: baselineInventory,
           inventoryKey: "inventory-current.json",
-          inventoryObject: mirroredObject("inventory-current.json"),
+          inventoryObject: storedObject("inventory-current.json"),
         }),
         captureGlitterCorpusPage: async (rawInput: CapturePageInput) => {
           const input = CapturePageInputSchema.parse(rawInput);
@@ -291,7 +281,7 @@ describe("Glitter corpus daily overlap workflows", () => {
           return {
             channelId: input.channelId,
             manifestKey,
-            manifestObject: mirroredObject(manifestKey),
+            manifestObject: storedObject(manifestKey),
             uniqueMessageCount: 4,
           };
         },
@@ -320,7 +310,7 @@ describe("Glitter corpus daily overlap workflows", () => {
     const overlapInputs: z.input<typeof ApplyOverlapInputSchema>[] = [];
     const captured: CapturePageInput[] = [];
     const baselineInventory = inventory(["10"]);
-    const stateObject = mirroredObject("states/empty-baseline.json");
+    const stateObject = storedObject("states/empty-baseline.json");
     const worker = await Worker.create({
       connection: testEnvironment.nativeConnection,
       taskQueue: TASK_QUEUE,
@@ -328,7 +318,7 @@ describe("Glitter corpus daily overlap workflows", () => {
       activities: {
         loadGlitterCorpusDailyBaseline: async () => ({
           inventory: baselineInventory,
-          inventoryObject: mirroredObject("inventory-empty-baseline.json"),
+          inventoryObject: storedObject("inventory-empty-baseline.json"),
           states: {
             "10": {
               manifestKey: stateObject.key,
@@ -343,7 +333,7 @@ describe("Glitter corpus daily overlap workflows", () => {
         inventoryGlitterGuild: async () => ({
           inventory: baselineInventory,
           inventoryKey: "inventory-current-empty-baseline.json",
-          inventoryObject: mirroredObject(
+          inventoryObject: storedObject(
             "inventory-current-empty-baseline.json",
           ),
         }),
@@ -370,7 +360,7 @@ describe("Glitter corpus daily overlap workflows", () => {
           return {
             channelId: input.channelId,
             manifestKey,
-            manifestObject: mirroredObject(manifestKey),
+            manifestObject: storedObject(manifestKey),
             uniqueMessageCount: 2,
           };
         },
@@ -400,7 +390,7 @@ describe("Glitter corpus periodic full refresh", () => {
     const captured: CapturePageInput[] = [];
     const verified: z.input<typeof VerifyChannelInputSchema>[] = [];
     const baselineInventory = inventory(["10"]);
-    const stateObject = mirroredObject("states/deep-baseline.json");
+    const stateObject = storedObject("states/deep-baseline.json");
     const worker = await Worker.create({
       connection: testEnvironment.nativeConnection,
       taskQueue: TASK_QUEUE,
@@ -408,7 +398,7 @@ describe("Glitter corpus periodic full refresh", () => {
       activities: {
         loadGlitterCorpusDailyBaseline: async () => ({
           inventory: baselineInventory,
-          inventoryObject: mirroredObject("inventory-deep-baseline.json"),
+          inventoryObject: storedObject("inventory-deep-baseline.json"),
           states: {
             "10": {
               manifestKey: stateObject.key,
@@ -423,9 +413,7 @@ describe("Glitter corpus periodic full refresh", () => {
         inventoryGlitterGuild: async () => ({
           inventory: baselineInventory,
           inventoryKey: "inventory-current-deep-baseline.json",
-          inventoryObject: mirroredObject(
-            "inventory-current-deep-baseline.json",
-          ),
+          inventoryObject: storedObject("inventory-current-deep-baseline.json"),
         }),
         captureGlitterCorpusPage: async (rawInput: CapturePageInput) => {
           const input = CapturePageInputSchema.parse(rawInput);
@@ -441,7 +429,7 @@ describe("Glitter corpus periodic full refresh", () => {
           return {
             channelId: input.channelId,
             manifestKey,
-            manifestObject: mirroredObject(manifestKey),
+            manifestObject: storedObject(manifestKey),
             uniqueMessageCount: 2,
           };
         },

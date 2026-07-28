@@ -501,7 +501,7 @@ export const glitterCorpusDiscordRequestsTotal = new Counter({
 
 export const glitterCorpusPagesTotal = new Counter({
   name: "glitter_corpus_pages_total",
-  help: "Immutable Discord response pages mirrored by traversal direction",
+  help: "Immutable Discord response pages stored by traversal direction",
   labelNames: ["direction"] as const,
   registers: [register],
 });
@@ -545,9 +545,9 @@ export const glitterCorpusSnapshotMetricsConfigured = new Gauge({
   registers: [register],
 });
 
-export const glitterCorpusMirrorDivergenceTotal = new Counter({
-  name: "glitter_corpus_mirror_divergence_total",
-  help: "Detected missing or checksum-divergent objects between SeaweedFS and R2",
+export const glitterCorpusStorageIntegrityFailuresTotal = new Counter({
+  name: "glitter_corpus_storage_integrity_failures_total",
+  help: "Missing, collided, or checksum-invalid Glitter corpus objects in SeaweedFS",
   registers: [register],
 });
 

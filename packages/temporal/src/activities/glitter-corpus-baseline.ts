@@ -1,8 +1,7 @@
 import { CurrentMessageSchema } from "#shared/glitter-corpus.ts";
-import { sha256 } from "#shared/glitter-corpus-projection.ts";
 import { loadStateManifest } from "./glitter-corpus-io.ts";
-import { createCorpusStoresFromEnv } from "./glitter-corpus-store.ts";
-import { readMirroredObject } from "./glitter-corpus-storage.ts";
+import { createCorpusStoreFromEnv } from "./glitter-corpus-store.ts";
+import { readVerifiedObject } from "./glitter-corpus-storage.ts";
 
 export async function readBaselineProjection(input: {
   manifestKey: string;
@@ -16,20 +15,11 @@ export async function readBaselineProjection(input: {
   ) {
     throw new Error(`baseline state identity mismatch for ${input.channelId}`);
   }
-  const bytes = await readMirroredObject({
-    stores: createCorpusStoresFromEnv(),
+  const bytes = await readVerifiedObject({
+    store: createCorpusStoreFromEnv(),
     key: baseline.projectionObjectKey,
+    expectedSha256: baseline.projectionSha256,
   });
-  if (bytes === undefined) {
-    throw new Error(
-      `baseline projection missing: ${baseline.projectionObjectKey}`,
-    );
-  }
-  if (sha256(bytes) !== baseline.projectionSha256) {
-    throw new Error(
-      `baseline projection checksum mismatch: ${baseline.projectionObjectKey}`,
-    );
-  }
   const messages = new TextDecoder()
     .decode(bytes)
     .split("\n")

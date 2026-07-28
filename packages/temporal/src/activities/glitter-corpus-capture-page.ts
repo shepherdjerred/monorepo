@@ -10,11 +10,8 @@ import type {
   DiscordRestResponse,
 } from "./glitter-corpus-discord-client.ts";
 import { jsonBytes } from "./glitter-corpus-io.ts";
-import { createCorpusStoresFromEnv } from "./glitter-corpus-store.ts";
-import {
-  putMirroredImmutableObject,
-  readAndRepairMirroredImmutableObject,
-} from "./glitter-corpus-storage.ts";
+import { createCorpusStoreFromEnv } from "./glitter-corpus-store.ts";
+import { putImmutableObject, readObject } from "./glitter-corpus-storage.ts";
 
 const PersistedDiscordResponseSchema = z
   .object({
@@ -50,12 +47,10 @@ export async function readOrCaptureDiscordPage(input: {
   const responseKey =
     `guilds/${input.request.guildId}/channels/${input.request.channelId}/` +
     `responses/${input.request.direction}/${input.request.requestId}.json`;
-  const stores = createCorpusStoresFromEnv();
-  const persisted = await readAndRepairMirroredImmutableObject({
-    stores,
+  const store = createCorpusStoreFromEnv();
+  const persisted = await readObject({
+    store,
     key: responseKey,
-    contentType: "application/json",
-    repairedAt: new Date().toISOString(),
   });
   if (persisted !== undefined) {
     return restoreDiscordResponse(persisted);
@@ -69,8 +64,8 @@ export async function readOrCaptureDiscordPage(input: {
       ? {}
       : { after: input.request.after }),
   });
-  await putMirroredImmutableObject({
-    stores,
+  await putImmutableObject({
+    store,
     key: responseKey,
     body: jsonBytes({
       schemaVersion: 1,

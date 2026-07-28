@@ -17,17 +17,17 @@ import {
   serializeProjection,
   sha256,
 } from "#shared/glitter-corpus-projection.ts";
-import { createCorpusStoresFromEnv } from "./glitter-corpus-store.ts";
-import { putMirroredImmutableObject } from "./glitter-corpus-storage.ts";
+import { createCorpusStoreFromEnv } from "./glitter-corpus-store.ts";
+import { putImmutableObject } from "./glitter-corpus-storage.ts";
 
 const EXPECTED_SEED_MESSAGES = 76_762;
 // Independent acceptance pins for the ONE trusted archive (see
 // packages/docs/guides/2026-07-26_glitter-discord-corpus-operations.md). The
 // row count alone is not identity: a truncated or substituted archive can
 // preserve 76,762 unique IDs while changing message text, authors, timestamps,
-// or IDs. Production (`--mirror=true`) imports must match both the archive
+// or IDs. Production (`--upload=true`) imports must match both the archive
 // bytes' SHA-256 and the deterministic projection SHA-256, so a different
-// archive can never be mirrored under its own self-declared hash and become
+// archive can never be uploaded under its own self-declared hash and become
 // canonical.
 const TRUSTED_SEED_ARCHIVE_SHA256 =
   "19aaca11be85b99d8034e48cfaf45e50e9739e9760da116d7262a6fd7588cc92";
@@ -390,28 +390,28 @@ export async function runSeedImporter(argv: readonly string[]): Promise<void> {
     );
   }
 
-  if (parseArg(argv, "mirror", false) === "true") {
+  if (parseArg(argv, "upload", false) === "true") {
     if (result.manifest.archiveSha256 !== TRUSTED_SEED_ARCHIVE_SHA256) {
       throw new Error(
-        `refusing to mirror untrusted seed: archive SHA-256 ${result.manifest.archiveSha256} does not match the pinned trusted archive ${TRUSTED_SEED_ARCHIVE_SHA256}`,
+        `refusing to upload untrusted seed: archive SHA-256 ${result.manifest.archiveSha256} does not match the pinned trusted archive ${TRUSTED_SEED_ARCHIVE_SHA256}`,
       );
     }
     if (result.manifest.projectionSha256 !== TRUSTED_SEED_PROJECTION_SHA256) {
       throw new Error(
-        `refusing to mirror untrusted seed: projection SHA-256 ${result.manifest.projectionSha256} does not match the pinned trusted projection ${TRUSTED_SEED_PROJECTION_SHA256}`,
+        `refusing to upload untrusted seed: projection SHA-256 ${result.manifest.projectionSha256} does not match the pinned trusted projection ${TRUSTED_SEED_PROJECTION_SHA256}`,
       );
     }
-    const stores = createCorpusStoresFromEnv();
+    const store = createCorpusStoreFromEnv();
     const prefix = `seed/${result.manifest.archiveSha256}`;
-    await putMirroredImmutableObject({
-      stores,
+    await putImmutableObject({
+      store,
       key: `${prefix}/archive.zip`,
       body: archiveBytes,
       contentType: "application/zip",
       writtenAt: importedAt,
     });
-    await putMirroredImmutableObject({
-      stores,
+    await putImmutableObject({
+      store,
       key: `${prefix}/manifest.json`,
       body: new TextEncoder().encode(
         `${JSON.stringify(result.manifest, null, 2)}\n`,
@@ -419,16 +419,16 @@ export async function runSeedImporter(argv: readonly string[]): Promise<void> {
       contentType: "application/json",
       writtenAt: importedAt,
     });
-    await putMirroredImmutableObject({
-      stores,
+    await putImmutableObject({
+      store,
       key: `${prefix}/projection.ndjson`,
       body: new TextEncoder().encode(result.projectionNdjson),
       contentType: "application/x-ndjson",
       writtenAt: importedAt,
     });
     for (const [channelId, observations] of byChannel) {
-      await putMirroredImmutableObject({
-        stores,
+      await putImmutableObject({
+        store,
         key: `${prefix}/channels/${channelId}/observations.ndjson`,
         body: new TextEncoder().encode(
           `${observations
@@ -439,7 +439,7 @@ export async function runSeedImporter(argv: readonly string[]): Promise<void> {
         writtenAt: importedAt,
       });
     }
-    console.warn(`mirrored seed prefix: ${prefix}`);
+    console.warn(`uploaded seed prefix: ${prefix}`);
   }
   console.warn(
     JSON.stringify(

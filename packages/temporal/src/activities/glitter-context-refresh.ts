@@ -409,7 +409,7 @@ export const glitterContextRefreshActivities = {
       const body = [
         "Automated weekly Glitter context refresh from Temporal.",
         "",
-        `Verified mirrored snapshot: \`${corpus.pointer.snapshotSha256}\``,
+        `Verified snapshot: \`${corpus.pointer.snapshotSha256}\``,
         `Style cards refreshed: ${String(refreshedPeople.size)}`,
         `Relationship updates proposed: ${String(relationshipProposalCount)}`,
         "",

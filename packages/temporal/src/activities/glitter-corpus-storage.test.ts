@@ -1,8 +1,14 @@
-import { describe, expect, test } from "bun:test";
+import { S3Client } from "@aws-sdk/client-s3";
+import { describe, expect, spyOn, test } from "bun:test";
+import { glitterCorpusStorageIntegrityFailuresTotal } from "#observability/metrics.ts";
+import { StoredObjectSchema } from "#shared/glitter-corpus.ts";
 import { discordRequestLeaseDelayMs } from "./glitter-corpus-rate-limit.ts";
+import type { CorpusStore } from "./glitter-corpus-store.ts";
 import {
   LatestSnapshotPointerSchema,
   latestSnapshotPointerNeedsUpdate,
+  readObject,
+  readRequiredObject,
 } from "./glitter-corpus-storage.ts";
 
 function pointer(input: { snapshotId: string; publishedAt: string }) {
@@ -48,6 +54,93 @@ describe("Glitter corpus latest snapshot pointer", () => {
     expect(() => latestSnapshotPointerNeedsUpdate(first, second)).toThrow(
       "conflicting",
     );
+  });
+});
+
+describe("Glitter corpus stored object receipt", () => {
+  test("requires one matching SeaweedFS receipt", () => {
+    const stored = StoredObjectSchema.parse({
+      key: "seed/archive.zip",
+      sha256: "a".repeat(64),
+      receipt: {
+        store: "seaweedfs",
+        bucket: "glitter-discord-corpus",
+        key: "seed/archive.zip",
+        sha256: "a".repeat(64),
+        etag: "etag",
+        writtenAt: "2026-01-01T00:00:00.000Z",
+      },
+    });
+
+    expect(stored.receipt.store).toBe("seaweedfs");
+    expect(() =>
+      StoredObjectSchema.parse({
+        ...stored,
+        receipt: { ...stored.receipt, sha256: "b".repeat(64) },
+      }),
+    ).toThrow("storage receipt key and checksum must match");
+    expect(() =>
+      StoredObjectSchema.parse({
+        ...stored,
+        receipt: { ...stored.receipt, store: "r2" },
+      }),
+    ).toThrow();
+  });
+});
+
+describe("Glitter corpus required reads", () => {
+  test("counts missing required objects but not optional misses", async () => {
+    let requestCount = 0;
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      fetch() {
+        requestCount += 1;
+        return new Response(
+          '<?xml version="1.0" encoding="UTF-8"?><Error><Code>NoSuchKey</Code><Message>missing</Message></Error>',
+          {
+            status: 404,
+            headers: { "content-type": "application/xml" },
+          },
+        );
+      },
+    });
+    const client = new S3Client({
+      endpoint: server.url.href,
+      forcePathStyle: true,
+      region: "us-east-1",
+      credentials: {
+        accessKeyId: "test",
+        secretAccessKey: "test",
+      },
+    });
+    const store: CorpusStore = {
+      name: "seaweedfs",
+      bucket: "test",
+      client,
+    };
+    const integrityFailure = spyOn(
+      glitterCorpusStorageIntegrityFailuresTotal,
+      "inc",
+    );
+
+    try {
+      expect(
+        await readObject({ store, key: "optional-cache-object.json" }),
+      ).toBeUndefined();
+      expect(integrityFailure).toHaveBeenCalledTimes(0);
+      await expect(
+        readRequiredObject({ store, key: "required-manifest.json" }),
+      ).rejects.toThrow(
+        "seaweedfs is missing required object: required-manifest.json",
+      );
+      expect(integrityFailure).toHaveBeenCalledTimes(1);
+      expect(requestCount).toBe(2);
+    } finally {
+      integrityFailure.mockRestore();
+      client.destroy();
+      await server.stop(true);
+    }
   });
 });
 

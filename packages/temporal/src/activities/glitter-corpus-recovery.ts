@@ -10,7 +10,6 @@ import {
   compareSnowflakes,
   mergeCurrentProjection,
   projectionChecksum,
-  sha256,
 } from "#shared/glitter-corpus-projection.ts";
 import {
   loadStateManifest,
@@ -18,10 +17,11 @@ import {
   readSeedChannelObservations,
   readTraversal,
 } from "./glitter-corpus-io.ts";
-import { createCorpusStoresFromEnv } from "./glitter-corpus-store.ts";
+import { createCorpusStoreFromEnv } from "./glitter-corpus-store.ts";
 import {
   LatestSnapshotPointerSchema,
-  readMirroredObject,
+  readRequiredObject,
+  readVerifiedObject,
 } from "./glitter-corpus-storage.ts";
 
 type RebuildContext = {
@@ -70,15 +70,11 @@ async function readRetainedBaselineProjection(input: {
       `recovery retained baseline identity mismatch for ${input.channelId}`,
     );
   }
-  const bytes = await readMirroredObject({
-    stores: createCorpusStoresFromEnv(),
+  const bytes = await readVerifiedObject({
+    store: createCorpusStoreFromEnv(),
     key: manifest.projectionObjectKey,
+    expectedSha256: manifest.projectionSha256,
   });
-  if (bytes === undefined || sha256(bytes) !== manifest.projectionSha256) {
-    throw new Error(
-      `recovery retained baseline projection mismatch: ${manifest.projectionObjectKey}`,
-    );
-  }
   const projection = new TextDecoder()
     .decode(bytes)
     .split("\n")
@@ -188,7 +184,7 @@ export async function verifyGlitterCorpusSnapshotGraph(input: {
   snapshot: GuildSnapshot;
   guildSlug: string;
 }): Promise<number> {
-  const stores = createCorpusStoresFromEnv();
+  const store = createCorpusStoreFromEnv();
   const context: RebuildContext = {
     guildSlug: input.guildSlug,
     cache: new Map(),
@@ -196,18 +192,11 @@ export async function verifyGlitterCorpusSnapshotGraph(input: {
   };
   let uniqueMessageCount = 0;
   for (const manifestObject of input.snapshot.channelManifestObjects) {
-    const manifestBytes = await readMirroredObject({
-      stores,
+    await readVerifiedObject({
+      store,
       key: manifestObject.key,
+      expectedSha256: manifestObject.sha256,
     });
-    if (
-      manifestBytes === undefined ||
-      sha256(manifestBytes) !== manifestObject.sha256
-    ) {
-      throw new Error(
-        `snapshot state checksum mismatch: ${manifestObject.key}`,
-      );
-    }
     const projection = await rebuildState(manifestObject.key, context);
     uniqueMessageCount += projection.length;
   }
@@ -276,15 +265,11 @@ async function rebuildState(
       ? await rebuildCompleteState(manifest, context)
       : await rebuildOverlapState(manifest, context);
   assertProjectionMatchesManifest(manifest, projection);
-  const stored = await readMirroredObject({
-    stores: createCorpusStoresFromEnv(),
+  await readVerifiedObject({
+    store: createCorpusStoreFromEnv(),
     key: manifest.projectionObjectKey,
+    expectedSha256: manifest.projectionSha256,
   });
-  if (stored === undefined || sha256(stored) !== manifest.projectionSha256) {
-    throw new Error(
-      `stored projection does not match recovery state ${manifestKey}`,
-    );
-  }
   context.active.delete(manifestKey);
   context.cache.set(manifestKey, projection);
   return projection;
@@ -301,45 +286,28 @@ export async function verifyLatestGlitterCorpusSnapshot(): Promise<{
   if (guildId === undefined || guildId === "") {
     throw new Error("GLITTER_DISCORD_GUILD_ID is required");
   }
-  const stores = createCorpusStoresFromEnv();
+  const store = createCorpusStoreFromEnv();
   const pointerKey = `guilds/${guildId}/snapshots/latest.json`;
-  const pointerBytes = await readMirroredObject({ stores, key: pointerKey });
-  if (pointerBytes === undefined) {
-    throw new Error(`latest corpus pointer is missing: ${pointerKey}`);
-  }
+  const pointerBytes = await readRequiredObject({ store, key: pointerKey });
   const pointer = LatestSnapshotPointerSchema.parse(
     JSON.parse(new TextDecoder().decode(pointerBytes)),
   );
   if (pointer.guildId !== guildId) {
     throw new Error(`latest corpus pointer belongs to ${pointer.guildId}`);
   }
-  const snapshotBytes = await readMirroredObject({
-    stores,
+  const snapshotBytes = await readVerifiedObject({
+    store,
     key: pointer.snapshotKey,
+    expectedSha256: pointer.snapshotSha256,
   });
-  if (
-    snapshotBytes === undefined ||
-    sha256(snapshotBytes) !== pointer.snapshotSha256
-  ) {
-    throw new Error(
-      `latest snapshot checksum mismatch: ${pointer.snapshotKey}`,
-    );
-  }
   const snapshot = GuildSnapshotSchema.parse(
     JSON.parse(new TextDecoder().decode(snapshotBytes)),
   );
-  const inventoryBytes = await readMirroredObject({
-    stores,
+  const inventoryBytes = await readVerifiedObject({
+    store,
     key: snapshot.inventoryObject.key,
+    expectedSha256: snapshot.inventoryObject.sha256,
   });
-  if (
-    inventoryBytes === undefined ||
-    sha256(inventoryBytes) !== snapshot.inventoryObject.sha256
-  ) {
-    throw new Error(
-      `snapshot inventory checksum mismatch: ${snapshot.inventoryObject.key}`,
-    );
-  }
   const inventory = GuildInventorySchema.parse(
     JSON.parse(new TextDecoder().decode(inventoryBytes)),
   );

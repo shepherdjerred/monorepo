@@ -33,6 +33,7 @@ import {
   createTemporalWorkerGithubWebhookService,
   createXcodeCloudWebhookService,
 } from "./http-services.ts";
+import { glitterCorpusEnv } from "./glitter-corpus-env.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
   serverServiceName: string;
@@ -281,6 +282,20 @@ export function createTemporalWorkerDeployment(
     "temporal-worker-secret",
     onePasswordItem.name,
   );
+  const starlightBotItem = new OnePasswordItem(
+    chart,
+    "temporal-starlight-bot-1p",
+    {
+      spec: {
+        itemPath: vaultItemPath("cmp6si6n5syhr4smxew3qfcmfi"),
+      },
+    },
+  );
+  const starlightBotSecret = Secret.fromSecretName(
+    chart,
+    "temporal-starlight-bot-secret",
+    starlightBotItem.name,
+  );
 
   const serviceAccount = createTemporalWorkerServiceAccount(chart);
 
@@ -414,6 +429,7 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "AWS_SECRET_ACCESS_KEY",
         }),
+        ...glitterCorpusEnv(secret, starlightBotSecret),
         // GitHub
         GITHUB_APP_ID: EnvValue.fromSecretValue({
           secret,
