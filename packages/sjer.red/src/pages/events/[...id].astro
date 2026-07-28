@@ -4,7 +4,7 @@ import RSVP from "@components/events/RSVP.astro";
 import Base from "@layouts/BaseLayout.astro";
 import { getCollection, render } from "astro:content";
 import type { CollectionEntry } from "astro:content";
-import { EventSchema } from "src/content/schemas/event";
+import { EventSchema } from "@src/content/schemas/event";
 
 type Props = {
   entry: CollectionEntry<"event">;

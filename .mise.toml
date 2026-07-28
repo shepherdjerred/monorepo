@@ -13,14 +13,14 @@ java = "corretto-25.0.4.7.1"
 gitleaks = "8"
 shellcheck = "0.11"
 # Native-family shims
-go = "1.26.4"
+go = "1.26.5"
 golangci-lint = "2"
 # Release automation (cooklang publish, release commit-backs) shells out to gh
 gh = "2"
 # CI scripts (bake-images.ts affected-scoping + digest collection) use jq
 jq = "1"
 # Homelab automation (helm push, tofu wrappers, ArgoCD sync, site deploys)
-helm = "3"
-opentofu = "1.12.3"
+helm = "4"
+opentofu = "1.12.5"
 argocd = "3"
 awscli = "2"

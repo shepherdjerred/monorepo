@@ -10,7 +10,7 @@
 # that faithfully for `docker buildx build`: it clones redlib at the exact pin
 # and runs the same build steps that upstream's Dockerfile.ubuntu performs
 # (builder: rust:slim-bookworm → cargo build --release --locked --bin redlib;
-# release: ubuntu:noble with a non-root user, EXPOSE 8080, /settings
+# release: Ubuntu 26.04 with a non-root user, EXPOSE 8080, /settings
 # healthcheck). Keeping the clone here means we track the pin without vendoring
 # upstream's entire source tree into this repo.
 #
@@ -47,13 +47,13 @@ RUN cargo build --release --locked --bin redlib \
 ########################
 ## release image
 ########################
-# Matches upstream Dockerfile.ubuntu's UBUNTU_RELEASE_VERSION=noble.
+# Renovate-managed Ubuntu 26.04 release base.
 # renovate: datasource=docker depName=ubuntu
-FROM ubuntu:noble@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90 AS release
+FROM ubuntu:26.04@sha256:3131b4cc82a783df6c9df078f86e01819a13594b865c2cad47bd1bca2b7063bb AS release
 
 # wget powers both the HEALTHCHECK below and the in-image `smoke` stage's
-# /settings probe. ubuntu:noble does not ship wget, so install it (upstream's
-# Dockerfile.ubuntu relies on the base having a probe tool; the minimal noble
+# /settings probe. The minimal Ubuntu image does not ship wget, so install it
+# (upstream's Dockerfile.ubuntu relies on the base having a probe tool; the base
 # image does not). Without this the smoke solve fails with `wget: not found`.
 RUN apt-get update \
   && apt-get -y install --no-install-recommends wget \

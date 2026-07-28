@@ -2,7 +2,7 @@ const versions = {
   // renovate: datasource=helm registryUrl=https://1password.github.io/connect-helm-charts/ versioning=semver
   connect: "2.4.1",
   // renovate: datasource=helm registryUrl=https://argoproj.github.io/argo-helm versioning=semver
-  "argo-cd": "10.1.4",
+  "argo-cd": "10.2.1",
   // renovate: datasource=helm registryUrl=https://charts.jetstack.io versioning=semver-coerced
   "cert-manager": "v1.21.0",
   // renovate: datasource=helm registryUrl=https://intel.github.io/helm-charts/ versioning=semver
@@ -10,7 +10,7 @@ const versions = {
   // renovate: datasource=helm registryUrl=https://kubernetes-sigs.github.io/node-feature-discovery/charts versioning=semver
   "node-feature-discovery": "0.19.0",
   // renovate: datasource=helm registryUrl=https://prometheus-community.github.io/helm-charts versioning=semver
-  "kube-prometheus-stack": "87.17.0",
+  "kube-prometheus-stack": "87.19.2",
   // renovate: datasource=helm registryUrl=https://prometheus-community.github.io/helm-charts versioning=semver
   "prometheus-adapter": "5.3.0",
   // renovate: datasource=helm registryUrl=https://prometheus-community.github.io/helm-charts versioning=semver
@@ -58,10 +58,10 @@ const versions = {
     "10.11.11@sha256:45f648c382a0c8b552582fcea40e95cb17c5d475473a891cba0eb7523fb92112",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "kometateam/kometa":
-    "v2.4.4@sha256:90e53a6bdf9343d63702767f8f6d6da09902e7bd174850120ac50d39a0722ff1",
+    "v2.4.5@sha256:a376a1818196cde159b5a4d5a6ad55411415f7b5bc38d8a27e8c718bae7f0ddd",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "linuxserver/prowlarr":
-    "2.4.0@sha256:4fd7a166c8f46dd3370a871c250ee577d6c2ae97a0dbe0e3614b5ef736205620",
+    "2.5.2@sha256:2f3d31307beba3ba2dd226d191f5f5c14ee3b4d8b49277c64683f5ed97083179",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver-coerced
   "qdm12/gluetun":
     "v3.41.1@sha256:1a5bf4b4820a879cdf8d93d7ef0d2d963af56670c9ebff8981860b6804ebc8ab",
@@ -94,22 +94,22 @@ const versions = {
     "v4.0.6@sha256:c31a738b6d5ec6982c050063dd3f063b6943eb1051fc81144789f840d9093a8d",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "timothyjmiller/cloudflare-ddns":
-    "latest@sha256:37c99677e997710c1bbe9d74c93f2e3b8de3457a5ca6e28643e251b38ed05311",
+    "latest@sha256:e78ef9df27d82edafbcce232681be398e6faf7c1f158b80b091b8c6a5b1b8879",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "cloudflare/cloudflared":
-    "2026.6.1@sha256:6d91c121b803126f7a5344005d17a9324788fc09d305b6e2560ec6040a7ae283",
+    "2026.7.3@sha256:e39ee8da81ad5e05d77f38d2f51c60ca51bf2a8450ac3abab50c17fdb91d91bf",
   // not managed by renovate (upstream tailscale/golink ships a rolling `main` tag)
   "tailscale/golink":
     "main@sha256:dc62e0d38bd2633d3090e6ca1de327471c376afe0457d397c4f111e5a98d8a88",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
   "home-assistant/home-assistant":
-    "2026.7.2@sha256:1476924357b46e80735c13e94232ba5c853cac052e9df4bb28d50fa56348097b",
+    "2026.7.4@sha256:5a531753cea96444200158fc2b0ac7ccd739291ec50414877b396de6e0bb29b3",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "bropat/eufy-security-ws":
     "3.1.0@sha256:d41169205f4e20e1e7e173283aaf8bb2d68e2abecb42bc1500a5fac5bb7a8750",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "zwavejs/zwave-js-ui":
-    "11.21.1@sha256:1193b96b31488e5a6c7895f16a27b2ead38f8a0c3d1bec335bb10b6d9f9e2905",
+    "11.22.0@sha256:f24115c115f98a1cd69fea620bf20180be17889e9ae3c58ceabf5df1bc56c2a8",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
   "koush/scrypted":
     "v0.144.1-noble-full@sha256:25440767192b0d4a0709f50388d14cdf365ba6bff59d04e40a41ca2b7b9a6b70",
@@ -118,7 +118,7 @@ const versions = {
   // renovate: datasource=github-releases versioning=semver
   "basnijholt/adaptive-lighting": "v1.31.0",
   // renovate: datasource=github-releases versioning=semver
-  "JeffSteinbok/hass-dreo": "v1.10.2",
+  "JeffSteinbok/hass-dreo": "v1.10.9",
   // renovate: datasource=github-releases versioning=semver
   "magico13/ha-emporia-vue": "v0.12.2",
   // renovate: datasource=github-releases versioning=semver
@@ -152,9 +152,9 @@ const versions = {
   // renovate: datasource=helm registryUrl=https://grafana.github.io/helm-charts versioning=semver
   tempo: "1.24.4",
   // renovate: datasource=helm registryUrl=https://grafana.github.io/helm-charts versioning=semver
-  pyroscope: "2.1.1",
+  pyroscope: "2.2.0",
   // renovate: datasource=helm registryUrl=https://grafana.github.io/helm-charts versioning=semver
-  alloy: "1.10.1",
+  alloy: "1.11.0",
   // renovate: datasource=helm registryUrl=https://openebs.github.io/openebs versioning=semver
   openebs: "4.5.1",
   // not managed by renovate — beta updated by version-commit-back
@@ -169,13 +169,13 @@ const versions = {
   // base moves off 2.0.0-, this pin needs one manual edit).
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
-    "2.0.0-6529@sha256:513a70ed76aae0e188fe56cca3edf52bbf9ae727a7e2bcc05d8fbac03704e880",
+    "2.0.0-6556@sha256:513a70ed76aae0e188fe56cca3edf52bbf9ae727a7e2bcc05d8fbac03704e880",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
     "2.0.0-6646@sha256:7615ba395c6f7bf4b1d0edb741748b350a9f0ae815acbe45e224d52f12333513",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/starlight-karma-bot
   "shepherdjerred/starlight-karma-bot/prod":
-    "2.0.0-4777@sha256:6a94f1d598bef983189c3f0b74d24f1c2c94ea4ba260dc2a5203d2d4bd735402",
+    "2.0.0-6529@sha256:f264607c7bf8fcca4a1d88bfdf9c36baf32623bed373f9925323fc35369c521c",
   // not managed by renovate
   "shepherdjerred/birmel":
     "2.0.0-6646@sha256:c6c0e599f8abf18c971ce617b305c52b17147b6d770a6732f8da93cb26125918",
@@ -194,18 +194,18 @@ const versions = {
     "0.15.0@sha256:a4d5ac974eb093adf0211389257179f4f4ca16369f91479be67bd881c376e716",
   // renovate: datasource=docker registryUrl=https://ghcr.io/buildkite/helm versioning=semver packageName=agent-stack-k8s
   "agent-stack-k8s":
-    "0.46.0@sha256:ecd95afbb320954c3d186d856f6ed02df22b0d7f88724fe16446ed4c0dd5aa4d",
+    "0.46.2@sha256:89e25e2fa0923e389cefe5457ecb6da0409989660afed3d6fe4ebbaedf97d28d",
   // Self-hosted Turborepo remote cache (backs the workspace task-graph
   // replatform — packages/docs/plans/2026-07-12_workspace-taskgraph-replatform.md).
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "ducktors/turborepo-remote-cache":
-    "2.11.2@sha256:99634a04eba43c839fb96f3e60bf0012b59abe1e6889153580493a840aad7ad0",
+    "2.11.5@sha256:dfd1ce24cc4bdd59113e3ba68c881269fda5dd5929e58e2ea95010c51c09056d",
   // Persistent BuildKit daemon backing CI image builds (bounded-GC cache on a
   // compressed ZFS PVC, replacing the per-run throwaway builder inside dind —
   // moves the build-layer write storm off the xfs /var system disk).
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "moby/buildkit":
-    "v0.28.1@sha256:a82d1ab899cda51aade6fe818d71e4b58c4079e047a0cf29dbb93b2b0465ea69",
+    "v0.31.1@sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc399c03a",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "library/python":
     "3.14-alpine@sha256:26730869004e2b9c4b9ad09cab8625e81d256d1ce97e72df5520e806b1709f92",
@@ -254,9 +254,9 @@ const versions = {
   "resmoio/kubernetes-event-exporter":
     "v1.7@sha256:8abb52b66557d3333f9e473e0eff2951309abfd018bd8d7fcfd86c4ecce6b9cf",
   // renovate: datasource=helm registryUrl=https://charts.bitnami.com/bitnami versioning=semver
-  redis: "27.0.15",
+  redis: "27.0.18",
   // renovate: datasource=helm registryUrl=https://seaweedfs.github.io/seaweedfs/helm versioning=semver
-  seaweedfs: "4.34.0",
+  seaweedfs: "4.36.0",
   // renovate: datasource=helm registryUrl=https://charts.bitnami.com/bitnami versioning=semver
   mariadb: "26.2.0",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
@@ -285,7 +285,7 @@ const versions = {
     "v2.0.0@sha256:cd5f75e1399073669b13b4151cc603332a825324d0b8f13dfc9de9112a3c68a1",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "clickhouse/clickhouse-server":
-    "26.5-alpine@sha256:d6d599097220479d6a55d6dc838b44fdea7774003666860701c82dc178c6ad13",
+    "26.7-alpine@sha256:79b3b3d5765447b928473d0f510e000c5738d066bc018b5e8a105a7c57b1e345",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "tbxark/mcp-proxy":
     "v0.43.2@sha256:1c43164a910a4f74a3ce48d95cb2ef792de8d467296555e63944fa798f0a44bd",
@@ -300,7 +300,7 @@ const versions = {
   "@automatearmy/email-reader-mcp": "1.0.3",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "bugsink/bugsink":
-    "2.4.0@sha256:bc3a491edb7d94d42ae49be14f586a4b7eefa929389272c37f9bec112f232e78",
+    "2.5.0@sha256:b697016950d8aa7d94020def15bc2727e8fc40148f079884ae4cdacf7ea1e9a3",
   // Relay Server - self-hosted Obsidian real-time collaboration backend (y-sweet fork)
   // not managed by renovate (docker.system3.md is a private relay.md registry; bump manually on upgrade)
   "relay-server":
@@ -380,7 +380,7 @@ export const ADAPTIVE_LIGHTING_TARBALL_SHA256 =
  *   curl -fSL "https://github.com/JeffSteinbok/hass-dreo/archive/refs/tags/$VERSION.tar.gz" | sha256sum
  */
 export const DREO_TARBALL_SHA256 =
-  "15eab378ea2bc76de4af8fc7f10f4beb3882e9f66948a7a7b1de6599d680f076";
+  "76e5a6b7d9f638597a50b6b6135acf714fd7fe424ea68c021079dd99326d0631";
 
 /**
  * SHA-256 of the GitHub release tarball for `magico13/ha-emporia-vue`,

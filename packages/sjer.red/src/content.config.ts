@@ -1,6 +1,6 @@
 import { defineCollection } from "astro:content";
-import { BlogSchema, LeetCodeSchema, TilSchema } from "src/content/schemas";
-import { EventSchema } from "src/content/schemas/event";
+import { BlogSchema, LeetCodeSchema, TilSchema } from "@src/content/schemas";
+import { EventSchema } from "@src/content/schemas/event";
 import { glob } from "astro/loaders";
 
 const blogCollection = defineCollection({

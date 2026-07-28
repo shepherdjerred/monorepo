@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@types/chroma-js": "^3.1.2",
-    "@types/react": "^19.2.14",
+    "@types/react": "^19.2.17",
     "bun-types": "latest",
     "eslint": "^10.3.0",
     "typescript": "^6.0.3"

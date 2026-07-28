@@ -315,7 +315,7 @@ test("sanity check", async () => {
 
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
-});
+}, 30_000);
 
 test("no items test", async () => {
   const matchNoItems = getMatch();

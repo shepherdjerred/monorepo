@@ -15,7 +15,7 @@
     "lint": "bunx eslint ."
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.105.0",
+    "@anthropic-ai/sdk": "^0.106.0",
     "@shepherdjerred/llm-models": "workspace:*",
     "pdfjs-dist": "^6.1.200",
     "playwright": "^1.60.0",

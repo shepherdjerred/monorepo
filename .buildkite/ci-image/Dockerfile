@@ -7,12 +7,12 @@
 FROM debian:bookworm-slim@sha256:7b140f374b289a7c2befc338f42ebe6441b7ea838a042bbd5acbfca6ec875818 AS base
 
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
-    ca-certificates curl git unzip xz-utils zstd python3 ripgrep rsync \
+    ca-certificates curl git minisign unzip xz-utils zstd python3 ripgrep rsync \
     build-essential pkg-config libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Docker CLI + buildx for image-build steps (BuildKit runs in-pod)
-COPY --from=docker:28-cli@sha256:625d9431a9f54c5a2bc90f24f0e1c3d55b1349fd857dd85035f98c2c9acbdd4d /usr/local/bin/docker /usr/local/bin/docker
+COPY --from=docker:29-cli@sha256:be132a9f282288de4afaf63379dff75711fda0147c6b72a9df44e51841402144 /usr/local/bin/docker /usr/local/bin/docker
 COPY --from=docker/buildx-bin:0.35.0@sha256:917570d8d0ae91ae49251f84f848a6801eedd114554c56a4fdf7ec88cac48eeb /buildx /usr/local/lib/docker/cli-plugins/docker-buildx
 
 # swiftlint from the official release zip: the -static build is
@@ -26,12 +26,31 @@ RUN curl -fsSL "https://github.com/realm/SwiftLint/releases/download/${SWIFTLINT
     && ln -sf /usr/local/swiftlint/swiftlint-static /usr/local/bin/swiftlint \
     && rm /tmp/swiftlint.zip
 
-# mise, pinned; tools come from the repo's .mise.toml
+# mise, pinned to the portable musl release assets; tools come from the
+# repo's .mise.toml. Verify the release's signed checksum manifest so Renovate
+# only needs to update the version and cannot leave architecture checksums stale.
 # renovate: datasource=github-releases depName=jdx/mise
-ENV MISE_VERSION="v2026.7.1" \
-    MISE_DATA_DIR=/opt/mise \
+ARG MISE_VERSION=v2026.7.13
+ARG MISE_MINISIGN_PUBLIC_KEY=RWTC3g8W3z4RZK3V3qv7fa1QY4JEWyBtqIHW+85QlJpZc5yG+uNYNBSZ
+ARG TARGETARCH
+ENV MISE_DATA_DIR=/opt/mise \
     PATH="/opt/mise/shims:/root/.local/bin:${PATH}"
-RUN curl -fsSL https://mise.run | sh
+RUN case "${TARGETARCH}" in \
+        amd64) mise_arch=x64 ;; \
+        arm64) mise_arch=arm64 ;; \
+        *) echo "unsupported architecture: ${TARGETARCH}" >&2; exit 1 ;; \
+    esac \
+    && mise_asset="mise-${MISE_VERSION}-linux-${mise_arch}-musl.tar.xz" \
+    && curl -fsSL "https://github.com/jdx/mise/releases/download/${MISE_VERSION}/${mise_asset}" -o "/tmp/${mise_asset}" \
+    && curl -fsSL "https://github.com/jdx/mise/releases/download/${MISE_VERSION}/SHASUMS256.txt" -o /tmp/SHASUMS256.txt \
+    && curl -fsSL "https://github.com/jdx/mise/releases/download/${MISE_VERSION}/SHASUMS256.txt.minisig" -o /tmp/SHASUMS256.txt.minisig \
+    && minisign -V -P "${MISE_MINISIGN_PUBLIC_KEY}" -m /tmp/SHASUMS256.txt -x /tmp/SHASUMS256.txt.minisig \
+    && cd /tmp \
+    && checksum_line="$(grep -F "  ./${mise_asset}" SHASUMS256.txt)" \
+    && printf '%s\n' "${checksum_line}" | sha256sum -c - \
+    && tar -xJf "${mise_asset}" -C /usr/local/bin --strip-components=2 mise/bin/mise \
+    && rm "${mise_asset}" SHASUMS256.txt SHASUMS256.txt.minisig \
+    && mise --version
 
 COPY .mise.toml /workspace/.mise.toml
 WORKDIR /workspace
