@@ -86,7 +86,7 @@ Affected items: HA token, Groq, qBittorrent, Plex, Pokebot, ha-sentry-dsn, whisp
 
 Some containers require specific env var names defined by upstream projects. The CDK8s env var key must match what the container expects, even if it differs from our canonical name:
 
-- `GITHUB_TOKEN` — required by `@modelcontextprotocol/server-github` (mcp-gateway). 1Password key is `GH_TOKEN`, mapped to env var `GITHUB_TOKEN`.
+- `GITHUB_PERSONAL_ACCESS_TOKEN` — required by `github/github-mcp-server` (mcp-gateway). 1Password key is `GH_TOKEN`, mapped to the upstream-required env var.
 - `WIREGUARD_PRIVATE_KEY` / `WIREGUARD_PRESHARED_KEY` — required by gluetun (qbittorrent). 1Password item is AirVPN Wireguard with keys `PRIVATE_KEY` / `PRESHARED_KEY`.
 
 ### Tailscale OAuth client

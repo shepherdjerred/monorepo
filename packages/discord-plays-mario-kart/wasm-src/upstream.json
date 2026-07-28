@@ -3,5 +3,5 @@
   "repository": "https://github.com/nbarkhina/N64Wasm.git",
   "branch": "master",
   "commit": "bfac222f8a27287022844b47000328531834e9c1",
-  "emsdkImage": "emscripten/emsdk:2.0.34"
+  "emsdkImage": "emscripten/emsdk:6.0.4@sha256:3a0d11e50f072dc2c4bc92e3b05ab1340fb7d4dd152f80b8af35fc1c6f15e644"
 }

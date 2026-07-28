@@ -268,9 +268,9 @@ async function smokeObsidianHeadless(): Promise<SmokeResult> {
 
 /**
  * Smoke test mcp-gateway.
- * Verifies: the Node runtime is present, the prebuilt edstem-mcp entrypoint
- * exists and parses (`node --check`), and every production dependency survived
- * `npm prune --omit=dev`.
+ * Verifies: the Node runtime and supported GitHub MCP server are present, the
+ * prebuilt edstem-mcp entrypoint exists and parses (`node --check`), and every
+ * production dependency survived `npm prune --omit=dev`.
  */
 async function smokeMcpGateway(): Promise<SmokeResult> {
   const image = "mcp-gateway:dev";
@@ -293,6 +293,25 @@ async function smokeMcpGateway(): Promise<SmokeResult> {
         image,
         ok: false,
         detail: `node --version exited ${String(node.exitCode)}\n${node.stderr}`,
+      };
+    }
+
+    const githubMcp = await run([
+      "docker",
+      "run",
+      "--rm",
+      "--name",
+      `${name}-github`,
+      "--entrypoint",
+      "github-mcp-server",
+      image,
+      "--version",
+    ]);
+    if (githubMcp.exitCode !== 0) {
+      return {
+        image,
+        ok: false,
+        detail: `github-mcp-server --version exited ${String(githubMcp.exitCode)}\n${githubMcp.stderr}`,
       };
     }
 
@@ -355,10 +374,11 @@ async function smokeMcpGateway(): Promise<SmokeResult> {
     return {
       image,
       ok: true,
-      detail: `node=${node.stdout.trim()}; edstem-mcp entrypoint parses; ${deps.stdout.trim()}`,
+      detail: `node=${node.stdout.trim()}; ${githubMcp.stdout.trim()}; edstem-mcp entrypoint parses; ${deps.stdout.trim()}`,
     };
   } finally {
     await forceRemove(name);
+    await forceRemove(`${name}-github`);
     await forceRemove(`${name}-check`);
     await forceRemove(`${name}-deps`);
   }

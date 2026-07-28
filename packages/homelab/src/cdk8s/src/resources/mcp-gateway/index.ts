@@ -56,10 +56,6 @@ export async function createMcpGatewayDeployment(chart: Chart) {
   const configContent = rawConfig
     .replaceAll("CANVAS_MCP_VERSION", versions["@r-huijts/canvas-mcp"])
     .replaceAll(
-      "GITHUB_MCP_VERSION",
-      versions["@modelcontextprotocol/server-github"],
-    )
-    .replaceAll(
       "GMAIL_MCP_VERSION",
       versions["@automatearmy/email-reader-mcp"],
     );
@@ -236,8 +232,8 @@ export async function createMcpGatewayDeployment(chart: Chart) {
           ),
           key: "CANVAS_BASE_URL",
         }),
-        // GitHub configuration - @modelcontextprotocol/server-github expects GITHUB_TOKEN
-        GITHUB_TOKEN: EnvValue.fromSecretValue({
+        // GitHub's supported MCP server expects GITHUB_PERSONAL_ACCESS_TOKEN.
+        GITHUB_PERSONAL_ACCESS_TOKEN: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
             chart,
             "github-token-secret",

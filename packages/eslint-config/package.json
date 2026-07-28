@@ -36,7 +36,7 @@
     "@eslint-community/eslint-plugin-eslint-comments": "^4.7.1",
     "@eslint/compat": "^2.1.0",
     "@eslint/js": "^10.0.1",
-    "@typescript-eslint/utils": "^8.59.3",
+    "@typescript-eslint/utils": "^8.65.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-node": "^0.4.0",
     "eslint-import-resolver-typescript": "^4.4.4",
@@ -51,7 +51,7 @@
     "eslint-plugin-regexp": "^3.0.0",
     "eslint-plugin-unicorn": "^64.0.0",
     "jiti": "^2.7.0",
-    "typescript-eslint": "^8.59.0"
+    "typescript-eslint": "^8.65.0"
   },
   "peerDependencies": {
     "eslint": "^10.3.0",

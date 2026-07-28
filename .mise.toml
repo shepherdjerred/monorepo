@@ -6,7 +6,7 @@
 [tools]
 # renovate: datasource=github-releases depName=oven-sh/bun
 bun = "1.3.14"
-rust = "1.96.0"
+rust = "1.97.1"
 # renovate: datasource=github-releases depName=corretto/corretto-25 versioning=loose
 java = "corretto-25.0.4.7.1"
 # Repo-wide checks + git hooks (verify/pre-commit call these directly)

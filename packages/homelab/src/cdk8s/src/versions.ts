@@ -52,7 +52,7 @@ const versions = {
     "1.6.0@sha256:ab401a0f361cfad328e444838b13d5b334b189d0f556fc91a3623eb581df36df",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "seerr-team/seerr":
-    "v3.3.0@sha256:c92d2dc117f62185e7bcb88cd56efd374ea79210eaf433275449e8d5988eb5a8",
+    "v3.4.0@sha256:d206d9e4056bb90178297df58047791196e7721e6dc19384579b0530702fe086",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "jellyfin/jellyfin":
     "10.11.11@sha256:45f648c382a0c8b552582fcea40e95cb17c5d475473a891cba0eb7523fb92112",
@@ -169,13 +169,13 @@ const versions = {
   // base moves off 2.0.0-, this pin needs one manual edit).
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
-    "2.0.0-6556@sha256:513a70ed76aae0e188fe56cca3edf52bbf9ae727a7e2bcc05d8fbac03704e880",
+    "2.0.0-6660@sha256:296268376fd5d195a263e1e55612d8e1924882f4be1e792d3a250a34319ceb60",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
     "2.0.0-6646@sha256:7615ba395c6f7bf4b1d0edb741748b350a9f0ae815acbe45e224d52f12333513",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/starlight-karma-bot
   "shepherdjerred/starlight-karma-bot/prod":
-    "2.0.0-6529@sha256:f264607c7bf8fcca4a1d88bfdf9c36baf32623bed373f9925323fc35369c521c",
+    "2.0.0-6646@sha256:7615ba395c6f7bf4b1d0edb741748b350a9f0ae815acbe45e224d52f12333513",
   // not managed by renovate
   "shepherdjerred/birmel":
     "2.0.0-6646@sha256:c6c0e599f8abf18c971ce617b305c52b17147b6d770a6732f8da93cb26125918",
@@ -205,7 +205,7 @@ const versions = {
   // moves the build-layer write storm off the xfs /var system disk).
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "moby/buildkit":
-    "v0.31.1@sha256:6b59b7df63a8cb9902736f9ddf7fcff8261613d3e7449b8ea8b7537fc399c03a",
+    "v0.31.2@sha256:2f5adac4ecd194d9f8c10b7b5d7bceb5186853db1b26e5abd3a657af0b7e26ec",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "library/python":
     "3.14-alpine@sha256:26730869004e2b9c4b9ad09cab8625e81d256d1ce97e72df5520e806b1709f92",
@@ -288,14 +288,12 @@ const versions = {
     "26.7-alpine@sha256:79b3b3d5765447b928473d0f510e000c5738d066bc018b5e8a105a7c57b1e345",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "tbxark/mcp-proxy":
-    "v0.43.2@sha256:1c43164a910a4f74a3ce48d95cb2ef792de8d467296555e63944fa798f0a44bd",
-  // mcp-gateway downstream MCP servers (npx-launched in the mcp-proxy container).
-  // Pinned + Renovate-tracked so cold starts are reproducible instead of `npx -y`
-  // grabbing latest. Substituted into mcp-gateway/config.json at synth time.
+    "v0.43.2@sha256:70c0e02d39c4c0898e610b3a30954f7930628fa6f4fb447bad14c32382a25879",
+  // mcp-gateway downstream npm MCP servers. Pinned + Renovate-tracked so cold
+  // starts are reproducible instead of `npx -y` grabbing latest. Substituted
+  // into mcp-gateway/config.json at synth time.
   // renovate: datasource=npm versioning=npm
   "@r-huijts/canvas-mcp": "1.3.0",
-  // renovate: datasource=npm versioning=npm
-  "@modelcontextprotocol/server-github": "2025.4.8",
   // renovate: datasource=npm versioning=npm
   "@automatearmy/email-reader-mcp": "1.0.3",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver

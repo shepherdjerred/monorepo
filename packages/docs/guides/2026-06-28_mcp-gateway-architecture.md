@@ -17,11 +17,12 @@ Readiness + liveness are bare `tcpSocket: 9090`. The proxy binds `:9090` immedia
 
 ## Secrets
 
-Never in the ConfigMap. `config.json` holds `*_PLACEHOLDER` markers; a busybox init container (`RENDER_CONFIG_SCRIPT`) seds the real tokens (`MCP_PROXY_AUTH_TOKEN`, `FASTMAIL_TOKEN`, `HOMEASSISTANT_TOKEN`) from the `mcp-gateway-credentials` 1Password item into `/rendered/config.json`. Fails closed if any is missing. npx server _versions_ (canvas/github/gmail) are substituted at synth time from `versions.ts` (datasource=npm, Renovate-tracked).
+Never in the ConfigMap. `config.json` holds `*_PLACEHOLDER` markers; a busybox init container (`RENDER_CONFIG_SCRIPT`) seds the real tokens (`MCP_PROXY_AUTH_TOKEN`, `FASTMAIL_TOKEN`, `HOMEASSISTANT_TOKEN`) from the `mcp-gateway-credentials` 1Password item into `/rendered/config.json`. Fails closed if any is missing. The canvas and Gmail npx server _versions_ are substituted at synth time from `versions.ts` (datasource=npm, Renovate-tracked). GitHub's supported `github-mcp-server` binary is checksum-verified and baked into the custom gateway image.
 
 ## Servers (post-#1155)
 
-- canvas/github = npx (pinned).
+- canvas = npx (pinned).
+- github = supported `github/github-mcp-server` binary in stdio mode, authenticated with `GITHUB_PERSONAL_ACCESS_TOKEN`.
 - fastmail = official remote `https://api.fastmail.com/mcp` (streamable-http + Bearer, 19 tools).
 - home-assistant = remote `/api/mcp` (streamable-http + Bearer long-lived token; 401 without it).
 - gmail = `@automatearmy/email-reader-mcp` (IMAP, non-fatal — hangs on init in-cluster despite valid creds+egress, needs a server swap).

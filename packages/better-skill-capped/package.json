@@ -42,7 +42,7 @@
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
     "sass": "^1.99.0",
-    "typescript-eslint": "^8.59.0",
+    "typescript-eslint": "^8.65.0",
     "vite": "^8.0.11"
   },
   "browserslist": {
