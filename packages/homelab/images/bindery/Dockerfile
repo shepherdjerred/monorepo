@@ -119,7 +119,8 @@ ENTRYPOINT ["/bindery"]
 ########################
 FROM source AS smoke
 COPY --from=builder /bindery /bindery
-RUN BINDERY_DB_PATH=/tmp/bindery.db BINDERY_DATA_DIR=/tmp /bindery >/tmp/bindery-smoke.log 2>&1 & \
+RUN export BINDERY_PORT=18788; \
+  BINDERY_DB_PATH=/tmp/bindery.db BINDERY_DATA_DIR=/tmp /bindery >/tmp/bindery-smoke.log 2>&1 & \
   pid=$!; \
   trap 'if kill -0 $pid; then kill $pid; if wait $pid; then :; else cleanup_status=$?; [ $cleanup_status -eq 143 ] || exit $cleanup_status; fi; fi' EXIT; \
   for _ in $(seq 1 30); do \
