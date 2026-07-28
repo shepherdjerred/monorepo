@@ -4,6 +4,7 @@ import {
   ChannelStateResultSchema,
   InventoryResultSchema,
 } from "#activities/glitter-corpus-activity-types.ts";
+import { temporalConnectionOptions } from "#lib/temporal-connection.ts";
 import { GuildSnapshotSchema } from "#shared/glitter-corpus.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
@@ -246,9 +247,12 @@ async function main(): Promise<void> {
   if (command === undefined) {
     usage();
   }
-  const connection = await Connection.connect({
-    address: Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_TEMPORAL_ADDRESS,
-  });
+  const connection = await Connection.connect(
+    temporalConnectionOptions({
+      environment: Bun.env,
+      defaultAddress: DEFAULT_TEMPORAL_ADDRESS,
+    }),
+  );
   const client = new Client({ connection });
   switch (command) {
     case "inventory": {

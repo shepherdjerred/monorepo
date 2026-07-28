@@ -27,6 +27,9 @@ contracts.
   second. Stricter reset headers and `retry_after` values extend that delay.
 - Initial capture is one channel at a time. Each channel runs in a child
   workflow so a large guild cannot exhaust one Temporal history.
+- Discord returns each message page newest-to-oldest for `before`, `after`,
+  and daily-overlap cursors. Forward traversal advances from each page's
+  largest snowflake; it does not assume the response array is ascending.
 - A channel is complete only after its backward traversal reaches an empty
   terminal page, its forward traversal reaches the frozen upper bound with a
   non-empty terminal page, and both contain the same unique message IDs.
@@ -145,13 +148,14 @@ their checksums match.
 
 ## Inventory and approval
 
-Port-forward the production Temporal frontend, then run the inventory workflow:
+Connect to the production Temporal frontend through its authenticated Tailscale
+ingress, then run the inventory workflow:
 
 ```bash
-kubectl -n temporal port-forward svc/temporal-server 7233:7233
-
 cd packages/temporal
-TEMPORAL_ADDRESS=localhost:7233 bun run glitter:operate inventory
+TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 \
+  TEMPORAL_TLS=true \
+  bun run glitter:operate inventory
 ```
 
 Review every included and excluded entry. Specifically verify:
@@ -172,12 +176,14 @@ messages but a bounded history. The canary performs the exact backward/forward
 proof and writes immutable evidence, but it does not publish `latest.json`:
 
 ```bash
-TEMPORAL_ADDRESS=localhost:7233 bun run glitter:operate canary \
+TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 \
+  TEMPORAL_TLS=true \
+  bun run glitter:operate canary \
   --guild-id=<guild-id> \
   --guild-slug=glitter-boys \
   --channel-id=<channel-id> \
   --seed-prefix=seed/19aaca11be85b99d8034e48cfaf45e50e9739e9760da116d7262a6fd7588cc92 \
-  --max-pages=100
+  --max-pages=1000
 ```
 
 Do not begin the full backfill unless the canary completes with equal traversal
@@ -191,7 +197,9 @@ deliberately.
 Start the approved inventory without waiting on the terminal session:
 
 ```bash
-TEMPORAL_ADDRESS=localhost:7233 bun run glitter:operate backfill \
+TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 \
+  TEMPORAL_TLS=true \
+  bun run glitter:operate backfill \
   --inventory-key=<approved-inventory-key> \
   --inventory-sha=<approved-inventory-sha256> \
   --seed-prefix=seed/19aaca11be85b99d8034e48cfaf45e50e9739e9760da116d7262a6fd7588cc92
@@ -230,7 +238,9 @@ After it passes, unpause `glitter-corpus-daily` in Temporal. Run one manual
 daily cycle and repeat recovery verification before relying on the schedule:
 
 ```bash
-TEMPORAL_ADDRESS=localhost:7233 bun run glitter:operate daily --wait=true
+TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 \
+  TEMPORAL_TLS=true \
+  bun run glitter:operate daily --wait=true
 bun run glitter:verify-corpus
 ```
 
@@ -245,7 +255,9 @@ Leave `glitter-context-refresh-weekly` paused until the first complete snapshot
 passes recovery verification. Then run two fixed-time dry runs:
 
 ```bash
-TEMPORAL_ADDRESS=localhost:7233 bun run glitter:operate context-refresh \
+TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 \
+  TEMPORAL_TLS=true \
+  bun run glitter:operate context-refresh \
   --dry-run=true \
   --now=<fixed-iso-timestamp> \
   --wait=true
@@ -318,14 +330,28 @@ Treat it as a correctness event, not as an object to overwrite.
 - Updated the operating contract, deployment prerequisites, import command,
   verifier, monitoring, and incident response for sole-canonical SeaweedFS
   storage.
+- Replaced the nonfunctional Kubernetes port-forward instructions with the
+  healthy Tailscale Temporal endpoint and added explicit `TEMPORAL_TLS=true`
+  support to the operator CLI.
+- Uploaded the trusted seed twice from the production worker and verified 101
+  immutable objects totaling 167,246,402 bytes under the approved prefix.
+- Recorded production inventory SHA-256
+  `8f115f88e68f6ae735d38907357e0fc96e35709927c2e8c0d4f15024d833af23`
+  with 267 included entries and 30 explicit exclusions.
+- Updated the canary ceiling for the known `league-of-legends` channel after
+  live traversal proved it exceeds 100 pages, and corrected forward-page
+  ordering and verification cursors to match Discord's newest-to-oldest
+  response contract.
 
 ### Remaining
 
-- Deploy the worker wiring, upload and verify the trusted seed, complete live
-  acceptance, and unpause the accepted schedules.
+- Deploy the canary fixes, complete canary/backfill/recovery and daily/weekly
+  live acceptance, then unpause the accepted schedules.
 
 ### Caveats
 
 - SeaweedFS currently has neither replication nor Velero volume backup. The
   trusted seed is reproducible from its pinned archive, but later Discord REST
   evidence requires an independent backup to survive total SeaweedFS loss.
+- The failed canary runs wrote immutable request/response evidence but did not
+  publish `latest.json`; failed-closed evidence remains safe to retain.

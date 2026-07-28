@@ -3,6 +3,7 @@ const CONFIGURATION_PAUSE_NOTE =
 
 type ScheduleStateDefinition = {
   requiredEnvironment?: readonly string[];
+  requiredPresentEnvironment?: readonly string[];
   initialPauseNote?: string;
 };
 
@@ -15,6 +16,11 @@ export function buildScheduleState(
     const value = env[name];
     return value === undefined || value === "";
   });
+  missing.push(
+    ...(schedule.requiredPresentEnvironment ?? []).filter(
+      (name) => env[name] === undefined,
+    ),
+  );
   if (missing.length > 0) {
     return {
       paused: true,

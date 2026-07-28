@@ -105,8 +105,8 @@ pass.
 ## Remaining
 
 - [x] Implement and merge the Temporal hardening and member-lookup PRs.
-- [ ] Publish and merge the SeaweedFS storage/deployment wiring.
-- [ ] Upload and verify the trusted seed.
+- [x] Publish and merge the SeaweedFS storage/deployment wiring.
+- [x] Upload and verify the trusted seed.
 - [ ] Approve inventory and complete canary, backfill, and recovery.
 - [ ] Accept daily and weekly workflows and unpause both schedules.
 - [ ] Complete and archive this plan and the related TODOs.
@@ -207,13 +207,49 @@ pass.
   253-test cdk8s suite, typechecks, targeted lint, `check:1password`, and
   storage/deployment schema checks. The post-review Temporal package test,
   typecheck, and lint commands also pass.
+- Merged SeaweedFS deployment PR #1758 at `55dfc50ce`; authoritative main
+  Buildkite #6707 passed every applicable verification, image, release, and
+  ArgoCD lane.
+- Verified the live worker deployment projects Starlight plus all required
+  SeaweedFS fields with no R2 variables, and confirmed both Glitter schedules
+  remain paused.
+- Confirmed #6707 pushed the Temporal worker image digest
+  `sha256:de51c6c4a386ea06fc8621ba2e1ceffad49b47dc24faade1794848d4058fead2`;
+  its automated version PR #1756 passed Buildkite #6708 and merged.
+- Added explicit TLS support to the Glitter operator CLI after live acceptance
+  proved Kubernetes port-forwarding cannot reach the server's pod-IP-only
+  listener. Updated the runbook to use the healthy Tailscale ingress.
+- Verified main image `2.0.0-6707` at digest
+  `sha256:de51c6c4a386ea06fc8621ba2e1ceffad49b47dc24faade1794848d4058fead2`
+  rolled out and all three Glitter worker queues reached `RUNNING`.
+- Uploaded the pinned seed to SeaweedFS twice from the credentialed production
+  worker. Both imports produced the approved archive and projection checksums,
+  164 CSVs, 98 channels, 76,762 unique messages, and zero duplicates.
+- Verified the seed prefix contains exactly 101 immutable objects totaling
+  167,246,402 bytes: the archive, manifest, projection, and 98 channel
+  partitions.
+- Ran production inventory through Temporal over TLS. Inventory
+  `8f115f88e68f6ae735d38907357e0fc96e35709927c2e8c0d4f15024d833af23`
+  contains 267 included entries, 17 non-message exclusions, and 13
+  no-history-permission exclusions; the approved canary channel is included.
+- Used the canary to find and fix four live-only acceptance defects before
+  publication: blank denylist presence was treated as missing, the 100-page
+  operator ceiling was too low for the chosen channel, and Discord returns
+  each `after` page newest-to-oldest rather than oldest-to-newest. The
+  verification pass also had to advance its forward cursor from the first
+  (largest) message in that descending page.
+- Converted traversal safety-ceiling failures to non-retryable Temporal
+  application failures so an incomplete traversal terminates explicitly
+  instead of retrying its workflow task forever.
 
 ### Remaining
 
-- Publish and merge the SeaweedFS PR, then deploy the worker and verify its
-  projected Starlight and SeaweedFS environment.
-- Approve the 267-entry included inventory and the 30 exclusions, then complete
-  the seed upload, canary, backfill, recovery, and schedule acceptance work.
+- Publish and deploy the live-canary fixes, rerun the canary with a deliberate
+  1,000-page ceiling, then complete backfill, recovery, and schedule
+  acceptance.
+- Reconcile the daily schedule from its false missing-denylist pause to its
+  explicit operator-approval hold; keep both schedules paused until their
+  respective acceptance gates pass.
 
 ### Caveats
 
@@ -227,3 +263,10 @@ pass.
   cache. The published tarball was independently downloaded and validated, and
   the failed clean-clone rehearsal passed end to end when rerun with an isolated
   Bun cache.
+- Main Buildkite #6709 deployed the intended Temporal image but failed its
+  final app-tree health wait because Loki and intentionally retained Jellyfin
+  resources remained out of sync. Deleting the tracked Jellyfin resources is a
+  separate destructive operator task and is not authorized by this rollout.
+- The first canary was terminated after its deliberately low 100-page ceiling
+  failed; the second failed closed on the live forward-page ordering mismatch.
+  Neither run published a canonical snapshot.

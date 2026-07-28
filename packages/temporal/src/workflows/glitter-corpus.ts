@@ -6,6 +6,7 @@ import type {
   DailyBaseline,
   InventoryResult,
 } from "#activities/glitter-corpus-activity-types.ts";
+import * as glitterFailures from "./glitter-corpus-failures.ts";
 
 const PAGE_LIMIT_SAFETY_CEILING = 100_000;
 const OVERLAP_DAYS = 7;
@@ -49,9 +50,7 @@ type FullTraversalResult = {
   terminalReason: "empty-channel" | "reached-upper-bound";
 };
 
-function nowIso(): string {
-  return new Date().toISOString();
-}
+const nowIso = (): string => new Date().toISOString();
 
 function smallestSnowflake(ids: readonly string[]): string | undefined {
   return ids.toSorted((left, right) => {
@@ -153,25 +152,24 @@ async function captureFullTraversal(input: {
     }
     if (input.direction === "backward") {
       before = pageSmallest;
-    } else {
-      if (
-        input.upperBoundInclusive !== undefined &&
-        BigInt(pageLargest) >= BigInt(input.upperBoundInclusive)
-      ) {
-        return {
-          pageManifestKeys,
-          oldestMessageId,
-          newestMessageId,
-          terminalReason: "reached-upper-bound",
-        };
-      }
-      after = pageLargest;
+      continue;
     }
+    if (
+      input.upperBoundInclusive !== undefined &&
+      BigInt(pageLargest) >= BigInt(input.upperBoundInclusive)
+    ) {
+      return {
+        pageManifestKeys,
+        oldestMessageId,
+        newestMessageId,
+        terminalReason: "reached-upper-bound",
+      };
+    }
+    after = pageLargest;
   }
 
-  throw new Error(
-    `${input.direction} traversal exceeded safety ceiling of ${String(input.maxPages)} pages for ${input.channelId}; refusing to mark it complete`,
-  );
+  const message = `${input.direction} traversal exceeded safety ceiling of ${String(input.maxPages)} pages for ${input.channelId}; refusing to mark it complete`;
+  throw glitterFailures.traversalSafetyCeiling(message);
 }
 
 export type GlitterCorpusChannelBackfillInput = {
@@ -317,7 +315,7 @@ export async function runGlitterCorpusChannelOverlap(
     }
     before = cursor;
   }
-  throw new Error(
+  throw glitterFailures.traversalSafetyCeiling(
     `daily overlap exceeded safety ceiling of ${String(input.maxPages)} pages for ${input.channelId}`,
   );
 }
@@ -325,7 +323,9 @@ export async function runGlitterCorpusChannelOverlap(
 function maxPages(input: number | undefined): number {
   const value = input ?? PAGE_LIMIT_SAFETY_CEILING;
   if (!Number.isInteger(value) || value <= 0) {
-    throw new Error("maxPagesPerChannel must be a positive integer");
+    throw glitterFailures.invalidInput(
+      "maxPagesPerChannel must be a positive integer",
+    );
   }
   return value;
 }

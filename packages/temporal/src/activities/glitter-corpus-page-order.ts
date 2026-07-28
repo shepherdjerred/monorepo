@@ -5,20 +5,28 @@ export function assertDiscordPageOrder(input: {
   direction: "backward" | "forward" | "daily-overlap";
   objectKey: string;
 }): void {
-  const expectedOrder =
-    input.direction === "forward" ? "oldest-to-newest" : "newest-to-oldest";
   for (const [index, messageId] of input.messageIds.entries()) {
     const next = input.messageIds[index + 1];
     if (next === undefined) {
       continue;
     }
     const comparison = compareSnowflakes(messageId, next);
-    const valid =
-      input.direction === "forward" ? comparison < 0 : comparison > 0;
-    if (!valid) {
+    if (comparison <= 0) {
       throw new Error(
-        `raw Discord page ${input.objectKey} is not strictly ${expectedOrder}`,
+        `raw Discord ${input.direction} page ${input.objectKey} is not strictly newest-to-oldest`,
       );
     }
   }
+}
+
+export function nextTraversalCursor(input: {
+  direction: "backward" | "forward";
+  messageIds: readonly string[];
+  previousCursor: string | undefined;
+}): string | undefined {
+  const cursor =
+    input.direction === "forward"
+      ? input.messageIds[0]
+      : input.messageIds.at(-1);
+  return cursor ?? input.previousCursor;
 }
