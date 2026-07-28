@@ -13,6 +13,8 @@ export type GitHubAppTokenDeps = {
   readonly env?: GitHubAppEnv;
   readonly fetch?: FetchLike;
   readonly now?: () => number;
+  readonly random?: () => number;
+  readonly sleep?: (ms: number) => Promise<void>;
 };
 
 export type GitHubAppTokenResult = {
@@ -164,12 +166,61 @@ function parseAccessTokenResponse(
   return { token, expiresAt };
 }
 
+const RETRYABLE_TOKEN_STATUSES = new Set([429, 502, 503, 504]);
+const TOKEN_MAX_ATTEMPTS = 4;
+
+function sleepFor(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function retryAfterDelayMs(value: string, nowMs: number): number | undefined {
+  const seconds = Number(value);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return Math.ceil(seconds * 1000);
+  }
+  const deadlineMs = Date.parse(value);
+  if (Number.isFinite(deadlineMs)) {
+    return Math.max(0, deadlineMs - nowMs);
+  }
+  return undefined;
+}
+
+function retryDelayMs(
+  response: Response,
+  nowMs: number,
+  attempt: number,
+  random: () => number,
+): number {
+  if (response.status === 429) {
+    const retryAfter = response.headers.get("Retry-After");
+    if (retryAfter !== null) {
+      const delayMs = retryAfterDelayMs(retryAfter, nowMs);
+      if (delayMs !== undefined) {
+        return delayMs;
+      }
+    }
+
+    const rateLimitReset = response.headers.get("X-RateLimit-Reset");
+    if (rateLimitReset !== null) {
+      const resetSeconds = Number(rateLimitReset);
+      if (Number.isFinite(resetSeconds) && resetSeconds >= 0) {
+        return Math.max(0, Math.ceil(resetSeconds * 1000 - nowMs));
+      }
+    }
+  }
+  return 200 * 2 ** (attempt - 1) + Math.floor(random() * 100);
+}
+
 export async function createGitHubAppInstallationToken(
   deps: GitHubAppTokenDeps = {},
 ): Promise<GitHubAppTokenResult> {
   const env = deps.env ?? processEnv();
   const fetchFn = deps.fetch ?? fetch;
   const now = deps.now ?? (() => Date.now());
+  const random = deps.random ?? Math.random;
+  const sleep = deps.sleep ?? sleepFor;
   const nowMs = now();
   const appId = requireNumericEnv(env, "GITHUB_APP_ID");
   const installationId = requireNumericEnv(env, "GITHUB_APP_INSTALLATION_ID");
@@ -179,27 +230,37 @@ export async function createGitHubAppInstallationToken(
     "",
   );
   const jwt = await createGitHubAppJwt({ appId, privateKey, now });
-  const response = await fetchFn(
-    `${apiBaseUrl}/app/installations/${installationId}/access_tokens`,
-    {
-      method: "POST",
-      headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: `Bearer ${jwt}`,
-        "X-GitHub-Api-Version": GITHUB_API_VERSION,
-      },
-      body: "{}",
+  const url = `${apiBaseUrl}/app/installations/${installationId}/access_tokens`;
+  const init: RequestInit = {
+    method: "POST",
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${jwt}`,
+      "X-GitHub-Api-Version": GITHUB_API_VERSION,
     },
-  );
+    body: "{}",
+  };
 
-  if (!response.ok) {
+  let lastError: Error | undefined;
+  for (let attempt = 1; attempt <= TOKEN_MAX_ATTEMPTS; attempt += 1) {
+    const response = await fetchFn(url, init);
+    if (response.ok) {
+      return parseAccessTokenResponse(await response.json(), nowMs);
+    }
     const body = await response.text();
-    throw new Error(
+    lastError = new Error(
       `GitHub App installation token request failed with ${String(response.status)} ${response.statusText}: ${body}`,
     );
+    if (
+      !RETRYABLE_TOKEN_STATUSES.has(response.status) ||
+      attempt === TOKEN_MAX_ATTEMPTS
+    ) {
+      throw lastError;
+    }
+    const delayMs = retryDelayMs(response, now(), attempt, random);
+    await sleep(delayMs);
   }
-
-  return parseAccessTokenResponse(await response.json(), nowMs);
+  throw lastError ?? new Error("GitHub App installation token request failed");
 }
 
 async function main(): Promise<void> {

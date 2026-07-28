@@ -75,6 +75,9 @@ model Account {
   updatedTime      DateTime
 
   @@unique([serverId, puuid])
+  // Hot path updates filter by puuid alone (post-match cursor writes); the
+  // unique index is (serverId, puuid) and cannot serve those lookups.
+  @@index([puuid])
 }
 
 // Global, self-maintaining cache of known summoners (Riot IDs are public).

@@ -13,8 +13,8 @@
  * tree mounted WITHOUT `.git` (so the script git-inits a scratch repo). This
  * driver reproduces that shape locally:
  *
- *  1. Copy the repo tree to a temp dir, excluding source-control and generated
- *     dependency/build/cache directories.
+ *  1. Copy only Git-tracked files to a temp dir, without source-control
+ *     metadata or local artifacts.
  *  2. Ensure the `cog` (cogapp) CLI is on PATH — the worker image bakes in
  *     cogapp system-wide; locally we shim `uvx --from cogapp==<pinned> cog`
  *     when a bare `cog` isn't already present.
@@ -22,7 +22,7 @@
  *
  * Fail-fast: a non-zero exit from any leg throws.
  */
-import { mkdtemp, mkdir, writeFile, chmod, rm } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -58,13 +58,34 @@ async function commandExists(name: string): Promise<boolean> {
   return (await proc.exited) === 0;
 }
 
+async function writeTrackedFilesManifest(manifestPath: string): Promise<void> {
+  const proc = Bun.spawn(["git", "ls-files", "-z"], {
+    cwd: REPO_ROOT,
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(proc.stdout).arrayBuffer(),
+    new Response(proc.stderr).text(),
+    proc.exited,
+  ]);
+  if (exitCode !== 0) {
+    throw new Error(
+      `git ls-files failed with exit code ${String(exitCode)}: ${stderr}`,
+    );
+  }
+  await writeFile(manifestPath, new Uint8Array(stdout));
+}
+
 /**
- * Copy the repo tree to `dest`, excluding the same paths the old Dagger step
- * excluded. Uses rsync when available (fast, honours excludes cleanly); the
- * exclude list is the load-bearing bit — `.git` MUST be absent so the
- * rehearsal git-inits a scratch repo instead of touching the real checkout.
+ * Copy only the source checkout's Git-tracked files to `dest`. The scratch
+ * tree intentionally has no `.git`, dependency output, or untracked local
+ * artifacts, matching a clean CI checkout without source-control metadata.
  */
-async function copyRepoTree(dest: string): Promise<void> {
+async function copyRepoTree(
+  dest: string,
+  trackedFilesManifest: string,
+): Promise<void> {
   if (!(await commandExists("rsync"))) {
     throw new Error(
       "rsync is required to copy the repo tree for the rehearsal — install it (brew install rsync).",
@@ -74,17 +95,8 @@ async function copyRepoTree(dest: string): Promise<void> {
     [
       "rsync",
       "-a",
-      "--exclude=.git",
-      "--exclude=node_modules",
-      "--exclude=dist",
-      "--exclude=.eslintcache",
-      "--exclude=.turbo",
-      "--exclude=.venv",
-      // `bun build --compile --outfile <path>` creates a sibling
-      // `.<hash>.bun-build` file and removes it after the atomic rename. A
-      // concurrent repo-wide build can otherwise make rsync observe the
-      // short-lived directory entry after Bun has already removed it.
-      "--exclude=.*.bun-build",
+      "--from0",
+      `--files-from=${trackedFilesManifest}`,
       `${REPO_ROOT}/`,
       `${dest}/`,
     ],
@@ -119,11 +131,13 @@ async function main(): Promise<void> {
   const workDir = await mkdtemp(path.join(tmpdir(), "schedule-rehearsal-"));
   const repoCopy = path.join(workDir, "monorepo");
   const shimDir = path.join(workDir, "shim");
+  const trackedFilesManifest = path.join(workDir, "tracked-files.txt");
   await mkdir(repoCopy, { recursive: true });
 
   try {
+    await writeTrackedFilesManifest(trackedFilesManifest);
     console.error(`[check:rehearsal] copying repo tree → ${repoCopy}`);
-    await copyRepoTree(repoCopy);
+    await copyRepoTree(repoCopy, trackedFilesManifest);
 
     const cogShim = await ensureCogOnPath(shimDir);
     const pathEnv =
@@ -132,10 +146,19 @@ async function main(): Promise<void> {
         : `${cogShim}:${Bun.env["PATH"] ?? ""}`;
 
     console.error("[check:rehearsal] running rehearse-bot-clone.ts");
-    await run(["bun", "run", REHEARSAL_SCRIPT, `--repo=${repoCopy}`], {
-      cwd: REPO_ROOT,
-      env: pathEnv === undefined ? {} : { PATH: pathEnv },
-    });
+    await run(
+      [
+        "bun",
+        "run",
+        REHEARSAL_SCRIPT,
+        `--repo=${repoCopy}`,
+        `--baseline-files=${trackedFilesManifest}`,
+      ],
+      {
+        cwd: REPO_ROOT,
+        env: pathEnv === undefined ? {} : { PATH: pathEnv },
+      },
+    );
     console.error("[check:rehearsal] rehearsal passed");
   } finally {
     await rm(workDir, { recursive: true, force: true });

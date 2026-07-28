@@ -125,8 +125,9 @@ const HOMELAB_AUDIT_AGENT_TASK: AgentTaskInput = {
   },
   scheduleId: "homelab-audit-daily",
   allowSelfCancel: false,
-  maxTurns: 8,
-  // The audit's 8 turns take ~25 min end-to-end; the old 8-min timeout killed it mid-run.
+  // 8 was too low — Bugsink showed error_max_turns at ~9 turns on full audits.
+  maxTurns: 40,
+  // Bounded report still needs headroom for tool rounds + Postal render.
   agentTimeoutMinutes: 45,
   emailSubjectPrefix: "Homelab Audit",
   source: {

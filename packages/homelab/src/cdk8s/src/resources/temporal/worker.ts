@@ -518,8 +518,14 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "SENTRY_DSN",
         }),
-        // OpenAI
+        // OpenAI. Codex CLI 0.139+ authenticates via CODEX_API_KEY only —
+        // OPENAI_API_KEY alone yields "401 Missing bearer" on /v1/responses.
+        // Same 1P field; no second secret.
         OPENAI_API_KEY: EnvValue.fromSecretValue({
+          secret,
+          key: "OPENAI_API_KEY",
+        }),
+        CODEX_API_KEY: EnvValue.fromSecretValue({
           secret,
           key: "OPENAI_API_KEY",
         }),

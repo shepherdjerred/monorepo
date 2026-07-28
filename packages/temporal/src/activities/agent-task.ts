@@ -1,5 +1,6 @@
 import { Context } from "@temporalio/activity";
 import * as Sentry from "@sentry/bun";
+import { agentSubprocessFailure } from "#activities/agent-task-failures.ts";
 import {
   agentSubprocessIdleSeconds,
   agentSubprocessSoftKillsTotal,
@@ -149,22 +150,24 @@ function workflowId(): string {
   }
 }
 
-function secretTokens(
+export function agentTaskSecretTokens(
   githubAppToken: string | undefined,
+  env: Readonly<Record<string, string | undefined>> = Bun.env,
 ): readonly (string | undefined)[] {
   return [
-    Bun.env["CLAUDE_CODE_OAUTH_TOKEN"],
-    Bun.env["ANTHROPIC_API_KEY"],
-    Bun.env["OPENAI_API_KEY"],
-    Bun.env["GITHUB_PERSONAL_ACCESS_TOKEN"],
-    Bun.env["GITHUB_APP_PRIVATE_KEY"],
+    env["CLAUDE_CODE_OAUTH_TOKEN"],
+    env["ANTHROPIC_API_KEY"],
+    env["CODEX_API_KEY"],
+    env["OPENAI_API_KEY"],
+    env["GITHUB_PERSONAL_ACCESS_TOKEN"],
+    env["GITHUB_APP_PRIVATE_KEY"],
     githubAppToken,
-    Bun.env["POSTAL_API_KEY"],
-    Bun.env["PAGERDUTY_TOKEN"],
-    Bun.env["BUGSINK_TOKEN"],
-    Bun.env["GRAFANA_API_KEY"],
-    Bun.env["ARGOCD_AUTH_TOKEN"],
-    Bun.env["CLOUDFLARE_API_TOKEN"],
+    env["POSTAL_API_KEY"],
+    env["PAGERDUTY_TOKEN"],
+    env["BUGSINK_TOKEN"],
+    env["GRAFANA_API_KEY"],
+    env["ARGOCD_AUTH_TOKEN"],
+    env["CLOUDFLARE_API_TOKEN"],
   ];
 }
 
@@ -190,6 +193,16 @@ function envForProvider(
     env[key] = value;
   }
   env["GH_TOKEN"] = githubAppToken;
+  // Codex CLI reads CODEX_API_KEY, not OPENAI_API_KEY (verified 0.139 in-pod:
+  // OPENAI-only → 401 Missing bearer; CODEX_API_KEY → turn.completed).
+  if (
+    provider === "codex" &&
+    (env["CODEX_API_KEY"] === undefined || env["CODEX_API_KEY"] === "") &&
+    env["OPENAI_API_KEY"] !== undefined &&
+    env["OPENAI_API_KEY"] !== ""
+  ) {
+    env["CODEX_API_KEY"] = env["OPENAI_API_KEY"];
+  }
   return env;
 }
 
@@ -272,7 +285,7 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
             command: command.args,
             cwd: input.workdir,
             env: envForProvider(provider, githubTokenResult.token),
-            redactTokens: secretTokens(githubTokenResult.token),
+            redactTokens: agentTaskSecretTokens(githubTokenResult.token),
             startToCloseTimeoutMs: startToCloseTimeoutMsOrUndefined(),
             cancellationSignal: activityCancellationSignalOrUndefined(),
             heartbeatIntervalMs: HEARTBEAT_INTERVAL_MS,
@@ -410,9 +423,7 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
 
       if (result.exitCode !== 0) {
         agentTaskRunsTotal.inc({ provider, outcome: "subprocess_failed" });
-        const error = new Error(
-          `${provider} agent task exited with code ${String(result.exitCode)} (signal=${result.signal}, durationMs=${String(result.durationMs)})`,
-        );
+        const error = agentSubprocessFailure(provider, result);
         captureWithContext(error, {
           provider,
           durationMs: result.durationMs,

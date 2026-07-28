@@ -24,6 +24,13 @@ Sentry.init({
   environment: import.meta.env.MODE,
   // Bugsink is Sentry-compatible but does not support performance tracing.
   tracesSampleRate: 0,
+  // Monaco/VS Code CancellationError on unmount/nav — not app bugs.
+  ignoreErrors: [
+    /^Canceled$/,
+    /^Cancelled$/,
+    /^AbortError$/,
+    /^The operation was aborted\.?$/,
+  ],
 });
 
 // Product-usage analytics (self-hosted Plausible). No-op unless the site build

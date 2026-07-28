@@ -32,6 +32,12 @@ const basePrisma = new PrismaClient({
   ),
 });
 
+// SQLite is single-writer. Post-match/prematch polls issue many Account
+// updateMany calls; wait up to 5s on lock contention instead of timing out
+// immediately under concurrent writers.
+await basePrisma.$executeRawUnsafe("PRAGMA busy_timeout = 5000");
+await basePrisma.$executeRawUnsafe("PRAGMA journal_mode = WAL");
+
 export const prisma = basePrisma.$extends({
   query: {
     $allModels: {
@@ -258,10 +264,15 @@ export async function getAccountsWithState(
  * @param matchId - The match ID that was just processed
  * @param prismaClient - Prisma client instance
  */
+/**
+ * Advance the post-match cursor and activity timestamp in one write.
+ * Callers previously issued two updateMany calls per player per match.
+ */
 export async function updateLastProcessedMatch(
   puuid: LeaguePuuid,
   matchId: MatchId,
   prismaClient: ExtendedPrismaClient = prisma,
+  matchTime?: Date,
 ): Promise<void> {
   logger.info(`📝 Updating lastProcessedMatchId for ${puuid} to ${matchId}`);
 
@@ -274,6 +285,7 @@ export async function updateLastProcessedMatch(
       },
       data: {
         lastProcessedMatchId: matchId,
+        ...(matchTime === undefined ? {} : { lastMatchTime: matchTime }),
       },
     });
 

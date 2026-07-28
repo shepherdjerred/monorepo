@@ -49,6 +49,12 @@ type DeploySiteBase = {
    * `assets/`, the scout SPA's `app/assets/`).
    */
   immutablePrefixes: string[];
+  /**
+   * Extra bucket keys/prefixes to keep across the deleting sync pass (objects
+   * not present in `distDir` that a runtime writer still owns — e.g. Temporal's
+   * `data/manifest.json` for better-skill-capped).
+   */
+  extraExcludes?: string[];
 };
 
 type DeploySiteBuildEnv =
@@ -138,6 +144,9 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     target: "s3",
     // Vite SPA — content-hashed bundles live under `assets/`, not `_astro/`.
     immutablePrefixes: ["assets/"],
+    // Temporal `fetchSkillCappedManifest` writes this daily; Vite dist has no
+    // `data/` so a bare `--delete` wipe would 404 the SPA's cold-load path.
+    extraExcludes: ["data/*"],
   },
   {
     bucket: "glitter-boys-ppl",
@@ -332,6 +341,9 @@ async function main(): Promise<void> {
     bucket: site.bucket,
     endpoint,
     immutablePrefixes: site.immutablePrefixes,
+    ...(site.extraExcludes === undefined
+      ? {}
+      : { extraExcludes: site.extraExcludes }),
     cwd: root,
     env: SEAWEEDFS_AWS_ENV,
     dryRun,
