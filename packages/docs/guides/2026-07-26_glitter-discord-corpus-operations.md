@@ -30,9 +30,8 @@ contracts.
 - A channel is complete only after its backward traversal reaches an empty
   terminal page, its forward traversal reaches the frozen upper bound with a
   non-empty terminal page, and both contain the same unique message IDs.
-- Every immutable write is read back and checksum-verified in both SeaweedFS
-  and Cloudflare R2.
-- The mutable `latest.json` pointer advances only after both stores contain the
+- Every immutable write is read back and checksum-verified in SeaweedFS.
+- The mutable `latest.json` pointer advances only after SeaweedFS contains the
   exact snapshot checksum.
 - The daily job covers at least seven days and must also cross the previous
   snapshot's newest message boundary. A long outage therefore expands work
@@ -46,42 +45,34 @@ contracts.
 
 ## Pre-deployment gate
 
-Create the private `glitter-discord-corpus` bucket in both OpenTofu stacks:
+Create the private `glitter-discord-corpus` SeaweedFS bucket:
 
 ```bash
 cd packages/homelab/src/tofu/seaweedfs
 tofu plan
 tofu apply
-
-cd ../cloudflare
-tofu plan
-tofu apply
 ```
 
-Create an R2 Object Read & Write token restricted to that bucket. Before the
-Temporal deployment rolls, add all of these fields to the existing Temporal
-worker 1Password item:
+The Temporal deployment reuses the worker's existing SeaweedFS credentials and
+projects the existing Starlight bot token from its separate 1Password item.
+CDK8s provides the guild identity, bucket, regions, and explicit empty denylist
+as non-secret literals:
 
-| Field                                  | Value                                                |
-| -------------------------------------- | ---------------------------------------------------- |
-| `GLITTER_DISCORD_TOKEN`                | Dedicated archival bot token                         |
-| `GLITTER_DISCORD_GUILD_ID`             | Glitter Boys guild snowflake                         |
-| `GLITTER_DISCORD_GUILD_SLUG`           | `glitter-boys`                                       |
-| `GLITTER_DISCORD_DENYLIST_CHANNEL_IDS` | Comma-separated channel IDs or a present blank field |
-| `GLITTER_CORPUS_S3_ENDPOINT`           | SeaweedFS S3 endpoint                                |
-| `GLITTER_CORPUS_S3_BUCKET`             | Private SeaweedFS corpus bucket                      |
-| `GLITTER_CORPUS_S3_ACCESS_KEY_ID`      | Bucket-scoped SeaweedFS access key                   |
-| `GLITTER_CORPUS_S3_SECRET_ACCESS_KEY`  | Bucket-scoped SeaweedFS secret key                   |
-| `GLITTER_CORPUS_S3_REGION`             | Optional; defaults to `us-east-1`                    |
-| `GLITTER_CORPUS_R2_ENDPOINT`           | Account-specific R2 S3 endpoint                      |
-| `GLITTER_CORPUS_R2_BUCKET`             | Private Cloudflare R2 corpus bucket                  |
-| `GLITTER_CORPUS_R2_ACCESS_KEY_ID`      | Bucket-scoped R2 access key                          |
-| `GLITTER_CORPUS_R2_SECRET_ACCESS_KEY`  | Bucket-scoped R2 secret key                          |
-| `GLITTER_CORPUS_R2_REGION`             | Optional; defaults to `auto`                         |
+| Runtime field                          | Source                                          |
+| -------------------------------------- | ----------------------------------------------- |
+| `GLITTER_DISCORD_TOKEN`                | Starlight 1Password item's `DISCORD_TOKEN`      |
+| `GLITTER_DISCORD_GUILD_ID`             | Literal `208425771172102144`                    |
+| `GLITTER_DISCORD_GUILD_SLUG`           | Literal `glitter-boys`                          |
+| `GLITTER_DISCORD_DENYLIST_CHANNEL_IDS` | Explicit blank literal until inventory approval |
+| `GLITTER_CORPUS_S3_ENDPOINT`           | Worker 1Password item's `S3_ENDPOINT`           |
+| `GLITTER_CORPUS_S3_BUCKET`             | Literal `glitter-discord-corpus`                |
+| `GLITTER_CORPUS_S3_ACCESS_KEY_ID`      | Worker 1Password item's `AWS_ACCESS_KEY_ID`     |
+| `GLITTER_CORPUS_S3_SECRET_ACCESS_KEY`  | Worker 1Password item's `AWS_SECRET_ACCESS_KEY` |
+| `GLITTER_CORPUS_S3_REGION`             | Literal `us-east-1`                             |
 
-The bot must have only View Channel and Read Message History where archival is
-approved. Enable the Message Content privileged intent. Missing secret fields
-prevent the pod from starting, so provision them before deployment.
+Starlight must have View Channel and Read Message History where archival is
+approved. Keep the Message Content privileged intent enabled. Missing secret
+fields prevent the pod from starting.
 Inventory also reads the current
 [application flags](https://docs.discord.com/developers/resources/application#application-object-application-flags)
 and fails before pagination when
@@ -93,7 +84,7 @@ paused until the first complete snapshot passes recovery verification.
 
 ## Import the trusted seed
 
-Run the import twice locally before mirroring it. The projection checksums must
+Run the import twice locally before uploading it. The projection checksums must
 match:
 
 ```bash
@@ -131,8 +122,8 @@ Expected trusted-seed acceptance:
 | Last timestamp     | `2025-11-23T03:01:23.939Z`                                         |
 | Projection SHA-256 | `ae61f1659196d176b343dc40f19741b0df73be01466f61c2da7561f43a7e08f8` |
 
-After both buckets exist and the worker storage credentials are available,
-mirror the archive, manifest, projection, and channel partitions:
+After the bucket exists and the worker storage credentials are available,
+upload the archive, manifest, projection, and channel partitions:
 
 ```bash
 bun run glitter:import-seed \
@@ -140,7 +131,7 @@ bun run glitter:import-seed \
   --output="$first_output" \
   --guild-id=208425771172102144 \
   --guild-slug=glitter-boys \
-  --mirror=true
+  --upload=true
 ```
 
 The approved seed prefix is:
@@ -191,7 +182,7 @@ TEMPORAL_ADDRESS=localhost:7233 bun run glitter:operate canary \
 
 Do not begin the full backfill unless the canary completes with equal traversal
 ID sets, an empty backward terminal page, a non-empty forward terminal page
-whose reason is `reached-upper-bound`, and matching mirror receipts. A
+whose reason is `reached-upper-bound`, and matching storage receipts. A
 safety-ceiling failure is not completeness; select a larger ceiling and rerun
 deliberately.
 
@@ -214,7 +205,7 @@ investigate any of these signals:
 - repeated 429 responses despite the conservative ceiling;
 - a backward/forward set mismatch;
 - a page cursor, ordering, identity, or checksum mismatch;
-- a SeaweedFS/R2 missing-object or checksum divergence;
+- a SeaweedFS missing-object, immutable collision, or checksum failure;
 - an inventory-scope alert.
 
 The workflow publishes a canonical pointer only after every approved channel
@@ -229,8 +220,8 @@ cd packages/temporal
 bun run glitter:verify-corpus
 ```
 
-This command reads every referenced object from both stores, validates mirror
-parity and snapshot receipts, reconstructs complete channels from raw backward
+This command reads every referenced object from SeaweedFS, validates checksums
+and snapshot receipts, reconstructs complete channels from raw backward
 and forward pages plus the trusted seed, replays at most six daily overlap
 states, and requires the rebuilt projection checksums and message count to match
 the published snapshot.
@@ -245,7 +236,8 @@ bun run glitter:verify-corpus
 
 The scheduled run is at 04:15 America/Los_Angeles with overlap policy `SKIP`.
 The Temporal dashboard and Prometheus rules expose progress, rate limiting,
-authorization failure, mirror divergence, inventory drift, and snapshot age.
+authorization failure, storage integrity failure, inventory drift, and snapshot
+age.
 
 ## Shared-context refresh acceptance
 
@@ -284,9 +276,13 @@ Never repair `latest.json` by hand.
 
 1. Pause `glitter-corpus-daily`.
 2. Preserve the failed workflow and immutable object keys.
-3. Correct credentials, permissions, rate pressure, or the damaged mirror.
-4. Copy the checksum-verified object from the healthy store to the exact key in
-   the damaged store.
+3. Correct credentials, permissions, or rate pressure before attempting
+   recovery.
+4. Restore a missing or corrupt immutable object only from an independently
+   verified SeaweedFS backup. Seed-prefix objects may instead be recreated from
+   the pinned trusted archive and must reproduce the documented checksums. If a
+   Discord REST evidence object has no verified backup, preserve the incident
+   and start a new inventory/backfill rather than overwriting its key.
 5. Run `bun run glitter:verify-corpus`.
 6. Retry the failed workflow or start a new inventory/backfill when its
    immutable request ID collided with changed Discord data.
@@ -307,10 +303,29 @@ Treat it as a correctness event, not as an object to overwrite.
 
 ### Remaining
 
-- Complete credential projection, deployment, mirroring, inventory approval,
+- Complete credential projection, deployment, seed upload, inventory approval,
   canary, backfill, recovery verification, and schedule acceptance.
 
 ### Caveats
 
 - Both ZIP roots are channel-export groups in one guild; archive directory
   names are retained as provenance and are not guild identities.
+
+## Session Log — 2026-07-28
+
+### Done
+
+- Updated the operating contract, deployment prerequisites, import command,
+  verifier, monitoring, and incident response for sole-canonical SeaweedFS
+  storage.
+
+### Remaining
+
+- Deploy the worker wiring, upload and verify the trusted seed, complete live
+  acceptance, and unpause the accepted schedules.
+
+### Caveats
+
+- SeaweedFS currently has neither replication nor Velero volume backup. The
+  trusted seed is reproducible from its pinned archive, but later Discord REST
+  evidence requires an independent backup to survive total SeaweedFS loss.

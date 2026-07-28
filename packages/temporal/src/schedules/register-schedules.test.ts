@@ -205,7 +205,7 @@ describe("Glitter corpus schedule", () => {
     const configured = configuredEnvironment(schedule);
     expect(buildScheduleState(schedule, configured)).toEqual({
       paused: true,
-      note: "Awaiting operator approval of the first complete mirrored snapshot",
+      note: "Awaiting operator approval of the first complete snapshot",
     });
   });
 
@@ -230,7 +230,7 @@ describe("Glitter corpus schedule", () => {
       }),
     ).toEqual({
       paused: true,
-      note: "Awaiting operator approval of the first complete mirrored snapshot",
+      note: "Awaiting operator approval of the first complete snapshot",
     });
   });
 

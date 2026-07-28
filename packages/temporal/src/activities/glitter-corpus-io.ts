@@ -15,11 +15,12 @@ import {
 } from "#shared/glitter-corpus-projection.ts";
 import { normalizeDiscordMessage } from "./glitter-corpus-normalize.ts";
 import { assertDiscordPageOrder } from "./glitter-corpus-page-order.ts";
-import { createCorpusStoresFromEnv } from "./glitter-corpus-store.ts";
+import { createCorpusStoreFromEnv } from "./glitter-corpus-store.ts";
 import {
-  putMirroredImmutableObject,
-  readMirroredObject,
-  readVerifiedMirroredObject,
+  putImmutableObject,
+  readObject,
+  readRequiredObject,
+  readVerifiedObject,
 } from "./glitter-corpus-storage.ts";
 import { ChannelStateResultSchema } from "./glitter-corpus-activity-types.ts";
 
@@ -82,11 +83,8 @@ export async function readCorpusJson<T>(
   key: string,
   schema: z.ZodType<T>,
 ): Promise<T> {
-  const stores = createCorpusStoresFromEnv();
-  const bytes = await readMirroredObject({ stores, key });
-  if (bytes === undefined) {
-    throw new Error(`mirrored corpus object does not exist: ${key}`);
-  }
+  const store = createCorpusStoreFromEnv();
+  const bytes = await readRequiredObject({ store, key });
   return schema.parse(JSON.parse(new TextDecoder().decode(bytes)));
 }
 
@@ -103,19 +101,12 @@ export async function readCorpusPage(
       `page manifest ${key} has direction ${manifest.direction}, expected ${expectedDirection}`,
     );
   }
-  const stores = createCorpusStoresFromEnv();
-  const bytes = await readMirroredObject({
-    stores,
+  const store = createCorpusStoreFromEnv();
+  const bytes = await readVerifiedObject({
+    store,
     key: manifest.rawObjectKey,
+    expectedSha256: manifest.rawSha256,
   });
-  if (bytes === undefined) {
-    throw new Error(`raw Discord page is missing: ${manifest.rawObjectKey}`);
-  }
-  if (sha256(bytes) !== manifest.rawSha256) {
-    throw new Error(
-      `raw Discord page checksum mismatch: ${manifest.rawObjectKey}`,
-    );
-  }
   const messages = z
     .array(DiscordApiMessageSchema)
     .parse(JSON.parse(new TextDecoder().decode(bytes)));
@@ -351,15 +342,12 @@ export async function readSeedChannelObservations(input: {
   if (input.seedPrefix === undefined) {
     return [];
   }
-  const stores = createCorpusStoresFromEnv();
+  const store = createCorpusStoreFromEnv();
   const manifestKey = `${input.seedPrefix}/manifest.json`;
-  const manifestBytes = await readMirroredObject({
-    stores,
+  const manifestBytes = await readRequiredObject({
+    store,
     key: manifestKey,
   });
-  if (manifestBytes === undefined) {
-    throw new Error(`seed manifest is missing: ${manifestKey}`);
-  }
   const manifest = SeedImportManifestSchema.parse(
     JSON.parse(new TextDecoder().decode(manifestBytes)),
   );
@@ -369,9 +357,11 @@ export async function readSeedChannelObservations(input: {
     );
   }
   const key = `${input.seedPrefix}/channels/${input.channelId}/observations.ndjson`;
-  const bytes = await readMirroredObject({ stores, key });
   const shouldExist = manifest.channelIds.includes(input.channelId);
-  if (shouldExist !== (bytes !== undefined)) {
+  const bytes = shouldExist
+    ? await readRequiredObject({ store, key })
+    : await readObject({ store, key });
+  if (!shouldExist && bytes !== undefined) {
     throw new Error(
       `seed channel partition presence disagrees with ${manifestKey}: ${key}`,
     );
@@ -417,9 +407,9 @@ export async function validateSeedForApprovedInventory(input: {
       `trusted seed guild ${manifest.guildId}/${manifest.guildSlug} does not match approved inventory ${input.guildId}/${input.guildSlug}`,
     );
   }
-  const stores = createCorpusStoresFromEnv();
-  const archiveBytes = await readVerifiedMirroredObject({
-    stores,
+  const store = createCorpusStoreFromEnv();
+  const archiveBytes = await readVerifiedObject({
+    store,
     key: `${input.seedPrefix}/archive.zip`,
     expectedSha256: manifest.archiveSha256,
   });
@@ -428,8 +418,8 @@ export async function validateSeedForApprovedInventory(input: {
       `trusted seed archive checksum mismatch: ${input.seedPrefix}`,
     );
   }
-  await readVerifiedMirroredObject({
-    stores,
+  await readVerifiedObject({
+    store,
     key: `${input.seedPrefix}/projection.ndjson`,
     expectedSha256: manifest.projectionSha256,
   });
@@ -461,8 +451,8 @@ export async function writeChannelProjection(input: {
     `guilds/${input.guildId}/channels/${input.channelId}/projections/` +
     `${input.snapshotId}.ndjson`;
   const body = new TextEncoder().encode(input.projectionNdjson);
-  await putMirroredImmutableObject({
-    stores: createCorpusStoresFromEnv(),
+  await putImmutableObject({
+    store: createCorpusStoreFromEnv(),
     key,
     body,
     contentType: "application/x-ndjson",
@@ -482,8 +472,8 @@ export async function writeChannelState(input: {
   const manifestKey =
     `guilds/${input.guildId}/channels/${input.channelId}/states/` +
     `${input.snapshotId}.json`;
-  const manifestObject = await putMirroredImmutableObject({
-    stores: createCorpusStoresFromEnv(),
+  const manifestObject = await putImmutableObject({
+    store: createCorpusStoreFromEnv(),
     key: manifestKey,
     body: jsonBytes(input.manifest),
     contentType: "application/json",

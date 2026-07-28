@@ -364,7 +364,7 @@ export function createTemporalDashboard() {
         id: 401,
         title: "Glitter Snapshot Age",
         description:
-          "Seconds since the most recently published complete mirrored snapshot.",
+          "Seconds since the most recently published complete snapshot.",
         expr: "time() - max(glitter_corpus_last_snapshot_timestamp_seconds) or on() vector(-1)",
         legend: "age",
         x: 6,
@@ -375,10 +375,10 @@ export function createTemporalDashboard() {
       }),
       statPanel({
         id: 402,
-        title: "Mirror Parity Healthy",
+        title: "Storage Integrity Healthy",
         description:
-          "1 means no missing or checksum-divergent objects were detected between SeaweedFS and R2 in the last 24 hours.",
-        expr: "1 - clamp_max((sum(increase(glitter_corpus_mirror_divergence_total[24h])) or on() vector(0)), 1)",
+          "1 means no missing, collided, or checksum-invalid SeaweedFS objects were detected in the last 24 hours.",
+        expr: "1 - clamp_max((sum(increase(glitter_corpus_storage_integrity_failures_total[24h])) or on() vector(0)), 1)",
         legend: "healthy",
         x: 12,
         y: 84,

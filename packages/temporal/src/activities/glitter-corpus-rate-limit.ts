@@ -1,7 +1,7 @@
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { z } from "zod/v4";
 import {
-  createCorpusStoresFromEnv,
+  createCorpusStoreFromEnv,
   isNotFoundError,
   isPreconditionFailedError,
   putMutableJson,
@@ -189,7 +189,7 @@ export function createGlitterDiscordRateLimitCoordinatorWithStorage(
 }
 
 export function createGlitterDiscordRateLimitCoordinator(): GlitterDiscordRateLimitCoordinator {
-  const [store] = createCorpusStoresFromEnv();
+  const store = createCorpusStoreFromEnv();
   return createGlitterDiscordRateLimitCoordinatorWithStorage({
     read: async () => await readDiscordRequestLease(store),
     compareAndSwap: async (input) =>

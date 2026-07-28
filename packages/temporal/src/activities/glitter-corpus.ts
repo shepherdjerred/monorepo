@@ -53,10 +53,10 @@ import {
   finalizeGlitterCorpusSnapshot,
   loadGlitterCorpusDailyBaseline,
 } from "./glitter-corpus-snapshot.ts";
-import { createCorpusStoresFromEnv } from "./glitter-corpus-store.ts";
+import { createCorpusStoreFromEnv } from "./glitter-corpus-store.ts";
 import {
-  putMirroredImmutableObject,
-  readMirroredObject,
+  putImmutableObject,
+  readRequiredObject,
 } from "./glitter-corpus-storage.ts";
 import {
   persistProjectionState,
@@ -137,8 +137,8 @@ async function inventoryGlitterGuild(input: {
     }
   }
   const inventoryKey = `guilds/${config.guildId}/inventory/${inventory.sha256}.json`;
-  const inventoryObject = await putMirroredImmutableObject({
-    stores: createCorpusStoresFromEnv(),
+  const inventoryObject = await putImmutableObject({
+    store: createCorpusStoreFromEnv(),
     key: inventoryKey,
     body: jsonBytes(inventory),
     contentType: "application/json",
@@ -178,15 +178,12 @@ async function loadApprovedGlitterInventory(input: {
       `inventory approval checksum does not match ${input.inventoryKey}`,
     );
   }
-  const bytes = await readMirroredObject({
-    stores: createCorpusStoresFromEnv(),
+  const bytes = await readRequiredObject({
+    store: createCorpusStoreFromEnv(),
     key: input.inventoryKey,
   });
-  if (bytes === undefined) {
-    throw new Error(`approved inventory is missing: ${input.inventoryKey}`);
-  }
-  const inventoryObject = await putMirroredImmutableObject({
-    stores: createCorpusStoresFromEnv(),
+  const inventoryObject = await putImmutableObject({
+    store: createCorpusStoreFromEnv(),
     key: input.inventoryKey,
     body: bytes,
     contentType: "application/json",
@@ -235,9 +232,9 @@ async function captureGlitterCorpusPage(
   const rawObjectKey =
     `guilds/${input.guildId}/channels/${input.channelId}/raw/` +
     `${input.direction}/${input.requestId}/${rawSha256}.json`;
-  const stores = createCorpusStoresFromEnv();
-  await putMirroredImmutableObject({
-    stores,
+  const store = createCorpusStoreFromEnv();
+  await putImmutableObject({
+    store,
     key: rawObjectKey,
     body: rawBody,
     contentType: "application/json",
@@ -266,8 +263,8 @@ async function captureGlitterCorpusPage(
   const manifestKey =
     `guilds/${input.guildId}/channels/${input.channelId}/pages/` +
     `${input.direction}/${input.requestId}/${sha256(manifestBody)}.json`;
-  const manifestObject = await putMirroredImmutableObject({
-    stores,
+  const manifestObject = await putImmutableObject({
+    store,
     key: manifestKey,
     body: manifestBody,
     contentType: "application/json",

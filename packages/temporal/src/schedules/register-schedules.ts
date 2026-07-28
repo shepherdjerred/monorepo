@@ -364,7 +364,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowExecutionTimeout: "6 hours",
     memo: "Daily Discord REST capture with seven-day overlap and a full historical refresh after six overlaps",
     initialPauseNote:
-      "Awaiting operator approval of the first complete mirrored snapshot",
+      "Awaiting operator approval of the first complete snapshot",
     requiredEnvironment: [
       "GLITTER_DISCORD_TOKEN",
       "GLITTER_DISCORD_GUILD_ID",
@@ -382,7 +382,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "3 hours",
-    memo: "Weekly GPT-5.6 Sol refresh of shared Glitter style cards and evidence-backed relationship history from the verified mirrored corpus",
+    memo: "Weekly GPT-5.6 Sol refresh of shared Glitter style cards and evidence-backed relationship history from the verified corpus",
     initialPauseNote:
       "Awaiting credentialed dry-run against the first approved complete snapshot",
     requiredEnvironment: [

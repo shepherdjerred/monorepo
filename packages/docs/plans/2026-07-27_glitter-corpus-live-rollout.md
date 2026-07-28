@@ -12,7 +12,7 @@ disposition: blocked
 ## Summary
 
 Finish the feature through production operation: close remaining correctness
-gaps, wire credentials, mirror the trusted seed, publish a verified complete
+gaps, wire credentials, upload the trusted seed, publish a verified complete
 snapshot, exercise daily and weekly workflows, and unpause both schedules.
 
 The archive's `glitter-boys` and `league-of-legends` roots are channel-export
@@ -20,10 +20,9 @@ groups from the same Discord guild: embedded threads in both report guild ID
 `208425771172102144`. The importer currently misclassifies those roots as
 separate guilds and must be fixed before seeding.
 
-Publish a two-PR git-spice stack:
-
-1. `fix(temporal): harden Glitter corpus rollout`
-2. `feat(homelab): wire Glitter corpus credentials`
+The hardening and live-discovered Discord member lookup fixes shipped in pull
+requests 1750 and 1752. Publish the remaining SeaweedFS storage/deployment
+change as a single git-spice PR.
 
 Keep both production schedules paused until their individual acceptance gates
 pass.
@@ -53,15 +52,16 @@ pass.
 
 ### PR 2 — credential and deployment wiring
 
-- The operator creates a dedicated `Glitter Corpus Archiver` application with
-  Message Content Intent and only View Channel plus Read Message History in the
-  approved public scope.
-- The operator creates an R2 Object Read & Write token restricted to
-  `glitter-discord-corpus` and populates the six Discord/R2 fields in
-  `temporal-temporal-worker-1p`.
-- Refresh the hashed vault snapshot and project all twelve required runtime
-  variables into the worker, reusing existing SeaweedFS credentials and using
-  explicit non-secret bucket, region, and initial empty-denylist values.
+- Reuse the existing production `Starlight` bot identity. Project its
+  `DISCORD_TOKEN` from the Starlight 1Password item into the Temporal namespace;
+  keep guild ID `208425771172102144` and slug `glitter-boys` as non-secret
+  literals.
+- Use SeaweedFS as the sole canonical object store. Project the existing worker
+  S3 credentials and explicit non-secret bucket, region, and initial
+  empty-denylist values; do not provision or project Cloudflare R2 credentials.
+- Replace the pre-production dual-mirror schema with a single checksum-verified
+  SeaweedFS receipt and retain immutable collision detection, read-after-write
+  verification, recovery checks, and monotonic pointer publication.
 - Merge both PRs bottom-up, require current-head and merged-main Buildkite
   success, follow image/GitOps deployment, and confirm both schedules remain at
   their operator-approval pause notes.
@@ -71,8 +71,8 @@ pass.
 1. Import the archive twice with the explicit guild identity and require
    byte-identical outputs: 164 CSVs, 98 channels, 76,762 unique messages, and
    zero duplicate IDs.
-2. Mirror the seed archive, manifest, projection, and channel partitions to
-   SeaweedFS and R2 and verify every immutable object and receipt.
+2. Upload the seed archive, manifest, projection, and channel partitions to
+   SeaweedFS and verify every immutable object and receipt.
 3. Run inventory and obtain explicit approval of every included/excluded entry
    and its immutable SHA. All 98 seed channel IDs must be approved.
 4. Run a seed-backed canary on an approved channel with more than 100 messages.
@@ -97,16 +97,16 @@ pass.
 - Run Temporal typecheck/test/lint, cdk8s tests and `check:1password`, affected
   repository verification, current-head Buildkite, and authoritative
   merged-main Buildkite.
-- Completion requires the corrected 76,762-message seed mirrored in both
-  stores, a published recovery-verified snapshot containing every seed message,
+- Completion requires the corrected 76,762-message seed stored in SeaweedFS, a
+  published recovery-verified snapshot containing every seed message,
   a verified daily cycle, accepted weekly execution, and both schedules
   deliberately unpaused.
 
 ## Remaining
 
-- [ ] Implement and merge the Temporal hardening PR.
-- [ ] Complete the privileged credential handoff and merge deployment wiring.
-- [ ] Mirror and verify the trusted seed.
+- [x] Implement and merge the Temporal hardening and member-lookup PRs.
+- [ ] Publish and merge the SeaweedFS storage/deployment wiring.
+- [ ] Upload and verify the trusted seed.
 - [ ] Approve inventory and complete canary, backfill, and recovery.
 - [ ] Accept daily and weekly workflows and unpause both schedules.
 - [ ] Complete and archive this plan and the related TODOs.
@@ -137,16 +137,93 @@ pass.
 - Added focused regression coverage and passed the Temporal package's 707-test
   suite, typecheck, lint, documentation checks, and affected repository
   verification.
-- Confirmed the existing SeaweedFS credential fields are populated and the six
-  new Discord/R2 credential fields are not yet present in the worker's
-  1Password item.
+- Confirmed the existing SeaweedFS credential fields are populated and the
+  three new R2 credential fields are not yet present in the worker's 1Password
+  item.
+- Published the hardening as draft PR
+  [#1750](https://github.com/shepherdjerred/monorepo/pull/1750); its Buildkite
+  verify, Semgrep, drift, Playwright, Trivy, and observability gates passed
+  against commit `7fd8369d61888a84869b010cc45eeeab5e02db18`.
+- Prepared the stacked homelab wiring and verified the synthesized deployment
+  maps the Discord, SeaweedFS, and R2 settings to the intended literals and
+  secret keys. Homelab build, typecheck, and lint pass.
+- Switched the wiring to the existing production `Starlight` credential,
+  confirmed that bot is a member of the Glitter guild with Message Content
+  enabled, and completed a live read-only inventory: 263 included entries and
+  14 entries without readable history.
+- Fixed the live-discovered Discord member lookup bug by addressing the guild
+  member with the bot snowflake instead of the unsupported `@me` placeholder;
+  focused tests, typecheck, and lint pass.
 
 ### Remaining
 
-- Publish and merge the two-PR stack after the six credential fields are
-  populated, then execute the live rollout checklist above.
+- Grant Starlight View Channel plus Read Message History on seed channel
+  `1101640275220238426` (`league-of-legends`) and decide whether the other 13
+  currently unreadable channels belong in the approved corpus scope.
+- Populate the three R2 credential fields, refresh the hashed vault snapshot, and
+  require `check:1password` to pass before committing and publishing PR 2.
+- Finish PR #1750's remaining Buildkite image/review gates, merge the two-PR
+  stack after all current-head gates pass, then execute the live rollout
+  checklist above.
 
 ### Caveats
 
 - Credential provisioning and inventory/full-scrape approval are explicit
   operator gates; no secret values belong in this document or chat.
+- The prepared homelab change is intentionally uncommitted because the offline
+  vault check proves all three new R2 fields are absent from the committed
+  snapshot.
+
+## Session Log — 2026-07-28
+
+### Done
+
+- Confirmed the Discord Customize option `League of Legends` maps only to the
+  `Glitter League` role `962497446943027211`, with no direct channel
+  subscriptions.
+- Assigned `Glitter League` to Starlight through Discord's guild-member role
+  API and verified both the resulting member role and an HTTP 200 message
+  history read from `league-of-legends`.
+- Re-ran live inventory with the corrected bot member lookup: 267 entries are
+  included, 17 are non-message channels, and 13 lack readable history. None of
+  the 13 unreadable channels occur in the trusted seed's 98-channel scope.
+- Merged the hardening PR #1750 and the member-lookup correction PR #1752 after
+  current-head Buildkite and Codex review passed.
+- Confirmed both the `glitter-discord-corpus` SeaweedFS bucket and the
+  previously planned R2 bucket exist; selected SeaweedFS as the sole canonical
+  corpus store before the first production publication.
+- Removed the R2 credential requirement and replaced the dual-mirror persisted
+  contract with checksum-verified single-store SeaweedFS objects.
+- Wired the Starlight token plus the existing Temporal worker's SeaweedFS
+  endpoint and credentials into the worker deployment, with focused synth
+  coverage proving no Glitter R2 variables remain.
+- Replaced the mirror-divergence metric, alert, and dashboard panel with
+  SeaweedFS storage-integrity monitoring.
+- Addressed the PR review finding by making required object reads distinct from
+  optional cache probes. Missing manifests, pages, seed partitions, baselines,
+  snapshots, inventories, and projections now increment the storage-integrity
+  counter, with an S3-level regression test covering required and optional 404s.
+- Passed focused Temporal tests, the full 709-test Temporal suite, the full
+  253-test cdk8s suite, typechecks, targeted lint, `check:1password`, and
+  storage/deployment schema checks. The post-review Temporal package test,
+  typecheck, and lint commands also pass.
+
+### Remaining
+
+- Publish and merge the SeaweedFS PR, then deploy the worker and verify its
+  projected Starlight and SeaweedFS environment.
+- Approve the 267-entry included inventory and the 30 exclusions, then complete
+  the seed upload, canary, backfill, recovery, and schedule acceptance work.
+
+### Caveats
+
+- Direct role assignment produces the required channel access but does not
+  necessarily mark the member-facing Customize option as selected in Discord's
+  client state.
+- The 13 unreadable channels remain excluded by the current live permissions;
+  because none is part of the trusted seed, they do not block seed preservation.
+- The affected aggregate passed 39 of 40 gates; its only failure was Bun
+  extracting `@openai/codex` while another worktree wrote the shared download
+  cache. The published tarball was independently downloaded and validated, and
+  the failed clean-clone rehearsal passed end to end when rerun with an isolated
+  Bun cache.

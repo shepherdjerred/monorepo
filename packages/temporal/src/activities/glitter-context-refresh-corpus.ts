@@ -8,11 +8,11 @@ import {
 } from "#shared/glitter-corpus.ts";
 import {
   LatestSnapshotPointerSchema,
-  readMirroredObject,
-  readVerifiedMirroredObject,
+  readRequiredObject,
+  readVerifiedObject,
   type LatestSnapshotPointer,
 } from "./glitter-corpus-storage.ts";
-import { createCorpusStoresFromEnv } from "./glitter-corpus-store.ts";
+import { createCorpusStoreFromEnv } from "./glitter-corpus-store.ts";
 
 function parseJson(bytes: Uint8Array): unknown {
   return JSON.parse(new TextDecoder().decode(bytes));
@@ -37,14 +37,9 @@ export async function loadVerifiedGlitterCorpus(): Promise<VerifiedGlitterCorpus
     .string()
     .regex(/^\d+$/u)
     .parse(Bun.env["GLITTER_DISCORD_GUILD_ID"]);
-  const stores = createCorpusStoresFromEnv();
+  const store = createCorpusStoreFromEnv();
   const pointerKey = `guilds/${guildId}/snapshots/latest.json`;
-  const pointerBytes = await readMirroredObject({ stores, key: pointerKey });
-  if (pointerBytes === undefined) {
-    throw new Error(
-      `verified Glitter snapshot pointer is missing: ${pointerKey}`,
-    );
-  }
+  const pointerBytes = await readRequiredObject({ store, key: pointerKey });
   const pointer = LatestSnapshotPointerSchema.parse(parseJson(pointerBytes));
   if (pointer.guildId !== guildId) {
     throw new Error(
@@ -53,8 +48,8 @@ export async function loadVerifiedGlitterCorpus(): Promise<VerifiedGlitterCorpus
   }
   const snapshot = GuildSnapshotSchema.parse(
     parseJson(
-      await readVerifiedMirroredObject({
-        stores,
+      await readVerifiedObject({
+        store,
         key: pointer.snapshotKey,
         expectedSha256: pointer.snapshotSha256,
       }),
@@ -66,16 +61,16 @@ export async function loadVerifiedGlitterCorpus(): Promise<VerifiedGlitterCorpus
   for (const manifestObject of snapshot.channelManifestObjects) {
     const manifest = ChannelStateManifestSchema.parse(
       parseJson(
-        await readVerifiedMirroredObject({
-          stores,
+        await readVerifiedObject({
+          store,
           key: manifestObject.key,
           expectedSha256: manifestObject.sha256,
         }),
       ),
     );
     const projection = parseProjection(
-      await readVerifiedMirroredObject({
-        stores,
+      await readVerifiedObject({
+        store,
         key: manifest.projectionObjectKey,
         expectedSha256: manifest.projectionSha256,
       }),

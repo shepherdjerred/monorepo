@@ -132,7 +132,7 @@ export async function generateStyleCard(input: {
       messages: input.candidate.totalMessageCount,
       date_range: `${first.timestamp} through ${last.timestamp}`,
       notes:
-        "Generated from the checksum-verified mirrored Discord corpus; human review required.",
+        "Generated from the checksum-verified Discord corpus; human review required.",
     },
   });
 }

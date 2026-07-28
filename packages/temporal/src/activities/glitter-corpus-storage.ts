@@ -1,13 +1,13 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { z } from "zod/v4";
 import {
-  MirrorObjectReceiptSchema,
-  MirroredObjectSchema,
-  type MirroredObject,
-  type MirrorObjectReceipt,
+  StoredObjectReceiptSchema,
+  StoredObjectSchema,
+  type StoredObject,
+  type StoredObjectReceipt,
 } from "#shared/glitter-corpus.ts";
 import { sha256 } from "#shared/glitter-corpus-projection.ts";
-import { glitterCorpusMirrorDivergenceTotal } from "#observability/metrics.ts";
+import { glitterCorpusStorageIntegrityFailuresTotal } from "#observability/metrics.ts";
 import {
   getObjectBytes,
   objectEtag,
@@ -27,29 +27,34 @@ export const LatestSnapshotPointerSchema = z
   .strict();
 export type LatestSnapshotPointer = z.infer<typeof LatestSnapshotPointerSchema>;
 
-async function putImmutableObject(input: {
+function storageIntegrityError(message: string): Error {
+  glitterCorpusStorageIntegrityFailuresTotal.inc();
+  return new Error(message);
+}
+
+async function putImmutableObjectReceipt(input: {
   store: CorpusStore;
   key: string;
   body: Uint8Array;
   contentType: string;
   writtenAt: string;
-}): Promise<MirrorObjectReceipt> {
+}): Promise<StoredObjectReceipt> {
   const expectedSha256 = sha256(input.body);
   const existingEtag = await objectEtag(input.store, input.key);
   if (existingEtag !== undefined) {
     const existing = await getObjectBytes(input.store, input.key);
     if (existing === undefined) {
-      throw new Error(
+      throw storageIntegrityError(
         `${input.store.name} object disappeared during immutable verification: ${input.key}`,
       );
     }
     const existingSha256 = sha256(existing);
     if (existingSha256 !== expectedSha256) {
-      throw new Error(
+      throw storageIntegrityError(
         `immutable object collision at ${input.store.name}:${input.key}; existing ${existingSha256}, incoming ${expectedSha256}`,
       );
     }
-    return MirrorObjectReceiptSchema.parse({
+    return StoredObjectReceiptSchema.parse({
       store: input.store.name,
       bucket: input.store.bucket,
       key: input.key,
@@ -69,23 +74,23 @@ async function putImmutableObject(input: {
     }),
   );
   if (response.ETag === undefined || response.ETag === "") {
-    throw new Error(
+    throw storageIntegrityError(
       `${input.store.name} did not return an ETag for ${input.key}`,
     );
   }
   const stored = await getObjectBytes(input.store, input.key);
   if (stored === undefined) {
-    throw new Error(
+    throw storageIntegrityError(
       `${input.store.name} object disappeared after write: ${input.key}`,
     );
   }
   const storedSha256 = sha256(stored);
   if (storedSha256 !== expectedSha256) {
-    throw new Error(
+    throw storageIntegrityError(
       `${input.store.name} corrupted ${input.key} during write: expected ${expectedSha256}, read ${storedSha256}`,
     );
   }
-  return MirrorObjectReceiptSchema.parse({
+  return StoredObjectReceiptSchema.parse({
     store: input.store.name,
     bucket: input.store.bucket,
     key: input.key,
@@ -95,33 +100,25 @@ async function putImmutableObject(input: {
   });
 }
 
-export async function putMirroredImmutableObject(input: {
-  stores: readonly [CorpusStore, CorpusStore];
+export async function putImmutableObject(input: {
+  store: CorpusStore;
   key: string;
   body: Uint8Array;
   contentType: string;
   writtenAt: string;
-}): Promise<MirroredObject> {
-  const [first, second] = input.stores;
-  const firstReceipt = await putImmutableObject({
-    store: first,
-    key: input.key,
-    body: input.body,
-    contentType: input.contentType,
-    writtenAt: input.writtenAt,
-  });
-  const secondReceipt = await putImmutableObject({
-    store: second,
+}): Promise<StoredObject> {
+  const receipt = await putImmutableObjectReceipt({
+    store: input.store,
     key: input.key,
     body: input.body,
     contentType: input.contentType,
     writtenAt: input.writtenAt,
   });
 
-  return MirroredObjectSchema.parse({
+  return StoredObjectSchema.parse({
     key: input.key,
     sha256: sha256(input.body),
-    receipts: [firstReceipt, secondReceipt],
+    receipt,
   });
 }
 
@@ -161,7 +158,7 @@ async function prepareLatestPointerUpdate(input: {
   }
   const existingBytes = await getObjectBytes(input.store, input.pointerKey);
   if (existingBytes === undefined) {
-    throw new Error(
+    throw storageIntegrityError(
       `${input.store.name} latest pointer disappeared after its ETag was read`,
     );
   }
@@ -181,143 +178,82 @@ async function prepareLatestPointerUpdate(input: {
 }
 
 export async function publishLatestSnapshotPointer(input: {
-  stores: readonly [CorpusStore, CorpusStore];
+  store: CorpusStore;
   pointer: LatestSnapshotPointer;
 }): Promise<void> {
   const pointer = LatestSnapshotPointerSchema.parse(input.pointer);
-  const snapshotBytes = await Promise.all(
-    input.stores.map((store) => getObjectBytes(store, pointer.snapshotKey)),
-  );
-  for (const [index, bytes] of snapshotBytes.entries()) {
-    const store = input.stores[index];
-    if (store === undefined || bytes === undefined) {
-      throw new Error(
-        `cannot publish latest pointer: ${store?.name ?? "unknown store"} is missing ${pointer.snapshotKey}`,
-      );
-    }
-    const actualSha256 = sha256(bytes);
-    if (actualSha256 !== pointer.snapshotSha256) {
-      throw new Error(
-        `cannot publish latest pointer: ${store.name} snapshot checksum ${actualSha256} does not match ${pointer.snapshotSha256}`,
-      );
-    }
+  const snapshotBytes = await getObjectBytes(input.store, pointer.snapshotKey);
+  if (snapshotBytes === undefined) {
+    throw storageIntegrityError(
+      `cannot publish latest pointer: ${input.store.name} is missing ${pointer.snapshotKey}`,
+    );
+  }
+  const actualSha256 = sha256(snapshotBytes);
+  if (actualSha256 !== pointer.snapshotSha256) {
+    throw storageIntegrityError(
+      `cannot publish latest pointer: ${input.store.name} snapshot checksum ${actualSha256} does not match ${pointer.snapshotSha256}`,
+    );
   }
 
   const pointerKey = `guilds/${pointer.guildId}/snapshots/latest.json`;
-  const updates = await Promise.all(
-    input.stores.map(async (store) => ({
-      store,
-      update: await prepareLatestPointerUpdate({
-        store,
-        pointerKey,
-        incoming: pointer,
-      }),
-    })),
-  );
-  for (const { store, update } of updates) {
-    if (update.shouldWrite) {
-      await putMutableJson(store, pointerKey, pointer, update.expectedEtag);
-    }
+  const update = await prepareLatestPointerUpdate({
+    store: input.store,
+    pointerKey,
+    incoming: pointer,
+  });
+  if (update.shouldWrite) {
+    await putMutableJson(input.store, pointerKey, pointer, update.expectedEtag);
   }
 
-  for (const store of input.stores) {
-    const bytes = await getObjectBytes(store, pointerKey);
-    if (bytes === undefined) {
-      throw new Error(
-        `${store.name} latest pointer vanished after publication`,
-      );
-    }
-    const storedPointer = LatestSnapshotPointerSchema.parse(
-      JSON.parse(new TextDecoder().decode(bytes)),
+  const bytes = await getObjectBytes(input.store, pointerKey);
+  if (bytes === undefined) {
+    throw storageIntegrityError(
+      `${input.store.name} latest pointer vanished after publication`,
     );
-    if (JSON.stringify(storedPointer) !== JSON.stringify(pointer)) {
-      throw new Error(
-        `${store.name} latest pointer changed during publication`,
-      );
-    }
   }
-}
-
-export async function readMirroredObject(input: {
-  stores: readonly [CorpusStore, CorpusStore];
-  key: string;
-}): Promise<Uint8Array | undefined> {
-  const [firstBytes, secondBytes] = await Promise.all(
-    input.stores.map((store) => getObjectBytes(store, input.key)),
+  const storedPointer = LatestSnapshotPointerSchema.parse(
+    JSON.parse(new TextDecoder().decode(bytes)),
   );
-  if (firstBytes === undefined && secondBytes === undefined) {
-    return undefined;
-  }
-  if (firstBytes === undefined || secondBytes === undefined) {
-    glitterCorpusMirrorDivergenceTotal.inc();
-    throw new Error(`mirror divergence: only one store contains ${input.key}`);
-  }
-  const firstSha256 = sha256(firstBytes);
-  const secondSha256 = sha256(secondBytes);
-  if (firstSha256 !== secondSha256) {
-    glitterCorpusMirrorDivergenceTotal.inc();
+  if (JSON.stringify(storedPointer) !== JSON.stringify(pointer)) {
     throw new Error(
-      `mirror divergence for ${input.key}: ${firstSha256} != ${secondSha256}`,
+      `${input.store.name} latest pointer changed during publication`,
     );
   }
-  return firstBytes;
 }
 
-export async function readAndRepairMirroredImmutableObject(input: {
-  stores: readonly [CorpusStore, CorpusStore];
+export async function readObject(input: {
+  store: CorpusStore;
   key: string;
-  contentType: string;
-  repairedAt: string;
 }): Promise<Uint8Array | undefined> {
-  const [first, second] = input.stores;
-  const [firstBytes, secondBytes] = await Promise.all([
-    getObjectBytes(first, input.key),
-    getObjectBytes(second, input.key),
-  ]);
-  if (firstBytes === undefined && secondBytes === undefined) {
-    return undefined;
-  }
-  if (firstBytes !== undefined && secondBytes !== undefined) {
-    if (sha256(firstBytes) !== sha256(secondBytes)) {
-      glitterCorpusMirrorDivergenceTotal.inc();
-      throw new Error(`mirror divergence for immutable ${input.key}`);
-    }
-    return firstBytes;
-  }
-  glitterCorpusMirrorDivergenceTotal.inc();
-  const body = firstBytes ?? secondBytes;
-  if (body === undefined) {
-    throw new Error(`partial mirror body disappeared: ${input.key}`);
-  }
-  const missingStore = firstBytes === undefined ? first : second;
-  await putImmutableObject({
-    store: missingStore,
-    key: input.key,
-    body,
-    contentType: input.contentType,
-    writtenAt: input.repairedAt,
-  });
-  const repaired = await readMirroredObject({
-    stores: input.stores,
-    key: input.key,
-  });
-  if (repaired === undefined) {
-    throw new Error(`repaired immutable object disappeared: ${input.key}`);
-  }
-  return repaired;
+  return getObjectBytes(input.store, input.key);
 }
 
-export async function readVerifiedMirroredObject(input: {
-  stores: readonly [CorpusStore, CorpusStore];
+export async function readRequiredObject(input: {
+  store: CorpusStore;
+  key: string;
+}): Promise<Uint8Array> {
+  const bytes = await readObject(input);
+  if (bytes === undefined) {
+    throw storageIntegrityError(
+      `${input.store.name} is missing required object: ${input.key}`,
+    );
+  }
+  return bytes;
+}
+
+export async function readVerifiedObject(input: {
+  store: CorpusStore;
   key: string;
   expectedSha256: string;
 }): Promise<Uint8Array> {
-  const bytes = await readMirroredObject({
-    stores: input.stores,
+  const bytes = await readRequiredObject({
+    store: input.store,
     key: input.key,
   });
-  if (bytes === undefined || sha256(bytes) !== input.expectedSha256) {
-    throw new Error(`mirrored object checksum mismatch: ${input.key}`);
+  if (sha256(bytes) !== input.expectedSha256) {
+    throw storageIntegrityError(
+      `stored object checksum mismatch: ${input.key}`,
+    );
   }
   return bytes;
 }

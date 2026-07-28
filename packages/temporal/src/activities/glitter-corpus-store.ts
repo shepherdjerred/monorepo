@@ -7,7 +7,7 @@ import {
 import { z } from "zod/v4";
 import { sha256 } from "#shared/glitter-corpus-projection.ts";
 
-export type CorpusStoreName = "seaweedfs" | "r2";
+export type CorpusStoreName = "seaweedfs";
 
 export type CorpusStore = {
   name: CorpusStoreName;
@@ -76,8 +76,8 @@ function createStore(input: {
   };
 }
 
-export function createCorpusStoresFromEnv(): [CorpusStore, CorpusStore] {
-  const seaweedfs = createStore({
+export function createCorpusStoreFromEnv(): CorpusStore {
+  return createStore({
     name: "seaweedfs",
     endpoint: requireEnv("GLITTER_CORPUS_S3_ENDPOINT"),
     bucket: requireEnv("GLITTER_CORPUS_S3_BUCKET"),
@@ -86,16 +86,6 @@ export function createCorpusStoresFromEnv(): [CorpusStore, CorpusStore] {
     region: Bun.env["GLITTER_CORPUS_S3_REGION"] ?? "us-east-1",
     forcePathStyle: true,
   });
-  const r2 = createStore({
-    name: "r2",
-    endpoint: requireEnv("GLITTER_CORPUS_R2_ENDPOINT"),
-    bucket: requireEnv("GLITTER_CORPUS_R2_BUCKET"),
-    accessKeyId: requireEnv("GLITTER_CORPUS_R2_ACCESS_KEY_ID"),
-    secretAccessKey: requireEnv("GLITTER_CORPUS_R2_SECRET_ACCESS_KEY"),
-    region: Bun.env["GLITTER_CORPUS_R2_REGION"] ?? "auto",
-    forcePathStyle: false,
-  });
-  return [seaweedfs, r2];
 }
 
 export async function getObjectBytes(

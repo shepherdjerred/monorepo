@@ -85,14 +85,16 @@ unless an independently discovered safety constraint makes it necessary.
 
 ### Storage and recovery
 
-- Create private SeaweedFS and Cloudflare R2 buckets.
-- Write immutable raw pages and manifests to both stores using content hashes.
-- Advance the canonical snapshot pointer only after both stores contain the same
-  verified snapshot.
+- Use the private `glitter-discord-corpus` SeaweedFS bucket as the sole
+  canonical store.
+- Write immutable raw pages and manifests with content hashes and verify every
+  object immediately after writing it.
+- Advance the canonical snapshot pointer only after SeaweedFS contains the exact
+  verified snapshot checksum.
 - Keep deterministic current projections and per-channel manifests versioned by
   snapshot. A projection can always be rebuilt from raw observations.
-- Alert on mirror divergence, stalled progress, completeness failure, unexpected
-  scope changes, and rate-limit pressure.
+- Alert on storage-integrity failure, stalled progress, completeness failure,
+  unexpected scope changes, and rate-limit pressure.
 
 ### Shared context
 
@@ -130,15 +132,16 @@ unless an independently discovered safety constraint makes it necessary.
 ### Pull request 1: accurate Discord corpus
 
 1. Add schemas for inventory, raw observations, request pages, channel
-   completeness manifests, projections, mirror receipts, and guild snapshots.
+   completeness manifests, projections, storage receipts, and guild snapshots.
 2. Add a streaming seed importer and prove the trusted archive imports exactly
    once per message ID.
 3. Add Discord inventory and conservative pagination clients with durable
    cursors, checksums, rate-limit telemetry, and fail-fast permission handling.
-4. Add dual-store persistence and two-phase snapshot publication.
+4. Add checksum-verified SeaweedFS persistence and conditional snapshot
+   publication.
 5. Add Temporal inventory, backfill, verification, and daily overlap workflows
    on a dedicated task queue.
-6. Add SeaweedFS/R2 infrastructure, secret wiring, metrics, dashboards, alerts,
+6. Add SeaweedFS infrastructure, secret wiring, metrics, dashboards, alerts,
    operational documentation, and disaster-recovery rehearsal.
 7. Run unit, property, fixture, workflow-replay, package, repository, and
    controlled live acceptance tests.
@@ -160,13 +163,13 @@ unless an independently discovered safety constraint makes it necessary.
 
 - The seed imports as exactly 76,762 unique messages with stable checksums.
 - Every approved public channel and public thread has a successful backward
-  proof, forward proof, projection reconciliation, and mirrored snapshot.
+  proof, forward proof, projection reconciliation, and verified snapshot.
 - Rerunning any import, page, projection, or workflow is idempotent.
 - Adding, editing, and deleting messages produces the specified deterministic
   current projection without losing raw evidence.
 - The daily overlap run discovers edits and new messages without missing any
   observable message in its contract.
-- SeaweedFS/R2 restore rehearsal rebuilds the same projection and checksums.
+- SeaweedFS recovery verification rebuilds the same projection and checksums.
 - Birmel, Scout, and Glitter consume one validated context source with no
   duplicate canonical files.
 - Caitlyn and Richard project to Exes while their prior Dating history remains
@@ -183,7 +186,7 @@ unless an independently discovered safety constraint makes it necessary.
       recovery gates, and secret references coherent.
 - [ ] Review the Discord inventory and explicitly approve its public
       channel/thread scope before starting the full-history scrape.
-- [ ] Hand privileged credential provisioning and live Discord/SeaweedFS/R2
+- [ ] Hand live Discord/SeaweedFS
       acceptance to `todos/glitter-discord-acceptance-operator.md`; archive this
       plan once the code tranche is merged.
 
@@ -309,3 +312,27 @@ unless an independently discovered safety constraint makes it necessary.
 ### Caveats
 
 - The 2026-07-27 board audit replaced generic or stale completion language with current ownership and verification semantics.
+
+## Session Log — 2026-07-28
+
+### Done
+
+- Reused the Starlight bot, granted its `Glitter League` role, and verified
+  message-history access to every trusted-seed channel.
+- Selected SeaweedFS as the sole canonical corpus store before production
+  publication and removed the unused R2 runtime and receipt contract.
+- Added checksum-verified single-store persistence, Starlight/SeaweedFS worker
+  wiring, and storage-integrity observability.
+
+### Remaining
+
+- Merge and deploy the SeaweedFS wiring, upload the trusted seed, run the
+  controlled live acceptance sequence, and unpause both schedules.
+
+### Caveats
+
+- SeaweedFS replication is disabled and all four SeaweedFS PVCs are explicitly
+  outside Velero volume backup. Seed objects can be recreated from the pinned
+  archive, but Discord REST evidence deleted from Discord after capture would
+  be unrecoverable after total SeaweedFS loss unless an independent backup is
+  added.
