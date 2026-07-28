@@ -17,6 +17,10 @@ Resolve all unresolved actionable review threads on PR #1746, verify the affecte
   while retaining the Jellyfin removal.
 - Made `goodMorningWakeUp` wait through the heat window and turn off the
   bathroom thermostat regardless of the second temperature reading.
+- Added a Temporal patch marker that preserves the legacy command sequence for
+  morning workflows already running during deployment.
+- Converted malformed Home Assistant home-zone coordinates into a
+  non-retryable `ApplicationFailure` with regression coverage.
 - Classified `goodMorningPreheat`'s `not-cold` outcome as benign in the
   Temporal monitoring rule and added regression coverage for both review
   fixes.

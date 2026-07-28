@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import type { EntityState } from "@shepherdjerred/home-assistant";
+import { ApplicationFailure } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import type { OutcomeRecord } from "#activities/outcome.ts";
@@ -10,6 +11,10 @@ import {
 } from "./good-morning.ts";
 
 const TASK_QUEUE = "good-morning-test";
+const DEFAULT_ZONE_ATTRIBUTES: Record<string, unknown> = {
+  latitude: 47.6,
+  longitude: -122.3,
+};
 
 let testEnv: TestWorkflowEnvironment;
 
@@ -30,15 +35,20 @@ type ServiceCall = {
 type Scenario = {
   indoorC: number;
   outdoorC: number;
+  zoneAttributes: Record<string, unknown>;
   serviceCalls: ServiceCall[];
   notifications: string[];
   outcomes: OutcomeRecord[];
 };
 
-function makeScenario(temps: { indoorC: number; outdoorC: number }): Scenario {
+function makeScenario(
+  temps: { indoorC: number; outdoorC: number },
+  zoneAttributes: Record<string, unknown> = DEFAULT_ZONE_ATTRIBUTES,
+): Scenario {
   return {
     indoorC: temps.indoorC,
     outdoorC: temps.outdoorC,
+    zoneAttributes,
     serviceCalls: [],
     notifications: [],
     outcomes: [],
@@ -69,10 +79,7 @@ function makeActivities(scenario: Scenario) {
           );
         case "zone.home":
           return Promise.resolve(
-            entityState(entityId, "zoning", {
-              latitude: 47.6,
-              longitude: -122.3,
-            }),
+            entityState(entityId, "zoning", scenario.zoneAttributes),
           );
         default:
           throw new Error(`Unexpected entity read: ${entityId}`);
@@ -123,6 +130,31 @@ async function runWorker<T>(
   );
 }
 
+async function expectNonRetryableApplicationFailure(
+  execution: Promise<unknown>,
+  expectedType: string,
+  expectedMessage: string,
+): Promise<void> {
+  let failure: unknown;
+  try {
+    await execution;
+  } catch (error) {
+    failure = error;
+  }
+  if (!(failure instanceof Error)) {
+    throw new Error("Expected workflow execution to fail");
+  }
+  const cause = failure.cause;
+  if (!(cause instanceof ApplicationFailure)) {
+    throw new TypeError(
+      "Expected workflow failure to include an ApplicationFailure cause",
+    );
+  }
+  expect(cause.type).toBe(expectedType);
+  expect(cause.nonRetryable).toBe(true);
+  expect(cause.message).toBe(expectedMessage);
+}
+
 describe("shouldHeatFloor", () => {
   test("heats at or below either threshold, skips above both", () => {
     expect(shouldHeatFloor({ indoorC: 20, outdoorC: 26 })).toBe(true);
@@ -131,6 +163,25 @@ describe("shouldHeatFloor", () => {
     expect(shouldHeatFloor({ indoorC: 26, outdoorC: 10 })).toBe(true);
     expect(shouldHeatFloor({ indoorC: 20.1, outdoorC: 15.1 })).toBe(false);
     expect(shouldHeatFloor({ indoorC: 26, outdoorC: 28 })).toBe(false);
+  });
+});
+
+describe("floor heat weather inputs", () => {
+  test("fails non-retryably when zone coordinates are malformed", async () => {
+    const scenario = makeScenario(
+      { indoorC: 18, outdoorC: 5 },
+      { latitude: "47.6", longitude: -122.3 },
+    );
+    await expectNonRetryableApplicationFailure(
+      runWorker(
+        scenario,
+        goodMorningPreheat,
+        `preheat-invalid-zone-${crypto.randomUUID()}`,
+      ),
+      "HomeZoneAttributesError",
+      "Home Assistant zone.home attributes must include numeric latitude and longitude",
+    );
+    expect(climateCalls(scenario)).toEqual([]);
   });
 });
 
