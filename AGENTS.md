@@ -223,14 +223,18 @@ If a command legitimately needs error handling, handle the specific error explic
 ## Commands
 
 ```bash
-# Whole-repo verification (build + typecheck + test + lint + every repo check)
-bun run verify                 # add -- --affected to scope to changed packages
-
-# Per-package task via turbo
+# Local iteration: run only the package tasks relevant to the change
 bunx turbo run <task> --filter=<pkg>   # e.g. bunx turbo run typecheck --filter=birmel
 
-# Linting (per-package)
+# Local commit safety: staged files only (Prettier, Gitleaks, and cheap guards)
+bunx lefthook run pre-commit
+
+# Linting and autofix (per-package)
 cd packages/<name> && bunx eslint . --fix
+
+# Exhaustive whole-repo verification is the Buildkite gate. Run locally only
+# when explicitly reproducing a CI failure or changing the verification system.
+bun run verify
 
 # CI runs on Buildkite (NOT GitHub Actions) via the static .buildkite/pipeline.yml
 # Check CI status via Buildkite CLI or web UI, never `gh run`
@@ -299,18 +303,22 @@ Optional tools (warned if missing): helm, swift, swiftlint, swiftformat, typesha
 
 ## Verification
 
-`bun run verify` (root) is the single verification entry point — build +
-typecheck + test + lint + every repo check (todos, suppressions, markdownlint,
-prettier, shellcheck, knip, gitleaks, ruff/pyright, helm/talos/1Password, …),
-the identical surface CI runs. Scope it to what you touched with `--affected`;
-everything replays from turbo's cache in milliseconds when unchanged.
+Local and CI verification deliberately have different scopes:
 
-1. `bun run verify` — whole repo (or `bun run verify -- --affected` for changed packages only)
-2. `bunx turbo run typecheck test lint --filter=<pkg>` — a single package
-3. `bunx eslint . --fix` — autofix lint in the relevant package
+1. During implementation, run focused package tasks such as
+   `bunx turbo run typecheck test lint --filter=<pkg>`.
+2. The `pre-commit` hook checks staged files only: Gitleaks, Prettier, line
+   endings, merge markers, environment-variable names, file size, and the
+   staged-diff automation rules. It does not run the root Turbo graph.
+3. Buildkite runs the exhaustive root `bun run verify` graph for every PR and
+   for `main`: build, typecheck, test, lint, todos, suppressions, markdownlint,
+   Prettier, shellcheck, Knip, Gitleaks, ruff/pyright, Helm/Talos/1Password, and
+   the remaining repository gates. The excluded site packages run in their
+   dedicated Buildkite lanes, so the overall pipeline remains the
+   full-repository backstop.
 
-The `pre-commit` hook runs `bun run verify -- --affected` (there is no
-`pre-push` hook), so a clean commit has passed the same gates as CI.
+Run `bun run verify` locally only when explicitly reproducing CI or modifying
+the verification machinery itself. There is no `pre-push` hook.
 
 ## Parallel Work — Use Worktrees
 

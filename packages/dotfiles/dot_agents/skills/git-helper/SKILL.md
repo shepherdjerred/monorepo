@@ -182,7 +182,14 @@ git diff --word-diff                # Word-level diff
 
 ### Monorepo commit-msg convention (this repo)
 
-Git hooks were removed 2026-07 (lefthook and its `commit-msg` validator are gone), so nothing enforces this anymore — but keep following the convention: `type(scope): description` with a scope that is a `packages/` dir name or one of `root` / `practice` / `archive` (`monorepo`, `repo`, `ALL` were never valid). Use `root` for sweeping cross-package commits (e.g. `feat(root): …`). Types: `feat fix chore ci docs refactor test perf build style revert misc`. There is also no pre-commit formatting hook — run `bunx prettier --write <file>` yourself before committing.
+Lefthook enforces `type(scope): description` with a scope that is a
+`packages/` directory name or one of `root` / `practice` / `archive`
+(`monorepo`, `repo`, and `ALL` are invalid). Use `root` for sweeping
+cross-package commits (for example, `feat(root): …`). Types: `feat fix chore ci
+docs refactor test perf build style revert misc`. The pre-commit hook runs
+changed-file safety checks, including staged-file Prettier and Gitleaks; focused
+package tests remain the developer's responsibility and the exhaustive gate
+runs in Buildkite.
 
 ### Syncing with Upstream
 

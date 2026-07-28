@@ -1,7 +1,10 @@
 import { describe, expect, test } from "bun:test";
 
 import { findEnvironmentVariableViolations } from "./environment-variable-rules.ts";
-import { parseCoverageSummaries } from "./migration-core.ts";
+import {
+  isSearchableEnvironmentVariablePath,
+  parseCoverageSummaries,
+} from "./migration-core.ts";
 
 describe("findEnvironmentVariableViolations", () => {
   test("reports a simple banned name with its canonical replacement", () => {
@@ -52,6 +55,18 @@ describe("findEnvironmentVariableViolations", () => {
       },
     ]);
   });
+});
+
+test("environment-variable checks scope local work to relevant changed files", () => {
+  expect(isSearchableEnvironmentVariablePath("packages/app/src/index.ts")).toBe(
+    true,
+  );
+  expect(
+    isSearchableEnvironmentVariablePath("packages/app/generated/client.ts"),
+  ).toBe(false);
+  expect(isSearchableEnvironmentVariablePath("packages/app/image.png")).toBe(
+    false,
+  );
 });
 
 test("parses Bun coverage summaries for the strict gate", () => {

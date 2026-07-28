@@ -1,52 +1,23 @@
 import { run } from "./lib/run.ts";
 import { findEnvironmentVariableViolations } from "./environment-variable-rules.ts";
+import { isSearchableEnvironmentVariablePath } from "./migration-core.ts";
 
-const SEARCH_EXTENSIONS = [
-  ".ts",
-  ".rs",
-  ".py",
-  ".fish",
-  ".tmpl",
-  ".yaml",
-  ".yml",
-  ".env",
-  ".md",
-  ".sh",
-  ".swift",
-];
-
-const EXCLUDED_PATHS = new Set([
-  "scripts/check-env-var-names.test.ts",
-  "scripts/check-env-var-names.ts",
-  "scripts/environment-variable-rules.ts",
-  "packages/docs/decisions/2026-03-27_env-var-naming-convention.md",
-  "packages/docs/guides/2026-04-04_homelab-health-audit-2.md",
-]);
-
-function isSearchablePath(path: string): boolean {
-  if (
-    path.startsWith("sandbox/archive/") ||
-    path.startsWith("sandbox/practice/") ||
-    path.startsWith(".build/") ||
-    path.includes("/generated/") ||
-    path.startsWith("packages/docs/archive/")
-  ) {
-    return false;
+export async function checkEnvironmentVariableNames(
+  requestedPaths?: readonly string[],
+): Promise<void> {
+  let candidatePaths: string[];
+  if (requestedPaths === undefined || requestedPaths.length === 0) {
+    const result = await run(["git", "ls-files", "-z"], {
+      capture: true,
+      secret: true,
+    });
+    candidatePaths = result.stdout.split("\0");
+  } else {
+    candidatePaths = [...requestedPaths];
   }
-  return (
-    SEARCH_EXTENSIONS.some((extension) => path.endsWith(extension)) &&
-    !EXCLUDED_PATHS.has(path)
+  const trackedPaths = candidatePaths.filter((path) =>
+    isSearchableEnvironmentVariablePath(path),
   );
-}
-
-export async function checkEnvironmentVariableNames(): Promise<void> {
-  const result = await run(["git", "ls-files", "-z"], {
-    capture: true,
-    secret: true,
-  });
-  const trackedPaths = result.stdout
-    .split("\0")
-    .filter((path) => isSearchablePath(path));
   const pathChecks = await Promise.all(
     trackedPaths.map(async (path) => ({
       exists: await Bun.file(path).exists(),
@@ -80,5 +51,8 @@ export async function checkEnvironmentVariableNames(): Promise<void> {
 }
 
 if (import.meta.main) {
-  await checkEnvironmentVariableNames();
+  const requestedPaths = Bun.argv.slice(2);
+  await checkEnvironmentVariableNames(
+    requestedPaths.length === 0 ? undefined : requestedPaths,
+  );
 }

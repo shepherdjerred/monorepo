@@ -1,5 +1,9 @@
 import { runAllowExit } from "./lib/run.ts";
-import { parseConflictIgnore } from "./migration-core.ts";
+import {
+  existingFiles,
+  isMergeConflictCandidate,
+  parseConflictIgnore,
+} from "./migration-core.ts";
 
 const SOURCE_PATHS = [
   "*.ts",
@@ -14,24 +18,37 @@ const SOURCE_PATHS = [
   "*.toml",
 ];
 
-export async function checkMergeConflicts(): Promise<void> {
+export async function checkMergeConflicts(
+  requestedPaths?: readonly string[],
+): Promise<void> {
   const ignoreFile = Bun.file(".conflictignore");
   const exclusions = (await ignoreFile.exists())
     ? parseConflictIgnore(await ignoreFile.text()).map(
         (path) => `:(exclude)${path}`,
       )
     : [];
+  const paths =
+    requestedPaths === undefined || requestedPaths.length === 0
+      ? SOURCE_PATHS
+      : await existingFiles(
+          requestedPaths.filter((path) => isMergeConflictCandidate(path)),
+        );
+  if (paths.length === 0) {
+    console.log("check-merge-conflicts: no staged source files to check");
+    return;
+  }
   const result = await runAllowExit(
     [
       "git",
       "grep",
+      "--cached",
       "-l",
       "-e",
       `${"<".repeat(7)} `,
       "-e",
       `${">".repeat(7)} `,
       "--",
-      ...SOURCE_PATHS,
+      ...paths,
       ...exclusions,
     ],
     { capture: true, secret: true },
@@ -45,5 +62,8 @@ export async function checkMergeConflicts(): Promise<void> {
 }
 
 if (import.meta.main) {
-  await checkMergeConflicts();
+  const requestedPaths = Bun.argv.slice(2);
+  await checkMergeConflicts(
+    requestedPaths.length === 0 ? undefined : requestedPaths,
+  );
 }
