@@ -1,5 +1,6 @@
 import {
   ApplicationFailure,
+  patched,
   proxyActivities,
   sleep,
 } from "@temporalio/workflow";
@@ -42,6 +43,8 @@ const MORNING_HEAT_TEMP_C = 30;
 // at/below 20°C OR the outdoor temperature is at/below 15°C.
 const HEAT_INDOOR_THRESHOLD_C = 20;
 const HEAT_OUTDOOR_THRESHOLD_C = 15;
+const CONDITIONAL_FLOOR_HEAT_PATCH = "good-morning-conditional-floor-heat-v1";
+const LEGACY_MORNING_HEAT_TEMP_C = 40;
 const MORNING_HEAT_DURATION = "60 minutes" as const;
 // The floor ramps ~8.3°C/hour (measured 2026-07-09: 22.3→30.6°C in the 60-min
 // wake window), so hitting 30°C from a ~22°C start needs ~1 hour of lead.
@@ -84,6 +87,19 @@ function parseTemperatureC(entityId: string, raw: string): number {
   return value;
 }
 
+function parseHomeZoneCoordinates(
+  attributes: Record<string, unknown>,
+): z.infer<typeof HomeZoneAttributes> {
+  const result = HomeZoneAttributes.safeParse(attributes);
+  if (!result.success) {
+    throw ApplicationFailure.nonRetryable(
+      "Home Assistant zone.home attributes must include numeric latitude and longitude",
+      "HomeZoneAttributesError",
+    );
+  }
+  return result.data;
+}
+
 // Reads the bathroom air sensor and the outdoor temperature (Open-Meteo at the
 // zone.home coordinates — HA has no weather integration) and decides whether
 // the morning floor heat is worth running. Any read failure propagates and
@@ -101,7 +117,7 @@ async function floorHeatDecision(): Promise<{
     MASTER_BATHROOM_AIR_TEMP,
     indoorState.state,
   );
-  const { latitude, longitude } = HomeZoneAttributes.parse(
+  const { latitude, longitude } = parseHomeZoneCoordinates(
     zoneState.attributes,
   );
   const outdoorC = await weatherActivities.getOutdoorTemperatureC(
@@ -125,18 +141,23 @@ export async function goodMorningPreheat(): Promise<void> {
     return;
   }
 
-  const decision = await floorHeatDecision();
-  if (!decision.heat) {
-    console.warn(
-      `good_morning_preheat: not cold (indoor ${String(decision.indoorC)}°C, outdoor ${String(decision.outdoorC)}°C), skipping heat`,
-    );
-    await setOutcome("skipped", "not-cold");
-    return;
+  const useConditionalFloorHeat = patched(CONDITIONAL_FLOOR_HEAT_PATCH);
+  if (useConditionalFloorHeat) {
+    const decision = await floorHeatDecision();
+    if (!decision.heat) {
+      console.warn(
+        `good_morning_preheat: not cold (indoor ${String(decision.indoorC)}°C, outdoor ${String(decision.outdoorC)}°C), skipping heat`,
+      );
+      await setOutcome("skipped", "not-cold");
+      return;
+    }
   }
 
   await callServiceUnchecked("climate", "set_temperature", {
     entity_id: MASTER_BATHROOM_HEAT,
-    temperature: MORNING_HEAT_TEMP_C,
+    temperature: useConditionalFloorHeat
+      ? MORNING_HEAT_TEMP_C
+      : LEGACY_MORNING_HEAT_TEMP_C,
     hvac_mode: "heat",
   });
 
@@ -169,17 +190,27 @@ export async function goodMorningWakeUp(): Promise<void> {
   // started it 2h15m ago; this is the fallback if the preheat run was skipped
   // or paused). On warm mornings the heat stays off; the rest of the wake
   // routine (notification, media, lights) is unconditional.
-  const decision = await floorHeatDecision();
-  if (decision.heat) {
+  let heat = true;
+  if (patched(CONDITIONAL_FLOOR_HEAT_PATCH)) {
+    const decision = await floorHeatDecision();
+    heat = decision.heat;
+    if (heat) {
+      await callServiceUnchecked("climate", "set_temperature", {
+        entity_id: MASTER_BATHROOM_HEAT,
+        temperature: MORNING_HEAT_TEMP_C,
+        hvac_mode: "heat",
+      });
+    } else {
+      console.warn(
+        `good_morning_wake_up: not cold (indoor ${String(decision.indoorC)}°C, outdoor ${String(decision.outdoorC)}°C), heat stays off`,
+      );
+    }
+  } else {
     await callServiceUnchecked("climate", "set_temperature", {
       entity_id: MASTER_BATHROOM_HEAT,
-      temperature: MORNING_HEAT_TEMP_C,
+      temperature: LEGACY_MORNING_HEAT_TEMP_C,
       hvac_mode: "heat",
     });
-  } else {
-    console.warn(
-      `good_morning_wake_up: not cold (indoor ${String(decision.indoorC)}°C, outdoor ${String(decision.outdoorC)}°C), heat stays off`,
-    );
   }
 
   await sendNotification("Good Morning", "Good Morning! Time to wake up.");
@@ -218,7 +249,7 @@ export async function goodMorningWakeUp(): Promise<void> {
   });
   await setOutcome(
     "executed",
-    decision.heat ? "wake-routine-complete" : "wake-routine-complete-no-heat",
+    heat ? "wake-routine-complete" : "wake-routine-complete-no-heat",
   );
 }
 
