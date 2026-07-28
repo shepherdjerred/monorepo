@@ -181,6 +181,7 @@ export type GlitterCorpusChannelBackfillInput = {
   channelId: string;
   verifiedAt: string;
   seedPrefix?: string;
+  retainedBaselineManifestKey?: string;
   maxPages: number;
 };
 
@@ -221,6 +222,11 @@ export async function runGlitterCorpusChannelBackfill(
       ? {}
       : { forwardUpperBoundMessageId: backward.newestMessageId }),
     ...(input.seedPrefix === undefined ? {} : { seedPrefix: input.seedPrefix }),
+    ...(input.retainedBaselineManifestKey === undefined
+      ? {}
+      : {
+          retainedBaselineManifestKey: input.retainedBaselineManifestKey,
+        }),
   });
 }
 
@@ -344,6 +350,8 @@ export async function runGlitterCorpusBackfill(
   if (input.seedPrefix !== undefined) {
     await validateApprovedGlitterSeed({
       seedPrefix: input.seedPrefix,
+      guildId: approved.inventory.guildId,
+      guildSlug: approved.inventory.guildSlug,
       approvedChannelIds: entries.map((entry) => entry.channelId),
     });
   }
@@ -436,6 +444,11 @@ export async function runGlitterCorpusDaily(): Promise<GlitterCorpusSnapshotResu
               baselineState.seedPrefix === null
                 ? {}
                 : { seedPrefix: baselineState.seedPrefix }),
+              ...(baselineState === undefined
+                ? {}
+                : {
+                    retainedBaselineManifestKey: baselineState.manifestKey,
+                  }),
               maxPages: PAGE_LIMIT_SAFETY_CEILING,
             },
           ],

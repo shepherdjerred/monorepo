@@ -20,6 +20,7 @@ describe("runGlitterContextRefresh", () => {
     const expected: GlitterContextRefreshResult = {
       outcome: "dry-run",
       snapshotSha256: "a".repeat(64),
+      proposalSha256: "b".repeat(64),
       eligiblePeople: ["virmel"],
       refreshedPeople: ["virmel"],
       relationshipProposalCount: 0,

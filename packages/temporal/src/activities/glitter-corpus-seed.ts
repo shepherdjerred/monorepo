@@ -5,10 +5,12 @@ import { unzipSync } from "fflate";
 import { z } from "zod/v4";
 import {
   CorpusObservationSchema,
-  SeedImportManifestSchema,
   type CorpusObservation,
-  type SeedImportManifest,
 } from "#shared/glitter-corpus.ts";
+import {
+  SeedImportManifestSchema,
+  type SeedImportManifest,
+} from "#shared/glitter-corpus-seed.ts";
 import {
   buildCurrentProjection,
   projectionChecksum,
@@ -30,11 +32,8 @@ const EXPECTED_SEED_MESSAGES = 76_762;
 const TRUSTED_SEED_ARCHIVE_SHA256 =
   "19aaca11be85b99d8034e48cfaf45e50e9739e9760da116d7262a6fd7588cc92";
 const TRUSTED_SEED_PROJECTION_SHA256 =
-  "8bad3bee568dfb5eb60d6524eee6b3c75d6ea3b1ac8f545887bac60cc8db572f";
+  "ae61f1659196d176b343dc40f19741b0df73be01466f61c2da7561f43a7e08f8";
 const CsvRowsSchema = z.array(z.record(z.string(), z.string()));
-const GuildMapSchema = z.record(z.string().min(1), z.string().regex(/^\d+$/));
-
-type GuildMap = z.infer<typeof GuildMapSchema>;
 
 export type SeedImportResult = {
   observations: CorpusObservation[];
@@ -154,7 +153,7 @@ function normalizeSeedTimestamp(timestamp: string): string {
 function normalizeSeedRow(input: {
   row: Readonly<Record<string, string>>;
   guildSlug: string;
-  guildId: string | null;
+  guildId: string;
   archiveSha256: string;
   csvPath: string;
   rowNumber: number;
@@ -166,6 +165,12 @@ function normalizeSeedRow(input: {
     requiredField(input.row, "timestamp", sourceKey),
   );
   const editedTimestamp = optionalField(input.row, "edited_timestamp");
+  const embeddedGuildId = optionalField(input.row, "thread.guild_id");
+  if (embeddedGuildId !== null && embeddedGuildId !== input.guildId) {
+    throw new Error(
+      `seed row ${sourceKey} belongs to guild ${embeddedGuildId}, expected ${input.guildId}`,
+    );
+  }
   const globalName =
     optionalField(input.row, "author.global_name") ??
     optionalField(input.row, "author.display_name");
@@ -207,10 +212,12 @@ function normalizeSeedRow(input: {
   });
 }
 
-function guildSlugForEntry(entryPath: string): string {
+function archiveRootForEntry(entryPath: string): string {
   const slash = entryPath.indexOf("/");
   if (slash <= 0) {
-    throw new Error(`seed CSV is not nested under a guild slug: ${entryPath}`);
+    throw new Error(
+      `seed CSV is not nested under an archive root: ${entryPath}`,
+    );
   }
   return entryPath.slice(0, slash);
 }
@@ -218,8 +225,9 @@ function guildSlugForEntry(entryPath: string): string {
 export function importSeedArchive(input: {
   archiveBytes: Uint8Array;
   archivePath: string;
+  guildId: string;
+  guildSlug: string;
   importedAt?: string;
-  guildMap?: GuildMap;
   expectedUniqueMessages?: number;
 }): SeedImportResult {
   const archiveEntries = unzipSync(input.archiveBytes);
@@ -245,14 +253,12 @@ export function importSeedArchive(input: {
         skip_empty_lines: true,
       }),
     );
-    const guildSlug = guildSlugForEntry(csvPath);
-    const guildId = input.guildMap?.[guildSlug] ?? null;
     for (const [index, row] of rows.entries()) {
       observations.push(
         normalizeSeedRow({
           row,
-          guildSlug,
-          guildId,
+          guildSlug: input.guildSlug,
+          guildId: input.guildId,
           archiveSha256,
           csvPath,
           rowNumber: index + 2,
@@ -281,19 +287,21 @@ export function importSeedArchive(input: {
   const projectionNdjson = serializeProjection(projection);
   const importedAt = input.importedAt ?? lastTimestamp;
   const manifest = SeedImportManifestSchema.parse({
-    schemaVersion: 1,
+    schemaVersion: 2,
     importedAt,
     archivePath: input.archivePath,
     archiveSha256,
+    guildId: input.guildId,
+    guildSlug: input.guildSlug,
+    archiveRoots: [
+      ...new Set(csvPaths.map((path) => archiveRootForEntry(path))),
+    ].toSorted(),
     csvFileCount: csvPaths.length,
     observationCount: observations.length,
     uniqueMessageCount: projection.length,
     duplicateMessageCount: observations.length - projection.length,
     firstTimestamp,
     lastTimestamp,
-    guildSlugs: [
-      ...new Set(observations.map((observation) => observation.guildSlug)),
-    ].toSorted(),
     channelIds: [
       ...new Set(observations.map((observation) => observation.channelId)),
     ].toSorted(),
@@ -320,21 +328,19 @@ function parseArg(
   return value;
 }
 
-async function readGuildMap(path: string | undefined): Promise<GuildMap> {
-  if (path === undefined) {
-    return {};
-  }
-  return GuildMapSchema.parse(await Bun.file(path).json());
-}
-
 export async function runSeedImporter(argv: readonly string[]): Promise<void> {
   const archivePath = parseArg(argv, "archive", true);
   const outputDirectory = parseArg(argv, "output", true);
-  if (archivePath === undefined || outputDirectory === undefined) {
+  const guildId = parseArg(argv, "guild-id", true);
+  const guildSlug = parseArg(argv, "guild-slug", true);
+  if (
+    archivePath === undefined ||
+    outputDirectory === undefined ||
+    guildId === undefined ||
+    guildSlug === undefined
+  ) {
     throw new Error("seed importer arguments unexpectedly missing");
   }
-  const guildMapPath = parseArg(argv, "guild-map", false);
-  const guildMap = await readGuildMap(guildMapPath);
   const archiveBytes = new Uint8Array(
     await Bun.file(archivePath).arrayBuffer(),
   );
@@ -342,10 +348,11 @@ export async function runSeedImporter(argv: readonly string[]): Promise<void> {
   const result = importSeedArchive({
     archiveBytes,
     archivePath: nodePath.basename(archivePath),
+    guildId,
+    guildSlug,
     ...(explicitImportedAt === undefined
       ? {}
       : { importedAt: explicitImportedAt }),
-    guildMap,
   });
   const importedAt = result.manifest.importedAt;
   await mkdir(outputDirectory, { recursive: true });
@@ -444,7 +451,9 @@ export async function runSeedImporter(argv: readonly string[]): Promise<void> {
         duplicateMessageCount: result.manifest.duplicateMessageCount,
         firstTimestamp: result.manifest.firstTimestamp,
         lastTimestamp: result.manifest.lastTimestamp,
-        guildSlugs: result.manifest.guildSlugs,
+        guildId: result.manifest.guildId,
+        guildSlug: result.manifest.guildSlug,
+        archiveRoots: result.manifest.archiveRoots,
         channelCount: result.manifest.channelIds.length,
         authorCount: result.manifest.authorIds.length,
         projectionSha256: result.manifest.projectionSha256,

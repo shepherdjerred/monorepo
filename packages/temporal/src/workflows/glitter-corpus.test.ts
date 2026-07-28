@@ -396,7 +396,7 @@ describe("Glitter corpus daily overlap workflows", () => {
 });
 
 describe("Glitter corpus periodic full refresh", () => {
-  it("resets a six-overlap lineage with a complete traversal and retains the seed", async () => {
+  it("resets a six-overlap lineage with a complete traversal and retains its baseline", async () => {
     const captured: CapturePageInput[] = [];
     const verified: z.input<typeof VerifyChannelInputSchema>[] = [];
     const baselineInventory = inventory(["10"]);
@@ -463,5 +463,8 @@ describe("Glitter corpus periodic full refresh", () => {
     ]);
     expect(verified).toHaveLength(1);
     expect(verified[0]?.seedPrefix).toBe("seed/approved");
+    expect(verified[0]?.retainedBaselineManifestKey).toBe(
+      "states/deep-baseline.json",
+    );
   }, 30_000);
 });

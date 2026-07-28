@@ -18,6 +18,7 @@ function usage(): never {
       "  bun run glitter:operate canary --guild-id=<id> --guild-slug=<slug> --channel-id=<id> [--seed-prefix=<prefix>] [--max-pages=<n>]",
       "  bun run glitter:operate backfill --inventory-key=<key> --inventory-sha=<sha256> [--seed-prefix=<prefix>] [--max-pages=<n>] [--wait=true]",
       "  bun run glitter:operate daily [--wait=true]",
+      "  bun run glitter:operate context-refresh --dry-run=<true|false> [--now=<iso>] [--wait=true]",
     ].join("\n"),
   );
   process.exit(2);
@@ -40,10 +41,11 @@ async function startWorkflow(input: {
   workflowType: string;
   workflowId: string;
   args: unknown[];
+  taskQueue?: string;
 }) {
   const handle = await input.client.workflow.start(input.workflowType, {
     args: input.args,
-    taskQueue: TASK_QUEUES.GLITTER_CORPUS,
+    taskQueue: input.taskQueue ?? TASK_QUEUES.GLITTER_CORPUS,
     workflowId: input.workflowId,
   });
   console.warn(
@@ -195,6 +197,50 @@ async function runDaily(
   }
 }
 
+async function runContextRefresh(
+  client: Client,
+  argv: readonly string[],
+): Promise<void> {
+  const parsed = z
+    .object({
+      "dry-run": z.enum(["true", "false"]),
+      now: z.iso.datetime({ offset: true }).optional(),
+      wait: z.enum(["true", "false"]).default("false"),
+    })
+    .strict()
+    .parse(flags(argv));
+  const handle = await startWorkflow({
+    client,
+    workflowType: "runGlitterContextRefresh",
+    workflowId: `glitter-context-refresh-manual-${crypto.randomUUID()}`,
+    taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
+    args: [
+      {
+        dryRun: parsed["dry-run"] === "true",
+        ...(parsed.now === undefined ? {} : { now: parsed.now }),
+      },
+    ],
+  });
+  if (parsed.wait === "true") {
+    const result = z
+      .object({
+        outcome: z.enum(["pr-created", "no-diff", "dry-run"]),
+        snapshotSha256: z.string().regex(/^[0-9a-f]{64}$/),
+        proposalSha256: z.string().regex(/^[0-9a-f]{64}$/),
+        eligiblePeople: z.array(z.string()),
+        refreshedPeople: z.array(z.string()),
+        relationshipProposalCount: z.number().int().nonnegative(),
+        changedFiles: z.array(z.string()),
+        branchName: z.string().optional(),
+        commitHash: z.string().optional(),
+        prUrl: z.url().optional(),
+      })
+      .strict()
+      .parse(await handle.result());
+    console.warn(JSON.stringify(result, null, 2));
+  }
+}
+
 async function main(): Promise<void> {
   const [command, ...argv] = process.argv.slice(2);
   if (command === undefined) {
@@ -222,6 +268,11 @@ async function main(): Promise<void> {
     }
     case "daily": {
       await runDaily(client, argv);
+
+      break;
+    }
+    case "context-refresh": {
+      await runContextRefresh(client, argv);
 
       break;
     }

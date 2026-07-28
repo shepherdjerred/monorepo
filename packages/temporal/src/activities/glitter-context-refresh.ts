@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdir, rm } from "node:fs/promises";
 import { Context } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
@@ -75,6 +76,7 @@ export type GlitterContextRefreshInput = z.input<
 export type GlitterContextRefreshResult = {
   outcome: "pr-created" | "no-diff" | "dry-run";
   snapshotSha256: string;
+  proposalSha256: string;
   eligiblePeople: string[];
   refreshedPeople: string[];
   relationshipProposalCount: number;
@@ -83,6 +85,43 @@ export type GlitterContextRefreshResult = {
   commitHash: string | undefined;
   prUrl: string | undefined;
 };
+
+export function glitterContextProposalChecksum(
+  files: readonly {
+    path: string;
+    bytes: Uint8Array | null;
+  }[],
+): string {
+  const hash = createHash("sha256");
+  for (const file of files.toSorted((left, right) =>
+    left.path.localeCompare(right.path),
+  )) {
+    hash.update(file.path);
+    hash.update("\0");
+    if (file.bytes === null) {
+      hash.update("deleted");
+    } else {
+      hash.update(String(file.bytes.length));
+      hash.update("\0");
+      hash.update(file.bytes);
+    }
+    hash.update("\0");
+  }
+  return hash.digest("hex");
+}
+
+export function glitterContextRunIdentity(rawRunId: string): {
+  runId: string;
+  tempDir: string;
+  branch: string;
+} {
+  const runId = z.uuid().parse(rawRunId);
+  return {
+    runId,
+    tempDir: `/tmp/glitter-context-refresh-${runId}`,
+    branch: `chore/glitter-context-refresh-${runId}`,
+  };
+}
 
 function jsonText(value: unknown): string {
   return `${JSON.stringify(value, null, 2)}\n`;
@@ -111,6 +150,25 @@ async function changedFiles(repoDir: string): Promise<string[]> {
     );
   }
   return files.toSorted();
+}
+
+async function changedFileProposalChecksum(
+  repoDir: string,
+  files: readonly string[],
+): Promise<string> {
+  return glitterContextProposalChecksum(
+    await Promise.all(
+      files.map(async (path) => {
+        const file = Bun.file(`${repoDir}/${path}`);
+        return {
+          path,
+          bytes: (await file.exists())
+            ? new Uint8Array(await file.arrayBuffer())
+            : null,
+        };
+      }),
+    ),
+  );
 }
 
 async function validateRefreshClone(repoDir: string): Promise<void> {
@@ -191,8 +249,14 @@ export const glitterContextRefreshActivities = {
     const input = GlitterContextRefreshInputSchema.parse(rawInput);
     const refreshedAt = input.now ?? new Date().toISOString();
     const now = new Date(refreshedAt);
-    const runId = crypto.randomUUID();
-    const tempDir = `/tmp/glitter-context-refresh-${runId}`;
+    const workflowExecution = Context.current().info.workflowExecution;
+    if (workflowExecution === undefined) {
+      throw new Error(
+        "Glitter context refresh requires a Temporal workflow execution",
+      );
+    }
+    const identity = glitterContextRunIdentity(workflowExecution.runId);
+    const { runId, tempDir } = identity;
     const repoDir = `${tempDir}/monorepo`;
     const heartbeat = setInterval(() => {
       Context.current().heartbeat({
@@ -303,6 +367,7 @@ export const glitterContextRefreshActivities = {
       );
       await validateRefreshClone(repoDir);
       const files = await changedFiles(repoDir);
+      const proposalSha256 = await changedFileProposalChecksum(repoDir, files);
       glitterContextRefreshPeople.set(
         { state: "refreshed" },
         refreshedPeople.size,
@@ -311,6 +376,7 @@ export const glitterContextRefreshActivities = {
 
       const baseResult = {
         snapshotSha256: corpus.pointer.snapshotSha256,
+        proposalSha256,
         eligiblePeople: candidates.map((candidate) => candidate.person.id),
         refreshedPeople: [...refreshedPeople].toSorted(),
         relationshipProposalCount,
@@ -338,7 +404,7 @@ export const glitterContextRefreshActivities = {
       }
 
       const { token } = await createGitHubAppInstallationToken();
-      const branch = `chore/glitter-context-refresh-${runId.slice(0, 8)}`;
+      const { branch } = identity;
       const title = "chore(glitter-context): refresh verified Discord context";
       const body = [
         "Automated weekly Glitter context refresh from Temporal.",

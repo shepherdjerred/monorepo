@@ -270,6 +270,8 @@ const ChannelStateBaseSchema = z.object({
 });
 
 export const ChannelCompletenessManifestSchema = ChannelStateBaseSchema.extend({
+  retainedBaselineManifestKey: z.string().min(1).nullable(),
+  retainedBaselineMessageCount: z.number().int().nonnegative(),
   backwardProof: TraversalProofSchema,
   forwardProof: TraversalProofSchema,
   seedObservationCount: z.number().int().nonnegative(),
@@ -282,6 +284,16 @@ export const ChannelCompletenessManifestSchema = ChannelStateBaseSchema.extend({
       context.addIssue({
         code: "custom",
         message: "complete channel state must reset lineageDepth to zero",
+      });
+    }
+    if (
+      value.retainedBaselineManifestKey === null &&
+      value.retainedBaselineMessageCount !== 0
+    ) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "retained baseline messages require a retained baseline manifest key",
       });
     }
   });
@@ -409,26 +421,6 @@ export const GuildSnapshotSchema = z
     }
   });
 export type GuildSnapshot = z.infer<typeof GuildSnapshotSchema>;
-export const SeedImportManifestSchema = z
-  .object({
-    schemaVersion: z.literal(1),
-    importedAt: IsoTimestampSchema,
-    archivePath: z.string().min(1),
-    archiveSha256: Sha256Schema,
-    csvFileCount: z.number().int().positive(),
-    observationCount: z.number().int().positive(),
-    uniqueMessageCount: z.number().int().positive(),
-    duplicateMessageCount: z.number().int().nonnegative(),
-    firstTimestamp: IsoTimestampSchema,
-    lastTimestamp: IsoTimestampSchema,
-    guildSlugs: z.array(z.string().min(1)),
-    channelIds: z.array(DiscordSnowflakeSchema),
-    authorIds: z.array(DiscordSnowflakeSchema),
-    projectionSha256: Sha256Schema,
-  })
-  .strict();
-export type SeedImportManifest = z.infer<typeof SeedImportManifestSchema>;
-
 export const DiscordApiAuthorSchema = z.looseObject({
   id: DiscordSnowflakeSchema,
   username: z.string(),
