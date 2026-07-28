@@ -106,15 +106,6 @@ resource "cloudflare_dns_record" "sjer_red_cname_homeassistant" {
   proxied = true
 }
 
-resource "cloudflare_dns_record" "sjer_red_cname_jellyfin" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "jellyfin"
-  type    = "CNAME"
-  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
-  proxied = true
-}
-
 # Kept for the Overseerr→Seerr redirect (see cloudflare_ruleset
 # "sjer_red_redirects" in this file). The origin is gone; the edge redirect
 # ruleset intercepts every request before the tunnel is contacted.
@@ -352,120 +343,6 @@ resource "cloudflare_dns_record" "sjer_red_cname_trmnl" {
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
-}
-
-# ── CNAMEs (Minecraft modded servers → ddns for mc-router) ────────────────────
-
-resource "cloudflare_dns_record" "sjer_red_cname_allthemons" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "allthemons"
-  type    = "CNAME"
-  content = "ddns.sjer.red"
-  proxied = false
-}
-
-resource "cloudflare_dns_record" "sjer_red_cname_stoneblock4" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "stoneblock4"
-  type    = "CNAME"
-  content = "ddns.sjer.red"
-  proxied = false
-}
-
-resource "cloudflare_dns_record" "sjer_red_cname_bettermc" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "bettermc"
-  type    = "CNAME"
-  content = "ddns.sjer.red"
-  proxied = false
-}
-
-resource "cloudflare_dns_record" "sjer_red_cname_allofcreate" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "allofcreate"
-  type    = "CNAME"
-  content = "ddns.sjer.red"
-  proxied = false
-}
-
-resource "cloudflare_dns_record" "sjer_red_cname_ftbskies2" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "ftbskies2"
-  type    = "CNAME"
-  content = "ddns.sjer.red"
-  proxied = false
-}
-
-# SRV records for Minecraft modded servers (port 30000 = mc-router NodePort)
-
-resource "cloudflare_dns_record" "sjer_red_srv_minecraft_allthemons" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "_minecraft._tcp.allthemons"
-  type    = "SRV"
-  data = {
-    priority = 0
-    weight   = 5
-    port     = 30000
-    target   = "allthemons.sjer.red"
-  }
-}
-
-resource "cloudflare_dns_record" "sjer_red_srv_minecraft_stoneblock4" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "_minecraft._tcp.stoneblock4"
-  type    = "SRV"
-  data = {
-    priority = 0
-    weight   = 5
-    port     = 30000
-    target   = "stoneblock4.sjer.red"
-  }
-}
-
-resource "cloudflare_dns_record" "sjer_red_srv_minecraft_bettermc" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "_minecraft._tcp.bettermc"
-  type    = "SRV"
-  data = {
-    priority = 0
-    weight   = 5
-    port     = 30000
-    target   = "bettermc.sjer.red"
-  }
-}
-
-resource "cloudflare_dns_record" "sjer_red_srv_minecraft_allofcreate" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "_minecraft._tcp.allofcreate"
-  type    = "SRV"
-  data = {
-    priority = 0
-    weight   = 5
-    port     = 30000
-    target   = "allofcreate.sjer.red"
-  }
-}
-
-resource "cloudflare_dns_record" "sjer_red_srv_minecraft_ftbskies2" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "_minecraft._tcp.ftbskies2"
-  type    = "SRV"
-  data = {
-    priority = 0
-    weight   = 5
-    port     = 30000
-    target   = "ftbskies2.sjer.red"
-  }
 }
 
 # FastMail DKIM

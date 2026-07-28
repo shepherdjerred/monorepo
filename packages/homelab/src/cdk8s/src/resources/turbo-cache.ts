@@ -82,7 +82,7 @@ export function createTurboCacheDeployment(chart: Chart) {
       // PVC on every pod (re)start. Once the cache is populated that's a long
       // outage on every restart; ON_ROOT_MISMATCH still repairs a fresh/wrong
       // volume root but skips the full walk once it already matches. Matches
-      // the seerr/bindery/jellyfin idiom.
+      // the seerr/bindery idiom.
       fsGroupChangePolicy: FsGroupChangePolicy.ON_ROOT_MISMATCH,
     },
     strategy: DeploymentStrategy.recreate(),

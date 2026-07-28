@@ -1,11 +1,23 @@
-import { sleep } from "@temporalio/workflow";
+import {
+  ApplicationFailure,
+  proxyActivities,
+  sleep,
+} from "@temporalio/workflow";
+import { z } from "zod";
 import {
   anyoneHome,
   callServiceUnchecked,
+  getEntityState,
   sendNotification,
   setOutcome,
   volumeUpBy,
 } from "./util.ts";
+import type { WeatherActivities } from "#activities/weather.ts";
+
+const weatherActivities = proxyActivities<WeatherActivities>({
+  startToCloseTimeout: "30 seconds",
+  retry: { maximumAttempts: 3 },
+});
 
 const BEDROOM_MEDIA = "media_player.bedroom" as const;
 // NOTE: this entity_id flips from media_player.main_bathroom when the HA
@@ -16,16 +28,23 @@ const EXTRA_MEDIA_PLAYERS = [MASTER_BATHROOM_MEDIA] as const;
 const BEDROOM_DIMMED = "scene.bedroom_dimmed" as const;
 const BEDROOM_BRIGHT = "scene.bedroom_bright" as const;
 const MASTER_BATHROOM_HEAT = "climate.master_bathroom" as const;
+const MASTER_BATHROOM_AIR_TEMP = "sensor.master_bathroom_temperature" as const;
+const HOME_ZONE = "zone.home" as const;
 // The INF-V1 floor heater's true max is 40°C. Upstream kgelinas/Mysa_HA capped
 // it at 30°C (issue #16); the fix (PR #18) was closed unmerged and upstream is
 // stale, so HA runs our fork shepherdjerred/Mysa_HA@v0.9.3 (via HACS), which
-// exposes the real device limit. Verified live: climate.master_bathroom.max_temp
-// == 40 and a 35°C set applied without error. See
-// packages/docs/plans/2026-05-05_mysa-max-temp-cap.md.
-const MORNING_HEAT_TEMP_C = 40;
+// exposes the real device limit. See
+// packages/docs/plans/2026-05-05_mysa-max-temp-cap.md. The morning target is
+// now 30°C (was 40°C until 2026-07) — warm feet without the multi-hour 40°C
+// preheat, and only on cold mornings (see shouldHeatFloor).
+const MORNING_HEAT_TEMP_C = 30;
+// Cold-morning thresholds (user-tuned 2026-07): heat when the bathroom air is
+// at/below 20°C OR the outdoor temperature is at/below 15°C.
+const HEAT_INDOOR_THRESHOLD_C = 20;
+const HEAT_OUTDOOR_THRESHOLD_C = 15;
 const MORNING_HEAT_DURATION = "60 minutes" as const;
 // The floor ramps ~8.3°C/hour (measured 2026-07-09: 22.3→30.6°C in the 60-min
-// wake window), so hitting 40°C from a ~22°C start needs ~2¼ hours of lead.
+// wake window), so hitting 30°C from a ~22°C start needs ~1 hour of lead.
 // goodMorningPreheat fires 2h15m before wake and owns its own turn-off as a
 // backstop (wake time + 60m), so heat never stays on if the wake run skips.
 // The 195-minute hold is chunked so a mid-hold departure (everyone leaves
@@ -39,16 +58,79 @@ const WAKE_MEDIA = {
   media_content_type: "favorite_item_id",
 };
 
+const HomeZoneAttributes = z.object({
+  latitude: z.number(),
+  longitude: z.number(),
+});
+
+export function shouldHeatFloor(temps: {
+  indoorC: number;
+  outdoorC: number;
+}): boolean {
+  return (
+    temps.indoorC <= HEAT_INDOOR_THRESHOLD_C ||
+    temps.outdoorC <= HEAT_OUTDOOR_THRESHOLD_C
+  );
+}
+
+function parseTemperatureC(entityId: string, raw: string): number {
+  const value = Number.parseFloat(raw);
+  if (!Number.isFinite(value)) {
+    throw ApplicationFailure.nonRetryable(
+      `Temperature sensor ${entityId} has non-numeric state: ${raw}`,
+      "TemperatureSensorStateError",
+    );
+  }
+  return value;
+}
+
+// Reads the bathroom air sensor and the outdoor temperature (Open-Meteo at the
+// zone.home coordinates — HA has no weather integration) and decides whether
+// the morning floor heat is worth running. Any read failure propagates and
+// fails the workflow run: we never silently guess at the weather.
+async function floorHeatDecision(): Promise<{
+  heat: boolean;
+  indoorC: number;
+  outdoorC: number;
+}> {
+  const [indoorState, zoneState] = await Promise.all([
+    getEntityState(MASTER_BATHROOM_AIR_TEMP),
+    getEntityState(HOME_ZONE),
+  ]);
+  const indoorC = parseTemperatureC(
+    MASTER_BATHROOM_AIR_TEMP,
+    indoorState.state,
+  );
+  const { latitude, longitude } = HomeZoneAttributes.parse(
+    zoneState.attributes,
+  );
+  const outdoorC = await weatherActivities.getOutdoorTemperatureC(
+    latitude,
+    longitude,
+  );
+  return { heat: shouldHeatFloor({ indoorC, outdoorC }), indoorC, outdoorC };
+}
+
 // Fires 2h15m before the wake routine so the bathroom floor is at temperature
-// when goodMorningWakeUp runs (the floor's thermal mass needs ~2¼h to climb
-// 22→40°C). Owns its own turn-off so the heat can't stay on if the wake run
-// never fires; the wake run's turn-off at the same wall-clock time is an
-// idempotent no-op on an already-off thermostat. The hold re-checks presence
-// every chunk and aborts early if the house empties mid-preheat.
+// when goodMorningWakeUp runs (the floor's thermal mass needs ~1h to climb
+// 22→30°C; the window stays 2h15m as a safe superset). Skips entirely on warm
+// mornings (shouldHeatFloor). Owns its own turn-off so the heat can't stay on
+// if the wake run never fires; the wake run's turn-off at the same wall-clock
+// time is an idempotent no-op on an already-off thermostat. The hold re-checks
+// presence every chunk and aborts early if the house empties mid-preheat.
 export async function goodMorningPreheat(): Promise<void> {
   if (!(await anyoneHome())) {
     console.warn("good_morning_preheat: no one home, skipping");
     await setOutcome("skipped", "no-one-home");
+    return;
+  }
+
+  const decision = await floorHeatDecision();
+  if (!decision.heat) {
+    console.warn(
+      `good_morning_preheat: not cold (indoor ${String(decision.indoorC)}°C, outdoor ${String(decision.outdoorC)}°C), skipping heat`,
+    );
+    await setOutcome("skipped", "not-cold");
     return;
   }
 
@@ -83,13 +165,22 @@ export async function goodMorningWakeUp(): Promise<void> {
     return;
   }
 
-  // Re-assert the heat setpoint (goodMorningPreheat normally started it 2h15m
-  // ago; this is the fallback if the preheat run was skipped or paused).
-  await callServiceUnchecked("climate", "set_temperature", {
-    entity_id: MASTER_BATHROOM_HEAT,
-    temperature: MORNING_HEAT_TEMP_C,
-    hvac_mode: "heat",
-  });
+  // Re-assert the heat setpoint on cold mornings (goodMorningPreheat normally
+  // started it 2h15m ago; this is the fallback if the preheat run was skipped
+  // or paused). On warm mornings the heat stays off; the rest of the wake
+  // routine (notification, media, lights) is unconditional.
+  const decision = await floorHeatDecision();
+  if (decision.heat) {
+    await callServiceUnchecked("climate", "set_temperature", {
+      entity_id: MASTER_BATHROOM_HEAT,
+      temperature: MORNING_HEAT_TEMP_C,
+      hvac_mode: "heat",
+    });
+  } else {
+    console.warn(
+      `good_morning_wake_up: not cold (indoor ${String(decision.indoorC)}°C, outdoor ${String(decision.outdoorC)}°C), heat stays off`,
+    );
+  }
 
   await sendNotification("Good Morning", "Good Morning! Time to wake up.");
 
@@ -117,12 +208,18 @@ export async function goodMorningWakeUp(): Promise<void> {
     transition: 3,
   });
 
-  // Hold the heat for the remainder of the cycle, then turn it off.
+  // Wait through the heat window, then always turn the thermostat off. The
+  // unconditional cleanup recovers a preheat run that set the thermostat but
+  // failed or was cancelled before its own backstop, even if this second
+  // temperature reading is now warm.
   await sleep(MORNING_HEAT_DURATION);
   await callServiceUnchecked("climate", "turn_off", {
     entity_id: MASTER_BATHROOM_HEAT,
   });
-  await setOutcome("executed", "wake-routine-complete");
+  await setOutcome(
+    "executed",
+    decision.heat ? "wake-routine-complete" : "wake-routine-complete-no-heat",
+  );
 }
 
 export async function goodMorningGetUp(): Promise<void> {

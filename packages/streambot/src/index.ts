@@ -39,7 +39,7 @@ async function main(): Promise<void> {
 
   startMetricsServer(config.observability.metricsPort);
   // GPU per-pod attribution via /proc/<pid>/fdinfo polling. Resolves the shared-renderD128
-  // attribution problem (streambot + Plex + Jellyfin on the same node) without needing the broken
+  // attribution problem (streambot + Plex on the same node) without needing the broken
   // intel_gpu_top PMU path on Gen 12+ Raptor Lake.
   startGpuCollector();
 

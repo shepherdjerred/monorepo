@@ -26,6 +26,7 @@ import { scoutQueueWindowsActivities } from "./scout-queue-windows.ts";
 import { observeReviewSignalsActivities } from "./observe-review-signals.ts";
 import { glitterCorpusActivities } from "./glitter-corpus.ts";
 import { glitterContextRefreshActivities } from "./glitter-context-refresh.ts";
+import { weatherActivities } from "./weather.ts";
 
 export const activities = {
   ...fetcherActivities,
@@ -56,4 +57,5 @@ export const activities = {
   ...observeReviewSignalsActivities,
   ...glitterCorpusActivities,
   ...glitterContextRefreshActivities,
+  ...weatherActivities,
 };

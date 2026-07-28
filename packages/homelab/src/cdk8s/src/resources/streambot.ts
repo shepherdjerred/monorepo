@@ -29,7 +29,7 @@ const STREAMBOT_GID = 1000;
  * has no Service/Ingress; it makes outbound Discord connections and streams via the selfbot.
  *
  * Runs in the `media` namespace so it can read-only mount the existing movies/tv libraries
- * (RWO PVCs, same single node as Plex/Jellyfin). yt-dlp + ffmpeg are baked into the image.
+ * (RWO PVCs, same single node as Plex). yt-dlp + ffmpeg are baked into the image.
  */
 export function createStreambotDeployment(
   chart: Chart,
@@ -212,7 +212,7 @@ export function createStreambotDeployment(
   setRevisionHistoryLimit(deployment);
 
   // Request the Intel iGPU so ffmpeg can VAAPI hardware-encode. The intel-device-plugin mounts
-  // /dev/dri into the pod; non-root UID 1000 works (same as Jellyfin). The GPU resource patch
+  // /dev/dri into the pod; non-root UID 1000 works. The GPU resource patch
   // (scripts/patch.ts) leaves an explicit `1` untouched.
   ApiObject.of(deployment).addJsonPatch(
     JsonPatch.add(

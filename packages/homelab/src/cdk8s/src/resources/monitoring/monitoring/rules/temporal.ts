@@ -29,8 +29,12 @@ const CHECK_AND_SKIP_WORKFLOWS: {
     // keep them in sync with run-vacuum-if-not-home.ts.)
     benignSkipReasons: ["someone-home", "all-units-active"],
   },
-  // goodMorning* skip when no one is home to wake — the expected gate.
-  { workflow: "goodMorningPreheat", benignSkipReasons: ["no-one-home"] },
+  // goodMorning* skip when no one is home to wake. Preheat also intentionally
+  // skips on warm mornings, while wake-up still executes the non-heating routine.
+  {
+    workflow: "goodMorningPreheat",
+    benignSkipReasons: ["no-one-home", "not-cold"],
+  },
   { workflow: "goodMorningWakeUp", benignSkipReasons: ["no-one-home"] },
   { workflow: "goodMorningGetUp", benignSkipReasons: ["no-one-home"] },
 ];
