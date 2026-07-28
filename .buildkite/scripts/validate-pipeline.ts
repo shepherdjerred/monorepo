@@ -212,7 +212,11 @@ for (const lane of ["site-scout", "sites", "scout-reconcile"]) {
 }
 
 for (const lane of ["site-scout", "sites"]) {
-  if (!selectorLane(ciChanged, lane).includes("packages/glitter-context")) {
+  const block = lanePaths[lane];
+  if (block === undefined) {
+    fail(`runtime CI selector is missing lane ${lane}`);
+  }
+  if (!block.includes("packages/glitter-context")) {
     fail(`runtime CI selector ${lane} is missing packages/glitter-context`);
   }
 }

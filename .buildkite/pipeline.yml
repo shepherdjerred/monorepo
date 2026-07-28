@@ -324,6 +324,7 @@ steps:
         - "scripts/lib/run.ts"
     cancel_on_build_failing: true
     command: |
+      rm -f /etc/apt/sources.list.d/nodesource.list /etc/apt/sources.list.d/nodesource.sources
       # The Playwright image adds NodeSource, but Bun only needs unzip from
       # Ubuntu. Keep an unavailable third-party feed from blocking bootstrap.
       apt-get update -qq -o Dir::Etc::sourcelist="sources.list.d/ubuntu.sources" -o Dir::Etc::sourceparts="-"
@@ -368,6 +369,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       if [ "$(buildkite-agent meta-data get ci-lane-run-playwright --default true)" != true ]; then exit 0; fi
+      rm -f /etc/apt/sources.list.d/nodesource.list /etc/apt/sources.list.d/nodesource.sources
       # The Playwright image adds NodeSource, but Bun only needs unzip from
       # Ubuntu. Keep an unavailable third-party feed from blocking bootstrap.
       apt-get update -qq -o Dir::Etc::sourcelist="sources.list.d/ubuntu.sources" -o Dir::Etc::sourceparts="-"
