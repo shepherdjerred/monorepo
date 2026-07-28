@@ -9,7 +9,7 @@
  * canonical workaround — the counters are kernel-direct, never wrong, and stable since Linux 5.19
  * (see kernel.org/doc/html/latest/gpu/drm-usage-stats.html).
  *
- * Per-pod attribution: `/dev/dri/renderD128` is shared with Plex and Jellyfin tenants on the same
+ * Per-pod attribution: `/dev/dri/renderD128` is shared with Plex on the same
  * node. `/proc` inside a container only exposes the container's PID namespace, so walking it from the
  * bun process naturally sums only THIS pod's engine time — no host-level join required.
  *

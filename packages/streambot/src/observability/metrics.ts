@@ -78,7 +78,7 @@ export const ffmpegProgressAgeSeconds = new Gauge({
 /**
  * Per-pod GPU engine utilization, polled from `/proc/PID/fdinfo/<drm_fd>` `drm-engine-<engine>:` counters
  * (kernel ABI stable since 5.19). Resolves the per-pod attribution problem when `/dev/dri/renderD128`
- * is shared with Plex / Jellyfin tenants: the standard `intel_gpu_top` is GPU-global AND broken on
+ * is shared with Plex: the standard `intel_gpu_top` is GPU-global AND broken on
  * Gen 12+ Raptor Lake (always reports 0% on the Video engine due to the i915 PMU bug —
  * github.com/intel/media-driver#1376, github.com/blakeblackshear/frigate/discussions/16619). fdinfo
  * is the canonical workaround. Unit: nanoseconds of engine wall-clock time, monotonic per fd.

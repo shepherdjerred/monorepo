@@ -53,9 +53,6 @@ const versions = {
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "seerr-team/seerr":
     "v3.4.0@sha256:d206d9e4056bb90178297df58047791196e7721e6dc19384579b0530702fe086",
-  // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
-  "jellyfin/jellyfin":
-    "10.11.11@sha256:45f648c382a0c8b552582fcea40e95cb17c5d475473a891cba0eb7523fb92112",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "kometateam/kometa":
     "v2.4.5@sha256:a376a1818196cde159b5a4d5a6ad55411415f7b5bc38d8a27e8c718bae7f0ddd",

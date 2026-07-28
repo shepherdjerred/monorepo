@@ -45,18 +45,18 @@ afterEach(async () => {
 });
 
 describe("PVC backup policy", () => {
-  it("classifies 45 included and 29 excluded PVCs without duplicates", () => {
+  it("classifies 45 included and 22 excluded PVCs without duplicates", () => {
     const keys = PVC_BACKUP_POLICY.map((entry) =>
       pvcBackupPolicyKey(entry.namespace, entry.name),
     );
-    expect(keys).toHaveLength(74);
-    expect(new Set(keys).size).toBe(74);
+    expect(keys).toHaveLength(67);
+    expect(new Set(keys).size).toBe(67);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
     ).toHaveLength(45);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
-    ).toHaveLength(29);
+    ).toHaveLength(22);
   });
 
   it("classifies and labels every synthesized PVC", async () => {

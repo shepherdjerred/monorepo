@@ -28,7 +28,7 @@ function normalizeExtensions(extensions: readonly string[]): Set<string> {
 
 /**
  * Recursively scan one library root for playable video files. Upstream StreamBot only listed the
- * top level; a real Plex/Jellyfin library is deeply nested, so we walk the whole tree.
+ * top level; a real Plex library is deeply nested, so we walk the whole tree.
  */
 export async function scanRoot(
   root: LibraryRoot,

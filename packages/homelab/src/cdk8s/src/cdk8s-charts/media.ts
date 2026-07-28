@@ -4,7 +4,6 @@ import { ZfsSataVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-sata-v
 import { createBazarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/bazarr.ts";
 import { createTautulliDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/media/tautulli.ts";
 import { createPlexDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/media/plex.ts";
-import { createJellyfinDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/media/jellyfin.ts";
 import { createKometaCronJob } from "@shepherdjerred/homelab/cdk8s/src/resources/media/kometa.ts";
 import { createRadarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/radarr.ts";
 import { createSeerrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/seerr.ts";
@@ -31,7 +30,7 @@ export async function createMediaChart(app: App) {
     storage: Size.tebibytes(6),
   });
   const downloadsVolume = new ZfsSataVolume(chart, "qbittorrent-hdd-pvc", {
-    storage: Size.tebibytes(1),
+    storage: Size.tebibytes(2),
   });
   const moviesVolume = new ZfsSataVolume(chart, "plex-movies-hdd-pvc", {
     storage: Size.tebibytes(6),
@@ -48,10 +47,6 @@ export async function createMediaChart(app: App) {
   });
   createTautulliDeployment(chart);
   createPlexDeployment(chart, {
-    tv: tvVolume.claim,
-    movies: moviesVolume.claim,
-  });
-  createJellyfinDeployment(chart, {
     tv: tvVolume.claim,
     movies: moviesVolume.claim,
   });
@@ -109,7 +104,7 @@ export async function createMediaChart(app: App) {
             },
           ],
         },
-        // Allow from Cloudflare tunnel (public access for Plex, Seerr, Jellyfin)
+        // Allow from Cloudflare tunnel (public access for Plex, Seerr)
         {
           from: [
             {
