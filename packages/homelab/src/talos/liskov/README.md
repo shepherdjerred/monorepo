@@ -30,7 +30,7 @@ committed).
 1. **SecureBoot enrollment** (BIOS): Secure Boot → OS Type "Windows UEFI
    mode", mode Custom, Key Management → Clear Secure Boot Keys (= setup
    mode). Boot the SecureBoot ISO and confirm the Talos auto-enroll prompt:
-   `https://factory.talos.dev/image/<schematic-id>/v1.13.6/metal-amd64-secureboot.iso`
+   `https://factory.talos.dev/image/<schematic-id>/v1.13.7/metal-amd64-secureboot.iso`
    (schematic id: see `patches/image.yaml`).
 2. **Maintenance mode**: note the IP from the console, then
    `talosctl -n <ip> disks --insecure` → put the 990 Pro **1TB** serial into

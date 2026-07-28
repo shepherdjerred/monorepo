@@ -202,16 +202,41 @@ kubectl exec pod/shell -n maintenance -- \
 ### Upgrade Talos
 
 ```bash {"interpreter":"/opt/homebrew/bin/bash"}
-VERSION=v1.13.6
-IMAGE=factory.talos.dev/metal-installer-secureboot/4560d31e3c529f9808e0898c2804d25be14201992fe2792abd4a09618e0d39a9:$VERSION
-talosctl upgrade --nodes 192.168.1.81 \
-  --image $IMAGE \
+VERSION=v1.13.7
+# Upgrade the CI worker first. Its Talos API certificate is issued to `liskov`,
+# so use the hostname rather than its Tailscale IP.
+talosctl --endpoints liskov --nodes liskov upgrade \
+  --image factory.talos.dev/metal-installer-secureboot/d953d04c966642907c1061252288cdc30189c2973f083de93355faac1e9d54cb:$VERSION \
   --drain=false
+
+# Torvalds is the single control plane and production node. Expect a brief
+# control-plane interruption while it reboots.
+talosctl --nodes torvalds.tailnet-1a49.ts.net upgrade \
+  --image factory.talos.dev/metal-installer-secureboot/4560d31e3c529f9808e0898c2804d25be14201992fe2792abd4a09618e0d39a9:$VERSION \
+  --drain=false
+
+talosctl --endpoints liskov --nodes liskov version
+talosctl --nodes torvalds.tailnet-1a49.ts.net version
 ```
 
 ### Upgrade Kubernetes
 
 ```bash {"interpreter":"/opt/homebrew/bin/bash"}
-VERSION=1.36.2
-talosctl --nodes 192.168.1.81 --endpoint https://torvalds:6443 upgrade-k8s --to $VERSION
+VERSION=1.36.3
+
+# `upgrade-k8s` discovers liskov by raw Tailscale IP, which does not match
+# its hostname-only Talos API certificate. Upgrade control-plane components,
+# kube-proxy, and bootstrap manifests first, without kubelet updates.
+talosctl --nodes torvalds.tailnet-1a49.ts.net --endpoint https://torvalds:6443 \
+  upgrade-k8s --to $VERSION --pre-pull-images=false --upgrade-kubelet=false
+
+# Then update each kubelet through its hostname-authenticated Talos API.
+talosctl --endpoints liskov --nodes liskov patch machineconfig --mode no-reboot \
+  --patch $'machine:\n  kubelet:\n    image: ghcr.io/siderolabs/kubelet:v'"$VERSION"
+talosctl --nodes torvalds.tailnet-1a49.ts.net patch machineconfig --mode no-reboot \
+  --patch $'machine:\n  kubelet:\n    image: ghcr.io/siderolabs/kubelet:v'"$VERSION"
+
+kubectl get nodes -o wide
+kubectl get --raw='/readyz?verbose'
+kubectl get --raw='/livez?verbose'
 ```

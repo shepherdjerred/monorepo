@@ -93,11 +93,11 @@ ARG CLAUDE_CODE_VERSION=2.1.175
 # renovate: datasource=npm depName=@openai/codex
 ARG CODEX_CLI_VERSION=0.139.0
 # renovate: datasource=github-releases depName=kubernetes/kubectl
-ARG KUBECTL_VERSION=v1.36.2
+ARG KUBECTL_VERSION=v1.36.3
 # renovate: datasource=github-releases depName=github/github-mcp-server
 ARG GITHUB_MCP_SERVER_VERSION=1.3.0
 # renovate: datasource=github-releases depName=siderolabs/talos
-ARG TALOSCTL_VERSION=v1.13.6
+ARG TALOSCTL_VERSION=v1.13.7
 # renovate: datasource=github-releases depName=opentofu/opentofu
 ARG TOFU_VERSION=1.12.3
 # renovate: datasource=github-releases depName=argoproj/argo-cd
