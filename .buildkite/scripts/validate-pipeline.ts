@@ -114,6 +114,12 @@ if (
   fail("ci-selector-base must be a soft-fail metadata preparation step");
 }
 
+requireIncludes(
+  stepBlocks.get("helm-push"),
+  "depends_on: [verify, images, ci-image-refresh]",
+  "helm-push must wait for remote BuildKit consumers before publishing the floating buildkitd chart",
+);
+
 for (const key of ["playwright-e2e-pr", "playwright-e2e-main"]) {
   const block = stepBlocks.get(key);
   const install =
