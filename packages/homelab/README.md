@@ -57,15 +57,25 @@ talosctl gen config \
   --config-patch @torvalds/patches/sysctls.yaml \
   --config-patch @torvalds/patches/zfs.yaml \
   --config-patch @torvalds/patches/interface.yaml \
-  torvalds https://torvalds.tailnet-1a49.ts.net:6443 --force
+  torvalds https://192.168.1.81:6443 --force
 
 ```
 
-1. Configure `endpoints` and `nodes` in `talosconfig` with Tailscale FQDNs:
+The generated control-plane endpoint is an internal cluster identity. Keep it
+on the stable LAN address unless every control-plane component is deliberately
+migrated together. It does not determine the endpoint used by external
+`talosctl` or `kubectl` clients.
+
+1. Configure the normal `talosconfig` endpoint and node with the Torvalds
+   Tailscale FQDN:
    - `endpoints: ["torvalds.tailnet-1a49.ts.net"]` — only control-plane nodes
      are endpoints.
-   - `nodes: ["torvalds.tailnet-1a49.ts.net", "liskov.tailnet-1a49.ts.net"]`
-     — both Talos machines are management targets.
+   - `nodes: ["torvalds.tailnet-1a49.ts.net"]`.
+
+   Liskov's Talos API certificate also includes
+   `liskov.tailnet-1a49.ts.net`. Add it as a normal target only after the
+   tailnet policy permits the Torvalds control-plane proxy to reach Liskov on
+   TCP/50000; a worker cannot be used as its own Talos proxy endpoint.
 
 2. Move the talosconfig:
 
