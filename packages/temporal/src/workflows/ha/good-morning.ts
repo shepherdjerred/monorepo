@@ -208,15 +208,14 @@ export async function goodMorningWakeUp(): Promise<void> {
     transition: 3,
   });
 
-  // Hold the heat for the remainder of the cycle, then turn it off. On warm
-  // mornings there is nothing to hold — the thermostat was never turned on
-  // (preheat makes the same decision and skips too).
-  if (decision.heat) {
-    await sleep(MORNING_HEAT_DURATION);
-    await callServiceUnchecked("climate", "turn_off", {
-      entity_id: MASTER_BATHROOM_HEAT,
-    });
-  }
+  // Wait through the heat window, then always turn the thermostat off. The
+  // unconditional cleanup recovers a preheat run that set the thermostat but
+  // failed or was cancelled before its own backstop, even if this second
+  // temperature reading is now warm.
+  await sleep(MORNING_HEAT_DURATION);
+  await callServiceUnchecked("climate", "turn_off", {
+    entity_id: MASTER_BATHROOM_HEAT,
+  });
   await setOutcome(
     "executed",
     decision.heat ? "wake-routine-complete" : "wake-routine-complete-no-heat",

@@ -205,7 +205,15 @@ describe("goodMorningWakeUp", () => {
       goodMorningWakeUp,
       `wake-warm-${crypto.randomUUID()}`,
     );
-    expect(climateCalls(scenario)).toEqual([]);
+    expect(climateCalls(scenario)).toEqual([
+      {
+        domain: "climate",
+        service: "turn_off",
+        data: {
+          entity_id: "climate.master_bathroom",
+        },
+      },
+    ]);
     expect(scenario.notifications).toEqual(["Good Morning"]);
     expect(
       scenario.serviceCalls.some(
