@@ -359,7 +359,11 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - Made every nested source-manifest object closed in the language-neutral JSON
   Schema and added draft-2020 validation regressions for typos inside a source
   object and a Bulbapedia page pin.
-- Verified all 313 middle-layer and 318 composed-top backend tests, the 61
+- Restricted acquisition-evidence bonuses to explicit acquisition language so
+  an ordinary location query such as `where is Route 101` ranks the Route 101
+  world record rather than unrelated randomizer reward metadata, while
+  `where to get HM06 Rock Smash` retains acquisition intent through `get`.
+- Verified all 313 middle-layer and 319 composed-top backend tests, the 61
   focused benchmark tests, all 30 knowledge/build script tests, backend and
   scripts typecheck/lint, and formatting.
 - Completed hosted verification on every final code-bearing stack head:
@@ -374,6 +378,8 @@ system against a copied live save and the exact goal `get me a pokeman`.
   not compare the current provider-invalid artifacts to the valid 0/3
   baseline.
 - Run a production goal only after three consecutive local successes.
+- Publish and verify the Route 101 ranking fix on replacement Buildkite and a
+  fresh exact-head Codex review.
 
 ### Caveats
 

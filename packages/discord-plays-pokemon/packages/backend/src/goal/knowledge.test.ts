@@ -205,3 +205,23 @@ describe("KnowledgeBase", () => {
     expect(rockSmashResults.at(0)?.excerpt).toContain("Mauville City");
   });
 });
+
+describe("knowledge location search", () => {
+  test("does not treat ordinary location queries as acquisition queries", async () => {
+    const base = await loadKnowledgeBase();
+    const results = base.search("where is Route 101", {
+      domain: "world",
+      limit: 5,
+    });
+    const topResult = results.at(0);
+    if (topResult === undefined) {
+      throw new Error("expected Route 101 search results");
+    }
+
+    expect(topResult.id).toBe("world:region_route101/main");
+    expect(topResult.excerpt).toContain("REGION_ROUTE101/MAIN");
+    expect(
+      results.slice(1).every((result) => result.score < topResult.score),
+    ).toBe(true);
+  });
+});

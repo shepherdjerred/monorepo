@@ -72,7 +72,6 @@ const ACQUISITION_QUERY_TERMS = new Set([
   "get",
   "obtain",
   "receive",
-  "where",
 ]);
 const ACQUISITION_EVIDENCE_TERMS = new Set([
   "acquire",
