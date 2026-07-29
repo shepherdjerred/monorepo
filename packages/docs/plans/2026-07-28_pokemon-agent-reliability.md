@@ -71,7 +71,7 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - [x] Implement and verify the compact prompt and benchmark harness.
 - [x] Implement and verify the knowledge corpus, retrieval, and skills.
 - [ ] Complete repeated local evaluation and iterate on failures.
-- [ ] Publish the review-ready stack and record CI/live verification.
+- [x] Publish the review-ready stack and record CI/live verification.
 
 ## Comment Log
 
@@ -314,8 +314,6 @@ system against a copied live save and the exact goal `get me a pokeman`.
 
 ### Remaining
 
-- Monitor the restacked replacement heads through Buildkite and fresh Codex
-  review.
 - Rerun three clean-copy candidate trials when Codex quota is available. Do
   not compare the current provider-invalid artifacts to the valid 0/3
   baseline.
@@ -364,12 +362,18 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - Verified all 313 middle-layer and 318 composed-top backend tests, the 61
   focused benchmark tests, all 30 knowledge/build script tests, backend and
   scripts typecheck/lint, and formatting.
+- Completed hosted verification on every final code-bearing stack head:
+  Buildkite #7123 for #1802, #7130 for #1803, and #7132 for #1805 passed all
+  authoritative lanes. Fresh exact-head Codex results were clean, every
+  GraphQL review thread was resolved, GitHub reported each PR clean and
+  mergeable, and direct merge-tree checks passed for the stacked PRs.
 
 ### Remaining
 
-- Publish the rewritten prompt/evaluation and knowledge stack heads.
-- Re-run Buildkite and the fresh Codex review on the rewritten PR heads.
-- Complete the repeated clean-copy model evaluation and production trial.
+- Rerun three clean-copy candidate trials when Codex quota is available. Do
+  not compare the current provider-invalid artifacts to the valid 0/3
+  baseline.
+- Run a production goal only after three consecutive local successes.
 
 ### Caveats
 
