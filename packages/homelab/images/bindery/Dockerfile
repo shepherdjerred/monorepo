@@ -80,11 +80,16 @@ RUN CGO_ENABLED=0 go test ./internal/api/ -run TestAddBook_AuthorlessGoogleBooks
 
 ARG TARGETOS
 ARG TARGETARCH
-ARG VERSION=dev
-ARG COMMIT=unknown
-ARG BUILD_DATE=unknown
-RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
-    -ldflags="-w -s -X main.version=${VERSION} -X main.commit=${COMMIT} -X main.date=${BUILD_DATE}" \
+ARG BINDERY_SOURCE_REF
+COPY --from=source /tmp/0001-gb-author-synthetic.patch /tmp/0001-gb-author-synthetic.patch
+# Runtime identity must describe the app source, not the Buildkite invocation.
+# Per-build VERSION/GIT_SHA values make /bindery's final layer differ on every
+# main build and create an endless version commit-back loop. The upstream ref
+# plus local patch hash changes exactly when Bindery's behavior changes.
+RUN source_ref="$(printf '%.12s' "${BINDERY_SOURCE_REF}")" \
+  && patch_ref="$(sha256sum /tmp/0001-gb-author-synthetic.patch | cut -c1-12)" \
+  && CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
+    -ldflags="-w -s -X main.version=sha-${source_ref}-patch-${patch_ref} -X main.commit=${BINDERY_SOURCE_REF} -X main.date=" \
     -o /bindery ./cmd/bindery
 
 ########################
@@ -118,13 +123,21 @@ ENTRYPOINT ["/bindery"]
 ## to open and the server to boot.
 ########################
 FROM source AS smoke
+ARG BINDERY_SOURCE_REF
 COPY --from=builder /bindery /bindery
-RUN export BINDERY_PORT=18788; \
+RUN set -e; \
+  source_ref="$(printf '%.12s' "${BINDERY_SOURCE_REF}")"; \
+  patch_ref="$(sha256sum /tmp/0001-gb-author-synthetic.patch | cut -c1-12)"; \
+  export BINDERY_PORT=18788; \
   BINDERY_DB_PATH=/tmp/bindery.db BINDERY_DATA_DIR=/tmp /bindery >/tmp/bindery-smoke.log 2>&1 & \
   pid=$!; \
   trap 'if kill -0 $pid; then kill $pid; if wait $pid; then :; else cleanup_status=$?; [ $cleanup_status -eq 143 ] || exit $cleanup_status; fi; fi' EXIT; \
   for _ in $(seq 1 30); do \
-    if /bindery healthcheck; then exit 0; fi; \
+    if /bindery healthcheck; then \
+      grep -F "\"version\":\"sha-${source_ref}-patch-${patch_ref}\"" /tmp/bindery-smoke.log; \
+      grep -F "\"commit\":\"${BINDERY_SOURCE_REF}\"" /tmp/bindery-smoke.log; \
+      exit 0; \
+    fi; \
     if ! kill -0 $pid; then cat /tmp/bindery-smoke.log; exit 1; fi; \
     sleep 1; \
   done; \
