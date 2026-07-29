@@ -65,6 +65,38 @@ describe("KnowledgeBase", () => {
     ).toEqual(["items:potion"]);
   });
 
+  test("ranks acquisition evidence above repeated usage mentions", () => {
+    const base = new KnowledgeBase([
+      {
+        id: "progression:strength-uses",
+        domain: "progression",
+        title: "Strength route cleanup",
+        aliases: [],
+        tags: [],
+        body: "Use Strength here. Strength opens this path. Return with Strength later.",
+        sources: [testSource],
+      },
+      {
+        id: "progression:strength-acquisition",
+        domain: "progression",
+        title: "Rusturf Tunnel reward",
+        aliases: [],
+        tags: [],
+        body: "As thanks, he gives you HM04 (Strength).",
+        sources: [testSource],
+      },
+    ]);
+
+    expect(
+      base
+        .search("how to get strength", { limit: 2 })
+        .map((result) => result.id),
+    ).toEqual([
+      "progression:strength-acquisition",
+      "progression:strength-uses",
+    ]);
+  });
+
   test("loads and searches the committed corpus", async () => {
     const base = await loadKnowledgeBase();
     const results = base.search("Route 101 wild encounter", {
@@ -107,5 +139,13 @@ describe("KnowledgeBase", () => {
           result.excerpt.includes("HM03 (Surf)"),
       ),
     ).toBe(true);
+    const strengthResults = base.search("how to get strength", {
+      domain: "progression",
+      limit: 5,
+    });
+    expect(strengthResults.at(0)?.id).toBe(
+      "progression:bulbapedia:emerald-part-5:2",
+    );
+    expect(strengthResults.at(0)?.excerpt).toContain("HM04 (Strength)");
   });
 });

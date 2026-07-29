@@ -55,6 +55,13 @@ describe("committed generated knowledge", () => {
     }
   });
 
+  test("uses field-specific move changelog history for Emerald values", () => {
+    expect(requiredRecord("battle:move:vine-whip").body).toContain("Power: 35");
+    expect(requiredRecord("battle:move:giga-drain").body).toContain(
+      "Power: 60",
+    );
+  });
+
   test("labels the item catalog generation-wide and omits known FRLG items", () => {
     for (const identifier of CONFIRMED_FRLG_ONLY_ITEM_IDENTIFIERS) {
       expect(recordsById.has(`items:${identifier}`)).toBe(false);
@@ -120,6 +127,29 @@ describe("committed generated knowledge", () => {
     expect(nincada.sources).toEqual([pokeApiSource, pokeemeraldSource]);
     expect(shedinja.sources).toEqual([pokeApiSource, pokeemeraldSource]);
     expect(shedinjaCreation.sources).toEqual([pokeemeraldSource]);
+    const wurmple = requiredRecord("species:wurmple");
+    expect(wurmple.body).toContain(
+      "hidden upper personality value modulo 10 (0-4 produces Silcoon)",
+    );
+    expect(wurmple.body).toContain(
+      "hidden upper personality value modulo 10 (5-9 produces Cascoon)",
+    );
+    const silcoon = requiredRecord("species:silcoon");
+    expect(silcoon.body).toContain(
+      "hidden upper personality value modulo 10 (0-4 produces Silcoon)",
+    );
+    const cascoon = requiredRecord("species:cascoon");
+    expect(cascoon.body).toContain(
+      "hidden upper personality value modulo 10 (5-9 produces Cascoon)",
+    );
+    const wurmpleBranch = requiredRecord(
+      "species:wurmple-evolution-branch-emerald",
+    );
+    expect(wurmpleBranch.body).toContain("personality value modulo 10 is 0-4");
+    expect(wurmple.sources).toEqual([pokeApiSource, pokeemeraldSource]);
+    expect(silcoon.sources).toEqual([pokeApiSource, pokeemeraldSource]);
+    expect(cascoon.sources).toEqual([pokeApiSource, pokeemeraldSource]);
+    expect(wurmpleBranch.sources).toEqual([pokeemeraldSource]);
     for (const record of records.filter(
       (entry) => entry.domain === "species",
     )) {

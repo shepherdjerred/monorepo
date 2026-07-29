@@ -103,17 +103,20 @@ revisions.
   experience, capture-rate, or minimum-happiness columns; omit those numbers
   from generated records while preserving supported nonnumeric conditions.
 - The pinned pokeemerald-wasm source supplies narrow, validated
-  Emerald-specific mechanics such as Shedinja's empty-party-slot requirement.
+  Emerald-specific mechanics such as Shedinja's empty-party-slot requirement
+  and Wurmple's hidden-personality Silcoon/Cascoon branch.
   Its repository declares no license; record that accurately and summarize
   behavior without copying source text. Knowledge records have a required
   non-empty `sources` array so composite facts expose every contributing
-  revision and license; the generic Nincada and Shedinja species records cite
-  both PokeAPI and pokeemerald-wasm.
+  revision and license; generic species records that contain these composite
+  evolution facts cite both PokeAPI and pokeemerald-wasm.
 - Bulbapedia supplies the separately stored full walkthrough under CC
   BY-NC-SA 2.5; preserve `knowledge/cc-by-nc-sa-2.5/NOTICE.md` and per-record
   attribution.
 - Runtime access is bounded through `pokemonctl knowledge search` and
   `pokemonctl knowledge get`; do not embed the corpus in the base prompt.
+- Acquisition-intent searches must prefer the passage that says where an item
+  or HM is received over passages that merely repeat its later uses.
 - `.agents/skills/pokemon-{world,progression,species,items,battle}` are focused
   discovery instructions, not copies of the underlying facts.
 

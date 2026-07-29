@@ -7,6 +7,7 @@ import {
 
 const EVOLUTION_TABLE_PATH = "src/data/pokemon/evolution.h";
 const EVOLUTION_SCENE_PATH = "src/evolution_scene.c";
+const POKEMON_PATH = "src/pokemon.c";
 
 function rawUrl(repository: string, commit: string, file: string): string {
   return `${repository.replace(/\.git$/, "")}/raw/${commit}/${file}`;
@@ -48,6 +49,37 @@ export function validateShedinjaSource(
   }
 }
 
+export function validateWurmpleSource(
+  evolutionTable: string,
+  pokemonSource: string,
+): void {
+  const normalizedTable = normalizedSource(evolutionTable);
+  if (
+    !/\[SPECIES_WURMPLE\]\s*=\s*\{\s*\{EVO_LEVEL_SILCOON,\s*7,\s*SPECIES_SILCOON\},\s*\{EVO_LEVEL_CASCOON,\s*7,\s*SPECIES_CASCOON\}\s*\}/.test(
+      normalizedTable,
+    )
+  ) {
+    throw new Error(
+      "pinned pokeemerald source no longer has the expected level-7 Wurmple evolution table",
+    );
+  }
+
+  const normalizedPokemon = normalizedSource(pokemonSource);
+  if (
+    !normalizedPokemon.includes("u16 upperPersonality = personality >> 16;") ||
+    !normalizedPokemon.includes(
+      "case EVO_LEVEL_SILCOON: if (gEvolutionTable[species][i].param <= level && (upperPersonality % 10) <= 4) targetSpecies = gEvolutionTable[species][i].targetSpecies;",
+    ) ||
+    !normalizedPokemon.includes(
+      "case EVO_LEVEL_CASCOON: if (gEvolutionTable[species][i].param <= level && (upperPersonality % 10) > 4) targetSpecies = gEvolutionTable[species][i].targetSpecies;",
+    )
+  ) {
+    throw new Error(
+      "pinned pokeemerald source no longer has the expected hidden-personality Wurmple branch",
+    );
+  }
+}
+
 export function createPokeemeraldKnowledgeSource(
   license: Sources["pokeemeraldWasm"]["license"],
   upstreamRepository: string,
@@ -72,11 +104,13 @@ export async function buildPokeemeraldRecords(
     upstreamRepository,
     commit,
   );
-  const [evolutionTable, evolutionScene] = await Promise.all([
+  const [evolutionTable, evolutionScene, pokemonSource] = await Promise.all([
     fetchText(rawUrl(repository, commit, EVOLUTION_TABLE_PATH)),
     fetchText(rawUrl(repository, commit, EVOLUTION_SCENE_PATH)),
+    fetchText(rawUrl(repository, commit, POKEMON_PATH)),
   ]);
   validateShedinjaSource(evolutionTable, evolutionScene);
+  validateWurmpleSource(evolutionTable, pokemonSource);
 
   return [
     {
@@ -100,6 +134,32 @@ export async function buildPokeemeraldRecords(
       body: [
         "In Pokémon Emerald, Nincada's level-20 evolution produces Ninjask and creates Shedinja only when the party has fewer than six members.",
         "Required setup: leave at least one party slot empty before Nincada evolves.",
+      ].join("\n"),
+      sources: [source],
+    },
+    {
+      id: "species:wurmple-evolution-branch-emerald",
+      domain: "species",
+      title: "Wurmple evolution branch in Emerald",
+      aliases: [
+        "wurmple",
+        "silcoon",
+        "cascoon",
+        "wurmple evolution",
+        "how to evolve wurmple",
+      ],
+      tags: [
+        "pokemon-emerald",
+        "wurmple",
+        "silcoon",
+        "cascoon",
+        "evolution",
+        "level-7",
+        "personality-value",
+      ],
+      body: [
+        "In Pokémon Emerald, Wurmple evolves at level 7. The result is Silcoon when the upper half of its hidden personality value modulo 10 is 0-4, or Cascoon when it is 5-9.",
+        "The personality value is fixed when the Pokémon is created and is not shown to the player, so the branch is not a choice made at evolution time.",
       ].join("\n"),
       sources: [source],
     },

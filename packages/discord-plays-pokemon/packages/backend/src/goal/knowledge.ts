@@ -66,6 +66,35 @@ const SEARCH_STOPWORDS = new Set([
   "to",
   "where",
 ]);
+const ACQUISITION_QUERY_TERMS = new Set([
+  "acquire",
+  "find",
+  "get",
+  "obtain",
+  "receive",
+  "where",
+]);
+const ACQUISITION_EVIDENCE_TERMS = new Set([
+  "acquire",
+  "acquired",
+  "award",
+  "awarded",
+  "awards",
+  "gave",
+  "give",
+  "given",
+  "gives",
+  "hand",
+  "handed",
+  "hands",
+  "obtain",
+  "obtained",
+  "receive",
+  "received",
+  "receives",
+]);
+const ACQUISITION_EVIDENCE_SCORE = 50;
+const HM_ACQUISITION_EVIDENCE_SCORE = 100;
 
 function normalize(value: string): string {
   return value
@@ -96,15 +125,41 @@ function occurrences(haystack: string, needle: string): number {
   }
 }
 
+function containsAnyTerm(value: string, candidates: ReadonlySet<string>) {
+  return normalize(value)
+    .split(" ")
+    .some((term) => candidates.has(term));
+}
+
+function acquisitionEvidenceScore(
+  record: KnowledgeRecord,
+  queryTerms: readonly string[],
+): number {
+  return record.body.split(/[.!?]\s+|\n+/).reduce((score, sentence) => {
+    const normalizedSentence = normalize(sentence);
+    const isRelevantEvidence =
+      queryTerms.some((term) => normalizedSentence.includes(term)) &&
+      containsAnyTerm(sentence, ACQUISITION_EVIDENCE_TERMS);
+    if (!isRelevantEvidence) return score;
+    return Math.max(
+      score,
+      /\bhm\d+\b/u.test(normalizedSentence)
+        ? HM_ACQUISITION_EVIDENCE_SCORE
+        : ACQUISITION_EVIDENCE_SCORE,
+    );
+  }, 0);
+}
+
 function scoreRecord(
   record: KnowledgeRecord,
   queryTerms: readonly string[],
+  acquisitionIntent: boolean,
 ): number {
   const title = normalize(record.title);
   const aliases = normalize(record.aliases.join(" "));
   const tags = normalize(record.tags.join(" "));
   const body = normalize(record.body);
-  return queryTerms.reduce((score, term) => {
+  const relevanceScore = queryTerms.reduce((score, term) => {
     if (title === term) return score + 100;
     if (title.includes(term)) return score + 30;
     if (aliases.includes(term)) return score + 20;
@@ -115,6 +170,10 @@ function scoreRecord(
     }
     return score;
   }, 0);
+  return (
+    relevanceScore +
+    (acquisitionIntent ? acquisitionEvidenceScore(record, queryTerms) : 0)
+  );
 }
 
 function excerpt(body: string, queryTerms: readonly string[]): string {
@@ -148,6 +207,7 @@ export class KnowledgeBase {
     if (queryTerms.length === 0) {
       throw new Error("knowledge query must contain searchable text");
     }
+    const acquisitionIntent = containsAnyTerm(query, ACQUISITION_QUERY_TERMS);
     return this.#records
       .filter(
         (record) =>
@@ -155,7 +215,7 @@ export class KnowledgeBase {
       )
       .map((record) => ({
         record,
-        score: scoreRecord(record, queryTerms),
+        score: scoreRecord(record, queryTerms, acquisitionIntent),
       }))
       .filter((candidate) => candidate.score > 0)
       .sort(

@@ -821,7 +821,7 @@
     "title": "Covet",
     "aliases": ["covet"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 40; accuracy: 100; PP: 25\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 40; accuracy: 100; PP: 40\nPriority: 0; Generation III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -837,7 +837,7 @@
     "title": "Crabhammer",
     "aliases": ["crabhammer"],
     "tags": ["water", "special"],
-    "body": "Type: water\nPower: 100; accuracy: 85; PP: 10\nPriority: 0; Generation III damage class: special",
+    "body": "Type: water\nPower: 90; accuracy: 85; PP: 10\nPriority: 0; Generation III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -1813,7 +1813,7 @@
     "title": "Giga Drain",
     "aliases": ["giga-drain"],
     "tags": ["grass", "special"],
-    "body": "Type: grass\nPower: 75; accuracy: 100; PP: 5\nPriority: 0; Generation III damage class: special",
+    "body": "Type: grass\nPower: 60; accuracy: 100; PP: 5\nPriority: 0; Generation III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -1877,7 +1877,7 @@
     "title": "Growth",
     "aliases": ["growth"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 40\nPriority: 0; Generation III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2069,7 +2069,7 @@
     "title": "High Jump Kick",
     "aliases": ["high-jump-kick"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: 85; accuracy: 90; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: 85; accuracy: 90; PP: 20\nPriority: 0; Generation III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -2373,7 +2373,7 @@
     "title": "Jump Kick",
     "aliases": ["jump-kick"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: 70; accuracy: 95; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: 70; accuracy: 95; PP: 25\nPriority: 0; Generation III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3157,7 +3157,7 @@
     "title": "Outrage",
     "aliases": ["outrage"],
     "tags": ["dragon", "special"],
-    "body": "Type: dragon\nPower: 90; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: special",
+    "body": "Type: dragon\nPower: 90; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -3253,7 +3253,7 @@
     "title": "Petal Dance",
     "aliases": ["petal-dance"],
     "tags": ["grass", "special"],
-    "body": "Type: grass\nPower: 70; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: special",
+    "body": "Type: grass\nPower: 70; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -5669,7 +5669,7 @@
     "title": "Vine Whip",
     "aliases": ["vine-whip"],
     "tags": ["grass", "special"],
-    "body": "Type: grass\nPower: 45; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: special",
+    "body": "Type: grass\nPower: 35; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -11413,13 +11413,19 @@
     "title": "Cascoon",
     "aliases": ["cascoon", "National Dex 268"],
     "tags": ["bug", "generation-3", "ordinary"],
-    "body": "National Pokédex: 268\nTypes: bug\nHeight: 0.7 m; weight: 11.5 kg\nEvolves from: Wurmple (Level Up, level 7)\nEvolves to: Dustox (Level Up, level 10)\nEmerald level-up moves (level:move): 1:harden, 7:harden",
+    "body": "National Pokédex: 268\nTypes: bug\nHeight: 0.7 m; weight: 11.5 kg\nEvolves from: Wurmple (Level Up, level 7; Emerald branch is fixed by Wurmple's hidden upper personality value modulo 10 (5-9 produces Cascoon), not player choice; evidence: species:wurmple-evolution-branch-emerald)\nEvolves to: Dustox (Level Up, level 10)\nEmerald level-up moves (level:move): 1:harden, 7:harden",
     "sources": [
       {
         "id": "pokeapi",
         "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
         "license": "BSD-3-Clause",
         "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
+      },
+      {
+        "id": "pokeemerald-wasm",
+        "url": "https://github.com/ottohg/pokeemerald-wasm/tree/c101be5ac2ae53c5d18ee063f16eeeda751639f8",
+        "license": "No license declared",
+        "revision": "c101be5ac2ae53c5d18ee063f16eeeda751639f8"
       }
     ]
   },
@@ -15613,13 +15619,19 @@
     "title": "Silcoon",
     "aliases": ["silcoon", "National Dex 266"],
     "tags": ["bug", "generation-3", "ordinary"],
-    "body": "National Pokédex: 266\nTypes: bug\nHeight: 0.6 m; weight: 10 kg\nEvolves from: Wurmple (Level Up, level 7)\nEvolves to: Beautifly (Level Up, level 10)\nEmerald level-up moves (level:move): 1:harden, 7:harden",
+    "body": "National Pokédex: 266\nTypes: bug\nHeight: 0.6 m; weight: 10 kg\nEvolves from: Wurmple (Level Up, level 7; Emerald branch is fixed by Wurmple's hidden upper personality value modulo 10 (0-4 produces Silcoon), not player choice; evidence: species:wurmple-evolution-branch-emerald)\nEvolves to: Beautifly (Level Up, level 10)\nEmerald level-up moves (level:move): 1:harden, 7:harden",
     "sources": [
       {
         "id": "pokeapi",
         "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
         "license": "BSD-3-Clause",
         "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
+      },
+      {
+        "id": "pokeemerald-wasm",
+        "url": "https://github.com/ottohg/pokeemerald-wasm/tree/c101be5ac2ae53c5d18ee063f16eeeda751639f8",
+        "license": "No license declared",
+        "revision": "c101be5ac2ae53c5d18ee063f16eeeda751639f8"
       }
     ]
   },
@@ -16909,13 +16921,49 @@
     "title": "Wurmple",
     "aliases": ["wurmple", "National Dex 265"],
     "tags": ["bug", "generation-3", "ordinary"],
-    "body": "National Pokédex: 265\nTypes: bug\nHeight: 0.3 m; weight: 3.6 kg\nEvolves from: none\nEvolves to: Silcoon (Level Up, level 7); Cascoon (Level Up, level 7)\nEmerald level-up moves (level:move): 1:tackle, 1:string-shot, 5:poison-sting",
+    "body": "National Pokédex: 265\nTypes: bug\nHeight: 0.3 m; weight: 3.6 kg\nEvolves from: none\nEvolves to: Silcoon (Level Up, level 7; Emerald branch is fixed by Wurmple's hidden upper personality value modulo 10 (0-4 produces Silcoon), not player choice; evidence: species:wurmple-evolution-branch-emerald); Cascoon (Level Up, level 7; Emerald branch is fixed by Wurmple's hidden upper personality value modulo 10 (5-9 produces Cascoon), not player choice; evidence: species:wurmple-evolution-branch-emerald)\nEmerald level-up moves (level:move): 1:tackle, 1:string-shot, 5:poison-sting",
     "sources": [
       {
         "id": "pokeapi",
         "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
         "license": "BSD-3-Clause",
         "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
+      },
+      {
+        "id": "pokeemerald-wasm",
+        "url": "https://github.com/ottohg/pokeemerald-wasm/tree/c101be5ac2ae53c5d18ee063f16eeeda751639f8",
+        "license": "No license declared",
+        "revision": "c101be5ac2ae53c5d18ee063f16eeeda751639f8"
+      }
+    ]
+  },
+  {
+    "id": "species:wurmple-evolution-branch-emerald",
+    "domain": "species",
+    "title": "Wurmple evolution branch in Emerald",
+    "aliases": [
+      "wurmple",
+      "silcoon",
+      "cascoon",
+      "wurmple evolution",
+      "how to evolve wurmple"
+    ],
+    "tags": [
+      "pokemon-emerald",
+      "wurmple",
+      "silcoon",
+      "cascoon",
+      "evolution",
+      "level-7",
+      "personality-value"
+    ],
+    "body": "In Pokémon Emerald, Wurmple evolves at level 7. The result is Silcoon when the upper half of its hidden personality value modulo 10 is 0-4, or Cascoon when it is 5-9.\nThe personality value is fixed when the Pokémon is created and is not shown to the player, so the branch is not a choice made at evolution time.",
+    "sources": [
+      {
+        "id": "pokeemerald-wasm",
+        "url": "https://github.com/ottohg/pokeemerald-wasm/tree/c101be5ac2ae53c5d18ee063f16eeeda751639f8",
+        "license": "No license declared",
+        "revision": "c101be5ac2ae53c5d18ee063f16eeeda751639f8"
       }
     ]
   },

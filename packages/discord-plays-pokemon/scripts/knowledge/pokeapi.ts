@@ -150,7 +150,7 @@ function typesForGeneration(
     : [...current];
 }
 
-function moveForVersion(
+export function moveForVersion(
   move: MoveRow,
   changelog: readonly MoveChangelogRow[],
   versionGroupId: number,
@@ -160,14 +160,21 @@ function moveForVersion(
     .sort(
       (left, right) =>
         left.changed_in_version_group_id - right.changed_in_version_group_id,
-    )
-    .at(0);
+    );
   return {
-    type_id: historical?.type_id ?? move.type_id,
-    power: historical?.power ?? move.power,
-    pp: historical?.pp ?? move.pp,
-    accuracy: historical?.accuracy ?? move.accuracy,
-    priority: historical?.priority ?? move.priority,
+    type_id:
+      historical.find((entry) => entry.type_id !== undefined)?.type_id ??
+      move.type_id,
+    power:
+      historical.find((entry) => entry.power !== undefined)?.power ??
+      move.power,
+    pp: historical.find((entry) => entry.pp !== undefined)?.pp ?? move.pp,
+    accuracy:
+      historical.find((entry) => entry.accuracy !== undefined)?.accuracy ??
+      move.accuracy,
+    priority:
+      historical.find((entry) => entry.priority !== undefined)?.priority ??
+      move.priority,
   };
 }
 
@@ -238,7 +245,7 @@ export function includeGeneration3Item(identifier: string): boolean {
 
 export async function buildPokeApiRecords(
   sources: Sources,
-  shedinjaMechanicSource: KnowledgeSource,
+  pokeemeraldMechanicSource: KnowledgeSource,
 ): Promise<KnowledgeRecord[]> {
   const [
     species,
@@ -383,10 +390,14 @@ export async function buildPokeApiRecords(
         `Evolves to: ${evolution.successors.join("; ") || "none"}`,
         `Emerald level-up moves (level:move): ${compactList(learnedMoves, 60) || "none"}`,
       ].join("\n"),
-      sources:
-        row.identifier === "nincada" || row.identifier === "shedinja"
-          ? [source, shedinjaMechanicSource]
-          : [source],
+      sources: [
+        source,
+        ...(["nincada", "shedinja", "wurmple", "silcoon", "cascoon"].includes(
+          row.identifier,
+        )
+          ? [pokeemeraldMechanicSource]
+          : []),
+      ],
     });
   }
 

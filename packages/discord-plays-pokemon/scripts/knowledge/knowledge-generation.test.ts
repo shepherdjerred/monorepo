@@ -13,13 +13,18 @@ import {
   generation3DamageClass,
   generation3PowerLabel,
   includeGeneration3Item,
+  moveForVersion,
 } from "./pokeapi.ts";
 import {
   emeraldShedinjaEvolutionCondition,
+  emeraldWurmpleEvolutionCondition,
   generation3FriendshipCondition,
   requirePokeApiReference,
 } from "./pokeapi-relations.ts";
-import { validateShedinjaSource } from "./pokeemerald.ts";
+import {
+  validateShedinjaSource,
+  validateWurmpleSource,
+} from "./pokeemerald.ts";
 
 const BULBAPEDIA_PIN = {
   title: "Walkthrough:Pokémon Emerald",
@@ -64,6 +69,51 @@ test("record JSON Schema requires non-empty structured provenance", async () => 
 });
 
 describe("Generation III move normalization", () => {
+  test("reconstructs each historical field from its first applicable change", () => {
+    const move = {
+      id: 22,
+      identifier: "vine-whip",
+      generation_id: 1,
+      type_id: 12,
+      power: 45,
+      pp: 25,
+      accuracy: 100,
+      priority: 0,
+      damage_class_id: 2,
+    };
+    const historical = moveForVersion(
+      move,
+      [
+        {
+          move_id: move.id,
+          changed_in_version_group_id: 8,
+          type_id: undefined,
+          power: undefined,
+          pp: 10,
+          accuracy: undefined,
+          priority: undefined,
+        },
+        {
+          move_id: move.id,
+          changed_in_version_group_id: 11,
+          type_id: undefined,
+          power: 35,
+          pp: undefined,
+          accuracy: 95,
+          priority: undefined,
+        },
+      ],
+      6,
+    );
+    expect(historical).toEqual({
+      type_id: 12,
+      power: 35,
+      pp: 10,
+      accuracy: 95,
+      priority: 0,
+    });
+  });
+
   test("treats fixed and variable damage attacks as damaging moves", () => {
     expect(generation3DamageClass("dragon", 3)).toBe("special");
     expect(generation3DamageClass("ground", 2)).toBe("physical");
@@ -157,6 +207,45 @@ describe("Generation III evolution normalization", () => {
     expect(() =>
       emeraldShedinjaEvolutionCondition("shed", "missingno"),
     ).toThrow("shed evolution unexpectedly targets missingno");
+  });
+
+  test("requires pinned Emerald evidence for Wurmple's evolution branch", () => {
+    const table = `
+      [SPECIES_WURMPLE] = {
+        {EVO_LEVEL_SILCOON, 7, SPECIES_SILCOON},
+        {EVO_LEVEL_CASCOON, 7, SPECIES_CASCOON}
+      }
+    `;
+    const pokemonSource = `
+      u16 upperPersonality = personality >> 16;
+      case EVO_LEVEL_SILCOON:
+        if (gEvolutionTable[species][i].param <= level && (upperPersonality % 10) <= 4)
+          targetSpecies = gEvolutionTable[species][i].targetSpecies;
+        break;
+      case EVO_LEVEL_CASCOON:
+        if (gEvolutionTable[species][i].param <= level && (upperPersonality % 10) > 4)
+          targetSpecies = gEvolutionTable[species][i].targetSpecies;
+        break;
+    `;
+    expect(validateWurmpleSource(table, pokemonSource)).toBeUndefined();
+    expect(() => validateWurmpleSource(table, "no personality branch")).toThrow(
+      "hidden-personality Wurmple branch",
+    );
+  });
+
+  test("expands Wurmple's generic branches with pinned Emerald facts", () => {
+    expect(
+      emeraldWurmpleEvolutionCondition("level-up", "silcoon", 7),
+    ).toContain("hidden upper personality value modulo 10 (0-4");
+    expect(
+      emeraldWurmpleEvolutionCondition("level-up", "cascoon", 7),
+    ).toContain("hidden upper personality value modulo 10 (5-9");
+    expect(
+      emeraldWurmpleEvolutionCondition("level-up", "beautifly", 10),
+    ).toBeUndefined();
+    expect(() =>
+      emeraldWurmpleEvolutionCondition("level-up", "silcoon", 8),
+    ).toThrow("expected level-7 level-up condition");
   });
 });
 

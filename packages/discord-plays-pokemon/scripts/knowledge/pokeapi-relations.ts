@@ -138,6 +138,29 @@ export function emeraldShedinjaEvolutionCondition(
   return "Emerald special: when Nincada evolves at level 20, Shedinja is created alongside Ninjask only with an empty party slot; evidence: species:shedinja-creation-emerald";
 }
 
+export function emeraldWurmpleEvolutionCondition(
+  trigger: string,
+  evolvedSpeciesIdentifier: string,
+  minimumLevel: number | undefined,
+): string | undefined {
+  if (
+    evolvedSpeciesIdentifier !== "silcoon" &&
+    evolvedSpeciesIdentifier !== "cascoon"
+  ) {
+    return undefined;
+  }
+  if (trigger !== "level-up" || minimumLevel !== 7) {
+    throw new Error(
+      `PokeAPI ${evolvedSpeciesIdentifier} evolution no longer has the expected level-7 level-up condition`,
+    );
+  }
+  const branch =
+    evolvedSpeciesIdentifier === "silcoon"
+      ? "0-4 produces Silcoon"
+      : "5-9 produces Cascoon";
+  return `Level Up, level 7; Emerald branch is fixed by Wurmple's hidden upper personality value modulo 10 (${branch}), not player choice; evidence: species:wurmple-evolution-branch-emerald`;
+}
+
 type SpeciesReference = Readonly<{
   id: number;
   identifier: string;
@@ -166,6 +189,12 @@ function evolutionCondition(
     evolvedSpecies.identifier,
   );
   if (emeraldShedinja !== undefined) return emeraldShedinja;
+  const emeraldWurmple = emeraldWurmpleEvolutionCondition(
+    trigger,
+    evolvedSpecies.identifier,
+    evolution.minimum_level,
+  );
+  if (emeraldWurmple !== undefined) return emeraldWurmple;
 
   const details: string[] = [humanizeIdentifier(trigger)];
   if (evolution.minimum_level !== undefined) {

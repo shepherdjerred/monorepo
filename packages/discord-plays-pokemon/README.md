@@ -56,14 +56,15 @@ query a committed, validated Pokémon Emerald corpus:
   Emerald availability. Unversioned catalog prices and species capture rates
   are intentionally omitted.
 - The exact pinned pokeemerald-wasm source for narrow Emerald mechanics that
-  PokeAPI does not version, including Shedinja's empty-party-slot requirement.
+  PokeAPI does not version, including Shedinja's empty-party-slot requirement
+  and Wurmple's hidden-personality Silcoon/Cascoon branch.
 - Bulbapedia's complete 22-part Emerald walkthrough, stored separately under
   `knowledge/cc-by-nc-sa-2.5/` and attributed under CC BY-NC-SA 2.5.
 
 All source revisions are pinned in `knowledge/sources.json`, and each record
 exposes a non-empty `sources` array with every contributing revision and
-license. Composite species facts such as Shedinja creation therefore cite both
-PokeAPI and pokeemerald-wasm. Regenerate the checked-in data with
+license. Composite species evolution facts therefore cite both PokeAPI and
+pokeemerald-wasm. Regenerate the checked-in data with
 `bun run generate:knowledge`. Five focused skills under
 `.agents/skills/pokemon-*` teach the agent when to search each domain without
 putting the encyclopedia in every prompt. Knowledge is advisory; live
