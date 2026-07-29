@@ -106,7 +106,8 @@ if (import.meta.main) {
     : "";
   const hasObservationBridge =
     observationSourceText.includes("WasmReadObservation") &&
-    observationSourceText.includes("WasmReadMapTile");
+    observationSourceText.includes("WasmReadMapTile") &&
+    observationSourceText.trimEnd().endsWith("}");
   const hasCheckpointExport = makefile.includes("export=WasmCheckpointSave");
   const hasCheckpointBridge =
     observationSourceText.includes("WasmCheckpointSave");
@@ -177,4 +178,5 @@ if (import.meta.main) {
   );
   await runRequired(["bun", `${root}/scripts/generate-species-data.ts`]);
   await runRequired(["bun", `${root}/scripts/generate-map-names.ts`]);
+  await runRequired(["bun", `${root}/scripts/generate-battle-data.ts`]);
 }

@@ -28,8 +28,14 @@ import {
   decodeEngineObservation,
   ENGINE_OBSERVATION_SIZE,
   type EngineMapTile,
-  type EngineObservationV2,
+  type EngineObservationV3,
 } from "./engine-observation.ts";
+import {
+  bindEngineMapTopologyExports,
+  readEngineMapTopology,
+  type EngineMapTopologyExports,
+  type EngineMapTopologyV1,
+} from "./engine-map-topology.ts";
 import { AtomicFlashPersistence } from "./flash-persistence.ts";
 
 // Minimal view of the wasm exports we depend on, validated at runtime so we
@@ -40,6 +46,7 @@ type WasmExports = {
   runFrame: () => void;
   readObservation: () => number;
   readMapTile: (x: number, y: number) => number;
+  mapTopology: EngineMapTopologyExports;
   checkpointSave: () => number;
 };
 
@@ -181,6 +188,7 @@ export class Emulator {
         "WasmReadObservation",
       ),
       readMapTile: requireNumberFunction2(instance.exports, "WasmReadMapTile"),
+      mapTopology: bindEngineMapTopologyExports(instance.exports),
       checkpointSave: requireNumberFunction(
         instance.exports,
         "WasmCheckpointSave",
@@ -249,7 +257,7 @@ export class Emulator {
   }
 
   /** Versioned, engine-authored phase/readiness/spatial observation. */
-  engineObservation(): EngineObservationV2 {
+  engineObservation(): EngineObservationV3 {
     const exports = this.exports;
     if (exports === undefined) {
       throw new Error("emulator is not initialized");
@@ -271,6 +279,13 @@ export class Emulator {
       throw new TypeError("map tile coordinates must be integers");
     }
     return decodeEngineMapTile(x, y, exports.readMapTile(x, y));
+  }
+
+  /** Read the current map's engine-authored connections and warp events. */
+  engineMapTopology(): EngineMapTopologyV1 | null {
+    const exports = this.exports;
+    if (exports === undefined) throw new Error("emulator is not initialized");
+    return readEngineMapTopology(this.memoryReader(), exports.mapTopology);
   }
 
   /** Render the current frame to a fresh RGBA buffer (for screenshots). */

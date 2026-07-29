@@ -45,3 +45,12 @@ test("creates the ignored WASM asset directory before writing", async () => {
 
   expect(await Bun.file(output).text()).toBe("wasm artifact");
 });
+
+test("keeps the observation bridge closing brace inside its new-file hunk", async () => {
+  const patch = await Bun.file(
+    `${import.meta.dir}/../wasm-src/patches/0001-extra-exports.patch`,
+  ).text();
+
+  expect(patch).toContain("@@ -0,0 +1,595 @@");
+  expect(patch.trimEnd().endsWith("+}")).toBe(true);
+});

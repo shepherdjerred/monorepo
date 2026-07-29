@@ -3,6 +3,7 @@ import type {
   CardinalDirection,
   EngineMapTile,
 } from "#src/emulator/engine-observation.ts";
+import type { EngineMapTopologyV1 } from "#src/emulator/engine-map-topology.ts";
 import type { CommandInput } from "#src/game/command/command-input.ts";
 import { GameController, type GameControlPort } from "./game-controller.ts";
 import { actionOutcome } from "./game-action-outcome.ts";
@@ -99,6 +100,26 @@ function observation(input: ObservationInput = {}): GameObservationV2 {
   };
 }
 
+function mapTopology(
+  input: Readonly<{
+    connections?: EngineMapTopologyV1["connections"];
+    warps?: EngineMapTopologyV1["warps"];
+  }> = {},
+): EngineMapTopologyV1 {
+  return {
+    version: 1,
+    size: 28,
+    frame: 10,
+    mapGroup: 0,
+    mapNum: 0,
+    width: 6,
+    height: 6,
+    bounds: { minX: 7, maxX: 12, minY: 7, maxY: 12 },
+    connections: input.connections ?? [],
+    warps: input.warps ?? [],
+  };
+}
+
 class FakeControlPort implements GameControlPort {
   readonly presses: CommandInput[] = [];
   private current: GameObservationV2;
@@ -106,6 +127,7 @@ class FakeControlPort implements GameControlPort {
   private currentFrame: Uint8Array;
   private readonly afterPressFrames: Uint8Array[];
   private readonly blocked: ReadonlySet<string>;
+  private readonly topology: EngineMapTopologyV1 | null;
 
   constructor(
     initial: GameObservationV2,
@@ -114,6 +136,7 @@ class FakeControlPort implements GameControlPort {
       blocked?: ReadonlySet<string>;
       initialFrame?: Uint8Array;
       afterPressFrames?: readonly Uint8Array[];
+      topology?: EngineMapTopologyV1;
     }> = {},
   ) {
     this.current = initial;
@@ -121,6 +144,7 @@ class FakeControlPort implements GameControlPort {
     this.blocked = options.blocked ?? new Set<string>();
     this.currentFrame = options.initialFrame ?? renderedFrame();
     this.afterPressFrames = [...(options.afterPressFrames ?? [])];
+    this.topology = options.topology ?? null;
   }
 
   observe(): GameObservationV2 {
@@ -157,6 +181,10 @@ class FakeControlPort implements GameControlPort {
       elevation: 0,
       passable,
     };
+  }
+
+  readMapTopology(): EngineMapTopologyV1 | null {
+    return this.topology;
   }
 }
 
@@ -638,5 +666,120 @@ describe("GameController navigation", () => {
     expect(result.status).toBe("stopped");
     expect(result.stopReason).toBe("map-changed");
     expect(port.presses).toHaveLength(1);
+  });
+});
+
+describe("GameController exit navigation", () => {
+  test("navigates a selected connection and stops at the first map change", async () => {
+    const topology = mapTopology({
+      connections: [
+        {
+          version: 1,
+          size: 24,
+          index: 0,
+          direction: "east",
+          destination: { mapGroup: 0, mapNum: 1 },
+          offset: 0,
+          span: {
+            start: { x: 12, y: 9 },
+            end: { x: 12, y: 10 },
+          },
+        },
+      ],
+    });
+    const port = new FakeControlPort(
+      observation({ x: 10, y: 9, facing: "east" }),
+      [
+        observation({ frame: 12, x: 11, y: 9, facing: "east" }),
+        observation({ frame: 24, x: 12, y: 9, facing: "east" }),
+        observation({
+          frame: 36,
+          x: 7,
+          y: 9,
+          facing: "east",
+          mapNum: 1,
+        }),
+      ],
+      { topology },
+    );
+
+    const result = await new GameController(port).navigateExit(
+      "connection:0",
+      3,
+    );
+
+    expect(result.status).toBe("traversed");
+    expect(result.stopReason).toBe("exit-traversed");
+    expect(result.attemptsMade).toBe(3);
+    expect(result.stepsTaken).toBe(2);
+    expect(port.presses.map((press) => press.command)).toEqual([
+      "right",
+      "right",
+      "right",
+    ]);
+  });
+
+  test("activates only the selected warp and stops without choosing a next route", async () => {
+    const topology = mapTopology({
+      warps: [
+        {
+          version: 1,
+          size: 24,
+          index: 3,
+          trigger: { x: 10, y: 9, elevation: 0, behavior: 0 },
+          activation: "step",
+          destination: {
+            mapGroup: 1,
+            mapNum: 2,
+            warpId: 0,
+            dynamic: false,
+            landing: { x: 7, y: 7 },
+          },
+        },
+      ],
+    });
+    const port = new FakeControlPort(
+      observation({ x: 10, y: 10, facing: "north" }),
+      [observation({ frame: 12, x: 10, y: 9, facing: "north" })],
+      { topology },
+    );
+
+    const result = await new GameController(port).navigateExit("warp:3", 1);
+
+    expect(result.status).toBe("triggered");
+    expect(result.stopReason).toBe("exit-triggered");
+    expect(result.attemptsMade).toBe(1);
+    expect(result.stepsTaken).toBe(1);
+    expect(port.presses.map((press) => press.command)).toEqual(["up"]);
+  });
+
+  test("rejects unavailable and non-navigable exit ids without input", async () => {
+    const topology = mapTopology({
+      warps: [
+        {
+          version: 1,
+          size: 24,
+          index: 0,
+          trigger: { x: 10, y: 9, elevation: 0, behavior: 0 },
+          activation: "unsupported",
+          destination: {
+            mapGroup: 0,
+            mapNum: 0,
+            warpId: 127,
+            dynamic: true,
+            landing: null,
+          },
+        },
+      ],
+    });
+    const port = new FakeControlPort(observation(), [], { topology });
+    const controller = new GameController(port);
+
+    const missing = await controller.navigateExit("connection:9", 5);
+    const unsupported = await controller.navigateExit("warp:0", 5);
+
+    expect(missing.stopReason).toBe("exit-not-found");
+    expect(unsupported.stopReason).toBe("exit-not-navigable");
+    expect(port.presses).toEqual([]);
   });
 });

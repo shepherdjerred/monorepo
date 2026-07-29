@@ -40,6 +40,7 @@ const config = [
         "src/goal/codex-trace.test.ts",
         "src/goal/discord-message.test.ts",
         "src/goal/e2e-goal.integration.test.ts",
+        "src/goal/game-battle-control.test.ts",
         "src/goal/game-controller-interact.test.ts",
         "src/goal/game-controller.test.ts",
         "src/goal/game-state-summary.test.ts",

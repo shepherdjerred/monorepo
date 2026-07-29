@@ -48,6 +48,7 @@ export function startGoalControlServer(
       await options.emulator.queuePress(0, frames, 0, "goal");
     },
     readMapTile: (x, y) => options.emulator.engineMapTile(x, y),
+    readMapTopology: () => options.emulator.engineMapTopology(),
   });
   const context: GoalControlContext = {
     ...options,

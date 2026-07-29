@@ -128,6 +128,10 @@ class InteractionPort implements GameControlPort {
       passable: true,
     };
   }
+
+  readMapTopology(): null {
+    return null;
+  }
 }
 
 const INVALID_INITIAL_STATES: readonly Readonly<{

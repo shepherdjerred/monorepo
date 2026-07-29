@@ -12,14 +12,16 @@ const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
 const REPO_SLUG = "shepherdjerred/monorepo";
 const MAIN_BRANCH = "main";
 const DPP_ROOT = "packages/discord-plays-pokemon";
-// The ONLY paths this job is allowed to stage: the committed species/map data
-// tables and knowledge corpus derived from pinned upstream sources. Steady
-// state is no-diff; the job's purpose is the follow-up regen PR the morning
-// after a source pin bump merges — hosted (Mend) Renovate cannot run the
-// generators inside its own PR.
+// The ONLY paths this job is allowed to stage: the committed species, map,
+// battle, and knowledge data derived from pinned upstream sources. Steady state
+// is no-diff; the job's purpose is the follow-up regen PR the morning after a
+// source pin bump merges — hosted (Mend) Renovate cannot run the generators
+// inside its own PR.
 const GENERATED_PATHS = [
   `${DPP_ROOT}/packages/backend/src/game/events/generated/species.ts`,
   `${DPP_ROOT}/packages/backend/src/game/spatial/generated/map-names.ts`,
+  `${DPP_ROOT}/packages/backend/src/game/battle/generated/move-names.ts`,
+  `${DPP_ROOT}/packages/backend/src/game/battle/generated/item-names.ts`,
   `${DPP_ROOT}/knowledge`,
 ];
 
@@ -36,8 +38,8 @@ export type PokeemeraldDataRefreshActivities =
 
 export const pokeemeraldDataRefreshActivities = {
   /**
-   * Regenerate the committed pokeemerald species/map data tables and knowledge
-   * corpus from their pinned sources and, if they drifted, open a PR.
+   * Regenerate the committed pokeemerald species, map, battle, and knowledge
+   * data from pinned sources and, if they drifted, open a PR.
    * Deterministic (no agent): generation is byte-stable against a clean tree.
    */
   async refreshPokeemeraldData(): Promise<PokeemeraldDataRefreshResult> {
@@ -76,6 +78,9 @@ export const pokeemeraldDataRefreshActivities = {
       await runCommand(["bun", "scripts/generate-map-names.ts"], {
         cwd: `${repoDir}/${DPP_ROOT}`,
       });
+      await runCommand(["bun", "scripts/generate-battle-data.ts"], {
+        cwd: `${repoDir}/${DPP_ROOT}`,
+      });
       await runCommand(["bun", "scripts/generate-knowledge.ts"], {
         cwd: `${repoDir}/${DPP_ROOT}`,
       });
@@ -97,10 +102,10 @@ export const pokeemeraldDataRefreshActivities = {
         "Automated Pokemon data and knowledge refresh from Temporal",
         "(`dpp-pokeemerald-data-daily`).",
         "",
-        "Regenerated the committed species/map tables and knowledge corpus",
-        "from their pinned upstream sources. This is usually the follow-up",
-        "to a merged source-pin bump (hosted Renovate cannot run the",
-        "generators itself).",
+        "Regenerated the committed species, map, battle, and knowledge data",
+        "from pinned upstream sources. This is usually the follow-up to a",
+        "merged source-pin bump (hosted Renovate cannot run the generators",
+        "itself).",
         "",
         `Changed files: ${String(files.length)}`,
         "",

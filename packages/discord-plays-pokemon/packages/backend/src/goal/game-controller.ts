@@ -2,10 +2,17 @@ import type {
   CardinalDirection,
   EngineMapTile,
 } from "#src/emulator/engine-observation.ts";
+import type { EngineMapTopologyV1 } from "#src/emulator/engine-map-topology.ts";
 import type { CommandInput } from "#src/game/command/command-input.ts";
 import type { Command } from "#src/game/command/command.ts";
 import type { GameObservationV2 } from "./game-observation.ts";
 import { commandForDirection } from "./game-direction.ts";
+import {
+  GameBattleControl,
+  type BattleMoveSelection,
+} from "./game-battle-control.ts";
+import { navigateGameExit } from "./game-exit-navigation.ts";
+import type { ExitNavigationOutcomeV1 } from "./game-exit-navigation-types.ts";
 import { navigateGame, type NavigationOutcomeV1 } from "./game-navigation.ts";
 import {
   actionOutcome,
@@ -26,6 +33,7 @@ export type GameControlPort = {
   press: (command: CommandInput) => Promise<void>;
   waitFrames: (frames: number) => Promise<void>;
   readMapTile: (x: number, y: number) => EngineMapTile | null;
+  readMapTopology: () => EngineMapTopologyV1 | null;
 };
 
 type ControlSnapshot = Readonly<{
@@ -66,8 +74,11 @@ function movementReady(observation: GameObservationV2): boolean {
 export class GameController {
   private locked = false;
   private readonly lockWaiters: (() => void)[] = [];
+  private readonly battle: GameBattleControl;
 
-  constructor(private readonly port: GameControlPort) {}
+  constructor(private readonly port: GameControlPort) {
+    this.battle = new GameBattleControl(port);
+  }
 
   observe(): GameObservationV2 {
     return this.port.observe();
@@ -137,6 +148,52 @@ export class GameController {
           maxSteps,
           searchRadius,
         }),
+    );
+  }
+
+  async navigateExit(
+    exitId: string,
+    maxSteps = 64,
+  ): Promise<ExitNavigationOutcomeV1> {
+    return await this.exclusive(
+      async () =>
+        await navigateGameExit({
+          observe: () => this.port.observe(),
+          readMapTile: (x, y) => this.port.readMapTile(x, y),
+          moveOne: async (direction) => await this.moveUnlocked(direction, 1),
+          topology: this.port.readMapTopology(),
+          exitId,
+          maxSteps,
+        }),
+    );
+  }
+
+  async battleMove(selection: BattleMoveSelection): Promise<ActionOutcomeV1> {
+    return await this.exclusive(async () => await this.battle.move(selection));
+  }
+
+  async battleRun(): Promise<ActionOutcomeV1> {
+    return await this.exclusive(async () => await this.battle.run());
+  }
+
+  async battleSwitch(partySlot: number): Promise<ActionOutcomeV1> {
+    return await this.exclusive(
+      async () => await this.battle.switch(partySlot),
+    );
+  }
+
+  async battleItem(
+    itemId: number,
+    partySlot?: number,
+  ): Promise<ActionOutcomeV1> {
+    return await this.exclusive(
+      async () => await this.battle.item(itemId, partySlot),
+    );
+  }
+
+  async battleTarget(targetBattler: number): Promise<ActionOutcomeV1> {
+    return await this.exclusive(
+      async () => await this.battle.target(targetBattler),
     );
   }
 

@@ -457,9 +457,12 @@ async function rehearsePokeemeraldDataEnvironment(
   const requiredPaths = [
     `${dppRoot}/scripts/generate-species-data.ts`,
     `${dppRoot}/scripts/generate-map-names.ts`,
+    `${dppRoot}/scripts/generate-battle-data.ts`,
     `${dppRoot}/scripts/generate-knowledge.ts`,
     `${dppRoot}/packages/backend/src/game/events/generated/species.ts`,
     `${dppRoot}/packages/backend/src/game/spatial/generated/map-names.ts`,
+    `${dppRoot}/packages/backend/src/game/battle/generated/move-names.ts`,
+    `${dppRoot}/packages/backend/src/game/battle/generated/item-names.ts`,
   ];
   for (const path of requiredPaths) {
     if (!(await Bun.file(path).exists())) {

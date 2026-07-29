@@ -114,7 +114,8 @@ deferred by explicit direction.
 - [x] Implement and verify the knowledge corpus, retrieval, and skills.
 - [x] Publish the restacked #1803/#1805 heads and record replacement CI/review.
 - [x] Implement benchmark-truth corrections.
-- [ ] Implement and publish compact semantic exits and named battle actions.
+- [x] Implement compact semantic exits and named battle actions.
+- [ ] Publish and complete current-head verification for the semantic controls.
 - [ ] Implement and publish early-prerequisite prompt and excerpt ranking.
 - [x] Replay the existing successful trace through the corrected telemetry.
 - [ ] Complete focused, real-WASM, Buildkite, and review verification for all
@@ -259,6 +260,10 @@ deferred by explicit direction.
   trace without another model run. It reports 141 movement actions, 54 stops,
   52 repeated-position loops, zero explicit ignored inputs, 44 compact
   observations, 233 full observations, and 721,752 tool-output characters.
+- 2026-07-29: Semantic gameplay now exposes decision-complete compact state,
+  authoritative stable current-map exit IDs, bounded traversal of one
+  caller-selected exit, and exact-name battle actions that execute only the
+  caller's move, item, switch, run, or target choice.
 
 ## Session Log — 2026-07-28
 
@@ -545,3 +550,36 @@ deferred by explicit direction.
   text; tool-output characters count completed aggregated output exactly once.
 - The replay is corrected analysis of an existing run, not a new reliability
   measurement.
+
+## Session Log — 2026-07-29 (semantic gameplay)
+
+### Done
+
+- Expanded compact observations with movement, progression, party, inventory,
+  and battle decision data while preserving byte-for-byte `--full` output.
+- Added engine-backed current-map connection/warp discovery and bounded
+  traversal of exactly one caller-selected exit.
+- Added exact-name move/item catalogs and explicit move, item, switch, run,
+  and target controls that reject unavailable choices before input.
+- Passed 92 focused backend and generator tests covering the observation ABI,
+  exit interruption, named battle selection, compact output, and prior control
+  behavior.
+
+### Remaining
+
+- Rebuild and run the mandatory real-WASM ABI gate once the local OrbStack
+  Docker service responds.
+- Publish the semantic-control draft PR and complete current-head Buildkite and
+  review verification.
+- Implement and publish the early-prerequisite prompt and knowledge passage
+  ranking as the final code layer.
+
+### Caveats
+
+- The host-only WASM build reached patch application but lacks `pkg-config` and
+  `png.h`; only the Docker toolchain or Buildkite is authoritative for the C
+  integration.
+- OrbStack reported itself running but its Docker socket did not answer
+  `docker info`; no engine compile result has been inferred from that host
+  runtime failure.
+- Repeat paid model measurements remain explicitly deferred.

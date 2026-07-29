@@ -1032,6 +1032,11 @@ describe("benchmark runtime overlay", () => {
       { createPath: true },
     );
     await Bun.write(
+      path.join(implementationRoot, "packages/backend/package.json"),
+      '{"imports":{"#src/*":"./src/*"}}\n',
+      { createPath: true },
+    );
+    await Bun.write(
       path.join(implementationRoot, ".agents/skills/pokemon-world/SKILL.md"),
       "world skill\n",
       { createPath: true },
@@ -1039,6 +1044,14 @@ describe("benchmark runtime overlay", () => {
     await Bun.write(
       path.join(implementationRoot, "packages/backend/src/goal/pokemonctl.ts"),
       "process.stdout.write('old pokemonctl\\n');\n",
+      { createPath: true },
+    );
+    await Bun.write(
+      path.join(
+        implementationRoot,
+        "packages/backend/src/game/battle/generated/item-names.ts",
+      ),
+      "export const itemNames = [];\n",
       { createPath: true },
     );
     await Bun.write(
@@ -1086,6 +1099,11 @@ describe("benchmark runtime overlay", () => {
       expect(
         await Bun.file(path.join(runtimeDirectory, "package.json")).exists(),
       ).toBe(false);
+      expect(
+        await Bun.file(
+          path.join(runtimeDirectory, "packages/backend/package.json"),
+        ).text(),
+      ).toBe('{"imports":{"#src/*":"./src/*"}}\n');
 
       await prepareRuntimeTools(
         path.join(runtimeDirectory, ".pokemon-goal-bin"),
