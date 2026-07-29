@@ -212,14 +212,14 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - Implemented a general engine checkpoint and ordered atomic flash
   persistence. A rebuilt real WASM passed an independent checkpoint/reboot
   integration test against a copied live save.
-- Verified the combined backend (301 tests, zero failures or skips), all 23
+- Verified the combined backend (303 tests, zero failures or skips), all 23
   knowledge/build script tests, package typecheck/lint, the exhaustive
   root `bun run verify` graph (217/217 tasks), and a clean Docker `smoke` build
   that rebuilt the patched WASM, passed both mandatory real-emulator ABI and
   independent checkpoint/reboot tests, and passed the in-image application
   check. The resulting local smoke image
   manifest is
-  `sha256:55da51c5dcaaf78978ff593426fcfc09cf5da01f69adde6acc2d93805a875e7b`.
+  `sha256:ee77b7b171b982723254bf3366eaa8476a076ad5dc96ac4060b7e2ea07f0b523`.
 - Completed a manual general-control playthrough through the first rival,
   Pokedex/Poke Ball acquisition, and a visible Poochyena catch.
 - Published the three-PR git-spice stack as #1802, #1803, and #1805 and attached
