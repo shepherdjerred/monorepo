@@ -37,6 +37,7 @@ export async function assertStaticSiteComplete(
 export function isMissingS3Object(stderr: string): boolean {
   return (
     stderr.includes("NoSuchKey") ||
+    stderr.includes("HeadObject operation: Not Found") ||
     (stderr.includes("404") && stderr.includes("does not exist"))
   );
 }
