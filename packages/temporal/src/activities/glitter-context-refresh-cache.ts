@@ -7,10 +7,18 @@ import {
   type CorpusStore,
 } from "./glitter-corpus-store.ts";
 
-const GENERATION_ARTIFACT_SCHEMA_VERSION = 1;
+const GENERATION_ARTIFACT_SCHEMA_VERSION = 2;
 const GENERATION_ARTIFACT_ROOT = "derived/glitter-context/generation-artifacts";
 const Sha256Schema = z.string().regex(/^[0-9a-f]{64}$/u);
 const CallSiteSchema = z.string().regex(/^[a-z0-9-]+$/u);
+
+export const GenerationUsageSchema = z.strictObject({
+  inputTokens: z.number().int().nonnegative(),
+  outputTokens: z.number().int().nonnegative(),
+  cachedInputTokens: z.number().int().nonnegative(),
+  costUsd: z.number().nonnegative(),
+});
+export type GenerationUsage = z.infer<typeof GenerationUsageSchema>;
 
 const GenerationArtifactSchema = z.strictObject({
   schemaVersion: z.literal(GENERATION_ARTIFACT_SCHEMA_VERSION),
@@ -19,6 +27,7 @@ const GenerationArtifactSchema = z.strictObject({
   requestSha256: Sha256Schema,
   responseSha256: Sha256Schema,
   response: z.unknown(),
+  usage: GenerationUsageSchema,
 });
 
 export type GenerationArtifactStore = {
@@ -48,13 +57,23 @@ export function generationArtifactKey(input: {
   ].join("/");
 }
 
+export type GenerationArtifactResult<Response> = {
+  response: Response;
+  key: string;
+  requestSha256: string;
+  cacheStatus: "hit" | "miss";
+  usage: GenerationUsage;
+};
+
 function parseStoredResponse<Response>(input: {
   stored: unknown;
+  key: string;
+  cacheStatus: "hit" | "miss";
   model: string;
   callSite: string;
   requestSha256: string;
   responseSchema: z.ZodType<Response>;
-}): Response {
+}): GenerationArtifactResult<Response> {
   const artifact = GenerationArtifactSchema.parse(input.stored);
   if (
     artifact.model !== input.model ||
@@ -72,7 +91,13 @@ function parseStoredResponse<Response>(input: {
       `Glitter generation artifact response checksum mismatch for ${input.callSite}`,
     );
   }
-  return response;
+  return {
+    response,
+    key: input.key,
+    requestSha256: input.requestSha256,
+    cacheStatus: input.cacheStatus,
+    usage: artifact.usage,
+  };
 }
 
 export async function readOrCreateGenerationArtifact<Response>(input: {
@@ -81,8 +106,11 @@ export async function readOrCreateGenerationArtifact<Response>(input: {
   callSite: string;
   request: unknown;
   responseSchema: z.ZodType<Response>;
-  generate: () => Promise<Response>;
-}): Promise<Response> {
+  generate: () => Promise<{
+    response: Response;
+    usage: GenerationUsage;
+  }>;
+}): Promise<GenerationArtifactResult<Response>> {
   const requestSha256 = generationRequestSha256(input.request);
   const key = generationArtifactKey({
     callSite: input.callSite,
@@ -92,6 +120,8 @@ export async function readOrCreateGenerationArtifact<Response>(input: {
   if (existing !== undefined) {
     return parseStoredResponse({
       stored: existing,
+      key,
+      cacheStatus: "hit",
       model: input.model,
       callSite: input.callSite,
       requestSha256,
@@ -99,7 +129,9 @@ export async function readOrCreateGenerationArtifact<Response>(input: {
     });
   }
 
-  const response = input.responseSchema.parse(await input.generate());
+  const generated = await input.generate();
+  const response = input.responseSchema.parse(generated.response);
+  const usage = GenerationUsageSchema.parse(generated.usage);
   await input.store.create(
     key,
     GenerationArtifactSchema.parse({
@@ -109,6 +141,7 @@ export async function readOrCreateGenerationArtifact<Response>(input: {
       requestSha256,
       responseSha256: sha256(jsonBytes(response)),
       response,
+      usage,
     }),
   );
 
@@ -120,6 +153,8 @@ export async function readOrCreateGenerationArtifact<Response>(input: {
   }
   return parseStoredResponse({
     stored: persisted,
+    key,
+    cacheStatus: "miss",
     model: input.model,
     callSite: input.callSite,
     requestSha256,

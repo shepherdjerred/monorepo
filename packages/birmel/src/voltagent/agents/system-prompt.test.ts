@@ -9,14 +9,51 @@ import {
   friendGroupHistory,
   relationshipContextText,
 } from "@shepherdjerred/glitter-context";
+import { StylePromptContextSchema } from "@shepherdjerred/glitter-context/schema";
 
 const GLITTER_BOYS_RELATIONSHIPS = relationshipContextText();
 
 const persona: PersonaContext = {
+  format: "compact",
   name: "TestPersona",
   voice: "- terse\n- dry",
   markers: "- lowercase\n- few periods",
   samples: ["yep", "nah", "go off"],
+};
+
+const thickPersona: PersonaContext = {
+  format: "thick",
+  name: "ThickPersona",
+  style: StylePromptContextSchema.parse({
+    author: "Thick Persona",
+    voice: ["Complete voice observation"],
+    style_markers: ["Complete style marker"],
+    topics: ["Complete topic"],
+    relationships: ["Complete relationship behavior"],
+    behaviors: ["Complete behavior"],
+    personality: ["Complete personality observation"],
+    humor_or_tone: ["Complete humor observation"],
+    summary: "Complete summary",
+    likes_dislikes: ["Complete preference"],
+    league: { role: "Complete League observation" },
+    other_games: ["Complete other game observation"],
+    how_to_mimic: ["Complete mimic guidance"],
+    quotes: Array.from({ length: 20 }, (_, index) => `quote-${String(index)}`),
+    sample_messages: Array.from(
+      { length: 30 },
+      (_, index) => `sample-${String(index)}`,
+    ),
+    situational_examples: {
+      provenance: "synthetic",
+      happy_or_excited: ["happy-0", "happy-1", "happy-2"],
+      angry_or_frustrated: ["angry-0", "angry-1", "angry-2"],
+      sad_or_disappointed: ["sad-0", "sad-1", "sad-2"],
+      supportive_or_caring: ["supportive-0", "supportive-1", "supportive-2"],
+      playful_or_teasing: ["playful-0", "playful-1", "playful-2"],
+      neutral_or_logistical: ["neutral-0", "neutral-1", "neutral-2"],
+    },
+    concerns: ["Complete concern"],
+  }),
 };
 
 function firstHistoryLine(): string {
@@ -63,6 +100,16 @@ describe("buildPersonaBlock", () => {
     expect(block).toContain('"s0"');
     expect(block).toContain('"s9"');
     expect(block).not.toContain('"s10"');
+  });
+
+  test("includes the complete V2 context without operational metadata", () => {
+    const block = buildPersonaBlock(thickPersona);
+    expect(block).toContain("Complete voice observation");
+    expect(block).toContain('"quote-19"');
+    expect(block).toContain('"sample-29"');
+    expect(block).toContain('"neutral-2"');
+    expect(block).not.toContain("schemaVersion");
+    expect(block).not.toContain('"coverage"');
   });
 });
 

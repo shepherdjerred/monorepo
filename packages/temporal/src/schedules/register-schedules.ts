@@ -376,13 +376,13 @@ export const SCHEDULES: ScheduleDefinition[] = [
   {
     id: "glitter-context-refresh-weekly",
     workflowType: "runGlitterContextRefresh",
-    args: [{}],
+    args: [{ maxEstimatedCostUsd: 10 }],
     // Monday 11:00 PT, isolated from Discord capture and after other PR jobs.
     cronExpression: "0 11 * * 1",
     taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "3 hours",
-    memo: "Weekly GPT-5.6 Sol refresh of shared Glitter style cards and evidence-backed relationship history from the verified corpus",
+    workflowExecutionTimeout: "8 hours",
+    memo: "Weekly GPT-5.6 Luna extraction and Sol synthesis of shared Glitter style cards plus evidence-backed relationship history from the verified corpus",
     initialPauseNote:
       "Awaiting credentialed dry-run against the first approved complete snapshot",
     requiredEnvironment: [

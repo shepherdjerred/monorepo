@@ -5,117 +5,202 @@ import {
   StyleCardSchema,
 } from "@shepherdjerred/glitter-context/schema";
 import { CurrentMessageSchema } from "#shared/glitter-corpus.ts";
+import { finalizeStyleSynthesis } from "./glitter-context-refresh-style-finalize.ts";
 import {
-  finalizeGeneratedStyleCard,
-  GeneratedStyleCardSchema,
-} from "./glitter-context-refresh-generate.ts";
+  STYLE_ARRAY_FIELDS,
+  StyleChunkSummarySchema,
+  StyleSynthesisSchema,
+} from "./glitter-context-refresh-style-schemas.ts";
 
-const emptyStyleFields = {
-  voice: [],
-  style_markers: [],
-  topics: [],
-  relationships: [],
-  behaviors: [],
-  personality: [],
-  humor_or_tone: [],
-  quotes: [],
-  summary: "",
-  likes_dislikes: [],
-  other_games: [],
-  how_to_mimic: [],
-};
-
-const generatedCard = GeneratedStyleCardSchema.parse({
-  ...emptyStyleFields,
-  league: [],
-  sample_messages: ["hello there"],
-  concerns: null,
+const person = PersonSchema.parse({
+  id: "ryan",
+  displayName: "NekoRyan",
+  kind: "person",
+  aliases: ["Ryan"],
+  discordUserIds: ["32345678901234567"],
 });
+
+const messages = Array.from({ length: 30 }, (_, index) =>
+  CurrentMessageSchema.parse({
+    schemaVersion: 1,
+    source: "discord-rest",
+    guildId: "12345678901234567",
+    guildSlug: "glitter-boys",
+    channelId: "22345678901234567",
+    messageId: String(42_345_678_901_234_500n + BigInt(index)),
+    author: {
+      id: "32345678901234567",
+      username: "nekoryan",
+      globalName: "NekoRyan",
+      discriminator: "0",
+      bot: false,
+      avatar: null,
+    },
+    content: `message ${String(index)} with characteristic phrasing`,
+    timestamp: `2026-07-${String(index + 1).padStart(2, "0")}T00:00:00.000Z`,
+    editedTimestamp: null,
+    type: 0,
+    flags: "0",
+    pinned: false,
+    tts: false,
+    attachments: [],
+    referencedMessageId: null,
+    selectedObservationKey: `observation-${String(index)}`,
+    selectedObservedAt: `2026-07-${String(index + 1).padStart(2, "0")}T00:00:01.000Z`,
+    rawSha256: index.toString(16).padStart(64, "0"),
+  }),
+);
 
 const existingCard = StyleCardSchema.parse({
   author: "Ryan",
   coverage: {
-    messages: 1,
-    date_range: "2025",
+    messages: 30,
+    date_range: "2026-07",
     notes: "Existing human-reviewed metadata.",
   },
-  ...emptyStyleFields,
-  league: {},
-  sample_messages: [],
-});
-
-const message = CurrentMessageSchema.parse({
-  schemaVersion: 1,
-  source: "discord-rest",
-  guildId: "12345678901234567",
-  guildSlug: "glitter-boys",
-  channelId: "22345678901234567",
-  messageId: "42345678901234567",
-  author: {
-    id: "32345678901234567",
-    username: "nekoryan",
-    globalName: "NekoRyan",
-    discriminator: "0",
-    bot: false,
-    avatar: null,
+  voice: ["Uses short, direct sentences with playful emphasis."],
+  style_markers: ["Frequently opens with a dry acknowledgment."],
+  topics: ["Games and plans with the friend group."],
+  relationships: ["Warmly teases close friends without hostility."],
+  behaviors: ["Answers practical questions directly before joking."],
+  personality: ["Comes across as attentive and lightly mischievous."],
+  humor_or_tone: ["Dry, understated humor with occasional exaggeration."],
+  summary:
+    "Ryan writes in a concise, conversational style that mixes practical answers with familiar teasing.",
+  likes_dislikes: ["Enjoys coordinated games and dislikes needless delay."],
+  league: {
+    playstyle: "Prefers coordinated team play.",
   },
-  content: "hello there",
-  timestamp: "2026-07-29T00:00:00.000Z",
-  editedTimestamp: null,
-  type: 0,
-  flags: "0",
-  pinned: false,
-  tts: false,
-  attachments: [],
-  referencedMessageId: null,
-  selectedObservationKey: "observation",
-  selectedObservedAt: "2026-07-29T00:00:01.000Z",
-  rawSha256: "a".repeat(64),
+  other_games: ["Regularly discusses multiplayer games with friends."],
+  how_to_mimic: ["Be concise, answer first, then add one dry joke."],
+  quotes: [],
+  sample_messages: [],
+  concerns: ["Avoid inferring private traits from casual jokes."],
 });
 
-describe("Glitter generated style-card schema", () => {
-  test("converts to an OpenAI strict Structured Outputs schema", () => {
+const retainedPatches = STYLE_ARRAY_FIELDS.map((field) => ({
+  field,
+  priorDecisions: [
+    {
+      priorIndex: 0,
+      decision: "retain",
+      removalBasis: null,
+      confidence: 0.9,
+      rationale: null,
+      evidenceMessageIds: [messages[0]?.messageId],
+    },
+  ],
+  additions: [],
+}));
+
+const situationalExamples = {
+  provenance: "synthetic" as const,
+  happy_or_excited: ["happy one", "happy two", "happy three"],
+  angry_or_frustrated: ["angry one", "angry two", "angry three"],
+  sad_or_disappointed: ["sad one", "sad two", "sad three"],
+  supportive_or_caring: [
+    "supportive one",
+    "supportive two",
+    "supportive three",
+  ],
+  playful_or_teasing: ["playful one", "playful two", "playful three"],
+  neutral_or_logistical: ["neutral one", "neutral two", "neutral three"],
+};
+
+const synthesis = StyleSynthesisSchema.parse({
+  patches: retainedPatches,
+  summary: existingCard.summary,
+  league: Object.entries(existingCard.league).map(([key, value]) => ({
+    key,
+    value,
+  })),
+  quoteMessageIds: messages.slice(0, 20).map((message) => message.messageId),
+  sampleMessageIds: messages.map((message) => message.messageId),
+  situational_examples: situationalExamples,
+});
+
+const candidate = {
+  person,
+  messages,
+  safeMessages: messages,
+  directRecentMessages: messages,
+  newMessageCount: 30,
+  totalMessageCount: 30,
+};
+const firstTimestamp = CurrentMessageSchema.parse(messages[0]).timestamp;
+const lastTimestamp = CurrentMessageSchema.parse(messages.at(-1)).timestamp;
+
+describe("Glitter generated style-card schemas", () => {
+  test("convert to OpenAI strict Structured Outputs schemas", () => {
     expect(() =>
-      zodResponseFormat(GeneratedStyleCardSchema, "style_card"),
+      zodResponseFormat(StyleChunkSummarySchema, "style_chunk_summary"),
+    ).not.toThrow();
+    expect(() =>
+      zodResponseFormat(StyleSynthesisSchema, "style_card_synthesis"),
     ).not.toThrow();
   });
 
-  test("requires nullable concerns and omits persisted metadata", () => {
-    const result = GeneratedStyleCardSchema.safeParse({
-      ...emptyStyleFields,
-      league: [],
-      sample_messages: [],
-      concerns: null,
-    });
-
-    expect(result.success).toBe(true);
-  });
-
-  test("preserves the human-reviewed author when the display name changes", () => {
-    const result = finalizeGeneratedStyleCard({
-      candidate: {
-        person: PersonSchema.parse({
-          id: "ryan",
-          displayName: "NekoRyan",
-          kind: "person",
-          aliases: ["Ryan"],
-          discordUserIds: ["32345678901234567"],
-        }),
-        messages: [message],
-        safeMessages: [message],
-        newMessageCount: 1,
-        totalMessageCount: 1,
-      },
+  test("finalizes a V2 card while preserving reviewed prose verbatim", () => {
+    const result = finalizeStyleSynthesis({
+      candidate,
       existingCard,
-      generatedCard,
+      sourceSnapshotSha256: "a".repeat(64),
+      chunkCount: 1,
+      synthesis,
     });
 
+    expect(result.schemaVersion).toBe(2);
     expect(result.author).toBe("Ryan");
+    expect(result.voice).toEqual(existingCard.voice);
+    expect(result.quotes).toEqual(
+      messages.slice(0, 20).map((message) => message.content),
+    );
+    expect(result.sample_messages).toEqual(
+      messages.map((message) => message.content),
+    );
+    expect(result.situational_examples).toEqual(situationalExamples);
     expect(result.coverage).toEqual({
-      messages: 1,
-      date_range: "2026-07-29T00:00:00.000Z through 2026-07-29T00:00:00.000Z",
+      source_snapshot_sha256: "a".repeat(64),
+      corpus: {
+        messages: 30,
+        date_range: {
+          start: firstTimestamp,
+          end: lastTimestamp,
+        },
+      },
+      evidence: {
+        safe_messages: 30,
+        summarized_messages: 30,
+        chunks: 1,
+        direct_recent_messages: 30,
+        date_range: {
+          start: firstTimestamp,
+          end: lastTimestamp,
+        },
+        strategy: "all-safe-monthly-chunks-plus-latest-500",
+      },
       notes:
         "Generated from the checksum-verified Discord corpus; human review required.",
     });
+  });
+
+  test("rejects evidence IDs that are not in the safe corpus", () => {
+    const invalidSynthesis = StyleSynthesisSchema.parse({
+      ...synthesis,
+      quoteMessageIds: [
+        "99999999999999999",
+        ...synthesis.quoteMessageIds.slice(1),
+      ],
+    });
+
+    expect(() =>
+      finalizeStyleSynthesis({
+        candidate,
+        existingCard,
+        sourceSnapshotSha256: "a".repeat(64),
+        chunkCount: 1,
+        synthesis: invalidSynthesis,
+      }),
+    ).toThrow("quotes cites unknown message IDs");
   });
 });

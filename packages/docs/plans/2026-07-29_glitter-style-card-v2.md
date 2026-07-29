@@ -3,7 +3,7 @@ id: plan-2026-07-29-glitter-style-card-v2
 type: plan
 status: in-progress
 board: true
-verification: operator
+verification: agent
 disposition: active
 ---
 
@@ -76,17 +76,17 @@ weekly production schedule.
 
 ## Implementation
 
-- [ ] Introduce the transitional V1/V2 schemas, coverage contract,
+- [x] Introduce the transitional V1/V2 schemas, coverage contract,
       `StylePromptContext`, JSON Schema, Python model, fixtures, and tests.
-- [ ] Implement complete-corpus monthly chunking, Luna extraction artifacts,
+- [x] Implement complete-corpus monthly chunking, Luna extraction artifacts,
       Sol synthesis, field-level patching, semantic validation/repair, and
       exact evidence checks.
-- [ ] Implement SeaweedFS artifact reuse, usage accounting, preflight estimates,
+- [x] Implement SeaweedFS artifact reuse, usage accounting, preflight estimates,
       run budgets, operator flags, and the $10 scheduled ceiling.
-- [ ] Wire thick V2 contexts through Birmel and Scout while retaining legacy
+- [x] Wire thick V2 contexts through Birmel and Scout while retaining legacy
       behavior and add consumer sentinel tests.
-- [ ] Update Temporal rehearsals and operator documentation.
-- [ ] Run focused builds, typechecks, tests, lint, docs checks, and affected
+- [x] Update Temporal rehearsals and operator documentation.
+- [x] Run focused builds, typechecks, tests, lint, docs checks, and affected
       verification; publish a draft implementation PR through git-spice.
 - [ ] Merge and deploy the implementation, run the pinned $50 dry run twice,
       promote the cached run, review and merge all 13 V2 cards, smoke-test
@@ -110,7 +110,6 @@ weekly production schedule.
 
 ## Remaining
 
-- [ ] Complete the implementation and publish its draft PR.
 - [ ] Complete the production generation, review, deployment, and schedule
       activation gates.
 
@@ -124,13 +123,31 @@ weekly production schedule.
 
 ### Done
 
-- Recorded the approved V2 generation, consumer, cost-control, and rollout
-  design.
+- Created draft PR #1846 with the transitional shared schema and metadata-free
+  `StylePromptContext`.
+- Implemented complete safe-corpus UTC-month chunking, Luna extraction, Sol
+  synthesis, field-level retention/removal rules, deterministic finalization,
+  one repair attempt, immutable SeaweedFS artifacts, and run-budget reporting.
+- Added the explicit `$50` operator flag and configured the paused weekly
+  schedule with a `$10` uncached ceiling.
+- Wired V2 thick contexts through the Birmel supervisor, all subagents,
+  should-respond classifier, and Scout frontend/backend built-ins while keeping
+  legacy Birmel and custom Scout inputs compatible.
+- Applied only the stronger descriptive fields from PR #1834 for Caitlyn,
+  Colin, and Richard as synthesis baselines.
+- Added direct last-entry and metadata-leak sentinels for Birmel's classifier
+  and Scout's shared frontend/backend prompt serializer.
+- Passed the serialized affected verification surface (79/79 tasks), 760
+  Temporal tests, 1,213 Scout backend tests, 94 Scout report tests, focused
+  Birmel and Scout sentinel tests, and forced consumer typecheck/lint.
+- Published the complete implementation to draft PR #1846 through git-spice.
 
 ### Remaining
 
-- Implement, verify, publish, deploy, seed, and activate the workflow using the
-  gates above.
+- Drive PR #1846 through Buildkite and review to merge.
+- Deploy the worker/consumers, complete the two pinned `$50` dry runs and cached
+  real run, review and merge the V2 data PR, smoke-test consumers, close #1834,
+  and resume the weekly schedule.
 
 ### Caveats
 
@@ -138,3 +155,5 @@ weekly production schedule.
   stay open until a replacement data PR exists.
 - The weekly context-refresh schedule remains intentionally paused during
   implementation and acceptance.
+- Current canonical data remains legacy V1 until the production workflow emits
+  and the human-reviewed replacement PR merges all 13 V2 cards.

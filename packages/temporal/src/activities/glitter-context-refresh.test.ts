@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
+import { GlitterContextRefreshInputSchema } from "./glitter-context-refresh.ts";
 import {
-  GlitterContextRefreshInputSchema,
   glitterContextProposalChecksum,
   glitterContextRunIdentity,
-} from "./glitter-context-refresh.ts";
+} from "./glitter-context-refresh-identity.ts";
 
 describe("Glitter context proposal checksum", () => {
   test("is stable across changed-file ordering and changes with file bytes", () => {
@@ -62,6 +62,7 @@ describe("Glitter context snapshot pin input", () => {
       }),
     ).toEqual({
       dryRun: true,
+      maxEstimatedCostUsd: 10,
       snapshot: { snapshotId, snapshotSha256 },
     });
     expect(() =>

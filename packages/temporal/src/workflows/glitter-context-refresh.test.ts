@@ -25,6 +25,17 @@ describe("runGlitterContextRefresh", () => {
       eligiblePeople: ["virmel"],
       refreshedPeople: ["virmel"],
       relationshipProposalCount: 0,
+      generation: {
+        maxUncachedCostUsd: 50,
+        preflightEstimatedCostUsd: 12,
+        actualUncachedCostUsd: 8,
+        cacheHits: 10,
+        cacheMisses: 4,
+        inputTokens: 1000,
+        outputTokens: 200,
+        cachedInputTokens: 100,
+        artifactKeys: ["artifact-a"],
+      },
       changedFiles: [
         "packages/glitter-context/data/style-cards/virmel_style.json",
       ],
@@ -49,6 +60,7 @@ describe("runGlitterContextRefresh", () => {
         args: [
           {
             dryRun: true,
+            maxEstimatedCostUsd: 50,
             now: "2026-07-26T00:00:00.000Z",
             snapshot: {
               snapshotId: "00000000-0000-4000-8000-000000000001",
@@ -64,6 +76,7 @@ describe("runGlitterContextRefresh", () => {
     expect(inputs).toEqual([
       {
         dryRun: true,
+        maxEstimatedCostUsd: 50,
         now: "2026-07-26T00:00:00.000Z",
         snapshot: {
           snapshotId: "00000000-0000-4000-8000-000000000001",

@@ -52,6 +52,10 @@ describe("buildPersonaPrompt", () => {
       throw new Error("expected persona prompt for virmel, got null");
     }
     expect(prompt.name).toBe("virmel");
+    expect(prompt.format).toBe("compact");
+    if (prompt.format !== "compact") {
+      throw new Error("expected the legacy style card to use compact context");
+    }
     expect(prompt.voice.length).toBeGreaterThan(0);
     expect(prompt.markers.length).toBeGreaterThan(0);
     expect(prompt.samples.length).toBeGreaterThan(0);

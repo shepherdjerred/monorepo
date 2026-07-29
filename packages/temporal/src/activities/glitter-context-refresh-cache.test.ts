@@ -41,12 +41,24 @@ describe("Glitter context generation artifacts", () => {
         responseSchema: ResponseSchema,
         generate: async () => {
           generationCount += 1;
-          return { value };
+          return {
+            response: { value },
+            usage: {
+              inputTokens: 10,
+              outputTokens: 2,
+              cachedInputTokens: 0,
+              costUsd: 0.01,
+            },
+          };
         },
       });
 
-    expect(await run("first")).toEqual({ value: "first" });
-    expect(await run("different")).toEqual({ value: "first" });
+    const first = await run("first");
+    const reused = await run("different");
+    expect(first.response).toEqual({ value: "first" });
+    expect(first.cacheStatus).toBe("miss");
+    expect(reused.response).toEqual({ value: "first" });
+    expect(reused.cacheStatus).toBe("hit");
     expect(generationCount).toBe(1);
     expect(values.size).toBe(1);
   });
@@ -57,12 +69,18 @@ describe("Glitter context generation artifacts", () => {
       read: winner.store.read,
       create: async (key) => {
         await winner.store.create(key, {
-          schemaVersion: 1,
+          schemaVersion: 2,
           model: "test-model",
           callSite: "style-card",
           requestSha256: generationRequestSha256({ prompt: "same" }),
           responseSha256: generationRequestSha256({ value: "winner" }),
           response: { value: "winner" },
+          usage: {
+            inputTokens: 10,
+            outputTokens: 2,
+            cachedInputTokens: 0,
+            costUsd: 0.01,
+          },
         });
       },
     };
@@ -73,10 +91,19 @@ describe("Glitter context generation artifacts", () => {
       callSite: "style-card",
       request: { prompt: "same" },
       responseSchema: ResponseSchema,
-      generate: async () => ({ value: "loser" }),
+      generate: async () => ({
+        response: { value: "loser" },
+        usage: {
+          inputTokens: 10,
+          outputTokens: 2,
+          cachedInputTokens: 0,
+          costUsd: 0.01,
+        },
+      }),
     });
 
-    expect(result).toEqual({ value: "winner" });
+    expect(result.response).toEqual({ value: "winner" });
+    expect(result.cacheStatus).toBe("miss");
   });
 
   test("fails closed when a stored response checksum is corrupt", async () => {
@@ -89,12 +116,18 @@ describe("Glitter context generation artifacts", () => {
           requestSha256,
         }),
         {
-          schemaVersion: 1,
+          schemaVersion: 2,
           model: "test-model",
           callSite: "style-card",
           requestSha256,
           responseSha256: "0".repeat(64),
           response: { value: "corrupt" },
+          usage: {
+            inputTokens: 10,
+            outputTokens: 2,
+            cachedInputTokens: 0,
+            costUsd: 0.01,
+          },
         },
       ],
     ]);
@@ -112,7 +145,15 @@ describe("Glitter context generation artifacts", () => {
         callSite: "style-card",
         request,
         responseSchema: ResponseSchema,
-        generate: async () => ({ value: "unused" }),
+        generate: async () => ({
+          response: { value: "unused" },
+          usage: {
+            inputTokens: 10,
+            outputTokens: 2,
+            cachedInputTokens: 0,
+            costUsd: 0.01,
+          },
+        }),
       }),
     ).rejects.toThrow("response checksum mismatch");
   });
@@ -133,7 +174,15 @@ describe("Glitter context generation artifacts", () => {
         callSite: "style-card",
         request: { prompt: "stable prompt" },
         responseSchema: UnknownResponseSchema,
-        generate: async () => ({ value: 42 }),
+        generate: async () => ({
+          response: { value: 42 },
+          usage: {
+            inputTokens: 10,
+            outputTokens: 2,
+            cachedInputTokens: 0,
+            costUsd: 0.01,
+          },
+        }),
       }),
     ).rejects.toThrow();
     expect(createCount).toBe(0);

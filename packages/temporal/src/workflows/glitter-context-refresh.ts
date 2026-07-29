@@ -7,7 +7,7 @@ import type {
 
 const { refreshGlitterContext } =
   proxyActivities<GlitterContextRefreshActivities>({
-    startToCloseTimeout: "90 minutes",
+    startToCloseTimeout: "7 hours",
     heartbeatTimeout: "60 seconds",
     retry: {
       maximumAttempts: 2,

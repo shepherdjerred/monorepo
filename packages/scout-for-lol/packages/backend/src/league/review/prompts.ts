@@ -1,6 +1,7 @@
 import {
   getStyleCard,
   PersonalityMetadataSchema,
+  serializeStyleCardForScoutPrompt,
   type Personality,
 } from "@scout-for-lol/data/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -77,11 +78,10 @@ async function loadPersonality(basename: string): Promise<Personality> {
       `Missing required shared style card for personality "${basename}"`,
     );
   }
-
   return {
     metadata,
     instructions,
-    styleCard: JSON.stringify(styleCard),
+    styleCard: serializeStyleCardForScoutPrompt(styleCard),
     filename: basename,
   };
 }

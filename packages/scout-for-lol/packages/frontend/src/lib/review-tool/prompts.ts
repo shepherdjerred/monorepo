@@ -3,7 +3,11 @@
  */
 import type { Personality } from "./config/schema.ts";
 import { PersonalityMetadataSchema } from "./config/schema.ts";
-import { getStyleCard, type Lane } from "@scout-for-lol/data";
+import {
+  getStyleCard,
+  serializeStyleCardForScoutPrompt,
+  type Lane,
+} from "@scout-for-lol/data";
 
 // Import personality files
 import aaronJson from "@scout-for-lol/data/review/prompts/personalities/aaron.json";
@@ -51,7 +55,7 @@ function requiredStyleCard(personalityId: string): string {
       `Missing required shared style card for personality "${personalityId}"`,
     );
   }
-  return JSON.stringify(styleCard);
+  return serializeStyleCardForScoutPrompt(styleCard);
 }
 
 /**
