@@ -146,6 +146,24 @@ This does not, by itself, reproduce every possible backend-driven state —
 see the `screenshot` skill's Limitations section (no network-response
 mocking in v1).
 
+### Post-match review evals
+
+`packages/evals` is the loopback-only app for immutable review datasets, human
+1-3 ratings, and style-batch freshness checks. Run it with
+`bun run --filter=@scout-for-lol/evals dev`. Candidate discovery and explicit
+S3/model-backed draft materialization are documented in `packages/evals/README.md`.
+The corpus is Beta-only. `sync-beta` creates a sanitized local profile snapshot
+from Beta SQLite, and discovery/materialization use that snapshot with the
+`scout-beta` S3 bucket. Raw S3 match objects do not preserve Scout aliases or
+tracked membership; never infer those identities from arbitrary Riot
+participants or substitute the production bucket.
+
+Run the deterministic browser suite with
+`bunx turbo run test:e2e --filter=@scout-for-lol/evals`. It uses a test-only
+in-memory store and the production-built Hono/tRPC/React path; it never reads the
+operator's eval database or calls Beta, S3, or OpenAI. Keep the suite
+single-worker unless each mutating scenario is moved to an isolated store.
+
 ### Desktop Package
 
 ```bash

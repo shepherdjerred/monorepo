@@ -15,7 +15,7 @@ export function validatePlaywrightLanes(
   for (const key of ["playwright-e2e-pr", "playwright-e2e-main"]) {
     const block = stepBlocks.get(key);
     const install =
-      ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'";
+      ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'";
     if (!hasTrimmedLine(block, install)) {
       fail(
         `Playwright lane ${key} is missing exact filtered install ${install}`,

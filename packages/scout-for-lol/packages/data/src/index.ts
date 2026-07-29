@@ -19,6 +19,7 @@ export { ART_STYLES } from "./review/art-styles-list.ts";
 export type { ArtStyle } from "./review/art-categories.ts";
 export * from "./review/models.ts";
 export * from "./review/prompts.ts";
+export * from "./review/exceptional-performance.ts";
 export * from "./review/image-prompt.ts";
 export {
   type ReviewTextMetadata,

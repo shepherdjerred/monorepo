@@ -482,6 +482,10 @@ await assertPackageTokens([
     ],
   ],
   ["packages/sjer.red/package.json", ['"bun x --no-install playwright test']],
+  [
+    "packages/scout-for-lol/packages/evals/package.json",
+    ['"bun run build && bun x --no-install playwright test"'],
+  ],
   ["scripts/package.json", ['"bunx --no-install eslint']],
   [
     "packages/release-tools/package.json",

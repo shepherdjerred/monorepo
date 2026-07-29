@@ -55,7 +55,7 @@ export type ReviewMetadata = {
  *
  * Prefers "Jerred" if they're in the match, otherwise selects randomly.
  */
-function selectPlayerIndex(match: CompletedMatch | ArenaMatch): number {
+export function selectPlayerIndex(match: CompletedMatch | ArenaMatch): number {
   const jerredIndex = match.players.findIndex(
     (p) => p.playerConfig.alias.toLowerCase() === "jerred",
   );
@@ -208,6 +208,7 @@ function resolveOpenAIProviderIssues(): void {
  *
  * @param options.match - The completed match data (regular or arena)
  * @param options.matchId - The match ID for S3 storage
+ * @param options.playerIndex - The already-selected player to review
  * @param options.rawMatchData - Raw match data from Riot API (required for match summary generation)
  * @param options.timelineData - Timeline data from Riot API (required for timeline summary)
  * @param options.targetServerIds - Discord guild ids the report targets, used to scope player history
@@ -216,6 +217,7 @@ function resolveOpenAIProviderIssues(): void {
 export type GenerateMatchReviewOptions = {
   match: CompletedMatch | ArenaMatch;
   matchId: MatchId;
+  playerIndex: number;
   rawMatchData: RawMatch;
   timelineData: RawTimeline;
   targetServerIds?: DiscordGuildId[];
@@ -226,8 +228,14 @@ export async function generateMatchReview(
 ): Promise<
   { text: string; image?: Uint8Array; metadata?: ReviewMetadata } | undefined
 > {
-  const { match, matchId, rawMatchData, timelineData, targetServerIds } =
-    options;
+  const {
+    match,
+    matchId,
+    playerIndex,
+    rawMatchData,
+    timelineData,
+    targetServerIds,
+  } = options;
   // Initialize clients
   const openaiClient = getOpenAIClient();
   if (!openaiClient) {
@@ -237,8 +245,6 @@ export async function generateMatchReview(
 
   const geminiClient = getGeminiClient();
 
-  // Select player
-  const playerIndex = selectPlayerIndex(match);
   const selectedPlayer = match.players[playerIndex];
   if (!selectedPlayer) {
     logger.info(

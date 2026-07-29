@@ -1,5 +1,5 @@
 import type {
-  PlayerConfigEntry,
+  ExceptionalGameResult,
   MatchId,
   CompletedMatch,
   QueueType,
@@ -7,10 +7,15 @@ import type {
   RawTimeline,
   DiscordGuildId,
 } from "@scout-for-lol/data/index.ts";
-import { MIN_GAME_DURATION_SECONDS } from "@scout-for-lol/data/index.ts";
+import {
+  isExceptionalGame,
+  MIN_GAME_DURATION_SECONDS,
+} from "@scout-for-lol/data/index.ts";
 import { getFlag } from "#src/configuration/flags.ts";
-import { generateMatchReview } from "#src/league/review/generator.ts";
-import { isExceptionalGame } from "./exceptional-game.ts";
+import {
+  generateMatchReview,
+  selectPlayerIndex,
+} from "#src/league/review/generator.ts";
 import { hasAiBeenAttempted, markAiAttempted } from "#src/database/index.ts";
 import { OpenAIBudgetExceeded } from "#src/league/review/openai-budget.ts";
 import { createLogger } from "#src/logger.ts";
@@ -28,13 +33,6 @@ export function isRankedQueue(queueType: QueueType | undefined): boolean {
     queueType === "clash" ||
     queueType === "aram clash"
   );
-}
-
-/**
- * Check if Jerred is in the match
- */
-function hasJerred(playersInMatch: PlayerConfigEntry[]): boolean {
-  return playersInMatch.some((p) => p.alias.toLowerCase() === "jerred");
 }
 
 /**
@@ -56,9 +54,47 @@ export type AiReviewContext = {
   matchId: MatchId;
   matchData: RawMatch;
   timelineData: RawTimeline | undefined;
-  playersInMatch: PlayerConfigEntry[];
   targetGuildIds: DiscordGuildId[];
 };
+
+type AiReviewDecision = {
+  playerIndex: number;
+  selectedPlayer: CompletedMatch["players"][number];
+  exceptionalResult: ExceptionalGameResult;
+  jerredOverride: boolean;
+  shouldGenerateReview: boolean;
+};
+
+export function getAiReviewDecision(
+  completedMatch: CompletedMatch,
+  matchData: RawMatch,
+): AiReviewDecision | undefined {
+  const playerIndex = selectPlayerIndex(completedMatch);
+  const selectedPlayer = completedMatch.players[playerIndex];
+  if (selectedPlayer === undefined) {
+    return undefined;
+  }
+
+  const exceptionalResult = isExceptionalGame(
+    matchData,
+    selectedPlayer.playerConfig,
+    completedMatch.durationInSeconds,
+  );
+  const jerredOverride =
+    selectedPlayer.playerConfig.alias.toLowerCase() === "jerred";
+  const shouldGenerateReview =
+    jerredOverride ||
+    (isRankedQueue(completedMatch.queueType) &&
+      exceptionalResult.isExceptional);
+
+  return {
+    playerIndex,
+    selectedPlayer,
+    exceptionalResult,
+    jerredOverride,
+    shouldGenerateReview,
+  };
+}
 
 /**
  * Generate AI review for a match if conditions are met
@@ -66,14 +102,8 @@ export type AiReviewContext = {
 export async function generateAiReviewIfEnabled(
   ctx: AiReviewContext,
 ): Promise<AiReviewResult> {
-  const {
-    completedMatch,
-    matchId,
-    matchData,
-    timelineData,
-    playersInMatch,
-    targetGuildIds,
-  } = ctx;
+  const { completedMatch, matchId, matchData, timelineData, targetGuildIds } =
+    ctx;
   const aiReviewsEnabled = isAiReviewEnabledForAnyGuild(targetGuildIds);
   if (!aiReviewsEnabled) {
     logger.info(
@@ -82,22 +112,19 @@ export async function generateAiReviewIfEnabled(
     return { text: undefined, image: undefined };
   }
 
-  // Jerred override for testing - always generate reviews for his games
-  const jerredOverride = hasJerred(playersInMatch);
+  const decision = getAiReviewDecision(completedMatch, matchData);
+  if (decision === undefined) {
+    logger.info(
+      "[generateMatchReport] Skipping AI review - no player available to review",
+    );
+    return { text: undefined, image: undefined };
+  }
+  const { playerIndex, exceptionalResult, jerredOverride } = decision;
 
-  // Check if game is exceptional (good or bad performance)
-  const exceptionalResult = isExceptionalGame(
-    matchData,
-    playersInMatch,
-    completedMatch.durationInSeconds,
-  );
-
-  // Only generate reviews for ranked games with exceptional performance, or Jerred override
+  // Only generate reviews for ranked games where the selected player had an
+  // exceptional performance, or for the selected Jerred override.
   const isRanked = isRankedQueue(completedMatch.queueType);
-  const shouldGenerateReview =
-    jerredOverride || (isRanked && exceptionalResult.isExceptional);
-
-  if (!shouldGenerateReview) {
+  if (!decision.shouldGenerateReview) {
     const reason = isRanked
       ? "not an exceptional game"
       : `not a ranked queue (queueType: ${completedMatch.queueType ?? "unknown"})`;
@@ -148,6 +175,7 @@ export async function generateAiReviewIfEnabled(
     const review = await generateMatchReview({
       match: completedMatch,
       matchId,
+      playerIndex,
       rawMatchData: matchData,
       timelineData,
       targetServerIds: targetGuildIds,
