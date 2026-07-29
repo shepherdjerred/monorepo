@@ -51,6 +51,7 @@ const SemanticOutcomeSchema = z.looseObject({
   inputApplied: z.boolean().optional(),
   framesElapsed: z.number().int().nonnegative().optional(),
   tilesMoved: z.number().int().nonnegative().optional(),
+  attemptsMade: z.number().int().nonnegative().optional(),
   stepsTaken: z.number().int().nonnegative().optional(),
   mapChanged: z.boolean().optional(),
   facingChanged: z.boolean().optional(),
@@ -145,6 +146,9 @@ export function formatPokemonctlActionOutput(
     ...(outcome.tilesMoved === undefined
       ? {}
       : { tilesMoved: outcome.tilesMoved }),
+    ...(outcome.attemptsMade === undefined
+      ? {}
+      : { attemptsMade: outcome.attemptsMade }),
     ...(outcome.stepsTaken === undefined
       ? {}
       : { stepsTaken: outcome.stepsTaken }),

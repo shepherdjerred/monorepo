@@ -284,7 +284,7 @@ test("pokemonctl advertises advance and sends one guarded request", async () => 
 
   try {
     const child = Bun.spawn(
-      ["bun", path.join(import.meta.dir, "pokemonctl.ts"), "advance"],
+      ["bun", path.join(import.meta.dir, "pokemonctl.ts"), "advance", "--full"],
       {
         env: {
           ...Bun.env,
@@ -297,9 +297,14 @@ test("pokemonctl advertises advance and sends one guarded request", async () => 
       },
     );
 
-    expect(await child.exited).toBe(0);
-    expect(await new Response(child.stderr).text()).toBe("");
-    expect(JSON.parse(await new Response(child.stdout).text())).toEqual({
+    const [exitCode, stderr, stdout] = await Promise.all([
+      child.exited,
+      new Response(child.stderr).text(),
+      new Response(child.stdout).text(),
+    ]);
+    expect(stderr).toBe("");
+    expect(exitCode).toBe(0);
+    expect(JSON.parse(stdout)).toEqual({
       status: "applied",
     });
     expect(received).toEqual({

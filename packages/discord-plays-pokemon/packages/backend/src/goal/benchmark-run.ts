@@ -11,6 +11,7 @@ import {
   BENCHMARK_PROVIDER_FAILURE_FILE,
   classifyCodexProviderFailure,
 } from "./benchmark-provider-failure.ts";
+import { requireBenchmarkOutputOutsideImplementation } from "./benchmark-output-location.ts";
 import {
   benchmarkRuntimeOverlayDirectory,
   prepareBenchmarkRuntimeOverlay,
@@ -208,6 +209,10 @@ export async function runBenchmarkOnce(
   const { args, implementation, run } = input;
   const runName = `run-${String(run).padStart(3, "0")}`;
   const runDirectory = path.join(args.output, runName);
+  await requireBenchmarkOutputOutsideImplementation(
+    implementation.packageRoot,
+    args.output,
+  );
   benchmarkRuntimeOverlayDirectory(implementation.packageRoot, runDirectory);
   await reserveBenchmarkDirectory(runDirectory, "benchmark run");
   const resultPath = path.join(runDirectory, "result.json");

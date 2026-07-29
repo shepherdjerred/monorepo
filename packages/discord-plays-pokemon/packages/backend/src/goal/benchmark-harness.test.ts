@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
-import { mkdir, mkdtemp, rm, stat } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm, stat, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import {
   DEFAULT_BENCHMARK_GOAL,
@@ -20,6 +20,7 @@ import {
   requireCleanGitWorktree,
   reserveBenchmarkDirectory,
 } from "./benchmark-run.ts";
+import { requireBenchmarkOutputOutsideImplementation } from "./benchmark-output-location.ts";
 import { prepareBenchmarkRuntimeOverlay } from "./benchmark-runtime-overlay.ts";
 import { runBenchmarkSeries } from "./benchmark-series.ts";
 import { prepareRuntimeTools } from "./goal-runtime-env.ts";
@@ -803,6 +804,77 @@ describe("benchmark artifact reservation", () => {
     } finally {
       await rm(root, { recursive: true, force: true });
     }
+  });
+});
+
+describe("benchmark output containment", () => {
+  test("rejects target paths and filesystem aliases without creating artifacts", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "pokemon-output-location-"));
+    const implementationRoot = path.join(root, "implementation");
+    const alias = path.join(root, "implementation-alias");
+    await mkdir(implementationRoot);
+    await symlink(implementationRoot, alias, "dir");
+
+    try {
+      await expect(
+        requireBenchmarkOutputOutsideImplementation(
+          implementationRoot,
+          implementationRoot,
+        ),
+      ).rejects.toThrow(
+        "benchmark output must be outside the target implementation",
+      );
+      await expect(
+        requireBenchmarkOutputOutsideImplementation(
+          implementationRoot,
+          path.join(implementationRoot, "benchmark-artifacts"),
+        ),
+      ).rejects.toThrow(
+        "benchmark output must be outside the target implementation",
+      );
+      await expect(
+        requireBenchmarkOutputOutsideImplementation(
+          implementationRoot,
+          path.join(alias, "benchmark-artifacts"),
+        ),
+      ).rejects.toThrow(
+        "benchmark output must be outside the target implementation",
+      );
+      expect(await readdir(implementationRoot)).toEqual([]);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test("accepts a sibling path with a shared name prefix", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "pokemon-output-sibling-"));
+    const implementationRoot = path.join(root, "implementation");
+    await mkdir(implementationRoot);
+    try {
+      await expect(
+        requireBenchmarkOutputOutsideImplementation(
+          implementationRoot,
+          path.join(root, "implementation-copy", "benchmark-artifacts"),
+        ),
+      ).resolves.toBeUndefined();
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test("CLI preflights containment before reserving the output directory", async () => {
+    const source = await Bun.file(
+      path.resolve(import.meta.dir, "../../scripts/goal-benchmark.ts"),
+    ).text();
+    const containmentCheck = source.indexOf(
+      "await requireBenchmarkOutputOutsideImplementation(",
+    );
+    const artifactReservation = source.indexOf(
+      'await reserveBenchmarkDirectory(args.output, "benchmark output")',
+    );
+
+    expect(containmentCheck).toBeGreaterThan(-1);
+    expect(artifactReservation).toBeGreaterThan(containmentCheck);
   });
 });
 

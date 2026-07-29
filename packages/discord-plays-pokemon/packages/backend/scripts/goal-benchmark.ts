@@ -6,8 +6,8 @@ import {
   buildBenchmarkSummary,
   parseBenchmarkArgs,
 } from "#src/goal/benchmark-harness.ts";
+import { requireBenchmarkOutputOutsideImplementation } from "#src/goal/benchmark-output-location.ts";
 import { validateCatchBenchmarkSourceSave } from "#src/goal/benchmark-source-save.ts";
-import { benchmarkRuntimeOverlayDirectory } from "#src/goal/benchmark-runtime-overlay.ts";
 import { runBenchmarkSeries } from "#src/goal/benchmark-series.ts";
 import {
   commandOutput,
@@ -133,9 +133,9 @@ async function main(): Promise<void> {
   const implementation = await resolveImplementationRoot(
     args.implementationRoot,
   );
-  benchmarkRuntimeOverlayDirectory(
+  await requireBenchmarkOutputOutsideImplementation(
     implementation.packageRoot,
-    path.join(args.output, "run-001"),
+    args.output,
   );
   await requireCleanGitWorktree(
     implementation.packageRoot,

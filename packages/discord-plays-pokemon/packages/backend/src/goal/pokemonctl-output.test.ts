@@ -103,6 +103,8 @@ test("keeps semantic verification evidence compact by default", () => {
     inputApplied: true,
     framesElapsed: 2,
     tilesMoved: 0,
+    attemptsMade: 2,
+    stepsTaken: 1,
     mapChanged: false,
     facingChanged: false,
     phaseChanged: false,
@@ -124,6 +126,8 @@ test("keeps semantic verification evidence compact by default", () => {
   const compactText = formatPokemonctlActionOutput(responseText, false);
   const compact = JSON.parse(compactText);
   expect(compact.status).toBe("applied");
+  expect(compact.attemptsMade).toBe(2);
+  expect(compact.stepsTaken).toBe(1);
   expect(compact.battleChanged).toBe(true);
   expect(compact.visualChangeRatio).toBe(0.0043);
   expect(compact.before.map).toBe("Route 103");
