@@ -1,10 +1,8 @@
 ---
 id: plan-2026-07-26-glitter-discord-source-of-truth
 type: plan
-status: in-progress
-board: true
-verification: agent
-disposition: active
+status: complete
+board: false
 ---
 
 # Glitter Discord Source of Truth and Shared Context
@@ -180,15 +178,14 @@ unless an independently discovered safety constraint makes it necessary.
 ## Remaining
 
 - [x] Implement, verify, and publish both draft pull requests.
-- [ ] Reconcile and land the shared-context/weekly-refresh change from PR #1700;
-      its implementation commit is not in current HEAD.
-- [ ] Verify the merged tree keeps the corpus consumers, paused schedule,
+- [x] Reconcile and land the shared-context/weekly-refresh implementation.
+- [x] Verify the merged tree keeps the corpus consumers, paused schedule,
       recovery gates, and secret references coherent.
-- [ ] Review the Discord inventory and explicitly approve its public
+- [x] Review the Discord inventory and explicitly approve its public
       channel/thread scope before starting the full-history scrape.
-- [ ] Hand live Discord/SeaweedFS
-      acceptance to `todos/glitter-discord-acceptance-operator.md`; archive this
-      plan once the code tranche is merged.
+- [x] Complete live Discord/SeaweedFS corpus acceptance and hand the separate
+      OpenAI quota-gated weekly-refresh acceptance to
+      `todos/glitter-corpus-worker-credentials.md`.
 
 ## Session Log — 2026-07-26
 
@@ -336,3 +333,28 @@ unless an independently discovered safety constraint makes it necessary.
   archive, but Discord REST evidence deleted from Discord after capture would
   be unrecoverable after total SeaweedFS loss unless an independent backup is
   added.
+
+## Session Log — 2026-07-29
+
+### Done
+
+- Reconciled the implementation plan with the shipped production state and
+  archived it as complete.
+- Confirmed the trusted seed, approved full backfill, scheduled daily capture,
+  immutable SeaweedFS publication, and independent recovery verification.
+- Confirmed the shared context package and Birmel, Scout, and Glitter consumers
+  are merged. The weekly refresh workflow is deployed fail-closed and remains
+  paused until its quota-gated live acceptance succeeds.
+
+### Remaining
+
+- Restore quota for the Temporal worker OpenAI credential, run the fixed-time
+  deterministic acceptance sequence tracked in
+  `glitter-corpus-worker-credentials.md`, then unpause the weekly schedule.
+
+### Caveats
+
+- This archive closes the implementation and corpus-capture plan. The current
+  production-acceptance boundary remains documented in
+  `2026-07-27_glitter-corpus-live-rollout.md` and
+  `glitter-corpus-worker-credentials.md`.

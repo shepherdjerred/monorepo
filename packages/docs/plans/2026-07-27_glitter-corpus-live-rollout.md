@@ -11,82 +11,63 @@ disposition: blocked
 
 ## Summary
 
-Finish the feature through production operation: close remaining correctness
-gaps, wire credentials, upload the trusted seed, publish a verified complete
-snapshot, exercise daily and weekly workflows, and unpause both schedules.
+The production corpus-capture workflow is complete and operating. The trusted
+76,762-message seed is stored in SeaweedFS, the complete backfill and recovery
+verification passed, and `glitter-corpus-daily` is active. Its latest scheduled
+run published recovery-verified snapshot
+`07d2998a-c2d0-4f15-aaab-c365bb103066` with 267 channels and 212,415 unique
+messages.
 
-The archive's `glitter-boys` and `league-of-legends` roots are channel-export
-groups from the same Discord guild: embedded threads in both report guild ID
-`208425771172102144`. The importer currently misclassifies those roots as
-separate guilds and must be fixed before seeding.
-
-The hardening and live-discovered Discord member lookup fixes shipped in pull
-requests 1750 and 1752. Publish the remaining SeaweedFS storage/deployment
-change as a single git-spice PR.
-
-Keep both production schedules paused until their individual acceptance gates
-pass.
+Only weekly context-refresh acceptance remains. The workflow and credential
+projection are deployed, but its fixed-time dry run fails closed on OpenAI HTTP
+429 `insufficient_quota`. Keep only `glitter-context-refresh-weekly` paused
+until quota is restored or a different production credential is explicitly
+authorized, two identical dry runs pass, the real refresh and consumer smokes
+pass, and the schedule is deliberately unpaused.
 
 ## Implementation
 
-### PR 1 — corpus and workflow hardening
-
-- Normalize the entire trusted ZIP to guild `208425771172102144` and slug
-  `glitter-boys`; require explicit production import flags, validate embedded
-  thread guild IDs, version the manifest, and repin the corrected deterministic
-  projection hash while retaining the archive hash and 76,762-message pin.
-- Preserve the prior verified projection when the six-overlap lineage resets to
-  a complete traversal. Record the retained baseline in the complete manifest
-  and make recovery reproduce the same bounded projection.
-- Fail daily inventory before publication when a previously captured,
-  non-denylisted public-thread parent is missing or no longer grants View
-  Channel plus Read Message History.
-- Replace the request timestamp lease with a CAS-protected 60-second in-flight
-  lease. Release it in `finally` and set the next request to the later of
-  completion plus one second or Discord's reset deadline.
-- Derive weekly refresh branch identity from the Temporal workflow run ID,
-  reuse an existing exact-head PR, return a deterministic proposal checksum,
-  and add a supported context-refresh operator command.
-- Correct the canary runbook: backward traversal ends empty; forward traversal
-  ends non-empty at the frozen upper bound; both ID sets must match.
-
-### PR 2 — credential and deployment wiring
-
-- Reuse the existing production `Starlight` bot identity. Project its
-  `DISCORD_TOKEN` from the Starlight 1Password item into the Temporal namespace;
-  keep guild ID `208425771172102144` and slug `glitter-boys` as non-secret
-  literals.
-- Use SeaweedFS as the sole canonical object store. Project the existing worker
-  S3 credentials and explicit non-secret bucket, region, and initial
-  empty-denylist values; do not provision or project Cloudflare R2 credentials.
-- Replace the pre-production dual-mirror schema with a single checksum-verified
-  SeaweedFS receipt and retain immutable collision detection, read-after-write
-  verification, recovery checks, and monotonic pointer publication.
-- Merge both PRs bottom-up, require current-head and merged-main Buildkite
-  success, follow image/GitOps deployment, and confirm both schedules remain at
-  their operator-approval pause notes.
+- [x] Normalize and import the trusted ZIP as guild `208425771172102144` /
+      `glitter-boys`, preserving the pinned 76,762-message projection.
+- [x] Ship corpus correctness, recovery, Discord lease, inventory, canary, and
+      retry-stable context-refresh hardening.
+- [x] Deploy the Starlight Discord token and SeaweedFS-only storage projection
+      to the production Temporal worker.
+- [x] Upload and verify the immutable seed, approve inventory, run the canary,
+      publish the complete backfill, and prove recovery retains every seed
+      message.
+- [x] Accept a manual daily cycle, verify the scheduled daily cycle, and
+      deliberately activate `glitter-corpus-daily`.
+- [x] Deploy the exact immutable Temporal worker image and verify ArgoCD,
+      schedule state, metrics, and storage-integrity alerts.
+- [ ] Restore the Temporal worker OpenAI project's quota or explicitly
+      authorize a different production OpenAI credential.
+- [ ] Run the snapshot-pinned fixed-time weekly dry run twice and require
+      byte-identical outputs and proposal checksums.
+- [ ] Run the real refresh, inspect its sole PR or no-diff result, and
+      smoke-test the shared package, Birmel, Scout, and Glitter consumers.
+- [ ] Deliberately unpause `glitter-context-refresh-weekly`, verify its next
+      action and observability, then archive this plan and its related TODOs.
 
 ## Live Rollout
 
-1. Import the archive twice with the explicit guild identity and require
-   byte-identical outputs: 164 CSVs, 98 channels, 76,762 unique messages, and
-   zero duplicate IDs.
-2. Upload the seed archive, manifest, projection, and channel partitions to
-   SeaweedFS and verify every immutable object and receipt.
-3. Run inventory and obtain explicit approval of every included/excluded entry
-   and its immutable SHA. All 98 seed channel IDs must be approved.
-4. Run a seed-backed canary on an approved channel with more than 100 messages.
-5. After explicit full-scrape approval, run and monitor the complete backfill.
-6. Run recovery verification and prove every seed message is present in the
-   canonical snapshot.
-7. Run one manual daily cycle while paused, verify recovery again, then unpause
-   `glitter-corpus-daily`.
-8. Run the weekly context refresh twice as fixed-time dry runs and require
-   identical snapshot/proposal checksums and outputs.
-9. Run one real weekly refresh, review its sole PR or no-diff result, smoke-test
-   Birmel, Scout, and Glitter, then unpause
-   `glitter-context-refresh-weekly`.
-10. Confirm schedule next-run times and clean corpus/context observability.
+- [x] Import the archive twice with the explicit guild identity and require
+      byte-identical outputs: 164 CSVs, 98 channels, 76,762 unique messages, and
+      zero duplicate IDs.
+- [x] Upload the seed archive, manifest, projection, and channel partitions to
+      SeaweedFS and verify every immutable object and receipt.
+- [x] Approve the production inventory, including all 98 seed channel IDs.
+- [x] Run the seed-backed canary and complete backfill.
+- [x] Run recovery verification and prove every seed message is present in the
+      canonical snapshot.
+- [x] Run and verify manual and scheduled daily cycles, then deliberately
+      activate `glitter-corpus-daily`.
+- [ ] Run the weekly context refresh twice as fixed-time dry runs and require
+      identical snapshot/proposal checksums and outputs.
+- [ ] Run one real weekly refresh, review its sole PR or no-diff result, and
+      smoke-test the shared package, Birmel, Scout, and Glitter.
+- [ ] Deliberately unpause `glitter-context-refresh-weekly`, confirm its
+      next-run time, and verify clean corpus/context observability.
 
 ## Verification
 
@@ -665,3 +646,84 @@ pass.
   overlapping Argo operations receive Buildkite's transient exit code.
 - This CI hardening did not mutate the production Glitter corpus, schedules, or
   worker credentials.
+
+## Session Log — 2026-07-29 (final production status)
+
+### Done
+
+- Completed the trusted-seed import, production backfill, manual daily capture,
+  and scheduled daily capture. The latest scheduled run,
+  `glitter-corpus-daily-workflow-2026-07-29T11:15:00Z` /
+  `019fad95-bf8f-7c9d-9ef3-368be4bdf27f`, published complete snapshot
+  `07d2998a-c2d0-4f15-aaab-c365bb103066` with 267 channels, 212,415 unique
+  messages, and SHA-256
+  `04b53f7bbf0a3186297d14e5522aa2edc0992fb7def721e4e6faa1f68ef5b776`.
+- Re-ran the recovery verifier from the production Temporal worker after the
+  final release. It independently returned the same snapshot identity, channel
+  count, message count, and checksum.
+- Shipped the worker, release-coordination, Argo, Scout reconciliation, and
+  release-retry repairs through PRs #1819, #1820, #1821, #1822, #1824, #1825,
+  #1826, and #1828. Authoritative main Buildkite #7105 passed every release
+  lane at commit `5a2b6135b066a1bc87e5556417972fbe78bb816f`, including npm
+  publication, Helm, Argo, and Scout production reconciliation.
+- Fixed the HIGH-severity CVE-2026-56852 found by the final status PR's Trivy
+  gate by upgrading the AsusWRT provider's indirect `golang.org/x/text`
+  dependency from 0.37.0 to 0.39.0 and its required `golang.org/x` dependency
+  closure. The provider's tests, vet, golangci-lint, and a fresh Trivy scan all
+  pass.
+- Archived the completed Discord/SeaweedFS operator-acceptance TODO and removed
+  its obsolete R2 requirements. Narrowed the remaining credential TODO to the
+  OpenAI quota-gated weekly refresh acceptance only.
+- Reconciled and archived the completed source-of-truth implementation plan so
+  the active workboard no longer advertises obsolete pre-seed tasks.
+- Closed the historical implementation handoff and pointed it to the archived
+  source plan plus this active production rollout.
+- Verified the production deployment is fully observed and Ready at immutable
+  worker image
+  `2.0.0-7052@sha256:580e41600ab0c1cc33d9d4f91a68c1ac7cc2126de68b6ade291b092719d8e4b2`.
+  The Temporal Argo application is Synced and Healthy after the final release.
+- Confirmed `glitter-corpus-daily` is active, with its next action at
+  `2026-07-30T11:15:00Z`. Confirmed
+  `glitter-context-refresh-weekly` remains deliberately paused, with its next
+  nominal action at `2026-08-03T18:00:00Z`.
+- Rechecked production observability after the final release:
+  `glitter_corpus_snapshot_metrics_configured` is 1,
+  `glitter_corpus_snapshot_messages` is 212,415, and every worker series reports
+  zero SeaweedFS storage-integrity failures over 24 hours.
+- Exercised the wired context-refresh workflow at fixed time
+  `2026-07-30T00:00:00Z` against immutable snapshot
+  `dbb59f00-3f6b-4cab-a87c-6d8a65e21d62` and checksum
+  `e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9`.
+  Both configured activity attempts failed closed on OpenAI HTTP 429
+  `insufficient_quota`; no branch, pull request, or generated-context mutation
+  occurred.
+- Reconciled the active plan's top-level summary and implementation checklist
+  with production so operators see the seed, SeaweedFS deployment, backfill,
+  recovery, and daily activation as complete, with only weekly acceptance
+  remaining.
+
+### Remaining
+
+- Restore quota for the OpenAI project used by the Temporal worker, or
+  explicitly authorize a different production OpenAI credential for this
+  workflow.
+- Rerun the same snapshot-pinned fixed-time dry run twice and require complete
+  output equality, including the proposal checksum.
+- Run the real fixed-time refresh with the same pin, inspect its sole PR or
+  no-diff result, and smoke-test the shared package, Birmel, Scout, and Glitter
+  consumers.
+- Deliberately unpause `glitter-context-refresh-weekly` only after those
+  acceptance gates pass, then complete and archive this plan and its related
+  TODOs.
+
+### Caveats
+
+- The corpus-capture half of the feature is seeded, verified, and operating
+  daily in production. The context-refresh half is wired and fails closed, but
+  it is not accepted or scheduled while its OpenAI project has no quota.
+- Nine schema-valid immutable generation artifacts remain reusable. Four style
+  cards are still missing and cannot be generated until the quota boundary is
+  resolved.
+- The Temporal OpenAI credential is distinct from the Birmel and Pokémon
+  credentials. No credential was read, copied, substituted, or changed during
+  this session.

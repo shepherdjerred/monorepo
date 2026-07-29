@@ -8,7 +8,8 @@ board: false
 # Shared Glitter-Context Package
 
 > Superseded by
-> `plans/2026-07-26_glitter-discord-source-of-truth.md`, which consolidates the
+> `archive/completed/2026-07-26_glitter-discord-source-of-truth.md`, which
+> consolidates the
 > shared package with the verified Discord corpus and weekly refresh design.
 
 ## Motivation
