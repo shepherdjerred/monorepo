@@ -11,6 +11,7 @@ import { evaluateWorkerCatch } from "./benchmark-result.ts";
 const STARTED_AT = "2026-07-28T10:00:00.000Z";
 const CAUGHT_AT = "2026-07-28T10:05:00.000Z";
 const FINISHED_AT = "2026-07-28T10:10:00.000Z";
+const EVIDENCE_CAPTURED_FRAME = 18_030;
 
 function mon(personality: number, species: number): ParsedPartyMon {
   return {
@@ -55,6 +56,7 @@ const afterCatch = snapshot([starter, caught], [251, 262]);
 function catchEvent(
   values: {
     occurredAt?: string;
+    frame?: number;
     species?: number;
     nationalDexNumber?: number;
     postEventParty?: readonly ParsedPartyMon[];
@@ -63,7 +65,7 @@ function catchEvent(
 ) {
   return {
     occurredAt: values.occurredAt ?? CAUGHT_AT,
-    frame: 18_000,
+    frame: values.frame ?? 18_000,
     species: values.species ?? 288,
     nationalDexNumber: values.nationalDexNumber ?? 263,
     postEventParty: (values.postEventParty ?? afterCatch.party).map(
@@ -111,6 +113,7 @@ function workerResult(exitCode: number | null) {
     },
     initialSnapshot: serializeSnapshot(initial),
     finalSnapshot: serializeSnapshot(afterCatch),
+    evidenceCapturedFrame: EVIDENCE_CAPTURED_FRAME,
     catchEvents: [catchEvent()],
     persistedSave: {
       persistedAt: "2026-07-28T10:06:00.000Z",
@@ -120,6 +123,44 @@ function workerResult(exitCode: number | null) {
   });
 }
 
+describe("catch event evidence window", () => {
+  test("accepts a final watcher poll after the goal process exits", () => {
+    const result = evaluateCatchBenchmark({
+      startedAt: STARTED_AT,
+      finishedAt: FINISHED_AT,
+      initialSnapshot: initial,
+      finalSnapshot: afterCatch,
+      evidenceCapturedFrame: EVIDENCE_CAPTURED_FRAME,
+      catchEvents: [
+        catchEvent({ occurredAt: "2026-07-28T10:10:00.001Z", frame: 18_030 }),
+      ],
+      persistedSave: {
+        ...persisted(),
+        persistedAt: "2026-07-28T10:11:00.000Z",
+      },
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.verifiedCaughtSpecies).toEqual([288]);
+  });
+
+  test("rejects a catch observed after final evidence capture", () => {
+    const result = evaluateCatchBenchmark({
+      startedAt: STARTED_AT,
+      finishedAt: FINISHED_AT,
+      initialSnapshot: initial,
+      finalSnapshot: afterCatch,
+      evidenceCapturedFrame: EVIDENCE_CAPTURED_FRAME,
+      catchEvents: [catchEvent({ frame: EVIDENCE_CAPTURED_FRAME + 1 })],
+      persistedSave: persisted(),
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.evidence.postStartCatch).toBe(false);
+    expect(result.caughtSpecies).toEqual([]);
+  });
+});
+
 describe("evaluateCatchBenchmark", () => {
   test("requires event, live state, and persisted save evidence", () => {
     const result = evaluateCatchBenchmark({
@@ -127,6 +168,7 @@ describe("evaluateCatchBenchmark", () => {
       finishedAt: FINISHED_AT,
       initialSnapshot: initial,
       finalSnapshot: afterCatch,
+      evidenceCapturedFrame: EVIDENCE_CAPTURED_FRAME,
       catchEvents: [catchEvent()],
       persistedSave: persisted(),
     });
@@ -152,6 +194,7 @@ describe("evaluateCatchBenchmark", () => {
       finishedAt: FINISHED_AT,
       initialSnapshot: initial,
       finalSnapshot: initial,
+      evidenceCapturedFrame: EVIDENCE_CAPTURED_FRAME,
       catchEvents: [],
       persistedSave: persisted(initial),
     });
@@ -172,6 +215,7 @@ describe("evaluateCatchBenchmark", () => {
       finishedAt: FINISHED_AT,
       initialSnapshot: initial,
       finalSnapshot: afterCatch,
+      evidenceCapturedFrame: EVIDENCE_CAPTURED_FRAME,
       catchEvents: [catchEvent({ occurredAt: "2026-07-28T09:59:59.000Z" })],
       persistedSave: persisted(),
     });
@@ -189,6 +233,7 @@ describe("evaluateCatchBenchmark", () => {
       finishedAt: FINISHED_AT,
       initialSnapshot: initial,
       finalSnapshot: afterCatch,
+      evidenceCapturedFrame: EVIDENCE_CAPTURED_FRAME,
       catchEvents: [catchEvent()],
       persistedSave: {
         ...persisted(),
@@ -209,6 +254,7 @@ describe("evaluateCatchBenchmark", () => {
       finishedAt: FINISHED_AT,
       initialSnapshot: initial,
       finalSnapshot: afterCatch,
+      evidenceCapturedFrame: EVIDENCE_CAPTURED_FRAME,
       catchEvents: [
         catchEvent({
           species: 286,
@@ -240,6 +286,7 @@ describe("evaluateCatchBenchmark", () => {
       finishedAt: FINISHED_AT,
       initialSnapshot: initial,
       finalSnapshot: dexOnlyAfterCatch,
+      evidenceCapturedFrame: EVIDENCE_CAPTURED_FRAME,
       catchEvents: [
         catchEvent({
           postEventParty: [starter],
@@ -260,6 +307,7 @@ describe("evaluateCatchBenchmark", () => {
         finishedAt: FINISHED_AT,
         initialSnapshot: initial,
         finalSnapshot: afterCatch,
+        evidenceCapturedFrame: EVIDENCE_CAPTURED_FRAME,
         catchEvents: [catchEvent({ nationalDexNumber: 261 })],
         persistedSave: persisted(),
       }),
@@ -273,6 +321,7 @@ describe("evaluateCatchBenchmark", () => {
         finishedAt: STARTED_AT,
         initialSnapshot: initial,
         finalSnapshot: afterCatch,
+        evidenceCapturedFrame: EVIDENCE_CAPTURED_FRAME,
         catchEvents: [],
         persistedSave: null,
       }),

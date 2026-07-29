@@ -209,11 +209,12 @@ async function bootAndContinue(
 async function waitForLiveSnapshot(
   emulator: Emulator,
   timeoutSeconds: number,
-): Promise<GameSnapshot> {
+): Promise<{ snapshot: GameSnapshot; capturedFrame: number }> {
   const deadline = Date.now() + timeoutSeconds * 1000;
   for (;;) {
+    const capturedFrame = emulator.frame;
     const snapshot = liveSnapshot(emulator);
-    if (snapshot !== null) return snapshot;
+    if (snapshot !== null) return { snapshot, capturedFrame };
     if (Date.now() >= deadline) {
       throw new Error("live game snapshot remained unavailable");
     }
@@ -383,6 +384,7 @@ async function main(): Promise<void> {
   let stopStartedAt: number;
   let initialSnapshot: GameSnapshot | undefined;
   let finalSnapshot: GameSnapshot | undefined;
+  let evidenceCapturedFrame: number | undefined;
   let goalId: string | undefined;
   let catchCaptureError: Error | undefined;
   const catchEvents: CatchEvent[] = [];
@@ -438,10 +440,12 @@ async function main(): Promise<void> {
     if (catchCaptureError !== undefined) {
       throw catchCaptureError;
     }
-    finalSnapshot = await waitForLiveSnapshot(
+    const finalEvidence = await waitForLiveSnapshot(
       emulator,
       config.bootTimeoutSeconds,
     );
+    finalSnapshot = finalEvidence.snapshot;
+    evidenceCapturedFrame = finalEvidence.capturedFrame;
     await emulator.checkpointSave();
   } finally {
     await manager?.shutdown();
@@ -473,6 +477,7 @@ async function main(): Promise<void> {
         goalState,
         initialSnapshot: serializeSnapshot(initialSnapshot),
         finalSnapshot: serializeSnapshot(finalSnapshot),
+        evidenceCapturedFrame,
         catchEvents,
         persistedSave: {
           persistedAt: persisted.persistedAt,

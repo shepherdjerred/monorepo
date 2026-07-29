@@ -38,6 +38,7 @@ export type CatchBenchmarkInput = {
   finishedAt: string;
   initialSnapshot: GameSnapshot;
   finalSnapshot: GameSnapshot;
+  evidenceCapturedFrame: number;
   catchEvents: readonly CatchEventEvidence[];
   persistedSave: PersistedSaveEvidence | null;
 };
@@ -100,10 +101,18 @@ export function evaluateCatchBenchmark(
   if (finishedAt < startedAt) {
     throw new Error("finishedAt must not precede startedAt");
   }
+  if (
+    !Number.isInteger(input.evidenceCapturedFrame) ||
+    input.evidenceCapturedFrame < 0
+  ) {
+    throw new Error("evidenceCapturedFrame must be a nonnegative integer");
+  }
 
   const postStartEvents = input.catchEvents.filter((event) => {
     const occurredAt = timestamp(event.occurredAt, "catchEvents[].occurredAt");
-    return occurredAt >= startedAt && occurredAt <= finishedAt;
+    return (
+      occurredAt >= startedAt && event.frame <= input.evidenceCapturedFrame
+    );
   });
   const persistedSnapshot = input.persistedSave?.snapshot;
   const correlated = postStartEvents.map((event) => {

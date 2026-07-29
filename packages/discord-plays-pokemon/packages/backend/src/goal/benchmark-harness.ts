@@ -31,6 +31,12 @@ const BenchmarkArgsSchema = z.strictObject({
 
 export type BenchmarkArgs = z.infer<typeof BenchmarkArgsSchema>;
 
+function resolvePathLikeCommand(command: string, cwd: string): string {
+  return path.isAbsolute(command) || command.includes(path.sep)
+    ? path.resolve(cwd, command)
+    : command;
+}
+
 const FLAG_TO_FIELD = new Map<string, keyof BenchmarkArgs>([
   ["--save", "save"],
   ["--wasm", "wasm"],
@@ -103,6 +109,7 @@ export function parseBenchmarkArgs(
     save: path.resolve(cwd, parsed.save),
     wasm: path.resolve(cwd, parsed.wasm),
     output: path.resolve(cwd, parsed.output),
+    codexBinary: resolvePathLikeCommand(parsed.codexBinary, cwd),
     implementationRoot: path.resolve(cwd, parsed.implementationRoot),
   };
 }
@@ -166,6 +173,7 @@ export const BenchmarkWorkerResultSchema = z.strictObject({
   goalState: GoalStateSchema,
   initialSnapshot: SerializedSnapshotSchema,
   finalSnapshot: SerializedSnapshotSchema,
+  evidenceCapturedFrame: z.number().int().nonnegative(),
   catchEvents: z.array(CatchEventSchema),
   persistedSave: z.strictObject({
     persistedAt: z.string(),

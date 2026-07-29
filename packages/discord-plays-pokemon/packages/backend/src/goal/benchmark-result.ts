@@ -90,6 +90,7 @@ export function evaluateWorkerCatch(input: {
     finishedAt: input.workerResult.goalState.finishedAt,
     initialSnapshot: deserializeSnapshot(input.workerResult.initialSnapshot),
     finalSnapshot: deserializeSnapshot(input.workerResult.finalSnapshot),
+    evidenceCapturedFrame: input.workerResult.evidenceCapturedFrame,
     catchEvents: input.workerResult.catchEvents,
     persistedSave: {
       persistedAt: input.workerResult.persistedSave.persistedAt,

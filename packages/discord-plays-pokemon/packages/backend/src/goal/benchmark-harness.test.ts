@@ -178,11 +178,37 @@ describe("parseBenchmarkArgs", () => {
     expect(parsed.save).toBe("/work/fixture.sav");
     expect(parsed.wasm).toBe("/work/game.wasm");
     expect(parsed.output).toBe("/work/artifacts");
+    expect(parsed.codexBinary).toBe("codex");
     expect(parsed.implementationRoot).toBe(
       "/repo/packages/discord-plays-pokemon",
     );
     expect(parsed.runs).toBe(2);
     expect(parsed.controlPort).toBe(19_000);
+  });
+
+  test("resolves path-like Codex binaries without changing PATH commands", () => {
+    const required = [
+      "--save",
+      "fixture.sav",
+      "--wasm",
+      "game.wasm",
+      "--output",
+      "artifacts",
+    ];
+
+    const pathLike = parseBenchmarkArgs(
+      [...required, "--codex-binary", "./bin/codex"],
+      "/package",
+      "/work",
+    );
+    const pathCommand = parseBenchmarkArgs(
+      [...required, "--codex-binary", "codex"],
+      "/package",
+      "/work",
+    );
+
+    expect(pathLike.codexBinary).toBe("/work/bin/codex");
+    expect(pathCommand.codexBinary).toBe("codex");
   });
 
   test("rejects unknown flags and overflowing per-run ports", () => {
