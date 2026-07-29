@@ -38,6 +38,11 @@ test("S3 lookup recognizes only confirmed missing-object diagnostics", () => {
       "fatal error: An error occurred (404): Key does not exist",
     ),
   ).toBe(true);
+  expect(
+    isMissingS3ObjectError(
+      "download failed: s3://scout-site-releases/inputs/example.json to - An error occurred (404) when calling the HeadObject operation: Not Found",
+    ),
+  ).toBe(true);
   expect(isMissingS3ObjectError("500 Internal Server Error")).toBe(false);
   expect(isMissingS3ObjectError("403 Forbidden")).toBe(false);
   expect(isMissingS3ObjectError("404 upstream gateway")).toBe(false);

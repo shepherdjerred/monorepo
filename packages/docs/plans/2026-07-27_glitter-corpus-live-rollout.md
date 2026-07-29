@@ -513,3 +513,75 @@ pass.
 - The nine persisted artifacts are the intended safe resume mechanism; retries
   against the same pinned snapshot will not pay for or regenerate those
   accepted responses.
+
+## Session Log — 2026-07-29 (production deployment and quota confirmation)
+
+### Done
+
+- Fixed the Argo release suspension schema so every suspended application keeps
+  a valid disabled automated-sync object, then passed all 31 suspension syncs
+  in authoritative main Buildkite #7040.
+- Replaced byte-level Helm chart fingerprints with canonical parsed-chart
+  fingerprints. PR
+  [#1820](https://github.com/shepherdjerred/monorepo/pull/1820) passed
+  current-head Buildkite #7045 and merged; main Buildkite #7052 successfully
+  published all ten expected charts and passed the complete Argo sync lane.
+- Merged generated pin PR
+  [#1821](https://github.com/shepherdjerred/monorepo/pull/1821) after
+  current-head Buildkite #7055 passed. The repository now durably pins the
+  Temporal worker from build 7052.
+- Verified production Argo is Synced and Healthy at Temporal chart
+  `2.0.0-7052`, and the Ready worker runs immutable image
+  `2.0.0-7052@sha256:580e41600ab0c1cc33d9d4f91a68c1ac7cc2126de68b6ade291b092719d8e4b2`.
+- Made Argo readiness revision-aware so a terminal failure from an older chart
+  revision cannot leave an otherwise current Synced and Healthy application
+  permanently Progressing. Current-revision, unversioned, and active
+  operations still block. PR
+  [#1822](https://github.com/shepherdjerred/monorepo/pull/1822) passed
+  current-head Buildkite #7061 and merged.
+- Ran the fixed-time, snapshot-pinned production dry run as workflow
+  `glitter-context-refresh-manual-cba098d4-60dd-4aea-af22-e65207b459eb`, run
+  `019fade0-3129-796d-b701-6d46b6b69f04`. Both configured activity attempts
+  failed closed on OpenAI HTTP 429 `insufficient_quota`; the workflow produced
+  no repository or generated-context mutation.
+- Confirmed `glitter-corpus-daily` remains active after its successful scheduled
+  action on July 29, with the next action at `2026-07-30T11:15:00Z`.
+  `glitter-context-refresh-weekly` remains deliberately paused, with its next
+  nominal action at `2026-08-03T18:00:00Z`.
+- Queried production observability after the rollout: snapshot metric
+  restoration is configured, the latest verified snapshot reports 212,415
+  messages, and every worker series reports zero SeaweedFS storage-integrity
+  failures over 24 hours.
+- Prepared PR
+  [#1824](https://github.com/shepherdjerred/monorepo/pull/1824) for the two
+  non-Glitter main gates exposed after the successful #7052 Argo lane: a
+  confirmed AWS CLI HeadObject 404 classifier for a missing Scout release
+  index, and the missing `homelab` package in the Cloudflare lane's
+  production-only install. Focused tests, pipeline validation, all 35 affected
+  verification tasks, and a clean production-filtered install plus `zod`
+  resolution check pass.
+
+### Remaining
+
+- Merge PR #1824 after its replacement current-head Buildkite and review gates
+  pass, then require the authoritative merged-main build to pass.
+- Restore quota for the OpenAI project used by the Temporal worker, or
+  explicitly authorize a different production OpenAI credential for this
+  workflow.
+- Rerun the pinned fixed-time dry run twice and require byte-identical outputs,
+  then run the real refresh, inspect its sole PR or no-diff result, and
+  smoke-test the shared package, Birmel, Scout, and Glitter consumers.
+- Deliberately unpause `glitter-context-refresh-weekly` only after those
+  acceptance gates pass, then complete and archive this plan and its related
+  TODOs.
+
+### Caveats
+
+- OpenAI rejected both attempts before the four missing style cards could be
+  generated. The nine prior immutable artifacts remain valid and reusable.
+- The Temporal OpenAI credential is distinct from the Birmel and Pokémon
+  credentials. No credential was read, copied, substituted, or changed during
+  this session.
+- Main Buildkite #7052 is red overall even though its Glitter-critical image,
+  Helm, and Argo lanes passed; the two remaining failures are the exact gates
+  fixed by PR #1824.

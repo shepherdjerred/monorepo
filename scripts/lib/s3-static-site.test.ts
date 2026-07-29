@@ -57,5 +57,11 @@ test("recognizes only missing-object S3 diagnostics as repairable drift", () => 
       "fatal error: An error occurred (NoSuchKey) when calling the GetObject operation",
     ),
   ).toBe(true);
+  expect(
+    isMissingS3Object(
+      "download failed: s3://bucket/key to - An error occurred (404) when calling the HeadObject operation: Not Found",
+    ),
+  ).toBe(true);
   expect(isMissingS3Object("fatal error: Access Denied")).toBe(false);
+  expect(isMissingS3Object("fatal error: 404 upstream gateway")).toBe(false);
 });
