@@ -25,6 +25,16 @@ const ApplicationSchema = z
         helm: z.object({
           valuesObject: z.object({
             config: z.object({
+              "agent-config": z.object({
+                "hooks-path": z.string(),
+                hooksVolume: z.object({
+                  name: z.string(),
+                  configMap: z.object({
+                    name: z.string(),
+                    defaultMode: z.number().int(),
+                  }),
+                }),
+              }),
               "pod-spec-patch": z.object({
                 containers: z.array(
                   z.object({
@@ -41,19 +51,39 @@ const ApplicationSchema = z
   })
   .loose();
 
-function synthBuildkiteApplication() {
+const ConfigMapSchema = z
+  .object({
+    apiVersion: z.literal("v1"),
+    kind: z.literal("ConfigMap"),
+    metadata: z.object({
+      name: z.literal("buildkite-agent-hooks"),
+      namespace: z.literal("buildkite"),
+    }),
+    data: z.object({
+      "agent-shutdown": z.string(),
+    }),
+  })
+  .loose();
+
+function synthBuildkiteResources() {
   const chart = Testing.chart();
   createBuildkiteApp(chart);
-  const application = z
-    .array(z.unknown())
-    .parse(Testing.synth(chart))
-    .find((manifest) => ApplicationSchema.safeParse(manifest).success);
-  return ApplicationSchema.parse(application);
+  const resources = z.array(z.unknown()).parse(Testing.synth(chart));
+  const application = resources.find(
+    (manifest) => ApplicationSchema.safeParse(manifest).success,
+  );
+  const hooks = resources.find(
+    (manifest) => ConfigMapSchema.safeParse(manifest).success,
+  );
+  return {
+    application: ApplicationSchema.parse(application),
+    hooks: ConfigMapSchema.parse(hooks),
+  };
 }
 
 describe("Buildkite application", () => {
   it("accounts for the tmpfs checkout on the checkout container", () => {
-    const application = synthBuildkiteApplication();
+    const { application } = synthBuildkiteResources();
     const containers =
       application.spec.source.helm.valuesObject.config["pod-spec-patch"]
         .containers;
@@ -72,5 +102,25 @@ describe("Buildkite application", () => {
         limits: { cpu: "400m", memory: "768Mi" },
       },
     });
+  });
+
+  it("retains the agent for terminal cAdvisor scrapes after job finish", () => {
+    const { application, hooks } = synthBuildkiteResources();
+    const agentConfig =
+      application.spec.source.helm.valuesObject.config["agent-config"];
+
+    expect(agentConfig).toEqual({
+      "hooks-path": "/buildkite/hooks",
+      hooksVolume: {
+        name: "buildkite-hooks",
+        configMap: {
+          name: "buildkite-agent-hooks",
+          defaultMode: 493,
+        },
+      },
+    });
+    expect(hooks.data["agent-shutdown"]).toContain("#!/bin/sh");
+    expect(hooks.data["agent-shutdown"]).toContain("set -eu");
+    expect(hooks.data["agent-shutdown"]).toContain("sleep 20");
   });
 });

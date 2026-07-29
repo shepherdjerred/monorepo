@@ -1,14 +1,15 @@
 import { mkdtemp } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { afterAll, beforeAll, describe, expect, it, mock } from "bun:test";
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { register } from "#observability/metrics.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
 import type { AgentTaskCommand } from "./agent-task-command.ts";
-// Static namespace import resolves the real module before mock.module runs, so
-// its non-mocked exports (e.g. reportOnlyPrompt) can be spread back into the
-// process-wide mock below.
-import * as actualAgentTaskCommand from "#activities/agent-task-command.ts";
+import {
+  agentTaskSecretTokens,
+  createAgentTaskActivities,
+  envForProvider,
+} from "./agent-task.ts";
 
 const originalFetch = globalThis.fetch;
 const originalGitHubAppId = Bun.env["GITHUB_APP_ID"];
@@ -85,22 +86,14 @@ const fetchStub = Object.assign(
   { preconnect: originalFetch.preconnect },
 );
 
-// Spread the real module so this mock only overrides `buildAgentTaskCommand`.
-// Bun's `mock.module` registers the mock process-wide and is NOT auto-restored
-// between test files, and `#activities/agent-task-command.ts` resolves to the
-// same file as the relative `./agent-task-command.ts`. Without the spread, a
-// sibling test file importing another export from this module would
-// intermittently fail to link with "Export named '…' not found", depending on
-// test-file order.
-void mock.module("#activities/agent-task-command.ts", () => ({
-  ...actualAgentTaskCommand,
-  buildAgentTaskCommand: async (
+const testAgentTaskActivities = createAgentTaskActivities(
+  async (
     _input: AgentTaskInput,
     workdir: string,
   ): Promise<AgentTaskCommand> => {
     const outputPath = path.join(workdir, "agent-task-output.json");
     const code = [
-      `await Bun.write(${JSON.stringify(outputPath)}, JSON.stringify({ markdown: "task complete" }));`,
+      `await Bun.write(${JSON.stringify(outputPath)}, JSON.stringify({ markdown: "task complete", followUp: null, cancelCron: null, cancelReason: null }));`,
     ].join("\n");
     return {
       args: ["bun", "--eval", code],
@@ -109,7 +102,7 @@ void mock.module("#activities/agent-task-command.ts", () => ({
       prompt: "Return a short report.",
     };
   },
-}));
+);
 
 const baseInput: AgentTaskInput = {
   title: "Metric placement test",
@@ -137,10 +130,9 @@ describe("agentTaskActivities", () => {
   });
 
   it("records a successful run after agent output parses", async () => {
-    const { agentTaskActivities } = await import("./agent-task.ts");
     const workdir = await mkdtemp(path.join(os.tmpdir(), "agent-task-test-"));
 
-    const result = await agentTaskActivities.runAgentTask({
+    const result = await testAgentTaskActivities.runAgentTask({
       input: baseInput,
       workdir,
     });
@@ -153,7 +145,6 @@ describe("agentTaskActivities", () => {
   });
 
   it("redacts a distinct Codex API key", async () => {
-    const { agentTaskSecretTokens } = await import("./agent-task.ts");
     const codexApiKey = "codex-distinct-secret";
     const tokens = agentTaskSecretTokens("github-token", {
       CODEX_API_KEY: codexApiKey,
@@ -161,5 +152,40 @@ describe("agentTaskActivities", () => {
     });
 
     expect(tokens).toContain(codexApiKey);
+  });
+
+  it("aliases OPENAI_API_KEY for Codex without overriding an explicit key", async () => {
+    expect(
+      envForProvider("codex", "github-token", {
+        OPENAI_API_KEY: "openai-key",
+      }),
+    ).toEqual({
+      OPENAI_API_KEY: "openai-key",
+      CODEX_API_KEY: "openai-key",
+      GH_TOKEN: "github-token",
+    });
+    expect(
+      envForProvider("codex", "github-token", {
+        OPENAI_API_KEY: "openai-key",
+        CODEX_API_KEY: "codex-key",
+      })["CODEX_API_KEY"],
+    ).toBe("codex-key");
+  });
+
+  it("keeps Claude OAuth isolation and sanitizes GitHub credentials", async () => {
+    const environment = envForProvider("claude", "installation-token", {
+      ANTHROPIC_API_KEY: "anthropic-key",
+      OPENAI_API_KEY: "openai-key",
+      GH_TOKEN: "personal-token",
+      GITHUB_PERSONAL_ACCESS_TOKEN: "personal-token",
+      GITHUB_APP_PRIVATE_KEY: "private-key",
+      SAFE_VALUE: "safe",
+    });
+
+    expect(environment).toEqual({
+      OPENAI_API_KEY: "openai-key",
+      SAFE_VALUE: "safe",
+      GH_TOKEN: "installation-token",
+    });
   });
 });

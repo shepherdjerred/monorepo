@@ -1,3 +1,4 @@
+import { zodResponseFormat } from "openai/helpers/zod.mjs";
 import { z } from "zod/v4";
 
 export const AgentTaskProviderSchema = z.enum(["claude", "codex"]);
@@ -82,11 +83,49 @@ export const AgentTaskResultPayloadSchema = z.object({
   cancelReason: z.string().min(1).optional(),
 });
 
+const AgentTaskWireFollowUpSchema = z
+  .object({
+    title: z.string().min(1),
+    prompt: z.string().min(1),
+    provider: AgentTaskProviderSchema.nullable(),
+    runAt: z.iso.datetime({ offset: true }).nullable(),
+    cron: z.string().min(1).nullable(),
+    model: z.string().min(1).nullable(),
+    maxTurns: z.number().int().positive().nullable(),
+    agentTimeoutMinutes: z.number().int().positive().max(90).nullable(),
+  })
+  .superRefine((value, ctx) => {
+    const scheduleFieldCount =
+      Number(value.runAt !== null) + Number(value.cron !== null);
+    if (scheduleFieldCount !== 1) {
+      ctx.addIssue({
+        code: "custom",
+        message: "followUp must set exactly one of runAt or cron",
+        path: ["runAt"],
+      });
+    }
+  });
+
+export const AgentTaskWireResultPayloadSchema = z.object({
+  markdown: z.string().min(1).describe("Markdown report to email to the user."),
+  followUp: AgentTaskWireFollowUpSchema.nullable(),
+  cancelCron: z
+    .boolean()
+    .nullable()
+    .describe(
+      "Set true only when the owning recurring schedule should be paused.",
+    ),
+  cancelReason: z.string().min(1).nullable(),
+});
+
 export type AgentTaskProvider = z.infer<typeof AgentTaskProviderSchema>;
 export type AgentTaskInput = z.infer<typeof AgentTaskInputSchema>;
 export type AgentTaskFollowUp = z.infer<typeof AgentTaskFollowUpSchema>;
 export type AgentTaskResultPayload = z.infer<
   typeof AgentTaskResultPayloadSchema
+>;
+export type AgentTaskWireResultPayload = z.infer<
+  typeof AgentTaskWireResultPayloadSchema
 >;
 
 export type AgentTaskStartResult =
@@ -100,45 +139,60 @@ export type AgentTaskStartResult =
       scheduleId: string;
     };
 
-export const AGENT_TASK_OUTPUT_JSON_SCHEMA: Record<string, unknown> = {
-  type: "object",
-  additionalProperties: false,
-  required: ["markdown"],
-  properties: {
-    markdown: {
-      type: "string",
-      minLength: 1,
-      description: "Markdown report to email to the user.",
-    },
-    followUp: {
-      type: "object",
-      additionalProperties: false,
-      required: ["title", "prompt"],
-      properties: {
-        title: { type: "string", minLength: 1 },
-        prompt: { type: "string", minLength: 1 },
-        provider: { type: "string", enum: ["claude", "codex"] },
-        runAt: {
-          type: "string",
-          description: "RFC3339 timestamp for a one-off follow-up.",
-        },
-        cron: {
-          type: "string",
-          description: "Cron expression for a recurring follow-up.",
-        },
-        model: { type: "string", minLength: 1 },
-        maxTurns: { type: "integer", minimum: 1 },
-        agentTimeoutMinutes: { type: "integer", minimum: 1, maximum: 90 },
-      },
-    },
-    cancelCron: {
-      type: "boolean",
-      description:
-        "Set true only when the owning recurring schedule should be paused.",
-    },
-    cancelReason: { type: "string", minLength: 1 },
-  },
-};
+export const AGENT_TASK_OUTPUT_JSON_SCHEMA: Record<string, unknown> = z
+  .record(z.string(), z.unknown())
+  .parse(
+    zodResponseFormat(AgentTaskWireResultPayloadSchema, "agent_task_result")
+      .json_schema.schema,
+  );
+
+function normalizeAgentTaskFollowUp(
+  followUp: AgentTaskWireResultPayload["followUp"],
+): AgentTaskFollowUp | undefined {
+  if (followUp === null) {
+    return undefined;
+  }
+  return AgentTaskFollowUpSchema.parse({
+    title: followUp.title,
+    prompt: followUp.prompt,
+    ...(followUp.provider === null ? {} : { provider: followUp.provider }),
+    ...(followUp.runAt === null ? {} : { runAt: followUp.runAt }),
+    ...(followUp.cron === null ? {} : { cron: followUp.cron }),
+    ...(followUp.model === null ? {} : { model: followUp.model }),
+    ...(followUp.maxTurns === null ? {} : { maxTurns: followUp.maxTurns }),
+    ...(followUp.agentTimeoutMinutes === null
+      ? {}
+      : { agentTimeoutMinutes: followUp.agentTimeoutMinutes }),
+  });
+}
+
+export function parseAgentTaskResultPayload(
+  raw: unknown,
+): AgentTaskResultPayload {
+  if (raw === undefined || raw === "") {
+    throw new Error(
+      "agent produced no structured output (expected --json-schema structured_output / --output-schema file)",
+    );
+  }
+  try {
+    const decoded: unknown = typeof raw === "string" ? JSON.parse(raw) : raw;
+    const wire = AgentTaskWireResultPayloadSchema.parse(decoded);
+    const followUp = normalizeAgentTaskFollowUp(wire.followUp);
+    return AgentTaskResultPayloadSchema.parse({
+      markdown: wire.markdown,
+      ...(followUp === undefined ? {} : { followUp }),
+      ...(wire.cancelCron === null ? {} : { cancelCron: wire.cancelCron }),
+      ...(wire.cancelReason === null
+        ? {}
+        : { cancelReason: wire.cancelReason }),
+    });
+  } catch (error: unknown) {
+    throw new Error(
+      `Failed to parse agent task JSON payload: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
+    );
+  }
+}
 
 function sortJson(value: unknown): unknown {
   if (Array.isArray(value)) {
