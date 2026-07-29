@@ -30,6 +30,7 @@ import {
   createStreamObserver,
   newSessionStats,
   prometheusLatencyObservations,
+  resetStreamLatencyMetrics,
   type SessionStats,
 } from "#src/stream/stream-observer.ts";
 import {
@@ -279,6 +280,7 @@ export class GameStreamer extends GameStreamerBase {
   private resetStreamMetrics(): void {
     this.videoSink = undefined;
     this.latencyTracker = undefined;
+    resetStreamLatencyMetrics();
     sinkBufferBytes.set(0);
     streamFfmpegSpeedRatio.set(0);
     streamFfmpegFps.set(0);

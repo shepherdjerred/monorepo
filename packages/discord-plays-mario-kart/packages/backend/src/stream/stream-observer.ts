@@ -96,6 +96,10 @@ export const prometheusLatencyObservations: StreamLatencyObservations = {
   },
 };
 
+export function resetStreamLatencyMetrics(): void {
+  streamAvContentOffsetMs.set(0);
+}
+
 export type StreamObserverOptions = {
   now?: () => number;
   latencyTracker?: StreamLatencyTracker;

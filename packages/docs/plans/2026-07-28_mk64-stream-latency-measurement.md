@@ -77,7 +77,7 @@ emulator tick.
   report. The software pipeline measured `-1.0 ms` A/V p50 at baseline,
   recovered an injected `+100 ms` audio delay as `+99.3 ms`, and recovered
   three delayed video frames as `-101.0 ms`.
-- Passed MK64 backend typecheck, lint, and 141 tests; MK64 root checks;
+- Passed MK64 backend typecheck, lint, and 142 tests; MK64 root checks;
   discord-video-stream build, typecheck, and 60 tests; and streambot typecheck,
   lint, and 384 package tests.
 - Published code commit `15ac4124b` to PR #1779 and deployed its immutable
@@ -99,19 +99,18 @@ emulator tick.
   line-oriented Prometheus parser after Buildkite Semgrep rejected the first
   implementation. The focused parser suite passes 11 tests, typecheck, and
   lint.
-- Addressed all five review-gate findings: measurement summaries now subtract
+- Addressed all six review-gate findings: measurement summaries now subtract
   starting histogram buckets, calibration video writes race encoder exit,
   encoder preparation receives cancellation, audio retains the leading VI
-  needed to pair drops with video, and the synchronization verification TODO
-  is active again.
+  needed to pair drops with video, the signed A/V gauge resets between
+  sessions, and the synchronization verification TODO is active again.
 - Revalidated the shared lifecycle with 57 tests, shared streaming core with
   nine tests, and Pokemon's consumer with 190 tests plus two intentional
   artifact-gated skips; all affected typechecks and lints pass.
 
 ### Remaining
 
-- [ ] Wait for replacement current-head Buildkite CI and human review of
-      PR #1779.
+- [ ] Complete human review and merge PR #1779.
 - [ ] Use the new evidence to design the separate video-latency reduction; this
       plan measures and attributes latency but does not change buffering policy.
       Operator re-verification remains tracked in

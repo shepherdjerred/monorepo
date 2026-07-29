@@ -4,6 +4,8 @@ import {
   createStreamObserver,
   newSessionStats,
   parseTimemarkSeconds,
+  prometheusLatencyObservations,
+  resetStreamLatencyMetrics,
 } from "./stream-observer.ts";
 import { notifyStreamSessionEnded } from "./game-streamer.ts";
 import { registry } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
@@ -102,6 +104,16 @@ describe("notifyStreamSessionEnded", () => {
     });
     await notifyStreamSessionEnded(true);
     expect(calls).toBe(0);
+  });
+});
+
+describe("resetStreamLatencyMetrics", () => {
+  it("clears the signed A/V gauge between sessions", async () => {
+    prometheusLatencyObservations.observeAvContentOffset(-198.5);
+    expect(await metricValue("stream_av_content_offset_ms")).toBe(-198.5);
+
+    resetStreamLatencyMetrics();
+    expect(await metricValue("stream_av_content_offset_ms")).toBe(0);
   });
 });
 
