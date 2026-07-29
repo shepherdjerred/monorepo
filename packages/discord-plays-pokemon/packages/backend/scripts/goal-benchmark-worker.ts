@@ -54,6 +54,8 @@ type ProcessCapture = {
   spawner: GoalProcessSpawner;
   completed: () => Promise<void>;
 };
+const EXTERNAL_PROVIDER_STARTUP_PATTERN =
+  /\b(?:quota|billing|usage limit|credit balance|rate limit|too many requests|429|auth(?:entication|orization)?|unauthorized|forbidden|log(?:ged)? in|login|required credentials?|api key|oauth|401|403)\b/i;
 async function startBenchmarkGoal(
   manager: GoalManager,
   goal: string,
@@ -69,11 +71,13 @@ async function startBenchmarkGoal(
     throw new Error(`goal did not start: ${started.kind}: ${started.content}`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    const failure = { schemaVersion: 1, phase: "startup", message };
-    await Bun.write(
-      path.join(runDirectory, "provider-startup-failure.json"),
-      `${JSON.stringify(failure)}\n`,
-    );
+    if (EXTERNAL_PROVIDER_STARTUP_PATTERN.test(message)) {
+      const failure = { schemaVersion: 1, phase: "startup", message };
+      await Bun.write(
+        path.join(runDirectory, "provider-startup-failure.json"),
+        `${JSON.stringify(failure)}\n`,
+      );
+    }
     throw error;
   }
 }
@@ -86,7 +90,6 @@ function serializeSnapshot(snapshot: GameSnapshot): SerializedSnapshot {
     caughtMonShiny: snapshot.caughtMonShiny,
   };
 }
-
 async function copyStream(
   stream: ReadableStream<Uint8Array>,
   filePath: string,
@@ -105,7 +108,6 @@ async function copyStream(
     await sink.end();
   }
 }
-
 function createProcessCapture(runDirectory: string): ProcessCapture {
   let capture: Promise<void> | undefined;
   const spawner: GoalProcessSpawner = (args, options) => {
@@ -144,7 +146,6 @@ function createProcessCapture(runDirectory: string): ProcessCapture {
     },
   };
 }
-
 function liveSnapshot(emulator: Emulator): GameSnapshot | null {
   return readGameSnapshot(emulator.memoryReader(), emulator.gameSymbols());
 }
@@ -154,7 +155,6 @@ function liveSpatial(
 ): ReturnType<typeof readSpatialSnapshot> {
   return readSpatialSnapshot(emulator.memoryReader(), emulator.gameSymbols());
 }
-
 function captureCatchEvent(
   emulator: Emulator,
   frame: number,
@@ -188,7 +188,6 @@ function captureCatchEvent(
     postEventNationalDexOwned: (dexByte & (1 << (bitIndex % 8))) !== 0,
   };
 }
-
 async function bootAndContinue(
   emulator: Emulator,
   timeoutSeconds: number,
@@ -206,15 +205,12 @@ async function bootAndContinue(
       );
     }
     if (Date.now() >= nextContinuePress) {
-      // Mechanical startup only: advance boot/title/Continue until the loaded
-      // save exposes a live player object. Gameplay remains entirely model-run.
       await emulator.queuePress(BUTTON.a, 3, 3);
       nextContinuePress = Date.now() + 750;
     }
     await Bun.sleep(100);
   }
 }
-
 async function waitForLiveSnapshot(
   emulator: Emulator,
   timeoutSeconds: number,
@@ -229,7 +225,6 @@ async function waitForLiveSnapshot(
     await Bun.sleep(100);
   }
 }
-
 async function waitForGoal(
   manager: GoalManager,
   goalId: string,
@@ -238,8 +233,12 @@ async function waitForGoal(
   const deadline = Date.now() + (runtimeMinutes * 60 + 30) * 1000;
   for (;;) {
     const state = manager.getStatus();
-    if (state === undefined) return;
-    if (state.id !== goalId) {
+    if (state === undefined) {
+      const completed = manager
+        .getHistory(100)
+        .some((entry) => entry.id === goalId);
+      if (completed) return;
+    } else if (state.id !== goalId) {
       throw new Error(`active goal changed from ${goalId} to ${state.id}`);
     }
     if (Date.now() >= deadline) {
@@ -248,7 +247,6 @@ async function waitForGoal(
     await Bun.sleep(250);
   }
 }
-
 async function waitForPersistedSave(
   savePath: string,
   minimumModifiedAt: number,
@@ -276,7 +274,6 @@ async function waitForPersistedSave(
     await Bun.sleep(100);
   }
 }
-
 async function snapshotPersistedSave(
   config: WorkerConfig,
 ): Promise<GameSnapshot> {
@@ -292,7 +289,6 @@ async function snapshotPersistedSave(
     await verifier.stopAndFlush();
   }
 }
-
 function buildRuntimeConfig(config: WorkerConfig) {
   return ConfigSchema.parse({
     bot: {
@@ -332,6 +328,7 @@ function buildRuntimeConfig(config: WorkerConfig) {
         reasoning_effort: config.reasoning,
         codex_binary: config.codexBinary,
         runtime_directory: config.runtimeDirectory,
+        helper_dir: path.join(config.runDirectory, ".pokemon-goal-bin"),
         screenshot_dir: path.join(config.runDirectory, "screenshots"),
         state_path: path.join(config.runDirectory, "goal-state.json"),
         memory_dir: path.join(config.runDirectory, "goal-memory"),
@@ -370,7 +367,6 @@ function buildRuntimeConfig(config: WorkerConfig) {
     },
   });
 }
-
 async function readWorkerConfig(): Promise<WorkerConfig> {
   const flagIndex = Bun.argv.indexOf("--config");
   const configPath = Bun.argv.at(flagIndex + 1);
@@ -379,7 +375,6 @@ async function readWorkerConfig(): Promise<WorkerConfig> {
   }
   return WorkerConfigSchema.parse(await Bun.file(configPath).json());
 }
-
 async function main(): Promise<void> {
   const config = await readWorkerConfig();
   const runtimeConfig = buildRuntimeConfig(config);
@@ -453,8 +448,6 @@ async function main(): Promise<void> {
       emulator,
       config.bootTimeoutSeconds,
     );
-    // Benchmark evidence must survive an independent reboot. The engine owns
-    // save serialization; the host only flushes its resulting flash bytes.
     await emulator.checkpointSave();
   } finally {
     await manager?.shutdown();
@@ -464,14 +457,12 @@ async function main(): Promise<void> {
     stopStartedAt = Date.now();
     await emulator.stopAndFlush();
   }
-
   const goalState = manager
     .getHistory(100)
     .find((entry) => entry.id === goalId);
   if (goalState === undefined) {
     throw new Error("completed goal state was not recorded");
   }
-
   const persisted = await waitForPersistedSave(
     config.runSavePath,
     stopStartedAt,
@@ -500,5 +491,4 @@ async function main(): Promise<void> {
     )}\n`,
   );
 }
-
 await main();

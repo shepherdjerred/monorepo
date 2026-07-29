@@ -100,6 +100,9 @@ reasoning_effort = "medium"
 codex_binary = "codex"
 # Codex runs from this directory; screenshots/state paths are relative to it
 runtime_directory = "."
+# Optional. Benchmarks override this with a per-run directory so helpers never
+# mutate the implementation checkout.
+# helper_dir = ".pokemon-goal-bin"
 screenshot_dir = "goal-screenshots"
 state_path = "goal-state.json"
 # Per-guild persistent memory (MEMORY.md fed into every goal prompt + logs/ +

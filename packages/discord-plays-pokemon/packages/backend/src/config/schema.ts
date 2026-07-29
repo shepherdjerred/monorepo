@@ -13,6 +13,7 @@ const GoalConfigSchema = z
     reasoning_effort: ReasoningEffortSchema.default("medium"),
     codex_binary: z.string().min(1).default("codex"),
     runtime_directory: z.string().min(1).default("."),
+    helper_dir: z.string().min(1).optional(),
     screenshot_dir: z.string().min(1).default("goal-screenshots"),
     state_path: z.string().min(1).default("goal-state.json"),
     // Per-guild persistent memory (MEMORY.md + logs/ + archived-memory/) lives

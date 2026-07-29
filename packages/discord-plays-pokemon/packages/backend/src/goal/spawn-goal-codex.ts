@@ -44,10 +44,15 @@ export async function spawnGoalCodex(
   const screenshotDirectory = path.isAbsolute(input.config.screenshot_dir)
     ? input.config.screenshot_dir
     : path.resolve(runtimeDirectory, input.config.screenshot_dir);
+  const configuredHelperDirectory =
+    input.config.helper_dir ?? ".pokemon-goal-bin";
+  const helperDirectory = path.isAbsolute(configuredHelperDirectory)
+    ? configuredHelperDirectory
+    : path.resolve(runtimeDirectory, configuredHelperDirectory);
   await Bun.write(path.join(screenshotDirectory, ".keep"), "", {
     createPath: true,
   });
-  const helperDirectory = await prepareRuntimeTools(runtimeDirectory);
+  await prepareRuntimeTools(helperDirectory);
   const outputPath = path.join(
     screenshotDirectory,
     `${input.goalId}-final.txt`,

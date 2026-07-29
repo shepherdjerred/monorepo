@@ -315,6 +315,42 @@ describe("GoalManager final report", () => {
     }
   });
 
+  test("prepares pokemonctl in an explicitly isolated helper directory", async () => {
+    const runtimeDirectory = await createRuntimeDirectory();
+    const helperDirectory = path.join(runtimeDirectory, "benchmark-helper");
+    const process = makeProcess();
+    let spawnedPath: string | undefined;
+    const manager = new GoalManager({
+      config: {
+        ...makeGoalConfig(runtimeDirectory),
+        helper_dir: helperDirectory,
+      },
+      controlToken: "token",
+      spawner: (_args, options) => {
+        spawnedPath = options.env["PATH"];
+        return process;
+      },
+      sendMessage: noopSendMessage,
+    });
+
+    const started = await manager.startGoal({
+      goal: "Reach Petalburg",
+      requesterId: "user-a",
+      channelId: "channel",
+    });
+    expect(started.kind).toBe("started");
+    expect(
+      await Bun.file(path.join(helperDirectory, "pokemonctl")).exists(),
+    ).toBe(true);
+    expect(
+      await Bun.file(
+        path.join(runtimeDirectory, ".pokemon-goal-bin", "pokemonctl"),
+      ).exists(),
+    ).toBe(false);
+    expect(spawnedPath?.split(":")[0]).toBe(helperDirectory);
+    await manager.shutdown();
+  });
+
   test("truncates an oversized final report to Discord's limit", async () => {
     const runtimeDirectory = await createRuntimeDirectory();
     const process = makeProcess();
