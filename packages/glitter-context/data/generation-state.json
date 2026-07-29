@@ -1,99 +1,99 @@
 {
   "$schema": "../schema/generation-state.schema.json",
   "schemaVersion": 1,
-  "relationshipSourceSnapshotChecksum": null,
-  "relationshipRefreshedAt": null,
+  "relationshipSourceSnapshotChecksum": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+  "relationshipRefreshedAt": "2026-07-30T00:00:00Z",
   "people": [
     {
       "personId": "aaron",
-      "lastMessageId": null,
-      "sourceSnapshotChecksum": null,
-      "messageCount": 0,
-      "refreshedAt": null
+      "lastMessageId": "1531845087103942716",
+      "sourceSnapshotChecksum": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+      "messageCount": 10036,
+      "refreshedAt": "2026-07-30T00:00:00Z"
     },
     {
       "personId": "brian",
-      "lastMessageId": null,
-      "sourceSnapshotChecksum": null,
-      "messageCount": 0,
-      "refreshedAt": null
+      "lastMessageId": "1531792015728316417",
+      "sourceSnapshotChecksum": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+      "messageCount": 8611,
+      "refreshedAt": "2026-07-30T00:00:00Z"
     },
     {
       "personId": "caitlyn",
-      "lastMessageId": null,
-      "sourceSnapshotChecksum": null,
-      "messageCount": 0,
-      "refreshedAt": null
+      "lastMessageId": "1529289580925157486",
+      "sourceSnapshotChecksum": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+      "messageCount": 3184,
+      "refreshedAt": "2026-07-30T00:00:00Z"
     },
     {
       "personId": "colin",
-      "lastMessageId": null,
-      "sourceSnapshotChecksum": null,
-      "messageCount": 0,
-      "refreshedAt": null
+      "lastMessageId": "1531857598926557235",
+      "sourceSnapshotChecksum": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+      "messageCount": 2517,
+      "refreshedAt": "2026-07-30T00:00:00Z"
     },
     {
       "personId": "danny",
-      "lastMessageId": null,
-      "sourceSnapshotChecksum": null,
-      "messageCount": 0,
-      "refreshedAt": null
+      "lastMessageId": "1531868658022744064",
+      "sourceSnapshotChecksum": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+      "messageCount": 20103,
+      "refreshedAt": "2026-07-30T00:00:00Z"
     },
     {
       "personId": "edward",
-      "lastMessageId": null,
-      "sourceSnapshotChecksum": null,
-      "messageCount": 0,
-      "refreshedAt": null
+      "lastMessageId": "1531804136784396378",
+      "sourceSnapshotChecksum": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+      "messageCount": 9720,
+      "refreshedAt": "2026-07-30T00:00:00Z"
     },
     {
       "personId": "hirza",
-      "lastMessageId": null,
-      "sourceSnapshotChecksum": null,
-      "messageCount": 0,
-      "refreshedAt": null
+      "lastMessageId": "1531600940849827891",
+      "sourceSnapshotChecksum": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+      "messageCount": 10878,
+      "refreshedAt": "2026-07-30T00:00:00Z"
     },
     {
       "personId": "irfan",
-      "lastMessageId": null,
-      "sourceSnapshotChecksum": null,
-      "messageCount": 0,
-      "refreshedAt": null
+      "lastMessageId": "1531863385048875168",
+      "sourceSnapshotChecksum": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+      "messageCount": 8857,
+      "refreshedAt": "2026-07-30T00:00:00Z"
     },
     {
       "personId": "jerred",
-      "lastMessageId": null,
-      "sourceSnapshotChecksum": null,
-      "messageCount": 0,
-      "refreshedAt": null
+      "lastMessageId": "1531869457943887976",
+      "sourceSnapshotChecksum": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+      "messageCount": 10863,
+      "refreshedAt": "2026-07-30T00:00:00Z"
     },
     {
       "personId": "long",
-      "lastMessageId": null,
-      "sourceSnapshotChecksum": null,
-      "messageCount": 0,
-      "refreshedAt": null
+      "lastMessageId": "1531856911211954336",
+      "sourceSnapshotChecksum": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+      "messageCount": 2704,
+      "refreshedAt": "2026-07-30T00:00:00Z"
     },
     {
       "personId": "richard",
-      "lastMessageId": null,
-      "sourceSnapshotChecksum": null,
-      "messageCount": 0,
-      "refreshedAt": null
+      "lastMessageId": "1450676901927456890",
+      "sourceSnapshotChecksum": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+      "messageCount": 1327,
+      "refreshedAt": "2026-07-30T00:00:00Z"
     },
     {
       "personId": "ryan",
-      "lastMessageId": null,
-      "sourceSnapshotChecksum": null,
-      "messageCount": 0,
-      "refreshedAt": null
+      "lastMessageId": "1531830816420663307",
+      "sourceSnapshotChecksum": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+      "messageCount": 6953,
+      "refreshedAt": "2026-07-30T00:00:00Z"
     },
     {
       "personId": "virmel",
-      "lastMessageId": null,
-      "sourceSnapshotChecksum": null,
-      "messageCount": 0,
-      "refreshedAt": null
+      "lastMessageId": "1531833612901548163",
+      "sourceSnapshotChecksum": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+      "messageCount": 20567,
+      "refreshedAt": "2026-07-30T00:00:00Z"
     }
   ]
 }
