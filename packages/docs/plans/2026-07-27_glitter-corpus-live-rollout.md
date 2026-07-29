@@ -401,10 +401,17 @@ pass.
 - Passed the focused schema regression, the full 738-test Temporal suite, and
   all 30 tasks in `bun run verify -- --affected`, including the schedule
   consumer-clone rehearsal.
+- Merged the repair through PR
+  [#1792](https://github.com/shepherdjerred/monorepo/pull/1792); authoritative
+  main Buildkite #6833 built and pushed the repaired worker image.
+- Traced the image-pin PR #1789 failure to two deterministic root-script lint
+  errors that a prior cache hit had hidden, then corrected the HCL parser
+  control flow and replaced the high-entropy test fixture.
 
 ### Remaining
 
-- Verify, publish, merge, and deploy the strict Structured Outputs repair.
+- Publish and merge the root-script lint repair, then complete the repaired
+  worker image-pin deployment through PR #1789.
 - Rerun both fixed-time dry runs and require byte-identical proposal outputs.
 - Run the real weekly refresh, review its PR or no-diff result, smoke-test all
   three consumers, and deliberately unpause the weekly schedule.
@@ -416,3 +423,6 @@ pass.
   branch, commit, PR, or context-file mutation.
 - `glitter-context-refresh-weekly` remains paused until both dry runs, the real
   run, and downstream smoke checks pass.
+- The repaired worker image exists at
+  `sha256:ffb5e5cb47b21e65f41385c3c4660de367ff4a12a18f26df1582a25af7086af1`,
+  but production remains on the prior image until the GitOps pin merges.

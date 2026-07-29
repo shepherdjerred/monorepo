@@ -52,15 +52,19 @@ export function hclNamedBlock(
       }
       continue;
     }
-    if (character === '"') {
-      quoted = true;
-    } else if (character === "{") {
-      depth += 1;
-    } else if (character === "}") {
-      depth -= 1;
-      if (depth === 0) {
-        return document.slice(markerIndex, index + 1);
-      }
+    switch (character) {
+      case '"':
+        quoted = true;
+        break;
+      case "{":
+        depth += 1;
+        break;
+      case "}":
+        depth -= 1;
+        if (depth === 0) {
+          return document.slice(markerIndex, index + 1);
+        }
+        break;
     }
   }
   fail(`docker-bake.hcl ${marker} has an unclosed body`);
