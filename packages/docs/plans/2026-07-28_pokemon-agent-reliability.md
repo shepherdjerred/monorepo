@@ -137,6 +137,12 @@ system against a copied live save and the exact goal `get me a pokeman`.
   wait state, so `advance` refuses cutscenes, auto-scroll, and text that is still
   printing. `observe` is compact by default while `observe --full` preserves the
   canonical diagnostic payload.
+- 2026-07-28: The final benchmark review rejected full-party source saves so a
+  catch always has independent party-identity evidence, restricted movement
+  telemetry to directional field actions, and added a discoverable operator
+  runbook plus dynamic benchmark skill. The first replacement image build also
+  found that the installed standalone CLI omitted its formatter module; the
+  runtime image now installs both files and passes the complete in-image smoke.
 
 ## Session Log — 2026-07-28
 
@@ -149,7 +155,7 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - Implemented a general engine checkpoint and ordered atomic flash
   persistence. A rebuilt real WASM passed an independent checkpoint/reboot
   integration test against a copied live save.
-- Verified the combined backend (258 tests, one opt-in live-save test skipped),
+- Verified the combined backend (263 tests, one opt-in live-save test skipped),
   all 19 knowledge/build script tests, package typecheck/lint, the exhaustive
   root `bun run verify` graph (217/217 tasks), and a
   clean Docker `smoke` build that rebuilt the patched WASM and passed both the
@@ -182,6 +188,12 @@ system against a copied live save and the exact goal `get me a pokeman`.
   engine hooks, bumped the packed observation ABI and public observation schema
   to v2, and unified compact/full CLI formatting across observations and action
   outcomes. The rebuilt 13.4 MiB WASM passes the mandatory Docker ABI boot test.
+- Hardened the benchmark source-save preflight around a complete active
+  14-sector slot and a required empty party position, removed menu/battle
+  controls from movement-loop telemetry, documented the operator workflow in
+  `AGENTS.md`, and added the dynamically loaded `pokemon-goal-benchmark` skill.
+- Fixed the runtime image to install the semantic CLI formatter beside
+  `pokemonctl`; the exact previously failing Docker `smoke` target now passes.
 
 ### Remaining
 
