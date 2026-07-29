@@ -109,6 +109,13 @@ excluded.
 - Passed focused builds, typechecks, lint, complete package test suites, and
   the backend container smoke test for the resilience changes.
 - Published draft resilience PR #1851 directly against `main`.
+- Restacked PR #1851 onto current `main` at `1daec4ea6`, resolving the plan
+  conflict while retaining its canonical board workflow and newer recovery
+  evidence.
+- Rejected ended season IDs in the Discord edit argument path before they can
+  reach competition persistence, with deterministic expired/current coverage.
+- Repassed the focused edit test, backend typecheck and lint, and changed-file
+  formatting checks after the review fix.
 
 ### Remaining
 
@@ -126,3 +133,5 @@ excluded.
   recovery merge; Argo CD had not yet reconciled the new pin.
 - The recovery merge still needs exact-head Buildkite and live rollout
   confirmation.
+- The restacked resilience head requires a replacement Buildkite run and Codex
+  review before beta acceptance.
