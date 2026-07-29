@@ -198,6 +198,12 @@ system against a copied live save and the exact goal `get me a pokeman`.
   resolves both target and runner Git top-level directories, then rejects
   symlink-resolved output and runtime-overlay paths inside either worktree
   before reserving them.
+- 2026-07-28: The next exact-head review found two end-of-run consistency
+  defects. Catch eligibility now ends at the emulator frame captured with the
+  final live snapshot, so the last post-exit watcher poll counts without
+  admitting later contamination. Path-like Codex binary arguments are
+  normalized against the operator's original working directory before the
+  worker switches to its runtime overlay; bare PATH commands remain unchanged.
 
 ## Session Log — 2026-07-28
 
@@ -212,14 +218,14 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - Implemented a general engine checkpoint and ordered atomic flash
   persistence. A rebuilt real WASM passed an independent checkpoint/reboot
   integration test against a copied live save.
-- Verified the combined backend (303 tests, zero failures or skips), all 23
+- Verified the combined backend (306 tests, zero failures or skips), all 23
   knowledge/build script tests, package typecheck/lint, the exhaustive
   root `bun run verify` graph (217/217 tasks), and a clean Docker `smoke` build
   that rebuilt the patched WASM, passed both mandatory real-emulator ABI and
   independent checkpoint/reboot tests, and passed the in-image application
   check. The resulting local smoke image
   manifest is
-  `sha256:ee77b7b171b982723254bf3366eaa8476a076ad5dc96ac4060b7e2ea07f0b523`.
+  `sha256:3790bb0257f910e89812995845a78fa650b9621484f239761be91ba7be84ece5`.
 - Completed a manual general-control playthrough through the first rival,
   Pokedex/Poke Ball acquisition, and a visible Poochyena catch.
 - Published the three-PR git-spice stack as #1802, #1803, and #1805 and attached
@@ -286,6 +292,10 @@ system against a copied live save and the exact goal `get me a pokeman`.
   exits cannot reach the catch evaluator, their harness-error artifacts retain
   the actual exit code, and target/runner Git-root containment protects both
   benchmark output and runtime overlays, including symlink aliases.
+- Closed the next two exact-head benchmark findings. Catch-event correlation
+  uses an emulator-frame upper bound coupled to final evidence capture, and a
+  relative path-like Codex binary resolves identically during preflight and
+  worker execution.
 
 ### Remaining
 
