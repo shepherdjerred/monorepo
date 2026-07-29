@@ -20,6 +20,7 @@ type ObservationInput = Readonly<{
   scriptOrDialogActive?: boolean;
   battleActionCursor?: number;
   battleControllerExecFlags?: number;
+  nearby?: NonNullable<GameObservationV1["world"]>["nearby"];
 }>;
 
 function observation(input: ObservationInput = {}): GameObservationV1 {
@@ -83,7 +84,7 @@ function observation(input: ObservationInput = {}): GameObservationV1 {
         west: { code: 0, passable: true },
         east: { code: 0, passable: true },
       },
-      nearby: [],
+      nearby: input.nearby ?? [],
     },
     game: null,
   };
@@ -152,6 +153,22 @@ function renderedFrame(changedPixels = 0): Uint8Array {
     frame[pixel * 4] = 255;
   }
   return frame;
+}
+
+function nearbyNpc(
+  dx: number,
+  dy: number,
+): NonNullable<GameObservationV1["world"]>["nearby"][number] {
+  return {
+    localId: 1,
+    graphicsId: 2,
+    kind: "npc",
+    movementType: 0,
+    dx,
+    dy,
+    facing: "south",
+    active: true,
+  };
 }
 
 describe("actionOutcome", () => {
@@ -351,6 +368,59 @@ describe("GameController", () => {
     expect(result.stopReason).toBe("target-reached");
     expect(result.stepsTaken).toBe(2);
     expect(port.presses.map((press) => press.command)).toEqual([
+      "right",
+      "right",
+    ]);
+  });
+
+  test("recomputes moving-object blocks after every navigation step", async () => {
+    const allowed = new Set(["5,5", "5,4", "6,4", "7,4", "6,5", "7,5"]);
+    const blocked = new Set<string>();
+    for (let x = 1; x <= 9; x += 1) {
+      for (let y = 1; y <= 9; y += 1) {
+        const key = `${String(x)},${String(y)}`;
+        if (!allowed.has(key)) blocked.add(key);
+      }
+    }
+    const start = observation({
+      x: 5,
+      y: 5,
+      nearby: [nearbyNpc(1, 0)],
+    });
+    const port = new FakeControlPort(
+      start,
+      [
+        observation({
+          frame: 12,
+          x: 5,
+          y: 4,
+          nearby: [nearbyNpc(2, 0)],
+        }),
+        observation({
+          frame: 24,
+          x: 5,
+          y: 5,
+          nearby: [nearbyNpc(2, -1)],
+        }),
+        observation({
+          frame: 36,
+          x: 6,
+          y: 5,
+          nearby: [nearbyNpc(1, -1)],
+        }),
+        observation({ frame: 48, x: 7, y: 5 }),
+      ],
+      { blocked },
+    );
+    const controller = new GameController(port);
+
+    const result = await controller.navigate({ x: 7, y: 5 }, 10, 4);
+
+    expect(result.status).toBe("arrived");
+    expect(result.stepsTaken).toBe(4);
+    expect(port.presses.map((press) => press.command)).toEqual([
+      "up",
+      "down",
       "right",
       "right",
     ]);

@@ -35,22 +35,27 @@ function makeGoalConfig(runtimeDirectory: string): Config["game"]["goal"] {
   };
 }
 
-function makeProcess(): GoalProcess & {
+function makeProcess(exitOnKill = true): GoalProcess & {
   finish: (exitCode: number) => void;
   killed: () => boolean;
+  killRequested: Promise<undefined>;
 } {
   let killed = false;
   const { promise: exited, resolve } = Promise.withResolvers<number>();
+  const { promise: killRequested, resolve: resolveKillRequested } =
+    Promise.withResolvers<undefined>();
   return {
     stdout: null,
     stderr: null,
     exited,
     kill: () => {
       killed = true;
-      resolve(143);
+      resolveKillRequested(undefined);
+      if (exitOnKill) resolve(143);
     },
     finish: resolve,
     killed: () => killed,
+    killRequested,
   };
 }
 
@@ -178,6 +183,38 @@ describe("GoalManager input lease", () => {
     await Bun.sleep(10);
     expect(processes[1]?.killed()).toBeTrue();
     expect(tracker.released).toBe(2);
+  });
+
+  test("retains the lease until a replaced process has exited", async () => {
+    const tracker = new LeaseTracker();
+    const first = makeProcess(false);
+    const second = makeProcess();
+    const processes = [first, second];
+    const manager = new GoalManager({
+      config: makeGoalConfig(await createRuntimeDirectory()),
+      controlToken: "token",
+      spawner: () => {
+        const process = processes.shift();
+        if (process === undefined) throw new Error("missing process fixture");
+        return process;
+      },
+      sendMessage: noopSendMessage,
+      acquireInputLease: tracker.acquire,
+    });
+
+    await manager.startGoal({ ...START_INPUT, goal: "First" });
+    const replacement = manager.startGoal({ ...START_INPUT, goal: "Second" });
+    await first.killRequested;
+    expect(tracker.held).toBeTrue();
+    expect(tracker.acquired).toBe(1);
+    expect(tracker.released).toBe(0);
+
+    first.finish(143);
+    const replacementResult = await replacement;
+    expect(replacementResult.kind).toBe("started");
+    expect(tracker.acquired).toBe(2);
+    expect(tracker.released).toBe(1);
+    await manager.shutdown();
   });
 
   test("releases a timed-out goal exactly once", async () => {

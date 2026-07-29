@@ -181,7 +181,7 @@ export async function navigateGame(
     minY: start.y - options.searchRadius,
     maxY: start.y + options.searchRadius,
   };
-  const blocked = new Set<string>();
+  const failedMovementTiles = new Set<string>();
   let stepsTaken = 0;
   let after = before;
 
@@ -226,6 +226,7 @@ export async function navigateGame(
       });
     }
 
+    const blocked = new Set(failedMovementTiles);
     for (const object of world.nearby) {
       blocked.add(coordinateKey(world.x + object.dx, world.y + object.dy));
     }
@@ -262,7 +263,7 @@ export async function navigateGame(
       });
     }
     if (step.tilesMoved === 0) {
-      blocked.add(coordinateKey(intended.x, intended.y));
+      failedMovementTiles.add(coordinateKey(intended.x, intended.y));
       continue;
     }
     stepsTaken += step.tilesMoved;

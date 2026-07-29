@@ -359,6 +359,7 @@ export class GoalManager {
     } catch (error) {
       clearTimeout(timeout);
       spawned.process.kill("SIGTERM");
+      await spawned.process.exited;
       spawned.trace.end();
       releaseInputLease();
       this.active = undefined;
@@ -418,6 +419,7 @@ export class GoalManager {
     const exitCode = await active.process.exited;
     const claimed = this.claimActive(id);
     if (claimed === undefined) return;
+    claimed.releaseInputLease();
 
     // Drain any remaining buffered stdout before reading token totals.
     // The last turn.completed usage event is the final line Codex emits and
@@ -454,6 +456,8 @@ export class GoalManager {
     if (active === undefined) return;
 
     active.process.kill("SIGTERM");
+    await active.process.exited;
+    active.releaseInputLease();
     active.state.status = "timeout";
     active.state.finishedAt = this.now().toISOString();
     active.state.finalReport = "Goal timed out before Codex finished.";
@@ -476,6 +480,8 @@ export class GoalManager {
     }
 
     active.process.kill("SIGTERM");
+    await active.process.exited;
+    active.releaseInputLease();
     active.state.status = status;
     active.state.finishedAt = this.now().toISOString();
     active.state.finalReport =
@@ -497,7 +503,6 @@ export class GoalManager {
     // race through teardown and release the same lease twice.
     this.active = undefined;
     clearTimeout(active.timeout);
-    active.releaseInputLease();
     return active;
   }
 
