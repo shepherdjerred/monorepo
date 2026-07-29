@@ -27,10 +27,11 @@ type Harness = {
   gates: {
     join: Deferred<true>;
     prepare: Deferred<EncoderHandles>;
+    prepareStarted: Deferred<AbortSignal>;
     run: Deferred<true>;
     leave: Deferred<true>;
   };
-  signals: { join?: AbortSignal };
+  signals: { join?: AbortSignal; prepare?: AbortSignal };
 };
 
 function makeHarness(
@@ -48,13 +49,14 @@ function makeHarness(
   const gates = {
     join: deferred<true>(),
     prepare: deferred<EncoderHandles>(),
+    prepareStarted: deferred<AbortSignal>(),
     run: deferred<true>(),
     leave: deferred<true>(),
   };
   gates.join.resolve(true);
   gates.prepare.resolve(encoder);
   gates.leave.resolve(true);
-  const signals: { join?: AbortSignal } = {};
+  const signals: { join?: AbortSignal; prepare?: AbortSignal } = {};
 
   const deps: RawGoLiveDeps = {
     joinVoice: async (_input, signal) => {
@@ -62,8 +64,10 @@ function makeHarness(
       signals.join = signal;
       await gates.join.promise;
     },
-    prepareEncoder: async () => {
+    prepareEncoder: async (signal) => {
       calls.push("prepareEncoder");
+      signals.prepare = signal;
+      gates.prepareStarted.resolve(signal);
       return gates.prepare.promise;
     },
     runStream: async () => {
@@ -122,6 +126,23 @@ describe("raw Go-Live machine", () => {
     expect(h.signals.join?.aborted).toBe(true);
     await waitFor(actor, (s) => s.matches("idle"));
     expect(h.calls).not.toContain("prepareEncoder");
+    expect(h.calls).not.toContain("runStream");
+    actor.stop();
+  });
+
+  test("STOP during encoder preparation aborts before streaming", async () => {
+    const h = makeHarness();
+    h.gates.prepare = deferred<EncoderHandles>();
+    const actor = createHarnessActor(h);
+    actor.start();
+
+    actor.send({ type: "START" });
+    await waitFor(actor, (s) => s.matches("preparing"));
+    const prepareSignal = await h.gates.prepareStarted.promise;
+    actor.send({ type: "STOP" });
+
+    expect(prepareSignal.aborted).toBe(true);
+    await waitFor(actor, (s) => s.matches("idle"));
     expect(h.calls).not.toContain("runStream");
     actor.stop();
   });

@@ -77,7 +77,7 @@ emulator tick.
   report. The software pipeline measured `-1.0 ms` A/V p50 at baseline,
   recovered an injected `+100 ms` audio delay as `+99.3 ms`, and recovered
   three delayed video frames as `-101.0 ms`.
-- Passed MK64 backend typecheck, lint, and 137 tests; MK64 root checks;
+- Passed MK64 backend typecheck, lint, and 141 tests; MK64 root checks;
   discord-video-stream build, typecheck, and 60 tests; and streambot typecheck,
   lint, and 384 package tests.
 - Published code commit `15ac4124b` to PR #1779 and deployed its immutable
@@ -86,10 +86,10 @@ emulator tick.
   29.95 emulator fps, reported hardware encoding engaged, recorded 903 ticks,
   populated packet/send and input-to-stream histograms, and recorded zero
   correlation failures.
-- Reproduced the reported lag objectively: packet-ready, send-complete, and
-  input-to-stream p95 values fell in the `<=2500 ms` bucket. Signed A/V content
-  offset averaged `-198.5 ms` (`-263.6` to `-180.8 ms`), meaning video content
-  lagged audio at the server-owned stream boundary.
+- Reproduced the reported lag objectively. Signed A/V content offset averaged
+  `-198.5 ms` (`-263.6` to `-180.8 ms`), meaning video content lagged audio at
+  the server-owned stream boundary; packet-ready, send-complete, and
+  input-to-stream histograms also received live observations.
 - Recorded the calibration output as an
   [asciinema artifact](https://public.sjer.red/pr/assets/1779/mk64-stream-latency.cast.html).
 - Stopped the Discord test session, closed the browser and port forwards, and
@@ -99,6 +99,14 @@ emulator tick.
   line-oriented Prometheus parser after Buildkite Semgrep rejected the first
   implementation. The focused parser suite passes 11 tests, typecheck, and
   lint.
+- Addressed all five review-gate findings: measurement summaries now subtract
+  starting histogram buckets, calibration video writes race encoder exit,
+  encoder preparation receives cancellation, audio retains the leading VI
+  needed to pair drops with video, and the synchronization verification TODO
+  is active again.
+- Revalidated the shared lifecycle with 57 tests, shared streaming core with
+  nine tests, and Pokemon's consumer with 190 tests plus two intentional
+  artifact-gated skips; all affected typechecks and lints pass.
 
 ### Remaining
 
@@ -106,6 +114,8 @@ emulator tick.
       PR #1779.
 - [ ] Use the new evidence to design the separate video-latency reduction; this
       plan measures and attributes latency but does not change buffering policy.
+      Operator re-verification remains tracked in
+      [`mk64-post-deploy-performance-verification`](../todos/mk64-post-deploy-performance-verification.md).
 
 ### Caveats
 
@@ -113,7 +123,9 @@ emulator tick.
 - The synthetic calibration validates the same H.264/Opus/NUT media boundary
   but uses the software encoder locally; VAAPI is covered by the live run.
 - Prometheus histogram quantiles report the configured bucket boundary, so the
-  live `2500 ms` p95 values are upper bounds rather than exact percentiles.
+  reported values are upper bounds rather than exact percentiles. The first
+  live run's `2500 ms` values also included lifetime history and are not the
+  accepted baseline; the corrected harness uses start/end bucket deltas.
 - Discord transport and client playback remain intentionally excluded. The
   measured `-198.5 ms` offset and stream delays exist before Discord receives
   the RTP packets.

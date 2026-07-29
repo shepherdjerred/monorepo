@@ -73,7 +73,9 @@ export function createRawGoLiveMachine(deps: RawGoLiveDeps) {
           signal: AbortSignal;
         }) => deps.joinVoice(input, signal),
       ),
-      prepareEncoder: fromPromise(() => deps.prepareEncoder()),
+      prepareEncoder: fromPromise(({ signal }: { signal: AbortSignal }) =>
+        deps.prepareEncoder(signal),
+      ),
       runStream: fromPromise(
         ({
           input,

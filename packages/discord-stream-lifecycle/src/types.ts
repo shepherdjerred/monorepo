@@ -107,7 +107,7 @@ export type RawGoLiveDeps = {
     input: { readonly target: VoiceTarget },
     signal: AbortSignal,
   ) => Promise<void>;
-  readonly prepareEncoder: () => Promise<EncoderHandles>;
+  readonly prepareEncoder: (signal: AbortSignal) => Promise<EncoderHandles>;
   readonly runStream: (
     handles: { readonly output: Readable; readonly playing: Promise<void> },
     signal: AbortSignal,

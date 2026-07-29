@@ -92,6 +92,26 @@ async function tolerateExpectedEncoderExit(
   }
 }
 
+async function encoderExitSignal(
+  encoderPromise: Promise<unknown>,
+): Promise<"encoder-exited"> {
+  await encoderPromise;
+  return "encoder-exited";
+}
+
+export async function waitForCalibrationVideoDrain(
+  video: PassThrough,
+  encoderPromise: Promise<unknown>,
+): Promise<void> {
+  const result = await Promise.race([
+    once(video, "drain"),
+    encoderExitSignal(encoderPromise),
+  ]);
+  if (result === "encoder-exited") {
+    throw new Error("ffmpeg exited before calibration video input completed");
+  }
+}
+
 async function renderCalibration(opts: Options): Promise<void> {
   const transport = await createAudioTransport();
   const video = new PassThrough();
@@ -151,7 +171,9 @@ async function renderCalibration(opts: Options): Promise<void> {
     })
       ? pulse
       : background;
-    if (!video.write(selected)) await once(video, "drain");
+    if (!video.write(selected)) {
+      await waitForCalibrationVideoDrain(video, promise);
+    }
   }
   video.end();
   await tolerateExpectedEncoderExit(promise);
@@ -190,4 +212,6 @@ async function main(): Promise<void> {
   );
 }
 
-await main();
+if (import.meta.main) {
+  await main();
+}

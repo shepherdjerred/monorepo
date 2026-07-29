@@ -164,7 +164,16 @@ export class GameStreamer extends GameStreamerBase {
     }
   }
 
-  protected async buildEncoder(): Promise<EncoderHandles> {
+  protected async buildEncoder(signal: AbortSignal): Promise<EncoderHandles> {
+    // Audio transport creation is the only awaited preparation step. Do it
+    // before publishing session state so a STOP that cancels this invoke cannot
+    // resume later, start the emulator, or notify a session-end callback.
+    const audioTransport = await createAudioTransport();
+    if (signal.aborted) {
+      audioTransport.close();
+      throw new DOMException("encoder preparation aborted", "AbortError");
+    }
+
     const latencyTracker = new StreamLatencyTracker(
       prometheusLatencyObservations,
     );
@@ -199,7 +208,6 @@ export class GameStreamer extends GameStreamerBase {
     // Stand up the loopback audio transport before ffmpeg launches so its client
     // connect succeeds immediately. pushAudio writes into the transport sink; the
     // (only) connection pipes it to ffmpeg's audio input.
-    const audioTransport = await createAudioTransport();
     this.audioTransport = audioTransport;
 
     const { output, promise } = prepareStream(bgra, {

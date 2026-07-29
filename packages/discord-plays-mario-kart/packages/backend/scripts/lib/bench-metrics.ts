@@ -4,12 +4,14 @@
 
 import { $ } from "bun";
 import { BenchSummarySchema } from "./bench-summary-schema.ts";
-
-export type ScrapedMetrics = {
-  text: string;
-  /** Wall-clock ms when the scrape was returned. */
-  ts: number;
-};
+import {
+  counter,
+  counterSum,
+  gauge,
+  histogramDeltaQuantile,
+  histogramQuantile,
+  type ScrapedMetrics,
+} from "./prometheus-metrics.ts";
 
 export async function scrape(metricsUrl: string): Promise<ScrapedMetrics> {
   const r = await fetch(metricsUrl, { signal: AbortSignal.timeout(5000) });
@@ -32,126 +34,6 @@ function helpHint(metricsUrl: string): string {
     );
   }
   return "";
-}
-
-// ---------------------------------------------------------------------------
-// Prometheus text-format parsers. Tolerate arbitrary label order; ignore
-// labels we don't filter on.
-// ---------------------------------------------------------------------------
-
-type MetricSample = {
-  name: string;
-  rawLabels: string;
-  value: number;
-};
-
-const METRIC_LINE_PATTERN = /^([a-z_:][\w:]*)(?:\{([^}]*)\})?\s+(\S+)/i;
-const LABEL_PATTERN = /(?:^|,)([a-z_]\w*)="((?:\\.|[^"\\])*)"/gi;
-
-function metricSamples(text: string, name: string): MetricSample[] {
-  const samples: MetricSample[] = [];
-  for (const line of text.split("\n")) {
-    const match = METRIC_LINE_PATTERN.exec(line);
-    if (match?.[1] !== name) continue;
-    const value = Number(match[3]);
-    if (!Number.isFinite(value)) continue;
-    samples.push({
-      name: match[1],
-      rawLabels: match[2] ?? "",
-      value,
-    });
-  }
-  return samples;
-}
-
-/** Build a label-set matcher. Tolerates extra labels and either order. */
-function matchesLabels(
-  rawLabels: string,
-  required: Record<string, string>,
-): boolean {
-  const actual = new Map<string, string>();
-  for (const match of rawLabels.matchAll(LABEL_PATTERN)) {
-    const name = match[1];
-    const value = match[2];
-    if (name !== undefined && value !== undefined) actual.set(name, value);
-  }
-  for (const [name, value] of Object.entries(required)) {
-    if (actual.get(name) !== value) return false;
-  }
-  return true;
-}
-
-/** Read a single counter or gauge value (no label-required match needed). */
-function readNumber(
-  text: string,
-  name: string,
-  labels?: Record<string, string>,
-): number | null {
-  for (const sample of metricSamples(text, name)) {
-    if (labels === undefined || matchesLabels(sample.rawLabels, labels)) {
-      return sample.value;
-    }
-  }
-  return null;
-}
-
-export function counter(
-  m: ScrapedMetrics,
-  name: string,
-  labels?: Record<string, string>,
-): number {
-  return readNumber(m.text, name, labels) ?? 0;
-}
-
-export function counterSum(m: ScrapedMetrics, name: string): number {
-  return metricSamples(m.text, name).reduce(
-    (sum, sample) => sum + sample.value,
-    0,
-  );
-}
-
-export function gauge(
-  m: ScrapedMetrics,
-  name: string,
-  labels?: Record<string, string>,
-): number | null {
-  return readNumber(m.text, name, labels);
-}
-
-/**
- * Computes the value of `name`_bucket at the lowest `le` whose cumulative
- * count covers `q` of the total samples. This is the same lifetime-quantile
- * approximation the existing histogramP95 in e2e-perf-browser.ts does, but
- * generalised to any quantile and label set.
- *
- * Returns NaN when the histogram has zero samples (so callers can skip /
- * report "no data" rather than show a misleading 0).
- */
-export function histogramQuantile(
-  m: ScrapedMetrics,
-  name: string,
-  q: number,
-  labels?: Record<string, string>,
-): number {
-  const rows: { le: number; cum: number }[] = [];
-  for (const sample of metricSamples(m.text, `${name}_bucket`)) {
-    const rawLabels = sample.rawLabels;
-    const leMatch = /(?:^|,)le="([^"]+)"(?:,|$)/.exec(rawLabels);
-    const leRaw = leMatch?.[1];
-    if (
-      leRaw !== undefined &&
-      (labels === undefined || matchesLabels(rawLabels, labels))
-    ) {
-      const le = leRaw === "+Inf" ? Number.POSITIVE_INFINITY : Number(leRaw);
-      rows.push({ le, cum: sample.value });
-    }
-  }
-  rows.sort((a, b) => a.le - b.le);
-  const last = rows.at(-1);
-  if (last === undefined || last.cum === 0) return Number.NaN;
-  const target = last.cum * q;
-  for (const row of rows) if (row.cum >= target) return row.le;
-  return Number.POSITIVE_INFINITY;
 }
 
 // ---------------------------------------------------------------------------
@@ -383,23 +265,39 @@ export function buildSummary(input: BuildSummaryInput): BenchSummary {
         counter(end, "stream_send_late_frames_total", { kind: "audio" }) -
         counter(start, "stream_send_late_frames_total", { kind: "audio" }),
       packet_ready_delay_video_p95: nanToNull(
-        histogramQuantile(end, "stream_packet_ready_delay_ms", 0.95, {
-          kind: "video",
+        histogramDeltaQuantile({
+          start,
+          end,
+          name: "stream_packet_ready_delay_ms",
+          q: 0.95,
+          labels: { kind: "video" },
         }),
       ),
       packet_ready_delay_audio_p95: nanToNull(
-        histogramQuantile(end, "stream_packet_ready_delay_ms", 0.95, {
-          kind: "audio",
+        histogramDeltaQuantile({
+          start,
+          end,
+          name: "stream_packet_ready_delay_ms",
+          q: 0.95,
+          labels: { kind: "audio" },
         }),
       ),
       send_complete_delay_video_p95: nanToNull(
-        histogramQuantile(end, "stream_send_complete_delay_ms", 0.95, {
-          kind: "video",
+        histogramDeltaQuantile({
+          start,
+          end,
+          name: "stream_send_complete_delay_ms",
+          q: 0.95,
+          labels: { kind: "video" },
         }),
       ),
       send_complete_delay_audio_p95: nanToNull(
-        histogramQuantile(end, "stream_send_complete_delay_ms", 0.95, {
-          kind: "audio",
+        histogramDeltaQuantile({
+          start,
+          end,
+          name: "stream_send_complete_delay_ms",
+          q: 0.95,
+          labels: { kind: "audio" },
         }),
       ),
       av_content_offset_ms: {
@@ -409,7 +307,12 @@ export function buildSummary(input: BuildSummaryInput): BenchSummary {
         last: avOffset.last,
       },
       av_content_skew_abs_ms_p95: nanToNull(
-        histogramQuantile(end, "stream_av_content_skew_abs_ms", 0.95),
+        histogramDeltaQuantile({
+          start,
+          end,
+          name: "stream_av_content_skew_abs_ms",
+          q: 0.95,
+        }),
       ),
       latency_correlation_failures_delta:
         counterSum(end, "stream_latency_correlation_failures_total") -
@@ -429,10 +332,20 @@ export function buildSummary(input: BuildSummaryInput): BenchSummary {
         histogramQuantile(end, "emulator_input_apply_delay_ms", 0.95),
       ),
       input_to_packet_ready_ms_p95: nanToNull(
-        histogramQuantile(end, "stream_input_to_packet_ready_ms", 0.95),
+        histogramDeltaQuantile({
+          start,
+          end,
+          name: "stream_input_to_packet_ready_ms",
+          q: 0.95,
+        }),
       ),
       input_to_send_complete_ms_p95: nanToNull(
-        histogramQuantile(end, "stream_input_to_send_complete_ms", 0.95),
+        histogramDeltaQuantile({
+          start,
+          end,
+          name: "stream_input_to_send_complete_ms",
+          q: 0.95,
+        }),
       ),
     },
   };

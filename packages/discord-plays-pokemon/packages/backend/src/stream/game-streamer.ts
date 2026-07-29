@@ -67,7 +67,7 @@ export class GameStreamer extends GameStreamerBase {
     }
   }
 
-  protected async buildEncoder(): Promise<EncoderHandles> {
+  protected async buildEncoder(signal: AbortSignal): Promise<EncoderHandles> {
     const rgba = new PassThrough();
     // Scale the 3:2 game into an aspect-correct content box, then pillarbox it onto
     // a black 16:9 canvas for Discord (see prepareStream `pad`).
@@ -80,6 +80,11 @@ export class GameStreamer extends GameStreamerBase {
     // into the transport sink; ffmpeg dials the loopback URL once and muxes
     // the bytes into the broadcast.
     const audioTransport = await createAudioTransport();
+    if (signal.aborted) {
+      rgba.end();
+      audioTransport.close();
+      throw new DOMException("encoder preparation aborted", "AbortError");
+    }
     this.audioTransport = audioTransport;
     const { output, promise } = prepareStream(rgba, {
       width: content.width,

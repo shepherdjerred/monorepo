@@ -168,7 +168,7 @@ export abstract class GameStreamerBase {
    * the machine's `prepareEncoder` step. The subclass sets `this.audioTransport`
    * here and returns the encoder handles.
    */
-  protected abstract buildEncoder(): Promise<EncoderHandles>;
+  protected abstract buildEncoder(signal: AbortSignal): Promise<EncoderHandles>;
 
   /**
    * Extra work after the library's `leaveVoice` runs (reset metrics, log a
@@ -200,8 +200,8 @@ export abstract class GameStreamerBase {
             this.streamer.leaveVoice();
           }
         }),
-      prepareEncoder: () =>
-        withSpan("stream.prepareEncoder", () => this.buildEncoder()),
+      prepareEncoder: (signal) =>
+        withSpan("stream.prepareEncoder", () => this.buildEncoder(signal)),
       runStream: ({ output, playing }) => this.runStream(output, playing),
       leaveVoice: (playing) =>
         withSpan("stream.leaveVoice", async () => {

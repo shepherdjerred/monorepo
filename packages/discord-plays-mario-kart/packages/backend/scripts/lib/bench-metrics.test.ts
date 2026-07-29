@@ -4,15 +4,18 @@ import { compareSummaries, renderCompareTable } from "./bench-compare.ts";
 import {
   BENCH_SUMMARY_VERSION,
   buildSummary,
-  counter,
-  counterSum,
   emptyGaugePoll,
-  gauge,
-  histogramQuantile,
   sampleGauges,
   type BenchSummary,
-  type ScrapedMetrics,
 } from "./bench-metrics.ts";
+import {
+  counter,
+  counterSum,
+  gauge,
+  histogramDeltaQuantile,
+  histogramQuantile,
+  type ScrapedMetrics,
+} from "./prometheus-metrics.ts";
 
 const fixturePath = path.join(
   import.meta.dirname,
@@ -113,6 +116,38 @@ describe("histogramQuantile", () => {
     // depends on workload; just confirm we got a number, not NaN.
     expect(Number.isNaN(v)).toBe(false);
     expect(Number.isNaN(a)).toBe(false);
+  });
+
+  it("computes measurement-window quantiles from bucket deltas", () => {
+    const start: ScrapedMetrics = {
+      text: [
+        'latency_ms_bucket{kind="video",le="10"} 1000',
+        'latency_ms_bucket{kind="video",le="20"} 1000',
+        'latency_ms_bucket{kind="video",le="+Inf"} 1000',
+      ].join("\n"),
+      ts: 1,
+    };
+    const end: ScrapedMetrics = {
+      text: [
+        'latency_ms_bucket{kind="video",le="10"} 1000',
+        'latency_ms_bucket{kind="video",le="20"} 1010',
+        'latency_ms_bucket{kind="video",le="+Inf"} 1010',
+      ].join("\n"),
+      ts: 2,
+    };
+
+    expect(histogramQuantile(end, "latency_ms", 0.95, { kind: "video" })).toBe(
+      10,
+    );
+    expect(
+      histogramDeltaQuantile({
+        start,
+        end,
+        name: "latency_ms",
+        q: 0.95,
+        labels: { kind: "video" },
+      }),
+    ).toBe(20);
   });
 });
 

@@ -1,8 +1,10 @@
 ---
 id: mk64-post-deploy-performance-verification
 type: todo
-status: complete
-board: false
+status: planned
+board: true
+verification: operator
+disposition: blocked
 origin: packages/docs/logs/2026-07-28_mk64-runtime-performance-followup.md
 source_marker: false
 ---
@@ -20,7 +22,8 @@ an immutable image built from the PR head and temporarily deployed by digest.
       an Emscripten export error.
 - [x] During a sustained session, confirm ffmpeg remains near 30 fps and `1.0x`
       realtime with negligible frame drops.
-- [x] Confirm game audio remains synchronized with video.
+- [ ] Confirm game audio remains synchronized with video after correcting the
+      measured server-side video lag.
 
 ## Comment Log
 
@@ -40,3 +43,8 @@ an immutable image built from the PR head and temporarily deployed by digest.
   Argo CD automated sync. The Application returned to `Synced` / `Healthy`.
   The independent `/stop` Worker reset-order error is tracked in
   `mk64-worker-session-stop-reset-order`.
+- 2026-07-28 — Reopened after content-timeline instrumentation disproved the
+  earlier packet-pacing inference. A 30-second live VAAPI sample measured signed
+  A/V content offset averaging `-198.5 ms`, meaning video lagged audio before
+  Discord received the RTP packets. Synchronization remains unverified until
+  that lag is corrected and the operator reruns the live check.
