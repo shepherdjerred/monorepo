@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { canonicalJson } from "./canonical-json.ts";
 
 const DEFAULT_MAX_REQUEST_BYTES = 1_500_000;
 const SERIALIZED_REQUEST_ID = "00000000-0000-0000-0000-000000000000";
@@ -100,31 +101,6 @@ export function batchManifestOverrides(
     batches.push(current);
   }
   return batches;
-}
-
-function canonicalJson(value: unknown): string {
-  switch (typeof value) {
-    case "boolean":
-    case "number":
-    case "string":
-      return JSON.stringify(value);
-    case "object":
-      if (value === null) {
-        return "null";
-      }
-      if (Array.isArray(value)) {
-        return `[${value.map((entry) => canonicalJson(entry)).join(",")}]`;
-      }
-      return `{${Object.entries(value)
-        .sort(([left], [right]) => left.localeCompare(right))
-        .map(([key, entry]) => `${JSON.stringify(key)}:${canonicalJson(entry)}`)
-        .join(",")}}`;
-    case "bigint":
-    case "function":
-    case "symbol":
-    case "undefined":
-      throw new Error(`unsupported operation value type: ${typeof value}`);
-  }
 }
 
 export function requestedOperationIdentity(application: unknown): string {

@@ -295,6 +295,7 @@ describe("Argo CD release gating", () => {
             {
               version: "2.0.0-43",
               urls: ["charts/apps-2.0.0-43.tgz"],
+              digest: "a".repeat(64),
             },
           ]);
         }
