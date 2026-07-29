@@ -203,12 +203,25 @@ Worker-thread performance change did not improve the delivered stream.
   measured 149-frame startup wall; if the encoder ever exceeds 240 frames of
   buffered video, the stream fails loudly instead of dropping only video or
   growing toward the previously observed multi-gigabyte backlog.
+- Published and deployed commit
+  `92d835746b5c755ffe7691ec29cd7242e6acef79` as immutable image
+  `sha256:b714d7c32866142e3457daa820d681731508c994ea3a01ed3f64ac05010d0929`.
+  The live stream reached 31.27 ffmpeg fps with zero frame drops, no restarts,
+  and an 18-frame startup queue against the 240-frame hard limit.
+- Argo CD restored the declared production image during the first acceptance
+  run. Added the temporary `argocd.argoproj.io/skip-reconcile=true` hold,
+  explicitly disabled child-Application automated sync, redeployed the same
+  digest, and restarted `/play` for manual listening.
+- Buildkite build 6860 found the removed drop counter as an unused export in
+  Knip. Replaced it with a hard-buffer-failure counter that is incremented by
+  the actual fail-fast path; focused tests, typecheck, lint, and Knip pass.
 
 ### Remaining
 
-- Publish the encoder-first bounded-buffer candidate, deploy its immutable
-  image, restart the Discord session, validate live performance telemetry, and
-  obtain manual confirmation that audio is synchronized.
+- Obtain manual confirmation that audio is synchronized, then remove the
+  temporary Argo CD acceptance hold and restore normal automated reconciliation.
+- Publish the hard-buffer-failure metric cleanup and confirm replacement
+  current-head Buildkite CI.
 - Fix the separate Worker teardown ordering error found when `/stop` ended the
   successful test session. It is tracked in
   [`mk64-worker-session-stop-reset-order`](../todos/mk64-worker-session-stop-reset-order.md).
@@ -264,6 +277,9 @@ Worker-thread performance change did not improve the delivered stream.
   queue. Encoder-first startup and minimum raw-input probing should keep its
   normal occupancy small; the 240-frame limit is a fail-fast safety margin, not
   permission for sustained sub-realtime encoding.
+- The live candidate is intentionally pinned while awaiting manual listening.
+  The `mario-kart` Application has `skip-reconcile=true` and automated sync
+  disabled; both must be removed after acceptance so GitOps resumes ownership.
 - `/stop` completed and the stream shut down, but its asynchronous session-end
   callback ran after `WorkerEmulator.stop()` and logged
   `emulator worker is not running`. That distinct lifecycle defect is now

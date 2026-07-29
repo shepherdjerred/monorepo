@@ -18,6 +18,7 @@ import {
 import { createAudioTransport } from "#src/stream/audio-transport.ts";
 import { sinkBufferBytes } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
 import {
+  streamFrameBufferFailuresTotal,
   streamFfmpegBitrateKbps,
   streamFfmpegFps,
   streamFfmpegSpeedRatio,
@@ -122,6 +123,7 @@ export class GameStreamer extends GameStreamerBase {
     if (wouldExceedFrameBuffer(bufferedBytes, frame.length)) {
       const message = `ffmpeg video input exceeded the ${String(STARTUP_BUFFER_FRAMES)}-frame hard limit`;
       logger.error(message, { bufferedBytes, incomingBytes: frame.length });
+      streamFrameBufferFailuresTotal.inc();
       sink.destroy(new Error(message));
       return;
     }

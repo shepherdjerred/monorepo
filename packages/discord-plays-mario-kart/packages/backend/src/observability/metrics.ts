@@ -54,9 +54,9 @@ export const streamFrameWriteMs = new Histogram({
   registers: [registry],
 });
 
-export const streamFramesDroppedTotal = new Counter({
-  name: "stream_frames_dropped_total",
-  help: "Frames dropped before the ffmpeg pipe because the input queue exceeded its latency budget (encode/send path below realtime); keeps end-to-end lag bounded",
+export const streamFrameBufferFailuresTotal = new Counter({
+  name: "stream_frame_buffer_failures_total",
+  help: "Streams failed because the bounded ffmpeg video-input buffer reached its hard limit",
   registers: [registry],
 });
 
