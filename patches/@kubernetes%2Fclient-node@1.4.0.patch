@@ -1,0 +1,33 @@
+diff --git a/dist/config.js b/dist/config.js
+index bda2e5e17e157b88609e9e790ed703fbf0b23275..65589178a72d314f5ad4423e6fd5ed8fdcd00475 100644
+--- a/dist/config.js
++++ b/dist/config.js
+@@ -1,7 +1,7 @@
+ import fs from 'node:fs';
+ import https from 'node:https';
+ import http from 'node:http';
+-import yaml from 'js-yaml';
++import * as yaml from 'js-yaml';
+ import net from 'node:net';
+ import path from 'node:path';
+ import { Headers } from 'node-fetch';
+diff --git a/dist/yaml.d.ts b/dist/yaml.d.ts
+index 0ebc30207a8e1b6798e937ff0f850ab1b59c72c9..716865d72008a333b6aff8b719bafd0b7ccd5419 100644
+--- a/dist/yaml.d.ts
++++ b/dist/yaml.d.ts
+@@ -1,4 +1,4 @@
+-import yaml from 'js-yaml';
++import * as yaml from 'js-yaml';
+ /**
+  * Load a Kubernetes object from YAML.
+  * @param data - The YAML string to load.
+diff --git a/dist/yaml.js b/dist/yaml.js
+index 7f54f2205579d3f345af630ffbb34ffecc4ae7bb..fd6ead39a3a27f988ca7365a90080891b860836c 100644
+--- a/dist/yaml.js
++++ b/dist/yaml.js
+@@ -1,4 +1,4 @@
+-import yaml from 'js-yaml';
++import * as yaml from 'js-yaml';
+ import { getSerializationType } from './util.js';
+ import { ObjectSerializer } from './serializer.js';
+ /**

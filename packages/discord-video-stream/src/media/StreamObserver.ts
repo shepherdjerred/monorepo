@@ -6,7 +6,7 @@
  * pipeline behaves identically when no observer is supplied — this adds visibility, never behavior.
  */
 
-/** Input stream metadata as parsed by ffmpeg's `codecData` event (one-shot, at stream start). */
+/** Input stream metadata parsed from ffmpeg stderr (one-shot, at stream start). */
 export type FfmpegCodecData = {
   format?: string;
   duration?: string;
@@ -20,9 +20,8 @@ export type FfmpegCodecData = {
 };
 
 /**
- * ffmpeg transcode progress, emitted ~once per second. fluent-ffmpeg does not surface a realtime
- * `speed` figure, so consumers derive the realtime ratio from `timemark` (media time) advance vs
- * wall-clock instead.
+ * ffmpeg transcode progress, emitted ~once per second. Consumers derive the realtime ratio from
+ * `timemark` (media time) advance vs wall-clock instead.
  */
 export type FfmpegProgress = {
   frames?: number;
@@ -64,7 +63,7 @@ export type QueueDepth = {
 };
 
 export type StreamObserver = {
-  /** The full ffmpeg command line (fluent-ffmpeg `start` event) — reveals which decode/scale flags applied. */
+  /** The full ffmpeg command line — reveals which decode/scale flags applied. */
   onCommand?: (command: string) => void;
   /**
    * The ffmpeg subprocess PID, once available. Lets the consumer attribute per-process resource
@@ -72,9 +71,9 @@ export type StreamObserver = {
    * GPU work attribution, when `/dev/dri/renderD128` is shared with other tenants).
    */
   onProcessStart?: (pid: number) => void;
-  /** Input codec/resolution/duration (fluent-ffmpeg `codecData` event), once at stream start. */
+  /** Input codec/resolution/duration parsed from stderr, once at stream start. */
   onCodecData?: (data: FfmpegCodecData) => void;
-  /** Periodic transcode progress (fluent-ffmpeg `progress` event). */
+  /** Periodic transcode progress parsed from ffmpeg's progress protocol. */
   onProgress?: (progress: FfmpegProgress) => void;
   /** Per-frame send timing from the video/audio send path. High volume — sample/aggregate downstream. */
   onSendStats?: (stats: SendStats) => void;

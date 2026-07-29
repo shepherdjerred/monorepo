@@ -1,15 +1,6 @@
-import ffmpeg from "fluent-ffmpeg";
-import type { ChildProcess } from "node:child_process";
+import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import { createInterface } from "node:readline";
 import pDebounce from "p-debounce";
-
-// Module augmentation: fluent-ffmpeg's @types/fluent-ffmpeg omits the `ffmpegProc` property that the
-// runtime attaches to the FfmpegCommand instance once `start` fires. We need it to surface the child
-// PID for out-of-process per-process collectors (e.g. /proc/<pid>/fdinfo GPU-engine attribution).
-declare module "fluent-ffmpeg" {
-  interface FfmpegCommand {
-    ffmpegProc?: ChildProcess;
-  }
-}
 import { createRequire as __createRequire } from "node:module";
 import Log from "debug-level";
 
@@ -45,7 +36,11 @@ import type { Streamer } from "../client/index.js";
 import type { EncoderSettingsGetter } from "./encoders/index.js";
 import type { VideoStreamInfo } from "./LibavDemuxer.js";
 import type { WebRtcConnWrapper } from "../client/voice/WebRtcWrapper.js";
-import type { FfmpegProgress, StreamObserver } from "./StreamObserver.js";
+import type {
+  FfmpegCodecData,
+  FfmpegProgress,
+  StreamObserver,
+} from "./StreamObserver.js";
 
 export type PrepareStreamOptions = {
   /**
@@ -178,6 +173,13 @@ export type PrepareStreamOptions = {
   customFfmpegFlags: string[];
 
   /**
+   * Override the ffmpeg executable. Defaults to `FFMPEG_PATH`, then `ffmpeg`.
+   * Primarily useful for deployments with a nonstandard installation path and
+   * deterministic process-level tests.
+   */
+  ffmpegPath?: string;
+
+  /**
    * Burn this subtitle file into the video. The graph is composed by `prepareStream` itself: on
    * the GPU pipeline the subtitles are rendered by libass onto a transparent BGRA canvas,
    * uploaded, and composited with `overlay_vaapi` (the whole video path stays on the GPU); on the
@@ -225,9 +227,9 @@ export type PrepareStreamOptions = {
    * Requires `includeAudio: true` — otherwise it is ignored.
    *
    * `source` is an ffmpeg input *string* (path / FIFO / URL such as `tcp://127.0.0.1:9000`), NOT a
-   * stream: fluent-ffmpeg can only pipe a single Readable (to stdin), which the primary `input`
-   * already uses, so a second live stream must reach ffmpeg over its own transport that the caller
-   * owns. `inputOptions` must fully describe the raw format, e.g.
+   * stream: the runner reserves stdin for a Readable primary `input`, so a second live stream must
+   * reach ffmpeg over its own transport that the caller owns. `inputOptions` must fully describe
+   * the raw format, e.g.
    * `["-f","s16le","-ar","44100","-ac","2"]`.
    */
   audioInput?: { readonly source: string; readonly inputOptions: string[] };
@@ -238,11 +240,168 @@ export type Controller = {
   setVolume(newVolume: number): Promise<boolean>;
 };
 
+type FfmpegInput = {
+  readonly source: string | Readable;
+  readonly options: string[];
+};
+
+class FfmpegArgumentBuilder {
+  readonly inputs: FfmpegInput[];
+  readonly outputOptions: string[] = [];
+  readonly videoFilters: string[] = [];
+  readonly audioFilterChain: string[] = [];
+  outputFormatName = "nut";
+
+  constructor(input: string | Readable) {
+    this.inputs = [{ source: input, options: [] }];
+  }
+
+  private get currentInput(): FfmpegInput {
+    const input = this.inputs.at(-1);
+    if (input === undefined) throw new Error("ffmpeg command has no input");
+    return input;
+  }
+
+  input(source: string): this {
+    this.inputs.push({ source, options: [] });
+    return this;
+  }
+
+  inputOption(...options: string[]): this {
+    this.currentInput.options.push(...options);
+    return this;
+  }
+
+  inputOptions(options: readonly string[]): this {
+    this.currentInput.options.push(...options);
+    return this;
+  }
+
+  output(_stream: PassThrough): this {
+    return this;
+  }
+
+  outputFormat(format: string): this {
+    this.outputFormatName = format;
+    return this;
+  }
+
+  addOptions(options: readonly string[]): this {
+    this.outputOptions.push(...options);
+    return this;
+  }
+
+  addOutputOption(option: string | readonly string[]): this {
+    if (typeof option === "string") this.outputOptions.push(option);
+    else this.outputOptions.push(...option);
+    return this;
+  }
+
+  videoCodec(codec: string): this {
+    this.outputOptions.push("-c:v", codec);
+    return this;
+  }
+
+  videoFilter(filters: readonly string[]): this {
+    this.videoFilters.push(...filters);
+    return this;
+  }
+
+  complexFilter(graph: readonly string[], mapLabel: string): this {
+    this.outputOptions.push(
+      "-filter_complex",
+      graph.join(";"),
+      "-map",
+      `[${mapLabel}]`,
+    );
+    return this;
+  }
+
+  fpsOutput(frameRate: number): this {
+    this.outputOptions.push("-r", String(frameRate));
+    return this;
+  }
+
+  outputOptionsList(options: readonly string[]): this {
+    this.outputOptions.push(...options);
+    return this;
+  }
+
+  audioChannels(channels: number): this {
+    this.outputOptions.push("-ac", String(channels));
+    return this;
+  }
+
+  audioFrequency(frequency: number): this {
+    this.outputOptions.push("-ar", String(frequency));
+    return this;
+  }
+
+  audioCodec(codec: string): this {
+    this.outputOptions.push("-c:a", codec);
+    return this;
+  }
+
+  audioBitrate(bitrate: string): this {
+    this.outputOptions.push("-b:a", bitrate);
+    return this;
+  }
+
+  audioFilters(filter: string): this {
+    this.audioFilterChain.push(filter);
+    return this;
+  }
+
+  arguments(): string[] {
+    const inputArguments = this.inputs.flatMap((input, index) => [
+      ...input.options,
+      "-i",
+      typeof input.source === "string" ? input.source : `pipe:${index.toString()}`,
+    ]);
+    return [
+      ...inputArguments,
+      ...this.outputOptions,
+      ...(this.videoFilters.length > 0
+        ? ["-filter:v", this.videoFilters.join(",")]
+        : []),
+      ...(this.audioFilterChain.length > 0
+        ? ["-filter:a", this.audioFilterChain.join(",")]
+        : []),
+      "-progress",
+      "pipe:2",
+      "-nostats",
+      "-f",
+      this.outputFormatName,
+      "pipe:1",
+    ];
+  }
+}
+
+export class FfmpegProcessHandle {
+  readonly args: readonly string[];
+  readonly #process: ChildProcessWithoutNullStreams;
+
+  constructor(
+    args: readonly string[],
+    process: ChildProcessWithoutNullStreams,
+  ) {
+    this.args = Object.freeze([...args]);
+    this.#process = process;
+  }
+
+  get pid(): number | undefined {
+    return this.#process.pid;
+  }
+
+  kill(signal: NodeJS.Signals = "SIGTERM"): boolean {
+    return this.#process.kill(signal);
+  }
+}
+
 /**
  * Rejection type of {@link prepareStream}'s `promise` when ffmpeg itself fails (as opposed to an
- * abort). Carries what the raw fluent-ffmpeg error loses: the parsed exit code and a bounded tail
- * of ffmpeg's stderr — the actual error lines (e.g. filter-graph negotiation failures), not just
- * the final "Conversion failed!".
+ * abort). Carries the parsed exit code and a bounded tail of ffmpeg's stderr — the actual error
+ * lines (e.g. filter-graph negotiation failures), not just the final "Conversion failed!".
  */
 export class FfmpegExitError extends Error {
   readonly exitCode: number | null;
@@ -266,11 +425,96 @@ export class FfmpegExitError extends Error {
   }
 }
 
-/** Parse fluent-ffmpeg's "ffmpeg exited with code N" message; null when the shape doesn't match. */
+/** Parse an "ffmpeg exited with code N" message; null when the shape doesn't match. */
 export function parseFfmpegExitCode(message: string): number | null {
   const match = /exited with code (\d+)/u.exec(message);
   const code = match?.[1];
   return code === undefined ? null : Number(code);
+}
+
+function quoteCommandArgument(argument: string): string {
+  if (/^[A-Za-z0-9_./:=+?,@%-]+$/u.test(argument)) return argument;
+  return `'${argument.replaceAll("'", "'\\''")}'`;
+}
+
+function ffmpegCommandLine(executable: string, args: readonly string[]): string {
+  return [executable, ...args].map(quoteCommandArgument).join(" ");
+}
+
+function createFfmpegStderrHandler(
+  observer: StreamObserver | undefined,
+  stderrTail: string[],
+): (line: string) => void {
+  const codecData: FfmpegCodecData = {};
+  const progress: FfmpegProgress = {};
+  let codecDataEmitted = false;
+
+  const emitCodecData = () => {
+    if (codecDataEmitted || observer?.onCodecData === undefined) return;
+    if (
+      codecData.format === undefined &&
+      codecData.duration === undefined &&
+      codecData.video === undefined &&
+      codecData.audio === undefined
+    ) {
+      return;
+    }
+    codecDataEmitted = true;
+    observer.onCodecData({ ...codecData });
+  };
+
+  return (line: string) => {
+    stderrTail.push(line);
+    if (stderrTail.length > 50) stderrTail.shift();
+
+    const inputMatch = /^\s*Input #0,\s*([^,]+(?:,[^,]+)*),\s*from /u.exec(
+      line,
+    );
+    if (inputMatch?.[1] !== undefined) codecData.format = inputMatch[1].trim();
+
+    const durationMatch = /^\s*Duration:\s*([^,]+)/u.exec(line);
+    if (durationMatch?.[1] !== undefined) {
+      codecData.duration = durationMatch[1].trim();
+    }
+
+    const videoMatch = /^\s*Stream #\S+.*Video:\s*([^,]+)(?:,\s*(.*))?/u.exec(
+      line,
+    );
+    if (videoMatch?.[1] !== undefined && codecData.video === undefined) {
+      codecData.video = videoMatch[1].trim();
+      const details = videoMatch[2]?.trim();
+      if (details !== undefined && details.length > 0) {
+        codecData.video_details = [details];
+      }
+    }
+
+    const audioMatch = /^\s*Stream #\S+.*Audio:\s*([^,]+)(?:,\s*(.*))?/u.exec(
+      line,
+    );
+    if (audioMatch?.[1] !== undefined && codecData.audio === undefined) {
+      codecData.audio = audioMatch[1].trim();
+      const details = audioMatch[2]?.trim();
+      if (details !== undefined && details.length > 0) {
+        codecData.audio_details = [details];
+      }
+    }
+
+    const separator = line.indexOf("=");
+    if (separator <= 0) return;
+    const key = line.slice(0, separator);
+    const value = line.slice(separator + 1);
+    if (key === "frame") progress.frames = Number(value);
+    else if (key === "fps") progress.currentFps = Number(value);
+    else if (key === "bitrate") progress.currentKbps = Number.parseFloat(value);
+    else if (key === "total_size") {
+      const bytes = Number(value);
+      if (Number.isFinite(bytes)) progress.targetSize = bytes / 1024;
+    } else if (key === "out_time") progress.timemark = value;
+    else if (key === "progress") {
+      emitCodecData();
+      observer?.onProgress?.({ ...progress });
+    }
+  };
 }
 
 export function prepareStream(
@@ -387,6 +631,7 @@ export function prepareStream(
       ...(opts.observer !== undefined ? { observer: opts.observer } : {}),
       ...(opts.pad !== undefined ? { pad: opts.pad } : {}),
       ...(opts.audioInput !== undefined ? { audioInput: opts.audioInput } : {}),
+      ...(opts.ffmpegPath !== undefined ? { ffmpegPath: opts.ffmpegPath } : {}),
     } satisfies PrepareStreamOptions;
   }
 
@@ -404,54 +649,12 @@ export function prepareStream(
 
   const output = new PassThrough();
 
-  // command creation
-  const command = ffmpeg(input);
-
-  // Observability seam: forward the ffmpeg command line, input codec metadata, and periodic
-  // transcode progress to an optional observer. Registered before `command.run()` so no events are
-  // missed. Purely additive — no effect when `options.observer` is undefined.
+  const commandBuilder = new FfmpegArgumentBuilder(input);
   const { observer } = options;
-  if (observer?.onCommand) {
-    command.on("start", (commandLine) => observer.onCommand?.(commandLine));
-  }
-  if (observer?.onProcessStart) {
-    // Hook fluent-ffmpeg's `start` to surface the child PID separately. The PID is needed by
-    // out-of-process collectors (e.g. /proc/<pid>/fdinfo for per-pod GPU attribution via the
-    // i915 `drm-engine-video` counter) that cannot inspect the subprocess from inside fluent-ffmpeg.
-    command.on("start", () => {
-      const pid = command.ffmpegProc?.pid;
-      if (typeof pid === "number") observer.onProcessStart?.(pid);
-    });
-  }
-  if (observer?.onCodecData) {
-    command.on("codecData", (data) => {
-      observer.onCodecData?.({
-        format: data.format,
-        duration: data.duration,
-        video: data.video,
-        audio: data.audio,
-        video_details: data.video_details,
-        audio_details: data.audio_details,
-      });
-    });
-  }
-  if (observer?.onProgress) {
-    command.on("progress", (progress) => {
-      const progressUpdate: FfmpegProgress = {
-        frames: progress.frames,
-        currentFps: progress.currentFps,
-        currentKbps: progress.currentKbps,
-        targetSize: progress.targetSize,
-        timemark: progress.timemark,
-      };
-      if (progress.percent !== undefined) progressUpdate.percent = progress.percent;
-      observer.onProgress?.(progressUpdate);
-    });
-  }
 
   // input seek: `-ss` before `-i` is a fast, accurate input seek for seekable sources.
   if (mergedOptions.startTime !== undefined) {
-    command.inputOption("-ss", String(mergedOptions.startTime));
+    commandBuilder.inputOption("-ss", String(mergedOptions.startTime));
   }
 
   // Cap input demux rate as a multiple of realtime to prevent the encoder from running ahead of
@@ -463,11 +666,11 @@ export function prepareStream(
     !isHls &&
     !isSrt
   ) {
-    command.inputOption("-readrate", String(mergedOptions.readrate));
+    commandBuilder.inputOption("-readrate", String(mergedOptions.readrate));
     // Only meaningful alongside readrate: how much input to burst-read before pacing engages.
     // The pre-roll gives the otherwise zero-margin realtime pipeline a cushion (see the option doc).
     if (mergedOptions.readrateInitialBurst !== undefined) {
-      command.inputOption(
+      commandBuilder.inputOption(
         "-readrate_initial_burst",
         String(mergedOptions.readrateInitialBurst),
       );
@@ -479,7 +682,7 @@ export function prepareStream(
     mergedOptions.customInputOptions &&
     mergedOptions.customInputOptions.length > 0
   ) {
-    command.inputOptions(mergedOptions.customInputOptions);
+    commandBuilder.inputOptions(mergedOptions.customInputOptions);
   }
 
   const { hardwareAcceleratedDecoding, minimizeLatency, customHeaders } =
@@ -516,51 +719,54 @@ export function prepareStream(
 
   if (hardwareAcceleratedDecoding) {
     if (hwPipeline) {
-      command.inputOptions(
+      commandBuilder.inputOptions(
         uploadMode && hwPipeline.uploadDecodeOptions
           ? hwPipeline.uploadDecodeOptions
           : hwPipeline.decodeOptions,
       );
-    } else command.inputOption("-hwaccel", "auto");
+    } else commandBuilder.inputOption("-hwaccel", "auto");
   }
 
   if (minimizeLatency) {
-    command.addOptions(["-fflags nobuffer", "-analyzeduration 0"]);
+    commandBuilder.addOptions(["-fflags", "nobuffer", "-analyzeduration", "0"]);
   }
 
   if (isHttpUrl) {
-    command.inputOption(
+    commandBuilder.inputOption(
       "-headers",
       Object.entries(customHeaders)
         .map(([k, v]) => `${k}: ${v}`)
         .join("\r\n"),
     );
     if (!isHls) {
-      command.inputOptions([
-        "-reconnect 1",
-        "-reconnect_at_eof 1",
-        "-reconnect_streamed 1",
-        "-reconnect_delay_max 4294",
+      commandBuilder.inputOptions([
+        "-reconnect",
+        "1",
+        "-reconnect_at_eof",
+        "1",
+        "-reconnect_streamed",
+        "1",
+        "-reconnect_delay_max",
+        "4294",
       ]);
     }
   }
 
   if (isSrt) {
-    command.inputOption("-scan_all_pmts 0");
+    commandBuilder.inputOption("-scan_all_pmts", "0");
   }
 
   // Optional second input carrying audio (for raw-video sources with no embedded audio track).
-  // Added after every input-0 option above so its inputOptions bind to this input (fluent-ffmpeg
-  // applies inputOptions to the most recently added input). Mapped via `-map 1:a:0` in the audio
-  // setup below. Only wired when audio output is enabled.
+  // Added after every input-0 option above so its inputOptions bind to this input. Mapped via
+  // `-map 1:a:0` in the audio setup below. Only wired when audio output is enabled.
   if (mergedOptions.audioInput && mergedOptions.includeAudio) {
-    command
+    commandBuilder
       .input(mergedOptions.audioInput.source)
       .inputOptions(mergedOptions.audioInput.inputOptions);
   }
 
   // general output options
-  command.output(output).outputFormat("nut");
+  commandBuilder.output(output).outputFormat("nut");
 
   // video setup (the `encoder` is resolved earlier, into `encoderSettings`/`hwPipeline`)
   const {
@@ -587,8 +793,8 @@ export function prepareStream(
         "inputColor 'hdr' is ignored when noTranscoding is set: the video stream is copied through unmodified, so no tonemap can apply",
       );
     }
-    command.addOutputOption("-map 0:v");
-    command.videoCodec("copy");
+    commandBuilder.addOutputOption(["-map", "0:v"]);
+    commandBuilder.videoCodec("copy");
   } else {
     if (!encoderSettings)
       throw new Error(`Encoder settings not specified for ${videoCodec}`);
@@ -635,18 +841,18 @@ export function prepareStream(
           encoderOutFilters: encoderSettings.outFilters ?? [],
         });
     if (graph.kind === "filterChain") {
-      command.addOutputOption("-map 0:v");
-      command.videoFilter(graph.filters);
+      commandBuilder.addOutputOption(["-map", "0:v"]);
+      commandBuilder.videoFilter(graph.filters);
     } else {
       // Multi-branch graph (GPU subtitle overlay): -filter_complex plus -map of its labeled
       // output. `-map 0:v` must NOT be emitted alongside it — that would put a second, unfiltered
       // video stream into the NUT output.
-      command.complexFilter(graph.graph, graph.mapLabel);
+      commandBuilder.complexFilter(graph.graph, graph.mapLabel);
     }
 
-    if (frameRate) command.fpsOutput(frameRate);
+    if (frameRate) commandBuilder.fpsOutput(frameRate);
 
-    command.addOutputOption([
+    commandBuilder.addOutputOption([
       "-b:v",
       `${bitrateVideo}k`,
       "-maxrate:v",
@@ -662,29 +868,29 @@ export function prepareStream(
       "expr:gte(t,n_forced*1)",
     ]);
 
-    command
+    commandBuilder
       .videoCodec(encoderSettings.name)
-      .outputOptions(encoderSettings.options)
+      .outputOptionsList(encoderSettings.options)
       // `globalOptions` serve the software-decode path (device init for the outFilters hwupload).
       // When the hardware pipeline is active its decodeOptions already initialized the same named
       // device, and a second -init_hw_device with that name is a hard ffmpeg error.
-      .outputOptions(hwPipeline ? [] : (encoderSettings.globalOptions ?? []));
+      .outputOptionsList(hwPipeline ? [] : (encoderSettings.globalOptions ?? []));
   }
 
   // audio setup
   const { includeAudio, bitrateAudio, audioInput } = mergedOptions;
   if (includeAudio)
-    command
+    commandBuilder
       // With a separate audio input, map its first audio stream (a required mapping — the caller
       // promised a stream); otherwise take audio from the primary input if it has any (`?`).
-      .addOutputOption(audioInput ? "-map 1:a:0" : "-map 0:a:0?")
+      .addOutputOption(["-map", audioInput ? "1:a:0" : "0:a:0?"])
       .audioChannels(2)
       /*
        * I don't have much surround sound material to test this with,
        * if you do and you have better settings for this, feel free to
        * contribute!
        */
-      .addOutputOption("-lfe_mix_level 1")
+      .addOutputOption(["-lfe_mix_level", "1"])
       .audioFrequency(48000)
       .audioCodec("libopus")
       .audioBitrate(`${bitrateAudio}k`)
@@ -695,47 +901,13 @@ export function prepareStream(
     mergedOptions.customFfmpegFlags &&
     mergedOptions.customFfmpegFlags.length > 0
   ) {
-    command.addOptions(mergedOptions.customFfmpegFlags);
+    commandBuilder.addOptions(mergedOptions.customFfmpegFlags);
   }
-
-  // exit handling
-  // Bounded stderr tail: fluent-ffmpeg's error object keeps only the last line ("Conversion
-  // failed!"), which loses the actual error (e.g. the filter-graph negotiation failure lines).
-  const STDERR_TAIL_LINES = 50;
-  const stderrTail: string[] = [];
-  command.on("stderr", (line: string) => {
-    stderrTail.push(line);
-    if (stderrTail.length > STDERR_TAIL_LINES) stderrTail.shift();
-  });
-  const promise = new Promise<void>((resolve, reject) => {
-    command.on("error", (err: Error) => {
-      if (cancelSignal?.aborted)
-        /**
-         * fluent-ffmpeg might throw an error when SIGTERM is sent to
-         * the process, so we check if the abort signal is triggered
-         * and throw that instead
-         */
-        reject(cancelSignal.reason);
-      else
-        reject(
-          new FfmpegExitError(err.message, {
-            cause: err,
-            exitCode: parseFfmpegExitCode(err.message),
-            stderrTail: [...stderrTail],
-            startTimeSeconds: mergedOptions.startTime,
-          }),
-        );
-    });
-    command.on("end", () => resolve());
-  });
-  promise.catch(() => {});
-  cancelSignal?.addEventListener("abort", () => command.kill("SIGTERM"), {
-    once: true,
-  });
 
   // realtime control mechanism
   let currentVolume = 1;
   let zmqClientPromise: Promise<Request> | undefined;
+  let zmqEndpoint: string | undefined;
   if (includeAudio && !isBun() && !isDeno()) {
     function randomInclusive(start: number, end: number) {
       return Math.floor(Math.random() * (end - start + 1)) + start;
@@ -747,20 +919,94 @@ export function prepareStream(
       randomInclusive(0, 255),
       randomInclusive(2, 254),
     ].join(".");
-    const zmqEndpoint = `tcp://${loopbackIp}:42069`;
-    command.audioFilters(`azmq=b=${zmqEndpoint.replaceAll(":", "\\\\:")}`);
+    zmqEndpoint = `tcp://${loopbackIp}:42069`;
+    commandBuilder.audioFilters(
+      `azmq=b=${zmqEndpoint.replaceAll(":", "\\\\:")}`,
+    );
+  }
+
+  const args = commandBuilder.arguments();
+  const executable =
+    mergedOptions.ffmpegPath ?? process.env["FFMPEG_PATH"] ?? "ffmpeg";
+  const child = spawn(executable, args, {
+    stdio: ["pipe", "pipe", "pipe"],
+    windowsHide: true,
+  });
+  const command = new FfmpegProcessHandle(args, child);
+  observer?.onCommand?.(ffmpegCommandLine(executable, args));
+  if (command.pid !== undefined) observer?.onProcessStart?.(command.pid);
+
+  const primaryInput = commandBuilder.inputs[0]?.source;
+  if (typeof primaryInput === "string" || primaryInput === undefined) {
+    child.stdin.end();
+  } else {
+    primaryInput.pipe(child.stdin);
+  }
+  child.stdout.pipe(output);
+
+  const stderrTail: string[] = [];
+  const stderrLines = createInterface({ input: child.stderr });
+  const handleStderr = createFfmpegStderrHandler(observer, stderrTail);
+  stderrLines.on("line", handleStderr);
+
+  let spawnError: Error | undefined;
+  const promise = new Promise<void>((resolve, reject) => {
+    child.once("error", (error) => {
+      spawnError = error;
+      if (cancelSignal?.aborted) reject(cancelSignal.reason);
+      else {
+        reject(
+          new FfmpegExitError(error.message, {
+            cause: error,
+            exitCode: null,
+            stderrTail: [...stderrTail],
+            startTimeSeconds: mergedOptions.startTime,
+          }),
+        );
+      }
+    });
+    child.once("close", (code, signal) => {
+      if (cancelSignal?.aborted) {
+        reject(cancelSignal.reason);
+        return;
+      }
+      if (spawnError !== undefined) return;
+      if (code === 0) {
+        resolve();
+        return;
+      }
+      const message =
+        code === null
+          ? `ffmpeg exited from signal ${signal ?? "unknown"}`
+          : `ffmpeg exited with code ${code.toString()}`;
+      const cause = new Error(message);
+      reject(
+        new FfmpegExitError(message, {
+          cause,
+          exitCode: code,
+          stderrTail: [...stderrTail],
+          startTimeSeconds: mergedOptions.startTime,
+        }),
+      );
+    });
+  });
+  promise.catch(() => {});
+  cancelSignal?.addEventListener("abort", () => command.kill("SIGTERM"), {
+    once: true,
+  });
+
+  if (zmqEndpoint !== undefined) {
+    const endpoint = zmqEndpoint;
     zmqClientPromise = import("zeromq").then((zmq) => {
       const client = new zmq.Request({
         sendTimeout: 5000,
         receiveTimeout: 5000,
       });
-      client.connect(zmqEndpoint);
-      promise.catch(() => {}).finally(() => client.disconnect(zmqEndpoint));
+      client.connect(endpoint);
+      promise.catch(() => {}).finally(() => client.disconnect(endpoint));
       return client;
     });
   }
-
-  command.run();
 
   return {
     command,

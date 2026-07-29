@@ -37,7 +37,7 @@
   "dependencies": {
     "@discord-plays-mario-kart/common": "workspace:*",
     "@libsql/client": "0.17.4",
-    "@opentelemetry/sdk-node": "^0.219.0",
+    "@opentelemetry/sdk-node": "^0.221.0",
     "@opentelemetry/sdk-trace-base": "^2.7.1",
     "@opentelemetry/semantic-conventions": "^1.40.0",
     "@prisma/adapter-libsql": "7.9.1",

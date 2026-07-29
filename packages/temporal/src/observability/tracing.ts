@@ -160,7 +160,8 @@ export function initializeTracing(): void {
   const lokiOtlpLogsEndpoint =
     Bun.env["LOKI_OTLP_ENDPOINT"] ?? DEFAULT_LOKI_OTLP_LOGS_ENDPOINT;
   const otlpLogExporter = new OTLPLogExporter({ url: lokiOtlpLogsEndpoint });
-  logRecordProcessor = new BatchLogRecordProcessor(otlpLogExporter, {
+  logRecordProcessor = new BatchLogRecordProcessor({
+    exporter: otlpLogExporter,
     scheduledDelayMillis: 2000,
     maxExportBatchSize: 512,
     maxQueueSize: 4096,

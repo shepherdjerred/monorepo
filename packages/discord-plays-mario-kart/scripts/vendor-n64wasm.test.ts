@@ -16,7 +16,8 @@ test("validates a complete immutable upstream pin", () => {
     repository: "https://example.com/n64wasm.git",
     branch: "main",
     commit: "0123456789abcdef0123456789abcdef01234567",
-    emsdkImage: "emscripten/emsdk:4.0.10",
+    emsdkImage:
+      "emscripten/emsdk:4.0.10@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
   };
   expect(parseN64Upstream(upstream)).toEqual(upstream);
 });

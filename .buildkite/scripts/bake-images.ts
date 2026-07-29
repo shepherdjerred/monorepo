@@ -20,7 +20,14 @@ const selectionReport = "image-selection-report.json";
 const pushOutcomes = "image-push-outcomes.json";
 const versionsPath = "packages/homelab/src/cdk8s/src/versions.ts";
 
-async function execute(
+export type CommandExecutor = (
+  command: readonly string[],
+  environment?: Readonly<Record<string, string | undefined>>,
+) => Promise<BuildxCommandResult>;
+
+export type TextWriter = (path: string, contents: string) => Promise<unknown>;
+
+export async function execute(
   command: readonly string[],
   environment: Readonly<Record<string, string | undefined>> = Bun.env,
 ): Promise<BuildxCommandResult> {
@@ -39,8 +46,11 @@ async function execute(
   return { exitCode, stdout, stderr };
 }
 
-async function annotate(commandArguments: readonly string[]): Promise<void> {
-  const result = await execute([
+export async function annotate(
+  commandArguments: readonly string[],
+  executor: CommandExecutor = execute,
+): Promise<void> {
+  const result = await executor([
     "bun",
     "--no-install",
     ".buildkite/scripts/annotate-image-summary.ts",
@@ -51,12 +61,15 @@ async function annotate(commandArguments: readonly string[]): Promise<void> {
   }
 }
 
-async function lastGreenCommit(
+export async function lastGreenCommit(
   currentCommit: string,
+  fetcher: typeof fetch = fetch,
+  executor: CommandExecutor = execute,
+  environment: Readonly<Record<string, string | undefined>> = Bun.env,
 ): Promise<string | undefined> {
-  const token = Bun.env["BUILDKITE_API_TOKEN"];
+  const token = environment["BUILDKITE_API_TOKEN"];
   if (token === undefined) return undefined;
-  const response = await fetch(
+  const response = await fetcher(
     "https://api.buildkite.com/v2/organizations/sjerred/pipelines/monorepo/builds?branch=main&state=passed&per_page=1",
     {
       headers: { Authorization: `Bearer ${token}` },
@@ -67,28 +80,37 @@ async function lastGreenCommit(
   const commits = parseBuildkiteCommits(await response.json());
   const commit = commits[0];
   if (commit === undefined || commit === currentCommit) return undefined;
-  const exists = await execute(["git", "cat-file", "-e", `${commit}^{commit}`]);
+  const exists = await executor([
+    "git",
+    "cat-file",
+    "-e",
+    `${commit}^{commit}`,
+  ]);
   return exists.exitCode === 0 ? commit : undefined;
 }
 
-async function selectedTargets(
+export async function selectedTargets(
   options: { readonly affected: boolean; readonly push: boolean },
   commit: string,
+  executor: CommandExecutor = execute,
+  greenCommit: (
+    currentCommit: string,
+  ) => Promise<string | undefined> = lastGreenCommit,
 ): Promise<{ readonly targets: string[]; readonly fallbackReason: string }> {
   let base: string | undefined;
   let fallbackReason = "full build requested (no --affected/--push scoping)";
   if (options.affected) {
-    const result = await execute(["git", "merge-base", "origin/main", "HEAD"]);
+    const result = await executor(["git", "merge-base", "origin/main", "HEAD"]);
     if (result.exitCode === 0) base = result.stdout.trim();
     else fallbackReason = "could not resolve merge-base with origin/main";
   } else if (options.push) {
-    base = await lastGreenCommit(commit);
+    base = await greenCommit(commit);
     if (base === undefined)
       fallbackReason = "could not resolve last green main build";
   }
   if (base === undefined) return { targets: knownImageTargets, fallbackReason };
 
-  const selection = await execute([
+  const selection = await executor([
     "bun",
     "--no-install",
     ".buildkite/scripts/select-image-targets.ts",
@@ -106,8 +128,11 @@ async function selectedTargets(
   return parseImageSelection(selection.stdout);
 }
 
-async function manifestDigest(image: string): Promise<string> {
-  const result = await execute([
+export async function manifestDigest(
+  image: string,
+  executor: CommandExecutor = execute,
+): Promise<string> {
+  const result = await executor([
     "docker",
     "buildx",
     "imagetools",
@@ -125,8 +150,11 @@ async function manifestDigest(image: string): Promise<string> {
   return digest;
 }
 
-async function imageLayers(image: string): Promise<string[] | undefined> {
-  const result = await execute([
+export async function imageLayers(
+  image: string,
+  executor: CommandExecutor = execute,
+): Promise<string[] | undefined> {
+  const result = await executor([
     "docker",
     "buildx",
     "imagetools",
@@ -154,10 +182,12 @@ async function setDigestMetadata(
   if (exitCode !== 0) throw new Error("metadata write failed");
 }
 
-async function ensureBuilder(): Promise<void> {
-  const inspect = await execute(["docker", "buildx", "inspect", "ci"]);
+export async function ensureBuilder(
+  executor: CommandExecutor = execute,
+): Promise<void> {
+  const inspect = await executor(["docker", "buildx", "inspect", "ci"]);
   if (inspect.exitCode === 0) return;
-  const create = await execute([
+  const create = await executor([
     "docker",
     "buildx",
     "create",
@@ -171,9 +201,11 @@ async function ensureBuilder(): Promise<void> {
     throw new Error("Could not create BuildKit builder");
 }
 
-async function runSmoke(
+export async function runSmoke(
   bakeTargets: readonly string[],
   contractHash: string,
+  executor: CommandExecutor = execute,
+  environment: Readonly<Record<string, string | undefined>> = Bun.env,
 ): Promise<void> {
   const smokeArguments = bakeTargets.flatMap((target) => [
     "--set",
@@ -182,12 +214,12 @@ async function runSmoke(
   smokeArguments.push(
     ...caddyfileEntitlementArguments(
       bakeTargets,
-      Bun.env["CADDYFILE_SMOKE_PATH"],
+      environment["CADDYFILE_SMOKE_PATH"],
     ),
   );
 
   const exitCode = await retryTransientBuildx(() =>
-    execute(
+    executor(
       [
         "docker",
         "buildx",
@@ -198,7 +230,7 @@ async function runSmoke(
         ...bakeTargets,
       ],
       {
-        ...Bun.env,
+        ...environment,
         VERSION: "dev",
         GIT_SHA: "unknown",
         CONTRACT_HASH: contractHash,
@@ -218,18 +250,42 @@ type PushOutcome = {
     | "no-pin-bumped";
 };
 
-async function pushImages(
-  targets: readonly string[],
-  commit: string,
-  buildNumber: string,
-  contractHash: string,
+type PushOptions = {
+  readonly targets: readonly string[];
+  readonly commit: string;
+  readonly buildNumber: string;
+  readonly contractHash: string;
+};
+
+export async function pushImages(
+  options: PushOptions,
+  dependencies: {
+    readonly executor?: CommandExecutor;
+    readonly environment?: Readonly<Record<string, string | undefined>>;
+    readonly readVersions?: () => Promise<string>;
+    readonly getManifestDigest?: (image: string) => Promise<string>;
+    readonly getImageLayers?: (image: string) => Promise<string[] | undefined>;
+    readonly writeMetadata?: (
+      digests: Readonly<Record<string, string>>,
+    ) => Promise<void>;
+    readonly writeText?: TextWriter;
+  } = {},
 ): Promise<void> {
+  const { targets, commit, buildNumber, contractHash } = options;
+  const executor = dependencies.executor ?? execute;
+  const environment = dependencies.environment ?? Bun.env;
+  const readVersions =
+    dependencies.readVersions ?? (async () => Bun.file(versionsPath).text());
+  const getManifestDigest = dependencies.getManifestDigest ?? manifestDigest;
+  const getImageLayers = dependencies.getImageLayers ?? imageLayers;
+  const writeMetadata = dependencies.writeMetadata ?? setDigestMetadata;
+  const writeText = dependencies.writeText ?? Bun.write;
   const caddyfileArguments = caddyfileEntitlementArguments(
     targets,
-    Bun.env["CADDYFILE_SMOKE_PATH"],
+    environment["CADDYFILE_SMOKE_PATH"],
   );
   const pushExitCode = await retryTransientBuildx(() =>
-    execute(
+    executor(
       [
         "docker",
         "buildx",
@@ -241,7 +297,7 @@ async function pushImages(
         ...targets,
       ],
       {
-        ...Bun.env,
+        ...environment,
         VERSION: buildNumber,
         GIT_SHA: commit,
         CONTRACT_HASH: contractHash,
@@ -253,18 +309,18 @@ async function pushImages(
   if (pushExitCode === 34) process.exit(pushExitCode);
   if (pushExitCode !== 0) throw new Error("Production image push failed");
 
-  const versions = await Bun.file(versionsPath).text();
+  const versions = await readVersions();
   const digests: Record<string, string> = {};
   const outcomes: PushOutcome[] = [];
   for (const name of targets) {
     const image = `${registry}/${name}`;
-    const digest = await manifestDigest(`${image}:${commit}`);
+    const digest = await getManifestDigest(`${image}:${commit}`);
     const pinned = findPinnedDigest(versions, name);
     if (pinned === undefined) {
       outcomes.push({ image: name, outcome: "no-pin-bumped" });
     } else {
-      const oldLayers = await imageLayers(`${image}@${pinned}`);
-      const newLayers = await imageLayers(`${image}:${commit}`);
+      const oldLayers = await getImageLayers(`${image}@${pinned}`);
+      const newLayers = await getImageLayers(`${image}:${commit}`);
       if (
         oldLayers !== undefined &&
         newLayers !== undefined &&
@@ -279,7 +335,7 @@ async function pushImages(
       });
     }
     if (name === "starlight-karma-bot") {
-      const tag = await execute([
+      const tag = await executor([
         "docker",
         "buildx",
         "imagetools",
@@ -292,18 +348,19 @@ async function pushImages(
     }
     digests[`shepherdjerred/${name}`] = digest;
   }
-  await setDigestMetadata(digests);
-  await Bun.write(pushOutcomes, `${JSON.stringify(outcomes)}\n`);
+  await writeMetadata(digests);
+  await writeText(pushOutcomes, `${JSON.stringify(outcomes)}\n`);
 }
 
-async function writeFallbackReport(
+export async function writeFallbackReport(
   targets: readonly string[],
   reason: string,
+  writeText: TextWriter = Bun.write,
 ): Promise<void> {
   const targetReasons = Object.fromEntries(
     targets.map((target) => [target, [reason]]),
   );
-  await Bun.write(
+  await writeText(
     selectionReport,
     `${JSON.stringify({
       base: null,
@@ -350,7 +407,12 @@ if (import.meta.main) {
   const contractHash = contractHashResult.stdout.trim();
   await runSmoke(bakeTargets, contractHash);
   if (options.push) {
-    await pushImages(bakeTargets, commit, buildNumber, contractHash);
+    await pushImages({
+      targets: bakeTargets,
+      commit,
+      buildNumber,
+      contractHash,
+    });
   }
 
   if (!(await Bun.file(selectionReport).exists())) {

@@ -49,6 +49,7 @@ export function findPinnedDigest(
   const lines = versions.split("\n");
   for (const key of [
     `shepherdjerred/${imageName}`,
+    `shepherdjerred/${imageName}/prod`,
     `shepherdjerred/${imageName}/beta`,
   ]) {
     const lineIndex = lines.findIndex((line) => line.includes(`"${key}"`));

@@ -1,0 +1,13 @@
+diff --git a/src/index.js b/src/index.js
+index 37cc570..cbd1c5d 100644
+--- a/src/index.js
++++ b/src/index.js
+@@ -25 +25,7 @@
+-const {parseSync, transformFromAstSync} = require('@babel/core');
++const {parseSync, transformFromAstSync} = require(
++  require.resolve('@babel/core-v7', {
++    // The compatibility core is owned by the React Native app, not this
++    // upstream package. Metro always launches with the app as its cwd.
++    paths: [process.cwd()],
++  }),
++);

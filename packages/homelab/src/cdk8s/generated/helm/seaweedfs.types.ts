@@ -1381,9 +1381,9 @@ export type SeaweedfsHelmValuesFiler = {
    */
   containerSecurityContext?: SeaweedfsHelmValuesFilerContainerSecurityContext;
   /**
-   * @default {...} (6 keys)
+   * @default {"http":{"enabled":false,"className":"","host":"seaweedfs.cluster.local","path":"/sw-filer/?(.*)","pathType":"ImplementationSpecific","annotations":{},"tls":[]},"grpc":{"enabled":false,"className":"","host":"seaweedfs.cluster.local","path":"/","pathType":"Prefix","annotations":{"nginx.ingress.kubernetes.io/backend-protocol":"GRPC"},"tls":[]}}
    */
-  ingress?: SeaweedfsHelmValuesFilerIngress;
+  ingresses?: SeaweedfsHelmValuesFilerIngresses;
   /**
    * extraEnvVars is a list of extra environment variables to set with the stateful set.
    *
@@ -1473,7 +1473,18 @@ export type SeaweedfsHelmValuesFilerPodSecurityContext = object;
 
 export type SeaweedfsHelmValuesFilerContainerSecurityContext = object;
 
-export type SeaweedfsHelmValuesFilerIngress = {
+export type SeaweedfsHelmValuesFilerIngresses = {
+  /**
+   * @default {...} (7 keys)
+   */
+  http?: SeaweedfsHelmValuesFilerIngressesHttp;
+  /**
+   * @default {...} (7 keys)
+   */
+  grpc?: SeaweedfsHelmValuesFilerIngressesGrpc;
+};
+
+export type SeaweedfsHelmValuesFilerIngressesHttp = {
   /**
    * @default false
    */
@@ -1514,15 +1525,68 @@ export type SeaweedfsHelmValuesFilerIngress = {
    *
    * @default {}
    */
-  annotations?: SeaweedfsHelmValuesFilerIngressAnnotations;
+  annotations?: SeaweedfsHelmValuesFilerIngressesHttpAnnotations;
+  tls?: unknown[];
 };
 
-export type SeaweedfsHelmValuesFilerIngressAnnotations = {
+export type SeaweedfsHelmValuesFilerIngressesHttpAnnotations = {
   /**
    * This type allows arbitrary additional properties beyond those defined below.
    * This is common for config maps, custom settings, and extensible configurations.
    */
   [key: string]: unknown;
+};
+
+export type SeaweedfsHelmValuesFilerIngressesGrpc = {
+  /**
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * @default ""
+   */
+  className?: string;
+  /**
+   * @default "seaweedfs.cluster.local"
+   */
+  host?: string;
+  /**
+   * gRPC methods are called at /<package>.<Service>/<Method>, so route the
+   * whole host, not the HTTP UI's regex path.
+   *
+   * @default "/"
+   */
+  path?: string;
+  /**
+   * @default "Prefix"
+   */
+  pathType?: string;
+  /**
+   * For end-to-end mTLS (the filer's own TLS reaches the client, not
+   * terminated at the edge), drop backend-protocol above and use TLS
+   * passthrough instead:
+   * nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+   * Passthrough routes by SNI (set `host` above), ignores `path`, and
+   * requires ingress-nginx to run with --enable-ssl-passthrough.
+   *
+   * @default {"nginx.ingress.kubernetes.io/backend-protocol":"GRPC"}
+   */
+  annotations?: SeaweedfsHelmValuesFilerIngressesGrpcAnnotations;
+  tls?: unknown[];
+};
+
+export type SeaweedfsHelmValuesFilerIngressesGrpcAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+  /**
+   * Ingress terminates TLS and re-originates gRPC (HTTP/2) to the filer.
+   *
+   * @default "GRPC"
+   */
+  "nginx.ingress.kubernetes.io/backend-protocol"?: string;
 };
 
 export type SeaweedfsHelmValuesFilerExtraEnvironmentVars = {
@@ -3778,6 +3842,7 @@ export type SeaweedfsHelmValuesCertificates = {
    * @default "SeaweedFS CA"
    */
   commonName?: string;
+  dnsNames?: unknown[];
   ipAddresses?: unknown[];
   /**
    * @default "RSA"
@@ -3897,7 +3962,7 @@ export type SeaweedfsHelmValues = {
    */
   cosi?: SeaweedfsHelmValuesCosi;
   /**
-   * @default {...} (8 keys)
+   * @default {...} (9 keys)
    */
   certificates?: SeaweedfsHelmValuesCertificates;
   /**
@@ -4128,11 +4193,19 @@ export type SeaweedfsHelmParameters = {
   "filer.nodeSelector"?: string;
   "filer.priorityClassName"?: string;
   "filer.serviceAccountName"?: string;
-  "filer.ingress.enabled"?: string;
-  "filer.ingress.className"?: string;
-  "filer.ingress.host"?: string;
-  "filer.ingress.path"?: string;
-  "filer.ingress.pathType"?: string;
+  "filer.ingresses.http.enabled"?: string;
+  "filer.ingresses.http.className"?: string;
+  "filer.ingresses.http.host"?: string;
+  "filer.ingresses.http.path"?: string;
+  "filer.ingresses.http.pathType"?: string;
+  "filer.ingresses.http.tls"?: string;
+  "filer.ingresses.grpc.enabled"?: string;
+  "filer.ingresses.grpc.className"?: string;
+  "filer.ingresses.grpc.host"?: string;
+  "filer.ingresses.grpc.path"?: string;
+  "filer.ingresses.grpc.pathType"?: string;
+  "filer.ingresses.grpc.annotations.nginx.ingress.kubernetes.io/backend-protocol"?: string;
+  "filer.ingresses.grpc.tls"?: string;
   "filer.extraEnvironmentVars.WEED_MYSQL_ENABLED"?: string;
   "filer.extraEnvironmentVars.WEED_MYSQL_HOSTNAME"?: string;
   "filer.extraEnvironmentVars.WEED_MYSQL_PORT"?: string;
@@ -4470,6 +4543,7 @@ export type SeaweedfsHelmParameters = {
   "cosi.extraVolumeMounts"?: string;
   "cosi.resources"?: string;
   "certificates.commonName"?: string;
+  "certificates.dnsNames"?: string;
   "certificates.ipAddresses"?: string;
   "certificates.keyAlgorithm"?: string;
   "certificates.keySize"?: string;
