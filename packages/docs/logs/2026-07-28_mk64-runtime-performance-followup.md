@@ -128,12 +128,24 @@ Worker-thread performance change did not improve the delivered stream.
   and cumulative backpressure metrics, and tests proving the stalled sink
   remains bounded and emits `drain` when consumption resumes.
 - Passed the revised backend suite: 127 tests, typecheck, and lint.
+- Published and deployed the flow-control candidate from commit
+  `6f907702e32a45683b89790325b23cdacfbd1e71`. It bounded the queue and
+  preserved both inputs, but the single startup pause did not drain: ffmpeg
+  remained at zero progress. Rolled back to the known-good candidate again.
+- Traced the startup wall to command construction in `discord-video-stream`:
+  `-fflags nobuffer -analyzeduration 0` were output after both `-i` arguments,
+  so neither live raw input received them and ffmpeg retained its default probe
+  behavior. The options now bind before each input, including the separate PCM
+  socket.
+- Added an argument-order regression test that requires one low-latency option
+  set before each `-i`; passed all 60 `discord-video-stream` tests plus the 127
+  backend tests, typecheck, and backend lint.
 
 ### Remaining
 
-- Commit and publish the revised flow-control fix, build and deploy an immutable
-  image from that PR head, restart the
-  Discord session, and obtain manual confirmation that audio is synchronized.
+- Commit and publish the corrected input-option placement, build and deploy an
+  immutable image from that PR head, restart the Discord session, and obtain
+  manual confirmation that audio is synchronized.
 - Fix the separate Worker teardown ordering error found when `/stop` ended the
   successful test session. It is tracked in
   [`mk64-worker-session-stop-reset-order`](../todos/mk64-worker-session-stop-reset-order.md).
@@ -161,6 +173,10 @@ Worker-thread performance change did not improve the delivered stream.
   startup: ffmpeg needs both inputs to advance. The rejected live candidate
   demonstrated the resulting positive-feedback stall before the design was
   replaced with whole-emulator backpressure.
+- Whole-emulator backpressure is the bounded-queue safety net, not a substitute
+  for correct input initialization. Its first live candidate exposed that the
+  nominal low-latency flags were attached after the input scope and therefore
+  could not prevent the startup probe wall.
 - `/stop` completed and the stream shut down, but its asynchronous session-end
   callback ran after `WorkerEmulator.stop()` and logged
   `emulator worker is not running`. That distinct lifecycle defect is now

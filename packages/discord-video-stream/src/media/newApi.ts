@@ -727,9 +727,10 @@ export function prepareStream(
     } else commandBuilder.inputOption("-hwaccel", "auto");
   }
 
-  if (minimizeLatency) {
-    commandBuilder.addOptions(["-fflags", "nobuffer", "-analyzeduration", "0"]);
-  }
+  const latencyInputOptions = minimizeLatency
+    ? ["-fflags", "nobuffer", "-analyzeduration", "0"]
+    : [];
+  commandBuilder.inputOptions(latencyInputOptions);
 
   if (isHttpUrl) {
     commandBuilder.inputOption(
@@ -762,7 +763,10 @@ export function prepareStream(
   if (mergedOptions.audioInput && mergedOptions.includeAudio) {
     commandBuilder
       .input(mergedOptions.audioInput.source)
-      .inputOptions(mergedOptions.audioInput.inputOptions);
+      .inputOptions([
+        ...latencyInputOptions,
+        ...mergedOptions.audioInput.inputOptions,
+      ]);
   }
 
   // general output options
