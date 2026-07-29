@@ -78,8 +78,9 @@ losses continue to reconnect.
   tests plus Streambot's affected checks pass.
 - Addressed the review gate's seek-failure finding by making replacement attach
   failures reject both `seek()` and active playback, tear down their resources,
-  and leave public position on the prior anchor until attach succeeds; the fork
-  now passes all 63 tests.
+  freeze public position until attach succeeds, and leave the clock stopped if
+  playback exits first; assigned the privileged live-permission TODO to operator
+  verification. The fork passes all 63 tests.
 
 ### Remaining
 

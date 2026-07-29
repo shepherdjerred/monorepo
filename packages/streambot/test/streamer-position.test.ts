@@ -309,6 +309,59 @@ describe("StreambotStreamer position tracking", () => {
   });
 });
 
+describe("StreambotStreamer seek failure lifecycle", () => {
+  test("a fatal replacement failure leaves the clock stopped after playback exits", async () => {
+    const clock = { ms: 1000 };
+    const finished = createVoidDeferred();
+    const replacementError = new Error("replacement attach failed");
+    const factory: PlayerFactory = () => ({
+      start: () => Promise.resolve(),
+      seek: () => {
+        finished.reject(replacementError);
+        return Promise.reject(replacementError);
+      },
+      setVolume: () => Promise.resolve(true),
+      stop: finished.resolve,
+      finished: finished.promise,
+      position: 0,
+    });
+    const streamer = new StreambotStreamer(
+      USER_TOKEN,
+      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "false" })),
+      () => clock.ms,
+      factory,
+    );
+    const run = streamer.runStream(
+      {
+        voice: VOICE,
+        resolved: RESOLVED,
+        volume: 100,
+        seekSeconds: 30,
+        pipelineMode: "sw",
+      },
+      new AbortController().signal,
+    );
+    const runFailure = (async (): Promise<unknown> => {
+      try {
+        await run;
+        return null;
+      } catch (error) {
+        return error;
+      }
+    })();
+    await flush();
+
+    clock.ms = 6000;
+    await expect(streamer.seek(120)).rejects.toThrow(
+      "replacement attach failed",
+    );
+    expect(await runFailure).toBeInstanceOf(StreamCrashError);
+
+    clock.ms = 10_000;
+    expect(streamer.getPosition()).toBeNull();
+  });
+});
+
 describe("StreambotStreamer failure position tracking", () => {
   test("a mid-stream failure surfaces as StreamCrashError with the elapsed position — no in-streamer retry", async () => {
     const clock = { ms: 1000 };

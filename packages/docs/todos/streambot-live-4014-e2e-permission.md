@@ -3,7 +3,7 @@ id: streambot-live-4014-e2e-permission
 type: todo
 status: planned
 board: true
-verification: agent
+verification: operator
 disposition: blocked
 origin: packages/docs/plans/2026-07-28_streambot-eof-and-voice-recovery.md
 source_marker: false

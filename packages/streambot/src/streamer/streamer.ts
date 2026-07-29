@@ -247,6 +247,7 @@ export class StreambotStreamer implements StreamerLike {
     if (this.player === null) {
       return false;
     }
+    const player = this.player;
     const target = Math.max(0, seconds);
     const previousPositionSeconds = this.getPosition();
     // The replacement observer can begin synchronously inside player.seek(), so expose the target
@@ -255,11 +256,14 @@ export class StreambotStreamer implements StreamerLike {
     this.pendingSeekOffsetSeconds = target;
     this.pendingSeekPreviousPositionSeconds = previousPositionSeconds;
     try {
-      await this.player.seek(target);
+      await player.seek(target);
     } catch (error) {
       this.pendingSeekOffsetSeconds = null;
       this.pendingSeekPreviousPositionSeconds = null;
-      if (previousPositionSeconds !== null) {
+      // A replacement attach failure also rejects player.finished. If the playback owner won that
+      // race, it has already cleared this.player and stopped the clock; do not restart a clock for
+      // dead media while the machine prepares recovery.
+      if (this.player === player && previousPositionSeconds !== null) {
         this.segmentStartOffsetSeconds = previousPositionSeconds;
         this.segmentStartedAtMs = this.now();
       }
