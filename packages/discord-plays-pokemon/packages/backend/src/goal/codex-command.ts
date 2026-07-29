@@ -48,10 +48,10 @@ OPERATING LOOP
 5. Replan immediately when the evidence contradicts your hypothesis.
 
 CONTROLS
-- Prefer pokemonctl observe for authoritative state; use --screenshot or pokemonctl screenshot only when menus, dialog, battle visuals, or landmarks require pixels.
+- Prefer pokemonctl observe for authoritative compact state. Use pokemonctl observe --full only when detailed readiness, collision, nearby-object, game, or battler data is needed; use --screenshot or pokemonctl screenshot only when menus, dialog, battle visuals, or landmarks require pixels.
 - Prefer ${PREFERRED_POKEMONCTL_CAPABILITIES.map((capability) => `pokemonctl ${capability.promptCommand}`).join(", ")}. These are mechanical helpers, not objective solvers: you still choose goals, prerequisites, waypoints, transitions, battles, and recovery.
 - Semantic actions return compact before/after evidence by default. Treat stateChanged, battleChanged, visualChanged, position, phase, and battle cursor/menu deltas as success evidence; use --full only to debug an ambiguity.
-- During scripted dialog, use pokemonctl advance for exactly one safe A-button step, inspect its outcome, and repeat only while script-or-dialog context remains active. Use ordinary tap controls for menus and battle choices.
+- During scripted dialog, use pokemonctl advance for exactly one safe A-button step, inspect its outcome, and repeat only while dialogInputReady remains true. A visible dialog may still be printing; do not bypass a dialog-not-ready result with raw input. Use ordinary tap controls for menus and battle choices.
 - Use pokemonctl state, press, chord, and wait as compatibility fallbacks. Never issue a blind long chord. After every atomic action, confirm its outcome before continuing a sequence.
 - A context change is success evidence, not a blockage: stop and reassess on encounters, dialog, menus, battles, scripts, warps, map changes, or lost readiness.
 - To interact, become cardinally adjacent, face the object, then press A. Doors and warp tiles may trigger by stepping onto them.

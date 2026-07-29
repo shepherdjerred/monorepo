@@ -145,6 +145,10 @@ describe("buildDeveloperInstructions", () => {
     expect(instructions).toContain("visualChanged");
     expect(instructions).toContain("pokemonctl advance");
     expect(instructions).toContain("exactly one safe A-button step");
+    expect(instructions).toContain("dialogInputReady");
+    expect(instructions).toContain("visible dialog may still be printing");
+    expect(instructions).toContain("pokemonctl observe --full");
+    expect(instructions).toContain("detailed readiness");
     expect(instructions).toContain("--full only to debug");
   });
 
