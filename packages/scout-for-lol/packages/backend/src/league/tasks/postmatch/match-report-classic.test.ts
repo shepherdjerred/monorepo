@@ -1,10 +1,11 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, mock, test } from "bun:test";
 import {
   PlayerConfigEntrySchema,
   RawMatchSchema,
   type RawMatch,
 } from "@scout-for-lol/data";
 import { buildClassicMatch } from "./match-report-classic.ts";
+import { generateMatchReport } from "./match-report-generator.ts";
 
 const fixtureUrl = new URL(
   "../../../../../../testdata/rift.json",
@@ -110,5 +111,59 @@ describe("buildClassicMatch", () => {
 
     expect(result.teams.blue).toHaveLength(3);
     expect(result.teams.red).toHaveLength(2);
+  });
+
+  test("routes before rank, timeline, history, and AI dependencies", async () => {
+    const rawMatch = await classicMatchFixture();
+    const trackedParticipant = rawMatch.info.participants[0];
+    if (trackedParticipant === undefined) {
+      throw new Error("Classic fixture is missing its tracked participant");
+    }
+    const trackedPlayer = PlayerConfigEntrySchema.parse({
+      alias: "Dependency Spy",
+      league: {
+        leagueAccount: {
+          puuid: trackedParticipant.puuid,
+          region: "AMERICA_NORTH",
+        },
+      },
+    });
+    const processClassicMatchSpy = mock(async () => ({
+      content: "Classic dependency route",
+    }));
+    const getPlayerSpy = mock(async () => {
+      throw new Error("Classic must not fetch ranked player data");
+    });
+    const fetchTimelineSpy = mock(async () => {
+      throw new Error("Classic must not fetch timeline data");
+    });
+    const processArenaSpy = mock(async () => {
+      throw new Error("Classic must not enter arena processing");
+    });
+    const processStandardSpy = mock(async () => {
+      throw new Error(
+        "Classic must not enter rank-history or AI standard processing",
+      );
+    });
+
+    const result = await generateMatchReport(
+      rawMatch,
+      [trackedPlayer],
+      { targetGuildIds: [] },
+      {
+        processClassicMatch: processClassicMatchSpy,
+        getPlayer: getPlayerSpy,
+        fetchTimelineIfStandardMatch: fetchTimelineSpy,
+        processArenaMatch: processArenaSpy,
+        processStandardMatch: processStandardSpy,
+      },
+    );
+
+    expect(result?.content).toBe("Classic dependency route");
+    expect(processClassicMatchSpy).toHaveBeenCalledTimes(1);
+    expect(getPlayerSpy).toHaveBeenCalledTimes(0);
+    expect(fetchTimelineSpy).toHaveBeenCalledTimes(0);
+    expect(processArenaSpy).toHaveBeenCalledTimes(0);
+    expect(processStandardSpy).toHaveBeenCalledTimes(0);
   });
 });

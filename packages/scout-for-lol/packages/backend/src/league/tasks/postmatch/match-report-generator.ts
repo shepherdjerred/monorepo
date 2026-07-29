@@ -345,6 +345,23 @@ export type GenerateMatchReportOptions = {
   targetGuildIds: DiscordGuildId[];
 };
 
+export type GenerateMatchReportDependencies = {
+  processClassicMatch: typeof processClassicMatch;
+  getPlayer: typeof getPlayer;
+  fetchTimelineIfStandardMatch: typeof fetchTimelineIfStandardMatch;
+  processArenaMatch: typeof processArenaMatch;
+  processStandardMatch: typeof processStandardMatch;
+};
+
+const defaultGenerateMatchReportDependencies: GenerateMatchReportDependencies =
+  {
+    processClassicMatch,
+    getPlayer,
+    fetchTimelineIfStandardMatch,
+    processArenaMatch,
+    processStandardMatch,
+  };
+
 /**
  * Generate a match report message for Discord
  *
@@ -357,6 +374,7 @@ export async function generateMatchReport(
   matchData: RawMatch,
   trackedPlayers: PlayerConfigEntry[],
   options: GenerateMatchReportOptions,
+  dependencies: GenerateMatchReportDependencies = defaultGenerateMatchReportDependencies,
 ): Promise<MessageCreateOptions | undefined> {
   const matchId = MatchIdSchema.parse(matchData.metadata.matchId);
   logger.info(
@@ -392,7 +410,7 @@ export async function generateMatchReport(
       matchData.info.gameMode,
     );
     if (queueType === "classic") {
-      const result = await processClassicMatch(
+      const result = await dependencies.processClassicMatch(
         matchData,
         matchId,
         playersInMatch,
@@ -403,11 +421,13 @@ export async function generateMatchReport(
 
     // Get full player data with ranks
     const players = await Promise.all(
-      playersInMatch.map((playerConfig) => getPlayer(playerConfig)),
+      playersInMatch.map((playerConfig) =>
+        dependencies.getPlayer(playerConfig),
+      ),
     );
 
     // Fetch timeline data for standard matches (to provide game progression context for AI reviews)
-    const timelineData = await fetchTimelineIfStandardMatch(
+    const timelineData = await dependencies.fetchTimelineIfStandardMatch(
       matchData,
       matchId,
       playersInMatch,
@@ -418,8 +438,13 @@ export async function generateMatchReport(
       matchData.info.queueId,
       matchData.info.gameMode,
     )
-      ? await processArenaMatch(players, matchData, matchId, playersInMatch)
-      : await processStandardMatch({
+      ? await dependencies.processArenaMatch(
+          players,
+          matchData,
+          matchId,
+          playersInMatch,
+        )
+      : await dependencies.processStandardMatch({
           players,
           matchData,
           matchId,
