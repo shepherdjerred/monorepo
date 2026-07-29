@@ -24,9 +24,12 @@ the Birmel and Pokémon credentials.
 
 ## Remaining
 
-- [ ] Restore quota for the OpenAI project used by the Temporal worker, or
-      explicitly authorize a different production OpenAI credential for this
-      workflow.
+- [ ] In the OpenAI dashboard, identify the project that owns
+      `OPENAI_API_KEY` from 1Password item
+      `mjgnqqh37jxyzseqrddde2jgaq` and restore its usable quota or billing
+      balance. If support is needed, provide request ID
+      `req_3b7c0ed562be4905ae4c68e65f2e71ba`. Alternatively, explicitly authorize
+      a different production OpenAI credential for this workflow.
 - [ ] Rerun the fixed-time dry run twice against snapshot
       `dbb59f00-3f6b-4cab-a87c-6d8a65e21d62` at SHA-256
       `e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9`
@@ -52,3 +55,11 @@ the Birmel and Pokémon credentials.
   workflow `glitter-context-refresh-manual-a3f6ec23-cb6d-45db-9766-f75009766b00`.
   Both configured attempts again reached OpenAI and failed closed on HTTP 429
   `insufficient_quota`; no branch, PR, or context mutation occurred.
+- 2026-07-29 — Probed the credential directly from the deployed worker without
+  exposing it. The configured key successfully read the `gpt-5.6-sol` model,
+  while a minimal completion failed with HTTP 429 `insufficient_quota`
+  (`req_3b7c0ed562be4905ae4c68e65f2e71ba`). Kubernetes identifies the source as
+  1Password item `mjgnqqh37jxyzseqrddde2jgaq`, version `19`,
+  `OPENAI_API_KEY`. The API returned no project or organization header, and a
+  metadata-only 1Password lookup timed out; the operator must identify that
+  key's owning project in the OpenAI dashboard and restore quota there.

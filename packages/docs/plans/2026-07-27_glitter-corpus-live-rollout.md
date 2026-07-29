@@ -775,3 +775,49 @@ pass, and the schedule is deliberately unpaused.
 - The Temporal OpenAI credential is distinct from the Birmel and Pokémon
   credentials. No credential was read, copied, substituted, or changed during
   this recheck.
+
+## Session Log — 2026-07-29 (credential boundary diagnosis)
+
+### Done
+
+- Probed OpenAI directly from the deployed worker without reading or printing
+  its credential. `GET /v1/models/gpt-5.6-sol` returned HTTP 200, proving the
+  key authenticates and can access the configured model.
+- Sent a minimal 16-token completion request with the configured
+  `gpt-5.6-sol` model. OpenAI returned HTTP 429 with error type and code
+  `insufficient_quota`; the request ID was
+  `req_3b7c0ed562be4905ae4c68e65f2e71ba`.
+- Identified the exact credential source from the deployed Kubernetes Secret
+  metadata: 1Password item `mjgnqqh37jxyzseqrddde2jgaq`, item version `19`,
+  field `OPENAI_API_KEY`. No secret value was retrieved.
+- Attempted one metadata-only 1Password lookup for a project or organization
+  label. Local authorization timed out, and OpenAI returned no project or
+  organization response header, so no billing-project identifier could be
+  established without operator access.
+
+### Remaining
+
+- In the OpenAI dashboard, identify the project that owns the key stored in
+  1Password item `mjgnqqh37jxyzseqrddde2jgaq` and restore its usable quota or
+  billing balance. If OpenAI support is needed, provide request ID
+  `req_3b7c0ed562be4905ae4c68e65f2e71ba`.
+- Rerun the same snapshot-pinned fixed-time dry run twice and require complete
+  output equality, including the proposal checksum.
+- Run the real fixed-time refresh with the same pin, inspect its sole PR or
+  no-diff result, and smoke-test the shared package, Birmel, Scout, and Glitter
+  consumers.
+- Deliberately unpause `glitter-context-refresh-weekly` only after those
+  acceptance gates pass, then complete and archive this plan and its related
+  TODOs.
+
+### Caveats
+
+- The direct model-read/completion split rules out an invalid key, unavailable
+  model, missing environment variable, Kubernetes projection failure, and
+  generic network failure. The remaining boundary is the key's OpenAI project
+  quota or billing state.
+- The deployed secret metadata does not contain the OpenAI project ID, and the
+  API response did not disclose it. Resolving that final identifier requires
+  access to the OpenAI dashboard or successful 1Password operator
+  authentication.
+- No credential value was read, printed, copied, substituted, or changed.
