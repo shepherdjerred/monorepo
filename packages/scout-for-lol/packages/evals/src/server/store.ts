@@ -47,7 +47,6 @@ const NavigationRowSchema = z.strictObject({
 
 const HumanRatingRowSchema = HumanRatingSchema;
 const FreshnessRatingRowSchema = FreshnessRatingSchema;
-
 const StyleReviewRowSchema = StyleBatchSchema.shape.reviews.element;
 
 export type CreateDatasetInput = z.input<typeof CreateDatasetInputSchema>;
@@ -334,24 +333,34 @@ export class EvalStore {
       inputTokens: parsed.inputTokens,
       outputTokens: parsed.outputTokens,
     });
-    this.#database
-      .query(
-        `INSERT INTO generations (
-           id, case_id, output_text, model, prompt_revision, duration_ms,
-           input_tokens, output_tokens, created_at
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      )
-      .run(
-        generation.id,
-        parsed.caseId,
-        generation.outputText,
-        generation.model,
-        generation.promptRevision,
-        generation.durationMs,
-        generation.inputTokens,
-        generation.outputTokens,
-        new Date().toISOString(),
-      );
+    this.#database.transaction(() => {
+      this.#database
+        .query(
+          `INSERT INTO generations (
+             id, case_id, output_text, model, prompt_revision, duration_ms,
+             input_tokens, output_tokens, created_at
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run(
+          generation.id,
+          parsed.caseId,
+          generation.outputText,
+          generation.model,
+          generation.promptRevision,
+          generation.durationMs,
+          generation.inputTokens,
+          generation.outputTokens,
+          new Date().toISOString(),
+        );
+      this.#database
+        .query(
+          `DELETE FROM freshness_ratings
+           WHERE (dataset_id, style_key) = (
+             SELECT dataset_id, style_key FROM dataset_cases WHERE id = ?
+           )`,
+        )
+        .run(parsed.caseId);
+    })();
     return generation;
   }
 

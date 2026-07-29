@@ -452,6 +452,23 @@ describe("EvalStore freshness ratings and row validation", () => {
       });
       expect(store.listStyleBatch(dataset.id, "aaron").rating).toEqual(edited);
 
+      store.recordGeneration({
+        caseId: first.id,
+        outputText: "Newest first output.",
+        model: "test",
+        promptRevision: "v3",
+        durationMs: null,
+        inputTokens: null,
+        outputTokens: null,
+      });
+      expect(store.listStyleBatch(dataset.id, "aaron")).toMatchObject({
+        reviews: [
+          { caseId: first.id, outputText: "Newest first output." },
+          { caseId: second.id, outputText: "Second output." },
+        ],
+        rating: null,
+      });
+
       const count = CountRowSchema.parse(
         database
           .query(
@@ -461,7 +478,7 @@ describe("EvalStore freshness ratings and row validation", () => {
           )
           .get(dataset.id, "aaron"),
       );
-      expect(count.count).toBe(1);
+      expect(count.count).toBe(0);
     } finally {
       store.close();
     }
