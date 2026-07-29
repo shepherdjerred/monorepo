@@ -665,3 +665,76 @@ pass.
   overlapping Argo operations receive Buildkite's transient exit code.
 - This CI hardening did not mutate the production Glitter corpus, schedules, or
   worker credentials.
+
+## Session Log — 2026-07-29 (final production status)
+
+### Done
+
+- Completed the trusted-seed import, production backfill, manual daily capture,
+  and scheduled daily capture. The latest scheduled run,
+  `glitter-corpus-daily-workflow-2026-07-29T11:15:00Z` /
+  `019fad95-bf8f-7c9d-9ef3-368be4bdf27f`, published complete snapshot
+  `07d2998a-c2d0-4f15-aaab-c365bb103066` with 267 channels, 212,415 unique
+  messages, and SHA-256
+  `04b53f7bbf0a3186297d14e5522aa2edc0992fb7def721e4e6faa1f68ef5b776`.
+- Re-ran the recovery verifier from the production Temporal worker after the
+  final release. It independently returned the same snapshot identity, channel
+  count, message count, and checksum.
+- Shipped the worker, release-coordination, Argo, Scout reconciliation, and
+  release-retry repairs through PRs #1819, #1820, #1821, #1822, #1824, #1825,
+  #1826, and #1828. Authoritative main Buildkite #7105 passed every release
+  lane at commit `5a2b6135b066a1bc87e5556417972fbe78bb816f`, including npm
+  publication, Helm, Argo, and Scout production reconciliation.
+- Fixed the HIGH-severity CVE-2026-56852 found by the final status PR's Trivy
+  gate by upgrading the AsusWRT provider's indirect `golang.org/x/text`
+  dependency from 0.37.0 to 0.39.0 and its required `golang.org/x` dependency
+  closure. The provider's tests, vet, golangci-lint, and a fresh Trivy scan all
+  pass.
+- Archived the completed Discord/SeaweedFS operator-acceptance TODO and removed
+  its obsolete R2 requirements. Narrowed the remaining credential TODO to the
+  OpenAI quota-gated weekly refresh acceptance only.
+- Verified the production deployment is fully observed and Ready at immutable
+  worker image
+  `2.0.0-7052@sha256:580e41600ab0c1cc33d9d4f91a68c1ac7cc2126de68b6ade291b092719d8e4b2`.
+  The Temporal Argo application is Synced and Healthy after the final release.
+- Confirmed `glitter-corpus-daily` is active, with its next action at
+  `2026-07-30T11:15:00Z`. Confirmed
+  `glitter-context-refresh-weekly` remains deliberately paused, with its next
+  nominal action at `2026-08-03T18:00:00Z`.
+- Rechecked production observability after the final release:
+  `glitter_corpus_snapshot_metrics_configured` is 1,
+  `glitter_corpus_snapshot_messages` is 212,415, and every worker series reports
+  zero SeaweedFS storage-integrity failures over 24 hours.
+- Exercised the wired context-refresh workflow at fixed time
+  `2026-07-30T00:00:00Z` against immutable snapshot
+  `dbb59f00-3f6b-4cab-a87c-6d8a65e21d62` and checksum
+  `e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9`.
+  Both configured activity attempts failed closed on OpenAI HTTP 429
+  `insufficient_quota`; no branch, pull request, or generated-context mutation
+  occurred.
+
+### Remaining
+
+- Restore quota for the OpenAI project used by the Temporal worker, or
+  explicitly authorize a different production OpenAI credential for this
+  workflow.
+- Rerun the same snapshot-pinned fixed-time dry run twice and require complete
+  output equality, including the proposal checksum.
+- Run the real fixed-time refresh with the same pin, inspect its sole PR or
+  no-diff result, and smoke-test the shared package, Birmel, Scout, and Glitter
+  consumers.
+- Deliberately unpause `glitter-context-refresh-weekly` only after those
+  acceptance gates pass, then complete and archive this plan and its related
+  TODOs.
+
+### Caveats
+
+- The corpus-capture half of the feature is seeded, verified, and operating
+  daily in production. The context-refresh half is wired and fails closed, but
+  it is not accepted or scheduled while its OpenAI project has no quota.
+- Nine schema-valid immutable generation artifacts remain reusable. Four style
+  cards are still missing and cannot be generated until the quota boundary is
+  resolved.
+- The Temporal OpenAI credential is distinct from the Birmel and Pokémon
+  credentials. No credential was read, copied, substituted, or changed during
+  this session.

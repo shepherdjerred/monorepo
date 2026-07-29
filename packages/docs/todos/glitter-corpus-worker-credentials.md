@@ -9,54 +9,33 @@ origin: packages/docs/logs/2026-07-26_pr-1700-glitter-shared-context.md
 source_marker: false
 ---
 
-# Wire Glitter corpus/context credentials into the Temporal worker
+# Complete quota-gated Glitter context refresh acceptance
 
-PR #1700 (`feature/glitter-shared-context`) adds two Temporal schedules —
-`glitter-corpus-daily` and `glitter-context-refresh-weekly`
-(`packages/temporal/src/schedules/register-schedules.ts`) — that declare a
-`requiredEnvironment` of Glitter Discord + mirrored-corpus storage credentials.
-`buildScheduleState` (`packages/temporal/src/schedules/schedule-state.ts`)
-fail-safes correctly: while any required var is missing the worker registers
-both schedules **paused** with the note
-`Paused automatically until required Glitter corpus credentials are configured`,
-so nothing runs mis-configured.
+The Discord and SeaweedFS credentials are provisioned in 1Password, wired into
+the deployed Temporal worker, and covered by the committed non-secret vault
+snapshot. The trusted seed, full backfill, daily capture, recovery verification,
+and observability gates all pass. `glitter-corpus-daily` is active in production.
 
-Codex flagged (PR #1700, P1) that the deployed worker
-(`packages/homelab/src/cdk8s/src/resources/temporal/worker.ts`) supplies none of
-these vars, so the schedules stay permanently "unconfigured" and can never reach
-the operator-approval pause state, even after the fields are added to 1Password.
-
-This step is **operator-blocked**: wiring the vars as required secret refs makes
-`check:1password` fail until the 12 fields exist in the `temporal-temporal-worker-1p`
-1Password item, and the repo policy forbids `optional: true` secrets
-(`packages/homelab/AGENTS.md` "No optional secrets — fail fast"). Populating them
-needs the real Glitter Discord bot token, guild id/slug, denylist channel ids, and
-the SeaweedFS/S3 + Cloudflare R2 corpus credentials — values only the operator has.
+The remaining credential boundary is the Temporal worker's existing
+`OPENAI_API_KEY`. The fixed-time, snapshot-pinned production dry run reached the
+generation activity, but both configured attempts failed closed on OpenAI HTTP
+429 `insufficient_quota`. The worker credential is intentionally distinct from
+the Birmel and Pokémon credentials.
 
 ## Remaining
 
-All remaining work is operator-gated (1Password provisioning + deploy):
-
-- [ ] Add these 12 fields to the `temporal-temporal-worker-1p` 1Password item
-      with real values:
-  - [ ] `GLITTER_DISCORD_TOKEN`
-  - [ ] `GLITTER_DISCORD_GUILD_ID`
-  - [ ] `GLITTER_DISCORD_GUILD_SLUG`
-  - [ ] `GLITTER_DISCORD_DENYLIST_CHANNEL_IDS`
-  - [ ] `GLITTER_CORPUS_S3_ENDPOINT`, `GLITTER_CORPUS_S3_BUCKET`,
-        `GLITTER_CORPUS_S3_ACCESS_KEY_ID`, `GLITTER_CORPUS_S3_SECRET_ACCESS_KEY`
-  - [ ] `GLITTER_CORPUS_R2_ENDPOINT`, `GLITTER_CORPUS_R2_BUCKET`,
-        `GLITTER_CORPUS_R2_ACCESS_KEY_ID`, `GLITTER_CORPUS_R2_SECRET_ACCESS_KEY`
-- [ ] Refresh the vault snapshot with
-      `cd packages/homelab/src/cdk8s && bun run scripts/snapshot-1password-vault.ts`
-      and commit `onepassword-vault-snapshot.json`.
-- [ ] Wire a `glitterCorpusEnv(secret)` block
-      (`requiredSecretEnv(secret, [...])` of the 12 keys) into the worker
-      container env in `worker.ts`, spread alongside `homelabAuditEnv(secret)`.
-      Confirm `check:1password` passes.
-- [ ] After deploy, confirm both schedules transition from the
-      "credentials-configured" pause note to their `initialPauseNote`
-      (operator-approval) state, then unpause in the Temporal UI when ready.
+- [ ] Restore quota for the OpenAI project used by the Temporal worker, or
+      explicitly authorize a different production OpenAI credential for this
+      workflow.
+- [ ] Rerun the fixed-time dry run twice against snapshot
+      `dbb59f00-3f6b-4cab-a87c-6d8a65e21d62` at SHA-256
+      `e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9`
+      and require complete output equality.
+- [ ] Run the real refresh with the same pin, inspect its sole PR or no-diff
+      result, and smoke-test the shared package, Birmel, Scout, and Glitter
+      consumers.
+- [ ] Unpause `glitter-context-refresh-weekly` only after those acceptance
+      gates pass, then complete and archive this TODO and the live rollout plan.
 
 ## Comment Log
 
@@ -64,3 +43,7 @@ All remaining work is operator-gated (1Password provisioning + deploy):
   credentials into the worker"). Code wiring was drafted and verified to fail
   `check:1password` because the 1P fields do not yet exist; reverted to keep CI
   green. Schedules already fail-safe (auto-paused as unconfigured).
+- 2026-07-29 — Discord and SeaweedFS credentials, worker wiring, deployment,
+  seed, backfill, daily schedule, recovery, and observability are complete.
+  Removed obsolete R2 and provisioning tasks. The only remaining operator
+  boundary is OpenAI project quota; weekly refresh remains deliberately paused.
