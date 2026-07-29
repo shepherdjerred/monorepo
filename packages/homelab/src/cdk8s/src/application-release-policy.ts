@@ -71,7 +71,9 @@ export function applyApplicationReleasePolicy(app: App): void {
       manifest.spec.syncPolicy !== undefined &&
       Object.hasOwn(manifest.spec.syncPolicy, "automated")
     ) {
-      construct.addJsonPatch(JsonPatch.remove("/spec/syncPolicy/automated"));
+      construct.addJsonPatch(
+        JsonPatch.replace("/spec/syncPolicy/automated", { enabled: false }),
+      );
     }
     if (
       revisions === undefined ||
