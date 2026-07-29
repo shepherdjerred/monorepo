@@ -218,7 +218,7 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - Implemented a general engine checkpoint and ordered atomic flash
   persistence. A rebuilt real WASM passed an independent checkpoint/reboot
   integration test against a copied live save.
-- Verified the combined backend (318 tests, zero failures or skips), all 27
+- Verified the combined backend (318 tests, zero failures or skips), all 30
   knowledge/build script tests, package typecheck/lint, the exhaustive
   root `bun run verify` graph (217/217 tasks), and a clean Docker `smoke` build
   that rebuilt the patched WASM, passed both mandatory real-emulator ABI and
@@ -281,7 +281,7 @@ system against a copied live save and the exact goal `get me a pokeman`.
   fail closed until SaveBlock2 is initialized without rejecting zero-key new
   games; benchmark and deployed Codex instruction/skill surfaces have an
   enforced Docker parity test; and the language-neutral knowledge schema,
-  generator, runtime, and 1,802 records preserve every contributing source
+  generator, runtime, and 1,803 records preserve every contributing source
   structurally.
 - Closed the replacement Buildkite security failure by upgrading
   `golang.org/x/text` from v0.37.0 to v0.39.0 in the base PR. The provider's
