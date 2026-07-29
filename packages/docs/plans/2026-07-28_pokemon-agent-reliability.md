@@ -103,6 +103,14 @@ system against a copied live save and the exact goal `get me a pokeman`.
   runs 2 and 3 stopped immediately on Codex quota. Provider failures are now
   classified as invalid evidence and stop the series rather than lowering the
   game success rate.
+- 2026-07-28: Automated stack review found and corrected two base-control
+  races, four benchmark evidence defects, and two knowledge-integrity defects.
+  Input ownership now lasts through child-process exit; moving-object blocks
+  are rebuilt per observation; benchmark checkouts no longer depend on
+  runner-only target files; artifact directories are reserved atomically;
+  unexplained process exits remain harness errors; observation screenshots are
+  counted; search filters generic words and weights repeated body evidence;
+  and unresolved PokeAPI joins fail generation.
 
 ## Session Log — 2026-07-28
 
@@ -115,7 +123,8 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - Implemented a general engine checkpoint and ordered atomic flash
   persistence. A rebuilt real WASM passed an independent checkpoint/reboot
   integration test against a copied live save.
-- Verified the backend (245 tests), package typecheck/lint, knowledge/build
+- Verified the backend (248 tests, one opt-in live-save test skipped), package
+  typecheck/lint, knowledge/build
   scripts, the exhaustive root `bun run verify` graph (217/217 tasks), and a
   clean Docker `smoke` build that rebuilt the patched WASM and passed both the
   ABI and in-image application checks.
@@ -129,6 +138,10 @@ system against a copied live save and the exact goal `get me a pokeman`.
   locally after that correction. Goal-process teardown tests now synchronize
   on the kill request instead of guessing that asynchronous work completes
   within 5 ms; the lifecycle suite passed 100/100 repeated cases.
+- Addressed all eight actionable Codex review findings across the stack with
+  focused regression tests. The pinned knowledge generator completed against
+  all four source revisions and reproduced 1,759 permissive plus 39
+  CC BY-NC-SA records without corpus drift.
 
 ### Remaining
 
