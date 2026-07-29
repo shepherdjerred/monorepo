@@ -20,6 +20,18 @@ export const ScoutReleaseStateSchema = z
 
 export type ScoutReleaseState = z.infer<typeof ScoutReleaseStateSchema>;
 
+const LegacyScoutReleaseManifestSchema = z
+  .object({
+    version: z.string().regex(SCOUT_VERSION_PATTERN),
+    gitSha: z.string().regex(/^[0-9a-f]{40}$/),
+    builtAt: z.iso.datetime({ offset: true }),
+  })
+  .strict();
+
+export type LegacyScoutReleaseManifest = z.infer<
+  typeof LegacyScoutReleaseManifestSchema
+>;
+
 export const ScoutReleaseContentSchema = ScoutReleaseStateSchema.pick({
   sourceCommit: true,
   backendImageDigest: true,
@@ -53,6 +65,20 @@ export function parseScoutReleaseState(text: string): ScoutReleaseState {
     throw new Error("Scout release version does not match its build number");
   }
   return state;
+}
+
+export function parseLegacyScoutReleaseManifest(
+  text: string,
+): LegacyScoutReleaseManifest {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch (error) {
+    throw new Error("Legacy Scout release manifest is not valid JSON", {
+      cause: error,
+    });
+  }
+  return LegacyScoutReleaseManifestSchema.parse(parsed);
 }
 
 export function retagScoutReleaseState(

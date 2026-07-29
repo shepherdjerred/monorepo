@@ -4,7 +4,6 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
 import { optionalEnv, requireEnv, run } from "./lib/run.ts";
-import { SEAWEEDFS_AWS_ENV, SEAWEEDFS_ENDPOINT } from "./lib/s3-static-site.ts";
 import {
   CANONICAL_DIGEST_PATTERN,
   parseScoutReleaseState,
@@ -17,14 +16,15 @@ import {
   validateProdPinState,
   type ScoutReleaseState,
 } from "./lib/scout-release-state.ts";
+import { reconcileLegacyScoutProd } from "./lib/scout-legacy-site-storage.ts";
 import {
   archiveScout,
   assertScoutArchiveBytes,
   deployScoutBeta,
   hashSiteArchive,
+  readScoutStateByVersion,
   reconcileScoutProd,
   readScoutStateByInput,
-  SCOUT_RELEASES_BUCKET,
   SCOUT_RELEASE_WORK_DIR,
 } from "./lib/scout-site-storage.ts";
 
@@ -244,21 +244,41 @@ async function resolveProdState(prodPin: string): Promise<ScoutReleaseState> {
   if (version === undefined || !SCOUT_VERSION_PATTERN.test(version)) {
     throw new Error("production pin has no canonical Scout release version");
   }
-  const result = await run(
-    [
-      "aws",
-      "s3",
-      "cp",
-      `s3://${SCOUT_RELEASES_BUCKET}/versions/${version}.json`,
-      "-",
-      "--endpoint-url",
-      SEAWEEDFS_ENDPOINT,
-    ],
-    { env: SEAWEEDFS_AWS_ENV, capture: true, secret: true },
-  );
-  const state = parseScoutReleaseState(result.stdout);
+  const state = await readScoutStateByVersion(version);
+  if (state === null) {
+    throw new Error(`no content-addressed Scout release state for ${version}`);
+  }
   validateProdPinState(prodPin, state);
   return state;
+}
+
+async function reconcileProdPin(
+  prodPin: string,
+  dryRun: boolean,
+): Promise<void> {
+  const [version, digest, ...extra] = prodPin.split("@");
+  if (
+    version === undefined ||
+    !SCOUT_VERSION_PATTERN.test(version) ||
+    digest === undefined ||
+    !CANONICAL_DIGEST_PATTERN.test(digest) ||
+    extra.length > 0
+  ) {
+    throw new Error("production pin is not canonical");
+  }
+  if (dryRun) {
+    console.log(
+      `DRYRUN: would resolve production release ${version} and reconcile its verified archive`,
+    );
+    return;
+  }
+  const state = await readScoutStateByVersion(version);
+  if (state === null) {
+    await reconcileLegacyScoutProd(version, digest, false);
+    return;
+  }
+  validateProdPinState(prodPin, state);
+  await reconcileScoutProd(state, false);
 }
 
 async function tagRelease(
@@ -286,7 +306,7 @@ async function tagRelease(
 
 function usage(): never {
   console.error(
-    "Usage: scout-site-release.ts <resolve-backend-digest|resolve-prod-pin|resolve-prod-state|prepare-state|archive|deploy-beta|reconcile-prod|tag-release> [options]",
+    "Usage: scout-site-release.ts <resolve-backend-digest|resolve-prod-pin|resolve-prod-state|prepare-state|archive|deploy-beta|reconcile-prod|reconcile-prod-pin|tag-release> [options]",
   );
   process.exit(1);
 }
@@ -331,6 +351,9 @@ async function main(): Promise<void> {
       break;
     case "reconcile-prod":
       await reconcileScoutProd(stateArg(args), dryRun);
+      break;
+    case "reconcile-prod-pin":
+      await reconcileProdPin(requiredArg(args, "--prod-pin"), dryRun);
       break;
     case "tag-release":
       await tagRelease(stateArg(args), dryRun);
