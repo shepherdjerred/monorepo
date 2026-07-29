@@ -151,12 +151,6 @@ async function handle(data: unknown): Promise<void> {
     case "start":
       requireEmulator().start();
       return;
-    case "pause":
-      requireEmulator().stop();
-      return;
-    case "resume":
-      requireEmulator().start();
-      return;
     case "stop": {
       requireEmulator().stop();
       // Final metrics flush must precede the stopped ack (port FIFO), so the

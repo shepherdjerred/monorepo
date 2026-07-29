@@ -10,8 +10,6 @@ import {
 import type { EncoderHandles } from "@shepherdjerred/discord-stream-lifecycle/types.ts";
 import { GameStreamerBase } from "@shepherdjerred/discord-plays-core/stream/game-streamer-base.ts";
 import {
-  AUDIO_CHANNELS,
-  AUDIO_SAMPLE_RATE,
   WIDTH,
   HEIGHT,
   N64_FPS,
@@ -20,8 +18,6 @@ import {
 import { createAudioTransport } from "#src/stream/audio-transport.ts";
 import { sinkBufferBytes } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
 import {
-  streamEmulatorBackpressurePausesTotal,
-  streamEmulatorPaused,
   streamFfmpegBitrateKbps,
   streamFfmpegFps,
   streamFfmpegSpeedRatio,
@@ -53,7 +49,7 @@ export type GameStreamerOptions = {
   // VAAPI hardware H.264 encoding on an Intel iGPU; falls back to libx264 when off.
   hardwareAcceleration: boolean;
   vaapiDevice: string;
-  onEncoderBackpressureChange: (backpressured: boolean) => void;
+  onEncoderStarted: () => void;
   onSessionEnded?: () => void | Promise<void>;
 };
 
@@ -70,87 +66,30 @@ export async function notifyStreamSessionEnded(
 // timestamps from this value, so it must match the emulator's actual tick rate.
 const SRC_FPS = N64_FPS;
 
-// High-water mark for the PassThrough feeding ffmpeg. The emulator produces
-// video and audio from the same tick loop, so pausing that loop when this queue
-// fills preserves A/V content time while preventing the multi-gigabyte backlog
-// observed before the stream was bounded. Three frames are about 100 ms at 30fps.
-export const MAX_SINK_BUFFER_BYTES = WIDTH * HEIGHT * 4 * 3;
-export const MIN_AUDIO_PREROLL_BYTES =
-  AUDIO_SAMPLE_RATE * AUDIO_CHANNELS * Int16Array.BYTES_PER_ELEMENT;
-
-export type EncoderFlowAction = "pause" | "resume" | undefined;
-export type EncoderFlowDecision = {
-  action: EncoderFlowAction;
-  watchDrain: boolean;
-};
-
-export class EncoderFlowControl {
-  private audioPrerollBytes = 0;
-  private backpressureArmed = true;
-  private startupBypassApplied = false;
-  private waitingForDrain = false;
-  private paused = false;
-
-  onAudio(bytes: number): void {
-    this.audioPrerollBytes = Math.min(
-      MIN_AUDIO_PREROLL_BYTES,
-      this.audioPrerollBytes + bytes,
-    );
-  }
-
-  onVideoWrite(canContinue: boolean): EncoderFlowDecision {
-    if (canContinue) {
-      return { action: undefined, watchDrain: false };
-    }
-    const watchDrain = !this.waitingForDrain;
-    this.waitingForDrain = true;
-    if (
-      this.paused ||
-      !this.backpressureArmed ||
-      this.audioPrerollBytes < MIN_AUDIO_PREROLL_BYTES
-    ) {
-      return { action: undefined, watchDrain };
-    }
-    this.paused = true;
-    this.backpressureArmed = false;
-    return { action: "pause", watchDrain };
-  }
-
-  onProgress(): EncoderFlowAction {
-    if (this.startupBypassApplied || !this.waitingForDrain) return undefined;
-    this.startupBypassApplied = true;
-    this.backpressureArmed = false;
-    if (!this.paused) return undefined;
-    this.paused = false;
-    return "resume";
-  }
-
-  onDrain(): EncoderFlowAction {
-    this.waitingForDrain = false;
-    this.backpressureArmed = true;
-    if (!this.paused) return undefined;
-    this.paused = false;
-    return "resume";
-  }
-
-  reset(): EncoderFlowAction {
-    const action = this.paused ? "resume" : undefined;
-    this.audioPrerollBytes = 0;
-    this.backpressureArmed = true;
-    this.startupBypassApplied = false;
-    this.waitingForDrain = false;
-    this.paused = false;
-    return action;
-  }
-}
+const FRAME_BYTES = WIDTH * HEIGHT * 4;
+export const STARTUP_BUFFER_FRAMES = N64_FPS * 8;
+export const MAX_SINK_BUFFER_BYTES = FRAME_BYTES * STARTUP_BUFFER_FRAMES;
 
 /**
- * Frame sink with a meaningful write() backpressure signal at the latency
- * budget. Node's default high-water mark is smaller than one raw frame, which
- * made write() return false for every frame and could not drive flow control.
+ * Keep the complete media timeline while ffmpeg opens its two live raw inputs.
+ * The measured startup wall discarded 149 frames with the former three-frame
+ * queue, so this allows eight seconds of burst headroom. Exceeding that hard
+ * bound fails the stream instead of silently dropping video or risking the
+ * multi-gigabyte backlog previously observed in production.
  */
 export function createFrameSink(): PassThrough {
   return new PassThrough({ highWaterMark: MAX_SINK_BUFFER_BYTES });
+}
+
+export function frameSinkBufferedBytes(sink: PassThrough): number {
+  return sink.readableLength + sink.writableLength;
+}
+
+export function wouldExceedFrameBuffer(
+  queuedBytes: number,
+  incomingBytes: number,
+): boolean {
+  return queuedBytes + incomingBytes > MAX_SINK_BUFFER_BYTES;
 }
 
 // Streams the emulator's BGRA frames into a Discord voice channel as a Go-Live
@@ -164,12 +103,6 @@ export class GameStreamer extends GameStreamerBase {
   private sessionStartedAt = 0;
   private lastPushAt: number | undefined;
   private streamObserver: StreamObserver | undefined;
-  private frameInput: PassThrough | undefined;
-  private encoderBackpressured = false;
-  private readonly encoderFlowControl = new EncoderFlowControl();
-  private readonly handleFrameSinkDrain = (): void => {
-    this.applyEncoderFlowAction(this.encoderFlowControl.onDrain());
-  };
 
   constructor(options: GameStreamerOptions) {
     super({
@@ -185,26 +118,23 @@ export class GameStreamer extends GameStreamerBase {
   pushFrame(frame: Buffer): void {
     const sink = this.frameSink;
     if (!sink) return;
+    const bufferedBytes = frameSinkBufferedBytes(sink);
+    if (wouldExceedFrameBuffer(bufferedBytes, frame.length)) {
+      const message = `ffmpeg video input exceeded the ${String(STARTUP_BUFFER_FRAMES)}-frame hard limit`;
+      logger.error(message, { bufferedBytes, incomingBytes: frame.length });
+      sink.destroy(new Error(message));
+      return;
+    }
     const pushAt = performance.now();
     if (this.lastPushAt !== undefined) {
       streamFrameIntervalMs.observe(pushAt - this.lastPushAt);
     }
     this.lastPushAt = pushAt;
-    const canContinue = sink.write(frame);
+    sink.write(frame);
     // A slow write is backpressure showing up before the buffer gauge moves.
     streamFrameWriteMs.observe(performance.now() - pushAt);
     if (this.session) this.session.framesPushed++;
-    sinkBufferBytes.set(sink.writableLength);
-    const decision = this.encoderFlowControl.onVideoWrite(canContinue);
-    if (decision.watchDrain) {
-      sink.once("drain", this.handleFrameSinkDrain);
-    }
-    this.applyEncoderFlowAction(decision.action);
-  }
-
-  override pushAudio(pcm: Buffer): void {
-    this.encoderFlowControl.onAudio(pcm.length);
-    super.pushAudio(pcm);
+    sinkBufferBytes.set(frameSinkBufferedBytes(sink));
   }
 
   protected override beforeActorStop(): void {
@@ -230,7 +160,6 @@ export class GameStreamer extends GameStreamerBase {
 
   protected async buildEncoder(): Promise<EncoderHandles> {
     const bgra = createFrameSink();
-    this.frameInput = bgra;
     // Scale the 4:3 game into an aspect-correct content box, then pillarbox it onto
     // a black 16:9 canvas for Discord (see prepareStream `pad`).
     const { content, canvas } = computeLetterbox(
@@ -239,11 +168,6 @@ export class GameStreamer extends GameStreamerBase {
     );
     const session = newSessionStats();
     const observer = createStreamObserver(session);
-    const observeProgress = observer.onProgress;
-    observer.onProgress = (progress) => {
-      observeProgress?.(progress);
-      this.applyEncoderFlowAction(this.encoderFlowControl.onProgress());
-    };
     this.session = session;
     this.sessionStartedAt = performance.now();
     this.lastPushAt = undefined;
@@ -302,6 +226,7 @@ export class GameStreamer extends GameStreamerBase {
     });
 
     logger.info("Go-Live stream started");
+    this.options.onEncoderStarted();
     return { sink: bgra, output, playing: promise };
   }
 
@@ -321,9 +246,6 @@ export class GameStreamer extends GameStreamerBase {
   }
 
   private resetStreamMetrics(): void {
-    this.frameInput?.off("drain", this.handleFrameSinkDrain);
-    this.frameInput = undefined;
-    this.applyEncoderFlowAction(this.encoderFlowControl.reset());
     sinkBufferBytes.set(0);
     streamFfmpegSpeedRatio.set(0);
     streamFfmpegFps.set(0);
@@ -344,7 +266,6 @@ export class GameStreamer extends GameStreamerBase {
       durationS: Math.round(durationS),
       framesPushed: session.framesPushed,
       framesDropped: session.framesDropped,
-      encoderBackpressurePauses: session.encoderBackpressurePauses,
       droppedPct:
         totalFrames > 0
           ? Math.round((session.framesDropped / totalFrames) * 1000) / 10
@@ -363,21 +284,5 @@ export class GameStreamer extends GameStreamerBase {
           : 0,
       lastSpeedRatio: session.lastSpeedRatio,
     });
-  }
-
-  private setEncoderBackpressured(backpressured: boolean): void {
-    if (this.encoderBackpressured === backpressured) return;
-    this.options.onEncoderBackpressureChange(backpressured);
-    this.encoderBackpressured = backpressured;
-    streamEmulatorPaused.set(backpressured ? 1 : 0);
-    if (backpressured) {
-      streamEmulatorBackpressurePausesTotal.inc();
-      if (this.session) this.session.encoderBackpressurePauses++;
-    }
-  }
-
-  private applyEncoderFlowAction(action: EncoderFlowAction): void {
-    if (action === undefined) return;
-    this.setEncoderBackpressured(action === "pause");
   }
 }

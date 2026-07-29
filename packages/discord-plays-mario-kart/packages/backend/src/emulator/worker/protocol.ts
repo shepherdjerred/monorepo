@@ -72,8 +72,6 @@ const MetricBatchSchema: z.ZodType<MetricBatch> = z.strictObject({
 const MainMessageSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("init"), opts: WorkerInitOptsSchema }),
   z.object({ kind: z.literal("start") }),
-  z.object({ kind: z.literal("pause") }),
-  z.object({ kind: z.literal("resume") }),
   z.object({ kind: z.literal("stop") }),
   z.object({
     kind: z.literal("restartFromStartMenu"),

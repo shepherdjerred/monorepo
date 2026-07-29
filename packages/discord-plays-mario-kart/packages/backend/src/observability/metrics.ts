@@ -56,19 +56,7 @@ export const streamFrameWriteMs = new Histogram({
 
 export const streamFramesDroppedTotal = new Counter({
   name: "stream_frames_dropped_total",
-  help: "Frames dropped before the ffmpeg pipe because the input queue exceeded its latency budget",
-  registers: [registry],
-});
-
-export const streamEmulatorBackpressurePausesTotal = new Counter({
-  name: "stream_emulator_backpressure_pauses_total",
-  help: "Times emulation paused because the bounded ffmpeg video-input queue filled",
-  registers: [registry],
-});
-
-export const streamEmulatorPaused = new Gauge({
-  name: "stream_emulator_paused",
-  help: "Whether emulation is currently paused for ffmpeg input backpressure (1 paused, 0 running)",
+  help: "Frames dropped before the ffmpeg pipe because the input queue exceeded its latency budget (encode/send path below realtime); keeps end-to-end lag bounded",
   registers: [registry],
 });
 

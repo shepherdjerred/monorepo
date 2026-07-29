@@ -187,10 +187,26 @@ Worker-thread performance change did not improve the delivered stream.
   queue is outstanding, whether the PCM gate has paused the emulator yet or
   not. This preserves the bypass across the observed live event order, while a
   queue that already drained uses normal steady-state control.
+- Published and deployed commit
+  `b7863c01cd2ba8a72063743e1b5a59a8ecce26b9`. It released the first
+  startup pause, but the next ordinary three-frame backpressure pause stalled
+  the dual-input encoder again. Live telemetry showed two pauses, zero drops,
+  nonzero ffmpeg progress, and `stream_emulator_paused 1`. This rejected
+  whole-emulator pause/resume as the steady-state control mechanism, not merely
+  its startup event ordering.
+- Removed the pause/resume Worker protocol, callback plumbing, state machine,
+  and pause telemetry. Emulator production now starts only after the ffmpeg
+  process and both raw transports exist, preventing gameplay media from
+  accumulating during encoder setup.
+- Replaced the three-frame drop/pause queue with an eight-second hard-bounded
+  burst buffer. It retains the complete A/V content timeline across the
+  measured 149-frame startup wall; if the encoder ever exceeds 240 frames of
+  buffered video, the stream fails loudly instead of dropping only video or
+  growing toward the previously observed multi-gigabyte backlog.
 
 ### Remaining
 
-- Publish the event-order-safe flow-control candidate, deploy its immutable
+- Publish the encoder-first bounded-buffer candidate, deploy its immutable
   image, restart the Discord session, validate live performance telemetry, and
   obtain manual confirmation that audio is synchronized.
 - Fix the separate Worker teardown ordering error found when `/stop` ended the
@@ -240,6 +256,14 @@ Worker-thread performance change did not improve the delivered stream.
   backlog was active. Live ordering demonstrated that progress can precede the
   PCM-gated pause, so the corrected transition keys the bypass to an
   outstanding full-sink interval rather than to the first callback globally.
+- The subsequent live run proved that even correctly ordered pause/resume is
+  unsafe for this dual raw-input command: pausing the shared producer can
+  deprive ffmpeg of the PCM required to drain its video input. The final design
+  does not pause a running emulator for encoder backpressure.
+- The bounded burst buffer is deliberately larger than the old low-latency
+  queue. Encoder-first startup and minimum raw-input probing should keep its
+  normal occupancy small; the 240-frame limit is a fail-fast safety margin, not
+  permission for sustained sub-realtime encoding.
 - `/stop` completed and the stream shut down, but its asynchronous session-end
   callback ran after `WorkerEmulator.stop()` and logged
   `emulator worker is not running`. That distinct lifecycle defect is now
