@@ -30,8 +30,8 @@ export default defineConfig({
     }),
     starlight({
       components: {
-        MarkdownContent: "./src/components/MarkdownContent.astro",
-        PageTitle: "./src/components/PageTitle.astro",
+        MarkdownContent: "./src/components/markdown-content.astro",
+        PageTitle: "./src/components/page-title.astro",
       },
       customCss: ["./src/styles/custom.css"],
       description:

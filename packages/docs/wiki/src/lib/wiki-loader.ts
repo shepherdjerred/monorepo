@@ -12,14 +12,12 @@ import {
   workingDocumentSlug,
   type WikiSourceKind,
 } from "./wiki-paths.ts";
+import { publicWorkingDocumentPaths } from "./wiki-publication.ts";
 
 const MARKDOWN_PATTERN = "**/*.md";
 const WIKI_DIRECTORY = "wiki";
 const REPOSITORY_EDIT_URL =
   "https://github.com/shepherdjerred/monorepo/edit/main/";
-const PUBLIC_WORKING_DOCUMENT_PATHS: ReadonlySet<string> = new Set([
-  "plans/2026-07-28_human-wiki-scaffold.md",
-]);
 const RenderedMetadataSchema = z
   .object({
     frontmatter: z.record(z.string(), z.unknown()).optional(),
@@ -107,12 +105,6 @@ async function loadWorkingEntries(docsRoot: string): Promise<SourceEntry[]> {
   );
   const directoryEntries = createDirectoryEntries(paths, docsRoot);
   return [...documentEntries, ...directoryEntries];
-}
-
-export function publicWorkingDocumentPaths(paths: Iterable<string>): string[] {
-  return [...paths]
-    .filter((entryPath) => PUBLIC_WORKING_DOCUMENT_PATHS.has(entryPath))
-    .sort();
 }
 
 function createDirectoryEntries(

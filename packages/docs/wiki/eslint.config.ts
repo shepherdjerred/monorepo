@@ -1,9 +1,8 @@
-import { recommended } from "@shepherdjerred/eslint-config";
+import { astroConfig, recommended } from "@shepherdjerred/eslint-config";
 
 const config = [
   {
     ignores: [
-      "**/*.astro",
       ".astro/**",
       "dist/**",
       "src/env.d.ts",
@@ -13,6 +12,7 @@ const config = [
     ],
   },
   ...recommended({ tsconfigRootDir: import.meta.dirname }),
+  ...astroConfig(),
   {
     files: ["astro.config.ts", "playwright.config.ts"],
     rules: {

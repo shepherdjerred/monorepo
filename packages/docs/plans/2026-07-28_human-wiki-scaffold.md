@@ -112,17 +112,24 @@ attempt to author a comprehensive monorepo atlas.
 ### Done
 
 - Replaced broad workflow-document publication with an explicit public
-  allowlist in `packages/docs/wiki/src/lib/wiki-loader.ts`.
+  allowlist in `packages/docs/wiki/src/lib/wiki-publication.ts`.
 - Added focused coverage proving unapproved operational and infrastructure
   documents cannot enter the working-document collection.
 - Updated the curated wiki copy to describe the allowlist boundary for
   [PR #1784](https://github.com/shepherdjerred/monorepo/pull/1784).
+- Centralized the working-document publication policy so links to unapproved
+  Markdown, non-Markdown files, and unpublished directories remain on GitHub
+  instead of pointing at nonexistent public wiki routes.
+- Enabled the shared Astro ESLint configuration and renamed the two Starlight
+  component overrides to kebab-case filenames, leaving `.astro` syntax and
+  correctness rules active.
+- Passed focused wiki unit tests, lint, typecheck, build, and Playwright
+  coverage; liveness-checked every new GitHub link target.
 
 ### Remaining
 
-- Await replacement Buildkite CI and hosted Codex review on the published fix.
-- Address the two existing P2 findings for non-Markdown working-document links
-  and Astro component lint coverage in subsequent focused fix cycles.
+- Await replacement Buildkite CI and hosted Codex review on the published
+  public-data, link-routing, and Astro-lint fixes.
 - After merge and deployment, run the live HTTP, cache-header, CSP, sitemap,
   robots, and public-corpus verification.
 
@@ -131,3 +138,6 @@ attempt to author a comprehensive monorepo atlas.
 - The initial allowlist contains only the wiki scaffold plan. Each additional
   working document requires an explicit public-data review before its path is
   added.
+- Exact-head Buildkite build 7212 remained hard-red because LeetCode lint found
+  a floating promise in `packages/leetcode/src/search.ts:218` and its search
+  build could not start the embedding server. Trivy exit 7 was soft-failed.

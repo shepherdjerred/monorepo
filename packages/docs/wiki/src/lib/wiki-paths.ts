@@ -1,5 +1,10 @@
 import nodePath from "node:path";
 
+import {
+  isPublicWorkingDirectoryPath,
+  isPublicWorkingDocumentPath,
+} from "./wiki-publication.ts";
+
 const MARKDOWN_EXTENSION = /\.mdx?$/u;
 const MARKDOWN_EXTENSION_GLOBAL = /\.mdx?$/gu;
 const URL_SCHEME = /^[a-z][a-z\d+.-]*:/iu;
@@ -56,12 +61,32 @@ export function rewriteWikiLink(sourcePath: string, url: string): string {
 
   if (normalizedTarget.startsWith("packages/docs/")) {
     const docsPath = normalizedTarget.slice("packages/docs/".length);
-    const route = MARKDOWN_EXTENSION.test(docsPath)
-      ? workingDocumentSlug(docsPath)
-      : workingDirectorySlug(docsPath);
-    return `/${route}/${suffix}`;
+    if (
+      MARKDOWN_EXTENSION.test(docsPath) &&
+      isPublicWorkingDocumentPath(docsPath)
+    ) {
+      return `/${workingDocumentSlug(docsPath)}/${suffix}`;
+    }
+    if (
+      nodePath.posix.extname(docsPath).length === 0 &&
+      isPublicWorkingDirectoryPath(docsPath)
+    ) {
+      return `/${workingDirectorySlug(docsPath)}/${suffix}`;
+    }
+    if (nodePath.posix.extname(docsPath).length === 0) {
+      return repositoryDirectoryUrl(normalizedTarget, suffix);
+    }
   }
 
+  return repositoryFileUrl(normalizedTarget, suffix, lineMatch, pathname);
+}
+
+function repositoryFileUrl(
+  normalizedTarget: string,
+  suffix: string,
+  lineMatch: RegExpExecArray | null,
+  pathname: string,
+): string {
   let lineFragment = suffix.startsWith("#") ? suffix : "";
   if (lineMatch !== null) {
     const startLine = lineMatch[1];
@@ -73,6 +98,13 @@ export function rewriteWikiLink(sourcePath: string, url: string): string {
   }
   const query = suffix.startsWith("?") ? suffix : "";
   return `${REPOSITORY_URL}/blob/main/${normalizedTarget}${query}${lineFragment}`;
+}
+
+function repositoryDirectoryUrl(
+  normalizedTarget: string,
+  suffix: string,
+): string {
+  return `${REPOSITORY_URL}/tree/main/${normalizedTarget}${suffix}`;
 }
 
 function splitUrlSuffix(url: string): { pathname: string; suffix: string } {

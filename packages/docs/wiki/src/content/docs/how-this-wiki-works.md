@@ -29,7 +29,7 @@ prefer a diagram over a directory dump, and explain why a choice exists.
 ## Working material
 
 Only working documents on the explicit public allowlist in
-`src/lib/wiki-loader.ts` are available at `/working/…`. Approval is
+`src/lib/wiki-publication.ts` are available at `/working/…`. Approval is
 file-by-file so operational notes and sensitive infrastructure context cannot
 enter the public build through broad discovery.
 

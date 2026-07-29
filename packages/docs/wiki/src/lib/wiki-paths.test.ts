@@ -24,10 +24,29 @@ describe("wiki link rewriting", () => {
   const sourcePath = "packages/docs/guides/example.md";
 
   test("rewrites docs links to working routes", () => {
-    expect(rewriteWikiLink(sourcePath, "../architecture/system.md#flow")).toBe(
-      "/working/architecture/system/#flow",
-    );
+    expect(
+      rewriteWikiLink(
+        sourcePath,
+        "../plans/2026-07-28_human-wiki-scaffold.md#verification",
+      ),
+    ).toBe("/working/plans/2026-07-28_human-wiki-scaffold/#verification");
     expect(rewriteWikiLink(sourcePath, "../plans/")).toBe("/working/plans/");
+  });
+
+  test("keeps unapproved docs links on GitHub", () => {
+    const publishedSourcePath =
+      "packages/docs/plans/2026-07-28_human-wiki-scaffold.md";
+    expect(
+      rewriteWikiLink(
+        publishedSourcePath,
+        "../decisions/2026-07-19_infrastructure-security-audit.md",
+      ),
+    ).toBe(
+      "https://github.com/shepherdjerred/monorepo/blob/main/packages/docs/decisions/2026-07-19_infrastructure-security-audit.md",
+    );
+    expect(rewriteWikiLink(publishedSourcePath, "../archive/completed/")).toBe(
+      "https://github.com/shepherdjerred/monorepo/tree/main/packages/docs/archive/completed/",
+    );
   });
 
   test("rewrites repository links to GitHub", () => {
@@ -38,6 +57,25 @@ describe("wiki link rewriting", () => {
       rewriteWikiLink(sourcePath, "../../homelab/src/index.ts:42-48"),
     ).toBe(
       "https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/index.ts#L42-L48",
+    );
+  });
+
+  test("rewrites non-Markdown docs files to their repository sources", () => {
+    expect(
+      rewriteWikiLink(
+        "packages/docs/decisions/2026-07-19_infrastructure-security-audit.md",
+        "./2026-07-19_infrastructure-security-audit.typ",
+      ),
+    ).toBe(
+      "https://github.com/shepherdjerred/monorepo/blob/main/packages/docs/decisions/2026-07-19_infrastructure-security-audit.typ",
+    );
+    expect(
+      rewriteWikiLink(
+        "packages/docs/decisions/2026-07-19_infrastructure-security-audit.md",
+        "./2026-07-19_infrastructure-security-audit.pdf#page=2",
+      ),
+    ).toBe(
+      "https://github.com/shepherdjerred/monorepo/blob/main/packages/docs/decisions/2026-07-19_infrastructure-security-audit.pdf#page=2",
     );
   });
 
