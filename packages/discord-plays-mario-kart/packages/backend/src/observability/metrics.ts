@@ -54,9 +54,9 @@ export const streamFrameWriteMs = new Histogram({
   registers: [registry],
 });
 
-export const streamFrameBufferFailuresTotal = new Counter({
-  name: "stream_frame_buffer_failures_total",
-  help: "Streams failed because the bounded ffmpeg video-input buffer reached its hard limit",
+export const streamFramesDroppedTotal = new Counter({
+  name: "stream_frames_dropped_total",
+  help: "Oldest queued raw-video frames evicted to keep video content near the continuous audio timeline",
   registers: [registry],
 });
 

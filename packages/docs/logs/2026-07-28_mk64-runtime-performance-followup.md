@@ -215,13 +215,30 @@ Worker-thread performance change did not improve the delivered stream.
 - Buildkite build 6860 found the removed drop counter as an unused export in
   Knip. Replaced it with a hard-buffer-failure counter that is incremented by
   the actual fail-fast path; focused tests, typecheck, lint, and Knip pass.
+- Manual listening confirmed that audio timing was correct, but video lagged by
+  about one second. Live telemetry independently showed 34 queued video frames
+  (1.13 seconds), proving that retaining the complete startup backlog traded the
+  earlier relative A/V offset for visible video latency.
+- Replaced the eight-second FIFO with a frame-aware three-frame latest-content
+  window. When ffmpeg falls behind, it evicts the oldest queued picture and
+  retains the newest frames; continuous audio therefore remains the timeline
+  anchor while video content catches up instead of preserving stale pictures or
+  discarding the newest content.
+- Generalized the shared stream lifecycle's frame-sink contract from
+  `PassThrough` to a readable sink with `write`, `end`, and `writableLength`, so
+  MK64 can provide frame-aware buffering without changing Pokemon's existing
+  `PassThrough` implementation.
+- Added tests proving a stalled sink receiving `[1, 2, 3, 4]` emits
+  `[2, 3, 4]`, remains bounded, counts eviction/delivery separately, rejects
+  malformed raw frames, and fails writes after end. MK64, shared lifecycle, and
+  shared core tests/typechecks/lints pass; Pokemon typecheck and Knip also pass.
 
 ### Remaining
 
-- Obtain manual confirmation that audio is synchronized, then remove the
-  temporary Argo CD acceptance hold and restore normal automated reconciliation.
-- Publish the hard-buffer-failure metric cleanup and confirm replacement
-  current-head Buildkite CI.
+- Publish and deploy the latest-content candidate, then obtain manual
+  confirmation that both audio synchronization and video latency are correct.
+- Remove the temporary Argo CD acceptance hold, restore normal automated
+  reconciliation, and confirm replacement current-head Buildkite CI.
 - Fix the separate Worker teardown ordering error found when `/stop` ended the
   successful test session. It is tracked in
   [`mk64-worker-session-stop-reset-order`](../todos/mk64-worker-session-stop-reset-order.md).
@@ -277,6 +294,9 @@ Worker-thread performance change did not improve the delivered stream.
   queue. Encoder-first startup and minimum raw-input probing should keep its
   normal occupancy small; the 240-frame limit is a fail-fast safety margin, not
   permission for sustained sub-realtime encoding.
+- The live 34-frame measurement rejected that burst-buffer assumption. The
+  latest-content queue restores the original three-frame latency budget but
+  evicts oldest queued content, correcting the old policy's direction.
 - The live candidate is intentionally pinned while awaiting manual listening.
   The `mario-kart` Application has `skip-reconcile=true` and automated sync
   disabled; both must be removed after acceptance so GitOps resumes ownership.

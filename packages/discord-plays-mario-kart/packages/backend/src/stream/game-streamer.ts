@@ -1,4 +1,3 @@
-import { PassThrough } from "node:stream";
 import type { Client } from "discord.js-selfbot-v13";
 import {
   prepareStream,
@@ -16,13 +15,14 @@ import {
   DISPLAY_ASPECT,
 } from "#src/emulator/constants.ts";
 import { createAudioTransport } from "#src/stream/audio-transport.ts";
+import { LatestFrameSink } from "#src/stream/latest-frame-sink.ts";
 import { sinkBufferBytes } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
 import {
-  streamFrameBufferFailuresTotal,
   streamFfmpegBitrateKbps,
   streamFfmpegFps,
   streamFfmpegSpeedRatio,
   streamFrameIntervalMs,
+  streamFramesDroppedTotal,
   streamFrameWriteMs,
   streamHwEncodeEngaged,
 } from "#src/observability/metrics.ts";
@@ -68,30 +68,7 @@ export async function notifyStreamSessionEnded(
 const SRC_FPS = N64_FPS;
 
 const FRAME_BYTES = WIDTH * HEIGHT * 4;
-export const STARTUP_BUFFER_FRAMES = N64_FPS * 8;
-export const MAX_SINK_BUFFER_BYTES = FRAME_BYTES * STARTUP_BUFFER_FRAMES;
-
-/**
- * Keep the complete media timeline while ffmpeg opens its two live raw inputs.
- * The measured startup wall discarded 149 frames with the former three-frame
- * queue, so this allows eight seconds of burst headroom. Exceeding that hard
- * bound fails the stream instead of silently dropping video or risking the
- * multi-gigabyte backlog previously observed in production.
- */
-export function createFrameSink(): PassThrough {
-  return new PassThrough({ highWaterMark: MAX_SINK_BUFFER_BYTES });
-}
-
-export function frameSinkBufferedBytes(sink: PassThrough): number {
-  return sink.readableLength + sink.writableLength;
-}
-
-export function wouldExceedFrameBuffer(
-  queuedBytes: number,
-  incomingBytes: number,
-): boolean {
-  return queuedBytes + incomingBytes > MAX_SINK_BUFFER_BYTES;
-}
+export const MAX_BUFFERED_FRAMES = 3;
 
 // Streams the emulator's BGRA frames into a Discord voice channel as a Go-Live
 // broadcast. The lifecycle (join voice → encode → broadcast → leave) is owned by
@@ -104,6 +81,7 @@ export class GameStreamer extends GameStreamerBase {
   private sessionStartedAt = 0;
   private lastPushAt: number | undefined;
   private streamObserver: StreamObserver | undefined;
+  private videoSink: LatestFrameSink | undefined;
 
   constructor(options: GameStreamerOptions) {
     super({
@@ -119,14 +97,6 @@ export class GameStreamer extends GameStreamerBase {
   pushFrame(frame: Buffer): void {
     const sink = this.frameSink;
     if (!sink) return;
-    const bufferedBytes = frameSinkBufferedBytes(sink);
-    if (wouldExceedFrameBuffer(bufferedBytes, frame.length)) {
-      const message = `ffmpeg video input exceeded the ${String(STARTUP_BUFFER_FRAMES)}-frame hard limit`;
-      logger.error(message, { bufferedBytes, incomingBytes: frame.length });
-      streamFrameBufferFailuresTotal.inc();
-      sink.destroy(new Error(message));
-      return;
-    }
     const pushAt = performance.now();
     if (this.lastPushAt !== undefined) {
       streamFrameIntervalMs.observe(pushAt - this.lastPushAt);
@@ -135,8 +105,7 @@ export class GameStreamer extends GameStreamerBase {
     sink.write(frame);
     // A slow write is backpressure showing up before the buffer gauge moves.
     streamFrameWriteMs.observe(performance.now() - pushAt);
-    if (this.session) this.session.framesPushed++;
-    sinkBufferBytes.set(frameSinkBufferedBytes(sink));
+    sinkBufferBytes.set(this.videoSink?.bufferedBytes ?? 0);
   }
 
   protected override beforeActorStop(): void {
@@ -161,7 +130,18 @@ export class GameStreamer extends GameStreamerBase {
   }
 
   protected async buildEncoder(): Promise<EncoderHandles> {
-    const bgra = createFrameSink();
+    const bgra = new LatestFrameSink({
+      frameBytes: FRAME_BYTES,
+      maxBufferedFrames: MAX_BUFFERED_FRAMES,
+      onFrameEvicted: () => {
+        streamFramesDroppedTotal.inc();
+        if (this.session) this.session.framesDropped++;
+      },
+      onFrameDelivered: () => {
+        if (this.session) this.session.framesPushed++;
+      },
+    });
+    this.videoSink = bgra;
     // Scale the 4:3 game into an aspect-correct content box, then pillarbox it onto
     // a black 16:9 canvas for Discord (see prepareStream `pad`).
     const { content, canvas } = computeLetterbox(
@@ -248,6 +228,7 @@ export class GameStreamer extends GameStreamerBase {
   }
 
   private resetStreamMetrics(): void {
+    this.videoSink = undefined;
     sinkBufferBytes.set(0);
     streamFfmpegSpeedRatio.set(0);
     streamFfmpegFps.set(0);
