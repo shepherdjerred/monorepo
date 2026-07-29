@@ -130,6 +130,8 @@ export class StreambotStreamer implements StreamerLike {
    * succeeds. Public position tracking continues from the prior anchor until seek() commits.
    */
   private pendingSeekOffsetSeconds: number | null = null;
+  /** Last delivered public position, frozen while a replacement seek pipeline attaches. */
+  private pendingSeekPreviousPositionSeconds: number | null = null;
   /** Wall-clock (ms) when the current segment began playing; null when nothing is playing. */
   private segmentStartedAtMs: number | null = null;
   /** Most recent Discord-side voice ws close (never set by local stops). */
@@ -246,20 +248,27 @@ export class StreambotStreamer implements StreamerLike {
       return false;
     }
     const target = Math.max(0, seconds);
-    const targetStartedAtMs = this.now();
+    const previousPositionSeconds = this.getPosition();
     // The replacement observer can begin synchronously inside player.seek(), so expose the target
     // to stall accounting immediately. Do not commit the public position anchor until the real
     // player confirms its replacement pipeline attached successfully.
     this.pendingSeekOffsetSeconds = target;
+    this.pendingSeekPreviousPositionSeconds = previousPositionSeconds;
     try {
       await this.player.seek(target);
     } catch (error) {
       this.pendingSeekOffsetSeconds = null;
+      this.pendingSeekPreviousPositionSeconds = null;
+      if (previousPositionSeconds !== null) {
+        this.segmentStartOffsetSeconds = previousPositionSeconds;
+        this.segmentStartedAtMs = this.now();
+      }
       throw error;
     }
     this.segmentStartOffsetSeconds = target;
-    this.segmentStartedAtMs = targetStartedAtMs;
+    this.segmentStartedAtMs = this.now();
     this.pendingSeekOffsetSeconds = null;
+    this.pendingSeekPreviousPositionSeconds = null;
     return true;
   }
 
@@ -269,6 +278,9 @@ export class StreambotStreamer implements StreamerLike {
    * `Player.position`, this advances with the clock.
    */
   getPosition(): number | null {
+    if (this.pendingSeekPreviousPositionSeconds !== null) {
+      return this.pendingSeekPreviousPositionSeconds;
+    }
     if (this.segmentStartedAtMs === null) {
       return null;
     }

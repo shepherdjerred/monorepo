@@ -69,6 +69,7 @@ function createVoidDeferred(): {
 function makeFakeFactory(
   startErrors: (Error | undefined)[] = [],
   seekErrors: (Error | undefined)[] = [],
+  seekGates: (Promise<void> | undefined)[] = [],
 ) {
   const segments: SegmentControl[] = [];
   const factory: PlayerFactory = (_streamer, _input, options) => {
@@ -76,6 +77,7 @@ function makeFakeFactory(
     const finished = createVoidDeferred();
     const startError = startErrors[segmentIndex];
     const seekError = seekErrors[segmentIndex];
+    const seekGate = seekGates[segmentIndex];
     const seekTargets: number[] = [];
     segments.push({
       resolve: finished.resolve,
@@ -88,11 +90,12 @@ function makeFakeFactory(
         startError === undefined
           ? Promise.resolve()
           : Promise.reject(startError),
-      seek: (seconds) => {
+      seek: async (seconds) => {
         seekTargets.push(seconds);
-        return seekError === undefined
-          ? Promise.resolve()
-          : Promise.reject(seekError);
+        if (seekError !== undefined) {
+          throw seekError;
+        }
+        await seekGate;
       },
       setVolume: () => Promise.resolve(true),
       stop: () => {
@@ -230,6 +233,44 @@ describe("StreambotStreamer position tracking", () => {
     expect(streamer.getPosition()).toBe(120);
 
     clock.ms = 8000;
+    expect(streamer.getPosition()).toBe(122);
+    segments[0]?.resolve();
+    await run;
+  });
+
+  test("a live seek freezes position while its replacement attaches", async () => {
+    const clock = { ms: 1000 };
+    const seekAttach = createVoidDeferred();
+    const { factory, segments } = makeFakeFactory([], [], [seekAttach.promise]);
+    const streamer = new StreambotStreamer(
+      USER_TOKEN,
+      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "false" })),
+      () => clock.ms,
+      factory,
+    );
+    const run = streamer.runStream(
+      {
+        voice: VOICE,
+        resolved: RESOLVED,
+        volume: 100,
+        seekSeconds: 30,
+        pipelineMode: "sw",
+      },
+      new AbortController().signal,
+    );
+    await flush();
+
+    clock.ms = 6000;
+    const seek = streamer.seek(120);
+    await flush();
+    clock.ms = 9000;
+    expect(streamer.getPosition()).toBe(35);
+
+    seekAttach.resolve();
+    await expect(seek).resolves.toBe(true);
+    expect(streamer.getPosition()).toBe(120);
+
+    clock.ms = 11_000;
     expect(streamer.getPosition()).toBe(122);
     segments[0]?.resolve();
     await run;
