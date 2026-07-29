@@ -471,18 +471,30 @@ pass.
 - Confirmed `glitter-corpus-daily` remains unpaused with its next action at
   `2026-07-29T11:15:00Z`, while `glitter-context-refresh-weekly` remains paused
   with its next nominal action at `2026-08-03T18:00:00Z`.
+- Added an exact manual snapshot pin consisting of the immutable snapshot UUID
+  and SHA-256. Pinned refreshes derive and verify that immutable object directly
+  and do not consult `snapshots/latest.json`, so the live daily schedule cannot
+  change acceptance input between runs.
+- Added focused coverage proving a pin ignores a newer latest pointer and fails
+  closed on checksum or embedded-identity mismatch. Updated the operator and
+  operations guide to require the same pin for both dry runs and the real run.
 
 ### Remaining
 
+- Merge and deploy the snapshot-pin repair through this pull request.
 - Restore quota for the OpenAI project used by the Temporal worker, or
   explicitly authorize a different production OpenAI credential for this
   workflow.
-- Rerun the same fixed-time dry run. It will reuse the nine accepted artifacts
-  and generate only the four missing style cards.
-- Run the fixed-time dry run again and require complete output equality,
-  including the proposal checksum.
-- Run the real fixed-time refresh, inspect its sole PR or no-diff result, and
-  smoke-test the shared package, Birmel, Scout, and Glitter consumers.
+- Rerun the same fixed-time dry run with snapshot
+  `dbb59f00-3f6b-4cab-a87c-6d8a65e21d62` at checksum
+  `e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9`.
+  It will reuse the nine accepted artifacts and generate only the four missing
+  style cards.
+- Run the fixed-time dry run again with the same pin and require complete output
+  equality, including the proposal checksum.
+- Run the real fixed-time refresh with the same pin, inspect its sole PR or
+  no-diff result, and smoke-test the shared package, Birmel, Scout, and Glitter
+  consumers.
 - Deliberately unpause `glitter-context-refresh-weekly`, verify schedule and
   storage-integrity observability, then complete and archive this plan and its
   related TODOs.
@@ -496,4 +508,5 @@ pass.
   but local authorization timed out. No secret value was revealed, written, or
   changed.
 - The nine persisted artifacts are the intended safe resume mechanism; retries
-  will not pay for or regenerate those accepted responses.
+  against the same pinned snapshot will not pay for or regenerate those
+  accepted responses.

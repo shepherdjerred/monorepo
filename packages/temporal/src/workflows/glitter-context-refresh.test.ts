@@ -19,6 +19,7 @@ describe("runGlitterContextRefresh", () => {
   test("replays the dry-run input and returns the activity result", async () => {
     const expected: GlitterContextRefreshResult = {
       outcome: "dry-run",
+      snapshotId: "00000000-0000-4000-8000-000000000001",
       snapshotSha256: "a".repeat(64),
       proposalSha256: "b".repeat(64),
       eligiblePeople: ["virmel"],
@@ -45,12 +46,30 @@ describe("runGlitterContextRefresh", () => {
     });
     const result = await worker.runUntil(
       testEnvironment.client.workflow.execute(runGlitterContextRefresh, {
-        args: [{ dryRun: true, now: "2026-07-26T00:00:00.000Z" }],
+        args: [
+          {
+            dryRun: true,
+            now: "2026-07-26T00:00:00.000Z",
+            snapshot: {
+              snapshotId: "00000000-0000-4000-8000-000000000001",
+              snapshotSha256: "a".repeat(64),
+            },
+          },
+        ],
         taskQueue: TASK_QUEUE,
         workflowId: "glitter-context-refresh-dry-run-test",
       }),
     );
     expect(result).toEqual(expected);
-    expect(inputs).toEqual([{ dryRun: true, now: "2026-07-26T00:00:00.000Z" }]);
+    expect(inputs).toEqual([
+      {
+        dryRun: true,
+        now: "2026-07-26T00:00:00.000Z",
+        snapshot: {
+          snapshotId: "00000000-0000-4000-8000-000000000001",
+          snapshotSha256: "a".repeat(64),
+        },
+      },
+    ]);
   }, 30_000);
 });
