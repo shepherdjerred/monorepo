@@ -69,7 +69,7 @@ attempt to author a comprehensive monorepo atlas.
 
 ## Remaining
 
-- [ ] Finish implementation verification and publish the draft PR with visual
+- [x] Finish implementation verification and publish the draft PR with visual
       evidence.
 - [ ] Merge and run post-deploy HTTP, cache-header, and CSP verification.
 
@@ -77,19 +77,31 @@ attempt to author a comprehensive monorepo atlas.
 
 ### Done
 
-- Researched Astro, Starlight, Sätteri, Pagefind, Mermaid, responsive images,
-  SEO, CSP, and the repository’s existing site delivery path.
-- Validated the selected framework stack in a temporary Bun-built prototype.
-- Recorded the approved implementation design in this plan.
+- Scaffolded the Astro/Starlight wiki, curated entry pages, accessible Mermaid
+  diagrams, responsive images, local Pagefind search, and the `/working/`
+  projection of the existing AI-oriented docs corpus.
+- Added human-first authoring instructions and the repo-owned `monorepo-docs`
+  skill, then applied the skill to the live chezmoi target.
+- Added docs-board isolation, unit and browser tests, static hosting, DNS,
+  storage lifecycle, deploy-catalog, Buildkite, and post-deploy probe wiring.
+- Fixed the clean-clone install rehearsal and LeetCode embedding subprocess
+  shutdown defects exposed by whole-repo verification.
+- Passed `bun run verify -- --affected` with 221 of 221 tasks successful,
+  including the full 1,033-page wiki build.
+- Committed the scaffold as `7a41e0c2f` and published draft
+  [PR #1784](https://github.com/shepherdjerred/monorepo/pull/1784) with desktop,
+  diagram, and mobile working-document screenshots.
 
 ### Remaining
 
-- Publish the draft PR with visual evidence.
-- Merge the PR, deploy from `main`, and run live HTTP, cache-header, and CSP
-  verification.
+- Merge [PR #1784](https://github.com/shepherdjerred/monorepo/pull/1784), allow
+  the main-only deployment and infrastructure reconciliation to complete, then
+  run the live HTTP, cache-header, CSP, sitemap, and robots verification.
 
 ### Caveats
 
-- The main checkout contains unrelated untracked session logs; preserve them.
-- The existing docs-site direction log predates the final public-site decision
-  and will be superseded by this plan in the implementation worktree.
+- `wiki.sjer.red` is not expected to be live until the PR merges and the
+  main-only deployment plus infrastructure reconciliation complete.
+- Astro reports a non-blocking large-chunk warning for Mermaid, and Starlight
+  reports its expected fallback-entry warning while generating `/404.html`;
+  the built 404 page was verified directly.
