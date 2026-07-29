@@ -2,15 +2,13 @@ import { z } from "zod";
 
 const DEFAULT_MAX_REQUEST_BYTES = 1_500_000;
 
-const ApplicationOperationStateSchema = z.object({
+const ApplicationOperationSchema = z.object({
+  operation: z.record(z.string(), z.unknown()).optional(),
   status: z
     .object({
       operationState: z
         .object({
-          startedAt: z.string().optional(),
-          finishedAt: z.string().optional(),
-          phase: z.string().optional(),
-          operation: z.unknown().optional(),
+          operation: z.record(z.string(), z.unknown()).optional(),
         })
         .optional(),
     })
@@ -95,11 +93,47 @@ export function batchManifestOverrides(
   return batches;
 }
 
-export function operationStateIdentity(application: unknown): string | null {
-  const operationState =
-    ApplicationOperationStateSchema.parse(application).status?.operationState;
-  if (operationState === undefined) {
+function canonicalJson(value: unknown): string {
+  switch (typeof value) {
+    case "boolean":
+    case "number":
+    case "string":
+      return JSON.stringify(value);
+    case "object":
+      if (value === null) {
+        return "null";
+      }
+      if (Array.isArray(value)) {
+        return `[${value.map((entry) => canonicalJson(entry)).join(",")}]`;
+      }
+      return `{${Object.entries(value)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, entry]) => `${JSON.stringify(key)}:${canonicalJson(entry)}`)
+        .join(",")}}`;
+    case "bigint":
+    case "function":
+    case "symbol":
+    case "undefined":
+      throw new Error(`unsupported operation value type: ${typeof value}`);
+  }
+}
+
+export function requestedOperationIdentity(application: unknown): string {
+  const operation = ApplicationOperationSchema.parse(application).operation;
+  if (operation === undefined) {
+    throw new Error("Argo sync response is missing the requested operation");
+  }
+  return canonicalJson(operation);
+}
+
+export function completedOperationIdentity(
+  application: unknown,
+): string | null {
+  const operation =
+    ApplicationOperationSchema.parse(application).status?.operationState
+      ?.operation;
+  if (operation === undefined) {
     return null;
   }
-  return JSON.stringify(operationState);
+  return canonicalJson(operation);
 }

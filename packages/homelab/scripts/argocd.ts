@@ -37,7 +37,8 @@ import {
 } from "../src/cdk8s/src/application-release-policy.ts";
 import {
   batchManifestOverrides,
-  operationStateIdentity,
+  completedOperationIdentity,
+  requestedOperationIdentity,
   type SyncOperationResource,
 } from "./argocd-manifest-overrides.ts";
 import { latestPublishedVersion } from "./helm-release-core.ts";
@@ -327,9 +328,6 @@ async function sync(
   if (appName === "apps" && options.prune) {
     await assertRootPruneSafe(token);
   }
-  const previousOperationIdentity = operationStateIdentity(
-    await getApplication(appName, token),
-  );
   const url = `${serverUrl()}/api/v1/applications/${appName}/sync`;
   const res = await fetch(url, {
     method: "POST",
@@ -354,6 +352,7 @@ async function sync(
       `Sync failed: HTTP ${res.status.toString()} ${res.statusText}\n${body}`,
     );
   }
+  const operationIdentity = requestedOperationIdentity(await res.json());
   console.log(`sync operation started: ${appName}`);
 
   const deadline = Date.now() + timeoutSeconds * 1000;
@@ -365,10 +364,7 @@ async function sync(
       ? status["operationState"]
       : {};
     const phase = typeof op["phase"] === "string" ? op["phase"] : "";
-    const currentOperationIdentity = operationStateIdentity(app);
-    const isOurs =
-      currentOperationIdentity !== null &&
-      currentOperationIdentity !== previousOperationIdentity;
+    const isOurs = completedOperationIdentity(app) === operationIdentity;
     console.log(
       `Operation: ${phase || "(pending)"}${isOurs ? "" : " [previous op]"} ` +
         `(${elapsed.toString()}/${timeoutSeconds.toString()}s)`,

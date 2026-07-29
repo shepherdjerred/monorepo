@@ -2,7 +2,8 @@ import { describe, expect, test } from "bun:test";
 
 import {
   batchManifestOverrides,
-  operationStateIdentity,
+  completedOperationIdentity,
+  requestedOperationIdentity,
   type ManifestOverride,
 } from "./argocd-manifest-overrides.ts";
 
@@ -59,34 +60,57 @@ describe("manifest override batching", () => {
 });
 
 describe("Argo operation identity", () => {
-  test("distinguishes consecutive batches even within the same second", () => {
-    const first = {
-      status: {
-        operationState: {
-          startedAt: "2026-07-29T10:00:00Z",
-          finishedAt: "2026-07-29T10:00:00Z",
-          phase: "Succeeded",
-          operation: { sync: { manifests: ["first"] } },
-        },
+  test("matches the completed operation returned by the sync POST", () => {
+    const requested = {
+      operation: {
+        initiatedBy: { username: "buildkite" },
+        sync: { manifests: ["current"], prune: false },
       },
     };
-    const second = {
+    const completed = {
       status: {
         operationState: {
-          startedAt: "2026-07-29T10:00:00Z",
           finishedAt: "2026-07-29T10:00:00Z",
           phase: "Succeeded",
-          operation: { sync: { manifests: ["second"] } },
+          operation: {
+            sync: { prune: false, manifests: ["current"] },
+            initiatedBy: { username: "buildkite" },
+          },
         },
       },
     };
 
-    expect(operationStateIdentity(first)).not.toBe(
-      operationStateIdentity(second),
+    expect(completedOperationIdentity(completed)).toBe(
+      requestedOperationIdentity(requested),
+    );
+  });
+
+  test("does not accept an earlier operation finishing after the POST", () => {
+    const requested = {
+      operation: { sync: { manifests: ["current"] } },
+    };
+    const previous = {
+      status: {
+        operationState: {
+          finishedAt: "2026-07-29T10:00:00Z",
+          phase: "Succeeded",
+          operation: { sync: { manifests: ["previous"] } },
+        },
+      },
+    };
+
+    expect(completedOperationIdentity(previous)).not.toBe(
+      requestedOperationIdentity(requested),
     );
   });
 
   test("returns null before an Application has an operation state", () => {
-    expect(operationStateIdentity({ status: {} })).toBeNull();
+    expect(completedOperationIdentity({ status: {} })).toBeNull();
+  });
+
+  test("fails when the sync response does not identify its operation", () => {
+    expect(() => requestedOperationIdentity({})).toThrow(
+      "sync response is missing the requested operation",
+    );
   });
 });

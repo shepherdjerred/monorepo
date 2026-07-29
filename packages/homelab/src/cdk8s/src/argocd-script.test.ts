@@ -12,6 +12,23 @@ type RequestObservation = {
   query: string;
 };
 
+const SyncRequestSchema = z.object({
+  manifests: z.array(z.string()),
+  resources: z.array(
+    z.object({
+      group: z.string(),
+      kind: z.string(),
+      name: z.string(),
+    }),
+  ),
+});
+
+const WorkerApplicationResource = {
+  group: "argoproj.io",
+  kind: "Application",
+  name: "worker",
+};
+
 describe("Argo CD prune safety", () => {
   test("blocks root pruning when a removed child lacks the cascade finalizer", async () => {
     let syncPosts = 0;
@@ -149,8 +166,14 @@ describe("Argo CD release gating", () => {
           request.method === "POST" &&
           url.pathname === "/api/v1/applications/apps/sync"
         ) {
-          syncBodies.push(await request.json());
-          return Response.json({});
+          const body = await request.json();
+          syncBodies.push(body);
+          return Response.json({
+            operation: {
+              initiatedBy: { username: "buildkite" },
+              sync: body,
+            },
+          });
         }
         if (
           request.method === "GET" &&
@@ -161,6 +184,10 @@ describe("Argo CD release gating", () => {
               operationState: {
                 phase: "Succeeded",
                 startedAt: new Date().toISOString(),
+                operation: {
+                  sync: syncBodies[0],
+                  initiatedBy: { username: "buildkite" },
+                },
               },
             },
           });
@@ -201,19 +228,16 @@ describe("Argo CD release gating", () => {
       expect(stderr).toBe("");
       expect(stdout).toContain("suspending auto-sync: worker");
       expect(syncBodies).toHaveLength(1);
-      const manifests = z
-        .object({ manifests: z.array(z.string()) })
-        .parse(syncBodies[0]).manifests;
-      expect(manifests).toHaveLength(3);
-      expect(JSON.parse(manifests[0] ?? "")).toMatchObject({
+      const syncRequest = SyncRequestSchema.parse(syncBodies[0]);
+      expect(syncRequest.manifests).toHaveLength(1);
+      expect(JSON.parse(syncRequest.manifests[0] ?? "")).toMatchObject({
         spec: {
           syncPolicy: {
             syncOptions: ["CreateNamespace=true"],
           },
         },
       });
-      expect(manifests[1]).toBe(externalApplication);
-      expect(manifests[2]).toBe(configMap);
+      expect(syncRequest.resources).toEqual([WorkerApplicationResource]);
     } finally {
       await server.stop(true);
     }
