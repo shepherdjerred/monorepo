@@ -92,3 +92,29 @@ system against a copied live save and the exact goal `get me a pokeman`.
 
 - No generalized runtime goal verifier or deterministic story solver will be
   introduced.
+
+## Session Log — 2026-07-29
+
+### Done
+
+- Fixed benchmark catch evidence capture so the event frame and species remain
+  immutable while party and Pokedex state settle for at most 1,800 frames or
+  30 seconds.
+- Prevented a later catch sample from supplying evidence for an older event by
+  closing pending evidence against the preceding snapshot at each new-catch
+  boundary.
+- Added focused delayed-state, cross-catch contamination, frame-timeout,
+  wall-timeout, and final-flush regressions.
+- Verified all 308 backend tests, the 57 focused benchmark tests, backend
+  typecheck, and backend lint.
+
+### Remaining
+
+- Publish the rewritten prompt/evaluation and knowledge stack heads.
+- Re-run Buildkite and the fresh Codex review on the rewritten PR heads.
+- Complete the repeated clean-copy model evaluation and production trial.
+
+### Caveats
+
+- This repair validates the harness timing behavior with deterministic tests;
+  a clean-copy real-model benchmark remains the final acceptance measurement.

@@ -3,11 +3,16 @@ import { z } from "zod";
 import { ConfigSchema } from "#src/config/schema.ts";
 import { BUTTON } from "#src/emulator/constants.ts";
 import { Emulator } from "#src/emulator/emulator.ts";
-import { SPECIES_TO_NATIONAL } from "#src/game/events/generated/species.ts";
 import { readGameSnapshot } from "#src/game/events/snapshot.ts";
 import type { GameSnapshot } from "#src/game/events/types.ts";
 import { createGameEventWatcher } from "#src/game/events/watcher.ts";
 import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
+import {
+  CATCH_EVIDENCE_SETTLE_MAX_MS,
+  createCatchEvidenceSettler,
+  type CatchEvidenceSettler,
+  type CatchEventEvidence,
+} from "#src/goal/catch-evidence.ts";
 import { GoalManager } from "#src/goal/goal-manager.ts";
 import type { GoalProcessSpawner } from "#src/goal/goal-types.ts";
 import { startGoalControlServer } from "#src/goal/control-server.ts";
@@ -35,18 +40,6 @@ type SerializedSnapshot = {
   dexOwned: number[];
   caughtMonSpecies: number;
   caughtMonShiny: boolean;
-};
-type CatchEvent = {
-  occurredAt: string;
-  frame: number;
-  species: number;
-  nationalDexNumber: number;
-  postEventParty: {
-    personality: number;
-    otId: number;
-    species: number;
-  }[];
-  postEventNationalDexOwned: boolean;
 };
 type ProcessCapture = {
   spawner: GoalProcessSpawner;
@@ -150,39 +143,6 @@ function liveSpatial(
 ): ReturnType<typeof readSpatialSnapshot> {
   return readSpatialSnapshot(emulator.memoryReader(), emulator.gameSymbols());
 }
-function captureCatchEvent(
-  emulator: Emulator,
-  frame: number,
-  species: number,
-): CatchEvent {
-  const snapshot = liveSnapshot(emulator);
-  if (snapshot === null) {
-    throw new Error("live snapshot unavailable while capturing catch event");
-  }
-  const nationalDexNumber = SPECIES_TO_NATIONAL[species];
-  if (nationalDexNumber === undefined || nationalDexNumber <= 0) {
-    throw new Error(`species ${String(species)} has no National Dex mapping`);
-  }
-  const bitIndex = nationalDexNumber - 1;
-  const dexByte = snapshot.dexOwned[Math.floor(bitIndex / 8)];
-  if (dexByte === undefined) {
-    throw new Error(
-      `National Dex ${String(nationalDexNumber)} is outside owned bitfield`,
-    );
-  }
-  return {
-    occurredAt: new Date().toISOString(),
-    frame,
-    species,
-    nationalDexNumber,
-    postEventParty: snapshot.party.map((mon) => ({
-      personality: mon.personality,
-      otId: mon.otId,
-      species: mon.species,
-    })),
-    postEventNationalDexOwned: (dexByte & (1 << (bitIndex % 8))) !== 0,
-  };
-}
 async function bootAndContinue(
   emulator: Emulator,
   timeoutSeconds: number,
@@ -241,6 +201,14 @@ async function waitForGoal(
       throw new Error("goal manager exceeded its runtime and shutdown grace");
     }
     await Bun.sleep(250);
+  }
+}
+async function waitForCatchEvidence(
+  settler: CatchEvidenceSettler,
+): Promise<void> {
+  const deadline = Date.now() + CATCH_EVIDENCE_SETTLE_MAX_MS + 1000;
+  while (settler.pendingCount() > 0 && Date.now() < deadline) {
+    await Bun.sleep(100);
   }
 }
 async function waitForPersistedSave(
@@ -387,7 +355,12 @@ async function main(): Promise<void> {
   let evidenceCapturedFrame: number | undefined;
   let goalId: string | undefined;
   let catchCaptureError: Error | undefined;
-  const catchEvents: CatchEvent[] = [];
+  let catchEvents: readonly CatchEventEvidence[];
+  const throwCatchCaptureError = (): void => {
+    if (catchCaptureError !== undefined) {
+      throw catchCaptureError;
+    }
+  };
 
   try {
     await emulator.init();
@@ -400,18 +373,33 @@ async function main(): Promise<void> {
       reader: emulator.memoryReader(),
       symbols: emulator.gameSymbols(),
     });
+    const catchEvidenceSettler = createCatchEvidenceSettler(initialSnapshot);
+    let collectCatchEvidence = true;
+    const pollCatchEvidence = (frame: number): void => {
+      if (!collectCatchEvidence) return;
+      try {
+        const capturedAtMs = Date.now();
+        const catches = watcher
+          .poll()
+          .filter((event) => event.kind === "catch")
+          .map((event) => ({
+            occurredAt: new Date(capturedAtMs).toISOString(),
+            species: event.species,
+          }));
+        catchEvidenceSettler.observe({
+          frame,
+          capturedAtMs,
+          snapshot: liveSnapshot(emulator),
+          catches,
+        });
+      } catch (error) {
+        catchCaptureError =
+          error instanceof Error ? error : new Error(String(error));
+      }
+    };
     emulator.addFrameHook((frame) => {
       if (frame % 30 !== 0) return;
-      for (const event of watcher.poll()) {
-        if (event.kind === "catch") {
-          try {
-            catchEvents.push(captureCatchEvent(emulator, frame, event.species));
-          } catch (error) {
-            catchCaptureError =
-              error instanceof Error ? error : new Error(String(error));
-          }
-        }
-      }
+      pollCatchEvidence(frame);
     });
 
     manager = new GoalManager({
@@ -437,13 +425,22 @@ async function main(): Promise<void> {
     goalId = active.id;
     await waitForGoal(manager, goalId, config.runtimeMinutes);
     await processCapture.completed();
-    if (catchCaptureError !== undefined) {
-      throw catchCaptureError;
-    }
+    pollCatchEvidence(emulator.frame);
+    throwCatchCaptureError();
+    await waitForCatchEvidence(catchEvidenceSettler);
     const finalEvidence = await waitForLiveSnapshot(
       emulator,
       config.bootTimeoutSeconds,
     );
+    catchEvidenceSettler.observe({
+      frame: finalEvidence.capturedFrame,
+      capturedAtMs: Date.now(),
+      snapshot: finalEvidence.snapshot,
+      catches: [],
+    });
+    collectCatchEvidence = false;
+    catchEvents = catchEvidenceSettler.finish();
+    throwCatchCaptureError();
     finalSnapshot = finalEvidence.snapshot;
     evidenceCapturedFrame = finalEvidence.capturedFrame;
     await emulator.checkpointSave();

@@ -3,29 +3,16 @@
 // decide whether a production /goal process is "completed".
 
 import type { GameSnapshot } from "#src/game/events/types.ts";
-import { SPECIES_TO_NATIONAL } from "#src/game/events/generated/species.ts";
+import {
+  dexOwned,
+  hasNewPartyIdentity,
+  nationalDexNumber,
+  snapshotContainsSpeciesDelta,
+  type CatchEventEvidence,
+  type CatchStateEvidence,
+} from "./catch-evidence.ts";
 
 const EMERALD_FLASH_SAVE_BYTES = 128 * 1024;
-
-export type PartyIdentityEvidence = {
-  personality: number;
-  otId: number;
-  species: number;
-};
-
-export type CatchStateEvidence = {
-  party: readonly PartyIdentityEvidence[];
-  dexOwned: Uint8Array;
-};
-
-export type CatchEventEvidence = {
-  occurredAt: string;
-  frame: number;
-  species: number;
-  nationalDexNumber: number;
-  postEventParty: readonly PartyIdentityEvidence[];
-  postEventNationalDexOwned: boolean;
-};
 
 export type PersistedSaveEvidence = {
   persistedAt: string;
@@ -226,56 +213,6 @@ export function evaluateCatchBenchmark(
     evidence,
     failures,
   };
-}
-
-function snapshotContainsSpeciesDelta(
-  initial: CatchStateEvidence,
-  candidate: CatchStateEvidence,
-  species: number,
-  nationalDexNumberValue: number,
-): boolean {
-  return (
-    hasNewPartyIdentity(initial.party, candidate.party, species) ||
-    (!dexOwned(initial, nationalDexNumberValue) &&
-      dexOwned(candidate, nationalDexNumberValue))
-  );
-}
-
-function hasNewPartyIdentity(
-  initial: readonly PartyIdentityEvidence[],
-  candidate: readonly PartyIdentityEvidence[],
-  species: number,
-): boolean {
-  const initialIdentities = new Set(
-    initial.map((mon) => `${String(mon.personality)}:${String(mon.otId)}`),
-  );
-  return candidate.some(
-    (mon) =>
-      mon.species === species &&
-      !initialIdentities.has(`${String(mon.personality)}:${String(mon.otId)}`),
-  );
-}
-
-function nationalDexNumber(species: number): number {
-  const value = SPECIES_TO_NATIONAL[species];
-  if (value === undefined || value <= 0) {
-    throw new Error(`species ${String(species)} has no National Dex mapping`);
-  }
-  return value;
-}
-
-function dexOwned(
-  snapshot: CatchStateEvidence,
-  nationalDexNumberValue: number,
-): boolean {
-  const bitIndex = nationalDexNumberValue - 1;
-  const byte = snapshot.dexOwned[Math.floor(bitIndex / 8)];
-  if (byte === undefined) {
-    throw new Error(
-      `National Dex ${String(nationalDexNumberValue)} is outside owned bitfield`,
-    );
-  }
-  return (byte & (1 << (bitIndex % 8))) !== 0;
 }
 
 function timestamp(value: string, field: string): number {

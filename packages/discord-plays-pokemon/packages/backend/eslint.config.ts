@@ -31,6 +31,7 @@ const config = [
         "src/emulator/emulator-symbols.integration.test.ts",
         "src/emulator/flash-persistence.test.ts",
         "src/goal/codex-command.test.ts",
+        "src/goal/catch-evidence.test.ts",
         "src/goal/benchmark-evaluator.test.ts",
         "src/goal/benchmark-harness.test.ts",
         "src/goal/benchmark-save-oracle.test.ts",

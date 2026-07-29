@@ -8,10 +8,10 @@ import {
 } from "./benchmark-harness.ts";
 import {
   evaluateCatchBenchmark,
-  type CatchStateEvidence,
   type CatchBenchmarkResult,
   type GoalBenchmarkTelemetry,
 } from "./benchmark-evaluator.ts";
+import type { CatchStateEvidence } from "./catch-evidence.ts";
 import {
   BENCHMARK_PROVIDER_FAILURE_FILE,
   BENCHMARK_PROVIDER_STARTUP_FAILURE_FILE,

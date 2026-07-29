@@ -1,7 +1,7 @@
 import type {
   CatchStateEvidence,
   PartyIdentityEvidence,
-} from "./benchmark-evaluator.ts";
+} from "./catch-evidence.ts";
 import {
   EMERALD_FLASH_SAVE_BYTES,
   readValidatedEmeraldSaveSlots,
