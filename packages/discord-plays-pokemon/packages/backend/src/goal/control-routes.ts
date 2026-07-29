@@ -6,7 +6,7 @@ import { encodePng } from "#src/emulator/png.ts";
 import { parseCommandInput } from "#src/game/command/command-input.ts";
 import { parseChord } from "#src/game/command/chord.ts";
 import { isValid, type ChordLimits } from "#src/discord/chord-validator.ts";
-import { execute } from "#src/discord/chord-executor.ts";
+import { effectiveChordDelay, execute } from "#src/discord/chord-executor.ts";
 import { readGameSnapshot } from "#src/game/events/snapshot.ts";
 import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
 import { formatGameStateForPrompt } from "./game-state-summary.ts";
@@ -18,10 +18,8 @@ import {
 } from "./goal-tool-log.ts";
 import type { GoalControlContext, Routed } from "./control-context.ts";
 import {
-  interactResponse,
-  moveResponse,
-  tapResponse,
-  waitResponse,
+  mapResponse,
+  routeSemanticRequest,
 } from "./semantic-control-routes.ts";
 
 const PressRequestSchema = z.strictObject({
@@ -337,7 +335,12 @@ async function pressResponse(
     parsed.holdMs === undefined && nextCommand.modifier === undefined
       ? await context.controller.tap(nextCommand.command, quantity)
       : await context.controller.perform("press:raw", async () => {
-          await enqueueCommand(context.emulator, nextCommand, nextTiming);
+          await enqueueCommand(
+            context.emulator,
+            nextCommand,
+            nextTiming,
+            "goal",
+          );
         });
   return { response: jsonResponse(body), requestMeta, logBody: body };
 }
@@ -360,9 +363,21 @@ async function chordResponse(
     };
   }
   const body = await context.controller.perform("chord:raw", async () => {
-    await execute(chord, async (commandInput) => {
-      await enqueueCommand(context.emulator, commandInput, context.timing);
-    });
+    await execute(
+      chord,
+      async (commandInput) => {
+        await enqueueCommand(
+          context.emulator,
+          commandInput,
+          context.timing,
+          "goal",
+        );
+      },
+      effectiveChordDelay(
+        context.config.game.commands.chord.delay,
+        context.config.game.commands.delay_between_actions_in_milliseconds,
+      ),
+    );
   });
   return { response: jsonResponse(body), requestMeta, logBody: body };
 }
@@ -385,6 +400,9 @@ export async function routeRequest(
   context: GoalControlContext,
   request: Request,
 ): Promise<Routed> {
+  const semantic = await routeSemanticRequest(context, request);
+  if (semantic !== undefined) return semantic;
+
   const url = new URL(request.url);
   switch (`${request.method} ${url.pathname}`) {
     case "GET /status":
@@ -404,6 +422,8 @@ export async function routeRequest(
     }
     case "GET /observe":
       return await observeResponse(context, request);
+    case "GET /map":
+      return mapResponse(context, request);
     case "GET /history": {
       const result = historyResponse(context, request);
       return {
@@ -416,14 +436,6 @@ export async function routeRequest(
       return await screenshotResponse(context);
     case "POST /press":
       return await pressResponse(context, request);
-    case "POST /tap":
-      return await tapResponse(context, request);
-    case "POST /move":
-      return await moveResponse(context, request);
-    case "POST /interact":
-      return await interactResponse(context, request);
-    case "POST /wait":
-      return await waitResponse(context, request);
     case "POST /chord":
       return await chordResponse(context, request);
     case "POST /progress":

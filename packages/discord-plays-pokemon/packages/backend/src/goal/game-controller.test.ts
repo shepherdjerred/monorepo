@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import type { CardinalDirection } from "#src/emulator/engine-observation.ts";
+import type {
+  CardinalDirection,
+  EngineMapTile,
+} from "#src/emulator/engine-observation.ts";
 import type { CommandInput } from "#src/game/command/command-input.ts";
-import {
-  actionOutcome,
-  GameController,
-  type GameControlPort,
-} from "./game-controller.ts";
+import { GameController, type GameControlPort } from "./game-controller.ts";
+import { actionOutcome } from "./game-action-outcome.ts";
 import type { GameObservationV1 } from "./game-observation.ts";
 
 type ObservationInput = Readonly<{
@@ -17,6 +17,9 @@ type ObservationInput = Readonly<{
   mapNum?: number;
   inputReady?: boolean;
   collisionNorth?: number;
+  scriptOrDialogActive?: boolean;
+  battleActionCursor?: number;
+  battleControllerExecFlags?: number;
 }>;
 
 function observation(input: ObservationInput = {}): GameObservationV1 {
@@ -26,6 +29,17 @@ function observation(input: ObservationInput = {}): GameObservationV1 {
     id: `observation-v1:${String(frame)}`,
     frame,
     phase: input.phase ?? "overworld",
+    context: {
+      kind:
+        input.phase === "battle"
+          ? "battle"
+          : input.scriptOrDialogActive === true
+            ? "script-or-dialog"
+            : "field",
+      battleActive: input.phase === "battle",
+      scriptOrDialogActive: input.scriptOrDialogActive ?? false,
+      menuOrTransitionActive: false,
+    },
     readiness: {
       observationValid: true,
       inputReady: input.inputReady ?? true,
@@ -34,6 +48,21 @@ function observation(input: ObservationInput = {}): GameObservationV1 {
       scriptActive: false,
       paletteFading: false,
     },
+    battle:
+      input.phase === "battle"
+        ? {
+            typeFlags: 0,
+            controllerExecFlags: input.battleControllerExecFlags ?? 0,
+            battlersCount: 2,
+            activeBattler: 0,
+            menu: "action",
+            actionCursor: input.battleActionCursor ?? 0,
+            moveCursor: 0,
+            currentMove: 0,
+            chosenMove: 0,
+            battlers: [],
+          }
+        : null,
     world: {
       map: input.mapNum === 1 ? "Route 101" : "Littleroot Town",
       mapGroup: 0,
@@ -64,28 +93,65 @@ class FakeControlPort implements GameControlPort {
   readonly presses: CommandInput[] = [];
   private current: GameObservationV1;
   private readonly afterPress: GameObservationV1[];
+  private currentFrame: Uint8Array;
+  private readonly afterPressFrames: Uint8Array[];
+  private readonly blocked: ReadonlySet<string>;
 
   constructor(
     initial: GameObservationV1,
     afterPress: readonly GameObservationV1[],
+    options: Readonly<{
+      blocked?: ReadonlySet<string>;
+      initialFrame?: Uint8Array;
+      afterPressFrames?: readonly Uint8Array[];
+    }> = {},
   ) {
     this.current = initial;
     this.afterPress = [...afterPress];
+    this.blocked = options.blocked ?? new Set<string>();
+    this.currentFrame = options.initialFrame ?? renderedFrame();
+    this.afterPressFrames = [...(options.afterPressFrames ?? [])];
   }
 
   observe(): GameObservationV1 {
     return this.current;
   }
 
+  renderFrame(): Uint8Array {
+    return this.currentFrame;
+  }
+
   async press(command: CommandInput): Promise<void> {
     this.presses.push(command);
     const next = this.afterPress.shift();
     if (next !== undefined) this.current = next;
+    const nextFrame = this.afterPressFrames.shift();
+    if (nextFrame !== undefined) this.currentFrame = nextFrame;
   }
 
   async waitFrames(frames: number): Promise<void> {
     await Promise.resolve(frames);
   }
+
+  readMapTile(x: number, y: number): EngineMapTile {
+    const passable = !this.blocked.has(`${String(x)},${String(y)}`);
+    return {
+      x,
+      y,
+      behavior: 0,
+      collision: passable ? 0 : 1,
+      elevation: 0,
+      passable,
+    };
+  }
+}
+
+function renderedFrame(changedPixels = 0): Uint8Array {
+  const frame = new Uint8Array(240 * 160 * 4);
+  for (let pixel = 0; pixel < changedPixels; pixel += 1) {
+    frame[pixel * 4] = 255;
+  }
+  return frame;
 }
 
 describe("actionOutcome", () => {
@@ -128,6 +194,38 @@ describe("actionOutcome", () => {
     expect(outcome.stopReason).toBe("map-changed");
     expect(outcome.mapChanged).toBe(true);
   });
+
+  test("reports battle cursor and controller changes as applied state", () => {
+    const before = observation({
+      phase: "battle",
+      battleActionCursor: 0,
+      battleControllerExecFlags: 1,
+    });
+    const after = observation({
+      frame: 12,
+      phase: "battle",
+      battleActionCursor: 1,
+      battleControllerExecFlags: 2,
+    });
+    const outcome = actionOutcome("tap:down", before, after, {
+      inputApplied: true,
+    });
+    expect(outcome.status).toBe("applied");
+    expect(outcome.stopReason).toBe("completed");
+    expect(outcome.battleChanged).toBe(true);
+    expect(outcome.stateChanged).toBe(true);
+  });
+
+  test("does not promote a tiny visual fluctuation to applied", () => {
+    const before = observation();
+    const after = observation({ frame: 12 });
+    const outcome = actionOutcome("tap:a", before, after, {
+      inputApplied: true,
+      visualChangeRatio: 0.0001,
+    });
+    expect(outcome.status).toBe("no-effect");
+    expect(outcome.visualChanged).toBe(false);
+  });
 });
 
 describe("GameController", () => {
@@ -163,5 +261,118 @@ describe("GameController", () => {
     expect(port.presses).toHaveLength(1);
     expect(outcome.status).toBe("context-changed");
     expect(outcome.stopReason).toBe("phase-changed");
+  });
+
+  test("recognizes a settled battle cursor change as applied", async () => {
+    const initial = observation({
+      phase: "battle",
+      battleActionCursor: 0,
+      battleControllerExecFlags: 1,
+    });
+    const changed = observation({
+      frame: 20,
+      phase: "battle",
+      battleActionCursor: 1,
+      battleControllerExecFlags: 2,
+    });
+    const port = new FakeControlPort(initial, [changed]);
+    const controller = new GameController(port);
+
+    const outcome = await controller.tap("down");
+
+    expect(outcome.status).toBe("applied");
+    expect(outcome.stopReason).toBe("completed");
+    expect(outcome.battleChanged).toBe(true);
+    expect(outcome.stateChanged).toBe(true);
+  });
+
+  test("recognizes a visible scripted-dialog advance as applied", async () => {
+    const scripted = observation({
+      phase: "scripted",
+      scriptOrDialogActive: true,
+    });
+    const advanced = observation({
+      frame: 20,
+      phase: "scripted",
+      scriptOrDialogActive: true,
+    });
+    const port = new FakeControlPort(scripted, [advanced], {
+      initialFrame: renderedFrame(),
+      afterPressFrames: [renderedFrame(300)],
+    });
+    const controller = new GameController(port);
+
+    const outcome = await controller.advance();
+
+    expect(port.presses).toEqual([{ command: "a", quantity: 1 }]);
+    expect(outcome.status).toBe("applied");
+    expect(outcome.stopReason).toBe("completed");
+    expect(outcome.stateChanged).toBe(false);
+    expect(outcome.visualChanged).toBe(true);
+    expect(outcome.visualChangeRatio).toBeGreaterThan(0.0025);
+  });
+
+  test("does not advance outside script-or-dialog context", async () => {
+    const field = observation();
+    const port = new FakeControlPort(field, []);
+    const controller = new GameController(port);
+
+    const outcome = await controller.advance();
+
+    expect(port.presses).toEqual([]);
+    expect(outcome.status).toBe("unavailable");
+    expect(outcome.stopReason).toBe("dialog-not-active");
+  });
+
+  test("reports an already-satisfied wait condition as completed", async () => {
+    const ready = observation();
+    const port = new FakeControlPort(ready, []);
+    const controller = new GameController(port);
+
+    const outcome = await controller.waitFor("ready", 60);
+
+    expect(outcome.status).toBe("applied");
+    expect(outcome.stopReason).toBe("completed");
+    expect(outcome.framesElapsed).toBe(0);
+    expect(port.presses).toHaveLength(0);
+  });
+
+  test("navigates a bounded current-map path to exact coordinates", async () => {
+    const start = observation({ x: 5, y: 5, facing: "east" });
+    const port = new FakeControlPort(start, [
+      observation({ frame: 12, x: 6, y: 5, facing: "east" }),
+      observation({ frame: 24, x: 7, y: 5, facing: "east" }),
+    ]);
+    const controller = new GameController(port);
+
+    const result = await controller.navigate({ x: 7, y: 5 }, 10, 4);
+
+    expect(result.status).toBe("arrived");
+    expect(result.stopReason).toBe("target-reached");
+    expect(result.stepsTaken).toBe(2);
+    expect(port.presses.map((press) => press.command)).toEqual([
+      "right",
+      "right",
+    ]);
+  });
+
+  test("stops navigation when movement crosses a map boundary", async () => {
+    const start = observation({ x: 5, y: 5, facing: "east" });
+    const port = new FakeControlPort(start, [
+      observation({
+        frame: 12,
+        x: 6,
+        y: 5,
+        facing: "east",
+        mapNum: 2,
+      }),
+    ]);
+    const controller = new GameController(port);
+
+    const result = await controller.navigate({ x: 7, y: 5 }, 10, 4);
+
+    expect(result.status).toBe("stopped");
+    expect(result.stopReason).toBe("map-changed");
+    expect(port.presses).toHaveLength(1);
   });
 });

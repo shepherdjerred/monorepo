@@ -37,12 +37,14 @@ export function startGoalControlServer(
   const timing = timingFromConfig(options.config);
   const controller = new GameController({
     observe: () => readGameObservation(options.emulator),
+    renderFrame: () => options.emulator.renderFrame(),
     press: async (command) => {
-      await enqueueCommand(options.emulator, command, timing);
+      await enqueueCommand(options.emulator, command, timing, "goal");
     },
     waitFrames: async (frames) => {
-      await options.emulator.queuePress(0, frames, 0);
+      await options.emulator.queuePress(0, frames, 0, "goal");
     },
+    readMapTile: (x, y) => options.emulator.engineMapTile(x, y),
   });
   const context: GoalControlContext = {
     ...options,

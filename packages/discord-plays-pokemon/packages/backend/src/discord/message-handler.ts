@@ -1,7 +1,7 @@
 import type { Client, Message } from "discord.js";
 import { Events, ChannelType } from "discord.js";
 import { parseChord, type Chord } from "#src/game/command/chord.ts";
-import { execute } from "./chord-executor.ts";
+import { effectiveChordDelay, execute } from "./chord-executor.ts";
 import { isValid } from "./chord-validator.ts";
 import type { CommandInput } from "#src/game/command/command-input.ts";
 import type { PokemonGameDriver } from "#src/lifecycle/pokemon-driver.ts";
@@ -91,7 +91,14 @@ async function handleMessage(
     maxQuantityPerAction: commands.max_quantity_per_action,
   };
   if (isValid(chord, chatLimits)) {
-    await execute(chord, fn);
+    await execute(
+      chord,
+      fn,
+      effectiveChordDelay(
+        commands.chord.delay,
+        commands.delay_between_actions_in_milliseconds,
+      ),
+    );
     await event.react(`👍`);
     lastCommand = new Date();
   } else {

@@ -62,6 +62,7 @@ type ActiveGoal = {
   // OTel span synthesis attached to the parser. The archive SpanProcessor
   // (observability/tracing.ts) ships full request/response bodies to S3.
   trace: CodexTrace;
+  releaseInputLease: () => void;
 };
 
 export type GoalProcess = {
@@ -118,7 +119,25 @@ type GoalManagerOptions = {
   // so tests that don't exercise prompt context don't have to pass a stub.
   snapshotProvider?: () => GameSnapshot | null;
   spatialSnapshotProvider?: () => SpatialSnapshot | null;
+  acquireInputLease?: () => () => void;
 };
+
+function oneShot(action: () => void): () => void {
+  let completed = false;
+  return () => {
+    if (completed) return;
+    completed = true;
+    action();
+  };
+}
+
+function noOpRelease(): void {
+  return;
+}
+
+function noOpAcquireInputLease(): () => void {
+  return noOpRelease;
+}
 
 import { defaultSpawner } from "./goal-process-helpers.ts";
 
@@ -136,6 +155,7 @@ export class GoalManager {
   private readonly now: () => Date;
   private readonly snapshotProvider: () => GameSnapshot | null;
   private readonly spatialSnapshotProvider: () => SpatialSnapshot | null;
+  private readonly acquireInputLease: () => () => void;
   // Per-guild persistent memory: the curated MEMORY.md fed into every prompt,
   // system-written session logs, and MEMORY.md archives. Backed by
   // config.memory_dir (the driver points it under saves/<guildId>/). Exposed to
@@ -157,6 +177,7 @@ export class GoalManager {
     this.snapshotProvider = options.snapshotProvider ?? (() => null);
     this.spatialSnapshotProvider =
       options.spatialSnapshotProvider ?? (() => null);
+    this.acquireInputLease = options.acquireInputLease ?? noOpAcquireInputLease;
     this.memory = new GoalMemory(
       this.resolveRuntimePath(this.config.memory_dir),
       this.now,
@@ -290,6 +311,8 @@ export class GoalManager {
       this.snapshotProvider(),
       this.spatialSnapshotProvider(),
     );
+    const memory = await this.memory.readMemory();
+    const releaseInputLease = oneShot(this.acquireInputLease());
     const spawned = await spawnGoalCodex({
       config: this.config,
       controlToken: this.controlToken,
@@ -299,9 +322,12 @@ export class GoalManager {
       promptContext: {
         gameStateSummary,
         recentGoalsSummary: formatHistoryForPrompt(this.getHistory(3)),
-        memory: await this.memory.readMemory(),
+        memory,
       },
       spawner: this.spawner,
+    }).catch((error: unknown) => {
+      releaseInputLease();
+      throw error;
     });
 
     const state: GoalState = {
@@ -317,7 +343,6 @@ export class GoalManager {
     const timeout = setTimeout(() => {
       void this.timeoutGoal(id);
     }, this.config.max_runtime_minutes * 60_000);
-
     this.active = {
       state,
       process: spawned.process,
@@ -327,8 +352,18 @@ export class GoalManager {
       jsonl: spawned.jsonl,
       stdoutPump: spawned.stdoutPump,
       trace: spawned.trace,
+      releaseInputLease,
     };
-    await this.persistState(state);
+    try {
+      await this.persistState(state);
+    } catch (error) {
+      clearTimeout(timeout);
+      spawned.process.kill("SIGTERM");
+      spawned.trace.end();
+      releaseInputLease();
+      this.active = undefined;
+      throw error;
+    }
     void this.observeProcess(id);
 
     return {
@@ -381,47 +416,42 @@ export class GoalManager {
     }
 
     const exitCode = await active.process.exited;
-    if (this.active?.state.id !== id) {
-      return;
-    }
+    const claimed = this.claimActive(id);
+    if (claimed === undefined) return;
 
     // Drain any remaining buffered stdout before reading token totals.
     // The last turn.completed usage event is the final line Codex emits and
     // may still be in the pipe when process.exited resolves.
-    await active.stdoutPump;
+    await claimed.stdoutPump;
 
-    clearTimeout(active.timeout);
-    const report = await this.readFinalReport(active.outputPath);
-    active.state.finishedAt = this.now().toISOString();
-    active.state.exitCode = exitCode;
-    active.state.status = exitCode === 0 ? "completed" : "failed";
-    active.state.finalReport = report;
-    await this.recordCompletion(active.state);
-    await this.persistState(active.state);
-    active.trace.end();
-    this.active = undefined;
+    const report = await this.readFinalReport(claimed.outputPath);
+    claimed.state.finishedAt = this.now().toISOString();
+    claimed.state.exitCode = exitCode;
+    claimed.state.status = exitCode === 0 ? "completed" : "failed";
+    claimed.state.finalReport = report;
+    await this.recordCompletion(claimed.state);
+    await this.persistState(claimed.state);
+    claimed.trace.end();
 
-    const usage = active.jsonl.total();
+    const usage = claimed.jsonl.total();
     const cost = computeCost(this.config.model, usage);
     const costLine = formatCostLine(this.config.model, cost, usage);
 
     // Cost line comes first so it is never cut by truncation on long reports.
     await this.sendMessage({
-      channelId: active.state.channelId,
+      channelId: claimed.state.channelId,
       content: truncateForDiscord(
-        `<@${active.state.requestedBy}> goal ${
+        `<@${claimed.state.requestedBy}> goal ${
           exitCode === 0 ? "finished" : "stopped with an error"
         } (${costLine}): ${sanitizeDiscordText(report)}`,
       ),
-      allowedUserIds: [active.state.requestedBy],
+      allowedUserIds: [claimed.state.requestedBy],
     });
   }
 
   private async timeoutGoal(id: string): Promise<void> {
-    const active = this.active;
-    if (active?.state.id !== id) {
-      return;
-    }
+    const active = this.claimActive(id);
+    if (active === undefined) return;
 
     active.process.kill("SIGTERM");
     active.state.status = "timeout";
@@ -430,7 +460,6 @@ export class GoalManager {
     await this.recordCompletion(active.state);
     await this.persistState(active.state);
     active.trace.end();
-    this.active = undefined;
     await this.sendMessage({
       channelId: active.state.channelId,
       content: `<@${active.state.requestedBy}> goal timed out after ${String(
@@ -441,12 +470,11 @@ export class GoalManager {
   }
 
   private async stopActive(status: "replaced" | "shutdown"): Promise<void> {
-    const active = this.active;
+    const active = this.claimActive();
     if (active === undefined) {
       return;
     }
 
-    clearTimeout(active.timeout);
     active.process.kill("SIGTERM");
     active.state.status = status;
     active.state.finishedAt = this.now().toISOString();
@@ -457,7 +485,20 @@ export class GoalManager {
     await this.recordCompletion(active.state);
     await this.persistState(active.state);
     active.trace.end();
+  }
+
+  private claimActive(id?: string): ActiveGoal | undefined {
+    const active = this.active;
+    if (active === undefined || (id !== undefined && active.state.id !== id)) {
+      return undefined;
+    }
+    // Claim synchronously before any terminal-path await. SIGTERM resolves the
+    // process exit promise, so stop/timeout and observeProcess can otherwise
+    // race through teardown and release the same lease twice.
     this.active = undefined;
+    clearTimeout(active.timeout);
+    active.releaseInputLease();
+    return active;
   }
 
   private async readFinalReport(outputPath: string): Promise<string> {

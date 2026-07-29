@@ -1,5 +1,6 @@
 import type { Emulator } from "#src/emulator/emulator.ts";
 import type {
+  BattleMenu,
   CardinalDirection,
   CollisionObservation,
   EngineFacing,
@@ -10,12 +11,28 @@ import { speciesName } from "#src/game/events/generated/species.ts";
 import { readGameSnapshot } from "#src/game/events/snapshot.ts";
 import { mapName } from "#src/game/spatial/generated/map-names.ts";
 import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
+import {
+  readGameSaveDetails,
+  type InventoryPocket,
+  type ProgressionFlags,
+} from "#src/game/game-save-details.ts";
 
 export type GameObservationV1 = Readonly<{
   schemaVersion: 1;
   id: string;
   frame: number;
   phase: EnginePhase;
+  context: Readonly<{
+    kind:
+      | "unavailable"
+      | "field"
+      | "script-or-dialog"
+      | "battle"
+      | "menu-or-transition";
+    battleActive: boolean;
+    scriptOrDialogActive: boolean;
+    menuOrTransitionActive: boolean;
+  }>;
   readiness: Readonly<{
     observationValid: boolean;
     inputReady: boolean;
@@ -24,6 +41,29 @@ export type GameObservationV1 = Readonly<{
     scriptActive: boolean;
     paletteFading: boolean;
   }>;
+  battle: Readonly<{
+    typeFlags: number;
+    controllerExecFlags: number;
+    battlersCount: number;
+    activeBattler: number;
+    menu: BattleMenu;
+    actionCursor: number;
+    moveCursor: number;
+    currentMove: number;
+    chosenMove: number;
+    battlers: readonly Readonly<{
+      battler: number;
+      side: "player" | "opponent";
+      position: number;
+      active: boolean;
+      speciesId: number;
+      species: string;
+      hp: number;
+      maxHp: number;
+      partyIndex: number;
+      status: number;
+    }>[];
+  }> | null;
   world: Readonly<{
     map: string;
     mapGroup: number;
@@ -46,6 +86,14 @@ export type GameObservationV1 = Readonly<{
     }>[];
   }> | null;
   game: Readonly<{
+    money: number;
+    registeredItemId: number;
+    inventory: readonly Readonly<{
+      itemId: number;
+      quantity: number;
+      pocket: InventoryPocket;
+    }>[];
+    progression: ProgressionFlags;
     party: readonly Readonly<{
       speciesId: number;
       species: string;
@@ -78,12 +126,31 @@ function countDexOwned(bitfield: Uint8Array): number {
   return total;
 }
 
+function contextFromPhase(phase: EnginePhase): GameObservationV1["context"] {
+  return {
+    kind:
+      phase === "unavailable"
+        ? "unavailable"
+        : phase === "overworld"
+          ? "field"
+          : phase === "scripted"
+            ? "script-or-dialog"
+            : phase === "battle"
+              ? "battle"
+              : "menu-or-transition",
+    battleActive: phase === "battle",
+    scriptOrDialogActive: phase === "scripted",
+    menuOrTransitionActive: phase === "other",
+  };
+}
+
 export function readGameObservation(emulator: Emulator): GameObservationV1 {
   const engine = emulator.engineObservation();
   const reader = emulator.memoryReader();
   const symbols = emulator.gameSymbols();
   const spatial = readSpatialSnapshot(reader, symbols);
   const snapshot = readGameSnapshot(reader, symbols);
+  const details = readGameSaveDetails(reader, symbols);
   const engineWorld = engine.world;
 
   const world =
@@ -131,12 +198,27 @@ export function readGameObservation(emulator: Emulator): GameObservationV1 {
     id: `observation-v1:${String(engine.frame)}`,
     frame: engine.frame,
     phase: engine.phase,
+    context: contextFromPhase(engine.phase),
     readiness: engine.readiness,
-    world,
-    game:
-      snapshot === null
+    battle:
+      engine.battle === null
         ? null
         : {
+            ...engine.battle,
+            battlers: engine.battle.battlers.map((battler) => ({
+              ...battler,
+              species: speciesName(battler.speciesId),
+            })),
+          },
+    world,
+    game:
+      snapshot === null || details === null
+        ? null
+        : {
+            money: details.money,
+            registeredItemId: details.registeredItemId,
+            inventory: details.inventory,
+            progression: details.progression,
             party: snapshot.party.map((mon) => ({
               speciesId: mon.species,
               species: speciesName(mon.species),

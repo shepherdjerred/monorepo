@@ -100,10 +100,21 @@ if (import.meta.main) {
   ]);
   const makefile = await Bun.file(`${workDirectory}/Makefile`).text();
   const hasExtraExports = makefile.includes("export=gSaveBlock2Ptr");
-  const hasObservationBridge = await Bun.file(
-    `${workDirectory}/src/wasm_observation.c`,
-  ).exists();
-  if (hasExtraExports !== hasObservationBridge) {
+  const observationSource = Bun.file(`${workDirectory}/src/wasm_observation.c`);
+  const observationSourceText = (await observationSource.exists())
+    ? await observationSource.text()
+    : "";
+  const hasObservationBridge =
+    observationSourceText.includes("WasmReadObservation") &&
+    observationSourceText.includes("WasmReadMapTile");
+  const hasCheckpointExport = makefile.includes("export=WasmCheckpointSave");
+  const hasCheckpointBridge =
+    observationSourceText.includes("WasmCheckpointSave");
+  if (
+    hasExtraExports !== hasObservationBridge ||
+    hasCheckpointExport !== hasCheckpointBridge ||
+    hasExtraExports !== hasCheckpointExport
+  ) {
     throw new Error(
       `Cached wasm source at ${workDirectory} has an incomplete patch series; use a fresh WORKDIR`,
     );

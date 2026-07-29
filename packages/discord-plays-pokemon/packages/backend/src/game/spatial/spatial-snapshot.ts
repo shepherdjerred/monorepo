@@ -79,6 +79,15 @@ export type NearbyObject = {
   graphicsId: number;
 };
 
+export type MapObject = {
+  x: number;
+  y: number;
+  distance: number;
+  facing: Facing;
+  kind: NearbyObject["kind"];
+  graphicsId: number;
+};
+
 export type SpatialSnapshot = {
   // Tile coords on the current map (raw engine values — origin is the
   // top-left including the +7 camera padding, so they are not "0-based map
@@ -160,15 +169,21 @@ function classify(graphicsId: number): NearbyObject["kind"] {
   }
 }
 
-/**
- * Read the live spatial snapshot, or null when the game isn't in a readable
- * state (no save loaded, mid-relocation, or the player ObjectEvent is
- * inactive — e.g. title screen, intro cutscene).
- */
-export function readSpatialSnapshot(
+type ActiveMapState = Readonly<{
+  x: number;
+  y: number;
+  facing: Facing;
+  movementMode: string;
+  mapGroup: number;
+  mapNum: number;
+  onTileBehavior: string;
+  objects: readonly MapObject[];
+}>;
+
+function readActiveMapState(
   reader: MemoryReader,
   symbols: GameSymbols,
-): SpatialSnapshot | null {
+): ActiveMapState | null {
   const avatar = symbols.gPlayerAvatar;
   if (!validPointer(avatar, PLAYER_AVATAR_MIN_SIZE, reader.byteLength)) {
     return null;
@@ -215,10 +230,9 @@ export function readSpatialSnapshot(
   );
   const onTileBehaviorRaw = reader.u8(playerBase + OE_METATILE_BEHAVIOR_OFFSET);
 
-  // Walk the ObjectEvent array and pick out active, same-map, non-invisible,
-  // non-player events within NEARBY_RADIUS tiles. Sort by manhattan distance
-  // then cap to NEARBY_LIMIT so the prompt line stays compact.
-  const all: NearbyObject[] = [];
+  // Keep every active, visible same-map object for explicit map views. The
+  // compact observation derives its bounded nearby subset from this list.
+  const objects: MapObject[] = [];
   for (let i = 0; i < OBJECT_EVENTS_COUNT; i++) {
     if (i === objectEventId) continue;
     const base = eventsBase + i * OBJECT_EVENT_SIZE;
@@ -235,20 +249,20 @@ export function readSpatialSnapshot(
     const oy = reader.s16(base + OE_CURRENT_COORDS_Y_OFFSET);
     const dx = ox - x;
     const dy = oy - y;
-    const manhattan = Math.abs(dx) + Math.abs(dy);
-    if (manhattan === 0 || manhattan > NEARBY_RADIUS) continue;
+    const distance = Math.abs(dx) + Math.abs(dy);
+    if (distance === 0) continue;
     const facingRaw = reader.u16(base + OE_FACING_OFFSET) & OE_FACING_MASK;
     const graphicsId = reader.u8(base + OE_GRAPHICS_ID_OFFSET);
-    all.push({
-      dx,
-      dy,
-      manhattan,
+    objects.push({
+      x: ox,
+      y: oy,
+      distance,
       facing: decodeFacing(facingRaw),
       kind: classify(graphicsId),
       graphicsId,
     });
   }
-  all.sort((a, b) => a.manhattan - b.manhattan);
+  objects.sort((a, b) => a.distance - b.distance);
 
   return {
     x,
@@ -258,6 +272,48 @@ export function readSpatialSnapshot(
     mapGroup,
     mapNum,
     onTileBehavior: describeMetatileBehavior(onTileBehaviorRaw),
-    nearby: all.slice(0, NEARBY_LIMIT),
+    objects,
   };
+}
+
+/**
+ * Read the live spatial snapshot, or null when the game isn't in a readable
+ * state (no save loaded, mid-relocation, or the player ObjectEvent is
+ * inactive — e.g. title screen, intro cutscene).
+ */
+export function readSpatialSnapshot(
+  reader: MemoryReader,
+  symbols: GameSymbols,
+): SpatialSnapshot | null {
+  const state = readActiveMapState(reader, symbols);
+  if (state === null) return null;
+  const nearby = state.objects
+    .filter((object) => object.distance <= NEARBY_RADIUS)
+    .slice(0, NEARBY_LIMIT)
+    .map((object) => ({
+      dx: object.x - state.x,
+      dy: object.y - state.y,
+      manhattan: object.distance,
+      facing: object.facing,
+      kind: object.kind,
+      graphicsId: object.graphicsId,
+    }));
+  return {
+    x: state.x,
+    y: state.y,
+    facing: state.facing,
+    movementMode: state.movementMode,
+    mapGroup: state.mapGroup,
+    mapNum: state.mapNum,
+    onTileBehavior: state.onTileBehavior,
+    nearby,
+  };
+}
+
+/** Return every active, visible object on the current map. */
+export function readMapObjects(
+  reader: MemoryReader,
+  symbols: GameSymbols,
+): readonly MapObject[] | null {
+  return readActiveMapState(reader, symbols)?.objects ?? null;
 }

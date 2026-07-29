@@ -121,6 +121,17 @@ RUN cd packages/discord-stream-lifecycle && bun run build \
 ENV VITE_SENTRY_RELEASE=dev
 RUN cd packages/discord-plays-pokemon/packages/frontend && bun run build
 
+# ── wasm-abi-test: prove the patched engine bridge against the real artifact ─
+# The source test may skip on a plain checkout because the generated binary is
+# intentionally gitignored. This stage makes the artifact present and is the
+# source for the runtime COPY below, so an image build cannot bypass the ABI
+# regression test.
+FROM build AS wasm-abi-test
+COPY --from=wasm-builder /src/build/wasm/pokeemerald.wasm \
+  /app/packages/discord-plays-pokemon/packages/backend/assets/pokeemerald.wasm
+RUN bun test \
+  /app/packages/discord-plays-pokemon/packages/backend/src/emulator/emulator-symbols.integration.test.ts
+
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
 FROM base AS prod-deps
 COPY --parents \
@@ -190,7 +201,7 @@ RUN install -D -m 0755 \
 
 # Stage the from-source wasm where the emulator expects it (relative to the
 # inner-monorepo root the app runs from).
-COPY --from=wasm-builder /src/build/wasm/pokeemerald.wasm \
+COPY --from=wasm-abi-test /app/packages/discord-plays-pokemon/packages/backend/assets/pokeemerald.wasm \
   /app/packages/discord-plays-pokemon/packages/backend/assets/pokeemerald.wasm
 
 # Version/revision metadata as build args so CI can bake the real build number +

@@ -8,6 +8,8 @@ function usage(): string {
     "  pokemonctl observe [--screenshot] [--full]",
     "  pokemonctl tap <button> [--repeat n]",
     "  pokemonctl move <north|south|west|east> [--tiles n]",
+    "  pokemonctl map show [--radius n]",
+    "  pokemonctl navigate --x n --y n [--max-steps n] [--radius n]  # current map only",
     "  pokemonctl interact [north|south|west|east|ahead]",
     "  pokemonctl wait --until <ready|stable|phase-change> [--timeout-ms n]",
     "  pokemonctl screenshot",
@@ -49,6 +51,20 @@ function readNumberFlag(args: string[], name: string): number | undefined {
     throw new Error(`${name} must be a positive integer`);
   }
 
+  return value;
+}
+
+function readIntegerFlag(args: string[], name: string): number | undefined {
+  const index = args.indexOf(name);
+  if (index === -1) return undefined;
+  const raw = args.at(index + 1);
+  if (raw === undefined) {
+    throw new Error(`${name} requires a value`);
+  }
+  const value = Number(raw);
+  if (!Number.isInteger(value)) {
+    throw new TypeError(`${name} must be an integer`);
+  }
   return value;
 }
 
@@ -168,6 +184,33 @@ async function handleMove(args: string[]): Promise<void> {
   printJsonText(await request("POST", "/move", { direction, tiles }));
 }
 
+async function handleMap(args: string[]): Promise<void> {
+  if (args.at(0) !== "show") {
+    throw new Error("map requires the show subcommand");
+  }
+  const radius = readNumberFlag(args, "--radius") ?? 8;
+  const params = new URLSearchParams({ radius: String(radius) });
+  printJsonText(await request("GET", `/map?${params.toString()}`));
+}
+
+async function handleNavigate(args: string[]): Promise<void> {
+  const x = readIntegerFlag(args, "--x");
+  const y = readIntegerFlag(args, "--y");
+  if (x === undefined || y === undefined) {
+    throw new Error("navigate requires --x and --y integer coordinates");
+  }
+  const maxSteps = readNumberFlag(args, "--max-steps") ?? 64;
+  const searchRadius = readNumberFlag(args, "--radius") ?? 12;
+  printJsonText(
+    await request("POST", "/navigate", {
+      x,
+      y,
+      maxSteps,
+      searchRadius,
+    }),
+  );
+}
+
 async function handleInteract(args: string[]): Promise<void> {
   const rawDirection = args.at(0);
   const direction =
@@ -274,6 +317,8 @@ const HANDLERS = new Map<string, (args: string[]) => Promise<void>>([
   ["observe", handleObserve],
   ["tap", handleTap],
   ["move", handleMove],
+  ["map", handleMap],
+  ["navigate", handleNavigate],
   ["interact", handleInteract],
   [
     "screenshot",

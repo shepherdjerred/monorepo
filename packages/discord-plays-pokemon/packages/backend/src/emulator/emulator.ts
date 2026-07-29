@@ -1,4 +1,3 @@
-import { rename } from "node:fs/promises";
 import { createAudioEngine } from "./audio/index.ts";
 import type { DrainResult } from "./audio/m4a-driver.ts";
 import { createBios } from "./bios.ts";
@@ -25,10 +24,13 @@ import { logger } from "#src/logger.ts";
 import { createMemoryReader, type MemoryReader } from "./memory.ts";
 import { createGameSymbols, type GameSymbols } from "./symbols.ts";
 import {
+  decodeEngineMapTile,
   decodeEngineObservation,
   ENGINE_OBSERVATION_SIZE,
+  type EngineMapTile,
   type EngineObservationV1,
 } from "./engine-observation.ts";
+import { AtomicFlashPersistence } from "./flash-persistence.ts";
 
 // Minimal view of the wasm exports we depend on, validated at runtime so we
 // never assert types we haven't checked.
@@ -37,6 +39,8 @@ type WasmExports = {
   agbMain: () => void;
   runFrame: () => void;
   readObservation: () => number;
+  readMapTile: (x: number, y: number) => number;
+  checkpointSave: () => number;
 };
 
 function requireFunction(
@@ -74,6 +78,25 @@ function requireNumberFunction(
   };
 }
 
+function requireNumberFunction2(
+  exports: Bun.WebAssembly.Exports,
+  name: string,
+): (first: number, second: number) => number {
+  const value = exports[name];
+  if (typeof value !== "function") {
+    throw new TypeError(
+      `wasm module is missing required function export: ${name}`,
+    );
+  }
+  return (first, second) => {
+    const result: unknown = Reflect.apply(value, undefined, [first, second]);
+    if (typeof result !== "number" || !Number.isInteger(result)) {
+      throw new TypeError(`wasm export ${name} did not return an integer`);
+    }
+    return result;
+  };
+}
+
 function requireMemory(exports: Bun.WebAssembly.Exports): WebAssembly.Memory {
   const value = exports["memory"];
   if (!(value instanceof WebAssembly.Memory)) {
@@ -82,7 +105,15 @@ function requireMemory(exports: Bun.WebAssembly.Exports): WebAssembly.Memory {
   return value;
 }
 
-type QueueStep = { mask: number; frames: number; done?: () => void };
+export type InputSource = "interactive" | "goal";
+
+type QueueStep = {
+  mask: number;
+  frames: number;
+  source: InputSource;
+  done?: () => void;
+  reject?: (error: Error) => void;
+};
 
 export type EmulatorOptions = {
   wasmPath: string;
@@ -105,6 +136,8 @@ export class Emulator {
   private currentFrame = 0;
 
   private readonly queue: QueueStep[] = [];
+  private inputLease: InputSource | undefined;
+  private inputLeaseGeneration = 0;
   private onFrameCb: ((rgba: Buffer) => void) | undefined;
   private onAudioCb: ((pcm: DrainResult) => void) | undefined;
   private readonly frameHooks: ((frame: number) => void)[] = [];
@@ -112,6 +145,7 @@ export class Emulator {
   private loopTimer: ReturnType<typeof setTimeout> | undefined;
   private nextTickAt = 0;
   private lastSavedHash = 0;
+  private readonly flashPersistence = new AtomicFlashPersistence();
 
   constructor(options: EmulatorOptions) {
     this.options = options;
@@ -138,6 +172,11 @@ export class Emulator {
       readObservation: requireNumberFunction(
         instance.exports,
         "WasmReadObservation",
+      ),
+      readMapTile: requireNumberFunction2(instance.exports, "WasmReadMapTile"),
+      checkpointSave: requireNumberFunction(
+        instance.exports,
+        "WasmCheckpointSave",
       ),
     };
 
@@ -215,10 +254,40 @@ export class Emulator {
     );
   }
 
+  /** Read one live current-map grid tile through the engine's map API. */
+  engineMapTile(x: number, y: number): EngineMapTile | null {
+    const exports = this.exports;
+    if (exports === undefined) {
+      throw new Error("emulator is not initialized");
+    }
+    if (!Number.isInteger(x) || !Number.isInteger(y)) {
+      throw new TypeError("map tile coordinates must be integers");
+    }
+    return decodeEngineMapTile(x, y, exports.readMapTile(x, y));
+  }
+
   /** Render the current frame to a fresh RGBA buffer (for screenshots). */
   renderFrame(): Buffer {
     const rgba = this.renderer.render();
     return Buffer.from(rgba);
+  }
+
+  /**
+   * Serialize the current live game state through Emerald's save engine, then
+   * durably flush the resulting emulated flash image before returning.
+   */
+  async checkpointSave(): Promise<void> {
+    const exports = this.exports;
+    if (exports === undefined) {
+      throw new Error("emulator is not initialized");
+    }
+    const status = exports.checkpointSave();
+    if (status !== 1) {
+      throw new Error(
+        `game engine failed to checkpoint live state: status ${String(status)}`,
+      );
+    }
+    await this.saveIfChanged(true);
   }
 
   start(): void {
@@ -228,11 +297,13 @@ export class Emulator {
   }
 
   stop(): void {
-    if (this.loopTimer !== undefined) {
-      clearTimeout(this.loopTimer);
-      this.loopTimer = undefined;
-    }
-    this.saveIfChanged(true);
+    this.haltLoop();
+    void this.saveInBackground(true);
+  }
+
+  async stopAndFlush(): Promise<void> {
+    this.haltLoop();
+    await this.saveIfChanged(true);
   }
 
   /**
@@ -244,17 +315,74 @@ export class Emulator {
     mask: number,
     holdFrames: number,
     gapFrames: number,
+    source: InputSource = "interactive",
   ): Promise<void> {
-    return new Promise((resolve) => {
+    this.assertInputAllowed(source);
+    return new Promise((resolve, reject) => {
       const hold = Math.max(1, Math.round(holdFrames));
       const gap = Math.max(0, Math.round(gapFrames));
       if (gap === 0) {
-        this.queue.push({ mask, frames: hold, done: resolve });
+        this.queue.push({
+          mask,
+          frames: hold,
+          source,
+          done: resolve,
+          reject,
+        });
       } else {
-        this.queue.push({ mask, frames: hold });
-        this.queue.push({ mask: 0, frames: gap, done: resolve });
+        this.queue.push({ mask, frames: hold, source });
+        this.queue.push({
+          mask: 0,
+          frames: gap,
+          source,
+          done: resolve,
+          reject,
+        });
       }
     });
+  }
+
+  /**
+   * Grant one input source exclusive control. Queued commands from another
+   * source are rejected immediately, so they cannot bleed into the goal after
+   * the lease boundary. The returned release function is generation-scoped:
+   * calling an old release can never unlock a newer lease.
+   */
+  acquireInputLease(source: InputSource): () => void {
+    if (this.inputLease !== undefined) {
+      throw new Error(`input is already leased by ${this.inputLease}`);
+    }
+    this.inputLease = source;
+    this.inputLeaseGeneration += 1;
+    const generation = this.inputLeaseGeneration;
+    const rejected = new Set<(error: Error) => void>();
+    for (const step of this.queue) {
+      if (step.source !== source && step.reject !== undefined) {
+        rejected.add(step.reject);
+      }
+    }
+    this.queue.splice(
+      0,
+      this.queue.length,
+      ...this.queue.filter((step) => step.source === source),
+    );
+    for (const reject of rejected) {
+      reject(new Error(`input lease acquired by ${source}`));
+    }
+    return () => {
+      if (
+        this.inputLease === source &&
+        this.inputLeaseGeneration === generation
+      ) {
+        this.inputLease = undefined;
+      }
+    };
+  }
+
+  private assertInputAllowed(source: InputSource): void {
+    if (this.inputLease !== undefined && this.inputLease !== source) {
+      throw new Error(`input is exclusively leased by ${this.inputLease}`);
+    }
   }
 
   private setKeys(mask: number): void {
@@ -314,7 +442,9 @@ export class Emulator {
     ticksTotal.inc();
 
     const interval = this.options.saveIntervalFrames ?? 60;
-    if (this.currentFrame % interval === 0) this.saveIfChanged(false);
+    if (this.currentFrame % interval === 0) {
+      void this.saveInBackground(false);
+    }
 
     // Self-correcting pacing: advance the target by one frame. If we fell
     // behind by more than a few frames (e.g. the process was paused), resync
@@ -367,26 +497,28 @@ export class Emulator {
     this.lastSavedHash = this.hash(flash);
   }
 
-  private saveIfChanged(force: boolean): void {
+  private haltLoop(): void {
+    if (this.loopTimer !== undefined) {
+      clearTimeout(this.loopTimer);
+      this.loopTimer = undefined;
+    }
+  }
+
+  private async saveIfChanged(force: boolean): Promise<void> {
     const path = this.options.savePath;
     const memory = this.exports?.memory;
     if (path === undefined || memory === undefined) return;
     const flash = this.flashBytes(memory);
     const hash = this.hash(flash);
     if (!force && hash === this.lastSavedHash) return;
-    this.lastSavedHash = hash;
     // Copy out of live wasm memory and persist without blocking the frame loop.
-    void this.persist(path, new Uint8Array(flash));
+    await this.flashPersistence.enqueue(path, new Uint8Array(flash));
+    this.lastSavedHash = hash;
   }
 
-  private async persist(path: string, data: Uint8Array): Promise<void> {
-    // Atomic write: stage to a sibling tmp file in the same directory, then
-    // rename(2) — POSIX guarantees atomicity. A kill -9 mid-write at worst
-    // leaves the tmp around; the real save is never torn.
-    const tmp = `${path}.tmp`;
+  private async saveInBackground(force: boolean): Promise<void> {
     try {
-      await Bun.write(tmp, data);
-      await rename(tmp, path);
+      await this.saveIfChanged(force);
     } catch (error) {
       logger.error("failed to persist flash save", error);
     }

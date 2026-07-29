@@ -1,5 +1,5 @@
 export const ENGINE_OBSERVATION_VERSION = 1;
-export const ENGINE_OBSERVATION_SIZE = 32;
+export const ENGINE_OBSERVATION_SIZE = 116;
 
 export type CardinalDirection = "north" | "south" | "west" | "east";
 export type EngineFacing = CardinalDirection | "unknown";
@@ -10,14 +10,32 @@ export type EnginePhase =
   | "battle"
   | "other";
 
+export type BattleMenu =
+  | "none"
+  | "action"
+  | "move"
+  | "bag"
+  | "party"
+  | "yes-no"
+  | "other";
+
 export type CollisionObservation = Readonly<{
   code: number;
   passable: boolean;
 }>;
 
+export type EngineMapTile = Readonly<{
+  x: number;
+  y: number;
+  behavior: number;
+  collision: number;
+  elevation: number;
+  passable: boolean;
+}>;
+
 export type EngineObservationV1 = Readonly<{
   version: 1;
-  size: 32;
+  size: 116;
   frame: number;
   phase: EnginePhase;
   readiness: Readonly<{
@@ -40,6 +58,28 @@ export type EngineObservationV1 = Readonly<{
     tileTransitionState: number;
     currentMetatileBehavior: number;
     collision: Readonly<Record<CardinalDirection, CollisionObservation>>;
+  }> | null;
+  battle: Readonly<{
+    typeFlags: number;
+    controllerExecFlags: number;
+    battlersCount: number;
+    activeBattler: number;
+    menu: BattleMenu;
+    actionCursor: number;
+    moveCursor: number;
+    currentMove: number;
+    chosenMove: number;
+    battlers: readonly Readonly<{
+      battler: number;
+      side: "player" | "opponent";
+      position: number;
+      active: boolean;
+      speciesId: number;
+      hp: number;
+      maxHp: number;
+      partyIndex: number;
+      status: number;
+    }>[];
   }> | null;
 }>;
 
@@ -92,6 +132,56 @@ function collision(code: number): CollisionObservation {
   return { code, passable: code === 0 };
 }
 
+function battleMenuFromRaw(raw: number): BattleMenu {
+  switch (raw) {
+    case 0:
+      return "none";
+    case 1:
+      return "action";
+    case 2:
+      return "move";
+    case 3:
+      return "bag";
+    case 4:
+      return "party";
+    case 5:
+      return "yes-no";
+    case 6:
+      return "other";
+    default:
+      throw new RangeError(`unknown battle menu: ${String(raw)}`);
+  }
+}
+
+function battleSideFromRaw(raw: number): "player" | "opponent" {
+  switch (raw) {
+    case 0:
+      return "player";
+    case 1:
+      return "opponent";
+    default:
+      throw new RangeError(`unknown battle side: ${String(raw)}`);
+  }
+}
+
+export function decodeEngineMapTile(
+  x: number,
+  y: number,
+  packed: number,
+): EngineMapTile | null {
+  const raw = packed >>> 0;
+  if ((raw & 0x80_00_00_00) === 0) return null;
+  const collisionCode = (raw >>> 8) & 0xff;
+  return {
+    x,
+    y,
+    behavior: raw & 0xff,
+    collision: collisionCode,
+    elevation: (raw >>> 16) & 0xff,
+    passable: collisionCode === 0,
+  };
+}
+
 export function decodeEngineObservation(
   bytes: Uint8Array,
 ): EngineObservationV1 {
@@ -135,6 +225,38 @@ export function decodeEngineObservation(
         },
       }
     : null;
+  const inBattle = view.getUint8(28) !== 0;
+  const battlersCount = view.getUint8(31);
+  if (inBattle && battlersCount > 4) {
+    throw new RangeError(`invalid battler count: ${String(battlersCount)}`);
+  }
+  const battle = inBattle
+    ? {
+        typeFlags: view.getUint32(32, true),
+        controllerExecFlags: view.getUint32(36, true),
+        battlersCount,
+        activeBattler: view.getUint8(42),
+        menu: battleMenuFromRaw(view.getUint8(30)),
+        actionCursor: view.getUint8(43),
+        moveCursor: view.getUint8(44),
+        currentMove: view.getUint16(110, true),
+        chosenMove: view.getUint16(112, true),
+        battlers: Array.from({ length: battlersCount }, (_, battler) => {
+          const offset = 46 + battler * 16;
+          return {
+            battler: view.getUint8(offset),
+            side: battleSideFromRaw(view.getUint8(offset + 1)),
+            position: view.getUint8(offset + 2),
+            active: view.getUint8(offset + 3) !== 0,
+            speciesId: view.getUint16(offset + 4, true),
+            hp: view.getUint16(offset + 6, true),
+            maxHp: view.getUint16(offset + 8, true),
+            partyIndex: view.getUint16(offset + 10, true),
+            status: view.getUint32(offset + 12, true),
+          };
+        }),
+      }
+    : null;
 
   return {
     version: ENGINE_OBSERVATION_VERSION,
@@ -150,5 +272,6 @@ export function decodeEngineObservation(
       paletteFading: view.getUint8(27) !== 0,
     },
     world,
+    battle,
   };
 }

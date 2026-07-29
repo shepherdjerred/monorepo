@@ -1,6 +1,8 @@
 import { Emulator } from "./emulator.ts";
 import { readGameSnapshot } from "#src/game/events/snapshot.ts";
 import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
+import { readGameSaveDetails } from "#src/game/game-save-details.ts";
+import { BUTTON } from "./constants.ts";
 
 // Boots the real pokeemerald.wasm and asserts the game-state symbols still
 // resolve and a snapshot read doesn't throw. It's the canary for renamed/moved
@@ -9,11 +11,40 @@ import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
 // scripts/build-wasm.ts), where this gate runs against the real artifact. When
 // the wasm is absent (plain `bun run test` on a clean checkout), skip.
 
-const WASM_PATH = new URL("../../assets/pokeemerald.wasm", import.meta.url)
-  .pathname;
+const WASM_PATH =
+  Bun.env.POKEMON_WASM_PATH ??
+  new URL("../../assets/pokeemerald.wasm", import.meta.url).pathname;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function continueLoadedSave(
+  emulator: Emulator,
+): Promise<ReturnType<Emulator["engineObservation"]>> {
+  const deadline = Date.now() + 30_000;
+  for (;;) {
+    const observation = emulator.engineObservation();
+    if (observation.world !== null && observation.readiness.inputReady) {
+      return observation;
+    }
+    if (Date.now() >= deadline) {
+      throw new Error("loaded save did not reach the overworld");
+    }
+    await emulator.queuePress(BUTTON.a, 3, 45);
+  }
+}
+
+function passableMovementButton(
+  observation: ReturnType<Emulator["engineObservation"]>,
+): number {
+  const world = observation.world;
+  if (world === null) throw new Error("world is unavailable for movement");
+  if (world.collision.north.passable) return BUTTON.up;
+  if (world.collision.south.passable) return BUTTON.down;
+  if (world.collision.west.passable) return BUTTON.left;
+  if (world.collision.east.passable) return BUTTON.right;
+  throw new Error("loaded save has no passable adjacent tile");
 }
 
 // `Bun.file().size` is synchronous and returns 0 for a missing file — used here
@@ -39,7 +70,8 @@ describeWasm("emulator game symbols (real wasm)", () => {
     expect(() => readSpatialSnapshot(reader, symbols)).not.toThrow();
     const bootObservation = emulator.engineObservation();
     expect(bootObservation.version).toBe(1);
-    expect(bootObservation.size).toBe(32);
+    expect(bootObservation.size).toBe(116);
+    expect(() => emulator.engineMapTile(0, 0)).not.toThrow();
 
     // Run a few hundred frames and confirm reads stay safe as the game runs.
     emulator.start();
@@ -58,3 +90,108 @@ describeWasm("emulator game symbols (real wasm)", () => {
     );
   }, 30_000);
 });
+
+const liveSavePath = Bun.env.POKEMON_LIVE_SAVE_PATH;
+const testLiveSave =
+  liveSavePath !== undefined && Bun.file(liveSavePath).size > 0
+    ? test
+    : test.skip;
+
+testLiveSave(
+  "decodes and checkpoints live state that survives an independent reboot",
+  async () => {
+    if (liveSavePath === undefined) {
+      throw new Error("POKEMON_LIVE_SAVE_PATH is required");
+    }
+    const sourceSave = await Bun.file(liveSavePath).bytes();
+    const checkpointPath = `${Bun.env.TMPDIR ?? "/tmp"}/pokemon-checkpoint-${crypto.randomUUID()}.sav`;
+    await Bun.write(checkpointPath, sourceSave);
+    try {
+      const emulator = new Emulator({
+        wasmPath: WASM_PATH,
+        savePath: checkpointPath,
+      });
+      await emulator.init();
+      emulator.start();
+      let observation: ReturnType<Emulator["engineObservation"]>;
+      try {
+        observation = await continueLoadedSave(emulator);
+        const startingWorld = observation.world;
+        if (startingWorld === null) {
+          throw new Error("loaded save has no world before movement");
+        }
+        const startingPosition = `${String(startingWorld.mapGroup)}:${String(startingWorld.mapNum)}:${String(startingWorld.x)}:${String(startingWorld.y)}`;
+        const movementButton = passableMovementButton(observation);
+        let movedPosition = startingPosition;
+        for (let attempt = 0; attempt < 3; attempt += 1) {
+          await emulator.queuePress(movementButton, 3, 60);
+          observation = emulator.engineObservation();
+          const world = observation.world;
+          if (world === null) {
+            throw new Error("world became unavailable during checkpoint move");
+          }
+          movedPosition = `${String(world.mapGroup)}:${String(world.mapNum)}:${String(world.x)}:${String(world.y)}`;
+          if (movedPosition !== startingPosition) break;
+        }
+        expect(movedPosition).not.toBe(startingPosition);
+        await emulator.checkpointSave();
+      } finally {
+        await emulator.stopAndFlush();
+      }
+
+      expect(observation.world).not.toBeNull();
+      const liveSnapshot = readGameSnapshot(
+        emulator.memoryReader(),
+        emulator.gameSymbols(),
+      );
+      if (liveSnapshot === null) {
+        throw new Error("live snapshot was unavailable after checkpoint");
+      }
+      const outputSave = await Bun.file(checkpointPath).bytes();
+      expect(outputSave).toHaveLength(128 * 1024);
+      expect(outputSave).not.toEqual(sourceSave);
+
+      const verifier = new Emulator({
+        wasmPath: WASM_PATH,
+        savePath: checkpointPath,
+      });
+      await verifier.init();
+      verifier.start();
+      let persistedObservation: ReturnType<Emulator["engineObservation"]>;
+      try {
+        persistedObservation = await continueLoadedSave(verifier);
+      } finally {
+        await verifier.stopAndFlush();
+      }
+      const persistedSnapshot = readGameSnapshot(
+        verifier.memoryReader(),
+        verifier.gameSymbols(),
+      );
+      if (persistedSnapshot === null) {
+        throw new Error("persisted snapshot was unavailable after reboot");
+      }
+      expect(persistedObservation.world).toMatchObject({
+        mapGroup: observation.world?.mapGroup,
+        mapNum: observation.world?.mapNum,
+        x: observation.world?.x,
+        y: observation.world?.y,
+        facing: observation.world?.facing,
+      });
+      expect(persistedSnapshot.party).toEqual(liveSnapshot.party);
+      expect(persistedSnapshot.dexOwned).toEqual(liveSnapshot.dexOwned);
+
+      const details = readGameSaveDetails(
+        emulator.memoryReader(),
+        emulator.gameSymbols(),
+      );
+      if (details === null) {
+        throw new Error("live save details were unavailable");
+      }
+      expect(details.money).toBe(3000);
+      expect(details.progression.hasPokemon).toBe(true);
+    } finally {
+      await Bun.file(checkpointPath).delete();
+    }
+  },
+  90_000,
+);

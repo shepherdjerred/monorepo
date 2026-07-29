@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { createMemoryReader } from "#src/emulator/memory.ts";
 import type { GameSymbols } from "#src/emulator/symbols.ts";
-import { readSpatialSnapshot } from "./spatial-snapshot.ts";
+import { readMapObjects, readSpatialSnapshot } from "./spatial-snapshot.ts";
 
 const SYMBOLS: GameSymbols = {
   gSaveBlock1Ptr: 0x10_00,
@@ -62,5 +62,30 @@ describe("readSpatialSnapshot", () => {
       view.setUint8(SYMBOLS.gPlayerAvatar, flags);
       expect(readSpatialSnapshot(reader, SYMBOLS)?.movementMode).toBe(expected);
     }
+  });
+
+  test("keeps observations compact while exposing every active map object", () => {
+    const { memory, view } = setupMemory();
+    const object = SYMBOLS.gObjectEvents + 0x24;
+    view.setUint8(object, 1);
+    view.setUint8(object + 5, 59);
+    view.setUint8(object + 9, 9);
+    view.setUint8(object + 10, 0);
+    view.setInt16(object + 0x10, 25, true);
+    view.setInt16(object + 0x12, 7, true);
+    view.setUint16(object + 0x18, 3, true);
+
+    const reader = createMemoryReader(memory);
+    expect(readSpatialSnapshot(reader, SYMBOLS)?.nearby).toEqual([]);
+    expect(readMapObjects(reader, SYMBOLS)).toEqual([
+      {
+        x: 25,
+        y: 7,
+        distance: 13,
+        facing: "west",
+        kind: "item",
+        graphicsId: 59,
+      },
+    ]);
   });
 });

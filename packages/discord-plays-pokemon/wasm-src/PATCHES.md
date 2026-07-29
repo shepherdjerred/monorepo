@@ -41,9 +41,9 @@ wasm-src/
 
 Applied in order with `patch -p1` (paths are `a/… b/…`):
 
-| Patch                      | Touches                              | What it does                                                                                                                                                                                                                                       |
-| -------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `0001-extra-exports.patch` | `Makefile`, `src/wasm_observation.c` | Adds the game-state global exports plus `WasmReadObservation`. The versioned 32-byte observation bridge reports authoritative phase, field-input readiness, map/position/facing, movement state, and directional collision from the engine itself. |
+| Patch                      | Touches                              | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| -------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0001-extra-exports.patch` | `Makefile`, `src/wasm_observation.c` | Adds the game-state global exports, `WasmReadObservation`, `WasmReadMapTile`, and `WasmCheckpointSave`. The versioned observation bridge reports authoritative phase and input readiness; live map, position, facing, movement, and collision state; exact battle-menu state; and up to four battle participants. The tile bridge exposes collision, elevation, and metatile behavior for bounded current-map navigation. Both read bridges reject stale world state outside the live overworld callback. The checkpoint bridge invokes Emerald's own save serializer so benchmark teardown can reboot and verify the achieved state instead of merely copying stale flash bytes. |
 
 ## Build
 
@@ -57,11 +57,14 @@ Applied in order with `patch -p1` (paths are `a/… b/…`):
   `debian:trixie-slim` (clang-19) stage and copies the result into the backend
   image. The build uses clang `wasm32-unknown-unknown` + `wasm-ld`, **not
   emscripten**; bookworm's clang-14 links a wasm Bun/JSC rejects, so the
-  toolchain image is pinned to trixie.
+  toolchain image is pinned to trixie. A dedicated `wasm-abi-test` stage then
+  boots that exact artifact and must pass the real-WASM ABI integration test
+  before the runtime image can be assembled.
 
 ## Verification gate
 
-The image build boots the freshly-built wasm and runs two tests against it:
+The image build boots the freshly-built wasm and runs the ABI test against it
+before creating the runtime image. The wider package verification also runs:
 
 - `packages/backend/src/emulator/emulator-symbols.integration.test.ts` — every
   required global/function resolves, the observation ABI validates, and

@@ -142,6 +142,7 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
           readGameSnapshot(emulator.memoryReader(), emulator.gameSymbols()),
         spatialSnapshotProvider: () =>
           readSpatialSnapshot(emulator.memoryReader(), emulator.gameSymbols()),
+        acquireInputLease: () => emulator.acquireInputLease("goal"),
       });
       await goalManager.initialize();
       goalControlServer = startGoalControlServer({
