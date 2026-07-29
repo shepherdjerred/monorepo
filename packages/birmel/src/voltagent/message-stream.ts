@@ -7,7 +7,7 @@ import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { traceTextStream } from "@shepherdjerred/llm-observability";
 
 // Typing cursor for progressive updates
-export const TYPING_CURSOR = " \u258C";
+export const TYPING_CURSOR = " \u{258C}";
 
 // Minimum interval between Discord message edits (ms) to avoid rate limits
 const EDIT_INTERVAL_MS = 1500;

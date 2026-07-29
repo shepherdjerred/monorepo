@@ -31,7 +31,7 @@ function makeTwistedError(name: string, status: number | string): Error {
  * range of `[0, 1)`. Using exactly 1 would be wrong because `Math.random`
  * never produces it; the test would diverge from production semantics.
  */
-const alwaysDrop = (): number => 0.999_999;
+const alwaysDrop = (): number => 0.999999;
 /** Random function that always returns 0 (below any sample rate > 0). */
 const alwaysSample = (): number => 0;
 

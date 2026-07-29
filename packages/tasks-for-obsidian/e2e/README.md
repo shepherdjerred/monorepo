@@ -51,6 +51,7 @@ depend on state that earlier flows mutate (the stable sentinel task is
 | `04-edit-task.yaml`            | rename "Task with details" via the edit form                |
 | `05-offline-queue.yaml`        | chaos-proxy offline → create → optimistic → online → replay |
 | `06-offline-crash-replay.yaml` | like 05 but with a kill/relaunch before going back online   |
+| `07-swipe-actions.yaml`        | left-swipe completion + right-swipe deletion                |
 
 The chaos proxy is toggled from flows via `runScript` (GraalJS `http.post`)
 against `/__chaos/offline` and `/__chaos/online` on the proxy port itself;

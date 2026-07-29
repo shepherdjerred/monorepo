@@ -46,10 +46,10 @@ export async function moveSubscription(
       return { kind: "not-subscribed-in-from-channel" };
     }
 
-    const existingTarget = player.subscriptions.find(
+    const isAlreadySubscribedToTarget = player.subscriptions.some(
       (s) => s.channelId === toChannelId,
     );
-    if (existingTarget) {
+    if (isAlreadySubscribedToTarget) {
       return { kind: "already-subscribed-in-to-channel" };
     }
 

@@ -195,5 +195,5 @@ export function formatStatus(
 ): string {
   if (!color) return `${status} ${message}`;
   const code = status === "REMOVE" ? 32 : status === "WOULD REMOVE" ? 36 : 33;
-  return `\u001B[${code.toString()}m${status}\u001B[0m ${message}`;
+  return `\u{1B}[${code.toString()}m${status}\u{1B}[0m ${message}`;
 }

@@ -1,10 +1,9 @@
 {
   "dependencies": {
     "@sentry/browser": "^10.0.0",
-    "@astrojs/mdx": "^6.0.3",
-    "@astrojs/react": "^5.0.4",
+    "@astrojs/mdx": "^7.0.5",
+    "@astrojs/react": "^6.0.2",
     "@astrojs/sitemap": "^3.7.2",
-    "@astrojs/tailwind": "^6.0.0",
     "@aws-sdk/client-s3": "^3.1001.0",
     "@google/generative-ai": "^0.24.0",
     "@iconify-json/heroicons": "^1.2.1",
@@ -15,10 +14,10 @@
     "@scout-for-lol/backend": "workspace:*",
     "@scout-for-lol/data": "workspace:*",
     "@scout-for-lol/report": "workspace:*",
-    "@tailwindcss/postcss": "^4.1.11",
     "@tailwindcss/typography": "^0.5.16",
+    "@tailwindcss/vite": "^4.2.4",
     "@trpc/client": "^11.8.0",
-    "astro": "^6.1.9",
+    "astro": "^7.1.5",
     "astro-icon": "^1.1.1",
     "astro-opengraph-images": "file:../../../astro-opengraph-images",
     "class-variance-authority": "^0.7.1",
@@ -57,7 +56,6 @@
     "@astrojs/check": "^0.9.4",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.1.9",
-    "autoprefixer": "^10.5.0",
     "bun-types": "latest",
     "eslint": "^10.3.0",
     "typescript": "^6.0.3"

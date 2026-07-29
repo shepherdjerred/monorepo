@@ -45,7 +45,7 @@ export const EMPTY_REPORT_STATE: ReportFormState = {
   channelId: "",
   queryText: STARTER_REPORT_QUERY,
   cronExpression: DEFAULT_REPORT_CRON,
-  scheduleTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  scheduleTimezone: new Intl.DateTimeFormat().resolvedOptions().timeZone,
 };
 
 export type ReportPayload = {

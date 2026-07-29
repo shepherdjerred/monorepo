@@ -53,7 +53,7 @@ describe("computeCost", () => {
       }),
     );
     // (15_000 * 0.20 + 5_000 * 0.02 + 1_500 * 1.25) / 1e6
-    expect(cost).toBeCloseTo(0.004_975, 6);
+    expect(cost).toBeCloseTo(0.004975, 6);
   });
 
   test("mini is ~3.7× more expensive than nano for the same workload", () => {
@@ -96,7 +96,7 @@ describe("formatCostLine", () => {
   test("uses 4-decimal precision when cost is sub-cent", () => {
     const line = formatCostLine(
       "gpt-5.4-nano",
-      0.000_12,
+      0.00012,
       usage({ inputTokens: 100, outputTokens: 50 }),
     );
     expect(line).toContain("$0.0001");

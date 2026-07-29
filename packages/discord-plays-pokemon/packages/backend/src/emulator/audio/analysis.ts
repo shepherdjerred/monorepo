@@ -28,8 +28,12 @@ export function fft(re: Float64Array, im: Float64Array): void {
     for (; j & bit; bit >>= 1) j ^= bit;
     j ^= bit;
     if (i < j) {
-      [re[i], re[j]] = [at(re, j), at(re, i)];
-      [im[i], im[j]] = [at(im, j), at(im, i)];
+      const realAtIndex = at(re, i);
+      const imaginaryAtIndex = at(im, i);
+      re[i] = at(re, j);
+      re[j] = realAtIndex;
+      im[i] = at(im, j);
+      im[j] = imaginaryAtIndex;
     }
   }
   // Cooley-Tukey butterflies.

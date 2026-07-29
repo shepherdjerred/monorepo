@@ -4,6 +4,7 @@ import opengraphImages, { presets } from "astro-opengraph-images";
 
 // https://astro.build/config
 export default defineConfig({
+  compressHTML: true,
   site: "http://example.com",
   integrations: [
     opengraphImages({

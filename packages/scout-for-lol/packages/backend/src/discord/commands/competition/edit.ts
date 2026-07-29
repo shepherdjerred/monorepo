@@ -139,7 +139,7 @@ async function parseEditArguments(
     }
 
     // Parse criteria if provided
-    let criteria: EditCommandArgs["criteria"] = undefined;
+    let criteria: EditCommandArgs["criteria"];
     if (criteriaType !== null) {
       if (!isDraft) {
         throw new Error("Cannot change criteria after competition has started");

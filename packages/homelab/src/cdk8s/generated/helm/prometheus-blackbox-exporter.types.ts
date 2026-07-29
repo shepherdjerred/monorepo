@@ -830,7 +830,7 @@ export type PrometheusblackboxexporterHelmValuesConfigReloaderImage = {
    */
   repository?: string;
   /**
-   * @default "v0.92.1"
+   * @default "v0.93.0"
    */
   tag?: string;
   /**

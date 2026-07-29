@@ -22,7 +22,7 @@ export function renderMessage(message: IpcMessage): string {
     const title = embed.title ?? "(no title)";
     lines.push(`  - embed: **${title}**`);
     if (embed.description !== null && embed.description.length > 0) {
-      lines.push(`    ${embed.description.split("\n").join(" / ")}`);
+      lines.push(`    ${embed.description.replaceAll("\n", " / ")}`);
     }
     for (const field of embed.fields) {
       lines.push(`    - ${field.name}: ${field.value}`);

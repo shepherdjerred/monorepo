@@ -7,6 +7,7 @@ const config = [
         "eslint.config.ts",
         "local.ts",
         "local-rules.ts",
+        "src/configs/*.test.ts",
         "src/rules/*.test.ts",
         "src/rules/shared/*.test.ts",
       ],

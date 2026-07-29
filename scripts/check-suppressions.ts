@@ -9,8 +9,7 @@ import { $ } from "bun";
 
 // Patterns to detect (case-insensitive where appropriate)
 const SUPPRESSION_PATTERNS = [
-  /eslint-disable/i,
-  /eslint-disable-next-line/i,
+  /(?:\/\/|\/\*)\s*eslint-disable(?:-next-line|-line)?(?:\s|$)/i,
   /@ts-ignore/i,
   /@ts-nocheck/i,
   /@ts-expect-error/i,
@@ -33,6 +32,8 @@ const EXCLUDED_FILES = [
   // its @ts-expect-error comments (matched as a path prefix).
   "packages/discord-video-stream/",
   "scripts/check-suppressions.ts",
+  // The detector's regression fixtures necessarily contain suppression text.
+  "scripts/check-suppressions.test.ts",
   "CHANGELOG.md",
   "Cargo.toml",
   "clippy.toml",
@@ -106,8 +107,11 @@ type Finding = {
   file: string;
   lineNumber: number;
   line: string;
-  pattern: string;
 };
+
+export function hasSuppressionPattern(line: string): boolean {
+  return SUPPRESSION_PATTERNS.some((pattern) => pattern.test(line));
+}
 
 async function main(): Promise<void> {
   console.log("Checking for new code quality suppressions...\n");
@@ -175,16 +179,12 @@ async function main(): Promise<void> {
     const cleanedLine = line.slice(1); // Remove the + prefix
 
     // Check if line matches any suppression pattern
-    for (const pattern of SUPPRESSION_PATTERNS) {
-      if (pattern.test(cleanedLine)) {
-        findings.push({
-          file: currentFile,
-          lineNumber: currentLineNumber,
-          line: cleanedLine.trim(),
-          pattern: pattern.toString(),
-        });
-        break; // Only report each line once
-      }
+    if (hasSuppressionPattern(cleanedLine)) {
+      findings.push({
+        file: currentFile,
+        lineNumber: currentLineNumber,
+        line: cleanedLine.trim(),
+      });
     }
 
     currentLineNumber++;
@@ -228,4 +228,6 @@ async function main(): Promise<void> {
   process.exit(1);
 }
 
-await main();
+if (import.meta.main) {
+  await main();
+}

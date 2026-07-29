@@ -3,7 +3,7 @@ import { z } from "zod";
 const PrintableAsciiSchema = z
   .string()
   .regex(
-    /^[\u0020-\u007E]*$/u,
+    /^[\u{20}-\u{7E}]*$/u,
     "S3 metadata must contain printable ASCII only",
   );
 

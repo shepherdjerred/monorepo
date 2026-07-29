@@ -139,9 +139,9 @@ test("calculates PR age and formats status output", () => {
     ),
   ).toBe(7);
   expect(formatStatus("KEEP", "branch", false)).toBe("KEEP branch");
-  expect(formatStatus("REMOVE", "branch", true)).toContain("\u001B[32m");
-  expect(formatStatus("WOULD REMOVE", "branch", true)).toContain("\u001B[36m");
-  expect(formatStatus("STALE", "branch", true)).toContain("\u001B[33m");
+  expect(formatStatus("REMOVE", "branch", true)).toContain("\u{1B}[32m");
+  expect(formatStatus("WOULD REMOVE", "branch", true)).toContain("\u{1B}[36m");
+  expect(formatStatus("STALE", "branch", true)).toContain("\u{1B}[33m");
 });
 
 test("interactive confirmation resolves on the first newline without EOF", async () => {

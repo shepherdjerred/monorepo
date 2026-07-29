@@ -110,7 +110,7 @@ export function generateLeaderboardEmbed(
 
     if (leaderboard.length > 10) {
       embed.addFields({
-        name: "\u200B",
+        name: "\u{200B}",
         value: `(Showing top 10 of ${leaderboard.length.toString()} participants)`,
         inline: false,
       });
@@ -206,7 +206,7 @@ export function generateCompetitionDetailsEmbed(
   });
   embed.addFields({ name: "Created", value: createdDate, inline: true });
 
-  embed.addFields({ name: "\u200B", value: "\u200B", inline: false });
+  embed.addFields({ name: "\u{200B}", value: "\u{200B}", inline: false });
 
   const criteriaDescription = formatCriteriaDescription(competition.criteria);
   embed.addFields({

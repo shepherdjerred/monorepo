@@ -12,6 +12,7 @@
  * deliberately deleted.
  */
 import { readdir } from "node:fs/promises";
+import path from "node:path";
 
 /**
  * Slice the top-level "packages" object out of bun.lock. A raw substring
@@ -188,14 +189,53 @@ async function rootOrphanErrors(
 // the pre-consolidation per-package workspaces (build-input patch dirs
 // like talos machine configs or wasm-src use non-versioned filenames and
 // are untouched by this).
+const generatedDirectoryNames = new Set([
+  ".astro",
+  ".cache",
+  ".turbo",
+  "build",
+  "coverage",
+  "dist",
+  "node_modules",
+]);
+
+async function packagePatchFiles(root: string): Promise<string[]> {
+  const files: string[] = [];
+
+  async function visit(directory: string, relative: string): Promise<void> {
+    const entries = await readdir(directory, { withFileTypes: true });
+    entries.sort((a, b) => a.name.localeCompare(b.name));
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      if (generatedDirectoryNames.has(entry.name)) continue;
+
+      const childDirectory = path.join(directory, entry.name);
+      const childRelative = `${relative}/${entry.name}`;
+      if (entry.name !== "patches") {
+        await visit(childDirectory, childRelative);
+        continue;
+      }
+
+      const patchEntries = await readdir(childDirectory, {
+        withFileTypes: true,
+      });
+      for (const patchEntry of patchEntries) {
+        if (patchEntry.isFile() && patchEntry.name.endsWith(".patch")) {
+          files.push(`${childRelative}/${patchEntry.name}`);
+        }
+      }
+    }
+  }
+
+  await visit(path.join(root, "packages"), "packages");
+  return files;
+}
+
 async function packageLocalOrphanErrors(root: string): Promise<string[]> {
   const bunStylePatch = /^[@%\w.-]+@\d[\w.-]*\.patch$/;
   const errors: string[] = [];
-  for await (const rel of new Bun.Glob("packages/**/patches/*.patch").scan({
-    cwd: root,
-    dot: false,
-  })) {
-    if (rel.includes("node_modules/")) continue;
+  for (const rel of await packagePatchFiles(root)) {
     const file = rel.split("/").pop() ?? "";
     if (bunStylePatch.test(file)) {
       errors.push(

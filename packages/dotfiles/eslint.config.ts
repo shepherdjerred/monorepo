@@ -13,7 +13,10 @@ export default [
   {
     files: ["bin/executable_git_cleanup.ts", "bin/git_cleanup_core.ts"],
     rules: {
-      "unicorn/filename-case": ["error", { case: "snakeCase" }],
+      "unicorn/filename-case": [
+        "error",
+        { case: "snakeCase", checkDirectories: false },
+      ],
     },
   },
 ];

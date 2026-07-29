@@ -181,20 +181,20 @@ describe("Competition status checks", () => {
 describe("Field editability rules", () => {
   test("title, description, channelId should be editable in DRAFT", () => {
     const isDraft = true;
-    const fieldsEditableAlways = ["title", "description", "channelId"];
+    const fieldsEditableAlways = new Set(["title", "description", "channelId"]);
 
     for (const _field of fieldsEditableAlways) {
-      const canEdit = isDraft || fieldsEditableAlways.includes(_field);
+      const canEdit = isDraft || fieldsEditableAlways.has(_field);
       expect(canEdit).toBe(true);
     }
   });
 
   test("title, description, channelId should be editable in ACTIVE", () => {
     const isDraft = false;
-    const fieldsEditableAlways = ["title", "description", "channelId"];
+    const fieldsEditableAlways = new Set(["title", "description", "channelId"]);
 
     for (const _field of fieldsEditableAlways) {
-      const canEdit = isDraft || fieldsEditableAlways.includes(_field);
+      const canEdit = isDraft || fieldsEditableAlways.has(_field);
       expect(canEdit).toBe(true);
     }
   });

@@ -111,6 +111,7 @@ export function reactNativeConfig(): TSESLint.FlatConfig.ConfigArray {
               kebabCase: true,
               pascalCase: true,
             },
+            checkDirectories: false,
           },
         ],
       },

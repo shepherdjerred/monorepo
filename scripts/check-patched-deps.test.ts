@@ -78,12 +78,34 @@ describe("collectErrors against the real repo", () => {
     await Bun.write(`${dir}/package.json`, JSON.stringify(doctored));
     await Bun.write(`${dir}/bun.lock`, lock);
     await Bun.write(`${dir}/patches/.keep`, "");
+    await Bun.write(`${dir}/packages/.keep`, "");
     try {
       const errors = await collectErrors(dir);
       expect(
         errors.some((e) => e.includes("matches NO resolved package")),
       ).toBe(true);
       expect(errors.some((e) => e.includes("also resolves"))).toBe(true);
+    } finally {
+      await Bun.$`rm -rf ${dir}`.quiet();
+    }
+  });
+
+  test("ignores generated trees while checking authored package patches", async () => {
+    const dir = `${tmpdir()}/check-patched-deps-generated-${String(process.pid)}`;
+    const manifest = { patchedDependencies: {} };
+    const lock = '{ "packages": {} }';
+    await Bun.write(`${dir}/package.json`, JSON.stringify(manifest));
+    await Bun.write(`${dir}/bun.lock`, lock);
+    await Bun.write(
+      `${dir}/packages/demo/dist/patches/generated@1.0.0.patch`,
+      "",
+    );
+    await Bun.write(`${dir}/packages/demo/patches/dead@1.0.0.patch`, "");
+
+    try {
+      expect(await collectErrors(dir)).toEqual([
+        "packages/demo/patches/dead@1.0.0.patch is a bun-style dependency patch outside the root patches/ dir — bun never applies it (patchedDependencies is root-only); delete it or move the fix to the root manifest.",
+      ]);
     } finally {
       await Bun.$`rm -rf ${dir}`.quiet();
     }

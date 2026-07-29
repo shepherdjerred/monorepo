@@ -100,7 +100,7 @@ function normalizeLine(line: string): string {
  */
 export function parseSrt(text: string): SrtCue[] {
   const lines = text
-    .replace(/^\uFEFF/u, "")
+    .replace(/^\u{FEFF}/u, "")
     .replaceAll(/\r\n?/gu, "\n")
     .split("\n");
   const cues: SrtCue[] = [];

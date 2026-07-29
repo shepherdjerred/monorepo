@@ -13,7 +13,7 @@ export type IncidentsOptions = {
 };
 
 function getUrgencyEmoji(urgency: string): string {
-  return urgency === "high" ? "\uD83D\uDD25" : "";
+  return urgency === "high" ? "\u{1F525}" : "";
 }
 
 function formatIncident(incident: PagerDutyIncident): string {
@@ -57,7 +57,7 @@ function formatIncidentsMarkdown(incidents: PagerDutyIncident[]): string {
   const acknowledged = incidents.filter((i) => i.status === "acknowledged");
 
   if (triggered.length > 0) {
-    lines.push(`### \uD83D\uDD34 Triggered (${String(triggered.length)})`);
+    lines.push(`### \u{1F534} Triggered (${String(triggered.length)})`);
     lines.push("");
     for (const incident of triggered) {
       lines.push(formatIncident(incident));
@@ -66,9 +66,7 @@ function formatIncidentsMarkdown(incidents: PagerDutyIncident[]): string {
   }
 
   if (acknowledged.length > 0) {
-    lines.push(
-      `### \uD83D\uDFE1 Acknowledged (${String(acknowledged.length)})`,
-    );
+    lines.push(`### \u{1F7E1} Acknowledged (${String(acknowledged.length)})`);
     lines.push("");
     for (const incident of acknowledged) {
       lines.push(formatIncident(incident));

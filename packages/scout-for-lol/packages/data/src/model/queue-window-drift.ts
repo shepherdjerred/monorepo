@@ -418,10 +418,9 @@ export function proposeQueueWindowEdits(
     });
   }
 
-  const nextQueues: Record<string, QueueWindow[]> = {};
-  for (const [key, windows] of Object.entries(file.queues)) {
-    nextQueues[key] = windows;
-  }
+  const nextQueues: Record<string, QueueWindow[]> = Object.fromEntries(
+    Object.entries(file.queues),
+  );
 
   const units = buildUnits(file);
   for (const unit of units) {

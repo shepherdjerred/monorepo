@@ -101,7 +101,7 @@ export function watchVault(
             schedule();
             return;
           }
-          const relPath = filename.split("\\").join("/");
+          const relPath = filename.replaceAll("\\", "/");
           // Same eligibility rule as the full rescan: skip non-.md files and
           // anything under a dot/underscore directory at ANY depth (the old
           // first-character check missed nested hidden dirs).

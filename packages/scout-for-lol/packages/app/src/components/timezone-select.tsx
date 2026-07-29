@@ -39,7 +39,7 @@ function makeZone(id: string): Zone {
   };
 }
 
-const LOCAL_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
+const LOCAL_ZONE = new Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 // The short "common" group pinned to the top of an unfiltered list: the user's
 // own zone, UTC, then the previously hard-coded shortlist.

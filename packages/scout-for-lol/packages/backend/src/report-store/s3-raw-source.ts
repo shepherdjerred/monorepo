@@ -75,7 +75,7 @@ export async function* enumerateRawObjects(
   bucket: string,
   prefix: string,
 ): AsyncGenerator<RawObjectRef> {
-  let continuationToken: string | undefined = undefined;
+  let continuationToken: string | undefined;
   do {
     const response: ListObjectsV2CommandOutput = await client.send(
       new ListObjectsV2Command({

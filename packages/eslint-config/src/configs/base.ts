@@ -6,9 +6,9 @@ import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
 import regexpPlugin from "eslint-plugin-regexp";
 import eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
-import unicorn from "eslint-plugin-unicorn";
 import noSecrets from "eslint-plugin-no-secrets";
 import type { TSESLint } from "@typescript-eslint/utils";
+import { reviewedUnicornConfig } from "./unicorn.js";
 
 export type BaseConfigOptions = {
   tsconfigRootDir?: string;
@@ -54,19 +54,22 @@ export function baseConfig(
     ...tseslint.configs.strictTypeChecked,
     ...tseslint.configs.stylisticTypeChecked,
     regexpPlugin.configs["flat/recommended"],
-    // Unicorn recommended with overrides
-    unicorn.configs["flat/recommended"],
+    // Reviewed Unicorn policy with repository-specific overrides
+    reviewedUnicornConfig,
     {
       rules: {
-        "unicorn/prevent-abbreviations": "off",
+        "unicorn/name-replacements": "off",
         "unicorn/no-null": "off",
         "unicorn/no-process-exit": "off",
-        "unicorn/filename-case": ["error", { case: "kebabCase" }],
+        "unicorn/filename-case": [
+          "error",
+          { case: "kebabCase", checkDirectories: false },
+        ],
         "unicorn/prefer-single-call": "off",
         "unicorn/switch-case-braces": "off",
         "unicorn/no-immediate-mutation": "off",
         "unicorn/no-array-reduce": "off",
-        "unicorn/no-array-for-each": "off",
+        "unicorn/no-for-each": "off",
         "unicorn/no-array-reverse": "off",
         // Do NOT push `.toSorted()` over `.sort()`. `Array.prototype.toSorted`
         // is ES2023 and ships unpolyfilled by esbuild/Vite, so it throws on

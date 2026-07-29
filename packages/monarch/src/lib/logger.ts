@@ -11,7 +11,7 @@ const NO_COLOR = Bun.env["NO_COLOR"] !== undefined;
 const IS_TTY = process.stderr.isTTY;
 
 const color = (code: number, text: string): string =>
-  NO_COLOR ? text : `\u001B[${String(code)}m${text}\u001B[0m`;
+  NO_COLOR ? text : `\u{1B}[${String(code)}m${text}\u{1B}[0m`;
 
 const COLORS: Record<LogLevel, (text: string) => string> = {
   debug: (t) => color(90, t),

@@ -40,11 +40,11 @@ function deviceKey(metric: DeviceMetric): string {
 }
 
 function networkKey(metric: NetworkMetric): string {
-  return `${metric.pod}\u0000${metric.node}\u0000${metric.networkInterface}`;
+  return `${metric.pod}\u{0}${metric.node}\u{0}${metric.networkInterface}`;
 }
 
 function childKey(metric: ChildDeviceMetric): string {
-  return `${deviceKey(metric)}\u0000${metric.container}`;
+  return `${deviceKey(metric)}\u{0}${metric.container}`;
 }
 
 function uniqueDeviceMap(

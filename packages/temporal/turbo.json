@@ -14,6 +14,7 @@
     // loads directly; the cross-repo coupling is deliberately not modelled as a
     // turbo hash because it can't be (inputs cannot reach outside the package).
     "check:rehearsal": {
+      "dependsOn": ["^build"],
       "inputs": [
         "scripts/check-schedule-rehearsal.ts",
         "scripts/rehearse-bot-clone.ts",
