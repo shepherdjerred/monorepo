@@ -275,6 +275,15 @@ Verify:
 - `changedFiles` contains only shared-package data and generated-data paths;
 - a second rehearsal is byte-idempotent.
 
+The first execution for an exact model request creates a private, immutable
+generation artifact under the guild's SeaweedFS prefix. The key is derived
+from the complete safe request plus every value used to finalize the generated
+card. Responses are schema-validated before creation, conditional creation
+makes concurrent first writers converge on one winner, and every reuse verifies
+the stored response checksum. A dry run can create these derived artifacts, but
+it does not create a Git branch, commit, or pull request. Repeated dry runs,
+activity retries, and the subsequent real run reuse the same artifacts.
+
 Run once with `--dry-run=false --wait=true` only after those checks pass. It
 may open one human-reviewed pull request and never auto-merges. Activity
 retries reuse a branch derived from the Temporal workflow run ID, so they
