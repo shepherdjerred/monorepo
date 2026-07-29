@@ -373,3 +373,46 @@ pass.
   mutated during the infrastructure and main-CI recovery.
 - Buildkite #6753 failed before its GitOps sync, so the admission fix is merged
   but is not accepted as live until the replacement main build completes.
+
+## Session Log — 2026-07-29 (weekly acceptance repair)
+
+### Done
+
+- Reconciled the corrected PVC policy, restarted the Postgres operator to
+  requeue all four clusters, and passed authoritative main Buildkite #6761 with
+  the Temporal application Synced and Healthy.
+- Reset the failed full backfill at event 2248. The replacement run
+  `59ac97b7-4f70-43a9-a78f-1027c0331e3a` completed all 267 approved channels
+  and published snapshot `c8311866-63cc-48c0-b258-cdcde388fa22`.
+- Rebuilt the published graph from immutable SeaweedFS objects and verified
+  212,315 unique messages plus all 76,762 trusted seed observations across all
+  98 seeded channels.
+- Completed manual daily run
+  `019fabf3-b2dc-7d5e-8a6a-41f6c16ffece`, published recovery-verified snapshot
+  `dbb59f00-3f6b-4cab-a87c-6d8a65e21d62` with 212,373 unique messages, and
+  deliberately unpaused `glitter-corpus-daily`.
+- Ran the first fixed-time weekly dry run. It failed closed before producing a
+  proposal because the model-facing `StyleCardSchema` contained an optional
+  field and an open record that OpenAI strict Structured Outputs reject.
+- Added a dedicated strict model-response schema with required nullable
+  concerns and an array representation for league entries, while preserving
+  the existing persisted style-card schema. Added an SDK schema-conversion
+  regression.
+- Passed the focused schema regression, the full 738-test Temporal suite, and
+  all 30 tasks in `bun run verify -- --affected`, including the schedule
+  consumer-clone rehearsal.
+
+### Remaining
+
+- Verify, publish, merge, and deploy the strict Structured Outputs repair.
+- Rerun both fixed-time dry runs and require byte-identical proposal outputs.
+- Run the real weekly refresh, review its PR or no-diff result, smoke-test all
+  three consumers, and deliberately unpause the weekly schedule.
+- Complete and archive this plan and the related rollout documents.
+
+### Caveats
+
+- The failed weekly dry run exhausted its two activity attempts and created no
+  branch, commit, PR, or context-file mutation.
+- `glitter-context-refresh-weekly` remains paused until both dry runs, the real
+  run, and downstream smoke checks pass.

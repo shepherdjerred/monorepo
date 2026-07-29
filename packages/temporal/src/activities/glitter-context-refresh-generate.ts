@@ -14,6 +14,30 @@ import type { StyleRefreshCandidate } from "./glitter-context-refresh-selection.
 
 const MODEL = "gpt-5.6-sol";
 
+const GeneratedLeagueValueSchema = z.union([
+  z.string(),
+  z.array(z.string()),
+  z.strictObject({
+    likes: z.array(z.string()),
+    dislikes: z.array(z.string()),
+  }),
+]);
+
+export const GeneratedStyleCardSchema = StyleCardSchema.omit({
+  author: true,
+  concerns: true,
+  coverage: true,
+  league: true,
+}).extend({
+  concerns: z.array(z.string()).nullable(),
+  league: z.array(
+    z.strictObject({
+      key: z.string().min(1),
+      value: GeneratedLeagueValueSchema,
+    }),
+  ),
+});
+
 const RelationshipProposalSchema = z.strictObject({
   sourceId: z.string(),
   targetId: z.string(),
@@ -68,6 +92,7 @@ export async function generateStyleCard(input: {
     "Preserve useful prior observations when the new evidence does not contradict them.",
     "Every sample_messages entry MUST be an exact, byte-for-byte content value",
     "from suppliedMessages. Choose at most 10 safe, representative samples.",
+    "Return league as a key/value entry array with no duplicate keys.",
     "Do not infer sensitive traits, diagnoses, identity, or private facts.",
     "Do not include Discord IDs or message IDs in prose fields.",
     "",
@@ -91,7 +116,7 @@ export async function generateStyleCard(input: {
       { role: "user" as const, content: prompt },
     ],
     max_completion_tokens: 10_000,
-    response_format: zodResponseFormat(StyleCardSchema, "style_card"),
+    response_format: zodResponseFormat(GeneratedStyleCardSchema, "style_card"),
   };
   const completion = await traceOpenAi(
     {
@@ -125,8 +150,16 @@ export async function generateStyleCard(input: {
       `style refresh candidate ${input.candidate.person.id} has no messages`,
     );
   }
+  const leagueKeys = new Set(parsed.league.map((entry) => entry.key));
+  if (leagueKeys.size !== parsed.league.length) {
+    throw new Error(
+      `GPT-5.6 Sol returned duplicate league keys for ${input.candidate.person.id}`,
+    );
+  }
+  const { concerns, league, ...generatedCard } = parsed;
   return StyleCardSchema.parse({
-    ...parsed,
+    ...generatedCard,
+    ...(concerns === null ? {} : { concerns }),
     author: input.candidate.person.displayName,
     coverage: {
       messages: input.candidate.totalMessageCount,
@@ -134,6 +167,7 @@ export async function generateStyleCard(input: {
       notes:
         "Generated from the checksum-verified Discord corpus; human review required.",
     },
+    league: Object.fromEntries(league.map((entry) => [entry.key, entry.value])),
   });
 }
 
