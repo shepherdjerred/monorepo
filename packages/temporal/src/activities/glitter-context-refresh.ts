@@ -24,6 +24,7 @@ import {
   generateStyleCard,
   proposeRelationships,
 } from "./glitter-context-refresh-generate.ts";
+import { createCorpusGenerationArtifactStore } from "./glitter-context-refresh-cache.ts";
 import {
   applyRelationshipProposals,
   selectRelationshipEvidence,
@@ -35,6 +36,7 @@ import {
   isAllowedGlitterContextRefreshPath,
 } from "./glitter-context-refresh-paths.ts";
 import { selectStyleRefreshCandidates } from "./glitter-context-refresh-selection.ts";
+import { createCorpusStoreFromEnv } from "./glitter-corpus-store.ts";
 import {
   openSeasonRefreshPr,
   parsePorcelainPaths,
@@ -267,6 +269,9 @@ export const glitterContextRefreshActivities = {
 
     try {
       const corpus = await loadVerifiedGlitterCorpus();
+      const generationArtifactStore = createCorpusGenerationArtifactStore(
+        createCorpusStoreFromEnv(),
+      );
       await mkdir(tempDir, { recursive: true });
       await simpleGit().clone(REPO_URL, repoDir, [
         "--branch",
@@ -302,7 +307,11 @@ export const glitterContextRefreshActivities = {
         });
         const path = styleCardPath(repoDir, candidate.person.id);
         const existingCard = StyleCardSchema.parse(await readJson(path));
-        const card = await generateStyleCard({ candidate, existingCard });
+        const card = await generateStyleCard({
+          candidate,
+          existingCard,
+          artifactStore: generationArtifactStore,
+        });
         await Bun.write(path, jsonText(card));
         refreshedPeople.add(candidate.person.id);
       }
@@ -327,6 +336,7 @@ export const glitterContextRefreshActivities = {
             (event) => event.status === "current",
           ),
           evidence,
+          artifactStore: generationArtifactStore,
         });
         const applied = applyRelationshipProposals({
           document: relationshipsDocument,

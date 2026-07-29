@@ -13,9 +13,14 @@ import {
   type StyleCard,
 } from "@shepherdjerred/glitter-context/schema";
 import type { CurrentMessage } from "#shared/glitter-corpus.ts";
+import {
+  readOrCreateGenerationArtifact,
+  type GenerationArtifactStore,
+} from "./glitter-context-refresh-cache.ts";
 import type { StyleRefreshCandidate } from "./glitter-context-refresh-selection.ts";
 
 const MODEL = "gpt-5.6-sol";
+const DETERMINISTIC_SEED = 0;
 
 const GeneratedLeagueValueSchema = z.union([
   z.string(),
@@ -155,8 +160,9 @@ export function finalizeGeneratedStyleCard(input: {
 export async function generateStyleCard(input: {
   candidate: StyleRefreshCandidate;
   existingCard: StyleCard;
+  artifactStore: GenerationArtifactStore;
 }): Promise<StyleCard> {
-  const messages = input.candidate.safeMessages.map((message) =>
+  const suppliedMessages = input.candidate.safeMessages.map((message) =>
     messageEvidence(message),
   );
   const prompt = [
@@ -174,32 +180,61 @@ export async function generateStyleCard(input: {
         displayName: input.candidate.person.displayName,
       },
       existingCard: input.existingCard,
-      suppliedMessages: messages,
+      suppliedMessages,
     }),
   ].join("\n");
-  const params = {
-    model: MODEL,
-    messages: chatMessages(
-      "You create evidence-grounded writing-style cards for human review.",
-      prompt,
-    ),
-    max_completion_tokens: 10_000,
-    response_format: zodResponseFormat(GeneratedStyleCardSchema, "style_card"),
-  };
-  const completion = await parseCompletion(
-    "glitter-context-style-card",
-    params,
+  const callSite = "glitter-context-style-card";
+  const messages = chatMessages(
+    "You create evidence-grounded writing-style cards for human review.",
+    prompt,
   );
-  const parsed = completion.choices[0]?.message.parsed;
-  if (parsed === null || parsed === undefined) {
+  const firstMessage = input.candidate.messages[0];
+  const lastMessage = input.candidate.messages.at(-1);
+  if (firstMessage === undefined || lastMessage === undefined) {
     throw new Error(
-      `GPT-5.6 Sol did not return a parsed style card for ${input.candidate.person.id}`,
+      `style refresh candidate ${input.candidate.person.id} has no messages`,
     );
   }
-  return finalizeGeneratedStyleCard({
-    candidate: input.candidate,
-    existingCard: input.existingCard,
-    generatedCard: parsed,
+  const params = {
+    model: MODEL,
+    messages,
+    max_completion_tokens: 10_000,
+    seed: DETERMINISTIC_SEED,
+    response_format: zodResponseFormat(GeneratedStyleCardSchema, "style_card"),
+  };
+  return await readOrCreateGenerationArtifact({
+    store: input.artifactStore,
+    model: MODEL,
+    callSite,
+    request: {
+      schemaVersion: 1,
+      model: MODEL,
+      messages,
+      maxCompletionTokens: params.max_completion_tokens,
+      seed: params.seed,
+      responseSchema: "generated-style-card-v1",
+      finalization: {
+        author: input.existingCard.author,
+        totalMessageCount: input.candidate.totalMessageCount,
+        firstMessageTimestamp: firstMessage.timestamp,
+        lastMessageTimestamp: lastMessage.timestamp,
+      },
+    },
+    responseSchema: StyleCardSchema,
+    generate: async () => {
+      const completion = await parseCompletion(callSite, params);
+      const parsed = completion.choices[0]?.message.parsed;
+      if (parsed === null || parsed === undefined) {
+        throw new Error(
+          `GPT-5.6 Sol did not return a parsed style card for ${input.candidate.person.id}`,
+        );
+      }
+      return finalizeGeneratedStyleCard({
+        candidate: input.candidate,
+        existingCard: input.existingCard,
+        generatedCard: parsed,
+      });
+    },
   });
 }
 
@@ -210,6 +245,7 @@ export async function proposeRelationships(input: {
     personId: string;
     message: CurrentMessage;
   }[];
+  artifactStore: GenerationArtifactStore;
 }): Promise<RelationshipProposal[]> {
   if (input.evidence.length === 0) {
     return [];
@@ -231,25 +267,44 @@ export async function proposeRelationships(input: {
       })),
     }),
   ].join("\n");
+  const callSite = "glitter-context-relationships";
+  const messages = chatMessages(
+    "You identify explicit relationship changes conservatively and cite corpus evidence.",
+    prompt,
+  );
   const params = {
     model: MODEL,
-    messages: chatMessages(
-      "You identify explicit relationship changes conservatively and cite corpus evidence.",
-      prompt,
-    ),
+    messages,
     max_completion_tokens: 6000,
+    seed: DETERMINISTIC_SEED,
     response_format: zodResponseFormat(
       RelationshipProposalsSchema,
       "relationship_proposals",
     ),
   };
-  const completion = await parseCompletion(
-    "glitter-context-relationships",
-    params,
-  );
-  const parsed = completion.choices[0]?.message.parsed;
-  if (parsed === null || parsed === undefined) {
-    throw new Error("GPT-5.6 Sol did not return parsed relationship proposals");
-  }
-  return parsed.proposals;
+  const result = await readOrCreateGenerationArtifact({
+    store: input.artifactStore,
+    model: MODEL,
+    callSite,
+    request: {
+      schemaVersion: 1,
+      model: MODEL,
+      messages,
+      maxCompletionTokens: params.max_completion_tokens,
+      seed: params.seed,
+      responseSchema: "relationship-proposals-v1",
+    },
+    responseSchema: RelationshipProposalsSchema,
+    generate: async () => {
+      const completion = await parseCompletion(callSite, params);
+      const parsed = completion.choices[0]?.message.parsed;
+      if (parsed === null || parsed === undefined) {
+        throw new Error(
+          "GPT-5.6 Sol did not return parsed relationship proposals",
+        );
+      }
+      return parsed;
+    },
+  });
+  return result.proposals;
 }
