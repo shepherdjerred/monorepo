@@ -10,8 +10,6 @@ import {
 import type { EncoderHandles } from "@shepherdjerred/discord-stream-lifecycle/types.ts";
 import { GameStreamerBase } from "@shepherdjerred/discord-plays-core/stream/game-streamer-base.ts";
 import {
-  AUDIO_BLOCK_ALIGN,
-  AUDIO_BYTES_PER_VIDEO_FRAME,
   WIDTH,
   HEIGHT,
   N64_FPS,
@@ -20,12 +18,12 @@ import {
 import { createAudioTransport } from "#src/stream/audio-transport.ts";
 import { sinkBufferBytes } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
 import {
-  streamAudioBytesDroppedTotal,
+  streamEmulatorBackpressurePausesTotal,
+  streamEmulatorPaused,
   streamFfmpegBitrateKbps,
   streamFfmpegFps,
   streamFfmpegSpeedRatio,
   streamFrameIntervalMs,
-  streamFramesDroppedTotal,
   streamFrameWriteMs,
   streamHwEncodeEngaged,
 } from "#src/observability/metrics.ts";
@@ -35,7 +33,6 @@ import {
   type SessionStats,
 } from "#src/stream/stream-observer.ts";
 import { logger } from "#src/logger.ts";
-import { PcmDropper } from "#src/stream/pcm-dropper.ts";
 
 export type GameStreamerOptions = {
   /**
@@ -54,6 +51,7 @@ export type GameStreamerOptions = {
   // VAAPI hardware H.264 encoding on an Intel iGPU; falls back to libx264 when off.
   hardwareAcceleration: boolean;
   vaapiDevice: string;
+  onEncoderBackpressureChange: (backpressured: boolean) => void;
   onSessionEnded?: () => void | Promise<void>;
 };
 
@@ -70,26 +68,19 @@ export async function notifyStreamSessionEnded(
 // timestamps from this value, so it must match the emulator's actual tick rate.
 const SRC_FPS = N64_FPS;
 
-// Cap on the bytes allowed to sit in the PassThrough feeding ffmpeg before
-// pushFrame starts dropping the newest frame. The emulator produces frames at a
-// fixed rate; if the encode/Discord-send path dips below realtime (e.g. the single
-// JS event loop is busy emulating), an *unbounded* queue pushes the broadcast
-// seconds — even minutes — behind live (a 3.5 GB / ~3 min backlog was observed in
-// prod), so controller input lag grows without bound and the pod risks OOM against
-// its memory limit. Bounding the queue trades frame rate for latency: under a slow
-// consumer the stream degrades to fewer fps at low lag instead of staying
-// real-time-rate but ever further behind. ~3 frames ≈ 100 ms at 30 fps.
+// High-water mark for the PassThrough feeding ffmpeg. The emulator produces
+// video and audio from the same tick loop, so pausing that loop when this queue
+// fills preserves A/V content time while preventing the multi-gigabyte backlog
+// observed before the stream was bounded. Three frames are about 100 ms at 30fps.
 export const MAX_SINK_BUFFER_BYTES = WIDTH * HEIGHT * 4 * 3;
 
 /**
- * Whether to drop a new frame rather than enqueue it: true once the bytes already
- * waiting in the ffmpeg input PassThrough are at/above the latency budget. Exported
- * for tests. (The PassThrough's highWaterMark is far below one frame, so `write()`'s
- * own backpressure return is always `false` and unusable as a signal — the queued
- * byte count is.)
+ * Frame sink with a meaningful write() backpressure signal at the latency
+ * budget. Node's default high-water mark is smaller than one raw frame, which
+ * made write() return false for every frame and could not drive flow control.
  */
-export function shouldDropFrame(queuedBytes: number): boolean {
-  return queuedBytes >= MAX_SINK_BUFFER_BYTES;
+export function createFrameSink(): PassThrough {
+  return new PassThrough({ highWaterMark: MAX_SINK_BUFFER_BYTES });
 }
 
 // Streams the emulator's BGRA frames into a Discord voice channel as a Go-Live
@@ -103,7 +94,11 @@ export class GameStreamer extends GameStreamerBase {
   private sessionStartedAt = 0;
   private lastPushAt: number | undefined;
   private streamObserver: StreamObserver | undefined;
-  private readonly pcmDropper = new PcmDropper(AUDIO_BLOCK_ALIGN);
+  private frameInput: PassThrough | undefined;
+  private encoderBackpressured = false;
+  private readonly handleFrameSinkDrain = (): void => {
+    this.setEncoderBackpressured(false);
+  };
 
   constructor(options: GameStreamerOptions) {
     super({
@@ -119,40 +114,20 @@ export class GameStreamer extends GameStreamerBase {
   pushFrame(frame: Buffer): void {
     const sink = this.frameSink;
     if (!sink) return;
-    // Drop the newest frame once the queue exceeds its latency budget, so input lag
-    // can't run away when the encode/send path falls below realtime. See
-    // shouldDropFrame / MAX_SINK_BUFFER_BYTES.
-    if (shouldDropFrame(sink.writableLength)) {
-      streamFramesDroppedTotal.inc();
-      if (this.session) this.session.framesDropped++;
-      // rawvideo assigns consecutive PTS values only to frames that reach
-      // ffmpeg. Drop the matching PCM duration too so content time skips
-      // together instead of making sound progressively later than video.
-      this.pcmDropper.dropNext(AUDIO_BYTES_PER_VIDEO_FRAME);
-      sinkBufferBytes.set(sink.writableLength);
-      return;
-    }
     const pushAt = performance.now();
     if (this.lastPushAt !== undefined) {
       streamFrameIntervalMs.observe(pushAt - this.lastPushAt);
     }
     this.lastPushAt = pushAt;
-    sink.write(frame);
+    const canContinue = sink.write(frame);
     // A slow write is backpressure showing up before the buffer gauge moves.
     streamFrameWriteMs.observe(performance.now() - pushAt);
     if (this.session) this.session.framesPushed++;
-    // Rising buffered bytes ⇒ ffmpeg/encode can't keep up with the frame rate.
     sinkBufferBytes.set(sink.writableLength);
-  }
-
-  override pushAudio(pcm: Buffer): void {
-    const alignedPcm = this.pcmDropper.process(pcm);
-    const droppedBytes = pcm.length - alignedPcm.length;
-    if (droppedBytes > 0) {
-      streamAudioBytesDroppedTotal.inc(droppedBytes);
-      if (this.session) this.session.audioBytesDropped += droppedBytes;
+    if (!canContinue && !this.encoderBackpressured) {
+      sink.once("drain", this.handleFrameSinkDrain);
+      this.setEncoderBackpressured(true);
     }
-    if (alignedPcm.length > 0) super.pushAudio(alignedPcm);
   }
 
   protected override beforeActorStop(): void {
@@ -177,8 +152,8 @@ export class GameStreamer extends GameStreamerBase {
   }
 
   protected async buildEncoder(): Promise<EncoderHandles> {
-    this.pcmDropper.reset();
-    const bgra = new PassThrough();
+    const bgra = createFrameSink();
+    this.frameInput = bgra;
     // Scale the 4:3 game into an aspect-correct content box, then pillarbox it onto
     // a black 16:9 canvas for Discord (see prepareStream `pad`).
     const { content, canvas } = computeLetterbox(
@@ -260,7 +235,9 @@ export class GameStreamer extends GameStreamerBase {
   }
 
   private resetStreamMetrics(): void {
-    this.pcmDropper.reset();
+    this.frameInput?.off("drain", this.handleFrameSinkDrain);
+    this.frameInput = undefined;
+    this.setEncoderBackpressured(false);
     sinkBufferBytes.set(0);
     streamFfmpegSpeedRatio.set(0);
     streamFfmpegFps.set(0);
@@ -281,7 +258,7 @@ export class GameStreamer extends GameStreamerBase {
       durationS: Math.round(durationS),
       framesPushed: session.framesPushed,
       framesDropped: session.framesDropped,
-      audioBytesDropped: session.audioBytesDropped,
+      encoderBackpressurePauses: session.encoderBackpressurePauses,
       droppedPct:
         totalFrames > 0
           ? Math.round((session.framesDropped / totalFrames) * 1000) / 10
@@ -300,5 +277,16 @@ export class GameStreamer extends GameStreamerBase {
           : 0,
       lastSpeedRatio: session.lastSpeedRatio,
     });
+  }
+
+  private setEncoderBackpressured(backpressured: boolean): void {
+    if (this.encoderBackpressured === backpressured) return;
+    this.options.onEncoderBackpressureChange(backpressured);
+    this.encoderBackpressured = backpressured;
+    streamEmulatorPaused.set(backpressured ? 1 : 0);
+    if (backpressured) {
+      streamEmulatorBackpressurePausesTotal.inc();
+      if (this.session) this.session.encoderBackpressurePauses++;
+    }
   }
 }

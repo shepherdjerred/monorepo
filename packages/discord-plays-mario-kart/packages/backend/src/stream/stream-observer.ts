@@ -23,7 +23,7 @@ import {
 export type SessionStats = {
   framesPushed: number;
   framesDropped: number;
-  audioBytesDropped: number;
+  encoderBackpressurePauses: number;
   videoFramesSent: number;
   lateVideoFrames: number;
   lastSpeedRatio: number | undefined;
@@ -33,7 +33,7 @@ export function newSessionStats(): SessionStats {
   return {
     framesPushed: 0,
     framesDropped: 0,
-    audioBytesDropped: 0,
+    encoderBackpressurePauses: 0,
     videoFramesSent: 0,
     lateVideoFrames: 0,
     lastSpeedRatio: undefined,

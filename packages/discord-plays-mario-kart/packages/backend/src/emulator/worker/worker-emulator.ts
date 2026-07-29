@@ -119,6 +119,16 @@ export class WorkerEmulator {
     this.post({ kind: "start" });
   }
 
+  /** Temporarily stop emulation while the media encoder drains its bounded input. */
+  pause(): void {
+    if (this.worker !== undefined) this.post({ kind: "pause" });
+  }
+
+  /** Resume emulation after media encoder backpressure clears. */
+  resume(): void {
+    if (this.worker !== undefined) this.post({ kind: "resume" });
+  }
+
   /** Stop the tick loop, drain the final metrics, and terminate the worker. */
   async stop(): Promise<void> {
     const worker = this.worker;

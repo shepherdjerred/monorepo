@@ -114,18 +114,25 @@ Worker-thread performance change did not improve the delivered stream.
 - Re-deployed the immutable PR candidate for manual acceptance and reproduced
   the reported audio delay with 148 video-only drops accumulated during the
   live session.
-- Added sample-aligned PCM drop debt at both bounded video-drop points:
-  Worker-to-main backpressure and the ffmpeg input queue. Each omitted 30 fps
-  frame now omits exactly 5,880 bytes of 44.1 kHz stereo s16le PCM, preventing
-  content skew from accumulating while retaining the bounded-latency policy.
-- Added `stream_audio_bytes_dropped_total` for live proof that paired PCM drops
-  were consumed, plus a deterministic 300-frame test proving forwarded PCM
-  duration equals accepted video duration across repeated drops.
-- Passed the updated backend suite: 133 tests, typecheck, and lint.
+- Published and deployed the first audio-sync candidate from commit
+  `52a59c11471fb4af0e0490dd322d1ebcac9e4283`. Live telemetry rejected it:
+  pairing startup frame drops with withheld PCM starved ffmpeg's second input,
+  held progress at zero, and produced 942 additional frame drops. Rolled the
+  pod back immediately and restored the known-good 30 fps candidate.
+- Replaced paired media dropping with whole-emulator flow control. The ffmpeg
+  raw-video `PassThrough` now has a three-frame high-water mark; when `write()`
+  signals backpressure, the Worker tick loop pauses (stopping game, video, and
+  audio time together) and resumes on `drain`. This retains a bounded media
+  queue without compressing one content timeline or starving either input.
+- Added validated Worker `pause` / `resume` protocol commands, current-state
+  and cumulative backpressure metrics, and tests proving the stalled sink
+  remains bounded and emits `drain` when consumption resumes.
+- Passed the revised backend suite: 127 tests, typecheck, and lint.
 
 ### Remaining
 
-- Build and deploy an immutable image from the updated PR head, restart the
+- Commit and publish the revised flow-control fix, build and deploy an immutable
+  image from that PR head, restart the
   Discord session, and obtain manual confirmation that audio is synchronized.
 - Fix the separate Worker teardown ordering error found when `/stop` ended the
   successful test session. It is tracked in
@@ -149,7 +156,11 @@ Worker-thread performance change did not improve the delivered stream.
 - The earlier live claim that audio and video were in lockstep was too strong:
   packet pacing and media duration did not measure relative content offset.
   Manual listening was the independent oracle that exposed the missing
-  video-drop/PCM-drop coupling.
+  content-timeline coupling.
+- Directly withholding PCM for a raw second ffmpeg input is not viable during
+  startup: ffmpeg needs both inputs to advance. The rejected live candidate
+  demonstrated the resulting positive-feedback stall before the design was
+  replaced with whole-emulator backpressure.
 - `/stop` completed and the stream shut down, but its asynchronous session-end
   callback ran after `WorkerEmulator.stop()` and logged
   `emulator worker is not running`. That distinct lifecycle defect is now

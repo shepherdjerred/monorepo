@@ -9,11 +9,6 @@
 // as it does on the main thread (wasm-host.ts's contract holds).
 import { N64Emulator } from "#src/emulator/n64-emulator.ts";
 import { readSnapshot } from "#src/emulator/mk64-memory.ts";
-import {
-  AUDIO_BLOCK_ALIGN,
-  AUDIO_BYTES_PER_VIDEO_FRAME,
-} from "#src/emulator/constants.ts";
-import { PcmDropper } from "#src/stream/pcm-dropper.ts";
 import { MAX_AUDIO_IN_FLIGHT, MAX_FRAMES_IN_FLIGHT } from "./backpressure.ts";
 import { createBatchingMetricSink } from "./metric-bridge.ts";
 import { parseMainMessage } from "./protocol.ts";
@@ -72,7 +67,6 @@ let framesInFlight = 0;
 // Without a bound, stale audio would accumulate in the port queue; with only
 // three chunks, PCM would drop after ~50 ms while video remained buffered.
 let audioInFlight = 0;
-const pcmDropper = new PcmDropper(AUDIO_BLOCK_ALIGN);
 
 function requireEmulator(): N64Emulator {
   const emu = emulator;
@@ -83,7 +77,6 @@ function requireEmulator(): N64Emulator {
 }
 
 async function handleInit(opts: WorkerInitOpts): Promise<void> {
-  pcmDropper.reset();
   snapshotEveryNFrames = opts.snapshotEveryNFrames;
   batching = createBatchingMetricSink((batch) => {
     post({ kind: "metrics", batch });
@@ -118,10 +111,7 @@ async function handleInit(opts: WorkerInitOpts): Promise<void> {
     }
     if (framesInFlight >= MAX_FRAMES_IN_FLIGHT) {
       // Main thread is behind (unacked frames saturated the bound). Drop this
-      // frame instead of growing the port's transfer queue. Pair the drop with
-      // one output-frame duration of PCM; otherwise rawvideo's synthetic PTS
-      // compresses only the video content timeline and audio drifts later.
-      pcmDropper.dropNext(AUDIO_BYTES_PER_VIDEO_FRAME);
+      // frame instead of growing the port's transfer queue.
       return;
     }
     framesInFlight += 1;
@@ -136,14 +126,12 @@ async function handleInit(opts: WorkerInitOpts): Promise<void> {
     );
   });
   emu.onAudio((pcm) => {
-    const alignedPcm = pcmDropper.process(pcm);
-    if (alignedPcm.length === 0) return;
     if (audioInFlight >= MAX_AUDIO_IN_FLIGHT) {
       // Main thread is behind; drop this chunk rather than growing the queue.
       return;
     }
     audioInFlight += 1;
-    post({ kind: "audio", pcm: alignedPcm }, transferListFor(alignedPcm));
+    post({ kind: "audio", pcm }, transferListFor(pcm));
   });
 
   emulator = emu;
@@ -161,6 +149,12 @@ async function handle(data: unknown): Promise<void> {
       }
       return;
     case "start":
+      requireEmulator().start();
+      return;
+    case "pause":
+      requireEmulator().stop();
+      return;
+    case "resume":
       requireEmulator().start();
       return;
     case "stop": {

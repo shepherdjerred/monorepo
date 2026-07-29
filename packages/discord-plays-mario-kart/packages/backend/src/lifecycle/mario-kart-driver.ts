@@ -133,6 +133,13 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
         Bun.env["STREAM_HARDWARE_ACCELERATION"] === "true" ||
         config.stream.video.hardware_acceleration,
       vaapiDevice: Bun.env["VAAPI_DEVICE"] ?? config.stream.video.vaapi_device,
+      onEncoderBackpressureChange: (backpressured) => {
+        if (backpressured) {
+          emulator.pause();
+        } else {
+          emulator.resume();
+        }
+      },
       onSessionEnded: () => {
         try {
           emulator.restartFromStartMenu("stream_session_ended");
