@@ -10,6 +10,8 @@ import {
 import type { EncoderHandles } from "@shepherdjerred/discord-stream-lifecycle/types.ts";
 import { GameStreamerBase } from "@shepherdjerred/discord-plays-core/stream/game-streamer-base.ts";
 import {
+  AUDIO_BLOCK_ALIGN,
+  AUDIO_BYTES_PER_VIDEO_FRAME,
   WIDTH,
   HEIGHT,
   N64_FPS,
@@ -18,6 +20,7 @@ import {
 import { createAudioTransport } from "#src/stream/audio-transport.ts";
 import { sinkBufferBytes } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
 import {
+  streamAudioBytesDroppedTotal,
   streamFfmpegBitrateKbps,
   streamFfmpegFps,
   streamFfmpegSpeedRatio,
@@ -32,6 +35,7 @@ import {
   type SessionStats,
 } from "#src/stream/stream-observer.ts";
 import { logger } from "#src/logger.ts";
+import { PcmDropper } from "#src/stream/pcm-dropper.ts";
 
 export type GameStreamerOptions = {
   /**
@@ -99,6 +103,7 @@ export class GameStreamer extends GameStreamerBase {
   private sessionStartedAt = 0;
   private lastPushAt: number | undefined;
   private streamObserver: StreamObserver | undefined;
+  private readonly pcmDropper = new PcmDropper(AUDIO_BLOCK_ALIGN);
 
   constructor(options: GameStreamerOptions) {
     super({
@@ -120,6 +125,10 @@ export class GameStreamer extends GameStreamerBase {
     if (shouldDropFrame(sink.writableLength)) {
       streamFramesDroppedTotal.inc();
       if (this.session) this.session.framesDropped++;
+      // rawvideo assigns consecutive PTS values only to frames that reach
+      // ffmpeg. Drop the matching PCM duration too so content time skips
+      // together instead of making sound progressively later than video.
+      this.pcmDropper.dropNext(AUDIO_BYTES_PER_VIDEO_FRAME);
       sinkBufferBytes.set(sink.writableLength);
       return;
     }
@@ -134,6 +143,16 @@ export class GameStreamer extends GameStreamerBase {
     if (this.session) this.session.framesPushed++;
     // Rising buffered bytes ⇒ ffmpeg/encode can't keep up with the frame rate.
     sinkBufferBytes.set(sink.writableLength);
+  }
+
+  override pushAudio(pcm: Buffer): void {
+    const alignedPcm = this.pcmDropper.process(pcm);
+    const droppedBytes = pcm.length - alignedPcm.length;
+    if (droppedBytes > 0) {
+      streamAudioBytesDroppedTotal.inc(droppedBytes);
+      if (this.session) this.session.audioBytesDropped += droppedBytes;
+    }
+    if (alignedPcm.length > 0) super.pushAudio(alignedPcm);
   }
 
   protected override beforeActorStop(): void {
@@ -158,6 +177,7 @@ export class GameStreamer extends GameStreamerBase {
   }
 
   protected async buildEncoder(): Promise<EncoderHandles> {
+    this.pcmDropper.reset();
     const bgra = new PassThrough();
     // Scale the 4:3 game into an aspect-correct content box, then pillarbox it onto
     // a black 16:9 canvas for Discord (see prepareStream `pad`).
@@ -240,6 +260,7 @@ export class GameStreamer extends GameStreamerBase {
   }
 
   private resetStreamMetrics(): void {
+    this.pcmDropper.reset();
     sinkBufferBytes.set(0);
     streamFfmpegSpeedRatio.set(0);
     streamFfmpegFps.set(0);
@@ -260,6 +281,7 @@ export class GameStreamer extends GameStreamerBase {
       durationS: Math.round(durationS),
       framesPushed: session.framesPushed,
       framesDropped: session.framesDropped,
+      audioBytesDropped: session.audioBytesDropped,
       droppedPct:
         totalFrames > 0
           ? Math.round((session.framesDropped / totalFrames) * 1000) / 10

@@ -25,6 +25,13 @@ export const DISPLAY_ASPECT = 4 / 3;
 // `int16_t[64000]` and the resampler targets 44100 Hz.
 export const AUDIO_SAMPLE_RATE = 44_100;
 export const AUDIO_CHANNELS = 2;
+export const AUDIO_BYTES_PER_SAMPLE = Int16Array.BYTES_PER_ELEMENT;
+export const AUDIO_BLOCK_ALIGN = AUDIO_CHANNELS * AUDIO_BYTES_PER_SAMPLE;
+// One 30 fps video frame spans exactly 1,470 stereo sample frames at 44.1 kHz.
+// When a video frame is deliberately dropped, discarding this much adjacent
+// PCM keeps the two content timelines from drifting apart.
+export const AUDIO_BYTES_PER_VIDEO_FRAME =
+  (AUDIO_SAMPLE_RATE * AUDIO_BLOCK_ALIGN) / N64_FPS;
 // Ring-buffer capacity in int16 samples (interleaved L/R), i.e. resampled_out_buf's length.
 export const AUDIO_RING_SAMPLES = 64_000;
 

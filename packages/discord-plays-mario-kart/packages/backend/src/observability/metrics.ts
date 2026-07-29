@@ -56,7 +56,13 @@ export const streamFrameWriteMs = new Histogram({
 
 export const streamFramesDroppedTotal = new Counter({
   name: "stream_frames_dropped_total",
-  help: "Frames dropped before the ffmpeg pipe because the input queue exceeded its latency budget (encode/send path below realtime); keeps end-to-end lag bounded",
+  help: "Frames dropped before the ffmpeg pipe because the input queue exceeded its latency budget (encode/send path below realtime); matching PCM is dropped to preserve A/V content sync",
+  registers: [registry],
+});
+
+export const streamAudioBytesDroppedTotal = new Counter({
+  name: "stream_audio_bytes_dropped_total",
+  help: "PCM bytes dropped to match video frames omitted before ffmpeg and preserve A/V content sync",
   registers: [registry],
 });
 
