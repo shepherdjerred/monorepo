@@ -9,7 +9,7 @@ import {
 } from "./validate-image-migration.ts";
 
 const deterministicBinderyDockerfile = `
-ARG BINDERY_SOURCE_REF=0123456789abcdef
+ARG BINDERY_SOURCE_REF=aaaaaaaaaaaaaaaa
 FROM source AS builder
 ARG BINDERY_SOURCE_REF
 RUN source_ref="$(printf '%.12s' "\${BINDERY_SOURCE_REF}")" \\
