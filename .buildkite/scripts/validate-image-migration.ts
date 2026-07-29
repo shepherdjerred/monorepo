@@ -45,10 +45,17 @@ export function hclNamedBlock(
     if (quoted) {
       if (escaped) {
         escaped = false;
-      } else if (character === "\\") {
-        escaped = true;
-      } else if (character === '"') {
-        quoted = false;
+        continue;
+      }
+      switch (character) {
+        case "\\": {
+          escaped = true;
+          break;
+        }
+        case '"': {
+          quoted = false;
+          break;
+        }
       }
       continue;
     }

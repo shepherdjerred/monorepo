@@ -30,7 +30,7 @@ import {
 } from "./validate-pipeline-lib.ts";
 import { validateCaddySmokeContracts } from "./validate-pipeline-caddy.ts";
 import { validateImageMigrationContracts } from "./validate-image-migration.ts";
-import { lanePaths } from "./migration-core.ts";
+import { fixedCorpusMode, lanePaths } from "./migration-core.ts";
 
 const PIPELINE_PATH = ".buildkite/pipeline.yml";
 const GLOBAL_IF_CHANGED = [
@@ -53,6 +53,8 @@ const PATH_GATED_PR_KEYS = new Set([
 ]);
 const pipeline = await Bun.file(PIPELINE_PATH).text();
 const lines = pipeline.split("\n");
+
+fixedCorpusMode(Bun.env);
 
 const checkoutContainerDefinition = [
   "  - checkout_container: &checkout_container",

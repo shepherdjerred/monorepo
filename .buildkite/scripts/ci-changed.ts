@@ -1,4 +1,9 @@
-import { globalPaths, lanePaths } from "./migration-core.ts";
+import {
+  FixedCorpusConfigurationError,
+  fixedCorpusForcesLane,
+  globalPaths,
+  lanePaths,
+} from "./migration-core.ts";
 
 async function execute(
   command: readonly string[],
@@ -29,6 +34,11 @@ async function main(): Promise<number> {
   const lane = Bun.argv[2];
   if (lane === undefined || lane.length === 0) {
     console.error("Usage: ci-changed.ts <lane>");
+    return 0;
+  }
+  if (fixedCorpusForcesLane(lane, Bun.env)) {
+    await recordDecision(lane, "ran — fixed CI I/O corpus requested");
+    console.log(`${lane}: fixed CI I/O corpus requested; running`);
     return 0;
   }
   let base = Bun.env["CI_CHANGED_BASE"];
@@ -121,6 +131,9 @@ if (import.meta.main) {
   try {
     process.exitCode = await main();
   } catch (error) {
+    if (error instanceof FixedCorpusConfigurationError) {
+      throw error;
+    }
     console.error(
       "WARN: CI change selector failed for %s; running lane",
       lane,

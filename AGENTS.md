@@ -240,6 +240,29 @@ bun run verify
 # Check CI status via Buildkite CLI or web UI, never `gh run`
 ```
 
+### Fixed-corpus CI I/O candidate builds
+
+`CI_IO_FIXED_CORPUS=true` is an operator-only mode for producing a comparable
+CI I/O acceptance candidate on the current `main` commit. It forces the
+playwright, resume, Docker E2E, images, and OpenTofu selectors; the image lane
+builds and pushes every known image target, and the OpenTofu lanes perform real
+applies. Unrelated selectors keep their normal change-based behavior.
+
+After confirming the SHA is still current `main`, create the build with:
+
+```bash
+bk build create \
+  --pipeline sjerred/monorepo \
+  --branch main \
+  --commit <current-main-sha> \
+  --env CI_IO_FIXED_CORPUS=true \
+  --yes
+```
+
+The value must be exactly `true`, and `BUILDKITE_BRANCH` must be `main`;
+invalid, unset-branch, and non-main requests fail before the pipeline runs.
+Treat this as a production-mutating build, not a read-only benchmark.
+
 ### Release refinement providers
 
 The main-only `release-please` lane runs `scripts/release.ts`. Its CHANGELOG

@@ -24,7 +24,7 @@ import {
 // resource bulkhead now.
 export const BUILDKITE_MAX_IN_FLIGHT = 20;
 
-export function createBuildkiteApp(chart: Chart) {
+function createBuildkiteNamespace(chart: Chart): void {
   new Namespace(chart, "buildkite-namespace", {
     metadata: {
       name: "buildkite",
@@ -35,6 +35,27 @@ export function createBuildkiteApp(chart: Chart) {
       },
     },
   });
+}
+
+function createBuildkiteAgentHooks(chart: Chart): void {
+  new KubeConfigMap(chart, "buildkite-agent-hooks", {
+    metadata: {
+      name: "buildkite-agent-hooks",
+      namespace: "buildkite",
+    },
+    data: {
+      "agent-shutdown": `#!/bin/sh
+set -eu
+
+echo "Retaining Buildkite agent for terminal cAdvisor scrapes (20s)"
+sleep 20
+`,
+    },
+  });
+}
+
+export function createBuildkiteApp(chart: Chart) {
+  createBuildkiteNamespace(chart);
 
   new OnePasswordItem(chart, "buildkite-agent-token", {
     spec: {
@@ -351,6 +372,8 @@ overrides:
     },
   });
 
+  createBuildkiteAgentHooks(chart);
+
   new Application(chart, "buildkite-app", {
     metadata: {
       name: "buildkite",
@@ -369,6 +392,18 @@ overrides:
             agentStackSecret: "buildkite-agent-token",
             config: {
               queue: "default",
+              "agent-config": {
+                "hooks-path": "/buildkite/hooks",
+                hooksVolume: {
+                  name: "buildkite-hooks",
+                  configMap: {
+                    name: "buildkite-agent-hooks",
+                    // Kubernetes mode values are decimal in JSON. 493 = 0755,
+                    // so the agent can execute the ConfigMap-backed hook.
+                    defaultMode: 493,
+                  },
+                },
+              },
               // Cluster-wide cap on concurrently-scheduled CI jobs. Sized
               // during the 2026-07 incident response (see
               // packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md

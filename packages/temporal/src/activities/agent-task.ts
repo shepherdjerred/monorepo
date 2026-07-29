@@ -20,7 +20,7 @@ import {
 } from "#shared/claude-result.ts";
 import {
   AgentTaskInputSchema,
-  AgentTaskResultPayloadSchema,
+  parseAgentTaskResultPayload,
   type AgentTaskInput,
   type AgentTaskProvider,
   type AgentTaskResultPayload,
@@ -171,12 +171,13 @@ export function agentTaskSecretTokens(
   ];
 }
 
-function envForProvider(
+export function envForProvider(
   provider: AgentTaskProvider,
   githubAppToken: string,
+  sourceEnv: Readonly<Record<string, string | undefined>> = Bun.env,
 ): Record<string, string> {
   const env: Record<string, string> = {};
-  for (const [key, value] of Object.entries(Bun.env)) {
+  for (const [key, value] of Object.entries(sourceEnv)) {
     if (typeof value !== "string") {
       continue;
     }
@@ -214,29 +215,13 @@ function splitRepo(fullName: string): { owner: string; repo: string } {
   return { owner, repo };
 }
 
-// `raw` is claude's `structured_output` object (from `--json-schema`) or
-// codex's `--output-last-message` file text (a JSON string).
-function parseAgentPayload(raw: unknown): AgentTaskResultPayload {
-  if (raw === undefined || raw === "") {
-    throw new Error(
-      "agent produced no structured output (expected --json-schema structured_output / --output-schema file)",
-    );
-  }
-  try {
-    const obj: unknown = typeof raw === "string" ? JSON.parse(raw) : raw;
-    return AgentTaskResultPayloadSchema.parse(obj);
-  } catch (error: unknown) {
-    throw new Error(
-      `Failed to parse agent task JSON payload: ${error instanceof Error ? error.message : String(error)}`,
-      { cause: error },
-    );
-  }
-}
-
-async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
+async function runAgent(
+  input: RunAgentTaskInput,
+  commandBuilder: typeof buildAgentTaskCommand,
+): Promise<RunAgentTaskResult> {
   const parsed = AgentTaskInputSchema.parse(input.input);
   const provider = parsed.provider;
-  const command = await buildAgentTaskCommand(parsed, input.workdir);
+  const command = await commandBuilder(parsed, input.workdir);
   const workflowType = currentWorkflowType();
 
   return withSpan(
@@ -438,7 +423,7 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
       let payload: AgentTaskResultPayload;
       try {
         if (provider === "claude") {
-          payload = parseAgentPayload(
+          payload = parseAgentTaskResultPayload(
             parseClaudeResultMessage(result.stdout).structured_output,
           );
         } else {
@@ -447,7 +432,7 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
               "Codex agent task completed without an output path",
             );
           }
-          payload = parseAgentPayload(
+          payload = parseAgentTaskResultPayload(
             await Bun.file(command.outputPath).text(),
           );
         }
@@ -497,13 +482,19 @@ async function prepareWorkdir(
   return { workdir };
 }
 
-export type AgentTaskActivities = typeof agentTaskActivities;
+export function createAgentTaskActivities(
+  commandBuilder: typeof buildAgentTaskCommand = buildAgentTaskCommand,
+) {
+  return {
+    prepareAgentTaskWorkdir: prepareWorkdir,
+    runAgentTask: (input: RunAgentTaskInput) => runAgent(input, commandBuilder),
+    sendAgentTaskEmail: sendEmail,
+    scheduleAgentTaskFollowUp: scheduleFollowUp,
+    pauseAgentTaskSchedule: pauseSchedule,
+    cleanupAgentTaskWorkdir: cleanup,
+  };
+}
 
-export const agentTaskActivities = {
-  prepareAgentTaskWorkdir: prepareWorkdir,
-  runAgentTask: runAgent,
-  sendAgentTaskEmail: sendEmail,
-  scheduleAgentTaskFollowUp: scheduleFollowUp,
-  pauseAgentTaskSchedule: pauseSchedule,
-  cleanupAgentTaskWorkdir: cleanup,
-};
+export const agentTaskActivities = createAgentTaskActivities();
+
+export type AgentTaskActivities = typeof agentTaskActivities;

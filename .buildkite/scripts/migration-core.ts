@@ -23,6 +23,53 @@ const infrastructureTargets = [
 
 export const knownImageTargets = [...applicationTargets, "infra"].sort();
 
+const FIXED_CORPUS_LANES: ReadonlySet<string> = new Set([
+  "docker-e2e",
+  "images",
+  "playwright",
+  "resume",
+  "tofu",
+]);
+
+export class FixedCorpusConfigurationError extends Error {}
+
+export function fixedCorpusMode(
+  environment: Readonly<Record<string, string | undefined>>,
+): boolean {
+  const value = environment["CI_IO_FIXED_CORPUS"];
+  if (value === undefined) {
+    return false;
+  }
+  if (value !== "true") {
+    throw new FixedCorpusConfigurationError(
+      'CI_IO_FIXED_CORPUS must be exactly "true" when set',
+    );
+  }
+  const branch = environment["BUILDKITE_BRANCH"];
+  if (branch !== "main") {
+    throw new FixedCorpusConfigurationError(
+      `CI_IO_FIXED_CORPUS is main-only; BUILDKITE_BRANCH was ${branch ?? "unset"}`,
+    );
+  }
+  return true;
+}
+
+export function fixedCorpusForcesLane(
+  lane: string,
+  environment: Readonly<Record<string, string | undefined>>,
+): boolean {
+  return fixedCorpusMode(environment) && FIXED_CORPUS_LANES.has(lane);
+}
+
+export function fixedCorpusLaneMetadata(
+  lane: string,
+): Readonly<Record<string, string>> {
+  return {
+    [`ci-lane-run-${lane}`]: "true",
+    [`ci-lane-decision-${lane}`]: "ran — fixed CI I/O corpus requested",
+  };
+}
+
 export function parseBakeArguments(rawArguments: readonly string[]): {
   readonly affected: boolean;
   readonly push: boolean;
