@@ -39,6 +39,24 @@ export type KnowledgeSearchResult = {
 
 const SEARCH_EXCERPT_CHARS = 1200;
 const GET_BODY_CHARS = 8000;
+const SEARCH_STOPWORDS = new Set([
+  "a",
+  "an",
+  "and",
+  "can",
+  "do",
+  "for",
+  "get",
+  "how",
+  "i",
+  "in",
+  "is",
+  "of",
+  "on",
+  "the",
+  "to",
+  "where",
+]);
 
 function normalize(value: string): string {
   return value
@@ -53,9 +71,20 @@ function terms(value: string): string[] {
     ...new Set(
       normalize(value)
         .split(" ")
-        .filter((term) => term.length > 1),
+        .filter((term) => term.length > 1 && !SEARCH_STOPWORDS.has(term)),
     ),
   ];
+}
+
+function occurrences(haystack: string, needle: string): number {
+  let count = 0;
+  let position = 0;
+  for (;;) {
+    const match = haystack.indexOf(needle, position);
+    if (match === -1) return count;
+    count += 1;
+    position = match + needle.length;
+  }
 }
 
 function scoreRecord(
@@ -71,7 +100,10 @@ function scoreRecord(
     if (title.includes(term)) return score + 30;
     if (aliases.includes(term)) return score + 20;
     if (tags.includes(term)) return score + 10;
-    if (body.includes(term)) return score + 2;
+    const bodyOccurrences = occurrences(body, term);
+    if (bodyOccurrences > 0) {
+      return score + Math.min(bodyOccurrences, 10) * 2;
+    }
     return score;
   }, 0);
 }

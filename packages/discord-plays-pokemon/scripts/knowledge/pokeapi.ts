@@ -113,6 +113,21 @@ type PokemonTypePastRow = z.infer<typeof PokemonTypePastRows>[number];
 type MoveRow = z.infer<typeof MoveRows>[number];
 type MoveChangelogRow = z.infer<typeof MoveChangelogRows>[number];
 
+export function requirePokeApiReference<T>(
+  values: ReadonlyMap<number, T>,
+  id: number,
+  referencedTable: string,
+  context: string,
+): T {
+  const value = values.get(id);
+  if (value === undefined) {
+    throw new Error(
+      `PokeAPI ${context} references missing ${referencedTable} row ${String(id)}`,
+    );
+  }
+  return value;
+}
+
 function rawUrl(sources: Sources, file: string): string {
   return `https://raw.githubusercontent.com/PokeAPI/pokeapi/${sources.pokeapi.commit}/${sources.pokeapi.csvPath}/${file}`;
 }
@@ -254,6 +269,7 @@ export async function buildPokeApiRecords(
   const typeNames = new Map(types.map((row) => [row.id, row.identifier]));
   const moveById = new Map(moves.map((row) => [row.id, row]));
   const speciesById = new Map(species.map((row) => [row.id, row]));
+  const itemById = new Map(items.map((row) => [row.id, row]));
   const formsBySpecies = valuesByKey(
     pokemon.filter((row) => row.is_default === "1"),
     (row) => row.species_id,
@@ -293,22 +309,35 @@ export async function buildPokeApiRecords(
     );
     const typeList = versionTypes
       .sort((left, right) => left.slot - right.slot)
-      .map(
-        (entry) =>
-          typeNames.get(entry.type_id) ?? `type-${String(entry.type_id)}`,
+      .map((entry) =>
+        requirePokeApiReference(
+          typeNames,
+          entry.type_id,
+          "types",
+          `type assignment for Pokémon ${form.identifier}`,
+        ),
       );
     const learnedMoves = (movesByPokemon.get(form.id) ?? [])
       .filter((entry) => entry.pokemon_move_method_id === 1)
       .sort((left, right) => left.level - right.level)
       .map((entry) => {
-        const move = moveById.get(entry.move_id);
-        return `${String(entry.level)}:${move?.identifier ?? `move-${String(entry.move_id)}`}`;
+        const move = requirePokeApiReference(
+          moveById,
+          entry.move_id,
+          "moves",
+          `level-up move for Pokémon ${form.identifier}`,
+        );
+        return `${String(entry.level)}:${move.identifier}`;
       });
     const predecessor =
       row.evolves_from_species_id === undefined
         ? "none"
-        : (speciesById.get(row.evolves_from_species_id)?.identifier ??
-          `species-${String(row.evolves_from_species_id)}`);
+        : requirePokeApiReference(
+            speciesById,
+            row.evolves_from_species_id,
+            "pokemon_species",
+            `evolution predecessor for species ${row.identifier}`,
+          ).identifier;
     records.push({
       id: `species:${row.identifier}`,
       domain: "species",
@@ -339,8 +368,12 @@ export async function buildPokeApiRecords(
       changelogByMove.get(move.id) ?? [],
       sources.pokeapi.versionGroupId,
     );
-    const typeName =
-      typeNames.get(versioned.type_id) ?? `type-${String(versioned.type_id)}`;
+    const typeName = requirePokeApiReference(
+      typeNames,
+      versioned.type_id,
+      "types",
+      `type for move ${move.identifier}`,
+    );
     const damageClass = generation3DamageClass(typeName, move.damage_class_id);
     records.push({
       id: `battle:move:${move.identifier}`,
@@ -366,6 +399,14 @@ export async function buildPokeApiRecords(
       .filter((entry) => entry.generation_id === sources.pokeapi.generationId)
       .map((entry) => entry.item_id),
   );
+  for (const itemId of generation3ItemIds) {
+    requirePokeApiReference(
+      itemById,
+      itemId,
+      "items",
+      "Generation III item index",
+    );
+  }
   for (const item of items.filter(
     (entry) =>
       generation3ItemIds.has(entry.id) &&

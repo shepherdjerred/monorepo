@@ -11,6 +11,7 @@ import {
   generation3DamageClass,
   generation3PowerLabel,
   includeGeneration3Item,
+  requirePokeApiReference,
 } from "./pokeapi.ts";
 
 const BULBAPEDIA_PIN = {
@@ -58,6 +59,18 @@ describe("Generation III item normalization", () => {
       expect(includeGeneration3Item(identifier)).toBe(false);
     }
     expect(includeGeneration3Item("poke-ball")).toBe(true);
+  });
+});
+
+describe("PokeAPI relational integrity", () => {
+  test("requires every referenced CSV row to resolve", () => {
+    const types = new Map([[3, "flying"]]);
+    expect(requirePokeApiReference(types, 3, "types", "move gust")).toBe(
+      "flying",
+    );
+    expect(() =>
+      requirePokeApiReference(types, 99, "types", "move glitch"),
+    ).toThrow("PokeAPI move glitch references missing types row 99");
   });
 });
 

@@ -83,5 +83,13 @@ describe("KnowledgeBase", () => {
     expect(base.get("battle:move:crunch")?.body).toContain(
       "Generation III damage class: special",
     );
+    const surfResults = base.search("how to get surf", { limit: 3 });
+    expect(
+      surfResults.some(
+        (result) =>
+          result.domain === "progression" &&
+          result.excerpt.includes("HM03 (Surf)"),
+      ),
+    ).toBe(true);
   });
 });
