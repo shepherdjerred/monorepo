@@ -81,6 +81,13 @@ The agreed boundary is:
 - Root instructions and the git, git-spice, and worktree skills describe the
   same local-versus-CI boundary.
 
+## Workflow Friction
+
+- Draft PRs currently start the 20-minute code-review gate even though the Codex
+  connector does not begin reviewing until the PR is marked ready. Buildkite
+  should skip or defer that gate for drafts so it does not consume an agent and
+  fail before the documented draft-to-ready workflow reaches that point.
+
 ## Session Log — 2026-07-28
 
 ### Done
@@ -106,10 +113,26 @@ The agreed boundary is:
   one script-coverage regression. Moved the pure changed-path classifiers into
   the tested migration helper; the scripts coverage gate now passes at 92.50%
   functions and 92.70% lines.
+- Merged the lightweight-local-verification change as PR #1761.
+- Confirmed PR #1766 superseded and resolved the stale image-bake merge
+  conflict, including the coverage-safe test structure.
+- Diagnosed main build #6733 after all verification, image, release, and
+  version-commit lanes passed: Argo reconciliation was blocked by a stale Loki
+  immutable-field comparison and two terminating Jellyfin PVCs.
+- Added a deletion-aware PVC admission-policy condition so finalizer cleanup
+  cannot be wedged after a retired claim leaves the catalog.
+- Broadened Loki's Argo ignore rule to the complete immutable
+  `volumeClaimTemplates` field.
+- Published the follow-up as PR #1769 and passed exhaustive Buildkite build
+  #6739, including full verify, browser and observability end-to-end suites,
+  deployment drift, image build/smoke, security scans, and the code-review gate.
 
 ### Remaining
 
-- Buildkite must pass the exhaustive repository gate on the updated PR head.
+- Merge PR #1769.
+- After the updated admission policy reaches the cluster, finish the two
+  terminating Jellyfin PVC deletions and verify their retained PVs.
+- Confirm a post-fix `main` build completes the Argo reconciliation lane.
 
 ### Caveats
 
@@ -121,3 +144,9 @@ The agreed boundary is:
 - The exhaustive docs, Knip, Gitleaks, Prettier, package, and infrastructure
   gates were intentionally not run locally; this change assigns that full
   surface to Buildkite.
+- The Jellyfin PVC deletion requests predated this follow-up. Their backing PVs
+  use the `Retain` reclaim policy, so finalizer cleanup removes the claims but
+  preserves the PV objects and data for explicit follow-up handling.
+- Buildkite #6739's review gate timed out once because the Codex connector did
+  not start while the PR was a draft. After marking the mechanically verified
+  PR ready and retrying only that job, the review gate passed with no findings.

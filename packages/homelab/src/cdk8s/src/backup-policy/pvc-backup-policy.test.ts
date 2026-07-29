@@ -13,6 +13,7 @@ import {
   PVC_BACKUP_POLICY,
   pvcBackupPolicyKey,
 } from "./pvc-backup-policy.ts";
+import { createPvcBackupAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/pvc-backup-admission.ts";
 
 const ManifestSchema = z.object({
   kind: z.string(),
@@ -31,6 +32,21 @@ const MutatingAdmissionPolicySchema = z.object({
       namespaceSelector: z.object({}),
       objectSelector: z.object({}),
     }),
+  }),
+});
+
+const ValidatingAdmissionPolicySchema = z.object({
+  kind: z.literal("ValidatingAdmissionPolicy"),
+  metadata: z.object({
+    name: z.literal("pvc-backup-policy.sjer.red"),
+  }),
+  spec: z.object({
+    matchConditions: z.array(
+      z.object({
+        name: z.string(),
+        expression: z.string(),
+      }),
+    ),
   }),
 });
 
@@ -115,6 +131,29 @@ describe("PVC backup policy", () => {
     expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(1);
     expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(1);
   }, 20_000);
+
+  it("permits finalizer cleanup for terminating PVCs", () => {
+    const app = new App();
+    const chart = new Chart(app, "pvc-backup-admission");
+    createPvcBackupAdmissionPolicies(chart);
+    const policy = parseAllDocuments(app.synthYaml())
+      .map((document) =>
+        ValidatingAdmissionPolicySchema.safeParse(document.toJS()),
+      )
+      .find((result) => result.success);
+    if (!policy?.success) {
+      throw new Error(
+        "PVC backup ValidatingAdmissionPolicy was not synthesized",
+      );
+    }
+
+    expect(policy.data.spec.matchConditions).toEqual([
+      {
+        name: "not-terminating",
+        expression: "object.metadata.deletionTimestamp == null",
+      },
+    ]);
+  });
 
   it("fails synthesis for an unclassified ZFS PVC", () => {
     const app = new App();
