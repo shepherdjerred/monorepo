@@ -22,7 +22,7 @@ const versions = {
   // not managed by renovate — built from packages/streambot; CI's version commit-back fills the
   // real tag@digest after the first image push. Seed digest is a placeholder until then.
   "shepherdjerred/streambot":
-    "2.0.0-6690@sha256:8ab796e128a3312cd1c4b2d19eff7407c763f6e6ac309093c61f5e2fcb33cba0",
+    "2.0.0-6852@sha256:8659676f4b6928820b4aba665bc3c9b87d58632ffe2c9bad353a78ab507b1350",
   // not managed by renovate — built from upstream redlib's glibc Dockerfile.ubuntu
   // at REDLIB_SOURCE_REF (pinned in the since-removed CI pipeline). The published image is
   // musl/Alpine, which Reddit blocks during OAuth (redlib-org/redlib#551 —
@@ -170,11 +170,11 @@ const versions = {
     "2.0.0-6690@sha256:f413cce0255ec8d33a06d9c1490be77a8e774c5cf9804f8e59e473c451aa7f75",
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
-    "2.0.0-6690@sha256:be3ddeeef49016a4fc9cae90542a0a1b8262aa7a2d4db1bf53edd93f935adce7",
+    "2.0.0-6852@sha256:aed1344cc11c7815af7dabd1799cdbb59db0be32551924411985a485794eb48a",
   // not managed by renovate — placeholder digest; CI version-commit-back fills
   // the real digest after the first successful image push.
   "shepherdjerred/discord-plays-mario-kart":
-    "2.0.0-6690@sha256:02bf1931100012bee2cd0792e3b2b929277c59b25ecb0d47964a5fe0bc38753a",
+    "2.0.0-6852@sha256:823b9066d721696499df9a97bab0beb306939118ff3bfd806ca754cc684873e7",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "freshrss/freshrss":
     "1.29.1@sha256:ab6b363102ccdbc39f6a62db926f567c61a5289bf25ba460f1c34423d8cc1a4d",
