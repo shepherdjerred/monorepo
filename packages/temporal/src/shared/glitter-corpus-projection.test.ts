@@ -56,6 +56,21 @@ function observation(input: {
   });
 }
 
+function attachment(size = 42): DiscordAttachment {
+  return {
+    id: "900",
+    filename: "photo.png",
+    size,
+    url: "https://cdn.discord.test/photo",
+    proxyUrl: "https://proxy.discord.test/photo",
+    contentType: "image/png",
+    height: 10,
+    width: 20,
+    description: null,
+    ephemeral: false,
+  };
+}
+
 describe("Glitter corpus current projection", () => {
   test("newest edited timestamp wins independent of observation order", () => {
     const original = observation({
@@ -89,6 +104,38 @@ describe("Glitter corpus current projection", () => {
     const selected = selectCurrentObservation([seed, discord]);
     expect(selected.source).toBe("discord-rest");
     expect(selected.guildId).toBe("123");
+  });
+
+  test("Discord content wins when a trusted seed row drifted without an edit timestamp", () => {
+    const seed = observation({
+      source: "seed",
+      sourceKey: "seed/row",
+      content: "Howdy <@597273347385982981>.",
+      observedAt: "2024-09-08T07:24:47.026Z",
+      timestamp: "2024-09-08T07:24:47.026Z",
+    });
+    const discord = observation({
+      source: "discord-rest",
+      sourceKey: "discord/page",
+      content: "Howdy <@456226577798135808>.",
+      observedAt: "2026-07-28T12:49:10.000Z",
+      timestamp: "2024-09-08T07:24:47.026000+00:00",
+    });
+
+    expect(selectCurrentObservation([seed, discord]).content).toBe(
+      discord.content,
+    );
+    expect(selectCurrentObservation([discord, seed]).content).toBe(
+      discord.content,
+    );
+    expect(
+      mergeCurrentProjection(buildCurrentProjection([seed]), [discord])[0]
+        ?.content,
+    ).toBe(discord.content);
+    expect(
+      mergeCurrentProjection(buildCurrentProjection([discord]), [seed])[0]
+        ?.content,
+    ).toBe(discord.content);
   });
 
   test("same message version with different content fails loudly", () => {
@@ -150,23 +197,16 @@ describe("Glitter corpus observation metadata", () => {
   });
 
   test("a later observation refreshes signed attachment URLs", () => {
-    const attachment = {
-      id: "900",
-      filename: "photo.png",
-      size: 42,
+    const originalAttachment = {
+      ...attachment(),
       url: "https://cdn.discord.test/old",
       proxyUrl: "https://proxy.discord.test/old",
-      contentType: "image/png",
-      height: 10,
-      width: 20,
-      description: null,
-      ephemeral: false,
     };
     const first = observation({
       sourceKey: "page-1",
       content: "same",
       observedAt: "2026-01-01T00:00:00.000Z",
-      attachments: [attachment],
+      attachments: [originalAttachment],
     });
     const later = observation({
       sourceKey: "page-2",
@@ -174,7 +214,7 @@ describe("Glitter corpus observation metadata", () => {
       observedAt: "2026-01-02T00:00:00.000Z",
       attachments: [
         {
-          ...attachment,
+          ...originalAttachment,
           url: "https://cdn.discord.test/new",
           proxyUrl: "https://proxy.discord.test/new",
         },
@@ -187,29 +227,36 @@ describe("Glitter corpus observation metadata", () => {
   });
 
   test("same version with different stable attachment data fails loudly", () => {
-    const attachment = {
-      id: "900",
-      filename: "photo.png",
-      size: 42,
-      url: "https://cdn.discord.test/photo",
-      proxyUrl: "https://proxy.discord.test/photo",
-      contentType: "image/png",
-      height: 10,
-      width: 20,
-      description: null,
-      ephemeral: false,
-    };
     expect(() =>
       selectCurrentObservation([
         observation({
           sourceKey: "page/a",
           content: "same",
-          attachments: [attachment],
+          attachments: [attachment()],
         }),
         observation({
           sourceKey: "page/b",
           content: "same",
-          attachments: [{ ...attachment, size: 43 }],
+          attachments: [attachment(43)],
+        }),
+      ]),
+    ).toThrow("conflicting payloads");
+  });
+
+  test("source authority does not hide non-content seed conflicts", () => {
+    expect(() =>
+      selectCurrentObservation([
+        observation({
+          source: "seed",
+          sourceKey: "seed/row",
+          content: "same",
+          attachments: [attachment()],
+        }),
+        observation({
+          source: "discord-rest",
+          sourceKey: "discord/page",
+          content: "same",
+          attachments: [attachment(43)],
         }),
       ]),
     ).toThrow("conflicting payloads");

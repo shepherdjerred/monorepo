@@ -107,7 +107,8 @@ pass.
 - [x] Implement and merge the Temporal hardening and member-lookup PRs.
 - [x] Publish and merge the SeaweedFS storage/deployment wiring.
 - [x] Upload and verify the trusted seed.
-- [ ] Approve inventory and complete canary, backfill, and recovery.
+- [x] Approve inventory and complete the production canary.
+- [ ] Complete the full backfill and recovery verification.
 - [ ] Accept daily and weekly workflows and unpause both schedules.
 - [ ] Complete and archive this plan and the related TODOs.
 
@@ -262,17 +263,49 @@ pass.
   migration core, so the regression test no longer imports executable
   orchestration while the production runner retains the same fail-fast
   behavior.
+- Merged the coverage-safe image fix as PR
+  [#1766](https://github.com/shepherdjerred/monorepo/pull/1766) after Buildkite
+  #6731 passed, then followed main Buildkite #6733 through image publication
+  and the generated version PR #1767 through Buildkite #6735 and merge.
+- Verified ArgoCD deployed worker image `2.0.0-6733` at digest
+  `sha256:e922c0b1fdcf96a1f0db89566dc09a1dabe25de3c799c834052e9bd70a2d69d2`;
+  the deployment reached generation 219 with all Glitter queues polling and
+  both schedules still paused at their intended operator gates.
+- Completed the production canary for channel `1101640275220238426`. Workflow
+  `glitter-corpus-canary-1101640275220238426-b692abae-6668-43cf-9385-e0e09becf7a7`
+  verified 10,288 unique messages and wrote immutable channel state
+  `594dddcb04598d5131836379c5193fc06f8131ddd20fbf300851810f0d949c66`
+  without publishing the canonical latest pointer.
+- Ran the approved 267-channel full backfill. It completed 248 children without
+  a child failure, then failed closed while reconciling the original guild
+  channel; no canonical snapshot or latest pointer was published.
+- Traced the verifier conflict for message `1282240201992966155` through all
+  1,179 stored live page objects and its trusted seed partition. The backward
+  and forward REST observations agree, while the archive contains a different
+  user mention for the same bot-authored message ID and timestamp and Discord
+  reports no `edited_timestamp`.
+- Added a narrow projection rule: at an equal message version, live Discord
+  REST may supersede trusted-seed content drift only when every other immutable
+  field agrees. Same-source content conflicts and all non-content immutable
+  conflicts still fail closed. Added order-independent initial projection and
+  daily baseline merge regressions using the production evidence.
+- Passed the focused 12-test projection suite, targeted lint and formatting,
+  Temporal typecheck, and the complete Temporal test, lint, and typecheck
+  surface. The affected repository verification also passed all 30 applicable
+  gates, including 736 Temporal tests, the clean-clone rehearsal, script
+  coverage, markdown, secret scanning, and quality checks.
 
 ### Remaining
 
-- Publish and deploy the live-canary fixes, rerun the canary with a deliberate
-  1,000-page ceiling, then complete backfill, recovery, and schedule
+- Publish, merge, and deploy the narrow seed-content drift correction.
+- Rerun the full approved backfill, publish its canonical snapshot, and pass
+  recovery verification including all 76,762 trusted seed messages.
+- Run and verify one manual daily cycle, then deliberately unpause the daily
+  schedule.
+- Complete the two fixed-time weekly dry runs, real weekly refresh, downstream
+  smoke checks, and deliberately unpause the weekly schedule.
+- Mark this plan complete and archive it only after both schedules have passed
   acceptance.
-- Merge the coverage-safe image-bake correction and verify its authoritative
-  current-main image publication and Temporal worker rollout.
-- Reconcile the daily schedule from its false missing-denylist pause to its
-  explicit operator-approval hold; keep both schedules paused until their
-  respective acceptance gates pass.
 
 ### Caveats
 
@@ -293,3 +326,13 @@ pass.
 - The first canary was terminated after its deliberately low 100-page ceiling
   failed; the second failed closed on the live forward-page ordering mismatch.
   Neither run published a canonical snapshot.
+- The first full backfill parent
+  `glitter-corpus-backfill-6a0a9a35-3209-4171-bb50-19da7577fb48` failed after
+  248 of 267 children completed. Its immutable page evidence remains in
+  SeaweedFS, but the failed parent published neither a complete snapshot nor a
+  latest pointer.
+- The source-authority exception is intentionally limited to content drift
+  between trusted seed and Discord REST at the same version. It does not
+  reconcile two disagreeing REST observations, two disagreeing seed
+  observations, or drift in identity, timestamps, type, flags, attachments,
+  references, or TTS.

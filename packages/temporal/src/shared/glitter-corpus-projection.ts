@@ -58,9 +58,39 @@ function stableAttachments(attachments: readonly DiscordAttachment[]): {
   }));
 }
 
-function equivalentImmutableMessageVersion(
-  left: CorpusObservation,
-  right: CorpusObservation,
+type ImmutableMessageVersion = {
+  source: CorpusObservation["source"];
+  guildId: string | null;
+  guildSlug: string;
+  channelId: string;
+  messageId: string;
+  author: {
+    id: string;
+    bot: boolean;
+  };
+  content: string;
+  timestamp: string;
+  editedTimestamp: string | null;
+  type: number;
+  flags: string;
+  tts: boolean;
+  attachments: readonly DiscordAttachment[];
+  referencedMessageId: string | null;
+};
+
+function hasSeedAndDiscordSources(
+  left: ImmutableMessageVersion,
+  right: ImmutableMessageVersion,
+): boolean {
+  return (
+    (left.source === "seed" && right.source === "discord-rest") ||
+    (left.source === "discord-rest" && right.source === "seed")
+  );
+}
+
+function equivalentImmutableMessageVersionExceptContent(
+  left: ImmutableMessageVersion,
+  right: ImmutableMessageVersion,
 ): boolean {
   return (
     (left.guildId === right.guildId ||
@@ -71,7 +101,6 @@ function equivalentImmutableMessageVersion(
     left.messageId === right.messageId &&
     left.author.id === right.author.id &&
     left.author.bot === right.author.bot &&
-    left.content === right.content &&
     instantMilliseconds(left.timestamp) ===
       instantMilliseconds(right.timestamp) &&
     (left.editedTimestamp === null
@@ -85,6 +114,27 @@ function equivalentImmutableMessageVersion(
     JSON.stringify(stableAttachments(left.attachments)) ===
       JSON.stringify(stableAttachments(right.attachments)) &&
     left.referencedMessageId === right.referencedMessageId
+  );
+}
+
+function equivalentImmutableMessageVersion(
+  left: ImmutableMessageVersion,
+  right: ImmutableMessageVersion,
+): boolean {
+  return (
+    left.content === right.content &&
+    equivalentImmutableMessageVersionExceptContent(left, right)
+  );
+}
+
+function isSeedContentDrift(
+  left: ImmutableMessageVersion,
+  right: ImmutableMessageVersion,
+): boolean {
+  return (
+    left.content !== right.content &&
+    hasSeedAndDiscordSources(left, right) &&
+    equivalentImmutableMessageVersionExceptContent(left, right)
   );
 }
 
@@ -155,6 +205,12 @@ export function selectCurrentObservation(
     }
 
     if (!equivalentImmutableMessageVersion(candidate, selected)) {
+      if (isSeedContentDrift(candidate, selected)) {
+        if (candidate.source === "discord-rest") {
+          selected = candidate;
+        }
+        continue;
+      }
       throw new Error(
         `conflicting payloads for message ${first.messageId} at version ${candidate.editedTimestamp ?? candidate.timestamp}`,
       );
@@ -236,36 +292,6 @@ function currentVersionTimestamp(message: CurrentMessage): number {
   return instantMilliseconds(message.editedTimestamp ?? message.timestamp);
 }
 
-function equivalentImmutableCurrentMessage(
-  left: CurrentMessage,
-  right: CurrentMessage,
-): boolean {
-  return (
-    (left.guildId === right.guildId ||
-      left.guildId === null ||
-      right.guildId === null) &&
-    left.guildSlug === right.guildSlug &&
-    left.channelId === right.channelId &&
-    left.messageId === right.messageId &&
-    left.author.id === right.author.id &&
-    left.author.bot === right.author.bot &&
-    left.content === right.content &&
-    instantMilliseconds(left.timestamp) ===
-      instantMilliseconds(right.timestamp) &&
-    (left.editedTimestamp === null
-      ? right.editedTimestamp === null
-      : right.editedTimestamp !== null &&
-        instantMilliseconds(left.editedTimestamp) ===
-          instantMilliseconds(right.editedTimestamp)) &&
-    left.type === right.type &&
-    left.flags === right.flags &&
-    left.tts === right.tts &&
-    JSON.stringify(stableAttachments(left.attachments)) ===
-      JSON.stringify(stableAttachments(right.attachments)) &&
-    left.referencedMessageId === right.referencedMessageId
-  );
-}
-
 function currentMessagePreference(
   candidate: CurrentMessage,
   selected: CurrentMessage,
@@ -326,8 +352,14 @@ export function mergeCurrentProjection(
     }
     if (
       comparison === 0 &&
-      !equivalentImmutableCurrentMessage(message, existing)
+      !equivalentImmutableMessageVersion(message, existing)
     ) {
+      if (isSeedContentDrift(message, existing)) {
+        if (message.source === "discord-rest") {
+          byId.set(message.messageId, message);
+        }
+        continue;
+      }
       throw new Error(
         `projection has conflicting payloads for message ${message.messageId} at ${message.editedTimestamp ?? message.timestamp}`,
       );
