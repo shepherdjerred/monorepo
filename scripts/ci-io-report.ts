@@ -152,15 +152,19 @@ function prometheusConfig(url: string): PrometheusClientConfig {
   return token === undefined ? base : { ...base, bearerToken: token };
 }
 
-function annotationStyle(report: CiIoReport): string {
-  if (
-    report.candidate.integrityIssues.length > 0 ||
-    (report.baseline?.integrityIssues.length ?? 0) > 0
-  ) {
+export function annotationStyle(report: CiIoReport): string {
+  if (report.candidate.integrityIssues.length > 0) {
     return "error";
   }
-  const gateStatus = report.comparison?.fixedCorpusGate.status;
+  const gate = report.comparison?.fixedCorpusGate;
+  const gateStatus = gate?.status;
   if (gateStatus === "failed") {
+    return "error";
+  }
+  if (
+    (report.baseline?.integrityIssues.length ?? 0) > 0 &&
+    gate?.proofKind !== "baseline-lower-bound"
+  ) {
     return "error";
   }
   if (
@@ -194,6 +198,20 @@ async function postAnnotation(
   const exitCode = await process.exited;
   if (exitCode !== 0) {
     throw new Error(`buildkite-agent annotate exited ${String(exitCode)}`);
+  }
+}
+
+export function assertRequestedBenchmarkIntegrity(
+  options: Pick<CliOptions, "benchmark" | "enforceImpactGates">,
+  candidate: WindowIoReport,
+  baseline: WindowIoReport | null,
+): void {
+  if (!options.benchmark) {
+    return;
+  }
+  assertBenchmarkIntegrity(candidate);
+  if (baseline !== null && !options.enforceImpactGates) {
+    assertBenchmarkIntegrity(baseline);
   }
 }
 
@@ -253,7 +271,7 @@ async function main(): Promise<void> {
     now: startedAt,
   });
   const report: CiIoReport = {
-    schemaVersion: 3,
+    schemaVersion: 4,
     generatedAt: startedAt.toISOString(),
     metricSource: options.metricSource,
     organization,
@@ -273,12 +291,7 @@ async function main(): Promise<void> {
   console.log(
     `Wrote ${options.jsonPath} and ${options.markdownPath}: ${String(candidate.summary.totalWriteBytes)} parent-write bytes across ${String(candidate.summary.measuredJobCount)} jobs`,
   );
-  if (options.benchmark) {
-    assertBenchmarkIntegrity(candidate);
-    if (baseline !== null) {
-      assertBenchmarkIntegrity(baseline);
-    }
-  }
+  assertRequestedBenchmarkIntegrity(options, candidate, baseline);
   if (options.enforceImpactGates) {
     const gateStatus = report.comparison?.fixedCorpusGate.status;
     if (gateStatus !== "passed") {

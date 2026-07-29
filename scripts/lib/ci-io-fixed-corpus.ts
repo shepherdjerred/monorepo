@@ -8,6 +8,11 @@ import {
   type JobOutcomeReport,
   type WindowIoReport,
 } from "./ci-io-report-model.ts";
+import {
+  fixedCorpusTelemetryProof,
+  reductionPercent,
+  uniqueIssueCodes,
+} from "./ci-io-proof.ts";
 
 const REQUIRED_LANE_GROUPS = [
   { name: "docs-only", stepKey: "verify" },
@@ -36,13 +41,6 @@ function percentChange(candidate: number, baseline: number): number | null {
     return null;
   }
   return ((candidate - baseline) / baseline) * 100;
-}
-
-function reductionPercent(change: number | null): number | null {
-  if (change === null || change === 0) {
-    return change;
-  }
-  return -change;
 }
 
 function lanes(report: WindowIoReport): CorpusLane[] {
@@ -183,10 +181,6 @@ function duplicateLaneDescriptions(corpusLanes: FixedCorpusLane[]): string[] {
   return [...duplicates].sort();
 }
 
-function hasDuplicateLanes(corpusLanes: FixedCorpusLane[]): boolean {
-  return duplicateLaneDescriptions(corpusLanes).length > 0;
-}
-
 function exactLanePresence(
   baseline: FixedCorpusLane[],
   candidate: FixedCorpusLane[],
@@ -295,16 +289,7 @@ function enforceLaneDurationGates(
   }
 }
 
-function hasCompleteTelemetry(report: WindowIoReport): boolean {
-  return (
-    report.summary.expectedJobCount > 0 &&
-    report.summary.completeJobCount === report.summary.expectedJobCount &&
-    report.summary.measuredJobCount === report.summary.expectedJobCount &&
-    report.integrityIssues.length === 0
-  );
-}
-
-function corpusIntegrityReasons(input: {
+function corpusComparabilityReasons(input: {
   baseline: WindowIoReport;
   candidate: WindowIoReport;
   baselineLanes: CorpusLane[];
@@ -405,18 +390,6 @@ function corpusIntegrityReasons(input: {
       `candidate fixed-corpus jobs did not all pass: ${unsuccessfulCandidateJobs.join(", ")}`,
     );
   }
-  if (
-    !hasCompleteTelemetry(input.baseline) ||
-    !hasCompleteTelemetry(input.candidate)
-  ) {
-    reasons.push("one or both fixed-corpus windows have incomplete telemetry");
-  }
-  if (
-    input.baseline.unfinishedBuilds.length > 0 ||
-    input.candidate.unfinishedBuilds.length > 0
-  ) {
-    reasons.push("one or both fixed-corpus cohorts excluded unfinished builds");
-  }
   return reasons;
 }
 
@@ -451,7 +424,7 @@ export function fixedCorpusGate(
           baseline.summary.p95DurationSeconds,
         );
   const writeReduction = reductionPercent(writeChange);
-  const inconclusiveReasons = corpusIntegrityReasons({
+  const comparabilityReasons = corpusComparabilityReasons({
     baseline,
     candidate,
     baselineLanes,
@@ -461,15 +434,33 @@ export function fixedCorpusGate(
     baselineBuilds,
     candidateBuilds,
   });
+  const telemetryProof = fixedCorpusTelemetryProof(baseline, candidate);
+  const inconclusiveReasons = [
+    ...comparabilityReasons,
+    ...telemetryProof.reasons,
+  ];
+  const comparisonEstablished =
+    comparabilityReasons.length === 0 && telemetryProof.reasons.length === 0;
+  const comparableProofKind = comparisonEstablished
+    ? telemetryProof.proofKind
+    : null;
+  const minimumWriteReduction =
+    comparableProofKind === null ? null : writeReduction;
   const thresholdReasons: string[] = [];
-  if (writeReduction === null) {
+  if (minimumWriteReduction === null) {
     inconclusiveReasons.push(
-      "aggregate write reduction could not be calculated",
+      "minimum aggregate write reduction could not be calculated",
     );
-  } else if (writeReduction < 50) {
-    thresholdReasons.push("aggregate write reduction is below 50%");
+  } else if (minimumWriteReduction < 50) {
+    if (comparableProofKind === "exact") {
+      thresholdReasons.push("aggregate write reduction is below 50%");
+    } else {
+      inconclusiveReasons.push(
+        "conservative minimum aggregate write reduction is below 50%",
+      );
+    }
   }
-  if (!hasDuplicateLanes(baselineLanes) && !hasDuplicateLanes(candidateLanes)) {
+  if (comparisonEstablished) {
     enforceLaneDurationGates(
       baselineLanes,
       candidateLanes,
@@ -480,13 +471,16 @@ export function fixedCorpusGate(
 
   return {
     status:
-      inconclusiveReasons.length > 0
-        ? "inconclusive"
-        : thresholdReasons.length > 0
-          ? "failed"
+      thresholdReasons.length > 0
+        ? "failed"
+        : inconclusiveReasons.length > 0
+          ? "inconclusive"
           : "passed",
+    proofKind: comparableProofKind,
     aggregateWriteReductionPercent: writeReduction,
+    minimumAggregateWriteReductionPercent: minimumWriteReduction,
     p95DurationChangePercent: durationChange,
+    baselineSamplingIssueCodes: uniqueIssueCodes(baseline),
     baselineLanes: baselineLanes.map(({ branch, stepKey, jobCount }) => ({
       branch,
       stepKey,

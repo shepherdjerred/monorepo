@@ -75,6 +75,24 @@ Use `CI_IO_FIXED_CORPUS=true` only if a replacement current-main candidate is
 required. This is an operational build: it performs real image pushes and
 OpenTofu applies.
 
+After confirming the requested commit is current `main`, an operator can create
+that build with:
+
+```bash
+bk build create \
+  --pipeline sjerred/monorepo \
+  --branch main \
+  --commit <current-main-sha> \
+  --env CI_IO_FIXED_CORPUS=true \
+  --yes
+```
+
+The value is intentionally exact and main-only. Any other value, an unset
+Buildkite branch, or a non-main branch is a configuration error. Fixed-corpus
+mode forces only playwright, resume, Docker E2E, images, and Tofu; verify
+already runs unconditionally and all unrelated selectors retain their normal
+change-based decisions.
+
 ## Verification
 
 ### Local and PR
@@ -141,14 +159,47 @@ OpenTofu applies.
   - preserved provider-key precedence and sanitized provider environments.
 - Passed focused build, typecheck, test, and lint for `@homelab/cdk8s` and
   `@shepherdjerred/temporal`.
+- Implemented Phase 2:
+  - added exact and conservative baseline-lower-bound proof classification;
+  - kept candidate telemetry and ordinary benchmark mode strict;
+  - added schema-v4 proof evidence to JSON, Markdown, and annotations;
+  - added the fail-fast, main-only fixed-corpus selector and full image target
+    forcing.
+- Passed focused build, typecheck, test, and lint for
+  `@shepherdjerred/root-scripts`, including the static pipeline validator.
+- Published the implementation as stacked draft PRs:
+  - Phase 1: PR #1785 (`feature/ci-observability-terminal`);
+  - Phase 2: PR #1787 (`feature/ci-io-conservative-proof`).
+- Fixed the order-dependent Temporal test failure exposed by hosted Buildkite:
+  replaced the process-wide `mock.module` command-builder replacement with
+  activity-level dependency injection, then passed both test-file orders and
+  the complete Temporal package checks.
+- Passed the exhaustive CI-mode repository verification:
+  `CI=true bun run verify -- --concurrency=6 --output-logs=errors-only
+--summarize` completed with 217/217 tasks successful.
+- Passed exact-head Buildkite #6794 for Phase 1, including the hosted Codex
+  review gate.
+- Addressed Phase 2's hosted Codex P2 by documenting the production-mutating
+  fixed-corpus operator mode in root `CLAUDE.md`/`AGENTS.md` and the managed
+  `buildkite-helper` skill.
+- Addressed the follow-up hosted Codex P2 by making known threshold failures
+  take precedence over inconclusive conservative evidence, with a regression
+  test proving a lane-duration failure produces an error annotation.
+- Addressed the next hosted Codex P2 by applying that precedence only after
+  corpus comparability is established, so mismatched lane/workload windows
+  remain inconclusive.
+- Fixed the two Buildkite migration-validator lint errors exposed by an
+  uncached focused root-scripts lint run.
+- Passed Buildkite #6808 for Phase 2 and resolved its only hosted Codex review
+  thread at that head.
 
 ### Remaining
 
-- [ ] Publish Phase 1 and obtain green hosted CI.
-- [ ] Implement, verify, and publish Phase 2.
 - [ ] Merge, deploy, and validate both phases in delivery order.
-- [ ] Record the final acceptance evidence and archive or retain the original
-      plans according to the completion policy.
+- [ ] Run the fixed-corpus proof on the first successful Phase 2 main build,
+      collect Grafana/Loki and Temporal evidence, and record the final
+      acceptance result.
+- [ ] Archive or retain the original plans according to the completion policy.
 
 ### Caveats
 

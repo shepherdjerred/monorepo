@@ -215,8 +215,11 @@ export function fixedCorpusWorkloadSignatureMultisetsMatch(
 
 export type FixedCorpusGate = {
   status: GateStatus;
+  proofKind: "exact" | "baseline-lower-bound" | null;
   aggregateWriteReductionPercent: number | null;
+  minimumAggregateWriteReductionPercent: number | null;
   p95DurationChangePercent: number | null;
+  baselineSamplingIssueCodes: IntegrityIssueCode[];
   baselineLanes: FixedCorpusLane[];
   candidateLanes: FixedCorpusLane[];
   baselineBuilds: FixedCorpusBuild[];
@@ -232,7 +235,7 @@ export type WindowComparison = {
 };
 
 export type CiIoReport = {
-  schemaVersion: 3;
+  schemaVersion: 4;
   generatedAt: string;
   metricSource: MetricSource;
   organization: string;

@@ -15,6 +15,29 @@ description: |
 
 BuildKite is a CI/CD platform where builds run on your own infrastructure via agents. Pipelines are defined in YAML (static or dynamically generated). This monorepo formerly used BuildKite as its sole CI platform with dynamic TypeScript pipeline generation and Dagger for all build steps (removed 2026-07).
 
+## Monorepo Fixed-Corpus CI I/O Builds
+
+`CI_IO_FIXED_CORPUS=true` is an operator-only mode for producing a comparable
+CI I/O acceptance candidate on the current `main` commit. It forces the
+playwright, resume, Docker E2E, images, and OpenTofu selectors. The image lane
+builds and pushes every known image target, and the OpenTofu lanes perform real
+applies; unrelated selectors keep their normal change-based decisions.
+
+After confirming the SHA is still current `main`, create the build with:
+
+```bash
+bk build create \
+  --pipeline sjerred/monorepo \
+  --branch main \
+  --commit <current-main-sha> \
+  --env CI_IO_FIXED_CORPUS=true \
+  --yes
+```
+
+The value must be exactly `true`, and `BUILDKITE_BRANCH` must be `main`.
+Invalid values, an unset branch, and non-main branches fail before the pipeline
+runs. Treat this as a production-mutating build, not a read-only benchmark.
+
 ## Pipeline YAML Quick Reference
 
 ### Command Step

@@ -251,6 +251,34 @@ test("uses the last green commit for scoped pushes", async () => {
   });
 });
 
+test("builds every known image target for the fixed CI I/O corpus", async () => {
+  const commands: string[][] = [];
+  const executor: CommandExecutor = async (command) => {
+    commands.push([...command]);
+    return commandResult(0, '["birmel"]');
+  };
+
+  expect(
+    await selectedTargets(
+      {
+        affected: false,
+        push: true,
+        environment: {
+          CI_IO_FIXED_CORPUS: "true",
+          BUILDKITE_BRANCH: "main",
+        },
+      },
+      "current",
+      executor,
+      greenCommit,
+    ),
+  ).toEqual({
+    targets: knownImageTargets,
+    fallbackReason: "fixed CI I/O corpus requested",
+  });
+  expect(commands).toEqual([]);
+});
+
 test("validates image manifest digests", async () => {
   const digest = `sha256:${"a".repeat(64)}`;
   const success: CommandExecutor = async () =>

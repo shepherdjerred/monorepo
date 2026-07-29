@@ -179,12 +179,24 @@ function comparisonLines(report: CiIoReport): string[] {
     return [];
   }
   const gate = comparison.fixedCorpusGate;
+  const proofDescription =
+    gate.proofKind === "baseline-lower-bound"
+      ? "conservative baseline lower bound"
+      : gate.proofKind === "exact"
+        ? "exact telemetry"
+        : "unavailable";
+  const baselineSamplingIssues =
+    gate.baselineSamplingIssueCodes.length === 0
+      ? "none"
+      : gate.baselineSamplingIssueCodes.map((code) => `\`${code}\``).join(", ");
   return [
     "## Baseline versus candidate",
     "",
     `Aggregate writes: ${formatPercent(comparison.writeBytesChangePercent)} (${formatBytes(comparison.writeBytesChange)}). Normalized per measured job: ${formatPercent(comparison.writeBytesPerJobChangePercent)}.`,
     "",
-    `Fixed-corpus impact gate: **${gate.status}**. Aggregate write reduction: ${formatPercent(gate.aggregateWriteReductionPercent)}. p95 duration change: ${formatPercent(gate.p95DurationChangePercent)}.`,
+    `Fixed-corpus impact gate: **${gate.status}**. Proof: **${proofDescription}**. Observed aggregate write reduction: ${formatPercent(gate.aggregateWriteReductionPercent)}. Conservative minimum aggregate write reduction: ${formatPercent(gate.minimumAggregateWriteReductionPercent)}. p95 duration change: ${formatPercent(gate.p95DurationChangePercent)}.`,
+    "",
+    `Baseline sampling issue codes: ${baselineSamplingIssues}. A baseline lower-bound proof is admissible only when the candidate telemetry is complete and every baseline issue is a terminal or long-job sampling omission.`,
     "",
     "### Fixed-corpus build identities",
     "",

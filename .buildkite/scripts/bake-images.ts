@@ -8,6 +8,7 @@ import {
   caddyfileEntitlementArguments,
   expandTargets,
   findPinnedDigest,
+  fixedCorpusMode,
   knownImageTargets,
   parseBakeArguments,
   parseBuildkiteCommits,
@@ -90,13 +91,23 @@ export async function lastGreenCommit(
 }
 
 export async function selectedTargets(
-  options: { readonly affected: boolean; readonly push: boolean },
+  options: {
+    readonly affected: boolean;
+    readonly push: boolean;
+    readonly environment?: Readonly<Record<string, string | undefined>>;
+  },
   commit: string,
   executor: CommandExecutor = execute,
   greenCommit: (
     currentCommit: string,
   ) => Promise<string | undefined> = lastGreenCommit,
 ): Promise<{ readonly targets: string[]; readonly fallbackReason: string }> {
+  if (fixedCorpusMode(options.environment ?? Bun.env)) {
+    return {
+      targets: knownImageTargets,
+      fallbackReason: "fixed CI I/O corpus requested",
+    };
+  }
   let base: string | undefined;
   let fallbackReason = "full build requested (no --affected/--push scoping)";
   if (options.affected) {
