@@ -100,16 +100,22 @@ describe("Glitter context generation artifacts", () => {
       generate: async () => ({
         response: { value: "loser" },
         usage: {
-          inputTokens: 10,
-          outputTokens: 2,
+          inputTokens: 20,
+          outputTokens: 4,
           cachedInputTokens: 0,
-          costUsd: 0.01,
+          costUsd: 0.02,
         },
       }),
     });
 
     expect(result.response).toEqual({ value: "winner" });
     expect(result.cacheStatus).toBe("miss");
+    expect(result.usage).toEqual({
+      inputTokens: 20,
+      outputTokens: 4,
+      cachedInputTokens: 0,
+      costUsd: 0.02,
+    });
   });
 
   test("fails closed when a stored response checksum is corrupt", async () => {

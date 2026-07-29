@@ -147,6 +147,9 @@ weekly production schedule.
   post-completion artifact-finalization failure is non-retryable with billed
   usage in its failure details, and the weekly workflow deadline now covers
   both complete seven-hour activity attempts plus backoff.
+- Preserved atomic first-writer response convergence while charging a
+  conditional-create loser for its own completion usage rather than the
+  winner's stored usage.
 - Hardened the native Temporal good-morning integration cases against
   full-repository CI contention after build #7180 exposed Bun's 5-second
   default timeout; all five repeated focused runs passed with the explicit

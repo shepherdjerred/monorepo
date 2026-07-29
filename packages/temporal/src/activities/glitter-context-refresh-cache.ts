@@ -178,7 +178,7 @@ export async function readOrCreateGenerationArtifact<Response>(input: {
         `Glitter generation artifact disappeared after creation: ${key}`,
       );
     }
-    return parseStoredResponse({
+    const persistedResult = parseStoredResponse({
       stored: persisted,
       key,
       cacheStatus: "miss",
@@ -187,6 +187,15 @@ export async function readOrCreateGenerationArtifact<Response>(input: {
       requestSha256,
       responseSchema: input.responseSchema,
     });
+    return {
+      response: persistedResult.response,
+      key: persistedResult.key,
+      requestSha256: persistedResult.requestSha256,
+      cacheStatus: persistedResult.cacheStatus,
+      // A conditional-create loser must reuse the winner's response while
+      // charging this execution for its own already-billed completion.
+      usage,
+    };
   } catch (error: unknown) {
     throw billedGenerationFinalizationFailure({
       error,
