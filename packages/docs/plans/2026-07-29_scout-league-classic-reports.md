@@ -158,11 +158,12 @@ renderers, and enrichment behavior must not change.
   private fonts without retaining SVG font outlines.
 - Passed focused build, typecheck, test, and lint tasks for Scout data, report,
   and backend packages; verified the pipeline contract and OpenTofu formatting.
+- Published draft PR #1849 on top of refresh PR #1827 with accepted full 5v5,
+  partial 3v2, and postmatch screenshots.
 
 ### Remaining
 
-- [ ] Publish the implementation and screenshots to the refresh PR and drive
-      current-head Buildkite to green.
+- [ ] Drive current-head Buildkite and review feedback to green.
 - [ ] After merge, verify OpenTofu adoption, beta deployment/notification, and
       the production promotion workflow before resolving the Bugsink issue.
 

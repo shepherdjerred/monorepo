@@ -157,11 +157,12 @@ controls.
   boundary.
 - Rendered and visually reviewed full and partial prematch reports plus full
   and partial postmatch reports using the checksum-pinned fonts.
+- Attached the accepted full prematch, partial prematch, and full postmatch
+  renders to PR #1849.
 
 ### Remaining
 
-- [ ] Attach the accepted full prematch, partial prematch, and full postmatch
-      screenshots to the implementation PR.
+- None.
 
 ### Caveats
 
