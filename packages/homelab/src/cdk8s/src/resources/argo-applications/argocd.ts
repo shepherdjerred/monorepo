@@ -200,9 +200,22 @@ if obj.status ~= nil then
     end
     hs.message = "Application is not Synced"
   end
+  local operationBlocks = false
   if obj.status.operationState ~= nil and
      obj.status.operationState.phase ~= nil and
      obj.status.operationState.phase ~= "Succeeded" then
+    operationBlocks = true
+    local phase = obj.status.operationState.phase
+    if (phase == "Failed" or phase == "Error") and
+       obj.status.operationState.syncResult ~= nil and
+       obj.status.operationState.syncResult.revision ~= nil and
+       obj.status.sync ~= nil and
+       obj.status.sync.revision ~= nil and
+       obj.status.operationState.syncResult.revision ~= obj.status.sync.revision then
+      operationBlocks = false
+    end
+  end
+  if operationBlocks then
     hs.status = "Progressing"
     hs.message = "Application operation is " .. obj.status.operationState.phase
   end

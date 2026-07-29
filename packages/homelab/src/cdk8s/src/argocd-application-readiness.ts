@@ -8,7 +8,15 @@ const ApplicationStatusSchema = z.object({
         .optional(),
       health: z.object({ status: z.string() }).optional(),
       operationState: z
-        .object({ phase: z.string(), message: z.string().optional() })
+        .object({
+          phase: z.string(),
+          message: z.string().optional(),
+          syncResult: z
+            .object({
+              revision: z.string().optional(),
+            })
+            .optional(),
+        })
         .optional(),
     })
     .optional(),
@@ -29,8 +37,11 @@ export function applicationReadiness(
   const syncValue = status?.sync?.status ?? "";
   const healthValue = status?.health?.status ?? "";
   const operationPhase = status?.operationState?.phase;
-  const operationReady =
-    operationPhase === undefined || operationPhase === "Succeeded";
+  const operationReady = operationIsReadyForCurrentRevision(
+    operationPhase,
+    status?.operationState?.syncResult?.revision,
+    status?.sync?.revision,
+  );
   return {
     sync: syncValue,
     health: healthValue,
@@ -56,6 +67,11 @@ const ApplicationListItemSchema = z.object({
         .object({
           phase: z.string(),
           message: z.string().optional(),
+          syncResult: z
+            .object({
+              revision: z.string().optional(),
+            })
+            .optional(),
         })
         .optional(),
       resources: z
@@ -87,8 +103,32 @@ function operationIsReady(phase: string | undefined): boolean {
   return phase === undefined || phase === "Succeeded";
 }
 
+function operationIsReadyForCurrentRevision(
+  phase: string | undefined,
+  operationRevision: string | undefined,
+  currentRevision: string | undefined,
+): boolean {
+  if (operationIsReady(phase)) {
+    return true;
+  }
+  return (
+    (phase === "Failed" || phase === "Error") &&
+    operationRevision !== undefined &&
+    currentRevision !== undefined &&
+    operationRevision !== currentRevision
+  );
+}
+
 function isSyncedAndHealthy(sync: string, health: string): boolean {
   return sync === "Synced" && health === "Healthy";
+}
+
+function itemOperationIsReady(item: ApplicationListItem): boolean {
+  return operationIsReadyForCurrentRevision(
+    item.status?.operationState?.phase,
+    item.status?.operationState?.syncResult?.revision,
+    item.status?.sync?.revision,
+  );
 }
 
 function offendingResources(item: ApplicationListItem): string[] {
@@ -126,15 +166,16 @@ export function unreadyApplicationSummaries(
     const sync = item.status?.sync?.status ?? "";
     const health = item.status?.health?.status ?? "";
     const operationPhase = item.status?.operationState?.phase;
+    const operationReady = itemOperationIsReady(item);
     const ready =
-      operationIsReady(operationPhase) &&
+      operationReady &&
       health === "Healthy" &&
       (!requireSynced || sync === "Synced");
     if (ready) {
       continue;
     }
     const offenders = offendingResources(item);
-    const operation = operationIsReady(operationPhase)
+    const operation = operationReady
       ? ""
       : ` Operation=${operationPhase ?? "?"}`;
     const suffix = offenders.length > 0 ? ` — ${offenders.join(", ")}` : "";
@@ -169,7 +210,7 @@ function expectedApplicationFailure(
   if (!isSyncedAndHealthy(sync, health)) {
     return `${wanted.name}: Sync=${sync || "?"} Health=${health || "?"}`;
   }
-  if (!operationIsReady(operationPhase)) {
+  if (!itemOperationIsReady(item)) {
     return `${wanted.name}: Operation=${operationPhase ?? "?"}`;
   }
   if (wanted.revision !== undefined && revision !== wanted.revision) {
