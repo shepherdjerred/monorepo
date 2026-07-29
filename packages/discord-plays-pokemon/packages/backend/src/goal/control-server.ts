@@ -27,8 +27,11 @@ function timingFromConfig(config: Config): CommandTiming {
   };
 }
 
-function authenticate(request: Request, token: string): boolean {
-  return request.headers.get("authorization") === `Bearer ${token}`;
+function bearerToken(request: Request): string | undefined {
+  const authorization = request.headers.get("authorization");
+  return authorization?.startsWith("Bearer ") === true
+    ? authorization.slice("Bearer ".length)
+    : undefined;
 }
 
 export function startGoalControlServer(
@@ -57,38 +60,47 @@ export function startGoalControlServer(
     hostname: options.config.game.goal.control_host,
     port: options.config.game.goal.control_port,
     async fetch(request) {
-      if (!authenticate(request, options.token)) {
+      const token = bearerToken(request);
+      const goalId = request.headers.get("x-pokemon-goal-id") ?? undefined;
+      const finishControl =
+        token === undefined || goalId === undefined
+          ? undefined
+          : options.goalManager.beginControlRequest(token, goalId);
+      if (finishControl === undefined) {
         return jsonResponse({ error: "unauthorized" }, 401);
       }
-
-      const url = new URL(request.url);
-      const startedAt = Date.now();
       try {
-        const routed = await routeRequest(context, request);
-        logGoalTool({
-          goalId: context.goalManager.getStatus()?.id,
-          method: request.method,
-          path: url.pathname,
-          durationMs: Date.now() - startedAt,
-          status: routed.response.status,
-          request: routed.requestMeta,
-          response: routed.logBody,
-        });
-        return routed.response;
-      } catch (error) {
-        logger.error(error);
-        const errorBody = {
-          error: error instanceof Error ? error.message : "unknown error",
-        };
-        logGoalTool({
-          goalId: context.goalManager.getStatus()?.id,
-          method: request.method,
-          path: url.pathname,
-          durationMs: Date.now() - startedAt,
-          status: 400,
-          response: errorBody,
-        });
-        return jsonResponse(errorBody, 400);
+        const url = new URL(request.url);
+        const startedAt = Date.now();
+        try {
+          const routed = await routeRequest(context, request);
+          logGoalTool({
+            goalId,
+            method: request.method,
+            path: url.pathname,
+            durationMs: Date.now() - startedAt,
+            status: routed.response.status,
+            request: routed.requestMeta,
+            response: routed.logBody,
+          });
+          return routed.response;
+        } catch (error) {
+          logger.error(error);
+          const errorBody = {
+            error: error instanceof Error ? error.message : "unknown error",
+          };
+          logGoalTool({
+            goalId,
+            method: request.method,
+            path: url.pathname,
+            durationMs: Date.now() - startedAt,
+            status: 400,
+            response: errorBody,
+          });
+          return jsonResponse(errorBody, 400);
+        }
+      } finally {
+        finishControl();
       }
     },
   });

@@ -51,6 +51,7 @@ export type BuildEnvironmentInput = {
   controlHost: string;
   controlPort: number;
   controlToken: string;
+  goalId: string;
 };
 
 export function buildEnvironment(
@@ -88,6 +89,7 @@ export function buildEnvironment(
     PATH: pathParts.join(":"),
     POKEMONCTL_URL: `http://${input.controlHost}:${String(input.controlPort)}`,
     POKEMONCTL_TOKEN: input.controlToken,
+    POKEMONCTL_GOAL_ID: input.goalId,
     POKEMONCTL_SCRIPT: path.join(
       input.runtimeDirectory,
       "packages",

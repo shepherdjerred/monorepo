@@ -74,11 +74,7 @@ handleMessages(runtime.bot, driver, async (commandInput: CommandInput) => {
   if (active === null) {
     return;
   }
-  try {
-    await enqueueCommand(active.emulator, commandInput, active.timing);
-  } catch (error) {
-    logger.error(error);
-  }
+  await enqueueCommand(active.emulator, commandInput, active.timing);
 });
 
 await runtime.start();

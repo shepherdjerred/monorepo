@@ -13,10 +13,8 @@ import {
 } from "#src/emulator/command-sink.ts";
 import { encodePng } from "#src/emulator/png.ts";
 import { GameStreamer } from "#src/stream/game-streamer.ts";
-import {
-  GoalManager,
-  type GoalDiscordMessage,
-} from "#src/goal/goal-manager.ts";
+import { GoalManager } from "#src/goal/goal-manager.ts";
+import type { GoalDiscordMessage } from "#src/goal/goal-types.ts";
 import {
   startGoalControlServer,
   type GoalControlServer,

@@ -107,6 +107,13 @@ function requireMemory(exports: Bun.WebAssembly.Exports): WebAssembly.Memory {
 
 export type InputSource = "interactive" | "goal";
 
+export class InputLeaseConflictError extends Error {
+  constructor(readonly owner: InputSource) {
+    super(`input is exclusively leased by ${owner}`);
+    this.name = "InputLeaseConflictError";
+  }
+}
+
 type QueueStep = {
   mask: number;
   frames: number;
@@ -367,7 +374,7 @@ export class Emulator {
       ...this.queue.filter((step) => step.source === source),
     );
     for (const reject of rejected) {
-      reject(new Error(`input lease acquired by ${source}`));
+      reject(new InputLeaseConflictError(source));
     }
     return () => {
       if (
@@ -381,7 +388,7 @@ export class Emulator {
 
   private assertInputAllowed(source: InputSource): void {
     if (this.inputLease !== undefined && this.inputLease !== source) {
-      throw new Error(`input is exclusively leased by ${this.inputLease}`);
+      throw new InputLeaseConflictError(this.inputLease);
     }
   }
 

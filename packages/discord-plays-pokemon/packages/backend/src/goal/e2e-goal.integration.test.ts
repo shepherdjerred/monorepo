@@ -22,11 +22,8 @@ import {
 import { trace } from "@opentelemetry/api";
 import type { Config } from "#src/config/schema.ts";
 import type { GameSnapshot } from "#src/game/events/types.ts";
-import {
-  GoalManager,
-  type GoalDiscordMessage,
-  type GoalProcessSpawner,
-} from "./goal-manager.ts";
+import { GoalManager } from "./goal-manager.ts";
+import type { GoalDiscordMessage, GoalProcessSpawner } from "./goal-types.ts";
 
 // Canned JSONL the stub codex emits. 2 turns, each with a tool call + agent
 // message + usage block.

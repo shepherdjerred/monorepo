@@ -19,6 +19,7 @@ const config = [
         "src/discord/chord-validator.test.ts",
         "src/discord/chord-executor.test.ts",
         "src/discord/event-notifier.test.ts",
+        "src/discord/message-handler.test.ts",
         "src/emulator/audio/analysis.test.ts",
         "src/emulator/audio/audio-fingerprint.test.ts",
         "src/emulator/audio/m4a-handlers-basic.test.ts",
@@ -36,6 +37,7 @@ const config = [
         "src/goal/game-controller.test.ts",
         "src/goal/game-state-summary.test.ts",
         "src/goal/goal-manager.test.ts",
+        "src/goal/goal-control-gate.test.ts",
         "src/goal/goal-input-lease.test.ts",
         "src/goal/goal-memory.test.ts",
         "src/goal/history-summary.test.ts",
@@ -46,7 +48,7 @@ const config = [
       ],
       // Test files are excluded from tsconfig (bun test globals aren't visible
       // to tsc), so they fall to the default project; raise the cap.
-      maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 40,
+      maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 42,
     },
   }),
   {

@@ -75,10 +75,12 @@ async function request(
 ): Promise<string> {
   const baseUrl = readRequiredEnv("POKEMONCTL_URL");
   const token = readRequiredEnv("POKEMONCTL_TOKEN");
+  const goalId = readRequiredEnv("POKEMONCTL_GOAL_ID");
   const response = await fetch(new URL(route, baseUrl), {
     method,
     headers: {
       authorization: `Bearer ${token}`,
+      "x-pokemon-goal-id": goalId,
       ...(body === undefined ? {} : { "content-type": "application/json" }),
     },
     body: body === undefined ? undefined : JSON.stringify(body),

@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import path from "node:path";
 import type { Config } from "#src/config/schema.ts";
-import { GoalManager, type GoalProcess } from "./goal-manager.ts";
+import { GoalManager } from "./goal-manager.ts";
+import type { GoalProcess } from "./goal-types.ts";
 
 async function createRuntimeDirectory(): Promise<string> {
   const directory = path.join(
@@ -214,6 +215,59 @@ describe("GoalManager input lease", () => {
     expect(replacementResult.kind).toBe("started");
     expect(tracker.acquired).toBe(2);
     expect(tracker.released).toBe(1);
+    await manager.shutdown();
+  });
+
+  test("blocks new starts and holds the lease while old controls drain", async () => {
+    const tracker = new LeaseTracker();
+    const first = makeProcess(false);
+    const second = makeProcess();
+    const processes = [first, second];
+    let controlToken: string | undefined;
+    let goalId: string | undefined;
+    const manager = new GoalManager({
+      config: {
+        ...makeGoalConfig(await createRuntimeDirectory()),
+        max_runtime_minutes: 0,
+      },
+      controlToken: "token",
+      spawner: (_args, options) => {
+        controlToken = options.env["POKEMONCTL_TOKEN"];
+        goalId = options.env["POKEMONCTL_GOAL_ID"];
+        const process = processes.shift();
+        if (process === undefined) throw new Error("missing process fixture");
+        return process;
+      },
+      sendMessage: noopSendMessage,
+      acquireInputLease: tracker.acquire,
+    });
+
+    await manager.startGoal(START_INPUT);
+    if (controlToken === undefined || goalId === undefined) {
+      throw new Error("goal control identity was not propagated");
+    }
+    const finishControl = manager.beginControlRequest(controlToken, goalId);
+    if (finishControl === undefined) {
+      throw new Error("active control request must be accepted");
+    }
+    expect(
+      manager.beginControlRequest(controlToken, "stale-goal"),
+    ).toBeUndefined();
+
+    await first.killRequested;
+    const busyBeforeExit = await manager.startGoal(START_INPUT);
+    expect(busyBeforeExit.kind).toBe("busy");
+    first.finish(143);
+    await Bun.sleep(0);
+    expect(tracker.held).toBe(true);
+    const busyBeforeDrain = await manager.startGoal(START_INPUT);
+    expect(busyBeforeDrain.kind).toBe("busy");
+
+    finishControl();
+    await waitForRelease(tracker);
+    await Bun.sleep(10);
+    const restarted = await manager.startGoal(START_INPUT);
+    expect(restarted.kind).toBe("started");
     await manager.shutdown();
   });
 

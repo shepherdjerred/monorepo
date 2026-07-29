@@ -13,7 +13,7 @@ import { prepareRuntimeTools, buildEnvironment } from "./goal-runtime-env.ts";
 import { buildCodexArgs, type PromptContext } from "./codex-command.ts";
 import { attachCodexTrace, type CodexTrace } from "./codex-trace.ts";
 import { streamToLog } from "./goal-process-helpers.ts";
-import type { GoalProcess, GoalProcessSpawner } from "./goal-manager.ts";
+import type { GoalProcess, GoalProcessSpawner } from "./goal-types.ts";
 
 export type SpawnGoalCodexInput = {
   config: Config["game"]["goal"];
@@ -67,6 +67,7 @@ export async function spawnGoalCodex(
       controlHost: input.config.control_host,
       controlPort: input.config.control_port,
       controlToken: input.controlToken,
+      goalId: input.goalId,
     }),
   });
   const jsonl = createCodexJsonlParser({
