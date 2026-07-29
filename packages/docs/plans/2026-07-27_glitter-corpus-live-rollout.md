@@ -11,82 +11,63 @@ disposition: blocked
 
 ## Summary
 
-Finish the feature through production operation: close remaining correctness
-gaps, wire credentials, upload the trusted seed, publish a verified complete
-snapshot, exercise daily and weekly workflows, and unpause both schedules.
+The production corpus-capture workflow is complete and operating. The trusted
+76,762-message seed is stored in SeaweedFS, the complete backfill and recovery
+verification passed, and `glitter-corpus-daily` is active. Its latest scheduled
+run published recovery-verified snapshot
+`07d2998a-c2d0-4f15-aaab-c365bb103066` with 267 channels and 212,415 unique
+messages.
 
-The archive's `glitter-boys` and `league-of-legends` roots are channel-export
-groups from the same Discord guild: embedded threads in both report guild ID
-`208425771172102144`. The importer currently misclassifies those roots as
-separate guilds and must be fixed before seeding.
-
-The hardening and live-discovered Discord member lookup fixes shipped in pull
-requests 1750 and 1752. Publish the remaining SeaweedFS storage/deployment
-change as a single git-spice PR.
-
-Keep both production schedules paused until their individual acceptance gates
-pass.
+Only weekly context-refresh acceptance remains. The workflow and credential
+projection are deployed, but its fixed-time dry run fails closed on OpenAI HTTP
+429 `insufficient_quota`. Keep only `glitter-context-refresh-weekly` paused
+until quota is restored or a different production credential is explicitly
+authorized, two identical dry runs pass, the real refresh and consumer smokes
+pass, and the schedule is deliberately unpaused.
 
 ## Implementation
 
-### PR 1 — corpus and workflow hardening
-
-- Normalize the entire trusted ZIP to guild `208425771172102144` and slug
-  `glitter-boys`; require explicit production import flags, validate embedded
-  thread guild IDs, version the manifest, and repin the corrected deterministic
-  projection hash while retaining the archive hash and 76,762-message pin.
-- Preserve the prior verified projection when the six-overlap lineage resets to
-  a complete traversal. Record the retained baseline in the complete manifest
-  and make recovery reproduce the same bounded projection.
-- Fail daily inventory before publication when a previously captured,
-  non-denylisted public-thread parent is missing or no longer grants View
-  Channel plus Read Message History.
-- Replace the request timestamp lease with a CAS-protected 60-second in-flight
-  lease. Release it in `finally` and set the next request to the later of
-  completion plus one second or Discord's reset deadline.
-- Derive weekly refresh branch identity from the Temporal workflow run ID,
-  reuse an existing exact-head PR, return a deterministic proposal checksum,
-  and add a supported context-refresh operator command.
-- Correct the canary runbook: backward traversal ends empty; forward traversal
-  ends non-empty at the frozen upper bound; both ID sets must match.
-
-### PR 2 — credential and deployment wiring
-
-- Reuse the existing production `Starlight` bot identity. Project its
-  `DISCORD_TOKEN` from the Starlight 1Password item into the Temporal namespace;
-  keep guild ID `208425771172102144` and slug `glitter-boys` as non-secret
-  literals.
-- Use SeaweedFS as the sole canonical object store. Project the existing worker
-  S3 credentials and explicit non-secret bucket, region, and initial
-  empty-denylist values; do not provision or project Cloudflare R2 credentials.
-- Replace the pre-production dual-mirror schema with a single checksum-verified
-  SeaweedFS receipt and retain immutable collision detection, read-after-write
-  verification, recovery checks, and monotonic pointer publication.
-- Merge both PRs bottom-up, require current-head and merged-main Buildkite
-  success, follow image/GitOps deployment, and confirm both schedules remain at
-  their operator-approval pause notes.
+- [x] Normalize and import the trusted ZIP as guild `208425771172102144` /
+      `glitter-boys`, preserving the pinned 76,762-message projection.
+- [x] Ship corpus correctness, recovery, Discord lease, inventory, canary, and
+      retry-stable context-refresh hardening.
+- [x] Deploy the Starlight Discord token and SeaweedFS-only storage projection
+      to the production Temporal worker.
+- [x] Upload and verify the immutable seed, approve inventory, run the canary,
+      publish the complete backfill, and prove recovery retains every seed
+      message.
+- [x] Accept a manual daily cycle, verify the scheduled daily cycle, and
+      deliberately activate `glitter-corpus-daily`.
+- [x] Deploy the exact immutable Temporal worker image and verify ArgoCD,
+      schedule state, metrics, and storage-integrity alerts.
+- [ ] Restore the Temporal worker OpenAI project's quota or explicitly
+      authorize a different production OpenAI credential.
+- [ ] Run the snapshot-pinned fixed-time weekly dry run twice and require
+      byte-identical outputs and proposal checksums.
+- [ ] Run the real refresh, inspect its sole PR or no-diff result, and
+      smoke-test the shared package, Birmel, Scout, and Glitter consumers.
+- [ ] Deliberately unpause `glitter-context-refresh-weekly`, verify its next
+      action and observability, then archive this plan and its related TODOs.
 
 ## Live Rollout
 
-1. Import the archive twice with the explicit guild identity and require
-   byte-identical outputs: 164 CSVs, 98 channels, 76,762 unique messages, and
-   zero duplicate IDs.
-2. Upload the seed archive, manifest, projection, and channel partitions to
-   SeaweedFS and verify every immutable object and receipt.
-3. Run inventory and obtain explicit approval of every included/excluded entry
-   and its immutable SHA. All 98 seed channel IDs must be approved.
-4. Run a seed-backed canary on an approved channel with more than 100 messages.
-5. After explicit full-scrape approval, run and monitor the complete backfill.
-6. Run recovery verification and prove every seed message is present in the
-   canonical snapshot.
-7. Run one manual daily cycle while paused, verify recovery again, then unpause
-   `glitter-corpus-daily`.
-8. Run the weekly context refresh twice as fixed-time dry runs and require
-   identical snapshot/proposal checksums and outputs.
-9. Run one real weekly refresh, review its sole PR or no-diff result, smoke-test
-   Birmel, Scout, and Glitter, then unpause
-   `glitter-context-refresh-weekly`.
-10. Confirm schedule next-run times and clean corpus/context observability.
+- [x] Import the archive twice with the explicit guild identity and require
+      byte-identical outputs: 164 CSVs, 98 channels, 76,762 unique messages, and
+      zero duplicate IDs.
+- [x] Upload the seed archive, manifest, projection, and channel partitions to
+      SeaweedFS and verify every immutable object and receipt.
+- [x] Approve the production inventory, including all 98 seed channel IDs.
+- [x] Run the seed-backed canary and complete backfill.
+- [x] Run recovery verification and prove every seed message is present in the
+      canonical snapshot.
+- [x] Run and verify manual and scheduled daily cycles, then deliberately
+      activate `glitter-corpus-daily`.
+- [ ] Run the weekly context refresh twice as fixed-time dry runs and require
+      identical snapshot/proposal checksums and outputs.
+- [ ] Run one real weekly refresh, review its sole PR or no-diff result, and
+      smoke-test the shared package, Birmel, Scout, and Glitter.
+- [ ] Deliberately unpause `glitter-context-refresh-weekly`, confirm its
+      next-run time, and verify clean corpus/context observability.
 
 ## Verification
 
@@ -716,6 +697,10 @@ pass.
   Both configured activity attempts failed closed on OpenAI HTTP 429
   `insufficient_quota`; no branch, pull request, or generated-context mutation
   occurred.
+- Reconciled the active plan's top-level summary and implementation checklist
+  with production so operators see the seed, SeaweedFS deployment, backfill,
+  recovery, and daily activation as complete, with only weekly acceptance
+  remaining.
 
 ### Remaining
 
