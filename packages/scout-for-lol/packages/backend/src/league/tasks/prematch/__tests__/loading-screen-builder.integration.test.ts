@@ -6,17 +6,22 @@ import {
 } from "@scout-for-lol/data/index.ts";
 import { buildLoadingScreenData } from "#src/league/tasks/prematch/loading-screen-builder.ts";
 
+let rankFetchCount = 0;
+
 // Mock the rank fetcher to avoid real API calls in tests
 void mock.module("#src/league/model/rank.ts", () => ({
-  getRankByPuuid: async () => ({
-    solo: {
-      tier: "gold",
-      division: 2,
-      lp: 50,
-      wins: 100,
-      losses: 90,
-    },
-  }),
+  getRankByPuuid: async () => {
+    rankFetchCount += 1;
+    return {
+      solo: {
+        tier: "gold",
+        division: 2,
+        lp: 50,
+        wins: 100,
+        losses: 90,
+      },
+    };
+  },
 }));
 
 const currentDir = new URL(".", import.meta.url).pathname;
@@ -145,12 +150,14 @@ describe("buildLoadingScreenData layout variants", () => {
       })),
     });
 
+    const rankFetchCountBeforeClassic = rankFetchCount;
     const result = await buildLoadingScreenData(
       gameInfo,
       new Set([trackedPuuid]),
       "AMERICA_NORTH",
     );
 
+    expect(rankFetchCount).toBe(rankFetchCountBeforeClassic);
     expect(result.layout).toBe("classic");
     if (result.layout !== "classic") {
       throw new Error("Expected Classic loading screen data");
