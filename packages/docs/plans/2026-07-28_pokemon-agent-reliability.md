@@ -158,6 +158,15 @@ system against a copied live save and the exact goal `get me a pokeman`.
   PokeAPI capture-rate field and added the empty-party requirement for
   Shedinja from the pinned pokeemerald source. The corpus now reproduces 1,760
   permissive and 39 CC BY-NC-SA records.
+- 2026-07-28: The current-head review gate surfaced five control/CLI threads
+  and two cross-layer integrity threads. Three pointed at code already fixed
+  but still-unresolved discussions; the remaining changes ensure every
+  attempted navigation step consumes the caller's bound, movement stays in the
+  authoritative overworld, a direction press that moves the player ends
+  `interact` before A, the advertised `advance` command runs through the real
+  CLI, benchmark output cannot be placed in or symlinked into its target
+  checkout, and generic Nincada/Shedinja records preserve the pinned level-20
+  and empty-party rule.
 
 ## Session Log — 2026-07-28
 
@@ -172,13 +181,13 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - Implemented a general engine checkpoint and ordered atomic flash
   persistence. A rebuilt real WASM passed an independent checkpoint/reboot
   integration test against a copied live save.
-- Verified the combined backend (288 tests, one opt-in live-save test skipped),
-  all 20 knowledge/build script tests, package typecheck/lint, the exhaustive
+- Verified the combined backend (297 tests, one opt-in live-save test skipped),
+  all 21 knowledge/build script tests, package typecheck/lint, the exhaustive
   root `bun run verify` graph (217/217 tasks), and a clean Docker `smoke` build
   that rebuilt the patched WASM, passed the real-emulator ABI boot test, and
   passed the in-image application check. The resulting local smoke image
   manifest is
-  `sha256:78e2b91a209178e2c2f30f053691531c65fd92a40c0e6ea38aeb2ff00bcf6c09`.
+  `sha256:c3cd11959929a9d0c05c43a875733110b061089a6b348b5f4a661ea250fa6c31`.
 - Completed a manual general-control playthrough through the first rival,
   Pokedex/Poke Ball acquisition, and a visible Poochyena catch.
 - Published the three-PR git-spice stack as #1802, #1803, and #1805 and attached
@@ -219,6 +228,12 @@ system against a copied live save and the exact goal `get me a pokeman`.
   oracle, strict flash integrity and rollover handling, clean runner
   provenance, removal of unversioned capture rates, and the pinned Shedinja
   empty-party condition.
+- Addressed the replacement review cycle: navigation attempts are strictly
+  bounded even when movement fails, movement aborts outside the overworld,
+  interaction never follows an accidental step with A, `pokemonctl advance` is
+  registered and integration-tested, benchmark output containment resolves
+  symlink aliases before artifact creation, and generic species retrieval
+  carries the pinned Shedinja creation requirements.
 
 ### Remaining
 
