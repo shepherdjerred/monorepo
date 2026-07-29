@@ -20,6 +20,7 @@ const config = [
         "src/discord/chord-executor.test.ts",
         "src/discord/event-notifier.test.ts",
         "src/discord/message-handler.test.ts",
+        "src/discord/slashCommands/commands/goal.test.ts",
         "src/emulator/audio/analysis.test.ts",
         "src/emulator/audio/audio-fingerprint.test.ts",
         "src/emulator/audio/m4a-handlers-basic.test.ts",
@@ -53,7 +54,7 @@ const config = [
       ],
       // Test files are excluded from tsconfig (bun test globals aren't visible
       // to tsc), so they fall to the default project; raise the cap.
-      maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 44,
+      maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 49,
     },
   }),
   {

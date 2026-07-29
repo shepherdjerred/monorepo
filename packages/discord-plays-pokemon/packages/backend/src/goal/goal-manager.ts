@@ -1,5 +1,4 @@
 import path from "node:path";
-import { z } from "zod";
 import { logger } from "#src/logger.ts";
 import type { Config } from "#src/config/schema.ts";
 import { hasCodexCredential } from "./codex-auth.ts";
@@ -13,12 +12,7 @@ import { formatHistoryForPrompt } from "./history-summary.ts";
 import { computeCost, formatCostLine } from "./pricing.ts";
 import { spawnGoalCodex } from "./spawn-goal-codex.ts";
 
-import {
-  appendToHistory,
-  HISTORY_LIMIT,
-  normalizeCompletedGoal,
-  type CompletedGoal,
-} from "./goal-history.ts";
+import { appendToHistory, type CompletedGoal } from "./goal-history.ts";
 import type {
   GoalMessageSender,
   GoalProcess,
@@ -29,35 +23,8 @@ import type {
 } from "./goal-types.ts";
 import { GoalMemory, buildSessionLogMeta } from "./goal-memory.ts";
 import { GoalControlGate } from "./goal-control-gate.ts";
-import {
-  goalActive,
-  goalDurationSeconds,
-  goalRunsTotal,
-} from "#src/observability/metrics.ts";
-
-// Validates the envelope written by persistState() so history is safely
-// deserialized on restart even if the file has an unexpected shape.
-const CompletedGoalSchema = z.object({
-  id: z.string(),
-  goal: z.string(),
-  requestedBy: z.string(),
-  startedAt: z.string(),
-  finishedAt: z.string(),
-  status: z.enum([
-    "running",
-    "completed",
-    "failed",
-    "timeout",
-    "replaced",
-    "shutdown",
-  ]),
-  finalReport: z.string().optional(),
-  exitCode: z.number().optional(),
-});
-
-const StateEnvelopeSchema = z.object({
-  history: z.array(CompletedGoalSchema).optional(),
-});
+import { recordGoalFinished, recordGoalStarted } from "./goal-metrics.ts";
+import { loadGoalHistory, persistGoalState } from "./goal-state-store.ts";
 
 type ActiveGoal = {
   state: GoalState;
@@ -65,15 +32,8 @@ type ActiveGoal = {
   timeout: ReturnType<typeof setTimeout>;
   lastProgressSentAt: number;
   outputPath: string;
-  // Streaming parser for Codex's `--json` stdout. Accumulates token usage so
-  // observeProcess() can build a cost line for the final Discord message.
   jsonl: CodexJsonlParser;
-  // Promise for the stdout pump coroutine. Must be awaited in observeProcess()
-  // before reading jsonl.total() — the last turn.completed usage event may
-  // still be buffered in the pipe when process.exited resolves.
   stdoutPump: Promise<void>;
-  // OTel span synthesis attached to the parser. The archive SpanProcessor
-  // (observability/tracing.ts) ships full request/response bodies to S3.
   trace: CodexTrace;
   releaseInputLease: () => void;
 };
@@ -115,10 +75,7 @@ import { defaultSpawner } from "./goal-process-helpers.ts";
 export class GoalManager {
   private active: ActiveGoal | undefined;
   private terminating: ActiveGoal | undefined;
-  // Synchronously claimed at the top of startGoal before its first await, so two
-  // near-simultaneous /goal interactions cannot both pass the lock check and
-  // both spawn a Codex process (orphaning the first). JS is single-threaded, so
-  // the check-and-set below the lock check fully closes the window.
+  // Claimed before startGoal's first await to serialize concurrent requests.
   private starting = false;
   private readonly config: Config["game"]["goal"];
   private readonly controlToken: string;
@@ -165,25 +122,7 @@ export class GoalManager {
    */
   async initialize(): Promise<void> {
     const statePath = this.resolveRuntimePath(this.config.state_path);
-    const file = Bun.file(statePath);
-    if (!(await file.exists())) return;
-    let raw: unknown;
-    try {
-      raw = await file.json();
-    } catch (error) {
-      logger.warn(`goal-manager: could not parse state file: ${String(error)}`);
-      return;
-    }
-    const result = StateEnvelopeSchema.safeParse(raw);
-    if (!result.success) {
-      logger.warn(
-        `goal-manager: state file has unexpected shape, starting with empty history`,
-      );
-      return;
-    }
-    const loaded: CompletedGoal[] = (result.data.history ?? [])
-      .slice(0, HISTORY_LIMIT)
-      .map((entry) => normalizeCompletedGoal(entry));
+    const loaded = await loadGoalHistory(statePath);
     this.history = loaded;
     for (const entry of loaded) this.recordedIds.add(entry.id);
     logger.info(
@@ -351,7 +290,7 @@ export class GoalManager {
       this.active = undefined;
       throw error;
     }
-    goalActive.inc();
+    recordGoalStarted();
     void this.observeProcess(id);
 
     return {
@@ -414,10 +353,9 @@ export class GoalManager {
       claimed.state.exitCode = exitCode;
       claimed.state.status = exitCode === 0 ? "completed" : "failed";
       claimed.state.finalReport = report;
-      this.recordTerminalMetrics(claimed.state);
+      recordGoalFinished(claimed.state);
       await this.recordCompletion(claimed.state);
       await this.persistState(claimed.state);
-
       const usage = claimed.jsonl.total();
       const cost = computeCost(this.config.model, usage);
       const costLine = formatCostLine(this.config.model, cost, usage);
@@ -447,7 +385,7 @@ export class GoalManager {
       active.state.status = "timeout";
       active.state.finishedAt = this.now().toISOString();
       active.state.finalReport = "Goal timed out before Codex finished.";
-      this.recordTerminalMetrics(active.state);
+      recordGoalFinished(active.state);
       await this.recordCompletion(active.state);
       await this.persistState(active.state);
       await this.sendMessage({
@@ -479,7 +417,7 @@ export class GoalManager {
         status === "replaced"
           ? "Goal was replaced by a newer goal."
           : "Goal was stopped during application shutdown.";
-      this.recordTerminalMetrics(active.state);
+      recordGoalFinished(active.state);
       await this.recordCompletion(active.state);
       await this.persistState(active.state);
     } finally {
@@ -527,28 +465,11 @@ export class GoalManager {
       : path.resolve(this.config.runtime_directory, value);
   }
 
-  private recordTerminalMetrics(state: GoalState): void {
-    if (state.status === "running" || state.finishedAt === undefined) {
-      throw new TypeError(
-        "Terminal goal metrics require a finished goal state",
-      );
-    }
-    const startedAt = Date.parse(state.startedAt);
-    const finishedAt = Date.parse(state.finishedAt);
-    if (Number.isNaN(startedAt) || Number.isNaN(finishedAt)) {
-      throw new TypeError("Goal metrics require valid lifecycle timestamps");
-    }
-    const durationSeconds = Math.max(0, (finishedAt - startedAt) / 1000);
-    goalActive.dec();
-    goalRunsTotal.inc({ status: state.status });
-    goalDurationSeconds.observe({ status: state.status }, durationSeconds);
-  }
-
   private async persistState(state: GoalState): Promise<void> {
-    const statePath = this.resolveRuntimePath(this.config.state_path);
-    const envelope = { current: state, history: this.history };
-    await Bun.write(statePath, `${JSON.stringify(envelope, undefined, 2)}\n`, {
-      createPath: true,
+    await persistGoalState({
+      statePath: this.resolveRuntimePath(this.config.state_path),
+      state,
+      history: this.history,
     });
   }
 

@@ -2,6 +2,8 @@
 // operating policy is injected as developer instructions; Discord content and
 // save-specific context remain an explicitly untrusted user message.
 
+import { PREFERRED_POKEMONCTL_CAPABILITIES } from "./goal-capabilities.ts";
+
 export type CodexReasoningEffort = "low" | "medium" | "high" | "xhigh";
 
 export type CodexCommandConfig = {
@@ -47,7 +49,7 @@ OPERATING LOOP
 
 CONTROLS
 - Prefer pokemonctl observe for authoritative state; use --screenshot or pokemonctl screenshot only when menus, dialog, battle visuals, or landmarks require pixels.
-- Prefer pokemonctl tap, move, interact, wait, map show, and bounded navigate when available. These are mechanical helpers, not objective solvers: you still choose goals, prerequisites, waypoints, transitions, battles, and recovery.
+- Prefer ${PREFERRED_POKEMONCTL_CAPABILITIES.map((capability) => `pokemonctl ${capability.promptCommand}`).join(", ")}. These are mechanical helpers, not objective solvers: you still choose goals, prerequisites, waypoints, transitions, battles, and recovery.
 - Use pokemonctl state, press, chord, and wait as compatibility fallbacks. Never issue a blind long chord. After every atomic action, confirm its outcome before continuing a sequence.
 - A context change is success evidence, not a blockage: stop and reassess on encounters, dialog, menus, battles, scripts, warps, map changes, or lost readiness.
 - To interact, become cardinally adjacent, face the object, then press A. Doors and warp tiles may trigger by stepping onto them.

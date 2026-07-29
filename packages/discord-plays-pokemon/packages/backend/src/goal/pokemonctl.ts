@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
 import { formatPokemonctlObservationOutput } from "./pokemonctl-output.ts";
+import { verifyPokemonctlCapabilities } from "./goal-capabilities.ts";
 
 type RequestBody = Record<string, unknown>;
 
@@ -366,6 +367,7 @@ const HANDLERS = new Map<string, (args: string[]) => Promise<void>>([
   ["grep", handleGrep],
   ["write", handleWrite],
 ]);
+verifyPokemonctlCapabilities(new Set(HANDLERS.keys()));
 
 async function main(): Promise<void> {
   const command = Bun.argv.at(2);

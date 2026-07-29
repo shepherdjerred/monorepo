@@ -9,6 +9,10 @@ import {
   PROMPT_BUDGETS,
   type PromptContext,
 } from "./codex-command.ts";
+import {
+  PREFERRED_POKEMONCTL_CAPABILITIES,
+  verifyPokemonctlCapabilities,
+} from "./goal-capabilities.ts";
 
 const baseConfig = {
   codexBinary: "codex",
@@ -100,6 +104,20 @@ describe("buildCodexArgs", () => {
 });
 
 describe("buildDeveloperInstructions", () => {
+  test("advertises only required CLI capabilities", () => {
+    const instructions = buildDeveloperInstructions();
+    const handlers = new Set(
+      PREFERRED_POKEMONCTL_CAPABILITIES.map((capability) => capability.handler),
+    );
+    verifyPokemonctlCapabilities(handlers);
+    for (const capability of PREFERRED_POKEMONCTL_CAPABILITIES) {
+      expect(instructions).toContain(`pokemonctl ${capability.promptCommand}`);
+    }
+    expect(() => verifyPokemonctlCapabilities(new Set(["observe"]))).toThrow(
+      "Prompt advertises unsupported pokemonctl command",
+    );
+  });
+
   test("uses the compact observe-act-verify-replan loop", () => {
     const instructions = buildDeveloperInstructions();
     expect(instructions).toContain("Observe the current phase");
