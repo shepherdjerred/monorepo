@@ -179,6 +179,14 @@ system against a copied live save and the exact goal `get me a pokeman`.
   flow, moves, checkpoints, and verifies spatial, party, Pokedex, and decoded
   save equality through an independently initialized emulator. The local and
   Docker executions both pass two tests with zero skips.
+- 2026-07-28: The following current-head reviews each found one remaining
+  cross-layer defect. Title-screen SaveBlock1 ciphertext is now withheld until
+  SaveBlock2 has an EOS-terminated initialized player name, while a legitimate
+  zero encryption key still decodes. Benchmark overlays and production images
+  now carry and verify the same `AGENTS.md` and `.agents` instruction surface.
+  Knowledge records now require non-empty structured `sources`; generic
+  Nincada and Shedinja records attribute both PokeAPI and the pinned
+  pokeemerald mechanic without losing the empty-party requirement.
 
 ## Session Log — 2026-07-28
 
@@ -193,14 +201,14 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - Implemented a general engine checkpoint and ordered atomic flash
   persistence. A rebuilt real WASM passed an independent checkpoint/reboot
   integration test against a copied live save.
-- Verified the combined backend (298 tests, zero failures or skips), all 22
+- Verified the combined backend (301 tests, zero failures or skips), all 23
   knowledge/build script tests, package typecheck/lint, the exhaustive
   root `bun run verify` graph (217/217 tasks), and a clean Docker `smoke` build
   that rebuilt the patched WASM, passed both mandatory real-emulator ABI and
   independent checkpoint/reboot tests, and passed the in-image application
   check. The resulting local smoke image
   manifest is
-  `sha256:97f43273ca55bf39a78ede4b1187b8ed7f389b8681e369b06d0113dbf63110f8`.
+  `sha256:55da51c5dcaaf78978ff593426fcfc09cf5da01f69adde6acc2d93805a875e7b`.
 - Completed a manual general-control playthrough through the first rival,
   Pokedex/Poke Ball acquisition, and a visible Poochyena catch.
 - Published the three-PR git-spice stack as #1802, #1803, and #1805 and attached
@@ -252,6 +260,12 @@ system against a copied live save and the exact goal `get me a pokeman`.
   with current text, and the mandatory Docker ABI gate now proves checkpoint
   persistence through a deterministic new game and independent reboot without
   requiring `POKEMON_LIVE_SAVE_PATH`.
+- Closed the next three current-head review defects: encrypted save details
+  fail closed until SaveBlock2 is initialized without rejecting zero-key new
+  games; benchmark and deployed Codex instruction/skill surfaces have an
+  enforced Docker parity test; and the language-neutral knowledge schema,
+  generator, runtime, and 1,801 records preserve every contributing source
+  structurally.
 
 ### Remaining
 
