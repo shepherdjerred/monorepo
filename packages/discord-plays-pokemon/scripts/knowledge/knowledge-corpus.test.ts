@@ -62,6 +62,61 @@ describe("committed generated knowledge", () => {
     );
   });
 
+  test("describes Hidden Power with its IV-dependent Emerald mechanics", () => {
+    const hiddenPower = requiredRecord("battle:move:hidden-power");
+    expect(hiddenPower.tags).toEqual([
+      "variable-type",
+      "variable-power",
+      "physical-or-special",
+    ]);
+    expect(hiddenPower.body).toContain(
+      "Type: determined by the attacking Pokémon's IVs; one of fighting, flying, poison, ground, rock, bug, ghost, steel, fire, water, grass, electric, psychic, ice, dragon, dark.",
+    );
+    expect(hiddenPower.body).toContain(
+      "Power: 30-70 based on the attacking Pokémon's IVs; accuracy: 100; PP: 15",
+    );
+    expect(hiddenPower.body).toContain(
+      "physical for fighting, flying, poison, ground, rock, bug, ghost, steel; special for fire, water, grass, electric, psychic, ice, dragon, dark.",
+    );
+    expect(hiddenPower.body).not.toContain("Type: normal");
+    expect(hiddenPower.body).not.toContain("Power: 1");
+    expect(hiddenPower.sources).toEqual([
+      {
+        id: "pokeapi",
+        url: `${sources.pokeapi.repository}/tree/${sources.pokeapi.commit}/${sources.pokeapi.csvPath}`,
+        license: "BSD-3-Clause",
+        revision: sources.pokeapi.commit,
+      },
+      {
+        id: "pokeemerald-wasm",
+        url: `${pokeemeraldUpstream.repository.replace(/\.git$/, "")}/blob/${pokeemeraldUpstream.commit}/src/battle_script_commands.c`,
+        license: "No license declared",
+        revision: pokeemeraldUpstream.commit,
+      },
+    ]);
+  });
+
+  test("excludes side-game Shadow moves using Generation III type availability", () => {
+    for (const identifier of [
+      "shadow-rush",
+      "shadow-blast",
+      "shadow-end",
+      "shadow-sky",
+    ]) {
+      expect(recordsById.has(`battle:move:${identifier}`)).toBe(false);
+    }
+    for (const record of records.filter(
+      (entry) =>
+        entry.domain === "battle" && entry.id.startsWith("battle:move:"),
+    )) {
+      expect(record.tags).not.toContain("shadow");
+      expect(record.body).not.toContain("Type: shadow");
+    }
+    expect(requiredRecord("battle:move:shadow-ball").tags).toContain("ghost");
+    expect(requiredRecord("battle:move:shadow-punch").tags).toContain("ghost");
+    expect(recordsById.has("battle:move:curse")).toBe(true);
+  });
+
   test("labels the item catalog generation-wide and omits known FRLG items", () => {
     for (const identifier of CONFIRMED_FRLG_ONLY_ITEM_IDENTIFIERS) {
       expect(recordsById.has(`items:${identifier}`)).toBe(false);

@@ -373,6 +373,17 @@ system against a copied live save and the exact goal `get me a pokeman`.
   authoritative lanes. Fresh exact-head Codex results were clean, every
   GraphQL review thread was resolved, GitHub reported each PR clean and
   mergeable, and direct merge-tree checks passed for the stacked PRs.
+- Replaced PokeAPI's historical Hidden Power sentinel (`Normal`, power 1,
+  physical) with the pinned Emerald mechanics: an IV-derived 16-type range,
+  power 30-70, and a physical/special category derived from the resulting
+  Generation III type.
+- Filtered battle moves through the pinned PokeAPI Generation III type-index
+  table after historical reconstruction. This removed all 18 side-game
+  Shadow-type moves without a fragile name list while retaining the legitimate
+  Ghost-type Shadow Ball and Shadow Punch records.
+- Regenerated 1,744 permissive plus 41 CC BY-NC-SA records and verified all 33
+  knowledge/build script tests, all 319 backend tests, and both packages'
+  typecheck and lint tasks.
 
 ### Remaining
 
@@ -380,8 +391,8 @@ system against a copied live save and the exact goal `get me a pokeman`.
   not compare the current provider-invalid artifacts to the valid 0/3
   baseline.
 - Run a production goal only after three consecutive local successes.
-- Publish and verify the Route 101 ranking fix on replacement Buildkite and a
-  fresh exact-head Codex review.
+- Publish and verify the Hidden Power and Shadow-type corpus corrections on
+  replacement Buildkite and a fresh exact-head Codex review.
 
 ### Caveats
 

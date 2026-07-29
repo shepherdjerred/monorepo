@@ -12,11 +12,13 @@ import {
 import { KNOWLEDGE_FETCH_TIMEOUT_MS } from "./fetch.ts";
 import {
   CONFIRMED_FRLG_ONLY_ITEM_IDENTIFIERS,
-  generation3DamageClass,
-  generation3PowerLabel,
   includeGeneration3Item,
   moveForVersion,
 } from "./pokeapi.ts";
+import {
+  generation3DamageClass,
+  generation3PowerLabel,
+} from "./pokeapi-moves.ts";
 import { SourcesSchema } from "./model.ts";
 import {
   emeraldShedinjaEvolutionCondition,
@@ -25,6 +27,7 @@ import {
   requirePokeApiReference,
 } from "./pokeapi-relations.ts";
 import {
+  validateHiddenPowerSource,
   validateShedinjaSource,
   validateRockSmashSource,
   validateWurmpleSource,
@@ -183,6 +186,91 @@ describe("Generation III move normalization", () => {
     expect(() => generation3DamageClass("normal", 4)).toThrow(
       "unknown PokeAPI move damage class id 4",
     );
+  });
+});
+
+describe("Emerald Hidden Power normalization", () => {
+  const commands = `
+    static void Cmd_hiddenpowercalc(void) {
+      u8 powerBits = (hpIV & 2) | (attackIV & 2) | (defenseIV & 2)
+        | (speedIV & 2) | (spAttackIV & 2) | (spDefenseIV & 2);
+      u8 typeBits = (hpIV & 1) | (attackIV & 1) | (defenseIV & 1)
+        | (speedIV & 1) | (spAttackIV & 1) | (spDefenseIV & 1);
+      gDynamicBasePower = (40 * powerBits) / 63 + 30;
+      gBattleStruct->dynamicMoveType =
+        ((NUMBER_OF_MON_TYPES - 3) * typeBits) / 63 + 1;
+      if (gBattleStruct->dynamicMoveType >= TYPE_MYSTERY)
+        gBattleStruct->dynamicMoveType++;
+    }
+  `;
+  const typeConstants = `
+    #define TYPE_NORMAL 0
+    #define TYPE_FIGHTING 1
+    #define TYPE_FLYING 2
+    #define TYPE_POISON 3
+    #define TYPE_GROUND 4
+    #define TYPE_ROCK 5
+    #define TYPE_BUG 6
+    #define TYPE_GHOST 7
+    #define TYPE_STEEL 8
+    #define TYPE_MYSTERY 9
+    #define TYPE_FIRE 10
+    #define TYPE_WATER 11
+    #define TYPE_GRASS 12
+    #define TYPE_ELECTRIC 13
+    #define TYPE_PSYCHIC 14
+    #define TYPE_ICE 15
+    #define TYPE_DRAGON 16
+    #define TYPE_DARK 17
+    #define NUMBER_OF_MON_TYPES 18
+  `;
+  const battleHeader = `
+    #define DYNAMIC_TYPE_MASK ((1 << 6) - 1)
+    #define IS_TYPE_PHYSICAL(moveType) (moveType < TYPE_MYSTERY)
+    #define IS_TYPE_SPECIAL(moveType) (moveType > TYPE_MYSTERY)
+  `;
+  const pokemonSource = `
+    type = typeOverride & DYNAMIC_TYPE_MASK;
+    if (IS_TYPE_PHYSICAL(type)) usePhysicalStats();
+    if (IS_TYPE_SPECIAL(type)) useSpecialStats();
+  `;
+
+  test("requires the pinned IV formulas, type order, and damage split", () => {
+    expect(
+      validateHiddenPowerSource(
+        commands,
+        pokemonSource,
+        typeConstants,
+        battleHeader,
+      ),
+    ).toBeUndefined();
+    expect(() =>
+      validateHiddenPowerSource(
+        commands.replace("40 * powerBits", "39 * powerBits"),
+        pokemonSource,
+        typeConstants,
+        battleHeader,
+      ),
+    ).toThrow("30-70 power calculation");
+    expect(() =>
+      validateHiddenPowerSource(
+        commands,
+        pokemonSource,
+        typeConstants.replace("#define TYPE_DARK 17", "#define TYPE_DARK 18"),
+        battleHeader,
+      ),
+    ).toThrow("expected Hidden Power type order");
+    expect(() =>
+      validateHiddenPowerSource(
+        commands,
+        pokemonSource,
+        typeConstants,
+        battleHeader.replace(
+          "moveType < TYPE_MYSTERY",
+          "moveType <= TYPE_MYSTERY",
+        ),
+      ),
+    ).toThrow("physical or special damage category");
   });
 });
 

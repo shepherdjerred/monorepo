@@ -9,6 +9,9 @@ const EVOLUTION_TABLE_PATH = "src/data/pokemon/evolution.h";
 const EVOLUTION_SCENE_PATH = "src/evolution_scene.c";
 const POKEMON_PATH = "src/pokemon.c";
 const ROCK_SMASH_SCRIPT_PATH = "data/maps/MauvilleCity_House1/scripts.inc";
+export const HIDDEN_POWER_SOURCE_PATH = "src/battle_script_commands.c";
+const BATTLE_HEADER_PATH = "include/battle.h";
+const POKEMON_TYPE_CONSTANTS_PATH = "include/constants/pokemon.h";
 
 function rawUrl(repository: string, commit: string, file: string): string {
   return `${repository.replace(/\.git$/, "")}/raw/${commit}/${file}`;
@@ -96,6 +99,91 @@ export function validateRockSmashSource(script: string): void {
   }
 }
 
+export function validateHiddenPowerSource(
+  battleScriptCommands: string,
+  pokemonSource: string,
+  typeConstants: string,
+  battleHeader: string,
+): void {
+  const normalizedCommands = normalizedSource(battleScriptCommands);
+  const ivNames = [
+    "hpIV",
+    "attackIV",
+    "defenseIV",
+    "speedIV",
+    "spAttackIV",
+    "spDefenseIV",
+  ];
+  if (
+    !normalizedCommands.includes("static void Cmd_hiddenpowercalc(void)") ||
+    !ivNames.every(
+      (name) =>
+        normalizedCommands.includes(`${name} & 1`) &&
+        normalizedCommands.includes(`${name} & 2`),
+    ) ||
+    !normalizedCommands.includes(
+      "gDynamicBasePower = (40 * powerBits) / 63 + 30;",
+    ) ||
+    !normalizedCommands.includes(
+      "gBattleStruct->dynamicMoveType = ((NUMBER_OF_MON_TYPES - 3) * typeBits) / 63 + 1;",
+    ) ||
+    !normalizedCommands.includes(
+      "if (gBattleStruct->dynamicMoveType >= TYPE_MYSTERY) gBattleStruct->dynamicMoveType++;",
+    )
+  ) {
+    throw new Error(
+      "pinned pokeemerald source no longer has the expected IV-dependent Hidden Power type and 30-70 power calculation",
+    );
+  }
+
+  const normalizedTypes = normalizedSource(typeConstants);
+  const expectedTypeOrder = [
+    "#define TYPE_NORMAL 0",
+    "#define TYPE_FIGHTING 1",
+    "#define TYPE_FLYING 2",
+    "#define TYPE_POISON 3",
+    "#define TYPE_GROUND 4",
+    "#define TYPE_ROCK 5",
+    "#define TYPE_BUG 6",
+    "#define TYPE_GHOST 7",
+    "#define TYPE_STEEL 8",
+    "#define TYPE_MYSTERY 9",
+    "#define TYPE_FIRE 10",
+    "#define TYPE_WATER 11",
+    "#define TYPE_GRASS 12",
+    "#define TYPE_ELECTRIC 13",
+    "#define TYPE_PSYCHIC 14",
+    "#define TYPE_ICE 15",
+    "#define TYPE_DRAGON 16",
+    "#define TYPE_DARK 17",
+    "#define NUMBER_OF_MON_TYPES 18",
+  ].join(" ");
+  if (!normalizedTypes.includes(expectedTypeOrder)) {
+    throw new Error(
+      "pinned pokeemerald source no longer has the expected Hidden Power type order",
+    );
+  }
+
+  const normalizedHeader = normalizedSource(battleHeader);
+  const normalizedPokemon = normalizedSource(pokemonSource);
+  if (
+    !normalizedHeader.includes("#define DYNAMIC_TYPE_MASK ((1 << 6) - 1)") ||
+    !normalizedHeader.includes(
+      "#define IS_TYPE_PHYSICAL(moveType) (moveType < TYPE_MYSTERY)",
+    ) ||
+    !normalizedHeader.includes(
+      "#define IS_TYPE_SPECIAL(moveType) (moveType > TYPE_MYSTERY)",
+    ) ||
+    !normalizedPokemon.includes("type = typeOverride & DYNAMIC_TYPE_MASK;") ||
+    !normalizedPokemon.includes("if (IS_TYPE_PHYSICAL(type))") ||
+    !normalizedPokemon.includes("if (IS_TYPE_SPECIAL(type))")
+  ) {
+    throw new Error(
+      "pinned pokeemerald source no longer derives Hidden Power's physical or special damage category from its dynamic type",
+    );
+  }
+}
+
 export function createPokeemeraldKnowledgeSource(
   license: Sources["pokeemeraldWasm"]["license"],
   upstreamRepository: string,
@@ -106,6 +194,18 @@ export function createPokeemeraldKnowledgeSource(
     url: `${upstreamRepository.replace(/\.git$/, "")}/tree/${commit}`,
     license,
     revision: commit,
+  };
+}
+
+export function createPokeemeraldFileKnowledgeSource(
+  license: Sources["pokeemeraldWasm"]["license"],
+  upstreamRepository: string,
+  commit: string,
+  file: string,
+): KnowledgeSource {
+  return {
+    ...createPokeemeraldKnowledgeSource(license, upstreamRepository, commit),
+    url: `${upstreamRepository.replace(/\.git$/, "")}/blob/${commit}/${file}`,
   };
 }
 
@@ -120,16 +220,32 @@ export async function buildPokeemeraldRecords(
     upstreamRepository,
     commit,
   );
-  const [evolutionTable, evolutionScene, pokemonSource, rockSmashScript] =
-    await Promise.all([
-      fetchText(rawUrl(repository, commit, EVOLUTION_TABLE_PATH)),
-      fetchText(rawUrl(repository, commit, EVOLUTION_SCENE_PATH)),
-      fetchText(rawUrl(repository, commit, POKEMON_PATH)),
-      fetchText(rawUrl(repository, commit, ROCK_SMASH_SCRIPT_PATH)),
-    ]);
+  const [
+    evolutionTable,
+    evolutionScene,
+    pokemonSource,
+    rockSmashScript,
+    hiddenPowerSource,
+    pokemonTypeConstants,
+    battleHeader,
+  ] = await Promise.all([
+    fetchText(rawUrl(repository, commit, EVOLUTION_TABLE_PATH)),
+    fetchText(rawUrl(repository, commit, EVOLUTION_SCENE_PATH)),
+    fetchText(rawUrl(repository, commit, POKEMON_PATH)),
+    fetchText(rawUrl(repository, commit, ROCK_SMASH_SCRIPT_PATH)),
+    fetchText(rawUrl(repository, commit, HIDDEN_POWER_SOURCE_PATH)),
+    fetchText(rawUrl(repository, commit, POKEMON_TYPE_CONSTANTS_PATH)),
+    fetchText(rawUrl(repository, commit, BATTLE_HEADER_PATH)),
+  ]);
   validateShedinjaSource(evolutionTable, evolutionScene);
   validateWurmpleSource(evolutionTable, pokemonSource);
   validateRockSmashSource(rockSmashScript);
+  validateHiddenPowerSource(
+    hiddenPowerSource,
+    pokemonSource,
+    pokemonTypeConstants,
+    battleHeader,
+  );
 
   return [
     {

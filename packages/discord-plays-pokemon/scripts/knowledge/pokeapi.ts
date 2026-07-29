@@ -8,6 +8,15 @@ import {
   type Sources,
 } from "./model.ts";
 import {
+  createHiddenPowerRecord,
+  HIDDEN_POWER_IDENTIFIER,
+} from "./pokeapi-hidden-power.ts";
+import {
+  generation3DamageClass,
+  generation3PowerLabel,
+  TypeGameIndexRows,
+} from "./pokeapi-moves.ts";
+import {
   EvolutionRows,
   EvolutionTriggerRows,
   PokemonFormRows,
@@ -187,46 +196,6 @@ function rarityTag(
   return "ordinary";
 }
 
-const GENERATION_3_PHYSICAL_TYPES = new Set([
-  "normal",
-  "fighting",
-  "flying",
-  "poison",
-  "ground",
-  "rock",
-  "bug",
-  "ghost",
-  "steel",
-]);
-
-const STATUS_DAMAGE_CLASS_ID = 1;
-const PHYSICAL_DAMAGE_CLASS_ID = 2;
-const SPECIAL_DAMAGE_CLASS_ID = 3;
-
-export function generation3DamageClass(
-  type: string,
-  damageClassId: number,
-): "physical" | "special" | "status" {
-  if (damageClassId === STATUS_DAMAGE_CLASS_ID) return "status";
-  if (
-    damageClassId !== PHYSICAL_DAMAGE_CLASS_ID &&
-    damageClassId !== SPECIAL_DAMAGE_CLASS_ID
-  ) {
-    throw new Error(
-      `unknown PokeAPI move damage class id ${String(damageClassId)}`,
-    );
-  }
-  return GENERATION_3_PHYSICAL_TYPES.has(type) ? "physical" : "special";
-}
-
-export function generation3PowerLabel(
-  power: number | undefined,
-  damageClass: "physical" | "special" | "status",
-): string {
-  if (power !== undefined) return String(power);
-  return damageClass === "status" ? "status" : "fixed or variable";
-}
-
 export const CONFIRMED_FRLG_ONLY_ITEM_IDENTIFIERS = [
   "tea",
   "tri-pass",
@@ -246,6 +215,7 @@ export function includeGeneration3Item(identifier: string): boolean {
 export async function buildPokeApiRecords(
   sources: Sources,
   pokeemeraldMechanicSource: KnowledgeSource,
+  hiddenPowerMechanicSource: KnowledgeSource,
 ): Promise<KnowledgeRecord[]> {
   const [
     species,
@@ -254,6 +224,7 @@ export async function buildPokeApiRecords(
     pokemonTypes,
     pokemonTypesPast,
     types,
+    typeGameIndices,
     moves,
     moveChangelog,
     pokemonMoves,
@@ -268,6 +239,7 @@ export async function buildPokeApiRecords(
     fetchCsv(rawUrl(sources, "pokemon_types.csv"), PokemonTypeRows),
     fetchCsv(rawUrl(sources, "pokemon_types_past.csv"), PokemonTypePastRows),
     fetchCsv(rawUrl(sources, "types.csv"), TypeRows),
+    fetchCsv(rawUrl(sources, "type_game_indices.csv"), TypeGameIndexRows),
     fetchCsv(rawUrl(sources, "moves.csv"), MoveRows),
     fetchCsv(rawUrl(sources, "move_changelog.csv"), MoveChangelogRows),
     fetchCsv(rawUrl(sources, "pokemon_moves.csv"), PokemonMoveRows),
@@ -277,6 +249,11 @@ export async function buildPokeApiRecords(
     fetchCsv(rawUrl(sources, "evolution_triggers.csv"), EvolutionTriggerRows),
   ]);
   const typeNames = new Map(types.map((row) => [row.id, row.identifier]));
+  const generationTypeIds = new Set(
+    typeGameIndices
+      .filter((entry) => entry.generation_id === sources.pokeapi.generationId)
+      .map((entry) => entry.type_id),
+  );
   const moveById = new Map(moves.map((row) => [row.id, row]));
   const speciesById = new Map(species.map((row) => [row.id, row]));
   const itemById = new Map(items.map((row) => [row.id, row]));
@@ -409,12 +386,24 @@ export async function buildPokeApiRecords(
       changelogByMove.get(move.id) ?? [],
       sources.pokeapi.versionGroupId,
     );
+    if (!generationTypeIds.has(versioned.type_id)) {
+      continue;
+    }
     const typeName = requirePokeApiReference(
       typeNames,
       versioned.type_id,
       "types",
       `type for move ${move.identifier}`,
     );
+    if (move.identifier === HIDDEN_POWER_IDENTIFIER) {
+      records.push(
+        createHiddenPowerRecord(move, versioned, [
+          source,
+          hiddenPowerMechanicSource,
+        ]),
+      );
+      continue;
+    }
     const damageClass = generation3DamageClass(typeName, move.damage_class_id);
     records.push({
       id: `battle:move:${move.identifier}`,
@@ -431,10 +420,9 @@ export async function buildPokeApiRecords(
     });
   }
 
-  // PokeAPI's item_game_indices table is generation-scoped, not
-  // version-scoped. Its Generation III rows include FireRed/LeafGreen key
-  // items, and the pinned pokeemerald constants retain those IDs for
-  // cross-game compatibility rather than proving Emerald availability.
+  // PokeAPI's generation-scoped item indices include FRLG key items; pinned
+  // pokeemerald constants retain those IDs for compatibility rather than
+  // proving Emerald availability.
   const generation3ItemIds = new Set(
     itemIndices
       .filter((entry) => entry.generation_id === sources.pokeapi.generationId)

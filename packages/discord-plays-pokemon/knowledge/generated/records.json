@@ -2052,14 +2052,20 @@
     "domain": "battle",
     "title": "Hidden Power",
     "aliases": ["hidden-power"],
-    "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 1; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "tags": ["variable-type", "variable-power", "physical-or-special"],
+    "body": "Type: determined by the attacking Pokémon's IVs; one of fighting, flying, poison, ground, rock, bug, ghost, steel, fire, water, grass, electric, psychic, ice, dragon, dark.\nPower: 30-70 based on the attacking Pokémon's IVs; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class follows the IV-derived type: physical for fighting, flying, poison, ground, rock, bug, ghost, steel; special for fire, water, grass, electric, psychic, ice, dragon, dark.",
     "sources": [
       {
         "id": "pokeapi",
         "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
         "license": "BSD-3-Clause",
         "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
+      },
+      {
+        "id": "pokeemerald-wasm",
+        "url": "https://github.com/ottohg/pokeemerald-wasm/blob/c101be5ac2ae53c5d18ee063f16eeeda751639f8/src/battle_script_commands.c",
+        "license": "No license declared",
+        "revision": "c101be5ac2ae53c5d18ee063f16eeeda751639f8"
       }
     ]
   },
@@ -4080,300 +4086,12 @@
     ]
   },
   {
-    "id": "battle:move:shadow-blast",
-    "domain": "battle",
-    "title": "Shadow Blast",
-    "aliases": ["shadow-blast"],
-    "tags": ["shadow", "special"],
-    "body": "Type: shadow\nPower: 80; accuracy: 100; PP: unknown\nPriority: 0; Generation III damage class: special",
-    "sources": [
-      {
-        "id": "pokeapi",
-        "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
-        "license": "BSD-3-Clause",
-        "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
-      }
-    ]
-  },
-  {
-    "id": "battle:move:shadow-blitz",
-    "domain": "battle",
-    "title": "Shadow Blitz",
-    "aliases": ["shadow-blitz"],
-    "tags": ["shadow", "special"],
-    "body": "Type: shadow\nPower: 40; accuracy: 100; PP: unknown\nPriority: 0; Generation III damage class: special",
-    "sources": [
-      {
-        "id": "pokeapi",
-        "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
-        "license": "BSD-3-Clause",
-        "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
-      }
-    ]
-  },
-  {
-    "id": "battle:move:shadow-bolt",
-    "domain": "battle",
-    "title": "Shadow Bolt",
-    "aliases": ["shadow-bolt"],
-    "tags": ["shadow", "special"],
-    "body": "Type: shadow\nPower: 75; accuracy: 100; PP: unknown\nPriority: 0; Generation III damage class: special",
-    "sources": [
-      {
-        "id": "pokeapi",
-        "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
-        "license": "BSD-3-Clause",
-        "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
-      }
-    ]
-  },
-  {
-    "id": "battle:move:shadow-break",
-    "domain": "battle",
-    "title": "Shadow Break",
-    "aliases": ["shadow-break"],
-    "tags": ["shadow", "special"],
-    "body": "Type: shadow\nPower: 75; accuracy: 100; PP: unknown\nPriority: 0; Generation III damage class: special",
-    "sources": [
-      {
-        "id": "pokeapi",
-        "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
-        "license": "BSD-3-Clause",
-        "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
-      }
-    ]
-  },
-  {
-    "id": "battle:move:shadow-chill",
-    "domain": "battle",
-    "title": "Shadow Chill",
-    "aliases": ["shadow-chill"],
-    "tags": ["shadow", "special"],
-    "body": "Type: shadow\nPower: 75; accuracy: 100; PP: unknown\nPriority: 0; Generation III damage class: special",
-    "sources": [
-      {
-        "id": "pokeapi",
-        "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
-        "license": "BSD-3-Clause",
-        "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
-      }
-    ]
-  },
-  {
-    "id": "battle:move:shadow-down",
-    "domain": "battle",
-    "title": "Shadow Down",
-    "aliases": ["shadow-down"],
-    "tags": ["shadow", "status"],
-    "body": "Type: shadow\nPower: status; accuracy: 100; PP: unknown\nPriority: 0; Generation III damage class: status",
-    "sources": [
-      {
-        "id": "pokeapi",
-        "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
-        "license": "BSD-3-Clause",
-        "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
-      }
-    ]
-  },
-  {
-    "id": "battle:move:shadow-end",
-    "domain": "battle",
-    "title": "Shadow End",
-    "aliases": ["shadow-end"],
-    "tags": ["shadow", "special"],
-    "body": "Type: shadow\nPower: 120; accuracy: 60; PP: unknown\nPriority: 0; Generation III damage class: special",
-    "sources": [
-      {
-        "id": "pokeapi",
-        "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
-        "license": "BSD-3-Clause",
-        "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
-      }
-    ]
-  },
-  {
-    "id": "battle:move:shadow-fire",
-    "domain": "battle",
-    "title": "Shadow Fire",
-    "aliases": ["shadow-fire"],
-    "tags": ["shadow", "special"],
-    "body": "Type: shadow\nPower: 75; accuracy: 100; PP: unknown\nPriority: 0; Generation III damage class: special",
-    "sources": [
-      {
-        "id": "pokeapi",
-        "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
-        "license": "BSD-3-Clause",
-        "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
-      }
-    ]
-  },
-  {
-    "id": "battle:move:shadow-half",
-    "domain": "battle",
-    "title": "Shadow Half",
-    "aliases": ["shadow-half"],
-    "tags": ["shadow", "special"],
-    "body": "Type: shadow\nPower: fixed or variable; accuracy: 100; PP: unknown\nPriority: 0; Generation III damage class: special",
-    "sources": [
-      {
-        "id": "pokeapi",
-        "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
-        "license": "BSD-3-Clause",
-        "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
-      }
-    ]
-  },
-  {
-    "id": "battle:move:shadow-hold",
-    "domain": "battle",
-    "title": "Shadow Hold",
-    "aliases": ["shadow-hold"],
-    "tags": ["shadow", "status"],
-    "body": "Type: shadow\nPower: status; accuracy: always; PP: unknown\nPriority: 0; Generation III damage class: status",
-    "sources": [
-      {
-        "id": "pokeapi",
-        "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
-        "license": "BSD-3-Clause",
-        "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
-      }
-    ]
-  },
-  {
-    "id": "battle:move:shadow-mist",
-    "domain": "battle",
-    "title": "Shadow Mist",
-    "aliases": ["shadow-mist"],
-    "tags": ["shadow", "status"],
-    "body": "Type: shadow\nPower: status; accuracy: 100; PP: unknown\nPriority: 0; Generation III damage class: status",
-    "sources": [
-      {
-        "id": "pokeapi",
-        "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
-        "license": "BSD-3-Clause",
-        "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
-      }
-    ]
-  },
-  {
-    "id": "battle:move:shadow-panic",
-    "domain": "battle",
-    "title": "Shadow Panic",
-    "aliases": ["shadow-panic"],
-    "tags": ["shadow", "status"],
-    "body": "Type: shadow\nPower: status; accuracy: 90; PP: unknown\nPriority: 0; Generation III damage class: status",
-    "sources": [
-      {
-        "id": "pokeapi",
-        "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
-        "license": "BSD-3-Clause",
-        "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
-      }
-    ]
-  },
-  {
     "id": "battle:move:shadow-punch",
     "domain": "battle",
     "title": "Shadow Punch",
     "aliases": ["shadow-punch"],
     "tags": ["ghost", "physical"],
     "body": "Type: ghost\nPower: 60; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: physical",
-    "sources": [
-      {
-        "id": "pokeapi",
-        "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
-        "license": "BSD-3-Clause",
-        "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
-      }
-    ]
-  },
-  {
-    "id": "battle:move:shadow-rave",
-    "domain": "battle",
-    "title": "Shadow Rave",
-    "aliases": ["shadow-rave"],
-    "tags": ["shadow", "special"],
-    "body": "Type: shadow\nPower: 70; accuracy: 100; PP: unknown\nPriority: 0; Generation III damage class: special",
-    "sources": [
-      {
-        "id": "pokeapi",
-        "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
-        "license": "BSD-3-Clause",
-        "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
-      }
-    ]
-  },
-  {
-    "id": "battle:move:shadow-rush",
-    "domain": "battle",
-    "title": "Shadow Rush",
-    "aliases": ["shadow-rush"],
-    "tags": ["shadow", "special"],
-    "body": "Type: shadow\nPower: 55; accuracy: 100; PP: unknown\nPriority: 0; Generation III damage class: special",
-    "sources": [
-      {
-        "id": "pokeapi",
-        "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
-        "license": "BSD-3-Clause",
-        "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
-      }
-    ]
-  },
-  {
-    "id": "battle:move:shadow-shed",
-    "domain": "battle",
-    "title": "Shadow Shed",
-    "aliases": ["shadow-shed"],
-    "tags": ["shadow", "status"],
-    "body": "Type: shadow\nPower: status; accuracy: always; PP: unknown\nPriority: 0; Generation III damage class: status",
-    "sources": [
-      {
-        "id": "pokeapi",
-        "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
-        "license": "BSD-3-Clause",
-        "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
-      }
-    ]
-  },
-  {
-    "id": "battle:move:shadow-sky",
-    "domain": "battle",
-    "title": "Shadow Sky",
-    "aliases": ["shadow-sky"],
-    "tags": ["shadow", "status"],
-    "body": "Type: shadow\nPower: status; accuracy: always; PP: unknown\nPriority: 0; Generation III damage class: status",
-    "sources": [
-      {
-        "id": "pokeapi",
-        "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
-        "license": "BSD-3-Clause",
-        "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
-      }
-    ]
-  },
-  {
-    "id": "battle:move:shadow-storm",
-    "domain": "battle",
-    "title": "Shadow Storm",
-    "aliases": ["shadow-storm"],
-    "tags": ["shadow", "special"],
-    "body": "Type: shadow\nPower: 95; accuracy: 100; PP: unknown\nPriority: 0; Generation III damage class: special",
-    "sources": [
-      {
-        "id": "pokeapi",
-        "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
-        "license": "BSD-3-Clause",
-        "revision": "dbef1b8570119d49b06943bc8ba6f0288d5872d5"
-      }
-    ]
-  },
-  {
-    "id": "battle:move:shadow-wave",
-    "domain": "battle",
-    "title": "Shadow Wave",
-    "aliases": ["shadow-wave"],
-    "tags": ["shadow", "special"],
-    "body": "Type: shadow\nPower: 50; accuracy: 100; PP: unknown\nPriority: 0; Generation III damage class: special",
     "sources": [
       {
         "id": "pokeapi",

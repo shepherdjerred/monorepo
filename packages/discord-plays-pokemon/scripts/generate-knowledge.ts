@@ -6,7 +6,9 @@ import { KnowledgeRecordsSchema, SourcesSchema } from "./knowledge/model.ts";
 import { buildPokeApiRecords } from "./knowledge/pokeapi.ts";
 import {
   buildPokeemeraldRecords,
+  createPokeemeraldFileKnowledgeSource,
   createPokeemeraldKnowledgeSource,
+  HIDDEN_POWER_SOURCE_PATH,
 } from "./knowledge/pokeemerald.ts";
 
 const packageRoot = path.resolve(import.meta.dir, "..");
@@ -24,10 +26,20 @@ const pokeemeraldKnowledgeSource = createPokeemeraldKnowledgeSource(
   pokeemeraldUpstream.repository,
   pokeemeraldUpstream.commit,
 );
+const hiddenPowerMechanicSource = createPokeemeraldFileKnowledgeSource(
+  sources.pokeemeraldWasm.license,
+  pokeemeraldUpstream.repository,
+  pokeemeraldUpstream.commit,
+  HIDDEN_POWER_SOURCE_PATH,
+);
 
 const [world, pokeapi, pokeemerald, bulbapedia] = await Promise.all([
   buildWorldRecords(sources),
-  buildPokeApiRecords(sources, pokeemeraldKnowledgeSource),
+  buildPokeApiRecords(
+    sources,
+    pokeemeraldKnowledgeSource,
+    hiddenPowerMechanicSource,
+  ),
   buildPokeemeraldRecords(
     sources.pokeemeraldWasm.license,
     pokeemeraldUpstream.repository,
