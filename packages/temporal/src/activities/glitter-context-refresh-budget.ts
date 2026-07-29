@@ -1,4 +1,5 @@
 import { costForTextUsage } from "@shepherdjerred/llm-models";
+import { ApplicationFailure } from "@temporalio/common";
 import type {
   GenerationArtifactResult,
   GenerationUsage,
@@ -65,26 +66,32 @@ export class GenerationBudget {
       this.#actualUncachedCostUsd + maximumCallCostUsd >
       this.#maxUncachedCostUsd
     ) {
-      throw new Error(
+      throw ApplicationFailure.nonRetryable(
         `Glitter generation budget exhausted: $${this.#actualUncachedCostUsd.toFixed(4)} spent, $${maximumCallCostUsd.toFixed(4)} maximum next call, $${this.#maxUncachedCostUsd.toFixed(2)} limit`,
+        "GlitterGenerationBudgetExhausted",
       );
     }
   }
 
   record<Response>(artifact: GenerationArtifactResult<Response>): void {
+    const alreadyRecorded = this.#artifactKeys.has(artifact.key);
     this.#artifactKeys.add(artifact.key);
     if (artifact.cacheStatus === "hit") {
       this.#cacheHits += 1;
+    } else {
+      this.#cacheMisses += 1;
+    }
+    if (!artifact.billedToCurrentRun || alreadyRecorded) {
       return;
     }
-    this.#cacheMisses += 1;
     this.#actualUncachedCostUsd += artifact.usage.costUsd;
     this.#inputTokens += artifact.usage.inputTokens;
     this.#outputTokens += artifact.usage.outputTokens;
     this.#cachedInputTokens += artifact.usage.cachedInputTokens;
     if (this.#actualUncachedCostUsd > this.#maxUncachedCostUsd) {
-      throw new Error(
+      throw ApplicationFailure.nonRetryable(
         `Glitter generation exceeded its $${this.#maxUncachedCostUsd.toFixed(2)} uncached cost limit`,
+        "GlitterGenerationBudgetExceeded",
       );
     }
   }

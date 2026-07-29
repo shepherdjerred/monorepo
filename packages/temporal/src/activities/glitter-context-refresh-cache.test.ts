@@ -4,6 +4,7 @@ import { ApplicationFailure } from "@temporalio/common";
 import {
   generationArtifactKey,
   generationRequestSha256,
+  generationSpendReceiptKey,
   readOrCreateGenerationArtifact,
   type GenerationArtifactStore,
 } from "./glitter-context-refresh-cache.ts";
@@ -15,8 +16,10 @@ import {
 
 const ResponseSchema = z.strictObject({ value: z.string() });
 const UnknownResponseSchema: z.ZodType = ResponseSchema;
+const CURRENT_RUN_ID = "00000000-0000-4000-8000-000000000001";
+const OTHER_RUN_ID = "00000000-0000-4000-8000-000000000002";
 
-function memoryStore(): {
+function memoryStore(ownerRunId = CURRENT_RUN_ID): {
   store: GenerationArtifactStore;
   values: Map<string, unknown>;
 } {
@@ -24,6 +27,7 @@ function memoryStore(): {
   return {
     values,
     store: {
+      ownerRunId,
       read: async (key) => values.get(key),
       create: async (key, value) => {
         if (!values.has(key)) {
@@ -65,17 +69,24 @@ describe("Glitter context generation artifacts", () => {
     expect(first.cacheStatus).toBe("miss");
     expect(reused.response).toEqual({ value: "first" });
     expect(reused.cacheStatus).toBe("hit");
+    expect(reused.billedToCurrentRun).toBe(true);
     expect(generationCount).toBe(1);
-    expect(values.size).toBe(1);
+    expect(values.size).toBe(2);
   });
 
   test("uses the atomic first-writer result after a create race", async () => {
-    const winner = memoryStore();
+    const winner = memoryStore(OTHER_RUN_ID);
     const store: GenerationArtifactStore = {
+      ownerRunId: CURRENT_RUN_ID,
       read: winner.store.read,
-      create: async (key) => {
+      create: async (key, value) => {
+        if (key.includes("/run-spend/")) {
+          await winner.store.create(key, value);
+          return;
+        }
         await winner.store.create(key, {
-          schemaVersion: 2,
+          schemaVersion: 3,
+          ownerRunId: OTHER_RUN_ID,
           model: "test-model",
           callSite: "style-card",
           requestSha256: generationRequestSha256({ prompt: "same" }),
@@ -110,6 +121,7 @@ describe("Glitter context generation artifacts", () => {
 
     expect(result.response).toEqual({ value: "winner" });
     expect(result.cacheStatus).toBe("miss");
+    expect(result.billedToCurrentRun).toBe(true);
     expect(result.usage).toEqual({
       inputTokens: 20,
       outputTokens: 4,
@@ -128,7 +140,8 @@ describe("Glitter context generation artifacts", () => {
           requestSha256,
         }),
         {
-          schemaVersion: 2,
+          schemaVersion: 3,
+          ownerRunId: CURRENT_RUN_ID,
           model: "test-model",
           callSite: "style-card",
           requestSha256,
@@ -144,6 +157,7 @@ describe("Glitter context generation artifacts", () => {
       ],
     ]);
     const store: GenerationArtifactStore = {
+      ownerRunId: CURRENT_RUN_ID,
       read: async (key) => values.get(key),
       create: async () => {
         throw new Error("create must not run for an existing artifact");
@@ -173,6 +187,7 @@ describe("Glitter context generation artifacts", () => {
   test("fails non-retryably after a billed schema-invalid response", async () => {
     let createCount = 0;
     const store: GenerationArtifactStore = {
+      ownerRunId: CURRENT_RUN_ID,
       read: () => Promise.resolve(),
       create: async () => {
         createCount += 1;
@@ -205,22 +220,27 @@ describe("Glitter context generation artifacts", () => {
     }
     expect(failure.type).toBe("BilledGenerationFinalizationError");
     expect(failure.nonRetryable).toBe(true);
-    expect(createCount).toBe(0);
+    expect(createCount).toBe(1);
   });
 });
 
 describe("Glitter billed completion artifacts", () => {
   test("fails non-retryably when a billed response cannot be persisted", async () => {
+    const memory = memoryStore();
     let generationCount = 0;
     const store: GenerationArtifactStore = {
-      read: () => Promise.resolve(),
-      create: async () => {
+      ownerRunId: CURRENT_RUN_ID,
+      read: memory.store.read,
+      create: async (key, value) => {
+        if (key.includes("/run-spend/")) {
+          await memory.store.create(key, value);
+          return;
+        }
         throw new Error("SeaweedFS unavailable");
       },
     };
 
-    let failure: unknown;
-    try {
+    const run = async () =>
       await readOrCreateGenerationArtifact({
         store,
         model: "test-model",
@@ -240,16 +260,20 @@ describe("Glitter billed completion artifacts", () => {
           };
         },
       });
+
+    let firstFailure: unknown;
+    try {
+      await run();
     } catch (error: unknown) {
-      failure = error;
+      firstFailure = error;
     }
-    if (!(failure instanceof ApplicationFailure)) {
+    if (!(firstFailure instanceof ApplicationFailure)) {
       throw new TypeError("Expected a non-retryable ApplicationFailure");
     }
-    expect(failure.type).toBe("BilledGenerationFinalizationError");
-    expect(failure.nonRetryable).toBe(true);
-    expect(failure.message).toContain("Automatic retry is disabled");
-    expect(failure.details).toEqual([
+    expect(firstFailure.type).toBe("BilledGenerationFinalizationError");
+    expect(firstFailure.nonRetryable).toBe(true);
+    expect(firstFailure.message).toContain("Automatic retry is disabled");
+    expect(firstFailure.details).toEqual([
       {
         key: generationArtifactKey({
           callSite: "style-card",
@@ -259,6 +283,7 @@ describe("Glitter billed completion artifacts", () => {
         }),
         model: "test-model",
         callSite: "style-card",
+        ownerRunId: CURRENT_RUN_ID,
         requestSha256: generationRequestSha256({
           prompt: "billed but not persisted",
         }),
@@ -271,6 +296,47 @@ describe("Glitter billed completion artifacts", () => {
         reason: "SeaweedFS unavailable",
       },
     ]);
+
+    let retryFailure: unknown;
+    try {
+      await run();
+    } catch (error: unknown) {
+      retryFailure = error;
+    }
+    if (!(retryFailure instanceof ApplicationFailure)) {
+      throw new TypeError("Expected a non-retryable retry ApplicationFailure");
+    }
+    expect(retryFailure.type).toBe("BilledGenerationReceiptWithoutArtifact");
+    expect(retryFailure.nonRetryable).toBe(true);
+    expect(retryFailure.details).toEqual([
+      {
+        key: generationArtifactKey({
+          callSite: "style-card",
+          requestSha256: generationRequestSha256({
+            prompt: "billed but not persisted",
+          }),
+        }),
+        spendReceiptKey: generationSpendReceiptKey({
+          ownerRunId: CURRENT_RUN_ID,
+          callSite: "style-card",
+          requestSha256: generationRequestSha256({
+            prompt: "billed but not persisted",
+          }),
+        }),
+        ownerRunId: CURRENT_RUN_ID,
+        model: "test-model",
+        callSite: "style-card",
+        requestSha256: generationRequestSha256({
+          prompt: "billed but not persisted",
+        }),
+        usage: {
+          inputTokens: 10,
+          outputTokens: 2,
+          cachedInputTokens: 0,
+          costUsd: 0.01,
+        },
+      },
+    ]);
     expect(generationCount).toBe(1);
   });
 
@@ -278,9 +344,8 @@ describe("Glitter billed completion artifacts", () => {
     const { store } = memoryStore();
     const CompletionArtifactSchema =
       glitterCompletionArtifactSchema(ResponseSchema);
-    const budget = new GenerationBudget(1);
     let generationCount = 0;
-    const run = async () => {
+    const run = async (budget: GenerationBudget) => {
       const artifact = await readOrCreateGenerationArtifact({
         store,
         model: "test-model",
@@ -311,12 +376,21 @@ describe("Glitter billed completion artifacts", () => {
         });
     };
 
-    expect(await run()).toThrow("model returned no parsed payload");
-    expect(await run()).toThrow("model returned no parsed payload");
+    const firstAttemptBudget = new GenerationBudget(1);
+    const retryBudget = new GenerationBudget(1);
+    expect(await run(firstAttemptBudget)).toThrow(
+      "model returned no parsed payload",
+    );
+    expect(await run(retryBudget)).toThrow("model returned no parsed payload");
     expect(generationCount).toBe(1);
-    expect(budget.summary()).toMatchObject({
+    expect(firstAttemptBudget.summary()).toMatchObject({
       actualUncachedCostUsd: 0.01,
       cacheMisses: 1,
+      cacheHits: 0,
+    });
+    expect(retryBudget.summary()).toMatchObject({
+      actualUncachedCostUsd: 0.01,
+      cacheMisses: 0,
       cacheHits: 1,
     });
   });

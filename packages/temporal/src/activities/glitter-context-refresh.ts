@@ -253,6 +253,7 @@ export const glitterContextRefreshActivities = {
       const corpus = await loadVerifiedGlitterCorpus(input.snapshot);
       const generationArtifactStore = createCorpusGenerationArtifactStore(
         createCorpusStoreFromEnv(),
+        runId,
       );
       await mkdir(tempDir, { recursive: true });
       await simpleGit().clone(REPO_URL, repoDir, [

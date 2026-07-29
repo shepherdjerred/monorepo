@@ -150,6 +150,10 @@ weekly production schedule.
 - Preserved atomic first-writer response convergence while charging a
   conditional-create loser for its own completion usage rather than the
   winner's stored usage.
+- Added immutable, run-owned spend receipts so an activity retry restores the
+  billed prefix before authorizing new model calls, while cache hits produced
+  by prior workflow runs remain free. Budget exhaustion and post-budget
+  overflow now fail non-retryably.
 - Hardened the native Temporal good-morning integration cases against
   full-repository CI contention after build #7180 exposed Bun's 5-second
   default timeout; all five repeated focused runs passed with the explicit

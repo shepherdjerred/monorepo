@@ -8,7 +8,8 @@ import {
   type CorpusStore,
 } from "./glitter-corpus-store.ts";
 
-const GENERATION_ARTIFACT_SCHEMA_VERSION = 2;
+const GENERATION_ARTIFACT_SCHEMA_VERSION = 3;
+const GENERATION_SPEND_RECEIPT_SCHEMA_VERSION = 1;
 const GENERATION_ARTIFACT_ROOT = "derived/glitter-context/generation-artifacts";
 const Sha256Schema = z.string().regex(/^[0-9a-f]{64}$/u);
 const CallSiteSchema = z.string().regex(/^[a-z0-9-]+$/u);
@@ -23,6 +24,7 @@ export type GenerationUsage = z.infer<typeof GenerationUsageSchema>;
 
 const GenerationArtifactSchema = z.strictObject({
   schemaVersion: z.literal(GENERATION_ARTIFACT_SCHEMA_VERSION),
+  ownerRunId: z.uuid(),
   model: z.string().min(1),
   callSite: CallSiteSchema,
   requestSha256: Sha256Schema,
@@ -31,7 +33,17 @@ const GenerationArtifactSchema = z.strictObject({
   usage: GenerationUsageSchema,
 });
 
+const GenerationSpendReceiptSchema = z.strictObject({
+  schemaVersion: z.literal(GENERATION_SPEND_RECEIPT_SCHEMA_VERSION),
+  ownerRunId: z.uuid(),
+  model: z.string().min(1),
+  callSite: CallSiteSchema,
+  requestSha256: Sha256Schema,
+  usage: GenerationUsageSchema,
+});
+
 export type GenerationArtifactStore = {
+  ownerRunId: string;
   read: (key: string) => Promise<unknown>;
   create: (key: string, value: unknown) => Promise<void>;
 };
@@ -58,11 +70,31 @@ export function generationArtifactKey(input: {
   ].join("/");
 }
 
+export function generationSpendReceiptKey(input: {
+  ownerRunId: string;
+  callSite: string;
+  requestSha256: string;
+}): string {
+  const ownerRunId = z.uuid().parse(input.ownerRunId);
+  const callSite = CallSiteSchema.parse(input.callSite);
+  const requestSha256 = Sha256Schema.parse(input.requestSha256);
+  return [
+    GENERATION_ARTIFACT_ROOT,
+    `v${String(GENERATION_ARTIFACT_SCHEMA_VERSION)}`,
+    "run-spend",
+    `v${String(GENERATION_SPEND_RECEIPT_SCHEMA_VERSION)}`,
+    ownerRunId,
+    callSite,
+    `${requestSha256}.json`,
+  ].join("/");
+}
+
 export type GenerationArtifactResult<Response> = {
   response: Response;
   key: string;
   requestSha256: string;
   cacheStatus: "hit" | "miss";
+  billedToCurrentRun: boolean;
   usage: GenerationUsage;
 };
 
@@ -71,6 +103,7 @@ function billedGenerationFinalizationFailure(input: {
   key: string;
   model: string;
   callSite: string;
+  ownerRunId: string;
   requestSha256: string;
   usage: GenerationUsage;
 }): ApplicationFailure {
@@ -83,6 +116,7 @@ function billedGenerationFinalizationFailure(input: {
       key: input.key,
       model: input.model,
       callSite: input.callSite,
+      ownerRunId: input.ownerRunId,
       requestSha256: input.requestSha256,
       usage: input.usage,
       reason,
@@ -96,6 +130,7 @@ function parseStoredResponse<Response>(input: {
   cacheStatus: "hit" | "miss";
   model: string;
   callSite: string;
+  ownerRunId: string;
   requestSha256: string;
   responseSchema: z.ZodType<Response>;
 }): GenerationArtifactResult<Response> {
@@ -121,8 +156,30 @@ function parseStoredResponse<Response>(input: {
     key: input.key,
     requestSha256: input.requestSha256,
     cacheStatus: input.cacheStatus,
+    billedToCurrentRun: artifact.ownerRunId === input.ownerRunId,
     usage: artifact.usage,
   };
+}
+
+function parseSpendReceipt(input: {
+  stored: unknown;
+  ownerRunId: string;
+  model: string;
+  callSite: string;
+  requestSha256: string;
+}): GenerationUsage {
+  const receipt = GenerationSpendReceiptSchema.parse(input.stored);
+  if (
+    receipt.ownerRunId !== input.ownerRunId ||
+    receipt.model !== input.model ||
+    receipt.callSite !== input.callSite ||
+    receipt.requestSha256 !== input.requestSha256
+  ) {
+    throw new Error(
+      `Glitter generation spend receipt identity mismatch for ${input.callSite}`,
+    );
+  }
+  return receipt.usage;
 }
 
 export async function readOrCreateGenerationArtifact<Response>(input: {
@@ -141,28 +198,101 @@ export async function readOrCreateGenerationArtifact<Response>(input: {
     callSite: input.callSite,
     requestSha256,
   });
+  const spendReceiptKey = generationSpendReceiptKey({
+    ownerRunId: input.store.ownerRunId,
+    callSite: input.callSite,
+    requestSha256,
+  });
   const existing = await input.store.read(key);
   if (existing !== undefined) {
-    return parseStoredResponse({
+    const persistedResult = parseStoredResponse({
       stored: existing,
       key,
       cacheStatus: "hit",
       model: input.model,
       callSite: input.callSite,
+      ownerRunId: input.store.ownerRunId,
       requestSha256,
       responseSchema: input.responseSchema,
     });
+    const storedSpendReceipt = await input.store.read(spendReceiptKey);
+    if (storedSpendReceipt === undefined) {
+      return persistedResult;
+    }
+    return {
+      response: persistedResult.response,
+      key: persistedResult.key,
+      requestSha256: persistedResult.requestSha256,
+      cacheStatus: persistedResult.cacheStatus,
+      billedToCurrentRun: true,
+      usage: parseSpendReceipt({
+        stored: storedSpendReceipt,
+        ownerRunId: input.store.ownerRunId,
+        model: input.model,
+        callSite: input.callSite,
+        requestSha256,
+      }),
+    };
+  }
+
+  const orphanedSpendReceipt = await input.store.read(spendReceiptKey);
+  if (orphanedSpendReceipt !== undefined) {
+    const usage = parseSpendReceipt({
+      stored: orphanedSpendReceipt,
+      ownerRunId: input.store.ownerRunId,
+      model: input.model,
+      callSite: input.callSite,
+      requestSha256,
+    });
+    throw ApplicationFailure.nonRetryable(
+      `Glitter run ${input.store.ownerRunId} already paid for ${input.callSite} request ${requestSha256}, but its response artifact is missing. Automatic regeneration is disabled to prevent rebilling.`,
+      "BilledGenerationReceiptWithoutArtifact",
+      {
+        key,
+        spendReceiptKey,
+        ownerRunId: input.store.ownerRunId,
+        model: input.model,
+        callSite: input.callSite,
+        requestSha256,
+        usage,
+      },
+    );
   }
 
   const generated = await input.generate();
   const reportedUsage = generated.usage;
   try {
     const usage = GenerationUsageSchema.parse(reportedUsage);
+    await input.store.create(
+      spendReceiptKey,
+      GenerationSpendReceiptSchema.parse({
+        schemaVersion: GENERATION_SPEND_RECEIPT_SCHEMA_VERSION,
+        ownerRunId: input.store.ownerRunId,
+        model: input.model,
+        callSite: input.callSite,
+        requestSha256,
+        usage,
+      }),
+    );
+    const persistedSpendReceipt = await input.store.read(spendReceiptKey);
+    if (persistedSpendReceipt === undefined) {
+      throw new Error(
+        `Glitter generation spend receipt disappeared after creation: ${spendReceiptKey}`,
+      );
+    }
+    parseSpendReceipt({
+      stored: persistedSpendReceipt,
+      ownerRunId: input.store.ownerRunId,
+      model: input.model,
+      callSite: input.callSite,
+      requestSha256,
+    });
     const response = input.responseSchema.parse(generated.response);
     await input.store.create(
       key,
       GenerationArtifactSchema.parse({
         schemaVersion: GENERATION_ARTIFACT_SCHEMA_VERSION,
+        ownerRunId: input.store.ownerRunId,
         model: input.model,
         callSite: input.callSite,
         requestSha256,
@@ -184,6 +314,7 @@ export async function readOrCreateGenerationArtifact<Response>(input: {
       cacheStatus: "miss",
       model: input.model,
       callSite: input.callSite,
+      ownerRunId: input.store.ownerRunId,
       requestSha256,
       responseSchema: input.responseSchema,
     });
@@ -192,6 +323,7 @@ export async function readOrCreateGenerationArtifact<Response>(input: {
       key: persistedResult.key,
       requestSha256: persistedResult.requestSha256,
       cacheStatus: persistedResult.cacheStatus,
+      billedToCurrentRun: true,
       // A conditional-create loser must reuse the winner's response while
       // charging this execution for its own already-billed completion.
       usage,
@@ -202,6 +334,7 @@ export async function readOrCreateGenerationArtifact<Response>(input: {
       key,
       model: input.model,
       callSite: input.callSite,
+      ownerRunId: input.store.ownerRunId,
       requestSha256,
       usage: reportedUsage,
     });
@@ -210,13 +343,16 @@ export async function readOrCreateGenerationArtifact<Response>(input: {
 
 export function createCorpusGenerationArtifactStore(
   store: CorpusStore,
+  ownerRunId: string,
 ): GenerationArtifactStore {
+  const parsedOwnerRunId = z.uuid().parse(ownerRunId);
   const guildId = z
     .string()
     .regex(/^\d+$/u)
     .parse(Bun.env["GLITTER_DISCORD_GUILD_ID"]);
   const scopedKey = (key: string) => `guilds/${guildId}/${key}`;
   return {
+    ownerRunId: parsedOwnerRunId,
     read: async (key) => {
       const bytes = await getObjectBytes(store, scopedKey(key));
       return bytes === undefined

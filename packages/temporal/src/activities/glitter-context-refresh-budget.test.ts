@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { ApplicationFailure } from "@temporalio/common";
 import {
   estimatedCallCostUsd,
   GenerationBudget,
@@ -14,12 +15,20 @@ describe("Glitter generation budget", () => {
     });
     const budget = new GenerationBudget(callCost / 2);
 
-    expect(() => budget.authorizeUncachedCall(callCost)).toThrow(
-      "budget exhausted",
-    );
+    let failure: unknown;
+    try {
+      budget.authorizeUncachedCall(callCost);
+    } catch (error: unknown) {
+      failure = error;
+    }
+    if (!(failure instanceof ApplicationFailure)) {
+      throw new TypeError("Expected a non-retryable ApplicationFailure");
+    }
+    expect(failure.type).toBe("GlitterGenerationBudgetExhausted");
+    expect(failure.nonRetryable).toBe(true);
   });
 
-  test("counts misses as spend and hits only as reuse", () => {
+  test("restores same-run hit spend without charging prior-run hits", () => {
     const budget = new GenerationBudget(1);
     budget.setPreflightEstimatedCostUsd(0.5);
     budget.record({
@@ -27,6 +36,7 @@ describe("Glitter generation budget", () => {
       key: "artifact-a",
       requestSha256: "a".repeat(64),
       cacheStatus: "miss",
+      billedToCurrentRun: true,
       usage: {
         inputTokens: 100,
         outputTokens: 20,
@@ -39,6 +49,7 @@ describe("Glitter generation budget", () => {
       key: "artifact-a",
       requestSha256: "a".repeat(64),
       cacheStatus: "hit",
+      billedToCurrentRun: true,
       usage: {
         inputTokens: 100,
         outputTokens: 20,
@@ -46,17 +57,43 @@ describe("Glitter generation budget", () => {
         costUsd: 0.25,
       },
     });
+    budget.record({
+      response: { value: "second" },
+      key: "artifact-b",
+      requestSha256: "b".repeat(64),
+      cacheStatus: "hit",
+      billedToCurrentRun: true,
+      usage: {
+        inputTokens: 60,
+        outputTokens: 10,
+        cachedInputTokens: 3,
+        costUsd: 0.15,
+      },
+    });
+    budget.record({
+      response: { value: "prior dry run" },
+      key: "artifact-c",
+      requestSha256: "c".repeat(64),
+      cacheStatus: "hit",
+      billedToCurrentRun: false,
+      usage: {
+        inputTokens: 500,
+        outputTokens: 100,
+        cachedInputTokens: 50,
+        costUsd: 0.5,
+      },
+    });
 
     expect(budget.summary()).toEqual({
       maxUncachedCostUsd: 1,
       preflightEstimatedCostUsd: 0.5,
-      actualUncachedCostUsd: 0.25,
-      cacheHits: 1,
+      actualUncachedCostUsd: 0.4,
+      cacheHits: 3,
       cacheMisses: 1,
-      inputTokens: 100,
-      outputTokens: 20,
-      cachedInputTokens: 5,
-      artifactKeys: ["artifact-a"],
+      inputTokens: 160,
+      outputTokens: 30,
+      cachedInputTokens: 8,
+      artifactKeys: ["artifact-a", "artifact-b", "artifact-c"],
     });
   });
 });
