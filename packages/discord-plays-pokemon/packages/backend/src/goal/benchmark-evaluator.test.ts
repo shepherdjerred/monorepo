@@ -1,10 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import type { GameSnapshot } from "#src/game/events/types.ts";
 import type { ParsedPartyMon } from "#src/game/events/pokemon-struct.ts";
+import { BenchmarkWorkerResultSchema } from "./benchmark-harness.ts";
 import {
   evaluateCatchBenchmark,
   type PersistedSaveEvidence,
 } from "./benchmark-evaluator.ts";
+import { evaluateWorkerCatch } from "./benchmark-result.ts";
 
 const STARTED_AT = "2026-07-28T10:00:00.000Z";
 const CAUGHT_AT = "2026-07-28T10:05:00.000Z";
@@ -82,6 +84,16 @@ function persisted(
     persistedAt: "2026-07-28T10:06:00.000Z",
     byteLength: 128 * 1024,
     snapshot: snapshotValue,
+  };
+}
+
+function serializeSnapshot(snapshotValue: GameSnapshot) {
+  return {
+    party: snapshotValue.party,
+    badges: [...snapshotValue.badges],
+    dexOwned: [...snapshotValue.dexOwned],
+    caughtMonSpecies: snapshotValue.caughtMonSpecies,
+    caughtMonShiny: snapshotValue.caughtMonShiny,
   };
 }
 
@@ -242,5 +254,40 @@ describe("evaluateCatchBenchmark", () => {
         persistedSave: null,
       }),
     ).toThrow("finishedAt must not precede startedAt");
+  });
+
+  test("does not trust the target decoder for persisted catch evidence", () => {
+    const workerResult = BenchmarkWorkerResultSchema.parse({
+      schemaVersion: 1,
+      goalState: {
+        id: "goal-1",
+        goal: "catch a Pokemon",
+        requestedBy: "benchmark",
+        startedAt: STARTED_AT,
+        status: "completed",
+        finishedAt: FINISHED_AT,
+        exitCode: 0,
+      },
+      initialSnapshot: serializeSnapshot(initial),
+      finalSnapshot: serializeSnapshot(afterCatch),
+      catchEvents: [catchEvent()],
+      persistedSave: {
+        persistedAt: "2026-07-28T10:06:00.000Z",
+        byteLength: 128 * 1024,
+        snapshot: serializeSnapshot(afterCatch),
+      },
+    });
+
+    const result = evaluateWorkerCatch({
+      workerResult,
+      providerFailure: null,
+      persistedSnapshot: initial,
+    });
+
+    expect(result?.success).toBe(false);
+    expect(result?.evidence.persistedSpeciesCorrelated).toBe(false);
+    expect(result?.failures).toContain(
+      "persisted state contains no delta for the caught species",
+    );
   });
 });

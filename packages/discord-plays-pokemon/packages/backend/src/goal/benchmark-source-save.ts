@@ -1,11 +1,10 @@
-const EMERALD_FLASH_SAVE_BYTES = 128 * 1024;
-const SAVE_SLOT_SECTORS = 14;
-const SAVE_SECTOR_BYTES = 0x10_00;
-const SAVE_SLOT_BYTES = SAVE_SLOT_SECTORS * SAVE_SECTOR_BYTES;
-const SAVE_SECTOR_ID_OFFSET = 0xf_f4;
-const SAVE_SECTOR_SIGNATURE_OFFSET = 0xf_f8;
-const SAVE_SECTOR_COUNTER_OFFSET = 0xf_fc;
-const SAVE_SECTOR_SIGNATURE = 0x08_01_20_25;
+import {
+  EMERALD_FLASH_SAVE_BYTES,
+  readValidatedEmeraldSaveSlots,
+  selectActiveEmeraldSaveSlot,
+  type ValidatedEmeraldSaveSlot,
+} from "./benchmark-flash-slot.ts";
+
 const SAVE_BLOCK_1_SECTOR_ID = 1;
 const SAVE_BLOCK_1_PARTY_COUNT_OFFSET = 0x2_34;
 const PARTY_CAPACITY = 6;
@@ -16,48 +15,17 @@ type SaveSlotPartyCount = Readonly<{
 }>;
 
 function saveSlotPartyCount(
-  bytes: Uint8Array,
-  slotOffset: number,
-): SaveSlotPartyCount | null {
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const sectorIds = new Set<number>();
-  let partyCount: number | undefined;
-  let counter: number | undefined;
-  for (let sector = 0; sector < SAVE_SLOT_SECTORS; sector += 1) {
-    const offset = slotOffset + sector * SAVE_SECTOR_BYTES;
-    if (
-      view.getUint32(offset + SAVE_SECTOR_SIGNATURE_OFFSET, true) !==
-      SAVE_SECTOR_SIGNATURE
-    ) {
-      return null;
-    }
-    const sectorId = view.getUint16(offset + SAVE_SECTOR_ID_OFFSET, true);
-    const sectorCounter = view.getUint32(
-      offset + SAVE_SECTOR_COUNTER_OFFSET,
-      true,
-    );
-    if (
-      sectorId >= SAVE_SLOT_SECTORS ||
-      sectorIds.has(sectorId) ||
-      (counter !== undefined && counter !== sectorCounter)
-    ) {
-      return null;
-    }
-    sectorIds.add(sectorId);
-    counter = sectorCounter;
-    if (sectorId === SAVE_BLOCK_1_SECTOR_ID) {
-      partyCount =
-        bytes[offset + SAVE_BLOCK_1_PARTY_COUNT_OFFSET] ?? PARTY_CAPACITY + 1;
-    }
+  slot: ValidatedEmeraldSaveSlot,
+): SaveSlotPartyCount {
+  const saveBlock1Start = slot.sectors.get(SAVE_BLOCK_1_SECTOR_ID);
+  if (saveBlock1Start === undefined) {
+    throw new Error("validated source save slot is missing SaveBlock1");
   }
-  if (
-    sectorIds.size !== SAVE_SLOT_SECTORS ||
-    counter === undefined ||
-    partyCount === undefined
-  ) {
-    return null;
-  }
-  return { counter, partyCount };
+  return {
+    counter: slot.counter,
+    partyCount:
+      saveBlock1Start[SAVE_BLOCK_1_PARTY_COUNT_OFFSET] ?? PARTY_CAPACITY + 1,
+  };
 }
 
 export function validateCatchBenchmarkSourceSave(bytes: Uint8Array): void {
@@ -66,17 +34,14 @@ export function validateCatchBenchmarkSourceSave(bytes: Uint8Array): void {
       `source save must be exactly ${String(EMERALD_FLASH_SAVE_BYTES)} bytes; got ${String(bytes.byteLength)}`,
     );
   }
-  const first = saveSlotPartyCount(bytes, 0);
-  const second = saveSlotPartyCount(bytes, SAVE_SLOT_BYTES);
-  const active =
-    second === null || (first !== null && first.counter >= second.counter)
-      ? first
-      : second;
-  if (active === null) {
+  const slots = readValidatedEmeraldSaveSlots(bytes);
+  const activeSlot = selectActiveEmeraldSaveSlot(slots.first, slots.second);
+  if (activeSlot === null) {
     throw new Error(
       "source save has no valid slot containing SaveBlock1 party data",
     );
   }
+  const active = saveSlotPartyCount(activeSlot);
   if (active.partyCount > PARTY_CAPACITY) {
     throw new Error(
       `source save has invalid party count ${String(active.partyCount)}`,

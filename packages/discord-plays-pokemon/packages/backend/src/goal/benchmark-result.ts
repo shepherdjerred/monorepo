@@ -8,6 +8,7 @@ import {
 } from "./benchmark-harness.ts";
 import {
   evaluateCatchBenchmark,
+  type CatchStateEvidence,
   type CatchBenchmarkResult,
   type GoalBenchmarkTelemetry,
 } from "./benchmark-evaluator.ts";
@@ -71,6 +72,7 @@ export async function readProviderStartupFailure(
 export function evaluateWorkerCatch(input: {
   workerResult: BenchmarkWorkerResult;
   providerFailure: BenchmarkProviderFailure | null;
+  persistedSnapshot: CatchStateEvidence;
 }): CatchBenchmarkResult | null {
   if (input.providerFailure !== null) return null;
   return evaluateCatchBenchmark({
@@ -82,7 +84,7 @@ export function evaluateWorkerCatch(input: {
     persistedSave: {
       persistedAt: input.workerResult.persistedSave.persistedAt,
       byteLength: input.workerResult.persistedSave.byteLength,
-      snapshot: deserializeSnapshot(input.workerResult.persistedSave.snapshot),
+      snapshot: input.persistedSnapshot,
     },
   });
 }

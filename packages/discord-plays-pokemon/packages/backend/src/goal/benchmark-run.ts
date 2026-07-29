@@ -12,6 +12,10 @@ import {
   classifyCodexProviderFailure,
 } from "./benchmark-provider-failure.ts";
 import {
+  benchmarkRuntimeOverlayDirectory,
+  prepareBenchmarkRuntimeOverlay,
+} from "./benchmark-runtime-overlay.ts";
+import {
   artifactPaths,
   evaluateWorkerCatch,
   harnessRunOutcome,
@@ -21,6 +25,7 @@ import {
   telemetryForArtifact,
   validRunOutcome,
 } from "./benchmark-result.ts";
+import { decodePersistedCatchState } from "./benchmark-save-oracle.ts";
 import { computeCost } from "./pricing.ts";
 
 export type BenchmarkImplementation = {
@@ -37,6 +42,7 @@ export type BenchmarkProvenanceInput = {
   runnerWorkingTreeDirty: boolean;
   workerSourceSha256: string;
   evaluatorSourceSha256: string;
+  saveOracleSourceSha256: string;
   codexVersion: string;
   bunVersion: string;
 };
@@ -202,12 +208,17 @@ export async function runBenchmarkOnce(
   const { args, implementation, run } = input;
   const runName = `run-${String(run).padStart(3, "0")}`;
   const runDirectory = path.join(args.output, runName);
+  benchmarkRuntimeOverlayDirectory(implementation.packageRoot, runDirectory);
   await reserveBenchmarkDirectory(runDirectory, "benchmark run");
   const resultPath = path.join(runDirectory, "result.json");
   const inputSavePath = path.join(runDirectory, "input.flash");
   const runSavePath = path.join(runDirectory, "run.flash");
   const persistedSavePath = path.join(runDirectory, "persisted.flash");
   const verificationSavePath = path.join(runDirectory, "verification.flash");
+  const runtimeDirectory = await prepareBenchmarkRuntimeOverlay(
+    implementation.packageRoot,
+    runDirectory,
+  );
   await Bun.write(inputSavePath, input.sourceSaveBytes, { createPath: true });
   await Bun.write(runSavePath, input.sourceSaveBytes);
   const controlPort = args.controlPort + (run - 1) * args.portStride;
@@ -218,7 +229,7 @@ export async function runBenchmarkOnce(
     persistedSavePath,
     verificationSavePath,
     wasmPath: args.wasm,
-    runtimeDirectory: implementation.packageRoot,
+    runtimeDirectory,
     runDirectory,
     controlHost: args.controlHost,
     controlPort,
@@ -255,6 +266,9 @@ export async function runBenchmarkOnce(
       throw new Error("worker returned invalid goal lifecycle timestamps");
     }
     const finalSaveSha256 = await sha256File(persistedSavePath);
+    const persistedSnapshot = decodePersistedCatchState(
+      await Bun.file(persistedSavePath).bytes(),
+    );
     const telemetryInput = await readTelemetry(runDirectory);
     const providerFailure = classifyCodexProviderFailure({
       jsonl: telemetryInput.jsonl,
@@ -269,6 +283,7 @@ export async function runBenchmarkOnce(
     const evaluation = evaluateWorkerCatch({
       workerResult,
       providerFailure,
+      persistedSnapshot,
     });
     const telemetry = telemetryForArtifact({
       raw: telemetryInput.raw,
@@ -311,6 +326,7 @@ export async function runBenchmarkOnce(
         runnerWorkingTreeDirty: input.provenance.runnerWorkingTreeDirty,
         workerSourceSha256: input.provenance.workerSourceSha256,
         evaluatorSourceSha256: input.provenance.evaluatorSourceSha256,
+        saveOracleSourceSha256: input.provenance.saveOracleSourceSha256,
         codexVersion: input.provenance.codexVersion,
         bunVersion: input.provenance.bunVersion,
         codexThreadId: telemetryInput.raw.codexThreadId,
@@ -330,6 +346,11 @@ export async function runBenchmarkOnce(
         finalSnapshot: workerResult.finalSnapshot,
         catchEvents: workerResult.catchEvents,
         persistedSave: workerResult.persistedSave,
+        persistedSaveOracle: {
+          implementation: "runner-gen3-flash-v1",
+          party: persistedSnapshot.party,
+          dexOwned: [...persistedSnapshot.dexOwned],
+        },
       },
       evaluation,
       telemetry,
@@ -400,6 +421,7 @@ export async function runBenchmarkOnce(
         runnerWorkingTreeDirty: input.provenance.runnerWorkingTreeDirty,
         workerSourceSha256: input.provenance.workerSourceSha256,
         evaluatorSourceSha256: input.provenance.evaluatorSourceSha256,
+        saveOracleSourceSha256: input.provenance.saveOracleSourceSha256,
         codexVersion: input.provenance.codexVersion,
         bunVersion: input.provenance.bunVersion,
         codexThreadId: telemetryInput.raw.codexThreadId,

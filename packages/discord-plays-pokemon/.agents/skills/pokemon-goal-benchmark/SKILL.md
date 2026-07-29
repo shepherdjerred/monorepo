@@ -31,7 +31,8 @@ benchmark into a scripted solver or count model prose as success.
    implementation being measured: the harness hashes the external file but
    records its relationship to `wasm-src/upstream.json` as `not-verified`.
 4. Choose a new output path outside the target checkout. The harness refuses
-   an existing output directory and a dirty target worktree.
+   an existing output directory and requires both the benchmark runner and
+   target implementation worktrees to be clean.
 
 ## Run
 

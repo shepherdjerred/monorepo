@@ -7,6 +7,7 @@ import {
   parseBenchmarkArgs,
 } from "#src/goal/benchmark-harness.ts";
 import { validateCatchBenchmarkSourceSave } from "#src/goal/benchmark-source-save.ts";
+import { benchmarkRuntimeOverlayDirectory } from "#src/goal/benchmark-runtime-overlay.ts";
 import { runBenchmarkSeries } from "#src/goal/benchmark-series.ts";
 import {
   commandOutput,
@@ -23,6 +24,10 @@ const WORKER_SOURCE = path.join(import.meta.dir, "goal-benchmark-worker.ts");
 const EVALUATOR_SOURCE = path.resolve(
   import.meta.dir,
   "../src/goal/benchmark-evaluator.ts",
+);
+const SAVE_ORACLE_SOURCE = path.resolve(
+  import.meta.dir,
+  "../src/goal/benchmark-save-oracle.ts",
 );
 
 const UpstreamSchema = z.looseObject({
@@ -122,19 +127,21 @@ async function main(): Promise<void> {
   await requireFile(args.wasm, "WASM");
   await requireFile(WORKER_SOURCE, "benchmark worker source");
   await requireFile(EVALUATOR_SOURCE, "benchmark evaluator source");
+  await requireFile(SAVE_ORACLE_SOURCE, "benchmark save oracle source");
   const sourceSaveBytes = await Bun.file(args.save).bytes();
   validateCatchBenchmarkSourceSave(sourceSaveBytes);
   const implementation = await resolveImplementationRoot(
     args.implementationRoot,
   );
+  benchmarkRuntimeOverlayDirectory(
+    implementation.packageRoot,
+    path.join(args.output, "run-001"),
+  );
   await requireCleanGitWorktree(
     implementation.packageRoot,
     "target implementation",
   );
-  const runnerStatus = await commandOutput(
-    ["git", "status", "--porcelain=v1", "--untracked-files=all"],
-    PACKAGE_ROOT,
-  );
+  await requireCleanGitWorktree(PACKAGE_ROOT, "benchmark runner");
   const [
     sourceSaveSha256,
     wasmSha256,
@@ -142,6 +149,7 @@ async function main(): Promise<void> {
     runnerCommit,
     workerSourceSha256,
     evaluatorSourceSha256,
+    saveOracleSourceSha256,
     codexVersion,
     bunVersion,
   ] = await Promise.all([
@@ -151,6 +159,7 @@ async function main(): Promise<void> {
     commandOutput(["git", "rev-parse", "HEAD"], PACKAGE_ROOT),
     sha256File(WORKER_SOURCE),
     sha256File(EVALUATOR_SOURCE),
+    sha256File(SAVE_ORACLE_SOURCE),
     commandOutput([args.codexBinary, "--version"], implementation.backendRoot),
     commandOutput(["bun", "--version"], implementation.backendRoot),
   ]);
@@ -179,9 +188,10 @@ async function main(): Promise<void> {
         targetPinnedWasmCommit: upstream.commit,
         targetCommit,
         runnerCommit,
-        runnerWorkingTreeDirty: runnerStatus.length > 0,
+        runnerWorkingTreeDirty: false,
         workerSourceSha256,
         evaluatorSourceSha256,
+        saveOracleSourceSha256,
         codexVersion,
         bunVersion,
       },
@@ -206,9 +216,10 @@ async function main(): Promise<void> {
       },
       targetCommit,
       runnerCommit,
-      runnerWorkingTreeDirty: runnerStatus.length > 0,
+      runnerWorkingTreeDirty: false,
       workerSourceSha256,
       evaluatorSourceSha256,
+      saveOracleSourceSha256,
       codexVersion,
       bunVersion,
     },

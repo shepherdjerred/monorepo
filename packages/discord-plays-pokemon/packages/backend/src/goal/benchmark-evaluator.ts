@@ -13,6 +13,11 @@ export type PartyIdentityEvidence = {
   species: number;
 };
 
+export type CatchStateEvidence = {
+  party: readonly PartyIdentityEvidence[];
+  dexOwned: Uint8Array;
+};
+
 export type CatchEventEvidence = {
   occurredAt: string;
   frame: number;
@@ -25,7 +30,7 @@ export type CatchEventEvidence = {
 export type PersistedSaveEvidence = {
   persistedAt: string;
   byteLength: number;
-  snapshot: GameSnapshot;
+  snapshot: CatchStateEvidence;
 };
 
 export type CatchBenchmarkInput = {
@@ -215,8 +220,8 @@ export function evaluateCatchBenchmark(
 }
 
 function snapshotContainsSpeciesDelta(
-  initial: GameSnapshot,
-  candidate: GameSnapshot,
+  initial: CatchStateEvidence,
+  candidate: CatchStateEvidence,
   species: number,
   nationalDexNumberValue: number,
 ): boolean {
@@ -251,7 +256,7 @@ function nationalDexNumber(species: number): number {
 }
 
 function dexOwned(
-  snapshot: GameSnapshot,
+  snapshot: CatchStateEvidence,
   nationalDexNumberValue: number,
 ): boolean {
   const bitIndex = nationalDexNumberValue - 1;

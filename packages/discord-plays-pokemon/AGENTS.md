@@ -27,8 +27,9 @@ Dockerfile's `ENV` copy). Freshness:
 `packages/backend` exposes the operator-only `benchmark:goal` command for
 repeatable real-model catch measurements. Run it from a clean, fully set-up
 checkout of the implementation being measured. Keep the source save and output
-directory outside that checkout: the target fails preflight when its Git
-worktree is dirty, and every output path must be new.
+directory outside that checkout: both the runner and target implementation
+fail preflight when their Git worktrees are dirty, and every output path must
+be new.
 
 The required inputs are:
 

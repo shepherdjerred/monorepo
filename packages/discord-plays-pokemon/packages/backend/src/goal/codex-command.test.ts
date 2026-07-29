@@ -118,6 +118,22 @@ describe("buildDeveloperInstructions", () => {
     );
   });
 
+  test("makes semantic controls primary and bounds navigation", () => {
+    const instructions = buildDeveloperInstructions();
+    expect(instructions).toContain("pokemonctl observe");
+    expect(instructions).toContain("pokemonctl tap");
+    expect(instructions).toContain("pokemonctl move");
+    expect(instructions).toContain("pokemonctl interact");
+    expect(instructions).toContain("pokemonctl map show");
+    expect(instructions).toContain("pokemonctl navigate");
+    expect(instructions).toContain("bounded travel");
+    expect(instructions).toContain("current map");
+    expect(instructions).toContain("finite step budget");
+    expect(instructions).toContain(
+      "raw pokemonctl press or pokemonctl chord as escape hatches",
+    );
+  });
+
   test("uses the compact observe-act-verify-replan loop", () => {
     const instructions = buildDeveloperInstructions();
     expect(instructions).toContain("Observe the current phase");

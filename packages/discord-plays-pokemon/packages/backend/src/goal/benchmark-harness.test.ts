@@ -20,7 +20,68 @@ import {
   requireCleanGitWorktree,
   reserveBenchmarkDirectory,
 } from "./benchmark-run.ts";
+import { prepareBenchmarkRuntimeOverlay } from "./benchmark-runtime-overlay.ts";
 import { runBenchmarkSeries } from "./benchmark-series.ts";
+import { prepareRuntimeTools } from "./goal-runtime-env.ts";
+
+const SAVE_SLOT_BYTES = 0xe0_00;
+const SAVE_SECTOR_BYTES = 0x10_00;
+const SAVE_SLOT_SECTORS = 14;
+const SAVE_SECTOR_CHECKSUM_OFFSET = 0xf_f6;
+const SAVE_SECTOR_ID_OFFSET = 0xf_f4;
+const SAVE_SECTOR_COUNTER_OFFSET = 0xf_fc;
+const MAX_SAVE_COUNTER = 0xff_ff_ff_ff;
+const WASM32_CHUNK_SIZES: readonly number[] = [
+  0xf_08, 0xf_80, 0xf_80, 0xf_80, 0xd_c0, 0xf_80, 0xf_80, 0xf_80, 0xf_80,
+  0xf_80, 0xf_80, 0xf_80, 0xf_80, 0x7_d0,
+];
+
+function sectorChecksum(
+  view: DataView,
+  sectorOffset: number,
+  chunkSize: number,
+): number {
+  let sum = 0;
+  for (let offset = 0; offset < chunkSize; offset += 4) {
+    sum = (sum + view.getUint32(sectorOffset + offset, true)) >>> 0;
+  }
+  return ((sum >>> 16) + (sum & 0xff_ff)) & 0xff_ff;
+}
+
+function setSlotCounter(
+  view: DataView,
+  slotOffset: number,
+  counter: number,
+): void {
+  for (let sector = 0; sector < SAVE_SLOT_SECTORS; sector += 1) {
+    view.setUint32(
+      slotOffset + sector * SAVE_SECTOR_BYTES + SAVE_SECTOR_COUNTER_OFFSET,
+      counter,
+      true,
+    );
+  }
+}
+
+function convertToWasm32Checksums(bytes: Uint8Array): void {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  for (const slotOffset of [0, SAVE_SLOT_BYTES]) {
+    for (let sector = 0; sector < SAVE_SLOT_SECTORS; sector += 1) {
+      const sectorOffset = slotOffset + sector * SAVE_SECTOR_BYTES;
+      const id = view.getUint16(sectorOffset + SAVE_SECTOR_ID_OFFSET, true);
+      const chunkSize = WASM32_CHUNK_SIZES[id];
+      if (chunkSize === undefined) {
+        throw new Error(
+          `test fixture has invalid logical sector ${String(id)}`,
+        );
+      }
+      view.setUint16(
+        sectorOffset + SAVE_SECTOR_CHECKSUM_OFFSET,
+        sectorChecksum(view, sectorOffset, chunkSize),
+        true,
+      );
+    }
+  }
+}
 
 async function git(command: readonly string[], cwd: string): Promise<string> {
   return await commandOutput(["git", ...command], cwd);
@@ -153,6 +214,50 @@ describe("validateCatchBenchmarkSourceSave", () => {
     expect(() => validateCatchBenchmarkSourceSave(save)).not.toThrow();
   });
 
+  test("accepts a save checksummed with the pinned wasm32 block layout", async () => {
+    const save = Uint8Array.from(
+      await Bun.file(
+        new URL("../game/events/testdata/after_starter.sav", import.meta.url),
+      ).bytes(),
+    );
+    convertToWasm32Checksums(save);
+
+    expect(() => validateCatchBenchmarkSourceSave(save)).not.toThrow();
+  });
+
+  test("rejects per-sector mixing of the two supported block layouts", async () => {
+    const save = Uint8Array.from(
+      await Bun.file(
+        new URL("../game/events/testdata/after_starter.sav", import.meta.url),
+      ).bytes(),
+    );
+    const view = new DataView(save.buffer, save.byteOffset, save.byteLength);
+    for (const slotOffset of [0, SAVE_SLOT_BYTES]) {
+      for (let sector = 0; sector < SAVE_SLOT_SECTORS; sector += 1) {
+        const sectorOffset = slotOffset + sector * SAVE_SECTOR_BYTES;
+        const id = view.getUint16(sectorOffset + SAVE_SECTOR_ID_OFFSET, true);
+        if (id === 0) {
+          view.setUint32(sectorOffset + 0xf_10, 1, true);
+          view.setUint16(
+            sectorOffset + SAVE_SECTOR_CHECKSUM_OFFSET,
+            sectorChecksum(view, sectorOffset, 0xf_2c),
+            true,
+          );
+        } else if (id === 4) {
+          view.setUint16(
+            sectorOffset + SAVE_SECTOR_CHECKSUM_OFFSET,
+            sectorChecksum(view, sectorOffset, 0xd_c0),
+            true,
+          );
+        }
+      }
+    }
+
+    expect(() => validateCatchBenchmarkSourceSave(save)).toThrow(
+      "source save has no valid slot containing SaveBlock1 party data",
+    );
+  });
+
   test("rejects a real full-party save before a benchmark can run", async () => {
     const save = await Bun.file(
       new URL("../game/events/testdata/champion.sav", import.meta.url),
@@ -184,6 +289,55 @@ describe("validateCatchBenchmarkSourceSave", () => {
 
     expect(() => validateCatchBenchmarkSourceSave(save)).toThrow(
       "source save has no valid slot containing SaveBlock1 party data",
+    );
+  });
+
+  test("rejects slots whose logical data does not match the stored checksum", async () => {
+    const save = Uint8Array.from(
+      await Bun.file(
+        new URL("../game/events/testdata/after_starter.sav", import.meta.url),
+      ).bytes(),
+    );
+    const view = new DataView(save.buffer, save.byteOffset, save.byteLength);
+    view.setUint16(
+      SAVE_SECTOR_CHECKSUM_OFFSET,
+      view.getUint16(SAVE_SECTOR_CHECKSUM_OFFSET, true) ^ 1,
+      true,
+    );
+    view.setUint16(
+      SAVE_SLOT_BYTES + SAVE_SECTOR_CHECKSUM_OFFSET,
+      view.getUint16(SAVE_SLOT_BYTES + SAVE_SECTOR_CHECKSUM_OFFSET, true) ^ 1,
+      true,
+    );
+
+    expect(() => validateCatchBenchmarkSourceSave(save)).toThrow(
+      "source save has no valid slot containing SaveBlock1 party data",
+    );
+  });
+
+  test("selects counter zero over max counter at the exact rollover", async () => {
+    const roomy = await Bun.file(
+      new URL("../game/events/testdata/after_starter.sav", import.meta.url),
+    ).bytes();
+    const full = await Bun.file(
+      new URL("../game/events/testdata/champion.sav", import.meta.url),
+    ).bytes();
+    const save = new Uint8Array(128 * 1024);
+    save.set(full.subarray(0, SAVE_SLOT_BYTES), 0);
+    save.set(
+      roomy.subarray(SAVE_SLOT_BYTES, SAVE_SLOT_BYTES * 2),
+      SAVE_SLOT_BYTES,
+    );
+    const view = new DataView(save.buffer, save.byteOffset, save.byteLength);
+    setSlotCounter(view, 0, MAX_SAVE_COUNTER);
+    setSlotCounter(view, SAVE_SLOT_BYTES, 0);
+
+    expect(() => validateCatchBenchmarkSourceSave(save)).not.toThrow();
+
+    setSlotCounter(view, 0, 0);
+    setSlotCounter(view, SAVE_SLOT_BYTES, MAX_SAVE_COUNTER);
+    expect(() => validateCatchBenchmarkSourceSave(save)).toThrow(
+      "source save has a full party",
     );
   });
 });
@@ -652,6 +806,141 @@ describe("benchmark artifact reservation", () => {
   });
 });
 
+describe("benchmark runtime overlay", () => {
+  test("copies only the target runtime surface and isolates helper writes", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "pokemon-runtime-overlay-"));
+    const implementationRoot = path.join(root, "implementation");
+    const runDirectory = path.join(root, "artifacts", "run-001");
+    await mkdir(runDirectory, { recursive: true });
+    await Bun.write(
+      path.join(implementationRoot, "AGENTS.md"),
+      "target instructions\n",
+      { createPath: true },
+    );
+    await Bun.write(
+      path.join(implementationRoot, ".agents/skills/pokemon-world/SKILL.md"),
+      "world skill\n",
+      { createPath: true },
+    );
+    await Bun.write(
+      path.join(implementationRoot, "packages/backend/src/goal/pokemonctl.ts"),
+      "process.stdout.write('old pokemonctl\\n');\n",
+      { createPath: true },
+    );
+    await Bun.write(
+      path.join(
+        implementationRoot,
+        "packages/backend/node_modules/zod/index.js",
+      ),
+      "export const z = {};\n",
+      { createPath: true },
+    );
+
+    try {
+      const runtimeDirectory = await prepareBenchmarkRuntimeOverlay(
+        implementationRoot,
+        runDirectory,
+      );
+      expect(runtimeDirectory).toBe(path.join(runDirectory, "runtime"));
+      expect(
+        await Bun.file(path.join(runtimeDirectory, "AGENTS.md")).text(),
+      ).toBe("target instructions\n");
+      expect(
+        await Bun.file(
+          path.join(runtimeDirectory, ".agents/skills/pokemon-world/SKILL.md"),
+        ).text(),
+      ).toBe("world skill\n");
+      expect(
+        await Bun.file(
+          path.join(
+            runtimeDirectory,
+            "packages/backend/src/goal/pokemonctl.ts",
+          ),
+        ).text(),
+      ).toBe("process.stdout.write('old pokemonctl\\n');\n");
+      expect(
+        await Bun.file(path.join(runtimeDirectory, "package.json")).exists(),
+      ).toBe(false);
+
+      await prepareRuntimeTools(
+        path.join(runtimeDirectory, ".pokemon-goal-bin"),
+      );
+      expect(
+        await Bun.file(
+          path.join(runtimeDirectory, ".pokemon-goal-bin/pokemonctl"),
+        ).exists(),
+      ).toBe(true);
+      expect(
+        await Bun.file(
+          path.join(implementationRoot, ".pokemon-goal-bin/pokemonctl"),
+        ).exists(),
+      ).toBe(false);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test("executes the copied current pokemonctl dependency graph", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "pokemon-runtime-exec-"));
+    const implementationRoot = path.resolve(import.meta.dir, "../../../..");
+    const runDirectory = path.join(root, "run-001");
+    await mkdir(runDirectory);
+    try {
+      const runtimeDirectory = await prepareBenchmarkRuntimeOverlay(
+        implementationRoot,
+        runDirectory,
+      );
+      const child = Bun.spawn(
+        [
+          "bun",
+          path.join(
+            runtimeDirectory,
+            "packages/backend/src/goal/pokemonctl.ts",
+          ),
+          "--help",
+        ],
+        {
+          cwd: runtimeDirectory,
+          stdout: "pipe",
+          stderr: "pipe",
+        },
+      );
+      const [stdout, stderr, exitCode] = await Promise.all([
+        new Response(child.stdout).text(),
+        new Response(child.stderr).text(),
+        child.exited,
+      ]);
+      expect(exitCode).toBe(0);
+      expect(stderr).toBe("");
+      expect(stdout).toContain("pokemonctl observe");
+      expect(stdout).toContain("pokemonctl navigate");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects an overlay nested in the target implementation", async () => {
+    const root = await mkdtemp(
+      path.join(tmpdir(), "pokemon-runtime-contained-"),
+    );
+    try {
+      await expect(
+        prepareBenchmarkRuntimeOverlay(
+          root,
+          path.join(root, "benchmark-output", "run-001"),
+        ),
+      ).rejects.toThrow(
+        "benchmark runtime overlay must be outside the target implementation",
+      );
+      expect(await Bun.file(path.join(root, "benchmark-output")).exists()).toBe(
+        false,
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+});
+
 test("benchmark worker does not import runner-only benchmark helpers", async () => {
   const worker = await Bun.file(
     path.resolve(import.meta.dir, "../../scripts/goal-benchmark-worker.ts"),
@@ -659,9 +948,18 @@ test("benchmark worker does not import runner-only benchmark helpers", async () 
   expect(worker).not.toContain("#src/goal/benchmark-");
   expect(worker).toContain('started.kind === "missing_credential"');
   expect(worker).toContain(".some((entry) => entry.id === goalId)");
-  expect(worker).toContain(
-    'helper_dir: path.join(config.runDirectory, ".pokemon-goal-bin")',
-  );
+  expect(worker).not.toContain("helper_dir:");
+  expect(worker).toContain("runtime_directory: config.runtimeDirectory");
+});
+
+test("benchmark runner rejects an unidentifiable dirty implementation", async () => {
+  const runner = await Bun.file(
+    path.resolve(import.meta.dir, "../../scripts/goal-benchmark.ts"),
+  ).text();
+
+  expect(runner).toContain('"target implementation"');
+  expect(runner).toContain('"benchmark runner"');
+  expect(runner).not.toContain("runnerStatus.length");
 });
 
 describe("runBenchmarkSeries", () => {

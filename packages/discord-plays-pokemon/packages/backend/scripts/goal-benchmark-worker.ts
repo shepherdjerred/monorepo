@@ -323,7 +323,6 @@ function buildRuntimeConfig(config: WorkerConfig) {
         reasoning_effort: config.reasoning,
         codex_binary: config.codexBinary,
         runtime_directory: config.runtimeDirectory,
-        helper_dir: path.join(config.runDirectory, ".pokemon-goal-bin"),
         screenshot_dir: path.join(config.runDirectory, "screenshots"),
         state_path: path.join(config.runDirectory, "goal-state.json"),
         memory_dir: path.join(config.runDirectory, "goal-memory"),
