@@ -3,10 +3,10 @@ import type { PagerDutyIncidentStatus } from "./types.ts";
 export function getStatusEmoji(status: PagerDutyIncidentStatus): string {
   switch (status) {
     case "triggered":
-      return "\uD83D\uDD34";
+      return "\u{1F534}";
     case "acknowledged":
-      return "\uD83D\uDFE1";
+      return "\u{1F7E1}";
     case "resolved":
-      return "\uD83D\uDFE2";
+      return "\u{1F7E2}";
   }
 }

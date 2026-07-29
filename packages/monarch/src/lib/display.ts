@@ -5,7 +5,7 @@ import type { UsageSummary } from "./usage.ts";
 
 const NO_COLOR = Bun.env["NO_COLOR"] !== undefined;
 function ansi(code: number, text: string): string {
-  return NO_COLOR ? text : `\u001B[${String(code)}m${text}\u001B[0m`;
+  return NO_COLOR ? text : `\u{1B}[${String(code)}m${text}\u{1B}[0m`;
 }
 function green(t: string): string {
   return ansi(32, t);
@@ -20,7 +20,7 @@ function dim(t: string): string {
   return ansi(90, t);
 }
 function bold(t: string): string {
-  return NO_COLOR ? t : `\u001B[1m${t}\u001B[0m`;
+  return NO_COLOR ? t : `\u{1B}[1m${t}\u{1B}[0m`;
 }
 
 function padRight(str: string, width: number): string {

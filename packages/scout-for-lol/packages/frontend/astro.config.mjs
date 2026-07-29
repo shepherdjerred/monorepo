@@ -6,6 +6,7 @@ import { readFileSync } from "node:fs";
 
 import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
+import tailwindcss from "@tailwindcss/vite";
 import icon from "astro-icon";
 import sitemap from "@astrojs/sitemap";
 import astroOpenGraphImages from "astro-opengraph-images";
@@ -31,6 +32,7 @@ const isNoindexPath = (/** @type {string} */ page) =>
 
 // https://astro.build/config
 export default defineConfig({
+  compressHTML: true,
   site: "https://scout-for-lol.com",
   env: {
     schema: {
@@ -97,6 +99,7 @@ export default defineConfig({
     }),
   ],
   vite: {
+    plugins: [tailwindcss()],
     assetsInclude: ["**/*.txt"],
     optimizeDeps: {
       // Don't pre-bundle these native modules - they're only used server-side

@@ -189,7 +189,7 @@ function parseRenderItem(
     return undefined;
   }
   const clauseStart = (renderToken.endOffset ?? renderToken.startOffset) + 1;
-  const value = text.slice(clauseStart).trim().split(/\s+/u).join(" ");
+  const value = text.slice(clauseStart).trim().replaceAll(/\s+/gu, " ");
   const last = tokens.at(-1) ?? renderToken;
   return {
     value,

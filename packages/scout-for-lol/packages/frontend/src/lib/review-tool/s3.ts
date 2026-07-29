@@ -34,7 +34,7 @@ async function fetchAllS3Objects(
     StorageClass?: string | undefined;
   };
   const allContents: S3Object[] = [];
-  let nextToken: string | undefined = undefined;
+  let nextToken: string | undefined;
   let iterations = 0;
   const maxIterations = 10; // Max 10k objects (10 * 1000)
 

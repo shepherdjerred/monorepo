@@ -11,6 +11,15 @@ export function createPostgresOperatorApp(chart: Chart) {
   });
 
   const postgresOperatorValues: HelmValuesForChart<"postgres-operator"> = {
+    configGeneral: {
+      // Postgres Operator v2 defaults to ConfigMaps for Patroni's DCS. Keep the
+      // migration explicit so a future chart default cannot move clusters back
+      // to the deprecated Endpoints-backed DCS.
+      kubernetes_use_configmaps: true,
+      // Four single-instance databases share this single-node cluster. Reconcile
+      // them serially during the v2 maintenance event to limit disruption.
+      workers: 1,
+    },
     configKubernetes: {
       // Since we have a single-node cluster, reduce resource requirements
       cluster_labels: {

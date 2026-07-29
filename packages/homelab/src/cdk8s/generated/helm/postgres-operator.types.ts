@@ -10,7 +10,7 @@ export type PostgresoperatorHelmValuesImage = {
    */
   repository?: string;
   /**
-   * @default "v1.15.1"
+   * @default "v2.0.0"
    */
   tag?: string;
   /**
@@ -41,6 +41,12 @@ export type PostgresoperatorHelmValuesConfigGeneral = {
    */
   enable_lazy_spilo_upgrade?: boolean;
   /**
+   * toogle to use maintenance windows feature
+   *
+   * @default true
+   */
+  enable_maintenance_windows?: boolean;
+  /**
    * set the PGVERSION env var instead of providing the version via postgresql.bin_dir in SPILO_CONFIGURATION
    *
    * @default true
@@ -52,12 +58,6 @@ export type PostgresoperatorHelmValuesConfigGeneral = {
    * @default true
    */
   enable_shm_volume?: boolean;
-  /**
-   * enables backwards compatible path between Spilo 12 and Spilo 13+ images
-   *
-   * @default false
-   */
-  enable_spilo_wal_path_compat?: boolean;
   /**
    * operator will sync only clusters where name starts with teamId prefix
    *
@@ -73,11 +73,18 @@ export type PostgresoperatorHelmValuesConfigGeneral = {
   /**
    * Spilo docker image
    *
-   * @default "ghcr.io/zalando/spilo-17:4.0-p3"
+   * @default "ghcr.io/zalando/spilo-18:4.1-p2"
    */
   docker_image?: string;
   /**
    * key name for annotation to ignore globally configured instance limits
+   * key name for annotation to ignore globally configured resources thresholds
+   * Select if setup uses endpoints (default), or configmaps to manage leader (DCS=k8s)
+   *
+   * @default true
+   */
+  kubernetes_use_configmaps?: boolean;
+  /**
    * min number of instances in Postgres cluster. -1 = no limit
    *
    * @default -1
@@ -154,13 +161,13 @@ export type PostgresoperatorHelmValuesConfigMajorVersionUpgrade = {
   /**
    * minimal Postgres major version that will not automatically be upgraded
    *
-   * @default "13"
+   * @default "14"
    */
   minimal_major_version?: number;
   /**
    * target Postgres major version when upgrading clusters automatically
    *
-   * @default "17"
+   * @default "18"
    */
   target_major_version?: number;
 };
@@ -570,12 +577,6 @@ export type PostgresoperatorHelmValuesConfigAwsOrGcp = {
    * @default "eu-central-1"
    */
   aws_region?: string;
-  /**
-   * enable automatic migration on AWS from gp2 to gp3 volumes
-   *
-   * @default false
-   */
-  enable_ebs_gp3_migration?: boolean;
 };
 
 export type PostgresoperatorHelmValuesConfigLogicalBackup = {
@@ -658,6 +659,24 @@ export type PostgresoperatorHelmValuesConfigLogicalBackup = {
    * @default ""
    */
   logical_backup_cronjob_environment_secret?: string;
+  /**
+   * number of successful backup jobs to keep in cronjob history
+   *
+   * @default 3
+   */
+  logical_backup_successful_jobs_history_limit?: number;
+  /**
+   * number of failed backup jobs to keep in cronjob history
+   *
+   * @default 3
+   */
+  logical_backup_failed_jobs_history_limit?: number;
+  /**
+   * TTL in seconds after which finished backup jobs are automatically deleted
+   *
+   * @default 86400
+   */
+  logical_backup_ttl_seconds_after_finished?: number;
 };
 
 export type PostgresoperatorHelmValuesConfigTeamsApi = {
@@ -750,7 +769,7 @@ export type PostgresoperatorHelmValuesConfigConnectionPooler = {
   /**
    * docker image
    *
-   * @default "registry.opensource.zalan.do/acid/pgbouncer:mas..."
+   * @default "ghcr.io/zalando/postgres-operator/pgbouncer:latest"
    */
   connection_pooler_image?: string;
   /**
@@ -925,10 +944,11 @@ export type PostgresoperatorHelmValues = {
    * @default false
    */
   enableJsonLogging?: boolean;
+  extraArgs?: unknown[];
   /**
    * general configuration parameters
    *
-   * @default {...} (14 keys)
+   * @default {...} (15 keys)
    */
   configGeneral?: PostgresoperatorHelmValuesConfigGeneral;
   /**
@@ -938,7 +958,7 @@ export type PostgresoperatorHelmValues = {
    */
   configUsers?: PostgresoperatorHelmValuesConfigUsers;
   /**
-   * @default {"major_version_upgrade_mode":"manual","minimal_major_version":"13","target_major_version":"17"}
+   * @default {"major_version_upgrade_mode":"manual","minimal_major_version":"14","target_major_version":"18"}
    */
   configMajorVersionUpgrade?: PostgresoperatorHelmValuesConfigMajorVersionUpgrade;
   /**
@@ -977,20 +997,20 @@ export type PostgresoperatorHelmValues = {
   configLoggingRestApi?: PostgresoperatorHelmValuesConfigLoggingRestApi;
   /**
    * configure interaction with non-Kubernetes objects from AWS or GCP
-   * defines maximum volume size in GB until which auto migration happens
    * GCP credentials that will be used by the operator / pods
    * AWS IAM role to supply in the iam.amazonaws.com/role annotation of Postgres pods
+   * Full ARN for IRSA (IAM Roles for Service Accounts) on EKS
    * S3 bucket to use for shipping postgres daily logs
    * S3 bucket to use for shipping WAL segments with WAL-E
    * GCS bucket to use for shipping WAL segments with WAL-E
    * Azure Storage Account to use for shipping WAL segments with WAL-G
    * configure K8s cron job managed by the operator
    *
-   * @default {"aws_region":"eu-central-1","enable_ebs_gp3_migration":false}
+   * @default {"aws_region":"eu-central-1"}
    */
   configAwsOrGcp?: PostgresoperatorHelmValuesConfigAwsOrGcp;
   /**
-   * @default {...} (13 keys)
+   * @default {...} (16 keys)
    */
   configLogicalBackup?: PostgresoperatorHelmValuesConfigLogicalBackup;
   /**
@@ -1086,15 +1106,17 @@ export type PostgresoperatorHelmParameters = {
   "image.pullPolicy"?: string;
   configTarget?: string;
   enableJsonLogging?: string;
+  extraArgs?: string;
   "configGeneral.enable_crd_registration"?: string;
   "configGeneral.crd_categories"?: string;
   "configGeneral.enable_lazy_spilo_upgrade"?: string;
+  "configGeneral.enable_maintenance_windows"?: string;
   "configGeneral.enable_pgversion_env_var"?: string;
   "configGeneral.enable_shm_volume"?: string;
-  "configGeneral.enable_spilo_wal_path_compat"?: string;
   "configGeneral.enable_team_id_clustername_prefix"?: string;
   "configGeneral.etcd_host"?: string;
   "configGeneral.docker_image"?: string;
+  "configGeneral.kubernetes_use_configmaps"?: string;
   "configGeneral.min_instances"?: string;
   "configGeneral.max_instances"?: string;
   "configGeneral.repair_period"?: string;
@@ -1166,7 +1188,6 @@ export type PostgresoperatorHelmParameters = {
   "configLoggingRestApi.cluster_history_entries"?: string;
   "configLoggingRestApi.ring_log_lines"?: string;
   "configAwsOrGcp.aws_region"?: string;
-  "configAwsOrGcp.enable_ebs_gp3_migration"?: string;
   "configLogicalBackup.logical_backup_docker_image"?: string;
   "configLogicalBackup.logical_backup_job_prefix"?: string;
   "configLogicalBackup.logical_backup_provider"?: string;
@@ -1180,6 +1201,9 @@ export type PostgresoperatorHelmParameters = {
   "configLogicalBackup.logical_backup_s3_retention_time"?: string;
   "configLogicalBackup.logical_backup_schedule"?: string;
   "configLogicalBackup.logical_backup_cronjob_environment_secret"?: string;
+  "configLogicalBackup.logical_backup_successful_jobs_history_limit"?: string;
+  "configLogicalBackup.logical_backup_failed_jobs_history_limit"?: string;
+  "configLogicalBackup.logical_backup_ttl_seconds_after_finished"?: string;
   "configTeamsApi.enable_admin_role_for_users"?: string;
   "configTeamsApi.enable_postgres_team_crd"?: string;
   "configTeamsApi.enable_postgres_team_crd_superusers"?: string;

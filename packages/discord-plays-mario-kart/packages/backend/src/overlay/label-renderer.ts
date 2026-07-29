@@ -85,10 +85,10 @@ export function createLabelRenderer(wasmDir: string): LabelRenderer {
         // Text coverage at this pill pixel (0 outside the text box).
         const tx = px - PAD_X;
         const ty = oy - PAD_Y;
-        let cover = 0;
-        if (tx >= 0 && tx < tw && ty >= 0 && ty < th) {
-          cover = raster.data[(ty * tw + tx) * 4 + 3] ?? 0;
-        }
+        const cover =
+          tx >= 0 && tx < tw && ty >= 0 && ty < th
+            ? (raster.data[(ty * tw + tx) * 4 + 3] ?? 0)
+            : 0;
         // Composite white text over a translucent black pill.
         // pill: (0,0,0, PILL_ALPHA); text: (255,255,255, cover) on top.
         const c = cover / 255;

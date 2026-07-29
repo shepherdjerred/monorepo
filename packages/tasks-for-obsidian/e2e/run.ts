@@ -451,6 +451,16 @@ const VAULT_ASSERTIONS: VaultAssertion[] = [
       return /complete_instances:\n\s+- /.test(content);
     },
   },
+  {
+    name: '"Swipe complete task" has status done (07-swipe-actions)',
+    check: (files) =>
+      fileWithTitle(files, "Swipe complete task")?.includes("status: done") ===
+      true,
+  },
+  {
+    name: '"Swipe delete task" is absent (07-swipe-actions)',
+    check: (files) => fileWithTitle(files, "Swipe delete task") === undefined,
+  },
 ];
 
 async function assertVaultState(vaultDir: string): Promise<void> {

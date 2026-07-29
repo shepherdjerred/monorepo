@@ -3,11 +3,11 @@ import type { HealthReport, HealthStatus } from "#lib/github/types.ts";
 function getStatusEmoji(status: HealthStatus): string {
   switch (status) {
     case "HEALTHY":
-      return "\u2705";
+      return "\u{2705}";
     case "UNHEALTHY":
-      return "\u274C";
+      return "\u{274C}";
     case "PENDING":
-      return "\u23F3";
+      return "\u{23F3}";
   }
 }
 

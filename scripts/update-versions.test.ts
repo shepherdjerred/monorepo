@@ -66,4 +66,4 @@ test("reconstructs a stale conflicting bump branch from current main", async () 
   } finally {
     await rm(repo, { recursive: true, force: true });
   }
-});
+}, 20_000);

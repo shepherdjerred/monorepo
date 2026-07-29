@@ -60,14 +60,12 @@ export function GenerationProgress({
   const isComplete = step === "complete";
 
   // Build display message with chunk info if applicable
-  let displayMessage = message;
-  if (
+  const displayMessage =
     chunkIndex !== undefined &&
     chunkTotal !== undefined &&
     step === "timeline-chunk"
-  ) {
-    displayMessage = `Processing timeline (${chunkIndex.toString()}/${chunkTotal.toString()})...`;
-  }
+      ? `Processing timeline (${chunkIndex.toString()}/${chunkTotal.toString()})...`
+      : message;
 
   return (
     <div className="mb-4 p-4 bg-brand-50 border border-brand-200 rounded-xl">

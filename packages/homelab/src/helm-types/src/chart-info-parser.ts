@@ -52,19 +52,11 @@ export async function parseChartInfoFromVersions(
       continue;
     }
 
-    // Try to determine chart name from the version key or URL
-    let chartName = versionKey;
-
-    // Handle special cases like "argo-cd" vs "argocd"
-    if (versionKey === "argo-cd") {
-      chartName = "argo-cd";
-    }
-
     charts.push({
       name: versionKey,
       repoUrl: repoUrl.replace(/\/$/, ""), // Remove trailing slash
       version,
-      chartName,
+      chartName: versionKey,
     });
   }
 

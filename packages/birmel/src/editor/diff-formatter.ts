@@ -93,15 +93,14 @@ function formatCodeBlock(
   language: string,
   prefix?: string,
 ): string {
-  let formatted = content;
-
   // Add prefix to each line if specified
-  if (prefix != null && prefix.length > 0) {
-    formatted = content
-      .split("\n")
-      .map((line) => `${prefix} ${line}`)
-      .join("\n");
-  }
+  let formatted =
+    prefix != null && prefix.length > 0
+      ? content
+          .split("\n")
+          .map((line) => `${prefix} ${line}`)
+          .join("\n")
+      : content;
 
   // Truncate long content
   if (formatted.length > 500) {

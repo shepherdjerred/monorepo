@@ -167,9 +167,9 @@ function enrichResults(sourceDb: Database, results: SearchResult[]): void {
 }
 
 function difficultyColor(difficulty: string): string {
-  if (difficulty === "Easy") return "\u001B[32m";
-  if (difficulty === "Medium") return "\u001B[33m";
-  return "\u001B[31m";
+  if (difficulty === "Easy") return "\u{1B}[32m";
+  if (difficulty === "Medium") return "\u{1B}[33m";
+  return "\u{1B}[31m";
 }
 
 function displayResults(
@@ -187,7 +187,7 @@ function displayResults(
   for (const [i, r] of results.entries()) {
     const dc = difficultyColor(r.difficulty);
     console.log(
-      `  ${String(i + 1)}. ${r.title} ${dc}[${r.difficulty}]\u001B[0m  (${r.score.toFixed(4)})`,
+      `  ${String(i + 1)}. ${r.title} ${dc}[${r.difficulty}]\u{1B}[0m  (${r.score.toFixed(4)})`,
     );
     console.log(`     Tags: ${r.tags.join(", ") || "none"}`);
     console.log(`     https://leetcode.com/problems/${r.slug}/`);

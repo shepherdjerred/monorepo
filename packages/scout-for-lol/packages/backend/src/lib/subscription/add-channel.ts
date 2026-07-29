@@ -32,10 +32,10 @@ export async function addSubscriptionChannel(
       return { kind: "player-not-found" };
     }
 
-    const existing = player.subscriptions.find(
+    const isAlreadySubscribed = player.subscriptions.some(
       (s) => s.channelId === channelId,
     );
-    if (existing) {
+    if (isAlreadySubscribed) {
       return { kind: "already-subscribed", channelId };
     }
 

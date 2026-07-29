@@ -329,7 +329,7 @@ describeFn("ArgoCD Helm Render - External Charts", () => {
       const msg = transientSkips
         .map(
           (o) =>
-            `  ${describeChart(o.chart)}:\n    ${o.result.stderr.trim().split("\n").join("\n    ")}`,
+            `  ${describeChart(o.chart)}:\n    ${o.result.stderr.trim().replaceAll("\n", "\n    ")}`,
         )
         .join("\n\n");
       console.warn(
@@ -356,7 +356,7 @@ describeFn("ArgoCD Helm Render - External Charts", () => {
       const msg = failures
         .map(
           (f) =>
-            `  ${describeChart(f.chart)}:\n    ${f.result.stderr.trim().split("\n").join("\n    ")}`,
+            `  ${describeChart(f.chart)}:\n    ${f.result.stderr.trim().replaceAll("\n", "\n    ")}`,
         )
         .join("\n\n");
       throw new Error(

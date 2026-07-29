@@ -36,7 +36,7 @@ describe("report result formatting", () => {
       throw new Error("Missing result column fixture");
     }
     expect(formatReportDisplayValue(games, 1276)).toBe("1,276");
-    expect(formatReportDisplayValue(winRate, 0.542_968_75)).toBe("54.3%");
+    expect(formatReportDisplayValue(winRate, 0.54296875)).toBe("54.3%");
     expect(formatReportDisplayValue(kda, 3.456)).toBe("3.46");
   });
 });

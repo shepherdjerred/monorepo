@@ -176,7 +176,7 @@ async function buildCompetitionEmbed(
   embed.addFields({ name: "Visibility", value: visibilityText, inline: true });
 
   // Add blank field for spacing (creates new row)
-  embed.addFields({ name: "\u200B", value: "\u200B", inline: false });
+  embed.addFields({ name: "\u{200B}", value: "\u{200B}", inline: false });
 
   // Add leaderboard or participant list based on status
   await match(status)
@@ -250,7 +250,7 @@ function addParticipantList(
 
   if (participants.length === 0) {
     embed.addFields({
-      name: "\u200B",
+      name: "\u{200B}",
       value: "No participants yet.",
       inline: false,
     });
@@ -270,7 +270,7 @@ function addParticipantList(
     })
     .join("\n");
 
-  embed.addFields({ name: "\u200B", value: participantList, inline: false });
+  embed.addFields({ name: "\u{200B}", value: participantList, inline: false });
 
   // Add note about leaderboard availability
   embed.addFields({
@@ -279,7 +279,7 @@ function addParticipantList(
     inline: false,
   });
   embed.addFields({
-    name: "\u200B",
+    name: "\u{200B}",
     value: "Leaderboard will be available when the competition starts.",
     inline: false,
   });
@@ -317,7 +317,7 @@ async function addLeaderboard(
       `[Competition View] No cached leaderboard found for competition ${competition.id.toString()}`,
     );
     embed.addFields({
-      name: "\u200B",
+      name: "\u{200B}",
       value:
         "Leaderboard not yet available. The leaderboard is updated daily at midnight UTC. Check back after the next update!",
       inline: false,
@@ -342,7 +342,7 @@ async function addLeaderboard(
   // Display leaderboard entries
   if (leaderboard.length === 0) {
     embed.addFields({
-      name: "\u200B",
+      name: "\u{200B}",
       value:
         "No participants have scores yet. Play some games to appear on the leaderboard!",
       inline: false,
@@ -365,7 +365,7 @@ async function addLeaderboard(
     .join("\n");
 
   embed.addFields({
-    name: "\u200B",
+    name: "\u{200B}",
     value: leaderboardText,
     inline: false,
   });
@@ -373,7 +373,7 @@ async function addLeaderboard(
   // If there are more than 10 participants, indicate it
   if (leaderboard.length > 10) {
     embed.addFields({
-      name: "\u200B",
+      name: "\u{200B}",
       value: `(Showing top 10 of ${leaderboard.length.toString()} participants)`,
       inline: false,
     });
@@ -384,7 +384,7 @@ async function addLeaderboard(
   const dateStr = formatHumanDateTime(cachedAt);
 
   embed.addFields({
-    name: "\u200B",
+    name: "\u{200B}",
     value: `_Last updated: ${dateStr} (${ageText})_`,
     inline: false,
   });

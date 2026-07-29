@@ -5,6 +5,7 @@ import { customOgMediaLayout } from "./src/customRenderer";
 
 // https://astro.build/config
 export default defineConfig({
+  compressHTML: true,
   site: "http://example.com",
   integrations: [
     opengraphImages({

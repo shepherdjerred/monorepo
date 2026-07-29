@@ -53,7 +53,7 @@ test("traceClaudeCli parses stream-json stdout into a gen_ai.chat span", () => {
     21_090,
   );
   expect(span.attributes["gen_ai.usage.cache_read_input_tokens"]).toBe(16_651);
-  expect(span.attributes["llm.cost_usd"]).toBe(0.028_257_6);
+  expect(span.attributes["llm.cost_usd"]).toBe(0.0282576);
   expect(span.attributes["llm.claude_code.num_turns"]).toBe(1);
   expect(span.attributes["gen_ai.response.finish_reasons"]).toEqual([
     "end_turn",
@@ -95,7 +95,7 @@ test("traceClaudeCli parses --output-format json stdout", () => {
   expect(span.attributes["gen_ai.usage.input_tokens"]).toBe(10);
   expect(span.attributes["gen_ai.usage.output_tokens"]).toBe(51);
   expect(span.attributes["gen_ai.usage.cache_read_input_tokens"]).toBe(37_741);
-  expect(span.attributes["llm.cost_usd"]).toBe(0.004_039_1);
+  expect(span.attributes["llm.cost_usd"]).toBe(0.0040391);
   expect(span.status.code).toBe(SpanStatusCode.OK);
 });
 

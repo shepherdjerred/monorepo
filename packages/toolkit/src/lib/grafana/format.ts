@@ -1,35 +1,35 @@
 export function getAlertStateEmoji(state: string): string {
   switch (state) {
     case "firing":
-      return "\uD83D\uDD34";
+      return "\u{1F534}";
     case "pending":
-      return "\uD83D\uDFE1";
+      return "\u{1F7E1}";
     case "inactive":
-      return "\uD83D\uDFE2";
+      return "\u{1F7E2}";
     case "normal":
-      return "\uD83D\uDFE2";
+      return "\u{1F7E2}";
     default:
-      return "\u26AA";
+      return "\u{26AA}";
   }
 }
 
 export function getDatasourceTypeEmoji(type: string): string {
   switch (type) {
     case "prometheus":
-      return "\uD83D\uDCCA";
+      return "\u{1F4CA}";
     case "loki":
-      return "\uD83D\uDCDD";
+      return "\u{1F4DD}";
     case "elasticsearch":
-      return "\uD83D\uDD0D";
+      return "\u{1F50D}";
     case "graphite":
-      return "\uD83D\uDCC8";
+      return "\u{1F4C8}";
     case "influxdb":
-      return "\uD83D\uDCC9";
+      return "\u{1F4C9}";
     case "mysql":
     case "postgres":
     case "mssql":
-      return "\uD83D\uDDC3\uFE0F";
+      return "\u{1F5C3}\u{FE0F}";
     default:
-      return "\uD83D\uDD0C";
+      return "\u{1F50C}";
   }
 }

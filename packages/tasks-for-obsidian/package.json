@@ -31,7 +31,7 @@
     "@sentry/react-native": "^8.8.0",
     "react": "19.2.8",
     "react-native": "0.86.2",
-    "react-native-gesture-handler": "3.0.2",
+    "react-native-gesture-handler": "3.1.0",
     "react-native-haptic-feedback": "^3.0.0",
     "react-native-ios-context-menu": "^3.2.1",
     "react-native-ios-utilities": "^5.2.0",

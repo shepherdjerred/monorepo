@@ -61,7 +61,7 @@ const Percent = createToken({ name: "Percent", pattern: /%/ });
 // Arabic, CJK, and Korean — enough for recipe names in most languages.
 // Chevrotain doesn't support the `u` flag with \p{L}, so we enumerate ranges.
 const UNICODE_LETTER_RANGES =
-  "\u00C0-\u024F\u0400-\u04FF\u0600-\u06FF\u0370-\u03FF\u3000-\u9FFF\uAC00-\uD7AF";
+  "\u{C0}-\u{24F}\u{400}-\u{4FF}\u{600}-\u{6FF}\u{370}-\u{3FF}\u{3000}-\u{9FFF}\u{AC00}-\u{D7AF}";
 const Word = createToken({
   name: "Word",
   pattern: new RegExp(String.raw`[\w${UNICODE_LETTER_RANGES}-]+`),

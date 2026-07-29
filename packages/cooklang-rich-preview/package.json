@@ -14,10 +14,9 @@
   },
   "dependencies": {
     "@iconify-json/heroicons": "^1.2.3",
-    "@tailwindcss/postcss": "^4.2.4",
-    "astro": "^6.1.9",
+    "@tailwindcss/vite": "^4.2.4",
+    "astro": "^7.1.5",
     "astro-icon": "^1.1.5",
-    "autoprefixer": "^10.5.0",
     "tailwindcss": "^4.2.4"
   },
   "devDependencies": {

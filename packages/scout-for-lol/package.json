@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "tsc --noEmit -p tsconfig.scripts.json",
-    "test": "bun test scripts",
+    "test": "bun test ./scripts",
     "test:coverage": "bun test --config ../../scripts/bunfig.coverage.toml --coverage scripts/create-minimal-png.test.ts scripts/dev-web.test.ts scripts/install-pkgs.test.ts",
     "lint": "eslint scripts",
     "typecheck": "tsc --noEmit -p tsconfig.scripts.json",
@@ -30,7 +30,7 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-regexp": "^3.1.0",
-    "eslint-plugin-unicorn": "^64.0.0",
+    "eslint-plugin-unicorn": "^69.0.0",
     "jiti": "^2.7.0",
     "jscpd": "^5.0.14",
     "knip": "^6.29.0",

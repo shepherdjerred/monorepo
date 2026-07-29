@@ -3,7 +3,7 @@ import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
 import remarkToc from "remark-toc";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import { rehypeHeadingIds } from "@astrojs/markdown-remark";
+import { rehypeHeadingIds, unified } from "@astrojs/markdown-remark";
 import icon from "astro-icon";
 import astroOpenGraphImages, { presets } from "astro-opengraph-images";
 import { rendererRich, transformerTwoslash } from "@shikijs/twoslash";
@@ -22,7 +22,27 @@ const fontData = readFileSync(fontPath).buffer;
 
 // https://astro.build/config
 export default defineConfig({
+  compressHTML: true,
   markdown: {
+    processor: unified({
+      rehypePlugins: [
+        [
+          rehypeMermaid,
+          {
+            strategy: "img-svg",
+            dark: true,
+          },
+        ],
+        rehypeHeadingIds,
+        [
+          rehypeAutolinkHeadings,
+          {
+            behavior: "append",
+          },
+        ],
+      ],
+      remarkPlugins: [remarkToc],
+    }),
     syntaxHighlight: {
       type: "shiki",
       excludeLangs: ["mermaid"],
@@ -40,23 +60,6 @@ export default defineConfig({
         }),
       ],
     },
-    rehypePlugins: [
-      [
-        rehypeMermaid,
-        {
-          strategy: "img-svg",
-          dark: true,
-        },
-      ],
-      rehypeHeadingIds,
-      [
-        rehypeAutolinkHeadings,
-        {
-          behavior: "append",
-        },
-      ],
-    ],
-    remarkPlugins: [remarkToc],
   },
 
   site: "https://sjer.red",
