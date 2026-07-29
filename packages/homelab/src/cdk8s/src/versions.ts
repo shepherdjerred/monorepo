@@ -346,7 +346,7 @@ applyCurrentBuildImageOverrides(versions);
  *
  * To regenerate after a version bump:
  *   VERSION=$(bun -e 'import v from "./src/versions.ts"; console.log(v["fuatakgun/eufy_security"])')
- *   curl -fSL "https://github.com/fuatakgun/eufy_security/archive/refs/tags/$VERSION.tar.gz" | sha256sum
+ *   curl -fSL "https://codeload.github.com/fuatakgun/eufy_security/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const EUFY_TARBALL_SHA256 =
   "b744aac0ce03a8a75de5100c672957504173c20cbe2ac0fc4d09d5bc75c59411";
@@ -357,7 +357,7 @@ export const EUFY_TARBALL_SHA256 =
  *
  * To regenerate after a version bump:
  *   VERSION=$(bun -e 'import v from "./src/versions.ts"; console.log(v["basnijholt/adaptive-lighting"])')
- *   curl -fSL "https://github.com/basnijholt/adaptive-lighting/archive/refs/tags/$VERSION.tar.gz" | sha256sum
+ *   curl -fSL "https://codeload.github.com/basnijholt/adaptive-lighting/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const ADAPTIVE_LIGHTING_TARBALL_SHA256 =
   "9c390346e022651778aaed613946a5275a503966274dfa399b966e0eb90f7ca4";
@@ -368,7 +368,7 @@ export const ADAPTIVE_LIGHTING_TARBALL_SHA256 =
  *
  * To regenerate after a version bump:
  *   VERSION=$(bun -e 'import v from "./src/versions.ts"; console.log(v["JeffSteinbok/hass-dreo"])')
- *   curl -fSL "https://github.com/JeffSteinbok/hass-dreo/archive/refs/tags/$VERSION.tar.gz" | sha256sum
+ *   curl -fSL "https://codeload.github.com/JeffSteinbok/hass-dreo/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const DREO_TARBALL_SHA256 =
   "76e5a6b7d9f638597a50b6b6135acf714fd7fe424ea68c021079dd99326d0631";
@@ -379,7 +379,7 @@ export const DREO_TARBALL_SHA256 =
  *
  * To regenerate after a version bump:
  *   VERSION=$(bun -e 'import v from "./src/versions.ts"; console.log(v["magico13/ha-emporia-vue"])')
- *   curl -fSL "https://github.com/magico13/ha-emporia-vue/archive/refs/tags/$VERSION.tar.gz" | sha256sum
+ *   curl -fSL "https://codeload.github.com/magico13/ha-emporia-vue/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const EMPORIA_VUE_TARBALL_SHA256 =
   "29595c369bedcf86577aedc73398325120be1b6bdcd154a61e75c3bda77d2d2d";
@@ -390,7 +390,7 @@ export const EMPORIA_VUE_TARBALL_SHA256 =
  *
  * To regenerate after a version bump:
  *   VERSION=$(bun -e 'import v from "./src/versions.ts"; console.log(v["dlarrick/hass-kumo"])')
- *   curl -fSL "https://github.com/dlarrick/hass-kumo/archive/refs/tags/$VERSION.tar.gz" | sha256sum
+ *   curl -fSL "https://codeload.github.com/dlarrick/hass-kumo/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const KUMO_TARBALL_SHA256 =
   "34b88547e0809b7849ba1fc1a3f149777a1a44a1d97bc56fed734224fdfbef0b";
@@ -405,7 +405,7 @@ export const KUMO_TARBALL_SHA256 =
  *
  * To regenerate after a version bump:
  *   VERSION=$(bun -e 'import v from "./src/versions.ts"; console.log(v["kgelinas/Mysa_HA"])')
- *   curl -fSL "https://github.com/kgelinas/Mysa_HA/archive/refs/tags/$VERSION.tar.gz" | sha256sum
+ *   curl -fSL "https://codeload.github.com/kgelinas/Mysa_HA/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const MYSA_TARBALL_SHA256 =
   "9d8120570bec8f1befedac4b20d67d1fb726da8fdf249305e21fae0213d1a0d9";
@@ -416,7 +416,7 @@ export const MYSA_TARBALL_SHA256 =
  *
  * To regenerate after a version bump:
  *   VERSION=$(bun -e 'import v from "./src/versions.ts"; console.log(v["jjjonesjr33/petlibro"])')
- *   curl -fSL "https://github.com/jjjonesjr33/petlibro/archive/refs/tags/$VERSION.tar.gz" | sha256sum
+ *   curl -fSL "https://codeload.github.com/jjjonesjr33/petlibro/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const PETLIBRO_TARBALL_SHA256 =
   "42203f0fc8ea7a9fa80877633b36ed0cfd4ef4f86f904a994d35b121e44c607f";
@@ -427,7 +427,7 @@ export const PETLIBRO_TARBALL_SHA256 =
  *
  * To regenerate after a version bump:
  *   VERSION=$(bun -e 'import v from "./src/versions.ts"; console.log(v["AlexxIT/SonoffLAN"])')
- *   curl -fSL "https://github.com/AlexxIT/SonoffLAN/archive/refs/tags/$VERSION.tar.gz" | sha256sum
+ *   curl -fSL "https://codeload.github.com/AlexxIT/SonoffLAN/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const SONOFF_TARBALL_SHA256 =
   "ce8fde8033260a191f498f71e37ac91ccef83f2388c1552d0d671c1fa718d0dc";
@@ -440,7 +440,7 @@ export const SONOFF_TARBALL_SHA256 =
  *
  * To regenerate after a version bump:
  *   VERSION=$(bun -e 'import v from "./src/versions.ts"; console.log(v["elax46/custom-brand-icons"])')
- *   curl -fSL "https://github.com/elax46/custom-brand-icons/archive/refs/tags/$VERSION.tar.gz" | sha256sum
+ *   curl -fSL "https://codeload.github.com/elax46/custom-brand-icons/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const CUSTOM_BRAND_ICONS_TARBALL_SHA256 =
   "3f1d70118cb1fa4d4ebbccaedf8c168a8a7e34ea1cfed5c18b01e7fb1c01d6de";

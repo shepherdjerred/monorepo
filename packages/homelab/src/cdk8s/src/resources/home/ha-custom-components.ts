@@ -6,6 +6,7 @@ import {
   ROOT_GID,
   ROOT_UID,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { githubTagArchiveUrl } from "@shepherdjerred/homelab/cdk8s/src/github-tag-archive.ts";
 import versions, {
   ADAPTIVE_LIGHTING_TARBALL_SHA256,
   CUSTOM_BRAND_ICONS_TARBALL_SHA256,
@@ -184,10 +185,11 @@ function installMarker(
   return `${spec.version}-${hash.digest("hex").slice(0, 16)}`;
 }
 
-async function buildInstallScript(
+export async function buildHaCustomComponentInstallScript(
   spec: HaCustomComponentSpec,
 ): Promise<string> {
   const { repo, version, sha256 } = spec;
+  const archiveUrl = githubTagArchiveUrl(repo, "$VERSION");
 
   if (spec.install.kind === "custom_components") {
     const { slug, patches } = spec.install;
@@ -228,7 +230,9 @@ fi
 apk add --no-cache curl tar patch
 STAGE=$(mktemp -d)
 ARCHIVE="$(mktemp)"
-curl -fSL "https://github.com/${repo}/archive/refs/tags/$VERSION.tar.gz" \
+curl -fSL --connect-timeout 15 --max-time 30 --retry 3 \
+  --retry-connrefused --retry-delay 2 --retry-max-time 90 \
+  "${archiveUrl}" \
   -o "$ARCHIVE"
 echo "$EXPECTED_SHA256  $ARCHIVE" | sha256sum -c -
 tar -xz -C "$STAGE" --strip-components=1 -f "$ARCHIVE"
@@ -273,7 +277,9 @@ fi
 apk add --no-cache curl tar
 STAGE=$(mktemp -d)
 ARCHIVE="$(mktemp)"
-curl -fSL "https://github.com/${repo}/archive/refs/tags/$VERSION.tar.gz" \
+curl -fSL --connect-timeout 15 --max-time 30 --retry 3 \
+  --retry-connrefused --retry-delay 2 --retry-max-time 90 \
+  "${archiveUrl}" \
   -o "$ARCHIVE"
 echo "$EXPECTED_SHA256  $ARCHIVE" | sha256sum -c -
 tar -xz -C "$STAGE" --strip-components=1 -f "$ARCHIVE"
@@ -302,7 +308,7 @@ export async function createHaCustomComponentInitContainer(
     name: containerNameFor(spec),
     image: `docker.io/alpine:${versions["library/alpine"]}`,
     command: ["/bin/sh"],
-    args: ["-c", await buildInstallScript(spec)],
+    args: ["-c", await buildHaCustomComponentInstallScript(spec)],
     securityContext: {
       ensureNonRoot: false,
       user: ROOT_UID,
