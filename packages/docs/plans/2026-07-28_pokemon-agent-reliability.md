@@ -218,7 +218,7 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - Implemented a general engine checkpoint and ordered atomic flash
   persistence. A rebuilt real WASM passed an independent checkpoint/reboot
   integration test against a copied live save.
-- Verified the combined backend (319 tests, zero failures or skips), all 30
+- Verified the combined backend (319 tests, zero failures or skips), all 33
   knowledge/build script tests, package typecheck/lint, the exhaustive
   root `bun run verify` graph (217/217 tasks), and a clean Docker `smoke` build
   that rebuilt the patched WASM, passed both mandatory real-emulator ABI and
@@ -281,7 +281,7 @@ system against a copied live save and the exact goal `get me a pokeman`.
   fail closed until SaveBlock2 is initialized without rejecting zero-key new
   games; benchmark and deployed Codex instruction/skill surfaces have an
   enforced Docker parity test; and the language-neutral knowledge schema,
-  generator, runtime, and 1,803 records preserve every contributing source
+  generator, runtime, and 1,785 records preserve every contributing source
   structurally.
 - Closed the replacement Buildkite security failure by upgrading
   `golang.org/x/text` from v0.37.0 to v0.39.0 in the base PR. The provider's
@@ -314,8 +314,6 @@ system against a copied live save and the exact goal `get me a pokeman`.
 
 ### Remaining
 
-- Monitor the Route 101 ranking fix through replacement Buildkite and fresh
-  Codex review.
 - Rerun three clean-copy candidate trials when Codex quota is available. Do
   not compare the current provider-invalid artifacts to the valid 0/3
   baseline.
@@ -366,7 +364,7 @@ system against a copied live save and the exact goal `get me a pokeman`.
   world record rather than unrelated randomizer reward metadata, while
   `where to get HM06 Rock Smash` retains acquisition intent through `get`.
 - Verified all 313 middle-layer and 319 composed-top backend tests, the 61
-  focused benchmark tests, all 30 knowledge/build script tests, backend and
+  focused benchmark tests, all 33 knowledge/build script tests, backend and
   scripts typecheck/lint, and formatting.
 - Completed hosted verification on every final code-bearing stack head:
   Buildkite #7123 for #1802, #7130 for #1803, and #7132 for #1805 passed all
