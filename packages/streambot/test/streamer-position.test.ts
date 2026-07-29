@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import {
-  StreambotStreamer,
-  type PlayerFactory,
-  type StreamObserverFactory,
-} from "@shepherdjerred/streambot/streamer/streamer.ts";
+import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
+import type {
+  PlayerFactory,
+  StreamObserverFactory,
+} from "@shepherdjerred/streambot/streamer/streamer-types.ts";
 import { StreamCrashError } from "@shepherdjerred/streambot/streamer/stream-errors.ts";
 import {
   loadConfig,
@@ -331,6 +331,64 @@ describe("StreambotStreamer overlapping seeks", () => {
 
     finished.resolve();
     await run;
+  });
+
+  test("a stopped session's late seek cannot overwrite a reused userbot's clock", async () => {
+    const clock = { ms: 1000 };
+    const oldSeekAttach = createVoidDeferred();
+    const { factory, segments } = makeFakeFactory(
+      [],
+      [],
+      [oldSeekAttach.promise],
+    );
+    const streamer = new StreambotStreamer(
+      USER_TOKEN,
+      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "false" })),
+      () => clock.ms,
+      factory,
+    );
+    const oldAbort = new AbortController();
+    const oldRun = streamer.runStream(
+      {
+        voice: VOICE,
+        resolved: RESOLVED,
+        volume: 100,
+        seekSeconds: 30,
+        pipelineMode: "sw",
+      },
+      oldAbort.signal,
+    );
+    await flush();
+
+    clock.ms = 6000;
+    const oldSeek = streamer.seek(120);
+    await flush();
+    oldAbort.abort();
+    await oldRun;
+    expect(streamer.getPosition()).toBeNull();
+
+    clock.ms = 10_000;
+    const newRun = streamer.runStream(
+      {
+        voice: VOICE,
+        resolved: RESOLVED,
+        volume: 100,
+        seekSeconds: 240,
+        pipelineMode: "sw",
+      },
+      new AbortController().signal,
+    );
+    await flush();
+    clock.ms = 12_000;
+    expect(streamer.getPosition()).toBe(242);
+
+    oldSeekAttach.resolve();
+    await expect(oldSeek).resolves.toBe(true);
+    clock.ms = 13_000;
+    expect(streamer.getPosition()).toBe(243);
+
+    segments[1]?.resolve();
+    await newRun;
   });
 });
 

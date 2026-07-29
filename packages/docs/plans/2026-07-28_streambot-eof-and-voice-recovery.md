@@ -85,6 +85,11 @@ losses continue to reconnect.
   seek cannot commit or clear the newer seek's anchor. Assigned the privileged
   live-permission TODO to operator verification. The fork passes all 63 tests,
   and Streambot's 26 affected regression tests pass.
+- Invalidated pending seek ownership whenever playback stops or a pooled userbot
+  begins another segment. A late replacement attach from the stopped session can
+  no longer restart or overwrite the reused userbot's position clock; the exact
+  cross-session race has deterministic regression coverage. Streambot lint,
+  typecheck, and all 395 unit tests pass.
 
 ### Remaining
 

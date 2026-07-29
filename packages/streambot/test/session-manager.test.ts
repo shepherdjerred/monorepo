@@ -9,7 +9,7 @@ import type {
   UserbotEntry,
   UserbotProvider,
 } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
-import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer.ts";
+import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer-types.ts";
 import type { VoiceCloseInfo } from "@shepherdjerred/streambot/streamer/voice-close-source.ts";
 import type { Announcement } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import type {

@@ -1,8 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import {
-  StreambotStreamer,
-  type PlayerFactory,
-} from "@shepherdjerred/streambot/streamer/streamer.ts";
+import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
+import type { PlayerFactory } from "@shepherdjerred/streambot/streamer/streamer-types.ts";
 import {
   loadConfig,
   type EnvLookup,
