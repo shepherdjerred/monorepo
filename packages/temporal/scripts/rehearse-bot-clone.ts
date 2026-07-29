@@ -9,11 +9,11 @@
  * of them), so the rehearsal cannot drift from what production executes.
  *
  * Canaries (each maps to a real weekly failure from June/July 2026):
- *  1. scout    — llm-models `file:` producer builds and resolves from
- *                scout's data package, and a plain `bun test` on the report
- *                package passes.
+ *  1. scout    — the root workspace installs, the llm-models producer builds
+ *                and resolves from scout's data package, and a plain
+ *                `bun test` on the report package passes.
  *  2. snapshot — `update-data-dragon.ts --snapshots-only`, the exact
- *                install-refresh (second `bun install --force`) + snapshot-
+ *                install-refresh (second root `bun install --force`) + snapshot-
  *                test step that failed in scout-data-dragon-weekly-refresh
  *                even after the (1) fix, because that second install wasn't
  *                isolated from the pod's shared, persistent Bun cache. See

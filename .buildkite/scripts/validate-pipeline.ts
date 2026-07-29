@@ -157,7 +157,7 @@ requireIncludes(
 for (const key of ["playwright-e2e-pr", "playwright-e2e-main"]) {
   const block = stepBlocks.get(key);
   const install =
-    "bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/monorepo'";
+    "bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo'";
   if (!hasTrimmedLine(block, install)) {
     fail(`Playwright lane ${key} is missing exact filtered install ${install}`);
   }

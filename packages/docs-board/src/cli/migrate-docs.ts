@@ -8,6 +8,7 @@ import {
   serializeMarkdownDocument,
   splitFrontmatter,
 } from "#shared/markdown";
+import { workflowDocumentPaths } from "#shared/docs-path";
 import {
   archiveFrontmatter,
   DispositionSchema,
@@ -428,7 +429,9 @@ async function migrateFile(relativePath: string): Promise<MigrationResult> {
 
 export async function migrateDocs(): Promise<MigrationResult[]> {
   const glob = new Bun.Glob("**/*.md");
-  const paths = [...glob.scanSync({ cwd: DOCS_ROOT, onlyFiles: true })].sort();
+  const paths = workflowDocumentPaths(
+    glob.scanSync({ cwd: DOCS_ROOT, onlyFiles: true }),
+  );
   const initialResults: MigrationResult[] = [];
   for (const relativePath of paths) {
     initialResults.push(await migrateFile(relativePath));

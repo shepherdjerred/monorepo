@@ -28,6 +28,7 @@ type ReadResult = {
 
 type TypedReader = {
   read: () => Promise<ReadResult>;
+  cancel: () => Promise<void>;
 };
 
 function getReader(stdout: ReadableStream<Uint8Array>): TypedReader {
@@ -36,6 +37,9 @@ function getReader(stdout: ReadableStream<Uint8Array>): TypedReader {
     async read(): Promise<ReadResult> {
       const result = await raw.read();
       return { value: result.value, done: result.done };
+    },
+    async cancel(): Promise<void> {
+      await raw.cancel();
     },
   };
 }
@@ -151,7 +155,7 @@ export class EmbeddingClient {
     this.proc = Bun.spawn(["uv", "run", scriptPath], {
       stdin: "pipe",
       stdout: "pipe",
-      stderr: "pipe",
+      stderr: "inherit",
     });
     const stdout = this.proc.stdout;
     if (stdout == null || typeof stdout === "number") {
@@ -195,17 +199,21 @@ export class EmbeddingClient {
       }
       if (Date.now() > deadline)
         throw new Error("Embedding server read timeout");
-      const result = await Promise.race([
-        this.reader.read(),
-        new Promise<never>((_, reject) =>
-          setTimeout(
-            () => {
-              reject(new Error("Embedding server read timeout"));
-            },
-            Math.max(1000, deadline - Date.now()),
-          ),
-        ),
-      ]);
+      let timeoutId: ReturnType<typeof setTimeout> | undefined;
+      const timeout = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(
+          () => {
+            reject(new Error("Embedding server read timeout"));
+          },
+          Math.max(1000, deadline - Date.now()),
+        );
+      });
+      let result: ReadResult;
+      try {
+        result = await Promise.race([this.reader.read(), timeout]);
+      } finally {
+        if (timeoutId !== undefined) clearTimeout(timeoutId);
+      }
       if (result.done)
         return this.lineBuffer.length > 0 ? this.lineBuffer : null;
       if (result.value != null)
@@ -213,20 +221,25 @@ export class EmbeddingClient {
     }
   }
 
-  shutdown(): void {
-    if (this.proc != null) {
-      try {
-        const stdin = getStdinWriter(this.proc);
-        stdin.end();
-      } catch {
-        /* ignore */
-      }
-      this.proc.kill();
-      this.proc = null;
-      this.reader = null;
-      this.lineBuffer = "";
-      this.ready = false;
+  async shutdown(): Promise<void> {
+    const proc = this.proc;
+    const reader = this.reader;
+    if (proc == null) return;
+
+    const stdin = getStdinWriter(proc);
+    stdin.end();
+    await proc.exited;
+    if (proc.exitCode !== 0) {
+      throw new Error(
+        `Embedding server exited with code ${String(proc.exitCode)}`,
+      );
     }
+    await reader?.cancel();
+
+    this.proc = null;
+    this.reader = null;
+    this.lineBuffer = "";
+    this.ready = false;
   }
 }
 

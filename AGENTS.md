@@ -21,7 +21,7 @@ packages/
 ├── cooklang-for-obsidian/      # Cooklang Obsidian plugin
 ├── cooklang-rich-preview/      # Cooklang rich link preview site
 ├── discord-plays-pokemon/      # Discord Plays Pokemon (headless emulator + Go-Live stream)
-├── docs/                       # AI-maintained monorepo documentation
+├── docs/                       # AI working docs plus the nested human-first wiki
 ├── dotfiles/                   # Dotfiles & shell config (chezmoi source)
 ├── eslint-config/              # Shared ESLint flat config (workspace-internal)
 ├── fonts/                      # Custom fonts
@@ -66,7 +66,7 @@ sandbox/                        # Personal scratch (not shipped, excluded from m
 - **Verify before asserting** — Don't write a subagent's claim or your own inference into a plan/report as "confirmed." Grep the live tree (`.buildkite/pipeline.yml`, `lefthook.yml`, root `package.json` `verify` script, per-package `turbo.json`) yourself before stating any CI/lint/gate wiring fact; audits often run against a stale base.
 - **Don't validate a replacement against the signal it replaces** — When building something to work around an unreliable upstream (e.g. GitHub's `mergeable` field, a flaky check), validate against an independent oracle (fixtures, golden files, the underlying tool, a semantic property like determinism), never the untrusted signal itself.
 - **Verify link liveness** — Every URL you write or rewrite (code, docs, READMEs, package metadata) must be liveness-checked (`curl -sI -o /dev/null -w '%{http_code}' <url>` → 200) before committing. Batch-verify mass rewrites; fall back to a known-good form or drop the link rather than ship a 404.
-- **Update docs with code** — When adding a CLI command or feature, update CLAUDE.md and the relevant skills in the same phase, not a later "polish" pass, so the integration points are usable as soon as the feature works.
+- **Update docs with code** — When adding a CLI command or feature, update CLAUDE.md and the relevant skills in the same phase, not a later "polish" pass, so the integration points are usable as soon as the feature works. When a change alters a meaningful architecture boundary, operator workflow, or system rationale, also update the nearest human page under `packages/docs/wiki/src/content/docs/`.
 - **Shared data is language-neutral** — Cross-package shared data (catalogs, config) belongs in a language-neutral source of truth (JSON + JSON Schema), validated per-language (Zod in TS, Pydantic in Python). The repo has Bun and Python consumers; don't ship a TS-only module. If TS needs it browser- and node-safe, ship a built package with inlined JSON + `.d.ts`, not a `node:fs` read or a source-only JSON import.
 
 ## Code Review Rules
@@ -387,7 +387,7 @@ Each package has its own AGENTS.md with specific instructions:
 - `packages/resume/AGENTS.md` - Resume site
 - `packages/toolkit/AGENTS.md` - CLI developer tools (pr, pd, bugsink, grafana)
 - `packages/tasks-for-obsidian/AGENTS.md` - React Native task app
-- `packages/docs/` - AI-maintained docs (see `monorepo-docs` skill)
+- `packages/docs/` - AI working docs plus `wiki/`, the human-first explanation layer (see `monorepo-docs` skill)
 
 ## PR Media & Demo Artifacts — `public.sjer.red`
 

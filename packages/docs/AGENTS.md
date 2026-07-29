@@ -7,7 +7,9 @@ board: false
 
 # packages/docs
 
-AI-maintained documentation for the monorepo. This is a knowledge base primarily written and consumed by AI agents working on this codebase.
+AI-maintained documentation for the monorepo. The workflow corpus is primarily
+written and consumed by AI agents. The nested `wiki/` is the separate,
+human-first explanation layer authored by AI for Jerred.
 
 ## Purpose
 
@@ -28,6 +30,7 @@ docs/
 ├── plans/             # Implementation plans (substantive multi-step work, in-progress or upcoming)
 ├── logs/              # Per-session journals (one-shot fixes, Q&A, bug recaps) — the default for sessions
 ├── todos/             # General issue tracking; required for every source TODO marker
+├── wiki/              # Human-first Starlight wiki; not workflow state or a docs-board input
 └── archive/           # Historical docs no longer actively maintained
     ├── bazel/         # Bazel-era docs (Bazel removed from monorepo)
     ├── completed/     # Plans whose work shipped (preserved for design context)
@@ -36,19 +39,26 @@ docs/
 
 ## Where to Put New Docs
 
-| Type                                        | Directory       | Examples                                                                  |
-| ------------------------------------------- | --------------- | ------------------------------------------------------------------------- |
-| System design, how components fit together  | `architecture/` | Service architecture, data flow, package relationships                    |
-| Reusable patterns across the codebase       | `patterns/`     | ESLint config patterns, testing conventions, naming rules                 |
-| "We decided X because Y"                    | `decisions/`    | Technology choices, audits, tradeoff analyses                             |
-| "How to do X" or operational knowledge      | `guides/`       | Deployment runbooks, health audits, research notes, changelogs            |
-| "We plan to build X" (future/in-progress)   | `plans/`        | Implementation plans, feature proposals, migration plans                  |
-| Per-session journal (default)               | `logs/`         | Bug-fix recaps, one-shot edits, Q&A answers                               |
-| Tracked issue / deferred work / source TODO | `todos/`        | Verification follow-ups, deferred fixes, source `TODO(todo:<id>)` markers |
+| Type                                        | Directory       | Examples                                                                   |
+| ------------------------------------------- | --------------- | -------------------------------------------------------------------------- |
+| System design, how components fit together  | `architecture/` | Service architecture, data flow, package relationships                     |
+| Reusable patterns across the codebase       | `patterns/`     | ESLint config patterns, testing conventions, naming rules                  |
+| "We decided X because Y"                    | `decisions/`    | Technology choices, audits, tradeoff analyses                              |
+| "How to do X" or operational knowledge      | `guides/`       | Deployment runbooks, health audits, research notes, changelogs             |
+| "We plan to build X" (future/in-progress)   | `plans/`        | Implementation plans, feature proposals, migration plans                   |
+| Per-session journal (default)               | `logs/`         | Bug-fix recaps, one-shot edits, Q&A answers                                |
+| Tracked issue / deferred work / source TODO | `todos/`        | Verification follow-ups, deferred fixes, source `TODO(todo:<id>)` markers  |
+| Terse explanation for Jerred                | `wiki/`         | System maps, infrastructure overviews, current architecture, key rationale |
 
 **When in doubt:** If it records a choice and its reasoning, it's a decision. If it describes steps to follow, it's a guide. If it describes something to build, it's a plan. If it's a journal of what one session did, it's a log.
 
 **Plan vs Log:** Default to a log. Promote to a plan only when the design itself is the artifact — multi-step work, design choices to commit to, or follow-up tasks for future sessions.
+
+**Wiki vs workflow docs:** Put durable human understanding in `wiki/`. Keep
+session state, implementation detail, evidence trails, and future work in the
+existing workflow taxonomy. The wiki renders the workflow corpus under
+`/working/`, so do not duplicate it. Follow `wiki/AGENTS.md` for its terse,
+visual-first authoring contract.
 
 ## Conventions
 
@@ -56,6 +66,8 @@ docs/
 - Use markdown with code examples where helpful
 - Name files with `<date>_kebab-case` (e.g., `2026-02-22_ci-pipeline.md`)
 - Every Markdown file has canonical YAML frontmatter: globally unique `id`, `type`, `status`, and `board`
+- The `wiki/` subtree is exempt from workflow frontmatter and docs-board rules;
+  its Starlight schema and `wiki/AGENTS.md` are authoritative there
 - Board items additionally require `verification` (`agent`, `human`, or `operator`) and `disposition` (`active`, `blocked`, or `deferred`). Use `operator` with `disposition: blocked` for physical or privileged actions that require explicit authorization but are not UAT
 - Use only `planned`, `in-progress`, `awaiting-human`, or `complete` for workflow status; do not add a `## Status` section
 - Use unchecked tasks under `## Remaining` for agent work and append-only entries under `## Comment Log` for steering and audit history

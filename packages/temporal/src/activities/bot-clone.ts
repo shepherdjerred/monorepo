@@ -47,20 +47,13 @@ export async function rootInstallWithoutHooks(repoDir: string): Promise<void> {
 }
 
 /**
- * Build the `@shepherdjerred/llm-models` `file:` producer inside a bot clone.
- * Its `dist/` entrypoint is gitignored, so a fresh clone ships it unbuilt and
- * any later `bun install` in a consumer workspace copies a broken package
- * (`Cannot find module '@shepherdjerred/llm-models'`). Must run BEFORE the
- * consumer's install so the copy picks up `dist/`. Mirrors the shared-producer
- * build step in the root AGENTS.md "Development Setup".
+ * Build the `@shepherdjerred/llm-models` workspace producer inside an
+ * already-installed bot clone. Its `dist/` entrypoint is gitignored, so a
+ * fresh clone ships it unbuilt even though the root install links it.
  */
 export async function buildLlmModels(repoDir: string): Promise<void> {
   const pkgDir = `${repoDir}/packages/llm-models`;
   const cacheDir = botCloneCacheDir(repoDir);
-  await runCommand(["bun", "install", "--frozen-lockfile"], {
-    cwd: pkgDir,
-    env: { BUN_INSTALL_CACHE_DIR: cacheDir },
-  });
   await runCommand(["bun", "run", "build"], {
     cwd: pkgDir,
     env: { BUN_INSTALL_CACHE_DIR: cacheDir },
@@ -68,17 +61,14 @@ export async function buildLlmModels(repoDir: string): Promise<void> {
 }
 
 /**
- * Build the browser/node-safe Glitter context package inside an ephemeral
- * clone. Its exports point at gitignored dist files, so Scout and Temporal
- * consumers must never run before this producer has been generated and built.
+ * Build the browser/node-safe Glitter context workspace inside an
+ * already-installed clone. Its exports point at gitignored dist files, so
+ * Scout and Temporal consumers must never run before this producer has been
+ * generated and built.
  */
 export async function buildGlitterContext(repoDir: string): Promise<void> {
   const pkgDir = `${repoDir}/packages/glitter-context`;
   const cacheDir = botCloneCacheDir(repoDir);
-  await runCommand(["bun", "install", "--frozen-lockfile"], {
-    cwd: pkgDir,
-    env: { BUN_INSTALL_CACHE_DIR: cacheDir },
-  });
   await runCommand(["bun", "run", "build"], {
     cwd: pkgDir,
     env: { BUN_INSTALL_CACHE_DIR: cacheDir },
@@ -86,16 +76,15 @@ export async function buildGlitterContext(repoDir: string): Promise<void> {
 }
 
 /**
- * Install the scout-for-lol workspace in a bot clone after building both
- * generated shared-package producers.
+ * Install the one root workspace in a bot clone, then build both generated
+ * shared-package producers Scout imports. Package-local installs are invalid
+ * in this monorepo: every workspace dependency is resolved by the root
+ * package.json and root bun.lock.
  */
 export async function installScoutWorkspace(repoDir: string): Promise<void> {
+  await rootInstallWithoutHooks(repoDir);
   await buildLlmModels(repoDir);
   await buildGlitterContext(repoDir);
-  await runCommand(["bun", "install", "--frozen-lockfile"], {
-    cwd: `${repoDir}/packages/scout-for-lol`,
-    env: { BUN_INSTALL_CACHE_DIR: botCloneCacheDir(repoDir) },
-  });
 }
 
 /**

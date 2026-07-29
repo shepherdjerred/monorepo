@@ -82,6 +82,7 @@ const LANE_TO_STEP: Record<string, string | null> = {
   "site-webring": "pr-dryrun",
   "site-cooklang": "pr-dryrun",
   "site-stocks": "pr-dryrun",
+  "site-wiki": "pr-dryrun",
   "site-better-skill-capped": "pr-dryrun",
   "site-glitter": "pr-dryrun",
   "site-scout": "pr-dryrun",
