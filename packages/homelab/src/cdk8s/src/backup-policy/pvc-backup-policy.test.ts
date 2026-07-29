@@ -132,7 +132,7 @@ describe("PVC backup policy", () => {
     expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(1);
   }, 20_000);
 
-  it("permits finalizer cleanup for terminating PVCs", () => {
+  it("checks deletion timestamp presence without reading an absent field", () => {
     const app = new App();
     const chart = new Chart(app, "pvc-backup-admission");
     createPvcBackupAdmissionPolicies(chart);
@@ -150,7 +150,7 @@ describe("PVC backup policy", () => {
     expect(policy.data.spec.matchConditions).toEqual([
       {
         name: "not-terminating",
-        expression: "object.metadata.deletionTimestamp == null",
+        expression: "!has(object.metadata.deletionTimestamp)",
       },
     ]);
   });
