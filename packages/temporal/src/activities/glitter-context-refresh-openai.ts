@@ -4,14 +4,26 @@ import {
   traceOpenAi,
   type TraceOpenAiMetadata,
 } from "@shepherdjerred/llm-observability";
+import { ApplicationFailure } from "@temporalio/common";
 import {
   type GenerationBudget,
   openAiGenerationUsage,
 } from "./glitter-context-refresh-budget.ts";
-import type {
-  GenerationArtifactResult,
-  GenerationUsage,
+import {
+  GenerationUsageSchema,
+  type GenerationArtifactResult,
+  type GenerationUsage,
 } from "./glitter-context-refresh-cache.ts";
+
+const OpenAiCompletionUsageSchema = z.object({
+  prompt_tokens: z.number().int().nonnegative(),
+  completion_tokens: z.number().int().nonnegative(),
+  prompt_tokens_details: z
+    .object({
+      cached_tokens: z.number().int().nonnegative().optional(),
+    })
+    .optional(),
+});
 
 function requireOpenAiApiKey(): string {
   const value = Bun.env["OPENAI_API_KEY"];
@@ -50,15 +62,39 @@ export function glitterCompletionUsage(input: {
   model: string;
   usage: OpenAI.Completions.CompletionUsage | undefined;
 }): GenerationUsage {
-  if (input.usage === undefined) {
-    throw new Error(`OpenAI returned no usage for ${input.model}`);
+  const parsedUsage = OpenAiCompletionUsageSchema.safeParse(input.usage);
+  if (!parsedUsage.success) {
+    throw ApplicationFailure.nonRetryable(
+      `OpenAI returned a billable completion without valid usage for ${input.model}; automatic retry is disabled because the completed request may already have been charged`,
+      "BilledGenerationUsageUnavailable",
+      {
+        model: input.model,
+        validationError: z.treeifyError(parsedUsage.error),
+      },
+    );
   }
-  return openAiGenerationUsage({
-    model: input.model,
-    promptTokens: input.usage.prompt_tokens,
-    completionTokens: input.usage.completion_tokens,
-    cachedPromptTokens: input.usage.prompt_tokens_details?.cached_tokens ?? 0,
-  });
+  try {
+    return GenerationUsageSchema.parse(
+      openAiGenerationUsage({
+        model: input.model,
+        promptTokens: parsedUsage.data.prompt_tokens,
+        completionTokens: parsedUsage.data.completion_tokens,
+        cachedPromptTokens:
+          parsedUsage.data.prompt_tokens_details?.cached_tokens ?? 0,
+      }),
+    );
+  } catch (error: unknown) {
+    const reason =
+      error instanceof Error ? error.message : "unknown usage conversion error";
+    throw ApplicationFailure.nonRetryable(
+      `OpenAI returned a billable completion whose usage could not be accounted for ${input.model}: ${reason}; automatic retry is disabled`,
+      "BilledGenerationUsageUnavailable",
+      {
+        model: input.model,
+        reason,
+      },
+    );
+  }
 }
 
 export function glitterCompletionArtifactSchema<Response>(

@@ -10,6 +10,7 @@ import {
 } from "./glitter-context-refresh-cache.ts";
 import { GenerationBudget } from "./glitter-context-refresh-budget.ts";
 import {
+  glitterCompletionArtifact,
   glitterCompletionArtifactSchema,
   useGlitterCompletionArtifact,
 } from "./glitter-context-refresh-openai.ts";
@@ -225,6 +226,27 @@ describe("Glitter context generation artifacts", () => {
 });
 
 describe("Glitter billed completion artifacts", () => {
+  test("fails non-retryably when a billable response omits usage", () => {
+    let failure: unknown;
+    try {
+      glitterCompletionArtifact({
+        model: "test-model",
+        parsed: { value: "paid result" },
+        rawContent: '{"value":"paid result"}',
+        usage: undefined,
+        missingParsedError: "unused",
+      });
+    } catch (error: unknown) {
+      failure = error;
+    }
+    if (!(failure instanceof ApplicationFailure)) {
+      throw new TypeError("Expected a non-retryable ApplicationFailure");
+    }
+    expect(failure.type).toBe("BilledGenerationUsageUnavailable");
+    expect(failure.nonRetryable).toBe(true);
+    expect(failure.message).toContain("may already have been charged");
+  });
+
   test("fails non-retryably when a billed response cannot be persisted", async () => {
     const memory = memoryStore();
     let generationCount = 0;

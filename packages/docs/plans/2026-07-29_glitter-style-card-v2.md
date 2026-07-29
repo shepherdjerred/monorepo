@@ -137,7 +137,7 @@ weekly production schedule.
   Colin, and Richard as synthesis baselines.
 - Added direct last-entry and metadata-leak sentinels for Birmel's classifier
   and Scout's shared frontend/backend prompt serializer.
-- Passed the serialized affected verification surface (79/79 tasks), 764
+- Passed the serialized affected verification surface (79/79 tasks), 765
   Temporal tests, 1,213 Scout backend tests, 94 Scout report tests, focused
   Birmel and Scout sentinel tests, and forced consumer typecheck/lint.
 - Addressed both P2 findings from the first Codex review: summary and League
@@ -154,6 +154,9 @@ weekly production schedule.
   billed prefix before authorizing new model calls, while cache hits produced
   by prior workflow runs remain free. Budget exhaustion and post-budget
   overflow now fail non-retryably.
+- Made a returned OpenAI completion with missing, malformed, or unaccountable
+  usage fail non-retryably at the provider boundary, because the request may
+  already have been billed even though no safe receipt can be written.
 - Hardened the native Temporal good-morning integration cases against
   full-repository CI contention after build #7180 exposed Bun's 5-second
   default timeout; all five repeated focused runs passed with the explicit
