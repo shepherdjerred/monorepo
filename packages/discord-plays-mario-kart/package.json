@@ -9,7 +9,8 @@
     "lint": "eslint --config eslint.config.ts scripts",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "build:wasm": "bun scripts/build-wasm.ts",
-    "vendor:wasm": "bun scripts/vendor-n64wasm.ts"
+    "vendor:wasm": "bun scripts/vendor-n64wasm.ts",
+    "test:ci": "bun ../../scripts/run-ci-test.ts"
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "workspace:*",

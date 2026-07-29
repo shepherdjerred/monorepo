@@ -6,6 +6,7 @@
     "build": "go build ./...",
     "test": "go test ./...",
     "lint": "golangci-lint run",
-    "typecheck": "go vet ./..."
+    "typecheck": "go vet ./...",
+    "test:ci": "bun ../../scripts/run-ci-test.ts"
   }
 }

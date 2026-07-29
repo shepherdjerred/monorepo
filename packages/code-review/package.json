@@ -22,7 +22,8 @@
   "scripts": {
     "test": "bun test",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "lint": "bunx eslint . --max-warnings=0"
+    "lint": "bunx eslint . --max-warnings=0",
+    "test:ci": "bun ../../scripts/run-ci-test.ts"
   },
   "dependencies": {
     "zod": "^4.4.3"

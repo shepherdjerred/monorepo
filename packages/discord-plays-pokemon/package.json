@@ -10,7 +10,8 @@
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "build:wasm": "bun scripts/build-wasm.ts",
     "generate:knowledge": "bun scripts/generate-knowledge.ts",
-    "generate:battle-data": "bun scripts/generate-battle-data.ts"
+    "generate:battle-data": "bun scripts/generate-battle-data.ts",
+    "test:ci": "bun ../../scripts/run-ci-test.ts"
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "workspace:*",

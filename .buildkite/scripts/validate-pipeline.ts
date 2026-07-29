@@ -175,7 +175,7 @@ requireIncludes(
 for (const key of ["playwright-e2e-pr", "playwright-e2e-main"]) {
   const block = stepBlocks.get(key);
   const install =
-    ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo'";
+    ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'";
   if (!hasTrimmedLine(block, install)) {
     fail(`Playwright lane ${key} is missing exact filtered install ${install}`);
   }
@@ -224,6 +224,19 @@ for (const [key, lane, candidate] of [
     );
   }
 }
+for (const [key, expected] of [
+  ["playwright-e2e-pr", "missing-error: 1"],
+  ["playwright-e2e-main", "missing-error: 0"],
+] satisfies readonly (readonly [string, string])[]) {
+  if (!stepBlocks.get(key)?.includes(expected)) {
+    fail(`${key} must configure the test collector with ${expected}`);
+  }
+}
+requireIncludes(
+  stepBlocks.get("playwright-e2e-main"),
+  "if [ ! -s .ci-reports/junit/sjer.red/playwright.xml ]; then",
+  "playwright-e2e-main must fail when an executed run emits no JUnit report",
+);
 
 // The merged PR dry-run lane owns the helm-types drift gate, the tofu plans,
 // and the print-only deploy rehearsals. Its install must stay the exact

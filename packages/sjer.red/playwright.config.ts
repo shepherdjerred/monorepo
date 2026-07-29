@@ -44,7 +44,17 @@ export default defineConfig({
   forbidOnly: isCI,
   retries: 1,
   workers: 2,
-  reporter: isCI ? "github" : "list",
+  reporter: isCI
+    ? [
+        ["list"],
+        [
+          "junit",
+          {
+            outputFile: "../../.ci-reports/junit/sjer.red/playwright.xml",
+          },
+        ],
+      ]
+    : "list",
   use: {
     baseURL: "http://localhost:4321",
     trace: "on-first-retry",

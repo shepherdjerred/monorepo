@@ -51,6 +51,10 @@
     "test": {
       "dependsOn": ["build", "^build", "generate"],
       "env": ["NODE_ENV"]
+    },
+    "test:ci": {
+      "dependsOn": ["build", "^build", "generate"],
+      "env": ["NODE_ENV"]
     }
   }
 }

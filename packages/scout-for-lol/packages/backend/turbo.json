@@ -19,6 +19,9 @@
     "test": {
       "env": ["DATABASE_URL"]
     },
+    "test:ci": {
+      "env": ["DATABASE_URL"]
+    },
     // Typed lint (projectService) resolves the generated Prisma client; root's
     // lint task only depends on ^build, so on a cold container lint raced
     // generate and every prisma.competitionParticipant access became an error
