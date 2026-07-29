@@ -1,0 +1,823 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Kayle": {
+      "id": "Jade_Kayle",
+      "key": "60010",
+      "name": "Kayle",
+      "title": "The Judicator",
+      "image": {
+        "full": "Jade_Kayle.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 144,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60010000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60010001",
+          "num": 1,
+          "name": "Silver Kayle",
+          "chromas": false
+        },
+        {
+          "id": "60010002",
+          "num": 2,
+          "name": "Viridian Kayle",
+          "chromas": true
+        },
+        {
+          "id": "60010006",
+          "num": 6,
+          "name": "Aether Wing Kayle",
+          "chromas": false
+        },
+        {
+          "id": "60010007",
+          "num": 7,
+          "name": "Riot Kayle",
+          "chromas": false
+        },
+        {
+          "id": "60010010",
+          "num": 10,
+          "name": "Viridian Kayle (Citrine)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "60010011",
+          "num": 11,
+          "name": "Viridian Kayle (Aquamarine)",
+          "chromas": true,
+          "parentSkin": 2
+        },
+        {
+          "id": "60010012",
+          "num": 12,
+          "name": "Viridian Kayle (Pearl)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "60010013",
+          "num": 13,
+          "name": "Viridian Kayle (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "60010014",
+          "num": 14,
+          "name": "Viridian Kayle (Obsidian)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "60010051",
+          "num": 51,
+          "name": "Aether Wing Kayle (Ruby)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "60010052",
+          "num": 52,
+          "name": "Aether Wing Kayle (Emerald)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "60010053",
+          "num": 53,
+          "name": "Aether Wing Kayle (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "60010054",
+          "num": 54,
+          "name": "Aether Wing Kayle (Amethyst)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "60010055",
+          "num": 55,
+          "name": "Aether Wing Kayle (Sapphire)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "60010056",
+          "num": 56,
+          "name": "Aether Wing Kayle (Ace)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "60010057",
+          "num": 57,
+          "name": "Immortal Journey Kayle",
+          "chromas": false
+        },
+        {
+          "id": "60010058",
+          "num": 58,
+          "name": "Immortal Journey Kayle (Ruby)",
+          "chromas": false,
+          "parentSkin": 57
+        },
+        {
+          "id": "60010059",
+          "num": 59,
+          "name": "Immortal Journey Kayle (Sapphire)",
+          "chromas": false,
+          "parentSkin": 57
+        },
+        {
+          "id": "60010060",
+          "num": 60,
+          "name": "Immortal Journey Kayle (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 57
+        },
+        {
+          "id": "60010061",
+          "num": 61,
+          "name": "Immortal Journey Kayle (Emerald)",
+          "chromas": false,
+          "parentSkin": 57
+        },
+        {
+          "id": "60010062",
+          "num": 62,
+          "name": "Immortal Journey Kayle (Amethyst)",
+          "chromas": false,
+          "parentSkin": 57
+        },
+        {
+          "id": "60010063",
+          "num": 63,
+          "name": "Immortal Journey Kayle (Catseye)",
+          "chromas": false,
+          "parentSkin": 57
+        },
+        {
+          "id": "60010064",
+          "num": 64,
+          "name": "Immortal Journey Kayle (Obsidian)",
+          "chromas": false,
+          "parentSkin": 57
+        },
+        {
+          "id": "60010065",
+          "num": 65,
+          "name": "Immortal Journey Kayle (Pearl)",
+          "chromas": false,
+          "parentSkin": 57
+        },
+        {
+          "id": "60010088",
+          "num": 88,
+          "name": "Silver Kayle Modern",
+          "chromas": false
+        },
+        {
+          "id": "60010302",
+          "num": 302,
+          "name": "Classic 2012 Kayle",
+          "chromas": false
+        },
+        {
+          "id": "60010303",
+          "num": 303,
+          "name": "Classic 2012 Kayle (Silver)",
+          "chromas": false,
+          "parentSkin": 302
+        },
+        {
+          "id": "60010304",
+          "num": 304,
+          "name": "Classic 2012 Kayle (Founder's Silver)",
+          "chromas": false,
+          "parentSkin": 302
+        },
+        {
+          "id": "60010305",
+          "num": 305,
+          "name": "Classic 2012 Kayle (Viridian)",
+          "chromas": false,
+          "parentSkin": 302
+        }
+      ],
+      "lore": "- The Abilities are completely different, except for Divine Blessing (W)<br>- Leveling up doesn't change her attacks<br>- Holy Fervor (P) grants Attack Damage as Ability Power and vice versa",
+      "blurb": "- The Abilities are completely different, except for Divine Blessing (W)<br>- Leveling up doesn't change her attacks<br>- Holy Fervor (P) grants Attack Damage as Ability Power and vice versa",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Mage",
+        "Marksman"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 6,
+        "defense": 6,
+        "magic": 7,
+        "difficulty": 7
+      },
+      "stats": {
+        "hp": 501,
+        "hpperlevel": 93,
+        "mp": 295,
+        "mpperlevel": 40,
+        "movespeed": 335,
+        "armor": 21,
+        "armorperlevel": 3.5,
+        "spellblock": 30,
+        "spellblockperlevel": 0.75,
+        "attackrange": 125,
+        "hpregen": 7.5,
+        "hpregenperlevel": 0.75,
+        "mpregen": 7.425,
+        "mpregenperlevel": 0.325,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 56.3,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 2.3,
+        "attackspeed": 0.638
+      },
+      "spells": [
+        {
+          "id": "Jade_KayleQ",
+          "name": "Reckoning",
+          "description": "Kayle blasts a target, dealing damage, slowing their movement speed, and applying a stack of Holy Fervor.",
+          "tooltip": "Kayle blasts a target, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> while <status>Slowing</status> by {{ slowpercent }}% and increasing Kayle's damage to them by {{ damageamp*100 }}% for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Slow",
+              "Damage Amp",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ slowpercent }}% -> {{ slowpercentNL }}%",
+              "{{ damageamp*100.000000 }}% -> {{ damageampnl*100.000000 }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
+          "cooldownBurn": "8",
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
+          "costBurn": "70/75/80/85/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            625,
+            625,
+            625,
+            625,
+            625
+          ],
+          "rangeBurn": "625",
+          "image": {
+            "full": "Jade_KayleQ.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 288,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_KayleW",
+          "name": "Divine Blessing",
+          "description": "Kayle blesses an allied champion, increasing their movement speed and healing them.",
+          "tooltip": "Kayle blesses an allied champion, increasing their <speed>Movement Speed</speed> by {{ movespeed*100 }}% for {{ duration }} seconds and healing them for <healing>{{ totalheal }} health</healing>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Healing",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ baseheal }} -> {{ basehealNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "cooldownBurn": "10",
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
+          "costBurn": "60/65/70/75/80",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
+          "rangeBurn": "700",
+          "image": {
+            "full": "Jade_KayleW.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 336,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_KayleE",
+          "name": "Righteous Fury",
+          "description": "Kayle increases her attack range and her basic attacks deals additional damage to her target and nearby enemies.",
+          "tooltip": "Kayle increases her attack range by {{ bonusrange }} for {{ duration }} seconds and her basic attacks deal <magicDamage>{{ targetdamage }} additional magic damage</magicDamage> on-hit. Nearby enemies take <magicDamage>{{ splashdamage }} magic damage</magicDamage> on attack.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Base Damage",
+              "Splash Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ splashadratio*100.000000 }}% -> {{ splashadrationl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            22,
+            21,
+            20,
+            19,
+            18
+          ],
+          "cooldownBurn": "22/21/20/19/18",
+          "cost": [
+            65,
+            65,
+            65,
+            65,
+            65
+          ],
+          "costBurn": "65",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
+          "rangeBurn": "400",
+          "image": {
+            "full": "Jade_KayleE.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 384,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_KayleR",
+          "name": "Intervention",
+          "description": "Bathes Kayle's target in a holy light, rendering them immune to all damage for a short time.",
+          "tooltip": "Kayle bathes an allied champion in holy light, making them Invulnerable for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            90,
+            75,
+            60
+          ],
+          "cooldownBurn": "90/75/60",
+          "cost": [
+            100,
+            75,
+            50
+          ],
+          "costBurn": "100/75/50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1200,
+            1200,
+            1200
+          ],
+          "rangeBurn": "1200",
+          "image": {
+            "full": "Jade_KayleR.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 432,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Holy Fervor",
+        "description": "Kayle gains a percentage of her Ability Power as Attack damage and a percentage of her Attack Damage as Ability Power.",
+        "image": {
+          "full": "Jade_Kayle_P.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 144,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

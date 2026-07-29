@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Samira": {
       "id": "Samira",
@@ -10,7 +10,7 @@
       "title": "the Desert Rose",
       "image": {
         "full": "Samira.png",
-        "sprite": "champion3.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 240,
         "y": 96,
@@ -476,10 +476,10 @@
           "rangeBurn": "950",
           "image": {
             "full": "SamiraQ.png",
-            "sprite": "spell11.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 384,
-            "y": 144,
+            "x": 192,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -617,10 +617,10 @@
           "rangeBurn": "325",
           "image": {
             "full": "SamiraW.png",
-            "sprite": "spell11.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 432,
-            "y": 144,
+            "x": 240,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -760,10 +760,10 @@
           "rangeBurn": "600",
           "image": {
             "full": "SamiraE.png",
-            "sprite": "spell12.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 0,
-            "y": 0,
+            "x": 288,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -873,10 +873,10 @@
           "rangeBurn": "600",
           "image": {
             "full": "SamiraR.png",
-            "sprite": "spell12.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 48,
-            "y": 0,
+            "x": 336,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -888,7 +888,7 @@
         "description": "Samira builds a combo by hitting attacks or abilities unique from the previous hit. Samira's attacks in melee range deal additional magic damage. Samira's attacks against enemies affected by <status>Immobilizing</status> effects will dash her to her attack range. If the enemy is <status>Knocked Up</status>, she also keeps them <status>Knocked Up</status> briefly.",
         "image": {
           "full": "SamiraP.png",
-          "sprite": "passive3.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 240,
           "y": 96,

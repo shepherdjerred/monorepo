@@ -1,0 +1,765 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Olaf": {
+      "id": "Jade_Olaf",
+      "key": "60002",
+      "name": "Olaf",
+      "title": "The Berserker",
+      "image": {
+        "full": "Jade_Olaf.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 336,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60002000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60002002",
+          "num": 2,
+          "name": "Glacial Olaf",
+          "chromas": false
+        },
+        {
+          "id": "60002003",
+          "num": 3,
+          "name": "Brolaf",
+          "chromas": false
+        },
+        {
+          "id": "60002006",
+          "num": 6,
+          "name": "Butcher Olaf",
+          "chromas": true
+        },
+        {
+          "id": "60002007",
+          "num": 7,
+          "name": "Brolaf (Turquoise)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "60002008",
+          "num": 8,
+          "name": "Brolaf (Citrine)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "60002009",
+          "num": 9,
+          "name": "Brolaf (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "60002010",
+          "num": 10,
+          "name": "Brolaf (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "60002011",
+          "num": 11,
+          "name": "Brolaf (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "60002012",
+          "num": 12,
+          "name": "Brolaf (Granite)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "60002013",
+          "num": 13,
+          "name": "Brolaf (Sapphire)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "60002014",
+          "num": 14,
+          "name": "Brolaf (Obsidian)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "60002016",
+          "num": 16,
+          "name": "Dragonslayer Olaf",
+          "chromas": false
+        },
+        {
+          "id": "60002017",
+          "num": 17,
+          "name": "Dragonslayer Olaf (Sapphire)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "60002018",
+          "num": 18,
+          "name": "Dragonslayer Olaf (Citrine)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "60002019",
+          "num": 19,
+          "name": "Dragonslayer Olaf (Emerald)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "60002020",
+          "num": 20,
+          "name": "Dragonslayer Olaf (Amethyst)",
+          "chromas": true,
+          "parentSkin": 16
+        },
+        {
+          "id": "60002021",
+          "num": 21,
+          "name": "Dragonslayer Olaf (Ruby)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "60002022",
+          "num": 22,
+          "name": "Dragonslayer Olaf (Pearl)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "60002023",
+          "num": 23,
+          "name": "Dragonslayer Olaf (Obsidian)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "60002024",
+          "num": 24,
+          "name": "Dragonslayer Olaf (Meteorite)",
+          "chromas": false,
+          "parentSkin": 16
+        }
+      ],
+      "lore": "- Vicious Strikes (W) grants Attack Damage, Lifesteal and Spell Vamp<br>- Reckless Swing (E) does not heal the health cost",
+      "blurb": "- Vicious Strikes (W) grants Attack Damage, Lifesteal and Spell Vamp<br>- Reckless Swing (E) does not heal the health cost",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 9,
+        "defense": 5,
+        "magic": 3,
+        "difficulty": 3
+      },
+      "stats": {
+        "hp": 534,
+        "hpperlevel": 93,
+        "mp": 270,
+        "mpperlevel": 45,
+        "movespeed": 350,
+        "armor": 24,
+        "armorperlevel": 3,
+        "spellblock": 31.25,
+        "spellblockperlevel": 1.25,
+        "attackrange": 125,
+        "hpregen": 7.9,
+        "hpregenperlevel": 0.9,
+        "mpregen": 7.075,
+        "mpregenperlevel": 0.575,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 57.6,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 2.7,
+        "attackspeed": 0.694
+      },
+      "spells": [
+        {
+          "id": "Jade_OlafQ",
+          "name": "Undertow",
+          "description": "Olaf throws an axe into the ground at a target location, dealing damage to units it passes through and slowing their movement speed. If Olaf picks up the axe, the ability's cooldown is reduced.",
+          "tooltip": "Olaf throws an axe to a target location, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to units it passes through and <status>Slowing</status> them by {{ slowamount*100 }}% decaying over {{ debuffduration }} seconds. <br /><br />If Olaf picks up the axe, the ability's cooldown is reduced by {{ cooldownrefund }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Slow",
+              "Mana Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowamount*100.000000 }}% -> {{ slowamountnl*100.000000 }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
+          "cooldownBurn": "8",
+          "cost": [
+            55,
+            60,
+            65,
+            70,
+            75
+          ],
+          "costBurn": "55/60/65/70/75",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "Jade_OlafQ.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 96,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_OlafW",
+          "name": "Vicious Strikes",
+          "description": "Olaf's attack damage is increased, based on his health, and he gains massive lifesteal and spell vamp.",
+          "tooltip": "Olaf gains <physicalDamage>{{ totaladgain }} Attack Damage</physicalDamage> , {{ lifestealamount*100 }}% Lifesteal, and Spell Vamp for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Attack Damage",
+              "Lifesteal/Spell Vamp%",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ attackdamage }} -> {{ attackdamageNL }}",
+              "{{ lifestealamount*100.000000 }}% -> {{ lifestealamountnl*100.000000 }}%",
+              "{{ basecost }} -> {{ basecostNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            16,
+            16,
+            16,
+            16,
+            16
+          ],
+          "cooldownBurn": "16",
+          "cost": [
+            40,
+            45,
+            50,
+            55,
+            60
+          ],
+          "costBurn": "40/45/50/55/60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
+          "rangeBurn": "700",
+          "image": {
+            "full": "Jade_OlafW.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 144,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_OlafE",
+          "name": "Reckless Swing",
+          "description": "Olaf attacks with such force that it deals true damage to his target and himself.",
+          "tooltip": "Olaf ferociously swings his axes, dealing <trueDamage>{{ totaldamage }} true damage</trueDamage> to his target.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Health Cost",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ basehealthcost }} -> {{ basehealthcostNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            9,
+            8,
+            7,
+            6,
+            5
+          ],
+          "cooldownBurn": "9/8/7/6/5",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              70,
+              115,
+              160,
+              205,
+              250
+            ],
+            [
+              40,
+              40,
+              40,
+              40,
+              40
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "70/115/160/205/250",
+            "40",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " Health",
+          "maxammo": "-1",
+          "range": [
+            325,
+            325,
+            325,
+            325,
+            325
+          ],
+          "rangeBurn": "325",
+          "image": {
+            "full": "Jade_OlafE.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 192,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ basehealthcost }} Health"
+        },
+        {
+          "id": "Jade_OlafR",
+          "name": "Ragnarok",
+          "description": "Olaf temporarily becomes immune to disables and gains bonus Armor, Magic Resist, and Lethality.",
+          "tooltip": "Olaf cleanses all <status>Immobilizing</status> and <status>Disabling</status> effects on himself and becomes immune to them the next {{ duration }} seconds. During this time, Olaf gains <scaleArmor>{{ resists }} Armor</scaleArmor>, <scaleMR>{{ resists }} Magic Resist</scaleMR>, and {{ armorpen }} Lethality.<br /><br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Armor and Magic Resist",
+              "Lethality",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ resists }} -> {{ resistsNL }}",
+              "{{ armorpen }} -> {{ armorpenNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            100,
+            100,
+            100
+          ],
+          "cooldownBurn": "100",
+          "cost": [
+            100,
+            75,
+            50
+          ],
+          "costBurn": "100/75/50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            400,
+            400,
+            400
+          ],
+          "rangeBurn": "400",
+          "image": {
+            "full": "Jade_OlafR.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 240,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Berserker Rage",
+        "description": "Olaf's Attack Speed increases as his Health decreases.",
+        "image": {
+          "full": "Jade_Olaf_Passive.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 336,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

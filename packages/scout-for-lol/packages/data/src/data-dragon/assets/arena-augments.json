@@ -1478,13 +1478,13 @@
         300
       ],
       "MaxLevel": [
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
       ],
       "MaxLevelMultiCastDelay": [
         1,
@@ -3420,15 +3420,6 @@
         0.2199999988079071,
         0.2199999988079071
       ],
-      "BonusCastCount": [
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        1
-      ],
       "BonusPerLevel": [
         9.5,
         9.5,
@@ -3464,6 +3455,24 @@
         2,
         2,
         2
+      ],
+      "Missiles": [
+        1,
+        1,
+        2,
+        3,
+        2,
+        2,
+        2
+      ],
+      "Range": [
+        1450,
+        1450,
+        1450,
+        1450,
+        1450,
+        1450,
+        1450
       ]
     },
     "calculations": {
@@ -4936,13 +4945,13 @@
         0.0010000000474974513
       ],
       "MaxLevel": [
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
       ]
     },
     "calculations": {
@@ -6846,18 +6855,18 @@
     "rarity": "gold",
     "dataValues": {
       "APRatio": [
-        0.20000000298023224,
-        0.20000000298023224,
         0.30000001192092896,
+        0.30000001192092896,
+        0.4000000059604645,
         0.4000000059604645,
         0.4000000059604645,
         0.4000000059604645,
         0.4000000059604645
       ],
       "BonusADRatio": [
-        1.4500000476837158,
-        1.4500000476837158,
         1.649999976158142,
+        1.649999976158142,
+        1.850000023841858,
         1.850000023841858,
         1.850000023841858,
         1.850000023841858,
@@ -6910,13 +6919,13 @@
         100
       ],
       "MaxLevel": [
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
       ],
       "MaxLevelMultiCastDelay": [
         0.5,
@@ -7731,20 +7740,20 @@
       "LaserLength": [
         600,
         600,
-        800,
+        1000,
         1000,
         1000,
         1000,
         1000
       ],
       "MaxLevel": [
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
       ],
       "MaxLevelGrowthDuration": [
         0.6000000238418579,
@@ -10575,71 +10584,6 @@
     "calculations": {},
     "type": "full"
   },
-  "250": {
-    "id": 250,
-    "apiName": "SlowAndSteady",
-    "name": "Slow and Steady",
-    "desc": "Your <speed>Attack Speed</speed> can not go above @StaticRatio@. All Bonus <speed>Attack Speed</speed> is converted to <scaleAD>Attack Damage</scaleAD>.<br>",
-    "tooltip": "Your <speed>Attack Speed</speed> can not go above @StaticRatio@. All bonus <speed>Attack Speed</speed> is converted to <scaleAD>Attack Damage</scaleAD> (<scaleAD>@ADPerAS@ AD</scaleAD> per <speed>1% AS</speed>).<br><br>Currently Gaining: @f1@ <scaleAD>Attack Damage</scaleAD>",
-    "iconLarge": "assets/ux/cherry/augments/icons/slowandsteady_large.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/slowandsteady_small.png",
-    "rarity": "prismatic",
-    "dataValues": {
-      "ASMultiplier": [
-        75,
-        75,
-        100,
-        100,
-        100,
-        100,
-        100
-      ],
-      "MaxLevel": [
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2
-      ],
-      "StaticRatio": [
-        0.6499999761581421,
-        0.6499999761581421,
-        0.6499999761581421,
-        0.6499999761581421,
-        0.6499999761581421,
-        0.6499999761581421,
-        0.6499999761581421
-      ],
-      "Vamp": [
-        0.30000001192092896,
-        0.30000001192092896,
-        0.30000001192092896,
-        0.30000001192092896,
-        0.30000001192092896,
-        0.30000001192092896,
-        0.30000001192092896
-      ]
-    },
-    "calculations": {
-      "ADPerAS": {
-        "__type": "GameCalculation",
-        "mFormulaParts": [
-          {
-            "__type": "NamedDataValueCalculationPart",
-            "mDataValue": "ASMultiplier"
-          }
-        ],
-        "mMultiplier": {
-          "__type": "NumberCalculationPart",
-          "mNumber": 0.009999999776482582
-        },
-        "mPrecision": 2
-      }
-    },
-    "type": "full"
-  },
   "251": {
     "id": 251,
     "apiName": "NumbToPain",
@@ -12716,12 +12660,12 @@
       ],
       "StartingBees": [
         0,
-        1,
         2,
-        3,
         4,
-        5,
-        6
+        6,
+        8,
+        10,
+        12
       ]
     },
     "calculations": {
@@ -12739,9 +12683,8 @@
           },
           {
             "__type": "StatByCoefficientCalculationPart",
-            "mCoefficient": 0.20000000298023224,
-            "mStat": 2,
-            "mStatFormula": 2
+            "mCoefficient": 0.25,
+            "mStat": 2
           }
         ],
         "{72c5c2a8}": 1
@@ -13204,8 +13147,8 @@
     "name": "Chemtech Putrifier",
     "desc": "All damage you do applies <keyword>Grevious Wounds</keyword>.",
     "tooltip": "Dealing <Damage>damage</Damage> to champions applies <keyword>@GrievousAmount*100@% Wounds</keyword> for @GrievousDuration@ seconds.",
-    "iconLarge": "assets/ux/cherry/augments/icons/chemtechpurifier_large.arena_2026_s2_a2.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/chemtechpurifier_small.arena_2026_s2_a2.png",
+    "iconLarge": "assets/ux/cherry/augments/icons/chemtechpurifier_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/chemtechpurifier_small.png",
     "rarity": "silver",
     "dataValues": {
       "GrievousAmount": [
@@ -13245,8 +13188,8 @@
     "name": "Bloodrazor",
     "desc": "Dealing damage deals an additional <physicalDamage>@MaxHealthDamage*100@% max health physical damage</physicalDamage>.",
     "tooltip": "Dealing damage deals an additional <physicalDamage>@MaxHealthDamage*100@% max health physical damage</physicalDamage>.",
-    "iconLarge": "assets/ux/cherry/augments/icons/bloodrazor_large.arena_2026_s2_a2.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/bloodrazor_small.arena_2026_s2_a2.png",
+    "iconLarge": "assets/ux/cherry/augments/icons/bloodrazor_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/bloodrazor_small.png",
     "rarity": "silver",
     "dataValues": {
       "MaxHealthDamage": [
@@ -13286,8 +13229,8 @@
     "name": "Dematerializer",
     "desc": "Your damage executes champions that are below @ExecuteThreshold*100@% Health.",
     "tooltip": "Your damage executes champions that are below @ExecuteThreshold*100@% Health.",
-    "iconLarge": "assets/ux/cherry/augments/icons/dematerializer_large.arena_2026_s2_a2.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/dematerializer_small.arena_2026_s2_a2.png",
+    "iconLarge": "assets/ux/cherry/augments/icons/dematerializer_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/dematerializer_small.png",
     "rarity": "silver",
     "dataValues": {
       "ExecuteThreshold": [
@@ -13318,8 +13261,8 @@
     "name": "Enchanted Flask",
     "desc": "Gain a <attention>Spell Shield</attention> every @Cooldown@ seconds.",
     "tooltip": "Gain a <attention>Spell Shield</attention> every @Cooldown@ seconds that blocks the next enemy Ability.",
-    "iconLarge": "assets/ux/cherry/augments/icons/crystallineflask_large.arena_2026_s2_a2.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/crystallineflask_small.arena_2026_s2_a2.png",
+    "iconLarge": "assets/ux/cherry/augments/icons/crystallineflask_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/crystallineflask_small.png",
     "rarity": "silver",
     "dataValues": {
       "Cooldown": [
@@ -13350,8 +13293,8 @@
     "name": "Frozen Mallet",
     "desc": "Dealing damage <status>Slows</status> enemies.",
     "tooltip": "Dealing damage applies a <speed>@SlowAmount*100@%</speed> <status>Slow</status> for @SlowDuration@ seconds.",
-    "iconLarge": "assets/ux/cherry/augments/icons/frozenmallet_large.arena_2026_s2_a2.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/frozenmallet_small.arena_2026_s2_a2.png",
+    "iconLarge": "assets/ux/cherry/augments/icons/frozenmallet_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/frozenmallet_small.png",
     "rarity": "silver",
     "dataValues": {
       "MaxLevel": [
@@ -13391,8 +13334,8 @@
     "name": "Remnant of the Watchers",
     "desc": "Reduce the <attackSpeed>Attack Speed</attackSpeed> of nearby champions.",
     "tooltip": "Reduce the <attackSpeed>Attack Speed</attackSpeed> of nearby champions by <attackSpeed>@ASPDSlow*-100@%</attackSpeed>.",
-    "iconLarge": "assets/ux/cherry/augments/icons/remnantofthewatchers_large.arena_2026_s2_a2.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/remnantofthewatchers_small.arena_2026_s2_a2.png",
+    "iconLarge": "assets/ux/cherry/augments/icons/remnantofthewatchers_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/remnantofthewatchers_small.png",
     "rarity": "silver",
     "dataValues": {
       "ASPDSlow": [
@@ -13537,8 +13480,8 @@
     "name": "Wolf's Frenzy",
     "desc": "Lose your innate revive. <br><br>Increase your <scaleHealth>Health by @HealthPercentageMod*100@%</scaleHealth>.<br><br>If you deal damage that would leave a champion below below <scaleHealth>@ExecuteThreshold*100@% maximum health</scaleHealth>, execute them.",
     "tooltip": "Lose your innate revive. <br><br>Increase your <scaleHealth>Health by @HealthPercentageMod*100@%</scaleHealth>.<br><br>If you deal damage that would leave a champion below below <scaleHealth>@ExecuteThreshold*100@% maximum health</scaleHealth>, execute them.",
-    "iconLarge": "assets/ux/cherry/augments/icons/wolf_large.arena_2026_s2.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/wolf_small.arena_2026_s2.png",
+    "iconLarge": "assets/ux/cherry/augments/icons/wolf_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/wolf_small.png",
     "rarity": "silver",
     "dataValues": {
       "ExecuteThreshold": [
@@ -13596,8 +13539,8 @@
     "name": "Lamb's Respite",
     "desc": "Gain @RevivesToGain@ additional revive, and cuts the time needed to revive in half.",
     "tooltip": "Gain @RevivesToGain@ additional revive, and cuts the time needed to revive in half.",
-    "iconLarge": "assets/ux/cherry/augments/icons/lamb_large.arena_2026_s2.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/lamb_small.arena_2026_s2.png",
+    "iconLarge": "assets/ux/cherry/augments/icons/lamb_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/lamb_small.png",
     "rarity": "silver",
     "dataValues": {
       "LambRezDelayMod": [
@@ -13655,8 +13598,8 @@
     "name": "Ally Demon",
     "desc": "Vote for your team to ally with the Demons. <br><br>Allying with Demons grants an <keywordMajor>%i:AugmentLevel% Augment Level</keywordMajor> when a <keywordMajor>Hunter team is eliminated</keywordMajor>.",
     "tooltip": "Vote for your team to ally with the Demons. <br><br>Allying with Demons grants an <keywordMajor>%i:AugmentLevel% Augment Level</keywordMajor> when a <keywordMajor>Hunter team is eliminated</keywordMajor>.",
-    "iconLarge": "assets/ux/cherry/augments/icons/yonedemon_large.arena_2026_s2_a2.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/yonedemon_small.arena_2026_s2_a2.png",
+    "iconLarge": "assets/ux/cherry/augments/icons/yonedemon_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/yonedemon_small.png",
     "rarity": "silver",
     "dataValues": {
       "MaxLevel": [
@@ -13678,8 +13621,8 @@
     "name": "Ally Hunter",
     "desc": "Vote for your team to ally with the Demon Hunters. <br><br>Allying with Demon Hunters grants you <gold>+%i:goldCoins%@BonusGold@ bonus gold</gold> <keywordMajor>when you beat a Demon team</keywordMajor>.",
     "tooltip": "Vote for your team to ally with the Demon Hunters. <br><br>Allying with Demon Hunters grants you <gold>+%i:goldCoins%@BonusGold@ bonus gold</gold> <keywordMajor>when you beat a Demon team</keywordMajor>.",
-    "iconLarge": "assets/ux/cherry/augments/icons/yonehunter_large.arena_2026_s2_a2.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/yonehunter_small.arena_2026_s2_a2.png",
+    "iconLarge": "assets/ux/cherry/augments/icons/yonehunter_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/yonehunter_small.png",
     "rarity": "silver",
     "dataValues": {
       "BonusGold": [
@@ -13742,8 +13685,8 @@
     "name": "Abstain From Wealth",
     "desc": "<healing>Restore @HealthRestorePercent@% of of the health</healing> you've sacrificed to Tahm Kench.<br><br>Gain <gold>+%i:goldCoins% @GoldToGrant@ gold</gold>.",
     "tooltip": "<healing>Restore @HealthRestorePercent@% of of the health</healing> you've sacrificed to Tahm Kench.<br><br>Gain <gold>+%i:goldCoins% @GoldToGrant@ gold</gold>.",
-    "iconLarge": "assets/ux/cherry/augments/icons/wealth_large.arena_2026_s2.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/wealth_small.arena_2026_s2.png",
+    "iconLarge": "assets/ux/cherry/augments/icons/wealth_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/wealth_small.png",
     "rarity": "silver",
     "dataValues": {
       "GoldToGrant": [
@@ -13775,8 +13718,8 @@
     "name": "Abstain From Power",
     "desc": "<healing>Restore @HealthRestorePercent@% of of the health</healing> you've sacrificed to Tahm Kench.<br><br>Gain <keywordMajor>@AnvilsGranted@ Silver Stat Anvil</keywordMajor>.",
     "tooltip": "<healing>Restore @HealthRestorePercent@% of of the health</healing> you've sacrificed to Tahm Kench.<br><br>Gain <keywordMajor>@AnvilsGranted@ Silver Stat Anvil</keywordMajor>.",
-    "iconLarge": "assets/ux/cherry/augments/icons/power_large.arena_2026_s2.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/power_small.arena_2026_s2.png",
+    "iconLarge": "assets/ux/cherry/augments/icons/power_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/power_small.png",
     "rarity": "silver",
     "dataValues": {
       "AnvilType": [
@@ -13836,8 +13779,8 @@
     "name": "Abstain From Risk",
     "desc": "<healing>Restore @HealthRestorePercent@% of of the health</healing> you've sacrificed to Tahm Kench.<br><br>Instantly gain a <keywordMajor>%i:Augment% Silver Augment</keywordMajor>.",
     "tooltip": "<healing>Restore @HealthRestorePercent@% of of the health</healing> you've sacrificed to Tahm Kench.<br><br>Instantly gain a <keywordMajor>%i:Augment% Silver Augment</keywordMajor>.",
-    "iconLarge": "assets/ux/cherry/augments/icons/risk_large.arena_2026_s2.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/risk_small.arena_2026_s2.png",
+    "iconLarge": "assets/ux/cherry/augments/icons/risk_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/risk_small.png",
     "rarity": "silver",
     "dataValues": {
       "AugmentTierGranted": [
@@ -13869,8 +13812,8 @@
     "name": "Craving For Wealth",
     "desc": "Sacrifice <scaleHealth>@HealthReductionPercent@% of your max health</scaleHealth> to Tahm Kench. <br><br>Your total sacrifice will increase to <scaleHealth>-@MaxHealthReduction@% max health</scaleHealth>.<br><br>Gain <gold>+%i:goldCoins% @GoldToGrant@ gold</gold>.",
     "tooltip": "Sacrifice <scaleHealth>@HealthReductionPercent@% of your max health</scaleHealth> to Tahm Kench. <br><br>Your total sacrifice will increase to <scaleHealth>-@MaxHealthReduction@% max health</scaleHealth>.<br><br>Gain <gold>+%i:goldCoins% @GoldToGrant@ gold</gold>.",
-    "iconLarge": "assets/ux/cherry/augments/icons/wealth_large.arena_2026_s2.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/wealth_large.arena_2026_s2.png",
+    "iconLarge": "assets/ux/cherry/augments/icons/wealth_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/wealth_large.png",
     "rarity": "silver",
     "dataValues": {
       "GoldToGrant": [
@@ -13921,8 +13864,8 @@
     "name": "Craving For Power",
     "desc": "Sacrifice <scaleHealth>@HealthReductionPercent@% of your max health</scaleHealth> to Tahm Kench. <br><br>Your total sacrifice will increase to <scaleHealth>-@MaxHealthReduction@% max health</scaleHealth>.<br><br>Gain <keywordMajor>@AnvilsGranted@ Gold Stat Anvil</keywordMajor>.",
     "tooltip": "Sacrifice <scaleHealth>@HealthReductionPercent@% of your max health</scaleHealth> to Tahm Kench. <br><br>Your total sacrifice will increase to <scaleHealth>-@MaxHealthReduction@% max health</scaleHealth>.<br><br>Gain <keywordMajor>@AnvilsGranted@ Gold Stat Anvil</keywordMajor>.",
-    "iconLarge": "assets/ux/cherry/augments/icons/power_large.arena_2026_s2.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/power_small.arena_2026_s2.png",
+    "iconLarge": "assets/ux/cherry/augments/icons/power_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/power_small.png",
     "rarity": "silver",
     "dataValues": {
       "AnvilType": [
@@ -13982,8 +13925,8 @@
     "name": "Craving For Risk",
     "desc": "Sacrifice <scaleHealth>@HealthReductionPercent@% of your max health</scaleHealth> to Tahm Kench. <br><br>Your total sacrifice will increase to <scaleHealth>-@MaxHealthReduction@% max health</scaleHealth>.<br><br>Gain a <keywordMajor>%i:Augment% Gold Augment</keywordMajor>.",
     "tooltip": "Sacrifice <scaleHealth>@HealthReductionPercent@% of your max health</scaleHealth> to Tahm Kench. <br><br>Your total sacrifice will increase to <scaleHealth>-@MaxHealthReduction@% max health</scaleHealth>.<br><br>Gain a <keywordMajor>%i:Augment% Gold Augment</keywordMajor>.",
-    "iconLarge": "assets/ux/cherry/augments/icons/risk_large.arena_2026_s2.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/risk_small.arena_2026_s2.png",
+    "iconLarge": "assets/ux/cherry/augments/icons/risk_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/risk_small.png",
     "rarity": "silver",
     "dataValues": {
       "AugmentTierGranted": [
@@ -14034,8 +13977,8 @@
     "name": "Compulsion For Wealth",
     "desc": "Sacrifice <scaleHealth>@HealthReductionPercent@% of your max health</scaleHealth> to Tahm Kench. <br><br>Your total sacrifice will increase to <scaleHealth>-@MaxHealthReduction@% max health</scaleHealth>.<br><br>Gain <gold>+%i:goldCoins% @GoldToGrant@ gold</gold>.",
     "tooltip": "Sacrifice <scaleHealth>@HealthReductionPercent@% of your max health</scaleHealth> to Tahm Kench. <br><br>Your total sacrifice will increase to <scaleHealth>-@MaxHealthReduction@% max health</scaleHealth>.<br><br>Gain <gold>+%i:goldCoins% @GoldToGrant@ gold</gold>.",
-    "iconLarge": "assets/ux/cherry/augments/icons/wealth_large.arena_2026_s2.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/wealth_small.arena_2026_s2.png",
+    "iconLarge": "assets/ux/cherry/augments/icons/wealth_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/wealth_small.png",
     "rarity": "silver",
     "dataValues": {
       "GoldToGrant": [
@@ -14086,8 +14029,8 @@
     "name": "Compulsion For Power",
     "desc": "Sacrifice <scaleHealth>@HealthReductionPercent@% of your max health</scaleHealth> to Tahm Kench. <br><br>Your total sacrifice will increase to <scaleHealth>-@MaxHealthReduction@% max health</scaleHealth>.<br><br>Gain <keywordMajor>@AnvilsGranted@ Prismatic Stat Anvils</keywordMajor>.",
     "tooltip": "Sacrifice <scaleHealth>@HealthReductionPercent@% of your max health</scaleHealth> to Tahm Kench. <br><br>Your total sacrifice will increase to <scaleHealth>-@MaxHealthReduction@% max health</scaleHealth>.<br><br>Gain <keywordMajor>@AnvilsGranted@ Prismatic Stat Anvils</keywordMajor>.",
-    "iconLarge": "assets/ux/cherry/augments/icons/power_large.arena_2026_s2.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/power_small.arena_2026_s2.png",
+    "iconLarge": "assets/ux/cherry/augments/icons/power_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/power_small.png",
     "rarity": "silver",
     "dataValues": {
       "AnvilType": [
@@ -14147,8 +14090,8 @@
     "name": "Compulsion For Risk",
     "desc": "Sacrifice <scaleHealth>@HealthReductionPercent@% of your max health</scaleHealth> to Tahm Kench. <br><br>Your total sacrifice will increase to <scaleHealth>-@MaxHealthReduction@% max health</scaleHealth>.<br><br>Gain a <keywordMajor>%i:Augment%  Prismatic Augment</keywordMajor>.",
     "tooltip": "Sacrifice <scaleHealth>@HealthReductionPercent@% of your max health</scaleHealth> to Tahm Kench. <br><br>Your total sacrifice will increase to <scaleHealth>-@MaxHealthReduction@% max health</scaleHealth>.<br><br>Gain a <keywordMajor>%i:Augment%  Prismatic Augment</keywordMajor>.",
-    "iconLarge": "assets/ux/cherry/augments/icons/risk_large.arena_2026_s2.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/risk_small.arena_2026_s2.png",
+    "iconLarge": "assets/ux/cherry/augments/icons/risk_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/risk_small.png",
     "rarity": "silver",
     "dataValues": {
       "AugmentTierGranted": [

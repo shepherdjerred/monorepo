@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Sylas": {
       "id": "Sylas",
@@ -10,7 +10,7 @@
       "title": "the Unshackled",
       "image": {
         "full": "Sylas.png",
-        "sprite": "champion4.png",
+        "sprite": "champion6.png",
         "group": "champion",
         "x": 48,
         "y": 48,
@@ -568,10 +568,10 @@
           "rangeBurn": "775",
           "image": {
             "full": "SylasQ.png",
-            "sprite": "spell13.png",
+            "sprite": "spell19.png",
             "group": "spell",
-            "x": 96,
-            "y": 96,
+            "x": 384,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -713,10 +713,10 @@
           "rangeBurn": "400",
           "image": {
             "full": "SylasW.png",
-            "sprite": "spell13.png",
+            "sprite": "spell19.png",
             "group": "spell",
-            "x": 144,
-            "y": 96,
+            "x": 432,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -854,10 +854,10 @@
           "rangeBurn": "400",
           "image": {
             "full": "SylasE.png",
-            "sprite": "spell13.png",
+            "sprite": "spell20.png",
             "group": "spell",
-            "x": 192,
-            "y": 96,
+            "x": 0,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -967,10 +967,10 @@
           "rangeBurn": "950",
           "image": {
             "full": "SylasR.png",
-            "sprite": "spell13.png",
+            "sprite": "spell20.png",
             "group": "spell",
-            "x": 240,
-            "y": 96,
+            "x": 48,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -982,7 +982,7 @@
         "description": "After casting a spell, Sylas stores a charge of Petricite Burst. Sylas's basic attacks will expend a charge and whirl his energized chains around him dealing bonus magic damage to enemies hit. While Sylas has a charge of Petricite Burst, he gains attack speed. ",
         "image": {
           "full": "SylasP.png",
-          "sprite": "passive4.png",
+          "sprite": "passive6.png",
           "group": "passive",
           "x": 48,
           "y": 48,

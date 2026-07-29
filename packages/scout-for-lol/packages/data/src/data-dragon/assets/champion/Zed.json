@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Zed": {
       "id": "Zed",
@@ -10,7 +10,7 @@
       "title": "the Master of Shadows",
       "image": {
         "full": "Zed.png",
-        "sprite": "champion5.png",
+        "sprite": "champion7.png",
         "group": "champion",
         "x": 336,
         "y": 48,
@@ -678,10 +678,10 @@
           "rangeBurn": "900",
           "image": {
             "full": "ZedQ.png",
-            "sprite": "spell17.png",
+            "sprite": "spell23.png",
             "group": "spell",
-            "x": 288,
-            "y": 0,
+            "x": 96,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -821,10 +821,10 @@
           "rangeBurn": "650",
           "image": {
             "full": "ZedW.png",
-            "sprite": "spell17.png",
+            "sprite": "spell23.png",
             "group": "spell",
-            "x": 336,
-            "y": 0,
+            "x": 144,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -964,10 +964,10 @@
           "rangeBurn": "290",
           "image": {
             "full": "ZedE.png",
-            "sprite": "spell17.png",
+            "sprite": "spell23.png",
             "group": "spell",
-            "x": 384,
-            "y": 0,
+            "x": 192,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -1079,10 +1079,10 @@
           "rangeBurn": "625",
           "image": {
             "full": "ZedR.png",
-            "sprite": "spell17.png",
+            "sprite": "spell23.png",
             "group": "spell",
-            "x": 432,
-            "y": 0,
+            "x": 240,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -1094,7 +1094,7 @@
         "description": "Zed's basic attacks against low health targets deals bonus Magic Damage. This effect can only occur once every few seconds against the same enemy champion.",
         "image": {
           "full": "ZedP.png",
-          "sprite": "passive5.png",
+          "sprite": "passive7.png",
           "group": "passive",
           "x": 336,
           "y": 48,

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Shyvana": {
       "id": "Shyvana",
@@ -10,7 +10,7 @@
       "title": "the Half-Dragon",
       "image": {
         "full": "Shyvana.png",
-        "sprite": "champion4.png",
+        "sprite": "champion6.png",
         "group": "champion",
         "x": 96,
         "y": 0,
@@ -371,10 +371,10 @@
           "rangeBurn": "25000",
           "image": {
             "full": "ShyvanaQ.png",
-            "sprite": "spell12.png",
+            "sprite": "spell19.png",
             "group": "spell",
-            "x": 288,
-            "y": 96,
+            "x": 96,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -514,10 +514,10 @@
           "rangeBurn": "350",
           "image": {
             "full": "ShyvanaW.png",
-            "sprite": "spell12.png",
+            "sprite": "spell19.png",
             "group": "spell",
-            "x": 336,
-            "y": 96,
+            "x": 144,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -657,10 +657,10 @@
           "rangeBurn": "800",
           "image": {
             "full": "ShyvanaE.png",
-            "sprite": "spell12.png",
+            "sprite": "spell19.png",
             "group": "spell",
-            "x": 384,
-            "y": 96,
+            "x": 192,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -778,10 +778,10 @@
           "rangeBurn": "1050",
           "image": {
             "full": "ShyvanaR.png",
-            "sprite": "spell12.png",
+            "sprite": "spell19.png",
             "group": "spell",
-            "x": 432,
-            "y": 96,
+            "x": 240,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -793,7 +793,7 @@
         "description": "Takedowns on enemy champions, large minions, and large monsters grant Shyvana Scalemail stacks, improving her defenses.",
         "image": {
           "full": "Shyvana_Passive.png",
-          "sprite": "passive4.png",
+          "sprite": "passive6.png",
           "group": "passive",
           "x": 96,
           "y": 0,

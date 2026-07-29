@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Janna": {
       "id": "Janna",
@@ -10,7 +10,7 @@
       "title": "the Storm's Fury",
       "image": {
         "full": "Janna.png",
-        "sprite": "champion1.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 432,
         "y": 48,
@@ -651,10 +651,10 @@
           "rangeBurn": "1075",
           "image": {
             "full": "HowlingGale.png",
-            "sprite": "spell5.png",
+            "sprite": "spell11.png",
             "group": "spell",
-            "x": 192,
-            "y": 48,
+            "x": 0,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -798,10 +798,10 @@
           "rangeBurn": "4294967295",
           "image": {
             "full": "SowTheWind.png",
-            "sprite": "spell5.png",
+            "sprite": "spell11.png",
             "group": "spell",
-            "x": 240,
-            "y": 48,
+            "x": 48,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -943,10 +943,10 @@
           "rangeBurn": "800",
           "image": {
             "full": "EyeOfTheStorm.png",
-            "sprite": "spell5.png",
+            "sprite": "spell11.png",
             "group": "spell",
-            "x": 288,
-            "y": 48,
+            "x": 96,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -1058,10 +1058,10 @@
           "rangeBurn": "725",
           "image": {
             "full": "ReapTheWhirlwind.png",
-            "sprite": "spell5.png",
+            "sprite": "spell11.png",
             "group": "spell",
-            "x": 336,
-            "y": 48,
+            "x": 144,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -1073,7 +1073,7 @@
         "description": "Janna's allies gain Move Speed moving towards her.<br><br>Janna deals a portion of bonus Move Speed as bonus magic damage on hit and with Zephyr.",
         "image": {
           "full": "JannaP.png",
-          "sprite": "passive1.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 432,
           "y": 48,

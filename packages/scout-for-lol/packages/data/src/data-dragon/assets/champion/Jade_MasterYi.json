@@ -1,0 +1,774 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_MasterYi": {
+      "id": "Jade_MasterYi",
+      "key": "60011",
+      "name": "Master Yi",
+      "title": "The Wuju Bladesman",
+      "image": {
+        "full": "Jade_MasterYi.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 48,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60011000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60011004",
+          "num": 4,
+          "name": "Samurai Yi",
+          "chromas": false
+        },
+        {
+          "id": "60011009",
+          "num": 9,
+          "name": "PROJECT: Yi",
+          "chromas": false
+        },
+        {
+          "id": "60011010",
+          "num": 10,
+          "name": "Cosmic Blade Master Yi",
+          "chromas": false
+        },
+        {
+          "id": "60011011",
+          "num": 11,
+          "name": "Eternal Sword Yi",
+          "chromas": false
+        },
+        {
+          "id": "60011012",
+          "num": 12,
+          "name": "Eternal Sword Yi (Pearl)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "60011013",
+          "num": 13,
+          "name": "Eternal Sword Yi (Turquoise)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "60011014",
+          "num": 14,
+          "name": "Eternal Sword Yi (Ruby)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "60011015",
+          "num": 15,
+          "name": "Eternal Sword Yi (Obsidian)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "60011016",
+          "num": 16,
+          "name": "Eternal Sword Yi (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "60011052",
+          "num": 52,
+          "name": "Spirit Blossom Master Yi",
+          "chromas": false
+        },
+        {
+          "id": "60011053",
+          "num": 53,
+          "name": "Prestige Spirit Blossom Master Yi",
+          "chromas": true
+        },
+        {
+          "id": "60011080",
+          "num": 80,
+          "name": "Spirit Blossom Master Yi (Ruby)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "60011081",
+          "num": 81,
+          "name": "Spirit Blossom Master Yi (Catseye)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "60011082",
+          "num": 82,
+          "name": "Spirit Blossom Master Yi (Sapphire)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "60011083",
+          "num": 83,
+          "name": "Spirit Blossom Master Yi (Emerald)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "60011084",
+          "num": 84,
+          "name": "Spirit Blossom Master Yi (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "60011085",
+          "num": 85,
+          "name": "Spirit Blossom Master Yi (Turquoise)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "60011086",
+          "num": 86,
+          "name": "Spirit Blossom Master Yi (Pearl)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "60011087",
+          "num": 87,
+          "name": "Spirit Blossom Master Yi (Obsidian)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "60011088",
+          "num": 88,
+          "name": "Spirit Blossom Master Yi (Night Blossom)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "60011301",
+          "num": 301,
+          "name": "Classic Master Yi",
+          "chromas": false
+        },
+        {
+          "id": "60011302",
+          "num": 302,
+          "name": "Classic Master Yi (Assassin Master)",
+          "chromas": false,
+          "parentSkin": 301
+        }
+      ],
+      "lore": "- Wuju Style (E) passive increases attack damage doubled when active<br>- Double Strike (P) is percent chance based<br>- Alpha Strike (Q) can not be directed after finishing movements",
+      "blurb": "- Wuju Style (E) passive increases attack damage doubled when active<br>- Double Strike (P) is percent chance based<br>- Alpha Strike (Q) can not be directed after finishing movements",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 10,
+        "defense": 4,
+        "magic": 2,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 530,
+        "hpperlevel": 86,
+        "mp": 235,
+        "mpperlevel": 36,
+        "movespeed": 355,
+        "armor": 24,
+        "armorperlevel": 3.7,
+        "spellblock": 31.25,
+        "spellblockperlevel": 1.25,
+        "attackrange": 125,
+        "hpregen": 7.4,
+        "hpregenperlevel": 0.65,
+        "mpregen": 6.95,
+        "mpregenperlevel": 0.45,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 58,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 2.98,
+        "attackspeed": 0.679
+      },
+      "spells": [
+        {
+          "id": "Jade_MasterYiAlphaStrike",
+          "name": "Alpha Strike",
+          "description": "Master Yi leaps across the battlefield with blinding speed, dealing physical damage to multiple units in his path. Alpha strike can critically strike and deals bonus physical damage to minions and monsters. Basic attacks reduce Alpha Strike's cooldown.",
+          "tooltip": "Master Yi leaps across the battlefield striking up to 4 enemies, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to each enemy with a {{ monsterdamageprocchance*100 }}% chance to deal <magicDamage>{{ totalmonsterdamage }} bonus magic damage</magicDamage> to minions and monsters.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Bonus Monster Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ totalmonsterdamage }} -> {{ totalmonsterdamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            18,
+            16,
+            14,
+            12,
+            10
+          ],
+          "cooldownBurn": "18/16/14/12/10",
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
+          "costBurn": "60/70/80/90/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
+          "rangeBurn": "600",
+          "image": {
+            "full": "Jade_MasterYiAlphaStrike.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 384,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_MasterYiMeditate",
+          "name": "Meditate",
+          "description": "Master Yi rejuvenates his body by focus of mind, restoring Health and taking reduced damage for a short time.",
+          "tooltip": "Master Yi channels, restoring <healing>{{ totalheal }} Health</healing> over 5 seconds. While channeling, Master Yi gains <scaleArmor>{{ defensestat }} Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Health Restored",
+              "Armor and Magic Resist",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ baseheal }} -> {{ basehealNL }}",
+              "{{ defensestat }} -> {{ defensestatNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            35,
+            35,
+            35,
+            35,
+            35
+          ],
+          "cooldownBurn": "35",
+          "cost": [
+            50,
+            65,
+            80,
+            95,
+            110
+          ],
+          "costBurn": "50/65/80/95/110",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
+          "rangeBurn": "20",
+          "image": {
+            "full": "Jade_MasterYiMeditate.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 432,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_MasterYiWujuStyle",
+          "name": "Wuju Style",
+          "description": "Master Yi becomes skilled in the art of Wuju, passively increasing his Attack Damage.  Activating Wuju Style grants bonus true damage on basic attacks, but the passive bonus is then lost while on cooldown.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Master Yi gains <physicalDamage>{{ passivead }} Attack Damage</physicalDamage>.<br /><br /><spellActive>Active:</spellActive> Master Yi gains <physicalDamage>{{ passivead*2 }} Attack Damage</physicalDamage> for {{ duration }} seconds but loses the passive bonus until it comes off of cooldown.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Attack Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ passivead }} -> {{ passiveadNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            25,
+            23,
+            21,
+            19,
+            17
+          ],
+          "cooldownBurn": "25/23/21/19/17",
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
+          "rangeBurn": "20",
+          "image": {
+            "full": "Jade_MasterYiWujuStyle.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 0,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_MasterYiHighlander",
+          "name": "Highlander",
+          "description": "Master Yi moves with unparalleled agility, temporarily increasing his Movement and Attack speeds as well as making him immune to all slowing effects. While active, Champion kills or assists extends Highlander's duration. Passively reduces cooldown for his other abilities on a kill or assist.",
+          "tooltip": "Increases Master Yi's <speed>Movement Speed</speed> by {{ rmsbonus*100 }}% and <attackSpeed>Attack Speed</attackSpeed> by {{ rasbonus*100 }}%, and he becomes immune to all slowing effects for {{ rduration }} seconds. <br /><br />While active, killing a champion refreshes all of Master Yi's cooldowns (assists reduce half of the base cooldown amount).{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Attack Speed",
+              "Duration"
+            ],
+            "effect": [
+              "{{ rasbonus*100.000000 }}% -> {{ rasbonusnl*100.000000 }}%",
+              "{{ rduration }} -> {{ rdurationNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            75,
+            75,
+            75
+          ],
+          "cooldownBurn": "75",
+          "cost": [
+            100,
+            100,
+            100
+          ],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1,
+            1,
+            1
+          ],
+          "rangeBurn": "1",
+          "image": {
+            "full": "Jade_MasterYiHighlander.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 48,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Double Strike",
+        "description": "Master Yi occassionaly strikes twice.",
+        "image": {
+          "full": "Jade_MasterYi_Passive1.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 48,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

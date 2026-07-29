@@ -1,0 +1,770 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Soraka": {
+      "id": "Jade_Soraka",
+      "key": "60016",
+      "name": "Soraka",
+      "title": "The Starchild",
+      "image": {
+        "full": "Jade_Soraka.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 336,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60016000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60016005",
+          "num": 5,
+          "name": "Order of the Banana Soraka",
+          "chromas": false
+        },
+        {
+          "id": "60016007",
+          "num": 7,
+          "name": "Star Guardian Soraka",
+          "chromas": false
+        },
+        {
+          "id": "60016017",
+          "num": 17,
+          "name": "Prestige Star Guardian Soraka",
+          "chromas": false
+        },
+        {
+          "id": "60016037",
+          "num": 37,
+          "name": "Immortal Journey Soraka",
+          "chromas": false
+        },
+        {
+          "id": "60016038",
+          "num": 38,
+          "name": "Immortal Journey Soraka (Ruby)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "60016039",
+          "num": 39,
+          "name": "Immortal Journey Soraka (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "60016040",
+          "num": 40,
+          "name": "Immortal Journey Soraka (Turquoise)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "60016041",
+          "num": 41,
+          "name": "Immortal Journey Soraka (Pearl)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "60016042",
+          "num": 42,
+          "name": "Immortal Journey Soraka (Obsidian)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "60016043",
+          "num": 43,
+          "name": "Immortal Journey Soraka (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "60016044",
+          "num": 44,
+          "name": "Faerie Court Soraka",
+          "chromas": false
+        },
+        {
+          "id": "60016045",
+          "num": 45,
+          "name": "Faerie Court Soraka (Ruby)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60016046",
+          "num": 46,
+          "name": "Faerie Court Soraka (Catseye)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60016047",
+          "num": 47,
+          "name": "Faerie Court Soraka (Pearl)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60016048",
+          "num": 48,
+          "name": "Faerie Court Soraka (Emerald)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60016049",
+          "num": 49,
+          "name": "Faerie Court Soraka (Turquoise)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60016050",
+          "num": 50,
+          "name": "Faerie Court Soraka (Obsidian)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60016051",
+          "num": 51,
+          "name": "Faerie Court Soraka (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60016052",
+          "num": 52,
+          "name": "Faerie Court Soraka (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60016301",
+          "num": 301,
+          "name": "Classic Soraka",
+          "chromas": false
+        },
+        {
+          "id": "60016302",
+          "num": 302,
+          "name": "Classic Soraka (Dryad)",
+          "chromas": false,
+          "parentSkin": 301
+        }
+      ],
+      "lore": "- The Abilities are completely different, except for the ultimate Wish (R)<br>- Can solo lane<br>- Has a point and click silence",
+      "blurb": "- The Abilities are completely different, except for the ultimate Wish (R)<br>- Can solo lane<br>- Has a point and click silence",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Support",
+        "Mage"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 2,
+        "defense": 5,
+        "magic": 7,
+        "difficulty": 3
+      },
+      "stats": {
+        "hp": 446,
+        "hpperlevel": 71,
+        "mp": 300,
+        "mpperlevel": 60,
+        "movespeed": 335,
+        "armor": 15.2,
+        "armorperlevel": 3.8,
+        "spellblock": 30,
+        "spellblockperlevel": 0,
+        "attackrange": 550,
+        "hpregen": 5.05,
+        "hpregenperlevel": 0.55,
+        "mpregen": 7.45,
+        "mpregenperlevel": 0.65,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 51.8,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 2.14,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "Jade_SorakaQ",
+          "name": "Starcall",
+          "description": "A shower of stars falls from the sky, striking all nearby enemies for magic damage and reducing their Magic Resist for a short duration.",
+          "tooltip": "Soraka calls upon the stars to strike all nearby enemies for <magicDamage>{{ totaldamage }} magic damage</magicDamage> and reduce their <scaleMR>Magic Resist</scaleMR> by {{ shred*-1 }} for {{ debuffduration }} seconds, stacking up to {{ maxstacks }} times.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Magic Resist Shred",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ shred*-1.000000 }} -> {{ shrednl*-1.000000 }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            2.5,
+            2.5,
+            2.5,
+            2.5,
+            2.5
+          ],
+          "cooldownBurn": "2.5",
+          "cost": [
+            20,
+            35,
+            50,
+            65,
+            80
+          ],
+          "costBurn": "20/35/50/65/80",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            625,
+            625,
+            625,
+            625,
+            625
+          ],
+          "rangeBurn": "625",
+          "image": {
+            "full": "Jade_SorakaQ.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 96,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_SorakaW",
+          "name": "Astral Blessing",
+          "description": "Soraka blesses a friendly unit, restoring health and increasing Armor for a short time.",
+          "tooltip": "Restores <healing>{{ totalheal }} Health</healing>, and temporarily grants <scaleArmor>{{ armour }} Armor</scaleArmor> to an ally for 3 seconds.</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Healing",
+              "Armor",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ baseheal }} -> {{ basehealNL }}",
+              "{{ armour }} -> {{ armourNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
+          "cooldownBurn": "20",
+          "cost": [
+            80,
+            110,
+            140,
+            170,
+            200
+          ],
+          "costBurn": "80/110/140/170/200",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            750,
+            750,
+            750,
+            750,
+            750
+          ],
+          "rangeBurn": "750",
+          "image": {
+            "full": "Jade_SorakaW.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 144,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_SorakaE",
+          "name": "Infuse",
+          "description": "Restores Mana to an ally, or deals damage to an enemy and silences them for a short duration.",
+          "tooltip": "Target an allied champion to restore <scaleMana>{{ mana }} Mana</scaleMana> (cannot be cast on self).<br /><br />Target an enemy to deal <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Silence</status> them for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Mana Restore",
+              "Damage",
+              "Silence Duration"
+            ],
+            "effect": [
+              "{{ mana }} -> {{ manaNL }}",
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ duration }} -> {{ durationNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "cooldownBurn": "10",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            725,
+            725,
+            725,
+            725,
+            725
+          ],
+          "rangeBurn": "725",
+          "image": {
+            "full": "Jade_SorakaE.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 192,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_SorakaR",
+          "name": "Wish",
+          "description": "Soraka fills her allies with hope, instantly restoring health to herself and all friendly champions.",
+          "tooltip": "Calls upon divine powers to instantly restore <healing>{{ healingcalc }} Health</healing> to all allied Champions.</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Healing",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ baseheal }} -> {{ basehealNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            160,
+            145,
+            130
+          ],
+          "cooldownBurn": "160/145/130",
+          "cost": [
+            100,
+            175,
+            250
+          ],
+          "costBurn": "100/175/250",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            25000,
+            25000,
+            25000
+          ],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "Jade_SorakaR.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 240,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Consecration",
+        "description": "Increases surrounding allies' Magic Resist by 16.",
+        "image": {
+          "full": "Jade_Soraka_Passive.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 336,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

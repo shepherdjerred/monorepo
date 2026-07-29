@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "MissFortune": {
       "id": "MissFortune",
@@ -10,7 +10,7 @@
       "title": "the Bounty Hunter",
       "image": {
         "full": "MissFortune.png",
-        "sprite": "champion2.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 192,
         "y": 96,
@@ -704,10 +704,10 @@
           "rangeBurn": "650",
           "image": {
             "full": "MissFortuneRicochetShot.png",
-            "sprite": "spell8.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 192,
-            "y": 144,
+            "x": 0,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -847,10 +847,10 @@
           "rangeBurn": "600",
           "image": {
             "full": "MissFortuneViciousStrikes.png",
-            "sprite": "spell8.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 240,
-            "y": 144,
+            "x": 48,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -988,10 +988,10 @@
           "rangeBurn": "1000",
           "image": {
             "full": "MissFortuneScattershot.png",
-            "sprite": "spell8.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 288,
-            "y": 144,
+            "x": 96,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1103,10 +1103,10 @@
           "rangeBurn": "25000",
           "image": {
             "full": "MissFortuneBulletTime.png",
-            "sprite": "spell8.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 336,
-            "y": 144,
+            "x": 144,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1118,7 +1118,7 @@
         "description": "Miss Fortune deals bonus physical damage whenever she basic attacks a new target.",
         "image": {
           "full": "MissFortune_W.png",
-          "sprite": "passive2.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 192,
           "y": 96,

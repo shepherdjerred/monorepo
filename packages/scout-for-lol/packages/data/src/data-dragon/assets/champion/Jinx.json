@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Jinx": {
       "id": "Jinx",
@@ -10,7 +10,7 @@
       "title": "the Loose Cannon",
       "image": {
         "full": "Jinx.png",
-        "sprite": "champion1.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 192,
         "y": 96,
@@ -629,10 +629,10 @@
           "rangeBurn": "600",
           "image": {
             "full": "JinxQ.png",
-            "sprite": "spell5.png",
+            "sprite": "spell12.png",
             "group": "spell",
-            "x": 192,
-            "y": 144,
+            "x": 0,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -774,10 +774,10 @@
           "rangeBurn": "1450",
           "image": {
             "full": "JinxW.png",
-            "sprite": "spell5.png",
+            "sprite": "spell12.png",
             "group": "spell",
-            "x": 240,
-            "y": 144,
+            "x": 48,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -915,10 +915,10 @@
           "rangeBurn": "925",
           "image": {
             "full": "JinxE.png",
-            "sprite": "spell5.png",
+            "sprite": "spell12.png",
             "group": "spell",
-            "x": 288,
-            "y": 144,
+            "x": 96,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1034,10 +1034,10 @@
           "rangeBurn": "25000",
           "image": {
             "full": "JinxR.png",
-            "sprite": "spell5.png",
+            "sprite": "spell12.png",
             "group": "spell",
-            "x": 336,
-            "y": 144,
+            "x": 144,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1049,7 +1049,7 @@
         "description": "Jinx receives massively increased Move Speed and Attack Speed whenever she helps kill or destroy an enemy champions epic jungle monster, or structure.",
         "image": {
           "full": "Jinx_Passive.png",
-          "sprite": "passive1.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 192,
           "y": 96,

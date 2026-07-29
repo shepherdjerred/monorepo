@@ -1,0 +1,833 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Ahri": {
+      "id": "Jade_Ahri",
+      "key": "60103",
+      "name": "Ahri",
+      "title": "The Nine-Tailed Fox",
+      "image": {
+        "full": "Jade_Ahri.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 432,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60103000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60103001",
+          "num": 1,
+          "name": "Dynasty Ahri",
+          "chromas": true
+        },
+        {
+          "id": "60103002",
+          "num": 2,
+          "name": "Midnight Ahri",
+          "chromas": true
+        },
+        {
+          "id": "60103027",
+          "num": 27,
+          "name": "Spirit Blossom Ahri",
+          "chromas": false
+        },
+        {
+          "id": "60103028",
+          "num": 28,
+          "name": "K/DA ALL OUT Ahri",
+          "chromas": false
+        },
+        {
+          "id": "60103029",
+          "num": 29,
+          "name": "Spirit Blossom Ahri (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60103030",
+          "num": 30,
+          "name": "Spirit Blossom Ahri (Pearl)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60103031",
+          "num": 31,
+          "name": "Spirit Blossom Ahri (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60103032",
+          "num": 32,
+          "name": "Spirit Blossom Ahri (Obsidian)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60103033",
+          "num": 33,
+          "name": "Spirit Blossom Ahri (Night Blossom)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60103034",
+          "num": 34,
+          "name": "K/DA ALL OUT Ahri (Ruby)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "60103035",
+          "num": 35,
+          "name": "K/DA ALL OUT Ahri (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "60103036",
+          "num": 36,
+          "name": "K/DA ALL OUT Ahri (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "60103037",
+          "num": 37,
+          "name": "K/DA ALL OUT Ahri (Emerald)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "60103038",
+          "num": 38,
+          "name": "K/DA ALL OUT Ahri (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "60103039",
+          "num": 39,
+          "name": "K/DA ALL OUT Ahri (Pearl)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "60103040",
+          "num": 40,
+          "name": "K/DA ALL OUT Ahri (Sapphire)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "60103041",
+          "num": 41,
+          "name": "K/DA ALL OUT Ahri (BADDEST)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "60103052",
+          "num": 52,
+          "name": "Dynasty Ahri (Ahri-versary)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "60103053",
+          "num": 53,
+          "name": "Midnight Ahri (Ahri-versary)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "60103062",
+          "num": 62,
+          "name": "Spirit Blossom Ahri (Ahri-versary)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60103063",
+          "num": 63,
+          "name": "K/DA ALL OUT Ahri (Ahri-versary)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "60103088",
+          "num": 88,
+          "name": "Spirit Blossom Springs Ahri",
+          "chromas": false
+        },
+        {
+          "id": "60103089",
+          "num": 89,
+          "name": "After Hours Spirit Blossom Springs Ahri",
+          "chromas": false
+        },
+        {
+          "id": "60103090",
+          "num": 90,
+          "name": "Spirit Blossom Springs Ahri (Ruby)",
+          "chromas": false,
+          "parentSkin": 88
+        },
+        {
+          "id": "60103091",
+          "num": 91,
+          "name": "Spirit Blossom Springs Ahri (Turquoise)",
+          "chromas": false,
+          "parentSkin": 88
+        },
+        {
+          "id": "60103092",
+          "num": 92,
+          "name": "Spirit Blossom Springs Ahri (Catseye)",
+          "chromas": false,
+          "parentSkin": 88
+        },
+        {
+          "id": "60103093",
+          "num": 93,
+          "name": "Spirit Blossom Springs Ahri (Tanzanite)",
+          "chromas": true,
+          "parentSkin": 88
+        },
+        {
+          "id": "60103094",
+          "num": 94,
+          "name": "Spirit Blossom Springs Ahri (Sapphire)",
+          "chromas": true,
+          "parentSkin": 88
+        },
+        {
+          "id": "60103095",
+          "num": 95,
+          "name": "Spirit Blossom Springs Ahri (Pearl)",
+          "chromas": false,
+          "parentSkin": 88
+        },
+        {
+          "id": "60103301",
+          "num": 301,
+          "name": "Classic Ahri",
+          "chromas": false
+        },
+        {
+          "id": "60103302",
+          "num": 302,
+          "name": "Classic Ahri (Midnight)",
+          "chromas": false,
+          "parentSkin": 301
+        }
+      ],
+      "lore": "- Essence Theft (P) is stacked on damaging enemies<br>- Spirit Rush (R) doesn't reset",
+      "blurb": "- Essence Theft (P) is stacked on damaging enemies<br>- Spirit Rush (R) doesn't reset",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Mage",
+        "Assassin"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 3,
+        "defense": 4,
+        "magic": 8,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 460,
+        "hpperlevel": 80,
+        "mp": 280,
+        "mpperlevel": 50,
+        "movespeed": 330,
+        "armor": 18.5,
+        "armorperlevel": 3.5,
+        "spellblock": 30,
+        "spellblockperlevel": 0,
+        "attackrange": 550,
+        "hpregen": 6.1,
+        "hpregenperlevel": 0.6,
+        "mpregen": 6.85,
+        "mpregenperlevel": 0.6,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 53,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 2,
+        "attackspeed": 0.668
+      },
+      "spells": [
+        {
+          "id": "Jade_AhriQ",
+          "name": "Orb of Deception",
+          "description": "Ahri sends out and pulls back her orb, dealing magic damage on the way out and true damage on the way back.",
+          "tooltip": "Ahri throws then pulls back her orb, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> on the way out and <trueDamage>{{ totaldamage }} true damage</trueDamage> on the way back.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
+          "cooldownBurn": "7",
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
+          "costBurn": "70/75/80/85/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            970,
+            970,
+            970,
+            970,
+            970
+          ],
+          "rangeBurn": "970",
+          "image": {
+            "full": "Jade_AhriQ.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 0,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_AhriW",
+          "name": "Fox-Fire",
+          "description": "Ahri releases three fox-fires, that lock onto and attack nearby enemies.",
+          "tooltip": "Ahri releases 3 fox-fires that seek nearby enemies and deal <magicDamage>{{ totaldamage }} magic damage</magicDamage>, reduced to <magicDamage>{{ halfdamage }} damage</magicDamage> beyond the first.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            9,
+            8,
+            7,
+            6,
+            5
+          ],
+          "cooldownBurn": "9/8/7/6/5",
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
+          "rangeBurn": "700",
+          "image": {
+            "full": "Jade_AhriW.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 48,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_AhriE",
+          "name": "Charm",
+          "description": "Ahri blows a kiss that damages and Charms the first enemy hit. They also take more damage from her for several seconds.",
+          "tooltip": "Ahri blows a kiss that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Charms</status> the first enemy hit for {{ charmduration }} seconds. They also take {{ damageamp }}% more damage from her for {{ damageampduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Duration",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ charmduration }} -> {{ charmdurationNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
+          "cooldownBurn": "12",
+          "cost": [
+            50,
+            65,
+            80,
+            95,
+            110
+          ],
+          "costBurn": "50/65/80/95/110",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            975,
+            975,
+            975,
+            975,
+            975
+          ],
+          "rangeBurn": "975",
+          "image": {
+            "full": "Jade_AhriE.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 96,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_AhriR",
+          "name": "Spirit Rush",
+          "description": "Ahri dashes forward and fires essence bolts, damaging 3 nearby enemies (prioritizes Champions). Spirit Rush can be cast up to three times before going on cooldown.",
+          "tooltip": "Ahri nimbly dashes, firing 3 essence bolts at nearby enemies, prioritizing champions. These bolts deal <magicDamage>{{ totaldamage }} magic damage</magicDamage> each. <spellName>Spirit Rush</spellName> can be <recast>Recast</recast> up to 2 more times within 10 seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            110,
+            95,
+            80
+          ],
+          "cooldownBurn": "110/95/80",
+          "cost": [
+            100,
+            100,
+            100
+          ],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            450,
+            450,
+            450
+          ],
+          "rangeBurn": "450",
+          "image": {
+            "full": "Jade_AhriR.png",
+            "sprite": "spell5.png",
+            "group": "spell",
+            "x": 144,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Essence Theft",
+        "description": "Gains a charge of Essence Theft whenever a spell hits an enemy. Upon reaching maximum charges, the next spell restores Ahri's Health.",
+        "image": {
+          "full": "Jade_Ahri_SoulEater2.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 432,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

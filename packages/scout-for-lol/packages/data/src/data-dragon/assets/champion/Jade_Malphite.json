@@ -1,0 +1,783 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Malphite": {
+      "id": "Jade_Malphite",
+      "key": "60054",
+      "name": "Malphite",
+      "title": "Shard of the Monolith",
+      "image": {
+        "full": "Jade_Malphite.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 432,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60054000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60054001",
+          "num": 1,
+          "name": "Shamrock Malphite",
+          "chromas": false
+        },
+        {
+          "id": "60054005",
+          "num": 5,
+          "name": "Glacial Malphite",
+          "chromas": false
+        },
+        {
+          "id": "60054023",
+          "num": 23,
+          "name": "Dark Star Malphite",
+          "chromas": false
+        },
+        {
+          "id": "60054024",
+          "num": 24,
+          "name": "Prestige Dark Star Malphite",
+          "chromas": false
+        },
+        {
+          "id": "60054027",
+          "num": 27,
+          "name": "Old God Malphite",
+          "chromas": false
+        },
+        {
+          "id": "60054028",
+          "num": 28,
+          "name": "Old God Malphite (Ruby)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60054029",
+          "num": 29,
+          "name": "Old God Malphite (Catseye)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60054030",
+          "num": 30,
+          "name": "Old God Malphite (Emerald)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60054031",
+          "num": 31,
+          "name": "Old God Malphite (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60054032",
+          "num": 32,
+          "name": "Old God Malphite (Sapphire)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60054033",
+          "num": 33,
+          "name": "Old God Malphite (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60054034",
+          "num": 34,
+          "name": "Old God Malphite (Pearl)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60054035",
+          "num": 35,
+          "name": "Old God Malphite (Obsidian)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60054036",
+          "num": 36,
+          "name": "Old God Malphite (Dark Ritual)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60054048",
+          "num": 48,
+          "name": "Pool Party Malphite",
+          "chromas": false
+        },
+        {
+          "id": "60054049",
+          "num": 49,
+          "name": "Pool Party Malphite (Ruby)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "60054050",
+          "num": 50,
+          "name": "Pool Party Malphite (Catseye)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "60054051",
+          "num": 51,
+          "name": "Pool Party Malphite (Sapphire)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "60054052",
+          "num": 52,
+          "name": "Pool Party Malphite (Emerald)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "60054053",
+          "num": 53,
+          "name": "Pool Party Malphite (Meteorite)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "60054054",
+          "num": 54,
+          "name": "Pool Party Malphite (Obsidian)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "60054055",
+          "num": 55,
+          "name": "Pool Party Malphite (Pearl)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "60054056",
+          "num": 56,
+          "name": "Pool Party Malphite (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 48
+        }
+      ],
+      "lore": "- Brutal Strikes (W) cleave is a passive and actively increases his damage",
+      "blurb": "- Brutal Strikes (W) cleave is a passive and actively increases his damage",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Tank",
+        "Mage"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 5,
+        "defense": 9,
+        "magic": 7,
+        "difficulty": 2
+      },
+      "stats": {
+        "hp": 513,
+        "hpperlevel": 90,
+        "mp": 255,
+        "mpperlevel": 40,
+        "movespeed": 335,
+        "armor": 25.75,
+        "armorperlevel": 3.75,
+        "spellblock": 31.25,
+        "spellblockperlevel": 1.25,
+        "attackrange": 125,
+        "hpregen": 8,
+        "hpregenperlevel": 0.55,
+        "mpregen": 6.95,
+        "mpregenperlevel": 0.55,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 59.675,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 3.4,
+        "attackspeed": 0.638
+      },
+      "spells": [
+        {
+          "id": "Jade_MalphiteSeismicShard",
+          "name": "Seismic Shard",
+          "description": "Using his primal elemental magic, Malphite sends a shard of the earth through the ground at his foe, dealing damage upon impact and stealing movement speed for 4 seconds.",
+          "tooltip": "Deals <magicDamage>{{ qdamagecalc }} magic damage</magicDamage> and steals <speed>{{ speedsteal }}% Movement Speed</speed> from the target for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "@AbilityResourceName@ Cost",
+              "Damage"
+            ],
+            "effect": [
+              "{{ cost }} -> {{ costNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ speedsteal }}% -> {{ speedstealNL }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
+          "cooldownBurn": "8",
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
+          "costBurn": "70/75/80/85/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              70,
+              120,
+              170,
+              220,
+              270
+            ],
+            [
+              20,
+              25,
+              30,
+              35,
+              40
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "70/120/170/220/270",
+            "20/25/30/35/40",
+            "3",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            625,
+            625,
+            625,
+            625,
+            625
+          ],
+          "rangeBurn": "625",
+          "image": {
+            "full": "Jade_MalphiteSeismicShard.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 0,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_MalphiteObduracy",
+          "name": "Brutal Strikes",
+          "description": "Malphite starts to hit with such force that his attacks deal damage to all units in front of him. Activating Brutal Strikes greatly increases his Armor and Attack Damage for a short amount of time.",
+          "tooltip": "<spellPassive>Passive: </spellPassive>Malphite's basic attacks hit units near his target for {{ jade_malphiteobduracypercentdamage*100 }}% of his <physicalDamage>Attack Damage</physicalDamage>.<br /><br /><spellActive>Active: </spellActive>Malphite's <scaleArmor>Armor</scaleArmor> and <physicalDamage>Attack Damage</physicalDamage> increase by {{ armorbonus*100 }}% for 6 seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "@AbilityResourceName@ Cost",
+              "Cleave Amount",
+              "Bonus AD Percentage",
+              "Armor Bonus"
+            ],
+            "effect": [
+              "{{ cost }} -> {{ costNL }}",
+              "{{ jade_malphiteobduracypercentdamage*100.000000 }}% -> {{ jade_malphiteobduracypercentdamagenl*100.000000 }}%",
+              "{{ adbonus*100.000000 }}% -> {{ adbonusnl*100.000000 }}%",
+              "{{ armorbonus*100.000000 }}% -> {{ armorbonusnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            14,
+            14,
+            14,
+            14,
+            14
+          ],
+          "cooldownBurn": "14",
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
+          "rangeBurn": "400",
+          "image": {
+            "full": "Jade_MalphiteObduracy.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 48,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_MalphiteLandslide",
+          "name": "Ground Slam",
+          "description": "Malphite slams the ground sending out a shockwave that deals magic damage based on his Armor as damage and reduces the Attack speed of enemies for a short duration.",
+          "tooltip": "Malphite slams the ground dealing <magicDamage>{{ edamagecalc }} magic damage</magicDamage> to surrounding enemies, reducing their Attack Speed by {{ asreduction*-100 }}% for {{ duration }} seconds.<br /><br />This ability gains damage equal to {{ armorscaling_jade*100 }}% of Malphite's Armor.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Attack Speed Reduction",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ asreduction*-100.000000 }}% -> {{ asreductionnl*-100.000000 }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
+          "cooldownBurn": "7",
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
+          "rangeBurn": "400",
+          "image": {
+            "full": "Jade_MalphiteLandslide.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 96,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_MalphiteUFSlash",
+          "name": "Unstoppable Force",
+          "description": "Malphite ferociously charges to a location, damaging enemies and knocking them into the air.",
+          "tooltip": "Malphite charges toward the target area, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Knocking</status> enemies into the air for {{ knockupduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Cooldown",
+              "Damage"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            130,
+            115,
+            100
+          ],
+          "cooldownBurn": "130/115/100",
+          "cost": [
+            100,
+            100,
+            100
+          ],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              1.5,
+              1.75,
+              2
+            ],
+            [
+              200,
+              300,
+              400
+            ],
+            [
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "1.5/1.75/2",
+            "200/300/400",
+            "1.5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1000,
+            1000,
+            1000
+          ],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "Jade_MalphiteUFSlash.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 144,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Granite Shield",
+        "description": "Malphite is shielded by a layer of rock which absorbs damage up to 10% of his maximum Health. If Malphite has not been hit for 10 seconds, this effect recharges.",
+        "image": {
+          "full": "Jade_Malphite_GraniteShield.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 432,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

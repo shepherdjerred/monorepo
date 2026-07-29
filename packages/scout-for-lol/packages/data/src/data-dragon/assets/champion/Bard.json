@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Bard": {
       "id": "Bard",
@@ -514,10 +514,10 @@
           "rangeBurn": "25000",
           "image": {
             "full": "BardQ.png",
-            "sprite": "spell1.png",
+            "sprite": "spell2.png",
             "group": "spell",
-            "x": 192,
-            "y": 144,
+            "x": 0,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -657,10 +657,10 @@
           "rangeBurn": "800",
           "image": {
             "full": "BardW.png",
-            "sprite": "spell1.png",
+            "sprite": "spell2.png",
             "group": "spell",
-            "x": 240,
-            "y": 144,
+            "x": 48,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -670,7 +670,7 @@
           "id": "BardE",
           "name": "Magical Journey",
           "description": "Bard opens a portal in nearby terrain. Allies and enemies alike can take a one-way trip through that terrain by moving into the portal.",
-          "tooltip": "Bard opens a one-way portal through Terrain for {{ e1 }} seconds. Any champion can enter the portal by moving onto it while near the entrance.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Bard opens a one-way portal through Terrain for {{ doorduration }} seconds. Any champion can enter the portal by moving onto it while near the entrance.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown"
@@ -796,10 +796,10 @@
           "rangeBurn": "900",
           "image": {
             "full": "BardE.png",
-            "sprite": "spell1.png",
+            "sprite": "spell2.png",
             "group": "spell",
-            "x": 288,
-            "y": 144,
+            "x": 96,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -909,10 +909,10 @@
           "rangeBurn": "3400",
           "image": {
             "full": "BardR.png",
-            "sprite": "spell1.png",
+            "sprite": "spell2.png",
             "group": "spell",
-            "x": 336,
-            "y": 144,
+            "x": 144,
+            "y": 48,
             "w": 48,
             "h": 48
           },

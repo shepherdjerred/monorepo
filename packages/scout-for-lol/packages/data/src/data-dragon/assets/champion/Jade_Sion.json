@@ -1,0 +1,828 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Sion": {
+      "id": "Jade_Sion",
+      "key": "60014",
+      "name": "Sion",
+      "title": "The Undead Champion",
+      "image": {
+        "full": "Jade_Sion.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 144,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60014000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60014003",
+          "num": 3,
+          "name": "Lumberjack Sion",
+          "chromas": false
+        },
+        {
+          "id": "60014005",
+          "num": 5,
+          "name": "Mecha Zero Sion",
+          "chromas": false
+        },
+        {
+          "id": "60014006",
+          "num": 6,
+          "name": "Mecha Zero Sion (Ruby)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "60014007",
+          "num": 7,
+          "name": "Mecha Zero Sion (Pearl)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "60014008",
+          "num": 8,
+          "name": "Mecha Zero Sion (Sapphire)",
+          "chromas": true,
+          "parentSkin": 5
+        },
+        {
+          "id": "60014009",
+          "num": 9,
+          "name": "Mecha Zero Sion (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "60014010",
+          "num": 10,
+          "name": "Mecha Zero Sion (Catseye)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "60014011",
+          "num": 11,
+          "name": "Mecha Zero Sion (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "60014012",
+          "num": 12,
+          "name": "Mecha Zero Sion (Obsidian)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "60014013",
+          "num": 13,
+          "name": "Mecha Zero Sion (Meteorite)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "60014022",
+          "num": 22,
+          "name": "Blackfrost Sion",
+          "chromas": false
+        },
+        {
+          "id": "60014023",
+          "num": 23,
+          "name": "Blackfrost Sion (Ruby)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "60014024",
+          "num": 24,
+          "name": "Blackfrost Sion (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "60014025",
+          "num": 25,
+          "name": "Blackfrost Sion (Emerald)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "60014026",
+          "num": 26,
+          "name": "Blackfrost Sion (Amethyst)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "60014027",
+          "num": 27,
+          "name": "Blackfrost Sion (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "60014028",
+          "num": 28,
+          "name": "Blackfrost Sion (Obsidian)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "60014029",
+          "num": 29,
+          "name": "Blackfrost Sion (Pearl)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "60014030",
+          "num": 30,
+          "name": "High Noon Sion",
+          "chromas": false
+        },
+        {
+          "id": "60014031",
+          "num": 31,
+          "name": "High Noon Sion (Ruby)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "60014032",
+          "num": 32,
+          "name": "High Noon Sion (Citrine)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "60014033",
+          "num": 33,
+          "name": "High Noon Sion (Emerald)",
+          "chromas": true,
+          "parentSkin": 30
+        },
+        {
+          "id": "60014034",
+          "num": 34,
+          "name": "High Noon Sion (Turquoise)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "60014035",
+          "num": 35,
+          "name": "High Noon Sion (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "60014036",
+          "num": 36,
+          "name": "High Noon Sion (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "60014037",
+          "num": 37,
+          "name": "High Noon Sion (Pearl)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "60014038",
+          "num": 38,
+          "name": "High Noon Sion (Obsidian)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "60014039",
+          "num": 39,
+          "name": "High Noon Sion (Nomad)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "60014301",
+          "num": 301,
+          "name": "Classic Sion",
+          "chromas": false
+        },
+        {
+          "id": "60014302",
+          "num": 302,
+          "name": "Classic Sion (Hextech)",
+          "chromas": true,
+          "parentSkin": 301
+        }
+      ],
+      "lore": "- The Abilities are completely different. Read the descriptions<br>- Sion has Ability Power and Attack Damage builds<br>- Damage dealer not a Juggernaut",
+      "blurb": "- The Abilities are completely different. Read the descriptions<br>- Sion has Ability Power and Attack Damage builds<br>- Damage dealer not a Juggernaut",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Tank",
+        "Fighter"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 5,
+        "defense": 9,
+        "magic": 3,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 507,
+        "hpperlevel": 104,
+        "mp": 240,
+        "mpperlevel": 40,
+        "movespeed": 345,
+        "armor": 25,
+        "armorperlevel": 3.25,
+        "spellblock": 31.25,
+        "spellblockperlevel": 1.25,
+        "attackrange": 125,
+        "hpregen": 8.85,
+        "hpregenperlevel": 0.95,
+        "mpregen": 6.7,
+        "mpregenperlevel": 0.4,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 58.7075,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 1.63,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "Jade_SionQ",
+          "name": "Cryptic Gaze",
+          "description": "Sion's stare terrifies a single enemy, dealing damage and stunning them.",
+          "tooltip": "Blasts a single enemy, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Stunning</status> for 1.5 seconds.</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
+          "cooldownBurn": "12/11/10/9/8",
+          "cost": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              2.5,
+              2.5,
+              2.5,
+              2.5,
+              2.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              7.5,
+              7.5,
+              7.5,
+              7.5,
+              7.5
+            ],
+            [
+              60,
+              60,
+              60,
+              60,
+              60
+            ],
+            [
+              150,
+              150,
+              150,
+              150,
+              150
+            ],
+            [
+              -0.8,
+              -0.8,
+              -0.8,
+              -0.8,
+              -0.8
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "2.5",
+            "0",
+            "7.5",
+            "60",
+            "150",
+            "-0.8"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            550,
+            550,
+            550,
+            550,
+            550
+          ],
+          "rangeBurn": "550",
+          "image": {
+            "full": "Jade_SionQ.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 288,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_SionW",
+          "name": "Death's Caress",
+          "description": "Sion surrounds himself with a damage-absorbing shield.  If the shield is not destroyed in 10 seconds then it will explode, dealing damage to surrounding enemies. Cast again after 4 seconds to manually detonate.",
+          "tooltip": "Sion surrounds himself with a shield which absorbs <shield>{{ totalshield }} damage</shield>. If the shield is not destroyed in 10 seconds, it will explode, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to surrounding enemies.<br /><br /><recast>Recast</recast> after 4 seconds to manually detonate.</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Shield Amount",
+              "Mana Cost"
+            ],
+            "effect": [
+              "{{ baseshield }} -> {{ baseshieldNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
+          "cooldownBurn": "8",
+          "cost": [
+            70,
+            80,
+            90,
+            100,
+            110
+          ],
+          "costBurn": "70/80/90/100/110",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              60,
+              75,
+              90,
+              105,
+              120
+            ],
+            [
+              40,
+              65,
+              90,
+              115,
+              140
+            ],
+            [
+              8,
+              10,
+              12,
+              14,
+              16
+            ],
+            [
+              14,
+              14,
+              14,
+              14,
+              14
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              15,
+              15,
+              15,
+              15,
+              15
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              15,
+              15,
+              15,
+              15,
+              15
+            ],
+            [
+              6,
+              6,
+              6,
+              6,
+              6
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "60/75/90/105/120",
+            "40/65/90/115/140",
+            "8/10/12/14/16",
+            "14",
+            "4",
+            "15",
+            "3",
+            "15",
+            "6",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "rangeBurn": "100",
+          "image": {
+            "full": "Jade_SionW.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 336,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_SionE",
+          "name": "Enrage",
+          "description": "While active Sion gains Attack Damage at the cost of Health on each basic attack. Additonally, he permanently increases his maximum Health whenever he kills a unit.",
+          "tooltip": "<toggle>Toggle: </toggle>Sion's <physicalDamage>Attack Damage</physicalDamage> is increased by {{ bonusdamage }} and he permanently gains <scaleHealth>{{ hpgainreduced }} maximum Health</scaleHealth> per kill. This bonus is doubled against Champions, large minions and large monsters<br /><br /><scaleHealth>Total Health gained: +{{ f1 }}</scaleHealth>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Health Per Kill",
+              "Health Cost"
+            ],
+            "effect": [
+              "{{ bonusdamage }} -> {{ bonusdamageNL }}",
+              "{{ hpgainreduced }} -> {{ hpgainreducedNL }}",
+              "{{ healthcost }} -> {{ healthcostNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "cooldownBurn": "0",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              65,
+              100,
+              135,
+              170,
+              205
+            ],
+            [
+              40,
+              45,
+              50,
+              55,
+              60
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              40,
+              45,
+              50,
+              55,
+              60
+            ],
+            [
+              25,
+              25,
+              25,
+              25,
+              25
+            ],
+            [
+              30,
+              30,
+              30,
+              30,
+              30
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              2.5,
+              2.5,
+              2.5,
+              2.5,
+              2.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "65/100/135/170/205",
+            "40/45/50/55/60",
+            "5",
+            "40/45/50/55/60",
+            "25",
+            "30",
+            "4",
+            "2.5",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " Health per Attack",
+          "maxammo": "-1",
+          "range": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "rangeBurn": "0",
+          "image": {
+            "full": "Jade_SionE.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 384,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ healthcost }} Health per Attack"
+        },
+        {
+          "id": "Jade_SionR",
+          "name": "Cannibalism",
+          "description": "Sion consumes some of his enemies' life force on each attack, leeching health to himself and nearby allies. The smell of flesh also renews Sion's fervor, increasing his Attack Speed.",
+          "tooltip": "Grants Sion <lifeSteal>{{ lifestealpercent*100 }}% Lifesteal</lifeSteal> and <attackSpeed>{{ attackspeedmod*100 }}% Attack Speed</attackSpeed> for 20 seconds. Additionally, Sion's basic attacks <healing>heal</healing> surrounding allies for {{ healpercent*100 }}% of the damage dealt.</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Ally Heal",
+              "Life Steal"
+            ],
+            "effect": [
+              "{{ healpercent*100.000000 }}% -> {{ healpercentnl*100.000000 }}%",
+              "{{ lifestealpercent*100.000000 }}% -> {{ lifestealpercentnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            90,
+            90,
+            90
+          ],
+          "cooldownBurn": "90",
+          "cost": [
+            100,
+            100,
+            100
+          ],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            100,
+            100,
+            100
+          ],
+          "rangeBurn": "100",
+          "image": {
+            "full": "Jade_SionR.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 432,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Feel No Pain",
+        "description": "Sion has a 40% chance to ignore up to 30/40/50 damage each time he is attacked.",
+        "image": {
+          "full": "Jade_Sion_Passive1.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 144,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

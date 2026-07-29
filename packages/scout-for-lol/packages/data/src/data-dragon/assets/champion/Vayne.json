@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Vayne": {
       "id": "Vayne",
@@ -10,7 +10,7 @@
       "title": "the Night Hunter",
       "image": {
         "full": "Vayne.png",
-        "sprite": "champion4.png",
+        "sprite": "champion6.png",
         "group": "champion",
         "x": 336,
         "y": 96,
@@ -694,10 +694,10 @@
           "rangeBurn": "300",
           "image": {
             "full": "VayneTumble.png",
-            "sprite": "spell15.png",
+            "sprite": "spell21.png",
             "group": "spell",
-            "x": 288,
-            "y": 0,
+            "x": 96,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -837,10 +837,10 @@
           "rangeBurn": "750",
           "image": {
             "full": "VayneSilveredBolts.png",
-            "sprite": "spell15.png",
+            "sprite": "spell21.png",
             "group": "spell",
-            "x": 336,
-            "y": 0,
+            "x": 144,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -978,10 +978,10 @@
           "rangeBurn": "550",
           "image": {
             "full": "VayneCondemn.png",
-            "sprite": "spell15.png",
+            "sprite": "spell21.png",
             "group": "spell",
-            "x": 384,
-            "y": 0,
+            "x": 192,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -1097,10 +1097,10 @@
           "rangeBurn": "1",
           "image": {
             "full": "VayneInquisition.png",
-            "sprite": "spell15.png",
+            "sprite": "spell21.png",
             "group": "spell",
-            "x": 432,
-            "y": 0,
+            "x": 240,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -1112,7 +1112,7 @@
         "description": "Vayne ruthlessly hunts evil-doers, gaining Move Speed when moving toward nearby enemy champions.",
         "image": {
           "full": "Vayne_NightHunter.png",
-          "sprite": "passive4.png",
+          "sprite": "passive6.png",
           "group": "passive",
           "x": 336,
           "y": 96,
