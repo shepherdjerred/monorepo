@@ -727,3 +727,51 @@ pass, and the schedule is deliberately unpaused.
 - The Temporal OpenAI credential is distinct from the Birmel and Pokémon
   credentials. No credential was read, copied, substituted, or changed during
   this session.
+
+## Session Log — 2026-07-29 (quota recheck)
+
+### Done
+
+- Re-audited production from the live cluster. ArgoCD reports the `temporal`
+  application Synced and Healthy at chart `2.0.0-7052`; the Ready worker still
+  runs immutable image
+  `2.0.0-7052@sha256:580e41600ab0c1cc33d9d4f91a68c1ac7cc2126de68b6ade291b092719d8e4b2`.
+- Verified the worker still projects the Starlight Discord token, all required
+  SeaweedFS settings, and the Temporal-specific `OPENAI_API_KEY`.
+- Confirmed `glitter-corpus-daily` remains active after its successful July 29
+  action, with its next action at `2026-07-30T11:15:00Z`. Confirmed
+  `glitter-context-refresh-weekly` remains paused at the intended acceptance
+  note, with its next nominal action at `2026-08-03T18:00:00Z`.
+- Re-ran the exact fixed-time, snapshot-pinned dry run as workflow
+  `glitter-context-refresh-manual-a3f6ec23-cb6d-45db-9766-f75009766b00`, run
+  `019fae74-d06a-7533-8306-98360cf94c7d`. Both configured attempts again
+  failed closed on OpenAI HTTP 429 `insufficient_quota`; OpenAI request IDs
+  were `req_347605d0e5934938b6e96144a76e99a6` and
+  `req_e0157cc73438445da69c6925528f20cc`.
+- Verified the failed dry run created no branch, pull request, or
+  generated-context mutation. The weekly schedule was not unpaused.
+
+### Remaining
+
+- Restore quota for the OpenAI project used by the Temporal worker, or
+  explicitly authorize a different production OpenAI credential for this
+  workflow.
+- Rerun the same snapshot-pinned fixed-time dry run twice and require complete
+  output equality, including the proposal checksum.
+- Run the real fixed-time refresh with the same pin, inspect its sole PR or
+  no-diff result, and smoke-test the shared package, Birmel, Scout, and Glitter
+  consumers.
+- Deliberately unpause `glitter-context-refresh-weekly` only after those
+  acceptance gates pass, then complete and archive this plan and its related
+  TODOs.
+
+### Caveats
+
+- The production credential is present and reaches OpenAI; the current blocker
+  is quota on its owning OpenAI project, not missing Kubernetes or 1Password
+  wiring.
+- Nine schema-valid immutable generation artifacts remain reusable. Four style
+  cards remain ungenerated until quota is restored.
+- The Temporal OpenAI credential is distinct from the Birmel and Pokémon
+  credentials. No credential was read, copied, substituted, or changed during
+  this recheck.
