@@ -34,7 +34,7 @@ fi
 if rg -q 'apt-get|playwright install|bun x' "$CI_PLAYWRIGHT_IMAGE" ||
   ! rg -Fq 'Bun.file("/ms-playwright/.docker-info").json()' "$CI_PLAYWRIGHT_IMAGE" ||
   ! rg -Fq 'typeof info.driverVersion !== "string"' "$CI_PLAYWRIGHT_IMAGE" ||
-  ! rg -Fq 'chromium-*/chrome-linux/chrome' "$CI_PLAYWRIGHT_IMAGE" ||
+  ! rg -Fq 'chromium-*/chrome-linux*/chrome' "$CI_PLAYWRIGHT_IMAGE" ||
   ! rg -Fq 'firefox-*/firefox/firefox' "$CI_PLAYWRIGHT_IMAGE" ||
   ! rg -Fq 'webkit-*/minibrowser-gtk/MiniBrowser' "$CI_PLAYWRIGHT_IMAGE"; then
   echo "Playwright CI image must use the pinned browser inventory without runtime installation" >&2

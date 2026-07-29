@@ -223,7 +223,7 @@ async function validatePlaywrightImage(): Promise<void> {
   for (const required of [
     'Bun.file("/ms-playwright/.docker-info").json()',
     "typeof info.driverVersion",
-    "chromium-*/chrome-linux/chrome",
+    "chromium-*/chrome-linux*/chrome",
     "firefox-*/firefox/firefox",
     "webkit-*/minibrowser-gtk/MiniBrowser",
   ]) {

@@ -9,6 +9,6 @@ FROM mcr.microsoft.com/playwright:v1.62.0-noble@sha256:baed2032d533817f3dbe6425d
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 RUN bun --version \
   && bun -e 'const info = await Bun.file("/ms-playwright/.docker-info").json(); if (typeof info.driverVersion !== "string" || !/^[0-9]+\.[0-9]+\.[0-9]+$/.test(info.driverVersion)) throw new Error("invalid Playwright browser inventory")' \
-  && test -x /ms-playwright/chromium-*/chrome-linux/chrome \
+  && test -x /ms-playwright/chromium-*/chrome-linux*/chrome \
   && test -x /ms-playwright/firefox-*/firefox/firefox \
   && test -x /ms-playwright/webkit-*/minibrowser-gtk/MiniBrowser
