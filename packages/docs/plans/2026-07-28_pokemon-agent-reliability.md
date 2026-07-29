@@ -218,7 +218,7 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - Implemented a general engine checkpoint and ordered atomic flash
   persistence. A rebuilt real WASM passed an independent checkpoint/reboot
   integration test against a copied live save.
-- Verified the combined backend (314 tests, zero failures or skips), all 27
+- Verified the combined backend (318 tests, zero failures or skips), all 27
   knowledge/build script tests, package typecheck/lint, the exhaustive
   root `bun run verify` graph (217/217 tasks), and a clean Docker `smoke` build
   that rebuilt the patched WASM, passed both mandatory real-emulator ABI and
@@ -351,8 +351,11 @@ system against a copied live save and the exact goal `get me a pokeman`.
   retained a 41-second hard wall cap.
 - Added regressions for source-path replacement, the empty post-process signal
   grace, either-bound grace expiry, and pending-evidence hard-cap behavior.
-- Verified all 313 middle-layer backend tests, the 61 focused benchmark tests,
-  backend typecheck, backend lint, and formatting.
+- Added reward acquisition vocabulary and evidence-position excerpts so `how
+to get fly` ranks the HM02 reward passage first and shows the acquisition
+  text.
+- Verified all 313 middle-layer and 318 composed-top backend tests, the 61
+  focused benchmark tests, backend typecheck, backend lint, and formatting.
 
 ### Remaining
 
