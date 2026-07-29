@@ -85,16 +85,22 @@ describe("Argo operation identity", () => {
     );
   });
 
-  test("does not accept an earlier operation finishing after the POST", () => {
+  test("distinguishes an exact retry by its request ID", () => {
     const requested = {
-      operation: { sync: { manifests: ["current"] } },
+      operation: {
+        info: [{ name: "ci.sjer.red/request-id", value: "current" }],
+        sync: { manifests: ["same"] },
+      },
     };
     const previous = {
       status: {
         operationState: {
           finishedAt: "2026-07-29T10:00:00Z",
           phase: "Succeeded",
-          operation: { sync: { manifests: ["previous"] } },
+          operation: {
+            info: [{ name: "ci.sjer.red/request-id", value: "previous" }],
+            sync: { manifests: ["same"] },
+          },
         },
       },
     };

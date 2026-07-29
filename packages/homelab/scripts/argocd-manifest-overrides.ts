@@ -1,6 +1,9 @@
 import { z } from "zod";
 
 const DEFAULT_MAX_REQUEST_BYTES = 1_500_000;
+const SERIALIZED_REQUEST_ID = "00000000-0000-0000-0000-000000000000";
+
+export const SYNC_REQUEST_ID_INFO_NAME = "ci.sjer.red/request-id";
 
 const ApplicationOperationSchema = z.object({
   operation: z.record(z.string(), z.unknown()).optional(),
@@ -36,6 +39,12 @@ function serializedRequestBytes(batch: ManifestOverrideBatch): number {
   return new TextEncoder().encode(
     JSON.stringify({
       prune: false,
+      infos: [
+        {
+          name: SYNC_REQUEST_ID_INFO_NAME,
+          value: SERIALIZED_REQUEST_ID,
+        },
+      ],
       manifests: batch.manifests,
       resources: batch.resources,
     }),

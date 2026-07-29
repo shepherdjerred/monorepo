@@ -39,6 +39,7 @@ import {
   batchManifestOverrides,
   completedOperationIdentity,
   requestedOperationIdentity,
+  SYNC_REQUEST_ID_INFO_NAME,
   type SyncOperationResource,
 } from "./argocd-manifest-overrides.ts";
 import { latestPublishedVersion } from "./helm-release-core.ts";
@@ -328,6 +329,7 @@ async function sync(
   if (appName === "apps" && options.prune) {
     await assertRootPruneSafe(token);
   }
+  const requestId = crypto.randomUUID();
   const url = `${serverUrl()}/api/v1/applications/${appName}/sync`;
   const res = await fetch(url, {
     method: "POST",
@@ -337,6 +339,7 @@ async function sync(
     },
     body: JSON.stringify({
       prune: options.prune,
+      infos: [{ name: SYNC_REQUEST_ID_INFO_NAME, value: requestId }],
       ...(options.revision === undefined ? {} : { revision: options.revision }),
       ...(options.manifests === undefined
         ? {}

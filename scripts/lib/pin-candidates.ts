@@ -167,6 +167,16 @@ export function mergePinStates(
   return merged;
 }
 
+export function fillMissingPinState(
+  primary: PinCandidatesState,
+  fallback: PinCandidatesState,
+): PinCandidatesState {
+  return PinCandidatesStateSchema.parse({
+    schema: "pin-candidates-state/v1",
+    pins: { ...fallback.pins, ...primary.pins },
+  });
+}
+
 export function mergePinCandidates(
   state: PinCandidatesState,
   batch: PinCandidates,

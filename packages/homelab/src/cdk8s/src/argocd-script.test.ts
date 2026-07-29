@@ -13,6 +13,12 @@ type RequestObservation = {
 };
 
 const SyncRequestSchema = z.object({
+  infos: z.array(
+    z.object({
+      name: z.string(),
+      value: z.uuid(),
+    }),
+  ),
   manifests: z.array(z.string()),
   resources: z.array(
     z.object({
@@ -28,6 +34,18 @@ const WorkerApplicationResource = {
   kind: "Application",
   name: "worker",
 };
+
+function operationForSyncRequest(request: unknown): unknown {
+  const syncRequest = SyncRequestSchema.parse(request);
+  return {
+    info: syncRequest.infos,
+    initiatedBy: { username: "buildkite" },
+    sync: {
+      manifests: syncRequest.manifests,
+      resources: syncRequest.resources,
+    },
+  };
+}
 
 describe("Argo CD prune safety", () => {
   test("blocks root pruning when a removed child lacks the cascade finalizer", async () => {
@@ -108,6 +126,7 @@ describe("Argo CD prune safety", () => {
 describe("Argo CD release gating", () => {
   test("suspends repository auto-sync through an explicit root manifest sync", async () => {
     const syncBodies: unknown[] = [];
+    let requestedOperation: unknown;
     const repositoryApplication = JSON.stringify({
       apiVersion: "argoproj.io/v1alpha1",
       kind: "Application",
@@ -168,12 +187,8 @@ describe("Argo CD release gating", () => {
         ) {
           const body = await request.json();
           syncBodies.push(body);
-          return Response.json({
-            operation: {
-              initiatedBy: { username: "buildkite" },
-              sync: body,
-            },
-          });
+          requestedOperation = operationForSyncRequest(body);
+          return Response.json({ operation: requestedOperation });
         }
         if (
           request.method === "GET" &&
@@ -184,10 +199,7 @@ describe("Argo CD release gating", () => {
               operationState: {
                 phase: "Succeeded",
                 startedAt: new Date().toISOString(),
-                operation: {
-                  sync: syncBodies[0],
-                  initiatedBy: { username: "buildkite" },
-                },
+                operation: requestedOperation,
               },
             },
           });
@@ -229,6 +241,8 @@ describe("Argo CD release gating", () => {
       expect(stdout).toContain("suspending auto-sync: worker");
       expect(syncBodies).toHaveLength(1);
       const syncRequest = SyncRequestSchema.parse(syncBodies[0]);
+      expect(syncRequest.infos).toHaveLength(1);
+      expect(syncRequest.infos[0]?.name).toBe("ci.sjer.red/request-id");
       expect(syncRequest.manifests).toHaveLength(1);
       expect(JSON.parse(syncRequest.manifests[0] ?? "")).toMatchObject({
         spec: {

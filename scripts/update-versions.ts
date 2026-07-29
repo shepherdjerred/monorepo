@@ -4,6 +4,7 @@ import { rm } from "node:fs/promises";
 
 import { setupGitAuth } from "./lib/github-auth.ts";
 import {
+  fillMissingPinState,
   mergePinCandidates,
   mergePinStates,
   parsePinCandidates,
@@ -172,7 +173,7 @@ async function prepareAttempt(
         await readBranchFile(git, pendingRef, PIN_STATE_FILE_REL),
       );
       validateStateAgainstVersions(persistedState, pendingVersions);
-      pendingState = mergePinStates(persistedState, reconstructedState);
+      pendingState = fillMissingPinState(persistedState, reconstructedState);
     } else {
       console.log(
         `reconstructed ${Object.keys(pendingState.pins).length.toString()} legacy pending image pins`,

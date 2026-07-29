@@ -9,6 +9,7 @@ import {
   resetVersionBumpBranch,
 } from "./update-versions.ts";
 import {
+  fillMissingPinState,
   mergePinCandidates,
   mergePinStates,
   parsePinCandidates,
@@ -24,6 +25,8 @@ const A =
   "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const B =
   "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+const C =
+  "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc";
 const KEY = "shepherdjerred/example";
 
 function batch(
@@ -236,13 +239,27 @@ describe("versions.ts integrity", () => {
       '{"schema":"pin-candidates-state/v1","pins":{}}',
     );
     const reconstructed = reconstructGeneratedBranchPinState(base, pending, 42);
-    const combined = mergePinStates(persisted, reconstructed);
+    const combined = fillMissingPinState(persisted, reconstructed);
 
     validateStateAgainstVersions(combined, pending);
     expect(combined.pins[KEY]).toEqual({
       buildNumber: 42,
       version: "v2",
       digest: B,
+    });
+  });
+
+  test("preserves persisted per-key build numbers during reconstruction", () => {
+    const persisted = parsePinCandidatesState(
+      `{"schema":"pin-candidates-state/v1","pins":{"${KEY}":{"buildNumber":100,"version":"v2","digest":"${B}"}}}`,
+    );
+    const reconstructed = parsePinCandidatesState(
+      `{"schema":"pin-candidates-state/v1","pins":{"${KEY}":{"buildNumber":110,"version":"v2","digest":"${B}"},"missing":{"buildNumber":110,"version":"v3","digest":"${C}"}}}`,
+    );
+
+    expect(fillMissingPinState(persisted, reconstructed).pins).toEqual({
+      [KEY]: { buildNumber: 100, version: "v2", digest: B },
+      missing: { buildNumber: 110, version: "v3", digest: C },
     });
   });
 });
