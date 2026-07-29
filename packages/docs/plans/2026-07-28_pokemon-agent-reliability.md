@@ -187,6 +187,11 @@ system against a copied live save and the exact goal `get me a pokeman`.
   Knowledge records now require non-empty structured `sources`; generic
   Nincada and Shedinja records attribute both PokeAPI and the pinned
   pokeemerald mechanic without losing the empty-party requirement.
+- 2026-07-28: Replacement Buildkite security scanning found
+  CVE-2026-56852 in `golang.org/x/text` v0.37.0. The base stack layer now uses
+  v0.39.0 and its compatible `golang.org/x/*` dependency set. Go tests, vet,
+  golangci-lint, and the exact repository Trivy HIGH/CRITICAL scan all pass
+  locally with zero findings.
 
 ## Session Log — 2026-07-28
 
@@ -266,6 +271,11 @@ system against a copied live save and the exact goal `get me a pokeman`.
   enforced Docker parity test; and the language-neutral knowledge schema,
   generator, runtime, and 1,801 records preserve every contributing source
   structurally.
+- Closed the replacement Buildkite security failure by upgrading
+  `golang.org/x/text` from v0.37.0 to v0.39.0 in the base PR. The provider's
+  tests, vet, and golangci-lint pass, and the CI-equivalent Trivy scan reports
+  zero HIGH/CRITICAL vulnerabilities across all five detected dependency
+  manifests.
 
 ### Remaining
 
