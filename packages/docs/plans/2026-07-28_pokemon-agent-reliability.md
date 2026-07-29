@@ -167,6 +167,18 @@ system against a copied live save and the exact goal `get me a pokeman`.
   CLI, benchmark output cannot be placed in or symlinked into its target
   checkout, and generic Nincada/Shedinja records preserve the pinned level-20
   and empty-party rule.
+- 2026-07-28: The next review cycle found that MediaWiki TextExtracts could
+  return current prose even when revision metadata was pinned. Walkthrough
+  generation now parses rendered content with `oldid=<revision>`, rejects
+  revision/title drift, and deterministically extracts article prose from the
+  coupled response. It reproduced 41 licensed records covering all 22 pinned
+  revisions while preserving the HM03 search regression.
+- 2026-07-28: The Docker ABI review also found that checkpoint/reboot coverage
+  still depended on an operator save and skipped in the mandatory image gate.
+  The test now creates deterministic blank flash, drives the real new-game
+  flow, moves, checkpoints, and verifies spatial, party, Pokedex, and decoded
+  save equality through an independently initialized emulator. The local and
+  Docker executions both pass two tests with zero skips.
 
 ## Session Log — 2026-07-28
 
@@ -181,13 +193,14 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - Implemented a general engine checkpoint and ordered atomic flash
   persistence. A rebuilt real WASM passed an independent checkpoint/reboot
   integration test against a copied live save.
-- Verified the combined backend (297 tests, one opt-in live-save test skipped),
-  all 21 knowledge/build script tests, package typecheck/lint, the exhaustive
+- Verified the combined backend (298 tests, zero failures or skips), all 22
+  knowledge/build script tests, package typecheck/lint, the exhaustive
   root `bun run verify` graph (217/217 tasks), and a clean Docker `smoke` build
-  that rebuilt the patched WASM, passed the real-emulator ABI boot test, and
-  passed the in-image application check. The resulting local smoke image
+  that rebuilt the patched WASM, passed both mandatory real-emulator ABI and
+  independent checkpoint/reboot tests, and passed the in-image application
+  check. The resulting local smoke image
   manifest is
-  `sha256:c3cd11959929a9d0c05c43a875733110b061089a6b348b5f4a661ea250fa6c31`.
+  `sha256:97f43273ca55bf39a78ede4b1187b8ed7f389b8681e369b06d0113dbf63110f8`.
 - Completed a manual general-control playthrough through the first rival,
   Pokedex/Poke Ball acquisition, and a visible Poochyena catch.
 - Published the three-PR git-spice stack as #1802, #1803, and #1805 and attached
@@ -234,6 +247,11 @@ system against a copied live save and the exact goal `get me a pokeman`.
   registered and integration-tested, benchmark output containment resolves
   symlink aliases before artifact creation, and generic species retrieval
   carries the pinned Shedinja creation requirements.
+- Closed the final two review defects: Bulbapedia prose is fetched and
+  validated from the exact pinned revision rather than pairing old metadata
+  with current text, and the mandatory Docker ABI gate now proves checkpoint
+  persistence through a deterministic new game and independent reboot without
+  requiring `POKEMON_LIVE_SAVE_PATH`.
 
 ### Remaining
 
