@@ -481,7 +481,9 @@ pass.
 
 ### Remaining
 
-- Merge and deploy the snapshot-pin repair through this pull request.
+- Restore the merge-generated main build after Playwright 1.62 changed the
+  amd64 Chromium directory from `chrome-linux` to `chrome-linux64`, then deploy
+  the merged snapshot-pin worker image through GitOps.
 - Restore quota for the OpenAI project used by the Temporal worker, or
   explicitly authorize a different production OpenAI credential for this
   workflow.
