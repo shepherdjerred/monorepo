@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import {
   DEFAULT_BENCHMARK_GOAL,
@@ -14,7 +14,11 @@ import {
   classifyCodexProviderFailure,
   type BenchmarkProviderFailure,
 } from "./benchmark-provider-failure.ts";
-import { commandOutput, requireCleanGitWorktree } from "./benchmark-run.ts";
+import {
+  commandOutput,
+  requireCleanGitWorktree,
+  reserveBenchmarkDirectory,
+} from "./benchmark-run.ts";
 import { runBenchmarkSeries } from "./benchmark-series.ts";
 
 async function git(command: readonly string[], cwd: string): Promise<string> {
@@ -158,6 +162,14 @@ describe("summarizeCodexJsonl", () => {
       {
         type: "item.started",
         item: {
+          id: "observe-shot-1",
+          type: "command_execution",
+          command: "pokemonctl observe --screenshot",
+        },
+      },
+      {
+        type: "item.started",
+        item: {
           id: "knowledge-1",
           type: "command_execution",
           command: 'pokemonctl grep "route" knowledge',
@@ -178,14 +190,14 @@ describe("summarizeCodexJsonl", () => {
 
     expect(summarizeCodexJsonl(`${lines}\nnot-json\n`)).toEqual({
       turns: 1,
-      toolCalls: 3,
+      toolCalls: 4,
       toolErrors: 1,
       errors: 2,
       movementActions: 1,
       movementStops: 1,
       repeatedPositionLoops: 0,
       ignoredInputs: 0,
-      screenshots: 1,
+      screenshots: 2,
       knowledgeQueries: 1,
       inputTokens: 100,
       cachedInputTokens: 80,
@@ -346,7 +358,7 @@ describe("classifyCodexProviderFailure", () => {
     });
   });
 
-  test("distinguishes authentication, startup, and generic turn failures", () => {
+  test("distinguishes authentication and structured turn failures", () => {
     expect(
       classifyCodexProviderFailure({
         jsonl: "",
@@ -363,11 +375,7 @@ describe("classifyCodexProviderFailure", () => {
         jsonl: JSON.stringify({ type: "thread.started", thread_id: "thread" }),
         codexExitCode: 78,
       }),
-    ).toMatchObject({
-      kind: "provider-startup",
-      phase: "startup",
-      source: "process-exit",
-    });
+    ).toBeNull();
     expect(
       classifyCodexProviderFailure({
         jsonl: [
@@ -395,6 +403,59 @@ describe("classifyCodexProviderFailure", () => {
       }),
     ).toBeNull();
   });
+});
+
+describe("benchmark artifact reservation", () => {
+  test("rejects empty and nonempty pre-existing directories", async () => {
+    const root = await mkdtemp(
+      path.join(tmpdir(), "pokemon-benchmark-output-"),
+    );
+    const empty = path.join(root, "empty");
+    const nonempty = path.join(root, "nonempty");
+    await mkdir(empty);
+    await Bun.write(path.join(nonempty, "stale-screenshot.png"), "stale", {
+      createPath: true,
+    });
+
+    try {
+      await expect(
+        reserveBenchmarkDirectory(empty, "benchmark output"),
+      ).rejects.toThrow(
+        "refusing to reuse existing benchmark output directory",
+      );
+      await expect(
+        reserveBenchmarkDirectory(nonempty, "benchmark run"),
+      ).rejects.toThrow("refusing to reuse existing benchmark run directory");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test("reserves a new directory exactly once", async () => {
+    const root = await mkdtemp(
+      path.join(tmpdir(), "pokemon-benchmark-output-"),
+    );
+    const output = path.join(root, "new");
+    try {
+      await reserveBenchmarkDirectory(output, "benchmark output");
+      const outputStat = await stat(output);
+      expect(outputStat.isDirectory()).toBe(true);
+      await expect(
+        reserveBenchmarkDirectory(output, "benchmark output"),
+      ).rejects.toThrow(
+        "refusing to reuse existing benchmark output directory",
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+});
+
+test("benchmark worker does not import runner-only benchmark helpers", async () => {
+  const worker = await Bun.file(
+    path.resolve(import.meta.dir, "../../scripts/goal-benchmark-worker.ts"),
+  ).text();
+  expect(worker).not.toContain("#src/goal/benchmark-");
 });
 
 describe("runBenchmarkSeries", () => {

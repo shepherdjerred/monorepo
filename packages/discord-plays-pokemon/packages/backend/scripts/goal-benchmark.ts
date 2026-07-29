@@ -10,6 +10,7 @@ import { runBenchmarkSeries } from "#src/goal/benchmark-series.ts";
 import {
   commandOutput,
   requireCleanGitWorktree,
+  reserveBenchmarkDirectory,
   runBenchmarkOnce,
   sha256File,
   writeBenchmarkJson,
@@ -127,12 +128,6 @@ async function main(): Promise<void> {
       `source save must be exactly ${String(FLASH_SAVE_BYTES)} bytes; got ${String(sourceSaveBytes.length)}`,
     );
   }
-  const summaryPath = path.join(args.output, "summary.json");
-  if (await Bun.file(summaryPath).exists()) {
-    throw new Error(
-      `refusing to overwrite existing benchmark summary: ${summaryPath}`,
-    );
-  }
   const implementation = await resolveImplementationRoot(
     args.implementationRoot,
   );
@@ -168,6 +163,8 @@ async function main(): Promise<void> {
       path.join(implementation.packageRoot, "wasm-src/upstream.json"),
     ).json(),
   );
+  await reserveBenchmarkDirectory(args.output, "benchmark output");
+  const summaryPath = path.join(args.output, "summary.json");
   const entries = await runBenchmarkSeries(args.runs, async (run) => {
     console.error(
       `benchmark run ${String(run)}/${String(args.runs)} on port ${String(

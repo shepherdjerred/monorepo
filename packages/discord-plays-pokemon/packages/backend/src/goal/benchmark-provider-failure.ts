@@ -111,18 +111,6 @@ export function classifyCodexProviderFailure(
     });
   }
 
-  if (input.codexExitCode !== null && input.codexExitCode !== 0) {
-    const phase = turnStarted ? "turn" : "startup";
-    return providerFailure({
-      kind: phase === "turn" ? "provider-turn" : "provider-startup",
-      phase,
-      source: "process-exit",
-      message: `Codex exited with code ${String(input.codexExitCode)} without a structured provider error`,
-      eventType: null,
-      codexExitCode: input.codexExitCode,
-    });
-  }
-
   return null;
 }
 

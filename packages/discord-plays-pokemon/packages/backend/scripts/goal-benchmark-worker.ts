@@ -8,13 +8,11 @@ import { readGameSnapshot } from "#src/game/events/snapshot.ts";
 import type { GameSnapshot } from "#src/game/events/types.ts";
 import { createGameEventWatcher } from "#src/game/events/watcher.ts";
 import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
-import { startBenchmarkGoal } from "#src/goal/benchmark-worker-provider.ts";
 import {
   GoalManager,
   type GoalProcessSpawner,
 } from "#src/goal/goal-manager.ts";
 import { startGoalControlServer } from "#src/goal/control-server.ts";
-
 const WorkerConfigSchema = z.strictObject({
   schemaVersion: z.literal(1),
   runSavePath: z.string().min(1),
@@ -32,9 +30,7 @@ const WorkerConfigSchema = z.strictObject({
   bootTimeoutSeconds: z.number().int().positive().max(300),
   codexBinary: z.string().min(1),
 });
-
 type WorkerConfig = z.infer<typeof WorkerConfigSchema>;
-
 type SerializedSnapshot = {
   party: GameSnapshot["party"];
   badges: GameSnapshot["badges"];
@@ -42,7 +38,6 @@ type SerializedSnapshot = {
   caughtMonSpecies: number;
   caughtMonShiny: boolean;
 };
-
 type CatchEvent = {
   occurredAt: string;
   frame: number;
@@ -55,12 +50,33 @@ type CatchEvent = {
   }[];
   postEventNationalDexOwned: boolean;
 };
-
 type ProcessCapture = {
   spawner: GoalProcessSpawner;
   completed: () => Promise<void>;
 };
-
+async function startBenchmarkGoal(
+  manager: GoalManager,
+  goal: string,
+  runDirectory: string,
+): Promise<void> {
+  try {
+    const started = await manager.startGoal({
+      goal,
+      requesterId: "benchmark-operator",
+      channelId: "benchmark",
+    });
+    if (started.kind === "started") return;
+    throw new Error(`goal did not start: ${started.kind}: ${started.content}`);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const failure = { schemaVersion: 1, phase: "startup", message };
+    await Bun.write(
+      path.join(runDirectory, "provider-startup-failure.json"),
+      `${JSON.stringify(failure)}\n`,
+    );
+    throw error;
+  }
+}
 function serializeSnapshot(snapshot: GameSnapshot): SerializedSnapshot {
   return {
     party: snapshot.party,
@@ -422,11 +438,7 @@ async function main(): Promise<void> {
       config: runtimeConfig,
       token: controlToken,
     });
-    await startBenchmarkGoal({
-      manager,
-      goal: config.goal,
-      runDirectory: config.runDirectory,
-    });
+    await startBenchmarkGoal(manager, config.goal, config.runDirectory);
     const active = manager.getStatus();
     if (active === undefined) {
       throw new Error("goal manager lost the active goal immediately");

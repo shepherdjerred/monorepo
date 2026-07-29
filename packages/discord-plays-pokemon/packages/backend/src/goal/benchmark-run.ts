@@ -1,5 +1,5 @@
 import path from "node:path";
-import { rename } from "node:fs/promises";
+import { mkdir, rename } from "node:fs/promises";
 import {
   BenchmarkWorkerResultSchema,
   summarizeCodexJsonl,
@@ -96,6 +96,23 @@ export async function writeBenchmarkJson(
   await rename(tmpPath, filePath);
 }
 
+export async function reserveBenchmarkDirectory(
+  directory: string,
+  label: string,
+): Promise<void> {
+  try {
+    await mkdir(directory);
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "EEXIST") {
+      throw new Error(
+        `refusing to reuse existing ${label} directory: ${directory}`,
+        { cause: error },
+      );
+    }
+    throw error;
+  }
+}
+
 async function copyStream(
   stream: ReadableStream<Uint8Array>,
   filePath: string,
@@ -185,12 +202,8 @@ export async function runBenchmarkOnce(
   const { args, implementation, run } = input;
   const runName = `run-${String(run).padStart(3, "0")}`;
   const runDirectory = path.join(args.output, runName);
+  await reserveBenchmarkDirectory(runDirectory, "benchmark run");
   const resultPath = path.join(runDirectory, "result.json");
-  if (await Bun.file(resultPath).exists()) {
-    throw new Error(
-      `refusing to overwrite existing run artifact: ${resultPath}`,
-    );
-  }
   const inputSavePath = path.join(runDirectory, "input.flash");
   const runSavePath = path.join(runDirectory, "run.flash");
   const persistedSavePath = path.join(runDirectory, "persisted.flash");

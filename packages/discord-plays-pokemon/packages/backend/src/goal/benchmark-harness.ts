@@ -357,7 +357,12 @@ function classifyNonMovementCommand(
   telemetry: CodexBenchmarkTelemetry,
   command: string,
 ): void {
-  if (/\bpokemonctl\s+screenshot\b/.test(command)) telemetry.screenshots += 1;
+  if (
+    /\bpokemonctl\s+screenshot\b/.test(command) ||
+    /\bpokemonctl\s+observe\b[^\n]*\s--screenshot(?:\s|$)/.test(command)
+  ) {
+    telemetry.screenshots += 1;
+  }
   if (
     /\bpokemonctl\s+(?:grep|read|list)\b/.test(command) ||
     /(?:^|[\s/])(?:knowledge|\.agents\/skills)(?:[\s/]|$)/.test(command)
