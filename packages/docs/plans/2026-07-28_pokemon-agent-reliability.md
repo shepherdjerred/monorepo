@@ -116,7 +116,8 @@ deferred by explicit direction.
 - [x] Implement benchmark-truth corrections.
 - [x] Implement compact semantic exits and named battle actions.
 - [ ] Publish and complete current-head verification for the semantic controls.
-- [ ] Implement and publish early-prerequisite prompt and excerpt ranking.
+- [x] Implement early-prerequisite prompt and excerpt ranking.
+- [ ] Publish and complete current-head verification for the decision policy.
 - [x] Replay the existing successful trace through the corrected telemetry.
 - [ ] Complete focused, real-WASM, Buildkite, and review verification for all
       new stack layers.
@@ -264,6 +265,10 @@ deferred by explicit direction.
   authoritative stable current-map exit IDs, bounded traversal of one
   caller-selected exit, and exact-name battle actions that execute only the
   caller's move, item, switch, run, or target choice.
+- 2026-07-29: Decision policy now requires compact-state inspection, an
+  explicit immediate prerequisite, and one early targeted acquisition search
+  before exploratory travel. Knowledge results rank and excerpt the passage
+  with the strongest term coverage, proximity, and acquisition evidence.
 
 ## Session Log — 2026-07-28
 
@@ -763,8 +768,8 @@ deferred by explicit direction.
 
 ### Remaining
 
-- Publish the #1847 fix, restack and publish #1848, and complete current-head
-  Buildkite and hosted-review verification for both pull requests.
+- Complete current-head Buildkite and hosted-review verification for PRs #1847
+  and #1848.
 
 ### Caveats
 
@@ -1123,3 +1128,30 @@ deferred by explicit direction.
   revalidation behavior; this fix changes only selected-exit routing.
 - Hosted review is intentionally deferred because the provider reports an
   explicit usage limit.
+
+## Session Log — 2026-07-29 (decision policy)
+
+### Done
+
+- Updated developer instructions to start from decision-complete compact state,
+  name an immediate prerequisite, make one early targeted search before
+  exploratory travel when needed, and prefer selected-exit/named-battle
+  semantics.
+- Added passage-level knowledge ranking by query-term coverage and proximity,
+  with additive acquisition evidence and decisive-passage excerpts.
+- Added regressions for prompt policy, acquisition ranking, and a decisive
+  Route 101 passage that beats scattered mentions.
+
+### Remaining
+
+- Publish the decision-policy draft PR and complete current-head Buildkite and
+  review verification for every open stack layer.
+- Complete the real-WASM gate for semantic controls when Docker responds, and
+  attach the required CLI recording to the semantic PR.
+
+### Caveats
+
+- The prompt and ranking improve general decision support without encoding a
+  deterministic quest route or battle strategy.
+- Repeat paid model measurements and Kubernetes mutation remain explicitly
+  deferred.

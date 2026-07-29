@@ -117,8 +117,10 @@ revisions.
   attribution.
 - Runtime access is bounded through `pokemonctl knowledge search` and
   `pokemonctl knowledge get`; do not embed the corpus in the base prompt.
-- Acquisition-intent searches must prefer the passage that says where an item
-  or HM is received over passages that merely repeat its later uses.
+- Search ranking must prefer passages with stronger query-term coverage and
+  proximity. Acquisition-intent searches add explicit reward/receipt evidence
+  and must excerpt where an item or HM is received rather than a prior
+  incidental mention or a later use.
 - `.agents/skills/pokemon-{world,progression,species,items,battle}` are focused
   discovery instructions, not copies of the underlying facts.
 
@@ -183,4 +185,26 @@ Test files (`*.test.ts`) are **excluded from tsconfig** (tsc with `types:["bun"]
 
 - Selected-exit navigation and named battle actions are mechanical helpers;
   route choice and battle strategy remain model decisions.
+- Repeat paid model measurements remain explicitly deferred.
+
+## Session Log — 2026-07-29 (decision policy)
+
+### Done
+
+- Updated the goal-agent loop to inspect compact state first, name the immediate
+  prerequisite, and search once early when its acquisition path is unknown.
+- Ranked knowledge passages by term coverage, proximity, and additive
+  acquisition evidence, then excerpted the decisive passage.
+
+### Remaining
+
+- Publish and complete current-head Buildkite and review verification for the
+  decision-policy stack layer.
+- Run the deferred catch benchmark only when a new measurement phase is
+  explicitly requested.
+
+### Caveats
+
+- The prompt guides general reasoning and tool use; it does not encode a quest
+  route, battle strategy, or deterministic solver.
 - Repeat paid model measurements remain explicitly deferred.

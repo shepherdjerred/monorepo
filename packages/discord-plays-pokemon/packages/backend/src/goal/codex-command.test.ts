@@ -128,7 +128,11 @@ describe("buildDeveloperInstructions", () => {
     expect(instructions).toContain("pokemonctl navigate");
     expect(instructions).toContain("bounded travel");
     expect(instructions).toContain("current map");
-    expect(instructions).toContain("finite step budget");
+    expect(instructions).toContain("pokemonctl map exits");
+    expect(instructions).toContain("pokemonctl navigate --exit");
+    expect(instructions).toContain("never chooses or chains a route");
+    expect(instructions).toContain("named pokemonctl battle actions");
+    expect(instructions).toContain("They do not choose strategy");
     expect(instructions).toContain(
       "raw pokemonctl press or pokemonctl chord as escape hatches",
     );
@@ -136,7 +140,10 @@ describe("buildDeveloperInstructions", () => {
 
   test("uses the compact observe-act-verify-replan loop", () => {
     const instructions = buildDeveloperInstructions();
-    expect(instructions).toContain("Observe the current phase");
+    expect(instructions).toContain("Start with one compact observation");
+    expect(instructions).toContain("immediate prerequisite");
+    expect(instructions).toContain("one targeted knowledge search early");
+    expect(instructions).toContain("before exploratory travel");
     expect(instructions).toContain("smallest semantic action");
     expect(instructions).toContain("settled outcome");
     expect(instructions).toContain("Replan immediately");
@@ -164,8 +171,12 @@ describe("buildDeveloperInstructions", () => {
     expect(instructions).toContain("dialogInputReady");
     expect(instructions).toContain("visible dialog may still be printing");
     expect(instructions).toContain("pokemonctl observe --full");
-    expect(instructions).toContain("detailed readiness");
-    expect(instructions).toContain("--full only to debug");
+    expect(instructions).toContain("decision-complete compact state");
+    expect(instructions).toContain("missing or contradictory evidence");
+    expect(instructions).toContain(
+      "one gameplay-changing pokemonctl operation",
+    );
+    expect(instructions).toContain("do not append a redundant observe");
   });
 
   test("does not embed encyclopedia or story walkthrough material", () => {

@@ -204,6 +204,45 @@ describe("knowledge acquisition search", () => {
       "progression:feebas",
     );
   });
+
+  test("ranks and excerpts the passage with the best term coverage and proximity", () => {
+    const base = new KnowledgeBase([
+      {
+        id: "world:scattered-route",
+        domain: "world",
+        title: "Scattered notes",
+        aliases: [],
+        tags: [],
+        body: `Route 101 is near Littleroot.
+
+Wild encounters are described much later.
+
+The grass contains Pokémon.`,
+        sources: [testSource],
+      },
+      {
+        id: "world:decisive-route",
+        domain: "world",
+        title: "Decisive route",
+        aliases: [],
+        tags: [],
+        body: `An incidental Route 101 mention.
+
+Route 101 tall grass contains wild Pokémon encounters.`,
+        sources: [testSource],
+      },
+    ]);
+
+    const results = base.search("Route 101 wild encounters", { limit: 2 });
+
+    expect(results.map((result) => result.id)).toEqual([
+      "world:decisive-route",
+      "world:scattered-route",
+    ]);
+    expect(results.at(0)?.excerpt).toContain(
+      "Route 101 tall grass contains wild Pokémon encounters",
+    );
+  });
 });
 
 describe("committed knowledge corpus", () => {

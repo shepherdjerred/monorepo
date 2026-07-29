@@ -97,8 +97,16 @@ const ACQUISITION_EVIDENCE_TERMS = new Set([
 ]);
 const ACQUISITION_EVIDENCE_SCORE = 150;
 const HM_ACQUISITION_EVIDENCE_SCORE = 200;
+const COVERAGE_TERM_SCORE = 15;
+const PROXIMITY_MAX_SCORE = 30;
+const PROXIMITY_MAX_SPAN = 600;
 
 type AcquisitionEvidence = Readonly<{
+  score: number;
+  position: number;
+}>;
+
+type PassageEvidence = Readonly<{
   score: number;
   position: number;
 }>;
@@ -194,10 +202,46 @@ function acquisitionEvidence(
   return bestEvidence;
 }
 
+function passageEvidence(
+  record: KnowledgeRecord,
+  queryTerms: readonly string[],
+): PassageEvidence | undefined {
+  let best: PassageEvidence | undefined;
+  let searchFrom = 0;
+  for (const passage of record.body.split(/\n\s*\n/u)) {
+    const position = record.body.indexOf(passage, searchFrom);
+    if (position === -1) {
+      throw new Error("knowledge passage must originate from its record body");
+    }
+    searchFrom = position + passage.length;
+    const normalizedPassage = normalize(passage);
+    const positions = queryTerms
+      .map((term) => normalizedPassage.indexOf(term))
+      .filter((termPosition) => termPosition >= 0);
+    const coverage = positions.length;
+    if (coverage === 0) continue;
+    const span =
+      coverage === 1
+        ? PROXIMITY_MAX_SPAN
+        : Math.max(...positions) - Math.min(...positions);
+    const proximityScore =
+      coverage < 2
+        ? 0
+        : Math.round(
+            PROXIMITY_MAX_SCORE * Math.max(0, 1 - span / PROXIMITY_MAX_SPAN),
+          );
+    const score = coverage * COVERAGE_TERM_SCORE + proximityScore;
+    if (best === undefined || score > best.score) {
+      best = { score, position };
+    }
+  }
+  return best;
+}
+
 function scoreRecord(
   record: KnowledgeRecord,
   queryTerms: readonly string[],
-  acquisitionScore: number,
+  evidenceScore: number,
 ): number {
   const title = normalize(record.title);
   const aliases = normalize(record.aliases.join(" "));
@@ -214,7 +258,7 @@ function scoreRecord(
     }
     return score;
   }, 0);
-  return relevanceScore + acquisitionScore;
+  return relevanceScore + evidenceScore;
 }
 
 function excerpt(
@@ -261,13 +305,19 @@ export class KnowledgeBase {
           options.domain === undefined || record.domain === options.domain,
       )
       .map((record) => {
-        const evidence = acquisitionIntent
+        const acquisition = acquisitionIntent
           ? acquisitionEvidence(record, queryTerms)
           : undefined;
+        const passage = passageEvidence(record, queryTerms);
+        const preferredEvidence = acquisition ?? passage;
         return {
           record,
-          evidence,
-          score: scoreRecord(record, queryTerms, evidence?.score ?? 0),
+          preferredEvidence,
+          score: scoreRecord(
+            record,
+            queryTerms,
+            (passage?.score ?? 0) + (acquisition?.score ?? 0),
+          ),
         };
       })
       .filter((candidate) => candidate.score > 0)
@@ -277,11 +327,11 @@ export class KnowledgeBase {
           left.record.title.localeCompare(right.record.title),
       )
       .slice(0, options.limit)
-      .map(({ record, score, evidence }) => ({
+      .map(({ record, score, preferredEvidence }) => ({
         id: record.id,
         domain: record.domain,
         title: record.title,
-        excerpt: excerpt(record.body, queryTerms, evidence?.position),
+        excerpt: excerpt(record.body, queryTerms, preferredEvidence?.position),
         sources: record.sources,
         score,
       }));
