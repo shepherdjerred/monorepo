@@ -69,7 +69,7 @@ system against a copied live save and the exact goal `get me a pokeman`.
 
 - [x] Implement and verify the observation/control foundation.
 - [x] Implement and verify the compact prompt and benchmark harness.
-- [ ] Implement and verify the knowledge corpus, retrieval, and skills.
+- [x] Implement and verify the knowledge corpus, retrieval, and skills.
 - [ ] Complete repeated local evaluation and iterate on failures.
 - [ ] Publish the review-ready stack and record CI/live verification.
 
@@ -77,21 +77,77 @@ system against a copied live save and the exact goal `get me a pokeman`.
 
 - 2026-07-28: Approved for implementation. Controls and prompt are the
   critical path; skills are explicitly secondary.
+- 2026-07-28: The untouched-agent baseline completed with zero successful
+  catches in three runs (33m42s, 312 tool calls, 32.4M input tokens, estimated
+  cost $5.07). The candidate evaluator now requires exact catch-species
+  correlation through event, live party/Pokedex state, and persisted save
+  evidence.
+- 2026-07-28: Integration review found and corrected start/shutdown and
+  process/lease races, plus a production-shape movement telemetry mismatch.
+  `/goal` is restricted to the active session starter; full isolated runner
+  architecture remains tracked in
+  `packages/docs/todos/pokemon-goal-runner-isolation.md`.
+- 2026-07-28: Candidate evaluation exposed incorrect wasm32 SaveBlock offsets,
+  action outcomes that ignored battle cursor and visible dialog changes,
+  oversized semantic responses, limited active-object visibility, and provider
+  failures counted as game failures. Those defects are fixed and covered by
+  focused tests.
+- 2026-07-28: A manual general-control run beat May, received the Pokedex and
+  five Poke Balls, and visibly caught a Poochyena. That run exposed a separate
+  teardown defect: the host copied stale flash because Emerald had not
+  serialized live RAM. The new engine checkpoint uses Emerald's canonical save
+  path, ordered atomic host writes, and an independent reboot test that proves
+  a live movement delta plus party and Pokedex state survive.
+- 2026-07-28: The candidate three-run model comparison is not a valid
+  measurement yet. Run 1 reached Route 103 but did not catch within 28m40s;
+  runs 2 and 3 stopped immediately on Codex quota. Provider failures are now
+  classified as invalid evidence and stop the series rather than lowering the
+  game success rate.
 
 ## Session Log — 2026-07-28
 
 ### Done
 
-- Captured the approved implementation plan and source/licensing decisions.
+- Implemented authoritative wasm32 save decoding, broader active-object
+  observations, battle/visual action evidence, bounded navigation controls, a
+  compact semantic CLI, prompt loop, provider-failure classification, and
+  strict benchmark evidence.
+- Implemented a general engine checkpoint and ordered atomic flash
+  persistence. A rebuilt real WASM passed an independent checkpoint/reboot
+  integration test against a copied live save.
+- Verified the backend (245 tests), package typecheck/lint, knowledge/build
+  scripts, the exhaustive root `bun run verify` graph (217/217 tasks), and a
+  clean Docker `smoke` build that rebuilt the patched WASM and passed both the
+  ABI and in-image application checks.
+- Completed a manual general-control playthrough through the first rival,
+  Pokedex/Poke Ball acquisition, and a visible Poochyena catch.
+- Published the three-PR git-spice stack as #1802, #1803, and #1805 and attached
+  the rendered catch evidence to #1802. The first current-head Buildkite run
+  exposed a cross-PR test dependency and router complexity regression; the
+  test now lives with the compact CLI implementation in #1803, while #1802
+  owns the shared semantic router. The exact test, lint, and Knip gates pass
+  locally after that correction. Goal-process teardown tests now synchronize
+  on the kill request instead of guessing that asynchronous work completes
+  within 5 ms; the lifecycle suite passed 100/100 repeated cases.
 
 ### Remaining
 
-- Execute, verify, publish, and measure the implementation.
+- Monitor the corrected stack's replacement current-head Buildkite runs.
+- Rerun three clean-copy candidate trials when Codex quota is available. Do
+  not compare the current provider-invalid artifacts to the valid 0/3
+  baseline.
+- Run a production goal only after three consecutive local successes.
 
 ### Caveats
 
 - No generalized runtime goal verifier or deterministic story solver will be
   introduced.
+- The visual manual catch occurred exactly at the 30-minute timeout before the
+  post-catch script updated the party/catch-event watcher, so it proves control
+  capability but is not counted as a strict benchmark success.
+- The valid baseline is 0/3 catches in 33m42s with 312 tool calls and 32.4M
+  input tokens (estimated $5.07). Candidate performance remains unmeasured
+  until provider capacity returns.
 
 ## Session Log — 2026-07-29
 
