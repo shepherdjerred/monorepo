@@ -19,6 +19,19 @@ export type BenchmarkImplementation = {
   backendRoot: string;
 };
 
+export type BenchmarkProvenanceInput = {
+  inputSaveSha256: string;
+  wasmSha256: string;
+  targetPinnedWasmCommit: string;
+  targetCommit: string;
+  runnerCommit: string;
+  runnerWorkingTreeDirty: boolean;
+  workerSourceSha256: string;
+  evaluatorSourceSha256: string;
+  codexVersion: string;
+  bunVersion: string;
+};
+
 export async function sha256File(filePath: string): Promise<string> {
   const hasher = new Bun.CryptoHasher("sha256");
   for await (const chunk of Bun.file(filePath).stream()) {
@@ -48,6 +61,19 @@ export async function commandOutput(
     );
   }
   return stdout.trim();
+}
+
+export async function requireCleanGitWorktree(
+  cwd: string,
+  label: string,
+): Promise<void> {
+  const status = await commandOutput(
+    ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+    cwd,
+  );
+  if (status.length > 0) {
+    throw new Error(`${label} must be clean:\n${status}`);
+  }
 }
 
 export async function writeBenchmarkJson(
@@ -120,8 +146,9 @@ function telemetryForArtifact(input: {
   reasoning: string;
   goalId: string;
   finalSaveSha256: string;
-  wasmCommit: string;
-  gitCommit: string;
+  wasmSha256: string;
+  targetCommit: string;
+  runnerCommit: string;
 }): GoalBenchmarkTelemetry {
   return {
     durationMs: input.durationMs,
@@ -142,8 +169,9 @@ function telemetryForArtifact(input: {
     estimatedCostUsd: computeCost(input.model, input.raw),
     traceId: input.goalId,
     saveSha256: input.finalSaveSha256,
-    wasmCommit: input.wasmCommit,
-    gitCommit: input.gitCommit,
+    wasmSha256: input.wasmSha256,
+    targetCommit: input.targetCommit,
+    runnerCommit: input.runnerCommit,
     model: input.model,
     reasoningEffort: input.reasoning,
   };
@@ -170,10 +198,7 @@ type RunBenchmarkOnceInput = {
   workerSource: string;
   run: number;
   sourceSaveBytes: Uint8Array;
-  sourceSaveSha256: string;
-  wasmSha256: string;
-  wasmCommit: string;
-  gitCommit: string;
+  provenance: BenchmarkProvenanceInput;
 };
 
 export async function runBenchmarkOnce(
@@ -259,8 +284,9 @@ export async function runBenchmarkOnce(
       reasoning: args.reasoning,
       goalId: workerResult.goalState.id,
       finalSaveSha256,
-      wasmCommit: input.wasmCommit,
-      gitCommit: input.gitCommit,
+      wasmSha256: input.provenance.wasmSha256,
+      targetCommit: input.provenance.targetCommit,
+      runnerCommit: input.provenance.runnerCommit,
     });
     await writeBenchmarkJson(resultPath, {
       schemaVersion: 1,
@@ -276,11 +302,21 @@ export async function runBenchmarkOnce(
         implementationRoot: implementation.packageRoot,
       },
       provenance: {
-        inputSaveSha256: input.sourceSaveSha256,
+        inputSaveSha256: input.provenance.inputSaveSha256,
         finalSaveSha256,
-        wasmSha256: input.wasmSha256,
-        wasmCommit: input.wasmCommit,
-        gitCommit: input.gitCommit,
+        wasmSha256: input.provenance.wasmSha256,
+        targetPinnedWasmCommit: input.provenance.targetPinnedWasmCommit,
+        wasmIdentity: {
+          kind: "external-file-sha256",
+          targetPinVerification: "not-verified",
+        },
+        targetCommit: input.provenance.targetCommit,
+        runnerCommit: input.provenance.runnerCommit,
+        runnerWorkingTreeDirty: input.provenance.runnerWorkingTreeDirty,
+        workerSourceSha256: input.provenance.workerSourceSha256,
+        evaluatorSourceSha256: input.provenance.evaluatorSourceSha256,
+        codexVersion: input.provenance.codexVersion,
+        bunVersion: input.provenance.bunVersion,
         codexThreadId: telemetryInput.raw.codexThreadId,
         traceIdentifier: workerResult.goalState.id,
         codexJsonlSha256: telemetryInput.jsonlSha256,
@@ -328,11 +364,21 @@ export async function runBenchmarkOnce(
         implementationRoot: implementation.packageRoot,
       },
       provenance: {
-        inputSaveSha256: input.sourceSaveSha256,
+        inputSaveSha256: input.provenance.inputSaveSha256,
         finalSaveSha256,
-        wasmSha256: input.wasmSha256,
-        wasmCommit: input.wasmCommit,
-        gitCommit: input.gitCommit,
+        wasmSha256: input.provenance.wasmSha256,
+        targetPinnedWasmCommit: input.provenance.targetPinnedWasmCommit,
+        wasmIdentity: {
+          kind: "external-file-sha256",
+          targetPinVerification: "not-verified",
+        },
+        targetCommit: input.provenance.targetCommit,
+        runnerCommit: input.provenance.runnerCommit,
+        runnerWorkingTreeDirty: input.provenance.runnerWorkingTreeDirty,
+        workerSourceSha256: input.provenance.workerSourceSha256,
+        evaluatorSourceSha256: input.provenance.evaluatorSourceSha256,
+        codexVersion: input.provenance.codexVersion,
+        bunVersion: input.provenance.bunVersion,
         codexThreadId: telemetryInput.raw.codexThreadId,
         traceIdentifier: null,
         codexJsonlSha256: telemetryInput.jsonlSha256,

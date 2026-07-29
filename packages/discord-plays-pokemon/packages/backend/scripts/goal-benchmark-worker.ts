@@ -3,6 +3,7 @@ import { z } from "zod";
 import { ConfigSchema } from "#src/config/schema.ts";
 import { BUTTON } from "#src/emulator/constants.ts";
 import { Emulator } from "#src/emulator/emulator.ts";
+import { SPECIES_TO_NATIONAL } from "#src/game/events/generated/species.ts";
 import { readGameSnapshot } from "#src/game/events/snapshot.ts";
 import type { GameSnapshot } from "#src/game/events/types.ts";
 import { createGameEventWatcher } from "#src/game/events/watcher.ts";
@@ -43,7 +44,15 @@ type SerializedSnapshot = {
 
 type CatchEvent = {
   occurredAt: string;
+  frame: number;
   species: number;
+  nationalDexNumber: number;
+  postEventParty: {
+    personality: number;
+    otId: number;
+    species: number;
+  }[];
+  postEventNationalDexOwned: boolean;
 };
 
 type ProcessCapture = {
@@ -127,6 +136,40 @@ function liveSpatial(
   emulator: Emulator,
 ): ReturnType<typeof readSpatialSnapshot> {
   return readSpatialSnapshot(emulator.memoryReader(), emulator.gameSymbols());
+}
+
+function captureCatchEvent(
+  emulator: Emulator,
+  frame: number,
+  species: number,
+): CatchEvent {
+  const snapshot = liveSnapshot(emulator);
+  if (snapshot === null) {
+    throw new Error("live snapshot unavailable while capturing catch event");
+  }
+  const nationalDexNumber = SPECIES_TO_NATIONAL[species];
+  if (nationalDexNumber === undefined || nationalDexNumber <= 0) {
+    throw new Error(`species ${String(species)} has no National Dex mapping`);
+  }
+  const bitIndex = nationalDexNumber - 1;
+  const dexByte = snapshot.dexOwned[Math.floor(bitIndex / 8)];
+  if (dexByte === undefined) {
+    throw new Error(
+      `National Dex ${String(nationalDexNumber)} is outside owned bitfield`,
+    );
+  }
+  return {
+    occurredAt: new Date().toISOString(),
+    frame,
+    species,
+    nationalDexNumber,
+    postEventParty: snapshot.party.map((mon) => ({
+      personality: mon.personality,
+      otId: mon.otId,
+      species: mon.species,
+    })),
+    postEventNationalDexOwned: (dexByte & (1 << (bitIndex % 8))) !== 0,
+  };
 }
 
 async function bootAndContinue(
@@ -335,6 +378,7 @@ async function main(): Promise<void> {
   let initialSnapshot: GameSnapshot | undefined;
   let finalSnapshot: GameSnapshot | undefined;
   let goalId: string | undefined;
+  let catchCaptureError: Error | undefined;
   const catchEvents: CatchEvent[] = [];
 
   try {
@@ -352,10 +396,12 @@ async function main(): Promise<void> {
       if (frame % 30 !== 0) return;
       for (const event of watcher.poll()) {
         if (event.kind === "catch") {
-          catchEvents.push({
-            occurredAt: new Date().toISOString(),
-            species: event.species,
-          });
+          try {
+            catchEvents.push(captureCatchEvent(emulator, frame, event.species));
+          } catch (error) {
+            catchCaptureError =
+              error instanceof Error ? error : new Error(String(error));
+          }
         }
       }
     });
@@ -392,6 +438,9 @@ async function main(): Promise<void> {
     goalId = active.id;
     await waitForGoal(manager, goalId, config.runtimeMinutes);
     await processCapture.completed();
+    if (catchCaptureError !== undefined) {
+      throw catchCaptureError;
+    }
     finalSnapshot = await waitForLiveSnapshot(
       emulator,
       config.bootTimeoutSeconds,

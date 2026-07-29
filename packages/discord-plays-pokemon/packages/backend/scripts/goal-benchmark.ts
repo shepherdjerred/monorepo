@@ -9,6 +9,7 @@ import {
 } from "#src/goal/benchmark-harness.ts";
 import {
   commandOutput,
+  requireCleanGitWorktree,
   runBenchmarkOnce,
   sha256File,
   writeBenchmarkJson,
@@ -18,6 +19,10 @@ import {
 const FLASH_SAVE_BYTES = 128 * 1024;
 const PACKAGE_ROOT = path.resolve(import.meta.dir, "../../..");
 const WORKER_SOURCE = path.join(import.meta.dir, "goal-benchmark-worker.ts");
+const EVALUATOR_SOURCE = path.resolve(
+  import.meta.dir,
+  "../src/goal/benchmark-evaluator.ts",
+);
 
 const UpstreamSchema = z.looseObject({
   commit: z.string().regex(/^[0-9a-f]{40}$/),
@@ -52,6 +57,9 @@ Options:
 The harness provides only mechanical boot/Continue handling. The model chooses
 all gameplay actions. Each run writes result.json, raw Codex JSONL, logs,
 screenshots, and independent save evidence. summary.json is written last.
+The selected implementation must have a clean Git worktree. The supplied WASM
+is identified by its SHA-256; the target's configured upstream pin is recorded
+separately with an explicit not-verified relationship to that external file.
 
 Exit status:
   0  Every requested run passed the strict catch evaluator
@@ -112,6 +120,7 @@ async function main(): Promise<void> {
   await requireFile(args.save, "source save");
   await requireFile(args.wasm, "WASM");
   await requireFile(WORKER_SOURCE, "benchmark worker source");
+  await requireFile(EVALUATOR_SOURCE, "benchmark evaluator source");
   const sourceSaveBytes = await Bun.file(args.save).bytes();
   if (sourceSaveBytes.length !== FLASH_SAVE_BYTES) {
     throw new Error(
@@ -127,10 +136,32 @@ async function main(): Promise<void> {
   const implementation = await resolveImplementationRoot(
     args.implementationRoot,
   );
-  const [sourceSaveSha256, wasmSha256, gitCommit] = await Promise.all([
+  await requireCleanGitWorktree(
+    implementation.packageRoot,
+    "target implementation",
+  );
+  const runnerStatus = await commandOutput(
+    ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+    PACKAGE_ROOT,
+  );
+  const [
+    sourceSaveSha256,
+    wasmSha256,
+    targetCommit,
+    runnerCommit,
+    workerSourceSha256,
+    evaluatorSourceSha256,
+    codexVersion,
+    bunVersion,
+  ] = await Promise.all([
     sha256File(args.save),
     sha256File(args.wasm),
     commandOutput(["git", "rev-parse", "HEAD"], implementation.packageRoot),
+    commandOutput(["git", "rev-parse", "HEAD"], PACKAGE_ROOT),
+    sha256File(WORKER_SOURCE),
+    sha256File(EVALUATOR_SOURCE),
+    commandOutput([args.codexBinary, "--version"], implementation.backendRoot),
+    commandOutput(["bun", "--version"], implementation.backendRoot),
   ]);
   const upstream = UpstreamSchema.parse(
     await Bun.file(
@@ -151,10 +182,18 @@ async function main(): Promise<void> {
         workerSource: WORKER_SOURCE,
         run,
         sourceSaveBytes,
-        sourceSaveSha256,
-        wasmSha256,
-        wasmCommit: upstream.commit,
-        gitCommit,
+        provenance: {
+          inputSaveSha256: sourceSaveSha256,
+          wasmSha256,
+          targetPinnedWasmCommit: upstream.commit,
+          targetCommit,
+          runnerCommit,
+          runnerWorkingTreeDirty: runnerStatus.length > 0,
+          workerSourceSha256,
+          evaluatorSourceSha256,
+          codexVersion,
+          bunVersion,
+        },
       }),
     );
   }
@@ -170,8 +209,18 @@ async function main(): Promise<void> {
     provenance: {
       inputSaveSha256: sourceSaveSha256,
       wasmSha256,
-      wasmCommit: upstream.commit,
-      gitCommit,
+      targetPinnedWasmCommit: upstream.commit,
+      wasmIdentity: {
+        kind: "external-file-sha256",
+        targetPinVerification: "not-verified",
+      },
+      targetCommit,
+      runnerCommit,
+      runnerWorkingTreeDirty: runnerStatus.length > 0,
+      workerSourceSha256,
+      evaluatorSourceSha256,
+      codexVersion,
+      bunVersion,
     },
   };
   await writeBenchmarkJson(summaryPath, summary);

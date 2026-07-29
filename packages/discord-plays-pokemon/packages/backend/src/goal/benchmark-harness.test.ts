@@ -1,10 +1,18 @@
 import { describe, expect, test } from "bun:test";
+import path from "node:path";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import {
   DEFAULT_BENCHMARK_GOAL,
   buildBenchmarkSummary,
   parseBenchmarkArgs,
   summarizeCodexJsonl,
 } from "./benchmark-harness.ts";
+import { commandOutput, requireCleanGitWorktree } from "./benchmark-run.ts";
+
+async function git(command: readonly string[], cwd: string): Promise<string> {
+  return await commandOutput(["git", ...command], cwd);
+}
 
 describe("parseBenchmarkArgs", () => {
   test("requires artifacts and preserves the exact default goal", () => {
@@ -142,6 +150,101 @@ describe("summarizeCodexJsonl", () => {
       codexThreadId: "thread-123",
     });
   });
+
+  test("derives movement loops and stops from structured action outcomes", () => {
+    const commands = [
+      {
+        id: "move-out",
+        command: "pokemonctl move east --tiles 1",
+        output: {
+          status: "completed",
+          before: { map: "Route 101", x: 10, y: 8 },
+          after: { map: "Route 101", x: 11, y: 8 },
+        },
+      },
+      {
+        id: "move-return",
+        command: "pokemonctl move west --tiles 1",
+        output: {
+          outcome: {
+            status: "completed",
+            before: { mapId: "Route 101", x: 11, y: 8 },
+            after: { mapId: "Route 101", x: 10, y: 8 },
+          },
+        },
+      },
+      {
+        id: "move-stopped",
+        command: "pokemonctl tap north",
+        output: {
+          status: "stopped",
+          stopReason: "collision",
+          before: { mapGroup: 0, mapNum: 16, x: 10, y: 8 },
+          after: { mapGroup: 0, mapNum: 16, x: 10, y: 8 },
+        },
+      },
+    ].map(({ id, command, output }) => ({
+      type: "item.completed",
+      item: {
+        id,
+        type: "command_execution",
+        command,
+        aggregated_output: JSON.stringify(output),
+        exit_code: 0,
+      },
+    }));
+
+    const telemetry = summarizeCodexJsonl(
+      commands.map((line) => JSON.stringify(line)).join("\n"),
+    );
+    expect(telemetry.movementActions).toBe(3);
+    expect(telemetry.movementStops).toBe(1);
+    expect(telemetry.repeatedPositionLoops).toBe(2);
+  });
+
+  test("supports legacy Location snapshots and ignores command text without position output", () => {
+    const lines = [
+      {
+        type: "item.completed",
+        item: {
+          id: "legacy-1",
+          type: "command_execution",
+          command: "pokemonctl press up",
+          aggregated_output:
+            "Location: Littleroot Town @ (12, 7) facing north, on foot",
+          exit_code: 0,
+        },
+      },
+      {
+        type: "item.completed",
+        item: {
+          id: "legacy-2",
+          type: "command_execution",
+          command: "pokemonctl press up",
+          aggregated_output:
+            "Location: Littleroot Town @ (12, 7) facing north, on foot",
+          exit_code: 0,
+        },
+      },
+      {
+        type: "item.completed",
+        item: {
+          id: "no-evidence",
+          type: "command_execution",
+          command: "pokemonctl move north --tiles 10",
+          aggregated_output: "command finished",
+          exit_code: 0,
+        },
+      },
+    ];
+    const telemetry = summarizeCodexJsonl(
+      lines.map((line) => JSON.stringify(line)).join("\n"),
+    );
+
+    expect(telemetry.toolCalls).toBe(3);
+    expect(telemetry.movementActions).toBe(2);
+    expect(telemetry.repeatedPositionLoops).toBe(1);
+  });
 });
 
 describe("buildBenchmarkSummary", () => {
@@ -191,5 +294,37 @@ describe("buildBenchmarkSummary", () => {
       knownCostUsd: 0.1,
       runsWithUnknownCost: 1,
     });
+  });
+});
+
+describe("requireCleanGitWorktree", () => {
+  test("accepts a clean target and rejects tracked target drift", async () => {
+    const directory = await mkdtemp(
+      path.join(tmpdir(), "pokemon-benchmark-git-"),
+    );
+    try {
+      await git(["init"], directory);
+      await git(
+        ["config", "user.email", "benchmark@example.invalid"],
+        directory,
+      );
+      await git(["config", "user.name", "Benchmark Test"], directory);
+      await Bun.write(path.join(directory, "target.txt"), "committed\n");
+      await git(["add", "target.txt"], directory);
+      await git(
+        ["-c", "commit.gpgsign=false", "commit", "-m", "test: fixture"],
+        directory,
+      );
+
+      await expect(
+        requireCleanGitWorktree(directory, "target implementation"),
+      ).resolves.toBeUndefined();
+      await Bun.write(path.join(directory, "target.txt"), "dirty\n");
+      await expect(
+        requireCleanGitWorktree(directory, "target implementation"),
+      ).rejects.toThrow("target implementation must be clean");
+    } finally {
+      await rm(directory, { recursive: true });
+    }
   });
 });

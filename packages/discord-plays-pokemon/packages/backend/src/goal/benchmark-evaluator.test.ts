@@ -46,9 +46,34 @@ function snapshot(
 }
 
 const starter = mon(1, 277);
-const caught = mon(2, 263);
+const caught = mon(2, 288);
 const initial = snapshot([starter], [251]);
 const afterCatch = snapshot([starter, caught], [251, 262]);
+
+function catchEvent(
+  values: {
+    occurredAt?: string;
+    species?: number;
+    nationalDexNumber?: number;
+    postEventParty?: readonly ParsedPartyMon[];
+    postEventNationalDexOwned?: boolean;
+  } = {},
+) {
+  return {
+    occurredAt: values.occurredAt ?? CAUGHT_AT,
+    frame: 18_000,
+    species: values.species ?? 288,
+    nationalDexNumber: values.nationalDexNumber ?? 263,
+    postEventParty: (values.postEventParty ?? afterCatch.party).map(
+      (entry) => ({
+        personality: entry.personality,
+        otId: entry.otId,
+        species: entry.species,
+      }),
+    ),
+    postEventNationalDexOwned: values.postEventNationalDexOwned ?? true,
+  };
+}
 
 function persisted(
   snapshotValue: GameSnapshot = afterCatch,
@@ -67,18 +92,19 @@ describe("evaluateCatchBenchmark", () => {
       finishedAt: FINISHED_AT,
       initialSnapshot: initial,
       finalSnapshot: afterCatch,
-      catchEvents: [{ occurredAt: CAUGHT_AT, species: 263 }],
+      catchEvents: [catchEvent()],
       persistedSave: persisted(),
     });
 
     expect(result.success).toBe(true);
-    expect(result.caughtSpecies).toEqual([263]);
+    expect(result.caughtSpecies).toEqual([288]);
+    expect(result.verifiedCaughtSpecies).toEqual([288]);
     expect(result.evidence).toEqual({
       postStartCatch: true,
-      livePartyAdded: true,
-      liveDexIncreased: true,
-      persistedPartyAdded: true,
-      persistedDexIncreased: true,
+      postEventSpeciesObserved: true,
+      liveSpeciesCorrelated: true,
+      persistedSpeciesCorrelated: true,
+      exactSpeciesCorrelated: true,
       saveWrittenAfterCatch: true,
       saveSizeValid: true,
     });
@@ -98,8 +124,9 @@ describe("evaluateCatchBenchmark", () => {
     expect(result.success).toBe(false);
     expect(result.failures).toEqual([
       "no catch event occurred during the benchmark window",
-      "live party and Pokédex contain no post-start catch evidence",
-      "persisted party and Pokédex contain no catch evidence",
+      "catch event has no exact post-event species delta",
+      "live state contains no delta for the caught species",
+      "persisted state contains no delta for the caught species",
       "save was not persisted after the catch event",
     ]);
   });
@@ -110,7 +137,7 @@ describe("evaluateCatchBenchmark", () => {
       finishedAt: FINISHED_AT,
       initialSnapshot: initial,
       finalSnapshot: afterCatch,
-      catchEvents: [{ occurredAt: "2026-07-28T09:59:59.000Z", species: 263 }],
+      catchEvents: [catchEvent({ occurredAt: "2026-07-28T09:59:59.000Z" })],
       persistedSave: persisted(),
     });
 
@@ -127,7 +154,7 @@ describe("evaluateCatchBenchmark", () => {
       finishedAt: FINISHED_AT,
       initialSnapshot: initial,
       finalSnapshot: afterCatch,
-      catchEvents: [{ occurredAt: CAUGHT_AT, species: 263 }],
+      catchEvents: [catchEvent()],
       persistedSave: {
         ...persisted(),
         persistedAt: "2026-07-28T10:04:59.000Z",
@@ -139,6 +166,69 @@ describe("evaluateCatchBenchmark", () => {
     expect(result.failures).toContain(
       "save was not persisted after the catch event",
     );
+  });
+
+  test("rejects unrelated party and Dex increases for another species", () => {
+    const result = evaluateCatchBenchmark({
+      startedAt: STARTED_AT,
+      finishedAt: FINISHED_AT,
+      initialSnapshot: initial,
+      finalSnapshot: afterCatch,
+      catchEvents: [
+        catchEvent({
+          species: 286,
+          nationalDexNumber: 261,
+          postEventParty: afterCatch.party,
+          postEventNationalDexOwned: false,
+        }),
+      ],
+      persistedSave: persisted(),
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.verifiedCaughtSpecies).toEqual([]);
+    expect(result.evidence).toEqual({
+      postStartCatch: true,
+      postEventSpeciesObserved: false,
+      liveSpeciesCorrelated: false,
+      persistedSpeciesCorrelated: false,
+      exactSpeciesCorrelated: false,
+      saveWrittenAfterCatch: true,
+      saveSizeValid: true,
+    });
+  });
+
+  test("correlates an exact species through its National Dex bit", () => {
+    const dexOnlyAfterCatch = snapshot([starter], [251, 262]);
+    const result = evaluateCatchBenchmark({
+      startedAt: STARTED_AT,
+      finishedAt: FINISHED_AT,
+      initialSnapshot: initial,
+      finalSnapshot: dexOnlyAfterCatch,
+      catchEvents: [
+        catchEvent({
+          postEventParty: [starter],
+          postEventNationalDexOwned: true,
+        }),
+      ],
+      persistedSave: persisted(dexOnlyAfterCatch),
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.verifiedCaughtSpecies).toEqual([288]);
+  });
+
+  test("rejects a claimed National Dex number that does not map to species", () => {
+    expect(() =>
+      evaluateCatchBenchmark({
+        startedAt: STARTED_AT,
+        finishedAt: FINISHED_AT,
+        initialSnapshot: initial,
+        finalSnapshot: afterCatch,
+        catchEvents: [catchEvent({ nationalDexNumber: 261 })],
+        persistedSave: persisted(),
+      }),
+    ).toThrow("maps to National Dex 263, not 261");
   });
 
   test("rejects malformed chronology instead of guessing", () => {

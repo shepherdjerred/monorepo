@@ -3,12 +3,23 @@
 // decide whether a production /goal process is "completed".
 
 import type { GameSnapshot } from "#src/game/events/types.ts";
+import { SPECIES_TO_NATIONAL } from "#src/game/events/generated/species.ts";
 
 const EMERALD_FLASH_SAVE_BYTES = 128 * 1024;
 
+export type PartyIdentityEvidence = {
+  personality: number;
+  otId: number;
+  species: number;
+};
+
 export type CatchEventEvidence = {
   occurredAt: string;
+  frame: number;
   species: number;
+  nationalDexNumber: number;
+  postEventParty: readonly PartyIdentityEvidence[];
+  postEventNationalDexOwned: boolean;
 };
 
 export type PersistedSaveEvidence = {
@@ -28,10 +39,10 @@ export type CatchBenchmarkInput = {
 
 export type CatchBenchmarkEvidence = {
   postStartCatch: boolean;
-  livePartyAdded: boolean;
-  liveDexIncreased: boolean;
-  persistedPartyAdded: boolean;
-  persistedDexIncreased: boolean;
+  postEventSpeciesObserved: boolean;
+  liveSpeciesCorrelated: boolean;
+  persistedSpeciesCorrelated: boolean;
+  exactSpeciesCorrelated: boolean;
   saveWrittenAfterCatch: boolean;
   saveSizeValid: boolean;
 };
@@ -40,6 +51,7 @@ export type CatchBenchmarkResult = {
   objective: "catch-pokemon";
   success: boolean;
   caughtSpecies: readonly number[];
+  verifiedCaughtSpecies: readonly number[];
   evidence: CatchBenchmarkEvidence;
   failures: readonly string[];
 };
@@ -63,8 +75,9 @@ export type GoalBenchmarkTelemetry = {
   estimatedCostUsd: number | null;
   traceId: string;
   saveSha256: string;
-  wasmCommit: string;
-  gitCommit: string;
+  wasmSha256: string;
+  targetCommit: string;
+  runnerCommit: string;
   model: string;
   reasoningEffort: string;
 };
@@ -87,47 +100,76 @@ export function evaluateCatchBenchmark(
     const occurredAt = timestamp(event.occurredAt, "catchEvents[].occurredAt");
     return occurredAt >= startedAt && occurredAt <= finishedAt;
   });
-  const latestCatchAt =
-    postStartEvents.length === 0
-      ? undefined
-      : Math.max(
-          ...postStartEvents.map((event) =>
-            timestamp(event.occurredAt, "catchEvents[].occurredAt"),
-          ),
-        );
-
-  const livePartyAdded = hasNewPartyMember(
-    input.initialSnapshot,
-    input.finalSnapshot,
-  );
-  const liveDexIncreased =
-    ownedCount(input.finalSnapshot.dexOwned) >
-    ownedCount(input.initialSnapshot.dexOwned);
-
   const persistedSnapshot = input.persistedSave?.snapshot;
-  const persistedPartyAdded =
-    persistedSnapshot === undefined
-      ? false
-      : hasNewPartyMember(input.initialSnapshot, persistedSnapshot);
-  const persistedDexIncreased =
-    persistedSnapshot === undefined
-      ? false
-      : ownedCount(persistedSnapshot.dexOwned) >
-        ownedCount(input.initialSnapshot.dexOwned);
+  const correlated = postStartEvents.map((event) => {
+    const expectedNationalDexNumber = nationalDexNumber(event.species);
+    if (event.nationalDexNumber !== expectedNationalDexNumber) {
+      throw new Error(
+        `catch event species ${String(event.species)} maps to National Dex ${String(expectedNationalDexNumber)}, not ${String(event.nationalDexNumber)}`,
+      );
+    }
+    const postEventSpeciesObserved =
+      hasNewPartyIdentity(
+        input.initialSnapshot.party,
+        event.postEventParty,
+        event.species,
+      ) ||
+      (!dexOwned(input.initialSnapshot, expectedNationalDexNumber) &&
+        event.postEventNationalDexOwned);
+    const liveSpeciesCorrelated = snapshotContainsSpeciesDelta(
+      input.initialSnapshot,
+      input.finalSnapshot,
+      event.species,
+      expectedNationalDexNumber,
+    );
+    const persistedSpeciesCorrelated =
+      persistedSnapshot !== undefined &&
+      snapshotContainsSpeciesDelta(
+        input.initialSnapshot,
+        persistedSnapshot,
+        event.species,
+        expectedNationalDexNumber,
+      );
+    const saveWrittenAfterCatch =
+      input.persistedSave !== null &&
+      timestamp(input.persistedSave.persistedAt, "persistedSave.persistedAt") >=
+        timestamp(event.occurredAt, "catchEvents[].occurredAt");
+    return {
+      event,
+      postEventSpeciesObserved,
+      liveSpeciesCorrelated,
+      persistedSpeciesCorrelated,
+      saveWrittenAfterCatch,
+      exactSpeciesCorrelated:
+        postEventSpeciesObserved &&
+        liveSpeciesCorrelated &&
+        persistedSpeciesCorrelated,
+    };
+  });
+  const verified = correlated.filter(
+    (entry) => entry.exactSpeciesCorrelated && entry.saveWrittenAfterCatch,
+  );
+
   const saveWrittenAfterCatch =
-    latestCatchAt !== undefined &&
-    input.persistedSave !== null &&
-    timestamp(input.persistedSave.persistedAt, "persistedSave.persistedAt") >=
-      latestCatchAt;
+    correlated.length > 0 &&
+    correlated.every((entry) => entry.saveWrittenAfterCatch);
   const saveSizeValid =
     input.persistedSave?.byteLength === EMERALD_FLASH_SAVE_BYTES;
 
   const evidence: CatchBenchmarkEvidence = {
     postStartCatch: postStartEvents.length > 0,
-    livePartyAdded,
-    liveDexIncreased,
-    persistedPartyAdded,
-    persistedDexIncreased,
+    postEventSpeciesObserved: correlated.some(
+      (entry) => entry.postEventSpeciesObserved,
+    ),
+    liveSpeciesCorrelated: correlated.some(
+      (entry) => entry.liveSpeciesCorrelated,
+    ),
+    persistedSpeciesCorrelated: correlated.some(
+      (entry) => entry.persistedSpeciesCorrelated,
+    ),
+    exactSpeciesCorrelated: correlated.some(
+      (entry) => entry.exactSpeciesCorrelated,
+    ),
     saveWrittenAfterCatch,
     saveSizeValid,
   };
@@ -136,13 +178,24 @@ export function evaluateCatchBenchmark(
   if (!evidence.postStartCatch) {
     failures.push("no catch event occurred during the benchmark window");
   }
-  if (!evidence.livePartyAdded && !evidence.liveDexIncreased) {
-    failures.push(
-      "live party and Pokédex contain no post-start catch evidence",
-    );
+  if (!evidence.postEventSpeciesObserved) {
+    failures.push("catch event has no exact post-event species delta");
   }
-  if (!evidence.persistedPartyAdded && !evidence.persistedDexIncreased) {
-    failures.push("persisted party and Pokédex contain no catch evidence");
+  if (!evidence.liveSpeciesCorrelated) {
+    failures.push("live state contains no delta for the caught species");
+  }
+  if (!evidence.persistedSpeciesCorrelated) {
+    failures.push("persisted state contains no delta for the caught species");
+  }
+  if (
+    evidence.postEventSpeciesObserved &&
+    evidence.liveSpeciesCorrelated &&
+    evidence.persistedSpeciesCorrelated &&
+    !evidence.exactSpeciesCorrelated
+  ) {
+    failures.push(
+      "catch event, live state, and persisted state do not correlate to one species",
+    );
   }
   if (!evidence.saveWrittenAfterCatch) {
     failures.push("save was not persisted after the catch event");
@@ -155,36 +208,60 @@ export function evaluateCatchBenchmark(
     objective: "catch-pokemon",
     success: failures.length === 0,
     caughtSpecies: postStartEvents.map((event) => event.species),
+    verifiedCaughtSpecies: verified.map((entry) => entry.event.species),
     evidence,
     failures,
   };
 }
 
-function hasNewPartyMember(
+function snapshotContainsSpeciesDelta(
   initial: GameSnapshot,
   candidate: GameSnapshot,
+  species: number,
+  nationalDexNumberValue: number,
+): boolean {
+  return (
+    hasNewPartyIdentity(initial.party, candidate.party, species) ||
+    (!dexOwned(initial, nationalDexNumberValue) &&
+      dexOwned(candidate, nationalDexNumberValue))
+  );
+}
+
+function hasNewPartyIdentity(
+  initial: readonly PartyIdentityEvidence[],
+  candidate: readonly PartyIdentityEvidence[],
+  species: number,
 ): boolean {
   const initialIdentities = new Set(
-    initial.party.map(
-      (mon) => `${String(mon.personality)}:${String(mon.otId)}`,
-    ),
+    initial.map((mon) => `${String(mon.personality)}:${String(mon.otId)}`),
   );
-  return candidate.party.some(
+  return candidate.some(
     (mon) =>
+      mon.species === species &&
       !initialIdentities.has(`${String(mon.personality)}:${String(mon.otId)}`),
   );
 }
 
-function ownedCount(bytes: Uint8Array): number {
-  let count = 0;
-  for (const byte of bytes) {
-    let remaining = byte;
-    while (remaining !== 0) {
-      count += remaining & 1;
-      remaining >>>= 1;
-    }
+function nationalDexNumber(species: number): number {
+  const value = SPECIES_TO_NATIONAL[species];
+  if (value === undefined || value <= 0) {
+    throw new Error(`species ${String(species)} has no National Dex mapping`);
   }
-  return count;
+  return value;
+}
+
+function dexOwned(
+  snapshot: GameSnapshot,
+  nationalDexNumberValue: number,
+): boolean {
+  const bitIndex = nationalDexNumberValue - 1;
+  const byte = snapshot.dexOwned[Math.floor(bitIndex / 8)];
+  if (byte === undefined) {
+    throw new Error(
+      `National Dex ${String(nationalDexNumberValue)} is outside owned bitfield`,
+    );
+  }
+  return (byte & (1 << (bitIndex % 8))) !== 0;
 }
 
 function timestamp(value: string, field: string): number {

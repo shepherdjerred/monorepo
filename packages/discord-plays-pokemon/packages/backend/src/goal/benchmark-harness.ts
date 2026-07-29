@@ -1,6 +1,11 @@
 import path from "node:path";
 import { z } from "zod";
 import type { GameSnapshot } from "#src/game/events/types.ts";
+import {
+  movementObservation,
+  positionLoopOccurred,
+  type MovementLoopState,
+} from "./benchmark-movement-telemetry.ts";
 
 export const DEFAULT_BENCHMARK_GOAL = "get me a pokeman";
 
@@ -124,7 +129,17 @@ export type SerializedSnapshot = z.infer<typeof SerializedSnapshotSchema>;
 
 const CatchEventSchema = z.strictObject({
   occurredAt: z.string(),
+  frame: z.number().int().nonnegative(),
   species: z.number().int().nonnegative(),
+  nationalDexNumber: z.number().int().positive(),
+  postEventParty: z.array(
+    z.strictObject({
+      personality: z.number().int().nonnegative(),
+      otId: z.number().int().nonnegative(),
+      species: z.number().int().nonnegative(),
+    }),
+  ),
+  postEventNationalDexOwned: z.boolean(),
 });
 
 const GoalStateSchema = z.strictObject({
@@ -200,10 +215,8 @@ export type CodexBenchmarkTelemetry = {
   codexThreadId: string | null;
 };
 
-type TelemetryParseState = {
+type TelemetryParseState = MovementLoopState & {
   countedTools: Set<string>;
-  lastMovementCommand: string | undefined;
-  repeatedMovementCount: number;
 };
 
 const RecordSchema = z.record(z.string(), z.unknown());
@@ -243,8 +256,8 @@ export function summarizeCodexJsonl(jsonl: string): CodexBenchmarkTelemetry {
   };
   const state: TelemetryParseState = {
     countedTools: new Set<string>(),
-    lastMovementCommand: undefined,
-    repeatedMovementCount: 0,
+    lastPosition: undefined,
+    visitedPositions: new Set<string>(),
   };
 
   for (const line of jsonl.split("\n")) {
@@ -316,8 +329,7 @@ function countCommandEvent(
   if (!state.countedTools.has(id)) {
     state.countedTools.add(id);
     result.toolCalls += 1;
-    classifyCommand(result, command);
-    countRepeatedMovement(result, state, command);
+    classifyNonMovementCommand(result, command);
   }
   if (type !== "item.completed") return;
   if (item.data.exit_code !== undefined && item.data.exit_code !== 0) {
@@ -331,27 +343,17 @@ function countCommandEvent(
   ]
     .filter((value) => value !== undefined)
     .join("\n");
-  if (isMovementCommand(command) && /"blocked"\s*:\s*true/.test(output)) {
-    result.movementStops += 1;
+  if (isMovementCommand(command)) {
+    const observation = movementObservation(output);
+    if (observation !== undefined) {
+      result.movementActions += 1;
+      if (observation.stopped) result.movementStops += 1;
+      if (positionLoopOccurred(state, observation)) {
+        result.repeatedPositionLoops += 1;
+      }
+    }
   }
   if (/ignored input/i.test(output)) result.ignoredInputs += 1;
-}
-
-function countRepeatedMovement(
-  result: CodexBenchmarkTelemetry,
-  state: TelemetryParseState,
-  command: string,
-): void {
-  if (!isMovementCommand(command)) return;
-  if (command !== state.lastMovementCommand) {
-    state.lastMovementCommand = command;
-    state.repeatedMovementCount = 0;
-    return;
-  }
-  state.repeatedMovementCount += 1;
-  if (state.repeatedMovementCount >= 2) {
-    result.repeatedPositionLoops += 1;
-  }
 }
 
 function commandText(command: string | unknown[] | undefined): string {
@@ -360,11 +362,10 @@ function commandText(command: string | unknown[] | undefined): string {
   return "";
 }
 
-function classifyCommand(
+function classifyNonMovementCommand(
   telemetry: CodexBenchmarkTelemetry,
   command: string,
 ): void {
-  if (isMovementCommand(command)) telemetry.movementActions += 1;
   if (/\bpokemonctl\s+screenshot\b/.test(command)) telemetry.screenshots += 1;
   if (
     /\bpokemonctl\s+(?:grep|read|list)\b/.test(command) ||
