@@ -7,9 +7,9 @@ sidebar:
 
 This is the source-context layer, not the curated wiki.
 
-Use search to find a known term, package, incident, or decision. Every existing
-Markdown document under `packages/docs/` is rendered beneath this route while
-keeping its source-relative structure.
+Use search to find approved source context. Working documents appear beneath
+this route only after their exact paths are added to the public allowlist in
+`src/lib/wiki-loader.ts`.
 
 Working pages are intentionally marked, hidden from the sitemap, and
 down-ranked in search. For a durable explanation, create or update a curated

@@ -27,9 +27,9 @@ attempt to author a comprehensive monorepo atlas.
   search, a filtered sitemap, accessible Mermaid diagrams, and no SSR or
   client-side router.
 - Define one typed content collection. Human Markdown uses clean routes and
-  requires `title` and `description`; existing `packages/docs` Markdown is
-  rendered beneath `/working/`, hidden from the sidebar, down-ranked in search,
-  and excluded from the sitemap.
+  requires `title` and `description`; explicitly allowlisted `packages/docs`
+  Markdown is rendered beneath `/working/`, hidden from the sidebar,
+  down-ranked in search, and excluded from the sitemap.
 - Add incremental loading, generated working-directory indexes, exact source
   edit links, title derivation for legacy pages, and link rewriting for docs,
   directories, repository files, and line references.
@@ -59,8 +59,9 @@ attempt to author a comprehensive monorepo atlas.
 
 ## Assumptions
 
-- The entire site, including legacy working documents, is public and
-  unauthenticated.
+- The entire site is public and unauthenticated. Working documents are included
+  only through an explicit file-by-file allowlist; broad workflow-doc
+  discovery is never a publication boundary.
 - The initial title is “Jerred’s Monorepo Wiki” and Starlight’s restrained
   default visual language remains until real content motivates custom branding.
 - `_astro/` is immutable; HTML, sitemap, robots, and Pagefind output remain
@@ -105,3 +106,28 @@ attempt to author a comprehensive monorepo atlas.
 - Astro reports a non-blocking large-chunk warning for Mermaid, and Starlight
   reports its expected fallback-entry warning while generating `/404.html`;
   the built 404 page was verified directly.
+
+## Session Log — 2026-07-29
+
+### Done
+
+- Replaced broad workflow-document publication with an explicit public
+  allowlist in `packages/docs/wiki/src/lib/wiki-loader.ts`.
+- Added focused coverage proving unapproved operational and infrastructure
+  documents cannot enter the working-document collection.
+- Updated the curated wiki copy to describe the allowlist boundary for
+  [PR #1784](https://github.com/shepherdjerred/monorepo/pull/1784).
+
+### Remaining
+
+- Await replacement Buildkite CI and hosted Codex review on the published fix.
+- Address the two existing P2 findings for non-Markdown working-document links
+  and Astro component lint coverage in subsequent focused fix cycles.
+- After merge and deployment, run the live HTTP, cache-header, CSP, sitemap,
+  robots, and public-corpus verification.
+
+### Caveats
+
+- The initial allowlist contains only the wiki scaffold plan. Each additional
+  working document requires an explicit public-data review before its path is
+  added.

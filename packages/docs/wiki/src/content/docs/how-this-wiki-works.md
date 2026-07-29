@@ -11,7 +11,7 @@ material only when you need provenance or implementation detail.
 ```mermaid
 flowchart LR
   accTitle: Wiki publishing flow
-  accDescr: Agents inspect the repository and working documents, then maintain terse human pages. Both layers are rendered, but working pages are visually marked and down-ranked in search.
+  accDescr: Agents inspect the repository and working documents, then maintain terse human pages. Curated pages and explicitly approved working documents are rendered, with working pages visually marked and down-ranked in search.
 
   R[Repository state] --> A[AI author]
   W[Working documents] --> A
@@ -28,8 +28,12 @@ prefer a diagram over a directory dump, and explain why a choice exists.
 
 ## Working material
 
-Everything already in `packages/docs/` remains available at `/working/…`.
-Those pages:
+Only working documents on the explicit public allowlist in
+`src/lib/wiki-loader.ts` are available at `/working/…`. Approval is
+file-by-file so operational notes and sensitive infrastructure context cannot
+enter the public build through broad discovery.
+
+Approved working pages:
 
 - carry a persistent working-material banner;
 - are hidden from the sidebar and sitemap;

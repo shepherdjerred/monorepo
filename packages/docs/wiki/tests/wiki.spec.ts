@@ -22,7 +22,7 @@ test("renders an accessible Mermaid diagram", async ({ page }) => {
 });
 
 test("marks and down-ranks working material", async ({ page }) => {
-  await page.goto("/working/architecture/");
+  await page.goto("/working/plans/");
 
   await expect(
     page.getByText("Working material —", { exact: false }),
@@ -32,6 +32,14 @@ test("marks and down-ranks working material", async ({ page }) => {
     "noindex,follow",
   );
   await expect(page.locator('[data-pagefind-weight="0.25"]')).toBeVisible();
+});
+
+test("does not publish unapproved working material", async ({ request }) => {
+  const response = await request.get(
+    "/working/archive/completed/homekit-secure-video/",
+  );
+
+  expect(response.status()).toBe(404);
 });
 
 test("keeps working routes out of the sitemap", async ({ request }) => {

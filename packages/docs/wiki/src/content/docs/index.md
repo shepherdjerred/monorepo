@@ -27,5 +27,5 @@ short, visual, and opinionated.
 
 ## What does not
 
-Raw agent notes, session logs, plans, and TODO records remain available under
+Explicitly approved source documents remain available under
 [working material](/working/), but they are not the main reading experience.
