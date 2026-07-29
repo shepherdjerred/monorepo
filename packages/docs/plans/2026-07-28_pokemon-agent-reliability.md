@@ -143,6 +143,21 @@ system against a copied live save and the exact goal `get me a pokeman`.
   runbook plus dynamic benchmark skill. The first replacement image build also
   found that the installed standalone CLI omitted its formatter module; the
   runtime image now installs both files and passes the complete in-image smoke.
+- 2026-07-28: Replacement review hardened the semantic contract again. The
+  base prompt now teaches semantic controls first and reserves raw input for
+  recovery, `interact` requires a stable ready overworld before and after
+  turning, and external Bag/Party selectors provide authoritative battle-input
+  readiness.
+- 2026-07-28: The benchmark now runs historical targets through a runner-owned
+  runtime overlay rather than adding new fields to their configuration. Its
+  success oracle independently parses the raw 128 KiB flash image, validates
+  every sector signature, ID, counter, checksum, and layout, handles the exact
+  Emerald counter rollover, and requires both runner and target provenance to
+  be clean.
+- 2026-07-28: Final knowledge correction removed the remaining unversioned
+  PokeAPI capture-rate field and added the empty-party requirement for
+  Shedinja from the pinned pokeemerald source. The corpus now reproduces 1,760
+  permissive and 39 CC BY-NC-SA records.
 
 ## Session Log — 2026-07-28
 
@@ -151,15 +166,19 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - Implemented authoritative wasm32 save decoding, broader active-object
   observations, battle/visual action evidence, bounded navigation controls, a
   compact semantic CLI, prompt loop, provider-failure classification, and
-  strict benchmark evidence.
+  strict benchmark evidence. The final evaluator independently validates raw
+  flash signatures, sector identity, save counters, checksums, layout, and
+  catch persistence without importing the target emulator.
 - Implemented a general engine checkpoint and ordered atomic flash
   persistence. A rebuilt real WASM passed an independent checkpoint/reboot
   integration test against a copied live save.
-- Verified the combined backend (263 tests, one opt-in live-save test skipped),
-  all 19 knowledge/build script tests, package typecheck/lint, the exhaustive
-  root `bun run verify` graph (217/217 tasks), and a
-  clean Docker `smoke` build that rebuilt the patched WASM and passed both the
-  ABI and in-image application checks.
+- Verified the combined backend (288 tests, one opt-in live-save test skipped),
+  all 20 knowledge/build script tests, package typecheck/lint, the exhaustive
+  root `bun run verify` graph (217/217 tasks), and a clean Docker `smoke` build
+  that rebuilt the patched WASM, passed the real-emulator ABI boot test, and
+  passed the in-image application check. The resulting local smoke image
+  manifest is
+  `sha256:78e2b91a209178e2c2f30f053691531c65fd92a40c0e6ea38aeb2ff00bcf6c09`.
 - Completed a manual general-control playthrough through the first rival,
   Pokedex/Poke Ball acquisition, and a visible Poochyena catch.
 - Published the three-PR git-spice stack as #1802, #1803, and #1805 and attached
@@ -194,6 +213,12 @@ system against a copied live save and the exact goal `get me a pokeman`.
   `AGENTS.md`, and added the dynamically loaded `pokemon-goal-benchmark` skill.
 - Fixed the runtime image to install the semantic CLI formatter beside
   `pokemonctl`; the exact previously failing Docker `smoke` target now passes.
+- Addressed the latest nine actionable review findings: semantic-first prompt
+  guidance, stable-overworld interaction guards, authoritative Bag/Party input
+  states, historical-target runtime overlays, an independent persisted-save
+  oracle, strict flash integrity and rollover handling, clean runner
+  provenance, removal of unversioned capture rates, and the pinned Shedinja
+  empty-party condition.
 
 ### Remaining
 
