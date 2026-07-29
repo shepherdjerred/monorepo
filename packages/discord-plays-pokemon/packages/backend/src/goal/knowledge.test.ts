@@ -112,15 +112,25 @@ describe("KnowledgeBase", () => {
         body: "As thanks, he gives you HM04 (Strength).",
         sources: [testSource],
       },
+      {
+        id: "progression:unrelated-reward",
+        domain: "progression",
+        title: "Unrelated reward",
+        aliases: [],
+        tags: [],
+        body: "The champion rewards you with a Potion. Strength opens a path.",
+        sources: [testSource],
+      },
     ]);
 
     expect(
       base
-        .search("how to get strength", { limit: 2 })
+        .search("how to get strength", { limit: 3 })
         .map((result) => result.id),
     ).toEqual([
       "progression:strength-acquisition",
       "progression:strength-uses",
+      "progression:unrelated-reward",
     ]);
   });
 
@@ -174,5 +184,13 @@ describe("KnowledgeBase", () => {
       "progression:bulbapedia:emerald-part-5:2",
     );
     expect(strengthResults.at(0)?.excerpt).toContain("HM04 (Strength)");
+    const flyResults = base.search("how to get fly", {
+      domain: "progression",
+      limit: 5,
+    });
+    expect(flyResults.at(0)?.id).toBe(
+      "progression:bulbapedia:emerald-part-10:1",
+    );
+    expect(flyResults.at(0)?.excerpt).toContain("HM02 (Fly)");
   });
 });

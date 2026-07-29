@@ -92,9 +92,17 @@ const ACQUISITION_EVIDENCE_TERMS = new Set([
   "receive",
   "received",
   "receives",
+  "reward",
+  "rewarded",
+  "rewards",
 ]);
 const ACQUISITION_EVIDENCE_SCORE = 50;
 const HM_ACQUISITION_EVIDENCE_SCORE = 100;
+
+type AcquisitionEvidence = Readonly<{
+  score: number;
+  position: number;
+}>;
 
 function normalize(value: string): string {
   return value
@@ -132,29 +140,37 @@ function containsAnyTerm(value: string, candidates: ReadonlySet<string>) {
     .some((term) => candidates.has(term));
 }
 
-function acquisitionEvidenceScore(
+function acquisitionEvidence(
   record: KnowledgeRecord,
   queryTerms: readonly string[],
-): number {
-  return record.body.split(/[.!?]\s+|\n+/).reduce((score, sentence) => {
+): AcquisitionEvidence | undefined {
+  let bestEvidence: AcquisitionEvidence | undefined;
+  let searchFrom = 0;
+  for (const sentence of record.body.split(/[.!?]\s+|\n+/)) {
+    const position = record.body.indexOf(sentence, searchFrom);
+    if (position === -1) {
+      throw new Error("knowledge sentence must originate from its record body");
+    }
+    searchFrom = position + sentence.length;
     const normalizedSentence = normalize(sentence);
     const isRelevantEvidence =
       queryTerms.some((term) => normalizedSentence.includes(term)) &&
       containsAnyTerm(sentence, ACQUISITION_EVIDENCE_TERMS);
-    if (!isRelevantEvidence) return score;
-    return Math.max(
-      score,
-      /\bhm\d+\b/u.test(normalizedSentence)
-        ? HM_ACQUISITION_EVIDENCE_SCORE
-        : ACQUISITION_EVIDENCE_SCORE,
-    );
-  }, 0);
+    if (!isRelevantEvidence) continue;
+    const score = /\bhm\d+\b/u.test(normalizedSentence)
+      ? HM_ACQUISITION_EVIDENCE_SCORE
+      : ACQUISITION_EVIDENCE_SCORE;
+    if (bestEvidence === undefined || score > bestEvidence.score) {
+      bestEvidence = { score, position };
+    }
+  }
+  return bestEvidence;
 }
 
 function scoreRecord(
   record: KnowledgeRecord,
   queryTerms: readonly string[],
-  acquisitionIntent: boolean,
+  acquisitionScore: number,
 ): number {
   const title = normalize(record.title);
   const aliases = normalize(record.aliases.join(" "));
@@ -171,18 +187,19 @@ function scoreRecord(
     }
     return score;
   }, 0);
-  return (
-    relevanceScore +
-    (acquisitionIntent ? acquisitionEvidenceScore(record, queryTerms) : 0)
-  );
+  return relevanceScore + acquisitionScore;
 }
 
-function excerpt(body: string, queryTerms: readonly string[]): string {
+function excerpt(
+  body: string,
+  queryTerms: readonly string[],
+  preferredPosition?: number,
+): string {
   const normalizedBody = normalize(body);
   const positions = queryTerms
     .map((term) => normalizedBody.indexOf(term))
     .filter((position) => position >= 0);
-  const first = Math.min(...positions);
+  const first = preferredPosition ?? Math.min(...positions);
   const start = Number.isFinite(first) ? Math.max(0, first - 200) : 0;
   const sliced = body.slice(start, start + SEARCH_EXCERPT_CHARS);
   return `${start > 0 ? "…" : ""}${sliced}${start + sliced.length < body.length ? "…" : ""}`;
@@ -214,10 +231,16 @@ export class KnowledgeBase {
         (record) =>
           options.domain === undefined || record.domain === options.domain,
       )
-      .map((record) => ({
-        record,
-        score: scoreRecord(record, queryTerms, acquisitionIntent),
-      }))
+      .map((record) => {
+        const evidence = acquisitionIntent
+          ? acquisitionEvidence(record, queryTerms)
+          : undefined;
+        return {
+          record,
+          evidence,
+          score: scoreRecord(record, queryTerms, evidence?.score ?? 0),
+        };
+      })
       .filter((candidate) => candidate.score > 0)
       .sort(
         (left, right) =>
@@ -225,11 +248,11 @@ export class KnowledgeBase {
           left.record.title.localeCompare(right.record.title),
       )
       .slice(0, options.limit)
-      .map(({ record, score }) => ({
+      .map(({ record, score, evidence }) => ({
         id: record.id,
         domain: record.domain,
         title: record.title,
-        excerpt: excerpt(record.body, queryTerms),
+        excerpt: excerpt(record.body, queryTerms, evidence?.position),
         sources: record.sources,
         score,
       }));
