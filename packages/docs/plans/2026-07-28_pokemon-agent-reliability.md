@@ -218,7 +218,7 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - Implemented a general engine checkpoint and ordered atomic flash
   persistence. A rebuilt real WASM passed an independent checkpoint/reboot
   integration test against a copied live save.
-- Verified the combined backend (306 tests, zero failures or skips), all 23
+- Verified the combined backend (307 tests, zero failures or skips), all 27
   knowledge/build script tests, package typecheck/lint, the exhaustive
   root `bun run verify` graph (217/217 tasks), and a clean Docker `smoke` build
   that rebuilt the patched WASM, passed both mandatory real-emulator ABI and
@@ -281,7 +281,7 @@ system against a copied live save and the exact goal `get me a pokeman`.
   fail closed until SaveBlock2 is initialized without rejecting zero-key new
   games; benchmark and deployed Codex instruction/skill surfaces have an
   enforced Docker parity test; and the language-neutral knowledge schema,
-  generator, runtime, and 1,801 records preserve every contributing source
+  generator, runtime, and 1,802 records preserve every contributing source
   structurally.
 - Closed the replacement Buildkite security failure by upgrading
   `golang.org/x/text` from v0.37.0 to v0.39.0 in the base PR. The provider's
@@ -296,6 +296,12 @@ system against a copied live save and the exact goal `get me a pokeman`.
   uses an emulator-frame upper bound coupled to final evidence capture, and a
   relative path-like Codex binary resolves identically during preflight and
   worker execution.
+- Closed the next three knowledge review findings. Acquisition-intent ranking
+  now puts the HM04 award passage first for `how to get strength`; Wurmple's
+  hidden personality-value branch is represented with pinned PokeAPI and
+  pokeemerald provenance; and move-history reconstruction selects each field's
+  Emerald-era value independently, including Vine Whip at 35 power and Giga
+  Drain at 60.
 
 ### Remaining
 
