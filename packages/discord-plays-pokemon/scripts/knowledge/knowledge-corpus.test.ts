@@ -42,6 +42,21 @@ describe("committed generated knowledge", () => {
     );
     expect(pokeBall.body).toContain("does not prove the item is obtainable");
     expect(pokeBall.body).not.toContain("Emerald item identifier");
+    expect(pokeBall.body).not.toContain("Shop cost:");
+    expect(pokeBall.body).toContain("Price is omitted");
+  });
+
+  test("uses Emerald species forms, rarity, and evolution directions", () => {
+    const deoxys = requiredRecord("species:deoxys");
+    expect(deoxys.body).not.toContain(
+      "Emerald level-up moves (level:move): none",
+    );
+    const mew = requiredRecord("species:mew");
+    expect(mew.tags).toContain("mythical");
+    expect(mew.tags).not.toContain("ordinary");
+    const ralts = requiredRecord("species:ralts");
+    expect(ralts.body).toContain("Evolves to: Kirlia");
+    expect(ralts.body).toContain("level 20");
   });
 
   test("identifies Archipelago checks and logic as randomizer metadata", () => {

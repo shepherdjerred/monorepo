@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { z } from "zod";
 import { archipelagoRandomizerMetadataLines } from "./archipelago.ts";
 import {
   BULBAPEDIA_REQUEST_DELAY_MS,
@@ -11,14 +12,29 @@ import {
   generation3DamageClass,
   generation3PowerLabel,
   includeGeneration3Item,
-  requirePokeApiReference,
 } from "./pokeapi.ts";
+import { requirePokeApiReference } from "./pokeapi-relations.ts";
 
 const BULBAPEDIA_PIN = {
   title: "Walkthrough:Pokémon Emerald",
   revision: 4_512_784,
   timestamp: "2026-03-19T15:26:23Z",
 };
+
+const SourceJsonSchema = z.object({
+  required: z.array(z.string()),
+  properties: z.record(z.string(), z.unknown()),
+});
+
+test("source JSON Schema accepts its own $schema property", async () => {
+  const schema = SourceJsonSchema.parse(
+    await Bun.file(
+      new URL("../../knowledge/sources.schema.json", import.meta.url),
+    ).json(),
+  );
+  expect(schema.required).toContain("$schema");
+  expect(schema.properties["$schema"]).toBeDefined();
+});
 
 describe("Generation III move normalization", () => {
   test("treats fixed and variable damage attacks as damaging moves", () => {

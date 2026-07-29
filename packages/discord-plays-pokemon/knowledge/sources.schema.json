@@ -2,8 +2,15 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["pokeemeraldWasm", "archipelago", "pokeapi", "bulbapedia"],
+  "required": [
+    "$schema",
+    "pokeemeraldWasm",
+    "archipelago",
+    "pokeapi",
+    "bulbapedia"
+  ],
   "properties": {
+    "$schema": { "type": "string" },
     "pokeemeraldWasm": {
       "type": "object",
       "required": ["repository", "manifest"],

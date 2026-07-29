@@ -111,6 +111,11 @@ system against a copied live save and the exact goal `get me a pokeman`.
   unexplained process exits remain harness errors; observation screenshots are
   counted; search filters generic words and weights repeated body evidence;
   and unresolved PokeAPI joins fail generation.
+- 2026-07-28: Follow-up knowledge review found five more corpus defects. The
+  source JSON Schema now accepts and requires its own `$schema`; unversioned
+  modern item prices are omitted; Emerald uses Deoxys Speed Forme; mythical
+  species are labeled distinctly; and species records include both forward
+  and backward Emerald-era evolution methods and conditions.
 
 ## Session Log — 2026-07-28
 
@@ -138,10 +143,10 @@ system against a copied live save and the exact goal `get me a pokeman`.
   locally after that correction. Goal-process teardown tests now synchronize
   on the kill request instead of guessing that asynchronous work completes
   within 5 ms; the lifecycle suite passed 100/100 repeated cases.
-- Addressed all eight actionable Codex review findings across the stack with
-  focused regression tests. The pinned knowledge generator completed against
-  all four source revisions and reproduced 1,759 permissive plus 39
-  CC BY-NC-SA records without corpus drift.
+- Addressed all eight initial actionable Codex review findings and five
+  follow-up corpus findings across the stack with focused regression tests.
+  The pinned knowledge generator completed against all four source revisions
+  and reproduced 1,759 permissive plus 39 CC BY-NC-SA records.
 
 ### Remaining
 

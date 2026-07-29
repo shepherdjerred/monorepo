@@ -6,6 +6,15 @@ import {
   type KnowledgeRecord,
   type Sources,
 } from "./model.ts";
+import {
+  EvolutionRows,
+  EvolutionTriggerRows,
+  PokemonFormRows,
+  pokemonForVersion,
+  requirePokeApiReference,
+  speciesEvolutionLines,
+  type EvolutionReferences,
+} from "./pokeapi-relations.ts";
 
 const IntegerString = z.string().regex(/^\d+$/).transform(Number);
 const OptionalIntegerString = z
@@ -97,7 +106,6 @@ const ItemRows = z.array(
     id: IntegerString,
     identifier: z.string().min(1),
     category_id: IntegerString,
-    cost: IntegerString,
   }),
 );
 const ItemIndexRows = z.array(
@@ -107,26 +115,10 @@ const ItemIndexRows = z.array(
     game_index: IntegerString,
   }),
 );
-
 type PokemonTypeRow = z.infer<typeof PokemonTypeRows>[number];
 type PokemonTypePastRow = z.infer<typeof PokemonTypePastRows>[number];
 type MoveRow = z.infer<typeof MoveRows>[number];
 type MoveChangelogRow = z.infer<typeof MoveChangelogRows>[number];
-
-export function requirePokeApiReference<T>(
-  values: ReadonlyMap<number, T>,
-  id: number,
-  referencedTable: string,
-  context: string,
-): T {
-  const value = values.get(id);
-  if (value === undefined) {
-    throw new Error(
-      `PokeAPI ${context} references missing ${referencedTable} row ${String(id)}`,
-    );
-  }
-  return value;
-}
 
 function rawUrl(sources: Sources, file: string): string {
   return `https://raw.githubusercontent.com/PokeAPI/pokeapi/${sources.pokeapi.commit}/${sources.pokeapi.csvPath}/${file}`;
@@ -180,8 +172,13 @@ function moveForVersion(
   };
 }
 
-function rarityTag(isLegendary: "0" | "1"): string {
-  return isLegendary === "1" ? "legendary" : "ordinary";
+function rarityTag(
+  isLegendary: "0" | "1",
+  isMythical: "0" | "1",
+): "legendary" | "mythical" | "ordinary" {
+  if (isLegendary === "1") return "legendary";
+  if (isMythical === "1") return "mythical";
+  return "ordinary";
 }
 
 const GENERATION_3_PHYSICAL_TYPES = new Set([
@@ -246,6 +243,7 @@ export async function buildPokeApiRecords(
   const [
     species,
     pokemon,
+    pokemonForms,
     pokemonTypes,
     pokemonTypesPast,
     types,
@@ -254,9 +252,12 @@ export async function buildPokeApiRecords(
     pokemonMoves,
     items,
     itemIndices,
+    evolutions,
+    evolutionTriggers,
   ] = await Promise.all([
     fetchCsv(rawUrl(sources, "pokemon_species.csv"), SpeciesRows),
     fetchCsv(rawUrl(sources, "pokemon.csv"), PokemonRows),
+    fetchCsv(rawUrl(sources, "pokemon_forms.csv"), PokemonFormRows),
     fetchCsv(rawUrl(sources, "pokemon_types.csv"), PokemonTypeRows),
     fetchCsv(rawUrl(sources, "pokemon_types_past.csv"), PokemonTypePastRows),
     fetchCsv(rawUrl(sources, "types.csv"), TypeRows),
@@ -265,14 +266,29 @@ export async function buildPokeApiRecords(
     fetchCsv(rawUrl(sources, "pokemon_moves.csv"), PokemonMoveRows),
     fetchCsv(rawUrl(sources, "items.csv"), ItemRows),
     fetchCsv(rawUrl(sources, "item_game_indices.csv"), ItemIndexRows),
+    fetchCsv(rawUrl(sources, "pokemon_evolution.csv"), EvolutionRows),
+    fetchCsv(rawUrl(sources, "evolution_triggers.csv"), EvolutionTriggerRows),
   ]);
   const typeNames = new Map(types.map((row) => [row.id, row.identifier]));
   const moveById = new Map(moves.map((row) => [row.id, row]));
   const speciesById = new Map(species.map((row) => [row.id, row]));
   const itemById = new Map(items.map((row) => [row.id, row]));
-  const formsBySpecies = valuesByKey(
-    pokemon.filter((row) => row.is_default === "1"),
-    (row) => row.species_id,
+  const pokemonBySpecies = valuesByKey(pokemon, (row) => row.species_id);
+  const formsByPokemon = valuesByKey(pokemonForms, (row) => row.pokemon_id);
+  const speciesByPredecessor = valuesByKey(
+    species.filter(
+      (row) =>
+        row.generation_id <= sources.pokeapi.generationId &&
+        row.evolves_from_species_id !== undefined,
+    ),
+    (row) => row.evolves_from_species_id ?? 0,
+  );
+  const evolutionsBySpecies = valuesByKey(
+    evolutions,
+    (row) => row.evolved_species_id,
+  );
+  const evolutionTriggerNames = new Map(
+    evolutionTriggers.map((row) => [row.id, row.identifier]),
   );
   const typesByPokemon = valuesByKey(pokemonTypes, (row) => row.pokemon_id);
   const pastTypesByPokemon = valuesByKey(
@@ -293,12 +309,23 @@ export async function buildPokeApiRecords(
     license: sources.pokeapi.license,
     revision: sources.pokeapi.commit,
   };
+  const evolutionReferences: EvolutionReferences = {
+    triggers: evolutionTriggerNames,
+    items: itemById,
+    moves: moveById,
+    species: speciesById,
+    types: typeNames,
+  };
 
   const records: KnowledgeRecord[] = [];
   for (const row of species.filter(
     (entry) => entry.generation_id <= sources.pokeapi.generationId,
   )) {
-    const form = formsBySpecies.get(row.id)?.at(0);
+    const form = pokemonForVersion(
+      pokemonBySpecies.get(row.id) ?? [],
+      formsByPokemon,
+      sources.pokeapi.versionGroupId,
+    );
     if (form === undefined) {
       throw new Error(`default form missing for species ${row.identifier}`);
     }
@@ -329,15 +356,15 @@ export async function buildPokeApiRecords(
         );
         return `${String(entry.level)}:${move.identifier}`;
       });
-    const predecessor =
-      row.evolves_from_species_id === undefined
-        ? "none"
-        : requirePokeApiReference(
-            speciesById,
-            row.evolves_from_species_id,
-            "pokemon_species",
-            `evolution predecessor for species ${row.identifier}`,
-          ).identifier;
+    const evolution = speciesEvolutionLines({
+      species: row,
+      speciesById,
+      speciesByPredecessor,
+      evolutionsBySpecies,
+      versionGroupId: sources.pokeapi.versionGroupId,
+      generationId: sources.pokeapi.generationId,
+      references: evolutionReferences,
+    });
     records.push({
       id: `species:${row.identifier}`,
       domain: "species",
@@ -346,14 +373,15 @@ export async function buildPokeApiRecords(
       tags: [
         ...typeList,
         `generation-${String(row.generation_id)}`,
-        rarityTag(row.is_legendary),
+        rarityTag(row.is_legendary, row.is_mythical),
       ],
       body: [
         `National Pokédex: ${String(row.id)}`,
         `Types: ${typeList.join("/")}`,
         `Height: ${String(form.height / 10)} m; weight: ${String(form.weight / 10)} kg`,
         `Base experience: ${String(form.base_experience ?? 0)}; capture rate: ${String(row.capture_rate)}`,
-        `Evolves from: ${predecessor}`,
+        `Evolves from: ${evolution.predecessor}`,
+        `Evolves to: ${evolution.successors.join("; ") || "none"}`,
         `Emerald level-up moves (level:move): ${compactList(learnedMoves, 60) || "none"}`,
       ].join("\n"),
       source,
@@ -425,7 +453,7 @@ export async function buildPokeApiRecords(
       body: [
         `Generation III item identifier: ${item.identifier}`,
         "Availability: this generation-wide catalog entry does not prove the item is obtainable in Pokémon Emerald.",
-        `Shop cost: ${String(item.cost)}; category id: ${String(item.category_id)}`,
+        `Category id: ${String(item.category_id)}. Price is omitted because PokeAPI's item cost is not version-specific.`,
       ].join("\n"),
       source,
     });
