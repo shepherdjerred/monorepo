@@ -25,6 +25,35 @@ describe("Scout bot-health alert rules", () => {
     expect(JSON.stringify(rule.expr)).toContain("discord_connection_status");
   });
 
+  test("warns 14 days before production season metadata expires", () => {
+    const rule = botHealth?.rules?.find(
+      (candidate) => candidate.alert === "ScoutSeasonScheduleExpiring",
+    );
+    if (rule === undefined) {
+      throw new Error("Missing ScoutSeasonScheduleExpiring rule");
+    }
+    const expression = JSON.stringify(rule.expr);
+    expect(rule.labels?.["severity"]).toBe("warning");
+    expect(expression).toContain("scout_season_schedule_end_timestamp_seconds");
+    expect(expression).toContain(String.raw`environment=\"prod\"`);
+    expect(expression).toContain("1209600");
+    expect(expression).toContain("259200");
+  });
+
+  test("pages below three days and after production metadata expires", () => {
+    const rule = botHealth?.rules?.find(
+      (candidate) => candidate.alert === "ScoutSeasonScheduleCritical",
+    );
+    if (rule === undefined) {
+      throw new Error("Missing ScoutSeasonScheduleCritical rule");
+    }
+    const expression = JSON.stringify(rule.expr);
+    expect(rule.labels?.["severity"]).toBe("critical");
+    expect(expression).toContain("scout_season_schedule_end_timestamp_seconds");
+    expect(expression).toContain(String.raw`environment=\"prod\"`);
+    expect(expression).toContain("259200");
+  });
+
   test("warns when a cron job stalls", () => {
     const rule = botHealth?.rules?.find(
       (candidate) => candidate.alert === "ScoutCronJobStale",

@@ -127,10 +127,12 @@ export function getCurrentSeason(): SeasonData | undefined {
 /**
  * Get season choices for Discord autocomplete
  * Only returns seasons that haven't ended yet (current and future seasons)
+ * @param now Date used to determine whether each season has ended
  * @returns Array of {name, value} for Discord choices
  */
-export function getSeasonChoices(): { name: string; value: SeasonId }[] {
-  const now = new Date();
+export function getSeasonChoices(
+  now: Date = new Date(),
+): { name: string; value: SeasonId }[] {
   return getAllSeasons()
     .filter((season) => season.endDate >= now)
     .map((season) => ({

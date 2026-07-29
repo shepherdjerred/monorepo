@@ -63,6 +63,7 @@ import { executeSubscriptionAddChannel } from "#src/discord/commands/subscriptio
 import { executeSubscriptionMove } from "#src/discord/commands/subscription/move.ts";
 import { executeSubscriptionEditFilters } from "#src/discord/commands/subscription/edit-filters.ts";
 import { suggestQueueCompletions } from "#src/discord/commands/subscription/queue-filter-arg.ts";
+import { suggestSeasonCompletions } from "#src/discord/commands/competition/season-arg.ts";
 import { executeMe } from "#src/discord/commands/me.ts";
 import { executePlayerList } from "#src/discord/commands/admin/player-list.ts";
 
@@ -75,6 +76,13 @@ export function handleCommands(client: Client) {
       if (interaction.isAutocomplete()) {
         const commandName = interaction.commandName;
         const focusedOption = interaction.options.getFocused(true);
+
+        if (commandName === "competition" && focusedOption.name === "season") {
+          await interaction.respond(
+            suggestSeasonCompletions(focusedOption.value),
+          );
+          return;
+        }
 
         // Handle champion autocomplete for competition create command
         if (

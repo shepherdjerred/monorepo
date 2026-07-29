@@ -121,39 +121,40 @@ describe("seasons", () => {
   });
 
   describe("getSeasonChoices", () => {
-    test("should return at least one active season (guards against stale SEASONS data)", () => {
-      // Empty choices silently degrade /competition's season option to a
-      // free-text input in Discord; this test fails CI before that ships.
-      expect(getSeasonChoices().length).toBeGreaterThan(0);
+    test("returns current and future seasons while excluding ended seasons", () => {
+      const choices = getSeasonChoices(new Date("2026-06-15T12:00:00-07:00"));
+
+      expect(choices.map((choice) => choice.value)).toEqual([
+        "2026_SEASON_3_ACT_1",
+        "2026_SEASON_2_ACT_2",
+      ]);
     });
 
-    test("should return Discord choices for non-ended seasons", () => {
-      const choices = getSeasonChoices();
-      expect(choices).toBeArray();
+    test("includes a season through its exact end boundary", () => {
+      const choices = getSeasonChoices(new Date("2026-09-22T23:59:59-07:00"));
 
+      expect(choices).toEqual([
+        {
+          name: "League Classic (Act 1)",
+          value: "2026_SEASON_3_ACT_1",
+        },
+      ]);
+    });
+
+    test("returns no choices after every bundled season has ended", () => {
+      expect(getSeasonChoices(new Date("2026-09-23T00:00:00-07:00"))).toEqual(
+        [],
+      );
+    });
+
+    test("returns valid labeled Discord choices", () => {
+      const choices = getSeasonChoices(new Date("2026-07-30T12:00:00-07:00"));
       for (const choice of choices) {
-        // Discord requires a non-empty label, and the value must be a real
-        // season id (parsing succeeds and its display name is the label).
-        expect(typeof choice.name).toBe("string");
         expect(choice.name.length).toBeGreaterThan(0);
-        const result = SeasonIdSchema.safeParse(choice.value);
-        expect(result.success).toBe(true);
-        if (result.success) {
-          expect(getSeasonById(result.data)?.displayName).toBe(choice.name);
-        }
-      }
-    });
-
-    test("should not include ended seasons", () => {
-      const choices = getSeasonChoices();
-      const now = new Date();
-
-      for (const choice of choices) {
-        const season = getSeasonById(choice.value);
-        if (season) {
-          expect(season.endDate.getTime()).toBeGreaterThanOrEqual(
-            now.getTime(),
-          );
+        const parsed = SeasonIdSchema.safeParse(choice.value);
+        expect(parsed.success).toBe(true);
+        if (parsed.success) {
+          expect(getSeasonById(parsed.data)?.displayName).toBe(choice.name);
         }
       }
     });
