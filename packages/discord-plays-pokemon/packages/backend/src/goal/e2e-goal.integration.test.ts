@@ -221,12 +221,25 @@ describe("e2e: /goal pipeline (T1–T7 integration)", () => {
     expect(disabled.has("multi_agent")).toBe(true);
     expect(args.includes("--json")).toBe(true);
 
-    // ---- T3 + T6: prompt has Emerald primer + game state + chord guidance ----
-    const prompt = args.at(-1) ?? "";
-    expect(prompt).toContain("Pokémon Emerald");
-    expect(prompt).toContain("Treecko"); // from the stubbed snapshot
-    expect(prompt).toContain("pokemonctl state"); // T5 pointer
-    expect(prompt.toLowerCase()).toContain("chord");
+    // ---- T3 + T6: policy and untrusted run data use separate roles ----
+    const developerConfig = args.find((arg) =>
+      arg.startsWith("developer_instructions="),
+    );
+    expect(developerConfig).toContain("Pokémon Emerald");
+    expect(developerConfig).toContain("pokemonctl state");
+    expect(developerConfig?.toLowerCase()).toContain("chord");
+    const prompt = args.at(-1);
+    if (prompt === undefined) {
+      throw new Error("Codex user prompt is missing");
+    }
+    const userPrompt: unknown = JSON.parse(prompt);
+    expect(userPrompt).toMatchObject({
+      kind: "pokemon_goal_run",
+      objective: "Advance the dialog and walk one tile",
+      startingContext: {
+        gameState: expect.stringContaining("Treecko"),
+      },
+    });
 
     // ---- T2: Discord message ends with the cost+token line ----
     const finalContent = messages.at(-1)?.content ?? "";

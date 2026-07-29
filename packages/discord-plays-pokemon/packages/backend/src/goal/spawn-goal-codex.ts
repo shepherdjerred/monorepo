@@ -10,7 +10,11 @@ import {
   type CodexJsonlParser,
 } from "@shepherdjerred/llm-observability/codex-jsonl";
 import { prepareRuntimeTools, buildEnvironment } from "./goal-runtime-env.ts";
-import { buildCodexArgs, type PromptContext } from "./codex-command.ts";
+import {
+  buildCodexArgs,
+  buildTracePrompt,
+  type PromptContext,
+} from "./codex-command.ts";
 import { attachCodexTrace, type CodexTrace } from "./codex-trace.ts";
 import { streamToLog } from "./goal-process-helpers.ts";
 import type { GoalProcess, GoalProcessSpawner } from "./goal-types.ts";
@@ -78,14 +82,15 @@ export async function spawnGoalCodex(
       logger.info(message);
     },
   });
-  // Full Codex prompt (last arg) archived on the root span for blackbox review.
+  // Archive both model-visible roles for blackbox review. The final command
+  // argument alone contains only the untrusted user-role message.
   const trace = attachCodexTrace(jsonl, {
     goalId: input.goalId,
     goal: input.goal,
     model: input.config.model,
     requestedBy: input.requestedBy,
     gameStateSummary: input.promptContext.gameStateSummary,
-    initialPrompt: args.at(-1) ?? "",
+    initialPrompt: buildTracePrompt(input.goal, input.promptContext),
   });
   // Drain stdout fully before reading jsonl.total() in observeProcess.
   const stdoutPump = pumpCodexStdout(process.stdout, jsonl);

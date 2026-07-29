@@ -29,6 +29,11 @@ import type {
 } from "./goal-types.ts";
 import { GoalMemory, buildSessionLogMeta } from "./goal-memory.ts";
 import { GoalControlGate } from "./goal-control-gate.ts";
+import {
+  goalActive,
+  goalDurationSeconds,
+  goalRunsTotal,
+} from "#src/observability/metrics.ts";
 
 // Validates the envelope written by persistState() so history is safely
 // deserialized on restart even if the file has an unexpected shape.
@@ -346,6 +351,7 @@ export class GoalManager {
       this.active = undefined;
       throw error;
     }
+    goalActive.inc();
     void this.observeProcess(id);
 
     return {
@@ -408,6 +414,7 @@ export class GoalManager {
       claimed.state.exitCode = exitCode;
       claimed.state.status = exitCode === 0 ? "completed" : "failed";
       claimed.state.finalReport = report;
+      this.recordTerminalMetrics(claimed.state);
       await this.recordCompletion(claimed.state);
       await this.persistState(claimed.state);
 
@@ -440,6 +447,7 @@ export class GoalManager {
       active.state.status = "timeout";
       active.state.finishedAt = this.now().toISOString();
       active.state.finalReport = "Goal timed out before Codex finished.";
+      this.recordTerminalMetrics(active.state);
       await this.recordCompletion(active.state);
       await this.persistState(active.state);
       await this.sendMessage({
@@ -471,6 +479,7 @@ export class GoalManager {
         status === "replaced"
           ? "Goal was replaced by a newer goal."
           : "Goal was stopped during application shutdown.";
+      this.recordTerminalMetrics(active.state);
       await this.recordCompletion(active.state);
       await this.persistState(active.state);
     } finally {
@@ -516,6 +525,23 @@ export class GoalManager {
     return path.isAbsolute(value)
       ? value
       : path.resolve(this.config.runtime_directory, value);
+  }
+
+  private recordTerminalMetrics(state: GoalState): void {
+    if (state.status === "running" || state.finishedAt === undefined) {
+      throw new TypeError(
+        "Terminal goal metrics require a finished goal state",
+      );
+    }
+    const startedAt = Date.parse(state.startedAt);
+    const finishedAt = Date.parse(state.finishedAt);
+    if (Number.isNaN(startedAt) || Number.isNaN(finishedAt)) {
+      throw new TypeError("Goal metrics require valid lifecycle timestamps");
+    }
+    const durationSeconds = Math.max(0, (finishedAt - startedAt) / 1000);
+    goalActive.dec();
+    goalRunsTotal.inc({ status: state.status });
+    goalDurationSeconds.observe({ status: state.status }, durationSeconds);
   }
 
   private async persistState(state: GoalState): Promise<void> {

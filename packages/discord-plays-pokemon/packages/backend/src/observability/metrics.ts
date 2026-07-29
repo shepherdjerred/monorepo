@@ -5,7 +5,7 @@
 // `@shepherdjerred/discord-plays-core/observability/metrics.ts`; import those
 // directly from core. This file holds the game events / notification / save-load
 // instruments plus copyMs (whose help text differs from mario-kart's).
-import { Histogram, Counter } from "prom-client";
+import { Histogram, Counter, Gauge } from "prom-client";
 import {
   registry,
   FRAME_MS_BUCKETS,
@@ -46,5 +46,26 @@ export const flashSaveLoadInvalidTotal = new Counter({
 export const notificationSendErrorsTotal = new Counter({
   name: "notification_send_errors_total",
   help: "Failures sending game event notifications to Discord",
+  registers: [registry],
+});
+
+export const goalActive = new Gauge({
+  name: "pokemon_goal_active",
+  help: "Whether a Pokemon goal Codex process is currently active",
+  registers: [registry],
+});
+
+export const goalRunsTotal = new Counter({
+  name: "pokemon_goal_runs_total",
+  help: "Terminal Pokemon goal runs by process-lifecycle status",
+  labelNames: ["status"],
+  registers: [registry],
+});
+
+export const goalDurationSeconds = new Histogram({
+  name: "pokemon_goal_duration_seconds",
+  help: "Pokemon goal process runtime by process-lifecycle status",
+  labelNames: ["status"],
+  buckets: [1, 5, 15, 30, 60, 120, 300, 600, 1200, 1800],
   registers: [registry],
 });
