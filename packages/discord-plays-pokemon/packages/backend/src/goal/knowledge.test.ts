@@ -65,6 +65,33 @@ describe("KnowledgeBase", () => {
     ).toEqual(["items:potion"]);
   });
 
+  test("keeps accented canonical names within one search token", () => {
+    const base = new KnowledgeBase([
+      {
+        id: "items:pokeblock-case",
+        domain: "items",
+        title: "Pokeblock Case",
+        aliases: ["pokeblock-case"],
+        tags: [],
+        body: "A case for holding Pokeblocks.",
+        sources: [testSource],
+      },
+      {
+        id: "battle:move:block",
+        domain: "battle",
+        title: "Block",
+        aliases: ["block"],
+        tags: [],
+        body: "A battle move.",
+        sources: [testSource],
+      },
+    ]);
+
+    expect(
+      base.search("Pokéblock Case", { limit: 2 }).map((result) => result.id),
+    ).toEqual(["items:pokeblock-case"]);
+  });
+
   test("ranks acquisition evidence above repeated usage mentions", () => {
     const base = new KnowledgeBase([
       {

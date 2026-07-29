@@ -99,6 +99,7 @@ const HM_ACQUISITION_EVIDENCE_SCORE = 100;
 function normalize(value: string): string {
   return value
     .normalize("NFKD")
+    .replaceAll(/\p{M}+/gu, "")
     .toLowerCase()
     .replaceAll(/[^\p{L}\p{N}]+/gu, " ")
     .trim();
