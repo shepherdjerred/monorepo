@@ -195,11 +195,14 @@ async function suspendRepositoryAutoSync(
     ) {
       return [];
     }
-    const syncPolicy = Object.fromEntries(
-      Object.entries(application.spec.syncPolicy).filter(
-        ([key]) => key !== "automated",
-      ),
-    );
+    const automated = application.spec.syncPolicy["automated"];
+    if (!isRecord(automated)) {
+      return [];
+    }
+    const syncPolicy = {
+      ...application.spec.syncPolicy,
+      automated: { ...automated, enabled: false },
+    };
     console.log(`suspending auto-sync: ${application.metadata.name}`);
     return [
       {

@@ -47,6 +47,25 @@ function operationForSyncRequest(request: unknown): unknown {
   };
 }
 
+function expectSuspendedWorkerRequest(request: unknown): void {
+  const syncRequest = SyncRequestSchema.parse(request);
+  expect(syncRequest.infos).toHaveLength(1);
+  expect(syncRequest.infos[0]?.name).toBe("ci.sjer.red/request-id");
+  expect(syncRequest.manifests).toHaveLength(1);
+  expect(JSON.parse(syncRequest.manifests[0] ?? "")).toMatchObject({
+    spec: {
+      syncPolicy: {
+        automated: {
+          enabled: false,
+          prune: true,
+          selfHeal: true,
+        },
+      },
+    },
+  });
+  expect(syncRequest.resources).toEqual([WorkerApplicationResource]);
+}
+
 describe("Argo CD prune safety", () => {
   test("blocks root pruning when a removed child lacks the cascade finalizer", async () => {
     let syncPosts = 0;
@@ -142,7 +161,9 @@ describe("Argo CD release gating", () => {
           server: "https://kubernetes.default.svc",
           namespace: "worker",
         },
-        syncPolicy: { automated: {}, syncOptions: ["CreateNamespace=true"] },
+        syncPolicy: {
+          automated: { prune: true, selfHeal: true },
+        },
       },
     });
     const externalApplication = JSON.stringify({
@@ -240,18 +261,7 @@ describe("Argo CD release gating", () => {
       expect(stderr).toBe("");
       expect(stdout).toContain("suspending auto-sync: worker");
       expect(syncBodies).toHaveLength(1);
-      const syncRequest = SyncRequestSchema.parse(syncBodies[0]);
-      expect(syncRequest.infos).toHaveLength(1);
-      expect(syncRequest.infos[0]?.name).toBe("ci.sjer.red/request-id");
-      expect(syncRequest.manifests).toHaveLength(1);
-      expect(JSON.parse(syncRequest.manifests[0] ?? "")).toMatchObject({
-        spec: {
-          syncPolicy: {
-            syncOptions: ["CreateNamespace=true"],
-          },
-        },
-      });
-      expect(syncRequest.resources).toEqual([WorkerApplicationResource]);
+      expectSuspendedWorkerRequest(syncBodies[0]);
     } finally {
       await server.stop(true);
     }
