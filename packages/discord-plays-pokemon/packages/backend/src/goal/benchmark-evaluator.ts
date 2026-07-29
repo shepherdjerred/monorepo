@@ -55,11 +55,12 @@ export type GoalBenchmarkTelemetry = {
   ignoredInputs: number;
   screenshots: number;
   knowledgeQueries: number;
+  errors: number;
   inputTokens: number;
   cachedInputTokens: number;
   outputTokens: number;
   reasoningOutputTokens: number;
-  estimatedCostUsd: number;
+  estimatedCostUsd: number | null;
   traceId: string;
   saveSha256: string;
   wasmCommit: string;

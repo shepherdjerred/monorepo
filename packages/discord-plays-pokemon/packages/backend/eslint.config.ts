@@ -31,6 +31,7 @@ const config = [
         "src/emulator/flash-persistence.test.ts",
         "src/goal/codex-command.test.ts",
         "src/goal/benchmark-evaluator.test.ts",
+        "src/goal/benchmark-harness.test.ts",
         "src/goal/codex-jsonl.test.ts",
         "src/goal/codex-trace.test.ts",
         "src/goal/discord-message.test.ts",
