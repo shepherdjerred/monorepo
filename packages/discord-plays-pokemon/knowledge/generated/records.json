@@ -9693,7 +9693,7 @@
     "title": "Azurill",
     "aliases": ["azurill", "National Dex 298"],
     "tags": ["normal", "generation-3", "ordinary"],
-    "body": "National Pokédex: 298\nTypes: normal\nHeight: 0.2 m; weight: 2 kg\nCapture rate: 150\nEvolves from: none\nEvolves to: Marill (Level Up, happiness 220+)\nEmerald level-up moves (level:move): 1:splash, 3:charm, 6:tail-whip, 10:bubble, 15:slam, 21:water-gun",
+    "body": "National Pokédex: 298\nTypes: normal\nHeight: 0.2 m; weight: 2 kg\nCapture rate: 150\nEvolves from: none\nEvolves to: Marill (Level Up, high friendship)\nEmerald level-up moves (level:move): 1:splash, 3:charm, 6:tail-whip, 10:bubble, 15:slam, 21:water-gun",
     "source": {
       "id": "pokeapi",
       "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
@@ -9875,7 +9875,7 @@
     "title": "Blissey",
     "aliases": ["blissey", "National Dex 242"],
     "tags": ["normal", "generation-2", "ordinary"],
-    "body": "National Pokédex: 242\nTypes: normal\nHeight: 1.5 m; weight: 46.8 kg\nCapture rate: 30\nEvolves from: Chansey (Level Up, happiness 220+)\nEvolves to: none\nEmerald level-up moves (level:move): 1:pound, 1:growl, 4:tail-whip, 7:refresh, 10:soft-boiled, 13:double-slap, 18:minimize, 23:sing, 28:egg-bomb, 33:defense-curl, 40:light-screen, 47:double-edge",
+    "body": "National Pokédex: 242\nTypes: normal\nHeight: 1.5 m; weight: 46.8 kg\nCapture rate: 30\nEvolves from: Chansey (Level Up, high friendship)\nEvolves to: none\nEmerald level-up moves (level:move): 1:pound, 1:growl, 4:tail-whip, 7:refresh, 10:soft-boiled, 13:double-slap, 18:minimize, 23:sing, 28:egg-bomb, 33:defense-curl, 40:light-screen, 47:double-edge",
     "source": {
       "id": "pokeapi",
       "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
@@ -10043,7 +10043,7 @@
     "title": "Chansey",
     "aliases": ["chansey", "National Dex 113"],
     "tags": ["normal", "generation-1", "ordinary"],
-    "body": "National Pokédex: 113\nTypes: normal\nHeight: 1.1 m; weight: 34.6 kg\nCapture rate: 30\nEvolves from: none\nEvolves to: Blissey (Level Up, happiness 220+)\nEmerald level-up moves (level:move): 1:pound, 1:growl, 5:tail-whip, 9:refresh, 13:soft-boiled, 17:double-slap, 23:minimize, 29:sing, 35:egg-bomb, 41:defense-curl, 49:light-screen, 57:double-edge",
+    "body": "National Pokédex: 113\nTypes: normal\nHeight: 1.1 m; weight: 34.6 kg\nCapture rate: 30\nEvolves from: none\nEvolves to: Blissey (Level Up, high friendship)\nEmerald level-up moves (level:move): 1:pound, 1:growl, 5:tail-whip, 9:refresh, 13:soft-boiled, 17:double-slap, 23:minimize, 29:sing, 35:egg-bomb, 41:defense-curl, 49:light-screen, 57:double-edge",
     "source": {
       "id": "pokeapi",
       "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
@@ -10183,7 +10183,7 @@
     "title": "Clefairy",
     "aliases": ["clefairy", "National Dex 35"],
     "tags": ["normal", "generation-1", "ordinary"],
-    "body": "National Pokédex: 35\nTypes: normal\nHeight: 0.6 m; weight: 7.5 kg\nCapture rate: 150\nEvolves from: Cleffa (Level Up, happiness 220+)\nEvolves to: Clefable (Use Item, Moon Stone)\nEmerald level-up moves (level:move): 1:pound, 1:growl, 5:encore, 9:sing, 13:double-slap, 17:follow-me, 21:minimize, 25:defense-curl, 29:metronome, 33:cosmic-power, 37:moonlight, 41:light-screen, 45:meteor-mash",
+    "body": "National Pokédex: 35\nTypes: normal\nHeight: 0.6 m; weight: 7.5 kg\nCapture rate: 150\nEvolves from: Cleffa (Level Up, high friendship)\nEvolves to: Clefable (Use Item, Moon Stone)\nEmerald level-up moves (level:move): 1:pound, 1:growl, 5:encore, 9:sing, 13:double-slap, 17:follow-me, 21:minimize, 25:defense-curl, 29:metronome, 33:cosmic-power, 37:moonlight, 41:light-screen, 45:meteor-mash",
     "source": {
       "id": "pokeapi",
       "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
@@ -10197,7 +10197,7 @@
     "title": "Cleffa",
     "aliases": ["cleffa", "National Dex 173"],
     "tags": ["normal", "generation-2", "ordinary"],
-    "body": "National Pokédex: 173\nTypes: normal\nHeight: 0.3 m; weight: 3 kg\nCapture rate: 150\nEvolves from: none\nEvolves to: Clefairy (Level Up, happiness 220+)\nEmerald level-up moves (level:move): 1:pound, 1:charm, 4:encore, 8:sing, 13:sweet-kiss",
+    "body": "National Pokédex: 173\nTypes: normal\nHeight: 0.3 m; weight: 3 kg\nCapture rate: 150\nEvolves from: none\nEvolves to: Clefairy (Level Up, high friendship)\nEmerald level-up moves (level:move): 1:pound, 1:charm, 4:encore, 8:sing, 13:sweet-kiss",
     "source": {
       "id": "pokeapi",
       "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
@@ -10295,7 +10295,7 @@
     "title": "Crobat",
     "aliases": ["crobat", "National Dex 169"],
     "tags": ["poison", "flying", "generation-2", "ordinary"],
-    "body": "National Pokédex: 169\nTypes: poison/flying\nHeight: 1.8 m; weight: 75 kg\nCapture rate: 90\nEvolves from: Golbat (Level Up, happiness 220+)\nEvolves to: none\nEmerald level-up moves (level:move): 1:supersonic, 1:screech, 1:leech-life, 1:astonish, 6:supersonic, 11:astonish, 16:bite, 21:wing-attack, 28:confuse-ray, 35:air-cutter, 42:mean-look, 49:poison-fang, 56:haze",
+    "body": "National Pokédex: 169\nTypes: poison/flying\nHeight: 1.8 m; weight: 75 kg\nCapture rate: 90\nEvolves from: Golbat (Level Up, high friendship)\nEvolves to: none\nEmerald level-up moves (level:move): 1:supersonic, 1:screech, 1:leech-life, 1:astonish, 6:supersonic, 11:astonish, 16:bite, 21:wing-attack, 28:confuse-ray, 35:air-cutter, 42:mean-look, 49:poison-fang, 56:haze",
     "source": {
       "id": "pokeapi",
       "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
@@ -10603,7 +10603,7 @@
     "title": "Eevee",
     "aliases": ["eevee", "National Dex 133"],
     "tags": ["normal", "generation-1", "ordinary"],
-    "body": "National Pokédex: 133\nTypes: normal\nHeight: 0.3 m; weight: 6.5 kg\nCapture rate: 45\nEvolves from: none\nEvolves to: Vaporeon (Use Item, Water Stone); Jolteon (Use Item, Thunder Stone); Flareon (Use Item, Fire Stone); Espeon (Level Up, happiness 220+, day); Umbreon (Level Up, happiness 220+, night)\nEmerald level-up moves (level:move): 1:tackle, 1:tail-whip, 1:helping-hand, 8:sand-attack, 16:growl, 23:quick-attack, 30:bite, 36:baton-pass, 42:take-down",
+    "body": "National Pokédex: 133\nTypes: normal\nHeight: 0.3 m; weight: 6.5 kg\nCapture rate: 45\nEvolves from: none\nEvolves to: Vaporeon (Use Item, Water Stone); Jolteon (Use Item, Thunder Stone); Flareon (Use Item, Fire Stone); Espeon (Level Up, high friendship, day); Umbreon (Level Up, high friendship, night)\nEmerald level-up moves (level:move): 1:tackle, 1:tail-whip, 1:helping-hand, 8:sand-attack, 16:growl, 23:quick-attack, 30:bite, 36:baton-pass, 42:take-down",
     "source": {
       "id": "pokeapi",
       "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
@@ -10701,7 +10701,7 @@
     "title": "Espeon",
     "aliases": ["espeon", "National Dex 196"],
     "tags": ["psychic", "generation-2", "ordinary"],
-    "body": "National Pokédex: 196\nTypes: psychic\nHeight: 0.9 m; weight: 26.5 kg\nCapture rate: 45\nEvolves from: Eevee (Level Up, happiness 220+, day)\nEvolves to: none\nEmerald level-up moves (level:move): 1:tackle, 1:tail-whip, 1:helping-hand, 8:sand-attack, 16:confusion, 23:quick-attack, 30:swift, 36:psybeam, 42:psych-up, 47:psychic, 52:morning-sun",
+    "body": "National Pokédex: 196\nTypes: psychic\nHeight: 0.9 m; weight: 26.5 kg\nCapture rate: 45\nEvolves from: Eevee (Level Up, high friendship, day)\nEvolves to: none\nEmerald level-up moves (level:move): 1:tackle, 1:tail-whip, 1:helping-hand, 8:sand-attack, 16:confusion, 23:quick-attack, 30:swift, 36:psybeam, 42:psych-up, 47:psychic, 52:morning-sun",
     "source": {
       "id": "pokeapi",
       "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
@@ -10995,7 +10995,7 @@
     "title": "Golbat",
     "aliases": ["golbat", "National Dex 42"],
     "tags": ["poison", "flying", "generation-1", "ordinary"],
-    "body": "National Pokédex: 42\nTypes: poison/flying\nHeight: 1.6 m; weight: 55 kg\nCapture rate: 90\nEvolves from: Zubat (Level Up, level 22)\nEvolves to: Crobat (Level Up, happiness 220+)\nEmerald level-up moves (level:move): 1:supersonic, 1:screech, 1:leech-life, 1:astonish, 6:supersonic, 11:astonish, 16:bite, 21:wing-attack, 28:confuse-ray, 35:air-cutter, 42:mean-look, 49:poison-fang, 56:haze",
+    "body": "National Pokédex: 42\nTypes: poison/flying\nHeight: 1.6 m; weight: 55 kg\nCapture rate: 90\nEvolves from: Zubat (Level Up, level 22)\nEvolves to: Crobat (Level Up, high friendship)\nEmerald level-up moves (level:move): 1:supersonic, 1:screech, 1:leech-life, 1:astonish, 6:supersonic, 11:astonish, 16:bite, 21:wing-attack, 28:confuse-ray, 35:air-cutter, 42:mean-look, 49:poison-fang, 56:haze",
     "source": {
       "id": "pokeapi",
       "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
@@ -11387,7 +11387,7 @@
     "title": "Igglybuff",
     "aliases": ["igglybuff", "National Dex 174"],
     "tags": ["normal", "generation-2", "ordinary"],
-    "body": "National Pokédex: 174\nTypes: normal\nHeight: 0.3 m; weight: 1 kg\nCapture rate: 170\nEvolves from: none\nEvolves to: Jigglypuff (Level Up, happiness 220+)\nEmerald level-up moves (level:move): 1:sing, 1:charm, 4:defense-curl, 9:pound, 14:sweet-kiss",
+    "body": "National Pokédex: 174\nTypes: normal\nHeight: 0.3 m; weight: 1 kg\nCapture rate: 170\nEvolves from: none\nEvolves to: Jigglypuff (Level Up, high friendship)\nEmerald level-up moves (level:move): 1:sing, 1:charm, 4:defense-curl, 9:pound, 14:sweet-kiss",
     "source": {
       "id": "pokeapi",
       "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
@@ -11429,7 +11429,7 @@
     "title": "Jigglypuff",
     "aliases": ["jigglypuff", "National Dex 39"],
     "tags": ["normal", "generation-1", "ordinary"],
-    "body": "National Pokédex: 39\nTypes: normal\nHeight: 0.5 m; weight: 5.5 kg\nCapture rate: 170\nEvolves from: Igglybuff (Level Up, happiness 220+)\nEvolves to: Wigglytuff (Use Item, Moon Stone)\nEmerald level-up moves (level:move): 1:sing, 4:defense-curl, 9:pound, 14:disable, 19:rollout, 24:double-slap, 29:rest, 34:body-slam, 39:mimic, 44:hyper-voice, 49:double-edge",
+    "body": "National Pokédex: 39\nTypes: normal\nHeight: 0.5 m; weight: 5.5 kg\nCapture rate: 170\nEvolves from: Igglybuff (Level Up, high friendship)\nEvolves to: Wigglytuff (Use Item, Moon Stone)\nEmerald level-up moves (level:move): 1:sing, 4:defense-curl, 9:pound, 14:disable, 19:rollout, 24:double-slap, 29:rest, 34:body-slam, 39:mimic, 44:hyper-voice, 49:double-edge",
     "source": {
       "id": "pokeapi",
       "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
@@ -12115,7 +12115,7 @@
     "title": "Marill",
     "aliases": ["marill", "National Dex 183"],
     "tags": ["water", "generation-2", "ordinary"],
-    "body": "National Pokédex: 183\nTypes: water\nHeight: 0.4 m; weight: 8.5 kg\nCapture rate: 190\nEvolves from: Azurill (Level Up, happiness 220+)\nEvolves to: Azumarill (Level Up, level 18)\nEmerald level-up moves (level:move): 1:tackle, 3:defense-curl, 6:tail-whip, 10:water-gun, 15:rollout, 21:bubble-beam, 28:double-edge, 36:rain-dance, 45:hydro-pump",
+    "body": "National Pokédex: 183\nTypes: water\nHeight: 0.4 m; weight: 8.5 kg\nCapture rate: 190\nEvolves from: Azurill (Level Up, high friendship)\nEvolves to: Azumarill (Level Up, level 18)\nEmerald level-up moves (level:move): 1:tackle, 3:defense-curl, 6:tail-whip, 10:water-gun, 15:rollout, 21:bubble-beam, 28:double-edge, 36:rain-dance, 45:hydro-pump",
     "source": {
       "id": "pokeapi",
       "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
@@ -12787,7 +12787,7 @@
     "title": "Pichu",
     "aliases": ["pichu", "National Dex 172"],
     "tags": ["electric", "generation-2", "ordinary"],
-    "body": "National Pokédex: 172\nTypes: electric\nHeight: 0.3 m; weight: 2 kg\nCapture rate: 190\nEvolves from: none\nEvolves to: Pikachu (Level Up, happiness 220+)\nEmerald level-up moves (level:move): 1:thunder-shock, 1:charm, 6:tail-whip, 8:thunder-wave, 11:sweet-kiss",
+    "body": "National Pokédex: 172\nTypes: electric\nHeight: 0.3 m; weight: 2 kg\nCapture rate: 190\nEvolves from: none\nEvolves to: Pikachu (Level Up, high friendship)\nEmerald level-up moves (level:move): 1:thunder-shock, 1:charm, 6:tail-whip, 8:thunder-wave, 11:sweet-kiss",
     "source": {
       "id": "pokeapi",
       "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
@@ -12843,7 +12843,7 @@
     "title": "Pikachu",
     "aliases": ["pikachu", "National Dex 25"],
     "tags": ["electric", "generation-1", "ordinary"],
-    "body": "National Pokédex: 25\nTypes: electric\nHeight: 0.4 m; weight: 6 kg\nCapture rate: 190\nEvolves from: Pichu (Level Up, happiness 220+)\nEvolves to: Raichu (Use Item, Thunder Stone)\nEmerald level-up moves (level:move): 1:growl, 1:thunder-shock, 6:tail-whip, 8:thunder-wave, 11:quick-attack, 15:double-team, 20:slam, 26:thunderbolt, 33:agility, 41:thunder, 50:light-screen",
+    "body": "National Pokédex: 25\nTypes: electric\nHeight: 0.4 m; weight: 6 kg\nCapture rate: 190\nEvolves from: Pichu (Level Up, high friendship)\nEvolves to: Raichu (Use Item, Thunder Stone)\nEmerald level-up moves (level:move): 1:growl, 1:thunder-shock, 6:tail-whip, 8:thunder-wave, 11:quick-attack, 15:double-team, 20:slam, 26:thunderbolt, 33:agility, 41:thunder, 50:light-screen",
     "source": {
       "id": "pokeapi",
       "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
@@ -14229,7 +14229,7 @@
     "title": "Togepi",
     "aliases": ["togepi", "National Dex 175"],
     "tags": ["normal", "generation-2", "ordinary"],
-    "body": "National Pokédex: 175\nTypes: normal\nHeight: 0.3 m; weight: 1.5 kg\nCapture rate: 190\nEvolves from: none\nEvolves to: Togetic (Level Up, happiness 220+)\nEmerald level-up moves (level:move): 1:growl, 1:charm, 6:metronome, 11:sweet-kiss, 16:yawn, 21:encore, 26:follow-me, 31:wish, 36:safeguard, 41:double-edge",
+    "body": "National Pokédex: 175\nTypes: normal\nHeight: 0.3 m; weight: 1.5 kg\nCapture rate: 190\nEvolves from: none\nEvolves to: Togetic (Level Up, high friendship)\nEmerald level-up moves (level:move): 1:growl, 1:charm, 6:metronome, 11:sweet-kiss, 16:yawn, 21:encore, 26:follow-me, 31:wish, 36:safeguard, 41:double-edge",
     "source": {
       "id": "pokeapi",
       "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
@@ -14243,7 +14243,7 @@
     "title": "Togetic",
     "aliases": ["togetic", "National Dex 176"],
     "tags": ["normal", "flying", "generation-2", "ordinary"],
-    "body": "National Pokédex: 176\nTypes: normal/flying\nHeight: 0.6 m; weight: 3.2 kg\nCapture rate: 75\nEvolves from: Togepi (Level Up, happiness 220+)\nEvolves to: none\nEmerald level-up moves (level:move): 1:growl, 1:charm, 6:metronome, 11:sweet-kiss, 16:yawn, 21:encore, 26:follow-me, 31:wish, 36:safeguard, 41:double-edge",
+    "body": "National Pokédex: 176\nTypes: normal/flying\nHeight: 0.6 m; weight: 3.2 kg\nCapture rate: 75\nEvolves from: Togepi (Level Up, high friendship)\nEvolves to: none\nEmerald level-up moves (level:move): 1:growl, 1:charm, 6:metronome, 11:sweet-kiss, 16:yawn, 21:encore, 26:follow-me, 31:wish, 36:safeguard, 41:double-edge",
     "source": {
       "id": "pokeapi",
       "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
@@ -14383,7 +14383,7 @@
     "title": "Umbreon",
     "aliases": ["umbreon", "National Dex 197"],
     "tags": ["dark", "generation-2", "ordinary"],
-    "body": "National Pokédex: 197\nTypes: dark\nHeight: 1 m; weight: 27 kg\nCapture rate: 45\nEvolves from: Eevee (Level Up, happiness 220+, night)\nEvolves to: none\nEmerald level-up moves (level:move): 1:tackle, 1:tail-whip, 1:helping-hand, 8:sand-attack, 16:pursuit, 23:quick-attack, 30:confuse-ray, 36:feint-attack, 42:mean-look, 47:screech, 52:moonlight",
+    "body": "National Pokédex: 197\nTypes: dark\nHeight: 1 m; weight: 27 kg\nCapture rate: 45\nEvolves from: Eevee (Level Up, high friendship, night)\nEvolves to: none\nEmerald level-up moves (level:move): 1:tackle, 1:tail-whip, 1:helping-hand, 8:sand-attack, 16:pursuit, 23:quick-attack, 30:confuse-ray, 36:feint-attack, 42:mean-look, 47:screech, 52:moonlight",
     "source": {
       "id": "pokeapi",
       "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",

@@ -14,7 +14,7 @@ import {
   includeGeneration3Item,
 } from "./pokeapi.ts";
 import {
-  generation3HappinessThreshold,
+  generation3FriendshipCondition,
   requirePokeApiReference,
 } from "./pokeapi-relations.ts";
 
@@ -94,10 +94,10 @@ describe("PokeAPI relational integrity", () => {
 });
 
 describe("Generation III evolution normalization", () => {
-  test("uses Emerald's friendship threshold instead of current PokeAPI data", () => {
-    expect(generation3HappinessThreshold(160)).toBe(220);
-    expect(generation3HappinessThreshold(220)).toBe(220);
-    expect(generation3HappinessThreshold(undefined)).toBeUndefined();
+  test("omits PokeAPI's unversioned numeric friendship threshold", () => {
+    expect(generation3FriendshipCondition(160)).toBe("high friendship");
+    expect(generation3FriendshipCondition(220)).toBe("high friendship");
+    expect(generation3FriendshipCondition(undefined)).toBeUndefined();
   });
 });
 

@@ -126,8 +126,9 @@ system against a copied live save and the exact goal `get me a pokeman`.
   each run uses an isolated helper directory and waits for its history record.
 - 2026-07-28: Final corpus review found two more unversioned PokeAPI fields.
   Current base-experience values are now omitted instead of being presented as
-  Emerald data, and friendship evolutions use Emerald's Generation III
-  threshold of 220 rather than the current minimum-happiness value.
+  Emerald data, and friendship evolutions retain the version-supported
+  high-friendship condition without presenting the current numeric threshold
+  as historical data.
 
 ## Session Log — 2026-07-28
 
@@ -167,9 +168,9 @@ system against a copied live save and the exact goal `get me a pokeman`.
   per-run, history persistence is awaited, and unknown startup exceptions
   remain harness failures.
 - Removed unversioned base-experience values from species records and
-  normalized every Emerald friendship evolution to the Generation III
-  threshold. The pinned generator reproduced 1,759 permissive and 39
-  CC BY-NC-SA records, and all 19 generator/corpus tests pass.
+  normalized every Emerald friendship evolution to a nonnumeric
+  high-friendship condition. The pinned generator reproduced 1,759 permissive
+  and 39 CC BY-NC-SA records, and all 19 generator/corpus tests pass.
 
 ### Remaining
 

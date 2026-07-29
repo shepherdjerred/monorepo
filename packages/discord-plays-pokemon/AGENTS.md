@@ -99,6 +99,9 @@ revisions.
   check and logic identifiers are labeled as non-vanilla metadata.
 - PokeAPI supplies BSD-3-Clause Generation III species, move, and item data.
   Item membership is generation-wide and does not prove Emerald availability.
+  Version-group filtering does not historicalize PokeAPI's unversioned base
+  experience or minimum-happiness columns; omit those numbers from generated
+  records while preserving supported nonnumeric conditions.
 - Bulbapedia supplies the separately stored full walkthrough under CC
   BY-NC-SA 2.5; preserve `knowledge/cc-by-nc-sa-2.5/NOTICE.md` and per-record
   attribution.
