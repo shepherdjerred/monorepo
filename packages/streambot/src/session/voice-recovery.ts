@@ -8,7 +8,10 @@ import {
   deleteState,
   stateFilePath,
 } from "@shepherdjerred/streambot/state/persistence.ts";
-import type { VoiceCloseInfo } from "@shepherdjerred/streambot/streamer/streamer.ts";
+import type {
+  VoiceCloseInfo,
+  VoiceCloseSource,
+} from "@shepherdjerred/streambot/streamer/voice-close-source.ts";
 import type {
   ChannelId,
   GuildId,
@@ -82,9 +85,6 @@ export function buildReconnectExhaustedAnnouncement(attempts: number): string {
   );
 }
 
-/** The slice of the streamer the coordinator reads: the latest Discord-side voice close. */
-type CloseSource = { lastVoiceCloseInfo: () => VoiceCloseInfo | null };
-
 /**
  * The slice of a session the coordinator drives. `SessionManager`'s `Session` satisfies this
  * structurally; the coordinator stays generic so it never needs the full (private) shape.
@@ -94,7 +94,9 @@ export type RecoverableSession = {
   readonly guildId: GuildId;
   readonly voiceChannelId: ChannelId;
   readonly statusChannelId: ChannelId | null;
-  readonly entry: { readonly userbot: CloseSource };
+  readonly entry: {
+    readonly userbot: { captureVoiceCloseSource: () => VoiceCloseSource };
+  };
   readonly actor: { send: (event: PlaybackEvent) => void };
   reconnectAttempts: number;
   preserveStateOnTeardown: boolean;
@@ -139,8 +141,8 @@ type PendingRecovery = {
   guildId: GuildId;
   channelId: ChannelId;
   statusChannelId: ChannelId | null;
-  /** The userbot that owned the lost session — its lastVoiceCloseInfo is re-checked at fire time. */
-  userbot: CloseSource;
+  /** Stable close state for the lost connection, independent of pooled userbot reuse. */
+  closeSource: VoiceCloseSource;
 };
 
 /**
@@ -167,8 +169,9 @@ export class VoiceRecoveryCoordinator<TSession extends RecoverableSession> {
       return;
     }
     session.voiceRecoveryStarted = true;
+    const closeSource = session.entry.userbot.captureVoiceCloseSource();
     const classification = classifyVoiceLoss(
-      session.entry.userbot.lastVoiceCloseInfo(),
+      closeSource.lastVoiceCloseInfo(),
       Date.now(),
     );
     voiceDisconnectsTotal.inc({
@@ -187,13 +190,19 @@ export class VoiceRecoveryCoordinator<TSession extends RecoverableSession> {
     // Checkpoint BEFORE dispatching: the machine clears the queue on the external stop, and
     // teardown latches `torndown` which blocks later writes. Position is still live — the
     // wall-clock tracker keeps advancing until the player is stopped.
-    await this.deps.saveSnapshot(session);
-    session.preserveStateOnTeardown = willReconnect;
-    session.actor.send({
-      type: "STREAMER_VOICE_DETACHED",
-      reason: voiceLossStopReason(classification, willReconnect),
-    });
+    try {
+      await this.deps.saveSnapshot(session);
+      session.preserveStateOnTeardown = willReconnect;
+      session.actor.send({
+        type: "STREAMER_VOICE_DETACHED",
+        reason: voiceLossStopReason(classification, willReconnect),
+      });
+    } catch (error) {
+      closeSource.release();
+      throw error;
+    }
     if (!willReconnect) {
+      closeSource.release();
       return;
     }
     this.scheduleReconnect({
@@ -202,7 +211,7 @@ export class VoiceRecoveryCoordinator<TSession extends RecoverableSession> {
       channelId: session.voiceChannelId,
       statusChannelId: session.statusChannelId,
       attempts: session.reconnectAttempts,
-      userbot: session.entry.userbot,
+      closeSource,
     });
   }
 
@@ -218,7 +227,7 @@ export class VoiceRecoveryCoordinator<TSession extends RecoverableSession> {
       channelId: session.voiceChannelId,
       statusChannelId: session.statusChannelId,
       attempts: session.reconnectAttempts,
-      userbot: session.entry.userbot,
+      closeSource: session.entry.userbot.captureVoiceCloseSource(),
     });
   }
 
@@ -226,6 +235,7 @@ export class VoiceRecoveryCoordinator<TSession extends RecoverableSession> {
   cancelAll(): void {
     for (const recovery of this.pending.values()) {
       clearTimeout(recovery.timer);
+      recovery.closeSource.release();
     }
     this.pending.clear();
   }
@@ -237,13 +247,15 @@ export class VoiceRecoveryCoordinator<TSession extends RecoverableSession> {
     channelId: ChannelId;
     statusChannelId: ChannelId | null;
     attempts: number;
-    userbot: CloseSource;
+    closeSource: VoiceCloseSource;
   }): void {
     if (this.pending.has(params.key)) {
+      params.closeSource.release();
       return;
     }
     const { delaySeconds, maxAttempts } = this.deps.reconnect;
     if (params.attempts >= maxAttempts) {
+      params.closeSource.release();
       voiceReconnectsTotal.inc({ outcome: "exhausted" });
       log.error("voice reconnect attempts exhausted — staying down", {
         guildId: params.guildId,
@@ -267,7 +279,7 @@ export class VoiceRecoveryCoordinator<TSession extends RecoverableSession> {
       guildId: params.guildId,
       channelId: params.channelId,
       statusChannelId: params.statusChannelId,
-      userbot: params.userbot,
+      closeSource: params.closeSource,
     });
   }
 
@@ -285,16 +297,18 @@ export class VoiceRecoveryCoordinator<TSession extends RecoverableSession> {
         channelId: recovery.channelId,
       });
       voiceReconnectsTotal.inc({ outcome: "skipped" });
+      recovery.closeSource.release();
       return;
     }
     // Re-classify against the latest close info: the deliberate 4014 sometimes lands only after
     // the gateway detach that started this recovery. Widen freshness to cover the wait.
     const late = classifyVoiceLoss(
-      recovery.userbot.lastVoiceCloseInfo(),
+      recovery.closeSource.lastVoiceCloseInfo(),
       Date.now(),
       this.deps.reconnect.delaySeconds * 1000 + CLOSE_INFO_FRESHNESS_MS,
     );
     if (late.deliberate) {
+      recovery.closeSource.release();
       log.warn("late deliberate disconnect — abandoning reconnect", {
         guildId: recovery.guildId,
         channelId: recovery.channelId,
@@ -311,13 +325,18 @@ export class VoiceRecoveryCoordinator<TSession extends RecoverableSession> {
       return;
     }
     const attempt = recovery.attempts + 1;
-    const result = await this.deps.resumeOne(
-      recovery.guildId,
-      recovery.channelId,
-      { reconnectAttempts: attempt },
-    );
+    let result: ResumeOutcome;
+    try {
+      result = await this.deps.resumeOne(recovery.guildId, recovery.channelId, {
+        reconnectAttempts: attempt,
+      });
+    } catch (error) {
+      recovery.closeSource.release();
+      throw error;
+    }
     switch (result) {
       case "resumed":
+        recovery.closeSource.release();
         // Success is counted only once the recovered session streams healthily for the confirm
         // window (SessionManager.writeSnapshot); until then its teardown re-arms the retry.
         log.info("voice reconnect attempt respawned session", {
@@ -327,10 +346,12 @@ export class VoiceRecoveryCoordinator<TSession extends RecoverableSession> {
         });
         return;
       case "nothing":
+        recovery.closeSource.release();
         // Queue was empty (nothing left to resume) — a harmless, terminal no-op.
         voiceReconnectsTotal.inc({ outcome: "skipped" });
         return;
       case "unresumable":
+        recovery.closeSource.release();
         // No member userbot is registered for this guild — a structural, permanent condition
         // that the state file has already been dropped for. Distinct from the empty-queue case.
         voiceReconnectsTotal.inc({ outcome: "unresumable" });
@@ -347,7 +368,7 @@ export class VoiceRecoveryCoordinator<TSession extends RecoverableSession> {
           channelId: recovery.channelId,
           statusChannelId: recovery.statusChannelId,
           attempts: recovery.attempts,
-          userbot: recovery.userbot,
+          closeSource: recovery.closeSource,
         });
     }
   }

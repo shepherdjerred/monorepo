@@ -74,8 +74,10 @@ losses continue to reconnect.
   tests successfully.
 - Addressed the review gate's teardown-race finding by retaining the stopped
   Go-Live child's close relay until replacement and allowing a racing `4014`
-  through local-stop suppression exactly once; the fork's build, typecheck, and
-  tests plus Streambot's affected checks pass.
+  through local-stop suppression exactly once. Bound delayed close state to the
+  original recovery incident so pooled-userbot reuse cannot lose or misattribute
+  a late `4014`; the fork's build, typecheck, and tests plus Streambot's affected
+  checks pass.
 - Addressed the review gate's seek-failure finding by making replacement attach
   failures reject both `seek()` and active playback, tear down their resources,
   freeze public position until attach succeeds, and leave the clock stopped if

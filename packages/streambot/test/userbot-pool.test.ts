@@ -43,6 +43,10 @@ function fakeStreamer(guilds: GuildId[], onLogin?: () => Promise<void>) {
     seek: () => Promise.resolve(true),
     getPosition: () => null,
     lastVoiceCloseInfo: () => null,
+    captureVoiceCloseSource: () => ({
+      lastVoiceCloseInfo: () => null,
+      release: () => null,
+    }),
     setVoiceCloseListener: () => {
       /* pool tests never simulate voice closes */
     },

@@ -44,9 +44,14 @@ import {
   streamSegmentDurationSeconds,
   streamSegmentsTotal,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
-
+import {
+  createVoiceCloseTracker,
+  EMPTY_VOICE_CLOSE_SOURCE,
+  type VoiceCloseInfo,
+  type VoiceCloseSource,
+  type VoiceCloseTracker,
+} from "@shepherdjerred/streambot/streamer/voice-close-source.ts";
 const log = logger.child("streamer");
-
 /**
  * Owns the selfbot voice connection and ffmpeg streaming via `@shepherdjerred/discord-video-stream`
  * (our fork). Its methods are the playback machine's `joinVoice` / `runStream` / `leaveVoice`
@@ -65,7 +70,6 @@ export type StreamerDependencies = {
   createPlayer?: PlayerFactory;
   createObserver?: StreamObserverFactory;
 };
-
 /**
  * The streamer surface the pool/session layer depends on. Extends `PooledUserbot` (the
  * shared lib's minimum) with streambot's video-streaming methods. Lets a `UserbotEntry`
@@ -84,6 +88,8 @@ export type StreamerLike = PooledUserbot & {
   getPosition: () => number | null;
   /** Most recent Discord-side voice ws close observed on this userbot, or null if none yet. */
   lastVoiceCloseInfo: () => VoiceCloseInfo | null;
+  /** Retain the current connection's close state for one delayed recovery incident. */
+  captureVoiceCloseSource: () => VoiceCloseSource;
   /**
    * Register the (single) callback fired when Discord closes the voice connection out from under
    * us. Locally-initiated stops never fire it. Pass null to clear.
@@ -98,15 +104,6 @@ export type StreamerLike = PooledUserbot & {
    */
   setStallListener: (listener: ((info: StallInfo) => void) | null) => void;
 };
-
-/** A Discord-side voice connection death, timestamped for freshness-based classification. */
-export type VoiceCloseInfo = {
-  code: number;
-  /** True for Discord's 4014 "disconnected" — a deliberate removal (e.g. moderator disconnect). */
-  deliberate: boolean;
-  atMs: number;
-};
-
 export class StreambotStreamer implements StreamerLike {
   private readonly client: Client;
   private readonly streamer: Streamer;
@@ -136,15 +133,12 @@ export class StreambotStreamer implements StreamerLike {
   private seekGeneration = 0;
   /** Wall-clock (ms) when the current segment began playing; null when nothing is playing. */
   private segmentStartedAtMs: number | null = null;
-  /** Most recent Discord-side voice ws close (never set by local stops). */
-  private lastVoiceClose: VoiceCloseInfo | null = null;
+  /** Close state for the current connection; retained recovery leases outlive pool reuse. */
+  private voiceCloseTracker: VoiceCloseTracker | null = null;
   /** Session-layer callback for Discord-side voice closes; cleared between sessions. */
   private voiceCloseListener: ((info: VoiceCloseInfo) => void) | null = null;
   /** Session-layer callback for mid-stream ffmpeg stalls; cleared between sessions. */
   private stallListener: ((info: StallInfo) => void) | null = null;
-  /** Unsubscribes the current voice connection's close handler; null when not joined. */
-  private detachVoiceCloseHandler: (() => void) | null = null;
-
   constructor(
     userToken: UserToken,
     config: Pick<Config, "stream">,
@@ -182,7 +176,6 @@ export class StreambotStreamer implements StreamerLike {
       log.warn("userbot client error", { error: getErrorMessage(error) });
     });
   }
-
   /**
    * Log in and wait for the gateway to finish hydrating — `client.guilds.cache` is empty until the
    * `ready` event fires, so the pool's membership snapshot ({@link guildIds}) would be wrong if we
@@ -201,7 +194,6 @@ export class StreambotStreamer implements StreamerLike {
       guilds: this.client.guilds.cache.size,
     });
   }
-
   /**
    * Discord user id of the logged-in streamer (for the alone-in-VC check). Throws if
    * called before {@link login} resolves — `login` awaits the gateway `ready` event,
@@ -223,8 +215,6 @@ export class StreambotStreamer implements StreamerLike {
 
   async destroy(): Promise<void> {
     this.safeStop();
-    this.detachVoiceCloseHandler?.();
-    this.detachVoiceCloseHandler = null;
     try {
       this.client.destroy();
     } catch (error) {
@@ -298,9 +288,12 @@ export class StreambotStreamer implements StreamerLike {
     );
   }
   lastVoiceCloseInfo(): VoiceCloseInfo | null {
-    return this.lastVoiceClose;
+    return this.voiceCloseTracker?.lastVoiceCloseInfo() ?? null;
   }
 
+  captureVoiceCloseSource(): VoiceCloseSource {
+    return this.voiceCloseTracker?.retain() ?? EMPTY_VOICE_CLOSE_SOURCE;
+  }
   setVoiceCloseListener(
     listener: ((info: VoiceCloseInfo) => void) | null,
   ): void {
@@ -309,7 +302,6 @@ export class StreambotStreamer implements StreamerLike {
   setStallListener(listener: ((info: StallInfo) => void) | null): void {
     this.stallListener = listener;
   }
-
   private safeStop(): void {
     try {
       this.player?.stop();
@@ -318,6 +310,8 @@ export class StreambotStreamer implements StreamerLike {
     }
     this.player = null;
     this.segmentStartedAtMs = null;
+    this.voiceCloseTracker?.release();
+    this.voiceCloseTracker = null;
     try {
       this.streamer.stopStream();
     } catch (error) {
@@ -331,23 +325,22 @@ export class StreambotStreamer implements StreamerLike {
   }
 
   readonly joinVoice = async (input: JoinVoiceInput): Promise<VoiceHandle> => {
-    // A pooled userbot keeps the prior transport observer through teardown so a slow remote close
-    // can still reclassify a pending reconnect. Retire it only when a new session takes ownership.
-    this.detachVoiceCloseHandler?.();
-    this.detachVoiceCloseHandler = null;
-    // Clear any close info left over from a prior session on this (pooled, reusable) userbot.
-    // Otherwise a stale `deliberate` close from a different (guild, channel) could be re-read by a
-    // pending reconnect timer and misclassify a transient drop as deliberate — deleting saved state.
-    // A `null` baseline classifies as transient (the safe direction: reconnect and preserve state).
-    this.lastVoiceClose = null;
+    this.voiceCloseTracker?.release();
+    this.voiceCloseTracker = null;
     await this.streamer.joinVoice(input.guildId, input.channelId);
     const connection = this.streamer.voiceConnection;
     if (connection === undefined) {
       throw new Error("voice connection missing after joinVoice resolved");
     }
+    const activeConnection = connection;
     // Surface Discord-side connection deaths (the fork emits `close` for non-resumable,
     // remotely-initiated closes). VoiceConnection also relays its active Go-Live child's close,
     // so this one observer covers either transport without a listener-installation race.
+    const voiceCloseListener = this.voiceCloseListener;
+    function detachCloseHandler(): void {
+      activeConnection.off("close", onClose);
+    }
+    const tracker = createVoiceCloseTracker(detachCloseHandler);
     const onClose = (info: MediaConnectionCloseInfo) => {
       const close: VoiceCloseInfo = {
         code: info.code,
@@ -357,22 +350,19 @@ export class StreambotStreamer implements StreamerLike {
       // Once Discord has explicitly disconnected the streamer, a later transient close from the
       // other media transport must not erase that classification. A late deliberate close may,
       // however, replace the transient signal that started recovery.
-      if (this.lastVoiceClose?.deliberate === true && !close.deliberate) {
+      if (!tracker.record(close)) {
         return;
       }
-      this.lastVoiceClose = close;
       log.warn("Discord media connection closed", {
         guildId: input.guildId,
         channelId: input.channelId,
         code: close.code,
         deliberate: close.deliberate,
       });
-      this.voiceCloseListener?.(close);
+      voiceCloseListener?.(close);
     };
-    connection.on("close", onClose);
-    this.detachVoiceCloseHandler = () => {
-      connection.off("close", onClose);
-    };
+    activeConnection.on("close", onClose);
+    this.voiceCloseTracker = tracker;
     log.info("joined voice", {
       guildId: input.guildId,
       channelId: input.channelId,
