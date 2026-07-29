@@ -6,11 +6,11 @@ import type {
 import type { CommandInput } from "#src/game/command/command-input.ts";
 import { GameController, type GameControlPort } from "./game-controller.ts";
 import { actionOutcome } from "./game-action-outcome.ts";
-import type { GameObservationV1 } from "./game-observation.ts";
+import type { GameObservationV2 } from "./game-observation.ts";
 
 type ObservationInput = Readonly<{
   frame?: number;
-  phase?: GameObservationV1["phase"];
+  phase?: GameObservationV2["phase"];
   x?: number;
   y?: number;
   facing?: CardinalDirection;
@@ -18,16 +18,20 @@ type ObservationInput = Readonly<{
   inputReady?: boolean;
   collisionNorth?: number;
   scriptOrDialogActive?: boolean;
+  dialogVisible?: boolean;
+  dialogInputReady?: boolean;
   battleActionCursor?: number;
   battleControllerExecFlags?: number;
-  nearby?: NonNullable<GameObservationV1["world"]>["nearby"];
+  nearby?: NonNullable<GameObservationV2["world"]>["nearby"];
 }>;
 
-function observation(input: ObservationInput = {}): GameObservationV1 {
+function observation(input: ObservationInput = {}): GameObservationV2 {
   const frame = input.frame ?? 10;
+  const dialogVisible = input.dialogVisible === true;
+  const dialogInputReady = input.dialogInputReady === true;
   return {
-    schemaVersion: 1,
-    id: `observation-v1:${String(frame)}`,
+    schemaVersion: 2,
+    id: `observation-v2:${String(frame)}`,
     frame,
     phase: input.phase ?? "overworld",
     context: {
@@ -39,6 +43,8 @@ function observation(input: ObservationInput = {}): GameObservationV1 {
             : "field",
       battleActive: input.phase === "battle",
       scriptOrDialogActive: input.scriptOrDialogActive ?? false,
+      dialogVisible,
+      dialogInputReady,
       menuOrTransitionActive: false,
     },
     readiness: {
@@ -47,6 +53,8 @@ function observation(input: ObservationInput = {}): GameObservationV1 {
       playerStable: true,
       controlsLocked: false,
       scriptActive: false,
+      dialogVisible,
+      dialogInputReady,
       paletteFading: false,
     },
     battle:
@@ -55,6 +63,7 @@ function observation(input: ObservationInput = {}): GameObservationV1 {
             typeFlags: 0,
             controllerExecFlags: input.battleControllerExecFlags ?? 0,
             battlersCount: 2,
+            inputBattler: 0,
             activeBattler: 0,
             menu: "action",
             actionCursor: input.battleActionCursor ?? 0,
@@ -92,15 +101,15 @@ function observation(input: ObservationInput = {}): GameObservationV1 {
 
 class FakeControlPort implements GameControlPort {
   readonly presses: CommandInput[] = [];
-  private current: GameObservationV1;
-  private readonly afterPress: GameObservationV1[];
+  private current: GameObservationV2;
+  private readonly afterPress: GameObservationV2[];
   private currentFrame: Uint8Array;
   private readonly afterPressFrames: Uint8Array[];
   private readonly blocked: ReadonlySet<string>;
 
   constructor(
-    initial: GameObservationV1,
-    afterPress: readonly GameObservationV1[],
+    initial: GameObservationV2,
+    afterPress: readonly GameObservationV2[],
     options: Readonly<{
       blocked?: ReadonlySet<string>;
       initialFrame?: Uint8Array;
@@ -114,7 +123,7 @@ class FakeControlPort implements GameControlPort {
     this.afterPressFrames = [...(options.afterPressFrames ?? [])];
   }
 
-  observe(): GameObservationV1 {
+  observe(): GameObservationV2 {
     return this.current;
   }
 
@@ -158,7 +167,7 @@ function renderedFrame(changedPixels = 0): Uint8Array {
 function nearbyNpc(
   dx: number,
   dy: number,
-): NonNullable<GameObservationV1["world"]>["nearby"][number] {
+): NonNullable<GameObservationV2["world"]>["nearby"][number] {
   return {
     localId: 1,
     graphicsId: 2,
@@ -303,15 +312,19 @@ describe("GameController", () => {
     expect(outcome.stateChanged).toBe(true);
   });
 
-  test("recognizes a visible scripted-dialog advance as applied", async () => {
+  test("recognizes a dialog waiting for input as an applied advance", async () => {
     const scripted = observation({
       phase: "scripted",
       scriptOrDialogActive: true,
+      dialogVisible: true,
+      dialogInputReady: true,
     });
     const advanced = observation({
       frame: 20,
       phase: "scripted",
       scriptOrDialogActive: true,
+      dialogVisible: true,
+      dialogInputReady: true,
     });
     const port = new FakeControlPort(scripted, [advanced], {
       initialFrame: renderedFrame(),
@@ -329,16 +342,38 @@ describe("GameController", () => {
     expect(outcome.visualChangeRatio).toBeGreaterThan(0.0025);
   });
 
-  test("does not advance outside script-or-dialog context", async () => {
-    const field = observation();
-    const port = new FakeControlPort(field, []);
+  test("does not advance during a broad scripted phase without dialog evidence", async () => {
+    const scripted = observation({
+      phase: "scripted",
+      scriptOrDialogActive: true,
+      dialogVisible: false,
+      dialogInputReady: false,
+    });
+    const port = new FakeControlPort(scripted, []);
     const controller = new GameController(port);
 
     const outcome = await controller.advance();
 
     expect(port.presses).toEqual([]);
     expect(outcome.status).toBe("unavailable");
-    expect(outcome.stopReason).toBe("dialog-not-active");
+    expect(outcome.stopReason).toBe("dialog-not-ready");
+  });
+
+  test("does not advance while a visible dialog is still printing", async () => {
+    const printing = observation({
+      phase: "scripted",
+      scriptOrDialogActive: true,
+      dialogVisible: true,
+      dialogInputReady: false,
+    });
+    const port = new FakeControlPort(printing, []);
+    const controller = new GameController(port);
+
+    const outcome = await controller.advance();
+
+    expect(port.presses).toEqual([]);
+    expect(outcome.status).toBe("unavailable");
+    expect(outcome.stopReason).toBe("dialog-not-ready");
   });
 
   test("reports an already-satisfied wait condition as completed", async () => {

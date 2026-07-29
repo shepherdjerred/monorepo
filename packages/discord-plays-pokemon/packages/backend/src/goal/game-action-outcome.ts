@@ -1,5 +1,5 @@
 import type { CardinalDirection } from "#src/emulator/engine-observation.ts";
-import type { GameObservationV1 } from "./game-observation.ts";
+import type { GameObservationV2 } from "./game-observation.ts";
 
 type ActionStatus =
   | "applied"
@@ -14,7 +14,7 @@ type ActionStopReason =
   | "map-changed"
   | "phase-changed"
   | "field-input-not-ready"
-  | "dialog-not-active"
+  | "dialog-not-ready"
   | "no-effect"
   | "settle-timeout"
   | "wait-timeout";
@@ -25,7 +25,7 @@ export type ActionOutcomeOptions = Readonly<{
   settleTimedOut?: boolean;
   unavailableReason?: Extract<
     ActionStopReason,
-    "field-input-not-ready" | "dialog-not-active"
+    "field-input-not-ready" | "dialog-not-ready"
   >;
   visualChangeRatio?: number;
 }>;
@@ -47,16 +47,16 @@ export type ActionOutcomeV1 = Readonly<{
   stateChanged: boolean;
   visualChanged: boolean;
   visualChangeRatio: number;
-  before: GameObservationV1;
-  after: GameObservationV1;
+  before: GameObservationV2;
+  after: GameObservationV2;
 }>;
 
 const MIN_VISUAL_CHANGE_RATIO = 0.0025;
 const MIN_COLOR_CHANNEL_DELTA = 16;
 
 export function mapChanged(
-  before: GameObservationV1,
-  after: GameObservationV1,
+  before: GameObservationV2,
+  after: GameObservationV2,
 ): boolean {
   if (before.world === null || after.world === null) return false;
   return (
@@ -66,8 +66,8 @@ export function mapChanged(
 }
 
 export function tilesMoved(
-  before: GameObservationV1,
-  after: GameObservationV1,
+  before: GameObservationV2,
+  after: GameObservationV2,
 ): number {
   if (
     before.world === null ||
@@ -84,8 +84,8 @@ export function tilesMoved(
 
 export function collisionProvesBlocked(
   direction: CardinalDirection | undefined,
-  before: GameObservationV1,
-  after: GameObservationV1,
+  before: GameObservationV2,
+  after: GameObservationV2,
 ): boolean {
   if (
     direction === undefined ||
@@ -100,7 +100,7 @@ export function collisionProvesBlocked(
 }
 
 export function meaningfulStateSignature(
-  observation: GameObservationV1,
+  observation: GameObservationV2,
 ): string {
   return JSON.stringify({
     phase: observation.phase,
@@ -138,8 +138,8 @@ export function visualChangeRatio(
 
 export function actionOutcome(
   action: string,
-  before: GameObservationV1,
-  after: GameObservationV1,
+  before: GameObservationV2,
+  after: GameObservationV2,
   options: ActionOutcomeOptions,
 ): ActionOutcomeV1 {
   const didMapChange = mapChanged(before, after);
@@ -207,8 +207,8 @@ export function actionOutcome(
 }
 
 function sameWorldPosition(
-  left: GameObservationV1,
-  right: GameObservationV1,
+  left: GameObservationV2,
+  right: GameObservationV2,
 ): boolean {
   if (left.world === null || right.world === null) {
     return left.world === right.world;
@@ -222,8 +222,8 @@ function sameWorldPosition(
 }
 
 function facingChanged(
-  before: GameObservationV1,
-  after: GameObservationV1,
+  before: GameObservationV2,
+  after: GameObservationV2,
 ): boolean {
   return (
     before.world !== null &&

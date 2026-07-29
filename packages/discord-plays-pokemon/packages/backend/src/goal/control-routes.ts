@@ -33,7 +33,6 @@ const ChordRequestSchema = z.strictObject({
 });
 
 const ObserveQuerySchema = z.strictObject({
-  full: z.literal("true").optional(),
   screenshot: z.literal("true").optional(),
 });
 
@@ -281,7 +280,6 @@ async function observeResponse(
   return {
     response: jsonResponse(body),
     requestMeta: {
-      full: parsed.data.full === "true",
       screenshot: parsed.data.screenshot === "true",
     },
     logBody: truncateStateForToolLog(JSON.stringify(body)),

@@ -28,7 +28,7 @@ import {
   decodeEngineObservation,
   ENGINE_OBSERVATION_SIZE,
   type EngineMapTile,
-  type EngineObservationV1,
+  type EngineObservationV2,
 } from "./engine-observation.ts";
 import { AtomicFlashPersistence } from "./flash-persistence.ts";
 
@@ -249,7 +249,7 @@ export class Emulator {
   }
 
   /** Versioned, engine-authored phase/readiness/spatial observation. */
-  engineObservation(): EngineObservationV1 {
+  engineObservation(): EngineObservationV2 {
     const exports = this.exports;
     if (exports === undefined) {
       throw new Error("emulator is not initialized");

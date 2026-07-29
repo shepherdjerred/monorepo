@@ -4,7 +4,7 @@ import type {
 } from "#src/emulator/engine-observation.ts";
 import type { CommandInput } from "#src/game/command/command-input.ts";
 import type { Command } from "#src/game/command/command.ts";
-import type { GameObservationV1 } from "./game-observation.ts";
+import type { GameObservationV2 } from "./game-observation.ts";
 import { commandForDirection } from "./game-direction.ts";
 import { navigateGame, type NavigationOutcomeV1 } from "./game-navigation.ts";
 import {
@@ -21,7 +21,7 @@ import {
 export type WaitCondition = "ready" | "stable" | "phase-change";
 
 export type GameControlPort = {
-  observe: () => GameObservationV1;
+  observe: () => GameObservationV2;
   renderFrame: () => Uint8Array;
   press: (command: CommandInput) => Promise<void>;
   waitFrames: (frames: number) => Promise<void>;
@@ -29,12 +29,12 @@ export type GameControlPort = {
 };
 
 type ControlSnapshot = Readonly<{
-  observation: GameObservationV1;
+  observation: GameObservationV2;
   frame: Uint8Array;
 }>;
 
 type SettleResult = Readonly<{
-  observation: GameObservationV1;
+  observation: GameObservationV2;
   timedOut: boolean;
 }>;
 
@@ -42,7 +42,7 @@ const SETTLE_STEP_FRAMES = 2;
 const SETTLE_MAX_FRAMES = 60;
 const SETTLE_STABLE_READS = 2;
 
-function stableSignature(observation: GameObservationV1): string {
+function stableSignature(observation: GameObservationV2): string {
   return meaningfulStateSignature(observation);
 }
 
@@ -52,7 +52,7 @@ export class GameController {
 
   constructor(private readonly port: GameControlPort) {}
 
-  observe(): GameObservationV1 {
+  observe(): GameObservationV2 {
     return this.port.observe();
   }
 
@@ -127,7 +127,7 @@ export class GameController {
     return await this.exclusive(async () => {
       const before = this.capture();
       const beforeObservation = before.observation;
-      let after: GameObservationV1;
+      let after: GameObservationV2;
       let settleTimedOut = false;
 
       if (
@@ -175,10 +175,10 @@ export class GameController {
   async advance(): Promise<ActionOutcomeV1> {
     return await this.exclusive(async () => {
       const before = this.capture();
-      if (!before.observation.context.scriptOrDialogActive) {
+      if (!before.observation.context.dialogInputReady) {
         return this.outcome("advance", before, before.observation, {
           inputApplied: false,
-          unavailableReason: "dialog-not-active",
+          unavailableReason: "dialog-not-ready",
         });
       }
       await this.port.press({ command: "a", quantity: 1 });
@@ -304,7 +304,7 @@ export class GameController {
   private outcome(
     action: string,
     before: ControlSnapshot,
-    after: GameObservationV1,
+    after: GameObservationV2,
     options: ActionOutcomeOptions,
   ): ActionOutcomeV1 {
     return actionOutcome(action, before.observation, after, {
@@ -318,8 +318,8 @@ export class GameController {
 
   private conditionMet(
     condition: WaitCondition,
-    before: GameObservationV1,
-    current: GameObservationV1,
+    before: GameObservationV2,
+    current: GameObservationV2,
   ): boolean {
     switch (condition) {
       case "ready":

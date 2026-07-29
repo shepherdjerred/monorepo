@@ -20,7 +20,7 @@ test("decodeEngineMapTile decodes the engine tile bitfield", () => {
 function validBytes(): Uint8Array {
   const bytes = new Uint8Array(ENGINE_OBSERVATION_SIZE);
   const view = new DataView(bytes.buffer);
-  view.setUint16(0, 1, true);
+  view.setUint16(0, 2, true);
   view.setUint16(2, ENGINE_OBSERVATION_SIZE, true);
   view.setUint32(4, 42, true);
   view.setUint8(8, 1);
@@ -44,7 +44,7 @@ function validBytes(): Uint8Array {
 describe("decodeEngineObservation", () => {
   test("decodes a valid stable overworld observation", () => {
     const observation = decodeEngineObservation(validBytes());
-    expect(observation.version).toBe(1);
+    expect(observation.version).toBe(2);
     expect(observation.frame).toBe(42);
     expect(observation.phase).toBe("overworld");
     expect(observation.readiness).toEqual({
@@ -53,6 +53,8 @@ describe("decodeEngineObservation", () => {
       playerStable: true,
       controlsLocked: false,
       scriptActive: false,
+      dialogVisible: false,
+      dialogInputReady: false,
       paletteFading: false,
     });
     expect(observation.world).toEqual({
@@ -83,9 +85,23 @@ describe("decodeEngineObservation", () => {
     expect(observation.readiness.observationValid).toBe(false);
   });
 
+  test("decodes independent dialog visibility and input readiness", () => {
+    for (const [flags, visible, ready] of [
+      [0, false, false],
+      [1, true, false],
+      [3, true, true],
+    ] as const) {
+      const bytes = validBytes();
+      new DataView(bytes.buffer).setUint8(45, flags);
+      const readiness = decodeEngineObservation(bytes).readiness;
+      expect(readiness.dialogVisible).toBe(visible);
+      expect(readiness.dialogInputReady).toBe(ready);
+    }
+  });
+
   test("rejects ABI version or size drift", () => {
     const bytes = validBytes();
-    bytes[0] = 2;
+    bytes[0] = 1;
     expect(() => decodeEngineObservation(bytes)).toThrow(
       "unsupported engine observation ABI",
     );
@@ -144,6 +160,7 @@ describe("decodeEngineObservation", () => {
     expect(decodeEngineObservation(bytes).world).toBeNull();
     expect(decodeEngineObservation(bytes).readiness.inputReady).toBeTrue();
     expect(battle?.menu).toBe("move");
+    expect(battle?.inputBattler).toBe(0);
     expect(battle?.moveCursor).toBe(3);
     expect(battle?.battlers).toEqual([
       {
@@ -169,6 +186,24 @@ describe("decodeEngineObservation", () => {
         status: 0,
       },
     ]);
+  });
+
+  test("decodes the second locally controlled battler in a double battle", () => {
+    const bytes = validBytes();
+    const view = new DataView(bytes.buffer);
+    view.setUint8(8, 3);
+    view.setUint8(9, 0b010);
+    view.setUint8(28, 1);
+    view.setUint8(30, 1);
+    view.setUint8(31, 4);
+    view.setUint8(40, 2);
+    view.setUint8(43, 3);
+
+    const battle = decodeEngineObservation(bytes).battle;
+
+    expect(battle?.inputBattler).toBe(2);
+    expect(battle?.menu).toBe("action");
+    expect(battle?.actionCursor).toBe(3);
   });
 
   test("does not report other or absent battle controller work as ready", () => {

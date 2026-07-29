@@ -23,7 +23,9 @@ Fully headless — no browser, no emulator UI, no GPU, no desktop:
   battle state) and plays through serialized semantic controls. Its primary
   local interface is `pokemonctl observe`, `tap`, `move`, `interact`, `wait`,
   `map show`, and bounded current-map `navigate`; raw `press` and `chord` remain
-  compatibility escape hatches.
+  compatibility escape hatches. CLI observations are compact by default;
+  `observe --full` includes detailed readiness, collision, nearby-object,
+  battler, party, inventory, and progression state for diagnostics.
 - **Notifications** — the bot polls the emulator's memory (~2×/sec) and posts
   Discord embeds for in-game events: faints, gym badges, evolutions, catches,
   level-ups, whiteouts, and new Pokédex entries. Configure under

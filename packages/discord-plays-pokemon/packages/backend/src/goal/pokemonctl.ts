@@ -1,11 +1,13 @@
 #!/usr/bin/env bun
 
+import { formatPokemonctlObservationOutput } from "./pokemonctl-output.ts";
+
 type RequestBody = Record<string, unknown>;
 
 function usage(): string {
   return [
     "Usage:",
-    "  pokemonctl observe [--screenshot] [--full]",
+    "  pokemonctl observe [--screenshot] [--full]  # compact by default; --full includes detailed state",
     "  pokemonctl tap <button> [--repeat n]",
     "  pokemonctl move <north|south|west|east> [--tiles n]",
     "  pokemonctl map show [--radius n]",
@@ -139,9 +141,13 @@ async function handlePress(args: string[]): Promise<void> {
 async function handleObserve(args: string[]): Promise<void> {
   const params = new URLSearchParams();
   if (args.includes("--screenshot")) params.set("screenshot", "true");
-  if (args.includes("--full")) params.set("full", "true");
   const query = params.size === 0 ? "" : `?${params.toString()}`;
-  printJsonText(await request("GET", `/observe${query}`));
+  printJsonText(
+    formatPokemonctlObservationOutput(
+      await request("GET", `/observe${query}`),
+      args.includes("--full"),
+    ),
+  );
 }
 
 async function handleTap(args: string[]): Promise<void> {

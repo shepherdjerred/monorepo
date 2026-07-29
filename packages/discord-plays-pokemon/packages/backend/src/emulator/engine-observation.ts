@@ -1,4 +1,4 @@
-export const ENGINE_OBSERVATION_VERSION = 1;
+export const ENGINE_OBSERVATION_VERSION = 2;
 export const ENGINE_OBSERVATION_SIZE = 116;
 
 export type CardinalDirection = "north" | "south" | "west" | "east";
@@ -17,7 +17,8 @@ export type BattleMenu =
   | "bag"
   | "party"
   | "yes-no"
-  | "other";
+  | "other"
+  | "target";
 
 export type CollisionObservation = Readonly<{
   code: number;
@@ -33,8 +34,8 @@ export type EngineMapTile = Readonly<{
   passable: boolean;
 }>;
 
-export type EngineObservationV1 = Readonly<{
-  version: 1;
+export type EngineObservationV2 = Readonly<{
+  version: 2;
   size: 116;
   frame: number;
   phase: EnginePhase;
@@ -44,6 +45,8 @@ export type EngineObservationV1 = Readonly<{
     playerStable: boolean;
     controlsLocked: boolean;
     scriptActive: boolean;
+    dialogVisible: boolean;
+    dialogInputReady: boolean;
     paletteFading: boolean;
   }>;
   world: Readonly<{
@@ -63,6 +66,7 @@ export type EngineObservationV1 = Readonly<{
     typeFlags: number;
     controllerExecFlags: number;
     battlersCount: number;
+    inputBattler: number | null;
     activeBattler: number;
     menu: BattleMenu;
     actionCursor: number;
@@ -148,6 +152,8 @@ function battleMenuFromRaw(raw: number): BattleMenu {
       return "yes-no";
     case 6:
       return "other";
+    case 7:
+      return "target";
     default:
       throw new RangeError(`unknown battle menu: ${String(raw)}`);
   }
@@ -184,7 +190,7 @@ export function decodeEngineMapTile(
 
 export function decodeEngineObservation(
   bytes: Uint8Array,
-): EngineObservationV1 {
+): EngineObservationV2 {
   if (bytes.byteLength < ENGINE_OBSERVATION_SIZE) {
     throw new RangeError(
       `engine observation is too short: ${String(bytes.byteLength)} bytes`,
@@ -235,6 +241,8 @@ export function decodeEngineObservation(
         typeFlags: view.getUint32(32, true),
         controllerExecFlags: view.getUint32(36, true),
         battlersCount,
+        inputBattler:
+          view.getUint8(40) < battlersCount ? view.getUint8(40) : null,
         activeBattler: view.getUint8(42),
         menu: battleMenuFromRaw(view.getUint8(30)),
         actionCursor: view.getUint8(43),
@@ -269,6 +277,8 @@ export function decodeEngineObservation(
       playerStable: (readiness & PLAYER_STABLE) !== 0,
       controlsLocked: view.getUint8(25) !== 0,
       scriptActive: view.getUint8(26) !== 0,
+      dialogVisible: (view.getUint8(45) & 1) !== 0,
+      dialogInputReady: (view.getUint8(45) & 2) !== 0,
       paletteFading: view.getUint8(27) !== 0,
     },
     world,

@@ -17,8 +17,8 @@ import {
   type ProgressionFlags,
 } from "#src/game/game-save-details.ts";
 
-export type GameObservationV1 = Readonly<{
-  schemaVersion: 1;
+export type GameObservationV2 = Readonly<{
+  schemaVersion: 2;
   id: string;
   frame: number;
   phase: EnginePhase;
@@ -31,6 +31,8 @@ export type GameObservationV1 = Readonly<{
       | "menu-or-transition";
     battleActive: boolean;
     scriptOrDialogActive: boolean;
+    dialogVisible: boolean;
+    dialogInputReady: boolean;
     menuOrTransitionActive: boolean;
   }>;
   readiness: Readonly<{
@@ -39,12 +41,15 @@ export type GameObservationV1 = Readonly<{
     playerStable: boolean;
     controlsLocked: boolean;
     scriptActive: boolean;
+    dialogVisible: boolean;
+    dialogInputReady: boolean;
     paletteFading: boolean;
   }>;
   battle: Readonly<{
     typeFlags: number;
     controllerExecFlags: number;
     battlersCount: number;
+    inputBattler: number | null;
     activeBattler: number;
     menu: BattleMenu;
     actionCursor: number;
@@ -126,7 +131,11 @@ function countDexOwned(bitfield: Uint8Array): number {
   return total;
 }
 
-function contextFromPhase(phase: EnginePhase): GameObservationV1["context"] {
+function contextFromEngine(
+  phase: EnginePhase,
+  dialogVisible: boolean,
+  dialogInputReady: boolean,
+): GameObservationV2["context"] {
   return {
     kind:
       phase === "unavailable"
@@ -140,11 +149,13 @@ function contextFromPhase(phase: EnginePhase): GameObservationV1["context"] {
               : "menu-or-transition",
     battleActive: phase === "battle",
     scriptOrDialogActive: phase === "scripted",
+    dialogVisible,
+    dialogInputReady,
     menuOrTransitionActive: phase === "other",
   };
 }
 
-export function readGameObservation(emulator: Emulator): GameObservationV1 {
+export function readGameObservation(emulator: Emulator): GameObservationV2 {
   const engine = emulator.engineObservation();
   const reader = emulator.memoryReader();
   const symbols = emulator.gameSymbols();
@@ -194,11 +205,15 @@ export function readGameObservation(emulator: Emulator): GameObservationV1 {
   }
 
   return {
-    schemaVersion: 1,
-    id: `observation-v1:${String(engine.frame)}`,
+    schemaVersion: 2,
+    id: `observation-v2:${String(engine.frame)}`,
     frame: engine.frame,
     phase: engine.phase,
-    context: contextFromPhase(engine.phase),
+    context: contextFromEngine(
+      engine.phase,
+      engine.readiness.dialogVisible,
+      engine.readiness.dialogInputReady,
+    ),
     readiness: engine.readiness,
     battle:
       engine.battle === null

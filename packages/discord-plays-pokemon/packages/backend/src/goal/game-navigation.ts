@@ -3,7 +3,7 @@ import type {
   EngineMapTile,
 } from "#src/emulator/engine-observation.ts";
 import type { ActionOutcomeV1 } from "./game-action-outcome.ts";
-import type { GameObservationV1 } from "./game-observation.ts";
+import type { GameObservationV2 } from "./game-observation.ts";
 
 export type NavigationStopReason =
   | "target-reached"
@@ -23,12 +23,12 @@ export type NavigationOutcomeV1 = Readonly<{
   map: Readonly<{ group: number; number: number }> | null;
   target: Readonly<{ x: number; y: number }>;
   stepsTaken: number;
-  before: GameObservationV1;
-  after: GameObservationV1;
+  before: GameObservationV2;
+  after: GameObservationV2;
 }>;
 
 type NavigationOptions = Readonly<{
-  observe: () => GameObservationV1;
+  observe: () => GameObservationV2;
   readMapTile: (x: number, y: number) => EngineMapTile | null;
   moveOne: (direction: CardinalDirection) => Promise<ActionOutcomeV1>;
   target: Readonly<{ x: number; y: number }>;
@@ -66,8 +66,8 @@ function nextCoordinate(
 }
 
 function mapChanged(
-  before: GameObservationV1,
-  after: GameObservationV1,
+  before: GameObservationV2,
+  after: GameObservationV2,
 ): boolean {
   if (before.world === null || after.world === null) return false;
   return (
@@ -126,8 +126,8 @@ function navigationResult(options: {
   stopReason: NavigationStopReason;
   target: Readonly<{ x: number; y: number }>;
   stepsTaken: number;
-  before: GameObservationV1;
-  after: GameObservationV1;
+  before: GameObservationV2;
+  after: GameObservationV2;
 }): NavigationOutcomeV1 {
   return {
     schemaVersion: 1,

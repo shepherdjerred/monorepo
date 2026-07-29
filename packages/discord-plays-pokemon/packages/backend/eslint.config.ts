@@ -41,6 +41,7 @@ const config = [
         "src/goal/goal-input-lease.test.ts",
         "src/goal/goal-memory.test.ts",
         "src/goal/history-summary.test.ts",
+        "src/goal/pokemonctl-output.test.ts",
         "src/goal/pricing.test.ts",
         "src/stream/stream-machine.test.ts",
         "src/stream/orchestrator-machine.test.ts",
@@ -48,7 +49,7 @@ const config = [
       ],
       // Test files are excluded from tsconfig (bun test globals aren't visible
       // to tsc), so they fall to the default project; raise the cap.
-      maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 42,
+      maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 43,
     },
   }),
   {

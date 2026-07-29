@@ -16,13 +16,14 @@ new file mode 100644
 index 000000000..84f0d7839
 --- /dev/null
 +++ b/src/wasm_observation.c
-@@ -0,0 +1,295 @@
+@@ -0,0 +1,272 @@
 +#include "global.h"
 +#include "battle.h"
 +#include "battle_anim.h"
 +#include "battle_controllers.h"
 +#include "battle_pyramid.h"
 +#include "event_object_movement.h"
++#include "field_message_box.h"
 +#include "fieldmap.h"
 +#include "field_screen_effect.h"
 +#include "main.h"
@@ -31,8 +32,9 @@ index 000000000..84f0d7839
 +#include "palette.h"
 +#include "save.h"
 +#include "script.h"
++#include "text.h"
 +
-+#define WASM_OBSERVATION_VERSION 1
++#define WASM_OBSERVATION_VERSION 2
 +
 +enum WasmObservationPhase
 +{
@@ -48,17 +50,6 @@ index 000000000..84f0d7839
 +    WASM_OBSERVATION_VALID = 1 << 0,
 +    WASM_INPUT_READY = 1 << 1,
 +    WASM_PLAYER_STABLE = 1 << 2,
-+};
-+
-+enum WasmBattleMenu
-+{
-+    WASM_BATTLE_MENU_NONE,
-+    WASM_BATTLE_MENU_ACTION,
-+    WASM_BATTLE_MENU_MOVE,
-+    WASM_BATTLE_MENU_BAG,
-+    WASM_BATTLE_MENU_PARTY,
-+    WASM_BATTLE_MENU_YES_NO,
-+    WASM_BATTLE_MENU_OTHER,
 +};
 +
 +struct __attribute__((packed)) WasmBattleParticipant
@@ -105,12 +96,12 @@ index 000000000..84f0d7839
 +    u8 battlersCount;
 +    u32 battleTypeFlags;
 +    u32 battleControllerExecFlags;
-+    u8 playerBattler;
++    u8 inputBattler;
 +    u8 opponentBattler;
 +    u8 activeBattler;
 +    u8 actionCursor;
 +    u8 moveCursor;
-+    u8 reserved;
++    u8 dialogFlags;
 +    struct WasmBattleParticipant battlers[MAX_BATTLERS_COUNT];
 +    u16 currentMove;
 +    u16 chosenMove;
@@ -140,6 +131,9 @@ index 000000000..84f0d7839
 +    bool8 playerStable = IsPlayerStandingStill();
 +    bool8 isOverworld = gMain.callback2 == CB2_Overworld;
 +    bool8 observationValid = FALSE;
++    bool8 dialogVisible = IsFieldMessageBoxVisible();
++    bool8 dialogInputReady = dialogVisible
++        && (IsTextPrinterWaitingForInput(0) || WasmIsScriptWaitingForButtonPress());
 +    u8 battler;
 +
 +    sWasmObservation.version = WASM_OBSERVATION_VERSION;
@@ -169,12 +163,12 @@ index 000000000..84f0d7839
 +    sWasmObservation.battlersCount = gBattlersCount;
 +    sWasmObservation.battleTypeFlags = gBattleTypeFlags;
 +    sWasmObservation.battleControllerExecFlags = gBattleControllerExecFlags;
-+    sWasmObservation.playerBattler = MAX_BATTLERS_COUNT;
++    sWasmObservation.inputBattler = MAX_BATTLERS_COUNT;
 +    sWasmObservation.opponentBattler = MAX_BATTLERS_COUNT;
 +    sWasmObservation.activeBattler = gActiveBattler;
 +    sWasmObservation.actionCursor = 0;
 +    sWasmObservation.moveCursor = 0;
-+    sWasmObservation.reserved = 0;
++    sWasmObservation.dialogFlags = dialogVisible | (dialogInputReady << 1);
 +    for (battler = 0; battler < MAX_BATTLERS_COUNT; battler++)
 +    {
 +        participant = &sWasmObservation.battlers[battler];
@@ -213,40 +207,24 @@ index 000000000..84f0d7839
 +            participant->maxHp = gBattleMons[battler].maxHP;
 +            participant->partyIndex = gBattlerPartyIndexes[battler];
 +            participant->status1 = gBattleMons[battler].status1;
-+            if (GetBattlerSide(battler) == B_SIDE_PLAYER && sWasmObservation.playerBattler == MAX_BATTLERS_COUNT)
-+                sWasmObservation.playerBattler = battler;
++            if (GetBattlerSide(battler) == B_SIDE_PLAYER && participant->active)
++            {
++                u8 menu = WasmGetPlayerInputMenuState(battler);
++                if (sWasmObservation.inputBattler == MAX_BATTLERS_COUNT
++                 && menu != WASM_BATTLE_MENU_NONE)
++                {
++                    sWasmObservation.inputBattler = battler;
++                    sWasmObservation.battleMenu = menu;
++                }
++            }
 +            else if (GetBattlerSide(battler) == B_SIDE_OPPONENT && sWasmObservation.opponentBattler == MAX_BATTLERS_COUNT)
 +                sWasmObservation.opponentBattler = battler;
 +        }
-+        if (sWasmObservation.playerBattler < MAX_BATTLERS_COUNT)
++        if (sWasmObservation.inputBattler < MAX_BATTLERS_COUNT)
 +        {
-+            battler = sWasmObservation.playerBattler;
++            battler = sWasmObservation.inputBattler;
 +            sWasmObservation.actionCursor = gActionSelectionCursor[battler];
 +            sWasmObservation.moveCursor = gMoveSelectionCursor[battler];
-+            if ((gBattleControllerExecFlags & (1u << battler)) != 0)
-+            {
-+                switch (gBattleBufferA[battler][0])
-+                {
-+                case CONTROLLER_CHOOSEACTION:
-+                    sWasmObservation.battleMenu = WASM_BATTLE_MENU_ACTION;
-+                    break;
-+                case CONTROLLER_CHOOSEMOVE:
-+                    sWasmObservation.battleMenu = WASM_BATTLE_MENU_MOVE;
-+                    break;
-+                case CONTROLLER_OPENBAG:
-+                    sWasmObservation.battleMenu = WASM_BATTLE_MENU_BAG;
-+                    break;
-+                case CONTROLLER_CHOOSEPOKEMON:
-+                    sWasmObservation.battleMenu = WASM_BATTLE_MENU_PARTY;
-+                    break;
-+                case CONTROLLER_YESNOBOX:
-+                    sWasmObservation.battleMenu = WASM_BATTLE_MENU_YES_NO;
-+                    break;
-+                default:
-+                    sWasmObservation.battleMenu = WASM_BATTLE_MENU_OTHER;
-+                    break;
-+                }
-+            }
 +        }
 +    }
 +
@@ -275,9 +253,8 @@ index 000000000..84f0d7839
 +    if (playerStable)
 +        sWasmObservation.readiness |= WASM_PLAYER_STABLE;
 +    if ((observationValid && playerStable && isOverworld && !controlsLocked && !scriptActive && !paletteFading)
-+     || (gMain.inBattle
-+      && sWasmObservation.battleMenu >= WASM_BATTLE_MENU_ACTION
-+      && sWasmObservation.battleMenu <= WASM_BATTLE_MENU_YES_NO))
++     || dialogInputReady
++     || (gMain.inBattle && sWasmObservation.battleMenu != WASM_BATTLE_MENU_NONE))
 +        sWasmObservation.readiness |= WASM_INPUT_READY;
 +
 +    return &sWasmObservation;
