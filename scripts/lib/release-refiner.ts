@@ -45,6 +45,9 @@ const ReleasePrSchema = z
     body: z.string(),
   })
   .loose();
+const OpenReleasePrSchema = z.array(
+  z.object({ number: z.number().int().positive() }).loose(),
+);
 const RefinerCommitSchema = z
   .object({
     sha: z.string().regex(/^[0-9a-f]{40}$/),
@@ -61,7 +64,7 @@ const RefinerCommitSchema = z
   })
   .loose();
 
-export type RefinerProvider = "claude" | "codex";
+export type RefinerProvider = "claude" | "codex" | "none";
 
 export type RefinerCommandRunner = (
   command: string[],
@@ -280,32 +283,38 @@ async function verifiedCommand(
   return result.stdout;
 }
 
+async function listOpenReleasePrs(
+  input: RunReleaseRefinerInput,
+  execute: RefinerCommandRunner,
+): Promise<z.infer<typeof OpenReleasePrSchema>> {
+  const stdout = await verifiedCommand(input, execute, [
+    "gh",
+    "pr",
+    "list",
+    "--repo",
+    "shepherdjerred/monorepo",
+    "--base",
+    "main",
+    "--label",
+    "autorelease: pending",
+    "--state",
+    "open",
+    "--json",
+    "number",
+    "--limit",
+    "1",
+  ]);
+  const raw: unknown = JSON.parse(stdout);
+  return OpenReleasePrSchema.parse(raw);
+}
+
 async function verifyReleaseRefinerResult(
   input: RunReleaseRefinerInput,
   result: z.infer<typeof ReleaseRefinerResultSchema>,
   execute: RefinerCommandRunner,
 ): Promise<void> {
   if (result.status === "no-open-release-pr") {
-    const stdout = await verifiedCommand(input, execute, [
-      "gh",
-      "pr",
-      "list",
-      "--repo",
-      "shepherdjerred/monorepo",
-      "--base",
-      "main",
-      "--label",
-      "autorelease: pending",
-      "--state",
-      "open",
-      "--json",
-      "number",
-      "--limit",
-      "1",
-    ]);
-    const openReleasePrs = z
-      .array(z.object({ number: z.number().int().positive() }).loose())
-      .parse(JSON.parse(stdout));
+    const openReleasePrs = await listOpenReleasePrs(input, execute);
     if (openReleasePrs.length > 0) {
       throw new Error(
         "Release refiner reported no open release PR, but GitHub has one",
@@ -367,6 +376,11 @@ export async function runReleaseRefiner(
   input: RunReleaseRefinerInput,
 ): Promise<RefinerProvider> {
   const execute = input.execute ?? runAllowExit;
+  const openReleasePrs = await listOpenReleasePrs(input, execute);
+  if (openReleasePrs.length === 0) {
+    return "none";
+  }
+
   const claude = await execute(claudeCommand(input.prompt), {
     cwd: input.root,
     capture: true,

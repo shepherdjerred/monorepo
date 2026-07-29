@@ -11,6 +11,16 @@ const refinedCommitSha = "0123456789abcdef0123456789abcdef01234567";
 const refinedEnvelope = `<!-- release-refiner-result -->\n{"status":"refined","prNumber":1720,"packagesRefined":["webring"],"commitSha":"${refinedCommitSha}"}\n<!-- /release-refiner-result -->`;
 const noOpenReleasePrEnvelope =
   '<!-- release-refiner-result -->{"status":"no-open-release-pr"}<!-- /release-refiner-result -->';
+const pendingReleasePrList: RunResult = {
+  stdout: JSON.stringify([{ number: 1720 }]),
+  stderr: "",
+  exitCode: 0,
+};
+const noOpenReleasePrList: RunResult = {
+  stdout: "[]",
+  stderr: "",
+  exitCode: 0,
+};
 
 const claudeSuccess: RunResult = {
   stdout: JSON.stringify({
@@ -79,13 +89,19 @@ type RecordedCall = {
 function runner(
   results: RunResult[],
   calls: RecordedCall[],
+  preflightResult = pendingReleasePrList,
 ): RefinerCommandRunner {
+  let preflightHandled = false;
   return (command, options) => {
     calls.push({
       command,
       env: options.env ?? {},
       unsetEnv: options.unsetEnv ?? [],
     });
+    if (!preflightHandled) {
+      preflightHandled = true;
+      return Promise.resolve(preflightResult);
+    }
     const result = results.shift();
     if (result === undefined) {
       throw new Error("test runner received an unexpected command");
@@ -106,6 +122,35 @@ function input(execute: RefinerCommandRunner) {
 }
 
 describe("release refiner provider selection", () => {
+  test("skips both providers when release-please produced no pending PR", async () => {
+    const calls: RecordedCall[] = [];
+    const provider = await runReleaseRefiner(
+      input(runner([], calls, noOpenReleasePrList)),
+    );
+
+    expect(provider).toBe("none");
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.command).toEqual([
+      "gh",
+      "pr",
+      "list",
+      "--repo",
+      "shepherdjerred/monorepo",
+      "--base",
+      "main",
+      "--label",
+      "autorelease: pending",
+      "--state",
+      "open",
+      "--json",
+      "number",
+      "--limit",
+      "1",
+    ]);
+    expect(calls[0]?.env["CLAUDE_CODE_OAUTH_TOKEN"]).toBeUndefined();
+    expect(calls[0]?.env["CODEX_API_KEY"]).toBeUndefined();
+  });
+
   test("uses Claude when the primary refiner succeeds", async () => {
     const calls: RecordedCall[] = [];
     const provider = await runReleaseRefiner(
@@ -113,11 +158,11 @@ describe("release refiner provider selection", () => {
     );
 
     expect(provider).toBe("claude");
-    expect(calls).toHaveLength(3);
-    expect(calls[0]?.command[0]).toBe("claude");
-    expect(calls[0]?.env["CLAUDE_CODE_OAUTH_TOKEN"]).toBe("claude-token");
-    expect(calls[0]?.env["CODEX_API_KEY"]).toBeUndefined();
-    expect(calls[0]?.unsetEnv).toEqual([
+    expect(calls).toHaveLength(4);
+    expect(calls[1]?.command[0]).toBe("claude");
+    expect(calls[1]?.env["CLAUDE_CODE_OAUTH_TOKEN"]).toBe("claude-token");
+    expect(calls[1]?.env["CODEX_API_KEY"]).toBeUndefined();
+    expect(calls[1]?.unsetEnv).toEqual([
       "OPENAI_API_KEY",
       "CODEX_API_KEY",
       "CODEX_ACCESS_TOKEN",
@@ -126,7 +171,7 @@ describe("release refiner provider selection", () => {
       "CODEX_ACCOUNT_ID",
       "ANTHROPIC_API_KEY",
     ]);
-    expect(calls[1]?.command).toEqual([
+    expect(calls[2]?.command).toEqual([
       "gh",
       "pr",
       "view",
@@ -136,7 +181,7 @@ describe("release refiner provider selection", () => {
       "--json",
       "number,state,baseRefName,headRefName,headRefOid,labels,body",
     ]);
-    expect(calls[2]?.command).toEqual([
+    expect(calls[3]?.command).toEqual([
       "gh",
       "api",
       `repos/shepherdjerred/monorepo/commits/${refinedCommitSha}`,
@@ -150,8 +195,8 @@ describe("release refiner provider selection", () => {
     );
 
     expect(provider).toBe("codex");
-    expect(calls).toHaveLength(4);
-    expect(calls[1]?.command.slice(0, 7)).toEqual([
+    expect(calls).toHaveLength(5);
+    expect(calls[2]?.command.slice(0, 7)).toEqual([
       "bun",
       "--no-install",
       "run",
@@ -160,15 +205,15 @@ describe("release refiner provider selection", () => {
       "release-refiner:codex",
       "--",
     ]);
-    expect(calls[1]?.command).toContain("gpt-5.6-sol");
-    expect(calls[1]?.command).toContain(
+    expect(calls[2]?.command).toContain("gpt-5.6-sol");
+    expect(calls[2]?.command).toContain(
       "--dangerously-bypass-approvals-and-sandbox",
     );
-    expect(calls[1]?.command).toContain("--ephemeral");
-    expect(calls[1]?.command).toContain("--skip-git-repo-check");
-    expect(calls[1]?.env["CODEX_API_KEY"]).toBe("openai-key");
-    expect(calls[1]?.env["CLAUDE_CODE_OAUTH_TOKEN"]).toBeUndefined();
-    expect(calls[1]?.unsetEnv).toEqual([
+    expect(calls[2]?.command).toContain("--ephemeral");
+    expect(calls[2]?.command).toContain("--skip-git-repo-check");
+    expect(calls[2]?.env["CODEX_API_KEY"]).toBe("openai-key");
+    expect(calls[2]?.env["CLAUDE_CODE_OAUTH_TOKEN"]).toBeUndefined();
+    expect(calls[2]?.unsetEnv).toEqual([
       "OPENAI_API_KEY",
       "CODEX_ACCESS_TOKEN",
       "CODEX_REFRESH_TOKEN",
@@ -201,8 +246,8 @@ describe("release refiner provider selection", () => {
     );
 
     expect(provider).toBe("claude");
-    expect(calls).toHaveLength(2);
-    expect(calls[1]?.command).toEqual([
+    expect(calls).toHaveLength(3);
+    expect(calls[2]?.command).toEqual([
       "gh",
       "pr",
       "list",
@@ -243,7 +288,7 @@ describe("release refiner remote verification", () => {
     await expect(runReleaseRefiner(input(execute))).rejects.toThrow(
       "reported no open release PR, but GitHub has one",
     );
-    expect(calls).toHaveLength(2);
+    expect(calls).toHaveLength(3);
   });
 
   test("rejects a refined result that does not match the release PR head", async () => {
@@ -270,7 +315,7 @@ describe("release refiner remote verification", () => {
     await expect(runReleaseRefiner(input(execute))).rejects.toThrow(
       "does not match the open pending release PR head",
     );
-    expect(calls).toHaveLength(2);
+    expect(calls).toHaveLength(3);
   });
 
   test("rejects a refined result whose remote commit changed other files", async () => {
@@ -300,7 +345,7 @@ describe("release refiner remote verification", () => {
     await expect(runReleaseRefiner(input(execute))).rejects.toThrow(
       "does not match the remote refiner commit and PR body",
     );
-    expect(calls).toHaveLength(3);
+    expect(calls).toHaveLength(4);
   });
 });
 
@@ -329,7 +374,7 @@ describe("release refiner failure handling", () => {
     await expect(runReleaseRefiner(input(execute))).rejects.toThrow(
       "without a valid non-error JSON result",
     );
-    expect(calls).toHaveLength(1);
+    expect(calls).toHaveLength(2);
   });
 
   test("fails closed when Claude exits zero with a hard-failure envelope", async () => {
@@ -352,7 +397,7 @@ describe("release refiner failure handling", () => {
     await expect(runReleaseRefiner(input(execute))).rejects.toThrow(
       "Claude release refiner exited 0 without a valid success envelope",
     );
-    expect(calls).toHaveLength(1);
+    expect(calls).toHaveLength(2);
   });
 
   test("fails closed on malformed or unknown Claude errors", async () => {
@@ -365,7 +410,7 @@ describe("release refiner failure handling", () => {
     await expect(runReleaseRefiner(input(execute))).rejects.toThrow(
       "Claude release refiner failed",
     );
-    expect(calls).toHaveLength(1);
+    expect(calls).toHaveLength(2);
   });
 
   test("fails closed when the Codex fallback fails", async () => {
@@ -385,7 +430,7 @@ describe("release refiner failure handling", () => {
     await expect(runReleaseRefiner(input(execute))).rejects.toThrow(
       "Codex release refiner failed",
     );
-    expect(calls).toHaveLength(2);
+    expect(calls).toHaveLength(3);
   });
 
   test("fails closed when Codex exits zero with a hard-failure envelope", async () => {
@@ -406,7 +451,7 @@ describe("release refiner failure handling", () => {
     await expect(runReleaseRefiner(input(execute))).rejects.toThrow(
       "Codex release refiner exited 0 without a valid success envelope",
     );
-    expect(calls).toHaveLength(2);
+    expect(calls).toHaveLength(3);
   });
 
   test("fails closed when Codex exits zero without a result envelope", async () => {
@@ -426,6 +471,6 @@ describe("release refiner failure handling", () => {
     await expect(runReleaseRefiner(input(execute))).rejects.toThrow(
       "Codex release refiner exited 0 without a valid success envelope",
     );
-    expect(calls).toHaveLength(2);
+    expect(calls).toHaveLength(3);
   });
 });
