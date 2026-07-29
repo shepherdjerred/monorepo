@@ -248,6 +248,11 @@
       ]
     },
     {
+      "source": "packages/discord-plays-pokemon/packages/backend/src/goal/pokemonctl-entrypoint.sh",
+      "disposition": "retain",
+      "reason": "Minimal executable image shim delegates directly to the installed Bun CLI module"
+    },
+    {
       "source": "packages/dotfiles/bin/executable_chezmoi_watchman.sh",
       "disposition": "retain",
       "reason": "Five-line command shim runs during bootstrap"

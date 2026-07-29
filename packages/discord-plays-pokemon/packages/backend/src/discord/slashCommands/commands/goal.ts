@@ -17,6 +17,13 @@ export const goalCommand = new SlashCommandBuilder()
       .setMaxLength(1000),
   );
 
+export function isGoalRequesterAuthorized(input: {
+  requesterId: string;
+  sessionStarterId: string;
+}): boolean {
+  return input.requesterId === input.sessionStarterId;
+}
+
 export function makeGoal(driver: PokemonGameDriver) {
   return async (interaction: ChatInputCommandInteraction): Promise<void> => {
     if (!interaction.inGuild()) {
@@ -38,6 +45,19 @@ export function makeGoal(driver: PokemonGameDriver) {
     if (runtime.goalManager === undefined) {
       await interaction.reply({
         content: "Goal mode is not enabled for this Pokemon instance.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+    if (
+      !isGoalRequesterAuthorized({
+        requesterId: interaction.user.id,
+        sessionStarterId: runtime.session.startedByUserId,
+      })
+    ) {
+      await interaction.reply({
+        content:
+          "Only the person who started this Pokémon session can use `/goal`.",
         flags: MessageFlags.Ephemeral,
       });
       return;

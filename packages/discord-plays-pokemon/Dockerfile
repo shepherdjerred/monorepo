@@ -165,7 +165,7 @@ WORKDIR /app
 # world-readable bin on PATH. Kept ABOVE the app layers: it needs only bun +
 # network, and a source edit must not re-download it.
 ENV BUN_INSTALL=/usr/local
-RUN bun add -g @openai/codex@0.139.0 && codex --version
+RUN bun add -g @openai/codex@0.145.0 && codex --version
 
 # Production node_modules + workspace manifests. The isolated-linker tree uses
 # relative symlinks (store at node_modules/.bun), so copying the whole install
@@ -178,7 +178,9 @@ COPY --from=prod-deps /app/ /app/
 # below.
 COPY --parents \
   tsconfig.base.json \
+  packages/discord-plays-pokemon/AGENTS.md \
   packages/discord-plays-pokemon/config.example.toml \
+  packages/discord-plays-pokemon/.agents \
   packages/discord-plays-pokemon/packages/backend \
   packages/discord-plays-pokemon/packages/common \
   packages/discord-plays-core \
@@ -188,6 +190,12 @@ COPY --parents \
   packages/llm-observability \
   ./
 
+# Keep the deployed Codex instruction surface identical to the benchmark
+# runtime overlay and fail the image build if either input is omitted.
+RUN test -s packages/discord-plays-pokemon/AGENTS.md \
+  && test -d packages/discord-plays-pokemon/.agents/skills \
+  && test -n "$(find packages/discord-plays-pokemon/.agents/skills -mindepth 2 -maxdepth 2 -type f -name SKILL.md -print -quit)"
+
 # Built artifacts from the build stage.
 COPY --from=build /app/packages/discord-stream-lifecycle/dist packages/discord-stream-lifecycle/dist
 COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
@@ -195,7 +203,7 @@ COPY --from=build /app/packages/discord-plays-pokemon/packages/frontend/dist pac
 
 # Make the goal-mode control CLI available to operators and spawned Codex loops.
 RUN install -D -m 0755 \
-    packages/discord-plays-pokemon/packages/backend/src/goal/pokemonctl.ts \
+    packages/discord-plays-pokemon/packages/backend/src/goal/pokemonctl-entrypoint.sh \
     /usr/local/bin/pokemonctl \
   && install -D -m 0644 \
     packages/discord-plays-pokemon/packages/backend/src/goal/pokemonctl-output.ts \

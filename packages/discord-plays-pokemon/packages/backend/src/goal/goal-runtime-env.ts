@@ -22,9 +22,8 @@ const INHERITED_ENVIRONMENT_ALLOWLIST = [
 ];
 
 export async function prepareRuntimeTools(
-  runtimeDirectory: string,
+  helperDirectory: string,
 ): Promise<string> {
-  const helperDirectory = path.join(runtimeDirectory, ".pokemon-goal-bin");
   const helperPath = path.join(helperDirectory, "pokemonctl");
   await Bun.write(
     helperPath,

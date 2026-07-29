@@ -36,10 +36,10 @@ function makeGoalConfig(runtimeDirectory: string): Config["game"]["goal"] {
   };
 }
 
-function makeProcess(exitOnKill = true): GoalProcess & {
+function makeProcess(resolveOnKill = true): GoalProcess & {
   finish: (exitCode: number) => void;
-  killed: () => boolean;
   killRequested: Promise<undefined>;
+  killed: () => boolean;
 } {
   let killed = false;
   const { promise: exited, resolve } = Promise.withResolvers<number>();
@@ -52,11 +52,11 @@ function makeProcess(exitOnKill = true): GoalProcess & {
     kill: () => {
       killed = true;
       resolveKillRequested(undefined);
-      if (exitOnKill) resolve(143);
+      if (resolveOnKill) resolve(143);
     },
     finish: resolve,
-    killed: () => killed,
     killRequested,
+    killed: () => killed,
   };
 }
 
@@ -146,7 +146,7 @@ describe("GoalManager input lease", () => {
     expect(spawnTracker.released).toBe(1);
 
     const persistTracker = new LeaseTracker();
-    const process = makeProcess();
+    const process = makeProcess(false);
     const runtimeDirectory = await createRuntimeDirectory();
     const persistManager = new GoalManager({
       config: { ...makeGoalConfig(runtimeDirectory), state_path: "." },
@@ -155,12 +155,58 @@ describe("GoalManager input lease", () => {
       sendMessage: noopSendMessage,
       acquireInputLease: persistTracker.acquire,
     });
-    await expect(persistManager.startGoal(START_INPUT)).rejects.toThrow();
+    let rejected = false;
+    const start = (async () => {
+      try {
+        return await persistManager.startGoal(START_INPUT);
+      } catch (error) {
+        rejected = true;
+        throw error;
+      }
+    })();
+    await process.killRequested;
     expect(process.killed()).toBeTrue();
+    expect(persistTracker.held).toBeTrue();
+    expect(rejected).toBeFalse();
+    process.finish(143);
+    await expect(start).rejects.toThrow();
     expect(persistTracker.released).toBe(1);
   });
 
-  test("claims replacement and shutdown teardown exactly once", async () => {
+  test("holds the lease until a replaced process actually exits", async () => {
+    const tracker = new LeaseTracker();
+    const processes: ReturnType<typeof makeProcess>[] = [];
+    const manager = new GoalManager({
+      config: makeGoalConfig(await createRuntimeDirectory()),
+      controlToken: "token",
+      spawner: () => {
+        const process = makeProcess(processes.length > 0);
+        processes.push(process);
+        return process;
+      },
+      sendMessage: noopSendMessage,
+      acquireInputLease: tracker.acquire,
+    });
+
+    await manager.startGoal({ ...START_INPUT, goal: "First" });
+    const replacement = manager.startGoal({ ...START_INPUT, goal: "Second" });
+    const firstProcess = processes.at(0);
+    if (firstProcess === undefined)
+      throw new Error("first process not spawned");
+    await firstProcess.killRequested;
+    expect(firstProcess.killed()).toBeTrue();
+    expect(tracker.held).toBeTrue();
+    expect(tracker.acquired).toBe(1);
+    firstProcess.finish(143);
+    await replacement;
+    expect(tracker.acquired).toBe(2);
+    expect(tracker.released).toBe(1);
+    await manager.shutdown();
+    expect(processes[1]?.killed()).toBeTrue();
+    expect(tracker.released).toBe(2);
+  });
+
+  test("shutdown waits for an in-flight start and then stops it", async () => {
     const tracker = new LeaseTracker();
     const processes: ReturnType<typeof makeProcess>[] = [];
     const manager = new GoalManager({
@@ -175,47 +221,17 @@ describe("GoalManager input lease", () => {
       acquireInputLease: tracker.acquire,
     });
 
-    await manager.startGoal({ ...START_INPUT, goal: "First" });
-    await manager.startGoal({ ...START_INPUT, goal: "Second" });
+    const starting = manager.startGoal(START_INPUT);
+    const stopping = manager.shutdown();
+    const startResult = await starting;
+    expect(startResult.kind).toBe("started");
+    await stopping;
+    expect(processes).toHaveLength(1);
     expect(processes[0]?.killed()).toBeTrue();
-    expect(tracker.acquired).toBe(2);
     expect(tracker.released).toBe(1);
-    await manager.shutdown();
-    await Bun.sleep(10);
-    expect(processes[1]?.killed()).toBeTrue();
-    expect(tracker.released).toBe(2);
-  });
-
-  test("retains the lease until a replaced process has exited", async () => {
-    const tracker = new LeaseTracker();
-    const first = makeProcess(false);
-    const second = makeProcess();
-    const processes = [first, second];
-    const manager = new GoalManager({
-      config: makeGoalConfig(await createRuntimeDirectory()),
-      controlToken: "token",
-      spawner: () => {
-        const process = processes.shift();
-        if (process === undefined) throw new Error("missing process fixture");
-        return process;
-      },
-      sendMessage: noopSendMessage,
-      acquireInputLease: tracker.acquire,
-    });
-
-    await manager.startGoal({ ...START_INPUT, goal: "First" });
-    const replacement = manager.startGoal({ ...START_INPUT, goal: "Second" });
-    await first.killRequested;
-    expect(tracker.held).toBeTrue();
-    expect(tracker.acquired).toBe(1);
-    expect(tracker.released).toBe(0);
-
-    first.finish(143);
-    const replacementResult = await replacement;
-    expect(replacementResult.kind).toBe("started");
-    expect(tracker.acquired).toBe(2);
-    expect(tracker.released).toBe(1);
-    await manager.shutdown();
+    expect(manager.getStatus()).toBeUndefined();
+    const afterShutdown = await manager.startGoal(START_INPUT);
+    expect(afterShutdown.kind).toBe("disabled");
   });
 
   test("blocks new starts and holds the lease while old controls drain", async () => {

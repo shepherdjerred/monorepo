@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pokemon Goal Benchmark"
+  short_description: "Run and interpret the Emerald goal-agent benchmark"
+  default_prompt: "Use $pokemon-goal-benchmark to run or interpret a clean-copy Pokemon Emerald goal benchmark."

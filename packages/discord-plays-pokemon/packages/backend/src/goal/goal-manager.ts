@@ -1,5 +1,4 @@
 import path from "node:path";
-import { z } from "zod";
 import { logger } from "#src/logger.ts";
 import type { Config } from "#src/config/schema.ts";
 import { hasCodexCredential } from "./codex-auth.ts";
@@ -13,12 +12,7 @@ import { formatHistoryForPrompt } from "./history-summary.ts";
 import { computeCost, formatCostLine } from "./pricing.ts";
 import { spawnGoalCodex } from "./spawn-goal-codex.ts";
 
-import {
-  appendToHistory,
-  HISTORY_LIMIT,
-  normalizeCompletedGoal,
-  type CompletedGoal,
-} from "./goal-history.ts";
+import { appendToHistory, type CompletedGoal } from "./goal-history.ts";
 import type {
   GoalMessageSender,
   GoalProcess,
@@ -29,30 +23,8 @@ import type {
 } from "./goal-types.ts";
 import { GoalMemory, buildSessionLogMeta } from "./goal-memory.ts";
 import { GoalControlGate } from "./goal-control-gate.ts";
-
-// Validates the envelope written by persistState() so history is safely
-// deserialized on restart even if the file has an unexpected shape.
-const CompletedGoalSchema = z.object({
-  id: z.string(),
-  goal: z.string(),
-  requestedBy: z.string(),
-  startedAt: z.string(),
-  finishedAt: z.string(),
-  status: z.enum([
-    "running",
-    "completed",
-    "failed",
-    "timeout",
-    "replaced",
-    "shutdown",
-  ]),
-  finalReport: z.string().optional(),
-  exitCode: z.number().optional(),
-});
-
-const StateEnvelopeSchema = z.object({
-  history: z.array(CompletedGoalSchema).optional(),
-});
+import { recordGoalFinished, recordGoalStarted } from "./goal-metrics.ts";
+import { loadGoalHistory, persistGoalState } from "./goal-state-store.ts";
 
 type ActiveGoal = {
   state: GoalState;
@@ -60,15 +32,8 @@ type ActiveGoal = {
   timeout: ReturnType<typeof setTimeout>;
   lastProgressSentAt: number;
   outputPath: string;
-  // Streaming parser for Codex's `--json` stdout. Accumulates token usage so
-  // observeProcess() can build a cost line for the final Discord message.
   jsonl: CodexJsonlParser;
-  // Promise for the stdout pump coroutine. Must be awaited in observeProcess()
-  // before reading jsonl.total() — the last turn.completed usage event may
-  // still be buffered in the pipe when process.exited resolves.
   stdoutPump: Promise<void>;
-  // OTel span synthesis attached to the parser. The archive SpanProcessor
-  // (observability/tracing.ts) ships full request/response bodies to S3.
   trace: CodexTrace;
   releaseInputLease: () => void;
 };
@@ -105,16 +70,13 @@ function noOpAcquireInputLease(): () => void {
   return noOpRelease;
 }
 
-import { defaultSpawner } from "./goal-process-helpers.ts";
+import { defaultSpawner, settleGoalProcess } from "./goal-process-helpers.ts";
 
 export class GoalManager {
   private active: ActiveGoal | undefined;
   private terminating: ActiveGoal | undefined;
-  // Synchronously claimed at the top of startGoal before its first await, so two
-  // near-simultaneous /goal interactions cannot both pass the lock check and
-  // both spawn a Codex process (orphaning the first). JS is single-threaded, so
-  // the check-and-set below the lock check fully closes the window.
-  private starting = false;
+  private startPromise: Promise<StartGoalResult> | undefined;
+  private shuttingDown = false;
   private readonly config: Config["game"]["goal"];
   private readonly controlToken: string;
   private readonly sendMessage: GoalMessageSender;
@@ -160,25 +122,7 @@ export class GoalManager {
    */
   async initialize(): Promise<void> {
     const statePath = this.resolveRuntimePath(this.config.state_path);
-    const file = Bun.file(statePath);
-    if (!(await file.exists())) return;
-    let raw: unknown;
-    try {
-      raw = await file.json();
-    } catch (error) {
-      logger.warn(`goal-manager: could not parse state file: ${String(error)}`);
-      return;
-    }
-    const result = StateEnvelopeSchema.safeParse(raw);
-    if (!result.success) {
-      logger.warn(
-        `goal-manager: state file has unexpected shape, starting with empty history`,
-      );
-      return;
-    }
-    const loaded: CompletedGoal[] = (result.data.history ?? [])
-      .slice(0, HISTORY_LIMIT)
-      .map((entry) => normalizeCompletedGoal(entry));
+    const loaded = await loadGoalHistory(statePath);
     this.history = loaded;
     for (const entry of loaded) this.recordedIds.add(entry.id);
     logger.info(
@@ -223,20 +167,28 @@ export class GoalManager {
       };
     }
 
-    // Claim the start slot synchronously, before the first await, so a second
-    // concurrent /goal cannot also reach the spawn path and orphan a process.
-    if (this.starting || this.terminating !== undefined) {
+    if (this.shuttingDown) {
+      return {
+        kind: "disabled",
+        content: "The active Pokémon session is shutting down.",
+        ephemeral: true,
+      };
+    }
+    if (this.startPromise !== undefined || this.terminating !== undefined) {
       return {
         kind: "busy",
         content: "Another goal is already starting. Try again in a moment.",
         ephemeral: true,
       };
     }
-    this.starting = true;
+    const startPromise = this.startGoalLocked(input, goal);
+    this.startPromise = startPromise;
     try {
-      return await this.startGoalLocked(input, goal);
+      return await startPromise;
     } finally {
-      this.starting = false;
+      if (this.startPromise === startPromise) {
+        this.startPromise = undefined;
+      }
     }
   }
 
@@ -319,6 +271,25 @@ export class GoalManager {
       deadline,
       status: "running",
     };
+    try {
+      await this.persistState(state);
+    } catch (error) {
+      this.controlGate.close(id);
+      try {
+        await settleGoalProcess(
+          {
+            process: spawned.process,
+            stdoutPump: spawned.stdoutPump,
+            releaseInputLease,
+          },
+          true,
+          () => this.controlGate.drain(),
+        );
+      } finally {
+        spawned.trace.end();
+      }
+      throw error;
+    }
     const timeout = setTimeout(() => {
       void this.timeoutGoal(id);
     }, this.config.max_runtime_minutes * 60_000);
@@ -333,19 +304,7 @@ export class GoalManager {
       trace: spawned.trace,
       releaseInputLease,
     };
-    try {
-      await this.persistState(state);
-    } catch (error) {
-      clearTimeout(timeout);
-      this.controlGate.close(id);
-      spawned.process.kill("SIGTERM");
-      await spawned.process.exited;
-      await this.controlGate.drain();
-      spawned.trace.end();
-      releaseInputLease();
-      this.active = undefined;
-      throw error;
-    }
+    recordGoalStarted();
     void this.observeProcess(id);
 
     return {
@@ -388,6 +347,11 @@ export class GoalManager {
   }
 
   async shutdown(): Promise<void> {
+    this.shuttingDown = true;
+    const startPromise = this.startPromise;
+    if (startPromise !== undefined) {
+      await Promise.allSettled([startPromise]);
+    }
     await this.stopActive("shutdown");
   }
 
@@ -397,20 +361,21 @@ export class GoalManager {
       return;
     }
 
-    const exitCode = await active.process.exited;
+    await active.process.exited;
     const claimed = this.claimActive(id);
     if (claimed === undefined) return;
     try {
-      await claimed.stdoutPump;
-      await this.releaseGoalControls(claimed);
+      const exitCode = await settleGoalProcess(claimed, false, () =>
+        this.controlGate.drain(),
+      );
       const report = await this.readFinalReport(claimed.outputPath);
       claimed.state.finishedAt = this.now().toISOString();
       claimed.state.exitCode = exitCode;
       claimed.state.status = exitCode === 0 ? "completed" : "failed";
       claimed.state.finalReport = report;
+      recordGoalFinished(claimed.state);
       await this.recordCompletion(claimed.state);
       await this.persistState(claimed.state);
-
       const usage = claimed.jsonl.total();
       const cost = computeCost(this.config.model, usage);
       const costLine = formatCostLine(this.config.model, cost, usage);
@@ -434,12 +399,11 @@ export class GoalManager {
     const active = this.claimActive(id);
     if (active === undefined) return;
     try {
-      active.process.kill("SIGTERM");
-      await active.process.exited;
-      await this.releaseGoalControls(active);
+      await settleGoalProcess(active, true, () => this.controlGate.drain());
       active.state.status = "timeout";
       active.state.finishedAt = this.now().toISOString();
       active.state.finalReport = "Goal timed out before Codex finished.";
+      recordGoalFinished(active.state);
       await this.recordCompletion(active.state);
       await this.persistState(active.state);
       await this.sendMessage({
@@ -462,15 +426,14 @@ export class GoalManager {
       return;
     }
     try {
-      active.process.kill("SIGTERM");
-      await active.process.exited;
-      await this.releaseGoalControls(active);
+      await settleGoalProcess(active, true, () => this.controlGate.drain());
       active.state.status = status;
       active.state.finishedAt = this.now().toISOString();
       active.state.finalReport =
         status === "replaced"
           ? "Goal was replaced by a newer goal."
           : "Goal was stopped during application shutdown.";
+      recordGoalFinished(active.state);
       await this.recordCompletion(active.state);
       await this.persistState(active.state);
     } finally {
@@ -495,11 +458,6 @@ export class GoalManager {
     return active;
   }
 
-  private async releaseGoalControls(active: ActiveGoal): Promise<void> {
-    await this.controlGate.drain();
-    active.releaseInputLease();
-  }
-
   private async readFinalReport(outputPath: string): Promise<string> {
     const file = Bun.file(outputPath);
     if (await file.exists()) {
@@ -519,10 +477,10 @@ export class GoalManager {
   }
 
   private async persistState(state: GoalState): Promise<void> {
-    const statePath = this.resolveRuntimePath(this.config.state_path);
-    const envelope = { current: state, history: this.history };
-    await Bun.write(statePath, `${JSON.stringify(envelope, undefined, 2)}\n`, {
-      createPath: true,
+    await persistGoalState({
+      statePath: this.resolveRuntimePath(this.config.state_path),
+      state,
+      history: this.history,
     });
   }
 
