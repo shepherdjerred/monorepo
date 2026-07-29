@@ -54,6 +54,11 @@ function expectSuspendedWorkerRequest(request: unknown): void {
   expect(syncRequest.manifests).toHaveLength(1);
   expect(JSON.parse(syncRequest.manifests[0] ?? "")).toMatchObject({
     spec: {
+      source: {
+        repoURL: "https://chartmuseum.sjer.red",
+        chart: "worker",
+        targetRevision: "~2.0.0-0",
+      },
       syncPolicy: {
         automated: {
           enabled: false,
@@ -146,6 +151,7 @@ describe("Argo CD release gating", () => {
   test("suspends repository auto-sync through an explicit root manifest sync", async () => {
     const syncBodies: unknown[] = [];
     let requestedOperation: unknown;
+    const renderedRevisions: (string | null)[] = [];
     const repositoryApplication = JSON.stringify({
       apiVersion: "argoproj.io/v1alpha1",
       kind: "Application",
@@ -198,6 +204,7 @@ describe("Argo CD release gating", () => {
           request.method === "GET" &&
           url.pathname === "/api/v1/applications/apps/manifests"
         ) {
+          renderedRevisions.push(url.searchParams.get("revision"));
           return Response.json({
             manifests: [repositoryApplication, externalApplication, configMap],
           });
@@ -217,6 +224,9 @@ describe("Argo CD release gating", () => {
         ) {
           return Response.json({
             status: {
+              sync: {
+                revision: "2.0.0-42",
+              },
               operationState: {
                 phase: "Succeeded",
                 startedAt: new Date().toISOString(),
@@ -260,6 +270,7 @@ describe("Argo CD release gating", () => {
       expect(exitCode).toBe(0);
       expect(stderr).toBe("");
       expect(stdout).toContain("suspending auto-sync: worker");
+      expect(renderedRevisions).toEqual(["2.0.0-42"]);
       expect(syncBodies).toHaveLength(1);
       expectSuspendedWorkerRequest(syncBodies[0]);
     } finally {
