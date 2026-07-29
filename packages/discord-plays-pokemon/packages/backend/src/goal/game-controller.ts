@@ -55,6 +55,14 @@ function interactionReady(observation: GameObservationV2): boolean {
   );
 }
 
+function movementReady(observation: GameObservationV2): boolean {
+  return (
+    observation.phase === "overworld" &&
+    observation.world !== null &&
+    observation.readiness.inputReady
+  );
+}
+
 export class GameController {
   private locked = false;
   private readonly lockWaiters: (() => void)[] = [];
@@ -163,6 +171,7 @@ export class GameController {
           !interactionReady(after) ||
           after.phase !== beforeObservation.phase ||
           mapChanged(beforeObservation, after) ||
+          tilesMoved(beforeObservation, after) > 0 ||
           after.world?.facing !== direction
         ) {
           return this.outcome("interact", before, after, {
@@ -238,10 +247,7 @@ export class GameController {
   ): Promise<ActionOutcomeV1> {
     const before = this.capture();
     const beforeObservation = before.observation;
-    if (
-      !beforeObservation.readiness.inputReady ||
-      beforeObservation.world === null
-    ) {
+    if (!movementReady(beforeObservation)) {
       return this.outcome(`move:${direction}`, before, beforeObservation, {
         inputApplied: false,
         direction,
@@ -251,14 +257,17 @@ export class GameController {
     let after = beforeObservation;
     let settleTimedOut = false;
     let completedTiles = 0;
+    let inputApplied = false;
     while (completedTiles < requestedTiles) {
       const stepBefore = this.port.observe();
-      if (!stepBefore.readiness.inputReady || stepBefore.world === null) break;
+      after = stepBefore;
+      if (!movementReady(stepBefore)) break;
 
       await this.port.press({
         command: commandForDirection(direction),
         quantity: 1,
       });
+      inputApplied = true;
       let settled = await this.settle();
       after = settled.observation;
       settleTimedOut ||= settled.timedOut;
@@ -274,6 +283,7 @@ export class GameController {
       let stepDistance = tilesMoved(stepBefore, after);
       if (
         stepDistance === 0 &&
+        movementReady(after) &&
         after.world !== null &&
         after.world.facing === direction &&
         !collisionProvesBlocked(direction, stepBefore, after)
@@ -293,14 +303,14 @@ export class GameController {
       if (
         mapChanged(stepBefore, after) ||
         stepBefore.phase !== after.phase ||
-        !after.readiness.inputReady
+        !movementReady(after)
       ) {
         break;
       }
     }
 
     return this.outcome(`move:${direction}`, before, after, {
-      inputApplied: true,
+      inputApplied,
       direction,
       settleTimedOut,
     });

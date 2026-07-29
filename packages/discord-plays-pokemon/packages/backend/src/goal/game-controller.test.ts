@@ -127,6 +127,10 @@ class FakeControlPort implements GameControlPort {
     return this.current;
   }
 
+  setObservation(currentObservation: GameObservationV2): void {
+    this.current = currentObservation;
+  }
+
   renderFrame(): Uint8Array {
     return this.currentFrame;
   }
@@ -272,6 +276,59 @@ describe("GameController", () => {
     expect(outcome.tilesMoved).toBe(1);
   });
 
+  test("rejects movement during a scripted dialog despite input readiness", async () => {
+    const scripted = observation({
+      phase: "scripted",
+      scriptOrDialogActive: true,
+      dialogVisible: true,
+      dialogInputReady: true,
+      inputReady: true,
+    });
+    const port = new FakeControlPort(scripted, []);
+    const controller = new GameController(port);
+
+    const move = await controller.move("north", 1);
+    const navigation = await controller.navigate({ x: 10, y: 9 }, 4, 4);
+
+    expect(port.presses).toEqual([]);
+    expect(move.status).toBe("unavailable");
+    expect(move.stopReason).toBe("field-input-not-ready");
+    expect(navigation.stopReason).toBe("field-input-not-ready");
+    expect(navigation.attemptsMade).toBe(0);
+  });
+
+  test("stops repeated movement if the authoritative phase changes", async () => {
+    const initial = observation({ x: 10, y: 10, facing: "north" });
+    const moved = observation({ frame: 12, x: 10, y: 9, facing: "north" });
+    const scripted = observation({
+      frame: 20,
+      phase: "scripted",
+      x: 10,
+      y: 9,
+      inputReady: true,
+      scriptOrDialogActive: true,
+      dialogVisible: true,
+      dialogInputReady: true,
+    });
+    const port = new FakeControlPort(initial, [moved]);
+    const originalWaitFrames = port.waitFrames.bind(port);
+    let waits = 0;
+    port.waitFrames = async (frames: number): Promise<void> => {
+      await originalWaitFrames(frames);
+      waits += 1;
+      if (waits === 2) {
+        port.setObservation(scripted);
+      }
+    };
+    const controller = new GameController(port);
+
+    const outcome = await controller.move("north", 3);
+
+    expect(port.presses).toEqual([{ command: "up", quantity: 1 }]);
+    expect(outcome.stopReason).toBe("phase-changed");
+    expect(outcome.after.phase).toBe("scripted");
+  });
+
   test("stops a repeated tap when the phase changes", async () => {
     const initial = observation({ phase: "overworld" });
     const battle = observation({
@@ -388,7 +445,9 @@ describe("GameController", () => {
     expect(outcome.framesElapsed).toBe(0);
     expect(port.presses).toHaveLength(0);
   });
+});
 
+describe("GameController navigation", () => {
   test("navigates a bounded current-map path to exact coordinates", async () => {
     const start = observation({ x: 5, y: 5, facing: "east" });
     const port = new FakeControlPort(start, [
@@ -401,11 +460,42 @@ describe("GameController", () => {
 
     expect(result.status).toBe("arrived");
     expect(result.stopReason).toBe("target-reached");
+    expect(result.attemptsMade).toBe(2);
     expect(result.stepsTaken).toBe(2);
     expect(port.presses.map((press) => press.command)).toEqual([
       "right",
       "right",
     ]);
+  });
+
+  test("reaches the target on the final allowed navigation attempt", async () => {
+    const start = observation({ x: 5, y: 5, facing: "east" });
+    const port = new FakeControlPort(start, [
+      observation({ frame: 12, x: 6, y: 5, facing: "east" }),
+    ]);
+    const controller = new GameController(port);
+
+    const result = await controller.navigate({ x: 6, y: 5 }, 1, 4);
+
+    expect(result.status).toBe("arrived");
+    expect(result.stopReason).toBe("target-reached");
+    expect(result.attemptsMade).toBe(1);
+    expect(result.stepsTaken).toBe(1);
+    expect(port.presses).toHaveLength(1);
+  });
+
+  test("consumes the navigation budget for failed movement attempts", async () => {
+    const start = observation({ x: 5, y: 5, facing: "east" });
+    const port = new FakeControlPort(start, []);
+    const controller = new GameController(port);
+
+    const result = await controller.navigate({ x: 7, y: 5 }, 2, 4);
+
+    expect(result.status).toBe("stopped");
+    expect(result.stopReason).toBe("max-steps");
+    expect(result.attemptsMade).toBe(2);
+    expect(result.stepsTaken).toBe(0);
+    expect(port.presses).toHaveLength(3);
   });
 
   test("recomputes moving-object blocks after every navigation step", async () => {
@@ -452,6 +542,7 @@ describe("GameController", () => {
     const result = await controller.navigate({ x: 7, y: 5 }, 10, 4);
 
     expect(result.status).toBe("arrived");
+    expect(result.attemptsMade).toBe(4);
     expect(result.stepsTaken).toBe(4);
     expect(port.presses.map((press) => press.command)).toEqual([
       "up",

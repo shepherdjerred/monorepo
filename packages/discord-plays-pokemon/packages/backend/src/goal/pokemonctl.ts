@@ -13,6 +13,7 @@ function usage(): string {
     "  pokemonctl map show [--radius n]",
     "  pokemonctl navigate --x n --y n [--max-steps n] [--radius n]  # current map only",
     "  pokemonctl interact [north|south|west|east|ahead]",
+    "  pokemonctl advance  # one scripted-dialog step",
     "  pokemonctl wait --until <ready|stable|phase-change> [--timeout-ms n]",
     "  pokemonctl screenshot",
     "  pokemonctl press <button> [--quantity n] [--hold-ms n]",
@@ -232,6 +233,14 @@ async function handleInteract(args: string[]): Promise<void> {
   );
 }
 
+async function handleAdvance(args: string[]): Promise<void> {
+  const unexpected = args.at(0);
+  if (unexpected !== undefined) {
+    throw new Error(`advance does not accept arguments: ${unexpected}`);
+  }
+  printJsonText(await request("POST", "/advance", {}));
+}
+
 async function handleChord(args: string[]): Promise<void> {
   const value = args.at(0);
   if (value === undefined) {
@@ -328,6 +337,7 @@ const HANDLERS = new Map<string, (args: string[]) => Promise<void>>([
   ["map", handleMap],
   ["navigate", handleNavigate],
   ["interact", handleInteract],
+  ["advance", handleAdvance],
   [
     "screenshot",
     async () => {

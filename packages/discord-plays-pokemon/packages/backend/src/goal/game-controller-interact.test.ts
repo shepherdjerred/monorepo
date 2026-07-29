@@ -11,6 +11,8 @@ type ObservationInput = Readonly<{
   frame?: number;
   phase?: GameObservationV2["phase"];
   facing?: CardinalDirection;
+  x?: number;
+  y?: number;
   inputReady?: boolean;
   playerStable?: boolean;
   worldAvailable?: boolean;
@@ -48,8 +50,8 @@ function observation(input: ObservationInput = {}): GameObservationV2 {
           map: "Littleroot Town",
           mapGroup: 0,
           mapNum: 0,
-          x: 10,
-          y: 10,
+          x: input.x ?? 10,
+          y: input.y ?? 10,
           facing: input.facing ?? "north",
           movementMode: "on foot",
           runningState: 0,
@@ -176,6 +178,19 @@ describe("GameController interact", () => {
     expect(port.presses).toEqual([{ command: "right", quantity: 1 }]);
     expect(outcome.inputApplied).toBe(true);
     expect(outcome.after.readiness.inputReady).toBe(false);
+  });
+
+  test("does not press A when the direction press moves the player", async () => {
+    const port = new InteractionPort(observation({ facing: "north" }), [
+      observation({ frame: 12, facing: "east", x: 11 }),
+    ]);
+
+    const outcome = await new GameController(port).interact("east");
+
+    expect(port.presses).toEqual([{ command: "right", quantity: 1 }]);
+    expect(outcome.inputApplied).toBe(true);
+    expect(outcome.tilesMoved).toBe(1);
+    expect(outcome.after.world?.x).toBe(11);
   });
 
   test("presses A for ahead, current-facing, and turn-then-interact field actions", async () => {

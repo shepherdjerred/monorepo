@@ -22,6 +22,7 @@ export type NavigationOutcomeV1 = Readonly<{
   stopReason: NavigationStopReason;
   map: Readonly<{ group: number; number: number }> | null;
   target: Readonly<{ x: number; y: number }>;
+  attemptsMade: number;
   stepsTaken: number;
   before: GameObservationV2;
   after: GameObservationV2;
@@ -76,6 +77,14 @@ function mapChanged(
   );
 }
 
+function movementReady(observation: GameObservationV2): boolean {
+  return (
+    observation.phase === "overworld" &&
+    observation.world !== null &&
+    observation.readiness.inputReady
+  );
+}
+
 function findNextPathStep(options: {
   readMapTile: (x: number, y: number) => EngineMapTile | null;
   start: Readonly<{ x: number; y: number }>;
@@ -125,6 +134,7 @@ function findNextPathStep(options: {
 function navigationResult(options: {
   stopReason: NavigationStopReason;
   target: Readonly<{ x: number; y: number }>;
+  attemptsMade: number;
   stepsTaken: number;
   before: GameObservationV2;
   after: GameObservationV2;
@@ -142,10 +152,29 @@ function navigationResult(options: {
             number: options.before.world.mapNum,
           },
     target: options.target,
+    attemptsMade: options.attemptsMade,
     stepsTaken: options.stepsTaken,
     before: options.before,
     after: options.after,
   };
+}
+
+function navigationBudgetResult(options: {
+  target: Readonly<{ x: number; y: number }>;
+  attemptsMade: number;
+  stepsTaken: number;
+  before: GameObservationV2;
+  after: GameObservationV2;
+}): NavigationOutcomeV1 {
+  const world = options.after.world;
+  const reached =
+    world !== null &&
+    world.x === options.target.x &&
+    world.y === options.target.y;
+  return navigationResult({
+    stopReason: reached ? "target-reached" : "max-steps",
+    ...options,
+  });
 }
 
 export async function navigateGame(
@@ -153,10 +182,11 @@ export async function navigateGame(
 ): Promise<NavigationOutcomeV1> {
   const before = options.observe();
   const start = before.world;
-  if (!before.readiness.inputReady || start === null) {
+  if (!movementReady(before) || start === null) {
     return navigationResult({
       stopReason: "field-input-not-ready",
       target: options.target,
+      attemptsMade: 0,
       stepsTaken: 0,
       before,
       after: before,
@@ -169,6 +199,7 @@ export async function navigateGame(
     return navigationResult({
       stopReason: "target-out-of-range",
       target: options.target,
+      attemptsMade: 0,
       stepsTaken: 0,
       before,
       after: before,
@@ -182,17 +213,29 @@ export async function navigateGame(
     maxY: start.y + options.searchRadius,
   };
   const failedMovementTiles = new Set<string>();
+  let attemptsMade = 0;
   let stepsTaken = 0;
   let after = before;
 
-  while (stepsTaken < options.maxSteps) {
+  while (attemptsMade < options.maxSteps) {
     const current = options.observe();
     const world = current.world;
     after = current;
-    if (world === null || !current.readiness.inputReady) {
+    if (current.phase !== "overworld") {
+      return navigationResult({
+        stopReason: "phase-changed",
+        target: options.target,
+        attemptsMade,
+        stepsTaken,
+        before,
+        after,
+      });
+    }
+    if (!movementReady(current) || world === null) {
       return navigationResult({
         stopReason: "field-input-not-ready",
         target: options.target,
+        attemptsMade,
         stepsTaken,
         before,
         after,
@@ -202,15 +245,7 @@ export async function navigateGame(
       return navigationResult({
         stopReason: "map-changed",
         target: options.target,
-        stepsTaken,
-        before,
-        after,
-      });
-    }
-    if (before.phase !== current.phase) {
-      return navigationResult({
-        stopReason: "phase-changed",
-        target: options.target,
+        attemptsMade,
         stepsTaken,
         before,
         after,
@@ -220,6 +255,7 @@ export async function navigateGame(
       return navigationResult({
         stopReason: "target-reached",
         target: options.target,
+        attemptsMade,
         stepsTaken,
         before,
         after,
@@ -241,12 +277,14 @@ export async function navigateGame(
       return navigationResult({
         stopReason: "no-route",
         target: options.target,
+        attemptsMade,
         stepsTaken,
         before,
         after,
       });
     }
     const intended = nextCoordinate(world.x, world.y, direction);
+    attemptsMade += 1;
     const step = await options.moveOne(direction);
     after = step.after;
     if (
@@ -257,6 +295,7 @@ export async function navigateGame(
       return navigationResult({
         stopReason: step.stopReason,
         target: options.target,
+        attemptsMade,
         stepsTaken,
         before,
         after,
@@ -268,9 +307,9 @@ export async function navigateGame(
     }
     stepsTaken += step.tilesMoved;
   }
-  return navigationResult({
-    stopReason: "max-steps",
+  return navigationBudgetResult({
     target: options.target,
+    attemptsMade,
     stepsTaken,
     before,
     after,
