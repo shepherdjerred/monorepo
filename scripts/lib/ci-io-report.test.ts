@@ -986,7 +986,7 @@ describe("outputs and CLI", () => {
       },
     });
     const report: CiIoReport = {
-      schemaVersion: 3,
+      schemaVersion: 4,
       generatedAt: WINDOW.to.toISOString(),
       metricSource: "raw",
       organization: "sjerred",

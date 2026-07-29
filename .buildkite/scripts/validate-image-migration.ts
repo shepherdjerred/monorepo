@@ -45,21 +45,35 @@ export function hclNamedBlock(
     if (quoted) {
       if (escaped) {
         escaped = false;
-      } else if (character === "\\") {
-        escaped = true;
-      } else if (character === '"') {
-        quoted = false;
+        continue;
+      }
+      switch (character) {
+        case "\\": {
+          escaped = true;
+          break;
+        }
+        case '"': {
+          quoted = false;
+          break;
+        }
       }
       continue;
     }
-    if (character === '"') {
-      quoted = true;
-    } else if (character === "{") {
-      depth += 1;
-    } else if (character === "}") {
-      depth -= 1;
-      if (depth === 0) {
-        return document.slice(markerIndex, index + 1);
+    switch (character) {
+      case '"': {
+        quoted = true;
+        break;
+      }
+      case "{": {
+        depth += 1;
+        break;
+      }
+      case "}": {
+        depth -= 1;
+        if (depth === 0) {
+          return document.slice(markerIndex, index + 1);
+        }
+        break;
       }
     }
   }

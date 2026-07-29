@@ -1,10 +1,15 @@
 import { describe, expect, test } from "bun:test";
 
+import {
+  annotationStyle,
+  assertRequestedBenchmarkIntegrity,
+} from "../ci-io-report.ts";
 import type { TimeWindow } from "./ci-io-api.ts";
 import { renderCiIoMarkdown } from "./ci-io-markdown.ts";
 import type {
   BranchStepIoReport,
   CiIoReport,
+  IntegrityIssueCode,
   JobIoReport,
   JobOutcomeReport,
   StepIoReport,
@@ -212,6 +217,32 @@ function gateJob(report: WindowIoReport, stepKey: string): JobOutcomeReport {
   return job;
 }
 
+function addSamplingIssue(
+  report: WindowIoReport,
+  code: IntegrityIssueCode,
+): void {
+  report.integrityIssues.push({
+    code,
+    message: `${code} fixture`,
+    jobId: report.jobs[0]?.jobId ?? null,
+    pod: report.jobs[0]?.pods[0] ?? null,
+  });
+  report.summary.completeJobCount -= 1;
+  const job = report.jobs[0];
+  if (job === undefined) {
+    throw new Error("fixed-corpus telemetry fixture is missing");
+  }
+  if (code === "missing-long-job-measurement") {
+    report.summary.measuredJobCount -= 1;
+    report.summary.missingJobCount += 1;
+    job.coverage = "missing";
+    job.writeBytes = null;
+  } else {
+    report.summary.lowerBoundJobCount += 1;
+    job.coverage = "lower-bound";
+  }
+}
+
 function withoutGateLane(
   report: WindowIoReport,
   stepKey: string,
@@ -257,7 +288,10 @@ describe("fixed-corpus impact gate", () => {
     );
     const gate = compareWindows(baseline, candidate).fixedCorpusGate;
     expect(gate.status).toBe("passed");
+    expect(gate.proofKind).toBe("exact");
     expect(gate.aggregateWriteReductionPercent).toBe(50);
+    expect(gate.minimumAggregateWriteReductionPercent).toBe(50);
+    expect(gate.baselineSamplingIssueCodes).toEqual([]);
     expect(gate.p95DurationChangePercent).toBeCloseTo(10);
     expect(gate.baselineLanes.map((lane) => lane.stepKey)).toEqual([
       "docker-e2e",
@@ -335,7 +369,7 @@ describe("fixed-corpus impact gate", () => {
       "docker-e2e=5,images=5,resume=5,sjer.red=5,tofu=5,verify=5",
     );
     const report: CiIoReport = {
-      schemaVersion: 3,
+      schemaVersion: 4,
       generatedAt: WINDOW.to.toISOString(),
       metricSource: "recording",
       organization: "sjerred",
@@ -350,6 +384,10 @@ describe("fixed-corpus impact gate", () => {
     expect(markdown).toContain("`candidate-commit`");
     expect(markdown).toContain(
       "`docker-e2e=5,images=5,resume=5,sjer.red=5,tofu=5,verify=5`",
+    );
+    expect(markdown).toContain("Proof: **exact telemetry**");
+    expect(markdown).toContain(
+      "Conservative minimum aggregate write reduction: 50.0%",
     );
   });
 
@@ -424,7 +462,9 @@ describe("fixed-corpus impact gate", () => {
       "baseline fixed-corpus window mixes pipeline schemas for logical lanes: main / sjer.red",
     );
   });
+});
 
+describe("fixed-corpus physical schema guards", () => {
   test("detects legacy and current physical schemas across branches", () => {
     const baseline = gateWindow(
       stepFixture({ writes: 100, duration: 100, network: 100 }),
@@ -452,6 +492,183 @@ describe("fixed-corpus impact gate", () => {
     );
     expect(gate.reasons).not.toContain(
       "baseline fixed-corpus window mixes pipeline schemas for logical lanes: main / sjer.red",
+    );
+  });
+});
+
+describe("fixed-corpus conservative proof", () => {
+  test("passes a conservative baseline lower-bound proof", () => {
+    for (const code of [
+      "insufficient-long-job-samples",
+      "missing-long-job-measurement",
+      "missing-post-finish-parent-sample",
+    ] as const) {
+      const baseline = gateWindow(
+        stepFixture({ writes: 100, duration: 100, network: 100 }),
+      );
+      const candidate = gateWindow(
+        stepFixture({ writes: 40, duration: 100, network: 100 }),
+      );
+      addSamplingIssue(baseline, code);
+
+      const gate = compareWindows(baseline, candidate).fixedCorpusGate;
+      expect(gate.status).toBe("passed");
+      expect(gate.proofKind).toBe("baseline-lower-bound");
+      expect(gate.aggregateWriteReductionPercent).toBe(60);
+      expect(gate.minimumAggregateWriteReductionPercent).toBe(60);
+      expect(gate.baselineSamplingIssueCodes).toEqual([code]);
+
+      const report: CiIoReport = {
+        schemaVersion: 4,
+        generatedAt: WINDOW.to.toISOString(),
+        metricSource: "recording",
+        organization: "sjerred",
+        pipeline: "monorepo",
+        candidate,
+        baseline,
+        comparison: compareWindows(baseline, candidate),
+      };
+      expect(renderCiIoMarkdown(report)).toContain(
+        "Proof: **conservative baseline lower bound**",
+      );
+      expect(annotationStyle(report)).toBe("success");
+      expect(() =>
+        assertRequestedBenchmarkIntegrity(
+          { benchmark: true, enforceImpactGates: true },
+          candidate,
+          baseline,
+        ),
+      ).not.toThrow();
+      expect(() =>
+        assertRequestedBenchmarkIntegrity(
+          { benchmark: true, enforceImpactGates: false },
+          candidate,
+          baseline,
+        ),
+      ).toThrow("CI I/O benchmark integrity failed");
+    }
+  });
+
+  test("rejects every non-sampling baseline integrity issue", () => {
+    const disallowedCodes: IntegrityIssueCode[] = [
+      "ambiguous-job-pods",
+      "counter-reset",
+      "metadata-mismatch",
+      "missing-network-measurement",
+      "multiple-pod-nodes",
+      "network-counter-reset",
+      "unfinished-job",
+      "unmatched-pod",
+    ];
+    for (const code of disallowedCodes) {
+      const baseline = gateWindow(
+        stepFixture({ writes: 100, duration: 100, network: 100 }),
+      );
+      const candidate = gateWindow(
+        stepFixture({ writes: 40, duration: 100, network: 100 }),
+      );
+      addSamplingIssue(baseline, code);
+      const gate = compareWindows(baseline, candidate).fixedCorpusGate;
+      expect(gate.status).toBe("inconclusive");
+      expect(gate.proofKind).toBeNull();
+      expect(gate.minimumAggregateWriteReductionPercent).toBeNull();
+      expect(gate.reasons).toContain(
+        `baseline fixed-corpus telemetry has inadmissible integrity issues: ${code}`,
+      );
+    }
+  });
+
+  test("keeps a conservative reduction below 50% inconclusive", () => {
+    const baseline = gateWindow(
+      stepFixture({ writes: 100, duration: 100, network: 100 }),
+    );
+    const candidate = gateWindow(
+      stepFixture({ writes: 51, duration: 100, network: 100 }),
+    );
+    addSamplingIssue(baseline, "missing-post-finish-parent-sample");
+
+    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
+    expect(gate.status).toBe("inconclusive");
+    expect(gate.proofKind).toBe("baseline-lower-bound");
+    expect(gate.minimumAggregateWriteReductionPercent).toBe(49);
+    expect(gate.reasons).toContain(
+      "conservative minimum aggregate write reduction is below 50%",
+    );
+    expect(gate.reasons).not.toContain(
+      "aggregate write reduction is below 50%",
+    );
+  });
+
+  test("does not mask a known duration failure with an inconclusive conservative reduction", () => {
+    const baseline = gateWindow(
+      stepFixture({ writes: 100, duration: 100, network: 100 }),
+    );
+    const candidate = gateWindow(
+      stepFixture({ writes: 51, duration: 111, network: 100 }),
+    );
+    addSamplingIssue(baseline, "missing-post-finish-parent-sample");
+
+    const comparison = compareWindows(baseline, candidate);
+    const gate = comparison.fixedCorpusGate;
+    expect(gate.status).toBe("failed");
+    expect(gate.proofKind).toBe("baseline-lower-bound");
+    expect(gate.minimumAggregateWriteReductionPercent).toBe(49);
+    expect(gate.reasons).toContain(
+      "conservative minimum aggregate write reduction is below 50%",
+    );
+    expect(gate.reasons).toContain(
+      "p95 duration regression exceeds 10% for lane main / docker-e2e (11.0%)",
+    );
+
+    const report: CiIoReport = {
+      schemaVersion: 4,
+      generatedAt: WINDOW.to.toISOString(),
+      metricSource: "recording",
+      organization: "sjerred",
+      pipeline: "monorepo",
+      candidate,
+      baseline,
+      comparison,
+    };
+    expect(annotationStyle(report)).toBe("error");
+  });
+
+  test("does not infer duration failures from noncomparable corpus windows", () => {
+    const baseline = gateWindow(
+      stepFixture({ writes: 100, duration: 100, network: 100 }),
+    );
+    const candidate = gateWindow(
+      stepFixture({ writes: 40, duration: 111, network: 100 }),
+      MAIN_FIXED_CORPUS_STEP_KEYS.slice(0, -1),
+    );
+
+    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
+    expect(gate.status).toBe("inconclusive");
+    expect(gate.proofKind).toBeNull();
+    expect(gate.reasons).toContain(
+      "fixed-corpus lanes differ between comparison windows",
+    );
+    expect(
+      gate.reasons.some((reason) =>
+        reason.startsWith("p95 duration regression exceeds 10%"),
+      ),
+    ).toBe(false);
+  });
+
+  test("requires complete candidate telemetry for every proof", () => {
+    const baseline = gateWindow(
+      stepFixture({ writes: 100, duration: 100, network: 100 }),
+    );
+    const candidate = gateWindow(
+      stepFixture({ writes: 40, duration: 100, network: 100 }),
+    );
+    addSamplingIssue(candidate, "missing-post-finish-parent-sample");
+
+    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
+    expect(gate.status).toBe("inconclusive");
+    expect(gate.proofKind).toBeNull();
+    expect(gate.reasons).toContain(
+      "candidate fixed-corpus window does not have complete telemetry",
     );
   });
 });
@@ -707,10 +924,10 @@ describe("fixed-corpus completeness guards", () => {
     const gate = compareWindows(baseline, incomplete).fixedCorpusGate;
     expect(gate.status).toBe("inconclusive");
     expect(gate.reasons).toContain(
-      "one or both fixed-corpus windows have incomplete telemetry",
+      "candidate fixed-corpus window does not have complete telemetry",
     );
     expect(gate.reasons).toContain(
-      "one or both fixed-corpus cohorts excluded unfinished builds",
+      "candidate fixed-corpus cohort excluded unfinished builds",
     );
   });
 });

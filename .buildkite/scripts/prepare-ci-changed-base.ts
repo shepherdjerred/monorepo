@@ -1,5 +1,7 @@
 import { $ } from "bun";
 import {
+  fixedCorpusForcesLane,
+  fixedCorpusLaneMetadata,
   globalPaths,
   laneMetadata,
   lanePaths,
@@ -41,7 +43,9 @@ if (import.meta.main) {
   await $`git merge-base --is-ancestor ${base} HEAD`;
   await $`buildkite-agent meta-data set ci-changed-base ${base}`;
   for (const lane of ["playwright", "resume"]) {
-    const metadata = laneMetadata(lane, await laneChanged(base, lane), base);
+    const metadata = fixedCorpusForcesLane(lane, Bun.env)
+      ? fixedCorpusLaneMetadata(lane)
+      : laneMetadata(lane, await laneChanged(base, lane), base);
     for (const [key, value] of Object.entries(metadata)) {
       await $`buildkite-agent meta-data set ${key} ${value}`;
     }
