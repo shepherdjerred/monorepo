@@ -575,6 +575,49 @@ describe("SessionManager voice-loss recovery", () => {
     await manager.destroyAll();
   });
 
+  test("a late 4014 reclassifies a gateway-first detach before reconnect", async () => {
+    const config = await makeReconnectConfig();
+    const pool = fakePool(1);
+    const { manager, announced } = makeManager(config, pool.provider);
+    await startStreaming(manager, announced);
+
+    const streamer = pool.streamers[0];
+    if (streamer === undefined) throw new Error("missing fake streamer");
+    streamer.positionSeconds.value = 123;
+
+    // The command gateway wins the race and initially has no close code, so recovery preserves
+    // state and arms a transient reconnect.
+    manager.notifyStreamerDetached({
+      guildId: GUILD,
+      channelId: CHANNEL_A,
+    });
+    await waitUntil(() => manager.getExisting(GUILD, CHANNEL_A) === null);
+
+    // The Go-Live transport's close arrives after session teardown. The real streamer keeps this
+    // close observation alive even though the session-layer callback has been cleared.
+    streamer.triggerVoiceClose({
+      code: 4014,
+      deliberate: true,
+      atMs: Date.now(),
+    });
+
+    await waitUntil(
+      () =>
+        announced.some((a) =>
+          announcementText(a.message).includes(
+            "streamer was disconnected from voice (close code 4014) — staying disconnected",
+          ),
+        ),
+      5000,
+    );
+    expect(manager.getExisting(GUILD, CHANNEL_A)).toBeNull();
+    expect(pool.acquireCount()).toBe(1);
+    const file = stateFilePath(config.state.dir, GUILD, CHANNEL_A);
+    await waitForAsync(async () => !(await Bun.file(file).exists()));
+
+    await manager.destroyAll();
+  });
+
   test("reconnect disabled: transient close stays down like today, but announces the reason", async () => {
     const config = await makeReconnectConfig({ enabled: false });
     const pool = fakePool(1);

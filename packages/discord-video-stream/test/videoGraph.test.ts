@@ -209,7 +209,7 @@ describe("buildVaapiVideoGraph", () => {
         "[0:v]scale_vaapi=w=1920:h=1080:format=nv12[base]",
         "color=c=black@0:s=1920x1080:r=30,format=bgra," +
           `subtitles=filename=${SUB}:alpha=1,hwupload[subs]`,
-        "[base][subs]overlay_vaapi[vout]",
+        "[base][subs]overlay_vaapi=shortest=1[vout]",
       ],
       mapLabel: "vout",
     });
@@ -233,7 +233,7 @@ describe("buildVaapiVideoGraph", () => {
           "setpts=PTS+2367/TB," +
           `subtitles=filename=${SUB}:alpha=1,` +
           "setpts=PTS-2367/TB,hwupload[subs]",
-        "[base][subs]overlay_vaapi[vout]",
+        "[base][subs]overlay_vaapi=shortest=1[vout]",
       ],
       mapLabel: "vout",
     });

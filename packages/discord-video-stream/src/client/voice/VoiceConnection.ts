@@ -1,8 +1,27 @@
 import { BaseMediaConnection } from "./BaseMediaConnection.js";
+import type { MediaConnectionCloseInfo } from "./BaseMediaConnection.js";
 import type { StreamConnection } from "./StreamConnection.js";
 
 export class VoiceConnection extends BaseMediaConnection {
-  public streamConnection: StreamConnection | undefined;
+  private _streamConnection: StreamConnection | undefined;
+  private readonly relayStreamClose = (
+    info: MediaConnectionCloseInfo,
+  ): void => {
+    this.emit("close", info);
+  };
+
+  public get streamConnection(): StreamConnection | undefined {
+    return this._streamConnection;
+  }
+
+  public set streamConnection(connection: StreamConnection | undefined) {
+    if (connection === this._streamConnection) {
+      return;
+    }
+    this._streamConnection?.off("close", this.relayStreamClose);
+    this._streamConnection = connection;
+    this._streamConnection?.on("close", this.relayStreamClose);
+  }
 
   public override get daveChannelId() {
     return this.channelId;
@@ -14,6 +33,8 @@ export class VoiceConnection extends BaseMediaConnection {
 
   public override stop(): void {
     super.stop();
-    this.streamConnection?.stop();
+    const streamConnection = this.streamConnection;
+    this.streamConnection = undefined;
+    streamConnection?.stop();
   }
 }

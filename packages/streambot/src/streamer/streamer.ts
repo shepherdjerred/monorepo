@@ -58,6 +58,13 @@ const log = logger.child("streamer");
  */
 /** Factory for the seekable player — injectable so tests can drive playback without a live stream. */
 export type PlayerFactory = typeof createSeekablePlayer;
+/** Factory for one segment's observer — injectable so tests can fire lifecycle events exactly. */
+export type StreamObserverFactory = typeof createStreamObserver;
+/** Optional lifecycle seams used by deterministic streamer tests. */
+export type StreamerDependencies = {
+  createPlayer?: PlayerFactory;
+  createObserver?: StreamObserverFactory;
+};
 
 /**
  * The streamer surface the pool/session layer depends on. Extends `PooledUserbot` (the
@@ -111,6 +118,8 @@ export class StreambotStreamer implements StreamerLike {
   private readonly now: () => number;
   /** Injectable player factory (defaults to the fork's real one) so tests can supply a fake. */
   private readonly createPlayer: PlayerFactory;
+  /** Injectable observer factory so startup and seek races are deterministic in tests. */
+  private readonly createObserver: StreamObserverFactory;
   private player: Player | null = null;
   /** Last known playback offset (seconds), captured per segment so a HW→SW retry can resume there. */
   private lastPlaybackPositionSeconds = 0;
@@ -131,12 +140,19 @@ export class StreambotStreamer implements StreamerLike {
     userToken: UserToken,
     config: Pick<Config, "stream">,
     now: () => number = Date.now,
-    createPlayer: PlayerFactory = createSeekablePlayer,
+    dependencies: PlayerFactory | StreamerDependencies = {},
   ) {
     this.userToken = userToken;
     this.config = config;
     this.now = now;
-    this.createPlayer = createPlayer;
+    this.createPlayer =
+      typeof dependencies === "function"
+        ? dependencies
+        : (dependencies.createPlayer ?? createSeekablePlayer);
+    this.createObserver =
+      typeof dependencies === "function"
+        ? createStreamObserver
+        : (dependencies.createObserver ?? createStreamObserver);
     this.client = new Client();
     this.streamer = new Streamer(this.client);
     // Gateway health observability: a dropped/invalidated userbot gateway kills streaming
@@ -199,6 +215,8 @@ export class StreambotStreamer implements StreamerLike {
 
   async destroy(): Promise<void> {
     this.safeStop();
+    this.detachVoiceCloseHandler?.();
+    this.detachVoiceCloseHandler = null;
     try {
       this.client.destroy();
     } catch (error) {
@@ -223,10 +241,19 @@ export class StreambotStreamer implements StreamerLike {
       return false;
     }
     const target = Math.max(0, seconds);
-    await this.player.seek(target);
-    // Re-anchor the elapsed clock so getPosition() tracks from the new offset.
+    const previousOffset = this.segmentStartOffsetSeconds;
+    const previousStartedAtMs = this.segmentStartedAtMs;
+    // Re-anchor before the player restarts ffmpeg: its new observer epoch can begin synchronously
+    // inside seek(), and any stall must be relative to this target rather than the prior segment.
     this.segmentStartOffsetSeconds = target;
     this.segmentStartedAtMs = this.now();
+    try {
+      await this.player.seek(target);
+    } catch (error) {
+      this.segmentStartOffsetSeconds = previousOffset;
+      this.segmentStartedAtMs = previousStartedAtMs;
+      throw error;
+    }
     return true;
   }
 
@@ -261,9 +288,6 @@ export class StreambotStreamer implements StreamerLike {
   }
 
   private safeStop(): void {
-    // Detach first so the ws close triggered by our own teardown can never fire the listener.
-    this.detachVoiceCloseHandler?.();
-    this.detachVoiceCloseHandler = null;
     try {
       this.player?.stop();
     } catch (error) {
@@ -284,6 +308,10 @@ export class StreambotStreamer implements StreamerLike {
   }
 
   readonly joinVoice = async (input: JoinVoiceInput): Promise<VoiceHandle> => {
+    // A pooled userbot keeps the prior transport observer through teardown so a slow remote close
+    // can still reclassify a pending reconnect. Retire it only when a new session takes ownership.
+    this.detachVoiceCloseHandler?.();
+    this.detachVoiceCloseHandler = null;
     // Clear any close info left over from a prior session on this (pooled, reusable) userbot.
     // Otherwise a stale `deliberate` close from a different (guild, channel) could be re-read by a
     // pending reconnect timer and misclassify a transient drop as deliberate — deleting saved state.
@@ -294,17 +322,23 @@ export class StreambotStreamer implements StreamerLike {
     if (connection === undefined) {
       throw new Error("voice connection missing after joinVoice resolved");
     }
-    // Surface Discord-side connection deaths (the fork only emits `close` for non-resumable,
-    // remotely-initiated closes). A Discord session end closes the voice connection, which
-    // cascades to the stream connection, so subscribing here covers both.
+    // Surface Discord-side connection deaths (the fork emits `close` for non-resumable,
+    // remotely-initiated closes). VoiceConnection also relays its active Go-Live child's close,
+    // so this one observer covers either transport without a listener-installation race.
     const onClose = (info: MediaConnectionCloseInfo) => {
       const close: VoiceCloseInfo = {
         code: info.code,
         deliberate: info.deliberate,
         atMs: this.now(),
       };
+      // Once Discord has explicitly disconnected the streamer, a later transient close from the
+      // other media transport must not erase that classification. A late deliberate close may,
+      // however, replace the transient signal that started recovery.
+      if (this.lastVoiceClose?.deliberate === true && !close.deliberate) {
+        return;
+      }
       this.lastVoiceClose = close;
-      log.warn("voice connection closed by Discord", {
+      log.warn("Discord media connection closed", {
         guildId: input.guildId,
         channelId: input.channelId,
         code: close.code,
@@ -435,7 +469,12 @@ export class StreambotStreamer implements StreamerLike {
     // Observability seam — forwards ffmpeg command/codec/progress and send-frametime stats to the
     // Prometheus metrics. Passed to both prepare (ffmpeg events) and play (send stats). The stall
     // watchdog routes to the session layer, which converts it into the machine's stall recovery.
-    const { observer, dispose: disposeObserver } = createStreamObserver(
+    // The observer can begin a progress epoch synchronously during player construction/startup, so
+    // establish the requested media offset first. Keep segmentStartedAtMs null until start()
+    // succeeds: public checkpoint time must not advance before playback is actually attached.
+    this.segmentStartOffsetSeconds = startSeconds;
+    this.segmentStartedAtMs = null;
+    const { observer, dispose: disposeObserver } = this.createObserver(
       useHardware,
       this.now,
       (lastMediaSeconds) => {
@@ -510,8 +549,7 @@ export class StreambotStreamer implements StreamerLike {
     try {
       await player.start();
       playbackStarted = true;
-      // Anchor the elapsed clock at the segment's start offset so getPosition() tracks live position.
-      this.segmentStartOffsetSeconds = startSeconds;
+      // Start the public elapsed clock only after playback attaches successfully.
       this.segmentStartedAtMs = this.now();
       try {
         await player.setVolume(Math.max(0, input.volume) / 100);
