@@ -218,7 +218,7 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - Implemented a general engine checkpoint and ordered atomic flash
   persistence. A rebuilt real WASM passed an independent checkpoint/reboot
   integration test against a copied live save.
-- Verified the combined backend (307 tests, zero failures or skips), all 27
+- Verified the combined backend (308 tests, zero failures or skips), all 27
   knowledge/build script tests, package typecheck/lint, the exhaustive
   root `bun run verify` graph (217/217 tasks), and a clean Docker `smoke` build
   that rebuilt the patched WASM, passed both mandatory real-emulator ABI and
@@ -302,6 +302,10 @@ system against a copied live save and the exact goal `get me a pokeman`.
   pokeemerald provenance; and move-history reconstruction selects each field's
   Emerald-era value independently, including Vine Whip at 35 power and Giga
   Drain at 60.
+- Closed the following Unicode retrieval finding. NFKD search normalization
+  removes combining marks before punctuation folding, so `Pokéblock Case`
+  remains a single semantic token and ranks the actual case record rather than
+  the unrelated Block move.
 
 ### Remaining
 
