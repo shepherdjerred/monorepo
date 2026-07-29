@@ -7,6 +7,8 @@ import { PokemonGameDriver } from "./lifecycle/pokemon-driver.ts";
 import { parseCommandInput } from "./game/command/command-input.ts";
 import type { CommandInput } from "./game/command/command-input.ts";
 import { enqueueCommand } from "./emulator/command-sink.ts";
+import type { CommandTiming } from "./emulator/command-sink.ts";
+import type { Emulator } from "./emulator/emulator.ts";
 import { encodePng } from "./emulator/png.ts";
 import { createWebServer } from "./webserver/index.ts";
 import { logger } from "./logger.ts";
@@ -18,6 +20,18 @@ import type {
 } from "@discord-plays-pokemon/common";
 
 const config = getConfig();
+
+async function enqueueWebCommand(
+  emulator: Emulator,
+  command: CommandInput,
+  timing: CommandTiming,
+): Promise<void> {
+  try {
+    await enqueueCommand(emulator, command, timing);
+  } catch (error) {
+    logger.error(error);
+  }
+}
 
 // ---- bot + pool + session manager + driver ----
 // One userbot, one emulator, one game at a time. The "pool" in the shared lib is
@@ -60,11 +74,7 @@ handleMessages(runtime.bot, driver, async (commandInput: CommandInput) => {
   if (active === null) {
     return;
   }
-  try {
-    await enqueueCommand(active.emulator, commandInput, active.timing);
-  } catch (error) {
-    logger.error(error);
-  }
+  await enqueueCommand(active.emulator, commandInput, active.timing);
 });
 
 await runtime.start();
@@ -88,7 +98,7 @@ if (config.web.enabled) {
           try {
             const parsed = parseCommandInput(commandEvent.request.value);
             if (parsed) {
-              void enqueueCommand(active.emulator, parsed, active.timing);
+              void enqueueWebCommand(active.emulator, parsed, active.timing);
             } else {
               logger.error("invalid command", commandEvent.request.value);
             }

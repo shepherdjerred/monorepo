@@ -25,6 +25,11 @@ const PLAYER_AVATAR_FLAGS_OFFSET = 0x00;
 // PlayerAvatar size — well over the fields we read. SaveBlock1 unused here
 // (we get position + map from the player's ObjectEvent).
 const PLAYER_AVATAR_MIN_SIZE = 0x06;
+const SAVE_BLOCK_1_LOCATION_OFFSET = 0x04;
+const WARP_DATA_MAP_GROUP_OFFSET = 0x00;
+const WARP_DATA_MAP_NUM_OFFSET = 0x01;
+const SAVE_BLOCK_1_LOCATION_MIN_SIZE =
+  SAVE_BLOCK_1_LOCATION_OFFSET + WARP_DATA_MAP_NUM_OFFSET + 1;
 
 // ObjectEvent field offsets (see include/global.fieldmap.h struct ObjectEvent).
 // /*0x00*/ u32 active:1, ... (bit 0 of byte 0)
@@ -71,6 +76,15 @@ export type NearbyObject = {
   // Soft classification. Most sprites are NPCs; ITEM_BALL/CUTTABLE_TREE/
   // BREAKABLE_ROCK are the actionable map decorations we want to highlight.
   kind: "npc" | "item" | "tree" | "rock";
+  graphicsId: number;
+};
+
+export type MapObject = {
+  x: number;
+  y: number;
+  distance: number;
+  facing: Facing;
+  kind: NearbyObject["kind"];
   graphicsId: number;
 };
 
@@ -121,16 +135,17 @@ function decodeFacing(raw: number): Facing {
 // surface. The ON_FOOT / CONTROLLABLE / FORCED flags exist on the same byte
 // but all collapse to "on foot" in our label set (the AI only cares about
 // the visible distinct modes), so we don't pull them in here.
-const PA_FLAG_MACH_BIKE = 0x01;
-const PA_FLAG_ACRO_BIKE = 0x02;
-const PA_FLAG_SURFING = 0x04;
-const PA_FLAG_UNDERWATER = 0x08;
-const PA_FLAG_DASH = 0x40;
+const PA_FLAG_MACH_BIKE = 0x02;
+const PA_FLAG_ACRO_BIKE = 0x04;
+const PA_FLAG_SURFING = 0x08;
+const PA_FLAG_UNDERWATER = 0x10;
+const PA_FLAG_DASH = 0x80;
 
 function describeMovementMode(flags: number): string {
   if ((flags & PA_FLAG_SURFING) !== 0) return "surfing";
   if ((flags & PA_FLAG_UNDERWATER) !== 0) return "diving";
-  if ((flags & (PA_FLAG_MACH_BIKE | PA_FLAG_ACRO_BIKE)) !== 0) return "biking";
+  if ((flags & PA_FLAG_MACH_BIKE) !== 0) return "mach bike";
+  if ((flags & PA_FLAG_ACRO_BIKE) !== 0) return "acro bike";
   if ((flags & PA_FLAG_DASH) !== 0) return "running";
   return "on foot";
 }
@@ -154,15 +169,21 @@ function classify(graphicsId: number): NearbyObject["kind"] {
   }
 }
 
-/**
- * Read the live spatial snapshot, or null when the game isn't in a readable
- * state (no save loaded, mid-relocation, or the player ObjectEvent is
- * inactive — e.g. title screen, intro cutscene).
- */
-export function readSpatialSnapshot(
+type ActiveMapState = Readonly<{
+  x: number;
+  y: number;
+  facing: Facing;
+  movementMode: string;
+  mapGroup: number;
+  mapNum: number;
+  onTileBehavior: string;
+  objects: readonly MapObject[];
+}>;
+
+function readActiveMapState(
   reader: MemoryReader,
   symbols: GameSymbols,
-): SpatialSnapshot | null {
+): ActiveMapState | null {
   const avatar = symbols.gPlayerAvatar;
   if (!validPointer(avatar, PLAYER_AVATAR_MIN_SIZE, reader.byteLength)) {
     return null;
@@ -186,20 +207,32 @@ export function readSpatialSnapshot(
     return null;
   }
 
+  const saveBlock1 = reader.u32(symbols.gSaveBlock1Ptr);
+  if (
+    !validPointer(saveBlock1, SAVE_BLOCK_1_LOCATION_MIN_SIZE, reader.byteLength)
+  ) {
+    return null;
+  }
   const flags = reader.u8(avatar + PLAYER_AVATAR_FLAGS_OFFSET);
 
   const x = reader.s16(playerBase + OE_CURRENT_COORDS_X_OFFSET);
   const y = reader.s16(playerBase + OE_CURRENT_COORDS_Y_OFFSET);
   const facingWord = reader.u16(playerBase + OE_FACING_OFFSET);
   const facing = decodeFacing(facingWord & OE_FACING_MASK);
-  const mapGroup = reader.u8(playerBase + OE_MAP_GROUP_OFFSET);
-  const mapNum = reader.u8(playerBase + OE_MAP_NUM_OFFSET);
+  // The player's ObjectEvent retains the old map identity across seamless
+  // camera connections. SaveBlock1.location is what the engine itself updates
+  // in LoadMapFromCameraTransition and is authoritative for the current map.
+  const mapGroup = reader.u8(
+    saveBlock1 + SAVE_BLOCK_1_LOCATION_OFFSET + WARP_DATA_MAP_GROUP_OFFSET,
+  );
+  const mapNum = reader.u8(
+    saveBlock1 + SAVE_BLOCK_1_LOCATION_OFFSET + WARP_DATA_MAP_NUM_OFFSET,
+  );
   const onTileBehaviorRaw = reader.u8(playerBase + OE_METATILE_BEHAVIOR_OFFSET);
 
-  // Walk the ObjectEvent array and pick out active, same-map, non-invisible,
-  // non-player events within NEARBY_RADIUS tiles. Sort by manhattan distance
-  // then cap to NEARBY_LIMIT so the prompt line stays compact.
-  const all: NearbyObject[] = [];
+  // Keep every active, visible same-map object for explicit map views. The
+  // compact observation derives its bounded nearby subset from this list.
+  const objects: MapObject[] = [];
   for (let i = 0; i < OBJECT_EVENTS_COUNT; i++) {
     if (i === objectEventId) continue;
     const base = eventsBase + i * OBJECT_EVENT_SIZE;
@@ -216,20 +249,20 @@ export function readSpatialSnapshot(
     const oy = reader.s16(base + OE_CURRENT_COORDS_Y_OFFSET);
     const dx = ox - x;
     const dy = oy - y;
-    const manhattan = Math.abs(dx) + Math.abs(dy);
-    if (manhattan === 0 || manhattan > NEARBY_RADIUS) continue;
+    const distance = Math.abs(dx) + Math.abs(dy);
+    if (distance === 0) continue;
     const facingRaw = reader.u16(base + OE_FACING_OFFSET) & OE_FACING_MASK;
     const graphicsId = reader.u8(base + OE_GRAPHICS_ID_OFFSET);
-    all.push({
-      dx,
-      dy,
-      manhattan,
+    objects.push({
+      x: ox,
+      y: oy,
+      distance,
       facing: decodeFacing(facingRaw),
       kind: classify(graphicsId),
       graphicsId,
     });
   }
-  all.sort((a, b) => a.manhattan - b.manhattan);
+  objects.sort((a, b) => a.distance - b.distance);
 
   return {
     x,
@@ -239,6 +272,48 @@ export function readSpatialSnapshot(
     mapGroup,
     mapNum,
     onTileBehavior: describeMetatileBehavior(onTileBehaviorRaw),
-    nearby: all.slice(0, NEARBY_LIMIT),
+    objects,
   };
+}
+
+/**
+ * Read the live spatial snapshot, or null when the game isn't in a readable
+ * state (no save loaded, mid-relocation, or the player ObjectEvent is
+ * inactive — e.g. title screen, intro cutscene).
+ */
+export function readSpatialSnapshot(
+  reader: MemoryReader,
+  symbols: GameSymbols,
+): SpatialSnapshot | null {
+  const state = readActiveMapState(reader, symbols);
+  if (state === null) return null;
+  const nearby = state.objects
+    .filter((object) => object.distance <= NEARBY_RADIUS)
+    .slice(0, NEARBY_LIMIT)
+    .map((object) => ({
+      dx: object.x - state.x,
+      dy: object.y - state.y,
+      manhattan: object.distance,
+      facing: object.facing,
+      kind: object.kind,
+      graphicsId: object.graphicsId,
+    }));
+  return {
+    x: state.x,
+    y: state.y,
+    facing: state.facing,
+    movementMode: state.movementMode,
+    mapGroup: state.mapGroup,
+    mapNum: state.mapNum,
+    onTileBehavior: state.onTileBehavior,
+    nearby,
+  };
+}
+
+/** Return every active, visible object on the current map. */
+export function readMapObjects(
+  reader: MemoryReader,
+  symbols: GameSymbols,
+): readonly MapObject[] | null {
+  return readActiveMapState(reader, symbols)?.objects ?? null;
 }

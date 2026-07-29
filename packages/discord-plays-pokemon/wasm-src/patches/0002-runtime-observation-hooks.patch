@@ -1,0 +1,249 @@
+diff --git a/include/battle_controllers.h b/include/battle_controllers.h
+index e4b368b89..b8c2615c2 100644
+--- a/include/battle_controllers.h
++++ b/include/battle_controllers.h
+@@ -299,6 +299,18 @@ void BtlController_EmitEndLinkBattle(u8 bufferId, u8 battleOutcome);
+ 
+ // player controller
+ void SetControllerToPlayer(void);
++enum WasmBattleInputMenu
++{
++    WASM_BATTLE_MENU_NONE,
++    WASM_BATTLE_MENU_ACTION,
++    WASM_BATTLE_MENU_MOVE,
++    WASM_BATTLE_MENU_BAG,
++    WASM_BATTLE_MENU_PARTY,
++    WASM_BATTLE_MENU_YES_NO,
++    WASM_BATTLE_MENU_OTHER,
++    WASM_BATTLE_MENU_TARGET,
++};
++u8 WasmGetPlayerInputMenuState(u8 battler);
+ void BattleControllerDummy(void);
+ void PlayerHandleGetRawMonData(void);
+ void SetBattleEndCallbacks(void);
+diff --git a/include/field_message_box.h b/include/field_message_box.h
+index 3a4c4f93c..41f946939 100644
+--- a/include/field_message_box.h
++++ b/include/field_message_box.h
+@@ -15,6 +15,7 @@ bool8 ShowFieldMessageFromBuffer(void);
+ bool8 ShowFieldAutoScrollMessage(const u8 *str);
+ void HideFieldMessageBox(void);
+ bool8 IsFieldMessageBoxHidden(void);
++bool8 IsFieldMessageBoxVisible(void);
+ u8 GetFieldMessageBoxMode(void);
+ void StopFieldMessage(void);
+ void InitFieldMessageBox(void);
+diff --git a/include/script.h b/include/script.h
+index 7c180e961..e3b92643e 100644
+--- a/include/script.h
++++ b/include/script.h
+@@ -36,6 +36,7 @@ void UnlockPlayerFieldControls(void);
+ bool8 ArePlayerFieldControlsLocked(void);
+ void ScriptContext_Init(void);
+ bool8 ScriptContext_IsEnabled(void);
++bool8 ScriptContext_IsNativeWaitingOn(bool8 (*ptr)(void));
+ bool8 ScriptContext_RunScript(void);
+ void ScriptContext_SetupScript(const u8 *ptr);
+ void ScriptContext_Stop(void);
+@@ -61,5 +62,6 @@ void InitRamScript_NoObjectEvent(u8 *script, u16 scriptSize);
+ 
+ // srccmd.h
+ void SetMovingNpcId(u16 npcId);
++bool8 WasmIsScriptWaitingForButtonPress(void);
+ 
+ #endif // GUARD_SCRIPT_H
+diff --git a/include/text.h b/include/text.h
+index db2415fd6..8dc2a640b 100644
+--- a/include/text.h
++++ b/include/text.h
+@@ -140,6 +140,7 @@ u16 AddTextPrinterParameterized(u8 windowId, u8 fontId, const u8 *str, u8 x, u8
+ bool16 AddTextPrinter(struct TextPrinterTemplate *printerTemplate, u8 speed, void (*callback)(struct TextPrinterTemplate *, u16));
+ void RunTextPrinters(void);
+ bool16 IsTextPrinterActive(u8 id);
++bool16 IsTextPrinterWaitingForInput(u8 id);
+ void GenerateFontHalfRowLookupTable(u8 fgColor, u8 bgColor, u8 shadowColor);
+ void SaveTextColors(u8 *fgColor, u8 *bgColor, u8 *shadowColor);
+ void RestoreTextColors(u8 *fgColor, u8 *bgColor, u8 *shadowColor);
+diff --git a/src/battle_controller_player.c b/src/battle_controller_player.c
+index 2e259c5a4..15ce4290d 100644
+--- a/src/battle_controller_player.c
++++ b/src/battle_controller_player.c
+@@ -3145,3 +3145,26 @@ static void PlayerHandleEndLinkBattle(void)
+ static void PlayerCmdEnd(void)
+ {
+ }
++
++u8 WasmGetPlayerInputMenuState(u8 battler)
++{
++    if (battler >= MAX_BATTLERS_COUNT)
++        return WASM_BATTLE_MENU_NONE;
++    if (gBattlerControllerFuncs[battler] == HandleInputChooseAction)
++        return WASM_BATTLE_MENU_ACTION;
++    if (gBattlerControllerFuncs[battler] == HandleInputChooseMove)
++        return WASM_BATTLE_MENU_MOVE;
++    if (gBattlerControllerFuncs[battler] == HandleInputChooseTarget)
++        return WASM_BATTLE_MENU_TARGET;
++    if (gBattlerControllerFuncs[battler] == PlayerHandleYesNoInput)
++        return WASM_BATTLE_MENU_YES_NO;
++    if (gBattlerControllerFuncs[battler] == CompleteWhenChoseItem
++     && gMain.callback2 != BattleMainCB2
++     && !gPaletteFade.active)
++        return WASM_BATTLE_MENU_BAG;
++    if (gBattlerControllerFuncs[battler] == WaitForMonSelection
++     && gMain.callback2 != BattleMainCB2
++     && !gPaletteFade.active)
++        return WASM_BATTLE_MENU_PARTY;
++    return WASM_BATTLE_MENU_NONE;
++}
+diff --git a/src/field_message_box.c b/src/field_message_box.c
+index f59a0429e..5c41eed9c 100755
+--- a/src/field_message_box.c
++++ b/src/field_message_box.c
+@@ -7,6 +7,7 @@
+ #include "field_message_box.h"
+ 
+ static EWRAM_DATA u8 sFieldMessageBoxMode = 0;
++static EWRAM_DATA bool8 sFieldMessageBoxVisible = FALSE;
+ 
+ static void ExpandStringAndStartDrawFieldMessage(const u8 *, bool32);
+ static void StartDrawFieldMessage(void);
+@@ -14,6 +15,7 @@ static void StartDrawFieldMessage(void);
+ void InitFieldMessageBox(void)
+ {
+     sFieldMessageBoxMode = FIELD_MESSAGE_BOX_HIDDEN;
++    sFieldMessageBoxVisible = FALSE;
+     gTextFlags.canABSpeedUpPrint = FALSE;
+     gTextFlags.useAlternateDownArrow = FALSE;
+     gTextFlags.autoScroll = FALSE;
+@@ -65,6 +67,7 @@ bool8 ShowFieldMessage(const u8 *str)
+         return FALSE;
+     ExpandStringAndStartDrawFieldMessage(str, TRUE);
+     sFieldMessageBoxMode = FIELD_MESSAGE_BOX_NORMAL;
++    sFieldMessageBoxVisible = TRUE;
+     return TRUE;
+ }
+ 
+@@ -73,6 +76,7 @@ static void Task_HidePokenavMessageWhenDone(u8 taskId)
+     if (!IsMatchCallTaskActive())
+     {
+         sFieldMessageBoxMode = FIELD_MESSAGE_BOX_HIDDEN;
++        sFieldMessageBoxVisible = FALSE;
+         DestroyTask(taskId);
+     }
+ }
+@@ -85,6 +89,7 @@ bool8 ShowPokenavFieldMessage(const u8 *str)
+     CreateTask(Task_HidePokenavMessageWhenDone, 0);
+     StartMatchCallFromScript(str);
+     sFieldMessageBoxMode = FIELD_MESSAGE_BOX_NORMAL;
++    sFieldMessageBoxVisible = TRUE;
+     return TRUE;
+ }
+ 
+@@ -93,6 +98,7 @@ bool8 ShowFieldAutoScrollMessage(const u8 *str)
+     if (sFieldMessageBoxMode != FIELD_MESSAGE_BOX_HIDDEN)
+         return FALSE;
+     sFieldMessageBoxMode = FIELD_MESSAGE_BOX_AUTO_SCROLL;
++    sFieldMessageBoxVisible = TRUE;
+     ExpandStringAndStartDrawFieldMessage(str, FALSE);
+     return TRUE;
+ }
+@@ -100,6 +106,7 @@ bool8 ShowFieldAutoScrollMessage(const u8 *str)
+ static bool8 UNUSED ForceShowFieldAutoScrollMessage(const u8 *str)
+ {
+     sFieldMessageBoxMode = FIELD_MESSAGE_BOX_AUTO_SCROLL;
++    sFieldMessageBoxVisible = TRUE;
+     ExpandStringAndStartDrawFieldMessage(str, TRUE);
+     return TRUE;
+ }
+@@ -111,6 +118,7 @@ bool8 ShowFieldMessageFromBuffer(void)
+     if (sFieldMessageBoxMode != FIELD_MESSAGE_BOX_HIDDEN)
+         return FALSE;
+     sFieldMessageBoxMode = FIELD_MESSAGE_BOX_NORMAL;
++    sFieldMessageBoxVisible = TRUE;
+     StartDrawFieldMessage();
+     return TRUE;
+ }
+@@ -133,6 +141,7 @@ void HideFieldMessageBox(void)
+     DestroyTask_DrawFieldMessage();
+     ClearDialogWindowAndFrame(0, TRUE);
+     sFieldMessageBoxMode = FIELD_MESSAGE_BOX_HIDDEN;
++    sFieldMessageBoxVisible = FALSE;
+ }
+ 
+ u8 GetFieldMessageBoxMode(void)
+@@ -147,15 +156,22 @@ bool8 IsFieldMessageBoxHidden(void)
+     return FALSE;
+ }
+ 
++bool8 IsFieldMessageBoxVisible(void)
++{
++    return sFieldMessageBoxVisible;
++}
++
+ static void UNUSED ReplaceFieldMessageWithFrame(void)
+ {
+     DestroyTask_DrawFieldMessage();
+     DrawStdWindowFrame(0, TRUE);
+     sFieldMessageBoxMode = FIELD_MESSAGE_BOX_HIDDEN;
++    sFieldMessageBoxVisible = FALSE;
+ }
+ 
+ void StopFieldMessage(void)
+ {
+     DestroyTask_DrawFieldMessage();
+     sFieldMessageBoxMode = FIELD_MESSAGE_BOX_HIDDEN;
++    sFieldMessageBoxVisible = FALSE;
+ }
+diff --git a/src/scrcmd.c b/src/scrcmd.c
+index 9c7dd864e..d79339011 100644
+--- a/src/scrcmd.c
++++ b/src/scrcmd.c
+@@ -1328,6 +1328,11 @@ static bool8 WaitForAorBPress(void)
+     return FALSE;
+ }
+ 
++bool8 WasmIsScriptWaitingForButtonPress(void)
++{
++    return ScriptContext_IsNativeWaitingOn(WaitForAorBPress);
++}
++
+ bool8 ScrCmd_waitbuttonpress(struct ScriptContext *ctx)
+ {
+     SetupNativeScript(ctx, WaitForAorBPress);
+diff --git a/src/script.c b/src/script.c
+index a953ff1e7..21e2a73b5 100644
+--- a/src/script.c
++++ b/src/script.c
+@@ -206,6 +206,12 @@ bool8 ScriptContext_IsEnabled(void)
+         return FALSE;
+ }
+ 
++bool8 ScriptContext_IsNativeWaitingOn(bool8 (*ptr)(void))
++{
++    return sGlobalScriptContextStatus == CONTEXT_RUNNING
++        && sGlobalScriptContext.nativePtr == ptr;
++}
++
+ // Re-initializes the global script context to zero.
+ void ScriptContext_Init(void)
+ {
+diff --git a/src/text.c b/src/text.c
+index 261f9666a..c4d91c669 100644
+--- a/src/text.c
++++ b/src/text.c
+@@ -349,6 +349,15 @@ bool16 IsTextPrinterActive(u8 id)
+     return sTextPrinters[id].active;
+ }
+ 
++bool16 IsTextPrinterWaitingForInput(u8 id)
++{
++    if (!sTextPrinters[id].active || gTextFlags.autoScroll)
++        return FALSE;
++    return sTextPrinters[id].state == RENDER_STATE_WAIT
++        || sTextPrinters[id].state == RENDER_STATE_CLEAR
++        || sTextPrinters[id].state == RENDER_STATE_SCROLL_START;
++}
++
+ static u32 RenderFont(struct TextPrinter *textPrinter)
+ {
+     u32 ret;

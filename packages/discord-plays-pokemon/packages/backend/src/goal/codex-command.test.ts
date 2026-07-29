@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import path from "node:path";
 import {
   buildCodexArgs,
   buildPrompt,
@@ -116,12 +117,23 @@ describe("buildPrompt", () => {
     expect(prompt.toLowerCase()).toContain("untrusted input");
   });
 
-  test("includes the Emerald domain primer + chord guidance", () => {
+  test("includes the Emerald primer and makes semantic controls primary", () => {
     const prompt = buildPrompt("Reach Petalburg", baseContext);
     expect(prompt).toContain("Pokémon Emerald");
     expect(prompt).toContain("Stone");
     expect(prompt).toContain("Knuckle");
-    expect(prompt.toLowerCase()).toContain("chord");
+    expect(prompt).toContain("pokemonctl observe");
+    expect(prompt).toContain("pokemonctl tap");
+    expect(prompt).toContain("pokemonctl move");
+    expect(prompt).toContain("pokemonctl interact");
+    expect(prompt).toContain("pokemonctl map show");
+    expect(prompt).toContain("pokemonctl navigate");
+    expect(prompt).toContain("bounded travel");
+    expect(prompt).toContain("current map");
+    expect(prompt).toContain("finite step budget");
+    expect(prompt).toContain(
+      "Raw pokemonctl press and pokemonctl chord are escape hatches only",
+    );
   });
 
   test("includes the state + history subcommand pointers", () => {
@@ -207,10 +219,12 @@ describe("buildPrompt", () => {
     expect(prompt).toContain("pokemonctl write MEMORY.md");
   });
 
-  test("documents the higher goal-bot chord limits", () => {
+  test("bounds raw controls as escape hatches", () => {
     const prompt = buildPrompt("Reach Petalburg", baseContext);
-    expect(prompt).toContain("60_d");
-    expect(prompt.toLowerCase()).toContain("above the discord chat limits");
+    expect(prompt).toContain(
+      "semantic controls cannot express the next atomic action",
+    );
+    expect(prompt).toContain("Never issue a blind long chord");
   });
 
   test("instructs read-before-write curation of MEMORY.md", () => {
@@ -250,4 +264,71 @@ describe("formatMemoryForPrompt", () => {
   test("passes saved memory through trimmed", () => {
     expect(formatMemoryForPrompt("  remember this  ")).toBe("remember this");
   });
+});
+
+test("pokemonctl advertises advance and sends one guarded request", async () => {
+  let received:
+    | Readonly<{
+        method: string;
+        pathname: string;
+        authorization: string | null;
+        goalId: string | null;
+        body: string;
+      }>
+    | undefined;
+  const server = Bun.serve({
+    port: 0,
+    fetch: async (request) => {
+      const url = new URL(request.url);
+      received = {
+        method: request.method,
+        pathname: url.pathname,
+        authorization: request.headers.get("authorization"),
+        goalId: request.headers.get("x-pokemon-goal-id"),
+        body: await request.text(),
+      };
+      return Response.json({ status: "applied" });
+    },
+  });
+
+  try {
+    const child = Bun.spawn(
+      ["bun", path.join(import.meta.dir, "pokemonctl.ts"), "advance"],
+      {
+        env: {
+          ...Bun.env,
+          POKEMONCTL_URL: `http://127.0.0.1:${String(server.port)}`,
+          POKEMONCTL_TOKEN: "test-token",
+          POKEMONCTL_GOAL_ID: "goal-test",
+        },
+        stdout: "pipe",
+        stderr: "pipe",
+      },
+    );
+
+    expect(await child.exited).toBe(0);
+    expect(await new Response(child.stderr).text()).toBe("");
+    expect(JSON.parse(await new Response(child.stdout).text())).toEqual({
+      status: "applied",
+    });
+    expect(received).toEqual({
+      method: "POST",
+      pathname: "/advance",
+      authorization: "Bearer test-token",
+      goalId: "goal-test",
+      body: "{}",
+    });
+
+    const help = Bun.spawn(
+      ["bun", path.join(import.meta.dir, "pokemonctl.ts"), "--help"],
+      { stdout: "pipe", stderr: "pipe" },
+    );
+    expect(await help.exited).toBe(0);
+    expect(await new Response(help.stderr).text()).toBe("");
+    expect(await new Response(help.stdout).text()).toContain(
+      "pokemonctl advance",
+    );
+  } finally {
+    await server.stop(true);
+  }
 });

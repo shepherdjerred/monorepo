@@ -1,14 +1,24 @@
 #!/usr/bin/env bun
 
+import { formatPokemonctlObservationOutput } from "./pokemonctl-output.ts";
+
 type RequestBody = Record<string, unknown>;
 
 function usage(): string {
   return [
     "Usage:",
+    "  pokemonctl observe [--screenshot] [--full]  # compact by default; --full includes detailed state",
+    "  pokemonctl tap <button> [--repeat n]",
+    "  pokemonctl move <north|south|west|east> [--tiles n]",
+    "  pokemonctl map show [--radius n]",
+    "  pokemonctl navigate --x n --y n [--max-steps n] [--radius n]  # current map only",
+    "  pokemonctl interact [north|south|west|east|ahead]",
+    "  pokemonctl advance  # one scripted-dialog step",
+    "  pokemonctl wait --until <ready|stable|phase-change> [--timeout-ms n]",
     "  pokemonctl screenshot",
     "  pokemonctl press <button> [--quantity n] [--hold-ms n]",
     '  pokemonctl chord "<commands>"',
-    "  pokemonctl wait --seconds n",
+    "  pokemonctl wait --seconds n  # compatibility delay",
     "  pokemonctl status",
     "  pokemonctl state",
     "  pokemonctl history [--limit n]",
@@ -47,6 +57,20 @@ function readNumberFlag(args: string[], name: string): number | undefined {
   return value;
 }
 
+function readIntegerFlag(args: string[], name: string): number | undefined {
+  const index = args.indexOf(name);
+  if (index === -1) return undefined;
+  const raw = args.at(index + 1);
+  if (raw === undefined) {
+    throw new Error(`${name} requires a value`);
+  }
+  const value = Number(raw);
+  if (!Number.isInteger(value)) {
+    throw new TypeError(`${name} must be an integer`);
+  }
+  return value;
+}
+
 async function request(
   method: "GET" | "POST",
   route: string,
@@ -54,10 +78,12 @@ async function request(
 ): Promise<string> {
   const baseUrl = readRequiredEnv("POKEMONCTL_URL");
   const token = readRequiredEnv("POKEMONCTL_TOKEN");
+  const goalId = readRequiredEnv("POKEMONCTL_GOAL_ID");
   const response = await fetch(new URL(route, baseUrl), {
     method,
     headers: {
       authorization: `Bearer ${token}`,
+      "x-pokemon-goal-id": goalId,
       ...(body === undefined ? {} : { "content-type": "application/json" }),
     },
     body: body === undefined ? undefined : JSON.stringify(body),
@@ -113,6 +139,108 @@ async function handlePress(args: string[]): Promise<void> {
   );
 }
 
+async function handleObserve(args: string[]): Promise<void> {
+  const params = new URLSearchParams();
+  if (args.includes("--screenshot")) params.set("screenshot", "true");
+  const query = params.size === 0 ? "" : `?${params.toString()}`;
+  printJsonText(
+    formatPokemonctlObservationOutput(
+      await request("GET", `/observe${query}`),
+      args.includes("--full"),
+    ),
+  );
+}
+
+async function handleTap(args: string[]): Promise<void> {
+  const button = args.at(0);
+  if (button === undefined) {
+    throw new Error("tap requires a button");
+  }
+  const repeat = readNumberFlag(args, "--repeat") ?? 1;
+  printJsonText(await request("POST", "/tap", { command: button, repeat }));
+}
+
+function normalizeDirection(value: string): string {
+  switch (value.toLowerCase()) {
+    case "north":
+    case "up":
+    case "u":
+      return "north";
+    case "south":
+    case "down":
+    case "d":
+      return "south";
+    case "west":
+    case "left":
+    case "l":
+      return "west";
+    case "east":
+    case "right":
+    case "r":
+      return "east";
+    default:
+      throw new Error(`invalid direction: ${value}`);
+  }
+}
+
+async function handleMove(args: string[]): Promise<void> {
+  const rawDirection = args.at(0);
+  if (rawDirection === undefined) {
+    throw new Error("move requires a direction");
+  }
+  const direction = normalizeDirection(rawDirection);
+  const tiles = readNumberFlag(args, "--tiles") ?? 1;
+  printJsonText(await request("POST", "/move", { direction, tiles }));
+}
+
+async function handleMap(args: string[]): Promise<void> {
+  if (args.at(0) !== "show") {
+    throw new Error("map requires the show subcommand");
+  }
+  const radius = readNumberFlag(args, "--radius") ?? 8;
+  const params = new URLSearchParams({ radius: String(radius) });
+  printJsonText(await request("GET", `/map?${params.toString()}`));
+}
+
+async function handleNavigate(args: string[]): Promise<void> {
+  const x = readIntegerFlag(args, "--x");
+  const y = readIntegerFlag(args, "--y");
+  if (x === undefined || y === undefined) {
+    throw new Error("navigate requires --x and --y integer coordinates");
+  }
+  const maxSteps = readNumberFlag(args, "--max-steps") ?? 64;
+  const searchRadius = readNumberFlag(args, "--radius") ?? 12;
+  printJsonText(
+    await request("POST", "/navigate", {
+      x,
+      y,
+      maxSteps,
+      searchRadius,
+    }),
+  );
+}
+
+async function handleInteract(args: string[]): Promise<void> {
+  const rawDirection = args.at(0);
+  const direction =
+    rawDirection === undefined || rawDirection === "ahead"
+      ? undefined
+      : normalizeDirection(rawDirection);
+  printJsonText(
+    await request("POST", "/interact", {
+      ...(direction === undefined ? {} : { direction }),
+    }),
+  );
+}
+
+async function handleAdvance(args: string[]): Promise<void> {
+  const unexpected = args.at(0);
+  if (unexpected !== undefined) {
+    throw new Error(`advance does not accept arguments: ${unexpected}`);
+  }
+  printJsonText(await request("POST", "/advance", {}));
+}
+
 async function handleChord(args: string[]): Promise<void> {
   const value = args.at(0);
   if (value === undefined) {
@@ -123,11 +251,22 @@ async function handleChord(args: string[]): Promise<void> {
 
 async function handleWait(args: string[]): Promise<void> {
   const seconds = readNumberFlag(args, "--seconds");
-  if (seconds === undefined) {
-    throw new Error("wait requires --seconds");
+  if (seconds !== undefined) {
+    await Bun.sleep(seconds * 1000);
+    printJson({ ok: true, waitedSeconds: seconds });
+    return;
   }
-  await Bun.sleep(seconds * 1000);
-  printJson({ ok: true, waitedSeconds: seconds });
+  const untilIndex = args.indexOf("--until");
+  const until = args.at(untilIndex + 1);
+  if (
+    untilIndex === -1 ||
+    (until !== "ready" && until !== "stable" && until !== "phase-change")
+  ) {
+    throw new Error("wait requires --until ready, stable, or phase-change");
+  }
+  const timeoutMs = readNumberFlag(args, "--timeout-ms") ?? 10_000;
+  const maxFrames = Math.max(1, Math.round(timeoutMs / (1000 / 59.7275)));
+  printJsonText(await request("POST", "/wait", { until, maxFrames }));
 }
 
 async function handleHistory(args: string[]): Promise<void> {
@@ -192,6 +331,13 @@ async function handleWrite(args: string[]): Promise<void> {
 }
 
 const HANDLERS = new Map<string, (args: string[]) => Promise<void>>([
+  ["observe", handleObserve],
+  ["tap", handleTap],
+  ["move", handleMove],
+  ["map", handleMap],
+  ["navigate", handleNavigate],
+  ["interact", handleInteract],
+  ["advance", handleAdvance],
   [
     "screenshot",
     async () => {

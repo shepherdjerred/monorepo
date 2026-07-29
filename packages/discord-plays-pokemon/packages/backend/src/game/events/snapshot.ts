@@ -1,20 +1,22 @@
 import type { MemoryReader } from "#src/emulator/memory.ts";
 import type { GameSymbols } from "#src/emulator/symbols.ts";
 import { snapshotInvalidTotal } from "#src/observability/metrics.ts";
+import {
+  SAVE_BLOCK_1_FLAGS_OFFSET,
+  SAVE_BLOCK_1_SIZE,
+  SAVE_BLOCK_2_POKEDEX_OFFSET,
+  SAVE_BLOCK_2_SIZE,
+} from "#src/game/save-block-layout.ts";
 import { parsePartyMon, PARTY_MAX, PARTY_MON_SIZE } from "./pokemon-struct.ts";
 import type { GameSnapshot } from "./types.ts";
 
-// Struct offsets verified against the pokeemerald-wasm source this build is
-// compiled from (include/global.h, include/constants/flags.h,
-// include/battle.h at tripplyons/pokeemerald-wasm).
-const SAVE_BLOCK_1_FLAGS_OFFSET = 0x12_70;
+// Flag ids come from the pinned upstream include/constants/flags.h. Struct
+// offsets and sizes come from save-block-layout.ts's wasm32 ABI measurements.
 const BADGE_FIRST_FLAG = 0x8_67; // FLAG_BADGE01_GET
 const BADGE_COUNT = 8;
-const SAVE_BLOCK_1_MIN_SIZE = 0x3d_88; // sizeof(struct SaveBlock1)
 
-const SAVE_BLOCK_2_DEX_OWNED_OFFSET = 0x18 + 0x10; // pokedex @0x18, owned @+0x10
+const SAVE_BLOCK_2_DEX_OWNED_OFFSET = SAVE_BLOCK_2_POKEDEX_OFFSET + 0x10;
 const DEX_FLAG_BYTES = 52;
-const SAVE_BLOCK_2_MIN_SIZE = 0xf_2c; // sizeof(struct SaveBlock2)
 
 const BATTLE_RESULTS_CAUGHT_SPECIES_OFFSET = 0x28;
 const BATTLE_RESULTS_BITFIELD_OFFSET = 0x05;
@@ -51,8 +53,8 @@ export function readGameSnapshot(
   const sb1 = reader.u32(symbols.gSaveBlock1Ptr);
   const sb2 = reader.u32(symbols.gSaveBlock2Ptr);
   if (
-    !validPointer(sb1, SAVE_BLOCK_1_MIN_SIZE, reader.byteLength) ||
-    !validPointer(sb2, SAVE_BLOCK_2_MIN_SIZE, reader.byteLength)
+    !validPointer(sb1, SAVE_BLOCK_1_SIZE, reader.byteLength) ||
+    !validPointer(sb2, SAVE_BLOCK_2_SIZE, reader.byteLength)
   ) {
     snapshotInvalidTotal.inc();
     return null;

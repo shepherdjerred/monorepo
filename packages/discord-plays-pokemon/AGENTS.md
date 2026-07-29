@@ -26,10 +26,25 @@ Dockerfile's `ENV` copy). Freshness:
 
 The notifier polls emulator memory (~2×/s) for faints/badges/evolutions/catches. Read-side modules: `packages/backend/src/emulator/{memory,symbols}.ts`, `src/game/events/`; debug with `packages/backend/scripts/probe-memory.ts`.
 
+- Goal-mode decisions use the versioned C observation ABI in
+  `wasm-src/patches/0001-extra-exports.patch` and
+  `packages/backend/src/emulator/engine-observation.ts`. Keep the packed C
+  struct, exported byte size, decoder offsets, and the mandatory Docker
+  `wasm-abi-test` stage in sync. Do not reconstruct volatile phase, map,
+  collision, or battle-controller state from guessed TypeScript offsets.
+- Semantic goal input is serialized by `GameController`, and `GoalManager`
+  holds the emulator's exclusive `goal` input lease for the full process
+  lifecycle. New input paths must identify their input source; no Discord/web
+  command may interleave while the lease is held. Terminal paths must claim an
+  active goal synchronously before awaiting so timeout, replacement, shutdown,
+  and process exit cannot release twice.
+- `pokemonctl navigate` is a bounded current-map movement helper, not a story
+  solver. It must re-read collision and nearby objects, replan when a tile is
+  blocked, and stop on map/phase/readiness changes.
 - The wasm exports **every C global as a `WebAssembly.Global`** (name section present) — resolve addresses by symbol via `instance.exports.<name>.value`, never hard-code. Key symbols: `gSaveBlock1Ptr`, `gSaveBlock2Ptr`, `gPlayerParty`, `gPlayerPartyCount`, `gBattleResults`.
 - The **data segment lives in LOW linear memory (~0x5e_0000–0x63_0000), NOT at GBA EWRAM 0x02000000.** Only hardware-mapped regions (REG 0x04.., VRAM 0x06.., FLASH 0x0e..) are at GBA addresses — pointer-validity checks must allow low addresses.
 - `gSaveBlock1Ptr`/`gSaveBlock2Ptr` are pointers the game **relocates periodically** (anti-cheat) — dereference fresh every poll, never cache the target.
-- Party = 6 × 100-byte struct; species is in an XOR-"encrypted", checksum-gated substruct (key = personality^OTID, order = personality%24). Offsets: `SaveBlock1.flags` @0x1270 (badge flag ids 0x867–0x86E), `SaveBlock2.pokedex` @0x18 (owned @+0x10, 52 B, bit index = nationalDexNum−1), `BattleResults.caughtMonSpecies` @0x28.
+- Party = 6 × 100-byte struct; species is in an XOR-"encrypted", checksum-gated substruct (key = personality^OTID, order = personality%24). The wasm32 ABI uses `sizeof(SaveBlock1) == 0x3c40`, `SaveBlock1.flags` @0x1248, `sizeof(SaveBlock2) == 0xf08`, and `SaveBlock2.encryptionKey` @0xa8; the commonly documented retail/GBA `flags` offset 0x1270 is not the live wasm layout. `SaveBlock2.pokedex` is @0x18 (owned @+0x10, 52 B, bit index = nationalDexNum−1), and `BattleResults.caughtMonSpecies` is @0x28.
 - **At the title screen SaveBlock1 + `gPlayerParty` are loaded but SaveBlock2 is zeroed until you pick "Continue"** — `pokedex.owned` reads all-zero pre-Continue. Cross-check dex offsets against `SaveBlock1.seen1` @0x988 (a 52-B copy loaded at the title screen). To test offline, point the probe `--save` at a 128 KiB Emerald `.sav` (truncate any 16 trailing RTC bytes to exactly 131072).
 
 ## ESLint / test-file config (`packages/backend`)

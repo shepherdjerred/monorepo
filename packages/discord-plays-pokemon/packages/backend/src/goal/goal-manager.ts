@@ -19,8 +19,16 @@ import {
   normalizeCompletedGoal,
   type CompletedGoal,
 } from "./goal-history.ts";
-import type { GoalState } from "./goal-types.ts";
+import type {
+  GoalMessageSender,
+  GoalProcess,
+  GoalProcessSpawner,
+  GoalState,
+  StartGoalInput,
+  StartGoalResult,
+} from "./goal-types.ts";
 import { GoalMemory, buildSessionLogMeta } from "./goal-memory.ts";
+import { GoalControlGate } from "./goal-control-gate.ts";
 
 // Validates the envelope written by persistState() so history is safely
 // deserialized on restart even if the file has an unexpected shape.
@@ -62,49 +70,8 @@ type ActiveGoal = {
   // OTel span synthesis attached to the parser. The archive SpanProcessor
   // (observability/tracing.ts) ships full request/response bodies to S3.
   trace: CodexTrace;
+  releaseInputLease: () => void;
 };
-
-export type GoalProcess = {
-  pid?: number;
-  stdout: ReadableStream<Uint8Array> | null;
-  stderr: ReadableStream<Uint8Array> | null;
-  exited: Promise<number>;
-  kill: (signal?: NodeJS.Signals | number) => void;
-};
-
-export type GoalProcessSpawner = (
-  args: string[],
-  options: {
-    cwd: string;
-    env: Record<string, string>;
-  },
-) => GoalProcess;
-
-export type GoalDiscordMessage = {
-  channelId: string;
-  content: string;
-  allowedUserIds?: string[];
-};
-
-export type GoalMessageSender = (message: GoalDiscordMessage) => Promise<void>;
-
-export type StartGoalInput = {
-  goal: string;
-  requesterId: string;
-  channelId: string;
-};
-
-export type StartGoalResult =
-  | {
-      kind: "started";
-      content: string;
-      ephemeral: false;
-    }
-  | {
-      kind: "locked" | "disabled" | "invalid" | "missing_credential" | "busy";
-      content: string;
-      ephemeral: true;
-    };
 
 type GoalManagerOptions = {
   config: Config["game"]["goal"];
@@ -118,12 +85,31 @@ type GoalManagerOptions = {
   // so tests that don't exercise prompt context don't have to pass a stub.
   snapshotProvider?: () => GameSnapshot | null;
   spatialSnapshotProvider?: () => SpatialSnapshot | null;
+  acquireInputLease?: () => () => void;
 };
+
+function oneShot(action: () => void): () => void {
+  let completed = false;
+  return () => {
+    if (completed) return;
+    completed = true;
+    action();
+  };
+}
+
+function noOpRelease(): void {
+  return;
+}
+
+function noOpAcquireInputLease(): () => void {
+  return noOpRelease;
+}
 
 import { defaultSpawner } from "./goal-process-helpers.ts";
 
 export class GoalManager {
   private active: ActiveGoal | undefined;
+  private terminating: ActiveGoal | undefined;
   // Synchronously claimed at the top of startGoal before its first await, so two
   // near-simultaneous /goal interactions cannot both pass the lock check and
   // both spawn a Codex process (orphaning the first). JS is single-threaded, so
@@ -136,6 +122,8 @@ export class GoalManager {
   private readonly now: () => Date;
   private readonly snapshotProvider: () => GameSnapshot | null;
   private readonly spatialSnapshotProvider: () => SpatialSnapshot | null;
+  private readonly acquireInputLease: () => () => void;
+  private readonly controlGate = new GoalControlGate();
   // Per-guild persistent memory: the curated MEMORY.md fed into every prompt,
   // system-written session logs, and MEMORY.md archives. Backed by
   // config.memory_dir (the driver points it under saves/<guildId>/). Exposed to
@@ -157,6 +145,7 @@ export class GoalManager {
     this.snapshotProvider = options.snapshotProvider ?? (() => null);
     this.spatialSnapshotProvider =
       options.spatialSnapshotProvider ?? (() => null);
+    this.acquireInputLease = options.acquireInputLease ?? noOpAcquireInputLease;
     this.memory = new GoalMemory(
       this.resolveRuntimePath(this.config.memory_dir),
       this.now,
@@ -198,7 +187,7 @@ export class GoalManager {
   }
 
   getStatus(): GoalState | undefined {
-    return this.active?.state;
+    return this.active?.state ?? this.terminating?.state;
   }
 
   /**
@@ -209,6 +198,11 @@ export class GoalManager {
   getHistory(limit: number): CompletedGoal[] {
     if (limit <= 0) return [];
     return this.history.slice(0, limit);
+  }
+
+  beginControlRequest(token: string, goalId: string): (() => void) | undefined {
+    if (token !== this.controlToken) return undefined;
+    return this.controlGate.begin(goalId);
   }
 
   async startGoal(input: StartGoalInput): Promise<StartGoalResult> {
@@ -231,7 +225,7 @@ export class GoalManager {
 
     // Claim the start slot synchronously, before the first await, so a second
     // concurrent /goal cannot also reach the spawn path and orphan a process.
-    if (this.starting) {
+    if (this.starting || this.terminating !== undefined) {
       return {
         kind: "busy",
         content: "Another goal is already starting. Try again in a moment.",
@@ -290,19 +284,30 @@ export class GoalManager {
       this.snapshotProvider(),
       this.spatialSnapshotProvider(),
     );
-    const spawned = await spawnGoalCodex({
-      config: this.config,
-      controlToken: this.controlToken,
-      goalId: id,
-      goal,
-      requestedBy: input.requesterId,
-      promptContext: {
-        gameStateSummary,
-        recentGoalsSummary: formatHistoryForPrompt(this.getHistory(3)),
-        memory: await this.memory.readMemory(),
-      },
-      spawner: this.spawner,
-    });
+    const memory = await this.memory.readMemory();
+    const releaseInputLease = oneShot(this.acquireInputLease());
+    this.controlGate.open(id);
+    let spawned: Awaited<ReturnType<typeof spawnGoalCodex>>;
+    try {
+      spawned = await spawnGoalCodex({
+        config: this.config,
+        controlToken: this.controlToken,
+        goalId: id,
+        goal,
+        requestedBy: input.requesterId,
+        promptContext: {
+          gameStateSummary,
+          recentGoalsSummary: formatHistoryForPrompt(this.getHistory(3)),
+          memory,
+        },
+        spawner: this.spawner,
+      });
+    } catch (error) {
+      this.controlGate.close(id);
+      await this.controlGate.drain();
+      releaseInputLease();
+      throw error;
+    }
 
     const state: GoalState = {
       id,
@@ -317,7 +322,6 @@ export class GoalManager {
     const timeout = setTimeout(() => {
       void this.timeoutGoal(id);
     }, this.config.max_runtime_minutes * 60_000);
-
     this.active = {
       state,
       process: spawned.process,
@@ -327,8 +331,21 @@ export class GoalManager {
       jsonl: spawned.jsonl,
       stdoutPump: spawned.stdoutPump,
       trace: spawned.trace,
+      releaseInputLease,
     };
-    await this.persistState(state);
+    try {
+      await this.persistState(state);
+    } catch (error) {
+      clearTimeout(timeout);
+      this.controlGate.close(id);
+      spawned.process.kill("SIGTERM");
+      await spawned.process.exited;
+      await this.controlGate.drain();
+      spawned.trace.end();
+      releaseInputLease();
+      this.active = undefined;
+      throw error;
+    }
     void this.observeProcess(id);
 
     return {
@@ -381,83 +398,106 @@ export class GoalManager {
     }
 
     const exitCode = await active.process.exited;
-    if (this.active?.state.id !== id) {
-      return;
+    const claimed = this.claimActive(id);
+    if (claimed === undefined) return;
+    try {
+      await claimed.stdoutPump;
+      await this.releaseGoalControls(claimed);
+      const report = await this.readFinalReport(claimed.outputPath);
+      claimed.state.finishedAt = this.now().toISOString();
+      claimed.state.exitCode = exitCode;
+      claimed.state.status = exitCode === 0 ? "completed" : "failed";
+      claimed.state.finalReport = report;
+      await this.recordCompletion(claimed.state);
+      await this.persistState(claimed.state);
+
+      const usage = claimed.jsonl.total();
+      const cost = computeCost(this.config.model, usage);
+      const costLine = formatCostLine(this.config.model, cost, usage);
+      await this.sendMessage({
+        channelId: claimed.state.channelId,
+        content: truncateForDiscord(
+          `<@${claimed.state.requestedBy}> goal ${
+            exitCode === 0 ? "finished" : "stopped with an error"
+          } (${costLine}): ${sanitizeDiscordText(report)}`,
+        ),
+        allowedUserIds: [claimed.state.requestedBy],
+      });
+    } finally {
+      claimed.releaseInputLease();
+      claimed.trace.end();
+      if (this.terminating === claimed) this.terminating = undefined;
     }
-
-    // Drain any remaining buffered stdout before reading token totals.
-    // The last turn.completed usage event is the final line Codex emits and
-    // may still be in the pipe when process.exited resolves.
-    await active.stdoutPump;
-
-    clearTimeout(active.timeout);
-    const report = await this.readFinalReport(active.outputPath);
-    active.state.finishedAt = this.now().toISOString();
-    active.state.exitCode = exitCode;
-    active.state.status = exitCode === 0 ? "completed" : "failed";
-    active.state.finalReport = report;
-    await this.recordCompletion(active.state);
-    await this.persistState(active.state);
-    active.trace.end();
-    this.active = undefined;
-
-    const usage = active.jsonl.total();
-    const cost = computeCost(this.config.model, usage);
-    const costLine = formatCostLine(this.config.model, cost, usage);
-
-    // Cost line comes first so it is never cut by truncation on long reports.
-    await this.sendMessage({
-      channelId: active.state.channelId,
-      content: truncateForDiscord(
-        `<@${active.state.requestedBy}> goal ${
-          exitCode === 0 ? "finished" : "stopped with an error"
-        } (${costLine}): ${sanitizeDiscordText(report)}`,
-      ),
-      allowedUserIds: [active.state.requestedBy],
-    });
   }
 
   private async timeoutGoal(id: string): Promise<void> {
-    const active = this.active;
-    if (active?.state.id !== id) {
-      return;
+    const active = this.claimActive(id);
+    if (active === undefined) return;
+    try {
+      active.process.kill("SIGTERM");
+      await active.process.exited;
+      await this.releaseGoalControls(active);
+      active.state.status = "timeout";
+      active.state.finishedAt = this.now().toISOString();
+      active.state.finalReport = "Goal timed out before Codex finished.";
+      await this.recordCompletion(active.state);
+      await this.persistState(active.state);
+      await this.sendMessage({
+        channelId: active.state.channelId,
+        content: `<@${active.state.requestedBy}> goal timed out after ${String(
+          this.config.max_runtime_minutes,
+        )} minutes.`,
+        allowedUserIds: [active.state.requestedBy],
+      });
+    } finally {
+      active.releaseInputLease();
+      active.trace.end();
+      if (this.terminating === active) this.terminating = undefined;
     }
-
-    active.process.kill("SIGTERM");
-    active.state.status = "timeout";
-    active.state.finishedAt = this.now().toISOString();
-    active.state.finalReport = "Goal timed out before Codex finished.";
-    await this.recordCompletion(active.state);
-    await this.persistState(active.state);
-    active.trace.end();
-    this.active = undefined;
-    await this.sendMessage({
-      channelId: active.state.channelId,
-      content: `<@${active.state.requestedBy}> goal timed out after ${String(
-        this.config.max_runtime_minutes,
-      )} minutes.`,
-      allowedUserIds: [active.state.requestedBy],
-    });
   }
 
   private async stopActive(status: "replaced" | "shutdown"): Promise<void> {
-    const active = this.active;
+    const active = this.claimActive();
     if (active === undefined) {
       return;
     }
+    try {
+      active.process.kill("SIGTERM");
+      await active.process.exited;
+      await this.releaseGoalControls(active);
+      active.state.status = status;
+      active.state.finishedAt = this.now().toISOString();
+      active.state.finalReport =
+        status === "replaced"
+          ? "Goal was replaced by a newer goal."
+          : "Goal was stopped during application shutdown.";
+      await this.recordCompletion(active.state);
+      await this.persistState(active.state);
+    } finally {
+      active.releaseInputLease();
+      active.trace.end();
+      if (this.terminating === active) this.terminating = undefined;
+    }
+  }
 
-    clearTimeout(active.timeout);
-    active.process.kill("SIGTERM");
-    active.state.status = status;
-    active.state.finishedAt = this.now().toISOString();
-    active.state.finalReport =
-      status === "replaced"
-        ? "Goal was replaced by a newer goal."
-        : "Goal was stopped during application shutdown.";
-    await this.recordCompletion(active.state);
-    await this.persistState(active.state);
-    active.trace.end();
+  private claimActive(id?: string): ActiveGoal | undefined {
+    const active = this.active;
+    if (active === undefined || (id !== undefined && active.state.id !== id)) {
+      return undefined;
+    }
+    // Claim synchronously before any terminal-path await. SIGTERM resolves the
+    // process exit promise, so stop/timeout and observeProcess can otherwise
+    // race through teardown and release the same lease twice.
     this.active = undefined;
+    this.terminating = active;
+    this.controlGate.close(active.state.id);
+    clearTimeout(active.timeout);
+    return active;
+  }
+
+  private async releaseGoalControls(active: ActiveGoal): Promise<void> {
+    await this.controlGate.drain();
+    active.releaseInputLease();
   }
 
   private async readFinalReport(outputPath: string): Promise<string> {

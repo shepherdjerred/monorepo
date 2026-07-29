@@ -4,6 +4,7 @@ import { createMemoryReader } from "#src/emulator/memory.ts";
 import { readGameSnapshot } from "./snapshot.ts";
 import { buildMon } from "./pokemon-struct.test.ts";
 import { PARTY_MON_SIZE } from "./pokemon-struct.ts";
+import { SAVE_BLOCK_1_FLAGS_OFFSET } from "#src/game/save-block-layout.ts";
 
 // Lay out a tiny synthetic "linear memory" with the globals and save blocks at
 // chosen addresses, then read it through the real createMemoryReader.
@@ -17,7 +18,6 @@ const SYMBOLS: GameSymbols = {
 };
 const SB1 = 0x1_00_00;
 const SB2 = 0x4_00_00;
-const FLAGS_OFFSET = 0x12_70;
 const DEX_OWNED_OFFSET = 0x28;
 
 function buildMemory(opts: {
@@ -44,10 +44,12 @@ function buildMemory(opts: {
   const sb2 = opts.sb2 ?? SB2;
   // Skip save-block writes when the pointer is deliberately out of bounds
   // (those tests only care that the read returns null).
-  if (sb1 + FLAGS_OFFSET + 0x20 < MEM_SIZE) {
-    // Badge flags live at sb1 + 0x1270; FLAG_BADGE01_GET is bit 0x867, i.e.
-    // byte (0x867 >> 3) bit (0x867 & 7) = bit 7.
-    view.setUint8(sb1 + FLAGS_OFFSET + (0x8_67 >> 3), opts.badgeByte ?? 0);
+  if (sb1 + SAVE_BLOCK_1_FLAGS_OFFSET + 0x20 < MEM_SIZE) {
+    // FLAG_BADGE01_GET is bit 0x867: byte (0x867 >> 3), bit 7.
+    view.setUint8(
+      sb1 + SAVE_BLOCK_1_FLAGS_OFFSET + (0x8_67 >> 3),
+      opts.badgeByte ?? 0,
+    );
   }
   if (sb2 + DEX_OWNED_OFFSET < MEM_SIZE) {
     view.setUint8(sb2 + DEX_OWNED_OFFSET, opts.dexByte ?? 0);

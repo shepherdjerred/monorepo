@@ -2,12 +2,12 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import path from "node:path";
 import type { Config } from "#src/config/schema.ts";
 import { DISCORD_MESSAGE_LIMIT } from "./discord-message.ts";
-import {
-  GoalManager,
-  type GoalDiscordMessage,
-  type GoalProcess,
-  type GoalProcessSpawner,
-} from "./goal-manager.ts";
+import { GoalManager } from "./goal-manager.ts";
+import type {
+  GoalDiscordMessage,
+  GoalProcess,
+  GoalProcessSpawner,
+} from "./goal-types.ts";
 
 async function createRuntimeDirectory(): Promise<string> {
   const directory = path.join(
@@ -451,7 +451,13 @@ async function runAndComplete(
   nextProcess().finish(0);
   // observeProcess writes history+state after process exit; poll briefly.
   for (let attempt = 0; attempt < 200; attempt += 1) {
-    if (manager.getHistory(20).some((entry) => entry.goal === goal)) return;
+    if (
+      manager.getHistory(20).some((entry) => entry.goal === goal) &&
+      manager.getStatus() === undefined
+    ) {
+      await Bun.sleep(1);
+      return;
+    }
     await Bun.sleep(1);
   }
   throw new Error(`Goal ${goal} never landed in history`);

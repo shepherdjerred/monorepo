@@ -3,7 +3,7 @@
 // line cap.
 
 import { logger } from "#src/logger.ts";
-import type { GoalProcessSpawner } from "./goal-manager.ts";
+import type { GoalProcessSpawner } from "./goal-types.ts";
 
 export const defaultSpawner: GoalProcessSpawner = (args, options) => {
   return Bun.spawn(args, {
