@@ -19,9 +19,11 @@ import {
   type StyleEvidenceChunk,
 } from "./glitter-context-refresh-chunks.ts";
 import {
+  glitterCompletionArtifact,
+  glitterCompletionArtifactSchema,
   glitterChatMessages,
-  glitterCompletionUsage,
   parseGlitterCompletion,
+  useGlitterCompletionArtifact,
 } from "./glitter-context-refresh-openai.ts";
 import type { StyleRefreshCandidate } from "./glitter-context-refresh-selection.ts";
 import { requireKnownEvidence } from "./glitter-context-refresh-evidence.ts";
@@ -160,12 +162,15 @@ async function runChunkExtraction(input: {
       "style_chunk_summary",
     ),
   };
+  const CompletionArtifactSchema = glitterCompletionArtifactSchema(
+    StyleChunkSummarySchema,
+  );
   const artifact = await readOrCreateGenerationArtifact({
     store: input.artifactStore,
     model: EXTRACTION_MODEL,
     callSite,
     request: {
-      schemaVersion: 2,
+      schemaVersion: 3,
       model: EXTRACTION_MODEL,
       messages,
       maxCompletionTokens: params.max_completion_tokens,
@@ -173,7 +178,7 @@ async function runChunkExtraction(input: {
       seed: params.seed,
       responseSchema: "style-chunk-summary-v2",
     },
-    responseSchema: StyleChunkSummarySchema,
+    responseSchema: CompletionArtifactSchema,
     generate: async () => {
       input.budget.authorizeUncachedCall(
         estimatedCallCostUsd({
@@ -183,23 +188,20 @@ async function runChunkExtraction(input: {
         }),
       );
       const completion = await parseGlitterCompletion(callSite, params);
-      const parsed = completion.choices[0]?.message.parsed;
-      if (parsed === null || parsed === undefined) {
-        throw new Error(
-          `GPT-5.6 Luna did not return a parsed summary for ${input.chunk.key}`,
-        );
-      }
-      return {
-        response: parsed,
-        usage: glitterCompletionUsage({
-          model: EXTRACTION_MODEL,
-          usage: completion.usage,
-        }),
-      };
+      const message = completion.choices[0]?.message;
+      return glitterCompletionArtifact({
+        model: EXTRACTION_MODEL,
+        parsed: message?.parsed,
+        rawContent: message?.content ?? null,
+        usage: completion.usage,
+        missingParsedError: `GPT-5.6 Luna did not return a parsed summary for ${input.chunk.key}`,
+      });
     },
   });
-  input.budget.record(artifact);
-  return artifact.response;
+  return useGlitterCompletionArtifact({
+    artifact,
+    budget: input.budget,
+  });
 }
 
 async function summarizeChunk(input: {
@@ -235,6 +237,7 @@ function synthesisPrompt(input: {
   const base = [
     "Patch this human-reviewed style card from complete safe-corpus evidence.",
     "Return one patch for every listed array field and one decision for every prior index.",
+    "Also patch every prior summary item and every prior League entry by index.",
     "Retain prior observations unless contradicted or explicitly judged low-confidence.",
     "Retained observations are copied by the application; do not rewrite them.",
     "Contradicted removals require corpus evidence. Low-confidence removals must use",
@@ -256,8 +259,20 @@ function synthesisPrompt(input: {
           (value, priorIndex) => ({ priorIndex, value }),
         ),
       })),
-      existingSummary: input.existingCard.summary,
-      existingLeague: input.existingCard.league,
+      summaryPatch: {
+        prior:
+          typeof input.existingCard.summary === "string"
+            ? [{ priorIndex: 0, value: input.existingCard.summary }]
+            : input.existingCard.summary.map((value, priorIndex) => ({
+                priorIndex,
+                value,
+              })),
+      },
+      leaguePatch: {
+        prior: Object.entries(input.existingCard.league).map(
+          ([key, value], priorIndex) => ({ priorIndex, key, value }),
+        ),
+      },
       chunkSummaries: input.chunks,
       directRecentMessages: input.candidate.directRecentMessages.map(
         (message) => messageEvidence(message),
@@ -305,12 +320,14 @@ async function runSynthesis(input: {
       "style_card_synthesis",
     ),
   };
+  const CompletionArtifactSchema =
+    glitterCompletionArtifactSchema(StyleSynthesisSchema);
   const artifact = await readOrCreateGenerationArtifact({
     store: input.artifactStore,
     model: SYNTHESIS_MODEL,
     callSite,
     request: {
-      schemaVersion: 2,
+      schemaVersion: 3,
       model: SYNTHESIS_MODEL,
       messages,
       maxCompletionTokens: params.max_completion_tokens,
@@ -318,7 +335,7 @@ async function runSynthesis(input: {
       seed: params.seed,
       responseSchema: "style-card-synthesis-v2",
     },
-    responseSchema: StyleSynthesisSchema,
+    responseSchema: CompletionArtifactSchema,
     generate: async () => {
       input.budget.authorizeUncachedCall(
         estimatedCallCostUsd({
@@ -328,23 +345,20 @@ async function runSynthesis(input: {
         }),
       );
       const completion = await parseGlitterCompletion(callSite, params);
-      const parsed = completion.choices[0]?.message.parsed;
-      if (parsed === null || parsed === undefined) {
-        throw new Error(
-          `GPT-5.6 Sol did not return a parsed synthesis for ${input.candidate.person.id}`,
-        );
-      }
-      return {
-        response: parsed,
-        usage: glitterCompletionUsage({
-          model: SYNTHESIS_MODEL,
-          usage: completion.usage,
-        }),
-      };
+      const message = completion.choices[0]?.message;
+      return glitterCompletionArtifact({
+        model: SYNTHESIS_MODEL,
+        parsed: message?.parsed,
+        rawContent: message?.content ?? null,
+        usage: completion.usage,
+        missingParsedError: `GPT-5.6 Sol did not return a parsed synthesis for ${input.candidate.person.id}`,
+      });
     },
   });
-  input.budget.record(artifact);
-  return artifact.response;
+  return useGlitterCompletionArtifact({
+    artifact,
+    budget: input.budget,
+  });
 }
 
 export function estimateStyleGenerationCost(input: {

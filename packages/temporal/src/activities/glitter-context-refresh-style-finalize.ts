@@ -9,6 +9,8 @@ import { requireKnownEvidence } from "./glitter-context-refresh-evidence.ts";
 import {
   STYLE_ARRAY_FIELDS,
   StyleArrayFieldSchema,
+  type GeneratedLeagueValue,
+  type PriorDecision,
   type StyleArrayField,
   type StyleSynthesis,
 } from "./glitter-context-refresh-style-schemas.ts";
@@ -18,6 +20,86 @@ export function priorFieldValues(
   field: StyleArrayField,
 ): string[] {
   return styleCard[field] ?? [];
+}
+
+function retainedPriorIndexes(input: {
+  label: string;
+  priorLength: number;
+  decisions: readonly PriorDecision[];
+  knownEvidenceIds: ReadonlySet<string>;
+}): Set<number> {
+  const decisionsByIndex = new Map(
+    input.decisions.map((decision) => [decision.priorIndex, decision]),
+  );
+  if (
+    decisionsByIndex.size !== input.priorLength ||
+    [...decisionsByIndex.keys()].some(
+      (index) => index < 0 || index >= input.priorLength,
+    )
+  ) {
+    throw new Error(
+      `style synthesis did not decide every prior ${input.label} observation exactly once`,
+    );
+  }
+  const retained = new Set<number>();
+  for (let index = 0; index < input.priorLength; index += 1) {
+    const decision = decisionsByIndex.get(index);
+    if (decision === undefined) {
+      throw new Error(
+        `style synthesis omitted ${input.label}[${String(index)}]`,
+      );
+    }
+    requireKnownEvidence(
+      decision.evidenceMessageIds,
+      input.knownEvidenceIds,
+      `${input.label}[${String(index)}] decision`,
+    );
+    if (decision.decision === "retain") {
+      if (decision.removalBasis !== null || decision.rationale !== null) {
+        throw new Error(
+          `retained ${input.label}[${String(index)}] has removal metadata`,
+        );
+      }
+      retained.add(index);
+      continue;
+    }
+    if (decision.removalBasis === null || decision.rationale === null) {
+      throw new Error(
+        `removed ${input.label}[${String(index)}] lacks a typed rationale`,
+      );
+    }
+    if (
+      decision.removalBasis === "contradicted" &&
+      decision.evidenceMessageIds.length === 0
+    ) {
+      throw new Error(
+        `contradicted ${input.label}[${String(index)}] lacks evidence`,
+      );
+    }
+    if (
+      decision.removalBasis === "explicit-low-confidence-judgment" &&
+      decision.confidence > 0.3
+    ) {
+      throw new Error(
+        `low-confidence removal for ${input.label}[${String(index)}] exceeds 0.3`,
+      );
+    }
+  }
+  return retained;
+}
+
+function requireAdditionEvidence(
+  label: string,
+  additions: readonly { evidenceMessageIds: readonly string[] }[],
+  knownEvidenceIds: ReadonlySet<string>,
+): void {
+  for (const addition of additions) {
+    requireKnownEvidence(
+      addition.evidenceMessageIds,
+      knownEvidenceIds,
+      `${label} addition`,
+    );
+  }
 }
 
 function applyPatches(input: {
@@ -41,67 +123,14 @@ function applyPatches(input: {
       if (patch === undefined) {
         throw new Error(`style synthesis omitted the ${field} patch`);
       }
-      const decisionsByIndex = new Map(
-        patch.priorDecisions.map((decision) => [decision.priorIndex, decision]),
-      );
-      if (
-        decisionsByIndex.size !== prior.length ||
-        [...decisionsByIndex.keys()].some(
-          (index) => index < 0 || index >= prior.length,
-        )
-      ) {
-        throw new Error(
-          `style synthesis did not decide every prior ${field} observation exactly once`,
-        );
-      }
-      const retained = prior.filter((_, index) => {
-        const decision = decisionsByIndex.get(index);
-        if (decision === undefined) {
-          throw new Error(`style synthesis omitted ${field}[${String(index)}]`);
-        }
-        requireKnownEvidence(
-          decision.evidenceMessageIds,
-          input.knownEvidenceIds,
-          `${field}[${String(index)}] decision`,
-        );
-        if (decision.decision === "retain") {
-          if (decision.removalBasis !== null || decision.rationale !== null) {
-            throw new Error(
-              `retained ${field}[${String(index)}] has removal metadata`,
-            );
-          }
-          return true;
-        }
-        if (decision.removalBasis === null || decision.rationale === null) {
-          throw new Error(
-            `removed ${field}[${String(index)}] lacks a typed rationale`,
-          );
-        }
-        if (
-          decision.removalBasis === "contradicted" &&
-          decision.evidenceMessageIds.length === 0
-        ) {
-          throw new Error(
-            `contradicted ${field}[${String(index)}] lacks evidence`,
-          );
-        }
-        if (
-          decision.removalBasis === "explicit-low-confidence-judgment" &&
-          decision.confidence > 0.3
-        ) {
-          throw new Error(
-            `low-confidence removal for ${field}[${String(index)}] exceeds 0.3`,
-          );
-        }
-        return false;
+      const retainedIndexes = retainedPriorIndexes({
+        label: field,
+        priorLength: prior.length,
+        decisions: patch.priorDecisions,
+        knownEvidenceIds: input.knownEvidenceIds,
       });
-      for (const addition of patch.additions) {
-        requireKnownEvidence(
-          addition.evidenceMessageIds,
-          input.knownEvidenceIds,
-          `${field} addition`,
-        );
-      }
+      const retained = prior.filter((_, index) => retainedIndexes.has(index));
+      requireAdditionEvidence(field, patch.additions, input.knownEvidenceIds);
       return [
         field,
         [...retained, ...patch.additions.map((addition) => addition.value)],
@@ -126,6 +155,66 @@ function stringValues(value: unknown): string[] {
   return lanesResult.success
     ? [...lanesResult.data.likes, ...lanesResult.data.dislikes]
     : [];
+}
+
+function applySummaryPatch(input: {
+  existingCard: StyleCard;
+  synthesis: StyleSynthesis;
+  knownEvidenceIds: ReadonlySet<string>;
+}): string[] {
+  const prior = stringValues(input.existingCard.summary);
+  const retainedIndexes = retainedPriorIndexes({
+    label: "summary",
+    priorLength: prior.length,
+    decisions: input.synthesis.summaryPatch.priorDecisions,
+    knownEvidenceIds: input.knownEvidenceIds,
+  });
+  requireAdditionEvidence(
+    "summary",
+    input.synthesis.summaryPatch.additions,
+    input.knownEvidenceIds,
+  );
+  const summary = [
+    ...prior.filter((_, index) => retainedIndexes.has(index)),
+    ...input.synthesis.summaryPatch.additions.map((addition) => addition.value),
+  ];
+  if (summary.length === 0) {
+    throw new Error("style synthesis removed the complete summary");
+  }
+  return summary;
+}
+
+function applyLeaguePatch(input: {
+  existingCard: StyleCard;
+  synthesis: StyleSynthesis;
+  knownEvidenceIds: ReadonlySet<string>;
+}): Record<string, GeneratedLeagueValue> {
+  const prior = Object.entries(input.existingCard.league);
+  const retainedIndexes = retainedPriorIndexes({
+    label: "league",
+    priorLength: prior.length,
+    decisions: input.synthesis.leaguePatch.priorDecisions,
+    knownEvidenceIds: input.knownEvidenceIds,
+  });
+  requireAdditionEvidence(
+    "league",
+    input.synthesis.leaguePatch.additions,
+    input.knownEvidenceIds,
+  );
+  const league: Record<string, GeneratedLeagueValue> = {};
+  for (const [index, entry] of prior.entries()) {
+    if (retainedIndexes.has(index)) {
+      const [key, value] = entry;
+      league[key] = value;
+    }
+  }
+  for (const addition of input.synthesis.leaguePatch.additions) {
+    if (Object.hasOwn(league, addition.key)) {
+      throw new Error("style synthesis returned duplicate league keys");
+    }
+    league[addition.key] = addition.value;
+  }
+  return league;
 }
 
 function descriptiveWordCount(card: StyleCard): number {
@@ -158,6 +247,16 @@ export function finalizeStyleSynthesis(input: {
     synthesis: input.synthesis,
     knownEvidenceIds,
   });
+  const summary = applySummaryPatch({
+    existingCard: input.existingCard,
+    synthesis: input.synthesis,
+    knownEvidenceIds,
+  });
+  const league = applyLeaguePatch({
+    existingCard: input.existingCard,
+    synthesis: input.synthesis,
+    knownEvidenceIds,
+  });
   const quoteIds = new Set(input.synthesis.quoteMessageIds);
   const sampleIds = new Set(input.synthesis.sampleMessageIds);
   if (quoteIds.size !== 20 || sampleIds.size !== 30) {
@@ -173,11 +272,6 @@ export function finalizeStyleSynthesis(input: {
     knownEvidenceIds,
     "sample messages",
   );
-  const leagueKeys = new Set(input.synthesis.league.map((entry) => entry.key));
-  if (leagueKeys.size !== input.synthesis.league.length) {
-    throw new Error("style synthesis returned duplicate league keys");
-  }
-
   const firstCorpusMessage = input.candidate.messages[0];
   const lastCorpusMessage = input.candidate.messages.at(-1);
   const firstSafeMessage = input.candidate.safeMessages[0];
@@ -227,10 +321,8 @@ export function finalizeStyleSynthesis(input: {
         "Generated from the checksum-verified Discord corpus; human review required.",
     },
     ...fields,
-    summary: input.synthesis.summary,
-    league: Object.fromEntries(
-      input.synthesis.league.map((entry) => [entry.key, entry.value]),
-    ),
+    summary,
+    league,
     quotes: contentForIds(input.synthesis.quoteMessageIds),
     sample_messages: contentForIds(input.synthesis.sampleMessageIds),
     situational_examples: input.synthesis.situational_examples,

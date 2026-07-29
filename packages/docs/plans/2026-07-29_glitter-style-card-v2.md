@@ -137,9 +137,12 @@ weekly production schedule.
   Colin, and Richard as synthesis baselines.
 - Added direct last-entry and metadata-leak sentinels for Birmel's classifier
   and Scout's shared frontend/backend prompt serializer.
-- Passed the serialized affected verification surface (79/79 tasks), 760
+- Passed the serialized affected verification surface (79/79 tasks), 762
   Temporal tests, 1,213 Scout backend tests, 94 Scout report tests, focused
   Birmel and Scout sentinel tests, and forced consumer typecheck/lint.
+- Addressed both P2 findings from the first Codex review: summary and League
+  now use evidence-backed patch decisions, and billed parse failures are
+  persisted before throwing so activity retries cannot spend twice.
 - Published the complete implementation to draft PR #1846 through git-spice.
 
 ### Remaining

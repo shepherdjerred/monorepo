@@ -93,6 +93,15 @@ const retainedPatches = STYLE_ARRAY_FIELDS.map((field) => ({
   additions: [],
 }));
 
+const retainedDecision = {
+  priorIndex: 0,
+  decision: "retain" as const,
+  removalBasis: null,
+  confidence: 0.9,
+  rationale: null,
+  evidenceMessageIds: [messages[0]?.messageId],
+};
+
 const situationalExamples = {
   provenance: "synthetic" as const,
   happy_or_excited: ["happy one", "happy two", "happy three"],
@@ -109,11 +118,14 @@ const situationalExamples = {
 
 const synthesis = StyleSynthesisSchema.parse({
   patches: retainedPatches,
-  summary: existingCard.summary,
-  league: Object.entries(existingCard.league).map(([key, value]) => ({
-    key,
-    value,
-  })),
+  summaryPatch: {
+    priorDecisions: [retainedDecision],
+    additions: [],
+  },
+  leaguePatch: {
+    priorDecisions: [retainedDecision],
+    additions: [],
+  },
   quoteMessageIds: messages.slice(0, 20).map((message) => message.messageId),
   sampleMessageIds: messages.map((message) => message.messageId),
   situational_examples: situationalExamples,
@@ -152,6 +164,12 @@ describe("Glitter generated style-card schemas", () => {
     expect(result.schemaVersion).toBe(2);
     expect(result.author).toBe("Ryan");
     expect(result.voice).toEqual(existingCard.voice);
+    expect(result.summary).toEqual(
+      typeof existingCard.summary === "string"
+        ? [existingCard.summary]
+        : existingCard.summary,
+    );
+    expect(result.league).toEqual(existingCard.league);
     expect(result.quotes).toEqual(
       messages.slice(0, 20).map((message) => message.content),
     );
@@ -202,5 +220,27 @@ describe("Glitter generated style-card schemas", () => {
         synthesis: invalidSynthesis,
       }),
     ).toThrow("quotes cites unknown message IDs");
+  });
+
+  test("requires evidence-backed decisions for summary and League prose", () => {
+    const invalidSynthesis = StyleSynthesisSchema.parse({
+      ...synthesis,
+      summaryPatch: {
+        priorDecisions: [],
+        additions: [],
+      },
+    });
+
+    expect(() =>
+      finalizeStyleSynthesis({
+        candidate,
+        existingCard,
+        sourceSnapshotSha256: "a".repeat(64),
+        chunkCount: 1,
+        synthesis: invalidSynthesis,
+      }),
+    ).toThrow(
+      "style synthesis did not decide every prior summary observation exactly once",
+    );
   });
 });

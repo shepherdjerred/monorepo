@@ -38,7 +38,7 @@ export const StyleChunkSummarySchema = z.strictObject({
 });
 export type StyleChunkSummary = z.infer<typeof StyleChunkSummarySchema>;
 
-const PriorDecisionSchema = z.strictObject({
+export const PriorDecisionSchema = z.strictObject({
   priorIndex: z.number().int().nonnegative(),
   decision: z.enum(["retain", "remove"]),
   removalBasis: z
@@ -48,8 +48,9 @@ const PriorDecisionSchema = z.strictObject({
   rationale: z.string().min(1).max(500).nullable(),
   evidenceMessageIds: z.array(EvidenceMessageIdSchema).max(8),
 });
+export type PriorDecision = z.infer<typeof PriorDecisionSchema>;
 
-const AdditionSchema = z.strictObject({
+export const AdditionSchema = z.strictObject({
   value: z.string().min(1).max(1000),
   confidence: z.number().min(0.7).max(1),
   evidenceMessageIds: z.array(EvidenceMessageIdSchema).min(1).max(8),
@@ -61,7 +62,7 @@ const FieldPatchSchema = z.strictObject({
   additions: z.array(AdditionSchema).max(30),
 });
 
-const GeneratedLeagueValueSchema = z.union([
+export const GeneratedLeagueValueSchema = z.union([
   z.string(),
   z.array(z.string()),
   z.strictObject({
@@ -69,16 +70,29 @@ const GeneratedLeagueValueSchema = z.union([
     dislikes: z.array(z.string()),
   }),
 ]);
+export type GeneratedLeagueValue = z.infer<typeof GeneratedLeagueValueSchema>;
+
+const SummaryPatchSchema = z.strictObject({
+  priorDecisions: z.array(PriorDecisionSchema),
+  additions: z.array(AdditionSchema).max(30),
+});
+
+const LeagueAdditionSchema = z.strictObject({
+  key: z.string().min(1),
+  value: GeneratedLeagueValueSchema,
+  confidence: z.number().min(0.7).max(1),
+  evidenceMessageIds: z.array(EvidenceMessageIdSchema).min(1).max(8),
+});
+
+const LeaguePatchSchema = z.strictObject({
+  priorDecisions: z.array(PriorDecisionSchema),
+  additions: z.array(LeagueAdditionSchema).max(30),
+});
 
 export const StyleSynthesisSchema = z.strictObject({
   patches: z.array(FieldPatchSchema).length(STYLE_ARRAY_FIELDS.length),
-  summary: z.string().min(1),
-  league: z.array(
-    z.strictObject({
-      key: z.string().min(1),
-      value: GeneratedLeagueValueSchema,
-    }),
-  ),
+  summaryPatch: SummaryPatchSchema,
+  leaguePatch: LeaguePatchSchema,
   quoteMessageIds: z.array(EvidenceMessageIdSchema).length(20),
   sampleMessageIds: z.array(EvidenceMessageIdSchema).length(30),
   situational_examples: SituationalExamplesSchema,

@@ -6,6 +6,11 @@ import {
   readOrCreateGenerationArtifact,
   type GenerationArtifactStore,
 } from "./glitter-context-refresh-cache.ts";
+import { GenerationBudget } from "./glitter-context-refresh-budget.ts";
+import {
+  glitterCompletionArtifactSchema,
+  useGlitterCompletionArtifact,
+} from "./glitter-context-refresh-openai.ts";
 
 const ResponseSchema = z.strictObject({ value: z.string() });
 const UnknownResponseSchema: z.ZodType = ResponseSchema;
@@ -186,5 +191,52 @@ describe("Glitter context generation artifacts", () => {
       }),
     ).rejects.toThrow();
     expect(createCount).toBe(0);
+  });
+
+  test("persists billed parse failures so an activity retry cannot spend twice", async () => {
+    const { store } = memoryStore();
+    const CompletionArtifactSchema =
+      glitterCompletionArtifactSchema(ResponseSchema);
+    const budget = new GenerationBudget(1);
+    let generationCount = 0;
+    const run = async () => {
+      const artifact = await readOrCreateGenerationArtifact({
+        store,
+        model: "test-model",
+        callSite: "style-card",
+        request: { prompt: "stable failed completion", seed: 0 },
+        responseSchema: CompletionArtifactSchema,
+        generate: async () => {
+          generationCount += 1;
+          return {
+            response: {
+              outcome: "failure" as const,
+              error: "model returned no parsed payload",
+              rawContent: '{"value":42}',
+            },
+            usage: {
+              inputTokens: 10,
+              outputTokens: 2,
+              cachedInputTokens: 0,
+              costUsd: 0.01,
+            },
+          };
+        },
+      });
+      return () =>
+        useGlitterCompletionArtifact({
+          artifact,
+          budget,
+        });
+    };
+
+    expect(await run()).toThrow("model returned no parsed payload");
+    expect(await run()).toThrow("model returned no parsed payload");
+    expect(generationCount).toBe(1);
+    expect(budget.summary()).toMatchObject({
+      actualUncachedCostUsd: 0.01,
+      cacheMisses: 1,
+      cacheHits: 1,
+    });
   });
 });

@@ -16,9 +16,11 @@ import {
   type GenerationArtifactStore,
 } from "./glitter-context-refresh-cache.ts";
 import {
+  glitterCompletionArtifact,
+  glitterCompletionArtifactSchema,
   glitterChatMessages,
-  glitterCompletionUsage,
   parseGlitterCompletion,
+  useGlitterCompletionArtifact,
 } from "./glitter-context-refresh-openai.ts";
 
 const RELATIONSHIP_MODEL = "gpt-5.6-sol";
@@ -129,12 +131,15 @@ export async function proposeRelationships(input: {
       "relationship_proposals",
     ),
   };
+  const CompletionArtifactSchema = glitterCompletionArtifactSchema(
+    RelationshipProposalsSchema,
+  );
   const artifact = await readOrCreateGenerationArtifact({
     store: input.artifactStore,
     model: RELATIONSHIP_MODEL,
     callSite,
     request: {
-      schemaVersion: 2,
+      schemaVersion: 3,
       model: RELATIONSHIP_MODEL,
       messages,
       maxCompletionTokens: params.max_completion_tokens,
@@ -142,7 +147,7 @@ export async function proposeRelationships(input: {
       seed: params.seed,
       responseSchema: "relationship-proposals-v2",
     },
-    responseSchema: RelationshipProposalsSchema,
+    responseSchema: CompletionArtifactSchema,
     generate: async () => {
       input.budget.authorizeUncachedCall(
         estimatedCallCostUsd({
@@ -152,21 +157,19 @@ export async function proposeRelationships(input: {
         }),
       );
       const completion = await parseGlitterCompletion(callSite, params);
-      const parsed = completion.choices[0]?.message.parsed;
-      if (parsed === null || parsed === undefined) {
-        throw new Error(
+      const message = completion.choices[0]?.message;
+      return glitterCompletionArtifact({
+        model: RELATIONSHIP_MODEL,
+        parsed: message?.parsed,
+        rawContent: message?.content ?? null,
+        usage: completion.usage,
+        missingParsedError:
           "GPT-5.6 Sol did not return parsed relationship proposals",
-        );
-      }
-      return {
-        response: parsed,
-        usage: glitterCompletionUsage({
-          model: RELATIONSHIP_MODEL,
-          usage: completion.usage,
-        }),
-      };
+      });
     },
   });
-  input.budget.record(artifact);
-  return artifact.response.proposals;
+  return useGlitterCompletionArtifact({
+    artifact,
+    budget: input.budget,
+  }).proposals;
 }
