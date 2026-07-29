@@ -109,7 +109,7 @@ export function createPvcBackupAdmissionPolicies(chart: Chart): void {
       matchConditions: [
         {
           name: "not-terminating",
-          expression: "object.metadata.deletionTimestamp == null",
+          expression: "!has(object.metadata.deletionTimestamp)",
         },
       ],
       variables: [
