@@ -336,3 +336,40 @@ pass.
   reconcile two disagreeing REST observations, two disagreeing seed
   observations, or drift in identity, timestamps, type, flags, attachments,
   references, or TTS.
+
+## Session Log — 2026-07-28 (rollout recovery)
+
+### Done
+
+- Fixed the PVC admission policy's absent-field CEL expression, added focused
+  synthesis coverage, and verified the generated policy with a live
+  API-server dry run.
+- Merged the admission fix as PR
+  [#1773](https://github.com/shepherdjerred/monorepo/pull/1773) at
+  `e0b7f21a5` after Buildkite #6752 and the current-head review gates passed.
+- Traced authoritative main Buildkite #6753 to a webring TypeDoc failure:
+  Markdown-It's compatibility patches imported Linkify 6 but still called its
+  removed `pretest()` method.
+- Completed the Linkify 6 migration for all three patched Markdown-It versions
+  and added TypeDoc generation to the webring test gate.
+- Reproduced and fixed an Astro 6 filesystem race by serializing `sjer.red`
+  typecheck before build. A forced cold sequence passed, followed by all 217
+  affected repository verification tasks.
+- Published the main-CI recovery as PR
+  [#1774](https://github.com/shepherdjerred/monorepo/pull/1774).
+
+### Remaining
+
+- Pass the amended PR #1774 current-head review and Buildkite gates, merge it,
+  and require the replacement authoritative main build to deploy and
+  reconcile successfully.
+- Resume the failed production backfill only after Temporal Postgres and the
+  ArgoCD application are healthy, then finish the daily and weekly acceptance
+  gates from this plan.
+
+### Caveats
+
+- Both production Glitter schedules remain paused; no seed or snapshot data was
+  mutated during the infrastructure and main-CI recovery.
+- Buildkite #6753 failed before its GitOps sync, so the admission fix is merged
+  but is not accepted as live until the replacement main build completes.

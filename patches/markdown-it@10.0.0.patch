@@ -10,3 +10,14 @@ index 570d016..3090567 100644
 +var LinkifyIt    = require('linkify-it').LinkifyIt;
  var mdurl        = require('mdurl');
  var punycode     = require('punycode');
+diff --git a/lib/rules_core/linkify.js b/lib/rules_core/linkify.js
+index afcd348..f242f2e 100644
+--- a/lib/rules_core/linkify.js
++++ b/lib/rules_core/linkify.js
+@@ -27,5 +27,5 @@
+   for (j = 0, l = blockTokens.length; j < l; j++) {
+     if (blockTokens[j].type !== 'inline' ||
+-        !state.md.linkify.pretest(blockTokens[j].content)) {
++        !state.md.linkify.test(blockTokens[j].content)) {
+       continue;
+     }

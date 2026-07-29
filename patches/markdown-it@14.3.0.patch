@@ -10,3 +10,14 @@ index 1857136..90777a3 100644
 +import { LinkifyIt } from 'linkify-it'
  import * as mdurl from 'mdurl'
  import punycode from 'punycode.js'
+diff --git a/lib/rules_core/linkify.mjs b/lib/rules_core/linkify.mjs
+index 052c3d8..9873626 100644
+--- a/lib/rules_core/linkify.mjs
++++ b/lib/rules_core/linkify.mjs
+@@ -20,5 +20,5 @@
+   for (let j = 0, l = blockTokens.length; j < l; j++) {
+     if (blockTokens[j].type !== 'inline' ||
+-        !state.md.linkify.pretest(blockTokens[j].content)) {
++        !state.md.linkify.test(blockTokens[j].content)) {
+       continue
+     }

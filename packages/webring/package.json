@@ -22,7 +22,7 @@
     "lint": "eslint src --cache",
     "build": "tsc",
     "watch": "tsc -w",
-    "test": "bun test src/",
+    "test": "bun run typedoc && bun test src/",
     "test:update": "bun test src/ --update-snapshots",
     "typedoc": "typedoc src/index.ts",
     "typecheck": "tsc --noEmit",
