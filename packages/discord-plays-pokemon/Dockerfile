@@ -182,6 +182,7 @@ COPY --parents \
   tsconfig.base.json \
   packages/discord-plays-pokemon/AGENTS.md \
   packages/discord-plays-pokemon/config.example.toml \
+  packages/discord-plays-pokemon/knowledge \
   packages/discord-plays-pokemon/.agents \
   packages/discord-plays-pokemon/packages/backend \
   packages/discord-plays-pokemon/packages/common \
@@ -193,8 +194,12 @@ COPY --parents \
   ./
 
 # Keep the deployed Codex instruction surface identical to the benchmark
-# runtime overlay and fail the image build if either input is omitted.
+# runtime overlay. Also fail the image build if the generated knowledge corpus
+# or dynamically discovered skills are omitted from the scoped source closure.
+ENV POKEMON_KNOWLEDGE_ROOT=/app/packages/discord-plays-pokemon/knowledge
 RUN test -s packages/discord-plays-pokemon/AGENTS.md \
+  && test -d "$POKEMON_KNOWLEDGE_ROOT" \
+  && test -n "$(find "$POKEMON_KNOWLEDGE_ROOT" -type f -print -quit)" \
   && test -d packages/discord-plays-pokemon/.agents/skills \
   && test -n "$(find packages/discord-plays-pokemon/.agents/skills -mindepth 2 -maxdepth 2 -type f -name SKILL.md -print -quit)"
 

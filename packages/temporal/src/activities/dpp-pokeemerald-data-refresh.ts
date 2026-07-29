@@ -13,14 +13,14 @@ const REPO_SLUG = "shepherdjerred/monorepo";
 const MAIN_BRANCH = "main";
 const DPP_ROOT = "packages/discord-plays-pokemon";
 // The ONLY paths this job is allowed to stage: the committed species/map data
-// tables derived from the pokeemerald-wasm source pin (`commit` in
-// wasm-src/upstream.json, Renovate-advanced). Steady state is no-diff; the
-// job's purpose is the follow-up regen PR the morning after a Renovate pin
-// bump merges — hosted (Mend) Renovate cannot run the generators inside its
-// own PR.
+// tables and knowledge corpus derived from pinned upstream sources. Steady
+// state is no-diff; the job's purpose is the follow-up regen PR the morning
+// after a source pin bump merges — hosted (Mend) Renovate cannot run the
+// generators inside its own PR.
 const GENERATED_PATHS = [
   `${DPP_ROOT}/packages/backend/src/game/events/generated/species.ts`,
   `${DPP_ROOT}/packages/backend/src/game/spatial/generated/map-names.ts`,
+  `${DPP_ROOT}/knowledge`,
 ];
 
 export type PokeemeraldDataRefreshResult = {
@@ -36,12 +36,9 @@ export type PokeemeraldDataRefreshActivities =
 
 export const pokeemeraldDataRefreshActivities = {
   /**
-   * Regenerate the committed pokeemerald species/map data tables from the
-   * wasm source pin and, if they drifted, open a PR. Deterministic (no
-   * agent): the generators fetch four files from
-   * raw.githubusercontent.com/ottohg/pokeemerald-wasm at the pinned SHA and
-   * format with the repo's pinned prettier, so regeneration is byte-stable
-   * against a clean tree.
+   * Regenerate the committed pokeemerald species/map data tables and knowledge
+   * corpus from their pinned sources and, if they drifted, open a PR.
+   * Deterministic (no agent): generation is byte-stable against a clean tree.
    */
   async refreshPokeemeraldData(): Promise<PokeemeraldDataRefreshResult> {
     const start = Date.now();
@@ -79,6 +76,9 @@ export const pokeemeraldDataRefreshActivities = {
       await runCommand(["bun", "scripts/generate-map-names.ts"], {
         cwd: `${repoDir}/${DPP_ROOT}`,
       });
+      await runCommand(["bun", "scripts/generate-knowledge.ts"], {
+        cwd: `${repoDir}/${DPP_ROOT}`,
+      });
 
       const files = await changedFilesInPaths(repoDir, GENERATED_PATHS);
       if (files.length === 0) {
@@ -92,15 +92,14 @@ export const pokeemeraldDataRefreshActivities = {
       }
 
       const branch = `chore/dpp-pokeemerald-data-refresh-${id.slice(0, 8)}`;
-      const title =
-        "chore(discord-plays-pokemon): refresh generated pokeemerald data";
+      const title = "chore(discord-plays-pokemon): refresh data and knowledge";
       const body = [
-        "Automated pokeemerald data-table refresh from Temporal",
+        "Automated Pokemon data and knowledge refresh from Temporal",
         "(`dpp-pokeemerald-data-daily`).",
         "",
-        "Regenerated the committed species/map tables from the current",
-        "`commit` pin in `wasm-src/upstream.json` — usually the follow-up",
-        "to a merged Renovate pin bump (hosted Renovate cannot run the",
+        "Regenerated the committed species/map tables and knowledge corpus",
+        "from their pinned upstream sources. This is usually the follow-up",
+        "to a merged source-pin bump (hosted Renovate cannot run the",
         "generators itself).",
         "",
         `Changed files: ${String(files.length)}`,
