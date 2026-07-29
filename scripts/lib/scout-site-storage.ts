@@ -107,6 +107,7 @@ export function immutablePutCommand(key: string, file: string): string[] {
     "*",
     "--endpoint-url",
     SEAWEEDFS_ENDPOINT,
+    "--no-cli-pager",
   ];
 }
 

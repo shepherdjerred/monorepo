@@ -585,3 +585,49 @@ pass.
 - Main Buildkite #7052 is red overall even though its Glitter-critical image,
   Helm, and Argo lanes passed; the two remaining failures are the exact gates
   fixed by PR #1824.
+
+## Session Log — 2026-07-29 (main release follow-up)
+
+### Done
+
+- Merged PR
+  [#1824](https://github.com/shepherdjerred/monorepo/pull/1824) after
+  current-head Buildkite #7067 passed every gate and the Codex documentation
+  finding was addressed and resolved.
+- Ran the production recovery verifier against the latest scheduled daily
+  snapshot. Snapshot `07d2998a-c2d0-4f15-aaab-c365bb103066` is complete across
+  all 267 channels with 212,415 unique messages and SHA-256
+  `04b53f7bbf0a3186297d14e5522aa2edc0992fb7def721e4e6faa1f68ef5b776`.
+- Followed authoritative main Buildkite #7070 through image and chart
+  publication. Every image was content-identical, including the Temporal
+  worker, and canonical Helm comparison published zero charts.
+- Confirmed the Cloudflare lane's production-only dependency repair passed.
+  The Scout lane advanced past its prior missing-index failure and certified
+  the complete 117 MiB archive.
+- Diagnosed Scout's next fail-fast error: the immutable `aws s3api put-object`
+  call attempted to launch the absent `less` pager. Added the AWS CLI's
+  explicit `--no-cli-pager` global option to that exact command.
+- Passed the seven focused Scout storage tests, an AWS CLI skeleton invocation
+  with an intentionally nonexistent pager, and all four affected repository
+  verification tasks.
+
+### Remaining
+
+- Publish and merge the pager fix after current-head Buildkite and review pass,
+  then require the replacement authoritative main build to pass every gate.
+- Restore the Temporal worker OpenAI project's quota, then complete the two
+  deterministic dry runs, real refresh, consumer smoke tests, and deliberate
+  weekly schedule unpause.
+- Complete and archive this plan and its related TODOs only after weekly
+  acceptance succeeds.
+
+### Caveats
+
+- Main Buildkite #7070 proves both fixes from PR #1824 but remains red because
+  the newly reached immutable put attempted to invoke a pager unavailable in
+  the production container.
+- The pager fix does not weaken immutable-write semantics: the
+  `If-None-Match: *` precondition and explicit 412 classification are
+  unchanged.
+- The Glitter production worker and corpus were not mutated by this Scout
+  release follow-up.
