@@ -1,8 +1,8 @@
 {
   "$schema": "./sources.schema.json",
   "pokeemeraldWasm": {
-    "repository": "https://github.com/ottohg/pokeemerald-wasm",
-    "manifest": "../wasm-src/upstream.json"
+    "manifest": "../wasm-src/upstream.json",
+    "license": "No license declared"
   },
   "archipelago": {
     "repository": "https://github.com/ArchipelagoMW/Archipelago",

@@ -63,10 +63,30 @@ describe("committed generated knowledge", () => {
     expect(eevee.body).toContain("high friendship");
     const golbat = requiredRecord("species:golbat");
     expect(golbat.body).toContain("high friendship");
+    const rayquaza = requiredRecord("species:rayquaza");
+    expect(rayquaza.body).not.toContain("Capture rate:");
+    const nincada = requiredRecord("species:nincada");
+    expect(nincada.body).toContain("see species:shedinja-creation-emerald");
+    const shedinja = requiredRecord("species:shedinja");
+    expect(shedinja.body).toContain("see species:shedinja-creation-emerald");
+    const shedinjaCreation = requiredRecord(
+      "species:shedinja-creation-emerald",
+    );
+    expect(shedinjaCreation.body).toContain("level-20 evolution");
+    expect(shedinjaCreation.body).toContain(
+      "leave at least one party slot empty",
+    );
+    expect(shedinjaCreation.source).toEqual({
+      id: "pokeemerald-wasm",
+      url: "https://github.com/ottohg/pokeemerald-wasm/tree/c101be5ac2ae53c5d18ee063f16eeeda751639f8",
+      license: "No license declared",
+      revision: "c101be5ac2ae53c5d18ee063f16eeeda751639f8",
+    });
     for (const record of records.filter(
       (entry) => entry.domain === "species",
     )) {
       expect(record.body).not.toContain("Base experience:");
+      expect(record.body).not.toContain("Capture rate:");
       expect(record.body).not.toMatch(/happiness \d+\+/);
     }
   });

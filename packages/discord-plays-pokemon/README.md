@@ -53,7 +53,10 @@ query a committed, validated Pokémon Emerald corpus:
 - PokeAPI's Generation III data for species, Emerald level-up moves, battle
   moves, and generation-wide item identifiers. Known FireRed/LeafGreen-only
   key items are excluded, but remaining catalog membership does not prove
-  Emerald availability. Unversioned catalog prices are intentionally omitted.
+  Emerald availability. Unversioned catalog prices and species capture rates
+  are intentionally omitted.
+- The exact pinned pokeemerald-wasm source for narrow Emerald mechanics that
+  PokeAPI does not version, including Shedinja's empty-party-slot requirement.
 - Bulbapedia's complete 22-part Emerald walkthrough, stored separately under
   `knowledge/cc-by-nc-sa-2.5/` and attributed under CC BY-NC-SA 2.5.
 

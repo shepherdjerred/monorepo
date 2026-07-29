@@ -28,7 +28,6 @@ const SpeciesRows = z.array(
     identifier: z.string().min(1),
     generation_id: IntegerString,
     evolves_from_species_id: OptionalIntegerString,
-    capture_rate: IntegerString,
     is_legendary: z.enum(["0", "1"]),
     is_mythical: z.enum(["0", "1"]),
   }),
@@ -236,6 +235,14 @@ export function includeGeneration3Item(identifier: string): boolean {
   return !confirmedFrlgOnlyItemIdentifiers.has(identifier);
 }
 
+function emeraldEvolutionCrossReference(
+  identifier: string,
+): string | undefined {
+  return identifier === "nincada" || identifier === "shedinja"
+    ? "Emerald-specific Shedinja creation requirement: see species:shedinja-creation-emerald."
+    : undefined;
+}
+
 export async function buildPokeApiRecords(
   sources: Sources,
 ): Promise<KnowledgeRecord[]> {
@@ -378,11 +385,13 @@ export async function buildPokeApiRecords(
         `National Pokédex: ${String(row.id)}`,
         `Types: ${typeList.join("/")}`,
         `Height: ${String(form.height / 10)} m; weight: ${String(form.weight / 10)} kg`,
-        `Capture rate: ${String(row.capture_rate)}`,
         `Evolves from: ${evolution.predecessor}`,
         `Evolves to: ${evolution.successors.join("; ") || "none"}`,
+        emeraldEvolutionCrossReference(row.identifier),
         `Emerald level-up moves (level:move): ${compactList(learnedMoves, 60) || "none"}`,
-      ].join("\n"),
+      ]
+        .filter((line) => line !== undefined)
+        .join("\n"),
       source,
     });
   }

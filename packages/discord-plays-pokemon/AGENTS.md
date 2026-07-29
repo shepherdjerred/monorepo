@@ -100,8 +100,12 @@ revisions.
 - PokeAPI supplies BSD-3-Clause Generation III species, move, and item data.
   Item membership is generation-wide and does not prove Emerald availability.
   Version-group filtering does not historicalize PokeAPI's unversioned base
-  experience or minimum-happiness columns; omit those numbers from generated
-  records while preserving supported nonnumeric conditions.
+  experience, capture-rate, or minimum-happiness columns; omit those numbers
+  from generated records while preserving supported nonnumeric conditions.
+- The pinned pokeemerald-wasm source supplies narrow, validated
+  Emerald-specific mechanics such as Shedinja's empty-party-slot requirement.
+  Its repository declares no license; record that accurately and summarize
+  behavior without copying source text.
 - Bulbapedia supplies the separately stored full walkthrough under CC
   BY-NC-SA 2.5; preserve `knowledge/cc-by-nc-sa-2.5/NOTICE.md` and per-record
   attribution.

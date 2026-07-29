@@ -13,10 +13,11 @@
     "$schema": { "type": "string" },
     "pokeemeraldWasm": {
       "type": "object",
-      "required": ["repository", "manifest"],
+      "additionalProperties": false,
+      "required": ["manifest", "license"],
       "properties": {
-        "repository": { "type": "string", "format": "uri" },
-        "manifest": { "type": "string" }
+        "manifest": { "type": "string" },
+        "license": { "const": "No license declared" }
       }
     },
     "archipelago": {

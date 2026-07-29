@@ -17,6 +17,7 @@ import {
   generation3FriendshipCondition,
   requirePokeApiReference,
 } from "./pokeapi-relations.ts";
+import { validateShedinjaSource } from "./pokeemerald.ts";
 
 const BULBAPEDIA_PIN = {
   title: "Walkthrough:Pokémon Emerald",
@@ -98,6 +99,23 @@ describe("Generation III evolution normalization", () => {
     expect(generation3FriendshipCondition(160)).toBe("high friendship");
     expect(generation3FriendshipCondition(220)).toBe("high friendship");
     expect(generation3FriendshipCondition(undefined)).toBeUndefined();
+  });
+
+  test("requires pinned Emerald evidence for Shedinja creation", () => {
+    const table = `
+      [SPECIES_NINCADA] = {
+        {EVO_LEVEL_NINJASK, 20, SPECIES_NINJASK},
+        {EVO_LEVEL_SHEDINJA, 20, SPECIES_SHEDINJA}
+      }
+    `;
+    const scene = `
+      if (gEvolutionTable[preEvoSpecies][0].method == EVO_LEVEL_NINJASK
+          && gPlayerPartyCount < PARTY_SIZE)
+    `;
+    expect(validateShedinjaSource(table, scene)).toBeUndefined();
+    expect(() => validateShedinjaSource(table, "no party condition")).toThrow(
+      "empty-party-slot Shedinja condition",
+    );
   });
 });
 

@@ -32,8 +32,8 @@ export type KnowledgeRecord = z.infer<typeof KnowledgeRecordSchema>;
 export const SourcesSchema = z.strictObject({
   $schema: z.string().min(1),
   pokeemeraldWasm: z.strictObject({
-    repository: z.url(),
     manifest: z.string().min(1),
+    license: z.literal("No license declared"),
   }),
   archipelago: z.strictObject({
     repository: z.url(),
