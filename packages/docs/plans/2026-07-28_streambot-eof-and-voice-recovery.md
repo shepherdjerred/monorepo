@@ -79,8 +79,10 @@ losses continue to reconnect.
 - Addressed the review gate's seek-failure finding by making replacement attach
   failures reject both `seek()` and active playback, tear down their resources,
   freeze public position until attach succeeds, and leave the clock stopped if
-  playback exits first; assigned the privileged live-permission TODO to operator
-  verification. The fork passes all 63 tests.
+  playback exits first. Added generation ownership so a superseded overlapping
+  seek cannot commit or clear the newer seek's anchor. Assigned the privileged
+  live-permission TODO to operator verification. The fork passes all 63 tests,
+  and Streambot's 26 affected regression tests pass.
 
 ### Remaining
 

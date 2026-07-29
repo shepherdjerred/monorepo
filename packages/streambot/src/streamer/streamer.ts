@@ -132,6 +132,8 @@ export class StreambotStreamer implements StreamerLike {
   private pendingSeekOffsetSeconds: number | null = null;
   /** Last delivered public position, frozen while a replacement seek pipeline attaches. */
   private pendingSeekPreviousPositionSeconds: number | null = null;
+  /** Monotonic owner for overlapping seek completions; only the newest request may update anchors. */
+  private seekGeneration = 0;
   /** Wall-clock (ms) when the current segment began playing; null when nothing is playing. */
   private segmentStartedAtMs: number | null = null;
   /** Most recent Discord-side voice ws close (never set by local stops). */
@@ -212,7 +214,6 @@ export class StreambotStreamer implements StreamerLike {
     }
     return id;
   }
-
   /** Guild ids this userbot is a member of (snapshot of the gateway cache after {@link login}). */
   guildIds(): GuildId[] {
     return [...this.client.guilds.cache.keys()].map((id) =>
@@ -233,7 +234,6 @@ export class StreambotStreamer implements StreamerLike {
     }
     await Promise.resolve();
   }
-
   /** Apply a volume percentage (0-200) to the live stream; false when nothing is playing. */
   async setVolume(percent: number): Promise<boolean> {
     if (this.player === null) {
@@ -241,7 +241,6 @@ export class StreambotStreamer implements StreamerLike {
     }
     return this.player.setVolume(Math.max(0, percent) / 100);
   }
-
   /** Seek the live stream to an absolute offset (seconds); false when nothing is playing. */
   async seek(seconds: number): Promise<boolean> {
     if (this.player === null) {
@@ -250,6 +249,7 @@ export class StreambotStreamer implements StreamerLike {
     const player = this.player;
     const target = Math.max(0, seconds);
     const previousPositionSeconds = this.getPosition();
+    const seekGeneration = ++this.seekGeneration;
     // The replacement observer can begin synchronously inside player.seek(), so expose the target
     // to stall accounting immediately. Do not commit the public position anchor until the real
     // player confirms its replacement pipeline attached successfully.
@@ -258,24 +258,27 @@ export class StreambotStreamer implements StreamerLike {
     try {
       await player.seek(target);
     } catch (error) {
-      this.pendingSeekOffsetSeconds = null;
-      this.pendingSeekPreviousPositionSeconds = null;
-      // A replacement attach failure also rejects player.finished. If the playback owner won that
-      // race, it has already cleared this.player and stopped the clock; do not restart a clock for
-      // dead media while the machine prepares recovery.
-      if (this.player === player && previousPositionSeconds !== null) {
-        this.segmentStartOffsetSeconds = previousPositionSeconds;
-        this.segmentStartedAtMs = this.now();
+      if (this.seekGeneration === seekGeneration) {
+        this.pendingSeekOffsetSeconds = null;
+        this.pendingSeekPreviousPositionSeconds = null;
+        // A replacement attach failure also rejects player.finished. If the playback owner won that
+        // race, it has already cleared this.player and stopped the clock; do not restart a clock for
+        // dead media while the machine prepares recovery.
+        if (this.player === player && previousPositionSeconds !== null) {
+          this.segmentStartOffsetSeconds = previousPositionSeconds;
+          this.segmentStartedAtMs = this.now();
+        }
       }
       throw error;
     }
-    this.segmentStartOffsetSeconds = target;
-    this.segmentStartedAtMs = this.now();
-    this.pendingSeekOffsetSeconds = null;
-    this.pendingSeekPreviousPositionSeconds = null;
+    if (this.seekGeneration === seekGeneration) {
+      this.segmentStartOffsetSeconds = target;
+      this.segmentStartedAtMs = this.now();
+      this.pendingSeekOffsetSeconds = null;
+      this.pendingSeekPreviousPositionSeconds = null;
+    }
     return true;
   }
-
   /**
    * Current playback position in seconds (segment start offset + real time since it began playing),
    * or null when nothing is playing. Used to checkpoint resume state — unlike the fork's
@@ -294,7 +297,6 @@ export class StreambotStreamer implements StreamerLike {
       this.now(),
     );
   }
-
   lastVoiceCloseInfo(): VoiceCloseInfo | null {
     return this.lastVoiceClose;
   }
@@ -304,7 +306,6 @@ export class StreambotStreamer implements StreamerLike {
   ): void {
     this.voiceCloseListener = listener;
   }
-
   setStallListener(listener: ((info: StallInfo) => void) | null): void {
     this.stallListener = listener;
   }

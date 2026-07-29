@@ -275,7 +275,66 @@ describe("StreambotStreamer position tracking", () => {
     segments[0]?.resolve();
     await run;
   });
+});
 
+describe("StreambotStreamer overlapping seeks", () => {
+  test("an older completion cannot overwrite the newer seek's rollback anchor", async () => {
+    const clock = { ms: 1000 };
+    const firstAttach = createVoidDeferred();
+    const secondAttach = createVoidDeferred();
+    const finished = createVoidDeferred();
+    let seekCount = 0;
+    const factory: PlayerFactory = () => ({
+      start: () => Promise.resolve(),
+      seek: async () => {
+        const attach = seekCount === 0 ? firstAttach : secondAttach;
+        seekCount += 1;
+        await attach.promise;
+      },
+      setVolume: () => Promise.resolve(true),
+      stop: finished.resolve,
+      finished: finished.promise,
+      position: 0,
+    });
+    const streamer = new StreambotStreamer(
+      USER_TOKEN,
+      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "false" })),
+      () => clock.ms,
+      factory,
+    );
+    const run = streamer.runStream(
+      {
+        voice: VOICE,
+        resolved: RESOLVED,
+        volume: 100,
+        seekSeconds: 30,
+        pipelineMode: "sw",
+      },
+      new AbortController().signal,
+    );
+    await flush();
+
+    clock.ms = 6000;
+    const firstSeek = streamer.seek(120);
+    await flush();
+    const secondSeek = streamer.seek(240);
+    await flush();
+
+    firstAttach.resolve();
+    await expect(firstSeek).resolves.toBe(true);
+    clock.ms = 9000;
+    expect(streamer.getPosition()).toBe(35);
+
+    secondAttach.reject(new Error("newer seek failed"));
+    await expect(secondSeek).rejects.toThrow("newer seek failed");
+    expect(streamer.getPosition()).toBe(35);
+
+    finished.resolve();
+    await run;
+  });
+});
+
+describe("StreambotStreamer seek rollback", () => {
   test("a failed live seek restores the prior playback anchor", async () => {
     const clock = { ms: 1000 };
     const seekError = new Error("seek restart failed");
