@@ -197,6 +197,9 @@ COPY --from=build /app/packages/discord-plays-pokemon/packages/frontend/dist pac
 RUN install -D -m 0755 \
     packages/discord-plays-pokemon/packages/backend/src/goal/pokemonctl.ts \
     /usr/local/bin/pokemonctl \
+  && install -D -m 0644 \
+    packages/discord-plays-pokemon/packages/backend/src/goal/pokemonctl-output.ts \
+    /usr/local/bin/pokemonctl-output.ts \
   && pokemonctl --help
 
 # Stage the from-source wasm where the emulator expects it (relative to the
