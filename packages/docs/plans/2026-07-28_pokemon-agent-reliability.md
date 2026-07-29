@@ -71,7 +71,7 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - [x] Implement and verify the compact prompt and benchmark harness.
 - [x] Implement and verify the knowledge corpus, retrieval, and skills.
 - [ ] Complete repeated local evaluation and iterate on failures.
-- [x] Publish the review-ready stack and record CI/live verification.
+- [ ] Publish the review-ready stack and record CI/live verification.
 
 ## Comment Log
 
@@ -218,7 +218,7 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - Implemented a general engine checkpoint and ordered atomic flash
   persistence. A rebuilt real WASM passed an independent checkpoint/reboot
   integration test against a copied live save.
-- Verified the combined backend (318 tests, zero failures or skips), all 30
+- Verified the combined backend (319 tests, zero failures or skips), all 30
   knowledge/build script tests, package typecheck/lint, the exhaustive
   root `bun run verify` graph (217/217 tasks), and a clean Docker `smoke` build
   that rebuilt the patched WASM, passed both mandatory real-emulator ABI and
@@ -314,6 +314,8 @@ system against a copied live save and the exact goal `get me a pokeman`.
 
 ### Remaining
 
+- Monitor the Route 101 ranking fix through replacement Buildkite and fresh
+  Codex review.
 - Rerun three clean-copy candidate trials when Codex quota is available. Do
   not compare the current provider-invalid artifacts to the valid 0/3
   baseline.
