@@ -71,7 +71,7 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - [x] Implement and verify the compact prompt and benchmark harness.
 - [x] Implement and verify the knowledge corpus, retrieval, and skills.
 - [ ] Complete repeated local evaluation and iterate on failures.
-- [ ] Publish the restacked #1803/#1805 heads and record replacement CI/review.
+- [x] Publish the restacked #1803/#1805 heads and record replacement CI/review.
 
 ## Comment Log
 
@@ -311,6 +311,11 @@ system against a copied live save and the exact goal `get me a pokeman`.
   NPC occupancy and authoritative static collision, allowing a transiently
   occupied corridor tile to recover while all retries still consume
   `maxSteps`.
+- Reconciled the stack after #1802 merged, closed the transient duplicate
+  #1833, and restacked #1803/#1805 onto `main`. Replacement Buildkite #7140
+  and #7141 passed every authoritative lane on the exact rewritten heads;
+  fresh Codex reviews found no major issues, every current and outdated
+  GraphQL thread is resolved, and GitHub reports both PRs clean and mergeable.
 
 ### Remaining
 
@@ -382,6 +387,11 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - Regenerated 1,744 permissive plus 41 CC BY-NC-SA records and verified all 33
   knowledge/build script tests, all 319 backend tests, and both packages'
   typecheck and lint tasks.
+- Reconciled the stack after #1802 merged, closed the transient duplicate
+  #1833, and restacked the surviving PRs onto `main`. Buildkite #7140 passed
+  for exact #1803 head `2014afba23`, and #7141 passed for exact #1805 head
+  `69477a3d91`; both fresh Codex reviews were clean, all review threads are
+  resolved, and both PRs are clean and mergeable.
 
 ### Remaining
 
@@ -389,8 +399,6 @@ system against a copied live save and the exact goal `get me a pokeman`.
   not compare the current provider-invalid artifacts to the valid 0/3
   baseline.
 - Run a production goal only after three consecutive local successes.
-- Publish and verify the Hidden Power and Shadow-type corpus corrections on
-  replacement Buildkite and a fresh exact-head Codex review.
 
 ### Caveats
 
