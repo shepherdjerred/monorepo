@@ -47,3 +47,8 @@ the Birmel and Pokémon credentials.
   seed, backfill, daily schedule, recovery, and observability are complete.
   Removed obsolete R2 and provisioning tasks. The only remaining operator
   boundary is OpenAI project quota; weekly refresh remains deliberately paused.
+- 2026-07-29 — Re-audited the live Ready worker, ArgoCD application, and both
+  schedules, then retried the exact fixed-time, snapshot-pinned dry run as
+  workflow `glitter-context-refresh-manual-a3f6ec23-cb6d-45db-9766-f75009766b00`.
+  Both configured attempts again reached OpenAI and failed closed on HTTP 429
+  `insufficient_quota`; no branch, PR, or context mutation occurred.
