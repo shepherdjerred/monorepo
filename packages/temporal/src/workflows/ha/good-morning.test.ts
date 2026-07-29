@@ -11,6 +11,10 @@ import {
 } from "./good-morning.ts";
 
 const TASK_QUEUE = "good-morning-test";
+// Each integration case compiles and starts a native Temporal worker. The
+// default 5s Bun timeout is too short when the full repository test graph is
+// sharing the CI host, even though workflow time itself is skipped.
+const WORKFLOW_TEST_TIMEOUT_MS = 30_000;
 const DEFAULT_ZONE_ATTRIBUTES: Record<string, unknown> = {
   latitude: 47.6,
   longitude: -122.3,
@@ -167,135 +171,159 @@ describe("shouldHeatFloor", () => {
 });
 
 describe("floor heat weather inputs", () => {
-  test("fails non-retryably when zone coordinates are malformed", async () => {
-    const scenario = makeScenario(
-      { indoorC: 18, outdoorC: 5 },
-      { latitude: "47.6", longitude: -122.3 },
-    );
-    await expectNonRetryableApplicationFailure(
-      runWorker(
-        scenario,
-        goodMorningPreheat,
-        `preheat-invalid-zone-${crypto.randomUUID()}`,
-      ),
-      "HomeZoneAttributesError",
-      "Home Assistant zone.home attributes must include numeric latitude and longitude",
-    );
-    expect(climateCalls(scenario)).toEqual([]);
-  });
+  test(
+    "fails non-retryably when zone coordinates are malformed",
+    async () => {
+      const scenario = makeScenario(
+        { indoorC: 18, outdoorC: 5 },
+        { latitude: "47.6", longitude: -122.3 },
+      );
+      await expectNonRetryableApplicationFailure(
+        runWorker(
+          scenario,
+          goodMorningPreheat,
+          `preheat-invalid-zone-${crypto.randomUUID()}`,
+        ),
+        "HomeZoneAttributesError",
+        "Home Assistant zone.home attributes must include numeric latitude and longitude",
+      );
+      expect(climateCalls(scenario)).toEqual([]);
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
 });
 
 describe("goodMorningPreheat", () => {
-  test("skips without touching the thermostat on a warm morning", async () => {
-    const scenario = makeScenario({ indoorC: 26, outdoorC: 28 });
-    await runWorker(
-      scenario,
-      goodMorningPreheat,
-      `preheat-warm-${crypto.randomUUID()}`,
-    );
-    expect(climateCalls(scenario)).toEqual([]);
-    expect(scenario.outcomes).toEqual([
-      {
-        workflow: "goodMorningPreheat",
-        outcome: "skipped",
-        reason: "not-cold",
-      },
-    ]);
-  });
+  test(
+    "skips without touching the thermostat on a warm morning",
+    async () => {
+      const scenario = makeScenario({ indoorC: 26, outdoorC: 28 });
+      await runWorker(
+        scenario,
+        goodMorningPreheat,
+        `preheat-warm-${crypto.randomUUID()}`,
+      );
+      expect(climateCalls(scenario)).toEqual([]);
+      expect(scenario.outcomes).toEqual([
+        {
+          workflow: "goodMorningPreheat",
+          outcome: "skipped",
+          reason: "not-cold",
+        },
+      ]);
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
 
-  test("heats to 30°C when the bathroom air is cold", async () => {
-    const scenario = makeScenario({ indoorC: 18, outdoorC: 28 });
-    await runWorker(
-      scenario,
-      goodMorningPreheat,
-      `preheat-cold-indoor-${crypto.randomUUID()}`,
-    );
-    const calls = climateCalls(scenario);
-    expect(calls[0]).toEqual({
-      domain: "climate",
-      service: "set_temperature",
-      data: {
-        entity_id: "climate.master_bathroom",
-        temperature: 30,
-        hvac_mode: "heat",
-      },
-    });
-    expect(calls.at(-1)?.service).toBe("turn_off");
-    expect(scenario.outcomes).toEqual([
-      {
-        workflow: "goodMorningPreheat",
-        outcome: "executed",
-        reason: "preheat-complete",
-      },
-    ]);
-  });
+  test(
+    "heats to 30°C when the bathroom air is cold",
+    async () => {
+      const scenario = makeScenario({ indoorC: 18, outdoorC: 28 });
+      await runWorker(
+        scenario,
+        goodMorningPreheat,
+        `preheat-cold-indoor-${crypto.randomUUID()}`,
+      );
+      const calls = climateCalls(scenario);
+      expect(calls[0]).toEqual({
+        domain: "climate",
+        service: "set_temperature",
+        data: {
+          entity_id: "climate.master_bathroom",
+          temperature: 30,
+          hvac_mode: "heat",
+        },
+      });
+      expect(calls.at(-1)?.service).toBe("turn_off");
+      expect(scenario.outcomes).toEqual([
+        {
+          workflow: "goodMorningPreheat",
+          outcome: "executed",
+          reason: "preheat-complete",
+        },
+      ]);
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
 
-  test("heats when it is cold outside even if the bathroom is warm", async () => {
-    const scenario = makeScenario({ indoorC: 22, outdoorC: 10 });
-    await runWorker(
-      scenario,
-      goodMorningPreheat,
-      `preheat-cold-outdoor-${crypto.randomUUID()}`,
-    );
-    expect(climateCalls(scenario)[0]?.service).toBe("set_temperature");
-    expect(scenario.outcomes).toEqual([
-      {
-        workflow: "goodMorningPreheat",
-        outcome: "executed",
-        reason: "preheat-complete",
-      },
-    ]);
-  });
+  test(
+    "heats when it is cold outside even if the bathroom is warm",
+    async () => {
+      const scenario = makeScenario({ indoorC: 22, outdoorC: 10 });
+      await runWorker(
+        scenario,
+        goodMorningPreheat,
+        `preheat-cold-outdoor-${crypto.randomUUID()}`,
+      );
+      expect(climateCalls(scenario)[0]?.service).toBe("set_temperature");
+      expect(scenario.outcomes).toEqual([
+        {
+          workflow: "goodMorningPreheat",
+          outcome: "executed",
+          reason: "preheat-complete",
+        },
+      ]);
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
 });
 
 describe("goodMorningWakeUp", () => {
-  test("runs the wake routine without heat on a warm morning", async () => {
-    const scenario = makeScenario({ indoorC: 26, outdoorC: 28 });
-    await runWorker(
-      scenario,
-      goodMorningWakeUp,
-      `wake-warm-${crypto.randomUUID()}`,
-    );
-    expect(climateCalls(scenario)).toEqual([
-      {
-        domain: "climate",
-        service: "turn_off",
-        data: {
-          entity_id: "climate.master_bathroom",
+  test(
+    "runs the wake routine without heat on a warm morning",
+    async () => {
+      const scenario = makeScenario({ indoorC: 26, outdoorC: 28 });
+      await runWorker(
+        scenario,
+        goodMorningWakeUp,
+        `wake-warm-${crypto.randomUUID()}`,
+      );
+      expect(climateCalls(scenario)).toEqual([
+        {
+          domain: "climate",
+          service: "turn_off",
+          data: {
+            entity_id: "climate.master_bathroom",
+          },
         },
-      },
-    ]);
-    expect(scenario.notifications).toEqual(["Good Morning"]);
-    expect(
-      scenario.serviceCalls.some(
-        (call) => call.domain === "scene" && call.service === "turn_on",
-      ),
-    ).toBe(true);
-    expect(scenario.outcomes).toEqual([
-      {
-        workflow: "goodMorningWakeUp",
-        outcome: "executed",
-        reason: "wake-routine-complete-no-heat",
-      },
-    ]);
-  });
+      ]);
+      expect(scenario.notifications).toEqual(["Good Morning"]);
+      expect(
+        scenario.serviceCalls.some(
+          (call) => call.domain === "scene" && call.service === "turn_on",
+        ),
+      ).toBe(true);
+      expect(scenario.outcomes).toEqual([
+        {
+          workflow: "goodMorningWakeUp",
+          outcome: "executed",
+          reason: "wake-routine-complete-no-heat",
+        },
+      ]);
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
 
-  test("heats through the wake window on a cold morning", async () => {
-    const scenario = makeScenario({ indoorC: 18, outdoorC: 5 });
-    await runWorker(
-      scenario,
-      goodMorningWakeUp,
-      `wake-cold-${crypto.randomUUID()}`,
-    );
-    const calls = climateCalls(scenario);
-    expect(calls[0]?.service).toBe("set_temperature");
-    expect(calls.at(-1)?.service).toBe("turn_off");
-    expect(scenario.outcomes).toEqual([
-      {
-        workflow: "goodMorningWakeUp",
-        outcome: "executed",
-        reason: "wake-routine-complete",
-      },
-    ]);
-  });
+  test(
+    "heats through the wake window on a cold morning",
+    async () => {
+      const scenario = makeScenario({ indoorC: 18, outdoorC: 5 });
+      await runWorker(
+        scenario,
+        goodMorningWakeUp,
+        `wake-cold-${crypto.randomUUID()}`,
+      );
+      const calls = climateCalls(scenario);
+      expect(calls[0]?.service).toBe("set_temperature");
+      expect(calls.at(-1)?.service).toBe("turn_off");
+      expect(scenario.outcomes).toEqual([
+        {
+          workflow: "goodMorningWakeUp",
+          outcome: "executed",
+          reason: "wake-routine-complete",
+        },
+      ]);
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
 });

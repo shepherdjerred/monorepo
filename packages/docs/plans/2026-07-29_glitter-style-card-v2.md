@@ -143,6 +143,10 @@ weekly production schedule.
 - Addressed both P2 findings from the first Codex review: summary and League
   now use evidence-backed patch decisions, and billed parse failures are
   persisted before throwing so activity retries cannot spend twice.
+- Hardened the native Temporal good-morning integration cases against
+  full-repository CI contention after build #7180 exposed Bun's 5-second
+  default timeout; all five repeated focused runs passed with the explicit
+  integration-test timeout.
 - Published the complete implementation to draft PR #1846 through git-spice.
 
 ### Remaining
