@@ -70,13 +70,13 @@ function noOpAcquireInputLease(): () => void {
   return noOpRelease;
 }
 
-import { defaultSpawner } from "./goal-process-helpers.ts";
+import { defaultSpawner, settleGoalProcess } from "./goal-process-helpers.ts";
 
 export class GoalManager {
   private active: ActiveGoal | undefined;
   private terminating: ActiveGoal | undefined;
-  // Claimed before startGoal's first await to serialize concurrent requests.
-  private starting = false;
+  private startPromise: Promise<StartGoalResult> | undefined;
+  private shuttingDown = false;
   private readonly config: Config["game"]["goal"];
   private readonly controlToken: string;
   private readonly sendMessage: GoalMessageSender;
@@ -167,20 +167,28 @@ export class GoalManager {
       };
     }
 
-    // Claim the start slot synchronously, before the first await, so a second
-    // concurrent /goal cannot also reach the spawn path and orphan a process.
-    if (this.starting || this.terminating !== undefined) {
+    if (this.shuttingDown) {
+      return {
+        kind: "disabled",
+        content: "The active Pokémon session is shutting down.",
+        ephemeral: true,
+      };
+    }
+    if (this.startPromise !== undefined || this.terminating !== undefined) {
       return {
         kind: "busy",
         content: "Another goal is already starting. Try again in a moment.",
         ephemeral: true,
       };
     }
-    this.starting = true;
+    const startPromise = this.startGoalLocked(input, goal);
+    this.startPromise = startPromise;
     try {
-      return await this.startGoalLocked(input, goal);
+      return await startPromise;
     } finally {
-      this.starting = false;
+      if (this.startPromise === startPromise) {
+        this.startPromise = undefined;
+      }
     }
   }
 
@@ -263,6 +271,25 @@ export class GoalManager {
       deadline,
       status: "running",
     };
+    try {
+      await this.persistState(state);
+    } catch (error) {
+      this.controlGate.close(id);
+      try {
+        await settleGoalProcess(
+          {
+            process: spawned.process,
+            stdoutPump: spawned.stdoutPump,
+            releaseInputLease,
+          },
+          true,
+          () => this.controlGate.drain(),
+        );
+      } finally {
+        spawned.trace.end();
+      }
+      throw error;
+    }
     const timeout = setTimeout(() => {
       void this.timeoutGoal(id);
     }, this.config.max_runtime_minutes * 60_000);
@@ -277,19 +304,6 @@ export class GoalManager {
       trace: spawned.trace,
       releaseInputLease,
     };
-    try {
-      await this.persistState(state);
-    } catch (error) {
-      clearTimeout(timeout);
-      this.controlGate.close(id);
-      spawned.process.kill("SIGTERM");
-      await spawned.process.exited;
-      await this.controlGate.drain();
-      spawned.trace.end();
-      releaseInputLease();
-      this.active = undefined;
-      throw error;
-    }
     recordGoalStarted();
     void this.observeProcess(id);
 
@@ -333,6 +347,11 @@ export class GoalManager {
   }
 
   async shutdown(): Promise<void> {
+    this.shuttingDown = true;
+    const startPromise = this.startPromise;
+    if (startPromise !== undefined) {
+      await Promise.allSettled([startPromise]);
+    }
     await this.stopActive("shutdown");
   }
 
@@ -342,12 +361,13 @@ export class GoalManager {
       return;
     }
 
-    const exitCode = await active.process.exited;
+    await active.process.exited;
     const claimed = this.claimActive(id);
     if (claimed === undefined) return;
     try {
-      await claimed.stdoutPump;
-      await this.releaseGoalControls(claimed);
+      const exitCode = await settleGoalProcess(claimed, false, () =>
+        this.controlGate.drain(),
+      );
       const report = await this.readFinalReport(claimed.outputPath);
       claimed.state.finishedAt = this.now().toISOString();
       claimed.state.exitCode = exitCode;
@@ -379,9 +399,7 @@ export class GoalManager {
     const active = this.claimActive(id);
     if (active === undefined) return;
     try {
-      active.process.kill("SIGTERM");
-      await active.process.exited;
-      await this.releaseGoalControls(active);
+      await settleGoalProcess(active, true, () => this.controlGate.drain());
       active.state.status = "timeout";
       active.state.finishedAt = this.now().toISOString();
       active.state.finalReport = "Goal timed out before Codex finished.";
@@ -408,9 +426,7 @@ export class GoalManager {
       return;
     }
     try {
-      active.process.kill("SIGTERM");
-      await active.process.exited;
-      await this.releaseGoalControls(active);
+      await settleGoalProcess(active, true, () => this.controlGate.drain());
       active.state.status = status;
       active.state.finishedAt = this.now().toISOString();
       active.state.finalReport =
@@ -440,11 +456,6 @@ export class GoalManager {
     this.controlGate.close(active.state.id);
     clearTimeout(active.timeout);
     return active;
-  }
-
-  private async releaseGoalControls(active: ActiveGoal): Promise<void> {
-    await this.controlGate.drain();
-    active.releaseInputLease();
   }
 
   private async readFinalReport(outputPath: string): Promise<string> {

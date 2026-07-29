@@ -26,6 +26,9 @@ const MovementPositionSchema = z.looseObject({
   x: z.number().int(),
   y: z.number().int(),
 });
+const ObservationSchema = z.looseObject({
+  world: z.unknown().nullable(),
+});
 const ActionOutcomeSchema = z.looseObject({
   before: z.unknown().optional(),
   after: z.unknown().optional(),
@@ -93,19 +96,27 @@ function structuredMovementObservation(
     "no-progress",
     "unchanged",
   ]);
+  const normalStopReasons = new Set(["completed", "target-reached"]);
+  const stopReason = outcome.data.stopReason?.trim().toLowerCase();
   return {
     before,
     after,
     stopped:
       outcome.data.blocked === true ||
       (status !== undefined && stoppedStatuses.has(status)) ||
-      (outcome.data.stopReason !== undefined &&
-        outcome.data.stopReason !== null &&
-        outcome.data.stopReason.trim().length > 0),
+      (stopReason !== undefined &&
+        stopReason.length > 0 &&
+        !normalStopReasons.has(stopReason)),
   };
 }
 
 function movementPosition(value: unknown): MovementPosition | undefined {
+  const observation = ObservationSchema.safeParse(value);
+  if (observation.success) {
+    return observation.data.world === null
+      ? undefined
+      : movementPosition(observation.data.world);
+  }
   const parsed = MovementPositionSchema.safeParse(value);
   if (!parsed.success) return undefined;
   const position = parsed.data;
@@ -159,5 +170,5 @@ function legacyLocations(output: string): MovementPosition[] {
 }
 
 function positionKey(position: MovementPosition): string {
-  return `${position.map}\u0000${String(position.x)}\u0000${String(position.y)}`;
+  return `${position.map}\u{0}${String(position.x)}\u{0}${String(position.y)}`;
 }

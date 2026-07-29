@@ -14,6 +14,20 @@ async function git(command: readonly string[], cwd: string): Promise<string> {
   return await commandOutput(["git", ...command], cwd);
 }
 
+function productionObservation(x: number) {
+  return {
+    schemaVersion: 1,
+    id: `observation-${String(x)}`,
+    world: {
+      map: "Route 101",
+      mapGroup: 0,
+      mapNum: 16,
+      x,
+      y: 8,
+    },
+  };
+}
+
 describe("parseBenchmarkArgs", () => {
   test("requires artifacts and preserves the exact default goal", () => {
     const parsed = parseBenchmarkArgs(
@@ -200,6 +214,31 @@ describe("summarizeCodexJsonl", () => {
     expect(telemetry.movementActions).toBe(3);
     expect(telemetry.movementStops).toBe(1);
     expect(telemetry.repeatedPositionLoops).toBe(2);
+  });
+
+  test("reads production observation worlds and treats completed as normal", () => {
+    const line = {
+      type: "item.completed",
+      item: {
+        id: "production-move",
+        type: "command_execution",
+        command: "pokemonctl move east --tiles 1",
+        aggregated_output: JSON.stringify({
+          schemaVersion: 1,
+          action: "move:east",
+          status: "applied",
+          stopReason: "completed",
+          before: productionObservation(10),
+          after: productionObservation(11),
+        }),
+        exit_code: 0,
+      },
+    };
+
+    const telemetry = summarizeCodexJsonl(JSON.stringify(line));
+    expect(telemetry.movementActions).toBe(1);
+    expect(telemetry.movementStops).toBe(0);
+    expect(telemetry.repeatedPositionLoops).toBe(0);
   });
 
   test("supports legacy Location snapshots and ignores command text without position output", () => {
