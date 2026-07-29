@@ -42,7 +42,7 @@ function baselineSelectionIssues(options: CliValidationOptions): string[] {
       "provide either --baseline-build or a baseline time window, not both",
     );
   }
-  if (options.enforceImpactGates && !hasWindow && !hasBuilds) {
+  if (!hasWindow && !hasBuilds && options.enforceImpactGates) {
     issues.push("--enforce-impact-gates requires a baseline selection");
   }
   return issues;

@@ -271,8 +271,8 @@ function resolveCompetitionId(
     throw new Error("Competition-backed reports require a competition_id.");
   }
   if (
-    plan.competitionId !== undefined &&
     sourceCompetitionId !== undefined &&
+    plan.competitionId !== undefined &&
     plan.competitionId !== sourceCompetitionId
   ) {
     throw new Error("Report competition_id does not match its source.");

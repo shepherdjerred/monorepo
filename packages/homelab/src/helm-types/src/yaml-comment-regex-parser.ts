@@ -22,7 +22,7 @@ export function parseCommentsWithRegex(
     if (!trimmed) {
       // Only reset if we had a commented-out key (pendingCommentIndent === -1)
       // This allows multi-line comments for real keys to work
-      if (pendingComment.length > 0 && pendingCommentIndent === -1) {
+      if (pendingCommentIndent === -1 && pendingComment.length > 0) {
         pendingDebugInfo.push(
           `Line ${String(lineNum)}: Blank line after commented-out key, resetting pending`,
         );
@@ -98,7 +98,7 @@ export function parseCommentsWithRegex(
     const keyMatch = keyMatchRegex.exec(trimmed);
     if (keyMatch && pendingComment.length > 0) {
       const key = keyMatch[1];
-      if (key != null && key !== "") {
+      if (key !== "" && key != null) {
         const keyIndent = line.search(/\S/);
 
         // Only associate comment if indentation matches closely

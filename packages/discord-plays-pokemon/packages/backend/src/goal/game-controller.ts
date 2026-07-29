@@ -99,9 +99,9 @@ export class GameController {
         after = settled.observation;
         settleTimedOut ||= settled.timedOut;
         if (
+          settleTimedOut ||
           before.observation.phase !== after.phase ||
-          mapChanged(before.observation, after) ||
-          settleTimedOut
+          mapChanged(before.observation, after)
         ) {
           break;
         }
@@ -273,9 +273,9 @@ export class GameController {
       settleTimedOut ||= settled.timedOut;
 
       if (
+        settleTimedOut ||
         mapChanged(stepBefore, after) ||
-        stepBefore.phase !== after.phase ||
-        settleTimedOut
+        stepBefore.phase !== after.phase
       ) {
         break;
       }

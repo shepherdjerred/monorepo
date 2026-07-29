@@ -160,7 +160,7 @@ export class TaskStore {
     command: Command,
     serverTask: Task | null,
   ): Promise<void> {
-    if (command.type === "create" && serverTask !== null) {
+    if (serverTask !== null && command.type === "create") {
       this.aliases.set(command.tempId, serverTask.id);
       await this.queue.remapTaskId(command.tempId, serverTask.id);
       await this.persistAliases();

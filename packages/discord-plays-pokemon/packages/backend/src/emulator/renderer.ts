@@ -161,7 +161,7 @@ export function createRenderer(): Renderer {
     const bldcnt = rd16((REG + 0x50) >> 1);
     const effect = (bldcnt >> 6) & 3;
     const sourceTargets = bldcnt & 0x3f;
-    if (!effectsEnabled || !(sourceTargets & layer) || effect === 0)
+    if (!effectsEnabled || effect === 0 || !(sourceTargets & layer))
       return color;
     if (effect === 1 && (bldcnt >> 8) & rd8Layer(pixel)) {
       const alpha = rd16((REG + 0x52) >> 1);

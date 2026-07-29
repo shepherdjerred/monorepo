@@ -108,7 +108,7 @@ export class GameStreamer extends GameStreamerBase {
   /** Feed one BGRA frame (no-op unless a broadcast is active). */
   pushFrame(frame: Buffer, timing?: StreamFrameTiming): void {
     const sink = this.videoSink;
-    if (!this.frameSink || sink === undefined) return;
+    if (sink === undefined || !this.frameSink) return;
     const pushAt = performance.now();
     if (this.lastPushAt !== undefined) {
       streamFrameIntervalMs.observe(pushAt - this.lastPushAt);

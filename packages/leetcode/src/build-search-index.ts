@@ -45,7 +45,7 @@ async function main() {
   let slugBatch: string[] = [];
 
   async function flushEmbeddings() {
-    if (textBatch.length === 0 || !embeddingsAvailable) {
+    if (!embeddingsAvailable || textBatch.length === 0) {
       textBatch = [];
       slugBatch = [];
       return;
@@ -97,7 +97,7 @@ async function main() {
     const constraints = extractConstraints(contentHtml) ?? "";
     const editorialHtml = editorial?.content_html;
     const editorialText =
-      editorialHtml != null && editorialHtml !== ""
+      editorialHtml !== "" && editorialHtml != null
         ? htmlToText(editorialHtml)
         : "";
     const tagsStr = tags.join(", ");

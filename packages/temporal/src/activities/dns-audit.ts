@@ -125,11 +125,11 @@ async function checkMx(
 export type DnsAuditActivities = typeof dnsAuditActivities;
 
 export const dnsAuditActivities = {
-  async getDomains(): Promise<{
+  getDomains(): Promise<{
     emailDomains: string[];
     noEmailDomains: string[];
   }> {
-    return await Promise.resolve({
+    return Promise.resolve({
       emailDomains: EMAIL_DOMAINS,
       noEmailDomains: NO_EMAIL_DOMAINS,
     });

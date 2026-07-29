@@ -319,8 +319,8 @@ export class DiscordRestClient {
         };
       }
       if (
-        !isRetryableStatus(request.response.status) ||
-        attempt === MAX_RETRIES
+        attempt === MAX_RETRIES ||
+        !isRetryableStatus(request.response.status)
       ) {
         glitterCorpusDiscordRequestsTotal.inc({ outcome: "fatal-error" });
         throw new Error(

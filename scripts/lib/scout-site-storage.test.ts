@@ -117,11 +117,10 @@ test("beta deployment checks served entrypoints before an exact-marker no-op", a
   const prodStart = source.indexOf("export async function reconcileScoutProd");
   const beta = source.slice(betaStart, prodStart);
   const mismatch = beta.indexOf("await firstS3ObjectMismatch");
-  const exactMarkerNoOp = beta.indexOf(
-    "currentMarker?.trim() === desired && mismatch === undefined",
-  );
+  const exactMarkerNoOp = beta.indexOf("mismatch === undefined");
   expect(mismatch).toBeGreaterThan(0);
   expect(exactMarkerNoOp).toBeGreaterThan(mismatch);
+  expect(beta).toContain("currentMarker?.trim() === desired");
   expect(beta).toContain("forceMutableUpload: true");
   expect(beta.indexOf("await assertS3ObjectsMatchSource")).toBeGreaterThan(0);
   expect(beta.indexOf("await writeMarker")).toBeGreaterThan(

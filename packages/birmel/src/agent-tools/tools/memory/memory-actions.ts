@@ -203,7 +203,7 @@ export async function handleAppendMemory(
   item: string | undefined,
   section: SectionKey | undefined,
 ): Promise<MemoryResult> {
-  if (item == null || item.length === 0 || !section) {
+  if (!section || item == null || item.length === 0) {
     return {
       success: false,
       message: "item and section are required for append",

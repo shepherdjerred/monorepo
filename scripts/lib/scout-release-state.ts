@@ -193,8 +193,8 @@ export function resolveProdPin(versionsSource: string): string {
   const [version, digest, ...extra] = pin.split("@");
   if (
     version === undefined ||
-    !SCOUT_VERSION_PATTERN.test(version) ||
     digest === undefined ||
+    !SCOUT_VERSION_PATTERN.test(version) ||
     !CANONICAL_DIGEST_PATTERN.test(digest) ||
     extra.length > 0
   ) {

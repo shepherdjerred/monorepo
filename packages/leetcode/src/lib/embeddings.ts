@@ -46,7 +46,7 @@ function getReader(stdout: ReadableStream<Uint8Array>): TypedReader {
 
 function getStdinWriter(proc: ReturnType<typeof Bun.spawn>): StdinWriter {
   const stdin = proc.stdin;
-  if (stdin == null || typeof stdin === "number") {
+  if (typeof stdin === "number" || stdin == null) {
     throw new Error("Process stdin not available");
   }
   return stdin;
@@ -195,7 +195,7 @@ export class EmbeddingClient {
       stderr: "inherit",
     });
     const stdout = this.proc.stdout;
-    if (stdout == null || typeof stdout === "number") {
+    if (typeof stdout === "number" || stdout == null) {
       throw new Error("Embedding server stdout not available");
     }
     this.reader = getReader(stdout);

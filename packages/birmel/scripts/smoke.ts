@@ -89,7 +89,7 @@ async function main(): Promise<void> {
 
   const lower = run.stdout.toLowerCase();
   const expected = EXPECTED_FAILURE.some((p) => lower.includes(p));
-  if (run.code === 0 || expected) {
+  if (expected || run.code === 0) {
     console.log(
       "Smoke test passed: editor + music deps present, and boot hit the expected auth failure.",
     );

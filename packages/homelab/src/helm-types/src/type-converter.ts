@@ -195,26 +195,26 @@ export function typesAreCompatible(
   if (schemaTypes.length > 1) {
     for (const st of schemaTypes) {
       // Handle quoted strings in unions (like "default")
-      if (st.startsWith('"') && st.endsWith('"') && inferredType === "string") {
+      if (inferredType === "string" && st.startsWith('"') && st.endsWith('"')) {
         return true;
       }
       if (st === inferredType) {
         return true;
       }
       // Arrays
-      if (st.endsWith("[]") && inferredType === "array") {
+      if (inferredType === "array" && st.endsWith("[]")) {
         return true;
       }
     }
   }
 
   // Handle array types
-  if (schemaType.endsWith("[]") && inferredType === "array") {
+  if (inferredType === "array" && schemaType.endsWith("[]")) {
     return true;
   }
 
   // Handle specific string literals - if schema expects specific strings and value is a string
-  if (schemaType.includes('"') && inferredType === "string") {
+  if (inferredType === "string" && schemaType.includes('"')) {
     return true;
   }
 
@@ -301,12 +301,12 @@ function convertWithSchema(
 
   // Warn about type mismatches
   if (
-    inferredType != null &&
     inferredType !== "" &&
+    inferredType != null &&
     !typesAreCompatible(inferredType, schemaType)
   ) {
     const propName =
-      propertyName != null && propertyName !== "" ? `'${propertyName}': ` : "";
+      propertyName !== "" && propertyName != null ? `'${propertyName}': ` : "";
     console.warn(
       `  ⚠️  Type mismatch for ${propName}Schema says '${schemaType}' but value suggests '${inferredType}' (value: ${String(value).slice(0, 50)})`,
     );
@@ -417,14 +417,14 @@ function inferUniformArrayType(
   const { nestedTypeName, chartName, fullKey, propertyName, yamlComment } = ctx;
   const elementType = [...elementTypes][0];
   const elementProp = elementTypeProps[0];
-  if (elementType == null || elementType === "" || !elementProp) {
+  if (elementType === "" || !elementProp || elementType == null) {
     return { type: "unknown[]", optional: true };
   }
 
   if (elementProp.nested) {
     const arrayElementTypeName = `${nestedTypeName}Element`;
     const allowArbitraryProps =
-      chartName != null && chartName !== "" && fullKey != null && fullKey !== ""
+      chartName !== "" && fullKey !== "" && chartName != null && fullKey != null
         ? shouldAllowArbitraryProps(
             fullKey,
             chartName,
@@ -478,7 +478,7 @@ function convertValueToProperty(opts: PropertyConversionContext): TypeProperty {
   // only allow cpu). Emit the canonical permissive type instead — but only
   // when the default value's shape is compatible, so RBAC `resources:
   // ["secrets"]` arrays stay arrays.
-  if (propertyName != null && propertyName !== "") {
+  if (propertyName !== "" && propertyName != null) {
     const wellKnown = getWellKnownK8sFieldType(propertyName, value);
     if (wellKnown) {
       return {

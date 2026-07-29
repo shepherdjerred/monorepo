@@ -179,7 +179,7 @@ export function shouldAllowArbitraryProps(
   }
 
   // Check YAML comments for hints
-  if (yamlComment != null && yamlComment !== "") {
+  if (yamlComment !== "" && yamlComment != null) {
     const commentLower = yamlComment.toLowerCase();
     if (
       /\b(?:arbitrary|custom|additional|extra|any)\s+(?:keys?|properties?|fields?|values?)\b/i.test(

@@ -167,7 +167,7 @@ export function recommended(
     },
   };
 
-  if (customRules.reactRules === true && react) {
+  if (react && customRules.reactRules === true) {
     customRulesConfig.rules = {
       ...customRulesConfig.rules,
       "custom-rules/no-use-effect": "warn",

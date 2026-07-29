@@ -11,7 +11,7 @@ type ToolLike = {
 };
 
 function getExecutableTool(tool: unknown): ToolLike {
-  if (tool == null || typeof tool !== "object" || !("execute" in tool)) {
+  if (typeof tool !== "object" || tool == null || !("execute" in tool)) {
     throw new TypeError("Tool is not executable");
   }
   const execute = tool.execute;
@@ -27,7 +27,7 @@ function getExecutableTool(tool: unknown): ToolLike {
 }
 
 function expectSuccess(value: unknown, label: string): void {
-  if (value == null || typeof value !== "object" || !("success" in value)) {
+  if (typeof value !== "object" || value == null || !("success" in value)) {
     throw new Error(`${label} did not return a success field`);
   }
   if (value.success !== true) {

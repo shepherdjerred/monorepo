@@ -117,7 +117,7 @@ export const prismaClientDisconnect = createRule<Options, MessageIds>({
 
       // Report at end of program
       "Program:exit"() {
-        if (prismaClientNodes.length > 0 && !hasAfterAllWithDisconnect) {
+        if (!hasAfterAllWithDisconnect && prismaClientNodes.length > 0) {
           // Report on each PrismaClient instantiation
           for (const [
             index,

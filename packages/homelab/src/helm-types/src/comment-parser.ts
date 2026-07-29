@@ -121,15 +121,15 @@ export function parseYAMLComments(yamlContent: string): Map<string, string> {
     if (keyMatch) {
       const indent = keyMatch[1]?.length ?? 0;
       const key = keyMatch[2];
-      if (key == null || key === "") {
+      if (key === "" || key == null) {
         continue;
       }
 
       // Update indent stack
       const lastIndent = indentStack.at(-1);
       while (
-        indentStack.length > 0 &&
         lastIndent &&
+        indentStack.length > 0 &&
         lastIndent.indent >= indent
       ) {
         indentStack.pop();

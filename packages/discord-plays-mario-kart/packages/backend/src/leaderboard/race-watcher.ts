@@ -102,7 +102,7 @@ export class RaceWatcher {
         const allFinished = [...race.seats.values()].every(
           (s) => s.finish !== undefined,
         );
-        if (this.confirmedState === "finished" || allFinished) {
+        if (allFinished || this.confirmedState === "finished") {
           this.phase = { kind: "emitted" };
           return this.finalize(race, snap);
         }

@@ -139,8 +139,8 @@ export async function getFreshUserAccessToken(
   const expiresAt = user.tokenExpiresAt;
   // Refresh if expired or within 60s of expiry.
   if (
-    user.discordAccessToken !== null &&
     expiresAt !== null &&
+    user.discordAccessToken !== null &&
     expiresAt.getTime() > Date.now() + 60_000
   ) {
     return user.discordAccessToken;

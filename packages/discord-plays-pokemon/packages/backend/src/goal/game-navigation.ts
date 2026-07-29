@@ -182,7 +182,7 @@ export async function navigateGame(
 ): Promise<NavigationOutcomeV1> {
   const before = options.observe();
   const start = before.world;
-  if (!movementReady(before) || start === null) {
+  if (start === null || !movementReady(before)) {
     return navigationResult({
       stopReason: "field-input-not-ready",
       target: options.target,
@@ -231,7 +231,7 @@ export async function navigateGame(
         after,
       });
     }
-    if (!movementReady(current) || world === null) {
+    if (world === null || !movementReady(current)) {
       return navigationResult({
         stopReason: "field-input-not-ready",
         target: options.target,

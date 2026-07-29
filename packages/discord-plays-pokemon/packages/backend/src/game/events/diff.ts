@@ -61,7 +61,7 @@ export function diffSnapshots(
 
     // Faint: HP crossed to zero. Suppressed when the whole party blacked out
     // (a single whiteout event stands in for the individual faints).
-    if (!mon.isEgg && before.hp > 0 && mon.hp === 0 && !whiteout) {
+    if (!whiteout && !mon.isEgg && before.hp > 0 && mon.hp === 0) {
       events.push({
         kind: "faint",
         species: mon.species,

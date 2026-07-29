@@ -157,7 +157,7 @@ export function SoundEntryCard({
   };
 
   const handleCache = async () => {
-    if (!onCache || entry.source.type !== "url" || isCaching) {
+    if (!onCache || isCaching || entry.source.type !== "url") {
       return;
     }
 

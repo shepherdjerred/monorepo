@@ -74,10 +74,10 @@ export async function handlePrCommand(
   args: string[],
 ): Promise<void> {
   if (
-    subcommand == null ||
-    subcommand.length === 0 ||
     subcommand === "--help" ||
-    subcommand === "-h"
+    subcommand === "-h" ||
+    subcommand == null ||
+    subcommand.length === 0
   ) {
     console.log(`
 tools pr - Pull request utilities

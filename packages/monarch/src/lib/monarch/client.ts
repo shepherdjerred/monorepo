@@ -210,7 +210,7 @@ export async function applySplits(
   const subTxns: { id: string }[] = txn.splitTransactions;
   for (const [i, split] of splits.entries()) {
     const subTxn = subTxns[i];
-    if (split.date !== undefined && split.date !== "" && subTxn) {
+    if (subTxn && split.date !== undefined && split.date !== "") {
       const subId = subTxn.id;
       const dateOverride = split.date;
       log.debug(`  Moving sub-transaction ${subId} to ${dateOverride}`);

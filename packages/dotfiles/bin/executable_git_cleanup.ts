@@ -123,7 +123,7 @@ async function inspectWorktree(
     pullRequestResult.state === "MERGED" ||
     (options.includeClosedPullRequests && pullRequestResult.state === "CLOSED");
   const commitsAheadOfDefault =
-    options.removeCleanWorktrees && !eligibleByBranchState
+    !eligibleByBranchState && options.removeCleanWorktrees
       ? await commitsAheadOfDefaultBranch(worktree.path, defaultBranch)
       : undefined;
   return {

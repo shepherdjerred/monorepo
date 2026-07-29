@@ -198,7 +198,7 @@ export function selectZfsNodePods(
     const isReady = pod.status?.conditions?.some(
       (condition) => condition.type === "Ready" && condition.status === "True",
     );
-    if (pod.status?.phase !== "Running" || isReady !== true) {
+    if (isReady !== true || pod.status?.phase !== "Running") {
       continue;
     }
     const name = pod.metadata?.name;

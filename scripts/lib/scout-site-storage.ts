@@ -368,7 +368,7 @@ export async function deployScoutBeta(
       endpoint: SEAWEEDFS_ENDPOINT,
       env: SEAWEEDFS_AWS_ENV,
     });
-    if (currentMarker?.trim() === desired && mismatch === undefined) {
+    if (mismatch === undefined && currentMarker?.trim() === desired) {
       return;
     }
     await s3SyncStaticSite({
