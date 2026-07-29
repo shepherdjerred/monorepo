@@ -152,10 +152,21 @@ Worker-thread performance change did not improve the delivered stream.
   other generic `minimizeLatency` callers.
 - Passed all 60 `discord-video-stream`, 9 `discord-plays-core`, and 127 MK64
   backend tests plus typecheck and the configured package lint gates.
+- Reproduced the pause/resume boundary outside Discord with the real ffmpeg
+  process. Six frames plus 200 ms of PCM drained in about 107 ms, proving the
+  command and flow-control path work once audio exists. This isolated the
+  live-only difference: N64 boot emits video before its audio ring is primed,
+  so the initial backpressure pause occurred before ffmpeg had usable PCM.
+- Delayed the first whole-emulator pause until one second (176,400 bytes) of
+  stereo s16le PCM has actually been forwarded. A video-first harness (ten
+  frames before audio) then buffered 40 frames / 22,732,800 writable bytes and
+  drained in about 34 ms once paused, without dropping either content stream.
+- Added focused tests for the audio-pre-roll gate and passed the affected
+  typecheck and lint targets.
 
 ### Remaining
 
-- Commit and publish the raw-input probe bound, build and deploy an immutable
+- Commit and publish the audio-pre-roll gate, build and deploy an immutable
   image from that PR head, restart the Discord session, and obtain manual
   confirmation that audio is synchronized.
 - Fix the separate Worker teardown ordering error found when `/stop` ended the
@@ -193,6 +204,10 @@ Worker-thread performance change did not improve the delivered stream.
   The probe-size override must remain scoped to explicitly typed raw inputs;
   applying the minimum globally could break codec/container discovery for
   other stream sources.
+- The steady-state video queue remains a three-frame budget. During the N64
+  audio-ring warm-up, video may temporarily exceed that high-water mark until
+  one second of PCM has been forwarded; the reproduced video-first case peaked
+  at about 22.7 MB and drained immediately after the synchronized pause.
 - `/stop` completed and the stream shut down, but its asynchronous session-end
   callback ran after `WorkerEmulator.stop()` and logged
   `emulator worker is not running`. That distinct lifecycle defect is now

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "bun:test";
-import { createFrameSink, MAX_SINK_BUFFER_BYTES } from "./game-streamer.ts";
+import {
+  createFrameSink,
+  MAX_SINK_BUFFER_BYTES,
+  MIN_AUDIO_PREROLL_BYTES,
+  shouldPauseForEncoderBackpressure,
+} from "./game-streamer.ts";
 import { HEIGHT, WIDTH } from "#src/emulator/constants.ts";
 
 const FRAME_BYTES = WIDTH * HEIGHT * 4;
@@ -42,5 +47,26 @@ describe("createFrameSink", () => {
 
     expect(sink.writableLength).toBe(0);
     sink.destroy();
+  });
+});
+
+describe("shouldPauseForEncoderBackpressure", () => {
+  it("does not pause before the live PCM input has enough startup data", () => {
+    expect(shouldPauseForEncoderBackpressure(false, 0)).toBe(false);
+    expect(
+      shouldPauseForEncoderBackpressure(false, MIN_AUDIO_PREROLL_BYTES - 1),
+    ).toBe(false);
+  });
+
+  it("pauses a full video sink once one second of PCM has been forwarded", () => {
+    expect(
+      shouldPauseForEncoderBackpressure(false, MIN_AUDIO_PREROLL_BYTES),
+    ).toBe(true);
+  });
+
+  it("keeps running when the video sink is accepting data", () => {
+    expect(
+      shouldPauseForEncoderBackpressure(true, MIN_AUDIO_PREROLL_BYTES),
+    ).toBe(false);
   });
 });

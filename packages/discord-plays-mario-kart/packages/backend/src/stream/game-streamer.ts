@@ -10,6 +10,8 @@ import {
 import type { EncoderHandles } from "@shepherdjerred/discord-stream-lifecycle/types.ts";
 import { GameStreamerBase } from "@shepherdjerred/discord-plays-core/stream/game-streamer-base.ts";
 import {
+  AUDIO_CHANNELS,
+  AUDIO_SAMPLE_RATE,
   WIDTH,
   HEIGHT,
   N64_FPS,
@@ -73,6 +75,15 @@ const SRC_FPS = N64_FPS;
 // fills preserves A/V content time while preventing the multi-gigabyte backlog
 // observed before the stream was bounded. Three frames are about 100 ms at 30fps.
 export const MAX_SINK_BUFFER_BYTES = WIDTH * HEIGHT * 4 * 3;
+export const MIN_AUDIO_PREROLL_BYTES =
+  AUDIO_SAMPLE_RATE * AUDIO_CHANNELS * Int16Array.BYTES_PER_ELEMENT;
+
+export function shouldPauseForEncoderBackpressure(
+  canContinue: boolean,
+  audioPrerollBytes: number,
+): boolean {
+  return !canContinue && audioPrerollBytes >= MIN_AUDIO_PREROLL_BYTES;
+}
 
 /**
  * Frame sink with a meaningful write() backpressure signal at the latency
@@ -96,6 +107,7 @@ export class GameStreamer extends GameStreamerBase {
   private streamObserver: StreamObserver | undefined;
   private frameInput: PassThrough | undefined;
   private encoderBackpressured = false;
+  private audioPrerollBytes = 0;
   private readonly handleFrameSinkDrain = (): void => {
     this.setEncoderBackpressured(false);
   };
@@ -124,10 +136,21 @@ export class GameStreamer extends GameStreamerBase {
     streamFrameWriteMs.observe(performance.now() - pushAt);
     if (this.session) this.session.framesPushed++;
     sinkBufferBytes.set(sink.writableLength);
-    if (!canContinue && !this.encoderBackpressured) {
+    if (
+      shouldPauseForEncoderBackpressure(canContinue, this.audioPrerollBytes) &&
+      !this.encoderBackpressured
+    ) {
       sink.once("drain", this.handleFrameSinkDrain);
       this.setEncoderBackpressured(true);
     }
+  }
+
+  override pushAudio(pcm: Buffer): void {
+    this.audioPrerollBytes = Math.min(
+      MIN_AUDIO_PREROLL_BYTES,
+      this.audioPrerollBytes + pcm.length,
+    );
+    super.pushAudio(pcm);
   }
 
   protected override beforeActorStop(): void {
@@ -241,6 +264,7 @@ export class GameStreamer extends GameStreamerBase {
   private resetStreamMetrics(): void {
     this.frameInput?.off("drain", this.handleFrameSinkDrain);
     this.frameInput = undefined;
+    this.audioPrerollBytes = 0;
     this.setEncoderBackpressured(false);
     sinkBufferBytes.set(0);
     streamFfmpegSpeedRatio.set(0);
