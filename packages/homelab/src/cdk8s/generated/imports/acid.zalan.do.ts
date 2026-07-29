@@ -4,7 +4,7 @@ import { ApiObject, ApiObjectMetadata, GroupVersionKind } from "cdk8s";
 import { Construct } from "constructs";
 
 /**
- *
+ * OperatorConfiguration defines the specification for the OperatorConfiguration.
  *
  * @schema OperatorConfiguration
  */
@@ -62,15 +62,19 @@ export class OperatorConfiguration extends ApiObject {
 }
 
 /**
+ * OperatorConfiguration defines the specification for the OperatorConfiguration.
+ *
  * @schema OperatorConfiguration
  */
 export interface OperatorConfigurationProps {
   /**
    * @schema OperatorConfiguration#metadata
    */
-  readonly metadata?: ApiObjectMetadata;
+  readonly metadata: ApiObjectMetadata;
 
   /**
+   * OperatorConfigurationData defines the operation config
+   *
    * @schema OperatorConfiguration#configuration
    */
   readonly configuration: OperatorConfigurationConfiguration;
@@ -99,15 +103,21 @@ export function toJson_OperatorConfigurationProps(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * OperatorConfigurationData defines the operation config
+ *
  * @schema OperatorConfigurationConfiguration
  */
 export interface OperatorConfigurationConfiguration {
   /**
+   * AWSGCPConfiguration defines the configuration for AWS
+   *
    * @schema OperatorConfigurationConfiguration#aws_or_gcp
    */
   readonly awsOrGcp?: OperatorConfigurationConfigurationAwsOrGcp;
 
   /**
+   * ConnectionPoolerConfiguration defines default configuration for connection pooler
+   *
    * @schema OperatorConfigurationConfiguration#connection_pooler
    */
   readonly connectionPooler?: OperatorConfigurationConfigurationConnectionPooler;
@@ -118,6 +128,8 @@ export interface OperatorConfigurationConfiguration {
   readonly crdCategories?: string[];
 
   /**
+   * OperatorDebugConfiguration defines options for the debug mode
+   *
    * @schema OperatorConfigurationConfiguration#debug
    */
   readonly debug?: OperatorConfigurationConfigurationDebug;
@@ -133,16 +145,14 @@ export interface OperatorConfigurationConfiguration {
   readonly enableCrdRegistration?: boolean;
 
   /**
-   * deprecated
-   *
-   * @schema OperatorConfigurationConfiguration#enable_crd_validation
-   */
-  readonly enableCrdValidation?: boolean;
-
-  /**
    * @schema OperatorConfigurationConfiguration#enable_lazy_spilo_upgrade
    */
   readonly enableLazySpiloUpgrade?: boolean;
+
+  /**
+   * @schema OperatorConfigurationConfiguration#enable_maintenance_windows
+   */
+  readonly enableMaintenanceWindows?: boolean;
 
   /**
    * @schema OperatorConfigurationConfiguration#enable_pgversion_env_var
@@ -175,6 +185,13 @@ export interface OperatorConfigurationConfiguration {
   readonly ignoreInstanceLimitsAnnotationKey?: string;
 
   /**
+   * @schema OperatorConfigurationConfiguration#ignore_resources_limits_annotation_key
+   */
+  readonly ignoreResourcesLimitsAnnotationKey?: string;
+
+  /**
+   * KubernetesMetaConfiguration defines k8s conf required for all Postgres clusters and the operator itself
+   *
    * @schema OperatorConfigurationConfiguration#kubernetes
    */
   readonly kubernetes?: OperatorConfigurationConfigurationKubernetes;
@@ -185,21 +202,34 @@ export interface OperatorConfigurationConfiguration {
   readonly kubernetesUseConfigmaps?: boolean;
 
   /**
+   * LoadBalancerConfiguration defines the LB configuration
+   *
    * @schema OperatorConfigurationConfiguration#load_balancer
    */
   readonly loadBalancer?: OperatorConfigurationConfigurationLoadBalancer;
 
   /**
+   * LoggingRESTAPIConfiguration defines Logging API conf
+   *
    * @schema OperatorConfigurationConfiguration#logging_rest_api
    */
   readonly loggingRestApi?: OperatorConfigurationConfigurationLoggingRestApi;
 
   /**
+   * OperatorLogicalBackupConfiguration defines configuration for logical backup
+   *
    * @schema OperatorConfigurationConfiguration#logical_backup
    */
   readonly logicalBackup?: OperatorConfigurationConfigurationLogicalBackup;
 
   /**
+   * @schema OperatorConfigurationConfiguration#maintenance_windows
+   */
+  readonly maintenanceWindows?: string[];
+
+  /**
+   * MajorVersionUpgradeConfiguration defines how to execute major version upgrades of Postgres.
+   *
    * @schema OperatorConfigurationConfiguration#major_version_upgrade
    */
   readonly majorVersionUpgrade?: OperatorConfigurationConfigurationMajorVersionUpgrade;
@@ -219,26 +249,36 @@ export interface OperatorConfigurationConfiguration {
   readonly minInstances?: number;
 
   /**
+   * PatroniConfiguration defines configuration for Patroni
+   *
    * @schema OperatorConfigurationConfiguration#patroni
    */
   readonly patroni?: OperatorConfigurationConfigurationPatroni;
 
   /**
+   * PostgresPodResourcesDefaults defines the spec of default resources
+   *
    * @schema OperatorConfigurationConfiguration#postgres_pod_resources
    */
   readonly postgresPodResources?: OperatorConfigurationConfigurationPostgresPodResources;
 
   /**
+   * period between consecutive repair requests
+   *
    * @schema OperatorConfigurationConfiguration#repair_period
    */
   readonly repairPeriod?: string;
 
   /**
+   * period between consecutive sync requests
+   *
    * @schema OperatorConfigurationConfiguration#resync_period
    */
   readonly resyncPeriod?: string;
 
   /**
+   * ScalyrConfiguration defines the configuration for ScalyrAPI
+   *
    * @schema OperatorConfigurationConfiguration#scalyr
    */
   readonly scalyr?: OperatorConfigurationConfigurationScalyr;
@@ -256,19 +296,25 @@ export interface OperatorConfigurationConfiguration {
   /**
    * @schema OperatorConfigurationConfiguration#sidecars
    */
-  readonly sidecars?: any[];
+  readonly sidecars?: any;
 
   /**
+   * TeamsAPIConfiguration defines the configuration of TeamsAPI
+   *
    * @schema OperatorConfigurationConfiguration#teams_api
    */
   readonly teamsApi?: OperatorConfigurationConfigurationTeamsApi;
 
   /**
+   * OperatorTimeouts defines the timeout of ResourceCheck, PodWait, ReadyWait
+   *
    * @schema OperatorConfigurationConfiguration#timeouts
    */
   readonly timeouts?: OperatorConfigurationConfigurationTimeouts;
 
   /**
+   * PostgresUsersConfiguration defines the system users of Postgres.
+   *
    * @schema OperatorConfigurationConfiguration#users
    */
   readonly users?: OperatorConfigurationConfigurationUsers;
@@ -299,8 +345,8 @@ export function toJson_OperatorConfigurationConfiguration(
     debug: toJson_OperatorConfigurationConfigurationDebug(obj.debug),
     docker_image: obj.dockerImage,
     enable_crd_registration: obj.enableCrdRegistration,
-    enable_crd_validation: obj.enableCrdValidation,
     enable_lazy_spilo_upgrade: obj.enableLazySpiloUpgrade,
+    enable_maintenance_windows: obj.enableMaintenanceWindows,
     enable_pgversion_env_var: obj.enablePgversionEnvVar,
     enable_shm_volume: obj.enableShmVolume,
     enable_spilo_wal_path_compat: obj.enableSpiloWalPathCompat,
@@ -308,6 +354,8 @@ export function toJson_OperatorConfigurationConfiguration(
     etcd_host: obj.etcdHost,
     ignore_instance_limits_annotation_key:
       obj.ignoreInstanceLimitsAnnotationKey,
+    ignore_resources_limits_annotation_key:
+      obj.ignoreResourcesLimitsAnnotationKey,
     kubernetes: toJson_OperatorConfigurationConfigurationKubernetes(
       obj.kubernetes,
     ),
@@ -321,6 +369,7 @@ export function toJson_OperatorConfigurationConfiguration(
     logical_backup: toJson_OperatorConfigurationConfigurationLogicalBackup(
       obj.logicalBackup,
     ),
+    maintenance_windows: obj.maintenanceWindows?.map((y) => y),
     major_version_upgrade:
       toJson_OperatorConfigurationConfigurationMajorVersionUpgrade(
         obj.majorVersionUpgrade,
@@ -343,7 +392,7 @@ export function toJson_OperatorConfigurationConfiguration(
             (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
             {},
           ),
-    sidecars: obj.sidecars?.map((y) => y),
+    sidecars: obj.sidecars,
     teams_api: toJson_OperatorConfigurationConfigurationTeamsApi(obj.teamsApi),
     timeouts: toJson_OperatorConfigurationConfigurationTimeouts(obj.timeouts),
     users: toJson_OperatorConfigurationConfigurationUsers(obj.users),
@@ -358,6 +407,8 @@ export function toJson_OperatorConfigurationConfiguration(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * AWSGCPConfiguration defines the configuration for AWS
+ *
  * @schema OperatorConfigurationConfigurationAwsOrGcp
  */
 export interface OperatorConfigurationConfigurationAwsOrGcp {
@@ -377,19 +428,14 @@ export interface OperatorConfigurationConfigurationAwsOrGcp {
   readonly awsRegion?: string;
 
   /**
-   * @schema OperatorConfigurationConfigurationAwsOrGcp#enable_ebs_gp3_migration
-   */
-  readonly enableEbsGp3Migration?: boolean;
-
-  /**
-   * @schema OperatorConfigurationConfigurationAwsOrGcp#enable_ebs_gp3_migration_max_size
-   */
-  readonly enableEbsGp3MigrationMaxSize?: number;
-
-  /**
    * @schema OperatorConfigurationConfigurationAwsOrGcp#gcp_credentials
    */
   readonly gcpCredentials?: string;
+
+  /**
+   * @schema OperatorConfigurationConfigurationAwsOrGcp#irsa_role_arn
+   */
+  readonly irsaRoleArn?: string;
 
   /**
    * @schema OperatorConfigurationConfigurationAwsOrGcp#kube_iam_role
@@ -431,9 +477,8 @@ export function toJson_OperatorConfigurationConfigurationAwsOrGcp(
     additional_secret_mount: obj.additionalSecretMount,
     additional_secret_mount_path: obj.additionalSecretMountPath,
     aws_region: obj.awsRegion,
-    enable_ebs_gp3_migration: obj.enableEbsGp3Migration,
-    enable_ebs_gp3_migration_max_size: obj.enableEbsGp3MigrationMaxSize,
     gcp_credentials: obj.gcpCredentials,
+    irsa_role_arn: obj.irsaRoleArn,
     kube_iam_role: obj.kubeIamRole,
     log_s3_bucket: obj.logS3Bucket,
     wal_az_storage_account: obj.walAzStorageAccount,
@@ -449,6 +494,8 @@ export function toJson_OperatorConfigurationConfigurationAwsOrGcp(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * ConnectionPoolerConfiguration defines default configuration for connection pooler
+ *
  * @schema OperatorConfigurationConfigurationConnectionPooler
  */
 export interface OperatorConfigurationConfigurationConnectionPooler {
@@ -538,6 +585,8 @@ export function toJson_OperatorConfigurationConfigurationConnectionPooler(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * OperatorDebugConfiguration defines options for the debug mode
+ *
  * @schema OperatorConfigurationConfigurationDebug
  */
 export interface OperatorConfigurationConfigurationDebug {
@@ -575,6 +624,8 @@ export function toJson_OperatorConfigurationConfigurationDebug(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * KubernetesMetaConfiguration defines k8s conf required for all Postgres clusters and the operator itself
+ *
  * @schema OperatorConfigurationConfigurationKubernetes
  */
 export interface OperatorConfigurationConfigurationKubernetes {
@@ -679,6 +730,8 @@ export interface OperatorConfigurationConfigurationKubernetes {
   readonly infrastructureRolesSecretName?: string;
 
   /**
+   * namespaced name of the secret containing infrastructure roles names and passwords
+   *
    * @schema OperatorConfigurationConfigurationKubernetes#infrastructure_roles_secrets
    */
   readonly infrastructureRolesSecrets?: OperatorConfigurationConfigurationKubernetesInfrastructureRolesSecrets[];
@@ -694,6 +747,16 @@ export interface OperatorConfigurationConfigurationKubernetes {
   readonly inheritedLabels?: string[];
 
   /**
+   * Probe describes a health check to be performed against a container to determine whether it is
+   * alive or ready to receive traffic.
+   *
+   * @schema OperatorConfigurationConfigurationKubernetes#liveness_probe
+   */
+  readonly livenessProbe?: OperatorConfigurationConfigurationKubernetesLivenessProbe;
+
+  /**
+   * timeout for successful migration of master pods from unschedulable node
+   *
    * @schema OperatorConfigurationConfigurationKubernetes#master_pod_move_timeout
    */
   readonly masterPodMoveTimeout?: string;
@@ -709,6 +772,8 @@ export interface OperatorConfigurationConfigurationKubernetes {
   readonly nodeReadinessLabelMerge?: OperatorConfigurationConfigurationKubernetesNodeReadinessLabelMerge;
 
   /**
+   * namespaced name of the secret containing the OAuth2 token to pass to the teams API
+   *
    * @schema OperatorConfigurationConfigurationKubernetes#oauth_token_secret_name
    */
   readonly oauthTokenSecretName?: string;
@@ -719,6 +784,8 @@ export interface OperatorConfigurationConfigurationKubernetes {
   readonly pdbMasterLabelSelector?: boolean;
 
   /**
+   * defines the template for PDB names
+   *
    * @schema OperatorConfigurationConfigurationKubernetes#pdb_name_format
    */
   readonly pdbNameFormat?: string;
@@ -726,7 +793,7 @@ export interface OperatorConfigurationConfigurationKubernetes {
   /**
    * @schema OperatorConfigurationConfigurationKubernetes#persistent_volume_claim_retention_policy
    */
-  readonly persistentVolumeClaimRetentionPolicy?: OperatorConfigurationConfigurationKubernetesPersistentVolumeClaimRetentionPolicy;
+  readonly persistentVolumeClaimRetentionPolicy?: { [key: string]: string };
 
   /**
    * @schema OperatorConfigurationConfigurationKubernetes#pod_antiaffinity_preferred_during_scheduling
@@ -739,6 +806,8 @@ export interface OperatorConfigurationConfigurationKubernetes {
   readonly podAntiaffinityTopologyKey?: string;
 
   /**
+   * namespaced name of the ConfigMap with environment variables to populate on every pod
+   *
    * @schema OperatorConfigurationConfigurationKubernetes#pod_environment_configmap
    */
   readonly podEnvironmentConfigmap?: string;
@@ -779,11 +848,18 @@ export interface OperatorConfigurationConfigurationKubernetes {
   readonly podServiceAccountRoleBindingDefinition?: string;
 
   /**
+   * Postgres pods are terminated forcefully after this timeout
+   *
    * @schema OperatorConfigurationConfigurationKubernetes#pod_terminate_grace_period
    */
   readonly podTerminateGracePeriod?: string;
 
   /**
+   * template for database user secrets generated by the operator,
+   * here username contains the namespace in the format namespace.username
+   * if the user is in different namespace than cluster and cross namespace secrets
+   * are enabled via `enable_cross_namespace_secret` flag in the configuration.
+   *
    * @schema OperatorConfigurationConfigurationKubernetes#secret_name_template
    */
   readonly secretNameTemplate?: string;
@@ -885,6 +961,10 @@ export function toJson_OperatorConfigurationConfigurationKubernetes(
     ),
     inherited_annotations: obj.inheritedAnnotations?.map((y) => y),
     inherited_labels: obj.inheritedLabels?.map((y) => y),
+    liveness_probe:
+      toJson_OperatorConfigurationConfigurationKubernetesLivenessProbe(
+        obj.livenessProbe,
+      ),
     master_pod_move_timeout: obj.masterPodMoveTimeout,
     node_readiness_label:
       obj.nodeReadinessLabel === undefined
@@ -898,9 +978,12 @@ export function toJson_OperatorConfigurationConfigurationKubernetes(
     pdb_master_label_selector: obj.pdbMasterLabelSelector,
     pdb_name_format: obj.pdbNameFormat,
     persistent_volume_claim_retention_policy:
-      toJson_OperatorConfigurationConfigurationKubernetesPersistentVolumeClaimRetentionPolicy(
-        obj.persistentVolumeClaimRetentionPolicy,
-      ),
+      obj.persistentVolumeClaimRetentionPolicy === undefined
+        ? undefined
+        : Object.entries(obj.persistentVolumeClaimRetentionPolicy).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
     pod_antiaffinity_preferred_during_scheduling:
       obj.podAntiaffinityPreferredDuringScheduling,
     pod_antiaffinity_topology_key: obj.podAntiaffinityTopologyKey,
@@ -940,6 +1023,8 @@ export function toJson_OperatorConfigurationConfigurationKubernetes(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * LoadBalancerConfiguration defines the LB configuration
+ *
  * @schema OperatorConfigurationConfigurationLoadBalancer
  */
 export interface OperatorConfigurationConfigurationLoadBalancer {
@@ -959,9 +1044,19 @@ export interface OperatorConfigurationConfigurationLoadBalancer {
   readonly enableMasterLoadBalancer?: boolean;
 
   /**
+   * @schema OperatorConfigurationConfigurationLoadBalancer#enable_master_node_port
+   */
+  readonly enableMasterNodePort?: boolean;
+
+  /**
    * @schema OperatorConfigurationConfigurationLoadBalancer#enable_master_pooler_load_balancer
    */
   readonly enableMasterPoolerLoadBalancer?: boolean;
+
+  /**
+   * @schema OperatorConfigurationConfigurationLoadBalancer#enable_master_pooler_node_port
+   */
+  readonly enableMasterPoolerNodePort?: boolean;
 
   /**
    * @schema OperatorConfigurationConfigurationLoadBalancer#enable_replica_load_balancer
@@ -969,9 +1064,19 @@ export interface OperatorConfigurationConfigurationLoadBalancer {
   readonly enableReplicaLoadBalancer?: boolean;
 
   /**
+   * @schema OperatorConfigurationConfigurationLoadBalancer#enable_replica_node_port
+   */
+  readonly enableReplicaNodePort?: boolean;
+
+  /**
    * @schema OperatorConfigurationConfigurationLoadBalancer#enable_replica_pooler_load_balancer
    */
   readonly enableReplicaPoolerLoadBalancer?: boolean;
+
+  /**
+   * @schema OperatorConfigurationConfigurationLoadBalancer#enable_replica_pooler_node_port
+   */
+  readonly enableReplicaPoolerNodePort?: boolean;
 
   /**
    * @schema OperatorConfigurationConfigurationLoadBalancer#external_traffic_policy
@@ -979,21 +1084,29 @@ export interface OperatorConfigurationConfigurationLoadBalancer {
   readonly externalTrafficPolicy?: OperatorConfigurationConfigurationLoadBalancerExternalTrafficPolicy;
 
   /**
+   * defines the DNS name string template for the master load balancer cluster
+   *
    * @schema OperatorConfigurationConfigurationLoadBalancer#master_dns_name_format
    */
   readonly masterDnsNameFormat?: string;
 
   /**
+   * deprecated DNS template for master load balancer using team name
+   *
    * @schema OperatorConfigurationConfigurationLoadBalancer#master_legacy_dns_name_format
    */
   readonly masterLegacyDnsNameFormat?: string;
 
   /**
+   * defines the DNS name string template for the replica load balancer cluster
+   *
    * @schema OperatorConfigurationConfigurationLoadBalancer#replica_dns_name_format
    */
   readonly replicaDnsNameFormat?: string;
 
   /**
+   * deprecated DNS template for replica load balancer using team name
+   *
    * @schema OperatorConfigurationConfigurationLoadBalancer#replica_legacy_dns_name_format
    */
   readonly replicaLegacyDnsNameFormat?: string;
@@ -1019,9 +1132,13 @@ export function toJson_OperatorConfigurationConfigurationLoadBalancer(
           ),
     db_hosted_zone: obj.dbHostedZone,
     enable_master_load_balancer: obj.enableMasterLoadBalancer,
+    enable_master_node_port: obj.enableMasterNodePort,
     enable_master_pooler_load_balancer: obj.enableMasterPoolerLoadBalancer,
+    enable_master_pooler_node_port: obj.enableMasterPoolerNodePort,
     enable_replica_load_balancer: obj.enableReplicaLoadBalancer,
+    enable_replica_node_port: obj.enableReplicaNodePort,
     enable_replica_pooler_load_balancer: obj.enableReplicaPoolerLoadBalancer,
+    enable_replica_pooler_node_port: obj.enableReplicaPoolerNodePort,
     external_traffic_policy: obj.externalTrafficPolicy,
     master_dns_name_format: obj.masterDnsNameFormat,
     master_legacy_dns_name_format: obj.masterLegacyDnsNameFormat,
@@ -1037,6 +1154,8 @@ export function toJson_OperatorConfigurationConfigurationLoadBalancer(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * LoggingRESTAPIConfiguration defines Logging API conf
+ *
  * @schema OperatorConfigurationConfigurationLoggingRestApi
  */
 export interface OperatorConfigurationConfigurationLoggingRestApi {
@@ -1080,6 +1199,8 @@ export function toJson_OperatorConfigurationConfigurationLoggingRestApi(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * OperatorLogicalBackupConfiguration defines configuration for logical backup
+ *
  * @schema OperatorConfigurationConfigurationLogicalBackup
  */
 export interface OperatorConfigurationConfigurationLogicalBackup {
@@ -1117,6 +1238,11 @@ export interface OperatorConfigurationConfigurationLogicalBackup {
    * @schema OperatorConfigurationConfigurationLogicalBackup#logical_backup_docker_image
    */
   readonly logicalBackupDockerImage?: string;
+
+  /**
+   * @schema OperatorConfigurationConfigurationLogicalBackup#logical_backup_failed_jobs_history_limit
+   */
+  readonly logicalBackupFailedJobsHistoryLimit?: number;
 
   /**
    * @schema OperatorConfigurationConfigurationLogicalBackup#logical_backup_google_application_credentials
@@ -1187,6 +1313,16 @@ export interface OperatorConfigurationConfigurationLogicalBackup {
    * @schema OperatorConfigurationConfigurationLogicalBackup#logical_backup_schedule
    */
   readonly logicalBackupSchedule?: string;
+
+  /**
+   * @schema OperatorConfigurationConfigurationLogicalBackup#logical_backup_successful_jobs_history_limit
+   */
+  readonly logicalBackupSuccessfulJobsHistoryLimit?: number;
+
+  /**
+   * @schema OperatorConfigurationConfigurationLogicalBackup#logical_backup_ttl_seconds_after_finished
+   */
+  readonly logicalBackupTtlSecondsAfterFinished?: number;
 }
 
 /**
@@ -1211,6 +1347,8 @@ export function toJson_OperatorConfigurationConfigurationLogicalBackup(
     logical_backup_cronjob_environment_secret:
       obj.logicalBackupCronjobEnvironmentSecret,
     logical_backup_docker_image: obj.logicalBackupDockerImage,
+    logical_backup_failed_jobs_history_limit:
+      obj.logicalBackupFailedJobsHistoryLimit,
     logical_backup_google_application_credentials:
       obj.logicalBackupGoogleApplicationCredentials,
     logical_backup_job_prefix: obj.logicalBackupJobPrefix,
@@ -1226,6 +1364,10 @@ export function toJson_OperatorConfigurationConfigurationLogicalBackup(
     logical_backup_s3_secret_access_key: obj.logicalBackupS3SecretAccessKey,
     logical_backup_s3_sse: obj.logicalBackupS3Sse,
     logical_backup_schedule: obj.logicalBackupSchedule,
+    logical_backup_successful_jobs_history_limit:
+      obj.logicalBackupSuccessfulJobsHistoryLimit,
+    logical_backup_ttl_seconds_after_finished:
+      obj.logicalBackupTtlSecondsAfterFinished,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -1236,13 +1378,15 @@ export function toJson_OperatorConfigurationConfigurationLogicalBackup(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * MajorVersionUpgradeConfiguration defines how to execute major version upgrades of Postgres.
+ *
  * @schema OperatorConfigurationConfigurationMajorVersionUpgrade
  */
 export interface OperatorConfigurationConfigurationMajorVersionUpgrade {
   /**
    * @schema OperatorConfigurationConfigurationMajorVersionUpgrade#major_version_upgrade_mode
    */
-  readonly majorVersionUpgradeMode?: string;
+  readonly majorVersionUpgradeMode?: OperatorConfigurationConfigurationMajorVersionUpgradeMajorVersionUpgradeMode;
 
   /**
    * @schema OperatorConfigurationConfigurationMajorVersionUpgrade#major_version_upgrade_team_allow_list
@@ -1286,6 +1430,8 @@ export function toJson_OperatorConfigurationConfigurationMajorVersionUpgrade(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * PatroniConfiguration defines configuration for Patroni
+ *
  * @schema OperatorConfigurationConfigurationPatroni
  */
 export interface OperatorConfigurationConfigurationPatroni {
@@ -1317,6 +1463,8 @@ export function toJson_OperatorConfigurationConfigurationPatroni(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * PostgresPodResourcesDefaults defines the spec of default resources
+ *
  * @schema OperatorConfigurationConfigurationPostgresPodResources
  */
 export interface OperatorConfigurationConfigurationPostgresPodResources {
@@ -1390,6 +1538,8 @@ export function toJson_OperatorConfigurationConfigurationPostgresPodResources(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * ScalyrConfiguration defines the configuration for ScalyrAPI
+ *
  * @schema OperatorConfigurationConfigurationScalyr
  */
 export interface OperatorConfigurationConfigurationScalyr {
@@ -1457,6 +1607,8 @@ export function toJson_OperatorConfigurationConfigurationScalyr(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * TeamsAPIConfiguration defines the configuration of TeamsAPI
+ *
  * @schema OperatorConfigurationConfigurationTeamsApi
  */
 export interface OperatorConfigurationConfigurationTeamsApi {
@@ -1572,45 +1724,63 @@ export function toJson_OperatorConfigurationConfigurationTeamsApi(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * OperatorTimeouts defines the timeout of ResourceCheck, PodWait, ReadyWait
+ *
  * @schema OperatorConfigurationConfigurationTimeouts
  */
 export interface OperatorConfigurationConfigurationTimeouts {
   /**
+   * interval between consecutive attempts of operator calling the Patroni API
+   *
    * @schema OperatorConfigurationConfigurationTimeouts#patroni_api_check_interval
    */
   readonly patroniApiCheckInterval?: string;
 
   /**
+   * timeout when waiting for successful response from Patroni API
+   *
    * @schema OperatorConfigurationConfigurationTimeouts#patroni_api_check_timeout
    */
   readonly patroniApiCheckTimeout?: string;
 
   /**
+   * timeout when waiting for the Postgres pods to be deleted
+   *
    * @schema OperatorConfigurationConfigurationTimeouts#pod_deletion_wait_timeout
    */
   readonly podDeletionWaitTimeout?: string;
 
   /**
+   * timeout when waiting for pod role and cluster labels
+   *
    * @schema OperatorConfigurationConfigurationTimeouts#pod_label_wait_timeout
    */
   readonly podLabelWaitTimeout?: string;
 
   /**
+   * interval between consecutive attempts waiting for postgresql CRD to be created
+   *
    * @schema OperatorConfigurationConfigurationTimeouts#ready_wait_interval
    */
   readonly readyWaitInterval?: string;
 
   /**
+   * timeout for the complete postgres CRD creation
+   *
    * @schema OperatorConfigurationConfigurationTimeouts#ready_wait_timeout
    */
   readonly readyWaitTimeout?: string;
 
   /**
+   * interval to wait between consecutive attempts to check for some K8s resources
+   *
    * @schema OperatorConfigurationConfigurationTimeouts#resource_check_interval
    */
   readonly resourceCheckInterval?: string;
 
   /**
+   * timeout when waiting for the presence of a certain K8s resource
+   *
    * @schema OperatorConfigurationConfigurationTimeouts#resource_check_timeout
    */
   readonly resourceCheckTimeout?: string;
@@ -1645,6 +1815,8 @@ export function toJson_OperatorConfigurationConfigurationTimeouts(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * PostgresUsersConfiguration defines the system users of Postgres.
+ *
  * @schema OperatorConfigurationConfigurationUsers
  */
 export interface OperatorConfigurationConfigurationUsers {
@@ -1730,6 +1902,8 @@ export interface OperatorConfigurationConfigurationKubernetesInfrastructureRoles
   readonly defaultuservalue?: string;
 
   /**
+   * This field point out the detailed yaml definition of the role, if exists
+   *
    * @schema OperatorConfigurationConfigurationKubernetesInfrastructureRolesSecrets#details
    */
   readonly details?: string;
@@ -1737,7 +1911,7 @@ export interface OperatorConfigurationConfigurationKubernetesInfrastructureRoles
   /**
    * @schema OperatorConfigurationConfigurationKubernetesInfrastructureRolesSecrets#passwordkey
    */
-  readonly passwordkey: string;
+  readonly passwordkey?: string;
 
   /**
    * @schema OperatorConfigurationConfigurationKubernetesInfrastructureRolesSecrets#rolekey
@@ -1745,9 +1919,12 @@ export interface OperatorConfigurationConfigurationKubernetesInfrastructureRoles
   readonly rolekey?: string;
 
   /**
+   * Name of a secret which describes the role, and optionally name of a
+   * configmap with an extra information
+   *
    * @schema OperatorConfigurationConfigurationKubernetesInfrastructureRolesSecrets#secretname
    */
-  readonly secretname: string;
+  readonly secretname?: string;
 
   /**
    * @schema OperatorConfigurationConfigurationKubernetesInfrastructureRolesSecrets#template
@@ -1757,7 +1934,7 @@ export interface OperatorConfigurationConfigurationKubernetesInfrastructureRoles
   /**
    * @schema OperatorConfigurationConfigurationKubernetesInfrastructureRolesSecrets#userkey
    */
-  readonly userkey: string;
+  readonly userkey?: string;
 }
 
 /**
@@ -1791,45 +1968,133 @@ export function toJson_OperatorConfigurationConfigurationKubernetesInfrastructur
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
- * @schema OperatorConfigurationConfigurationKubernetesNodeReadinessLabelMerge
+ * Probe describes a health check to be performed against a container to determine whether it is
+ * alive or ready to receive traffic.
+ *
+ * @schema OperatorConfigurationConfigurationKubernetesLivenessProbe
  */
-export enum OperatorConfigurationConfigurationKubernetesNodeReadinessLabelMerge {
-  /** AND */
-  AND = "AND",
-  /** OR */
-  OR = "OR",
+export interface OperatorConfigurationConfigurationKubernetesLivenessProbe {
+  /**
+   * Exec specifies a command to execute in the container.
+   *
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbe#exec
+   */
+  readonly exec?: OperatorConfigurationConfigurationKubernetesLivenessProbeExec;
+
+  /**
+   * Minimum consecutive failures for the probe to be considered failed after having succeeded.
+   * Defaults to 3. Minimum value is 1.
+   *
+   * @default 3. Minimum value is 1.
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbe#failureThreshold
+   */
+  readonly failureThreshold?: number;
+
+  /**
+   * GRPC specifies a GRPC HealthCheckRequest.
+   *
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbe#grpc
+   */
+  readonly grpc?: OperatorConfigurationConfigurationKubernetesLivenessProbeGrpc;
+
+  /**
+   * HTTPGet specifies an HTTP GET request to perform.
+   *
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbe#httpGet
+   */
+  readonly httpGet?: OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGet;
+
+  /**
+   * Number of seconds after the container has started before liveness probes are initiated.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbe#initialDelaySeconds
+   */
+  readonly initialDelaySeconds?: number;
+
+  /**
+   * How often (in seconds) to perform the probe.
+   * Default to 10 seconds. Minimum value is 1.
+   *
+   * @default 10 seconds. Minimum value is 1.
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbe#periodSeconds
+   */
+  readonly periodSeconds?: number;
+
+  /**
+   * Minimum consecutive successes for the probe to be considered successful after having failed.
+   * Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
+   *
+   * @default 1. Must be 1 for liveness and startup. Minimum value is 1.
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbe#successThreshold
+   */
+  readonly successThreshold?: number;
+
+  /**
+   * TCPSocket specifies a connection to a TCP port.
+   *
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbe#tcpSocket
+   */
+  readonly tcpSocket?: OperatorConfigurationConfigurationKubernetesLivenessProbeTcpSocket;
+
+  /**
+   * Optional duration in seconds the pod needs to terminate gracefully upon probe failure.
+   * The grace period is the duration in seconds after the processes running in the pod are sent
+   * a termination signal and the time when the processes are forcibly halted with a kill signal.
+   * Set this value longer than the expected cleanup time for your process.
+   * If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this
+   * value overrides the value provided by the pod spec.
+   * Value must be non-negative integer. The value zero indicates stop immediately via
+   * the kill signal (no opportunity to shut down).
+   * This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate.
+   * Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset.
+   *
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbe#terminationGracePeriodSeconds
+   */
+  readonly terminationGracePeriodSeconds?: number;
+
+  /**
+   * Number of seconds after which the probe times out.
+   * Defaults to 1 second. Minimum value is 1.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @default 1 second. Minimum value is 1.
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbe#timeoutSeconds
+   */
+  readonly timeoutSeconds?: number;
 }
 
 /**
- * @schema OperatorConfigurationConfigurationKubernetesPersistentVolumeClaimRetentionPolicy
- */
-export interface OperatorConfigurationConfigurationKubernetesPersistentVolumeClaimRetentionPolicy {
-  /**
-   * @schema OperatorConfigurationConfigurationKubernetesPersistentVolumeClaimRetentionPolicy#when_deleted
-   */
-  readonly whenDeleted?: OperatorConfigurationConfigurationKubernetesPersistentVolumeClaimRetentionPolicyWhenDeleted;
-
-  /**
-   * @schema OperatorConfigurationConfigurationKubernetesPersistentVolumeClaimRetentionPolicy#when_scaled
-   */
-  readonly whenScaled?: OperatorConfigurationConfigurationKubernetesPersistentVolumeClaimRetentionPolicyWhenScaled;
-}
-
-/**
- * Converts an object of type 'OperatorConfigurationConfigurationKubernetesPersistentVolumeClaimRetentionPolicy' to JSON representation.
+ * Converts an object of type 'OperatorConfigurationConfigurationKubernetesLivenessProbe' to JSON representation.
  */
 /* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
-export function toJson_OperatorConfigurationConfigurationKubernetesPersistentVolumeClaimRetentionPolicy(
-  obj:
-    | OperatorConfigurationConfigurationKubernetesPersistentVolumeClaimRetentionPolicy
-    | undefined,
+export function toJson_OperatorConfigurationConfigurationKubernetesLivenessProbe(
+  obj: OperatorConfigurationConfigurationKubernetesLivenessProbe | undefined,
 ): Record<string, any> | undefined {
   if (obj === undefined) {
     return undefined;
   }
   const result = {
-    when_deleted: obj.whenDeleted,
-    when_scaled: obj.whenScaled,
+    exec: toJson_OperatorConfigurationConfigurationKubernetesLivenessProbeExec(
+      obj.exec,
+    ),
+    failureThreshold: obj.failureThreshold,
+    grpc: toJson_OperatorConfigurationConfigurationKubernetesLivenessProbeGrpc(
+      obj.grpc,
+    ),
+    httpGet:
+      toJson_OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGet(
+        obj.httpGet,
+      ),
+    initialDelaySeconds: obj.initialDelaySeconds,
+    periodSeconds: obj.periodSeconds,
+    successThreshold: obj.successThreshold,
+    tcpSocket:
+      toJson_OperatorConfigurationConfigurationKubernetesLivenessProbeTcpSocket(
+        obj.tcpSocket,
+      ),
+    terminationGracePeriodSeconds: obj.terminationGracePeriodSeconds,
+    timeoutSeconds: obj.timeoutSeconds,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -1838,6 +2103,16 @@ export function toJson_OperatorConfigurationConfigurationKubernetesPersistentVol
   );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema OperatorConfigurationConfigurationKubernetesNodeReadinessLabelMerge
+ */
+export enum OperatorConfigurationConfigurationKubernetesNodeReadinessLabelMerge {
+  /** AND */
+  AND = "AND",
+  /** OR */
+  OR = "OR",
+}
 
 /**
  * @schema OperatorConfigurationConfigurationKubernetesPodManagementPolicy
@@ -1886,27 +2161,329 @@ export enum OperatorConfigurationConfigurationLogicalBackupLogicalBackupProvider
 }
 
 /**
- * @schema OperatorConfigurationConfigurationKubernetesPersistentVolumeClaimRetentionPolicyWhenDeleted
+ * @schema OperatorConfigurationConfigurationMajorVersionUpgradeMajorVersionUpgradeMode
  */
-export enum OperatorConfigurationConfigurationKubernetesPersistentVolumeClaimRetentionPolicyWhenDeleted {
-  /** delete */
-  DELETE = "delete",
-  /** retain */
-  RETAIN = "retain",
+export enum OperatorConfigurationConfigurationMajorVersionUpgradeMajorVersionUpgradeMode {
+  /** off */
+  OFF = "off",
+  /** manual */
+  MANUAL = "manual",
+  /** full */
+  FULL = "full",
 }
 
 /**
- * @schema OperatorConfigurationConfigurationKubernetesPersistentVolumeClaimRetentionPolicyWhenScaled
- */
-export enum OperatorConfigurationConfigurationKubernetesPersistentVolumeClaimRetentionPolicyWhenScaled {
-  /** delete */
-  DELETE = "delete",
-  /** retain */
-  RETAIN = "retain",
-}
-
-/**
+ * Exec specifies a command to execute in the container.
  *
+ * @schema OperatorConfigurationConfigurationKubernetesLivenessProbeExec
+ */
+export interface OperatorConfigurationConfigurationKubernetesLivenessProbeExec {
+  /**
+   * Command is the command line to execute inside the container, the working directory for the
+   * command  is root ('/') in the container's filesystem. The command is simply exec'd, it is
+   * not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use
+   * a shell, you need to explicitly call out to that shell.
+   * Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
+   *
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbeExec#command
+   */
+  readonly command?: string[];
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationKubernetesLivenessProbeExec' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationKubernetesLivenessProbeExec(
+  obj:
+    | OperatorConfigurationConfigurationKubernetesLivenessProbeExec
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    command: obj.command?.map((y) => y),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * GRPC specifies a GRPC HealthCheckRequest.
+ *
+ * @schema OperatorConfigurationConfigurationKubernetesLivenessProbeGrpc
+ */
+export interface OperatorConfigurationConfigurationKubernetesLivenessProbeGrpc {
+  /**
+   * Port number of the gRPC service. Number must be in the range 1 to 65535.
+   *
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbeGrpc#port
+   */
+  readonly port: number;
+
+  /**
+   * Service is the name of the service to place in the gRPC HealthCheckRequest
+   * (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+   *
+   * If this is not specified, the default behavior is defined by gRPC.
+   *
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbeGrpc#service
+   */
+  readonly service?: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationKubernetesLivenessProbeGrpc' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationKubernetesLivenessProbeGrpc(
+  obj:
+    | OperatorConfigurationConfigurationKubernetesLivenessProbeGrpc
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    port: obj.port,
+    service: obj.service,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * HTTPGet specifies an HTTP GET request to perform.
+ *
+ * @schema OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGet
+ */
+export interface OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGet {
+  /**
+   * Host name to connect to, defaults to the pod IP. You probably want to set
+   * "Host" in httpHeaders instead.
+   *
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGet#host
+   */
+  readonly host?: string;
+
+  /**
+   * Custom headers to set in the request. HTTP allows repeated headers.
+   *
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGet#httpHeaders
+   */
+  readonly httpHeaders?: OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGetHttpHeaders[];
+
+  /**
+   * Path to access on the HTTP server.
+   *
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGet#path
+   */
+  readonly path?: string;
+
+  /**
+   * Name or number of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGet#port
+   */
+  readonly port: OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGetPort;
+
+  /**
+   * Scheme to use for connecting to the host.
+   * Defaults to HTTP.
+   *
+   * @default HTTP.
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGet#scheme
+   */
+  readonly scheme?: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGet' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGet(
+  obj:
+    | OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGet
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    httpHeaders: obj.httpHeaders?.map((y) =>
+      toJson_OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGetHttpHeaders(
+        y,
+      ),
+    ),
+    path: obj.path,
+    port: obj.port?.value,
+    scheme: obj.scheme,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * TCPSocket specifies a connection to a TCP port.
+ *
+ * @schema OperatorConfigurationConfigurationKubernetesLivenessProbeTcpSocket
+ */
+export interface OperatorConfigurationConfigurationKubernetesLivenessProbeTcpSocket {
+  /**
+   * Optional: Host name to connect to, defaults to the pod IP.
+   *
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbeTcpSocket#host
+   */
+  readonly host?: string;
+
+  /**
+   * Number or name of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbeTcpSocket#port
+   */
+  readonly port: OperatorConfigurationConfigurationKubernetesLivenessProbeTcpSocketPort;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationKubernetesLivenessProbeTcpSocket' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationKubernetesLivenessProbeTcpSocket(
+  obj:
+    | OperatorConfigurationConfigurationKubernetesLivenessProbeTcpSocket
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    port: obj.port?.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * HTTPHeader describes a custom header to be used in HTTP probes
+ *
+ * @schema OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGetHttpHeaders
+ */
+export interface OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGetHttpHeaders {
+  /**
+   * The header field name.
+   * This will be canonicalized upon output, so case-variant names will be understood as the same header.
+   *
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGetHttpHeaders#name
+   */
+  readonly name: string;
+
+  /**
+   * The header field value
+   *
+   * @schema OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGetHttpHeaders#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGetHttpHeaders' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGetHttpHeaders(
+  obj:
+    | OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGetHttpHeaders
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Name or number of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGetPort
+ */
+export class OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGetPort {
+  public static fromNumber(
+    value: number,
+  ): OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGetPort {
+    return new OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGetPort(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGetPort {
+    return new OperatorConfigurationConfigurationKubernetesLivenessProbeHttpGetPort(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * Number or name of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema OperatorConfigurationConfigurationKubernetesLivenessProbeTcpSocketPort
+ */
+export class OperatorConfigurationConfigurationKubernetesLivenessProbeTcpSocketPort {
+  public static fromNumber(
+    value: number,
+  ): OperatorConfigurationConfigurationKubernetesLivenessProbeTcpSocketPort {
+    return new OperatorConfigurationConfigurationKubernetesLivenessProbeTcpSocketPort(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): OperatorConfigurationConfigurationKubernetesLivenessProbeTcpSocketPort {
+    return new OperatorConfigurationConfigurationKubernetesLivenessProbeTcpSocketPort(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * Postgresql defines PostgreSQL Custom Resource Definition Object.
  *
  * @schema postgresql
  */
@@ -1960,15 +2537,19 @@ export class Postgresql extends ApiObject {
 }
 
 /**
+ * Postgresql defines PostgreSQL Custom Resource Definition Object.
+ *
  * @schema postgresql
  */
 export interface PostgresqlProps {
   /**
    * @schema postgresql#metadata
    */
-  readonly metadata?: ApiObjectMetadata;
+  readonly metadata: ApiObjectMetadata;
 
   /**
+   * PostgresSpec defines the specification for the PostgreSQL TPR.
+   *
    * @schema postgresql#spec
    */
   readonly spec: PostgresqlSpec;
@@ -1997,6 +2578,8 @@ export function toJson_PostgresqlProps(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * PostgresSpec defines the specification for the PostgreSQL TPR.
+ *
  * @schema PostgresqlSpec
  */
 export interface PostgresqlSpec {
@@ -2006,21 +2589,37 @@ export interface PostgresqlSpec {
   readonly additionalVolumes?: PostgresqlSpecAdditionalVolumes[];
 
   /**
+   * load balancers' source ranges are the same for master and replica services
+   *
    * @schema PostgresqlSpec#allowedSourceRanges
    */
   readonly allowedSourceRanges?: string[];
 
   /**
+   * CloneDescription describes which cluster the new should clone and up to which point in time
+   *
    * @schema PostgresqlSpec#clone
    */
   readonly clone?: PostgresqlSpecClone;
 
   /**
+   * ConnectionPooler Options for connection pooler
+   *
+   * pgbouncer-large (with higher resources) or odyssey-small (with smaller
+   * resources)
+   * Type              string `json:"type,omitempty"`
+   *
+   * makes sense to expose. E.g. pool size (min/max boundaries), max client
+   * connections etc.
+   *
    * @schema PostgresqlSpec#connectionPooler
    */
   readonly connectionPooler?: PostgresqlSpecConnectionPooler;
 
   /**
+   * Note: usernames specified here as database owners must be declared
+   * in the users key of the spec key.
+   *
    * @schema PostgresqlSpec#databases
    */
   readonly databases?: { [key: string]: string };
@@ -2041,14 +2640,31 @@ export interface PostgresqlSpec {
   readonly enableLogicalBackup?: boolean;
 
   /**
+   * vars that enable load balancers are pointers because it is important to know if any of them is omitted from the Postgres manifest
+   * in that case the var evaluates to nil and the value is taken from the operator config
+   *
    * @schema PostgresqlSpec#enableMasterLoadBalancer
    */
   readonly enableMasterLoadBalancer?: boolean;
 
   /**
+   * vars to enable and configure nodeport services
+   * set ports to 0 or nil to let kubernetes decide which port to use
+   * overrides loadbalancer configuration
+   *
+   * @schema PostgresqlSpec#enableMasterNodePort
+   */
+  readonly enableMasterNodePort?: boolean;
+
+  /**
    * @schema PostgresqlSpec#enableMasterPoolerLoadBalancer
    */
   readonly enableMasterPoolerLoadBalancer?: boolean;
+
+  /**
+   * @schema PostgresqlSpec#enableMasterPoolerNodePort
+   */
+  readonly enableMasterPoolerNodePort?: boolean;
 
   /**
    * @schema PostgresqlSpec#enableReplicaConnectionPooler
@@ -2061,9 +2677,19 @@ export interface PostgresqlSpec {
   readonly enableReplicaLoadBalancer?: boolean;
 
   /**
+   * @schema PostgresqlSpec#enableReplicaNodePort
+   */
+  readonly enableReplicaNodePort?: boolean;
+
+  /**
    * @schema PostgresqlSpec#enableReplicaPoolerLoadBalancer
    */
   readonly enableReplicaPoolerLoadBalancer?: boolean;
+
+  /**
+   * @schema PostgresqlSpec#enableReplicaPoolerNodePort
+   */
+  readonly enableReplicaPoolerNodePort?: boolean;
 
   /**
    * @schema PostgresqlSpec#enableShmVolume
@@ -2073,12 +2699,25 @@ export interface PostgresqlSpec {
   /**
    * @schema PostgresqlSpec#env
    */
-  readonly env?: any[];
+  readonly env?: PostgresqlSpecEnv[];
+
+  /**
+   * @schema PostgresqlSpec#envFrom
+   */
+  readonly envFrom?: PostgresqlSpecEnvFrom[];
 
   /**
    * @schema PostgresqlSpec#initContainers
    */
-  readonly initContainers?: any[];
+  readonly initContainers?: PostgresqlSpecInitContainers[];
+
+  /**
+   * Probe describes a health check to be performed against a container to determine whether it is
+   * alive or ready to receive traffic.
+   *
+   * @schema PostgresqlSpec#livenessProbe
+   */
+  readonly livenessProbe?: PostgresqlSpecLivenessProbe;
 
   /**
    * @schema PostgresqlSpec#logicalBackupRetention
@@ -2096,11 +2735,25 @@ export interface PostgresqlSpec {
   readonly maintenanceWindows?: string[];
 
   /**
+   * @schema PostgresqlSpec#masterNodePort
+   */
+  readonly masterNodePort?: number;
+
+  /**
+   * @schema PostgresqlSpec#masterPoolerNodePort
+   */
+  readonly masterPoolerNodePort?: number;
+
+  /**
+   * MasterServiceAnnotations takes precedence over ServiceAnnotations for master role if not empty
+   *
    * @schema PostgresqlSpec#masterServiceAnnotations
    */
   readonly masterServiceAnnotations?: { [key: string]: string };
 
   /**
+   * Node affinity is a group of node affinity scheduling rules.
+   *
    * @schema PostgresqlSpec#nodeAffinity
    */
   readonly nodeAffinity?: PostgresqlSpecNodeAffinity;
@@ -2111,6 +2764,8 @@ export interface PostgresqlSpec {
   readonly numberOfInstances: number;
 
   /**
+   * Patroni contains Patroni-specific configuration
+   *
    * @schema PostgresqlSpec#patroni
    */
   readonly patroni?: PostgresqlSpecPatroni;
@@ -2126,6 +2781,8 @@ export interface PostgresqlSpec {
   readonly podPriorityClassName?: string;
 
   /**
+   * PostgresqlParam describes PostgreSQL version and pairs of configuration parameter name - values.
+   *
    * @schema PostgresqlSpec#postgresql
    */
   readonly postgresql: PostgresqlSpecPostgresql;
@@ -2138,18 +2795,25 @@ export interface PostgresqlSpec {
   };
 
   /**
-   * deprecated
-   *
-   * @schema PostgresqlSpec#replicaLoadBalancer
+   * @schema PostgresqlSpec#replicaNodePort
    */
-  readonly replicaLoadBalancer?: boolean;
+  readonly replicaNodePort?: number;
 
   /**
+   * @schema PostgresqlSpec#replicaPoolerNodePort
+   */
+  readonly replicaPoolerNodePort?: number;
+
+  /**
+   * ReplicaServiceAnnotations takes precedence over ServiceAnnotations for replica role if not empty
+   *
    * @schema PostgresqlSpec#replicaServiceAnnotations
    */
   readonly replicaServiceAnnotations?: { [key: string]: string };
 
   /**
+   * Resources describes requests and limits for the cluster resouces.
+   *
    * @schema PostgresqlSpec#resources
    */
   readonly resources?: PostgresqlSpecResources;
@@ -2167,7 +2831,7 @@ export interface PostgresqlSpec {
   /**
    * @schema PostgresqlSpec#sidecars
    */
-  readonly sidecars?: any[];
+  readonly sidecars?: PostgresqlSpecSidecars[];
 
   /**
    * @schema PostgresqlSpec#spiloFSGroup
@@ -2185,6 +2849,10 @@ export interface PostgresqlSpec {
   readonly spiloRunAsUser?: number;
 
   /**
+   * StandbyDescription contains remote primary config and/or s3/gs wal path.
+   * standby_host can be specified alone or together with either s3_wal_path OR gs_wal_path (mutually exclusive).
+   * At least one field must be specified. s3_wal_path and gs_wal_path are mutually exclusive.
+   *
    * @schema PostgresqlSpec#standby
    */
   readonly standby?: PostgresqlSpecStandby;
@@ -2200,6 +2868,8 @@ export interface PostgresqlSpec {
   readonly teamId: string;
 
   /**
+   * TLSDescription specs TLS properties
+   *
    * @schema PostgresqlSpec#tls
    */
   readonly tls?: PostgresqlSpecTls;
@@ -2210,11 +2880,9 @@ export interface PostgresqlSpec {
   readonly tolerations?: PostgresqlSpecTolerations[];
 
   /**
-   * deprecated
-   *
-   * @schema PostgresqlSpec#useLoadBalancer
+   * @schema PostgresqlSpec#topologySpreadConstraints
    */
-  readonly useLoadBalancer?: boolean;
+  readonly topologySpreadConstraints?: PostgresqlSpecTopologySpreadConstraints[];
 
   /**
    * @schema PostgresqlSpec#users
@@ -2237,6 +2905,8 @@ export interface PostgresqlSpec {
   readonly usersWithSecretRotation?: string[];
 
   /**
+   * Volume describes a single volume in the manifest.
+   *
    * @schema PostgresqlSpec#volume
    */
   readonly volume: PostgresqlSpecVolume;
@@ -2272,16 +2942,26 @@ export function toJson_PostgresqlSpec(
     enableConnectionPooler: obj.enableConnectionPooler,
     enableLogicalBackup: obj.enableLogicalBackup,
     enableMasterLoadBalancer: obj.enableMasterLoadBalancer,
+    enableMasterNodePort: obj.enableMasterNodePort,
     enableMasterPoolerLoadBalancer: obj.enableMasterPoolerLoadBalancer,
+    enableMasterPoolerNodePort: obj.enableMasterPoolerNodePort,
     enableReplicaConnectionPooler: obj.enableReplicaConnectionPooler,
     enableReplicaLoadBalancer: obj.enableReplicaLoadBalancer,
+    enableReplicaNodePort: obj.enableReplicaNodePort,
     enableReplicaPoolerLoadBalancer: obj.enableReplicaPoolerLoadBalancer,
+    enableReplicaPoolerNodePort: obj.enableReplicaPoolerNodePort,
     enableShmVolume: obj.enableShmVolume,
-    env: obj.env?.map((y) => y),
-    initContainers: obj.initContainers?.map((y) => y),
+    env: obj.env?.map((y) => toJson_PostgresqlSpecEnv(y)),
+    envFrom: obj.envFrom?.map((y) => toJson_PostgresqlSpecEnvFrom(y)),
+    initContainers: obj.initContainers?.map((y) =>
+      toJson_PostgresqlSpecInitContainers(y),
+    ),
+    livenessProbe: toJson_PostgresqlSpecLivenessProbe(obj.livenessProbe),
     logicalBackupRetention: obj.logicalBackupRetention,
     logicalBackupSchedule: obj.logicalBackupSchedule,
     maintenanceWindows: obj.maintenanceWindows?.map((y) => y),
+    masterNodePort: obj.masterNodePort,
+    masterPoolerNodePort: obj.masterPoolerNodePort,
     masterServiceAnnotations:
       obj.masterServiceAnnotations === undefined
         ? undefined
@@ -2314,7 +2994,8 @@ export function toJson_PostgresqlSpec(
                   },
             {},
           ),
-    replicaLoadBalancer: obj.replicaLoadBalancer,
+    replicaNodePort: obj.replicaNodePort,
+    replicaPoolerNodePort: obj.replicaPoolerNodePort,
     replicaServiceAnnotations:
       obj.replicaServiceAnnotations === undefined
         ? undefined
@@ -2331,7 +3012,7 @@ export function toJson_PostgresqlSpec(
             (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
             {},
           ),
-    sidecars: obj.sidecars?.map((y) => y),
+    sidecars: obj.sidecars?.map((y) => toJson_PostgresqlSpecSidecars(y)),
     spiloFSGroup: obj.spiloFsGroup,
     spiloRunAsGroup: obj.spiloRunAsGroup,
     spiloRunAsUser: obj.spiloRunAsUser,
@@ -2342,7 +3023,9 @@ export function toJson_PostgresqlSpec(
     tolerations: obj.tolerations?.map((y) =>
       toJson_PostgresqlSpecTolerations(y),
     ),
-    useLoadBalancer: obj.useLoadBalancer,
+    topologySpreadConstraints: obj.topologySpreadConstraints?.map((y) =>
+      toJson_PostgresqlSpecTopologySpreadConstraints(y),
+    ),
     users:
       obj.users === undefined
         ? undefined
@@ -2367,6 +3050,8 @@ export function toJson_PostgresqlSpec(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * AdditionalVolume specs additional optional volumes for statefulset
+ *
  * @schema PostgresqlSpecAdditionalVolumes
  */
 export interface PostgresqlSpecAdditionalVolumes {
@@ -2428,6 +3113,8 @@ export function toJson_PostgresqlSpecAdditionalVolumes(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * CloneDescription describes which cluster the new should clone and up to which point in time
+ *
  * @schema PostgresqlSpecClone
  */
 export interface PostgresqlSpecClone {
@@ -2462,6 +3149,10 @@ export interface PostgresqlSpecClone {
   readonly s3WalPath?: string;
 
   /**
+   * The regexp matches the date-time format (RFC 3339 Section 5.6) that specifies a timezone as an offset relative to UTC
+   * Example: 1996-12-19T16:39:57-08:00
+   * Note: this field requires a timezone
+   *
    * @schema PostgresqlSpecClone#timestamp
    */
   readonly timestamp?: string;
@@ -2501,6 +3192,15 @@ export function toJson_PostgresqlSpecClone(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * ConnectionPooler Options for connection pooler
+ *
+ * pgbouncer-large (with higher resources) or odyssey-small (with smaller
+ * resources)
+ * Type              string `json:"type,omitempty"`
+ *
+ * makes sense to expose. E.g. pool size (min/max boundaries), max client
+ * connections etc.
+ *
  * @schema PostgresqlSpecConnectionPooler
  */
 export interface PostgresqlSpecConnectionPooler {
@@ -2525,6 +3225,8 @@ export interface PostgresqlSpecConnectionPooler {
   readonly numberOfInstances?: number;
 
   /**
+   * Resources describes requests and limits for the cluster resouces.
+   *
    * @schema PostgresqlSpecConnectionPooler#resources
    */
   readonly resources?: PostgresqlSpecConnectionPoolerResources;
@@ -2568,15 +3270,626 @@ export function toJson_PostgresqlSpecConnectionPooler(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * EnvVar represents an environment variable present in a Container.
+ *
+ * @schema PostgresqlSpecEnv
+ */
+export interface PostgresqlSpecEnv {
+  /**
+   * Name of the environment variable.
+   * May consist of any printable ASCII characters except '='.
+   *
+   * @schema PostgresqlSpecEnv#name
+   */
+  readonly name: string;
+
+  /**
+   * Variable references $(VAR_NAME) are expanded
+   * using the previously defined environment variables in the container and
+   * any service environment variables. If a variable cannot be resolved,
+   * the reference in the input string will be unchanged. Double $$ are reduced
+   * to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e.
+   * "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)".
+   * Escaped references will never be expanded, regardless of whether the variable
+   * exists or not.
+   * Defaults to "".
+   *
+   * @default .
+   * @schema PostgresqlSpecEnv#value
+   */
+  readonly value?: string;
+
+  /**
+   * Source for the environment variable's value. Cannot be used if value is not empty.
+   *
+   * @schema PostgresqlSpecEnv#valueFrom
+   */
+  readonly valueFrom?: PostgresqlSpecEnvValueFrom;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecEnv' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecEnv(
+  obj: PostgresqlSpecEnv | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+    valueFrom: toJson_PostgresqlSpecEnvValueFrom(obj.valueFrom),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * EnvFromSource represents the source of a set of ConfigMaps or Secrets
+ *
+ * @schema PostgresqlSpecEnvFrom
+ */
+export interface PostgresqlSpecEnvFrom {
+  /**
+   * The ConfigMap to select from
+   *
+   * @schema PostgresqlSpecEnvFrom#configMapRef
+   */
+  readonly configMapRef?: PostgresqlSpecEnvFromConfigMapRef;
+
+  /**
+   * Optional text to prepend to the name of each environment variable.
+   * May consist of any printable ASCII characters except '='.
+   *
+   * @schema PostgresqlSpecEnvFrom#prefix
+   */
+  readonly prefix?: string;
+
+  /**
+   * The Secret to select from
+   *
+   * @schema PostgresqlSpecEnvFrom#secretRef
+   */
+  readonly secretRef?: PostgresqlSpecEnvFromSecretRef;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecEnvFrom' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecEnvFrom(
+  obj: PostgresqlSpecEnvFrom | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    configMapRef: toJson_PostgresqlSpecEnvFromConfigMapRef(obj.configMapRef),
+    prefix: obj.prefix,
+    secretRef: toJson_PostgresqlSpecEnvFromSecretRef(obj.secretRef),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * A single application container that you want to run within a pod.
+ *
+ * @schema PostgresqlSpecInitContainers
+ */
+export interface PostgresqlSpecInitContainers {
+  /**
+   * Arguments to the entrypoint.
+   * The container image's CMD is used if this is not provided.
+   * Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+   * cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+   * to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+   * produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+   * of whether the variable exists or not. Cannot be updated.
+   * More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
+   *
+   * @schema PostgresqlSpecInitContainers#args
+   */
+  readonly args?: string[];
+
+  /**
+   * Entrypoint array. Not executed within a shell.
+   * The container image's ENTRYPOINT is used if this is not provided.
+   * Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+   * cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+   * to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+   * produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+   * of whether the variable exists or not. Cannot be updated.
+   * More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
+   *
+   * @schema PostgresqlSpecInitContainers#command
+   */
+  readonly command?: string[];
+
+  /**
+   * List of environment variables to set in the container.
+   * Cannot be updated.
+   *
+   * @schema PostgresqlSpecInitContainers#env
+   */
+  readonly env?: PostgresqlSpecInitContainersEnv[];
+
+  /**
+   * List of sources to populate environment variables in the container.
+   * The keys defined within a source may consist of any printable ASCII characters except '='.
+   * When a key exists in multiple
+   * sources, the value associated with the last source will take precedence.
+   * Values defined by an Env with a duplicate key will take precedence.
+   * Cannot be updated.
+   *
+   * @schema PostgresqlSpecInitContainers#envFrom
+   */
+  readonly envFrom?: PostgresqlSpecInitContainersEnvFrom[];
+
+  /**
+   * Container image name.
+   * More info: https://kubernetes.io/docs/concepts/containers/images
+   * This field is optional to allow higher level config management to default or override
+   * container images in workload controllers like Deployments and StatefulSets.
+   *
+   * @schema PostgresqlSpecInitContainers#image
+   */
+  readonly image?: string;
+
+  /**
+   * Image pull policy.
+   * One of Always, Never, IfNotPresent.
+   * Defaults to Always if :latest tag is specified, or IfNotPresent otherwise.
+   * Cannot be updated.
+   * More info: https://kubernetes.io/docs/concepts/containers/images#updating-images
+   *
+   * @default Always if :latest tag is specified, or IfNotPresent otherwise.
+   * @schema PostgresqlSpecInitContainers#imagePullPolicy
+   */
+  readonly imagePullPolicy?: string;
+
+  /**
+   * Actions that the management system should take in response to container lifecycle events.
+   * Cannot be updated.
+   *
+   * @schema PostgresqlSpecInitContainers#lifecycle
+   */
+  readonly lifecycle?: PostgresqlSpecInitContainersLifecycle;
+
+  /**
+   * Periodic probe of container liveness.
+   * Container will be restarted if the probe fails.
+   * Cannot be updated.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @schema PostgresqlSpecInitContainers#livenessProbe
+   */
+  readonly livenessProbe?: PostgresqlSpecInitContainersLivenessProbe;
+
+  /**
+   * Name of the container specified as a DNS_LABEL.
+   * Each container in a pod must have a unique name (DNS_LABEL).
+   * Cannot be updated.
+   *
+   * @schema PostgresqlSpecInitContainers#name
+   */
+  readonly name: string;
+
+  /**
+   * List of ports to expose from the container. Not specifying a port here
+   * DOES NOT prevent that port from being exposed. Any port which is
+   * listening on the default "0.0.0.0" address inside a container will be
+   * accessible from the network.
+   * Modifying this array with strategic merge patch may corrupt the data.
+   * For more information See https://github.com/kubernetes/kubernetes/issues/108255.
+   * Cannot be updated.
+   *
+   * @schema PostgresqlSpecInitContainers#ports
+   */
+  readonly ports?: PostgresqlSpecInitContainersPorts[];
+
+  /**
+   * Periodic probe of container service readiness.
+   * Container will be removed from service endpoints if the probe fails.
+   * Cannot be updated.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @schema PostgresqlSpecInitContainers#readinessProbe
+   */
+  readonly readinessProbe?: PostgresqlSpecInitContainersReadinessProbe;
+
+  /**
+   * Resources resize policy for the container.
+   * This field cannot be set on ephemeral containers.
+   *
+   * @schema PostgresqlSpecInitContainers#resizePolicy
+   */
+  readonly resizePolicy?: PostgresqlSpecInitContainersResizePolicy[];
+
+  /**
+   * Compute Resources required by this container.
+   * Cannot be updated.
+   * More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+   *
+   * @schema PostgresqlSpecInitContainers#resources
+   */
+  readonly resources?: PostgresqlSpecInitContainersResources;
+
+  /**
+   * RestartPolicy defines the restart behavior of individual containers in a pod.
+   * This overrides the pod-level restart policy. When this field is not specified,
+   * the restart behavior is defined by the Pod's restart policy and the container type.
+   * Additionally, setting the RestartPolicy as "Always" for the init container will
+   * have the following effect:
+   * this init container will be continually restarted on
+   * exit until all regular containers have terminated. Once all regular
+   * containers have completed, all init containers with restartPolicy "Always"
+   * will be shut down. This lifecycle differs from normal init containers and
+   * is often referred to as a "sidecar" container. Although this init
+   * container still starts in the init container sequence, it does not wait
+   * for the container to complete before proceeding to the next init
+   * container. Instead, the next init container starts immediately after this
+   * init container is started, or after any startupProbe has successfully
+   * completed.
+   *
+   * @schema PostgresqlSpecInitContainers#restartPolicy
+   */
+  readonly restartPolicy?: string;
+
+  /**
+   * Represents a list of rules to be checked to determine if the
+   * container should be restarted on exit. The rules are evaluated in
+   * order. Once a rule matches a container exit condition, the remaining
+   * rules are ignored. If no rule matches the container exit condition,
+   * the Container-level restart policy determines the whether the container
+   * is restarted or not. Constraints on the rules:
+   * - At most 20 rules are allowed.
+   * - Rules can have the same action.
+   * - Identical rules are not forbidden in validations.
+   * When rules are specified, container MUST set RestartPolicy explicitly
+   * even it if matches the Pod's RestartPolicy.
+   *
+   * @schema PostgresqlSpecInitContainers#restartPolicyRules
+   */
+  readonly restartPolicyRules?: PostgresqlSpecInitContainersRestartPolicyRules[];
+
+  /**
+   * SecurityContext defines the security options the container should be run with.
+   * If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext.
+   * More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+   *
+   * @schema PostgresqlSpecInitContainers#securityContext
+   */
+  readonly securityContext?: PostgresqlSpecInitContainersSecurityContext;
+
+  /**
+   * StartupProbe indicates that the Pod has successfully initialized.
+   * If specified, no other probes are executed until this completes successfully.
+   * If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+   * This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+   * when it might take a long time to load data or warm a cache, than during steady-state operation.
+   * This cannot be updated.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @schema PostgresqlSpecInitContainers#startupProbe
+   */
+  readonly startupProbe?: PostgresqlSpecInitContainersStartupProbe;
+
+  /**
+   * Whether this container should allocate a buffer for stdin in the container runtime. If this
+   * is not set, reads from stdin in the container will always result in EOF.
+   * Default is false.
+   *
+   * @default false.
+   * @schema PostgresqlSpecInitContainers#stdin
+   */
+  readonly stdin?: boolean;
+
+  /**
+   * Whether the container runtime should close the stdin channel after it has been opened by
+   * a single attach. When stdin is true the stdin stream will remain open across multiple attach
+   * sessions. If stdinOnce is set to true, stdin is opened on container start, is empty until the
+   * first client attaches to stdin, and then remains open and accepts data until the client disconnects,
+   * at which time stdin is closed and remains closed until the container is restarted. If this
+   * flag is false, a container processes that reads from stdin will never receive an EOF.
+   * Default is false
+   *
+   * @default false
+   * @schema PostgresqlSpecInitContainers#stdinOnce
+   */
+  readonly stdinOnce?: boolean;
+
+  /**
+   * Optional: Path at which the file to which the container's termination message
+   * will be written is mounted into the container's filesystem.
+   * Message written is intended to be brief final status, such as an assertion failure message.
+   * Will be truncated by the node if greater than 4096 bytes. The total message length across
+   * all containers will be limited to 12kb.
+   * Defaults to /dev/termination-log.
+   * Cannot be updated.
+   *
+   * @default dev/termination-log.
+   * @schema PostgresqlSpecInitContainers#terminationMessagePath
+   */
+  readonly terminationMessagePath?: string;
+
+  /**
+   * Indicate how the termination message should be populated. File will use the contents of
+   * terminationMessagePath to populate the container status message on both success and failure.
+   * FallbackToLogsOnError will use the last chunk of container log output if the termination
+   * message file is empty and the container exited with an error.
+   * The log output is limited to 2048 bytes or 80 lines, whichever is smaller.
+   * Defaults to File.
+   * Cannot be updated.
+   *
+   * @default File.
+   * @schema PostgresqlSpecInitContainers#terminationMessagePolicy
+   */
+  readonly terminationMessagePolicy?: string;
+
+  /**
+   * Whether this container should allocate a TTY for itself, also requires 'stdin' to be true.
+   * Default is false.
+   *
+   * @default false.
+   * @schema PostgresqlSpecInitContainers#tty
+   */
+  readonly tty?: boolean;
+
+  /**
+   * volumeDevices is the list of block devices to be used by the container.
+   *
+   * @schema PostgresqlSpecInitContainers#volumeDevices
+   */
+  readonly volumeDevices?: PostgresqlSpecInitContainersVolumeDevices[];
+
+  /**
+   * Pod volumes to mount into the container's filesystem.
+   * Cannot be updated.
+   *
+   * @schema PostgresqlSpecInitContainers#volumeMounts
+   */
+  readonly volumeMounts?: PostgresqlSpecInitContainersVolumeMounts[];
+
+  /**
+   * Container's working directory.
+   * If not specified, the container runtime's default will be used, which
+   * might be configured in the container image.
+   * Cannot be updated.
+   *
+   * @schema PostgresqlSpecInitContainers#workingDir
+   */
+  readonly workingDir?: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainers' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainers(
+  obj: PostgresqlSpecInitContainers | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    args: obj.args?.map((y) => y),
+    command: obj.command?.map((y) => y),
+    env: obj.env?.map((y) => toJson_PostgresqlSpecInitContainersEnv(y)),
+    envFrom: obj.envFrom?.map((y) =>
+      toJson_PostgresqlSpecInitContainersEnvFrom(y),
+    ),
+    image: obj.image,
+    imagePullPolicy: obj.imagePullPolicy,
+    lifecycle: toJson_PostgresqlSpecInitContainersLifecycle(obj.lifecycle),
+    livenessProbe: toJson_PostgresqlSpecInitContainersLivenessProbe(
+      obj.livenessProbe,
+    ),
+    name: obj.name,
+    ports: obj.ports?.map((y) => toJson_PostgresqlSpecInitContainersPorts(y)),
+    readinessProbe: toJson_PostgresqlSpecInitContainersReadinessProbe(
+      obj.readinessProbe,
+    ),
+    resizePolicy: obj.resizePolicy?.map((y) =>
+      toJson_PostgresqlSpecInitContainersResizePolicy(y),
+    ),
+    resources: toJson_PostgresqlSpecInitContainersResources(obj.resources),
+    restartPolicy: obj.restartPolicy,
+    restartPolicyRules: obj.restartPolicyRules?.map((y) =>
+      toJson_PostgresqlSpecInitContainersRestartPolicyRules(y),
+    ),
+    securityContext: toJson_PostgresqlSpecInitContainersSecurityContext(
+      obj.securityContext,
+    ),
+    startupProbe: toJson_PostgresqlSpecInitContainersStartupProbe(
+      obj.startupProbe,
+    ),
+    stdin: obj.stdin,
+    stdinOnce: obj.stdinOnce,
+    terminationMessagePath: obj.terminationMessagePath,
+    terminationMessagePolicy: obj.terminationMessagePolicy,
+    tty: obj.tty,
+    volumeDevices: obj.volumeDevices?.map((y) =>
+      toJson_PostgresqlSpecInitContainersVolumeDevices(y),
+    ),
+    volumeMounts: obj.volumeMounts?.map((y) =>
+      toJson_PostgresqlSpecInitContainersVolumeMounts(y),
+    ),
+    workingDir: obj.workingDir,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Probe describes a health check to be performed against a container to determine whether it is
+ * alive or ready to receive traffic.
+ *
+ * @schema PostgresqlSpecLivenessProbe
+ */
+export interface PostgresqlSpecLivenessProbe {
+  /**
+   * Exec specifies a command to execute in the container.
+   *
+   * @schema PostgresqlSpecLivenessProbe#exec
+   */
+  readonly exec?: PostgresqlSpecLivenessProbeExec;
+
+  /**
+   * Minimum consecutive failures for the probe to be considered failed after having succeeded.
+   * Defaults to 3. Minimum value is 1.
+   *
+   * @default 3. Minimum value is 1.
+   * @schema PostgresqlSpecLivenessProbe#failureThreshold
+   */
+  readonly failureThreshold?: number;
+
+  /**
+   * GRPC specifies a GRPC HealthCheckRequest.
+   *
+   * @schema PostgresqlSpecLivenessProbe#grpc
+   */
+  readonly grpc?: PostgresqlSpecLivenessProbeGrpc;
+
+  /**
+   * HTTPGet specifies an HTTP GET request to perform.
+   *
+   * @schema PostgresqlSpecLivenessProbe#httpGet
+   */
+  readonly httpGet?: PostgresqlSpecLivenessProbeHttpGet;
+
+  /**
+   * Number of seconds after the container has started before liveness probes are initiated.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @schema PostgresqlSpecLivenessProbe#initialDelaySeconds
+   */
+  readonly initialDelaySeconds?: number;
+
+  /**
+   * How often (in seconds) to perform the probe.
+   * Default to 10 seconds. Minimum value is 1.
+   *
+   * @default 10 seconds. Minimum value is 1.
+   * @schema PostgresqlSpecLivenessProbe#periodSeconds
+   */
+  readonly periodSeconds?: number;
+
+  /**
+   * Minimum consecutive successes for the probe to be considered successful after having failed.
+   * Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
+   *
+   * @default 1. Must be 1 for liveness and startup. Minimum value is 1.
+   * @schema PostgresqlSpecLivenessProbe#successThreshold
+   */
+  readonly successThreshold?: number;
+
+  /**
+   * TCPSocket specifies a connection to a TCP port.
+   *
+   * @schema PostgresqlSpecLivenessProbe#tcpSocket
+   */
+  readonly tcpSocket?: PostgresqlSpecLivenessProbeTcpSocket;
+
+  /**
+   * Optional duration in seconds the pod needs to terminate gracefully upon probe failure.
+   * The grace period is the duration in seconds after the processes running in the pod are sent
+   * a termination signal and the time when the processes are forcibly halted with a kill signal.
+   * Set this value longer than the expected cleanup time for your process.
+   * If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this
+   * value overrides the value provided by the pod spec.
+   * Value must be non-negative integer. The value zero indicates stop immediately via
+   * the kill signal (no opportunity to shut down).
+   * This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate.
+   * Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset.
+   *
+   * @schema PostgresqlSpecLivenessProbe#terminationGracePeriodSeconds
+   */
+  readonly terminationGracePeriodSeconds?: number;
+
+  /**
+   * Number of seconds after which the probe times out.
+   * Defaults to 1 second. Minimum value is 1.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @default 1 second. Minimum value is 1.
+   * @schema PostgresqlSpecLivenessProbe#timeoutSeconds
+   */
+  readonly timeoutSeconds?: number;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecLivenessProbe' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecLivenessProbe(
+  obj: PostgresqlSpecLivenessProbe | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    exec: toJson_PostgresqlSpecLivenessProbeExec(obj.exec),
+    failureThreshold: obj.failureThreshold,
+    grpc: toJson_PostgresqlSpecLivenessProbeGrpc(obj.grpc),
+    httpGet: toJson_PostgresqlSpecLivenessProbeHttpGet(obj.httpGet),
+    initialDelaySeconds: obj.initialDelaySeconds,
+    periodSeconds: obj.periodSeconds,
+    successThreshold: obj.successThreshold,
+    tcpSocket: toJson_PostgresqlSpecLivenessProbeTcpSocket(obj.tcpSocket),
+    terminationGracePeriodSeconds: obj.terminationGracePeriodSeconds,
+    timeoutSeconds: obj.timeoutSeconds,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Node affinity is a group of node affinity scheduling rules.
+ *
  * @schema PostgresqlSpecNodeAffinity
  */
 export interface PostgresqlSpecNodeAffinity {
   /**
+   * The scheduler will prefer to schedule pods to nodes that satisfy
+   * the affinity expressions specified by this field, but it may choose
+   * a node that violates one or more of the expressions. The node that is
+   * most preferred is the one with the greatest sum of weights, i.e.
+   * for each node that meets all of the scheduling requirements (resource
+   * request, requiredDuringScheduling affinity expressions, etc.),
+   * compute a sum by iterating through the elements of this field and adding
+   * "weight" to the sum if the node matches the corresponding matchExpressions; the
+   * node(s) with the highest sum are the most preferred.
+   *
    * @schema PostgresqlSpecNodeAffinity#preferredDuringSchedulingIgnoredDuringExecution
    */
   readonly preferredDuringSchedulingIgnoredDuringExecution?: PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecution[];
 
   /**
+   * If the affinity requirements specified by this field are not met at
+   * scheduling time, the pod will not be scheduled onto the node.
+   * If the affinity requirements specified by this field cease to be met
+   * at some point during pod execution (e.g. due to an update), the system
+   * may or may not try to eventually evict the pod from its node.
+   *
    * @schema PostgresqlSpecNodeAffinity#requiredDuringSchedulingIgnoredDuringExecution
    */
   readonly requiredDuringSchedulingIgnoredDuringExecution?: PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnoredDuringExecution;
@@ -2613,6 +3926,8 @@ export function toJson_PostgresqlSpecNodeAffinity(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * Patroni contains Patroni-specific configuration
+ *
  * @schema PostgresqlSpecPatroni
  */
 export interface PostgresqlSpecPatroni {
@@ -2729,6 +4044,8 @@ export function toJson_PostgresqlSpecPatroni(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * PostgresqlParam describes PostgreSQL version and pairs of configuration parameter name - values.
+ *
  * @schema PostgresqlSpecPostgresql
  */
 export interface PostgresqlSpecPostgresql {
@@ -2772,6 +4089,8 @@ export function toJson_PostgresqlSpecPostgresql(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * PreparedDatabase describes elements to be bootstrapped
+ *
  * @schema PostgresqlSpecPreparedDatabases
  */
 export interface PostgresqlSpecPreparedDatabases {
@@ -2839,15 +4158,21 @@ export function toJson_PostgresqlSpecPreparedDatabases(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * Resources describes requests and limits for the cluster resouces.
+ *
  * @schema PostgresqlSpecResources
  */
 export interface PostgresqlSpecResources {
   /**
+   * ResourceDescription describes CPU and memory resources defined for a cluster.
+   *
    * @schema PostgresqlSpecResources#limits
    */
   readonly limits?: PostgresqlSpecResourcesLimits;
 
   /**
+   * ResourceDescription describes CPU and memory resources defined for a cluster.
+   *
    * @schema PostgresqlSpecResources#requests
    */
   readonly requests?: PostgresqlSpecResourcesRequests;
@@ -2876,6 +4201,75 @@ export function toJson_PostgresqlSpecResources(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * Sidecar defines a container to be run in the same pod as the Postgres container.
+ *
+ * @schema PostgresqlSpecSidecars
+ */
+export interface PostgresqlSpecSidecars {
+  /**
+   * @schema PostgresqlSpecSidecars#command
+   */
+  readonly command?: string[];
+
+  /**
+   * @schema PostgresqlSpecSidecars#env
+   */
+  readonly env?: PostgresqlSpecSidecarsEnv[];
+
+  /**
+   * @schema PostgresqlSpecSidecars#image
+   */
+  readonly image?: string;
+
+  /**
+   * @schema PostgresqlSpecSidecars#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema PostgresqlSpecSidecars#ports
+   */
+  readonly ports?: PostgresqlSpecSidecarsPorts[];
+
+  /**
+   * Resources describes requests and limits for the cluster resouces.
+   *
+   * @schema PostgresqlSpecSidecars#resources
+   */
+  readonly resources?: PostgresqlSpecSidecarsResources;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecSidecars' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecSidecars(
+  obj: PostgresqlSpecSidecars | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    command: obj.command?.map((y) => y),
+    env: obj.env?.map((y) => toJson_PostgresqlSpecSidecarsEnv(y)),
+    image: obj.image,
+    name: obj.name,
+    ports: obj.ports?.map((y) => toJson_PostgresqlSpecSidecarsPorts(y)),
+    resources: toJson_PostgresqlSpecSidecarsResources(obj.resources),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * StandbyDescription contains remote primary config and/or s3/gs wal path.
+ * standby_host can be specified alone or together with either s3_wal_path OR gs_wal_path (mutually exclusive).
+ * At least one field must be specified. s3_wal_path and gs_wal_path are mutually exclusive.
+ *
  * @schema PostgresqlSpecStandby
  */
 export interface PostgresqlSpecStandby {
@@ -2898,6 +4292,11 @@ export interface PostgresqlSpecStandby {
    * @schema PostgresqlSpecStandby#standby_port
    */
   readonly standbyPort?: string;
+
+  /**
+   * @schema PostgresqlSpecStandby#standby_primary_slot_name
+   */
+  readonly standbyPrimarySlotName?: string;
 }
 
 /**
@@ -2915,6 +4314,7 @@ export function toJson_PostgresqlSpecStandby(
     s3_wal_path: obj.s3WalPath,
     standby_host: obj.standbyHost,
     standby_port: obj.standbyPort,
+    standby_primary_slot_name: obj.standbyPrimarySlotName,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -2925,6 +4325,8 @@ export function toJson_PostgresqlSpecStandby(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * Stream defines properties for creating FabricEventStream resources
+ *
  * @schema PostgresqlSpecStreams
  */
 export interface PostgresqlSpecStreams {
@@ -3013,6 +4415,8 @@ export function toJson_PostgresqlSpecStreams(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * TLSDescription specs TLS properties
+ *
  * @schema PostgresqlSpecTls
  */
 export interface PostgresqlSpecTls {
@@ -3068,30 +4472,54 @@ export function toJson_PostgresqlSpecTls(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * The pod this Toleration is attached to tolerates any taint that matches
+ * the triple <key,value,effect> using the matching operator <operator>.
+ *
  * @schema PostgresqlSpecTolerations
  */
 export interface PostgresqlSpecTolerations {
   /**
+   * Effect indicates the taint effect to match. Empty means match all taint effects.
+   * When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.
+   *
    * @schema PostgresqlSpecTolerations#effect
    */
-  readonly effect?: PostgresqlSpecTolerationsEffect;
+  readonly effect?: string;
 
   /**
+   * Key is the taint key that the toleration applies to. Empty means match all taint keys.
+   * If the key is empty, operator must be Exists; this combination means to match all values and all keys.
+   *
    * @schema PostgresqlSpecTolerations#key
    */
   readonly key?: string;
 
   /**
+   * Operator represents a key's relationship to the value.
+   * Valid operators are Exists, Equal, Lt, and Gt. Defaults to Equal.
+   * Exists is equivalent to wildcard for value, so that a pod can
+   * tolerate all taints of a particular category.
+   * Lt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).
+   *
+   * @default Equal.
    * @schema PostgresqlSpecTolerations#operator
    */
-  readonly operator?: PostgresqlSpecTolerationsOperator;
+  readonly operator?: string;
 
   /**
+   * TolerationSeconds represents the period of time the toleration (which must be
+   * of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default,
+   * it is not set, which means tolerate the taint forever (do not evict). Zero and
+   * negative values will be treated as 0 (evict immediately) by the system.
+   *
    * @schema PostgresqlSpecTolerations#tolerationSeconds
    */
   readonly tolerationSeconds?: number;
 
   /**
+   * Value is the taint value the toleration matches to.
+   * If the operator is Exists, the value should be empty, otherwise just a regular string.
+   *
    * @schema PostgresqlSpecTolerations#value
    */
   readonly value?: string;
@@ -3113,6 +4541,181 @@ export function toJson_PostgresqlSpecTolerations(
     operator: obj.operator,
     tolerationSeconds: obj.tolerationSeconds,
     value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * TopologySpreadConstraint specifies how to spread matching pods among the given topology.
+ *
+ * @schema PostgresqlSpecTopologySpreadConstraints
+ */
+export interface PostgresqlSpecTopologySpreadConstraints {
+  /**
+   * LabelSelector is used to find matching pods.
+   * Pods that match this label selector are counted to determine the number of pods
+   * in their corresponding topology domain.
+   *
+   * @schema PostgresqlSpecTopologySpreadConstraints#labelSelector
+   */
+  readonly labelSelector?: PostgresqlSpecTopologySpreadConstraintsLabelSelector;
+
+  /**
+   * MatchLabelKeys is a set of pod label keys to select the pods over which
+   * spreading will be calculated. The keys are used to lookup values from the
+   * incoming pod labels, those key-value labels are ANDed with labelSelector
+   * to select the group of existing pods over which spreading will be calculated
+   * for the incoming pod. The same key is forbidden to exist in both MatchLabelKeys and LabelSelector.
+   * MatchLabelKeys cannot be set when LabelSelector isn't set.
+   * Keys that don't exist in the incoming pod labels will
+   * be ignored. A null or empty list means only match against labelSelector.
+   *
+   * This is a beta field and requires the MatchLabelKeysInPodTopologySpread feature gate to be enabled (enabled by default).
+   *
+   * @schema PostgresqlSpecTopologySpreadConstraints#matchLabelKeys
+   */
+  readonly matchLabelKeys?: string[];
+
+  /**
+   * MaxSkew describes the degree to which pods may be unevenly distributed.
+   * When `whenUnsatisfiable=DoNotSchedule`, it is the maximum permitted difference
+   * between the number of matching pods in the target topology and the global minimum.
+   * The global minimum is the minimum number of matching pods in an eligible domain
+   * or zero if the number of eligible domains is less than MinDomains.
+   * For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same
+   * labelSelector spread as 2/2/1:
+   * In this case, the global minimum is 1.
+   * | zone1 | zone2 | zone3 |
+   * |  P P  |  P P  |   P   |
+   * - if MaxSkew is 1, incoming pod can only be scheduled to zone3 to become 2/2/2;
+   * scheduling it onto zone1(zone2) would make the ActualSkew(3-1) on zone1(zone2)
+   * violate MaxSkew(1).
+   * - if MaxSkew is 2, incoming pod can be scheduled onto any zone.
+   * When `whenUnsatisfiable=ScheduleAnyway`, it is used to give higher precedence
+   * to topologies that satisfy it.
+   * It's a required field. Default value is 1 and 0 is not allowed.
+   *
+   * @schema PostgresqlSpecTopologySpreadConstraints#maxSkew
+   */
+  readonly maxSkew: number;
+
+  /**
+   * MinDomains indicates a minimum number of eligible domains.
+   * When the number of eligible domains with matching topology keys is less than minDomains,
+   * Pod Topology Spread treats "global minimum" as 0, and then the calculation of Skew is performed.
+   * And when the number of eligible domains with matching topology keys equals or greater than minDomains,
+   * this value has no effect on scheduling.
+   * As a result, when the number of eligible domains is less than minDomains,
+   * scheduler won't schedule more than maxSkew Pods to those domains.
+   * If value is nil, the constraint behaves as if MinDomains is equal to 1.
+   * Valid values are integers greater than 0.
+   * When value is not nil, WhenUnsatisfiable must be DoNotSchedule.
+   *
+   * For example, in a 3-zone cluster, MaxSkew is set to 2, MinDomains is set to 5 and pods with the same
+   * labelSelector spread as 2/2/2:
+   * | zone1 | zone2 | zone3 |
+   * |  P P  |  P P  |  P P  |
+   * The number of domains is less than 5(MinDomains), so "global minimum" is treated as 0.
+   * In this situation, new pod with the same labelSelector cannot be scheduled,
+   * because computed skew will be 3(3 - 0) if new Pod is scheduled to any of the three zones,
+   * it will violate MaxSkew.
+   *
+   * @schema PostgresqlSpecTopologySpreadConstraints#minDomains
+   */
+  readonly minDomains?: number;
+
+  /**
+   * NodeAffinityPolicy indicates how we will treat Pod's nodeAffinity/nodeSelector
+   * when calculating pod topology spread skew. Options are:
+   * - Honor: only nodes matching nodeAffinity/nodeSelector are included in the calculations.
+   * - Ignore: nodeAffinity/nodeSelector are ignored. All nodes are included in the calculations.
+   *
+   * If this value is nil, the behavior is equivalent to the Honor policy.
+   *
+   * @schema PostgresqlSpecTopologySpreadConstraints#nodeAffinityPolicy
+   */
+  readonly nodeAffinityPolicy?: string;
+
+  /**
+   * NodeTaintsPolicy indicates how we will treat node taints when calculating
+   * pod topology spread skew. Options are:
+   * - Honor: nodes without taints, along with tainted nodes for which the incoming pod
+   * has a toleration, are included.
+   * - Ignore: node taints are ignored. All nodes are included.
+   *
+   * If this value is nil, the behavior is equivalent to the Ignore policy.
+   *
+   * @schema PostgresqlSpecTopologySpreadConstraints#nodeTaintsPolicy
+   */
+  readonly nodeTaintsPolicy?: string;
+
+  /**
+   * TopologyKey is the key of node labels. Nodes that have a label with this key
+   * and identical values are considered to be in the same topology.
+   * We consider each <key, value> as a "bucket", and try to put balanced number
+   * of pods into each bucket.
+   * We define a domain as a particular instance of a topology.
+   * Also, we define an eligible domain as a domain whose nodes meet the requirements of
+   * nodeAffinityPolicy and nodeTaintsPolicy.
+   * e.g. If TopologyKey is "kubernetes.io/hostname", each Node is a domain of that topology.
+   * And, if TopologyKey is "topology.kubernetes.io/zone", each zone is a domain of that topology.
+   * It's a required field.
+   *
+   * @schema PostgresqlSpecTopologySpreadConstraints#topologyKey
+   */
+  readonly topologyKey: string;
+
+  /**
+   * WhenUnsatisfiable indicates how to deal with a pod if it doesn't satisfy
+   * the spread constraint.
+   * - DoNotSchedule (default) tells the scheduler not to schedule it.
+   * - ScheduleAnyway tells the scheduler to schedule the pod in any location,
+   * but giving higher precedence to topologies that would help reduce the
+   * skew.
+   * A constraint is considered "Unsatisfiable" for an incoming pod
+   * if and only if every possible node assignment for that pod would violate
+   * "MaxSkew" on some topology.
+   * For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same
+   * labelSelector spread as 3/1/1:
+   * | zone1 | zone2 | zone3 |
+   * | P P P |   P   |   P   |
+   * If WhenUnsatisfiable is set to DoNotSchedule, incoming pod can only be scheduled
+   * to zone2(zone3) to become 3/2/1(3/1/2) as ActualSkew(2-1) on zone2(zone3) satisfies
+   * MaxSkew(1). In other words, the cluster can still be imbalanced, but scheduler
+   * won't make it *more* imbalanced.
+   * It's a required field.
+   *
+   * @schema PostgresqlSpecTopologySpreadConstraints#whenUnsatisfiable
+   */
+  readonly whenUnsatisfiable: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecTopologySpreadConstraints' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecTopologySpreadConstraints(
+  obj: PostgresqlSpecTopologySpreadConstraints | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    labelSelector: toJson_PostgresqlSpecTopologySpreadConstraintsLabelSelector(
+      obj.labelSelector,
+    ),
+    matchLabelKeys: obj.matchLabelKeys?.map((y) => y),
+    maxSkew: obj.maxSkew,
+    minDomains: obj.minDomains,
+    nodeAffinityPolicy: obj.nodeAffinityPolicy,
+    nodeTaintsPolicy: obj.nodeTaintsPolicy,
+    topologyKey: obj.topologyKey,
+    whenUnsatisfiable: obj.whenUnsatisfiable,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -3157,6 +4760,8 @@ export enum PostgresqlSpecUsers {
 }
 
 /**
+ * Volume describes a single volume in the manifest.
+ *
  * @schema PostgresqlSpecVolume
  */
 export interface PostgresqlSpecVolume {
@@ -3171,6 +4776,10 @@ export interface PostgresqlSpecVolume {
   readonly isSubPathExpr?: boolean;
 
   /**
+   * A label selector is a label query over a set of resources. The result of matchLabels and
+   * matchExpressions are ANDed. An empty label selector matches all objects. A null
+   * label selector matches no objects.
+   *
    * @schema PostgresqlSpecVolume#selector
    */
   readonly selector?: PostgresqlSpecVolumeSelector;
@@ -3194,6 +4803,11 @@ export interface PostgresqlSpecVolume {
    * @schema PostgresqlSpecVolume#throughput
    */
   readonly throughput?: number;
+
+  /**
+   * @schema PostgresqlSpecVolume#type
+   */
+  readonly type?: string;
 }
 
 /**
@@ -3214,6 +4828,7 @@ export function toJson_PostgresqlSpecVolume(
     storageClass: obj.storageClass,
     subPath: obj.subPath,
     throughput: obj.throughput,
+    type: obj.type,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -3234,15 +4849,21 @@ export enum PostgresqlSpecConnectionPoolerMode {
 }
 
 /**
+ * Resources describes requests and limits for the cluster resouces.
+ *
  * @schema PostgresqlSpecConnectionPoolerResources
  */
 export interface PostgresqlSpecConnectionPoolerResources {
   /**
+   * ResourceDescription describes CPU and memory resources defined for a cluster.
+   *
    * @schema PostgresqlSpecConnectionPoolerResources#limits
    */
   readonly limits?: PostgresqlSpecConnectionPoolerResourcesLimits;
 
   /**
+   * ResourceDescription describes CPU and memory resources defined for a cluster.
+   *
    * @schema PostgresqlSpecConnectionPoolerResources#requests
    */
   readonly requests?: PostgresqlSpecConnectionPoolerResourcesRequests;
@@ -3273,15 +4894,1570 @@ export function toJson_PostgresqlSpecConnectionPoolerResources(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * Source for the environment variable's value. Cannot be used if value is not empty.
+ *
+ * @schema PostgresqlSpecEnvValueFrom
+ */
+export interface PostgresqlSpecEnvValueFrom {
+  /**
+   * Selects a key of a ConfigMap.
+   *
+   * @schema PostgresqlSpecEnvValueFrom#configMapKeyRef
+   */
+  readonly configMapKeyRef?: PostgresqlSpecEnvValueFromConfigMapKeyRef;
+
+  /**
+   * Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels['<KEY>']`, `metadata.annotations['<KEY>']`,
+   * spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.
+   *
+   * @schema PostgresqlSpecEnvValueFrom#fieldRef
+   */
+  readonly fieldRef?: PostgresqlSpecEnvValueFromFieldRef;
+
+  /**
+   * FileKeyRef selects a key of the env file.
+   * Requires the EnvFiles feature gate to be enabled.
+   *
+   * @schema PostgresqlSpecEnvValueFrom#fileKeyRef
+   */
+  readonly fileKeyRef?: PostgresqlSpecEnvValueFromFileKeyRef;
+
+  /**
+   * Selects a resource of the container: only resources limits and requests
+   * (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.
+   *
+   * @schema PostgresqlSpecEnvValueFrom#resourceFieldRef
+   */
+  readonly resourceFieldRef?: PostgresqlSpecEnvValueFromResourceFieldRef;
+
+  /**
+   * Selects a key of a secret in the pod's namespace
+   *
+   * @schema PostgresqlSpecEnvValueFrom#secretKeyRef
+   */
+  readonly secretKeyRef?: PostgresqlSpecEnvValueFromSecretKeyRef;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecEnvValueFrom' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecEnvValueFrom(
+  obj: PostgresqlSpecEnvValueFrom | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    configMapKeyRef: toJson_PostgresqlSpecEnvValueFromConfigMapKeyRef(
+      obj.configMapKeyRef,
+    ),
+    fieldRef: toJson_PostgresqlSpecEnvValueFromFieldRef(obj.fieldRef),
+    fileKeyRef: toJson_PostgresqlSpecEnvValueFromFileKeyRef(obj.fileKeyRef),
+    resourceFieldRef: toJson_PostgresqlSpecEnvValueFromResourceFieldRef(
+      obj.resourceFieldRef,
+    ),
+    secretKeyRef: toJson_PostgresqlSpecEnvValueFromSecretKeyRef(
+      obj.secretKeyRef,
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * The ConfigMap to select from
+ *
+ * @schema PostgresqlSpecEnvFromConfigMapRef
+ */
+export interface PostgresqlSpecEnvFromConfigMapRef {
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   *
+   * @schema PostgresqlSpecEnvFromConfigMapRef#name
+   */
+  readonly name?: string;
+
+  /**
+   * Specify whether the ConfigMap must be defined
+   *
+   * @schema PostgresqlSpecEnvFromConfigMapRef#optional
+   */
+  readonly optional?: boolean;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecEnvFromConfigMapRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecEnvFromConfigMapRef(
+  obj: PostgresqlSpecEnvFromConfigMapRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    optional: obj.optional,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * The Secret to select from
+ *
+ * @schema PostgresqlSpecEnvFromSecretRef
+ */
+export interface PostgresqlSpecEnvFromSecretRef {
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   *
+   * @schema PostgresqlSpecEnvFromSecretRef#name
+   */
+  readonly name?: string;
+
+  /**
+   * Specify whether the Secret must be defined
+   *
+   * @schema PostgresqlSpecEnvFromSecretRef#optional
+   */
+  readonly optional?: boolean;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecEnvFromSecretRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecEnvFromSecretRef(
+  obj: PostgresqlSpecEnvFromSecretRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    optional: obj.optional,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * EnvVar represents an environment variable present in a Container.
+ *
+ * @schema PostgresqlSpecInitContainersEnv
+ */
+export interface PostgresqlSpecInitContainersEnv {
+  /**
+   * Name of the environment variable.
+   * May consist of any printable ASCII characters except '='.
+   *
+   * @schema PostgresqlSpecInitContainersEnv#name
+   */
+  readonly name: string;
+
+  /**
+   * Variable references $(VAR_NAME) are expanded
+   * using the previously defined environment variables in the container and
+   * any service environment variables. If a variable cannot be resolved,
+   * the reference in the input string will be unchanged. Double $$ are reduced
+   * to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e.
+   * "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)".
+   * Escaped references will never be expanded, regardless of whether the variable
+   * exists or not.
+   * Defaults to "".
+   *
+   * @default .
+   * @schema PostgresqlSpecInitContainersEnv#value
+   */
+  readonly value?: string;
+
+  /**
+   * Source for the environment variable's value. Cannot be used if value is not empty.
+   *
+   * @schema PostgresqlSpecInitContainersEnv#valueFrom
+   */
+  readonly valueFrom?: PostgresqlSpecInitContainersEnvValueFrom;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersEnv' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersEnv(
+  obj: PostgresqlSpecInitContainersEnv | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+    valueFrom: toJson_PostgresqlSpecInitContainersEnvValueFrom(obj.valueFrom),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * EnvFromSource represents the source of a set of ConfigMaps or Secrets
+ *
+ * @schema PostgresqlSpecInitContainersEnvFrom
+ */
+export interface PostgresqlSpecInitContainersEnvFrom {
+  /**
+   * The ConfigMap to select from
+   *
+   * @schema PostgresqlSpecInitContainersEnvFrom#configMapRef
+   */
+  readonly configMapRef?: PostgresqlSpecInitContainersEnvFromConfigMapRef;
+
+  /**
+   * Optional text to prepend to the name of each environment variable.
+   * May consist of any printable ASCII characters except '='.
+   *
+   * @schema PostgresqlSpecInitContainersEnvFrom#prefix
+   */
+  readonly prefix?: string;
+
+  /**
+   * The Secret to select from
+   *
+   * @schema PostgresqlSpecInitContainersEnvFrom#secretRef
+   */
+  readonly secretRef?: PostgresqlSpecInitContainersEnvFromSecretRef;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersEnvFrom' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersEnvFrom(
+  obj: PostgresqlSpecInitContainersEnvFrom | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    configMapRef: toJson_PostgresqlSpecInitContainersEnvFromConfigMapRef(
+      obj.configMapRef,
+    ),
+    prefix: obj.prefix,
+    secretRef: toJson_PostgresqlSpecInitContainersEnvFromSecretRef(
+      obj.secretRef,
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Actions that the management system should take in response to container lifecycle events.
+ * Cannot be updated.
+ *
+ * @schema PostgresqlSpecInitContainersLifecycle
+ */
+export interface PostgresqlSpecInitContainersLifecycle {
+  /**
+   * PostStart is called immediately after a container is created. If the handler fails,
+   * the container is terminated and restarted according to its restart policy.
+   * Other management of the container blocks until the hook completes.
+   * More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks
+   *
+   * @schema PostgresqlSpecInitContainersLifecycle#postStart
+   */
+  readonly postStart?: PostgresqlSpecInitContainersLifecyclePostStart;
+
+  /**
+   * PreStop is called immediately before a container is terminated due to an
+   * API request or management event such as liveness/startup probe failure,
+   * preemption, resource contention, etc. The handler is not called if the
+   * container crashes or exits. The Pod's termination grace period countdown begins before the
+   * PreStop hook is executed. Regardless of the outcome of the handler, the
+   * container will eventually terminate within the Pod's termination grace
+   * period (unless delayed by finalizers). Other management of the container blocks until the hook completes
+   * or until the termination grace period is reached.
+   * More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks
+   *
+   * @schema PostgresqlSpecInitContainersLifecycle#preStop
+   */
+  readonly preStop?: PostgresqlSpecInitContainersLifecyclePreStop;
+
+  /**
+   * StopSignal defines which signal will be sent to a container when it is being stopped.
+   * If not specified, the default is defined by the container runtime in use.
+   * StopSignal can only be set for Pods with a non-empty .spec.os.name
+   *
+   * @schema PostgresqlSpecInitContainersLifecycle#stopSignal
+   */
+  readonly stopSignal?: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersLifecycle' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersLifecycle(
+  obj: PostgresqlSpecInitContainersLifecycle | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    postStart: toJson_PostgresqlSpecInitContainersLifecyclePostStart(
+      obj.postStart,
+    ),
+    preStop: toJson_PostgresqlSpecInitContainersLifecyclePreStop(obj.preStop),
+    stopSignal: obj.stopSignal,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Periodic probe of container liveness.
+ * Container will be restarted if the probe fails.
+ * Cannot be updated.
+ * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+ *
+ * @schema PostgresqlSpecInitContainersLivenessProbe
+ */
+export interface PostgresqlSpecInitContainersLivenessProbe {
+  /**
+   * Exec specifies a command to execute in the container.
+   *
+   * @schema PostgresqlSpecInitContainersLivenessProbe#exec
+   */
+  readonly exec?: PostgresqlSpecInitContainersLivenessProbeExec;
+
+  /**
+   * Minimum consecutive failures for the probe to be considered failed after having succeeded.
+   * Defaults to 3. Minimum value is 1.
+   *
+   * @default 3. Minimum value is 1.
+   * @schema PostgresqlSpecInitContainersLivenessProbe#failureThreshold
+   */
+  readonly failureThreshold?: number;
+
+  /**
+   * GRPC specifies a GRPC HealthCheckRequest.
+   *
+   * @schema PostgresqlSpecInitContainersLivenessProbe#grpc
+   */
+  readonly grpc?: PostgresqlSpecInitContainersLivenessProbeGrpc;
+
+  /**
+   * HTTPGet specifies an HTTP GET request to perform.
+   *
+   * @schema PostgresqlSpecInitContainersLivenessProbe#httpGet
+   */
+  readonly httpGet?: PostgresqlSpecInitContainersLivenessProbeHttpGet;
+
+  /**
+   * Number of seconds after the container has started before liveness probes are initiated.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @schema PostgresqlSpecInitContainersLivenessProbe#initialDelaySeconds
+   */
+  readonly initialDelaySeconds?: number;
+
+  /**
+   * How often (in seconds) to perform the probe.
+   * Default to 10 seconds. Minimum value is 1.
+   *
+   * @default 10 seconds. Minimum value is 1.
+   * @schema PostgresqlSpecInitContainersLivenessProbe#periodSeconds
+   */
+  readonly periodSeconds?: number;
+
+  /**
+   * Minimum consecutive successes for the probe to be considered successful after having failed.
+   * Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
+   *
+   * @default 1. Must be 1 for liveness and startup. Minimum value is 1.
+   * @schema PostgresqlSpecInitContainersLivenessProbe#successThreshold
+   */
+  readonly successThreshold?: number;
+
+  /**
+   * TCPSocket specifies a connection to a TCP port.
+   *
+   * @schema PostgresqlSpecInitContainersLivenessProbe#tcpSocket
+   */
+  readonly tcpSocket?: PostgresqlSpecInitContainersLivenessProbeTcpSocket;
+
+  /**
+   * Optional duration in seconds the pod needs to terminate gracefully upon probe failure.
+   * The grace period is the duration in seconds after the processes running in the pod are sent
+   * a termination signal and the time when the processes are forcibly halted with a kill signal.
+   * Set this value longer than the expected cleanup time for your process.
+   * If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this
+   * value overrides the value provided by the pod spec.
+   * Value must be non-negative integer. The value zero indicates stop immediately via
+   * the kill signal (no opportunity to shut down).
+   * This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate.
+   * Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset.
+   *
+   * @schema PostgresqlSpecInitContainersLivenessProbe#terminationGracePeriodSeconds
+   */
+  readonly terminationGracePeriodSeconds?: number;
+
+  /**
+   * Number of seconds after which the probe times out.
+   * Defaults to 1 second. Minimum value is 1.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @default 1 second. Minimum value is 1.
+   * @schema PostgresqlSpecInitContainersLivenessProbe#timeoutSeconds
+   */
+  readonly timeoutSeconds?: number;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersLivenessProbe' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersLivenessProbe(
+  obj: PostgresqlSpecInitContainersLivenessProbe | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    exec: toJson_PostgresqlSpecInitContainersLivenessProbeExec(obj.exec),
+    failureThreshold: obj.failureThreshold,
+    grpc: toJson_PostgresqlSpecInitContainersLivenessProbeGrpc(obj.grpc),
+    httpGet: toJson_PostgresqlSpecInitContainersLivenessProbeHttpGet(
+      obj.httpGet,
+    ),
+    initialDelaySeconds: obj.initialDelaySeconds,
+    periodSeconds: obj.periodSeconds,
+    successThreshold: obj.successThreshold,
+    tcpSocket: toJson_PostgresqlSpecInitContainersLivenessProbeTcpSocket(
+      obj.tcpSocket,
+    ),
+    terminationGracePeriodSeconds: obj.terminationGracePeriodSeconds,
+    timeoutSeconds: obj.timeoutSeconds,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * ContainerPort represents a network port in a single container.
+ *
+ * @schema PostgresqlSpecInitContainersPorts
+ */
+export interface PostgresqlSpecInitContainersPorts {
+  /**
+   * Number of port to expose on the pod's IP address.
+   * This must be a valid port number, 0 < x < 65536.
+   *
+   * @schema PostgresqlSpecInitContainersPorts#containerPort
+   */
+  readonly containerPort: number;
+
+  /**
+   * What host IP to bind the external port to.
+   *
+   * @schema PostgresqlSpecInitContainersPorts#hostIP
+   */
+  readonly hostIp?: string;
+
+  /**
+   * Number of port to expose on the host.
+   * If specified, this must be a valid port number, 0 < x < 65536.
+   * If HostNetwork is specified, this must match ContainerPort.
+   * Most containers do not need this.
+   *
+   * @schema PostgresqlSpecInitContainersPorts#hostPort
+   */
+  readonly hostPort?: number;
+
+  /**
+   * If specified, this must be an IANA_SVC_NAME and unique within the pod. Each
+   * named port in a pod must have a unique name. Name for the port that can be
+   * referred to by services.
+   *
+   * @schema PostgresqlSpecInitContainersPorts#name
+   */
+  readonly name?: string;
+
+  /**
+   * Protocol for port. Must be UDP, TCP, or SCTP.
+   * Defaults to "TCP".
+   *
+   * @default TCP".
+   * @schema PostgresqlSpecInitContainersPorts#protocol
+   */
+  readonly protocol?: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersPorts' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersPorts(
+  obj: PostgresqlSpecInitContainersPorts | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    containerPort: obj.containerPort,
+    hostIP: obj.hostIp,
+    hostPort: obj.hostPort,
+    name: obj.name,
+    protocol: obj.protocol,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Periodic probe of container service readiness.
+ * Container will be removed from service endpoints if the probe fails.
+ * Cannot be updated.
+ * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+ *
+ * @schema PostgresqlSpecInitContainersReadinessProbe
+ */
+export interface PostgresqlSpecInitContainersReadinessProbe {
+  /**
+   * Exec specifies a command to execute in the container.
+   *
+   * @schema PostgresqlSpecInitContainersReadinessProbe#exec
+   */
+  readonly exec?: PostgresqlSpecInitContainersReadinessProbeExec;
+
+  /**
+   * Minimum consecutive failures for the probe to be considered failed after having succeeded.
+   * Defaults to 3. Minimum value is 1.
+   *
+   * @default 3. Minimum value is 1.
+   * @schema PostgresqlSpecInitContainersReadinessProbe#failureThreshold
+   */
+  readonly failureThreshold?: number;
+
+  /**
+   * GRPC specifies a GRPC HealthCheckRequest.
+   *
+   * @schema PostgresqlSpecInitContainersReadinessProbe#grpc
+   */
+  readonly grpc?: PostgresqlSpecInitContainersReadinessProbeGrpc;
+
+  /**
+   * HTTPGet specifies an HTTP GET request to perform.
+   *
+   * @schema PostgresqlSpecInitContainersReadinessProbe#httpGet
+   */
+  readonly httpGet?: PostgresqlSpecInitContainersReadinessProbeHttpGet;
+
+  /**
+   * Number of seconds after the container has started before liveness probes are initiated.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @schema PostgresqlSpecInitContainersReadinessProbe#initialDelaySeconds
+   */
+  readonly initialDelaySeconds?: number;
+
+  /**
+   * How often (in seconds) to perform the probe.
+   * Default to 10 seconds. Minimum value is 1.
+   *
+   * @default 10 seconds. Minimum value is 1.
+   * @schema PostgresqlSpecInitContainersReadinessProbe#periodSeconds
+   */
+  readonly periodSeconds?: number;
+
+  /**
+   * Minimum consecutive successes for the probe to be considered successful after having failed.
+   * Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
+   *
+   * @default 1. Must be 1 for liveness and startup. Minimum value is 1.
+   * @schema PostgresqlSpecInitContainersReadinessProbe#successThreshold
+   */
+  readonly successThreshold?: number;
+
+  /**
+   * TCPSocket specifies a connection to a TCP port.
+   *
+   * @schema PostgresqlSpecInitContainersReadinessProbe#tcpSocket
+   */
+  readonly tcpSocket?: PostgresqlSpecInitContainersReadinessProbeTcpSocket;
+
+  /**
+   * Optional duration in seconds the pod needs to terminate gracefully upon probe failure.
+   * The grace period is the duration in seconds after the processes running in the pod are sent
+   * a termination signal and the time when the processes are forcibly halted with a kill signal.
+   * Set this value longer than the expected cleanup time for your process.
+   * If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this
+   * value overrides the value provided by the pod spec.
+   * Value must be non-negative integer. The value zero indicates stop immediately via
+   * the kill signal (no opportunity to shut down).
+   * This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate.
+   * Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset.
+   *
+   * @schema PostgresqlSpecInitContainersReadinessProbe#terminationGracePeriodSeconds
+   */
+  readonly terminationGracePeriodSeconds?: number;
+
+  /**
+   * Number of seconds after which the probe times out.
+   * Defaults to 1 second. Minimum value is 1.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @default 1 second. Minimum value is 1.
+   * @schema PostgresqlSpecInitContainersReadinessProbe#timeoutSeconds
+   */
+  readonly timeoutSeconds?: number;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersReadinessProbe' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersReadinessProbe(
+  obj: PostgresqlSpecInitContainersReadinessProbe | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    exec: toJson_PostgresqlSpecInitContainersReadinessProbeExec(obj.exec),
+    failureThreshold: obj.failureThreshold,
+    grpc: toJson_PostgresqlSpecInitContainersReadinessProbeGrpc(obj.grpc),
+    httpGet: toJson_PostgresqlSpecInitContainersReadinessProbeHttpGet(
+      obj.httpGet,
+    ),
+    initialDelaySeconds: obj.initialDelaySeconds,
+    periodSeconds: obj.periodSeconds,
+    successThreshold: obj.successThreshold,
+    tcpSocket: toJson_PostgresqlSpecInitContainersReadinessProbeTcpSocket(
+      obj.tcpSocket,
+    ),
+    terminationGracePeriodSeconds: obj.terminationGracePeriodSeconds,
+    timeoutSeconds: obj.timeoutSeconds,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * ContainerResizePolicy represents resource resize policy for the container.
+ *
+ * @schema PostgresqlSpecInitContainersResizePolicy
+ */
+export interface PostgresqlSpecInitContainersResizePolicy {
+  /**
+   * Name of the resource to which this resource resize policy applies.
+   * Supported values: cpu, memory.
+   *
+   * @schema PostgresqlSpecInitContainersResizePolicy#resourceName
+   */
+  readonly resourceName: string;
+
+  /**
+   * Restart policy to apply when specified resource is resized.
+   * If not specified, it defaults to NotRequired.
+   *
+   * @schema PostgresqlSpecInitContainersResizePolicy#restartPolicy
+   */
+  readonly restartPolicy: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersResizePolicy' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersResizePolicy(
+  obj: PostgresqlSpecInitContainersResizePolicy | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    resourceName: obj.resourceName,
+    restartPolicy: obj.restartPolicy,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Compute Resources required by this container.
+ * Cannot be updated.
+ * More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+ *
+ * @schema PostgresqlSpecInitContainersResources
+ */
+export interface PostgresqlSpecInitContainersResources {
+  /**
+   * Claims lists the names of resources, defined in spec.resourceClaims,
+   * that are used by this container.
+   *
+   * This field depends on the
+   * DynamicResourceAllocation feature gate.
+   *
+   * This field is immutable. It can only be set for containers.
+   *
+   * @schema PostgresqlSpecInitContainersResources#claims
+   */
+  readonly claims?: PostgresqlSpecInitContainersResourcesClaims[];
+
+  /**
+   * Limits describes the maximum amount of compute resources allowed.
+   * More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+   *
+   * @schema PostgresqlSpecInitContainersResources#limits
+   */
+  readonly limits?: {
+    [key: string]: PostgresqlSpecInitContainersResourcesLimits;
+  };
+
+  /**
+   * Requests describes the minimum amount of compute resources required.
+   * If Requests is omitted for a container, it defaults to Limits if that is explicitly specified,
+   * otherwise to an implementation-defined value. Requests cannot exceed Limits.
+   * More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+   *
+   * @schema PostgresqlSpecInitContainersResources#requests
+   */
+  readonly requests?: {
+    [key: string]: PostgresqlSpecInitContainersResourcesRequests;
+  };
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersResources' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersResources(
+  obj: PostgresqlSpecInitContainersResources | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    claims: obj.claims?.map((y) =>
+      toJson_PostgresqlSpecInitContainersResourcesClaims(y),
+    ),
+    limits:
+      obj.limits === undefined
+        ? undefined
+        : Object.entries(obj.limits).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1]?.value }),
+            {},
+          ),
+    requests:
+      obj.requests === undefined
+        ? undefined
+        : Object.entries(obj.requests).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1]?.value }),
+            {},
+          ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * ContainerRestartRule describes how a container exit is handled.
+ *
+ * @schema PostgresqlSpecInitContainersRestartPolicyRules
+ */
+export interface PostgresqlSpecInitContainersRestartPolicyRules {
+  /**
+   * Specifies the action taken on a container exit if the requirements
+   * are satisfied. The only possible value is "Restart" to restart the
+   * container.
+   *
+   * @schema PostgresqlSpecInitContainersRestartPolicyRules#action
+   */
+  readonly action: string;
+
+  /**
+   * Represents the exit codes to check on container exits.
+   *
+   * @schema PostgresqlSpecInitContainersRestartPolicyRules#exitCodes
+   */
+  readonly exitCodes?: PostgresqlSpecInitContainersRestartPolicyRulesExitCodes;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersRestartPolicyRules' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersRestartPolicyRules(
+  obj: PostgresqlSpecInitContainersRestartPolicyRules | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    action: obj.action,
+    exitCodes: toJson_PostgresqlSpecInitContainersRestartPolicyRulesExitCodes(
+      obj.exitCodes,
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * SecurityContext defines the security options the container should be run with.
+ * If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext.
+ * More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+ *
+ * @schema PostgresqlSpecInitContainersSecurityContext
+ */
+export interface PostgresqlSpecInitContainersSecurityContext {
+  /**
+   * AllowPrivilegeEscalation controls whether a process can gain more
+   * privileges than its parent process. This bool directly controls if
+   * the no_new_privs flag will be set on the container process.
+   * AllowPrivilegeEscalation is true always when the container is:
+   * 1) run as Privileged
+   * 2) has CAP_SYS_ADMIN
+   * Note that this field cannot be set when spec.os.name is windows.
+   *
+   * @schema PostgresqlSpecInitContainersSecurityContext#allowPrivilegeEscalation
+   */
+  readonly allowPrivilegeEscalation?: boolean;
+
+  /**
+   * appArmorProfile is the AppArmor options to use by this container. If set, this profile
+   * overrides the pod's appArmorProfile.
+   * Note that this field cannot be set when spec.os.name is windows.
+   *
+   * @schema PostgresqlSpecInitContainersSecurityContext#appArmorProfile
+   */
+  readonly appArmorProfile?: PostgresqlSpecInitContainersSecurityContextAppArmorProfile;
+
+  /**
+   * The capabilities to add/drop when running containers.
+   * Defaults to the default set of capabilities granted by the container runtime.
+   * Note that this field cannot be set when spec.os.name is windows.
+   *
+   * @default the default set of capabilities granted by the container runtime.
+   * @schema PostgresqlSpecInitContainersSecurityContext#capabilities
+   */
+  readonly capabilities?: PostgresqlSpecInitContainersSecurityContextCapabilities;
+
+  /**
+   * Run container in privileged mode.
+   * Processes in privileged containers are essentially equivalent to root on the host.
+   * Defaults to false.
+   * Note that this field cannot be set when spec.os.name is windows.
+   *
+   * @default false.
+   * @schema PostgresqlSpecInitContainersSecurityContext#privileged
+   */
+  readonly privileged?: boolean;
+
+  /**
+   * procMount denotes the type of proc mount to use for the containers.
+   * The default value is Default which uses the container runtime defaults for
+   * readonly paths and masked paths.
+   * Note that this field cannot be set when spec.os.name is windows.
+   *
+   * @schema PostgresqlSpecInitContainersSecurityContext#procMount
+   */
+  readonly procMount?: string;
+
+  /**
+   * Whether this container has a read-only root filesystem.
+   * Default is false.
+   * Note that this field cannot be set when spec.os.name is windows.
+   *
+   * @default false.
+   * @schema PostgresqlSpecInitContainersSecurityContext#readOnlyRootFilesystem
+   */
+  readonly readOnlyRootFilesystem?: boolean;
+
+  /**
+   * The GID to run the entrypoint of the container process.
+   * Uses runtime default if unset.
+   * May also be set in PodSecurityContext.  If set in both SecurityContext and
+   * PodSecurityContext, the value specified in SecurityContext takes precedence.
+   * Note that this field cannot be set when spec.os.name is windows.
+   *
+   * @schema PostgresqlSpecInitContainersSecurityContext#runAsGroup
+   */
+  readonly runAsGroup?: number;
+
+  /**
+   * Indicates that the container must run as a non-root user.
+   * If true, the Kubelet will validate the image at runtime to ensure that it
+   * does not run as UID 0 (root) and fail to start the container if it does.
+   * If unset or false, no such validation will be performed.
+   * May also be set in PodSecurityContext.  If set in both SecurityContext and
+   * PodSecurityContext, the value specified in SecurityContext takes precedence.
+   *
+   * @schema PostgresqlSpecInitContainersSecurityContext#runAsNonRoot
+   */
+  readonly runAsNonRoot?: boolean;
+
+  /**
+   * The UID to run the entrypoint of the container process.
+   * Defaults to user specified in image metadata if unspecified.
+   * May also be set in PodSecurityContext.  If set in both SecurityContext and
+   * PodSecurityContext, the value specified in SecurityContext takes precedence.
+   * Note that this field cannot be set when spec.os.name is windows.
+   *
+   * @default user specified in image metadata if unspecified.
+   * @schema PostgresqlSpecInitContainersSecurityContext#runAsUser
+   */
+  readonly runAsUser?: number;
+
+  /**
+   * The SELinux context to be applied to the container.
+   * If unspecified, the container runtime will allocate a random SELinux context for each
+   * container.  May also be set in PodSecurityContext.  If set in both SecurityContext and
+   * PodSecurityContext, the value specified in SecurityContext takes precedence.
+   * Note that this field cannot be set when spec.os.name is windows.
+   *
+   * @schema PostgresqlSpecInitContainersSecurityContext#seLinuxOptions
+   */
+  readonly seLinuxOptions?: PostgresqlSpecInitContainersSecurityContextSeLinuxOptions;
+
+  /**
+   * The seccomp options to use by this container. If seccomp options are
+   * provided at both the pod & container level, the container options
+   * override the pod options.
+   * Note that this field cannot be set when spec.os.name is windows.
+   *
+   * @schema PostgresqlSpecInitContainersSecurityContext#seccompProfile
+   */
+  readonly seccompProfile?: PostgresqlSpecInitContainersSecurityContextSeccompProfile;
+
+  /**
+   * The Windows specific settings applied to all containers.
+   * If unspecified, the options from the PodSecurityContext will be used.
+   * If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+   * Note that this field cannot be set when spec.os.name is linux.
+   *
+   * @schema PostgresqlSpecInitContainersSecurityContext#windowsOptions
+   */
+  readonly windowsOptions?: PostgresqlSpecInitContainersSecurityContextWindowsOptions;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersSecurityContext' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersSecurityContext(
+  obj: PostgresqlSpecInitContainersSecurityContext | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    allowPrivilegeEscalation: obj.allowPrivilegeEscalation,
+    appArmorProfile:
+      toJson_PostgresqlSpecInitContainersSecurityContextAppArmorProfile(
+        obj.appArmorProfile,
+      ),
+    capabilities:
+      toJson_PostgresqlSpecInitContainersSecurityContextCapabilities(
+        obj.capabilities,
+      ),
+    privileged: obj.privileged,
+    procMount: obj.procMount,
+    readOnlyRootFilesystem: obj.readOnlyRootFilesystem,
+    runAsGroup: obj.runAsGroup,
+    runAsNonRoot: obj.runAsNonRoot,
+    runAsUser: obj.runAsUser,
+    seLinuxOptions:
+      toJson_PostgresqlSpecInitContainersSecurityContextSeLinuxOptions(
+        obj.seLinuxOptions,
+      ),
+    seccompProfile:
+      toJson_PostgresqlSpecInitContainersSecurityContextSeccompProfile(
+        obj.seccompProfile,
+      ),
+    windowsOptions:
+      toJson_PostgresqlSpecInitContainersSecurityContextWindowsOptions(
+        obj.windowsOptions,
+      ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * StartupProbe indicates that the Pod has successfully initialized.
+ * If specified, no other probes are executed until this completes successfully.
+ * If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+ * This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+ * when it might take a long time to load data or warm a cache, than during steady-state operation.
+ * This cannot be updated.
+ * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+ *
+ * @schema PostgresqlSpecInitContainersStartupProbe
+ */
+export interface PostgresqlSpecInitContainersStartupProbe {
+  /**
+   * Exec specifies a command to execute in the container.
+   *
+   * @schema PostgresqlSpecInitContainersStartupProbe#exec
+   */
+  readonly exec?: PostgresqlSpecInitContainersStartupProbeExec;
+
+  /**
+   * Minimum consecutive failures for the probe to be considered failed after having succeeded.
+   * Defaults to 3. Minimum value is 1.
+   *
+   * @default 3. Minimum value is 1.
+   * @schema PostgresqlSpecInitContainersStartupProbe#failureThreshold
+   */
+  readonly failureThreshold?: number;
+
+  /**
+   * GRPC specifies a GRPC HealthCheckRequest.
+   *
+   * @schema PostgresqlSpecInitContainersStartupProbe#grpc
+   */
+  readonly grpc?: PostgresqlSpecInitContainersStartupProbeGrpc;
+
+  /**
+   * HTTPGet specifies an HTTP GET request to perform.
+   *
+   * @schema PostgresqlSpecInitContainersStartupProbe#httpGet
+   */
+  readonly httpGet?: PostgresqlSpecInitContainersStartupProbeHttpGet;
+
+  /**
+   * Number of seconds after the container has started before liveness probes are initiated.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @schema PostgresqlSpecInitContainersStartupProbe#initialDelaySeconds
+   */
+  readonly initialDelaySeconds?: number;
+
+  /**
+   * How often (in seconds) to perform the probe.
+   * Default to 10 seconds. Minimum value is 1.
+   *
+   * @default 10 seconds. Minimum value is 1.
+   * @schema PostgresqlSpecInitContainersStartupProbe#periodSeconds
+   */
+  readonly periodSeconds?: number;
+
+  /**
+   * Minimum consecutive successes for the probe to be considered successful after having failed.
+   * Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
+   *
+   * @default 1. Must be 1 for liveness and startup. Minimum value is 1.
+   * @schema PostgresqlSpecInitContainersStartupProbe#successThreshold
+   */
+  readonly successThreshold?: number;
+
+  /**
+   * TCPSocket specifies a connection to a TCP port.
+   *
+   * @schema PostgresqlSpecInitContainersStartupProbe#tcpSocket
+   */
+  readonly tcpSocket?: PostgresqlSpecInitContainersStartupProbeTcpSocket;
+
+  /**
+   * Optional duration in seconds the pod needs to terminate gracefully upon probe failure.
+   * The grace period is the duration in seconds after the processes running in the pod are sent
+   * a termination signal and the time when the processes are forcibly halted with a kill signal.
+   * Set this value longer than the expected cleanup time for your process.
+   * If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this
+   * value overrides the value provided by the pod spec.
+   * Value must be non-negative integer. The value zero indicates stop immediately via
+   * the kill signal (no opportunity to shut down).
+   * This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate.
+   * Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset.
+   *
+   * @schema PostgresqlSpecInitContainersStartupProbe#terminationGracePeriodSeconds
+   */
+  readonly terminationGracePeriodSeconds?: number;
+
+  /**
+   * Number of seconds after which the probe times out.
+   * Defaults to 1 second. Minimum value is 1.
+   * More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+   *
+   * @default 1 second. Minimum value is 1.
+   * @schema PostgresqlSpecInitContainersStartupProbe#timeoutSeconds
+   */
+  readonly timeoutSeconds?: number;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersStartupProbe' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersStartupProbe(
+  obj: PostgresqlSpecInitContainersStartupProbe | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    exec: toJson_PostgresqlSpecInitContainersStartupProbeExec(obj.exec),
+    failureThreshold: obj.failureThreshold,
+    grpc: toJson_PostgresqlSpecInitContainersStartupProbeGrpc(obj.grpc),
+    httpGet: toJson_PostgresqlSpecInitContainersStartupProbeHttpGet(
+      obj.httpGet,
+    ),
+    initialDelaySeconds: obj.initialDelaySeconds,
+    periodSeconds: obj.periodSeconds,
+    successThreshold: obj.successThreshold,
+    tcpSocket: toJson_PostgresqlSpecInitContainersStartupProbeTcpSocket(
+      obj.tcpSocket,
+    ),
+    terminationGracePeriodSeconds: obj.terminationGracePeriodSeconds,
+    timeoutSeconds: obj.timeoutSeconds,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * volumeDevice describes a mapping of a raw block device within a container.
+ *
+ * @schema PostgresqlSpecInitContainersVolumeDevices
+ */
+export interface PostgresqlSpecInitContainersVolumeDevices {
+  /**
+   * devicePath is the path inside of the container that the device will be mapped to.
+   *
+   * @schema PostgresqlSpecInitContainersVolumeDevices#devicePath
+   */
+  readonly devicePath: string;
+
+  /**
+   * name must match the name of a persistentVolumeClaim in the pod
+   *
+   * @schema PostgresqlSpecInitContainersVolumeDevices#name
+   */
+  readonly name: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersVolumeDevices' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersVolumeDevices(
+  obj: PostgresqlSpecInitContainersVolumeDevices | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    devicePath: obj.devicePath,
+    name: obj.name,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * VolumeMount describes a mounting of a Volume within a container.
+ *
+ * @schema PostgresqlSpecInitContainersVolumeMounts
+ */
+export interface PostgresqlSpecInitContainersVolumeMounts {
+  /**
+   * Path within the container at which the volume should be mounted.  Must
+   * not contain ':'.
+   *
+   * @schema PostgresqlSpecInitContainersVolumeMounts#mountPath
+   */
+  readonly mountPath: string;
+
+  /**
+   * mountPropagation determines how mounts are propagated from the host
+   * to container and the other way around.
+   * When not set, MountPropagationNone is used.
+   * This field is beta in 1.10.
+   * When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+   * (which defaults to None).
+   *
+   * @schema PostgresqlSpecInitContainersVolumeMounts#mountPropagation
+   */
+  readonly mountPropagation?: string;
+
+  /**
+   * This must match the Name of a Volume.
+   *
+   * @schema PostgresqlSpecInitContainersVolumeMounts#name
+   */
+  readonly name: string;
+
+  /**
+   * Mounted read-only if true, read-write otherwise (false or unspecified).
+   * Defaults to false.
+   *
+   * @default false.
+   * @schema PostgresqlSpecInitContainersVolumeMounts#readOnly
+   */
+  readonly readOnly?: boolean;
+
+  /**
+   * RecursiveReadOnly specifies whether read-only mounts should be handled
+   * recursively.
+   *
+   * If ReadOnly is false, this field has no meaning and must be unspecified.
+   *
+   * If ReadOnly is true, and this field is set to Disabled, the mount is not made
+   * recursively read-only.  If this field is set to IfPossible, the mount is made
+   * recursively read-only, if it is supported by the container runtime.  If this
+   * field is set to Enabled, the mount is made recursively read-only if it is
+   * supported by the container runtime, otherwise the pod will not be started and
+   * an error will be generated to indicate the reason.
+   *
+   * If this field is set to IfPossible or Enabled, MountPropagation must be set to
+   * None (or be unspecified, which defaults to None).
+   *
+   * If this field is not specified, it is treated as an equivalent of Disabled.
+   *
+   * @schema PostgresqlSpecInitContainersVolumeMounts#recursiveReadOnly
+   */
+  readonly recursiveReadOnly?: string;
+
+  /**
+   * Path within the volume from which the container's volume should be mounted.
+   * Defaults to "" (volume's root).
+   *
+   * @default volume's root).
+   * @schema PostgresqlSpecInitContainersVolumeMounts#subPath
+   */
+  readonly subPath?: string;
+
+  /**
+   * Expanded path within the volume from which the container's volume should be mounted.
+   * Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+   * Defaults to "" (volume's root).
+   * SubPathExpr and SubPath are mutually exclusive.
+   *
+   * @default volume's root).
+   * @schema PostgresqlSpecInitContainersVolumeMounts#subPathExpr
+   */
+  readonly subPathExpr?: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersVolumeMounts' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersVolumeMounts(
+  obj: PostgresqlSpecInitContainersVolumeMounts | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    mountPath: obj.mountPath,
+    mountPropagation: obj.mountPropagation,
+    name: obj.name,
+    readOnly: obj.readOnly,
+    recursiveReadOnly: obj.recursiveReadOnly,
+    subPath: obj.subPath,
+    subPathExpr: obj.subPathExpr,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Exec specifies a command to execute in the container.
+ *
+ * @schema PostgresqlSpecLivenessProbeExec
+ */
+export interface PostgresqlSpecLivenessProbeExec {
+  /**
+   * Command is the command line to execute inside the container, the working directory for the
+   * command  is root ('/') in the container's filesystem. The command is simply exec'd, it is
+   * not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use
+   * a shell, you need to explicitly call out to that shell.
+   * Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
+   *
+   * @schema PostgresqlSpecLivenessProbeExec#command
+   */
+  readonly command?: string[];
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecLivenessProbeExec' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecLivenessProbeExec(
+  obj: PostgresqlSpecLivenessProbeExec | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    command: obj.command?.map((y) => y),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * GRPC specifies a GRPC HealthCheckRequest.
+ *
+ * @schema PostgresqlSpecLivenessProbeGrpc
+ */
+export interface PostgresqlSpecLivenessProbeGrpc {
+  /**
+   * Port number of the gRPC service. Number must be in the range 1 to 65535.
+   *
+   * @schema PostgresqlSpecLivenessProbeGrpc#port
+   */
+  readonly port: number;
+
+  /**
+   * Service is the name of the service to place in the gRPC HealthCheckRequest
+   * (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+   *
+   * If this is not specified, the default behavior is defined by gRPC.
+   *
+   * @schema PostgresqlSpecLivenessProbeGrpc#service
+   */
+  readonly service?: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecLivenessProbeGrpc' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecLivenessProbeGrpc(
+  obj: PostgresqlSpecLivenessProbeGrpc | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    port: obj.port,
+    service: obj.service,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * HTTPGet specifies an HTTP GET request to perform.
+ *
+ * @schema PostgresqlSpecLivenessProbeHttpGet
+ */
+export interface PostgresqlSpecLivenessProbeHttpGet {
+  /**
+   * Host name to connect to, defaults to the pod IP. You probably want to set
+   * "Host" in httpHeaders instead.
+   *
+   * @schema PostgresqlSpecLivenessProbeHttpGet#host
+   */
+  readonly host?: string;
+
+  /**
+   * Custom headers to set in the request. HTTP allows repeated headers.
+   *
+   * @schema PostgresqlSpecLivenessProbeHttpGet#httpHeaders
+   */
+  readonly httpHeaders?: PostgresqlSpecLivenessProbeHttpGetHttpHeaders[];
+
+  /**
+   * Path to access on the HTTP server.
+   *
+   * @schema PostgresqlSpecLivenessProbeHttpGet#path
+   */
+  readonly path?: string;
+
+  /**
+   * Name or number of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema PostgresqlSpecLivenessProbeHttpGet#port
+   */
+  readonly port: PostgresqlSpecLivenessProbeHttpGetPort;
+
+  /**
+   * Scheme to use for connecting to the host.
+   * Defaults to HTTP.
+   *
+   * @default HTTP.
+   * @schema PostgresqlSpecLivenessProbeHttpGet#scheme
+   */
+  readonly scheme?: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecLivenessProbeHttpGet' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecLivenessProbeHttpGet(
+  obj: PostgresqlSpecLivenessProbeHttpGet | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    httpHeaders: obj.httpHeaders?.map((y) =>
+      toJson_PostgresqlSpecLivenessProbeHttpGetHttpHeaders(y),
+    ),
+    path: obj.path,
+    port: obj.port?.value,
+    scheme: obj.scheme,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * TCPSocket specifies a connection to a TCP port.
+ *
+ * @schema PostgresqlSpecLivenessProbeTcpSocket
+ */
+export interface PostgresqlSpecLivenessProbeTcpSocket {
+  /**
+   * Optional: Host name to connect to, defaults to the pod IP.
+   *
+   * @schema PostgresqlSpecLivenessProbeTcpSocket#host
+   */
+  readonly host?: string;
+
+  /**
+   * Number or name of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema PostgresqlSpecLivenessProbeTcpSocket#port
+   */
+  readonly port: PostgresqlSpecLivenessProbeTcpSocketPort;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecLivenessProbeTcpSocket' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecLivenessProbeTcpSocket(
+  obj: PostgresqlSpecLivenessProbeTcpSocket | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    port: obj.port?.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * An empty preferred scheduling term matches all objects with implicit weight 0
+ * (i.e. it's a no-op). A null preferred scheduling term matches no objects (i.e. is also a no-op).
+ *
  * @schema PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecution
  */
 export interface PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecution {
   /**
+   * A node selector term, associated with the corresponding weight.
+   *
    * @schema PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecution#preference
    */
   readonly preference: PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionPreference;
 
   /**
+   * Weight associated with matching the corresponding nodeSelectorTerm, in the range 1-100.
+   *
    * @schema PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecution#weight
    */
   readonly weight: number;
@@ -3315,10 +6491,18 @@ export function toJson_PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnore
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * If the affinity requirements specified by this field are not met at
+ * scheduling time, the pod will not be scheduled onto the node.
+ * If the affinity requirements specified by this field cease to be met
+ * at some point during pod execution (e.g. due to an update), the system
+ * may or may not try to eventually evict the pod from its node.
+ *
  * @schema PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnoredDuringExecution
  */
 export interface PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnoredDuringExecution {
   /**
+   * Required. A list of node selector terms. The terms are ORed.
+   *
    * @schema PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnoredDuringExecution#nodeSelectorTerms
    */
   readonly nodeSelectorTerms: PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnoredDuringExecutionNodeSelectorTerms[];
@@ -3355,8 +6539,6 @@ export function toJson_PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnored
  * @schema PostgresqlSpecPostgresqlVersion
  */
 export enum PostgresqlSpecPostgresqlVersion {
-  /** 13 */
-  VALUE_13 = "13",
   /** 14 */
   VALUE_14 = "14",
   /** 15 */
@@ -3365,9 +6547,13 @@ export enum PostgresqlSpecPostgresqlVersion {
   VALUE_16 = "16",
   /** 17 */
   VALUE_17 = "17",
+  /** 18 */
+  VALUE_18 = "18",
 }
 
 /**
+ * PreparedSchema describes elements to be bootstrapped per schema
+ *
  * @schema PostgresqlSpecPreparedDatabasesSchemas
  */
 export interface PostgresqlSpecPreparedDatabasesSchemas {
@@ -3405,10 +6591,26 @@ export function toJson_PostgresqlSpecPreparedDatabasesSchemas(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * ResourceDescription describes CPU and memory resources defined for a cluster.
+ *
  * @schema PostgresqlSpecResourcesLimits
  */
 export interface PostgresqlSpecResourcesLimits {
   /**
+   * Decimal natural followed by m, or decimal natural followed by
+   * dot followed by up to three decimal digits.
+   *
+   * This is because the Kubernetes CPU resource has millis as the
+   * maximum precision.  The actual values are checked in code
+   * because the regular expression would be huge and horrible and
+   * not very helpful in validation error messages; this one checks
+   * only the format of the given number.
+   *
+   * https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-cpu
+   *
+   * Note: the value specified here must not be zero or be lower
+   * than the corresponding request.
+   *
    * @schema PostgresqlSpecResourcesLimits#cpu
    */
   readonly cpu?: string;
@@ -3424,6 +6626,15 @@ export interface PostgresqlSpecResourcesLimits {
   readonly hugepages2Mi?: string;
 
   /**
+   * You can express memory as a plain integer or as a fixed-point
+   * integer using one of these suffixes: E, P, T, G, M, k. You can
+   * also use the power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki
+   *
+   * https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-memory
+   *
+   * Note: the value specified here must not be zero or be higher
+   * than the corresponding limit.
+   *
    * @schema PostgresqlSpecResourcesLimits#memory
    */
   readonly memory?: string;
@@ -3454,10 +6665,26 @@ export function toJson_PostgresqlSpecResourcesLimits(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * ResourceDescription describes CPU and memory resources defined for a cluster.
+ *
  * @schema PostgresqlSpecResourcesRequests
  */
 export interface PostgresqlSpecResourcesRequests {
   /**
+   * Decimal natural followed by m, or decimal natural followed by
+   * dot followed by up to three decimal digits.
+   *
+   * This is because the Kubernetes CPU resource has millis as the
+   * maximum precision.  The actual values are checked in code
+   * because the regular expression would be huge and horrible and
+   * not very helpful in validation error messages; this one checks
+   * only the format of the given number.
+   *
+   * https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-cpu
+   *
+   * Note: the value specified here must not be zero or be lower
+   * than the corresponding request.
+   *
    * @schema PostgresqlSpecResourcesRequests#cpu
    */
   readonly cpu?: string;
@@ -3473,6 +6700,15 @@ export interface PostgresqlSpecResourcesRequests {
   readonly hugepages2Mi?: string;
 
   /**
+   * You can express memory as a plain integer or as a fixed-point
+   * integer using one of these suffixes: E, P, T, G, M, k. You can
+   * also use the power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki
+   *
+   * https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-memory
+   *
+   * Note: the value specified here must not be zero or be higher
+   * than the corresponding limit.
+   *
    * @schema PostgresqlSpecResourcesRequests#memory
    */
   readonly memory?: string;
@@ -3503,6 +6739,187 @@ export function toJson_PostgresqlSpecResourcesRequests(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * EnvVar represents an environment variable present in a Container.
+ *
+ * @schema PostgresqlSpecSidecarsEnv
+ */
+export interface PostgresqlSpecSidecarsEnv {
+  /**
+   * Name of the environment variable.
+   * May consist of any printable ASCII characters except '='.
+   *
+   * @schema PostgresqlSpecSidecarsEnv#name
+   */
+  readonly name: string;
+
+  /**
+   * Variable references $(VAR_NAME) are expanded
+   * using the previously defined environment variables in the container and
+   * any service environment variables. If a variable cannot be resolved,
+   * the reference in the input string will be unchanged. Double $$ are reduced
+   * to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e.
+   * "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)".
+   * Escaped references will never be expanded, regardless of whether the variable
+   * exists or not.
+   * Defaults to "".
+   *
+   * @default .
+   * @schema PostgresqlSpecSidecarsEnv#value
+   */
+  readonly value?: string;
+
+  /**
+   * Source for the environment variable's value. Cannot be used if value is not empty.
+   *
+   * @schema PostgresqlSpecSidecarsEnv#valueFrom
+   */
+  readonly valueFrom?: PostgresqlSpecSidecarsEnvValueFrom;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecSidecarsEnv' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecSidecarsEnv(
+  obj: PostgresqlSpecSidecarsEnv | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+    valueFrom: toJson_PostgresqlSpecSidecarsEnvValueFrom(obj.valueFrom),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * ContainerPort represents a network port in a single container.
+ *
+ * @schema PostgresqlSpecSidecarsPorts
+ */
+export interface PostgresqlSpecSidecarsPorts {
+  /**
+   * Number of port to expose on the pod's IP address.
+   * This must be a valid port number, 0 < x < 65536.
+   *
+   * @schema PostgresqlSpecSidecarsPorts#containerPort
+   */
+  readonly containerPort: number;
+
+  /**
+   * What host IP to bind the external port to.
+   *
+   * @schema PostgresqlSpecSidecarsPorts#hostIP
+   */
+  readonly hostIp?: string;
+
+  /**
+   * Number of port to expose on the host.
+   * If specified, this must be a valid port number, 0 < x < 65536.
+   * If HostNetwork is specified, this must match ContainerPort.
+   * Most containers do not need this.
+   *
+   * @schema PostgresqlSpecSidecarsPorts#hostPort
+   */
+  readonly hostPort?: number;
+
+  /**
+   * If specified, this must be an IANA_SVC_NAME and unique within the pod. Each
+   * named port in a pod must have a unique name. Name for the port that can be
+   * referred to by services.
+   *
+   * @schema PostgresqlSpecSidecarsPorts#name
+   */
+  readonly name?: string;
+
+  /**
+   * Protocol for port. Must be UDP, TCP, or SCTP.
+   * Defaults to "TCP".
+   *
+   * @default TCP".
+   * @schema PostgresqlSpecSidecarsPorts#protocol
+   */
+  readonly protocol?: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecSidecarsPorts' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecSidecarsPorts(
+  obj: PostgresqlSpecSidecarsPorts | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    containerPort: obj.containerPort,
+    hostIP: obj.hostIp,
+    hostPort: obj.hostPort,
+    name: obj.name,
+    protocol: obj.protocol,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Resources describes requests and limits for the cluster resouces.
+ *
+ * @schema PostgresqlSpecSidecarsResources
+ */
+export interface PostgresqlSpecSidecarsResources {
+  /**
+   * ResourceDescription describes CPU and memory resources defined for a cluster.
+   *
+   * @schema PostgresqlSpecSidecarsResources#limits
+   */
+  readonly limits?: PostgresqlSpecSidecarsResourcesLimits;
+
+  /**
+   * ResourceDescription describes CPU and memory resources defined for a cluster.
+   *
+   * @schema PostgresqlSpecSidecarsResources#requests
+   */
+  readonly requests?: PostgresqlSpecSidecarsResourcesRequests;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecSidecarsResources' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecSidecarsResources(
+  obj: PostgresqlSpecSidecarsResources | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    limits: toJson_PostgresqlSpecSidecarsResourcesLimits(obj.limits),
+    requests: toJson_PostgresqlSpecSidecarsResourcesRequests(obj.requests),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * StreamTable defines properties of outbox tables for FabricEventStreams
+ *
  * @schema PostgresqlSpecStreamsTables
  */
 export interface PostgresqlSpecStreamsTables {
@@ -3558,40 +6975,85 @@ export function toJson_PostgresqlSpecStreamsTables(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
- * @schema PostgresqlSpecTolerationsEffect
+ * LabelSelector is used to find matching pods.
+ * Pods that match this label selector are counted to determine the number of pods
+ * in their corresponding topology domain.
+ *
+ * @schema PostgresqlSpecTopologySpreadConstraintsLabelSelector
  */
-export enum PostgresqlSpecTolerationsEffect {
-  /** NoExecute */
-  NO_EXECUTE = "NoExecute",
-  /** NoSchedule */
-  NO_SCHEDULE = "NoSchedule",
-  /** PreferNoSchedule */
-  PREFER_NO_SCHEDULE = "PreferNoSchedule",
+export interface PostgresqlSpecTopologySpreadConstraintsLabelSelector {
+  /**
+   * matchExpressions is a list of label selector requirements. The requirements are ANDed.
+   *
+   * @schema PostgresqlSpecTopologySpreadConstraintsLabelSelector#matchExpressions
+   */
+  readonly matchExpressions?: PostgresqlSpecTopologySpreadConstraintsLabelSelectorMatchExpressions[];
+
+  /**
+   * matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+   * map is equivalent to an element of matchExpressions, whose key field is "key", the
+   * operator is "In", and the values array contains only "value". The requirements are ANDed.
+   *
+   * @schema PostgresqlSpecTopologySpreadConstraintsLabelSelector#matchLabels
+   */
+  readonly matchLabels?: { [key: string]: string };
 }
 
 /**
- * @schema PostgresqlSpecTolerationsOperator
+ * Converts an object of type 'PostgresqlSpecTopologySpreadConstraintsLabelSelector' to JSON representation.
  */
-export enum PostgresqlSpecTolerationsOperator {
-  /** Equal */
-  EQUAL = "Equal",
-  /** Exists */
-  EXISTS = "Exists",
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecTopologySpreadConstraintsLabelSelector(
+  obj: PostgresqlSpecTopologySpreadConstraintsLabelSelector | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    matchExpressions: obj.matchExpressions?.map((y) =>
+      toJson_PostgresqlSpecTopologySpreadConstraintsLabelSelectorMatchExpressions(
+        y,
+      ),
+    ),
+    matchLabels:
+      obj.matchLabels === undefined
+        ? undefined
+        : Object.entries(obj.matchLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
 }
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * A label selector is a label query over a set of resources. The result of matchLabels and
+ * matchExpressions are ANDed. An empty label selector matches all objects. A null
+ * label selector matches no objects.
+ *
  * @schema PostgresqlSpecVolumeSelector
  */
 export interface PostgresqlSpecVolumeSelector {
   /**
+   * matchExpressions is a list of label selector requirements. The requirements are ANDed.
+   *
    * @schema PostgresqlSpecVolumeSelector#matchExpressions
    */
   readonly matchExpressions?: PostgresqlSpecVolumeSelectorMatchExpressions[];
 
   /**
+   * matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+   * map is equivalent to an element of matchExpressions, whose key field is "key", the
+   * operator is "In", and the values array contains only "value". The requirements are ANDed.
+   *
    * @schema PostgresqlSpecVolumeSelector#matchLabels
    */
-  readonly matchLabels?: any;
+  readonly matchLabels?: { [key: string]: string };
 }
 
 /**
@@ -3608,7 +7070,13 @@ export function toJson_PostgresqlSpecVolumeSelector(
     matchExpressions: obj.matchExpressions?.map((y) =>
       toJson_PostgresqlSpecVolumeSelectorMatchExpressions(y),
     ),
-    matchLabels: obj.matchLabels,
+    matchLabels:
+      obj.matchLabels === undefined
+        ? undefined
+        : Object.entries(obj.matchLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -3619,15 +7087,50 @@ export function toJson_PostgresqlSpecVolumeSelector(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * ResourceDescription describes CPU and memory resources defined for a cluster.
+ *
  * @schema PostgresqlSpecConnectionPoolerResourcesLimits
  */
 export interface PostgresqlSpecConnectionPoolerResourcesLimits {
   /**
+   * Decimal natural followed by m, or decimal natural followed by
+   * dot followed by up to three decimal digits.
+   *
+   * This is because the Kubernetes CPU resource has millis as the
+   * maximum precision.  The actual values are checked in code
+   * because the regular expression would be huge and horrible and
+   * not very helpful in validation error messages; this one checks
+   * only the format of the given number.
+   *
+   * https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-cpu
+   *
+   * Note: the value specified here must not be zero or be lower
+   * than the corresponding request.
+   *
    * @schema PostgresqlSpecConnectionPoolerResourcesLimits#cpu
    */
   readonly cpu?: string;
 
   /**
+   * @schema PostgresqlSpecConnectionPoolerResourcesLimits#hugepages-1Gi
+   */
+  readonly hugepages1Gi?: string;
+
+  /**
+   * @schema PostgresqlSpecConnectionPoolerResourcesLimits#hugepages-2Mi
+   */
+  readonly hugepages2Mi?: string;
+
+  /**
+   * You can express memory as a plain integer or as a fixed-point
+   * integer using one of these suffixes: E, P, T, G, M, k. You can
+   * also use the power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki
+   *
+   * https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-memory
+   *
+   * Note: the value specified here must not be zero or be higher
+   * than the corresponding limit.
+   *
    * @schema PostgresqlSpecConnectionPoolerResourcesLimits#memory
    */
   readonly memory?: string;
@@ -3645,6 +7148,8 @@ export function toJson_PostgresqlSpecConnectionPoolerResourcesLimits(
   }
   const result = {
     cpu: obj.cpu,
+    "hugepages-1Gi": obj.hugepages1Gi,
+    "hugepages-2Mi": obj.hugepages2Mi,
     memory: obj.memory,
   };
   // filter undefined values
@@ -3656,15 +7161,50 @@ export function toJson_PostgresqlSpecConnectionPoolerResourcesLimits(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * ResourceDescription describes CPU and memory resources defined for a cluster.
+ *
  * @schema PostgresqlSpecConnectionPoolerResourcesRequests
  */
 export interface PostgresqlSpecConnectionPoolerResourcesRequests {
   /**
+   * Decimal natural followed by m, or decimal natural followed by
+   * dot followed by up to three decimal digits.
+   *
+   * This is because the Kubernetes CPU resource has millis as the
+   * maximum precision.  The actual values are checked in code
+   * because the regular expression would be huge and horrible and
+   * not very helpful in validation error messages; this one checks
+   * only the format of the given number.
+   *
+   * https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-cpu
+   *
+   * Note: the value specified here must not be zero or be lower
+   * than the corresponding request.
+   *
    * @schema PostgresqlSpecConnectionPoolerResourcesRequests#cpu
    */
   readonly cpu?: string;
 
   /**
+   * @schema PostgresqlSpecConnectionPoolerResourcesRequests#hugepages-1Gi
+   */
+  readonly hugepages1Gi?: string;
+
+  /**
+   * @schema PostgresqlSpecConnectionPoolerResourcesRequests#hugepages-2Mi
+   */
+  readonly hugepages2Mi?: string;
+
+  /**
+   * You can express memory as a plain integer or as a fixed-point
+   * integer using one of these suffixes: E, P, T, G, M, k. You can
+   * also use the power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki
+   *
+   * https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-memory
+   *
+   * Note: the value specified here must not be zero or be higher
+   * than the corresponding limit.
+   *
    * @schema PostgresqlSpecConnectionPoolerResourcesRequests#memory
    */
   readonly memory?: string;
@@ -3682,6 +7222,8 @@ export function toJson_PostgresqlSpecConnectionPoolerResourcesRequests(
   }
   const result = {
     cpu: obj.cpu,
+    "hugepages-1Gi": obj.hugepages1Gi,
+    "hugepages-2Mi": obj.hugepages2Mi,
     memory: obj.memory,
   };
   // filter undefined values
@@ -3693,15 +7235,1729 @@ export function toJson_PostgresqlSpecConnectionPoolerResourcesRequests(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * Selects a key of a ConfigMap.
+ *
+ * @schema PostgresqlSpecEnvValueFromConfigMapKeyRef
+ */
+export interface PostgresqlSpecEnvValueFromConfigMapKeyRef {
+  /**
+   * The key to select.
+   *
+   * @schema PostgresqlSpecEnvValueFromConfigMapKeyRef#key
+   */
+  readonly key: string;
+
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   *
+   * @schema PostgresqlSpecEnvValueFromConfigMapKeyRef#name
+   */
+  readonly name?: string;
+
+  /**
+   * Specify whether the ConfigMap or its key must be defined
+   *
+   * @schema PostgresqlSpecEnvValueFromConfigMapKeyRef#optional
+   */
+  readonly optional?: boolean;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecEnvValueFromConfigMapKeyRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecEnvValueFromConfigMapKeyRef(
+  obj: PostgresqlSpecEnvValueFromConfigMapKeyRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    key: obj.key,
+    name: obj.name,
+    optional: obj.optional,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels['<KEY>']`, `metadata.annotations['<KEY>']`,
+ * spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.
+ *
+ * @schema PostgresqlSpecEnvValueFromFieldRef
+ */
+export interface PostgresqlSpecEnvValueFromFieldRef {
+  /**
+   * Version of the schema the FieldPath is written in terms of, defaults to "v1".
+   *
+   * @schema PostgresqlSpecEnvValueFromFieldRef#apiVersion
+   */
+  readonly apiVersion?: string;
+
+  /**
+   * Path of the field to select in the specified API version.
+   *
+   * @schema PostgresqlSpecEnvValueFromFieldRef#fieldPath
+   */
+  readonly fieldPath: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecEnvValueFromFieldRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecEnvValueFromFieldRef(
+  obj: PostgresqlSpecEnvValueFromFieldRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersion: obj.apiVersion,
+    fieldPath: obj.fieldPath,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * FileKeyRef selects a key of the env file.
+ * Requires the EnvFiles feature gate to be enabled.
+ *
+ * @schema PostgresqlSpecEnvValueFromFileKeyRef
+ */
+export interface PostgresqlSpecEnvValueFromFileKeyRef {
+  /**
+   * The key within the env file. An invalid key will prevent the pod from starting.
+   * The keys defined within a source may consist of any printable ASCII characters except '='.
+   * During Alpha stage of the EnvFiles feature gate, the key size is limited to 128 characters.
+   *
+   * @schema PostgresqlSpecEnvValueFromFileKeyRef#key
+   */
+  readonly key: string;
+
+  /**
+   * Specify whether the file or its key must be defined. If the file or key
+   * does not exist, then the env var is not published.
+   * If optional is set to true and the specified key does not exist,
+   * the environment variable will not be set in the Pod's containers.
+   *
+   * If optional is set to false and the specified key does not exist,
+   * an error will be returned during Pod creation.
+   *
+   * @schema PostgresqlSpecEnvValueFromFileKeyRef#optional
+   */
+  readonly optional?: boolean;
+
+  /**
+   * The path within the volume from which to select the file.
+   * Must be relative and may not contain the '..' path or start with '..'.
+   *
+   * @schema PostgresqlSpecEnvValueFromFileKeyRef#path
+   */
+  readonly path: string;
+
+  /**
+   * The name of the volume mount containing the env file.
+   *
+   * @schema PostgresqlSpecEnvValueFromFileKeyRef#volumeName
+   */
+  readonly volumeName: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecEnvValueFromFileKeyRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecEnvValueFromFileKeyRef(
+  obj: PostgresqlSpecEnvValueFromFileKeyRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    key: obj.key,
+    optional: obj.optional,
+    path: obj.path,
+    volumeName: obj.volumeName,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Selects a resource of the container: only resources limits and requests
+ * (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.
+ *
+ * @schema PostgresqlSpecEnvValueFromResourceFieldRef
+ */
+export interface PostgresqlSpecEnvValueFromResourceFieldRef {
+  /**
+   * Container name: required for volumes, optional for env vars
+   *
+   * @schema PostgresqlSpecEnvValueFromResourceFieldRef#containerName
+   */
+  readonly containerName?: string;
+
+  /**
+   * Specifies the output format of the exposed resources, defaults to "1"
+   *
+   * @schema PostgresqlSpecEnvValueFromResourceFieldRef#divisor
+   */
+  readonly divisor?: PostgresqlSpecEnvValueFromResourceFieldRefDivisor;
+
+  /**
+   * Required: resource to select
+   *
+   * @schema PostgresqlSpecEnvValueFromResourceFieldRef#resource
+   */
+  readonly resource: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecEnvValueFromResourceFieldRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecEnvValueFromResourceFieldRef(
+  obj: PostgresqlSpecEnvValueFromResourceFieldRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    containerName: obj.containerName,
+    divisor: obj.divisor?.value,
+    resource: obj.resource,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Selects a key of a secret in the pod's namespace
+ *
+ * @schema PostgresqlSpecEnvValueFromSecretKeyRef
+ */
+export interface PostgresqlSpecEnvValueFromSecretKeyRef {
+  /**
+   * The key of the secret to select from.  Must be a valid secret key.
+   *
+   * @schema PostgresqlSpecEnvValueFromSecretKeyRef#key
+   */
+  readonly key: string;
+
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   *
+   * @schema PostgresqlSpecEnvValueFromSecretKeyRef#name
+   */
+  readonly name?: string;
+
+  /**
+   * Specify whether the Secret or its key must be defined
+   *
+   * @schema PostgresqlSpecEnvValueFromSecretKeyRef#optional
+   */
+  readonly optional?: boolean;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecEnvValueFromSecretKeyRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecEnvValueFromSecretKeyRef(
+  obj: PostgresqlSpecEnvValueFromSecretKeyRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    key: obj.key,
+    name: obj.name,
+    optional: obj.optional,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Source for the environment variable's value. Cannot be used if value is not empty.
+ *
+ * @schema PostgresqlSpecInitContainersEnvValueFrom
+ */
+export interface PostgresqlSpecInitContainersEnvValueFrom {
+  /**
+   * Selects a key of a ConfigMap.
+   *
+   * @schema PostgresqlSpecInitContainersEnvValueFrom#configMapKeyRef
+   */
+  readonly configMapKeyRef?: PostgresqlSpecInitContainersEnvValueFromConfigMapKeyRef;
+
+  /**
+   * Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels['<KEY>']`, `metadata.annotations['<KEY>']`,
+   * spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.
+   *
+   * @schema PostgresqlSpecInitContainersEnvValueFrom#fieldRef
+   */
+  readonly fieldRef?: PostgresqlSpecInitContainersEnvValueFromFieldRef;
+
+  /**
+   * FileKeyRef selects a key of the env file.
+   * Requires the EnvFiles feature gate to be enabled.
+   *
+   * @schema PostgresqlSpecInitContainersEnvValueFrom#fileKeyRef
+   */
+  readonly fileKeyRef?: PostgresqlSpecInitContainersEnvValueFromFileKeyRef;
+
+  /**
+   * Selects a resource of the container: only resources limits and requests
+   * (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.
+   *
+   * @schema PostgresqlSpecInitContainersEnvValueFrom#resourceFieldRef
+   */
+  readonly resourceFieldRef?: PostgresqlSpecInitContainersEnvValueFromResourceFieldRef;
+
+  /**
+   * Selects a key of a secret in the pod's namespace
+   *
+   * @schema PostgresqlSpecInitContainersEnvValueFrom#secretKeyRef
+   */
+  readonly secretKeyRef?: PostgresqlSpecInitContainersEnvValueFromSecretKeyRef;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersEnvValueFrom' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersEnvValueFrom(
+  obj: PostgresqlSpecInitContainersEnvValueFrom | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    configMapKeyRef:
+      toJson_PostgresqlSpecInitContainersEnvValueFromConfigMapKeyRef(
+        obj.configMapKeyRef,
+      ),
+    fieldRef: toJson_PostgresqlSpecInitContainersEnvValueFromFieldRef(
+      obj.fieldRef,
+    ),
+    fileKeyRef: toJson_PostgresqlSpecInitContainersEnvValueFromFileKeyRef(
+      obj.fileKeyRef,
+    ),
+    resourceFieldRef:
+      toJson_PostgresqlSpecInitContainersEnvValueFromResourceFieldRef(
+        obj.resourceFieldRef,
+      ),
+    secretKeyRef: toJson_PostgresqlSpecInitContainersEnvValueFromSecretKeyRef(
+      obj.secretKeyRef,
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * The ConfigMap to select from
+ *
+ * @schema PostgresqlSpecInitContainersEnvFromConfigMapRef
+ */
+export interface PostgresqlSpecInitContainersEnvFromConfigMapRef {
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   *
+   * @schema PostgresqlSpecInitContainersEnvFromConfigMapRef#name
+   */
+  readonly name?: string;
+
+  /**
+   * Specify whether the ConfigMap must be defined
+   *
+   * @schema PostgresqlSpecInitContainersEnvFromConfigMapRef#optional
+   */
+  readonly optional?: boolean;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersEnvFromConfigMapRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersEnvFromConfigMapRef(
+  obj: PostgresqlSpecInitContainersEnvFromConfigMapRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    optional: obj.optional,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * The Secret to select from
+ *
+ * @schema PostgresqlSpecInitContainersEnvFromSecretRef
+ */
+export interface PostgresqlSpecInitContainersEnvFromSecretRef {
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   *
+   * @schema PostgresqlSpecInitContainersEnvFromSecretRef#name
+   */
+  readonly name?: string;
+
+  /**
+   * Specify whether the Secret must be defined
+   *
+   * @schema PostgresqlSpecInitContainersEnvFromSecretRef#optional
+   */
+  readonly optional?: boolean;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersEnvFromSecretRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersEnvFromSecretRef(
+  obj: PostgresqlSpecInitContainersEnvFromSecretRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    optional: obj.optional,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * PostStart is called immediately after a container is created. If the handler fails,
+ * the container is terminated and restarted according to its restart policy.
+ * Other management of the container blocks until the hook completes.
+ * More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks
+ *
+ * @schema PostgresqlSpecInitContainersLifecyclePostStart
+ */
+export interface PostgresqlSpecInitContainersLifecyclePostStart {
+  /**
+   * Exec specifies a command to execute in the container.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePostStart#exec
+   */
+  readonly exec?: PostgresqlSpecInitContainersLifecyclePostStartExec;
+
+  /**
+   * HTTPGet specifies an HTTP GET request to perform.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePostStart#httpGet
+   */
+  readonly httpGet?: PostgresqlSpecInitContainersLifecyclePostStartHttpGet;
+
+  /**
+   * Sleep represents a duration that the container should sleep.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePostStart#sleep
+   */
+  readonly sleep?: PostgresqlSpecInitContainersLifecyclePostStartSleep;
+
+  /**
+   * Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept
+   * for backward compatibility. There is no validation of this field and
+   * lifecycle hooks will fail at runtime when it is specified.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePostStart#tcpSocket
+   */
+  readonly tcpSocket?: PostgresqlSpecInitContainersLifecyclePostStartTcpSocket;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersLifecyclePostStart' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersLifecyclePostStart(
+  obj: PostgresqlSpecInitContainersLifecyclePostStart | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    exec: toJson_PostgresqlSpecInitContainersLifecyclePostStartExec(obj.exec),
+    httpGet: toJson_PostgresqlSpecInitContainersLifecyclePostStartHttpGet(
+      obj.httpGet,
+    ),
+    sleep: toJson_PostgresqlSpecInitContainersLifecyclePostStartSleep(
+      obj.sleep,
+    ),
+    tcpSocket: toJson_PostgresqlSpecInitContainersLifecyclePostStartTcpSocket(
+      obj.tcpSocket,
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * PreStop is called immediately before a container is terminated due to an
+ * API request or management event such as liveness/startup probe failure,
+ * preemption, resource contention, etc. The handler is not called if the
+ * container crashes or exits. The Pod's termination grace period countdown begins before the
+ * PreStop hook is executed. Regardless of the outcome of the handler, the
+ * container will eventually terminate within the Pod's termination grace
+ * period (unless delayed by finalizers). Other management of the container blocks until the hook completes
+ * or until the termination grace period is reached.
+ * More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks
+ *
+ * @schema PostgresqlSpecInitContainersLifecyclePreStop
+ */
+export interface PostgresqlSpecInitContainersLifecyclePreStop {
+  /**
+   * Exec specifies a command to execute in the container.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePreStop#exec
+   */
+  readonly exec?: PostgresqlSpecInitContainersLifecyclePreStopExec;
+
+  /**
+   * HTTPGet specifies an HTTP GET request to perform.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePreStop#httpGet
+   */
+  readonly httpGet?: PostgresqlSpecInitContainersLifecyclePreStopHttpGet;
+
+  /**
+   * Sleep represents a duration that the container should sleep.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePreStop#sleep
+   */
+  readonly sleep?: PostgresqlSpecInitContainersLifecyclePreStopSleep;
+
+  /**
+   * Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept
+   * for backward compatibility. There is no validation of this field and
+   * lifecycle hooks will fail at runtime when it is specified.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePreStop#tcpSocket
+   */
+  readonly tcpSocket?: PostgresqlSpecInitContainersLifecyclePreStopTcpSocket;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersLifecyclePreStop' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersLifecyclePreStop(
+  obj: PostgresqlSpecInitContainersLifecyclePreStop | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    exec: toJson_PostgresqlSpecInitContainersLifecyclePreStopExec(obj.exec),
+    httpGet: toJson_PostgresqlSpecInitContainersLifecyclePreStopHttpGet(
+      obj.httpGet,
+    ),
+    sleep: toJson_PostgresqlSpecInitContainersLifecyclePreStopSleep(obj.sleep),
+    tcpSocket: toJson_PostgresqlSpecInitContainersLifecyclePreStopTcpSocket(
+      obj.tcpSocket,
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Exec specifies a command to execute in the container.
+ *
+ * @schema PostgresqlSpecInitContainersLivenessProbeExec
+ */
+export interface PostgresqlSpecInitContainersLivenessProbeExec {
+  /**
+   * Command is the command line to execute inside the container, the working directory for the
+   * command  is root ('/') in the container's filesystem. The command is simply exec'd, it is
+   * not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use
+   * a shell, you need to explicitly call out to that shell.
+   * Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
+   *
+   * @schema PostgresqlSpecInitContainersLivenessProbeExec#command
+   */
+  readonly command?: string[];
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersLivenessProbeExec' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersLivenessProbeExec(
+  obj: PostgresqlSpecInitContainersLivenessProbeExec | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    command: obj.command?.map((y) => y),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * GRPC specifies a GRPC HealthCheckRequest.
+ *
+ * @schema PostgresqlSpecInitContainersLivenessProbeGrpc
+ */
+export interface PostgresqlSpecInitContainersLivenessProbeGrpc {
+  /**
+   * Port number of the gRPC service. Number must be in the range 1 to 65535.
+   *
+   * @schema PostgresqlSpecInitContainersLivenessProbeGrpc#port
+   */
+  readonly port: number;
+
+  /**
+   * Service is the name of the service to place in the gRPC HealthCheckRequest
+   * (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+   *
+   * If this is not specified, the default behavior is defined by gRPC.
+   *
+   * @schema PostgresqlSpecInitContainersLivenessProbeGrpc#service
+   */
+  readonly service?: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersLivenessProbeGrpc' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersLivenessProbeGrpc(
+  obj: PostgresqlSpecInitContainersLivenessProbeGrpc | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    port: obj.port,
+    service: obj.service,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * HTTPGet specifies an HTTP GET request to perform.
+ *
+ * @schema PostgresqlSpecInitContainersLivenessProbeHttpGet
+ */
+export interface PostgresqlSpecInitContainersLivenessProbeHttpGet {
+  /**
+   * Host name to connect to, defaults to the pod IP. You probably want to set
+   * "Host" in httpHeaders instead.
+   *
+   * @schema PostgresqlSpecInitContainersLivenessProbeHttpGet#host
+   */
+  readonly host?: string;
+
+  /**
+   * Custom headers to set in the request. HTTP allows repeated headers.
+   *
+   * @schema PostgresqlSpecInitContainersLivenessProbeHttpGet#httpHeaders
+   */
+  readonly httpHeaders?: PostgresqlSpecInitContainersLivenessProbeHttpGetHttpHeaders[];
+
+  /**
+   * Path to access on the HTTP server.
+   *
+   * @schema PostgresqlSpecInitContainersLivenessProbeHttpGet#path
+   */
+  readonly path?: string;
+
+  /**
+   * Name or number of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema PostgresqlSpecInitContainersLivenessProbeHttpGet#port
+   */
+  readonly port: PostgresqlSpecInitContainersLivenessProbeHttpGetPort;
+
+  /**
+   * Scheme to use for connecting to the host.
+   * Defaults to HTTP.
+   *
+   * @default HTTP.
+   * @schema PostgresqlSpecInitContainersLivenessProbeHttpGet#scheme
+   */
+  readonly scheme?: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersLivenessProbeHttpGet' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersLivenessProbeHttpGet(
+  obj: PostgresqlSpecInitContainersLivenessProbeHttpGet | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    httpHeaders: obj.httpHeaders?.map((y) =>
+      toJson_PostgresqlSpecInitContainersLivenessProbeHttpGetHttpHeaders(y),
+    ),
+    path: obj.path,
+    port: obj.port?.value,
+    scheme: obj.scheme,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * TCPSocket specifies a connection to a TCP port.
+ *
+ * @schema PostgresqlSpecInitContainersLivenessProbeTcpSocket
+ */
+export interface PostgresqlSpecInitContainersLivenessProbeTcpSocket {
+  /**
+   * Optional: Host name to connect to, defaults to the pod IP.
+   *
+   * @schema PostgresqlSpecInitContainersLivenessProbeTcpSocket#host
+   */
+  readonly host?: string;
+
+  /**
+   * Number or name of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema PostgresqlSpecInitContainersLivenessProbeTcpSocket#port
+   */
+  readonly port: PostgresqlSpecInitContainersLivenessProbeTcpSocketPort;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersLivenessProbeTcpSocket' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersLivenessProbeTcpSocket(
+  obj: PostgresqlSpecInitContainersLivenessProbeTcpSocket | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    port: obj.port?.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Exec specifies a command to execute in the container.
+ *
+ * @schema PostgresqlSpecInitContainersReadinessProbeExec
+ */
+export interface PostgresqlSpecInitContainersReadinessProbeExec {
+  /**
+   * Command is the command line to execute inside the container, the working directory for the
+   * command  is root ('/') in the container's filesystem. The command is simply exec'd, it is
+   * not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use
+   * a shell, you need to explicitly call out to that shell.
+   * Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
+   *
+   * @schema PostgresqlSpecInitContainersReadinessProbeExec#command
+   */
+  readonly command?: string[];
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersReadinessProbeExec' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersReadinessProbeExec(
+  obj: PostgresqlSpecInitContainersReadinessProbeExec | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    command: obj.command?.map((y) => y),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * GRPC specifies a GRPC HealthCheckRequest.
+ *
+ * @schema PostgresqlSpecInitContainersReadinessProbeGrpc
+ */
+export interface PostgresqlSpecInitContainersReadinessProbeGrpc {
+  /**
+   * Port number of the gRPC service. Number must be in the range 1 to 65535.
+   *
+   * @schema PostgresqlSpecInitContainersReadinessProbeGrpc#port
+   */
+  readonly port: number;
+
+  /**
+   * Service is the name of the service to place in the gRPC HealthCheckRequest
+   * (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+   *
+   * If this is not specified, the default behavior is defined by gRPC.
+   *
+   * @schema PostgresqlSpecInitContainersReadinessProbeGrpc#service
+   */
+  readonly service?: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersReadinessProbeGrpc' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersReadinessProbeGrpc(
+  obj: PostgresqlSpecInitContainersReadinessProbeGrpc | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    port: obj.port,
+    service: obj.service,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * HTTPGet specifies an HTTP GET request to perform.
+ *
+ * @schema PostgresqlSpecInitContainersReadinessProbeHttpGet
+ */
+export interface PostgresqlSpecInitContainersReadinessProbeHttpGet {
+  /**
+   * Host name to connect to, defaults to the pod IP. You probably want to set
+   * "Host" in httpHeaders instead.
+   *
+   * @schema PostgresqlSpecInitContainersReadinessProbeHttpGet#host
+   */
+  readonly host?: string;
+
+  /**
+   * Custom headers to set in the request. HTTP allows repeated headers.
+   *
+   * @schema PostgresqlSpecInitContainersReadinessProbeHttpGet#httpHeaders
+   */
+  readonly httpHeaders?: PostgresqlSpecInitContainersReadinessProbeHttpGetHttpHeaders[];
+
+  /**
+   * Path to access on the HTTP server.
+   *
+   * @schema PostgresqlSpecInitContainersReadinessProbeHttpGet#path
+   */
+  readonly path?: string;
+
+  /**
+   * Name or number of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema PostgresqlSpecInitContainersReadinessProbeHttpGet#port
+   */
+  readonly port: PostgresqlSpecInitContainersReadinessProbeHttpGetPort;
+
+  /**
+   * Scheme to use for connecting to the host.
+   * Defaults to HTTP.
+   *
+   * @default HTTP.
+   * @schema PostgresqlSpecInitContainersReadinessProbeHttpGet#scheme
+   */
+  readonly scheme?: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersReadinessProbeHttpGet' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersReadinessProbeHttpGet(
+  obj: PostgresqlSpecInitContainersReadinessProbeHttpGet | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    httpHeaders: obj.httpHeaders?.map((y) =>
+      toJson_PostgresqlSpecInitContainersReadinessProbeHttpGetHttpHeaders(y),
+    ),
+    path: obj.path,
+    port: obj.port?.value,
+    scheme: obj.scheme,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * TCPSocket specifies a connection to a TCP port.
+ *
+ * @schema PostgresqlSpecInitContainersReadinessProbeTcpSocket
+ */
+export interface PostgresqlSpecInitContainersReadinessProbeTcpSocket {
+  /**
+   * Optional: Host name to connect to, defaults to the pod IP.
+   *
+   * @schema PostgresqlSpecInitContainersReadinessProbeTcpSocket#host
+   */
+  readonly host?: string;
+
+  /**
+   * Number or name of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema PostgresqlSpecInitContainersReadinessProbeTcpSocket#port
+   */
+  readonly port: PostgresqlSpecInitContainersReadinessProbeTcpSocketPort;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersReadinessProbeTcpSocket' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersReadinessProbeTcpSocket(
+  obj: PostgresqlSpecInitContainersReadinessProbeTcpSocket | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    port: obj.port?.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * ResourceClaim references one entry in PodSpec.ResourceClaims.
+ *
+ * @schema PostgresqlSpecInitContainersResourcesClaims
+ */
+export interface PostgresqlSpecInitContainersResourcesClaims {
+  /**
+   * Name must match the name of one entry in pod.spec.resourceClaims of
+   * the Pod where this field is used. It makes that resource available
+   * inside a container.
+   *
+   * @schema PostgresqlSpecInitContainersResourcesClaims#name
+   */
+  readonly name: string;
+
+  /**
+   * Request is the name chosen for a request in the referenced claim.
+   * If empty, everything from the claim is made available, otherwise
+   * only the result of this request.
+   *
+   * @schema PostgresqlSpecInitContainersResourcesClaims#request
+   */
+  readonly request?: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersResourcesClaims' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersResourcesClaims(
+  obj: PostgresqlSpecInitContainersResourcesClaims | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    request: obj.request,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema PostgresqlSpecInitContainersResourcesLimits
+ */
+export class PostgresqlSpecInitContainersResourcesLimits {
+  public static fromNumber(
+    value: number,
+  ): PostgresqlSpecInitContainersResourcesLimits {
+    return new PostgresqlSpecInitContainersResourcesLimits(value);
+  }
+  public static fromString(
+    value: string,
+  ): PostgresqlSpecInitContainersResourcesLimits {
+    return new PostgresqlSpecInitContainersResourcesLimits(value);
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * @schema PostgresqlSpecInitContainersResourcesRequests
+ */
+export class PostgresqlSpecInitContainersResourcesRequests {
+  public static fromNumber(
+    value: number,
+  ): PostgresqlSpecInitContainersResourcesRequests {
+    return new PostgresqlSpecInitContainersResourcesRequests(value);
+  }
+  public static fromString(
+    value: string,
+  ): PostgresqlSpecInitContainersResourcesRequests {
+    return new PostgresqlSpecInitContainersResourcesRequests(value);
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * Represents the exit codes to check on container exits.
+ *
+ * @schema PostgresqlSpecInitContainersRestartPolicyRulesExitCodes
+ */
+export interface PostgresqlSpecInitContainersRestartPolicyRulesExitCodes {
+  /**
+   * Represents the relationship between the container exit code(s) and the
+   * specified values. Possible values are:
+   * - In: the requirement is satisfied if the container exit code is in the
+   * set of specified values.
+   * - NotIn: the requirement is satisfied if the container exit code is
+   * not in the set of specified values.
+   *
+   * @schema PostgresqlSpecInitContainersRestartPolicyRulesExitCodes#operator
+   */
+  readonly operator: string;
+
+  /**
+   * Specifies the set of values to check for container exit codes.
+   * At most 255 elements are allowed.
+   *
+   * @schema PostgresqlSpecInitContainersRestartPolicyRulesExitCodes#values
+   */
+  readonly values?: number[];
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersRestartPolicyRulesExitCodes' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersRestartPolicyRulesExitCodes(
+  obj: PostgresqlSpecInitContainersRestartPolicyRulesExitCodes | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    operator: obj.operator,
+    values: obj.values?.map((y) => y),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * appArmorProfile is the AppArmor options to use by this container. If set, this profile
+ * overrides the pod's appArmorProfile.
+ * Note that this field cannot be set when spec.os.name is windows.
+ *
+ * @schema PostgresqlSpecInitContainersSecurityContextAppArmorProfile
+ */
+export interface PostgresqlSpecInitContainersSecurityContextAppArmorProfile {
+  /**
+   * localhostProfile indicates a profile loaded on the node that should be used.
+   * The profile must be preconfigured on the node to work.
+   * Must match the loaded name of the profile.
+   * Must be set if and only if type is "Localhost".
+   *
+   * @schema PostgresqlSpecInitContainersSecurityContextAppArmorProfile#localhostProfile
+   */
+  readonly localhostProfile?: string;
+
+  /**
+   * type indicates which kind of AppArmor profile will be applied.
+   * Valid options are:
+   * Localhost - a profile pre-loaded on the node.
+   * RuntimeDefault - the container runtime's default profile.
+   * Unconfined - no AppArmor enforcement.
+   *
+   * @schema PostgresqlSpecInitContainersSecurityContextAppArmorProfile#type
+   */
+  readonly type: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersSecurityContextAppArmorProfile' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersSecurityContextAppArmorProfile(
+  obj: PostgresqlSpecInitContainersSecurityContextAppArmorProfile | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    localhostProfile: obj.localhostProfile,
+    type: obj.type,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * The capabilities to add/drop when running containers.
+ * Defaults to the default set of capabilities granted by the container runtime.
+ * Note that this field cannot be set when spec.os.name is windows.
+ *
+ * @default the default set of capabilities granted by the container runtime.
+ * @schema PostgresqlSpecInitContainersSecurityContextCapabilities
+ */
+export interface PostgresqlSpecInitContainersSecurityContextCapabilities {
+  /**
+   * Added capabilities
+   *
+   * @schema PostgresqlSpecInitContainersSecurityContextCapabilities#add
+   */
+  readonly add?: string[];
+
+  /**
+   * Removed capabilities
+   *
+   * @schema PostgresqlSpecInitContainersSecurityContextCapabilities#drop
+   */
+  readonly drop?: string[];
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersSecurityContextCapabilities' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersSecurityContextCapabilities(
+  obj: PostgresqlSpecInitContainersSecurityContextCapabilities | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    add: obj.add?.map((y) => y),
+    drop: obj.drop?.map((y) => y),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * The SELinux context to be applied to the container.
+ * If unspecified, the container runtime will allocate a random SELinux context for each
+ * container.  May also be set in PodSecurityContext.  If set in both SecurityContext and
+ * PodSecurityContext, the value specified in SecurityContext takes precedence.
+ * Note that this field cannot be set when spec.os.name is windows.
+ *
+ * @schema PostgresqlSpecInitContainersSecurityContextSeLinuxOptions
+ */
+export interface PostgresqlSpecInitContainersSecurityContextSeLinuxOptions {
+  /**
+   * Level is SELinux level label that applies to the container.
+   *
+   * @schema PostgresqlSpecInitContainersSecurityContextSeLinuxOptions#level
+   */
+  readonly level?: string;
+
+  /**
+   * Role is a SELinux role label that applies to the container.
+   *
+   * @schema PostgresqlSpecInitContainersSecurityContextSeLinuxOptions#role
+   */
+  readonly role?: string;
+
+  /**
+   * Type is a SELinux type label that applies to the container.
+   *
+   * @schema PostgresqlSpecInitContainersSecurityContextSeLinuxOptions#type
+   */
+  readonly type?: string;
+
+  /**
+   * User is a SELinux user label that applies to the container.
+   *
+   * @schema PostgresqlSpecInitContainersSecurityContextSeLinuxOptions#user
+   */
+  readonly user?: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersSecurityContextSeLinuxOptions' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersSecurityContextSeLinuxOptions(
+  obj: PostgresqlSpecInitContainersSecurityContextSeLinuxOptions | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    level: obj.level,
+    role: obj.role,
+    type: obj.type,
+    user: obj.user,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * The seccomp options to use by this container. If seccomp options are
+ * provided at both the pod & container level, the container options
+ * override the pod options.
+ * Note that this field cannot be set when spec.os.name is windows.
+ *
+ * @schema PostgresqlSpecInitContainersSecurityContextSeccompProfile
+ */
+export interface PostgresqlSpecInitContainersSecurityContextSeccompProfile {
+  /**
+   * localhostProfile indicates a profile defined in a file on the node should be used.
+   * The profile must be preconfigured on the node to work.
+   * Must be a descending path, relative to the kubelet's configured seccomp profile location.
+   * Must be set if type is "Localhost". Must NOT be set for any other type.
+   *
+   * @schema PostgresqlSpecInitContainersSecurityContextSeccompProfile#localhostProfile
+   */
+  readonly localhostProfile?: string;
+
+  /**
+   * type indicates which kind of seccomp profile will be applied.
+   * Valid options are:
+   *
+   * Localhost - a profile defined in a file on the node should be used.
+   * RuntimeDefault - the container runtime default profile should be used.
+   * Unconfined - no profile should be applied.
+   *
+   * @schema PostgresqlSpecInitContainersSecurityContextSeccompProfile#type
+   */
+  readonly type: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersSecurityContextSeccompProfile' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersSecurityContextSeccompProfile(
+  obj: PostgresqlSpecInitContainersSecurityContextSeccompProfile | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    localhostProfile: obj.localhostProfile,
+    type: obj.type,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * The Windows specific settings applied to all containers.
+ * If unspecified, the options from the PodSecurityContext will be used.
+ * If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
+ * Note that this field cannot be set when spec.os.name is linux.
+ *
+ * @schema PostgresqlSpecInitContainersSecurityContextWindowsOptions
+ */
+export interface PostgresqlSpecInitContainersSecurityContextWindowsOptions {
+  /**
+   * GMSACredentialSpec is where the GMSA admission webhook
+   * (https://github.com/kubernetes-sigs/windows-gmsa) inlines the contents of the
+   * GMSA credential spec named by the GMSACredentialSpecName field.
+   *
+   * @schema PostgresqlSpecInitContainersSecurityContextWindowsOptions#gmsaCredentialSpec
+   */
+  readonly gmsaCredentialSpec?: string;
+
+  /**
+   * GMSACredentialSpecName is the name of the GMSA credential spec to use.
+   *
+   * @schema PostgresqlSpecInitContainersSecurityContextWindowsOptions#gmsaCredentialSpecName
+   */
+  readonly gmsaCredentialSpecName?: string;
+
+  /**
+   * HostProcess determines if a container should be run as a 'Host Process' container.
+   * All of a Pod's containers must have the same effective HostProcess value
+   * (it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).
+   * In addition, if HostProcess is true then HostNetwork must also be set to true.
+   *
+   * @schema PostgresqlSpecInitContainersSecurityContextWindowsOptions#hostProcess
+   */
+  readonly hostProcess?: boolean;
+
+  /**
+   * The UserName in Windows to run the entrypoint of the container process.
+   * Defaults to the user specified in image metadata if unspecified.
+   * May also be set in PodSecurityContext. If set in both SecurityContext and
+   * PodSecurityContext, the value specified in SecurityContext takes precedence.
+   *
+   * @default the user specified in image metadata if unspecified.
+   * @schema PostgresqlSpecInitContainersSecurityContextWindowsOptions#runAsUserName
+   */
+  readonly runAsUserName?: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersSecurityContextWindowsOptions' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersSecurityContextWindowsOptions(
+  obj: PostgresqlSpecInitContainersSecurityContextWindowsOptions | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    gmsaCredentialSpec: obj.gmsaCredentialSpec,
+    gmsaCredentialSpecName: obj.gmsaCredentialSpecName,
+    hostProcess: obj.hostProcess,
+    runAsUserName: obj.runAsUserName,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Exec specifies a command to execute in the container.
+ *
+ * @schema PostgresqlSpecInitContainersStartupProbeExec
+ */
+export interface PostgresqlSpecInitContainersStartupProbeExec {
+  /**
+   * Command is the command line to execute inside the container, the working directory for the
+   * command  is root ('/') in the container's filesystem. The command is simply exec'd, it is
+   * not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use
+   * a shell, you need to explicitly call out to that shell.
+   * Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
+   *
+   * @schema PostgresqlSpecInitContainersStartupProbeExec#command
+   */
+  readonly command?: string[];
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersStartupProbeExec' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersStartupProbeExec(
+  obj: PostgresqlSpecInitContainersStartupProbeExec | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    command: obj.command?.map((y) => y),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * GRPC specifies a GRPC HealthCheckRequest.
+ *
+ * @schema PostgresqlSpecInitContainersStartupProbeGrpc
+ */
+export interface PostgresqlSpecInitContainersStartupProbeGrpc {
+  /**
+   * Port number of the gRPC service. Number must be in the range 1 to 65535.
+   *
+   * @schema PostgresqlSpecInitContainersStartupProbeGrpc#port
+   */
+  readonly port: number;
+
+  /**
+   * Service is the name of the service to place in the gRPC HealthCheckRequest
+   * (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+   *
+   * If this is not specified, the default behavior is defined by gRPC.
+   *
+   * @schema PostgresqlSpecInitContainersStartupProbeGrpc#service
+   */
+  readonly service?: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersStartupProbeGrpc' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersStartupProbeGrpc(
+  obj: PostgresqlSpecInitContainersStartupProbeGrpc | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    port: obj.port,
+    service: obj.service,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * HTTPGet specifies an HTTP GET request to perform.
+ *
+ * @schema PostgresqlSpecInitContainersStartupProbeHttpGet
+ */
+export interface PostgresqlSpecInitContainersStartupProbeHttpGet {
+  /**
+   * Host name to connect to, defaults to the pod IP. You probably want to set
+   * "Host" in httpHeaders instead.
+   *
+   * @schema PostgresqlSpecInitContainersStartupProbeHttpGet#host
+   */
+  readonly host?: string;
+
+  /**
+   * Custom headers to set in the request. HTTP allows repeated headers.
+   *
+   * @schema PostgresqlSpecInitContainersStartupProbeHttpGet#httpHeaders
+   */
+  readonly httpHeaders?: PostgresqlSpecInitContainersStartupProbeHttpGetHttpHeaders[];
+
+  /**
+   * Path to access on the HTTP server.
+   *
+   * @schema PostgresqlSpecInitContainersStartupProbeHttpGet#path
+   */
+  readonly path?: string;
+
+  /**
+   * Name or number of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema PostgresqlSpecInitContainersStartupProbeHttpGet#port
+   */
+  readonly port: PostgresqlSpecInitContainersStartupProbeHttpGetPort;
+
+  /**
+   * Scheme to use for connecting to the host.
+   * Defaults to HTTP.
+   *
+   * @default HTTP.
+   * @schema PostgresqlSpecInitContainersStartupProbeHttpGet#scheme
+   */
+  readonly scheme?: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersStartupProbeHttpGet' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersStartupProbeHttpGet(
+  obj: PostgresqlSpecInitContainersStartupProbeHttpGet | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    httpHeaders: obj.httpHeaders?.map((y) =>
+      toJson_PostgresqlSpecInitContainersStartupProbeHttpGetHttpHeaders(y),
+    ),
+    path: obj.path,
+    port: obj.port?.value,
+    scheme: obj.scheme,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * TCPSocket specifies a connection to a TCP port.
+ *
+ * @schema PostgresqlSpecInitContainersStartupProbeTcpSocket
+ */
+export interface PostgresqlSpecInitContainersStartupProbeTcpSocket {
+  /**
+   * Optional: Host name to connect to, defaults to the pod IP.
+   *
+   * @schema PostgresqlSpecInitContainersStartupProbeTcpSocket#host
+   */
+  readonly host?: string;
+
+  /**
+   * Number or name of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema PostgresqlSpecInitContainersStartupProbeTcpSocket#port
+   */
+  readonly port: PostgresqlSpecInitContainersStartupProbeTcpSocketPort;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersStartupProbeTcpSocket' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersStartupProbeTcpSocket(
+  obj: PostgresqlSpecInitContainersStartupProbeTcpSocket | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    port: obj.port?.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * HTTPHeader describes a custom header to be used in HTTP probes
+ *
+ * @schema PostgresqlSpecLivenessProbeHttpGetHttpHeaders
+ */
+export interface PostgresqlSpecLivenessProbeHttpGetHttpHeaders {
+  /**
+   * The header field name.
+   * This will be canonicalized upon output, so case-variant names will be understood as the same header.
+   *
+   * @schema PostgresqlSpecLivenessProbeHttpGetHttpHeaders#name
+   */
+  readonly name: string;
+
+  /**
+   * The header field value
+   *
+   * @schema PostgresqlSpecLivenessProbeHttpGetHttpHeaders#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecLivenessProbeHttpGetHttpHeaders' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecLivenessProbeHttpGetHttpHeaders(
+  obj: PostgresqlSpecLivenessProbeHttpGetHttpHeaders | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Name or number of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema PostgresqlSpecLivenessProbeHttpGetPort
+ */
+export class PostgresqlSpecLivenessProbeHttpGetPort {
+  public static fromNumber(
+    value: number,
+  ): PostgresqlSpecLivenessProbeHttpGetPort {
+    return new PostgresqlSpecLivenessProbeHttpGetPort(value);
+  }
+  public static fromString(
+    value: string,
+  ): PostgresqlSpecLivenessProbeHttpGetPort {
+    return new PostgresqlSpecLivenessProbeHttpGetPort(value);
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * Number or name of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema PostgresqlSpecLivenessProbeTcpSocketPort
+ */
+export class PostgresqlSpecLivenessProbeTcpSocketPort {
+  public static fromNumber(
+    value: number,
+  ): PostgresqlSpecLivenessProbeTcpSocketPort {
+    return new PostgresqlSpecLivenessProbeTcpSocketPort(value);
+  }
+  public static fromString(
+    value: string,
+  ): PostgresqlSpecLivenessProbeTcpSocketPort {
+    return new PostgresqlSpecLivenessProbeTcpSocketPort(value);
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * A node selector term, associated with the corresponding weight.
+ *
  * @schema PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionPreference
  */
 export interface PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionPreference {
   /**
+   * A list of node selector requirements by node's labels.
+   *
    * @schema PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionPreference#matchExpressions
    */
   readonly matchExpressions?: PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionPreferenceMatchExpressions[];
 
   /**
+   * A list of node selector requirements by node's fields.
+   *
    * @schema PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionPreference#matchFields
    */
   readonly matchFields?: PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionPreferenceMatchFields[];
@@ -3740,15 +8996,23 @@ export function toJson_PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnore
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * A null or empty node selector term matches no objects. The requirements of
+ * them are ANDed.
+ * The TopologySelectorTerm type implements a subset of the NodeSelectorTerm.
+ *
  * @schema PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnoredDuringExecutionNodeSelectorTerms
  */
 export interface PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnoredDuringExecutionNodeSelectorTerms {
   /**
+   * A list of node selector requirements by node's labels.
+   *
    * @schema PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnoredDuringExecutionNodeSelectorTerms#matchExpressions
    */
   readonly matchExpressions?: PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnoredDuringExecutionNodeSelectorTermsMatchExpressions[];
 
   /**
+   * A list of node selector requirements by node's fields.
+   *
    * @schema PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnoredDuringExecutionNodeSelectorTerms#matchFields
    */
   readonly matchFields?: PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnoredDuringExecutionNodeSelectorTermsMatchFields[];
@@ -3787,20 +9051,317 @@ export function toJson_PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnored
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * Source for the environment variable's value. Cannot be used if value is not empty.
+ *
+ * @schema PostgresqlSpecSidecarsEnvValueFrom
+ */
+export interface PostgresqlSpecSidecarsEnvValueFrom {
+  /**
+   * Selects a key of a ConfigMap.
+   *
+   * @schema PostgresqlSpecSidecarsEnvValueFrom#configMapKeyRef
+   */
+  readonly configMapKeyRef?: PostgresqlSpecSidecarsEnvValueFromConfigMapKeyRef;
+
+  /**
+   * Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels['<KEY>']`, `metadata.annotations['<KEY>']`,
+   * spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.
+   *
+   * @schema PostgresqlSpecSidecarsEnvValueFrom#fieldRef
+   */
+  readonly fieldRef?: PostgresqlSpecSidecarsEnvValueFromFieldRef;
+
+  /**
+   * FileKeyRef selects a key of the env file.
+   * Requires the EnvFiles feature gate to be enabled.
+   *
+   * @schema PostgresqlSpecSidecarsEnvValueFrom#fileKeyRef
+   */
+  readonly fileKeyRef?: PostgresqlSpecSidecarsEnvValueFromFileKeyRef;
+
+  /**
+   * Selects a resource of the container: only resources limits and requests
+   * (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.
+   *
+   * @schema PostgresqlSpecSidecarsEnvValueFrom#resourceFieldRef
+   */
+  readonly resourceFieldRef?: PostgresqlSpecSidecarsEnvValueFromResourceFieldRef;
+
+  /**
+   * Selects a key of a secret in the pod's namespace
+   *
+   * @schema PostgresqlSpecSidecarsEnvValueFrom#secretKeyRef
+   */
+  readonly secretKeyRef?: PostgresqlSpecSidecarsEnvValueFromSecretKeyRef;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecSidecarsEnvValueFrom' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecSidecarsEnvValueFrom(
+  obj: PostgresqlSpecSidecarsEnvValueFrom | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    configMapKeyRef: toJson_PostgresqlSpecSidecarsEnvValueFromConfigMapKeyRef(
+      obj.configMapKeyRef,
+    ),
+    fieldRef: toJson_PostgresqlSpecSidecarsEnvValueFromFieldRef(obj.fieldRef),
+    fileKeyRef: toJson_PostgresqlSpecSidecarsEnvValueFromFileKeyRef(
+      obj.fileKeyRef,
+    ),
+    resourceFieldRef: toJson_PostgresqlSpecSidecarsEnvValueFromResourceFieldRef(
+      obj.resourceFieldRef,
+    ),
+    secretKeyRef: toJson_PostgresqlSpecSidecarsEnvValueFromSecretKeyRef(
+      obj.secretKeyRef,
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * ResourceDescription describes CPU and memory resources defined for a cluster.
+ *
+ * @schema PostgresqlSpecSidecarsResourcesLimits
+ */
+export interface PostgresqlSpecSidecarsResourcesLimits {
+  /**
+   * Decimal natural followed by m, or decimal natural followed by
+   * dot followed by up to three decimal digits.
+   *
+   * This is because the Kubernetes CPU resource has millis as the
+   * maximum precision.  The actual values are checked in code
+   * because the regular expression would be huge and horrible and
+   * not very helpful in validation error messages; this one checks
+   * only the format of the given number.
+   *
+   * https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-cpu
+   *
+   * Note: the value specified here must not be zero or be lower
+   * than the corresponding request.
+   *
+   * @schema PostgresqlSpecSidecarsResourcesLimits#cpu
+   */
+  readonly cpu?: string;
+
+  /**
+   * @schema PostgresqlSpecSidecarsResourcesLimits#hugepages-1Gi
+   */
+  readonly hugepages1Gi?: string;
+
+  /**
+   * @schema PostgresqlSpecSidecarsResourcesLimits#hugepages-2Mi
+   */
+  readonly hugepages2Mi?: string;
+
+  /**
+   * You can express memory as a plain integer or as a fixed-point
+   * integer using one of these suffixes: E, P, T, G, M, k. You can
+   * also use the power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki
+   *
+   * https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-memory
+   *
+   * Note: the value specified here must not be zero or be higher
+   * than the corresponding limit.
+   *
+   * @schema PostgresqlSpecSidecarsResourcesLimits#memory
+   */
+  readonly memory?: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecSidecarsResourcesLimits' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecSidecarsResourcesLimits(
+  obj: PostgresqlSpecSidecarsResourcesLimits | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    cpu: obj.cpu,
+    "hugepages-1Gi": obj.hugepages1Gi,
+    "hugepages-2Mi": obj.hugepages2Mi,
+    memory: obj.memory,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * ResourceDescription describes CPU and memory resources defined for a cluster.
+ *
+ * @schema PostgresqlSpecSidecarsResourcesRequests
+ */
+export interface PostgresqlSpecSidecarsResourcesRequests {
+  /**
+   * Decimal natural followed by m, or decimal natural followed by
+   * dot followed by up to three decimal digits.
+   *
+   * This is because the Kubernetes CPU resource has millis as the
+   * maximum precision.  The actual values are checked in code
+   * because the regular expression would be huge and horrible and
+   * not very helpful in validation error messages; this one checks
+   * only the format of the given number.
+   *
+   * https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-cpu
+   *
+   * Note: the value specified here must not be zero or be lower
+   * than the corresponding request.
+   *
+   * @schema PostgresqlSpecSidecarsResourcesRequests#cpu
+   */
+  readonly cpu?: string;
+
+  /**
+   * @schema PostgresqlSpecSidecarsResourcesRequests#hugepages-1Gi
+   */
+  readonly hugepages1Gi?: string;
+
+  /**
+   * @schema PostgresqlSpecSidecarsResourcesRequests#hugepages-2Mi
+   */
+  readonly hugepages2Mi?: string;
+
+  /**
+   * You can express memory as a plain integer or as a fixed-point
+   * integer using one of these suffixes: E, P, T, G, M, k. You can
+   * also use the power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki
+   *
+   * https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-memory
+   *
+   * Note: the value specified here must not be zero or be higher
+   * than the corresponding limit.
+   *
+   * @schema PostgresqlSpecSidecarsResourcesRequests#memory
+   */
+  readonly memory?: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecSidecarsResourcesRequests' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecSidecarsResourcesRequests(
+  obj: PostgresqlSpecSidecarsResourcesRequests | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    cpu: obj.cpu,
+    "hugepages-1Gi": obj.hugepages1Gi,
+    "hugepages-2Mi": obj.hugepages2Mi,
+    memory: obj.memory,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * A label selector requirement is a selector that contains values, a key, and an operator that
+ * relates the key and values.
+ *
+ * @schema PostgresqlSpecTopologySpreadConstraintsLabelSelectorMatchExpressions
+ */
+export interface PostgresqlSpecTopologySpreadConstraintsLabelSelectorMatchExpressions {
+  /**
+   * key is the label key that the selector applies to.
+   *
+   * @schema PostgresqlSpecTopologySpreadConstraintsLabelSelectorMatchExpressions#key
+   */
+  readonly key: string;
+
+  /**
+   * operator represents a key's relationship to a set of values.
+   * Valid operators are In, NotIn, Exists and DoesNotExist.
+   *
+   * @schema PostgresqlSpecTopologySpreadConstraintsLabelSelectorMatchExpressions#operator
+   */
+  readonly operator: string;
+
+  /**
+   * values is an array of string values. If the operator is In or NotIn,
+   * the values array must be non-empty. If the operator is Exists or DoesNotExist,
+   * the values array must be empty. This array is replaced during a strategic
+   * merge patch.
+   *
+   * @schema PostgresqlSpecTopologySpreadConstraintsLabelSelectorMatchExpressions#values
+   */
+  readonly values?: string[];
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecTopologySpreadConstraintsLabelSelectorMatchExpressions' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecTopologySpreadConstraintsLabelSelectorMatchExpressions(
+  obj:
+    | PostgresqlSpecTopologySpreadConstraintsLabelSelectorMatchExpressions
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    key: obj.key,
+    operator: obj.operator,
+    values: obj.values?.map((y) => y),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * A label selector requirement is a selector that contains values, a key, and an operator that
+ * relates the key and values.
+ *
  * @schema PostgresqlSpecVolumeSelectorMatchExpressions
  */
 export interface PostgresqlSpecVolumeSelectorMatchExpressions {
   /**
+   * key is the label key that the selector applies to.
+   *
    * @schema PostgresqlSpecVolumeSelectorMatchExpressions#key
    */
   readonly key: string;
 
   /**
+   * operator represents a key's relationship to a set of values.
+   * Valid operators are In, NotIn, Exists and DoesNotExist.
+   *
    * @schema PostgresqlSpecVolumeSelectorMatchExpressions#operator
    */
-  readonly operator: PostgresqlSpecVolumeSelectorMatchExpressionsOperator;
+  readonly operator: string;
 
   /**
+   * values is an array of string values. If the operator is In or NotIn,
+   * the values array must be non-empty. If the operator is Exists or DoesNotExist,
+   * the values array must be empty. This array is replaced during a strategic
+   * merge patch.
+   *
    * @schema PostgresqlSpecVolumeSelectorMatchExpressions#values
    */
   readonly values?: string[];
@@ -3830,20 +9391,978 @@ export function toJson_PostgresqlSpecVolumeSelectorMatchExpressions(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * Specifies the output format of the exposed resources, defaults to "1"
+ *
+ * @schema PostgresqlSpecEnvValueFromResourceFieldRefDivisor
+ */
+export class PostgresqlSpecEnvValueFromResourceFieldRefDivisor {
+  public static fromNumber(
+    value: number,
+  ): PostgresqlSpecEnvValueFromResourceFieldRefDivisor {
+    return new PostgresqlSpecEnvValueFromResourceFieldRefDivisor(value);
+  }
+  public static fromString(
+    value: string,
+  ): PostgresqlSpecEnvValueFromResourceFieldRefDivisor {
+    return new PostgresqlSpecEnvValueFromResourceFieldRefDivisor(value);
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * Selects a key of a ConfigMap.
+ *
+ * @schema PostgresqlSpecInitContainersEnvValueFromConfigMapKeyRef
+ */
+export interface PostgresqlSpecInitContainersEnvValueFromConfigMapKeyRef {
+  /**
+   * The key to select.
+   *
+   * @schema PostgresqlSpecInitContainersEnvValueFromConfigMapKeyRef#key
+   */
+  readonly key: string;
+
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   *
+   * @schema PostgresqlSpecInitContainersEnvValueFromConfigMapKeyRef#name
+   */
+  readonly name?: string;
+
+  /**
+   * Specify whether the ConfigMap or its key must be defined
+   *
+   * @schema PostgresqlSpecInitContainersEnvValueFromConfigMapKeyRef#optional
+   */
+  readonly optional?: boolean;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersEnvValueFromConfigMapKeyRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersEnvValueFromConfigMapKeyRef(
+  obj: PostgresqlSpecInitContainersEnvValueFromConfigMapKeyRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    key: obj.key,
+    name: obj.name,
+    optional: obj.optional,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels['<KEY>']`, `metadata.annotations['<KEY>']`,
+ * spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.
+ *
+ * @schema PostgresqlSpecInitContainersEnvValueFromFieldRef
+ */
+export interface PostgresqlSpecInitContainersEnvValueFromFieldRef {
+  /**
+   * Version of the schema the FieldPath is written in terms of, defaults to "v1".
+   *
+   * @schema PostgresqlSpecInitContainersEnvValueFromFieldRef#apiVersion
+   */
+  readonly apiVersion?: string;
+
+  /**
+   * Path of the field to select in the specified API version.
+   *
+   * @schema PostgresqlSpecInitContainersEnvValueFromFieldRef#fieldPath
+   */
+  readonly fieldPath: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersEnvValueFromFieldRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersEnvValueFromFieldRef(
+  obj: PostgresqlSpecInitContainersEnvValueFromFieldRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersion: obj.apiVersion,
+    fieldPath: obj.fieldPath,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * FileKeyRef selects a key of the env file.
+ * Requires the EnvFiles feature gate to be enabled.
+ *
+ * @schema PostgresqlSpecInitContainersEnvValueFromFileKeyRef
+ */
+export interface PostgresqlSpecInitContainersEnvValueFromFileKeyRef {
+  /**
+   * The key within the env file. An invalid key will prevent the pod from starting.
+   * The keys defined within a source may consist of any printable ASCII characters except '='.
+   * During Alpha stage of the EnvFiles feature gate, the key size is limited to 128 characters.
+   *
+   * @schema PostgresqlSpecInitContainersEnvValueFromFileKeyRef#key
+   */
+  readonly key: string;
+
+  /**
+   * Specify whether the file or its key must be defined. If the file or key
+   * does not exist, then the env var is not published.
+   * If optional is set to true and the specified key does not exist,
+   * the environment variable will not be set in the Pod's containers.
+   *
+   * If optional is set to false and the specified key does not exist,
+   * an error will be returned during Pod creation.
+   *
+   * @schema PostgresqlSpecInitContainersEnvValueFromFileKeyRef#optional
+   */
+  readonly optional?: boolean;
+
+  /**
+   * The path within the volume from which to select the file.
+   * Must be relative and may not contain the '..' path or start with '..'.
+   *
+   * @schema PostgresqlSpecInitContainersEnvValueFromFileKeyRef#path
+   */
+  readonly path: string;
+
+  /**
+   * The name of the volume mount containing the env file.
+   *
+   * @schema PostgresqlSpecInitContainersEnvValueFromFileKeyRef#volumeName
+   */
+  readonly volumeName: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersEnvValueFromFileKeyRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersEnvValueFromFileKeyRef(
+  obj: PostgresqlSpecInitContainersEnvValueFromFileKeyRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    key: obj.key,
+    optional: obj.optional,
+    path: obj.path,
+    volumeName: obj.volumeName,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Selects a resource of the container: only resources limits and requests
+ * (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.
+ *
+ * @schema PostgresqlSpecInitContainersEnvValueFromResourceFieldRef
+ */
+export interface PostgresqlSpecInitContainersEnvValueFromResourceFieldRef {
+  /**
+   * Container name: required for volumes, optional for env vars
+   *
+   * @schema PostgresqlSpecInitContainersEnvValueFromResourceFieldRef#containerName
+   */
+  readonly containerName?: string;
+
+  /**
+   * Specifies the output format of the exposed resources, defaults to "1"
+   *
+   * @schema PostgresqlSpecInitContainersEnvValueFromResourceFieldRef#divisor
+   */
+  readonly divisor?: PostgresqlSpecInitContainersEnvValueFromResourceFieldRefDivisor;
+
+  /**
+   * Required: resource to select
+   *
+   * @schema PostgresqlSpecInitContainersEnvValueFromResourceFieldRef#resource
+   */
+  readonly resource: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersEnvValueFromResourceFieldRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersEnvValueFromResourceFieldRef(
+  obj: PostgresqlSpecInitContainersEnvValueFromResourceFieldRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    containerName: obj.containerName,
+    divisor: obj.divisor?.value,
+    resource: obj.resource,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Selects a key of a secret in the pod's namespace
+ *
+ * @schema PostgresqlSpecInitContainersEnvValueFromSecretKeyRef
+ */
+export interface PostgresqlSpecInitContainersEnvValueFromSecretKeyRef {
+  /**
+   * The key of the secret to select from.  Must be a valid secret key.
+   *
+   * @schema PostgresqlSpecInitContainersEnvValueFromSecretKeyRef#key
+   */
+  readonly key: string;
+
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   *
+   * @schema PostgresqlSpecInitContainersEnvValueFromSecretKeyRef#name
+   */
+  readonly name?: string;
+
+  /**
+   * Specify whether the Secret or its key must be defined
+   *
+   * @schema PostgresqlSpecInitContainersEnvValueFromSecretKeyRef#optional
+   */
+  readonly optional?: boolean;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersEnvValueFromSecretKeyRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersEnvValueFromSecretKeyRef(
+  obj: PostgresqlSpecInitContainersEnvValueFromSecretKeyRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    key: obj.key,
+    name: obj.name,
+    optional: obj.optional,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Exec specifies a command to execute in the container.
+ *
+ * @schema PostgresqlSpecInitContainersLifecyclePostStartExec
+ */
+export interface PostgresqlSpecInitContainersLifecyclePostStartExec {
+  /**
+   * Command is the command line to execute inside the container, the working directory for the
+   * command  is root ('/') in the container's filesystem. The command is simply exec'd, it is
+   * not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use
+   * a shell, you need to explicitly call out to that shell.
+   * Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePostStartExec#command
+   */
+  readonly command?: string[];
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersLifecyclePostStartExec' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersLifecyclePostStartExec(
+  obj: PostgresqlSpecInitContainersLifecyclePostStartExec | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    command: obj.command?.map((y) => y),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * HTTPGet specifies an HTTP GET request to perform.
+ *
+ * @schema PostgresqlSpecInitContainersLifecyclePostStartHttpGet
+ */
+export interface PostgresqlSpecInitContainersLifecyclePostStartHttpGet {
+  /**
+   * Host name to connect to, defaults to the pod IP. You probably want to set
+   * "Host" in httpHeaders instead.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePostStartHttpGet#host
+   */
+  readonly host?: string;
+
+  /**
+   * Custom headers to set in the request. HTTP allows repeated headers.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePostStartHttpGet#httpHeaders
+   */
+  readonly httpHeaders?: PostgresqlSpecInitContainersLifecyclePostStartHttpGetHttpHeaders[];
+
+  /**
+   * Path to access on the HTTP server.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePostStartHttpGet#path
+   */
+  readonly path?: string;
+
+  /**
+   * Name or number of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePostStartHttpGet#port
+   */
+  readonly port: PostgresqlSpecInitContainersLifecyclePostStartHttpGetPort;
+
+  /**
+   * Scheme to use for connecting to the host.
+   * Defaults to HTTP.
+   *
+   * @default HTTP.
+   * @schema PostgresqlSpecInitContainersLifecyclePostStartHttpGet#scheme
+   */
+  readonly scheme?: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersLifecyclePostStartHttpGet' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersLifecyclePostStartHttpGet(
+  obj: PostgresqlSpecInitContainersLifecyclePostStartHttpGet | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    httpHeaders: obj.httpHeaders?.map((y) =>
+      toJson_PostgresqlSpecInitContainersLifecyclePostStartHttpGetHttpHeaders(
+        y,
+      ),
+    ),
+    path: obj.path,
+    port: obj.port?.value,
+    scheme: obj.scheme,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Sleep represents a duration that the container should sleep.
+ *
+ * @schema PostgresqlSpecInitContainersLifecyclePostStartSleep
+ */
+export interface PostgresqlSpecInitContainersLifecyclePostStartSleep {
+  /**
+   * Seconds is the number of seconds to sleep.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePostStartSleep#seconds
+   */
+  readonly seconds: number;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersLifecyclePostStartSleep' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersLifecyclePostStartSleep(
+  obj: PostgresqlSpecInitContainersLifecyclePostStartSleep | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    seconds: obj.seconds,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept
+ * for backward compatibility. There is no validation of this field and
+ * lifecycle hooks will fail at runtime when it is specified.
+ *
+ * @schema PostgresqlSpecInitContainersLifecyclePostStartTcpSocket
+ */
+export interface PostgresqlSpecInitContainersLifecyclePostStartTcpSocket {
+  /**
+   * Optional: Host name to connect to, defaults to the pod IP.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePostStartTcpSocket#host
+   */
+  readonly host?: string;
+
+  /**
+   * Number or name of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePostStartTcpSocket#port
+   */
+  readonly port: PostgresqlSpecInitContainersLifecyclePostStartTcpSocketPort;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersLifecyclePostStartTcpSocket' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersLifecyclePostStartTcpSocket(
+  obj: PostgresqlSpecInitContainersLifecyclePostStartTcpSocket | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    port: obj.port?.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Exec specifies a command to execute in the container.
+ *
+ * @schema PostgresqlSpecInitContainersLifecyclePreStopExec
+ */
+export interface PostgresqlSpecInitContainersLifecyclePreStopExec {
+  /**
+   * Command is the command line to execute inside the container, the working directory for the
+   * command  is root ('/') in the container's filesystem. The command is simply exec'd, it is
+   * not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use
+   * a shell, you need to explicitly call out to that shell.
+   * Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePreStopExec#command
+   */
+  readonly command?: string[];
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersLifecyclePreStopExec' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersLifecyclePreStopExec(
+  obj: PostgresqlSpecInitContainersLifecyclePreStopExec | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    command: obj.command?.map((y) => y),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * HTTPGet specifies an HTTP GET request to perform.
+ *
+ * @schema PostgresqlSpecInitContainersLifecyclePreStopHttpGet
+ */
+export interface PostgresqlSpecInitContainersLifecyclePreStopHttpGet {
+  /**
+   * Host name to connect to, defaults to the pod IP. You probably want to set
+   * "Host" in httpHeaders instead.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePreStopHttpGet#host
+   */
+  readonly host?: string;
+
+  /**
+   * Custom headers to set in the request. HTTP allows repeated headers.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePreStopHttpGet#httpHeaders
+   */
+  readonly httpHeaders?: PostgresqlSpecInitContainersLifecyclePreStopHttpGetHttpHeaders[];
+
+  /**
+   * Path to access on the HTTP server.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePreStopHttpGet#path
+   */
+  readonly path?: string;
+
+  /**
+   * Name or number of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePreStopHttpGet#port
+   */
+  readonly port: PostgresqlSpecInitContainersLifecyclePreStopHttpGetPort;
+
+  /**
+   * Scheme to use for connecting to the host.
+   * Defaults to HTTP.
+   *
+   * @default HTTP.
+   * @schema PostgresqlSpecInitContainersLifecyclePreStopHttpGet#scheme
+   */
+  readonly scheme?: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersLifecyclePreStopHttpGet' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersLifecyclePreStopHttpGet(
+  obj: PostgresqlSpecInitContainersLifecyclePreStopHttpGet | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    httpHeaders: obj.httpHeaders?.map((y) =>
+      toJson_PostgresqlSpecInitContainersLifecyclePreStopHttpGetHttpHeaders(y),
+    ),
+    path: obj.path,
+    port: obj.port?.value,
+    scheme: obj.scheme,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Sleep represents a duration that the container should sleep.
+ *
+ * @schema PostgresqlSpecInitContainersLifecyclePreStopSleep
+ */
+export interface PostgresqlSpecInitContainersLifecyclePreStopSleep {
+  /**
+   * Seconds is the number of seconds to sleep.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePreStopSleep#seconds
+   */
+  readonly seconds: number;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersLifecyclePreStopSleep' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersLifecyclePreStopSleep(
+  obj: PostgresqlSpecInitContainersLifecyclePreStopSleep | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    seconds: obj.seconds,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept
+ * for backward compatibility. There is no validation of this field and
+ * lifecycle hooks will fail at runtime when it is specified.
+ *
+ * @schema PostgresqlSpecInitContainersLifecyclePreStopTcpSocket
+ */
+export interface PostgresqlSpecInitContainersLifecyclePreStopTcpSocket {
+  /**
+   * Optional: Host name to connect to, defaults to the pod IP.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePreStopTcpSocket#host
+   */
+  readonly host?: string;
+
+  /**
+   * Number or name of the port to access on the container.
+   * Number must be in the range 1 to 65535.
+   * Name must be an IANA_SVC_NAME.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePreStopTcpSocket#port
+   */
+  readonly port: PostgresqlSpecInitContainersLifecyclePreStopTcpSocketPort;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersLifecyclePreStopTcpSocket' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersLifecyclePreStopTcpSocket(
+  obj: PostgresqlSpecInitContainersLifecyclePreStopTcpSocket | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    host: obj.host,
+    port: obj.port?.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * HTTPHeader describes a custom header to be used in HTTP probes
+ *
+ * @schema PostgresqlSpecInitContainersLivenessProbeHttpGetHttpHeaders
+ */
+export interface PostgresqlSpecInitContainersLivenessProbeHttpGetHttpHeaders {
+  /**
+   * The header field name.
+   * This will be canonicalized upon output, so case-variant names will be understood as the same header.
+   *
+   * @schema PostgresqlSpecInitContainersLivenessProbeHttpGetHttpHeaders#name
+   */
+  readonly name: string;
+
+  /**
+   * The header field value
+   *
+   * @schema PostgresqlSpecInitContainersLivenessProbeHttpGetHttpHeaders#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersLivenessProbeHttpGetHttpHeaders' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersLivenessProbeHttpGetHttpHeaders(
+  obj: PostgresqlSpecInitContainersLivenessProbeHttpGetHttpHeaders | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Name or number of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema PostgresqlSpecInitContainersLivenessProbeHttpGetPort
+ */
+export class PostgresqlSpecInitContainersLivenessProbeHttpGetPort {
+  public static fromNumber(
+    value: number,
+  ): PostgresqlSpecInitContainersLivenessProbeHttpGetPort {
+    return new PostgresqlSpecInitContainersLivenessProbeHttpGetPort(value);
+  }
+  public static fromString(
+    value: string,
+  ): PostgresqlSpecInitContainersLivenessProbeHttpGetPort {
+    return new PostgresqlSpecInitContainersLivenessProbeHttpGetPort(value);
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * Number or name of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema PostgresqlSpecInitContainersLivenessProbeTcpSocketPort
+ */
+export class PostgresqlSpecInitContainersLivenessProbeTcpSocketPort {
+  public static fromNumber(
+    value: number,
+  ): PostgresqlSpecInitContainersLivenessProbeTcpSocketPort {
+    return new PostgresqlSpecInitContainersLivenessProbeTcpSocketPort(value);
+  }
+  public static fromString(
+    value: string,
+  ): PostgresqlSpecInitContainersLivenessProbeTcpSocketPort {
+    return new PostgresqlSpecInitContainersLivenessProbeTcpSocketPort(value);
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * HTTPHeader describes a custom header to be used in HTTP probes
+ *
+ * @schema PostgresqlSpecInitContainersReadinessProbeHttpGetHttpHeaders
+ */
+export interface PostgresqlSpecInitContainersReadinessProbeHttpGetHttpHeaders {
+  /**
+   * The header field name.
+   * This will be canonicalized upon output, so case-variant names will be understood as the same header.
+   *
+   * @schema PostgresqlSpecInitContainersReadinessProbeHttpGetHttpHeaders#name
+   */
+  readonly name: string;
+
+  /**
+   * The header field value
+   *
+   * @schema PostgresqlSpecInitContainersReadinessProbeHttpGetHttpHeaders#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersReadinessProbeHttpGetHttpHeaders' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersReadinessProbeHttpGetHttpHeaders(
+  obj: PostgresqlSpecInitContainersReadinessProbeHttpGetHttpHeaders | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Name or number of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema PostgresqlSpecInitContainersReadinessProbeHttpGetPort
+ */
+export class PostgresqlSpecInitContainersReadinessProbeHttpGetPort {
+  public static fromNumber(
+    value: number,
+  ): PostgresqlSpecInitContainersReadinessProbeHttpGetPort {
+    return new PostgresqlSpecInitContainersReadinessProbeHttpGetPort(value);
+  }
+  public static fromString(
+    value: string,
+  ): PostgresqlSpecInitContainersReadinessProbeHttpGetPort {
+    return new PostgresqlSpecInitContainersReadinessProbeHttpGetPort(value);
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * Number or name of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema PostgresqlSpecInitContainersReadinessProbeTcpSocketPort
+ */
+export class PostgresqlSpecInitContainersReadinessProbeTcpSocketPort {
+  public static fromNumber(
+    value: number,
+  ): PostgresqlSpecInitContainersReadinessProbeTcpSocketPort {
+    return new PostgresqlSpecInitContainersReadinessProbeTcpSocketPort(value);
+  }
+  public static fromString(
+    value: string,
+  ): PostgresqlSpecInitContainersReadinessProbeTcpSocketPort {
+    return new PostgresqlSpecInitContainersReadinessProbeTcpSocketPort(value);
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * HTTPHeader describes a custom header to be used in HTTP probes
+ *
+ * @schema PostgresqlSpecInitContainersStartupProbeHttpGetHttpHeaders
+ */
+export interface PostgresqlSpecInitContainersStartupProbeHttpGetHttpHeaders {
+  /**
+   * The header field name.
+   * This will be canonicalized upon output, so case-variant names will be understood as the same header.
+   *
+   * @schema PostgresqlSpecInitContainersStartupProbeHttpGetHttpHeaders#name
+   */
+  readonly name: string;
+
+  /**
+   * The header field value
+   *
+   * @schema PostgresqlSpecInitContainersStartupProbeHttpGetHttpHeaders#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersStartupProbeHttpGetHttpHeaders' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersStartupProbeHttpGetHttpHeaders(
+  obj: PostgresqlSpecInitContainersStartupProbeHttpGetHttpHeaders | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Name or number of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema PostgresqlSpecInitContainersStartupProbeHttpGetPort
+ */
+export class PostgresqlSpecInitContainersStartupProbeHttpGetPort {
+  public static fromNumber(
+    value: number,
+  ): PostgresqlSpecInitContainersStartupProbeHttpGetPort {
+    return new PostgresqlSpecInitContainersStartupProbeHttpGetPort(value);
+  }
+  public static fromString(
+    value: string,
+  ): PostgresqlSpecInitContainersStartupProbeHttpGetPort {
+    return new PostgresqlSpecInitContainersStartupProbeHttpGetPort(value);
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * Number or name of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema PostgresqlSpecInitContainersStartupProbeTcpSocketPort
+ */
+export class PostgresqlSpecInitContainersStartupProbeTcpSocketPort {
+  public static fromNumber(
+    value: number,
+  ): PostgresqlSpecInitContainersStartupProbeTcpSocketPort {
+    return new PostgresqlSpecInitContainersStartupProbeTcpSocketPort(value);
+  }
+  public static fromString(
+    value: string,
+  ): PostgresqlSpecInitContainersStartupProbeTcpSocketPort {
+    return new PostgresqlSpecInitContainersStartupProbeTcpSocketPort(value);
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * A node selector requirement is a selector that contains values, a key, and an operator
+ * that relates the key and values.
+ *
  * @schema PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionPreferenceMatchExpressions
  */
 export interface PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionPreferenceMatchExpressions {
   /**
+   * The label key that the selector applies to.
+   *
    * @schema PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionPreferenceMatchExpressions#key
    */
   readonly key: string;
 
   /**
+   * Represents a key's relationship to a set of values.
+   * Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.
+   *
    * @schema PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionPreferenceMatchExpressions#operator
    */
   readonly operator: string;
 
   /**
+   * An array of string values. If the operator is In or NotIn,
+   * the values array must be non-empty. If the operator is Exists or DoesNotExist,
+   * the values array must be empty. If the operator is Gt or Lt, the values
+   * array must have a single element, which will be interpreted as an integer.
+   * This array is replaced during a strategic merge patch.
+   *
    * @schema PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionPreferenceMatchExpressions#values
    */
   readonly values?: string[];
@@ -3875,20 +10394,34 @@ export function toJson_PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnore
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * A node selector requirement is a selector that contains values, a key, and an operator
+ * that relates the key and values.
+ *
  * @schema PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionPreferenceMatchFields
  */
 export interface PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionPreferenceMatchFields {
   /**
+   * The label key that the selector applies to.
+   *
    * @schema PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionPreferenceMatchFields#key
    */
   readonly key: string;
 
   /**
+   * Represents a key's relationship to a set of values.
+   * Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.
+   *
    * @schema PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionPreferenceMatchFields#operator
    */
   readonly operator: string;
 
   /**
+   * An array of string values. If the operator is In or NotIn,
+   * the values array must be non-empty. If the operator is Exists or DoesNotExist,
+   * the values array must be empty. If the operator is Gt or Lt, the values
+   * array must have a single element, which will be interpreted as an integer.
+   * This array is replaced during a strategic merge patch.
+   *
    * @schema PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionPreferenceMatchFields#values
    */
   readonly values?: string[];
@@ -3920,20 +10453,34 @@ export function toJson_PostgresqlSpecNodeAffinityPreferredDuringSchedulingIgnore
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * A node selector requirement is a selector that contains values, a key, and an operator
+ * that relates the key and values.
+ *
  * @schema PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnoredDuringExecutionNodeSelectorTermsMatchExpressions
  */
 export interface PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnoredDuringExecutionNodeSelectorTermsMatchExpressions {
   /**
+   * The label key that the selector applies to.
+   *
    * @schema PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnoredDuringExecutionNodeSelectorTermsMatchExpressions#key
    */
   readonly key: string;
 
   /**
+   * Represents a key's relationship to a set of values.
+   * Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.
+   *
    * @schema PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnoredDuringExecutionNodeSelectorTermsMatchExpressions#operator
    */
   readonly operator: string;
 
   /**
+   * An array of string values. If the operator is In or NotIn,
+   * the values array must be non-empty. If the operator is Exists or DoesNotExist,
+   * the values array must be empty. If the operator is Gt or Lt, the values
+   * array must have a single element, which will be interpreted as an integer.
+   * This array is replaced during a strategic merge patch.
+   *
    * @schema PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnoredDuringExecutionNodeSelectorTermsMatchExpressions#values
    */
   readonly values?: string[];
@@ -3965,20 +10512,34 @@ export function toJson_PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnored
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * A node selector requirement is a selector that contains values, a key, and an operator
+ * that relates the key and values.
+ *
  * @schema PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnoredDuringExecutionNodeSelectorTermsMatchFields
  */
 export interface PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnoredDuringExecutionNodeSelectorTermsMatchFields {
   /**
+   * The label key that the selector applies to.
+   *
    * @schema PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnoredDuringExecutionNodeSelectorTermsMatchFields#key
    */
   readonly key: string;
 
   /**
+   * Represents a key's relationship to a set of values.
+   * Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.
+   *
    * @schema PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnoredDuringExecutionNodeSelectorTermsMatchFields#operator
    */
   readonly operator: string;
 
   /**
+   * An array of string values. If the operator is In or NotIn,
+   * the values array must be non-empty. If the operator is Exists or DoesNotExist,
+   * the values array must be empty. If the operator is Gt or Lt, the values
+   * array must have a single element, which will be interpreted as an integer.
+   * This array is replaced during a strategic merge patch.
+   *
    * @schema PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnoredDuringExecutionNodeSelectorTermsMatchFields#values
    */
   readonly values?: string[];
@@ -4010,21 +10571,504 @@ export function toJson_PostgresqlSpecNodeAffinityRequiredDuringSchedulingIgnored
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
- * @schema PostgresqlSpecVolumeSelectorMatchExpressionsOperator
+ * Selects a key of a ConfigMap.
+ *
+ * @schema PostgresqlSpecSidecarsEnvValueFromConfigMapKeyRef
  */
-export enum PostgresqlSpecVolumeSelectorMatchExpressionsOperator {
-  /** DoesNotExist */
-  DOES_NOT_EXIST = "DoesNotExist",
-  /** Exists */
-  EXISTS = "Exists",
-  /** In */
-  IN = "In",
-  /** NotIn */
-  NOT_IN = "NotIn",
+export interface PostgresqlSpecSidecarsEnvValueFromConfigMapKeyRef {
+  /**
+   * The key to select.
+   *
+   * @schema PostgresqlSpecSidecarsEnvValueFromConfigMapKeyRef#key
+   */
+  readonly key: string;
+
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   *
+   * @schema PostgresqlSpecSidecarsEnvValueFromConfigMapKeyRef#name
+   */
+  readonly name?: string;
+
+  /**
+   * Specify whether the ConfigMap or its key must be defined
+   *
+   * @schema PostgresqlSpecSidecarsEnvValueFromConfigMapKeyRef#optional
+   */
+  readonly optional?: boolean;
 }
 
 /**
+ * Converts an object of type 'PostgresqlSpecSidecarsEnvValueFromConfigMapKeyRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecSidecarsEnvValueFromConfigMapKeyRef(
+  obj: PostgresqlSpecSidecarsEnvValueFromConfigMapKeyRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    key: obj.key,
+    name: obj.name,
+    optional: obj.optional,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels['<KEY>']`, `metadata.annotations['<KEY>']`,
+ * spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.
  *
+ * @schema PostgresqlSpecSidecarsEnvValueFromFieldRef
+ */
+export interface PostgresqlSpecSidecarsEnvValueFromFieldRef {
+  /**
+   * Version of the schema the FieldPath is written in terms of, defaults to "v1".
+   *
+   * @schema PostgresqlSpecSidecarsEnvValueFromFieldRef#apiVersion
+   */
+  readonly apiVersion?: string;
+
+  /**
+   * Path of the field to select in the specified API version.
+   *
+   * @schema PostgresqlSpecSidecarsEnvValueFromFieldRef#fieldPath
+   */
+  readonly fieldPath: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecSidecarsEnvValueFromFieldRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecSidecarsEnvValueFromFieldRef(
+  obj: PostgresqlSpecSidecarsEnvValueFromFieldRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersion: obj.apiVersion,
+    fieldPath: obj.fieldPath,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * FileKeyRef selects a key of the env file.
+ * Requires the EnvFiles feature gate to be enabled.
+ *
+ * @schema PostgresqlSpecSidecarsEnvValueFromFileKeyRef
+ */
+export interface PostgresqlSpecSidecarsEnvValueFromFileKeyRef {
+  /**
+   * The key within the env file. An invalid key will prevent the pod from starting.
+   * The keys defined within a source may consist of any printable ASCII characters except '='.
+   * During Alpha stage of the EnvFiles feature gate, the key size is limited to 128 characters.
+   *
+   * @schema PostgresqlSpecSidecarsEnvValueFromFileKeyRef#key
+   */
+  readonly key: string;
+
+  /**
+   * Specify whether the file or its key must be defined. If the file or key
+   * does not exist, then the env var is not published.
+   * If optional is set to true and the specified key does not exist,
+   * the environment variable will not be set in the Pod's containers.
+   *
+   * If optional is set to false and the specified key does not exist,
+   * an error will be returned during Pod creation.
+   *
+   * @schema PostgresqlSpecSidecarsEnvValueFromFileKeyRef#optional
+   */
+  readonly optional?: boolean;
+
+  /**
+   * The path within the volume from which to select the file.
+   * Must be relative and may not contain the '..' path or start with '..'.
+   *
+   * @schema PostgresqlSpecSidecarsEnvValueFromFileKeyRef#path
+   */
+  readonly path: string;
+
+  /**
+   * The name of the volume mount containing the env file.
+   *
+   * @schema PostgresqlSpecSidecarsEnvValueFromFileKeyRef#volumeName
+   */
+  readonly volumeName: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecSidecarsEnvValueFromFileKeyRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecSidecarsEnvValueFromFileKeyRef(
+  obj: PostgresqlSpecSidecarsEnvValueFromFileKeyRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    key: obj.key,
+    optional: obj.optional,
+    path: obj.path,
+    volumeName: obj.volumeName,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Selects a resource of the container: only resources limits and requests
+ * (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.
+ *
+ * @schema PostgresqlSpecSidecarsEnvValueFromResourceFieldRef
+ */
+export interface PostgresqlSpecSidecarsEnvValueFromResourceFieldRef {
+  /**
+   * Container name: required for volumes, optional for env vars
+   *
+   * @schema PostgresqlSpecSidecarsEnvValueFromResourceFieldRef#containerName
+   */
+  readonly containerName?: string;
+
+  /**
+   * Specifies the output format of the exposed resources, defaults to "1"
+   *
+   * @schema PostgresqlSpecSidecarsEnvValueFromResourceFieldRef#divisor
+   */
+  readonly divisor?: PostgresqlSpecSidecarsEnvValueFromResourceFieldRefDivisor;
+
+  /**
+   * Required: resource to select
+   *
+   * @schema PostgresqlSpecSidecarsEnvValueFromResourceFieldRef#resource
+   */
+  readonly resource: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecSidecarsEnvValueFromResourceFieldRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecSidecarsEnvValueFromResourceFieldRef(
+  obj: PostgresqlSpecSidecarsEnvValueFromResourceFieldRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    containerName: obj.containerName,
+    divisor: obj.divisor?.value,
+    resource: obj.resource,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Selects a key of a secret in the pod's namespace
+ *
+ * @schema PostgresqlSpecSidecarsEnvValueFromSecretKeyRef
+ */
+export interface PostgresqlSpecSidecarsEnvValueFromSecretKeyRef {
+  /**
+   * The key of the secret to select from.  Must be a valid secret key.
+   *
+   * @schema PostgresqlSpecSidecarsEnvValueFromSecretKeyRef#key
+   */
+  readonly key: string;
+
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   *
+   * @schema PostgresqlSpecSidecarsEnvValueFromSecretKeyRef#name
+   */
+  readonly name?: string;
+
+  /**
+   * Specify whether the Secret or its key must be defined
+   *
+   * @schema PostgresqlSpecSidecarsEnvValueFromSecretKeyRef#optional
+   */
+  readonly optional?: boolean;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecSidecarsEnvValueFromSecretKeyRef' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecSidecarsEnvValueFromSecretKeyRef(
+  obj: PostgresqlSpecSidecarsEnvValueFromSecretKeyRef | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    key: obj.key,
+    name: obj.name,
+    optional: obj.optional,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Specifies the output format of the exposed resources, defaults to "1"
+ *
+ * @schema PostgresqlSpecInitContainersEnvValueFromResourceFieldRefDivisor
+ */
+export class PostgresqlSpecInitContainersEnvValueFromResourceFieldRefDivisor {
+  public static fromNumber(
+    value: number,
+  ): PostgresqlSpecInitContainersEnvValueFromResourceFieldRefDivisor {
+    return new PostgresqlSpecInitContainersEnvValueFromResourceFieldRefDivisor(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): PostgresqlSpecInitContainersEnvValueFromResourceFieldRefDivisor {
+    return new PostgresqlSpecInitContainersEnvValueFromResourceFieldRefDivisor(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * HTTPHeader describes a custom header to be used in HTTP probes
+ *
+ * @schema PostgresqlSpecInitContainersLifecyclePostStartHttpGetHttpHeaders
+ */
+export interface PostgresqlSpecInitContainersLifecyclePostStartHttpGetHttpHeaders {
+  /**
+   * The header field name.
+   * This will be canonicalized upon output, so case-variant names will be understood as the same header.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePostStartHttpGetHttpHeaders#name
+   */
+  readonly name: string;
+
+  /**
+   * The header field value
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePostStartHttpGetHttpHeaders#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersLifecyclePostStartHttpGetHttpHeaders' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersLifecyclePostStartHttpGetHttpHeaders(
+  obj:
+    | PostgresqlSpecInitContainersLifecyclePostStartHttpGetHttpHeaders
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Name or number of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema PostgresqlSpecInitContainersLifecyclePostStartHttpGetPort
+ */
+export class PostgresqlSpecInitContainersLifecyclePostStartHttpGetPort {
+  public static fromNumber(
+    value: number,
+  ): PostgresqlSpecInitContainersLifecyclePostStartHttpGetPort {
+    return new PostgresqlSpecInitContainersLifecyclePostStartHttpGetPort(value);
+  }
+  public static fromString(
+    value: string,
+  ): PostgresqlSpecInitContainersLifecyclePostStartHttpGetPort {
+    return new PostgresqlSpecInitContainersLifecyclePostStartHttpGetPort(value);
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * Number or name of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema PostgresqlSpecInitContainersLifecyclePostStartTcpSocketPort
+ */
+export class PostgresqlSpecInitContainersLifecyclePostStartTcpSocketPort {
+  public static fromNumber(
+    value: number,
+  ): PostgresqlSpecInitContainersLifecyclePostStartTcpSocketPort {
+    return new PostgresqlSpecInitContainersLifecyclePostStartTcpSocketPort(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): PostgresqlSpecInitContainersLifecyclePostStartTcpSocketPort {
+    return new PostgresqlSpecInitContainersLifecyclePostStartTcpSocketPort(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * HTTPHeader describes a custom header to be used in HTTP probes
+ *
+ * @schema PostgresqlSpecInitContainersLifecyclePreStopHttpGetHttpHeaders
+ */
+export interface PostgresqlSpecInitContainersLifecyclePreStopHttpGetHttpHeaders {
+  /**
+   * The header field name.
+   * This will be canonicalized upon output, so case-variant names will be understood as the same header.
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePreStopHttpGetHttpHeaders#name
+   */
+  readonly name: string;
+
+  /**
+   * The header field value
+   *
+   * @schema PostgresqlSpecInitContainersLifecyclePreStopHttpGetHttpHeaders#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'PostgresqlSpecInitContainersLifecyclePreStopHttpGetHttpHeaders' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_PostgresqlSpecInitContainersLifecyclePreStopHttpGetHttpHeaders(
+  obj:
+    | PostgresqlSpecInitContainersLifecyclePreStopHttpGetHttpHeaders
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * Name or number of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema PostgresqlSpecInitContainersLifecyclePreStopHttpGetPort
+ */
+export class PostgresqlSpecInitContainersLifecyclePreStopHttpGetPort {
+  public static fromNumber(
+    value: number,
+  ): PostgresqlSpecInitContainersLifecyclePreStopHttpGetPort {
+    return new PostgresqlSpecInitContainersLifecyclePreStopHttpGetPort(value);
+  }
+  public static fromString(
+    value: string,
+  ): PostgresqlSpecInitContainersLifecyclePreStopHttpGetPort {
+    return new PostgresqlSpecInitContainersLifecyclePreStopHttpGetPort(value);
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * Number or name of the port to access on the container.
+ * Number must be in the range 1 to 65535.
+ * Name must be an IANA_SVC_NAME.
+ *
+ * @schema PostgresqlSpecInitContainersLifecyclePreStopTcpSocketPort
+ */
+export class PostgresqlSpecInitContainersLifecyclePreStopTcpSocketPort {
+  public static fromNumber(
+    value: number,
+  ): PostgresqlSpecInitContainersLifecyclePreStopTcpSocketPort {
+    return new PostgresqlSpecInitContainersLifecyclePreStopTcpSocketPort(value);
+  }
+  public static fromString(
+    value: string,
+  ): PostgresqlSpecInitContainersLifecyclePreStopTcpSocketPort {
+    return new PostgresqlSpecInitContainersLifecyclePreStopTcpSocketPort(value);
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * Specifies the output format of the exposed resources, defaults to "1"
+ *
+ * @schema PostgresqlSpecSidecarsEnvValueFromResourceFieldRefDivisor
+ */
+export class PostgresqlSpecSidecarsEnvValueFromResourceFieldRefDivisor {
+  public static fromNumber(
+    value: number,
+  ): PostgresqlSpecSidecarsEnvValueFromResourceFieldRefDivisor {
+    return new PostgresqlSpecSidecarsEnvValueFromResourceFieldRefDivisor(value);
+  }
+  public static fromString(
+    value: string,
+  ): PostgresqlSpecSidecarsEnvValueFromResourceFieldRefDivisor {
+    return new PostgresqlSpecSidecarsEnvValueFromResourceFieldRefDivisor(value);
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * PostgresTeam defines Custom Resource Definition Object for team management.
  *
  * @schema PostgresTeam
  */
@@ -4078,15 +11122,19 @@ export class PostgresTeam extends ApiObject {
 }
 
 /**
+ * PostgresTeam defines Custom Resource Definition Object for team management.
+ *
  * @schema PostgresTeam
  */
 export interface PostgresTeamProps {
   /**
    * @schema PostgresTeam#metadata
    */
-  readonly metadata?: ApiObjectMetadata;
+  readonly metadata: ApiObjectMetadata;
 
   /**
+   * PostgresTeamSpec defines the specification for the PostgresTeam TPR.
+   *
    * @schema PostgresTeam#spec
    */
   readonly spec: PostgresTeamSpec;
@@ -4115,6 +11163,8 @@ export function toJson_PostgresTeamProps(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * PostgresTeamSpec defines the specification for the PostgresTeam TPR.
+ *
  * @schema PostgresTeamSpec
  */
 export interface PostgresTeamSpec {
