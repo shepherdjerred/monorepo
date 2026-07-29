@@ -19,9 +19,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc -p tsconfig.build.json",
     "test": "bun run build && bun test test/",
-    "typecheck": "bun run build && tsc --noEmit",
+    "typecheck": "bun run build && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "bun run build && eslint ."
   },
   "dependencies": {
@@ -40,6 +40,7 @@
     "discord.js-selfbot-v13": "^3.7.1",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "@typescript/native": "npm:typescript@7.0.2"
   }
 }

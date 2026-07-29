@@ -16,7 +16,7 @@
     "lint": "bunx eslint src",
     "format": "bunx prettier --check src",
     "format:write": "bunx prettier --write src",
-    "typecheck": "bunx tsc --noEmit",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "update-data-dragon": "bun run scripts/update-data-dragon.ts"
   },
   "dependencies": {
@@ -33,7 +33,8 @@
     "bun-types": "latest",
     "eslint": "^10.3.0",
     "twisted": "^1.82.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "@typescript/native": "npm:typescript@7.0.2"
   },
   "imports": {
     "#generated/*": "./generated/*",

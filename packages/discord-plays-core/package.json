@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "test": "bun test test/",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "eslint ."
   },
   "dependencies": {
@@ -45,6 +45,7 @@
     "@typescript-eslint/utils": "^8.65.0",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "@typescript/native": "npm:typescript@7.0.2"
   }
 }

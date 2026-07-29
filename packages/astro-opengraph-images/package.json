@@ -23,11 +23,11 @@
   },
   "scripts": {
     "lint": "eslint src generate-readme.ts generate-readme-core.ts generate-readme*.test.ts --cache",
-    "build": "bun node_modules/@typescript/native/bin/tsc",
-    "watch": "bun node_modules/@typescript/native/bin/tsc -w",
+    "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc",
+    "watch": "PATH=node_modules/@typescript/native/bin:$PATH tsc -w",
     "test": "vitest src && bun test generate-readme*.test.ts",
     "test:coverage": "bun test --config ../../scripts/bunfig.coverage.toml --coverage generate-readme.test.ts",
-    "typecheck": "bun node_modules/@typescript/native/bin/tsc --noEmit && bun node_modules/@typescript/native/bin/tsc --noEmit -p tsconfig.scripts.json",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit -p tsconfig.scripts.json",
     "publish:npm": "bun ../../scripts/publish-npm.ts ."
   },
   "main": "dist/index.js",

@@ -5,6 +5,9 @@ import { isNoopScript } from "./migration-core.ts";
 
 const PackageJsonSchema = z
   .object({
+    dependencies: z.record(z.string(), z.string()).optional(),
+    devDependencies: z.record(z.string(), z.string()).optional(),
+    peerDependencies: z.record(z.string(), z.string()).optional(),
     scripts: z.record(z.string(), z.string()).optional(),
     workspaces: z
       .union([z.array(z.string()), z.object({ packages: z.array(z.string()) })])
@@ -13,6 +16,53 @@ const PackageJsonSchema = z
   .loose();
 
 const requiredScripts = ["build", "test", "lint", "typecheck"] as const;
+const nativeTypeScriptCommand =
+  "PATH=node_modules/@typescript/native/bin:$PATH tsc";
+const nativeTypeScriptVersion = "npm:typescript@7.0.2";
+const legacyTypeScriptCommandPattern =
+  /(?:^|&&|\|\||;)\s*(?:bunx(?:\s+--no-install)?\s+)?tsc(?:\s|$)/;
+
+function collectTypeScriptToolchainErrors(
+  directory: string,
+  packageJson: z.infer<typeof PackageJsonSchema>,
+): string[] {
+  const errors: string[] = [];
+  const scripts = packageJson.scripts ?? {};
+  const usesNativeCompiler = Object.values(scripts).some((command) =>
+    command.includes(nativeTypeScriptCommand),
+  );
+  const usesAmbiguousCompiler = Object.values(scripts).some((command) =>
+    legacyTypeScriptCommandPattern.test(command),
+  );
+  const nativeTypeScriptDependency =
+    packageJson.devDependencies?.["@typescript/native"];
+  if (
+    (usesNativeCompiler || usesAmbiguousCompiler) &&
+    nativeTypeScriptDependency !== nativeTypeScriptVersion
+  ) {
+    errors.push(
+      `${directory} must declare @typescript/native as ${nativeTypeScriptVersion}`,
+    );
+  }
+  if (
+    nativeTypeScriptDependency !== undefined &&
+    !usesNativeCompiler &&
+    !usesAmbiguousCompiler
+  ) {
+    errors.push(
+      `${directory} declares @typescript/native without invoking the native compiler`,
+    );
+  }
+  for (const [name, command] of Object.entries(scripts)) {
+    if (legacyTypeScriptCommandPattern.test(command)) {
+      errors.push(
+        `${directory} script ${name} invokes ambiguous tsc instead of ${nativeTypeScriptCommand}`,
+      );
+    }
+  }
+  return errors;
+}
+
 const exemptions = new Set(
   `
 packages/glitter:build
@@ -103,6 +153,7 @@ export async function findComplianceErrors(root: string): Promise<string[]> {
   for (const [directory, packageJson] of [...packages].sort(([left], [right]) =>
     left.localeCompare(right),
   )) {
+    errors.push(...collectTypeScriptToolchainErrors(directory, packageJson));
     for (const script of requiredScripts) {
       const key = `${directory}:${script}`;
       const command = packageJson.scripts?.[script];
@@ -114,6 +165,12 @@ export async function findComplianceErrors(root: string): Promise<string[]> {
       }
     }
   }
+  const scriptsPackageJson = PackageJsonSchema.parse(
+    await Bun.file(`${root}/scripts/package.json`).json(),
+  );
+  errors.push(
+    ...collectTypeScriptToolchainErrors("scripts", scriptsPackageJson),
+  );
   return errors;
 }
 

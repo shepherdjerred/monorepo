@@ -17,7 +17,7 @@
     "lint": "bunx eslint src",
     "format": "bunx prettier --check src",
     "format:write": "bunx prettier --write src",
-    "typecheck": "bunx tsc --noEmit"
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit"
   },
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
@@ -36,7 +36,8 @@
     "@types/react": "^19.2.17",
     "bun-types": "latest",
     "eslint": "^10.3.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "@typescript/native": "npm:typescript@7.0.2"
   },
   "description": "Generate report images for League of Legends",
   "keywords": [

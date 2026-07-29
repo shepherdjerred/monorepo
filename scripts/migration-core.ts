@@ -50,7 +50,8 @@ export function packageFiles(name: string): Readonly<Record<string, string>> {
         scripts: {
           build: "bun build src/index.ts --outdir dist",
           test: "bun test",
-          typecheck: "bun node_modules/@typescript/native/bin/tsc --noEmit",
+          typecheck:
+            "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
           lint: "eslint .",
         },
         devDependencies: {

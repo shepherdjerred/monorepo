@@ -6,7 +6,7 @@
   "types": "src/index.ts",
   "scripts": {
     "test": "bun test",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "bunx eslint . --max-warnings=0"
   },
   "dependencies": {
@@ -19,7 +19,8 @@
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.65.0"
+    "typescript-eslint": "^8.65.0",
+    "@typescript/native": "npm:typescript@7.0.2"
   },
   "exports": {
     ".": {

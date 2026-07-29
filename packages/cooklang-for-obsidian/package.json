@@ -8,7 +8,7 @@
     "build": "bun esbuild.config.mjs production",
     "lint": "eslint src --cache",
     "test": "bun test",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "publish:plugin": "bun scripts/publish.ts"
   },
   "devDependencies": {
@@ -20,7 +20,8 @@
     "esbuild": "^0.28.0",
     "eslint": "^10.3.0",
     "obsidian": "latest",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "@typescript/native": "npm:typescript@7.0.2"
   },
   "dependencies": {
     "chevrotain": "^13.0.0"

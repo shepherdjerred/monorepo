@@ -18,7 +18,7 @@
     "e2e": "bun run e2e/run.ts",
     "e2e:voice-recovery": "bun run e2e/voice-recovery.ts",
     "e2e:local": "bun run e2e/local.ts",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "eslint .",
     "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/streambot:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t streambot:dev -f Dockerfile ../..",
     "smoke": "bun scripts/smoke.ts"
@@ -39,6 +39,7 @@
     "@typescript-eslint/utils": "^8.65.0",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "@typescript/native": "npm:typescript@7.0.2"
   }
 }

@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "typecheck": "bunx tsc --noEmit",
-    "build": "bunx tsc",
-    "watch": "bunx tsc --watch",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc",
+    "watch": "PATH=node_modules/@typescript/native/bin:$PATH tsc --watch",
     "lint": "bun run lint:check",
     "lint:fix": "bun run lint:eslint:fix",
     "lint:check": "bun run lint:eslint:check",
@@ -30,7 +30,8 @@
     "eslint-config-prettier": "^10.1.1",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.65.0"
+    "typescript-eslint": "^8.65.0",
+    "@typescript/native": "npm:typescript@7.0.2"
   },
   "exports": {
     ".": "./src/index.ts",
