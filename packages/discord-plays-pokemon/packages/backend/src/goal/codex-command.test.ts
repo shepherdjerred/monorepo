@@ -137,6 +137,17 @@ describe("buildDeveloperInstructions", () => {
     expect(instructions).toContain("Never issue a blind long chord");
   });
 
+  test("guides compact verification and one-step scripted dialog", () => {
+    const instructions = buildDeveloperInstructions();
+    expect(instructions).toContain("compact before/after evidence");
+    expect(instructions).toContain("stateChanged");
+    expect(instructions).toContain("battleChanged");
+    expect(instructions).toContain("visualChanged");
+    expect(instructions).toContain("pokemonctl advance");
+    expect(instructions).toContain("exactly one safe A-button step");
+    expect(instructions).toContain("--full only to debug");
+  });
+
   test("does not embed encyclopedia or story walkthrough material", () => {
     const instructions = buildDeveloperInstructions();
     expect(instructions).not.toContain("Gym order");

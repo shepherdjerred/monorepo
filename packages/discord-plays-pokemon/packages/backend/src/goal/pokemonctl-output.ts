@@ -43,6 +43,39 @@ const ObservationSchema = z.looseObject({
   screenshot: ScreenshotSchema.optional(),
 });
 
+const SemanticOutcomeSchema = z.looseObject({
+  schemaVersion: z.literal(1),
+  action: z.string(),
+  status: z.string(),
+  stopReason: z.string(),
+  inputApplied: z.boolean().optional(),
+  framesElapsed: z.number().int().nonnegative().optional(),
+  tilesMoved: z.number().int().nonnegative().optional(),
+  stepsTaken: z.number().int().nonnegative().optional(),
+  mapChanged: z.boolean().optional(),
+  facingChanged: z.boolean().optional(),
+  phaseChanged: z.boolean().optional(),
+  battleChanged: z.boolean().optional(),
+  stateChanged: z.boolean().optional(),
+  visualChanged: z.boolean().optional(),
+  visualChangeRatio: z.number().min(0).max(1).optional(),
+  map: z
+    .looseObject({
+      group: z.number().int(),
+      number: z.number().int(),
+    })
+    .nullable()
+    .optional(),
+  target: z
+    .looseObject({
+      x: z.number().int(),
+      y: z.number().int(),
+    })
+    .optional(),
+  before: ObservationSchema,
+  after: ObservationSchema,
+});
+
 type ParsedObservation = z.infer<typeof ObservationSchema>;
 
 export function compactPokemonctlObservation(observation: ParsedObservation) {
@@ -90,4 +123,58 @@ export function formatPokemonctlObservationOutput(
   if (full) return responseText;
   const observation = ObservationSchema.parse(JSON.parse(responseText));
   return JSON.stringify(compactPokemonctlObservation(observation));
+}
+
+export function formatPokemonctlActionOutput(
+  responseText: string,
+  full: boolean,
+): string {
+  if (full) return responseText;
+  const outcome = SemanticOutcomeSchema.parse(JSON.parse(responseText));
+  return JSON.stringify({
+    schemaVersion: outcome.schemaVersion,
+    action: outcome.action,
+    status: outcome.status,
+    stopReason: outcome.stopReason,
+    ...(outcome.inputApplied === undefined
+      ? {}
+      : { inputApplied: outcome.inputApplied }),
+    ...(outcome.framesElapsed === undefined
+      ? {}
+      : { framesElapsed: outcome.framesElapsed }),
+    ...(outcome.tilesMoved === undefined
+      ? {}
+      : { tilesMoved: outcome.tilesMoved }),
+    ...(outcome.stepsTaken === undefined
+      ? {}
+      : { stepsTaken: outcome.stepsTaken }),
+    ...(outcome.mapChanged === undefined
+      ? {}
+      : { mapChanged: outcome.mapChanged }),
+    ...(outcome.facingChanged === undefined
+      ? {}
+      : { facingChanged: outcome.facingChanged }),
+    ...(outcome.phaseChanged === undefined
+      ? {}
+      : { phaseChanged: outcome.phaseChanged }),
+    ...(outcome.battleChanged === undefined
+      ? {}
+      : { battleChanged: outcome.battleChanged }),
+    ...(outcome.stateChanged === undefined
+      ? {}
+      : { stateChanged: outcome.stateChanged }),
+    ...(outcome.visualChanged === undefined
+      ? {}
+      : { visualChanged: outcome.visualChanged }),
+    ...(outcome.visualChangeRatio === undefined
+      ? {}
+      : {
+          visualChangeRatio:
+            Math.round(outcome.visualChangeRatio * 10_000) / 10_000,
+        }),
+    ...(outcome.map === undefined ? {} : { map: outcome.map }),
+    ...(outcome.target === undefined ? {} : { target: outcome.target }),
+    before: compactPokemonctlObservation(outcome.before),
+    after: compactPokemonctlObservation(outcome.after),
+  });
 }

@@ -6,6 +6,7 @@ import {
   positionLoopOccurred,
   type MovementLoopState,
 } from "./benchmark-movement-telemetry.ts";
+import type { BenchmarkProviderFailure } from "./benchmark-provider-failure.ts";
 
 export const DEFAULT_BENCHMARK_GOAL = "get me a pokeman";
 
@@ -174,16 +175,6 @@ export const BenchmarkWorkerResultSchema = z.strictObject({
 });
 
 export type BenchmarkWorkerResult = z.infer<typeof BenchmarkWorkerResultSchema>;
-
-export function serializeSnapshot(snapshot: GameSnapshot): SerializedSnapshot {
-  return {
-    party: [...snapshot.party],
-    badges: [...snapshot.badges],
-    dexOwned: [...snapshot.dexOwned],
-    caughtMonSpecies: snapshot.caughtMonSpecies,
-    caughtMonShiny: snapshot.caughtMonShiny,
-  };
-}
 
 export function deserializeSnapshot(
   snapshot: SerializedSnapshot,
@@ -381,9 +372,17 @@ function isMovementCommand(command: string): boolean {
   );
 }
 
+export type BenchmarkRunOutcome =
+  | "success"
+  | "game-failure"
+  | "invalid-provider"
+  | "harness-error";
+
 export type BenchmarkRunSummaryEntry = {
   run: number;
   success: boolean;
+  outcome: BenchmarkRunOutcome;
+  providerFailure: BenchmarkProviderFailure | null;
   durationMs: number;
   telemetry: {
     turns: number;
@@ -403,8 +402,15 @@ export function buildBenchmarkSummary(
   schemaVersion: 1;
   requestedRuns: number;
   completedRuns: number;
+  validRuns: number;
   successfulRuns: number;
   failedRuns: number;
+  invalidRuns: number;
+  providerFailureRuns: number;
+  harnessErrorRuns: number;
+  stoppedEarly: boolean;
+  stopReason: "external-provider-failure" | null;
+  successRate: number | null;
   allSucceeded: boolean;
   totals: {
     durationMs: number;
@@ -419,7 +425,21 @@ export function buildBenchmarkSummary(
   };
   runs: readonly BenchmarkRunSummaryEntry[];
 } {
-  const successfulRuns = entries.filter((entry) => entry.success).length;
+  const successfulRuns = entries.filter(
+    (entry) => entry.outcome === "success",
+  ).length;
+  const failedRuns = entries.filter(
+    (entry) => entry.outcome === "game-failure",
+  ).length;
+  const providerFailureRuns = entries.filter(
+    (entry) => entry.outcome === "invalid-provider",
+  ).length;
+  const harnessErrorRuns = entries.filter(
+    (entry) => entry.outcome === "harness-error",
+  ).length;
+  const invalidRuns = providerFailureRuns + harnessErrorRuns;
+  const validRuns = successfulRuns + failedRuns;
+  const stoppedEarly = entries.length < requestedRuns;
   const totals = {
     durationMs: 0,
     turns: 0,
@@ -449,8 +469,18 @@ export function buildBenchmarkSummary(
     schemaVersion: 1,
     requestedRuns,
     completedRuns: entries.length,
+    validRuns,
     successfulRuns,
-    failedRuns: entries.length - successfulRuns,
+    failedRuns,
+    invalidRuns,
+    providerFailureRuns,
+    harnessErrorRuns,
+    stoppedEarly,
+    stopReason:
+      stoppedEarly && providerFailureRuns > 0
+        ? "external-provider-failure"
+        : null,
+    successRate: validRuns === 0 ? null : successfulRuns / validRuns,
     allSucceeded:
       entries.length === requestedRuns && successfulRuns === requestedRuns,
     totals,

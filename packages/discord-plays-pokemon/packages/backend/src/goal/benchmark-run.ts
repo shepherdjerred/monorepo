@@ -2,16 +2,25 @@ import path from "node:path";
 import { rename } from "node:fs/promises";
 import {
   BenchmarkWorkerResultSchema,
-  deserializeSnapshot,
   summarizeCodexJsonl,
   type BenchmarkArgs,
   type BenchmarkRunSummaryEntry,
   type CodexBenchmarkTelemetry,
 } from "./benchmark-harness.ts";
 import {
-  evaluateCatchBenchmark,
-  type GoalBenchmarkTelemetry,
-} from "./benchmark-evaluator.ts";
+  BENCHMARK_PROVIDER_FAILURE_FILE,
+  classifyCodexProviderFailure,
+} from "./benchmark-provider-failure.ts";
+import {
+  artifactPaths,
+  evaluateWorkerCatch,
+  harnessRunOutcome,
+  readProviderStartupFailure,
+  resultStatus,
+  summaryEntry,
+  telemetryForArtifact,
+  validRunOutcome,
+} from "./benchmark-result.ts";
 import { computeCost } from "./pricing.ts";
 
 export type BenchmarkImplementation = {
@@ -139,55 +148,24 @@ async function runWorker(
   return results[2];
 }
 
-function telemetryForArtifact(input: {
-  raw: CodexBenchmarkTelemetry;
-  durationMs: number;
-  model: string;
-  reasoning: string;
-  goalId: string;
-  finalSaveSha256: string;
-  wasmSha256: string;
-  targetCommit: string;
-  runnerCommit: string;
-}): GoalBenchmarkTelemetry {
-  return {
-    durationMs: input.durationMs,
-    turns: input.raw.turns,
-    toolCalls: input.raw.toolCalls,
-    toolErrors: input.raw.toolErrors,
-    movementActions: input.raw.movementActions,
-    movementStops: input.raw.movementStops,
-    repeatedPositionLoops: input.raw.repeatedPositionLoops,
-    ignoredInputs: input.raw.ignoredInputs,
-    screenshots: input.raw.screenshots,
-    knowledgeQueries: input.raw.knowledgeQueries,
-    errors: input.raw.errors,
-    inputTokens: input.raw.inputTokens,
-    cachedInputTokens: input.raw.cachedInputTokens,
-    outputTokens: input.raw.outputTokens,
-    reasoningOutputTokens: input.raw.reasoningOutputTokens,
-    estimatedCostUsd: computeCost(input.model, input.raw),
-    traceId: input.goalId,
-    saveSha256: input.finalSaveSha256,
-    wasmSha256: input.wasmSha256,
-    targetCommit: input.targetCommit,
-    runnerCommit: input.runnerCommit,
-    model: input.model,
-    reasoningEffort: input.reasoning,
-  };
-}
-
 async function readTelemetry(runDirectory: string): Promise<{
   raw: CodexBenchmarkTelemetry;
+  jsonl: string;
   jsonlSha256: string | null;
 }> {
   const jsonlPath = path.join(runDirectory, "codex.jsonl");
   const file = Bun.file(jsonlPath);
   if (!(await file.exists())) {
-    return { raw: summarizeCodexJsonl(""), jsonlSha256: null };
+    return {
+      raw: summarizeCodexJsonl(""),
+      jsonl: "",
+      jsonlSha256: null,
+    };
   }
+  const jsonl = await file.text();
   return {
-    raw: summarizeCodexJsonl(await file.text()),
+    raw: summarizeCodexJsonl(jsonl),
+    jsonl,
     jsonlSha256: await sha256File(jsonlPath),
   };
 }
@@ -263,20 +241,22 @@ export async function runBenchmarkOnce(
     if (!Number.isFinite(durationMs) || durationMs < 0) {
       throw new Error("worker returned invalid goal lifecycle timestamps");
     }
-    const evaluation = evaluateCatchBenchmark({
-      startedAt: workerResult.goalState.startedAt,
-      finishedAt,
-      initialSnapshot: deserializeSnapshot(workerResult.initialSnapshot),
-      finalSnapshot: deserializeSnapshot(workerResult.finalSnapshot),
-      catchEvents: workerResult.catchEvents,
-      persistedSave: {
-        persistedAt: workerResult.persistedSave.persistedAt,
-        byteLength: workerResult.persistedSave.byteLength,
-        snapshot: deserializeSnapshot(workerResult.persistedSave.snapshot),
-      },
-    });
     const finalSaveSha256 = await sha256File(persistedSavePath);
     const telemetryInput = await readTelemetry(runDirectory);
+    const providerFailure = classifyCodexProviderFailure({
+      jsonl: telemetryInput.jsonl,
+      codexExitCode: workerResult.goalState.exitCode ?? null,
+    });
+    if (providerFailure !== null) {
+      await writeBenchmarkJson(
+        path.join(runDirectory, BENCHMARK_PROVIDER_FAILURE_FILE),
+        providerFailure,
+      );
+    }
+    const evaluation = evaluateWorkerCatch({
+      workerResult,
+      providerFailure,
+    });
     const telemetry = telemetryForArtifact({
       raw: telemetryInput.raw,
       durationMs,
@@ -288,10 +268,13 @@ export async function runBenchmarkOnce(
       targetCommit: input.provenance.targetCommit,
       runnerCommit: input.provenance.runnerCommit,
     });
+    const outcome = validRunOutcome(providerFailure, evaluation);
     await writeBenchmarkJson(resultPath, {
       schemaVersion: 1,
       run,
-      status: evaluation.success ? "success" : "failed",
+      status: resultStatus(outcome),
+      outcome,
+      providerFailure,
       configuration: {
         goal: args.goal,
         model: args.model,
@@ -337,12 +320,36 @@ export async function runBenchmarkOnce(
       },
       evaluation,
       telemetry,
-      artifacts: artifactPaths(runName, true, true),
+      artifacts: artifactPaths({
+        runName,
+        hasFinalSave: true,
+        hasJsonl: true,
+        hasProviderFailure: providerFailure !== null,
+        hasProviderStartupFailure: false,
+      }),
       error: null,
     });
-    return summaryEntry(run, evaluation.success, durationMs, telemetry);
+    return summaryEntry({
+      run,
+      outcome,
+      durationMs,
+      telemetry,
+      providerFailure,
+    });
   } catch (error) {
     const telemetryInput = await readTelemetry(runDirectory);
+    const startupFailure = await readProviderStartupFailure(runDirectory);
+    const providerFailure = classifyCodexProviderFailure({
+      jsonl: telemetryInput.jsonl,
+      codexExitCode: null,
+      startupError: startupFailure?.message ?? null,
+    });
+    if (providerFailure !== null) {
+      await writeBenchmarkJson(
+        path.join(runDirectory, BENCHMARK_PROVIDER_FAILURE_FILE),
+        providerFailure,
+      );
+    }
     const durationMs = Date.now() - harnessStartMs;
     const message = error instanceof Error ? error.message : String(error);
     const finalSave = Bun.file(persistedSavePath);
@@ -350,10 +357,13 @@ export async function runBenchmarkOnce(
       ? await sha256File(persistedSavePath)
       : null;
     const cost = computeCost(args.model, telemetryInput.raw);
+    const outcome = harnessRunOutcome(providerFailure);
     await writeBenchmarkJson(resultPath, {
       schemaVersion: 1,
       run,
-      status: "harness-error",
+      status: resultStatus(outcome),
+      outcome,
+      providerFailure,
       configuration: {
         goal: args.goal,
         model: args.model,
@@ -398,16 +408,20 @@ export async function runBenchmarkOnce(
         durationMs,
         estimatedCostUsd: cost,
       },
-      artifacts: artifactPaths(
+      artifacts: artifactPaths({
         runName,
-        finalSaveSha256 !== null,
-        telemetryInput.jsonlSha256 !== null,
-      ),
+        hasFinalSave: finalSaveSha256 !== null,
+        hasJsonl: telemetryInput.jsonlSha256 !== null,
+        hasProviderFailure: providerFailure !== null,
+        hasProviderStartupFailure: startupFailure !== null,
+      }),
       error: message,
     });
     return {
       run,
       success: false,
+      outcome,
+      providerFailure,
       durationMs,
       telemetry: {
         turns: telemetryInput.raw.turns,
@@ -420,41 +434,4 @@ export async function runBenchmarkOnce(
       },
     };
   }
-}
-
-function artifactPaths(
-  runName: string,
-  hasFinalSave: boolean,
-  hasJsonl: boolean,
-): Record<string, string | null> {
-  return {
-    inputSave: `${runName}/input.flash`,
-    finalSave: hasFinalSave ? `${runName}/persisted.flash` : null,
-    codexJsonl: hasJsonl ? `${runName}/codex.jsonl` : null,
-    screenshots: `${runName}/screenshots`,
-    workerStdout: `${runName}/worker.stdout.log`,
-    workerStderr: `${runName}/worker.stderr.log`,
-  };
-}
-
-function summaryEntry(
-  run: number,
-  success: boolean,
-  durationMs: number,
-  telemetry: GoalBenchmarkTelemetry,
-): BenchmarkRunSummaryEntry {
-  return {
-    run,
-    success,
-    durationMs,
-    telemetry: {
-      turns: telemetry.turns,
-      toolCalls: telemetry.toolCalls,
-      errors: telemetry.errors,
-      inputTokens: telemetry.inputTokens,
-      outputTokens: telemetry.outputTokens,
-      reasoningOutputTokens: telemetry.reasoningOutputTokens,
-      estimatedCostUsd: telemetry.estimatedCostUsd,
-    },
-  };
 }

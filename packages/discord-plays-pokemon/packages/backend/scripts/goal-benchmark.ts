@@ -5,8 +5,8 @@ import { z } from "zod";
 import {
   buildBenchmarkSummary,
   parseBenchmarkArgs,
-  type BenchmarkRunSummaryEntry,
 } from "#src/goal/benchmark-harness.ts";
+import { runBenchmarkSeries } from "#src/goal/benchmark-series.ts";
 import {
   commandOutput,
   requireCleanGitWorktree,
@@ -63,8 +63,8 @@ separately with an explicit not-verified relationship to that external file.
 
 Exit status:
   0  Every requested run passed the strict catch evaluator
-  1  One or more runs failed or hit a harness error
-  2  Invalid arguments or preflight failure`;
+  1  One or more valid runs failed the strict catch evaluator
+  2  Invalid measurement, harness error, invalid arguments, or preflight failure`;
 }
 
 async function requireFile(filePath: string, label: string): Promise<void> {
@@ -168,35 +168,32 @@ async function main(): Promise<void> {
       path.join(implementation.packageRoot, "wasm-src/upstream.json"),
     ).json(),
   );
-  const entries: BenchmarkRunSummaryEntry[] = [];
-  for (let run = 1; run <= args.runs; run += 1) {
+  const entries = await runBenchmarkSeries(args.runs, async (run) => {
     console.error(
       `benchmark run ${String(run)}/${String(args.runs)} on port ${String(
         args.controlPort + (run - 1) * args.portStride,
       )}`,
     );
-    entries.push(
-      await runBenchmarkOnce({
-        args,
-        implementation,
-        workerSource: WORKER_SOURCE,
-        run,
-        sourceSaveBytes,
-        provenance: {
-          inputSaveSha256: sourceSaveSha256,
-          wasmSha256,
-          targetPinnedWasmCommit: upstream.commit,
-          targetCommit,
-          runnerCommit,
-          runnerWorkingTreeDirty: runnerStatus.length > 0,
-          workerSourceSha256,
-          evaluatorSourceSha256,
-          codexVersion,
-          bunVersion,
-        },
-      }),
-    );
-  }
+    return await runBenchmarkOnce({
+      args,
+      implementation,
+      workerSource: WORKER_SOURCE,
+      run,
+      sourceSaveBytes,
+      provenance: {
+        inputSaveSha256: sourceSaveSha256,
+        wasmSha256,
+        targetPinnedWasmCommit: upstream.commit,
+        targetCommit,
+        runnerCommit,
+        runnerWorkingTreeDirty: runnerStatus.length > 0,
+        workerSourceSha256,
+        evaluatorSourceSha256,
+        codexVersion,
+        bunVersion,
+      },
+    });
+  });
   const summary = {
     ...buildBenchmarkSummary(args.runs, entries),
     configuration: {
@@ -225,7 +222,11 @@ async function main(): Promise<void> {
   };
   await writeBenchmarkJson(summaryPath, summary);
   process.stdout.write(`${summaryPath}\n`);
-  if (!summary.allSucceeded) process.exitCode = 1;
+  if (summary.invalidRuns > 0) {
+    process.exitCode = 2;
+  } else if (!summary.allSucceeded) {
+    process.exitCode = 1;
+  }
 }
 
 try {

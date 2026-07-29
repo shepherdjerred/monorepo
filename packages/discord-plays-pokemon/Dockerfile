@@ -195,7 +195,7 @@ COPY --from=build /app/packages/discord-plays-pokemon/packages/frontend/dist pac
 
 # Make the goal-mode control CLI available to operators and spawned Codex loops.
 RUN install -D -m 0755 \
-    packages/discord-plays-pokemon/packages/backend/src/goal/pokemonctl.ts \
+    packages/discord-plays-pokemon/packages/backend/src/goal/pokemonctl-entrypoint.sh \
     /usr/local/bin/pokemonctl \
   && install -D -m 0644 \
     packages/discord-plays-pokemon/packages/backend/src/goal/pokemonctl-output.ts \

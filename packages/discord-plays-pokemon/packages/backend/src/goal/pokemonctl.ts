@@ -1,7 +1,10 @@
 #!/usr/bin/env bun
 
-import { formatPokemonctlObservationOutput } from "./pokemonctl-output.ts";
 import { verifyPokemonctlCapabilities } from "./goal-capabilities.ts";
+import {
+  formatPokemonctlActionOutput,
+  formatPokemonctlObservationOutput,
+} from "./pokemonctl-output.ts";
 
 type RequestBody = Record<string, unknown>;
 
@@ -9,16 +12,16 @@ function usage(): string {
   return [
     "Usage:",
     "  pokemonctl observe [--screenshot] [--full]  # compact by default; --full includes detailed state",
-    "  pokemonctl tap <button> [--repeat n]",
-    "  pokemonctl move <north|south|west|east> [--tiles n]",
+    "  pokemonctl tap <button> [--repeat n] [--full]",
+    "  pokemonctl move <north|south|west|east> [--tiles n] [--full]",
     "  pokemonctl map show [--radius n]",
-    "  pokemonctl navigate --x n --y n [--max-steps n] [--radius n]  # current map only",
-    "  pokemonctl interact [north|south|west|east|ahead]",
-    "  pokemonctl advance  # one scripted-dialog step",
-    "  pokemonctl wait --until <ready|stable|phase-change> [--timeout-ms n]",
+    "  pokemonctl navigate --x n --y n [--max-steps n] [--radius n] [--full]  # current map only",
+    "  pokemonctl interact [north|south|west|east|ahead] [--full]",
+    "  pokemonctl advance [--full]  # one scripted-dialog step",
+    "  pokemonctl wait --until <ready|stable|phase-change> [--timeout-ms n] [--full]",
     "  pokemonctl screenshot",
-    "  pokemonctl press <button> [--quantity n] [--hold-ms n]",
-    '  pokemonctl chord "<commands>"',
+    "  pokemonctl press <button> [--quantity n] [--hold-ms n] [--full]",
+    '  pokemonctl chord "<commands>" [--full]',
     "  pokemonctl wait --seconds n  # compatibility delay",
     "  pokemonctl status",
     "  pokemonctl state",
@@ -124,6 +127,10 @@ function printJsonText(value: string): void {
   process.stdout.write(`${value}\n`);
 }
 
+function printActionText(value: string, args: string[]): void {
+  printJsonText(formatPokemonctlActionOutput(value, args.includes("--full")));
+}
+
 async function handlePress(args: string[]): Promise<void> {
   const button = args.at(0);
   if (button === undefined) {
@@ -131,12 +138,13 @@ async function handlePress(args: string[]): Promise<void> {
   }
   const quantity = readNumberFlag(args, "--quantity");
   const holdMs = readNumberFlag(args, "--hold-ms");
-  printJsonText(
+  printActionText(
     await request("POST", "/press", {
       command: button,
       ...(quantity === undefined ? {} : { quantity }),
       ...(holdMs === undefined ? {} : { holdMs }),
     }),
+    args,
   );
 }
 
@@ -158,7 +166,10 @@ async function handleTap(args: string[]): Promise<void> {
     throw new Error("tap requires a button");
   }
   const repeat = readNumberFlag(args, "--repeat") ?? 1;
-  printJsonText(await request("POST", "/tap", { command: button, repeat }));
+  printActionText(
+    await request("POST", "/tap", { command: button, repeat }),
+    args,
+  );
 }
 
 function normalizeDirection(value: string): string {
@@ -191,7 +202,7 @@ async function handleMove(args: string[]): Promise<void> {
   }
   const direction = normalizeDirection(rawDirection);
   const tiles = readNumberFlag(args, "--tiles") ?? 1;
-  printJsonText(await request("POST", "/move", { direction, tiles }));
+  printActionText(await request("POST", "/move", { direction, tiles }), args);
 }
 
 async function handleMap(args: string[]): Promise<void> {
@@ -211,35 +222,37 @@ async function handleNavigate(args: string[]): Promise<void> {
   }
   const maxSteps = readNumberFlag(args, "--max-steps") ?? 64;
   const searchRadius = readNumberFlag(args, "--radius") ?? 12;
-  printJsonText(
+  printActionText(
     await request("POST", "/navigate", {
       x,
       y,
       maxSteps,
       searchRadius,
     }),
+    args,
   );
 }
 
 async function handleInteract(args: string[]): Promise<void> {
-  const rawDirection = args.at(0);
+  const rawDirection = args.find((value) => !value.startsWith("--"));
   const direction =
     rawDirection === undefined || rawDirection === "ahead"
       ? undefined
       : normalizeDirection(rawDirection);
-  printJsonText(
+  printActionText(
     await request("POST", "/interact", {
       ...(direction === undefined ? {} : { direction }),
     }),
+    args,
   );
 }
 
 async function handleAdvance(args: string[]): Promise<void> {
-  const unexpected = args.at(0);
+  const unexpected = args.find((value) => value !== "--full");
   if (unexpected !== undefined) {
     throw new Error(`advance does not accept arguments: ${unexpected}`);
   }
-  printJsonText(await request("POST", "/advance", {}));
+  printActionText(await request("POST", "/advance", {}), args);
 }
 
 async function handleChord(args: string[]): Promise<void> {
@@ -247,7 +260,7 @@ async function handleChord(args: string[]): Promise<void> {
   if (value === undefined) {
     throw new Error("chord requires a command string");
   }
-  printJsonText(await request("POST", "/chord", { value }));
+  printActionText(await request("POST", "/chord", { value }), args);
 }
 
 async function handleWait(args: string[]): Promise<void> {
@@ -267,7 +280,7 @@ async function handleWait(args: string[]): Promise<void> {
   }
   const timeoutMs = readNumberFlag(args, "--timeout-ms") ?? 10_000;
   const maxFrames = Math.max(1, Math.round(timeoutMs / (1000 / 59.7275)));
-  printJsonText(await request("POST", "/wait", { until, maxFrames }));
+  printActionText(await request("POST", "/wait", { until, maxFrames }), args);
 }
 
 async function handleHistory(args: string[]): Promise<void> {

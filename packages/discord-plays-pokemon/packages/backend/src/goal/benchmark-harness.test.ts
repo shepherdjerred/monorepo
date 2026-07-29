@@ -7,8 +7,15 @@ import {
   buildBenchmarkSummary,
   parseBenchmarkArgs,
   summarizeCodexJsonl,
+  type BenchmarkRunOutcome,
+  type BenchmarkRunSummaryEntry,
 } from "./benchmark-harness.ts";
+import {
+  classifyCodexProviderFailure,
+  type BenchmarkProviderFailure,
+} from "./benchmark-provider-failure.ts";
 import { commandOutput, requireCleanGitWorktree } from "./benchmark-run.ts";
+import { runBenchmarkSeries } from "./benchmark-series.ts";
 
 async function git(command: readonly string[], cwd: string): Promise<string> {
   return await commandOutput(["git", ...command], cwd);
@@ -24,6 +31,29 @@ function productionObservation(x: number) {
       mapNum: 16,
       x,
       y: 8,
+    },
+  };
+}
+
+function benchmarkEntry(
+  run: number,
+  outcome: BenchmarkRunOutcome,
+  providerFailure: BenchmarkProviderFailure | null = null,
+): BenchmarkRunSummaryEntry {
+  return {
+    run,
+    success: outcome === "success",
+    outcome,
+    providerFailure,
+    durationMs: 1000,
+    telemetry: {
+      turns: 1,
+      toolCalls: 2,
+      errors: 0,
+      inputTokens: 100,
+      outputTokens: 20,
+      reasoningOutputTokens: 10,
+      estimatedCostUsd: 0.1,
     },
   };
 }
@@ -286,12 +316,141 @@ describe("summarizeCodexJsonl", () => {
   });
 });
 
+describe("classifyCodexProviderFailure", () => {
+  test("classifies the observed quota turn failure as invalid provider evidence", () => {
+    const jsonl = [
+      { type: "thread.started", thread_id: "thread-123" },
+      { type: "turn.started" },
+      {
+        type: "error",
+        message: "Quota exceeded. Check your plan and billing details.",
+      },
+      {
+        type: "turn.failed",
+        error: {
+          message: "Quota exceeded. Check your plan and billing details.",
+        },
+      },
+    ]
+      .map((line) => JSON.stringify(line))
+      .join("\n");
+
+    expect(classifyCodexProviderFailure({ jsonl, codexExitCode: 1 })).toEqual({
+      schemaVersion: 1,
+      kind: "quota",
+      phase: "turn",
+      source: "codex-jsonl",
+      message: "Quota exceeded. Check your plan and billing details.",
+      eventType: "error",
+      codexExitCode: 1,
+    });
+  });
+
+  test("distinguishes authentication, startup, and generic turn failures", () => {
+    expect(
+      classifyCodexProviderFailure({
+        jsonl: "",
+        codexExitCode: null,
+        startupError: "Codex authentication required; run codex login",
+      }),
+    ).toMatchObject({
+      kind: "authentication",
+      phase: "startup",
+      source: "startup-exception",
+    });
+    expect(
+      classifyCodexProviderFailure({
+        jsonl: JSON.stringify({ type: "thread.started", thread_id: "thread" }),
+        codexExitCode: 78,
+      }),
+    ).toMatchObject({
+      kind: "provider-startup",
+      phase: "startup",
+      source: "process-exit",
+    });
+    expect(
+      classifyCodexProviderFailure({
+        jsonl: [
+          JSON.stringify({ type: "turn.started" }),
+          JSON.stringify({
+            type: "turn.failed",
+            error: { message: "upstream unavailable" },
+          }),
+        ].join("\n"),
+        codexExitCode: 1,
+      }),
+    ).toMatchObject({
+      kind: "provider-turn",
+      phase: "turn",
+      source: "codex-jsonl",
+      message: "upstream unavailable",
+    });
+    expect(
+      classifyCodexProviderFailure({
+        jsonl: [
+          JSON.stringify({ type: "turn.started" }),
+          JSON.stringify({ type: "turn.completed", usage: {} }),
+        ].join("\n"),
+        codexExitCode: 0,
+      }),
+    ).toBeNull();
+  });
+});
+
+describe("runBenchmarkSeries", () => {
+  test("stops immediately after an invalid provider measurement", async () => {
+    const quotaFailure = classifyCodexProviderFailure({
+      jsonl: [
+        JSON.stringify({ type: "turn.started" }),
+        JSON.stringify({
+          type: "turn.failed",
+          error: { message: "Quota exceeded" },
+        }),
+      ].join("\n"),
+      codexExitCode: 1,
+    });
+    if (quotaFailure === null) {
+      throw new Error("quota fixture must classify as a provider failure");
+    }
+    const executed: number[] = [];
+    const entries = await runBenchmarkSeries(3, (run) => {
+      executed.push(run);
+      return Promise.resolve(
+        benchmarkEntry(run, "invalid-provider", quotaFailure),
+      );
+    });
+
+    expect(executed).toEqual([1]);
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.outcome).toBe("invalid-provider");
+  });
+
+  test("continues after a valid game failure", async () => {
+    const executed: number[] = [];
+    const entries = await runBenchmarkSeries(3, (run) => {
+      executed.push(run);
+      return Promise.resolve(
+        benchmarkEntry(run, run === 1 ? "game-failure" : "success"),
+      );
+    });
+
+    expect(executed).toEqual([1, 2, 3]);
+    expect(entries.map((entry) => entry.outcome)).toEqual([
+      "game-failure",
+      "success",
+      "success",
+    ]);
+  });
+});
+
 describe("buildBenchmarkSummary", () => {
   test("requires every requested run to succeed", () => {
     const summary = buildBenchmarkSummary(2, [
       {
         run: 1,
         success: true,
+        outcome: "success",
+        providerFailure: null,
         durationMs: 1000,
         telemetry: {
           turns: 2,
@@ -306,6 +465,8 @@ describe("buildBenchmarkSummary", () => {
       {
         run: 2,
         success: false,
+        outcome: "game-failure",
+        providerFailure: null,
         durationMs: 2000,
         telemetry: {
           turns: 4,
@@ -320,8 +481,15 @@ describe("buildBenchmarkSummary", () => {
     ]);
 
     expect(summary.allSucceeded).toBe(false);
+    expect(summary.validRuns).toBe(2);
     expect(summary.successfulRuns).toBe(1);
     expect(summary.failedRuns).toBe(1);
+    expect(summary.invalidRuns).toBe(0);
+    expect(summary.providerFailureRuns).toBe(0);
+    expect(summary.harnessErrorRuns).toBe(0);
+    expect(summary.stoppedEarly).toBe(false);
+    expect(summary.stopReason).toBeNull();
+    expect(summary.successRate).toBe(0.5);
     expect(summary.totals).toEqual({
       durationMs: 3000,
       turns: 6,
@@ -333,6 +501,34 @@ describe("buildBenchmarkSummary", () => {
       knownCostUsd: 0.1,
       runsWithUnknownCost: 1,
     });
+  });
+
+  test("reports an early provider stop as invalid rather than game failure", () => {
+    const quotaFailure = classifyCodexProviderFailure({
+      jsonl: JSON.stringify({
+        type: "turn.failed",
+        error: { message: "Quota exceeded" },
+      }),
+      codexExitCode: 1,
+    });
+    if (quotaFailure === null) {
+      throw new Error("quota fixture must classify as a provider failure");
+    }
+    const summary = buildBenchmarkSummary(3, [
+      benchmarkEntry(1, "invalid-provider", quotaFailure),
+    ]);
+
+    expect(summary.completedRuns).toBe(1);
+    expect(summary.validRuns).toBe(0);
+    expect(summary.successfulRuns).toBe(0);
+    expect(summary.failedRuns).toBe(0);
+    expect(summary.invalidRuns).toBe(1);
+    expect(summary.providerFailureRuns).toBe(1);
+    expect(summary.harnessErrorRuns).toBe(0);
+    expect(summary.stoppedEarly).toBe(true);
+    expect(summary.stopReason).toBe("external-provider-failure");
+    expect(summary.successRate).toBeNull();
+    expect(summary.allSucceeded).toBe(false);
   });
 });
 

@@ -8,6 +8,7 @@ import { readGameSnapshot } from "#src/game/events/snapshot.ts";
 import type { GameSnapshot } from "#src/game/events/types.ts";
 import { createGameEventWatcher } from "#src/game/events/watcher.ts";
 import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
+import { startBenchmarkGoal } from "#src/goal/benchmark-worker-provider.ts";
 import {
   GoalManager,
   type GoalProcessSpawner,
@@ -272,7 +273,7 @@ async function snapshotPersistedSave(
   try {
     return await bootAndContinue(verifier, config.bootTimeoutSeconds);
   } finally {
-    verifier.stop();
+    await verifier.stopAndFlush();
   }
 }
 
@@ -421,16 +422,11 @@ async function main(): Promise<void> {
       config: runtimeConfig,
       token: controlToken,
     });
-    const started = await manager.startGoal({
+    await startBenchmarkGoal({
+      manager,
       goal: config.goal,
-      requesterId: "benchmark-operator",
-      channelId: "benchmark",
+      runDirectory: config.runDirectory,
     });
-    if (started.kind !== "started") {
-      throw new Error(
-        `goal did not start: ${started.kind}: ${started.content}`,
-      );
-    }
     const active = manager.getStatus();
     if (active === undefined) {
       throw new Error("goal manager lost the active goal immediately");
@@ -445,13 +441,16 @@ async function main(): Promise<void> {
       emulator,
       config.bootTimeoutSeconds,
     );
+    // Benchmark evidence must survive an independent reboot. The engine owns
+    // save serialization; the host only flushes its resulting flash bytes.
+    await emulator.checkpointSave();
   } finally {
     await manager?.shutdown();
     if (controlServer !== undefined) {
       await controlServer.stop(true);
     }
     stopStartedAt = Date.now();
-    emulator.stop();
+    await emulator.stopAndFlush();
   }
 
   const goalState = manager

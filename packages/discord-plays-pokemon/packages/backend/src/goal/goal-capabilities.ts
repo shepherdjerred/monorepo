@@ -3,6 +3,7 @@ export const PREFERRED_POKEMONCTL_CAPABILITIES = [
   { promptCommand: "tap", handler: "tap" },
   { promptCommand: "move", handler: "move" },
   { promptCommand: "interact", handler: "interact" },
+  { promptCommand: "advance", handler: "advance" },
   { promptCommand: "wait", handler: "wait" },
   { promptCommand: "map show", handler: "map" },
   { promptCommand: "navigate", handler: "navigate" },
