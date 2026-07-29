@@ -78,11 +78,58 @@ export const MAX_SINK_BUFFER_BYTES = WIDTH * HEIGHT * 4 * 3;
 export const MIN_AUDIO_PREROLL_BYTES =
   AUDIO_SAMPLE_RATE * AUDIO_CHANNELS * Int16Array.BYTES_PER_ELEMENT;
 
-export function shouldPauseForEncoderBackpressure(
-  canContinue: boolean,
-  audioPrerollBytes: number,
-): boolean {
-  return !canContinue && audioPrerollBytes >= MIN_AUDIO_PREROLL_BYTES;
+export type EncoderFlowAction = "pause" | "resume" | undefined;
+
+export class EncoderFlowControl {
+  private audioPrerollBytes = 0;
+  private backpressureArmed = true;
+  private encoderProgressSeen = false;
+  private paused = false;
+
+  onAudio(bytes: number): void {
+    this.audioPrerollBytes = Math.min(
+      MIN_AUDIO_PREROLL_BYTES,
+      this.audioPrerollBytes + bytes,
+    );
+  }
+
+  onVideoWrite(canContinue: boolean): EncoderFlowAction {
+    if (
+      canContinue ||
+      this.paused ||
+      !this.backpressureArmed ||
+      this.audioPrerollBytes < MIN_AUDIO_PREROLL_BYTES
+    ) {
+      return undefined;
+    }
+    this.paused = true;
+    this.backpressureArmed = false;
+    return "pause";
+  }
+
+  onProgress(): EncoderFlowAction {
+    if (this.encoderProgressSeen) return undefined;
+    this.encoderProgressSeen = true;
+    if (!this.paused) return undefined;
+    this.paused = false;
+    return "resume";
+  }
+
+  onDrain(): EncoderFlowAction {
+    this.backpressureArmed = true;
+    if (!this.paused) return undefined;
+    this.paused = false;
+    return "resume";
+  }
+
+  reset(): EncoderFlowAction {
+    const action = this.paused ? "resume" : undefined;
+    this.audioPrerollBytes = 0;
+    this.backpressureArmed = true;
+    this.encoderProgressSeen = false;
+    this.paused = false;
+    return action;
+  }
 }
 
 /**
@@ -107,9 +154,9 @@ export class GameStreamer extends GameStreamerBase {
   private streamObserver: StreamObserver | undefined;
   private frameInput: PassThrough | undefined;
   private encoderBackpressured = false;
-  private audioPrerollBytes = 0;
+  private readonly encoderFlowControl = new EncoderFlowControl();
   private readonly handleFrameSinkDrain = (): void => {
-    this.setEncoderBackpressured(false);
+    this.applyEncoderFlowAction(this.encoderFlowControl.onDrain());
   };
 
   constructor(options: GameStreamerOptions) {
@@ -136,20 +183,15 @@ export class GameStreamer extends GameStreamerBase {
     streamFrameWriteMs.observe(performance.now() - pushAt);
     if (this.session) this.session.framesPushed++;
     sinkBufferBytes.set(sink.writableLength);
-    if (
-      shouldPauseForEncoderBackpressure(canContinue, this.audioPrerollBytes) &&
-      !this.encoderBackpressured
-    ) {
+    const action = this.encoderFlowControl.onVideoWrite(canContinue);
+    if (action === "pause") {
       sink.once("drain", this.handleFrameSinkDrain);
-      this.setEncoderBackpressured(true);
     }
+    this.applyEncoderFlowAction(action);
   }
 
   override pushAudio(pcm: Buffer): void {
-    this.audioPrerollBytes = Math.min(
-      MIN_AUDIO_PREROLL_BYTES,
-      this.audioPrerollBytes + pcm.length,
-    );
+    this.encoderFlowControl.onAudio(pcm.length);
     super.pushAudio(pcm);
   }
 
@@ -185,6 +227,11 @@ export class GameStreamer extends GameStreamerBase {
     );
     const session = newSessionStats();
     const observer = createStreamObserver(session);
+    const observeProgress = observer.onProgress;
+    observer.onProgress = (progress) => {
+      observeProgress?.(progress);
+      this.applyEncoderFlowAction(this.encoderFlowControl.onProgress());
+    };
     this.session = session;
     this.sessionStartedAt = performance.now();
     this.lastPushAt = undefined;
@@ -264,8 +311,7 @@ export class GameStreamer extends GameStreamerBase {
   private resetStreamMetrics(): void {
     this.frameInput?.off("drain", this.handleFrameSinkDrain);
     this.frameInput = undefined;
-    this.audioPrerollBytes = 0;
-    this.setEncoderBackpressured(false);
+    this.applyEncoderFlowAction(this.encoderFlowControl.reset());
     sinkBufferBytes.set(0);
     streamFfmpegSpeedRatio.set(0);
     streamFfmpegFps.set(0);
@@ -316,5 +362,10 @@ export class GameStreamer extends GameStreamerBase {
       streamEmulatorBackpressurePausesTotal.inc();
       if (this.session) this.session.encoderBackpressurePauses++;
     }
+  }
+
+  private applyEncoderFlowAction(action: EncoderFlowAction): void {
+    if (action === undefined) return;
+    this.setEncoderBackpressured(action === "pause");
   }
 }

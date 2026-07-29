@@ -1,9 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import {
   createFrameSink,
+  EncoderFlowControl,
   MAX_SINK_BUFFER_BYTES,
   MIN_AUDIO_PREROLL_BYTES,
-  shouldPauseForEncoderBackpressure,
 } from "./game-streamer.ts";
 import { HEIGHT, WIDTH } from "#src/emulator/constants.ts";
 
@@ -50,23 +50,44 @@ describe("createFrameSink", () => {
   });
 });
 
-describe("shouldPauseForEncoderBackpressure", () => {
+describe("EncoderFlowControl", () => {
   it("does not pause before the live PCM input has enough startup data", () => {
-    expect(shouldPauseForEncoderBackpressure(false, 0)).toBe(false);
-    expect(
-      shouldPauseForEncoderBackpressure(false, MIN_AUDIO_PREROLL_BYTES - 1),
-    ).toBe(false);
+    const flow = new EncoderFlowControl();
+    expect(flow.onVideoWrite(false)).toBeUndefined();
+    flow.onAudio(MIN_AUDIO_PREROLL_BYTES - 1);
+    expect(flow.onVideoWrite(false)).toBeUndefined();
   });
 
   it("pauses a full video sink once one second of PCM has been forwarded", () => {
-    expect(
-      shouldPauseForEncoderBackpressure(false, MIN_AUDIO_PREROLL_BYTES),
-    ).toBe(true);
+    const flow = new EncoderFlowControl();
+    flow.onAudio(MIN_AUDIO_PREROLL_BYTES);
+    expect(flow.onVideoWrite(false)).toBe("pause");
   });
 
   it("keeps running when the video sink is accepting data", () => {
-    expect(
-      shouldPauseForEncoderBackpressure(true, MIN_AUDIO_PREROLL_BYTES),
-    ).toBe(false);
+    const flow = new EncoderFlowControl();
+    flow.onAudio(MIN_AUDIO_PREROLL_BYTES);
+    expect(flow.onVideoWrite(true)).toBeUndefined();
+  });
+
+  it("uses first encoder progress to release startup, then waits for drain to re-arm", () => {
+    const flow = new EncoderFlowControl();
+    flow.onAudio(MIN_AUDIO_PREROLL_BYTES);
+    expect(flow.onVideoWrite(false)).toBe("pause");
+    expect(flow.onProgress()).toBe("resume");
+    expect(flow.onVideoWrite(false)).toBeUndefined();
+    expect(flow.onProgress()).toBeUndefined();
+    expect(flow.onDrain()).toBeUndefined();
+    expect(flow.onVideoWrite(false)).toBe("pause");
+    expect(flow.onProgress()).toBeUndefined();
+    expect(flow.onDrain()).toBe("resume");
+  });
+
+  it("resumes a paused emulator when stream state resets", () => {
+    const flow = new EncoderFlowControl();
+    flow.onAudio(MIN_AUDIO_PREROLL_BYTES);
+    expect(flow.onVideoWrite(false)).toBe("pause");
+    expect(flow.reset()).toBe("resume");
+    expect(flow.onVideoWrite(false)).toBeUndefined();
   });
 });

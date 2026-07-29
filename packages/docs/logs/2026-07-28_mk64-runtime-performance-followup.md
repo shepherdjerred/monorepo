@@ -163,12 +163,24 @@ Worker-thread performance change did not improve the delivered stream.
   drained in about 34 ms once paused, without dropping either content stream.
 - Added focused tests for the audio-pre-roll gate and passed the affected
   typecheck and lint targets.
+- Published and deployed the audio-pre-roll candidate from commit
+  `129aab491d9f97fa7dc51ab8d7cbb29bf784f20d`. It crossed the prior
+  startup wall with zero dropped frames and nonzero ffmpeg progress, but the
+  emulator remained paused after ffmpeg consumed the pre-roll. That prevented
+  new PCM from arriving before the initial video queue could emit `drain`.
+- Replaced the startup-only drain dependency with explicit encoder flow state:
+  the first ffmpeg progress event proves that both inputs are initialized and
+  releases the startup pause; the existing drain listener then re-arms normal
+  steady-state pause-on-backpressure behavior after the startup queue catches
+  up. Later progress events cannot release a steady-state pause.
+- Added state-transition tests covering the PCM gate, first-progress release,
+  drain re-arm, steady-state drain release, and reset behavior.
 
 ### Remaining
 
-- Commit and publish the audio-pre-roll gate, build and deploy an immutable
-  image from that PR head, restart the Discord session, and obtain manual
-  confirmation that audio is synchronized.
+- Publish the first-progress flow-control candidate, deploy its immutable
+  image, restart the Discord session, validate live performance telemetry, and
+  obtain manual confirmation that audio is synchronized.
 - Fix the separate Worker teardown ordering error found when `/stop` ended the
   successful test session. It is tracked in
   [`mk64-worker-session-stop-reset-order`](../todos/mk64-worker-session-stop-reset-order.md).
@@ -207,7 +219,11 @@ Worker-thread performance change did not improve the delivered stream.
 - The steady-state video queue remains a three-frame budget. During the N64
   audio-ring warm-up, video may temporarily exceed that high-water mark until
   one second of PCM has been forwarded; the reproduced video-first case peaked
-  at about 22.7 MB and drained immediately after the synchronized pause.
+  at about 22.7 MB.
+- Audio pre-roll alone was insufficient because ffmpeg needed the resumed
+  emulator to continue feeding PCM before its startup video queue could fully
+  drain. First encoder progress is therefore a one-time initialization signal;
+  only `drain` may release later backpressure pauses.
 - `/stop` completed and the stream shut down, but its asynchronous session-end
   callback ran after `WorkerEmulator.stop()` and logged
   `emulator worker is not running`. That distinct lifecycle defect is now
