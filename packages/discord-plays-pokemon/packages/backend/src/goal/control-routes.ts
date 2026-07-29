@@ -10,18 +10,14 @@ import { effectiveChordDelay, execute } from "#src/discord/chord-executor.ts";
 import { readGameSnapshot } from "#src/game/events/snapshot.ts";
 import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
 import { formatGameStateForPrompt } from "./game-state-summary.ts";
-import { formatHistoryForPrompt } from "./history-summary.ts";
 import type { FsEntry, GrepMatch } from "./goal-memory.ts";
-import {
-  truncateForToolLog,
-  truncateStateForToolLog,
-} from "./goal-tool-log.ts";
+import { truncateStateForToolLog } from "./goal-tool-log.ts";
 import type { GoalControlContext, Routed } from "./control-context.ts";
 import {
   mapResponse,
   routeSemanticRequest,
 } from "./semantic-control-routes.ts";
-import { KnowledgeDomainSchema, loadKnowledgeBase } from "./knowledge.ts";
+import { routeInformationalRequest } from "./informational-control-routes.ts";
 
 const PressRequestSchema = z.strictObject({
   command: z.string().min(1),
@@ -53,20 +49,6 @@ const GrepQuerySchema = z.strictObject({
 const WriteRequestSchema = z.strictObject({
   path: z.string().min(1),
   content: z.string().min(1).max(64_000),
-});
-
-const HistoryQuerySchema = z.strictObject({
-  limit: z.coerce.number().int().min(1).max(10).optional(),
-});
-
-const KnowledgeSearchQuerySchema = z.strictObject({
-  q: z.string().min(2).max(200),
-  domain: KnowledgeDomainSchema.optional(),
-  limit: z.coerce.number().int().min(1).max(10).optional(),
-});
-
-const KnowledgeGetQuerySchema = z.strictObject({
-  id: z.string().min(1).max(300),
 });
 
 function goalChordLimits(goal: Config["game"]["goal"]): ChordLimits {
@@ -124,66 +106,6 @@ function stateResponse(context: GoalControlContext): {
   const spatial = readSpatialSnapshot(reader, symbols);
   const body = formatGameStateForPrompt(snapshot, spatial);
   return { response: textResponse(body), logBody: body };
-}
-
-function historyResponse(
-  context: GoalControlContext,
-  request: Request,
-): { response: Response; logBody: string; requestMeta: unknown } {
-  const params = queryParams(request);
-  const parsed = HistoryQuerySchema.safeParse(params);
-  if (!parsed.success) {
-    return {
-      response: jsonResponse(
-        { error: "limit must be an integer between 1 and 10" },
-        400,
-      ),
-      logBody: "invalid limit",
-      requestMeta: params,
-    };
-  }
-  const limit = parsed.data.limit ?? 3;
-  const body = formatHistoryForPrompt(context.goalManager.getHistory(limit));
-  return {
-    response: textResponse(body),
-    logBody: body,
-    requestMeta: { limit },
-  };
-}
-
-async function knowledgeSearchResponse(request: Request): Promise<Response> {
-  const parsed = KnowledgeSearchQuerySchema.safeParse(queryParams(request));
-  if (!parsed.success) {
-    return jsonResponse(
-      {
-        error:
-          "knowledge search requires q (2-200 chars), optional domain, and limit 1-10",
-      },
-      400,
-    );
-  }
-  const base = await loadKnowledgeBase();
-  return jsonResponse({
-    query: parsed.data.q,
-    results: base.search(parsed.data.q, {
-      ...(parsed.data.domain === undefined
-        ? {}
-        : { domain: parsed.data.domain }),
-      limit: parsed.data.limit ?? 5,
-    }),
-  });
-}
-
-async function knowledgeGetResponse(request: Request): Promise<Response> {
-  const parsed = KnowledgeGetQuerySchema.safeParse(queryParams(request));
-  if (!parsed.success) {
-    return jsonResponse({ error: "knowledge get requires an id" }, 400);
-  }
-  const base = await loadKnowledgeBase();
-  const record = base.get(parsed.data.id);
-  return record === undefined
-    ? jsonResponse({ error: "knowledge record not found" }, 404)
-    : jsonResponse(record);
 }
 
 async function listResponse(
@@ -444,6 +366,8 @@ export async function routeRequest(
   context: GoalControlContext,
   request: Request,
 ): Promise<Routed> {
+  const informational = await routeInformationalRequest(context, request);
+  if (informational !== undefined) return informational;
   const semantic = await routeSemanticRequest(context, request);
   if (semantic !== undefined) return semantic;
 
@@ -468,30 +392,6 @@ export async function routeRequest(
       return await observeResponse(context, request);
     case "GET /map":
       return mapResponse(context, request);
-    case "GET /history": {
-      const result = historyResponse(context, request);
-      return {
-        response: result.response,
-        requestMeta: result.requestMeta,
-        logBody: truncateForToolLog(result.logBody),
-      };
-    }
-    case "GET /knowledge/search": {
-      const response = await knowledgeSearchResponse(request);
-      return {
-        response,
-        requestMeta: queryParams(request),
-        logBody: { status: response.status },
-      };
-    }
-    case "GET /knowledge/get": {
-      const response = await knowledgeGetResponse(request);
-      return {
-        response,
-        requestMeta: queryParams(request),
-        logBody: { status: response.status },
-      };
-    }
     case "POST /screenshot":
       return await screenshotResponse(context);
     case "POST /press":
