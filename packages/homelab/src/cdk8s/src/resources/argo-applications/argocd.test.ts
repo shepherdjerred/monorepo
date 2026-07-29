@@ -46,6 +46,7 @@ describe("ArgoCD application", () => {
     ).toEqual([
       "p, buildkite, applications, sync, default/*, allow",
       "p, buildkite, applications, get, default/*, allow",
+      "p, buildkite, applications, override, default/apps, allow",
     ]);
   });
 });
