@@ -89,21 +89,20 @@ export function expandTargets(selected: readonly string[]): string[] {
   return targets;
 }
 
-export function findPinnedDigest(
+export function findManagedImagePin(
   versions: string,
   imageName: string,
-): string | undefined {
+): { readonly key: string; readonly digest: string } | undefined {
   const lines = versions.split("\n");
   for (const key of [
     `shepherdjerred/${imageName}`,
-    `shepherdjerred/${imageName}/prod`,
     `shepherdjerred/${imageName}/beta`,
   ]) {
     const lineIndex = lines.findIndex((line) => line.includes(`"${key}"`));
     if (lineIndex === -1) continue;
     const candidate = lines.slice(lineIndex, lineIndex + 2).join("\n");
     const match = /sha256:[a-f\d]{64}/.exec(candidate);
-    if (match !== null) return match[0];
+    if (match !== null) return { key, digest: match[0] };
   }
   return undefined;
 }
@@ -174,10 +173,17 @@ export const summarySteps = [
   "sites",
   "helm-push",
   "tofu-apply",
+  "tofu-github",
   "argocd-sync",
+  "scout-beta-release",
   "publish",
+  "scout-tag-release",
   "scout-prod-reconcile",
-  "ci-image-refresh",
+  "tofu-cloudflare",
+  "release-please",
+  "version-commit-back",
+  "ci-base-refresh",
+  "ci-playwright-refresh",
 ] as const;
 
 export const summaryLanes = [
@@ -201,67 +207,23 @@ export const summaryLanes = [
   "npm",
   "cooklang",
   "scout-reconcile",
-  "ci-image",
+  "ci-base",
+  "ci-playwright",
 ] as const;
 
 export function outcomeIcon(outcome: string): string {
   return outcome === "passed" ? ":white_check_mark:" : ":x:";
 }
 
-export function ciImageTags(image: string, commit: string): readonly string[] {
-  return ["--tag", `${image}:${commit}`, "--tag", `${image}:latest`];
-}
-
-export const builderCreateCommand = [
-  "docker",
-  "buildx",
-  "create",
-  "--name",
-  "ci",
-  "--driver",
-  "remote",
-  "tcp://buildkitd-buildkitd-service.buildkitd.svc.cluster.local:1234",
+export const globalPaths = [
+  ".buildkite/pipeline.yml",
+  ".buildkite/scripts/ci-changed.ts",
+  ".buildkite/scripts/migration-core.ts",
+  ".buildkite/scripts/prepare-ci-changed-base.ts",
+  ".buildkite/scripts/upload-pipeline.sh",
 ] as const;
 
-export function ciImageBuildCommand(
-  image: string,
-  dockerfile: string,
-  commit: string,
-): readonly string[] {
-  return [
-    "docker",
-    "buildx",
-    "build",
-    "--builder",
-    "ci",
-    "--file",
-    dockerfile,
-    "--cache-from",
-    `type=registry,ref=${image}:buildcache`,
-    "--cache-to",
-    `type=registry,ref=${image}:buildcache,mode=max,image-manifest=true`,
-    ...ciImageTags(image, commit),
-    "--push",
-    ".",
-  ];
-}
-
-export function registryLoginCommand(token?: string): string[] | undefined {
-  return token === undefined || token.length === 0
-    ? undefined
-    : [
-        "docker",
-        "login",
-        "ghcr.io",
-        "-u",
-        "shepherdjerred",
-        "--password-stdin",
-      ];
-}
-
-export const globalPaths = [
-  ".buildkite",
-  ".mise.toml",
+const workspacePaths = [
   "bun.lock",
   "bunfig.toml",
   "package.json",
@@ -277,33 +239,48 @@ const deployScripts = [
 
 const sitePaths = {
   "site-sjer-red": [
+    ...workspacePaths,
     "packages/sjer.red",
     "packages/astro-opengraph-images",
     "packages/webring",
     ...deployScripts,
   ],
   "site-resume": ["packages/resume", ...deployScripts],
-  "site-webring": ["packages/webring", ...deployScripts],
-  "site-cooklang": ["packages/cooklang-rich-preview", ...deployScripts],
-  "site-stocks": ["packages/stocks-sjer-red", ...deployScripts],
+  "site-webring": [...workspacePaths, "packages/webring", ...deployScripts],
+  "site-cooklang": [
+    ...workspacePaths,
+    "packages/cooklang-rich-preview",
+    ...deployScripts,
+  ],
+  "site-stocks": [
+    ...workspacePaths,
+    "packages/stocks-sjer-red",
+    ...deployScripts,
+  ],
   "site-better-skill-capped": [
+    ...workspacePaths,
     "packages/better-skill-capped",
     ...deployScripts,
   ],
   "site-glitter": [
+    ...workspacePaths,
     "packages/glitter",
     "packages/glitter-context",
     ...deployScripts,
   ],
   "site-scout": [
+    ...workspacePaths,
     "packages/scout-for-lol",
     "packages/astro-opengraph-images",
     "packages/llm-models",
     "packages/glitter-context",
-    "packages/homelab/src/cdk8s/src/versions.ts",
     "scripts/package.json",
     "scripts/scout-site-release.ts",
-    "scripts/lib",
+    "scripts/lib/pin-candidates.ts",
+    "scripts/lib/run.ts",
+    "scripts/lib/s3-static-site.ts",
+    "scripts/lib/scout-release-state.ts",
+    "scripts/lib/scout-site-storage.ts",
     "docker-bake.hcl",
     ".dockerignore",
   ],
@@ -311,6 +288,7 @@ const sitePaths = {
 
 export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   playwright: [
+    ...workspacePaths,
     "packages/sjer.red",
     "packages/astro-opengraph-images",
     "packages/webring",
@@ -318,8 +296,13 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     ...deployScripts,
   ],
   resume: ["packages/resume", ...deployScripts],
-  "docker-e2e": ["packages/llm-observability", "packages/eslint-config"],
+  "docker-e2e": [
+    ...workspacePaths,
+    "packages/llm-observability",
+    "packages/eslint-config",
+  ],
   "helm-types": [
+    ...workspacePaths,
     "packages/homelab/src/cdk8s/src/versions.ts",
     "packages/homelab/src/cdk8s/scripts/generate-helm-types.ts",
     "packages/homelab/src/cdk8s/scripts/parse-helm-charts.ts",
@@ -327,23 +310,28 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "packages/homelab/src/cdk8s/generated/helm",
   ],
   tofu: [
+    ...workspacePaths,
     "packages/homelab/src/tofu",
     "packages/homelab/scripts/tofu-stack.ts",
     "scripts/lib/run.ts",
     "scripts/lib/transient.ts",
   ],
   helm: [
+    ...workspacePaths,
     "packages/homelab/src/cdk8s",
+    "packages/homelab/scripts/helm-release-core.ts",
     "packages/homelab/scripts/helm-push.ts",
     "scripts/lib/run.ts",
   ],
   argocd: [
+    ...workspacePaths,
     "packages/homelab/src/cdk8s",
     "packages/homelab/scripts/argocd.ts",
     "scripts/lib/run.ts",
     "scripts/lib/transient.ts",
   ],
   npm: [
+    ...workspacePaths,
     "packages/astro-opengraph-images",
     "packages/webring",
     "packages/homelab/src/helm-types",
@@ -351,8 +339,11 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "scripts/lib",
   ],
   ...sitePaths,
-  sites: Object.values(sitePaths).flat(),
+  sites: Object.entries(sitePaths)
+    .filter(([lane]) => lane !== "site-scout")
+    .flatMap(([, paths]) => paths),
   "scout-reconcile": [
+    ...workspacePaths,
     "packages/scout-for-lol",
     "packages/astro-opengraph-images",
     "packages/llm-models",
@@ -361,14 +352,39 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "scripts/scout-site-release.ts",
     "scripts/lib",
   ],
-  cooklang: ["packages/cooklang-for-obsidian"],
-  "ci-image": [
-    ".buildkite/ci-image",
-    ".buildkite/ci-playwright",
+  cooklang: [...workspacePaths, "packages/cooklang-for-obsidian"],
+  "ci-base": [
+    ".buildkite/ci-image/Dockerfile",
+    ".buildkite/scripts/bake-retry.ts",
+    ".buildkite/scripts/build-ci-image-core.ts",
     ".buildkite/scripts/build-ci-image.ts",
+    ".buildkite/scripts/buildkit-env.ts",
+    ".buildkite/scripts/update-ci-image-pin-core.ts",
+    ".buildkite/scripts/update-ci-image-pin.ts",
     ".mise.toml",
   ],
+  "ci-playwright": [
+    ".buildkite/ci-playwright/Dockerfile",
+    ".buildkite/scripts/bake-retry.ts",
+    ".buildkite/scripts/build-ci-image-core.ts",
+    ".buildkite/scripts/build-ci-image.ts",
+    ".buildkite/scripts/buildkit-env.ts",
+    ".buildkite/scripts/update-ci-image-pin-core.ts",
+    ".buildkite/scripts/update-ci-image-pin.ts",
+  ],
 };
+
+const lanesWithoutGlobalPaths = new Set(["site-scout"]);
+
+export function selectorPathsForLane(
+  lane: string,
+): readonly string[] | undefined {
+  const paths = lanePaths[lane];
+  if (paths === undefined) {
+    return undefined;
+  }
+  return lanesWithoutGlobalPaths.has(lane) ? paths : [...globalPaths, ...paths];
+}
 
 export function caddyfileEntitlementArguments(
   targets: readonly string[],
@@ -381,18 +397,18 @@ export function caddyfileEntitlementArguments(
   return ["--allow", `fs.read=${caddyfile}`];
 }
 
-export function selectBase(response: unknown, head: string): string {
+export function selectBase(response: unknown): string {
   if (!Array.isArray(response)) {
     throw new TypeError("Buildkite response must be an array");
   }
   for (const value of response) {
     const build = asRecord(value);
     const commit = build?.["commit"];
-    if (typeof commit === "string" && commit.length > 0 && commit !== head) {
+    if (typeof commit === "string" && commit.length > 0) {
       return commit;
     }
   }
-  throw new Error("Buildkite response contains no earlier green commit");
+  throw new Error("Buildkite response contains no valid green commit");
 }
 
 export function laneMetadata(

@@ -30,17 +30,16 @@ import {
 } from "./validate-pipeline-lib.ts";
 import { validateCaddySmokeContracts } from "./validate-pipeline-caddy.ts";
 import { validateImageMigrationContracts } from "./validate-image-migration.ts";
-import { fixedCorpusMode, lanePaths } from "./migration-core.ts";
+import { validateReleasePipelineContracts } from "./validate-pipeline-release.ts";
+import { fixedCorpusMode, lanePaths, summarySteps } from "./migration-core.ts";
 
 const PIPELINE_PATH = ".buildkite/pipeline.yml";
 const GLOBAL_IF_CHANGED = [
-  '".buildkite/**"',
-  '".mise.toml"',
-  '"bun.lock"',
-  '"bunfig.toml"',
-  '"package.json"',
-  '"patches/**"',
-  '"turbo.json"',
+  '".buildkite/pipeline.yml"',
+  '".buildkite/scripts/ci-changed.ts"',
+  '".buildkite/scripts/migration-core.ts"',
+  '".buildkite/scripts/prepare-ci-changed-base.ts"',
+  '".buildkite/scripts/upload-pipeline.sh"',
 ];
 const PATH_GATED_PR_KEYS = new Set([
   "playwright-e2e-pr",
@@ -75,6 +74,17 @@ for (const anchorName of SHARED_POD_ANCHORS) {
   if (!hasTrimmedLine(anchorBlock, CHECKOUT_CONTAINER_ALIAS)) {
     fail(`shared pod anchor ${anchorName} does not patch checkout resources`);
   }
+  for (const required of [
+    'image: "${CI_BASE_IMAGE}"',
+    "imagePullPolicy: IfNotPresent",
+  ]) {
+    if (!hasTrimmedLine(anchorBlock, required)) {
+      fail(`shared pod anchor ${anchorName} is missing immutable ${required}`);
+    }
+  }
+}
+if (pipeline.includes("ghcr.io/shepherdjerred/ci-base:latest")) {
+  fail("pipeline restored a mutable ci-base tag");
 }
 
 const verifyPodAnchor = sharedPodAnchorBlock(pipeline, "pod_verify_kubernetes");
@@ -93,6 +103,28 @@ const { stepStarts, keys, stepBlocks } = collectStepBlocks(lines, {
   pathGatedPrKeys: PATH_GATED_PR_KEYS,
   globalIfChanged: GLOBAL_IF_CHANGED,
 });
+
+const mainHardSteps = [...stepBlocks]
+  .filter(
+    ([key, block]) =>
+      (key === "verify" ||
+        block.includes("if: build.branch == pipeline.default_branch")) &&
+      key !== "ci-selector-base" &&
+      key !== "build-summary",
+  )
+  .map(([key]) => key)
+  .sort();
+if (mainHardSteps.join("\n") !== [...summarySteps].sort().join("\n")) {
+  fail("build summary does not enumerate every hard main step");
+}
+const buildSummary = stepBlocks.get("build-summary");
+for (const step of summarySteps) {
+  requireIncludes(
+    buildSummary,
+    `- ${step}`,
+    `build-summary does not wait for hard main step ${step}`,
+  );
+}
 
 for (const key of [
   "verify",
@@ -118,7 +150,7 @@ if (
 
 requireIncludes(
   stepBlocks.get("helm-push"),
-  "depends_on: [verify, images, ci-image-refresh]",
+  "depends_on: [verify, images, ci-base-refresh, ci-playwright-refresh]",
   "helm-push must wait for remote BuildKit consumers before publishing the floating buildkitd chart",
 );
 
@@ -129,22 +161,48 @@ for (const key of ["playwright-e2e-pr", "playwright-e2e-main"]) {
   if (!hasTrimmedLine(block, install)) {
     fail(`Playwright lane ${key} is missing exact filtered install ${install}`);
   }
-  if (
-    !hasTrimmedLine(
-      block,
-      "rm -f /etc/apt/sources.list.d/nodesource.list /etc/apt/sources.list.d/nodesource.sources",
-    )
-  ) {
-    fail(`Playwright lane ${key} must remove the stale NodeSource APT source`);
-  }
-  for (const required of [
-    "bun x --no-install playwright install",
+  requireIncludes(
+    block,
+    'image: "${CI_PLAYWRIGHT_IMAGE}"',
+    `Playwright lane ${key} does not consume the committed candidate pin`,
+  );
+  requireIncludes(
+    block,
+    "imagePullPolicy: IfNotPresent",
+    `Playwright lane ${key} does not use the immutable image pull policy`,
+  );
+  requireIncludes(
+    block,
     "bun x --no-install turbo run build lint test test:e2e",
+    `Playwright lane ${key} is missing its exact test closure`,
+  );
+  for (const forbidden of [
+    "playwright install",
+    "bun.zip",
+    "apt-get",
+    "mcr.microsoft.com/playwright",
+  ]) {
+    if (block?.includes(forbidden) === true) {
+      fail(`Playwright lane ${key} restored runtime bootstrap ${forbidden}`);
+    }
+  }
+}
+
+for (const [key, lane, candidate] of [
+  ["ci-base-refresh", "ci-base", "ci-base-candidate.json"],
+  ["ci-playwright-refresh", "ci-playwright", "ci-playwright-candidate.json"],
+] satisfies readonly (readonly [string, string, string])[]) {
+  const block = stepBlocks.get(key);
+  for (const required of [
+    `ci-changed.ts ${lane}`,
+    `build-ci-image.ts --image ${lane} --candidate-out ${candidate}`,
+    `update-ci-image-pin.ts --candidate ${candidate}`,
+    "concurrency: 1",
   ]) {
     requireIncludes(
       block,
       required,
-      `Playwright lane ${key} is missing explicit tool closure ${required}`,
+      `${key} is missing content-addressed promotion contract ${required}`,
     );
   }
 }
@@ -155,7 +213,7 @@ for (const key of ["playwright-e2e-pr", "playwright-e2e-main"]) {
 // stay internally gated on their ci-changed lanes.
 const prDryrun = stepBlocks.get("pr-dryrun");
 const prDryrunInstall =
-  "bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter '@homelab/cdk8s'";
+  "bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter homelab --filter '@homelab/cdk8s'";
 if (!hasTrimmedLine(prDryrun, prDryrunInstall)) {
   fail(`pr-dryrun is missing exact filtered install ${prDryrunInstall}`);
 }
@@ -201,7 +259,7 @@ for (const required of [
   }
 }
 
-for (const lane of ["site-scout", "sites", "scout-reconcile"]) {
+for (const lane of ["site-scout", "scout-reconcile"]) {
   const block = lanePaths[lane];
   if (block === undefined) {
     fail(`runtime CI selector is missing lane ${lane}`);
@@ -235,9 +293,6 @@ const selectImageTargets = await Bun.file(
 if (!selectImageTargets.includes('"--no-renames"')) {
   fail("image selection can omit a renamed source path");
 }
-if (!selectImageTargets.includes('"turbo.json"')) {
-  fail("image selection can skip every target after turbo.json changes");
-}
 if (!selectImageTargets.includes('"tsconfig.base.json"')) {
   fail("image selection can skip every target after root tsconfig changes");
 }
@@ -253,6 +308,25 @@ const caddyConfigInputs = [
   "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts",
 ];
 const imagesPr = stepBlocks.get("images-pr");
+for (const selectorInput of [
+  ".buildkite/application-image-smoke.Dockerfile",
+  ".buildkite/scripts/application-image-runtime.ts",
+  ".buildkite/scripts/bake-images.ts",
+  ".buildkite/scripts/bake-retry.ts",
+  ".buildkite/scripts/buildkit-env.ts",
+  ".buildkite/scripts/image-targets.ts",
+  ".buildkite/scripts/migration-core.ts",
+  ".buildkite/scripts/select-image-targets.ts",
+  ".buildkite/scripts/select-image-targets-lockfile.ts",
+  ".buildkite/scripts/select-image-targets-workspaces.ts",
+  ".buildkite/scripts/smoke-app-in-image.ts",
+]) {
+  requireIncludes(
+    imagesPr,
+    `"${selectorInput}"`,
+    `images-pr path gate is missing image selector input ${selectorInput}`,
+  );
+}
 requireIncludes(
   imagesPr,
   '- "scripts/package.json"',
@@ -357,87 +431,12 @@ for (const [stepKey, step] of [
   }
 }
 
-const sites = stepBlocks.get("sites");
-for (const required of [
-  "filters+=(--filter glitter)",
-  "--filter '@scout-for-lol/frontend'",
-  "--filter '@scout-for-lol/app'",
-  "--filter astro-opengraph-images",
-  "--filter '@shepherdjerred/llm-models'",
-  "--filter '@shepherdjerred/glitter-context'",
-  "bun --no-install run --cwd packages/llm-models build",
-  "bun --no-install run --cwd packages/astro-opengraph-images build",
-  "bun --no-install run --cwd packages/glitter-context build",
-]) {
-  requireIncludes(
-    sites,
-    required,
-    `sites install closure is missing ${required}`,
-  );
-}
-
-for (const dependency of [
-  '"packages/astro-opengraph-images/**"',
-  '"packages/llm-models/**"',
-  '"scripts/package.json"',
-]) {
-  requireIncludes(
-    prDryrun,
-    dependency,
-    `pr-dryrun path gate is missing ${dependency}`,
-  );
-}
-
-const publish = stepBlocks.get("publish");
-if (
-  publish === undefined ||
-  publish.includes("--filter '@shepherdjerred/root-scripts'")
-) {
-  fail("publish restored an unnecessary root-scripts install");
-}
-for (const required of ["ci-changed.ts npm", "ci-changed.ts cooklang"]) {
-  if (!publish.includes(required)) {
-    fail(`publish is missing section gate ${required}`);
-  }
-}
-
-const releasePlease = stepBlocks.get("release-please");
-const releaseInstall =
-  "bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --production";
-if (!hasTrimmedLine(releasePlease, releaseInstall)) {
-  fail(
-    `release-please lane is missing exact filtered install ${releaseInstall}`,
-  );
-}
-
-const jsonHelpers = await Bun.file("scripts/lib/json.ts").text();
-if (jsonHelpers.includes('from "zod"')) {
-  fail("tiny JSON helpers restored a hidden install dependency");
-}
-
-const selectorPreparation = await Bun.file(
-  ".buildkite/scripts/prepare-ci-changed-base.ts",
-).text();
-if (
-  !selectorPreparation.includes("AbortSignal.timeout") ||
-  !selectorStep.includes("timeout_in_minutes: 2")
-) {
-  fail("main selector API lookup is not time-bounded");
-}
-
-const uploadPipeline = await Bun.file(
-  ".buildkite/scripts/upload-pipeline.sh",
-).text();
-const tofuPipeline = await Bun.file(
-  "packages/homelab/src/tofu/buildkite/pipeline.tf",
-).text();
-if (
-  !uploadPipeline.includes("git diff --no-renames --name-only") ||
-  !uploadPipeline.includes("--changed-files-path") ||
-  !tofuPipeline.includes("sh .buildkite/scripts/upload-pipeline.sh")
-) {
-  fail("pipeline upload can omit the source side of renames");
-}
+await validateReleasePipelineContracts({
+  pipeline,
+  prDryrun,
+  selectorStep,
+  stepBlocks,
+});
 
 assertUnfilteredInstallBelongsToVerify(lines, stepStarts);
 

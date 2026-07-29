@@ -1,409 +1,360 @@
 #!/usr/bin/env bun
-/**
- * Update image version+digest entries in versions.ts, then open (or refresh) an
- * auto-merge PR with the bump.
- *
- * Ports two old pieces:
- *  - `.buildkite/scripts/update-versions.ts` — the in-place source rewrite that
- *    replaces `"key": "value"` with `"key": "version@sha256:digest"` (same-line
- *    and multi-line entry forms, with the /beta-suffix handling).
- *  - `versionCommitBackHelper` (.dagger/src/release.ts) — clone monorepo on a
- *    pending branch, run the rewrite, commit, push, and open a `--auto --squash`
- *    PR authed by GitHub App creds.
- *
- * Two modes:
- *   Local rewrite only (no git):
- *     bun scripts/update-versions.ts <versions-file> <version> [key=digest ...]
- *   Commit-back (clone + PR):
- *     bun scripts/update-versions.ts --commit-back <version> --digests '<json>' [--dry-run]
- *
- * Env (commit-back): GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID,
- *   GITHUB_APP_PRIVATE_KEY.
- */
 
-import { run, tmpBase } from "./lib/run.ts";
+import { rm } from "node:fs/promises";
+
 import { setupGitAuth } from "./lib/github-auth.ts";
-import { toStringRecord } from "./lib/json.ts";
+import {
+  mergePinCandidates,
+  mergePinStates,
+  parsePinCandidates,
+  parsePinCandidatesState,
+  parseVersionsSource,
+  rewriteVersionsSource,
+  serializePinCandidatesState,
+  validateCandidateKeys,
+  validateStateAgainstVersions,
+  type PinCandidates,
+} from "./lib/pin-candidates.ts";
+import { run, runAllowExit, tmpBase } from "./lib/run.ts";
 import { runMain } from "./lib/transient.ts";
 
 const MONOREPO_REPO = "shepherdjerred/monorepo";
 const MONOREPO_WRITE_URL = `https://github.com/${MONOREPO_REPO}.git`;
 const VERSION_BUMP_BRANCH = "chore/version-bump-pending";
 const VERSIONS_FILE_REL = "packages/homelab/src/cdk8s/src/versions.ts";
+const PIN_STATE_FILE_REL = "scripts/pin-candidates-state.json";
+const MAX_LEASE_ATTEMPTS = 3;
 
-type GitRunner = (args: string[]) => Promise<unknown>;
+type GitRunner = (
+  args: string[],
+  options?: { allowExit?: boolean; capture?: boolean },
+) => Promise<{ exitCode: number; stderr: string; stdout: string }>;
+
+type ResetGitRunner = (args: string[]) => Promise<unknown>;
 
 /**
  * Reconstruct the generated bump branch from current main.
  *
  * Main image builds are scoped from the last green main build, and a failed
- * commit-back prevents that baseline from advancing. The current digest set
- * therefore contains every still-pending image change. Starting from main is
- * both cumulative and immune to conflicts from a closed or superseded
+ * commit-back prevents that baseline from advancing. The current candidate
+ * state therefore contains every still-pending image change. Starting from
+ * main is both cumulative and immune to conflicts from a closed or superseded
  * generated PR.
  */
-export async function resetVersionBumpBranch(git: GitRunner): Promise<void> {
+export async function resetVersionBumpBranch(
+  git: ResetGitRunner,
+): Promise<void> {
   await git(["checkout", "-B", VERSION_BUMP_BRANCH, "origin/main"]);
 }
 
-// ---------------------------------------------------------------------------
-// In-place versions.ts rewrite (verbatim port of update-versions.ts)
-// ---------------------------------------------------------------------------
-
-const escapeRegex = (s: string) =>
-  s.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
-// Matches `"value"` (possibly with trailing comma) as the only content after
-// whitespace on a line; captures the indent and the value.
-const VALUE_LINE_RE = /^(\s*)"([^"]*)"[ \t]*(?:,[ \t]*)?$/;
-
-// A digest-unchanged entry is skipped entirely (even though the version
-// prefix would differ): bumping only the version string would redeploy a
-// byte-identical image on every merge. Digest equality is the "did the
-// image actually change" gate.
-const digestOf = (value: string): string => value.split("@")[1] ?? "";
-
-/**
- * Rewrite the version+digest string assignments for the given keys in a
- * versions.ts source file. Returns the number of entries updated. Throws when a
- * key matches but the line after it is not a string value (never clobber a
- * closing brace or unrelated code), and when zero entries matched.
- */
-export async function rewriteVersionsFile(
-  versionsFile: string,
-  version: string,
-  digests: Map<string, string>,
-): Promise<number> {
-  if (digests.size === 0) {
-    console.log("No digests provided, nothing to update");
-    return 0;
+async function readBranchFile(
+  git: GitRunner,
+  ref: string,
+  path: string,
+): Promise<string> {
+  const result = await git(["show", `${ref}:${path}`], {
+    allowExit: true,
+    capture: true,
+  });
+  if (result.exitCode !== 0) {
+    throw new Error(`failed to read ${path} from ${ref}: ${result.stderr}`);
   }
-
-  const source = await Bun.file(versionsFile).text();
-  const lines = source.split("\n");
-  let updated = 0;
-  let matched = 0;
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (line === undefined) {
-      continue;
-    }
-    for (const [key, digest] of digests) {
-      // Match the key as an exact match OR as a prefix with /beta suffix.
-      // versions.ts may have "/beta" suffix for deployment stages.
-      const exactMatch: boolean = line.includes(`"${key}"`);
-      const betaMatch: boolean = line.includes(`"${key}/beta"`);
-      if (!exactMatch && !betaMatch) {
-        continue;
-      }
-      const matchedKey: string = betaMatch ? `${key}/beta` : key;
-      const newValue = `${version}@${digest}`;
-
-      // Case 1: same-line entry — `"key": "value",`
-      const sameLineRe = new RegExp(
-        String.raw`("${escapeRegex(matchedKey)}"\s*:\s*)"([^"]*)"(\s*,?)`,
-      );
-      const sameLine = sameLineRe.exec(line);
-      if (sameLine) {
-        matched++;
-        if (digestOf(sameLine[2] ?? "") === digest) {
-          console.log(`Unchanged ${matchedKey}: digest ${digest}`);
-          continue;
-        }
-        lines[i] = line.replace(sameLineRe, `$1"${newValue}"$3`);
-        updated++;
-        console.log(`Updated ${matchedKey}: ${newValue}`);
-        continue;
-      }
-
-      // Case 2: multi-line entry — key on this line, value on the next.
-      if (i + 1 >= lines.length) {
-        continue;
-      }
-      const valueLine = lines[i + 1];
-      const valueMatch = valueLine?.match(VALUE_LINE_RE);
-      if (!valueMatch) {
-        throw new Error(
-          `Refusing to update ${matchedKey}: line after key is not a ` +
-            `string value: ${JSON.stringify(valueLine)}`,
-        );
-      }
-      matched++;
-      if (digestOf(valueMatch[2] ?? "") === digest) {
-        console.log(`Unchanged ${matchedKey}: digest ${digest}`);
-        continue;
-      }
-      const indent = valueMatch[1] ?? "";
-      lines[i + 1] = `${indent}"${newValue}",`;
-      updated++;
-      console.log(`Updated ${matchedKey}: ${newValue}`);
-    }
-  }
-
-  if (matched === 0) {
-    throw new Error("No entries matched — check the key names");
-  }
-  if (updated === 0) {
-    console.log("All matched entries already have these digests — no rewrite");
-    return 0;
-  }
-
-  await Bun.write(versionsFile, lines.join("\n"));
-  console.log(`Updated ${updated.toString()} entries in ${versionsFile}`);
-  return updated;
+  return result.stdout;
 }
 
-/** Parse `key=digest` argv entries into a Map (skips malformed pairs). */
-function parseDigestArgs(entries: string[]): Map<string, string> {
-  const digests = new Map<string, string>();
-  for (const entry of entries) {
-    const eqIdx = entry.indexOf("=");
-    if (eqIdx === -1) {
-      continue;
-    }
-    const key = entry.slice(0, eqIdx);
-    const digest = entry.slice(eqIdx + 1);
-    if (key !== "" && digest !== "") {
-      digests.set(key, digest);
-    }
-  }
-  return digests;
-}
-
-/** Parse the `--digests '<json>'` object into a Map of non-empty string values. */
-function parseDigestJson(json: string): Map<string, string> {
-  const digests = new Map<string, string>();
-  const trimmed = json.trim();
-  if (trimmed === "") {
-    return digests;
-  }
-  const parsed: unknown = JSON.parse(trimmed);
-  for (const [k, v] of Object.entries(toStringRecord(parsed))) {
-    if (v !== "") {
-      digests.set(k, v);
-    }
-  }
-  return digests;
-}
-
-/** Repo root = one level up from scripts/. */
-function repoRoot(): string {
-  return new URL("..", import.meta.url).pathname;
-}
-
-// ---------------------------------------------------------------------------
-// Commit-back (clone + PR), ported from versionCommitBackHelper
-// ---------------------------------------------------------------------------
-
-async function commitBack(
-  version: string,
-  digests: Map<string, string>,
-  dryRun: boolean,
-): Promise<void> {
-  console.log(
-    `--- version commit-back: ${version}${dryRun ? " (dry run)" : ""}`,
+async function remoteBranchSha(git: GitRunner): Promise<string | null> {
+  const result = await git(
+    ["ls-remote", "--heads", "origin", VERSION_BUMP_BRANCH],
+    { capture: true },
   );
-  if (dryRun) {
-    const pairs = [...digests.entries()]
-      .map(([k, v]) => `${k}=${v}`)
-      .join(", ");
-    console.log(
-      `DRYRUN: would update ${VERSION_BUMP_BRANCH} with version bump ` +
-        `${version} and digests: {${pairs}}`,
-    );
-    return;
+  const line = result.stdout.trim();
+  if (line === "") {
+    return null;
+  }
+  const [sha, ref, ...extra] = line.split(/\s+/);
+  if (
+    sha === undefined ||
+    ref !== `refs/heads/${VERSION_BUMP_BRANCH}` ||
+    extra.length > 0 ||
+    !/^[0-9a-f]{40}$/.test(sha)
+  ) {
+    throw new Error(`unexpected ls-remote output: ${line}`);
+  }
+  return sha;
+}
+
+async function prepareAttempt(
+  cloneDir: string,
+  git: GitRunner,
+  batch: PinCandidates,
+  remoteSha: string | null,
+): Promise<boolean> {
+  await git(["fetch", "origin", "main:refs/remotes/origin/main"]);
+  if (remoteSha !== null) {
+    await git([
+      "fetch",
+      "origin",
+      `+${VERSION_BUMP_BRANCH}:refs/remotes/origin/${VERSION_BUMP_BRANCH}`,
+    ]);
   }
 
-  const root = repoRoot();
-  const auth = await setupGitAuth(root);
-  const env = auth.env;
-  const cloneDir = `${tmpBase()}/monorepo-version-bump-${Date.now().toString()}`;
+  const mainSource = await readBranchFile(
+    git,
+    "origin/main",
+    VERSIONS_FILE_REL,
+  );
+  const mainState = parsePinCandidatesState(
+    await readBranchFile(git, "origin/main", PIN_STATE_FILE_REL),
+  );
+  const mainVersions = parseVersionsSource(mainSource);
+  validateStateAgainstVersions(mainState, mainVersions);
+  validateCandidateKeys(batch, mainVersions);
 
-  try {
-    await run(["git", "clone", MONOREPO_WRITE_URL, cloneDir], { env });
-    const git = (args: string[]) =>
-      run(["git", "-C", cloneDir, ...args], { env });
-    await git(["config", "user.email", "ci@sjer.red"]);
-    await git(["config", "user.name", "CI Bot"]);
-
-    await git(["fetch", "origin", "main:refs/remotes/origin/main"]);
-    await resetVersionBumpBranch(git);
-
-    await rewriteVersionsFile(
-      `${cloneDir}/${VERSIONS_FILE_REL}`,
-      version,
-      digests,
+  let aggregate = mainState;
+  if (remoteSha !== null) {
+    const pendingSource = await readBranchFile(
+      git,
+      `origin/${VERSION_BUMP_BRANCH}`,
+      VERSIONS_FILE_REL,
     );
-    await git(["add", VERSIONS_FILE_REL]);
-
-    const staged = await run(
-      ["git", "-C", cloneDir, "diff", "--cached", "--quiet"],
-      { env },
-    ).then(
-      () => true, // exit 0 = no staged changes
-      () => false, // non-zero = changes staged
+    const pendingState = parsePinCandidatesState(
+      await readBranchFile(
+        git,
+        `origin/${VERSION_BUMP_BRANCH}`,
+        PIN_STATE_FILE_REL,
+      ),
     );
-    let committed = false;
-    if (staged) {
-      console.log("No version changes to commit");
-    } else {
-      await git([
-        "commit",
-        "-m",
-        `chore: bump image versions to ${version}`,
-        "-m",
-        "Auto-Generated: ci-bot",
-      ]);
-      committed = true;
-    }
+    validateStateAgainstVersions(
+      pendingState,
+      parseVersionsSource(pendingSource),
+    );
+    aggregate = mergePinStates(aggregate, pendingState);
+  }
+  aggregate = mergePinCandidates(aggregate, batch);
 
-    // If nothing new committed AND the pending branch has no diff vs main, stop.
-    if (!committed) {
-      const noBranchDiff = await run(
-        ["git", "-C", cloneDir, "diff", "--quiet", "origin/main...HEAD"],
-        { env },
-      ).then(
-        () => true,
-        () => false,
-      );
-      if (noBranchDiff) {
-        console.log("No version changes and pending branch has no diff");
-        return;
-      }
-    }
+  await resetVersionBumpBranch(git);
+  await Bun.write(
+    `${cloneDir}/${VERSIONS_FILE_REL}`,
+    rewriteVersionsSource(mainSource, aggregate),
+  );
+  await Bun.write(
+    `${cloneDir}/${PIN_STATE_FILE_REL}`,
+    serializePinCandidatesState(aggregate),
+  );
+  await git(["add", VERSIONS_FILE_REL, PIN_STATE_FILE_REL]);
+  const staged = await git(["diff", "--cached", "--quiet"], {
+    allowExit: true,
+  });
+  if (staged.exitCode === 0) {
+    return false;
+  }
+  if (staged.exitCode !== 1) {
+    throw new Error(`git diff failed: ${staged.stderr}`);
+  }
+  await git([
+    "commit",
+    "-m",
+    `chore: update image pins from build ${batch.buildNumber.toString()}`,
+    "-m",
+    "Auto-Generated: ci-bot",
+  ]);
+  return true;
+}
 
-    await git([
+function isLeaseRejection(stderr: string): boolean {
+  return stderr.includes("stale info");
+}
+
+export async function pushWithExactLease(
+  git: GitRunner,
+  expectedSha: string | null = null,
+): Promise<"pushed" | "retry"> {
+  const expected = expectedSha ?? "";
+  const result = await git(
+    [
       "push",
-      "--force-with-lease",
+      `--force-with-lease=refs/heads/${VERSION_BUMP_BRANCH}:${expected}`,
       "-u",
       "origin",
       VERSION_BUMP_BRANCH,
-    ]);
+    ],
+    { allowExit: true },
+  );
+  if (result.exitCode === 0) {
+    return "pushed";
+  }
+  if (isLeaseRejection(result.stderr)) {
+    return "retry";
+  }
+  throw new Error(`version pin push failed: ${result.stderr}`);
+}
 
-    // Find or create the PR, then enable auto-merge (squash).
-    const prList = await run(
-      [
-        "gh",
-        "pr",
-        "list",
-        "--repo",
-        MONOREPO_REPO,
-        "--head",
-        VERSION_BUMP_BRANCH,
-        "--state",
-        "open",
-        "--json",
-        "number",
-        "-q",
-        ".[0].number // empty",
-      ],
-      { env, capture: true },
-    );
-    let prNumber = prList.stdout.trim();
-    if (prNumber === "") {
-      await run(
-        [
-          "gh",
-          "pr",
-          "create",
-          "--repo",
-          MONOREPO_REPO,
-          "--base",
-          "main",
-          "--head",
-          VERSION_BUMP_BRANCH,
-          "--title",
-          "chore: bump pending image versions",
-          "--body",
-          "Auto-generated version bump",
-        ],
-        { env },
-      );
-      const created = await run(
-        [
-          "gh",
-          "pr",
-          "view",
-          "--repo",
-          MONOREPO_REPO,
-          VERSION_BUMP_BRANCH,
-          "--json",
-          "number",
-          "-q",
-          ".number",
-        ],
-        { env, capture: true },
-      );
-      prNumber = created.stdout.trim();
-    }
-    if (prNumber === "") {
-      throw new Error("version commit-back PR number is empty");
-    }
+async function openOrUpdatePullRequest(
+  env: Record<string, string>,
+): Promise<void> {
+  const prList = await run(
+    [
+      "gh",
+      "pr",
+      "list",
+      "--repo",
+      MONOREPO_REPO,
+      "--head",
+      VERSION_BUMP_BRANCH,
+      "--state",
+      "open",
+      "--json",
+      "number",
+      "-q",
+      ".[0].number // empty",
+    ],
+    { env, capture: true },
+  );
+  let prNumber = prList.stdout.trim();
+  if (prNumber === "") {
     await run(
       [
         "gh",
         "pr",
-        "merge",
+        "create",
         "--repo",
         MONOREPO_REPO,
-        prNumber,
-        "--auto",
-        "--squash",
+        "--base",
+        "main",
+        "--head",
+        VERSION_BUMP_BRANCH,
+        "--title",
+        "chore: bump pending image versions",
+        "--body",
+        "Auto-generated version bump",
       ],
       { env },
     );
-    console.log(`--- opened/updated auto-merge PR #${prNumber}`);
+    const created = await run(
+      [
+        "gh",
+        "pr",
+        "view",
+        "--repo",
+        MONOREPO_REPO,
+        VERSION_BUMP_BRANCH,
+        "--json",
+        "number",
+        "-q",
+        ".number",
+      ],
+      { env, capture: true },
+    );
+    prNumber = created.stdout.trim();
+  }
+  if (prNumber === "") {
+    throw new Error("version commit-back PR number is empty");
+  }
+  await run(
+    [
+      "gh",
+      "pr",
+      "merge",
+      "--repo",
+      MONOREPO_REPO,
+      prNumber,
+      "--auto",
+      "--squash",
+    ],
+    { env },
+  );
+}
+
+async function commitBack(
+  batch: PinCandidates,
+  dryRun: boolean,
+): Promise<void> {
+  const candidateCount = Object.keys(batch.candidates).length;
+  if (candidateCount === 0) {
+    console.log("No pin candidates; exiting before authentication");
+    return;
+  }
+  if (dryRun) {
+    console.log(
+      serializePinCandidatesState(
+        mergePinCandidates(
+          { schema: "pin-candidates-state/v1", pins: {} },
+          batch,
+        ),
+      ),
+    );
+    return;
+  }
+
+  const root = new URL("..", import.meta.url).pathname;
+  const auth = await setupGitAuth(root);
+  const env = auth.env;
+  const cloneDir = `${tmpBase()}/monorepo-version-bump-${crypto.randomUUID()}`;
+  try {
+    await run(["git", "clone", MONOREPO_WRITE_URL, cloneDir], { env });
+    const git: GitRunner = async (args, options = {}) => {
+      const command = ["git", "-C", cloneDir, ...args];
+      const runOptions = { env, capture: options.capture === true };
+      return options.allowExit === true
+        ? await runAllowExit(command, runOptions)
+        : await run(command, runOptions);
+    };
+    await git(["config", "user.email", "ci@sjer.red"]);
+    await git(["config", "user.name", "CI Bot"]);
+
+    let pushed = false;
+    for (let attempt = 1; attempt <= MAX_LEASE_ATTEMPTS; attempt++) {
+      const expectedSha = await remoteBranchSha(git);
+      const changed = await prepareAttempt(cloneDir, git, batch, expectedSha);
+      if (!changed) {
+        console.log("Image pins already include every candidate");
+        return;
+      }
+      const outcome = await pushWithExactLease(git, expectedSha);
+      if (outcome === "pushed") {
+        pushed = true;
+        break;
+      }
+      console.log(
+        `version pin branch changed during attempt ${attempt.toString()}; retrying`,
+      );
+    }
+    if (!pushed) {
+      throw new Error(
+        `version pin push lost ${MAX_LEASE_ATTEMPTS.toString()} consecutive leases`,
+      );
+    }
+    await openOrUpdatePullRequest(env);
   } finally {
     await auth.cleanup();
-    if (await Bun.file(cloneDir).exists()) {
-      await Bun.$`rm -rf ${cloneDir}`.quiet();
-    }
+    await rm(cloneDir, { recursive: true, force: true });
   }
 }
 
-// ---------------------------------------------------------------------------
-// CLI
-// ---------------------------------------------------------------------------
-
 function usage(): never {
   console.error(
-    "Usage:\n" +
-      "  bun scripts/update-versions.ts <versions-file> <version> [key=digest ...]\n" +
-      "  bun scripts/update-versions.ts --commit-back <version> --digests '<json>' [--dry-run]",
+    "Usage: bun scripts/update-versions.ts --commit-back --candidates '<pin-candidates/v1 JSON>' [--dry-run]",
   );
   process.exit(1);
 }
 
 async function main(): Promise<void> {
   const argv = Bun.argv.slice(2);
-  if (argv.includes("--help") || argv.includes("-h") || argv.length === 0) {
+  if (argv.includes("--help") || argv.includes("-h")) {
     usage();
   }
-
-  if (argv.includes("--commit-back")) {
-    const dryRun = argv.includes("--dry-run");
-    const rest = argv.filter((a) => a !== "--commit-back" && a !== "--dry-run");
-    const version = rest.find((a) => !a.startsWith("--"));
-    const digestsIdx = rest.indexOf("--digests");
-    const digestsJson = digestsIdx === -1 ? "" : (rest[digestsIdx + 1] ?? "");
-    if (version === undefined) {
-      console.error("commit-back requires a <version>.");
-      usage();
-    }
-    await commitBack(version, parseDigestJson(digestsJson), dryRun);
-    return;
-  }
-
-  // Local rewrite mode.
-  const versionsFile = argv[0];
-  const version = argv[1];
-  if (versionsFile === undefined || version === undefined) {
+  if (!argv.includes("--commit-back")) {
     usage();
   }
-  await rewriteVersionsFile(
-    versionsFile,
-    version,
-    parseDigestArgs(argv.slice(2)),
+  const candidatesIndex = argv.indexOf("--candidates");
+  const candidatesJson =
+    candidatesIndex === -1 ? undefined : argv[candidatesIndex + 1];
+  if (candidatesJson === undefined) {
+    throw new Error("--candidates requires a pin-candidates/v1 JSON document");
+  }
+  await commitBack(
+    parsePinCandidates(candidatesJson),
+    argv.includes("--dry-run"),
   );
 }
 

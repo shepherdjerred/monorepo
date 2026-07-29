@@ -152,6 +152,21 @@ export function assertUniqueSmokePorts(ports: readonly SmokePort[]): void {
   }
 }
 
+export function applicationSmokePort(source: string, image: string): SmokePort {
+  const marker = `  "${image}": {`;
+  const start = source.indexOf(marker);
+  if (start === -1) {
+    fail(`${image} application smoke configuration is missing`);
+  }
+  const next = source.indexOf('\n  "', start + marker.length);
+  const block = source.slice(start, next === -1 ? source.length : next);
+  const rawPort = /PORT: "([1-9]\d{0,4})"/.exec(block)?.[1];
+  if (rawPort === undefined) {
+    fail(`${image} application smoke must set an explicit PORT`);
+  }
+  return { image, port: Number.parseInt(rawPort, 10) };
+}
+
 export async function validateImageMigrationContracts(
   pipeline: string,
   bakeImages: string,
@@ -193,7 +208,7 @@ export async function validateImageMigrationContracts(
     ".buildkite/scripts/build-ci-image.ts",
   ).text();
   const buildCiImageCore = await Bun.file(
-    ".buildkite/scripts/migration-core.ts",
+    ".buildkite/scripts/build-ci-image-core.ts",
   ).text();
   const buildCiImageContract = `${buildCiImage}\n${buildCiImageCore}`;
   if (
@@ -255,9 +270,27 @@ export async function validateImageMigrationContracts(
     (required) =>
       `shelfbridge smoke listener and probe disagree: missing ${required}`,
   );
+  const applicationSmoke = await Bun.file(
+    ".buildkite/scripts/smoke-app-in-image.ts",
+  ).text();
+  const tasknotesPort = applicationSmokePort(
+    applicationSmoke,
+    "tasknotes-server",
+  );
+  const trmnlPort = applicationSmokePort(applicationSmoke, "trmnl-dashboard");
+  const scoutPort = applicationSmokePort(applicationSmoke, "scout-for-lol");
+  requireAllPresent(
+    applicationSmoke,
+    [`listening on :${trmnlPort.port.toString()}`],
+    (required) =>
+      `trmnl-dashboard smoke listener and readiness check disagree: missing ${required}`,
+  );
   assertUniqueSmokePorts([
     binderyPort,
     shelfbridgePort,
     httpSmokePort(redlibDockerfile, "redlib"),
+    tasknotesPort,
+    trmnlPort,
+    scoutPort,
   ]);
 }

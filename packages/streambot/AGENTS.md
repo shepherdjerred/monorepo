@@ -163,8 +163,10 @@ extensions, no parent imports (use `@shepherdjerred/streambot/...`), Zod at ever
 Bun APIs, structured logging. `yt-dlp` and `ffmpeg` are system binaries baked into the image
 (no runtime download). When building the image, install `yt-dlp` by downloading the per-arch
 standalone binary from the release **asset CDN**
-(`github.com/yt-dlp/yt-dlp/releases/latest/download/<asset>`) and verifying it against
-`SHA2-256SUMS` (this install runs as a step in the `Dockerfile`). Do **not** rely on `youtube-dl-exec`'s postinstall — it queries `api.github.com`
+(`github.com/yt-dlp/yt-dlp/releases/download/<version>/<asset>`) and verify it
+against the `SHA2-256SUMS` asset from that same pinned release (this install
+runs as a step in the `Dockerfile`). Do **not** rely on
+`youtube-dl-exec`'s postinstall — it queries `api.github.com`
 unauthenticated (its token header is silently dropped by a `fetch(url, headers)` vs
 `fetch(url, { headers })` bug) and exhausts GitHub's 60 req/hr anonymous limit on shared egress
 IPs, intermittently failing image builds.

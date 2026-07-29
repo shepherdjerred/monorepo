@@ -60,7 +60,11 @@ function "cacheto" {
 }
 function "imagetags" {
   params = [name]
-  result = equal(PUSH_IMAGES, "true") ? ["${REGISTRY}/${name}:${GIT_SHA}", "${REGISTRY}/${name}:latest"] : ["${name}:dev"]
+  # Main publishes an immutable source-addressed candidate. CI resolves this
+  # tag to its manifest digest, smoke-tests that exact digest, and promotes
+  # only the digest through GitOps metadata. Mutable latest tags bypass that
+  # contract and are intentionally not emitted.
+  result = equal(PUSH_IMAGES, "true") ? ["${REGISTRY}/${name}:candidate-${GIT_SHA}"] : ["${name}:dev"]
 }
 
 group "default" {

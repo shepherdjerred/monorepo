@@ -44,9 +44,8 @@ describe("ArgoCD application", () => {
         "policy.csv"
       ].split("\n"),
     ).toEqual([
-      "p, buildkite, applications, sync, default/apps, allow",
+      "p, buildkite, applications, sync, default/*, allow",
       "p, buildkite, applications, get, default/*, allow",
-      "p, buildkite, applications, delete, default/kueue, allow",
     ]);
   });
 });

@@ -1,4 +1,4 @@
-import { registryLoginCommand } from "./migration-core.ts";
+import { registryLoginCommand } from "./build-ci-image-core.ts";
 
 if (import.meta.main) {
   const token = Bun.env["GH_TOKEN"];

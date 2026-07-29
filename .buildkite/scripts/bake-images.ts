@@ -1,25 +1,31 @@
 import { rm } from "node:fs/promises";
 import { asRecord } from "../../scripts/lib/json.ts";
 import {
+  classifyRuntimeChange,
+  imageRuntimeFingerprint,
+  runExactCandidateSmoke,
+} from "./application-image-runtime.ts";
+import {
   retryTransientBuildx,
   type BuildxCommandResult,
 } from "./bake-retry.ts";
 import {
   caddyfileEntitlementArguments,
   expandTargets,
-  findPinnedDigest,
   fixedCorpusMode,
+  findManagedImagePin,
   knownImageTargets,
   parseBakeArguments,
   parseBuildkiteCommits,
   parseImageSelection,
-  parseStringArray,
 } from "./migration-core.ts";
+import { APPLICATION_IMAGE_TARGETS } from "./image-targets.ts";
 
 const registry = "ghcr.io/shepherdjerred";
 const selectionReport = "image-selection-report.json";
 const pushOutcomes = "image-push-outcomes.json";
 const versionsPath = "packages/homelab/src/cdk8s/src/versions.ts";
+const applicationImageTargets = new Set(APPLICATION_IMAGE_TARGETS);
 
 export type CommandExecutor = (
   command: readonly string[],
@@ -63,7 +69,7 @@ export async function annotate(
 }
 
 export async function lastGreenCommit(
-  currentCommit: string,
+  _currentCommit: string,
   fetcher: typeof fetch = fetch,
   executor: CommandExecutor = execute,
   environment: Readonly<Record<string, string | undefined>> = Bun.env,
@@ -80,7 +86,7 @@ export async function lastGreenCommit(
   if (response?.ok !== true) return undefined;
   const commits = parseBuildkiteCommits(await response.json());
   const commit = commits[0];
-  if (commit === undefined || commit === currentCommit) return undefined;
+  if (commit === undefined) return undefined;
   const exists = await executor([
     "git",
     "cat-file",
@@ -161,23 +167,6 @@ export async function manifestDigest(
   return digest;
 }
 
-export async function imageLayers(
-  image: string,
-  executor: CommandExecutor = execute,
-): Promise<string[] | undefined> {
-  const result = await executor([
-    "docker",
-    "buildx",
-    "imagetools",
-    "inspect",
-    image,
-    "--format",
-    "{{json .Image.RootFS.DiffIDs}}",
-  ]);
-  if (result.exitCode !== 0) return undefined;
-  return parseStringArray(JSON.parse(result.stdout), "image layers");
-}
-
 async function setDigestMetadata(
   digests: Readonly<Record<string, string>>,
 ): Promise<void> {
@@ -191,6 +180,39 @@ async function setDigestMetadata(
   );
   const exitCode = await metadata.exited;
   if (exitCode !== 0) throw new Error("metadata write failed");
+}
+
+async function setPinCandidatesMetadata(
+  digests: Readonly<Record<string, string>>,
+  buildNumber: string,
+): Promise<void> {
+  const parsedBuildNumber = Number(buildNumber);
+  if (!Number.isSafeInteger(parsedBuildNumber) || parsedBuildNumber <= 0) {
+    throw new Error("Build number must be a positive safe integer");
+  }
+  const candidates = Object.fromEntries(
+    Object.entries(digests).map(([key, digest]) => [
+      key,
+      { version: `2.0.0-${buildNumber}`, digest },
+    ]),
+  );
+  const metadata = Bun.spawn(
+    ["buildkite-agent", "meta-data", "set", "pin-candidates"],
+    {
+      stdin: new Blob([
+        JSON.stringify({
+          schema: "pin-candidates/v1",
+          buildNumber: parsedBuildNumber,
+          candidates,
+        }),
+      ]),
+      stdout: "inherit",
+      stderr: "inherit",
+    },
+  );
+  if ((await metadata.exited) !== 0) {
+    throw new Error("pin candidate metadata write failed");
+  }
 }
 
 export async function ensureBuilder(
@@ -275,9 +297,20 @@ export async function pushImages(
     readonly environment?: Readonly<Record<string, string | undefined>>;
     readonly readVersions?: () => Promise<string>;
     readonly getManifestDigest?: (image: string) => Promise<string>;
-    readonly getImageLayers?: (image: string) => Promise<string[] | undefined>;
+    readonly getRuntimeFingerprint?: (
+      image: string,
+    ) => Promise<string | undefined>;
+    readonly smokeCandidate?: (
+      target: string,
+      candidate: string,
+      contractHash: string,
+    ) => Promise<void>;
     readonly writeMetadata?: (
       digests: Readonly<Record<string, string>>,
+    ) => Promise<void>;
+    readonly writeCandidates?: (
+      digests: Readonly<Record<string, string>>,
+      buildNumber: string,
     ) => Promise<void>;
     readonly writeText?: TextWriter;
   } = {},
@@ -288,8 +321,24 @@ export async function pushImages(
   const readVersions =
     dependencies.readVersions ?? (async () => Bun.file(versionsPath).text());
   const getManifestDigest = dependencies.getManifestDigest ?? manifestDigest;
-  const getImageLayers = dependencies.getImageLayers ?? imageLayers;
+  const getRuntimeFingerprint =
+    dependencies.getRuntimeFingerprint ??
+    (async (image) => imageRuntimeFingerprint(image, executor));
+  const smokeCandidate =
+    dependencies.smokeCandidate ??
+    (async (target, candidate, expectedContractHash) =>
+      runExactCandidateSmoke(
+        {
+          target,
+          candidate,
+          contractHash: expectedContractHash,
+        },
+        executor,
+        environment,
+      ));
   const writeMetadata = dependencies.writeMetadata ?? setDigestMetadata;
+  const writeCandidates =
+    dependencies.writeCandidates ?? setPinCandidatesMetadata;
   const writeText = dependencies.writeText ?? Bun.write;
   const caddyfileArguments = caddyfileEntitlementArguments(
     targets,
@@ -325,26 +374,30 @@ export async function pushImages(
   const outcomes: PushOutcome[] = [];
   for (const name of targets) {
     const image = `${registry}/${name}`;
-    const digest = await getManifestDigest(`${image}:${commit}`);
-    const pinned = findPinnedDigest(versions, name);
-    if (pinned === undefined) {
-      outcomes.push({ image: name, outcome: "no-pin-bumped" });
-    } else {
-      const oldLayers = await getImageLayers(`${image}@${pinned}`);
-      const newLayers = await getImageLayers(`${image}:${commit}`);
-      if (
-        oldLayers !== undefined &&
-        newLayers !== undefined &&
-        JSON.stringify(oldLayers) === JSON.stringify(newLayers)
-      ) {
-        outcomes.push({ image: name, outcome: "content-unchanged" });
-        continue;
-      }
-      outcomes.push({
-        image: name,
-        outcome: oldLayers === undefined ? "pin-unresolvable-bumped" : "bumped",
-      });
+    const managedPin = findManagedImagePin(versions, name);
+    if (managedPin === undefined) {
+      throw new Error(`No managed image pin exists for ${image}`);
     }
+    const candidateTag = `${image}:candidate-${commit}`;
+    const digest = await getManifestDigest(candidateTag);
+    const candidate = `${image}@${digest}`;
+    if (applicationImageTargets.has(name)) {
+      await smokeCandidate(name, candidate, contractHash);
+    }
+    const newFingerprint = await getRuntimeFingerprint(candidate);
+    if (newFingerprint === undefined) {
+      throw new Error(`Could not fingerprint candidate ${candidate}`);
+    }
+    const outcome = await classifyRuntimeChange(
+      {
+        image,
+        pinnedDigest: managedPin.digest,
+        candidateFingerprint: newFingerprint,
+      },
+      getRuntimeFingerprint,
+    );
+    outcomes.push({ image: name, outcome });
+    if (outcome === "content-unchanged") continue;
     if (name === "starlight-karma-bot") {
       const tag = await executor([
         "docker",
@@ -353,13 +406,14 @@ export async function pushImages(
         "create",
         "--tag",
         `${image}:2.0.0-${buildNumber}`,
-        `${image}:${commit}`,
+        candidate,
       ]);
       if (tag.exitCode !== 0) throw new Error(`Version tag failed for ${name}`);
     }
-    digests[`shepherdjerred/${name}`] = digest;
+    digests[managedPin.key] = digest;
   }
   await writeMetadata(digests);
+  await writeCandidates(digests, buildNumber);
   await writeText(pushOutcomes, `${JSON.stringify(outcomes)}\n`);
 }
 
@@ -402,6 +456,7 @@ if (import.meta.main) {
     await annotate(["--report", selectionReport]);
     if (options.push) {
       await setDigestMetadata({});
+      await setPinCandidatesMetadata({}, buildNumber);
       await Bun.write(pushOutcomes, "[]\n");
     }
     process.exit(0);

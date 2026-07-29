@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+  applicationSmokePort,
   assertDeterministicBinderyIdentity,
   assertUniqueSmokePorts,
   explicitSmokePort,
@@ -86,6 +87,21 @@ describe("deterministic Bindery identity", () => {
 });
 
 describe("parallel image smoke ports", () => {
+  test("extracts application smoke environment ports", () => {
+    const source = `
+  "tasknotes-server": {
+    env: { PORT: "18789" },
+  },
+  "other": {
+    env: {},
+  },
+`;
+    expect(applicationSmokePort(source, "tasknotes-server")).toEqual({
+      image: "tasknotes-server",
+      port: 18_789,
+    });
+  });
+
   test("extracts exported listener ports from the smoke stage only", () => {
     const dockerfile = `
 FROM runtime AS release

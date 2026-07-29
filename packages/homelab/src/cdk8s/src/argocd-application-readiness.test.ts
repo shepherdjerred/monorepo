@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import {
   applicationReadiness,
+  releaseTreeReadiness,
   unreadyApplicationSummaries,
 } from "./argocd-application-readiness.ts";
 
@@ -12,6 +13,56 @@ describe("applicationReadiness", () => {
     };
     expect(applicationReadiness(app, true).ready).toBe(false);
     expect(applicationReadiness(app, false).ready).toBe(true);
+  });
+
+  test("rejects a failed operation even when status is green", () => {
+    expect(
+      applicationReadiness(
+        {
+          status: {
+            sync: { status: "Synced" },
+            health: { status: "Healthy" },
+            operationState: { phase: "Failed" },
+          },
+        },
+        true,
+      ).ready,
+    ).toBe(false);
+  });
+});
+
+describe("releaseTreeReadiness", () => {
+  test("requires every child to be Synced, Healthy, and on its exact revision", () => {
+    const list = {
+      items: [
+        {
+          metadata: { name: "worker" },
+          status: {
+            sync: { status: "Synced", revision: "2.0.0-42" },
+            health: { status: "Healthy" },
+            operationState: { phase: "Succeeded" },
+          },
+        },
+        {
+          metadata: { name: "stuck" },
+          status: {
+            sync: { status: "OutOfSync", revision: "2.0.0-41" },
+            health: { status: "Healthy" },
+          },
+        },
+      ],
+    };
+    expect(
+      releaseTreeReadiness(list, [
+        { name: "apps" },
+        { name: "worker", revision: "2.0.0-42" },
+        { name: "stuck", revision: "2.0.0-42" },
+        { name: "missing", revision: "2.0.0-42" },
+      ]),
+    ).toEqual({
+      ready: false,
+      failures: ["stuck: Sync=OutOfSync Health=Healthy", "missing: missing"],
+    });
   });
 });
 

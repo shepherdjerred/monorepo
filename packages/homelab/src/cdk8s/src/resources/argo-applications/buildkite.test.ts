@@ -65,6 +65,32 @@ const ConfigMapSchema = z
   })
   .loose();
 
+const CachePruneCronJobSchema = z
+  .object({
+    kind: z.literal("CronJob"),
+    metadata: z.object({
+      name: z.literal("buildkite-uv-cache-prune"),
+    }),
+    spec: z.object({
+      jobTemplate: z.object({
+        spec: z.object({
+          template: z.object({
+            spec: z.object({
+              containers: z.array(
+                z.object({
+                  name: z.string(),
+                  image: z.string(),
+                  imagePullPolicy: z.string().optional(),
+                }),
+              ),
+            }),
+          }),
+        }),
+      }),
+    }),
+  })
+  .loose();
+
 function synthBuildkiteResources() {
   const chart = Testing.chart();
   createBuildkiteApp(chart);
@@ -75,9 +101,13 @@ function synthBuildkiteResources() {
   const hooks = resources.find(
     (manifest) => ConfigMapSchema.safeParse(manifest).success,
   );
+  const cachePruneCronJob = resources.find(
+    (manifest) => CachePruneCronJobSchema.safeParse(manifest).success,
+  );
   return {
     application: ApplicationSchema.parse(application),
     hooks: ConfigMapSchema.parse(hooks),
+    cachePruneCronJob: CachePruneCronJobSchema.parse(cachePruneCronJob),
   };
 }
 
@@ -122,5 +152,27 @@ describe("Buildkite application", () => {
     expect(hooks.data["agent-shutdown"]).toContain("#!/bin/sh");
     expect(hooks.data["agent-shutdown"]).toContain("set -eu");
     expect(hooks.data["agent-shutdown"]).toContain("sleep 20");
+  });
+
+  it("pins cache pruning to the promoted immutable ci-base image", async () => {
+    const { cachePruneCronJob } = synthBuildkiteResources();
+    const digestContents = await Bun.file(
+      new URL("ci-base.DIGEST", import.meta.url),
+    ).text();
+    const digest = digestContents.trim();
+    const container =
+      cachePruneCronJob.spec.jobTemplate.spec.template.spec.containers.find(
+        (candidate) => candidate.name === "uv-cache-prune",
+      );
+
+    expect(container).toEqual(
+      expect.objectContaining({
+        image: `ghcr.io/shepherdjerred/ci-base@${digest}`,
+        imagePullPolicy: "IfNotPresent",
+      }),
+    );
+    expect(container?.image).toMatch(
+      /^ghcr\.io\/shepherdjerred\/ci-base@sha256:[\da-f]{64}$/,
+    );
   });
 });

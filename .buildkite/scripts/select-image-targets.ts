@@ -26,23 +26,11 @@ import {
   targetClosureDirs,
 } from "./select-image-targets-workspaces.ts";
 import type { WorkspacePackage } from "./select-image-targets-workspaces.ts";
-
-const TARGET_OWNERS: Readonly<Record<string, string>> = {
-  birmel: "@shepherdjerred/birmel",
-  "tasknotes-server": "tasknotes-server",
-  "starlight-karma-bot": "starlight-karma-bot",
-  streambot: "@shepherdjerred/streambot",
-  "temporal-worker": "@shepherdjerred/temporal",
-  "trmnl-dashboard": "@shepherdjerred/trmnl-dashboard",
-  "scout-for-lol": "@scout-for-lol/backend",
-  "discord-plays-pokemon": "@discord-plays-pokemon/backend",
-  "discord-plays-mario-kart": "@discord-plays-mario-kart/backend",
-};
-
-export const ALL_IMAGE_TARGETS = [
-  ...Object.keys(TARGET_OWNERS),
-  "infra",
-].sort();
+import {
+  ALL_IMAGE_TARGETS,
+  APPLICATION_IMAGE_TARGETS,
+  IMAGE_TARGET_OWNERS,
+} from "./image-targets.ts";
 
 // Paths whose change means "build everything", unconditionally. Deliberately
 // NOT here, because their changes are attributed per image instead (each with
@@ -59,27 +47,40 @@ export const ALL_IMAGE_TARGETS = [
 // - .buildkite/ — only the files that shape image builds/selection are
 //   global; other CI scripts don't change image content.
 const GLOBAL_IMAGE_INPUTS = [
+  // Bake defines the Dockerfile, context, arguments, cache, and output tags
+  // for every application and infrastructure image.
+  "docker-bake.hcl",
+  // Selector and orchestration corrections must reconcile every target once:
+  // a previously omitted content change can already be inside the last-green
+  // base, so testing the new selector alone cannot repair that latent drift.
   ".buildkite/pipeline.yml",
   ".buildkite/scripts/bake-images.ts",
   ".buildkite/scripts/bake-retry.ts",
   ".buildkite/scripts/buildkit-env.ts",
+  ".buildkite/scripts/image-targets.ts",
   ".buildkite/scripts/migration-core.ts",
   ".buildkite/scripts/select-image-targets.ts",
   ".buildkite/scripts/select-image-targets-lockfile.ts",
   ".buildkite/scripts/select-image-targets-workspaces.ts",
-  // Staged into every Dockerfile's smoke stage — a harness change must
-  // re-run every image's in-image smoke.
+];
+
+// These files shape every application solve, but none of the self-contained
+// infrastructure image contexts. Keep them separate from GLOBAL_IMAGE_INPUTS
+// so a harness or root workspace-config edit does not rebuild infra.
+const SHARED_APPLICATION_IMAGE_INPUTS = [
+  ".buildkite/application-image-smoke.Dockerfile",
+  ".buildkite/scripts/application-image-runtime.ts",
   ".buildkite/scripts/smoke-app-in-image.ts",
   ".dockerignore",
-  ".mise.toml",
-  "docker-bake.hcl",
   "bunfig.toml",
-  "turbo.json",
   "tsconfig.base.json",
 ];
 
 const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> = {
-  "scout-for-lol": ["packages/scout-for-lol/tsconfig.base.json"],
+  "scout-for-lol": [
+    "packages/scout-for-lol/scripts/contract-hash.ts",
+    "packages/scout-for-lol/tsconfig.base.json",
+  ],
   // Temporal compiles toolkit into the worker image as an embedded CLI, but
   // toolkit is deliberately not a runtime workspace dependency.
   "temporal-worker": ["packages/toolkit/"],
@@ -114,7 +115,7 @@ function lockfileChangedTargets(
   const base = parseLockfile(lockfiles.base);
   const head = parseLockfile(lockfiles.head);
   const changed = new Set<string>();
-  for (const [target, owner] of Object.entries(TARGET_OWNERS)) {
+  for (const [target, owner] of Object.entries(IMAGE_TARGET_OWNERS)) {
     const closureDirs = targetClosureDirs(target, owner, packages);
     const baseFp = closureFingerprint(closureDirs, base);
     const headFp = closureFingerprint(closureDirs, head);
@@ -219,7 +220,7 @@ function addClosureReasons(
   packages: ReadonlyMap<string, WorkspacePackage>,
   reasons: Map<string, string[]>,
 ): void {
-  for (const [target, owner] of Object.entries(TARGET_OWNERS)) {
+  for (const [target, owner] of Object.entries(IMAGE_TARGET_OWNERS)) {
     const closure = dependencyClosure(owner, packages);
     const dirs = [...closure].map((name) => {
       const pkg = packages.get(name);
@@ -234,7 +235,6 @@ function addClosureReasons(
       const dir = dirs.find((candidate) => path.startsWith(candidate));
       if (dir !== undefined) {
         addReason(reasons, target, `workspace closure: ${path} under ${dir}`);
-        break;
       }
     }
   }
@@ -255,8 +255,26 @@ function addPrefixReasons(
           target,
           `configured extra input: ${path} (matches ${prefix})`,
         );
-        break;
       }
+    }
+  }
+}
+
+function addSharedApplicationReasons(
+  changedPaths: readonly string[],
+  reasons: Map<string, string[]>,
+): void {
+  for (const path of changedPaths) {
+    const input = SHARED_APPLICATION_IMAGE_INPUTS.find((candidate) =>
+      pathMatchesPrefix(path, candidate),
+    );
+    if (input === undefined) continue;
+    for (const target of APPLICATION_IMAGE_TARGETS) {
+      addReason(
+        reasons,
+        target,
+        `shared application image input: ${path} (matches ${input})`,
+      );
     }
   }
 }
@@ -280,7 +298,7 @@ async function addPatchReasons(options: {
     inputs?.lockfiles?.head ?? (await Bun.file(`${repoRoot}/bun.lock`).text());
   const lock = parseLockfile(lockHead);
   const closureIds = new Map<string, Set<string>>();
-  for (const [target, owner] of Object.entries(TARGET_OWNERS)) {
+  for (const [target, owner] of Object.entries(IMAGE_TARGET_OWNERS)) {
     const dirs = targetClosureDirs(target, owner, packages);
     const ids = closurePackageIds(dirs, lock);
     if (ids === null) {
@@ -374,6 +392,7 @@ export async function selectImageTargetsWithReasons(
   const reasons = new Map<string, string[]>();
   addClosureReasons(changedPaths, packages, reasons);
   addPrefixReasons(changedPaths, reasons);
+  addSharedApplicationReasons(changedPaths, reasons);
 
   const patchPaths = changedPaths.filter((path) => path.startsWith("patches/"));
   if (patchPaths.length > 0) {

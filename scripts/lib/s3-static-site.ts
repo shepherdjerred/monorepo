@@ -33,34 +33,6 @@ export async function assertStaticSiteComplete(
   }
 }
 
-/** Read a release marker; a missing marker deliberately triggers a full sync. */
-export async function readS3Marker(opts: {
-  bucket: string;
-  key: string;
-  endpoint: string;
-  env: Record<string, string>;
-}): Promise<string | null> {
-  const result = await runAllowExit(
-    [
-      "aws",
-      "s3",
-      "cp",
-      `s3://${opts.bucket}/${opts.key}`,
-      "-",
-      "--endpoint-url",
-      opts.endpoint,
-    ],
-    { env: opts.env, capture: true },
-  );
-  if (result.exitCode !== 0) {
-    console.log(
-      `marker s3://${opts.bucket}/${opts.key} missing or unreadable (exit ${result.exitCode.toString()}) — treating as out of date`,
-    );
-    return null;
-  }
-  return result.stdout.trim();
-}
-
 /** AWS CLI's stable missing-key diagnostics for `s3 cp` object reads. */
 export function isMissingS3Object(stderr: string): boolean {
   return (

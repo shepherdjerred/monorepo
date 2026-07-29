@@ -176,9 +176,14 @@ ENV GIT_SHA=${GIT_SHA}
 # `prisma` is a runtime dependency of the backend, so `bunx` resolves it from
 # the installed tree without a network fetch.
 WORKDIR /app/packages/discord-plays-mario-kart
-CMD ["sh", "-c", "cd packages/backend && bunx prisma db push && cd /app/packages/discord-plays-mario-kart && exec bun packages/backend/src/index.ts"]
+USER 1000:1000
+ENV HOME=/tmp
+CMD ["sh", "-c", "cd packages/backend && bun x --no-install prisma db push && cd /app/packages/discord-plays-mario-kart && exec bun packages/backend/src/index.ts"]
 
 FROM runtime AS smoke
+# This stage temporarily needs root only to assemble the smoke harness and its
+# writable config fixture. It drops back to the deploy UID before execution.
+USER root
 # The smoke harness ships in CI context only — the scoped source COPY
 # excludes .buildkite, so stage it here (never in the pushed image stage).
 COPY .buildkite/scripts/smoke-app-in-image.ts /app/.buildkite/scripts/smoke-app-in-image.ts

@@ -27,17 +27,80 @@ import { requireEnv, optionalEnv } from "../../../scripts/lib/run.ts";
 import { runMain } from "../../../scripts/lib/transient.ts";
 import {
   applicationReadiness,
+  releaseTreeReadiness,
   unreadyApplicationSummaries,
 } from "../src/cdk8s/src/argocd-application-readiness.ts";
+import {
+  APPLICATION_LIFECYCLE_ANNOTATION,
+  APPLICATION_RESOURCES_FINALIZER,
+  REPOSITORY_CHART_URLS,
+} from "../src/cdk8s/src/application-release-policy.ts";
+import { latestPublishedVersion } from "./helm-release-core.ts";
+import { z } from "zod";
 
 const DEFAULT_SERVER_URL = "https://argocd.sjer.red";
+const DEFAULT_CHARTMUSEUM_ORIGIN = "https://chartmuseum.sjer.red";
 const DEFAULT_HEALTH_TIMEOUT_S = 300;
 const DEFAULT_SYNC_TIMEOUT_S = 300;
 const DEFAULT_DELETION_TIMEOUT_S = 120;
 const POLL_INTERVAL_MS = 10_000;
 
+const ExpectedApplicationsSchema = z.array(
+  z.object({
+    name: z.string().min(1),
+    revision: z.string().regex(/^2\.0\.0-\d+$/),
+    prune: z.boolean().default(false),
+  }),
+);
+
+const ManifestResponseSchema = z.object({
+  manifests: z.array(z.string()),
+});
+
+const RenderedApplicationSchema = z
+  .object({
+    apiVersion: z.string(),
+    kind: z.literal("Application"),
+    metadata: z.object({ name: z.string() }).passthrough(),
+    spec: z
+      .object({
+        source: z.object({
+          repoURL: z.string(),
+          chart: z.string().optional(),
+        }),
+        syncPolicy: z.record(z.string(), z.unknown()).optional(),
+      })
+      .passthrough(),
+  })
+  .passthrough();
+
+const RenderedObjectSchema = z
+  .object({
+    kind: z.string(),
+  })
+  .passthrough();
+
+const ReconcileApplicationSchema = z.object({
+  status: z
+    .object({
+      sync: z
+        .object({
+          status: z.string(),
+          revision: z.string().optional(),
+        })
+        .optional(),
+    })
+    .optional(),
+});
+
 function serverUrl(): string {
   return optionalEnv("ARGOCD_SERVER_URL") ?? DEFAULT_SERVER_URL;
+}
+
+function chartMuseumOrigin(): string {
+  return (
+    optionalEnv("CHARTMUSEUM_ORIGIN") ?? DEFAULT_CHARTMUSEUM_ORIGIN
+  ).replace(/\/$/, "");
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -72,6 +135,136 @@ async function getApplication(
   return data;
 }
 
+async function getApplications(token: string): Promise<unknown> {
+  const url = `${serverUrl()}/api/v1/applications`;
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+    redirect: "follow",
+  });
+  if (!response.ok) {
+    const body = (await response.text()).slice(0, 1024);
+    throw new Error(
+      `ERROR: ${url} returned HTTP ${response.status.toString()}\n${body}`,
+    );
+  }
+  return response.json();
+}
+
+async function suspendRepositoryAutoSync(
+  rootAppName: string,
+  timeoutSeconds: number,
+  dryRun: boolean,
+): Promise<void> {
+  console.log(
+    `--- argocd suspend-auto-sync: repository Applications under ${rootAppName}${dryRun ? " (dry run)" : ""}`,
+  );
+  if (dryRun) {
+    return;
+  }
+  const token = requireEnv("ARGOCD_TOKEN");
+  const manifestsUrl = `${serverUrl()}/api/v1/applications/${encodeURIComponent(rootAppName)}/manifests`;
+  const manifestsResponse = await fetch(manifestsUrl, {
+    headers: { Authorization: `Bearer ${token}` },
+    redirect: "follow",
+  });
+  if (!manifestsResponse.ok) {
+    const body = (await manifestsResponse.text()).slice(0, 1024);
+    throw new Error(
+      `Could not render ${rootAppName}: HTTP ${manifestsResponse.status.toString()}\n${body}`,
+    );
+  }
+  const rendered = ManifestResponseSchema.parse(await manifestsResponse.json());
+  const suspended = rendered.manifests.map((manifestSource) => {
+    const parsed = RenderedObjectSchema.parse(JSON.parse(manifestSource));
+    if (parsed.kind !== "Application") {
+      return manifestSource;
+    }
+    const application = RenderedApplicationSchema.parse(parsed);
+    if (
+      application.spec.source.chart === undefined ||
+      !REPOSITORY_CHART_URLS.has(application.spec.source.repoURL) ||
+      application.spec.syncPolicy === undefined ||
+      !Object.hasOwn(application.spec.syncPolicy, "automated")
+    ) {
+      return manifestSource;
+    }
+    const syncPolicy = Object.fromEntries(
+      Object.entries(application.spec.syncPolicy).filter(
+        ([key]) => key !== "automated",
+      ),
+    );
+    console.log(`suspending auto-sync: ${application.metadata.name}`);
+    return JSON.stringify({
+      ...application,
+      spec: { ...application.spec, syncPolicy },
+    });
+  });
+  await sync(rootAppName, timeoutSeconds, false, false, undefined, suspended);
+}
+
+async function assertExpectedAppsRevisionIsLatest(
+  expectedRevision: string,
+): Promise<void> {
+  const url = `${chartMuseumOrigin()}/api/charts/apps`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    const body = (await response.text()).slice(0, 1024);
+    throw new Error(
+      `ChartMuseum inventory failed for apps: HTTP ${response.status.toString()}\n${body}`,
+    );
+  }
+  const latest = latestPublishedVersion(await response.json());
+  if (latest === undefined) {
+    throw new Error("ChartMuseum has no published apps release");
+  }
+  if (latest.version !== expectedRevision) {
+    throw new Error(
+      `Refusing stale Argo release ${expectedRevision}: newest published apps revision is ${latest.version}`,
+    );
+  }
+}
+
+async function assertRootPruneSafe(token: string): Promise<void> {
+  const root = await getApplication("apps", token);
+  const status = isRecord(root["status"]) ? root["status"] : {};
+  const resources = Array.isArray(status["resources"])
+    ? status["resources"]
+    : [];
+  const candidates = resources.flatMap((resource: unknown) => {
+    if (
+      !isRecord(resource) ||
+      resource["kind"] !== "Application" ||
+      resource["status"] !== "OutOfSync" ||
+      typeof resource["name"] !== "string" ||
+      resource["name"] === "apps"
+    ) {
+      return [];
+    }
+    return [resource["name"]];
+  });
+  for (const childName of candidates) {
+    const child = await getApplication(childName, token);
+    const metadata = isRecord(child["metadata"]) ? child["metadata"] : {};
+    const annotations = isRecord(metadata["annotations"])
+      ? metadata["annotations"]
+      : {};
+    const finalizers = Array.isArray(metadata["finalizers"])
+      ? metadata["finalizers"]
+      : [];
+    const lifecycle = annotations[APPLICATION_LIFECYCLE_ANNOTATION];
+    if (lifecycle !== "cascade") {
+      throw new Error(
+        `Refusing to prune Application ${childName}: lifecycle is ${String(lifecycle ?? "undeclared")}`,
+      );
+    }
+    if (!finalizers.includes(APPLICATION_RESOURCES_FINALIZER)) {
+      throw new Error(
+        `Refusing to prune Application ${childName}: cascading resources finalizer is missing`,
+      );
+    }
+  }
+}
+
 /**
  * Trigger an ArgoCD sync for an application and wait for the sync OPERATION to
  * reach a terminal phase, failing on anything but Succeeded.
@@ -89,6 +282,8 @@ async function sync(
   timeoutSeconds: number,
   dryRun: boolean,
   prune: boolean,
+  revision?: string,
+  manifests?: readonly string[],
 ): Promise<void> {
   console.log(
     `--- argocd sync: ${appName}${prune ? " (prune)" : ""}${dryRun ? " (dry run)" : ""}`,
@@ -100,6 +295,9 @@ async function sync(
     return;
   }
   const token = requireEnv("ARGOCD_TOKEN");
+  if (appName === "apps" && prune) {
+    await assertRootPruneSafe(token);
+  }
   const url = `${serverUrl()}/api/v1/applications/${appName}/sync`;
   // Operations started before this instant are a previous sync, not ours.
   const postedAt = Date.now();
@@ -109,7 +307,11 @@ async function sync(
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ prune }),
+    body: JSON.stringify({
+      prune,
+      ...(revision === undefined ? {} : { revision }),
+      ...(manifests === undefined ? {} : { manifests }),
+    }),
   });
   if (!res.ok) {
     const body = (await res.text()).slice(0, 1024);
@@ -151,6 +353,100 @@ async function sync(
   }
   throw new Error(
     `Timeout: sync operation for ${appName} did not complete within ${timeoutSeconds.toString()}s`,
+  );
+}
+
+async function reconcileRelease(
+  expectedPath: string,
+  timeoutSeconds: number,
+  dryRun: boolean,
+): Promise<void> {
+  const expected = ExpectedApplicationsSchema.parse(
+    JSON.parse(await Bun.file(expectedPath).text()),
+  );
+  if (dryRun) {
+    console.log(
+      `DRYRUN: would reconcile ${expected.length.toString()} expected Application(s)`,
+    );
+    return;
+  }
+  const appsRelease = expected.find(
+    (application) => application.name === "apps",
+  );
+  if (appsRelease === undefined) {
+    throw new Error("Expected release inventory is missing the apps revision");
+  }
+  await assertExpectedAppsRevisionIsLatest(appsRelease.revision);
+  const token = requireEnv("ARGOCD_TOKEN");
+  const root = ReconcileApplicationSchema.parse(
+    await getApplication("apps", token),
+  );
+  if (
+    root.status?.sync?.status !== "Synced" ||
+    root.status.sync.revision !== appsRelease.revision
+  ) {
+    await sync("apps", timeoutSeconds, false, false, appsRelease.revision);
+  }
+  for (const wanted of expected) {
+    if (wanted.name === "apps") {
+      continue;
+    }
+    const current = ReconcileApplicationSchema.parse(
+      await getApplication(wanted.name, token),
+    );
+    const syncStatus = current.status?.sync?.status;
+    const revision = current.status?.sync?.revision;
+    if (
+      syncStatus === "Synced" &&
+      (wanted.revision === undefined || revision === wanted.revision)
+    ) {
+      continue;
+    }
+    await sync(
+      wanted.name,
+      timeoutSeconds,
+      false,
+      wanted.prune,
+      wanted.revision,
+    );
+  }
+  await releaseHealthWait(expectedPath, timeoutSeconds, false);
+}
+
+async function releaseHealthWait(
+  expectedPath: string,
+  timeoutSeconds: number,
+  dryRun: boolean,
+): Promise<void> {
+  const expected = ExpectedApplicationsSchema.parse(
+    JSON.parse(await Bun.file(expectedPath).text()),
+  );
+  console.log(
+    `--- argocd release-health-wait: ${expected.length.toString()} expected Application(s)`,
+  );
+  if (dryRun) {
+    return;
+  }
+  const token = requireEnv("ARGOCD_TOKEN");
+  const deadline = Date.now() + timeoutSeconds * 1000;
+  let latestFailures: readonly string[] = [];
+  while (Date.now() < deadline) {
+    const readiness = releaseTreeReadiness(
+      await getApplications(token),
+      expected,
+    );
+    if (readiness.ready) {
+      console.log("release tree is Synced/Healthy on expected revisions");
+      return;
+    }
+    latestFailures = readiness.failures;
+    for (const failure of latestFailures) {
+      console.log(`not ready: ${failure}`);
+    }
+    await Bun.sleep(POLL_INTERVAL_MS);
+  }
+  throw new Error(
+    `Release tree did not become ready: ${latestFailures.join("; ")}`,
   );
 }
 
@@ -386,6 +682,12 @@ function usage(): never {
       "[--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts tree-health-wait <app> " +
       "[--timeout <s>] [--dry-run]\n" +
+      "  bun packages/homelab/scripts/argocd.ts release-health-wait <expected.json> " +
+      "[--timeout <s>] [--dry-run]\n" +
+      "  bun packages/homelab/scripts/argocd.ts reconcile-release <expected.json> " +
+      "[--timeout <s>] [--dry-run]\n" +
+      "  bun packages/homelab/scripts/argocd.ts suspend-auto-sync <root-app> " +
+      "[--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts wait-deletion <app> " +
       "--group <g> --version <v> --kind <k> --namespace <ns> " +
       "[--timeout <s>] [--dry-run]",
@@ -435,6 +737,7 @@ async function main(): Promise<void> {
         timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
         dryRun,
         argv.includes("--prune"),
+        flag(argv, "revision"),
       );
       return;
     case "delete-application": {
@@ -465,6 +768,27 @@ async function main(): Promise<void> {
         timeoutOverride ?? DEFAULT_HEALTH_TIMEOUT_S,
         dryRun,
         true,
+      );
+      return;
+    case "release-health-wait":
+      await releaseHealthWait(
+        app,
+        timeoutOverride ?? DEFAULT_HEALTH_TIMEOUT_S,
+        dryRun,
+      );
+      return;
+    case "reconcile-release":
+      await reconcileRelease(
+        app,
+        timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
+        dryRun,
+      );
+      return;
+    case "suspend-auto-sync":
+      await suspendRepositoryAutoSync(
+        app,
+        timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
+        dryRun,
       );
       return;
     case "wait-deletion": {

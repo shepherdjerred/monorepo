@@ -35,11 +35,14 @@ ENV OTTOHG_SHA=c101be5ac2ae53c5d18ee063f16eeeda751639f8
 # Toolchain: modern LLVM for wasm32 clang + wasm-ld, build-essential for the
 # decomp host tools, libpng/zlib + pkg-config for gbagfx, python3 + uv for the
 # sound-data tooling.
+# renovate: datasource=pypi depName=uv
+ARG UV_VERSION=0.12.0
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     clang lld llvm build-essential libpng-dev zlib1g-dev pkg-config \
     git make ca-certificates python3 python3-pip \
-  && pip3 install --break-system-packages --no-cache-dir uv \
+  && pip3 install --break-system-packages --no-cache-dir "uv==${UV_VERSION}" \
+  && uv --version \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src

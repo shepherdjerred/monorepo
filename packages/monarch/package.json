@@ -18,7 +18,7 @@
     "@anthropic-ai/sdk": "^0.115.0",
     "@shepherdjerred/llm-models": "workspace:*",
     "pdfjs-dist": "^6.1.200",
-    "playwright": "^1.60.0",
+    "playwright": "1.62.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

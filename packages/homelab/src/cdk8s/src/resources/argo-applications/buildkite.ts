@@ -23,6 +23,13 @@ import {
 // liskov's own capacity (kubelet reservations, eviction, pids cap) is the
 // resource bulkhead now.
 export const BUILDKITE_MAX_IN_FLIGHT = 20;
+const CI_BASE_DIGEST_CONTENT = await Bun.file(
+  new URL("ci-base.DIGEST", import.meta.url),
+).text();
+const CI_BASE_DIGEST = CI_BASE_DIGEST_CONTENT.trim();
+if (!/^sha256:[\da-f]{64}$/.test(CI_BASE_DIGEST)) {
+  throw new Error("ci-base.DIGEST must contain a canonical sha256 digest");
+}
 
 function createBuildkiteNamespace(chart: Chart): void {
   new Namespace(chart, "buildkite-namespace", {
@@ -283,7 +290,8 @@ overrides:
               containers: [
                 {
                   name: "uv-cache-prune",
-                  image: "ghcr.io/shepherdjerred/ci-base:latest",
+                  image: `ghcr.io/shepherdjerred/ci-base@${CI_BASE_DIGEST}`,
+                  imagePullPolicy: "IfNotPresent",
                   command: ["uv", "cache", "prune", "--ci"],
                   env: [{ name: "UV_CACHE_DIR", value: "/buildkite/uv-cache" }],
                   resources: {

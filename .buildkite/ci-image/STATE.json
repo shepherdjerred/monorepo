@@ -1,0 +1,7 @@
+{
+  "schema": "ci-image-pin-state/v1",
+  "buildNumber": 0,
+  "sourceCommit": "bootstrap",
+  "sourceFingerprint": "bootstrap",
+  "digest": "sha256:5ddd275a7f616aa0bab8df8cb570c88532f000c3f3e89422ff4d7b69329da368"
+}

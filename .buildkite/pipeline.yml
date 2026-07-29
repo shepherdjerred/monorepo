@@ -31,12 +31,9 @@ common:
           containers:
             - *checkout_container
             - name: container-0
-              image: "ghcr.io/shepherdjerred/ci-base:latest"
-              # :latest is mutable and the ci-image refresh step repushes it;
-              # the k8s default IfNotPresent pinned pods to a stale node-cached
-              # image (build 5648: release step lacked the claude CLI baked
-              # into the current image).
-              imagePullPolicy: Always
+              image: "${CI_BASE_IMAGE}"
+              # upload-pipeline.sh expands the validated committed digest.
+              imagePullPolicy: IfNotPresent
               env:
                 # kubernetes-bootstrap runs step commands via /bin/sh by
                 # default — dash on the debian ci-base, which rejects
@@ -77,9 +74,8 @@ common:
           containers:
             - *checkout_container
             - name: container-0
-              image: "ghcr.io/shepherdjerred/ci-base:latest"
-              # Same stale-:latest guard as the base pod above.
-              imagePullPolicy: Always
+              image: "${CI_BASE_IMAGE}"
+              imagePullPolicy: IfNotPresent
               env:
                 # Same dash-vs-bash guard as the base pod above (build 5651).
                 - name: BUILDKITE_SHELL
@@ -115,9 +111,8 @@ common:
           containers:
             - *checkout_container
             - name: container-0
-              image: "ghcr.io/shepherdjerred/ci-base:latest"
-              # Same stale-:latest guard as the base pod above.
-              imagePullPolicy: Always
+              image: "${CI_BASE_IMAGE}"
+              imagePullPolicy: IfNotPresent
               env:
                 # Same dash-vs-bash guard as the base pod above (build 5651).
                 - name: BUILDKITE_SHELL
@@ -147,8 +142,8 @@ common:
           containers:
             - *checkout_container
             - name: container-0
-              image: "ghcr.io/shepherdjerred/ci-base:latest"
-              imagePullPolicy: Always
+              image: "${CI_BASE_IMAGE}"
+              imagePullPolicy: IfNotPresent
               env:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
@@ -185,8 +180,8 @@ common:
           containers:
             - *checkout_container
             - name: container-0
-              image: "ghcr.io/shepherdjerred/ci-base:latest"
-              imagePullPolicy: Always
+              image: "${CI_BASE_IMAGE}"
+              imagePullPolicy: IfNotPresent
               env:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
@@ -307,8 +302,12 @@ steps:
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     if_changed:
       include:
-        - ".buildkite/**"
-        - ".mise.toml"
+        - ".buildkite/pipeline.yml"
+        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/migration-core.ts"
+        - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/upload-pipeline.sh"
+        - ".buildkite/ci-playwright/**"
         - "bun.lock"
         - "bunfig.toml"
         - "package.json"
@@ -325,13 +324,7 @@ steps:
         - "scripts/lib/run.ts"
     cancel_on_build_failing: true
     command: |
-      rm -f /etc/apt/sources.list.d/nodesource.list /etc/apt/sources.list.d/nodesource.sources
-      curl -fsSL -o /tmp/bun.zip https://github.com/oven-sh/bun/releases/download/bun-v1.3.14/bun-linux-x64.zip
-      echo "951ee2aee855f08595aeec6225226a298d3fea83a3dcd6465c09cbccdf7e848f  /tmp/bun.zip" | sha256sum --check -
-      python3 -m zipfile -e /tmp/bun.zip /usr/local/lib
-      chmod +x /usr/local/lib/bun-linux-x64/bun; export PATH="/usr/local/lib/bun-linux-x64:$$PATH"
       bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/monorepo'
-      cd packages/sjer.red && bun x --no-install playwright install && cd ../..
       bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --concurrency=2
     retry: *retry
     plugins:
@@ -346,8 +339,8 @@ steps:
             containers:
               - *checkout_container
               - name: container-0
-                # renovate: datasource=docker depName=mcr.microsoft.com/playwright
-                image: "mcr.microsoft.com/playwright:v1.62.0-noble@sha256:baed2032d533817f3dbe6425de795788430ba345e819a1201337009ba17c9d07"
+                image: "${CI_PLAYWRIGHT_IMAGE}"
+                imagePullPolicy: IfNotPresent
                 resources:
                   # The checkout container separately requests its 1Gi tmpfs charge.
                   requests: { cpu: "2", memory: "5Gi" }
@@ -368,13 +361,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       if [ "$(buildkite-agent meta-data get ci-lane-run-playwright --default true)" != true ]; then exit 0; fi
-      rm -f /etc/apt/sources.list.d/nodesource.list /etc/apt/sources.list.d/nodesource.sources
-      curl -fsSL -o /tmp/bun.zip https://github.com/oven-sh/bun/releases/download/bun-v1.3.14/bun-linux-x64.zip
-      echo "951ee2aee855f08595aeec6225226a298d3fea83a3dcd6465c09cbccdf7e848f  /tmp/bun.zip" | sha256sum --check -
-      python3 -m zipfile -e /tmp/bun.zip /usr/local/lib
-      chmod +x /usr/local/lib/bun-linux-x64/bun; export PATH="/usr/local/lib/bun-linux-x64:$$PATH"
       bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/monorepo'
-      cd packages/sjer.red && bun x --no-install playwright install && cd ../..
       bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --concurrency=2
     artifact_paths:
       - "packages/sjer.red/dist/**/*"
@@ -392,8 +379,8 @@ steps:
             containers:
               - *checkout_container
               - name: container-0
-                # renovate: datasource=docker depName=mcr.microsoft.com/playwright
-                image: "mcr.microsoft.com/playwright:v1.62.0-noble@sha256:baed2032d533817f3dbe6425de795788430ba345e819a1201337009ba17c9d07"
+                image: "${CI_PLAYWRIGHT_IMAGE}"
+                imagePullPolicy: IfNotPresent
                 resources:
                   # The checkout container separately requests its 1Gi tmpfs charge.
                   requests: { cpu: "2", memory: "5Gi" }
@@ -410,13 +397,11 @@ steps:
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     if_changed:
       include:
-        - ".buildkite/**"
-        - ".mise.toml"
-        - "bun.lock"
-        - "bunfig.toml"
-        - "package.json"
-        - "patches/**"
-        - "turbo.json"
+        - ".buildkite/pipeline.yml"
+        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/migration-core.ts"
+        - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/upload-pipeline.sh"
         - "packages/resume/**"
         # Main's resume lane also gates on the deploy consumers of its
         # artifact — mirror them (lane↔if_changed coverage test).
@@ -499,8 +484,12 @@ steps:
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     if_changed:
       include:
-        - ".buildkite/**"
-        - ".mise.toml"
+        - ".buildkite/pipeline.yml"
+        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/migration-core.ts"
+        - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/upload-pipeline.sh"
+        - ".buildkite/scripts/toolchain.sh"
         - "bun.lock"
         - "bunfig.toml"
         - "package.json"
@@ -628,8 +617,11 @@ steps:
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     if_changed:
       include:
-        - ".buildkite/**"
-        - ".mise.toml"
+        - ".buildkite/pipeline.yml"
+        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/migration-core.ts"
+        - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/upload-pipeline.sh"
         - "bun.lock"
         - "**/bun.lock"
         - "bunfig.toml"
@@ -724,8 +716,11 @@ steps:
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     if_changed:
       include:
-        - ".buildkite/**"
-        - ".mise.toml"
+        - ".buildkite/pipeline.yml"
+        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/migration-core.ts"
+        - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/upload-pipeline.sh"
         - "bun.lock"
         - "bunfig.toml"
         - "package.json"
@@ -873,8 +868,19 @@ steps:
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     if_changed:
       include:
-        - ".buildkite/**"
-        - ".mise.toml"
+        - ".buildkite/pipeline.yml"
+        - ".buildkite/scripts/bake-images.ts"
+        - ".buildkite/scripts/bake-retry.ts"
+        - ".buildkite/scripts/buildkit-env.ts"
+        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/migration-core.ts"
+        - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/select-image-targets.ts"
+        - ".buildkite/scripts/select-image-targets-lockfile.ts"
+        - ".buildkite/scripts/select-image-targets-workspaces.ts"
+        - ".buildkite/scripts/smoke-app-in-image.ts"
+        - ".buildkite/scripts/upload-pipeline.sh"
+        - ".buildkite/scripts/validate-image-migration.ts"
         - "bun.lock"
         - "bunfig.toml"
         - "package.json"
@@ -890,6 +896,7 @@ steps:
         - "scripts/lib/**"
         - "packages/homelab/src/tofu/**"
         - "packages/homelab/scripts/tofu-stack.ts"
+        - "packages/homelab/scripts/helm-release-core.ts"
         - "packages/homelab/scripts/helm-push.ts"
         - "packages/homelab/scripts/argocd.ts"
         - "packages/homelab/src/cdk8s/**"
@@ -916,7 +923,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter '@homelab/cdk8s'
+      bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter homelab --filter '@homelab/cdk8s'
       # Merge-base for section gating; unresolvable → empty → ci-changed.ts
       # fails open and every section runs (extra work, never lost coverage).
       if ! CI_CHANGED_BASE=$(git merge-base origin/main HEAD); then
@@ -953,11 +960,23 @@ steps:
       for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red better-skill-capped glitter; do
         bun --no-install scripts/deploy-site.ts "$$site" --dry-run
       done
-      bun --no-install scripts/scout-site-release.ts archive --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
-      bun --no-install scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
-      bun --no-install scripts/scout-site-release.ts reconcile-prod --dry-run
-      bun --no-install scripts/scout-site-release.ts tag-release --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
+      scout_backend=$$(bun --no-install scripts/scout-site-release.ts resolve-backend-digest)
+      bun --no-install scripts/scout-site-release.ts prepare-state \
+        --build-number "$BUILDKITE_BUILD_NUMBER" \
+        --backend-digest "$$scout_backend" \
+        --output /tmp/scout-release-state.json \
+        --dry-run
+      scout_state=$$(</tmp/scout-release-state.json)
+      bun --no-install scripts/scout-site-release.ts archive --state "$$scout_state" --dry-run
+      bun --no-install scripts/scout-site-release.ts deploy-beta --state "$$scout_state" --dry-run
+      bun --no-install scripts/scout-site-release.ts reconcile-prod --state "$$scout_state" --dry-run
+      bun --no-install scripts/scout-site-release.ts tag-release --state "$$scout_state" --dry-run
+      bun --no-install scripts/scout-site-release.ts resolve-prod-pin
       bun --no-install packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER" --dry-run
+      bun --no-install packages/homelab/scripts/argocd.ts reconcile-release argocd-release-expected.json --dry-run
+      pin_candidates=$$(jq -cn --arg build "$BUILDKITE_BUILD_NUMBER" \
+        '{schema:"pin-candidates/v1",buildNumber:($$build|tonumber),candidates:{}}')
+      bun --no-install scripts/update-versions.ts --commit-back --candidates "$$pin_candidates" --dry-run
       bun --no-install scripts/release.ts --dry-run
     retry: *retry
     plugins:
@@ -972,9 +991,24 @@ steps:
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     if_changed:
       include:
-        - ".buildkite/**"
+        - ".buildkite/pipeline.yml"
+        - ".buildkite/application-image-smoke.Dockerfile"
+        - ".buildkite/scripts/application-image-runtime.ts"
+        - ".buildkite/scripts/bake-images.ts"
+        - ".buildkite/scripts/bake-retry.ts"
+        - ".buildkite/scripts/buildkit-env.ts"
+        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/image-targets.ts"
+        - ".buildkite/scripts/migration-core.ts"
+        - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/select-image-targets.ts"
+        - ".buildkite/scripts/select-image-targets-lockfile.ts"
+        - ".buildkite/scripts/select-image-targets-workspaces.ts"
+        - ".buildkite/scripts/smoke-app-in-image.ts"
+        - ".buildkite/scripts/toolchain.sh"
+        - ".buildkite/scripts/upload-pipeline.sh"
+        - ".buildkite/scripts/validate-pipeline.ts"
         - ".dockerignore"
-        - ".mise.toml"
         - "bun.lock"
         - "bunfig.toml"
         - "docker-bake.hcl"
@@ -1043,6 +1077,9 @@ steps:
     command: |
       if ! bun --no-install .buildkite/scripts/ci-changed.ts images; then
         jq -n '{}' | buildkite-agent meta-data set image-digests
+        jq -cn --arg build "$BUILDKITE_BUILD_NUMBER" \
+          '{schema:"pin-candidates/v1",buildNumber:($$build|tonumber),candidates:{}}' |
+          buildkite-agent meta-data set pin-candidates
         # bake-images.ts never runs on this path, so it never produces
         # image-push-outcomes.json — write the empty array ourselves; an
         # unmatched artifact_paths entry fails the step even though the skip
@@ -1085,13 +1122,7 @@ steps:
     concurrency: 1
     concurrency_group: monorepo/site-deploys
     command: |
-      # The site-scout lane carries paths the aggregate sites lane does not
-      # (notably versions.ts: the version commit-back build must archive +
-      # mint the deferred scout release pair — build 6281 hard-failed when
-      # this early exit swallowed that build's archive), so only skip when
-      # BOTH selectors agree nothing site-shaped changed.
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts sites &&
-        ! bun --no-install .buildkite/scripts/ci-changed.ts site-scout; then
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts sites; then
         # The per-site lanes below never run on this early-exit path, so their
         # own ci-changed.ts calls (and the recordDecision inside them) never
         # fire even though the aggregate answer applies to every one of them —
@@ -1114,7 +1145,6 @@ steps:
       site_stocks=false
       site_better_skill_capped=false
       site_glitter=false
-      site_scout=false
       if bun --no-install .buildkite/scripts/ci-changed.ts site-sjer-red; then
         site_sjer=true
       fi
@@ -1142,18 +1172,6 @@ steps:
         # consumer must be selected so its production closure is installed.
         filters+=(--filter glitter)
       fi
-      if bun --no-install .buildkite/scripts/ci-changed.ts site-scout; then
-        site_scout=true
-        filters+=(--filter '@scout-for-lol/frontend')
-        filters+=(--filter '@scout-for-lol/app')
-        filters+=(--filter astro-opengraph-images)
-        filters+=(--filter '@shepherdjerred/llm-models')
-        # Scout's data workspace imports this browser-safe shared context.
-        # A filtered install links the workspace but does not produce its
-        # gitignored dist entrypoint, so build it before the Scout site.
-        filters+=(--filter '@shepherdjerred/glitter-context')
-        bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
-      fi
       if [ "$${#filters[@]}" -gt 0 ]; then
         bun install --frozen-lockfile "$${filters[@]}"
       fi
@@ -1174,17 +1192,6 @@ steps:
       if $$site_stocks; then bun --no-install scripts/deploy-site.ts stocks-sjer-red; fi
       if $$site_better_skill_capped; then bun --no-install scripts/deploy-site.ts better-skill-capped; fi
       if $$site_glitter; then bun --no-install scripts/deploy-site.ts glitter; fi
-      if $$site_scout; then
-        bun --no-install run --cwd packages/llm-models build
-        bun --no-install run --cwd packages/astro-opengraph-images build
-        bun --no-install run --cwd packages/glitter-context build
-        bun --no-install scripts/scout-site-release.ts archive --version "2.0.0-$BUILDKITE_BUILD_NUMBER"
-        # Record the archived version so scout-tag-release can gate on what
-        # actually happened instead of re-deriving it from a second path
-        # selector that can (and did — build 6281) skew from this one.
-        buildkite-agent meta-data set scout-site-archived "2.0.0-$BUILDKITE_BUILD_NUMBER"
-        bun --no-install scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER"
-      fi
     retry: *retry
     plugins:
       - kubernetes:
@@ -1206,6 +1213,9 @@ steps:
     if: build.branch == pipeline.default_branch
     depends_on: verify
     cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/package-publish
+    concurrency_method: ordered
     # Both halves are idempotent (npm --tolerate-republish; cooklang skips an
     # existing version tag), so the shared retry anchor is safe.
     command: |
@@ -1244,21 +1254,30 @@ steps:
   - label: ":helm: helm push"
     key: helm-push
     if: build.branch == pipeline.default_branch
-    # Publishing the floating buildkitd chart makes Argo auto-sync it. Wait for
-    # this build's remote solves first so a daemon version/config rollout
-    # cannot send graceful_stop to its own image jobs (build 6681).
-    depends_on: [verify, images, ci-image-refresh]
-    cancel_on_build_failing: true
+    # Wait for this build's remote solves before suspending the currently
+    # floating repository Applications and publishing their immutable charts.
+    depends_on: [verify, images, ci-base-refresh, ci-playwright-refresh]
+    concurrency: 1
+    concurrency_group: monorepo/homelab-release
+    concurrency_method: ordered
     command: |
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts helm; then exit 0; fi
+      image_digests=$$(buildkite-agent meta-data get image-digests --default '{}')
+      release_requested=false
+      if bun --no-install .buildkite/scripts/ci-changed.ts helm; then release_requested=true; fi
+      if bun --no-install .buildkite/scripts/ci-changed.ts argocd; then release_requested=true; fi
+      if [ "$$image_digests" != "{}" ]; then release_requested=true; fi
+      if ! $$release_requested; then
+        exit 0
+      fi
       . .buildkite/scripts/toolchain.sh
-      # cdk8s synth output is flat (`dist/<chart>.k8s.yaml`), so `dist/*` matches
-      # it. The former `dist/**/*` download failed fatally here: buildkite-agent's
-      # `**/*` needs a subdirectory segment, matches none of the flat files, and
-      # treats "no artifacts found" as fatal — killing the step before this
-      # `dist/*` download (which does match) ever ran (build 6007).
-      buildkite-agent artifact download "packages/homelab/src/cdk8s/dist/*" . --step verify
+      bun install --frozen-lockfile --filter homelab --filter '@homelab/cdk8s' --production
+      export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
+      bun --no-install packages/homelab/scripts/argocd.ts suspend-auto-sync apps --timeout 300
+      export HOMELAB_IMAGE_DIGESTS_JSON="$$image_digests"
+      export HOMELAB_RELEASE_VERSION="2.0.0-$BUILDKITE_BUILD_NUMBER"
       bun --no-install packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER"
+      buildkite-agent artifact upload "helm-release-plan.json"
+      buildkite-agent artifact upload "argocd-release-expected.json"
     retry: *retry
     plugins:
       - kubernetes:
@@ -1320,21 +1339,26 @@ steps:
     key: argocd-sync
     if: build.branch == pipeline.default_branch
     depends_on: [images, helm-push, tofu-apply]
-    cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/homelab-release
+    concurrency_method: ordered
     command: |
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts argocd; then exit 0; fi
+      image_digests=$$(buildkite-agent meta-data get image-digests --default '{}')
+      release_requested=false
+      if bun --no-install .buildkite/scripts/ci-changed.ts helm; then release_requested=true; fi
+      if bun --no-install .buildkite/scripts/ci-changed.ts argocd; then release_requested=true; fi
+      if [ "$$image_digests" != "{}" ]; then release_requested=true; fi
+      if ! $$release_requested; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile --filter '@homelab/cdk8s' --production
+      bun install --frozen-lockfile --filter homelab --filter '@homelab/cdk8s' --production
       # The CI secret uses the argocd CLI's canonical ARGOCD_AUTH_TOKEN name;
       # argocd.ts reads ARGOCD_TOKEN (build 5648).
       export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
-      bun --no-install packages/homelab/scripts/argocd.ts sync apps
-      bun --no-install packages/homelab/scripts/argocd.ts tree-health-wait argocd --timeout 300
-      # Kueue was a child Application without a resources finalizer. Delete it
-      # explicitly with foreground cascading before pruning the root-owned
-      # queues and namespace; otherwise its Helm resources are orphaned.
-      bun --no-install packages/homelab/scripts/argocd.ts delete-application kueue --project default --timeout 300
-      bun --no-install packages/homelab/scripts/argocd.ts sync apps --prune
+      buildkite-agent artifact download "argocd-release-expected.json" . --step helm-push
+      bun --no-install packages/homelab/scripts/argocd.ts reconcile-release argocd-release-expected.json --timeout 300
+      apps_revision=$$(jq -er '.[] | select(.name == "apps") | .revision' argocd-release-expected.json)
+      bun --no-install packages/homelab/scripts/argocd.ts sync apps --revision "$$apps_revision" --prune
+      bun --no-install packages/homelab/scripts/argocd.ts release-health-wait argocd-release-expected.json --timeout 300
       bun --no-install packages/homelab/scripts/argocd.ts tree-health-wait apps --timeout 300
     retry: *retry
     plugins:
@@ -1344,38 +1368,72 @@ steps:
             labels:
               ci.sjer.red/step-key: argocd-sync
 
-  # Mint the versioned release-pair tag: after this build archived site
-  # version 2.0.0-<build> and deployed it to beta, retag the paired backend
-  # digest as ghcr.io/shepherdjerred/scout-for-lol:2.0.0-<build>. The tag is
-  # what the Renovate-managed prod pin discovers — tag name = archived site
-  # version, tag target = the backend content beta serves that site against —
-  # so every tag Renovate can offer is a complete, promotable pair. Ordered
-  # after images (paired digest known) AND sites (archive manifest uploaded);
-  # imagetools talks straight to the registry, so no dind sidecar is needed.
+  # Build each Scout flavor exactly once, bind both immutable archives to the
+  # exact backend digest that Argo just made healthy, then deploy beta from
+  # that archived state. This lane is separate from generic static sites so a
+  # non-Scout image pin update cannot manufacture a Scout release.
+  - label: ":test_tube: scout beta release"
+    key: scout-beta-release
+    if: build.branch == pipeline.default_branch
+    depends_on: [images, argocd-sync]
+    concurrency: 1
+    concurrency_group: monorepo/site-deploys
+    command: |
+      scout_candidate=$$(buildkite-agent meta-data get image-digests |
+        jq -r '."shepherdjerred/scout-for-lol/beta" // empty')
+      scout_source_changed=false
+      if bun --no-install .buildkite/scripts/ci-changed.ts site-scout; then
+        scout_source_changed=true
+      fi
+      if [ -z "$$scout_candidate" ] && ! $$scout_source_changed; then exit 0; fi
+      . .buildkite/scripts/toolchain.sh
+      bun install --frozen-lockfile \
+        --filter '@shepherdjerred/root-scripts' \
+        --filter '@scout-for-lol/frontend' \
+        --filter '@scout-for-lol/app' \
+        --filter astro-opengraph-images \
+        --filter '@shepherdjerred/llm-models' \
+        --filter '@shepherdjerred/glitter-context'
+      bun --no-install run --cwd packages/llm-models build
+      bun --no-install run --cwd packages/astro-opengraph-images build
+      bun --no-install run --cwd packages/glitter-context build
+      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
+      if [ -n "$$scout_candidate" ]; then
+        scout_backend=$$(bun --no-install scripts/scout-site-release.ts resolve-backend-digest --candidate-digest "$$scout_candidate")
+      else
+        scout_backend=$$(bun --no-install scripts/scout-site-release.ts resolve-backend-digest)
+      fi
+      bun --no-install scripts/scout-site-release.ts prepare-state \
+        --build-number "$BUILDKITE_BUILD_NUMBER" \
+        --backend-digest "$$scout_backend" \
+        --output .scout-release/state.json
+      scout_state=$$(<.scout-release/state.json)
+      bun --no-install scripts/scout-site-release.ts archive --state "$$scout_state"
+      buildkite-agent meta-data set scout-release-state "$$scout_state"
+      bun --no-install scripts/scout-site-release.ts deploy-beta --state "$$scout_state"
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: scout-beta-release
+
+  # Mint a promotable tag only after the exact beta release is deployed and
+  # verified. The immutable state binds tag, backend digest, both site archives,
+  # source commit, and release inputs.
   - label: ":label: scout tag release"
     key: scout-tag-release
     if: build.branch == pipeline.default_branch
-    depends_on: [images, sites]
-    cancel_on_build_failing: true
+    depends_on: scout-beta-release
     command: |
-      # Gate on what the sites step actually recorded, not on a re-derived
-      # path selector: build 6281 failed because this step's site-scout list
-      # and the sites step's aggregate list disagreed about a versions.ts-only
-      # commit. No recorded archive → nothing to mint this build. If the
-      # images step still recorded a scout digest (a backend-closure change
-      # outside the site lane), the mint is deferred: the commit-back merge
-      # touches versions.ts (in the site-scout lane), so the next build
-      # archives + mints the pair.
-      archived=$$(buildkite-agent meta-data get scout-site-archived --default "")
-      if [ -z "$$archived" ]; then exit 0; fi
+      scout_state=$$(buildkite-agent meta-data get scout-release-state --default "")
+      if [ -z "$$scout_state" ]; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
-      # SeaweedFS creds: asserts the version's archive manifest exists before
-      # minting (only archived versions may become promotable tags).
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       printf '%s' "$$GH_TOKEN" | docker login ghcr.io -u shepherdjerred --password-stdin
-      scout_digest=$$(buildkite-agent meta-data get image-digests | jq -r '."shepherdjerred/scout-for-lol" // empty')
-      bun --no-install scripts/scout-site-release.ts tag-release --version "$$archived" $${scout_digest:+--digest "$$scout_digest"}
+      bun --no-install scripts/scout-site-release.ts tag-release --state "$$scout_state"
     retry: *retry
     plugins:
       - kubernetes:
@@ -1394,8 +1452,7 @@ steps:
   - label: ":rocket: scout prod reconcile"
     key: scout-prod-reconcile
     if: build.branch == pipeline.default_branch
-    depends_on: [argocd-sync, sites]
-    cancel_on_build_failing: true
+    depends_on: [argocd-sync, scout-beta-release]
     concurrency: 1
     concurrency_group: monorepo/site-deploys
     command: |
@@ -1403,7 +1460,9 @@ steps:
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
-      bun --no-install scripts/scout-site-release.ts reconcile-prod
+      prod_pin=$$(bun --no-install scripts/scout-site-release.ts resolve-prod-pin)
+      prod_state=$$(bun --no-install scripts/scout-site-release.ts resolve-prod-state --prod-pin "$$prod_pin")
+      bun --no-install scripts/scout-site-release.ts reconcile-prod --state "$$prod_state"
     retry: *retry
     plugins:
       - kubernetes:
@@ -1481,9 +1540,12 @@ steps:
     if: build.branch == pipeline.default_branch
     depends_on: images
     cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/version-commit-back
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun --no-install scripts/update-versions.ts --commit-back "2.0.0-$BUILDKITE_BUILD_NUMBER" --digests "$$(buildkite-agent meta-data get image-digests)"
+      bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
+      bun --no-install scripts/update-versions.ts --commit-back --candidates "$$(buildkite-agent meta-data get pin-candidates)"
     # Safe to retry: the bump branch is force-updated and the PR lookup is
     # find-or-create; transient gh/git failures exit 34 via transient.ts.
     retry: *retry
@@ -1494,24 +1556,50 @@ steps:
             labels:
               ci.sjer.red/step-key: version-commit-back
 
-  # ── Toolchain image refresh ───────────────────────────────────────────────
-  - label: ":docker: ci-image refresh"
-    key: ci-image-refresh
+  # ── Toolchain image candidates ────────────────────────────────────────────
+  # Candidate builds are independent. Each generated PR updates one committed
+  # digest, and PR CI consumes that digest before auto-merge.
+  - label: ":docker: ci-base candidate"
+    key: ci-base-refresh
     if: build.branch == pipeline.default_branch
     depends_on: verify
     cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/ci-base-refresh
     command: |
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts ci-image; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts ci-base; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       bun --no-install .buildkite/scripts/buildkit-env.ts
-      bun --no-install .buildkite/scripts/build-ci-image.ts
+      bun --no-install .buildkite/scripts/build-ci-image.ts --image ci-base --candidate-out ci-base-candidate.json
+      bun --no-install .buildkite/scripts/update-ci-image-pin.ts --candidate ci-base-candidate.json
     retry: *retry
     plugins:
       - kubernetes:
           <<: *pod_buildkit_kubernetes
           metadata:
             labels:
-              ci.sjer.red/step-key: ci-image-refresh
+              ci.sjer.red/step-key: ci-base-refresh
+
+  - label: ":performing_arts: ci-playwright candidate"
+    key: ci-playwright-refresh
+    if: build.branch == pipeline.default_branch
+    depends_on: verify
+    cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/ci-playwright-refresh
+    command: |
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts ci-playwright; then exit 0; fi
+      . .buildkite/scripts/toolchain.sh
+      bun --no-install .buildkite/scripts/buildkit-env.ts
+      bun --no-install .buildkite/scripts/build-ci-image.ts --image ci-playwright --candidate-out ci-playwright-candidate.json
+      bun --no-install .buildkite/scripts/update-ci-image-pin.ts --candidate ci-playwright-candidate.json
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_buildkit_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: ci-playwright-refresh
 
   # ── Main-only: build summary annotation (runs even when deploys fail) ─────
   - label: ":memo: build summary"
@@ -1526,14 +1614,17 @@ steps:
       - sites
       - helm-push
       - tofu-apply
+      - tofu-github
       - argocd-sync
-      # These three record the npm/cooklang, scout-reconcile, and ci-image
-      # lane decisions the table below renders; without depending on them
-      # directly, build-summary can render before they finish and show a
-      # false "not recorded" for a lane that's still mid-run.
+      - scout-beta-release
       - publish
+      - scout-tag-release
       - scout-prod-reconcile
-      - ci-image-refresh
+      - tofu-cloudflare
+      - release-please
+      - version-commit-back
+      - ci-base-refresh
+      - ci-playwright-refresh
     allow_dependency_failure: true
     command: bun --no-install .buildkite/scripts/annotate-build-summary.ts
     plugins:
