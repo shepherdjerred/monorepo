@@ -20,7 +20,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
-const SHELFBRIDGE_PORT = 8787;
+export const SHELFBRIDGE_PORT = 8787;
 export const SHELFBRIDGE_SERVICE_HOSTNAME = "media-shelfbridge-service";
 export const SHELFBRIDGE_SERVICE_IP = "10.109.78.226";
 
@@ -36,9 +36,11 @@ export const SHELFBRIDGE_SERVICE_IP = "10.109.78.226";
  *
  * PUBLIC_BASE_URL must resolve from inside the qBittorrent pod (gluetun
  * netns). Gluetun deliberately replaces Kubernetes DNS to keep public lookups
- * inside the VPN, so the qBittorrent pod maps this hostname to the Service's
- * pinned ClusterIP. No ingress: the only consumers are in-namespace (Bindery
- * API queries, qBit webseeds).
+ * inside the VPN. Bindery resolves this hostname normally to the Service, while
+ * the qBittorrent pod maps it to a fixed-destination relay on the pod's
+ * WireGuard address. The relay then forwards only to the pinned ClusterIP. No
+ * ingress: the only consumers are in-namespace (Bindery API queries, qBit
+ * webseeds).
  *
  * Z-Library is enabled anonymously (no ZLIB_EMAIL/PASSWORD) — returns
  * anonymous-tier results; wire creds later by adding envs + 1Password fields.
@@ -148,9 +150,9 @@ export function createShelfbridgeDeployment(chart: Chart) {
 
   new Service(chart, "shelfbridge-service", {
     selector: deployment,
-    // qBittorrent's Gluetun netns cannot use Kubernetes DNS without sending
-    // all public DNS through CoreDNS outside the VPN. Keep this address stable
-    // so qBittorrent can use a narrow /etc/hosts entry instead.
+    // Keep this address stable: qBittorrent's fixed-destination relay uses it
+    // as the only backend without depending on Kubernetes DNS from Gluetun's
+    // network namespace.
     clusterIP: SHELFBRIDGE_SERVICE_IP,
     ports: [{ port: SHELFBRIDGE_PORT }],
   });
