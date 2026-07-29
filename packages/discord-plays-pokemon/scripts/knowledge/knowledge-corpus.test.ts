@@ -57,6 +57,12 @@ describe("committed generated knowledge", () => {
     const ralts = requiredRecord("species:ralts");
     expect(ralts.body).toContain("Evolves to: Kirlia");
     expect(ralts.body).toContain("level 20");
+    const blissey = requiredRecord("species:blissey");
+    expect(blissey.body).not.toContain("Base experience:");
+    expect(blissey.body).toContain("happiness 220+");
+    const eevee = requiredRecord("species:eevee");
+    expect(eevee.body).toContain("happiness 220+");
+    expect(eevee.body).not.toContain("happiness 160+");
   });
 
   test("identifies Archipelago checks and logic as randomizer metadata", () => {

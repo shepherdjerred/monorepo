@@ -124,6 +124,10 @@ system against a copied live save and the exact goal `get me a pokeman`.
   release, teardown rejects new starts, lease conflicts are typed and reported
   to the user, only explicit provider startup failures are classified, and
   each run uses an isolated helper directory and waits for its history record.
+- 2026-07-28: Final corpus review found two more unversioned PokeAPI fields.
+  Current base-experience values are now omitted instead of being presented as
+  Emerald data, and friendship evolutions use Emerald's Generation III
+  threshold of 220 rather than the current minimum-happiness value.
 
 ## Session Log — 2026-07-28
 
@@ -162,6 +166,10 @@ system against a copied live save and the exact goal `get me a pokeman`.
   lease denial without a false acknowledgement, benchmark helpers are
   per-run, history persistence is awaited, and unknown startup exceptions
   remain harness failures.
+- Removed unversioned base-experience values from species records and
+  normalized every Emerald friendship evolution to the Generation III
+  threshold. The pinned generator reproduced 1,759 permissive and 39
+  CC BY-NC-SA records, and all 19 generator/corpus tests pass.
 
 ### Remaining
 

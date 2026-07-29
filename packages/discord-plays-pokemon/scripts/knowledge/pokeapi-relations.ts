@@ -45,6 +45,15 @@ export const EvolutionTriggerRows = z.array(
 export type PokemonFormRow = z.infer<typeof PokemonFormRows>[number];
 export type EvolutionRow = z.infer<typeof EvolutionRows>[number];
 
+export function generation3HappinessThreshold(
+  minimumHappiness: number | undefined,
+): number | undefined {
+  // PokeAPI's evolution rows identify friendship evolutions for the target
+  // version group, but minimum_happiness is maintained as current data. Every
+  // friendship evolution in Emerald uses the Generation III threshold of 220.
+  return minimumHappiness === undefined ? undefined : 220;
+}
+
 export function requirePokeApiReference<T>(
   values: ReadonlyMap<number, T>,
   id: number,
@@ -155,8 +164,9 @@ function evolutionCondition(
     );
     details.push(`holding ${humanizeIdentifier(item.identifier)}`);
   }
-  if (evolution.minimum_happiness !== undefined) {
-    details.push(`happiness ${String(evolution.minimum_happiness)}+`);
+  const happiness = generation3HappinessThreshold(evolution.minimum_happiness);
+  if (happiness !== undefined) {
+    details.push(`happiness ${String(happiness)}+`);
   }
   if (evolution.minimum_beauty !== undefined) {
     details.push(`beauty ${String(evolution.minimum_beauty)}+`);

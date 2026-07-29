@@ -13,7 +13,10 @@ import {
   generation3PowerLabel,
   includeGeneration3Item,
 } from "./pokeapi.ts";
-import { requirePokeApiReference } from "./pokeapi-relations.ts";
+import {
+  generation3HappinessThreshold,
+  requirePokeApiReference,
+} from "./pokeapi-relations.ts";
 
 const BULBAPEDIA_PIN = {
   title: "Walkthrough:Pokémon Emerald",
@@ -87,6 +90,14 @@ describe("PokeAPI relational integrity", () => {
     expect(() =>
       requirePokeApiReference(types, 99, "types", "move glitch"),
     ).toThrow("PokeAPI move glitch references missing types row 99");
+  });
+});
+
+describe("Generation III evolution normalization", () => {
+  test("uses Emerald's friendship threshold instead of current PokeAPI data", () => {
+    expect(generation3HappinessThreshold(160)).toBe(220);
+    expect(generation3HappinessThreshold(220)).toBe(220);
+    expect(generation3HappinessThreshold(undefined)).toBeUndefined();
   });
 });
 

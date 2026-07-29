@@ -40,7 +40,6 @@ const PokemonRows = z.array(
     species_id: IntegerString,
     height: IntegerString,
     weight: IntegerString,
-    base_experience: OptionalIntegerString,
     is_default: z.enum(["0", "1"]),
   }),
 );
@@ -379,7 +378,7 @@ export async function buildPokeApiRecords(
         `National Pokédex: ${String(row.id)}`,
         `Types: ${typeList.join("/")}`,
         `Height: ${String(form.height / 10)} m; weight: ${String(form.weight / 10)} kg`,
-        `Base experience: ${String(form.base_experience ?? 0)}; capture rate: ${String(row.capture_rate)}`,
+        `Capture rate: ${String(row.capture_rate)}`,
         `Evolves from: ${evolution.predecessor}`,
         `Evolves to: ${evolution.successors.join("; ") || "none"}`,
         `Emerald level-up moves (level:move): ${compactList(learnedMoves, 60) || "none"}`,
