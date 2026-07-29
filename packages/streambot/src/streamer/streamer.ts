@@ -125,6 +125,11 @@ export class StreambotStreamer implements StreamerLike {
   private lastPlaybackPositionSeconds = 0;
   /** Offset (seconds) the current segment started playing at (initial resume seek or last live seek). */
   private segmentStartOffsetSeconds = 0;
+  /**
+   * Seek target visible to the synchronously-starting observer before the replacement attach
+   * succeeds. Public position tracking continues from the prior anchor until seek() commits.
+   */
+  private pendingSeekOffsetSeconds: number | null = null;
   /** Wall-clock (ms) when the current segment began playing; null when nothing is playing. */
   private segmentStartedAtMs: number | null = null;
   /** Most recent Discord-side voice ws close (never set by local stops). */
@@ -241,19 +246,20 @@ export class StreambotStreamer implements StreamerLike {
       return false;
     }
     const target = Math.max(0, seconds);
-    const previousOffset = this.segmentStartOffsetSeconds;
-    const previousStartedAtMs = this.segmentStartedAtMs;
-    // Re-anchor before the player restarts ffmpeg: its new observer epoch can begin synchronously
-    // inside seek(), and any stall must be relative to this target rather than the prior segment.
-    this.segmentStartOffsetSeconds = target;
-    this.segmentStartedAtMs = this.now();
+    const targetStartedAtMs = this.now();
+    // The replacement observer can begin synchronously inside player.seek(), so expose the target
+    // to stall accounting immediately. Do not commit the public position anchor until the real
+    // player confirms its replacement pipeline attached successfully.
+    this.pendingSeekOffsetSeconds = target;
     try {
       await this.player.seek(target);
     } catch (error) {
-      this.segmentStartOffsetSeconds = previousOffset;
-      this.segmentStartedAtMs = previousStartedAtMs;
+      this.pendingSeekOffsetSeconds = null;
       throw error;
     }
+    this.segmentStartOffsetSeconds = target;
+    this.segmentStartedAtMs = targetStartedAtMs;
+    this.pendingSeekOffsetSeconds = null;
     return true;
   }
 
@@ -487,10 +493,12 @@ export class StreambotStreamer implements StreamerLike {
         // across live seeks). We deliberately do NOT derive this from `getPosition()`: the wall-clock
         // tracker over-counts when ffmpeg was producing below realtime before it froze, which would
         // skip unseen media. Fall back to the segment start if no media time was parsed yet.
+        const segmentStartOffsetSeconds =
+          this.pendingSeekOffsetSeconds ?? this.segmentStartOffsetSeconds;
         const positionSeconds =
           lastMediaSeconds === undefined
-            ? this.segmentStartOffsetSeconds
-            : this.segmentStartOffsetSeconds + lastMediaSeconds;
+            ? segmentStartOffsetSeconds
+            : segmentStartOffsetSeconds + lastMediaSeconds;
         this.stallListener?.({
           positionSeconds,
           reason: `ffmpeg produced no output for ${String(STALL_AFTER_SECONDS)}s`,

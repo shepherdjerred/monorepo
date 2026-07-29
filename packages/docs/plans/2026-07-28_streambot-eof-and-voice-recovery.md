@@ -75,7 +75,11 @@ losses continue to reconnect.
 - Addressed the review gate's teardown-race finding by retaining the stopped
   Go-Live child's close relay until replacement and allowing a racing `4014`
   through local-stop suppression exactly once; the fork's build, typecheck, and
-  62 tests plus Streambot's affected checks pass.
+  tests plus Streambot's affected checks pass.
+- Addressed the review gate's seek-failure finding by making replacement attach
+  failures reject both `seek()` and active playback, tear down their resources,
+  and leave public position on the prior anchor until attach succeeds; the fork
+  now passes all 63 tests.
 
 ### Remaining
 
