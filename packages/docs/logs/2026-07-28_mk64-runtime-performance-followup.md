@@ -311,3 +311,37 @@ Worker-thread performance change did not improve the delivered stream.
   `package.json` has no `check-docs` script. The supported root command is
   `bun run check-todos`, which invokes
   `packages/docs-board/src/cli/check-docs.ts` and validates the full docs model.
+
+## Session Log — 2026-07-28 (Stream latency measurement)
+
+### Done
+
+- Approved the server-owned measurement boundaries and calibration approach.
+- Added encoded-packet PTS/duration and RTP-send PTS checkpoints to the shared
+  stream observer.
+- Correlated raw video, raw PCM, controller receipt, encoded packets, and sends
+  through the Worker and latest-frame queue. Input carried by an evicted frame
+  is attributed to the next visible frame.
+- Added passive Prometheus metrics and browser performance-summary fields for
+  packet-ready delay, send-complete delay, input latency, signed A/V
+  source-content offset, and correlation failures.
+- Added the `e2e:stream-latency` flash/chirp calibration harness and JSON
+  report. The software pipeline measured `-1.0 ms` A/V p50 at baseline,
+  recovered an injected `+100 ms` audio delay as `+99.3 ms`, and recovered
+  three delayed video frames as `-101.0 ms`.
+- Passed MK64 backend typecheck, lint, and 137 tests; MK64 root checks;
+  discord-video-stream build, typecheck, and 60 tests; and streambot typecheck,
+  lint, and 384 package tests.
+
+### Remaining
+
+- [ ] Publish the updated PR and restore the temporary acceptance deployment.
+- [ ] Exercise the passive metrics on the live VAAPI stream and record the
+      resulting baseline.
+- [ ] Restore normal Argo CD reconciliation after live acceptance.
+
+### Caveats
+
+- The ROM-backed and live VAAPI checks are not CI-portable.
+- The synthetic calibration validates the same H.264/Opus/NUT media boundary
+  but uses the software encoder locally; VAAPI is covered by the live run.

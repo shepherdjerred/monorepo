@@ -1,11 +1,16 @@
 import { Readable } from "node:stream";
 import type { FrameSink } from "@shepherdjerred/discord-stream-lifecycle/types.ts";
 
-export type LatestFrameSinkOptions = {
+export type LatestFrameSinkOptions<T> = {
   readonly frameBytes: number;
   readonly maxBufferedFrames: number;
-  readonly onFrameEvicted: () => void;
-  readonly onFrameDelivered: () => void;
+  readonly onFrameEvicted: (metadata: T | undefined) => void;
+  readonly onFrameDelivered: (metadata: T | undefined) => void;
+};
+
+type QueuedFrame<T> = {
+  frame: Buffer;
+  metadata: T | undefined;
 };
 
 /**
@@ -16,16 +21,16 @@ export type LatestFrameSinkOptions = {
  * queued frame advances video content toward the continuously advancing audio
  * timeline instead of preserving stale video or dropping the newest content.
  */
-export class LatestFrameSink extends Readable implements FrameSink {
+export class LatestFrameSink<T = never> extends Readable implements FrameSink {
   private readonly frameBytes: number;
   private readonly maxBufferedFrames: number;
-  private readonly onFrameEvicted: () => void;
-  private readonly onFrameDelivered: () => void;
-  private readonly queued: Buffer[] = [];
+  private readonly onFrameEvicted: (metadata: T | undefined) => void;
+  private readonly onFrameDelivered: (metadata: T | undefined) => void;
+  private readonly queued: QueuedFrame<T>[] = [];
   private readRequested = false;
   private ended = false;
 
-  constructor(options: LatestFrameSinkOptions) {
+  constructor(options: LatestFrameSinkOptions<T>) {
     if (options.maxBufferedFrames < 2) {
       throw new RangeError("maxBufferedFrames must be at least 2");
     }
@@ -45,6 +50,10 @@ export class LatestFrameSink extends Readable implements FrameSink {
   }
 
   write(frame: Buffer): boolean {
+    return this.writeFrame(frame);
+  }
+
+  writeFrame(frame: Buffer, metadata?: T): boolean {
     if (this.ended) {
       throw new Error("cannot write a frame after the sink has ended");
     }
@@ -56,11 +65,11 @@ export class LatestFrameSink extends Readable implements FrameSink {
 
     let evicted = false;
     if (this.bufferedBytes >= this.maxBufferedFrames * this.frameBytes) {
-      this.queued.shift();
-      this.onFrameEvicted();
+      const dropped = this.queued.shift();
+      this.onFrameEvicted(dropped?.metadata);
       evicted = true;
     }
-    this.queued.push(frame);
+    this.queued.push({ frame, metadata });
     this.flush();
     return !evicted;
   }
@@ -78,11 +87,11 @@ export class LatestFrameSink extends Readable implements FrameSink {
 
   private flush(): void {
     if (!this.readRequested) return;
-    const frame = this.queued.shift();
-    if (frame !== undefined) {
+    const queued = this.queued.shift();
+    if (queued !== undefined) {
       this.readRequested = false;
-      this.push(frame);
-      this.onFrameDelivered();
+      this.push(queued.frame);
+      this.onFrameDelivered(queued.metadata);
       return;
     }
     if (this.ended) {

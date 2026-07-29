@@ -15,9 +15,20 @@ import {
   streamFfmpegFps,
   streamFfmpegSpeedRatio,
   streamHwEncodeEngaged,
+  streamAvContentOffsetMs,
+  streamAvContentSkewAbsMs,
+  streamInputToPacketReadyMs,
+  streamInputToSendCompleteMs,
+  streamLatencyCorrelationFailuresTotal,
+  streamPacketReadyDelayMs,
+  streamSendCompleteDelayMs,
   streamSendFrametimeRatio,
   streamSendLateFramesTotal,
 } from "#src/observability/metrics.ts";
+import type {
+  StreamLatencyTracker,
+  StreamLatencyObservations,
+} from "#src/stream/stream-latency-tracker.ts";
 
 /** Aggregates over one Go-Live session, logged as a summary on stop. */
 export type SessionStats = {
@@ -63,14 +74,42 @@ const SLOW_SAMPLES_BEFORE_WARN = 5;
 const SLOW_WARN_INTERVAL_MS = 60_000;
 const SLOW_RATIO_THRESHOLD = 0.95;
 
+export const prometheusLatencyObservations: StreamLatencyObservations = {
+  observePacketReady: (kind, delayMs) => {
+    streamPacketReadyDelayMs.observe({ kind }, delayMs);
+  },
+  observeSendComplete: (kind, delayMs) => {
+    streamSendCompleteDelayMs.observe({ kind }, delayMs);
+  },
+  observeInputToPacketReady: (delayMs) => {
+    streamInputToPacketReadyMs.observe(delayMs);
+  },
+  observeInputToSendComplete: (delayMs) => {
+    streamInputToSendCompleteMs.observe(delayMs);
+  },
+  observeAvContentOffset: (offsetMs) => {
+    streamAvContentOffsetMs.set(offsetMs);
+    streamAvContentSkewAbsMs.observe(Math.abs(offsetMs));
+  },
+  correlationFailure: (kind, reason) => {
+    streamLatencyCorrelationFailuresTotal.inc({ kind, reason });
+  },
+};
+
+export type StreamObserverOptions = {
+  now?: () => number;
+  latencyTracker?: StreamLatencyTracker;
+};
+
 /**
  * Build the observer for one Go-Live session. `session` accumulates the
- * stop-time summary; `now` is injectable for deterministic tests.
+ * stop-time summary; the clock and source-media correlation are injectable.
  */
 export function createStreamObserver(
   session: SessionStats,
-  now: () => number = Date.now,
+  options: StreamObserverOptions = {},
 ): StreamObserver {
+  const now = options.now ?? (() => performance.timeOrigin + performance.now());
   let prevMediaSeconds: number | undefined;
   let prevWallMs: number | undefined;
   let slowSamples = 0;
@@ -133,7 +172,11 @@ export function createStreamObserver(
         prevWallMs = wallMs;
       }
     },
+    onPacketReady: (stats) => {
+      options.latencyTracker?.onPacketReady(stats);
+    },
     onSendStats: (stats) => {
+      options.latencyTracker?.onSendStats(stats);
       streamSendFrametimeRatio.observe({ kind: stats.kind }, stats.ratio);
       if (stats.kind === "video") session.videoFramesSent++;
       if (stats.ratio > 1) {

@@ -92,6 +92,7 @@ cd packages/backend
 bun run build:wasm            # compile the core into assets/n64wasm (once)
 bun run smoke:wasm-host       # ROM-free Worker + generated-runtime smoke
 bun run e2e:worker            # full production Worker path: frames, audio, input, metrics
+bun run e2e:stream-latency    # synthetic flash/chirp through H.264 + Opus + NUT
 
 # Scenario harness — drive the game to a known state and screenshot it.
 bun run e2e:scenario                       # list scenarios (menu, 1p, 2p, 3p, 4p)
@@ -110,6 +111,21 @@ data in [`scenarios.ts`](./packages/backend/scripts/lib/scenarios.ts). Add a
 scenario by adding an entry there. **Menu-nav gotcha:** multiplayer character
 select blocks until _every_ seat presses A, so the schedules mirror A onto all
 N controllers.
+
+`e2e:stream-latency` isolates the media pipeline owned by this service; it does
+not include Discord ingest or playback. It writes a NUT recording and JSON
+report to `/tmp` by default, then decodes the recording and compares each
+synchronized video flash with its audio chirp. Positive A/V offset means audio
+lags video. Use `--audio-delay-ms 100` or `--video-delay-frames 3` to verify
+that the analyzer recovers a known delay and sign.
+
+Ordinary sessions expose the same server-side boundaries continuously:
+`stream_packet_ready_delay_ms` and `stream_send_complete_delay_ms` measure raw
+media availability to encoded packet readiness and RTP completion;
+`stream_input_to_packet_ready_ms` and `stream_input_to_send_complete_ms` measure
+controller receipt to the first correlated video packet; and
+`stream_av_content_offset_ms` measures signed source-content skew. Correlation
+failures are explicit in `stream_latency_correlation_failures_total`.
 
 ## Deployment
 

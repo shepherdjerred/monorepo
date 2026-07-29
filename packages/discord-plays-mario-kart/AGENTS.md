@@ -43,6 +43,12 @@ automated gate; these harnesses are for driving the real game.
   address map.
 - **`e2e-input.ts`** / **`e2e-input-assert.ts`** — prove a web keypress reaches
   the game (frame-hash diff).
+- **`e2e-stream-latency.ts`** (`bun run e2e:stream-latency`) — encode
+  synchronized video flashes and audio chirps through the production
+  H.264/Opus/NUT pipeline, decode them, and report media delay and signed A/V
+  offset without including Discord. Positive A/V offset means audio lags.
+  `--audio-delay-ms` and `--video-delay-frames` inject known delays for analyzer
+  validation.
 - **`lib/harness.ts`** — reusable primitives: `resolveRom`, `bootEmulator`
   (sprint mode, deterministic per-tick), `driveUntil({schedule, until,
 timeoutFrames, onTick})`, `captureScreenshot({path, names, screenMode})`.
@@ -85,6 +91,16 @@ full 30fps under load needs the emulator on a Worker thread
 Diagnosis: `stream_sink_buffer_bytes` growing unbounded is the smoking gun;
 `stream_ffmpeg_speed_ratio` < 1 sustained; the `e2e:perf` harness drives only
 the emulator path (empty `onFrame`) so it can't exercise the sink.
+
+For server-owned latency attribution, use the stream observer metrics rather
+than visual estimates from Discord. `stream_packet_ready_delay_ms` and
+`stream_send_complete_delay_ms` cover raw-media availability to encoded packet
+readiness and RTP completion. `stream_input_to_packet_ready_ms` and
+`stream_input_to_send_complete_ms` correlate a controller receipt with the
+first video packet containing that state. `stream_av_content_offset_ms` is
+signed source-content skew (positive means audio lags); correlation misses must
+increment `stream_latency_correlation_failures_total` instead of silently
+guessing.
 
 Profiling: node-wide `pyroscope.ebpf` → Pyroscope has `mario-kart/main`, but
 ~64% of Bun samples are `[unknown]` (eBPF can't symbolize Bun's JIT'd JS/wasm).

@@ -3,7 +3,7 @@
 // exercised against a captured fixture in a unit test.
 
 import { $ } from "bun";
-import { z } from "zod";
+import { BenchSummarySchema } from "./bench-summary-schema.ts";
 
 export type ScrapedMetrics = {
   text: string;
@@ -88,6 +88,21 @@ export function counter(
   return readNumber(m.text, name, labels) ?? 0;
 }
 
+export function counterSum(m: ScrapedMetrics, name: string): number {
+  const re = new RegExp(
+    String.raw`^${escapeRegex(name)}(?:\{[^}]*\})?\s+(\S+)`,
+    "gm",
+  );
+  let sum = 0;
+  let match: RegExpExecArray | null = re.exec(m.text);
+  while (match !== null) {
+    const value = Number(match[1]);
+    if (Number.isFinite(value)) sum += value;
+    match = re.exec(m.text);
+  }
+  return sum;
+}
+
 export function gauge(
   m: ScrapedMetrics,
   name: string,
@@ -150,6 +165,7 @@ export type GaugePoll = {
   sink_buffer_bytes: number[];
   hw_encode_engaged: number[];
   stream_active: number[];
+  av_content_offset_ms: number[];
 };
 
 export function emptyGaugePoll(): GaugePoll {
@@ -160,6 +176,7 @@ export function emptyGaugePoll(): GaugePoll {
     sink_buffer_bytes: [],
     hw_encode_engaged: [],
     stream_active: [],
+    av_content_offset_ms: [],
   };
 }
 
@@ -174,6 +191,10 @@ export function sampleGauges(m: ScrapedMetrics, poll: GaugePoll): void {
   pushNonNull(poll.sink_buffer_bytes, gauge(m, "stream_sink_buffer_bytes"));
   pushNonNull(poll.hw_encode_engaged, gauge(m, "stream_hw_encode_engaged"));
   pushNonNull(poll.stream_active, gauge(m, "stream_active"));
+  pushNonNull(
+    poll.av_content_offset_ms,
+    gauge(m, "stream_av_content_offset_ms"),
+  );
 }
 
 function summariseGauge(samples: number[]): {
@@ -199,7 +220,7 @@ function summariseGauge(samples: number[]): {
 // against older baselines and warn about schema drift.
 // ---------------------------------------------------------------------------
 
-export const BENCH_SUMMARY_VERSION = 1;
+export const BENCH_SUMMARY_VERSION = 2;
 
 export type BenchSummary = {
   version: number;
@@ -237,12 +258,26 @@ export type BenchSummary = {
     send_frametime_ratio_audio_p95: number | null;
     send_late_frames_video_delta: number;
     send_late_frames_audio_delta: number;
+    packet_ready_delay_video_p95: number | null;
+    packet_ready_delay_audio_p95: number | null;
+    send_complete_delay_video_p95: number | null;
+    send_complete_delay_audio_p95: number | null;
+    av_content_offset_ms: {
+      min: number | null;
+      mean: number | null;
+      max: number | null;
+      last: number | null;
+    };
+    av_content_skew_abs_ms_p95: number | null;
+    latency_correlation_failures_delta: number;
   };
   input: {
     controller_rtt_ms_p50: number | null;
     controller_rtt_ms_p95: number | null;
     input_apply_delay_ms_p50: number | null;
     input_apply_delay_ms_p95: number | null;
+    input_to_packet_ready_ms_p95: number | null;
+    input_to_send_complete_ms_p95: number | null;
   };
 };
 
@@ -277,6 +312,7 @@ export function buildSummary(input: BuildSummaryInput): BenchSummary {
   const sink = summariseGauge(poll.sink_buffer_bytes);
   const hwLast = summariseGauge(poll.hw_encode_engaged).last;
   const activeLast = summariseGauge(poll.stream_active).last;
+  const avOffset = summariseGauge(poll.av_content_offset_ms);
   return {
     version: BENCH_SUMMARY_VERSION,
     ts: input.benchStartedAt.toISOString(),
@@ -345,6 +381,38 @@ export function buildSummary(input: BuildSummaryInput): BenchSummary {
       send_late_frames_audio_delta:
         counter(end, "stream_send_late_frames_total", { kind: "audio" }) -
         counter(start, "stream_send_late_frames_total", { kind: "audio" }),
+      packet_ready_delay_video_p95: nanToNull(
+        histogramQuantile(end, "stream_packet_ready_delay_ms", 0.95, {
+          kind: "video",
+        }),
+      ),
+      packet_ready_delay_audio_p95: nanToNull(
+        histogramQuantile(end, "stream_packet_ready_delay_ms", 0.95, {
+          kind: "audio",
+        }),
+      ),
+      send_complete_delay_video_p95: nanToNull(
+        histogramQuantile(end, "stream_send_complete_delay_ms", 0.95, {
+          kind: "video",
+        }),
+      ),
+      send_complete_delay_audio_p95: nanToNull(
+        histogramQuantile(end, "stream_send_complete_delay_ms", 0.95, {
+          kind: "audio",
+        }),
+      ),
+      av_content_offset_ms: {
+        min: avOffset.min,
+        mean: avOffset.mean,
+        max: avOffset.max,
+        last: avOffset.last,
+      },
+      av_content_skew_abs_ms_p95: nanToNull(
+        histogramQuantile(end, "stream_av_content_skew_abs_ms", 0.95),
+      ),
+      latency_correlation_failures_delta:
+        counterSum(end, "stream_latency_correlation_failures_total") -
+        counterSum(start, "stream_latency_correlation_failures_total"),
     },
     input: {
       controller_rtt_ms_p50: nanToNull(
@@ -358,6 +426,12 @@ export function buildSummary(input: BuildSummaryInput): BenchSummary {
       ),
       input_apply_delay_ms_p95: nanToNull(
         histogramQuantile(end, "emulator_input_apply_delay_ms", 0.95),
+      ),
+      input_to_packet_ready_ms_p95: nanToNull(
+        histogramQuantile(end, "stream_input_to_packet_ready_ms", 0.95),
+      ),
+      input_to_send_complete_ms_p95: nanToNull(
+        histogramQuantile(end, "stream_input_to_send_complete_ms", 0.95),
       ),
     },
   };
@@ -396,56 +470,6 @@ export async function gitMetadata(): Promise<{
 // fails to parse, the caller gets a clear ZodError that names the offending
 // path.
 // ---------------------------------------------------------------------------
-
-const NullableNumber = z.number().nullable();
-const GaugeMinMeanLast = z.object({
-  min: NullableNumber,
-  mean: NullableNumber,
-  last: NullableNumber,
-});
-const GaugeMinMean = z.object({ min: NullableNumber, mean: NullableNumber });
-const GaugeMean = z.object({ mean: NullableNumber });
-
-export const BenchSummarySchema = z.object({
-  version: z.number(),
-  ts: z.string(),
-  target: z.string(),
-  metrics_url: z.string(),
-  duration_sec: z.number(),
-  seats: z.number(),
-  git: z.object({ sha: z.string(), branch: z.string(), dirty: z.boolean() }),
-  emulator: z.object({
-    fps_mean: z.number(),
-    emulate_ms_p95: NullableNumber,
-    late_ms_p95: NullableNumber,
-    apply_ms_p95: NullableNumber,
-    resync_delta: z.number(),
-    ticks_delta: z.number(),
-  }),
-  stream: z.object({
-    active_last: NullableNumber,
-    hw_encode_engaged: NullableNumber,
-    ffmpeg_speed_ratio: GaugeMinMeanLast,
-    ffmpeg_fps: GaugeMinMean,
-    ffmpeg_bitrate_kbps: GaugeMean,
-    frame_interval_ms_p50: NullableNumber,
-    frame_interval_ms_p95: NullableNumber,
-    frame_write_ms_p95: NullableNumber,
-    sink_buffer_bytes_max: NullableNumber,
-    send_frametime_ratio_video_p50: NullableNumber,
-    send_frametime_ratio_video_p95: NullableNumber,
-    send_frametime_ratio_audio_p50: NullableNumber,
-    send_frametime_ratio_audio_p95: NullableNumber,
-    send_late_frames_video_delta: z.number(),
-    send_late_frames_audio_delta: z.number(),
-  }),
-  input: z.object({
-    controller_rtt_ms_p50: NullableNumber,
-    controller_rtt_ms_p95: NullableNumber,
-    input_apply_delay_ms_p50: NullableNumber,
-    input_apply_delay_ms_p95: NullableNumber,
-  }),
-});
 
 export function parseBenchSummary(raw: unknown): BenchSummary {
   return BenchSummarySchema.parse(raw);

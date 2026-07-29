@@ -175,10 +175,15 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
     // Per-frame pipeline: overlay → stream. Race decoding happens in the Worker.
     emulator.onFrame((frame) => {
       applyStreamOverlays(frame.rgba, frame.height, overlayContext());
-      streamer.pushFrame(frame.rgba);
+      streamer.pushFrame(frame.rgba, {
+        contentTimeMs: frame.contentTimeMs,
+        ...(frame.inputReceivedAtMs === undefined
+          ? {}
+          : { inputReceivedAtMs: frame.inputReceivedAtMs }),
+      });
     });
-    emulator.onAudio((pcm) => {
-      streamer.pushAudio(pcm);
+    emulator.onAudio((pcm, contentEndMs) => {
+      streamer.pushAudio(pcm, contentEndMs);
     });
 
     await streamer.start();

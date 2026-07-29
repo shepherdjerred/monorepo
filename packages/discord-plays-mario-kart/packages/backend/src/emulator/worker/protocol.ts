@@ -104,8 +104,14 @@ const WorkerMessageSchema = z.discriminatedUnion("kind", [
     rgba: BytesSchema,
     height: z.number(),
     seatActivity: z.array(z.boolean()),
+    contentTimeMs: z.number(),
+    inputReceivedAtMs: z.number().optional(),
   }),
-  z.object({ kind: z.literal("audio"), pcm: BytesSchema }),
+  z.object({
+    kind: z.literal("audio"),
+    pcm: BytesSchema,
+    contentEndMs: z.number(),
+  }),
   z.object({ kind: z.literal("snapshot"), snapshot: SnapshotSchema }),
   z.object({ kind: z.literal("metrics"), batch: MetricBatchSchema }),
   // Backpressure: the worker acks each drained controller input so the main

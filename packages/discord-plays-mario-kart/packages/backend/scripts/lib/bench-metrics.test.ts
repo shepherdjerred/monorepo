@@ -5,6 +5,7 @@ import {
   BENCH_SUMMARY_VERSION,
   buildSummary,
   counter,
+  counterSum,
   emptyGaugePoll,
   gauge,
   histogramQuantile,
@@ -57,6 +58,7 @@ describe("counter / gauge", () => {
     });
     expect(video).toBeGreaterThanOrEqual(0);
     expect(audio).toBeGreaterThanOrEqual(0);
+    expect(counterSum(m, "stream_send_late_frames_total")).toBe(video + audio);
   });
 });
 
@@ -164,6 +166,13 @@ function makeSummary(overrides: Partial<BenchSummary["stream"]>): BenchSummary {
       send_frametime_ratio_audio_p95: 0.8,
       send_late_frames_video_delta: 0,
       send_late_frames_audio_delta: 0,
+      packet_ready_delay_video_p95: 33,
+      packet_ready_delay_audio_p95: 25,
+      send_complete_delay_video_p95: 50,
+      send_complete_delay_audio_p95: 33,
+      av_content_offset_ms: { min: -5, mean: 0, max: 5, last: 0 },
+      av_content_skew_abs_ms_p95: 8,
+      latency_correlation_failures_delta: 0,
       ...overrides,
     },
     input: {
@@ -171,6 +180,8 @@ function makeSummary(overrides: Partial<BenchSummary["stream"]>): BenchSummary {
       controller_rtt_ms_p95: 75,
       input_apply_delay_ms_p50: 5,
       input_apply_delay_ms_p95: 15,
+      input_to_packet_ready_ms_p95: 75,
+      input_to_send_complete_ms_p95: 100,
     },
   };
 }

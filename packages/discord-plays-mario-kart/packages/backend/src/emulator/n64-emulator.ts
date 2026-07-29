@@ -6,7 +6,11 @@ import {
   type FsModule,
 } from "./save-persistence.ts";
 import { initializeWasmHost, requireEmscriptenFunction } from "./wasm-host.ts";
-import { shouldEmitVideoFrame, viIntervalMs } from "./vi-timing.ts";
+import {
+  shouldEmitVideoFrame,
+  viIntervalMs,
+  VI_TICKS_PER_VIDEO_FRAME,
+} from "./vi-timing.ts";
 import { buildConfigTxt } from "./config-txt.ts";
 import { drainRing } from "./audio-ring.ts";
 import {
@@ -109,8 +113,11 @@ export class N64Emulator {
   private fs: FsModule | undefined;
   private readonly inputs: PlayerInputState[];
   private readonly inputLatency = new InputLatencyTracker(MAX_SEATS);
-  private onFrameCb: ((rgba: Buffer) => void) | undefined;
-  private onAudioCb: ((pcm: Buffer) => void) | undefined;
+  private onFrameCb:
+    | ((rgba: Buffer, contentTimeMs: number) => void)
+    | undefined;
+  private onAudioCb: ((pcm: Buffer, contentEndMs: number) => void) | undefined;
+  private pendingFrameInputReceivedAtMs: number | undefined;
   // Ring-buffer read cursor (int16 sample index) — how far we've drained audio.
   private audioReadPos = 0;
   private running = false;
@@ -301,7 +308,7 @@ export class N64Emulator {
     logger.info("n64 emulator booted");
   }
 
-  onFrame(cb: (rgba: Buffer) => void): void {
+  onFrame(cb: (rgba: Buffer, contentTimeMs: number) => void): void {
     this.onFrameCb = cb;
   }
 
@@ -312,9 +319,21 @@ export class N64Emulator {
    * doesn't flush a backlog of pre-subscription samples (which would leave audio
    * permanently leading video).
    */
-  onAudio(cb: (pcm: Buffer) => void): void {
+  onAudio(cb: (pcm: Buffer, contentEndMs: number) => void): void {
     this.onAudioCb = cb;
     this.resyncAudioCursor();
+  }
+
+  /**
+   * Consume the earliest controller receipt represented by the next frame that
+   * actually crosses the Worker boundary. The Worker calls this only after its
+   * in-flight gate accepts the frame, so a port-level drop cannot lose the
+   * correlation before a later visible frame carries the applied HUD state.
+   */
+  takePendingFrameInputReceivedAtMs(): number | undefined {
+    const receivedAtMs = this.pendingFrameInputReceivedAtMs;
+    this.pendingFrameInputReceivedAtMs = undefined;
+    return receivedAtMs;
   }
 
   /** Snap the audio read cursor to the core's current write position. */
@@ -438,6 +457,7 @@ export class N64Emulator {
     }
     rt.reset();
     this.completedViTicks = 0;
+    this.pendingFrameInputReceivedAtMs = undefined;
     this.lastHeight = HEIGHT;
     // The loop was stopped across reset(), so audio kept being written without
     // being drained; snap the cursor forward so we don't dump that gap on resume.
@@ -500,8 +520,12 @@ export class N64Emulator {
       );
     }
     // Everything pending is now latched into this tick.
-    this.inputLatency.drainAll((ms) => {
+    this.inputLatency.drainAll((ms, _seat, receivedAtMs) => {
       this.metrics.observeInputApplyDelayMs(ms);
+      this.pendingFrameInputReceivedAtMs =
+        this.pendingFrameInputReceivedAtMs === undefined
+          ? receivedAtMs
+          : Math.min(this.pendingFrameInputReceivedAtMs, receivedAtMs);
     });
 
     const emulateStart = performance.now();
@@ -519,7 +543,12 @@ export class N64Emulator {
           this.lastHeight = h;
           // Copy out of the (reused) heap view before handing off.
           const copyStart = performance.now();
-          cb(Buffer.from(rt.heap().subarray(vbuf, vbuf + WIDTH * h * 4)));
+          const contentTimeMs =
+            (this.completedViTicks - VI_TICKS_PER_VIDEO_FRAME) * this.frameMs;
+          cb(
+            Buffer.from(rt.heap().subarray(vbuf, vbuf + WIDTH * h * 4)),
+            contentTimeMs,
+          );
           this.metrics.observeCopyMs(performance.now() - copyStart);
         }
       }
@@ -531,7 +560,9 @@ export class N64Emulator {
     const audioCb = this.onAudioCb;
     if (audioCb !== undefined) {
       const pcm = this.drainAudio();
-      if (pcm.length > 0) audioCb(pcm);
+      if (pcm.length > 0) {
+        audioCb(pcm, this.completedViTicks * this.frameMs);
+      }
     }
     if (videoFrameReady) {
       // Keep this metric's established meaning: achieved output frame rate.

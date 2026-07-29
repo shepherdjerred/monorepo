@@ -69,6 +69,7 @@ describe("createStreamObserver", () => {
     const { observer, dispose } = createStreamObserver(true);
     observer.onSendStats?.({
       kind: "video",
+      ptsMs: 0,
       ratio: 0.5,
       sendTime: 10,
       frametime: 20,
@@ -77,6 +78,7 @@ describe("createStreamObserver", () => {
     });
     observer.onSendStats?.({
       kind: "video",
+      ptsMs: 20,
       ratio: 1.5,
       sendTime: 30,
       frametime: 20,

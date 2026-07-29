@@ -173,6 +173,7 @@ export class BaseMediaStream extends Writable {
     const reportSendStats = () => {
       this._observer?.onSendStats?.({
         kind: this._kind,
+        ptsMs: this._pts ?? 0,
         ratio,
         sendTime,
         frametime,

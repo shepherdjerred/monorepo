@@ -29,8 +29,13 @@ import {
 import {
   createStreamObserver,
   newSessionStats,
+  prometheusLatencyObservations,
   type SessionStats,
 } from "#src/stream/stream-observer.ts";
+import {
+  StreamLatencyTracker,
+  type VideoSourceTiming,
+} from "#src/stream/stream-latency-tracker.ts";
 import { logger } from "#src/logger.ts";
 
 export type GameStreamerOptions = {
@@ -70,6 +75,11 @@ const SRC_FPS = N64_FPS;
 const FRAME_BYTES = WIDTH * HEIGHT * 4;
 export const MAX_BUFFERED_FRAMES = 3;
 
+export type StreamFrameTiming = {
+  contentTimeMs: number;
+  inputReceivedAtMs?: number;
+};
+
 // Streams the emulator's BGRA frames into a Discord voice channel as a Go-Live
 // broadcast. The lifecycle (join voice → encode → broadcast → leave) is owned by
 // the shared GameStreamerBase; this subclass supplies Mario Kart-specific side
@@ -81,7 +91,8 @@ export class GameStreamer extends GameStreamerBase {
   private sessionStartedAt = 0;
   private lastPushAt: number | undefined;
   private streamObserver: StreamObserver | undefined;
-  private videoSink: LatestFrameSink | undefined;
+  private videoSink: LatestFrameSink<VideoSourceTiming> | undefined;
+  private latencyTracker: StreamLatencyTracker | undefined;
 
   constructor(options: GameStreamerOptions) {
     super({
@@ -94,18 +105,42 @@ export class GameStreamer extends GameStreamerBase {
   }
 
   /** Feed one BGRA frame (no-op unless a broadcast is active). */
-  pushFrame(frame: Buffer): void {
-    const sink = this.frameSink;
-    if (!sink) return;
+  pushFrame(frame: Buffer, timing?: StreamFrameTiming): void {
+    const sink = this.videoSink;
+    if (!this.frameSink || sink === undefined) return;
     const pushAt = performance.now();
     if (this.lastPushAt !== undefined) {
       streamFrameIntervalMs.observe(pushAt - this.lastPushAt);
     }
     this.lastPushAt = pushAt;
-    sink.write(frame);
+    const sourceTiming =
+      timing === undefined
+        ? undefined
+        : {
+            contentTimeMs: timing.contentTimeMs,
+            availableAtMs: performance.timeOrigin + pushAt,
+            ...(timing.inputReceivedAtMs === undefined
+              ? {}
+              : { inputReceivedAtMs: timing.inputReceivedAtMs }),
+          };
+    sink.writeFrame(frame, sourceTiming);
     // A slow write is backpressure showing up before the buffer gauge moves.
     streamFrameWriteMs.observe(performance.now() - pushAt);
     sinkBufferBytes.set(this.videoSink?.bufferedBytes ?? 0);
+  }
+
+  override pushAudio(pcm: Buffer, contentEndMs?: number): void {
+    const transport = this.audioTransport;
+    if (transport === null) return;
+    const availableAtMs = performance.timeOrigin + performance.now();
+    transport.sink.write(pcm);
+    if (contentEndMs !== undefined) {
+      this.latencyTracker?.recordAudioSource({
+        pcmBytes: pcm.byteLength,
+        contentEndMs,
+        availableAtMs,
+      });
+    }
   }
 
   protected override beforeActorStop(): void {
@@ -130,15 +165,21 @@ export class GameStreamer extends GameStreamerBase {
   }
 
   protected async buildEncoder(): Promise<EncoderHandles> {
-    const bgra = new LatestFrameSink({
+    const latencyTracker = new StreamLatencyTracker(
+      prometheusLatencyObservations,
+    );
+    this.latencyTracker = latencyTracker;
+    const bgra = new LatestFrameSink<VideoSourceTiming>({
       frameBytes: FRAME_BYTES,
       maxBufferedFrames: MAX_BUFFERED_FRAMES,
-      onFrameEvicted: () => {
+      onFrameEvicted: (timing) => {
         streamFramesDroppedTotal.inc();
         if (this.session) this.session.framesDropped++;
+        latencyTracker.recordDroppedVideoSource(timing);
       },
-      onFrameDelivered: () => {
+      onFrameDelivered: (timing) => {
         if (this.session) this.session.framesPushed++;
+        if (timing !== undefined) latencyTracker.recordVideoSource(timing);
       },
     });
     this.videoSink = bgra;
@@ -149,7 +190,7 @@ export class GameStreamer extends GameStreamerBase {
       this.options.canvasHeight,
     );
     const session = newSessionStats();
-    const observer = createStreamObserver(session);
+    const observer = createStreamObserver(session, { latencyTracker });
     this.session = session;
     this.sessionStartedAt = performance.now();
     this.lastPushAt = undefined;
@@ -229,6 +270,7 @@ export class GameStreamer extends GameStreamerBase {
 
   private resetStreamMetrics(): void {
     this.videoSink = undefined;
+    this.latencyTracker = undefined;
     sinkBufferBytes.set(0);
     streamFfmpegSpeedRatio.set(0);
     streamFfmpegFps.set(0);

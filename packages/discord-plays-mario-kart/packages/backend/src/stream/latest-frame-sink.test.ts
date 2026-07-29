@@ -11,21 +11,25 @@ describe("LatestFrameSink", () => {
   it("keeps the newest bounded window when the consumer is stalled", async () => {
     let evicted = 0;
     let delivered = 0;
-    const sink = new LatestFrameSink({
+    const evictedMetadata: number[] = [];
+    const deliveredMetadata: number[] = [];
+    const sink = new LatestFrameSink<number>({
       frameBytes: FRAME_BYTES,
       maxBufferedFrames: 3,
-      onFrameEvicted: () => {
+      onFrameEvicted: (metadata) => {
         evicted++;
+        if (metadata !== undefined) evictedMetadata.push(metadata);
       },
-      onFrameDelivered: () => {
+      onFrameDelivered: (metadata) => {
         delivered++;
+        if (metadata !== undefined) deliveredMetadata.push(metadata);
       },
     });
 
-    expect(sink.write(frame(1))).toBe(true);
-    expect(sink.write(frame(2))).toBe(true);
-    expect(sink.write(frame(3))).toBe(true);
-    expect(sink.write(frame(4))).toBe(false);
+    expect(sink.writeFrame(frame(1), 1)).toBe(true);
+    expect(sink.writeFrame(frame(2), 2)).toBe(true);
+    expect(sink.writeFrame(frame(3), 3)).toBe(true);
+    expect(sink.writeFrame(frame(4), 4)).toBe(false);
     expect(sink.bufferedBytes).toBe(FRAME_BYTES * 3);
 
     sink.end();
@@ -42,6 +46,8 @@ describe("LatestFrameSink", () => {
     expect(received).toEqual([2, 3, 4]);
     expect(evicted).toBe(1);
     expect(delivered).toBe(3);
+    expect(evictedMetadata).toEqual([1]);
+    expect(deliveredMetadata).toEqual([2, 3, 4]);
   });
 
   it("rejects malformed frame sizes", () => {

@@ -41,12 +41,14 @@ export class InputLatencyTracker {
   }
 
   /** Observe and clear every pending seat (call once per tick, at latch time). */
-  drainAll(observe: (delayMs: number) => void): void {
+  drainAll(
+    observe: (delayMs: number, seat: number, receivedAtMs: number) => void,
+  ): void {
     const t = this.now();
     for (let seat = 0; seat < this.pending.length; seat++) {
       const recordedAt = this.pending[seat];
       if (recordedAt === undefined) continue;
-      observe(t - recordedAt);
+      observe(t - recordedAt, seat, recordedAt);
       this.pending[seat] = undefined;
     }
   }

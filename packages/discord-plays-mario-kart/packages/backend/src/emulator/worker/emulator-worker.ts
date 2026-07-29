@@ -92,7 +92,7 @@ async function handleInit(opts: WorkerInitOpts): Promise<void> {
   });
   await emu.init();
 
-  emu.onFrame((rgba) => {
+  emu.onFrame((rgba, contentTimeMs) => {
     frameCount += 1;
     // Race snapshots decode in the worker (RDRAM lives here); only the small
     // decoded snapshot crosses to the main thread. A bad read must never break
@@ -115,23 +115,26 @@ async function handleInit(opts: WorkerInitOpts): Promise<void> {
       return;
     }
     framesInFlight += 1;
+    const inputReceivedAtMs = emu.takePendingFrameInputReceivedAtMs();
     post(
       {
         kind: "frame",
         rgba,
         height: emu.height,
         seatActivity: emu.seatActivity(),
+        contentTimeMs,
+        ...(inputReceivedAtMs === undefined ? {} : { inputReceivedAtMs }),
       },
       transferListFor(rgba),
     );
   });
-  emu.onAudio((pcm) => {
+  emu.onAudio((pcm, contentEndMs) => {
     if (audioInFlight >= MAX_AUDIO_IN_FLIGHT) {
       // Main thread is behind; drop this chunk rather than growing the queue.
       return;
     }
     audioInFlight += 1;
-    post({ kind: "audio", pcm }, transferListFor(pcm));
+    post({ kind: "audio", pcm, contentEndMs }, transferListFor(pcm));
   });
 
   emulator = emu;

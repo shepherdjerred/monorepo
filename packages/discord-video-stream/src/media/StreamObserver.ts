@@ -35,6 +35,8 @@ export type FfmpegProgress = {
 /** Per-frame send timing from the realtime media send path. `ratio > 1` means the frame was late. */
 export type SendStats = {
   kind: "video" | "audio";
+  /** Media presentation timestamp of the packet that completed sending, in milliseconds. */
+  ptsMs: number;
   /** sendTime / frametime — the fraction of the frame's wall-clock budget the send consumed. */
   ratio: number;
   /** Wall-clock milliseconds spent sending this frame. */
@@ -52,6 +54,15 @@ export type SendStats = {
   syncWaitMs: number;
   /** A/V sync correction taken on this frame, if any. Each correction re-anchors the schedule. */
   syncEvent?: "ahead" | "behind";
+};
+
+/** Encoded packet as soon as the NUT demuxer makes it available to the paced sender. */
+export type PacketReadyStats = {
+  kind: "video" | "audio";
+  /** Packet presentation timestamp on the encoded media timeline, in milliseconds. */
+  ptsMs: number;
+  /** Packet duration on the encoded media timeline, in milliseconds. */
+  durationMs: number;
 };
 
 /** Buffered packet counts between the demuxer and the paced send streams. */
@@ -75,6 +86,11 @@ export type StreamObserver = {
   onCodecData?: (data: FfmpegCodecData) => void;
   /** Periodic transcode progress parsed from ffmpeg's progress protocol. */
   onProgress?: (progress: FfmpegProgress) => void;
+  /**
+   * Encoded packet timing at the NUT demux boundary, before sender pacing and
+   * RTP transport. High volume — correlate or aggregate downstream.
+   */
+  onPacketReady?: (stats: PacketReadyStats) => void;
   /** Per-frame send timing from the video/audio send path. High volume — sample/aggregate downstream. */
   onSendStats?: (stats: SendStats) => void;
   /**

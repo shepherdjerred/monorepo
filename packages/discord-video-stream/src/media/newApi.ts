@@ -1176,7 +1176,10 @@ export async function attachPipeline(
   cancelSignal?.throwIfAborted();
 
   logger.debug("Initializing demuxer");
-  const { video, audio } = await demux(input, { format: options.format });
+  const { video, audio } = await demux(input, {
+    format: options.format,
+    ...(options.observer === undefined ? {} : { observer: options.observer }),
+  });
   cancelSignal?.throwIfAborted();
 
   if (!video) throw new Error("No video stream in media");
