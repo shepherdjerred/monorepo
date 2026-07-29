@@ -7,10 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.7.2](https://github.com/shepherdjerred/monorepo/compare/webring-v1.7.1...webring-v1.7.2) (2026-07-29)
 
+No public API changes. Preview truncation is now self-contained and no longer depends on `truncate-html`'s legacy dependency chain.
 
-### Bug Fixes
-
-* **ci:** restore site builds with linkify 6 ([#1774](https://github.com/shepherdjerred/monorepo/issues/1774)) ([d457fbb](https://github.com/shepherdjerred/monorepo/commit/d457fbba40b6148489926a70fb1e8de64d8464ed))
+- Preview HTML is truncated with an internal `htmlparser2` implementation that preserves balanced tags, escapes emitted text and attributes, and collapses whitespace ([4f08817](https://github.com/shepherdjerred/monorepo/commit/4f08817bebb8d0e0d12a428647e03cf58a77ea9e))
+- Bump the new `htmlparser2` runtime dependency from `^10.0.0` to `^12.0.0` ([8202ff6](https://github.com/shepherdjerred/monorepo/commit/8202ff6ae5c70d94e9c600216477bfe8519baf05))
 
 ## [1.7.1](https://github.com/shepherdjerred/monorepo/compare/webring-v1.7.0...webring-v1.7.1) (2026-06-14)
 
