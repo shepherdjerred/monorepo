@@ -19,6 +19,82 @@ function smokeStage(dockerfile: string, image: string): string {
   return nextStage === -1 ? remainder : remainder.slice(0, nextStage);
 }
 
+export function hclNamedBlock(
+  document: string,
+  blockType: string,
+  name: string,
+): string {
+  if (!/^[a-z][a-z-]*$/.test(blockType) || name.length === 0) {
+    fail(`invalid HCL block selector ${blockType}:${name}`);
+  }
+  const marker = `${blockType} "${name}"`;
+  const markerIndex = document.indexOf(marker);
+  if (markerIndex === -1) {
+    fail(`docker-bake.hcl has no ${marker}`);
+  }
+  const openIndex = document.indexOf("{", markerIndex + marker.length);
+  if (openIndex === -1) {
+    fail(`docker-bake.hcl ${marker} has no body`);
+  }
+
+  let depth = 0;
+  let quoted = false;
+  let escaped = false;
+  for (let index = openIndex; index < document.length; index += 1) {
+    const character = document.charAt(index);
+    if (quoted) {
+      if (escaped) {
+        escaped = false;
+      } else if (character === "\\") {
+        escaped = true;
+      } else if (character === '"') {
+        quoted = false;
+      }
+      continue;
+    }
+    if (character === '"') {
+      quoted = true;
+    } else if (character === "{") {
+      depth += 1;
+    } else if (character === "}") {
+      depth -= 1;
+      if (depth === 0) {
+        return document.slice(markerIndex, index + 1);
+      }
+    }
+  }
+  fail(`docker-bake.hcl ${marker} has an unclosed body`);
+}
+
+export function assertDeterministicBinderyIdentity(
+  dockerBake: string,
+  dockerfile: string,
+): void {
+  const binderyTarget = hclNamedBlock(dockerBake, "target", "bindery");
+  if (/\b(?:VERSION|GIT_SHA)\b/.test(binderyTarget)) {
+    fail("bindery bake target must not consume per-build VERSION or GIT_SHA");
+  }
+  if (/^ARG (?:VERSION|COMMIT|BUILD_DATE)(?:=|$)/m.test(dockerfile)) {
+    fail(
+      "bindery Dockerfile must not declare dynamic VERSION, COMMIT, or BUILD_DATE arguments",
+    );
+  }
+  requireAllPresent(
+    dockerfile,
+    [
+      'source_ref="$(printf \'%.12s\' "${BINDERY_SOURCE_REF}")"',
+      'patch_ref="$(sha256sum /tmp/0001-gb-author-synthetic.patch | cut -c1-12)"',
+      "main.version=sha-${source_ref}-patch-${patch_ref}",
+      "main.commit=${BINDERY_SOURCE_REF}",
+      "main.date=",
+      '"\\"version\\":\\"sha-${source_ref}-patch-${patch_ref}\\""',
+      '"\\"commit\\":\\"${BINDERY_SOURCE_REF}\\""',
+    ],
+    (required) =>
+      `bindery deterministic runtime identity is missing contract ${required}`,
+  );
+}
+
 export function explicitSmokePort(
   dockerfile: string,
   image: string,
@@ -145,6 +221,7 @@ export async function validateImageMigrationContracts(
       Bun.file("packages/homelab/images/shelfbridge/Dockerfile").text(),
       Bun.file("packages/homelab/images/redlib/Dockerfile").text(),
     ]);
+  assertDeterministicBinderyIdentity(dockerBake, binderyDockerfile);
   const binderyPort = explicitSmokePort(
     binderyDockerfile,
     "bindery",

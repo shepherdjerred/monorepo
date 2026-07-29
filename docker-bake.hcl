@@ -177,10 +177,6 @@ target "bindery" {
   context    = "packages/homelab/images/bindery"
   target     = "image"
   tags       = imagetags("bindery")
-  args = {
-    VERSION = VERSION
-    COMMIT  = GIT_SHA
-  }
   cache-from = cachefrom("bindery")
   cache-to   = cacheto("bindery")
 }
