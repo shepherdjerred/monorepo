@@ -61,15 +61,30 @@ losses continue to reconnect.
 - Passed the fork build, typecheck, and 61 unit tests; Streambot typecheck,
   lint, 388 unit tests, and local E2E; and all 14 real-ffmpeg integration tests
   inside the built runtime image.
+- Proved the VAAPI EOF fix on `torvalds`: the old graph hit the eight-second
+  watchdog (`124`) while `overlay_vaapi=shortest=1` exited successfully (`0`);
+  removed the temporary GPU pod afterward.
+- Added `e2e:voice-recovery` and proved a real subtitled stream in the dedicated
+  Discord guild reaches natural EOF and advances to `waiting` without a stall
+  retry.
+- Opened draft PR #1778.
 
 ### Remaining
 
-- Complete VAAPI-node and live test-Discord verification.
-- Run staged pre-commit checks and Buildkite verification.
-- Publish the git-spice pull request with visual evidence.
+- Provision a test-guild identity with **Move Members**, then complete the live
+  `4014` phase tracked by
+  `packages/docs/todos/streambot-live-4014-e2e-permission.md`.
+- Re-run staged pre-commit checks, publish the latest commit, and complete
+  Buildkite verification.
+- Attach the supplied failure screenshot and available verification evidence to
+  PR #1778.
 
 ### Caveats
 
 - The host Homebrew FFmpeg lacks libass/zimg, so its integration run fails at
   filter discovery. The same suite passes in the Streambot runtime image,
   which contains the required filters.
+- The command bot and default test user both receive Discord error `50013`
+  (Missing Permissions) when attempting a moderator disconnect. The live `4014` check
+  therefore remains permission-blocked; direct and gateway-first late `4014`
+  paths are covered by deterministic tests.
