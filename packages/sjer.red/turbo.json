@@ -4,8 +4,11 @@
   "tasks": {
     // The og-image rendering inside `astro build` launches a browser too —
     // same PLAYWRIGHT_BROWSERS_PATH pass-through as test:e2e (hash-neutral).
+    // Astro 6 writes generated content modules through a shared `.astro`
+    // directory. Serialize this package's typecheck before its build so two
+    // Astro processes cannot race the same temporary rename.
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["typecheck", "^build"],
       "outputs": ["dist/**"],
       "passThroughEnv": ["PLAYWRIGHT_BROWSERS_PATH"]
     },
