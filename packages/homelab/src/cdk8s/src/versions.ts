@@ -22,7 +22,7 @@ const versions = {
   // not managed by renovate — built from packages/streambot; CI's version commit-back fills the
   // real tag@digest after the first image push. Seed digest is a placeholder until then.
   "shepherdjerred/streambot":
-    "2.0.0-6852@sha256:8659676f4b6928820b4aba665bc3c9b87d58632ffe2c9bad353a78ab507b1350",
+    "2.0.0-6874@sha256:d142ed318d9089a8934ef0cf45b3cd8e8b5435b233f69b7667673cb5b3657296",
   // not managed by renovate — built from upstream redlib's glibc Dockerfile.ubuntu
   // at REDLIB_SOURCE_REF (pinned in the since-removed CI pipeline). The published image is
   // musl/Alpine, which Reddit blocks during OAuth (redlib-org/redlib#551 —
@@ -76,7 +76,7 @@ const versions = {
   // not managed by renovate — updated by version commit-back
   // Self-built from pinned upstream source with the Chinese Google Books patch.
   "shepherdjerred/bindery":
-    "2.0.0-6746@sha256:6fb6c929bcbde84abf572cc079bd37a0cacab0eb778c69ec5656baac4f4eb7c9",
+    "2.0.0-6874@sha256:2833a75913988f67adfdf2eb92f0e63c1fa1cc81f503f156fb1474272b0b5472",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   // Calibre-Web Automated — library + ingest + Send-to-Kindle path
   "crocodilestick/calibre-web-automated":
@@ -148,7 +148,7 @@ const versions = {
   openebs: "4.5.1",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
-    "2.0.0-6690@sha256:b3ec73f1a9aaa2b79b58ce3d8904c70e7d4ad15c40b4b111e0e0355d3fda0054",
+    "2.0.0-6874@sha256:796c024cdfae3b410966fed1d07ee8973203501b5dac8675cbc292072c565c29",
   // Prod promotion = merging the Renovate PR for this pin. Each 2.0.0-<n>
   // tag is minted by the scout-tag-release CI step only after site version
   // <n> is archived, pointing at the backend digest beta serves it against —
@@ -161,20 +161,20 @@ const versions = {
     "2.0.0-6673@sha256:1020003c3939fadb6d4c1bcd0fd362c1ada9865a427d51171fe65528120b33e7",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
-    "2.0.0-6690@sha256:b4f6c9719e4ffe952e1a8b3ea3721eb19b096484b5604581426f872fb412df44",
+    "2.0.0-6874@sha256:b75b5e6cda84cfa2848fac8fd2fbcb349d2fe1b700097bcc5490f7b799d97181",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/starlight-karma-bot
   "shepherdjerred/starlight-karma-bot/prod":
     "2.0.0-6673@sha256:4e0aaa2bc818f4e98c67462bfe95c722ea470a266b6c95f6861b7dc6a5da240f",
   // not managed by renovate
   "shepherdjerred/birmel":
-    "2.0.0-6690@sha256:f413cce0255ec8d33a06d9c1490be77a8e774c5cf9804f8e59e473c451aa7f75",
+    "2.0.0-6874@sha256:2f911fcd8c2a3263f0dac3157f1c570ae26dc27fc1c9b49f5cb47e634b0b1464",
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
-    "2.0.0-6852@sha256:aed1344cc11c7815af7dabd1799cdbb59db0be32551924411985a485794eb48a",
+    "2.0.0-6874@sha256:73cca59d68f0bd0a7d7085fbaa01ff9dc5dd9ecf5844e99f429ce5d1e6b99713",
   // not managed by renovate — placeholder digest; CI version-commit-back fills
   // the real digest after the first successful image push.
   "shepherdjerred/discord-plays-mario-kart":
-    "2.0.0-6852@sha256:823b9066d721696499df9a97bab0beb306939118ff3bfd806ca754cc684873e7",
+    "2.0.0-6874@sha256:2006e9b94eadd01bfce1361d38468d07b7ac143a4173fb602c8ed704a86bf2ca",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "freshrss/freshrss":
     "1.29.1@sha256:ab6b363102ccdbc39f6a62db926f567c61a5289bf25ba460f1c34423d8cc1a4d",
@@ -299,7 +299,7 @@ const versions = {
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
-    "2.0.0-6690@sha256:f19386fb3f1552b106efe60ea7fe07332d7b045c80af157c4f9fd8436f4cb328",
+    "2.0.0-6874@sha256:4f1f650c8eb3e71c8fd4a79da602e451bc8ed44c33a55d3f143e50fc1e5f51c8",
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
@@ -320,11 +320,11 @@ const versions = {
   // Custom temporal-worker image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/temporal-worker":
-    "2.0.0-6833@sha256:ffb5e5cb47b21e65f41385c3c4660de367ff4a12a18f26df1582a25af7086af1",
+    "2.0.0-6874@sha256:1ac343610934b4bb3e0dba04615d9a9f55655b82e453159bf023f89fcc4b7483",
   // Custom TRMNL dashboard image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/trmnl-dashboard":
-    "2.0.0-6690@sha256:2b26208d7188e7bdef09c942f7aa7dea349611ae7d79329993da16b75a550df1",
+    "2.0.0-6874@sha256:f3595168d3a7eebed144601ce2498461ed7dbd46370d92d717e2e446b2ed88d1",
 };
 
 /**
