@@ -88,11 +88,16 @@ const RenderedObjectSchema = z
   })
   .passthrough();
 
-const RootSyncedRevisionSchema = z.object({
+const RootDeploymentHistorySchema = z.object({
   status: z.object({
-    sync: z.object({
-      revision: z.string().regex(/^2\.0\.0-\d+$/),
-    }),
+    history: z
+      .array(
+        z.object({
+          id: z.number().int().nonnegative(),
+          revision: z.string().regex(/^2\.0\.0-\d+$/),
+        }),
+      )
+      .min(1),
   }),
 });
 
@@ -178,17 +183,23 @@ async function suspendRepositoryAutoSync(
     return;
   }
   const token = requireEnv("ARGOCD_TOKEN");
-  const rootApplication = RootSyncedRevisionSchema.parse(
+  const rootApplication = RootDeploymentHistorySchema.parse(
     await getApplication(rootAppName, token),
+  );
+  const [firstDeployment, ...remainingDeployments] =
+    rootApplication.status.history;
+  if (firstDeployment === undefined) {
+    throw new Error(`${rootAppName} has no successful deployment history`);
+  }
+  const latestDeployment = remainingDeployments.reduce(
+    (latest, candidate) => (candidate.id > latest.id ? candidate : latest),
+    firstDeployment,
   );
   const manifestsUrl = new URL(
     `/api/v1/applications/${encodeURIComponent(rootAppName)}/manifests`,
     serverUrl(),
   );
-  manifestsUrl.searchParams.set(
-    "revision",
-    rootApplication.status.sync.revision,
-  );
+  manifestsUrl.searchParams.set("revision", latestDeployment.revision);
   const manifestsResponse = await fetch(manifestsUrl, {
     headers: { Authorization: `Bearer ${token}` },
     redirect: "follow",

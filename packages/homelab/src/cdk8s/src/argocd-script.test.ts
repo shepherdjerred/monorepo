@@ -225,8 +225,13 @@ describe("Argo CD release gating", () => {
           return Response.json({
             status: {
               sync: {
-                revision: "2.0.0-42",
+                revision: "~2.0.0-0",
               },
+              history: [
+                { id: 40, revision: "2.0.0-40" },
+                { id: 42, revision: "2.0.0-42" },
+                { id: 41, revision: "2.0.0-41" },
+              ],
               operationState: {
                 phase: "Succeeded",
                 startedAt: new Date().toISOString(),
