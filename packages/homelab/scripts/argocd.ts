@@ -74,6 +74,7 @@ const RenderedApplicationSchema = z
         source: z.object({
           repoURL: z.string(),
           chart: z.string().optional(),
+          targetRevision: z.string().min(1),
         }),
         syncPolicy: z.record(z.string(), z.unknown()).optional(),
       })
@@ -86,6 +87,14 @@ const RenderedObjectSchema = z
     kind: z.string(),
   })
   .passthrough();
+
+const RootSyncedRevisionSchema = z.object({
+  status: z.object({
+    sync: z.object({
+      revision: z.string().regex(/^2\.0\.0-\d+$/),
+    }),
+  }),
+});
 
 const ReconcileApplicationSchema = z.object({
   status: z
@@ -169,7 +178,17 @@ async function suspendRepositoryAutoSync(
     return;
   }
   const token = requireEnv("ARGOCD_TOKEN");
-  const manifestsUrl = `${serverUrl()}/api/v1/applications/${encodeURIComponent(rootAppName)}/manifests`;
+  const rootApplication = RootSyncedRevisionSchema.parse(
+    await getApplication(rootAppName, token),
+  );
+  const manifestsUrl = new URL(
+    `/api/v1/applications/${encodeURIComponent(rootAppName)}/manifests`,
+    serverUrl(),
+  );
+  manifestsUrl.searchParams.set(
+    "revision",
+    rootApplication.status.sync.revision,
+  );
   const manifestsResponse = await fetch(manifestsUrl, {
     headers: { Authorization: `Bearer ${token}` },
     redirect: "follow",
@@ -177,7 +196,7 @@ async function suspendRepositoryAutoSync(
   if (!manifestsResponse.ok) {
     const body = (await manifestsResponse.text()).slice(0, 1024);
     throw new Error(
-      `Could not render ${rootAppName}: HTTP ${manifestsResponse.status.toString()}\n${body}`,
+      `Could not render ${rootAppName} from ${manifestsUrl.toString()}: HTTP ${manifestsResponse.status.toString()}\n${body}`,
     );
   }
   const rendered = ManifestResponseSchema.parse(await manifestsResponse.json());
