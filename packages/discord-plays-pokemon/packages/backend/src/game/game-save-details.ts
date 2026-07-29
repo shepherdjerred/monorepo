@@ -11,6 +11,8 @@ import {
   SAVE_BLOCK_1_SIZE,
   SAVE_BLOCK_1_TM_HM_OFFSET,
   SAVE_BLOCK_2_ENCRYPTION_KEY_OFFSET,
+  SAVE_BLOCK_2_PLAYER_NAME_LENGTH,
+  SAVE_BLOCK_2_PLAYER_NAME_OFFSET,
   SAVE_BLOCK_2_SIZE,
 } from "./save-block-layout.ts";
 
@@ -44,6 +46,7 @@ export type GameSaveDetails = Readonly<{
 }>;
 
 const ITEM_SLOT_SIZE = 4;
+const POKEMON_TEXT_EOS = 0xff;
 
 const POCKETS: readonly Readonly<{
   pocket: InventoryPocket;
@@ -88,6 +91,21 @@ function readFlag(
   return ((byte >> (id & 7)) & 1) === 1;
 }
 
+function hasInitializedPlayerName(
+  reader: MemoryReader,
+  saveBlock2: number,
+): boolean {
+  for (let index = 0; index < SAVE_BLOCK_2_PLAYER_NAME_LENGTH; index += 1) {
+    if (
+      reader.u8(saveBlock2 + SAVE_BLOCK_2_PLAYER_NAME_OFFSET + index) ===
+      POKEMON_TEXT_EOS
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function readGameSaveDetails(
   reader: MemoryReader,
   symbols: GameSymbols,
@@ -98,6 +116,12 @@ export function readGameSaveDetails(
     !validPointer(saveBlock1, SAVE_BLOCK_1_SIZE, reader.byteLength) ||
     !validPointer(saveBlock2, SAVE_BLOCK_2_SIZE, reader.byteLength)
   ) {
+    return null;
+  }
+  // The title screen can expose a valid SaveBlock2 pointer before that block
+  // is populated. An initialized player name is always EOS-terminated in the
+  // pinned ABI, including new games whose encryption key is legitimately zero.
+  if (!hasInitializedPlayerName(reader, saveBlock2)) {
     return null;
   }
   const encryptionKey = reader.u32(

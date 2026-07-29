@@ -15,5 +15,9 @@ export const SAVE_BLOCK_1_BERRIES_OFFSET = 0x7_90;
 export const SAVE_BLOCK_1_FLAGS_OFFSET = 0x12_48;
 
 export const SAVE_BLOCK_2_SIZE = 0xf_08;
+// include/global.h: SaveBlock2.playerName[PLAYER_NAME_LENGTH + 1], where
+// PLAYER_NAME_LENGTH is 7. Pokémon strings terminate with EOS (0xff).
+export const SAVE_BLOCK_2_PLAYER_NAME_OFFSET = 0;
+export const SAVE_BLOCK_2_PLAYER_NAME_LENGTH = 8;
 export const SAVE_BLOCK_2_POKEDEX_OFFSET = 0x18;
 export const SAVE_BLOCK_2_ENCRYPTION_KEY_OFFSET = 0xa8;
