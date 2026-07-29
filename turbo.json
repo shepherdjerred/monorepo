@@ -43,6 +43,13 @@
       "env": ["NODE_ENV"],
       "dependsOn": ["^build", "generate"]
     },
+    // The scheduled reporting pipeline must execute every test and produce a
+    // complete fresh coverage set, so this task intentionally bypasses Turbo.
+    "test:report": {
+      "cache": false,
+      "env": ["NODE_ENV"],
+      "dependsOn": ["generate", "^build"]
+    },
     "lint": {
       // "generate" for the same reason typecheck/test have it: type-aware
       // ESLint builds a TS program, and packages with codegen (Prisma
@@ -117,6 +124,7 @@
     },
     "//#script-coverage": {
       "dependsOn": ["//#check-script-migrations"],
+      "cache": false,
       "inputs": [
         "scripts/bunfig.coverage.toml",
         "scripts/check-script-coverage.ts",

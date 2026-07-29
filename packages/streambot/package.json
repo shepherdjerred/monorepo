@@ -22,7 +22,8 @@
     "lint": "eslint .",
     "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/streambot:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t streambot:dev -f Dockerfile ../..",
     "smoke": "bun scripts/smoke.ts",
-    "test:ci": "bun ../../scripts/run-ci-test.ts"
+    "test:ci": "bun ../../scripts/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
   },
   "dependencies": {
     "@sentry/bun": "^10.49.0",

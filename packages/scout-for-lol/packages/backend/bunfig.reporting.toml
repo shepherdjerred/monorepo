@@ -1,0 +1,13 @@
+[test]
+preload = ["./test-setup.ts"]
+coveragePathIgnorePatterns = [
+  "**/generated/**",
+  "**/*.test.ts",
+  "**/*.integration.test.ts",
+  "**/node_modules/**",
+  "**/__tests__/**",
+]
+coverageReporter = ["text", "lcov"]
+# Measurement-only scheduled run; package and repository quality gates remain
+# unchanged and execute separately.
+coverageThreshold = { lines = 0, functions = 0 }

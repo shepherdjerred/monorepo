@@ -1,7 +1,8 @@
 // Content-specific invariant checks for the Playwright e2e lanes, split out of
 // validate-pipeline.ts to keep the entry file under the max-lines budget. Each
 // lane must use the exact filtered install, consume the committed image pin,
-// run only the no-install test closure, and restore no runtime bootstrap.
+// run only the no-install test closure, restore no runtime bootstrap, and carry
+// the reporting collector contract that matches each lane's skip semantics.
 import {
   fail,
   hasTrimmedLine,
@@ -49,6 +50,20 @@ export function validatePlaywrightLanes(
       if (block?.includes(forbidden) === true) {
         fail(`Playwright lane ${key} restored runtime bootstrap ${forbidden}`);
       }
+    }
+    const reportingContracts =
+      key === "playwright-e2e-main"
+        ? [
+            "missing-error: 0",
+            "if [ ! -s .ci-reports/junit/sjer.red/playwright.xml ]; then",
+          ]
+        : ["missing-error: 1"];
+    for (const required of reportingContracts) {
+      requireIncludes(
+        block,
+        required,
+        `Playwright lane ${key} is missing reporting contract ${required}`,
+      );
     }
   }
 }

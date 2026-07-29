@@ -94,3 +94,60 @@ resource "buildkite_pipeline" "monorepo" {
                         readOnly: true
   YAML
 }
+
+# A separate, schedule-only pipeline owns complete fresh test and coverage
+# reporting. It deliberately has no webhook triggers and no release/deploy
+# steps; the ordinary monorepo pipeline remains the per-change quality gate.
+resource "buildkite_pipeline" "reporting" {
+  name       = "monorepo-test-reporting"
+  repository = "https://github.com/shepherdjerred/monorepo.git"
+  cluster_id = buildkite_cluster.homelab.id
+
+  visibility           = "PRIVATE"
+  default_branch       = "main"
+  branch_configuration = "main"
+
+  skip_intermediate_builds   = true
+  cancel_intermediate_builds = true
+
+  provider_settings = {
+    trigger_mode = "none"
+  }
+
+  steps = <<-YAML
+    steps:
+      - label: ":pipeline: Upload reporting pipeline"
+        key: reporting-pipeline-upload
+        command: sh .buildkite/scripts/upload-reporting-pipeline.sh
+        timeout_in_minutes: 5
+        agents:
+          queue: default
+        plugins:
+          - kubernetes:
+              metadata:
+                labels:
+                  ci.sjer.red/step-key: reporting-pipeline-upload
+              podSpecPatch:
+                containers:
+                  - name: checkout
+                    resources:
+                      requests:
+                        cpu: 50m
+                        memory: 1Gi
+                      limits:
+                        cpu: 400m
+                        memory: 2Gi
+  YAML
+}
+
+# Keep the recurring trigger disabled until the pipeline succeeds manually.
+# The rollout branch enables it after that evidence exists.
+resource "buildkite_pipeline_schedule" "reporting_daily" {
+  pipeline_id = buildkite_pipeline.reporting.id
+  label       = "Daily complete test and coverage reporting"
+  cronline    = "0 3 * * *"
+  branch      = "main"
+  commit      = "HEAD"
+  message     = "Daily complete test and coverage reporting"
+  enabled     = false
+}

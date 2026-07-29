@@ -10,6 +10,7 @@ const StepSchema = z.discriminatedUnion("runner", [
       name: z.string().min(1).optional(),
       bunArgs: z.array(z.string()).optional(),
       args: z.array(z.string()).optional(),
+      coverageConfig: z.string().min(1).optional(),
     })
     .strict(),
   z
@@ -51,6 +52,10 @@ export const TestManifestSchema = z
         .object({
           package: z.string().min(1),
           directory: z.string().min(1),
+          coverageSourceDirectories: z
+            .array(z.string().min(1))
+            .min(1)
+            .optional(),
           defaultEnv: z.record(z.string(), z.string()).optional(),
           steps: z.array(StepSchema).min(1),
         })
@@ -134,6 +139,10 @@ export function reportedWorkspacesForReports(
     reported.add(workspace);
   }
   return [...reported].sort();
+}
+
+export function testStepReportName(step: TestStep, index: number): string {
+  return step.name ?? `${step.runner}-${(index + 1).toString()}`;
 }
 
 const XmlValueSchema = z.json();

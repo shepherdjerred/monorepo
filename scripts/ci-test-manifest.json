@@ -28,7 +28,11 @@
           "name": "generate",
           "command": ["bun", "--env-file=.env.test", "run", "generate"]
         },
-        { "runner": "bun", "bunArgs": ["--env-file=.env.test"] }
+        {
+          "runner": "bun",
+          "bunArgs": ["--env-file=.env.test"],
+          "coverageConfig": "bunfig.reporting.toml"
+        }
       ]
     },
     {
@@ -49,7 +53,12 @@
     {
       "package": "@shepherdjerred/discord-plays-mario-kart-scripts",
       "directory": "packages/discord-plays-mario-kart",
-      "steps": [{ "runner": "bun", "args": ["scripts"] }]
+      "steps": [
+        {
+          "runner": "bun",
+          "args": ["scripts"]
+        }
+      ]
     },
     {
       "package": "@discord-plays-mario-kart/backend",
@@ -204,6 +213,7 @@
       "steps": [
         {
           "runner": "bun",
+          "coverageConfig": "bunfig.reporting.toml",
           "args": [
             "scripts/create-minimal-png.test.ts",
             "scripts/dev-web.test.ts",
@@ -222,7 +232,13 @@
       "package": "@scout-for-lol/backend",
       "directory": "packages/scout-for-lol/packages/backend",
       "defaultEnv": { "DATABASE_URL": "file:./test.db" },
-      "steps": [{ "runner": "bun", "args": ["--timeout", "20000"] }]
+      "steps": [
+        {
+          "runner": "bun",
+          "coverageConfig": "bunfig.reporting.toml",
+          "args": ["--timeout", "20000"]
+        }
+      ]
     },
     {
       "package": "@scout-for-lol/data",
@@ -329,6 +345,7 @@
     {
       "package": "@shepherdjerred/root-scripts",
       "directory": "scripts",
+      "coverageSourceDirectories": ["scripts", ".buildkite/scripts"],
       "steps": [
         { "runner": "bun", "args": [".", "../.buildkite/scripts"] },
         {

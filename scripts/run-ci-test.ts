@@ -5,24 +5,31 @@ import {
   completeJUnitReport,
   removeExistingReport,
   sanitizeWorkspace,
+  testStepReportName,
   TestManifestSchema,
   type TestStep,
 } from "./ci-reporting.ts";
 
 const repositoryRoot = path.resolve(import.meta.dir, "..");
+const coverageEnabled = Bun.env["CI_TEST_COVERAGE"] === "1";
+const bunLcovReporter = "--coverage-reporter=lcov";
+if (process.argv.slice(2).length > 0) {
+  throw new Error(`Unknown arguments: ${process.argv.slice(2).join(", ")}`);
+}
 const manifest = TestManifestSchema.parse(
   await Bun.file(path.join(import.meta.dir, "ci-test-manifest.json")).json(),
 );
 const workspaceDirectory = path.relative(repositoryRoot, process.cwd());
-const workspace = manifest.workspaces.find(
+const workspaceEntry = manifest.workspaces.find(
   (entry) => entry.directory === workspaceDirectory,
 );
 
-if (workspace === undefined) {
+if (workspaceEntry === undefined) {
   throw new Error(
     `No CI test reporting entry exists for workspace ${workspaceDirectory}`,
   );
 }
+const workspace = workspaceEntry;
 
 const outputDirectory = path.join(
   repositoryRoot,
@@ -35,20 +42,52 @@ await Bun.$`mkdir -p ${outputDirectory}`;
 const environment = { ...Bun.env };
 applyDefaultEnvironment(environment, workspace.defaultEnv ?? {});
 
-function reportName(step: TestStep, index: number): string {
-  return step.name ?? `${step.runner}-${(index + 1).toString()}`;
+function coverageDirectory(step: TestStep, index: number): string {
+  return path.join(
+    repositoryRoot,
+    ".ci-reports",
+    "coverage",
+    "raw",
+    sanitizeWorkspace(workspace.package),
+    testStepReportName(step, index),
+  );
 }
 
-function commandForStep(step: TestStep, reportPath: string): string[] {
+function vitestCoverageArguments(rawCoverageDirectory: string): string[] {
+  return coverageEnabled
+    ? [
+        "--coverage",
+        "--coverage.provider=istanbul",
+        "--coverage.reporter=lcov",
+        `--coverage.reportsDirectory=${rawCoverageDirectory}`,
+      ]
+    : [];
+}
+
+function commandForStep(
+  step: TestStep,
+  reportPath: string,
+  rawCoverageDirectory: string,
+): string[] {
   switch (step.runner) {
     case "bun":
       return [
         "bun",
         ...(step.bunArgs ?? []),
         "test",
-        ...(step.args ?? []),
+        ...(coverageEnabled && step.coverageConfig !== undefined
+          ? [`--config=${step.coverageConfig}`]
+          : []),
         "--reporter=junit",
         `--reporter-outfile=${reportPath}`,
+        ...(coverageEnabled
+          ? [
+              "--coverage",
+              bunLcovReporter,
+              `--coverage-dir=${rawCoverageDirectory}`,
+            ]
+          : []),
+        ...(step.args ?? []),
       ];
     case "vitest":
       return [
@@ -60,6 +99,7 @@ function commandForStep(step: TestStep, reportPath: string): string[] {
         "--reporter=default",
         "--reporter=junit",
         `--outputFile=${reportPath}`,
+        ...vitestCoverageArguments(rawCoverageDirectory),
       ];
     case "go":
       return [
@@ -72,6 +112,9 @@ function commandForStep(step: TestStep, reportPath: string): string[] {
         reportPath,
         "--",
         ...step.args,
+        ...(coverageEnabled
+          ? [`-coverprofile=${path.join(rawCoverageDirectory, "coverage.out")}`]
+          : []),
       ];
     case "cargo":
       return ["cargo", "test", ...step.args, "--", "--format", "pretty"];
@@ -80,12 +123,45 @@ function commandForStep(step: TestStep, reportPath: string): string[] {
   }
 }
 
+function expectedCoveragePath(
+  step: TestStep,
+  rawCoverageDirectory: string,
+): string | undefined {
+  switch (step.runner) {
+    case "bun":
+    case "vitest":
+      return path.join(rawCoverageDirectory, "lcov.info");
+    case "go":
+      return path.join(rawCoverageDirectory, "coverage.out");
+    case "cargo":
+    case "command":
+      return undefined;
+  }
+}
+
+function fallbackBunCoveragePath(step: TestStep): string | undefined {
+  return coverageEnabled && step.runner === "bun"
+    ? path.join(process.cwd(), "coverage", "lcov.info")
+    : undefined;
+}
+
 for (const [index, step] of workspace.steps.entries()) {
-  const name = reportName(step, index);
+  const name = testStepReportName(step, index);
   const reportPath = path.resolve(outputDirectory, `${name}.xml`);
   await removeExistingReport(reportPath);
+  const rawCoverageDirectory = coverageDirectory(step, index);
+  if (coverageEnabled && step.runner !== "cargo" && step.runner !== "command") {
+    await Bun.$`mkdir -p ${rawCoverageDirectory}`;
+  }
+  const fallbackCoveragePath = fallbackBunCoveragePath(step);
+  if (
+    fallbackCoveragePath !== undefined &&
+    (await Bun.file(fallbackCoveragePath).exists())
+  ) {
+    await Bun.file(fallbackCoveragePath).delete();
+  }
   const startedAt = performance.now();
-  const command = commandForStep(step, reportPath);
+  const command = commandForStep(step, reportPath, rawCoverageDirectory);
   let exitCode: number;
   let reportingError: Error | undefined;
   if (step.runner === "cargo") {
@@ -151,6 +227,16 @@ for (const [index, step] of workspace.steps.entries()) {
     reportingError = completed.reportingError;
   }
 
+  const coveragePath = expectedCoveragePath(step, rawCoverageDirectory);
+  if (
+    coveragePath !== undefined &&
+    !(await Bun.file(coveragePath).exists()) &&
+    fallbackCoveragePath !== undefined &&
+    (await Bun.file(fallbackCoveragePath).exists())
+  ) {
+    await Bun.write(coveragePath, Bun.file(fallbackCoveragePath));
+  }
+
   if (exitCode !== 0) {
     if (reportingError !== undefined) {
       console.error(
@@ -164,5 +250,14 @@ for (const [index, step] of workspace.steps.entries()) {
   }
   if (reportingError !== undefined) {
     throw reportingError;
+  }
+
+  if (coverageEnabled && coveragePath !== undefined) {
+    const file = Bun.file(coveragePath);
+    if (!(await file.exists()) || file.size === 0) {
+      throw new Error(
+        `${workspace.package} step ${name} emitted no coverage report at ${coveragePath}`,
+      );
+    }
   }
 }
