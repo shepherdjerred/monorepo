@@ -23,15 +23,18 @@ import {
   isBlocking,
   isProviderAuthor,
   REVIEW_SIGNAL_SCHEMA,
+  reviewGateSkipReasonForAuthor,
   resolveProvider,
   tallyFindings,
   type GateDecision,
+  type PullRequestAuthor,
   type ReviewProvider,
   type ReviewSignalEvent,
   type ReviewThread,
 } from "@shepherdjerred/code-review";
 import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
 import {
+  fetchPullRequestAuthor,
   fetchReviewThreads,
   resolveReviewState,
   type ReviewStateResult,
@@ -339,6 +342,7 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
   // rather than poison the whole wait — a transient failure or not-yet-visible
   // event must not permanently mark every later reaction as stale.
   let headPushedAt: string | null = null;
+  let pullRequestAuthor: PullRequestAuthor | null = null;
   let lastState: ReviewStateResult | null = null;
   let lastThreads: readonly ReviewThread[] = [];
   let lastPollError: Error | null = null;
@@ -347,6 +351,33 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
     let stateResult: ReviewStateResult;
     let threadResult: { threads: ReviewThread[]; headRefOid: string | null };
     try {
+      pullRequestAuthor ??= await fetchPullRequestAuthor({
+        repo,
+        number,
+        token,
+      });
+      const authorSkipReason = reviewGateSkipReasonForAuthor(pullRequestAuthor);
+      if (authorSkipReason !== null) {
+        console.log(
+          JSON.stringify({
+            level: "info",
+            msg: "review-gate-skipped",
+            component: "review-gate",
+            reason: authorSkipReason,
+            provider: provider.id,
+            repo,
+            pr: number,
+            head_sha: head,
+            author_login: pullRequestAuthor.login,
+            author_type: pullRequestAuthor.type,
+          }),
+        );
+        console.log(
+          `Skipping ${provider.displayName} review gate for bot-authored PR #${String(number)} (${pullRequestAuthor.login}).`,
+        );
+        return;
+      }
+
       // Only the review-at-head clean-👍 path binds by head-push time; a
       // check-run provider (e.g. Greptile) never reads it, so don't make the
       // Activity endpoint a gate prerequisite for it — an endpoint outage must

@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { evaluateGate, isBlocking } from "./gate.ts";
+import {
+  evaluateGate,
+  isBlocking,
+  reviewGateSkipReasonForAuthor,
+} from "./gate.ts";
 import { codexProvider } from "./providers/codex.ts";
 import { greptileProvider } from "./providers/greptile.ts";
 import type { ReviewThread } from "./types.ts";
@@ -16,6 +20,44 @@ function thread(overrides: Partial<ReviewThread>): ReviewThread {
     ...overrides,
   };
 }
+
+describe("reviewGateSkipReasonForAuthor", () => {
+  test("skips an author whose GitHub account type is Bot", () => {
+    expect(
+      reviewGateSkipReasonForAuthor({
+        login: "long-summer-intern[bot]",
+        type: "Bot",
+      }),
+    ).toBe("bot-author");
+  });
+
+  test("does not skip a human author", () => {
+    expect(
+      reviewGateSkipReasonForAuthor({
+        login: "shepherdjerred",
+        type: "User",
+      }),
+    ).toBeNull();
+  });
+
+  test("fails closed for a new GitHub account type", () => {
+    expect(
+      reviewGateSkipReasonForAuthor({
+        login: "future-service",
+        type: "ServiceAccount",
+      }),
+    ).toBeNull();
+  });
+
+  test("does not infer bot status from the login", () => {
+    expect(
+      reviewGateSkipReasonForAuthor({
+        login: "lookalike[bot]",
+        type: "User",
+      }),
+    ).toBeNull();
+  });
+});
 
 describe("isBlocking", () => {
   test("blocks an unresolved, non-outdated provider thread within threshold", () => {

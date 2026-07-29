@@ -11,10 +11,18 @@ import { isProviderAuthor } from "./identity.ts";
 import { severityLabel } from "./severity.ts";
 import type {
   GateDecision,
+  PullRequestAuthor,
   ReviewProvider,
   ReviewState,
   ReviewThread,
 } from "./types.ts";
+
+/** Bot-authored pull requests do not require a provider code review. */
+export function reviewGateSkipReasonForAuthor(
+  author: PullRequestAuthor,
+): "bot-author" | null {
+  return author.type === "Bot" ? "bot-author" : null;
+}
 
 /**
  * A thread blocks the gate iff it is authored by the active provider, still

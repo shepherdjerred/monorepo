@@ -29,6 +29,12 @@ export type GateDecision =
   | { state: "passed"; message: string }
   | { state: "failed"; message: string };
 
+/** GitHub's validated author identity for a pull request. */
+export type PullRequestAuthor = {
+  login: string;
+  type: string;
+};
+
 /**
  * A PR review thread, normalised from the GitHub GraphQL `reviewThreads`
  * connection. `priority` is the numeric severity level (0..3, lower = more
