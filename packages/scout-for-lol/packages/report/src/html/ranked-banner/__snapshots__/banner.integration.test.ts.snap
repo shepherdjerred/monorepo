@@ -1,15 +1,15 @@
 // Bun Snapshot v1, https://bun.sh/docs/test/snapshots
 
-exports[`banner — solo victory 1`] = `"ff54f72fb8f2d8611467668285fa4969b675e9c3c987ad836bb946dbd160c5ce"`;
+exports[`banner — solo victory 1`] = `"3d30aef5a4760428ba20027f2d4a61afd716cf1f84c585d69c74be604e7c9a9c"`;
 
-exports[`banner — solo defeat (ranked flex) 1`] = `"59304ab00181a10e5f7d32dfeb1ec8a99c41335aeac06155fead374659a310a1"`;
+exports[`banner — solo defeat (ranked flex) 1`] = `"48a7b6199700da017f0379db8246ce3638b3c700b839e733c9ad25f91823854d"`;
 
-exports[`banner — 3-player squad with public champion name 1`] = `"0e2be28f31f20f2eb9ecc3467e9f2f6c322c3b93f90e6208af602a004895c74e"`;
+exports[`banner — 3-player squad with public champion name 1`] = `"6f68bbfe43b98f96a56295750be1e52123c86a2282bd8bff2f2a3d4593b4fc9d"`;
 
-exports[`banner — 5-player squad 1`] = `"f1097f5a9afe5a329b6f58b90a6b3efebd84265bd9a0de687ba25205b8b8b715"`;
+exports[`banner — 5-player squad 1`] = `"8a5447e7695c2ed6be919a9f5d4b94ce131acaf6c03a2c367ce3a7a5489809b2"`;
 
-exports[`banner — 6-player squad 1`] = `"6d2622fa50ae02c418b6c31d7f341bbbdfcb33732ab56f27dbcbca5126306762"`;
+exports[`banner — 6-player squad 1`] = `"034b2e656c7ac83291731394e502045ace120ba1b648b38a7edf1cf2e01e265e"`;
 
-exports[`banner — 10-player squad 1`] = `"6df57de568ec989f796d85c39085a64b7cb82974fe60563b31b2602e364bd8ab"`;
+exports[`banner — 10-player squad 1`] = `"1f03fe4cb202cb6a245a6099ba3ae76a949036e28187bffc50587afedb0368b5"`;
 
-exports[`banner — 11-player squad spans three groups 1`] = `"8dc9b508414e6c31313ba0670646ba20107bd1b11543761fe263a5dd60cb55e0"`;
+exports[`banner — 11-player squad spans three groups 1`] = `"275a9464b4ef7cbd2dd924808b8f72c07eeaaf94a0f0b0bbe5fd61c48585c62a"`;
