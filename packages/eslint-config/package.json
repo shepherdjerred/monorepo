@@ -26,10 +26,10 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc --outDir ./dist",
+    "build": "bun node_modules/@typescript/native/bin/tsc --outDir ./dist",
     "lint": "bunx eslint --cache .",
     "test": "bun test",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bun node_modules/@typescript/native/bin/tsc --noEmit",
     "prepublishOnly": "bun run build"
   },
   "dependencies": {
@@ -59,6 +59,7 @@
   },
   "devDependencies": {
     "@typescript-eslint/rule-tester": "^8.59.0",
-    "@types/node": "^26.1.1"
+    "@types/node": "^26.1.1",
+    "@typescript/native": "npm:typescript@7.0.2"
   }
 }
