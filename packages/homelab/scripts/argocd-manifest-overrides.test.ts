@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import {
   batchManifestOverrides,
+  operationStateIdentity,
   type ManifestOverride,
 } from "./argocd-manifest-overrides.ts";
 
@@ -54,5 +55,38 @@ describe("manifest override batching", () => {
     expect(() => batchManifestOverrides([override("huge", 2000)], 500)).toThrow(
       "Application/huge exceeds the request budget",
     );
+  });
+});
+
+describe("Argo operation identity", () => {
+  test("distinguishes consecutive batches even within the same second", () => {
+    const first = {
+      status: {
+        operationState: {
+          startedAt: "2026-07-29T10:00:00Z",
+          finishedAt: "2026-07-29T10:00:00Z",
+          phase: "Succeeded",
+          operation: { sync: { manifests: ["first"] } },
+        },
+      },
+    };
+    const second = {
+      status: {
+        operationState: {
+          startedAt: "2026-07-29T10:00:00Z",
+          finishedAt: "2026-07-29T10:00:00Z",
+          phase: "Succeeded",
+          operation: { sync: { manifests: ["second"] } },
+        },
+      },
+    };
+
+    expect(operationStateIdentity(first)).not.toBe(
+      operationStateIdentity(second),
+    );
+  });
+
+  test("returns null before an Application has an operation state", () => {
+    expect(operationStateIdentity({ status: {} })).toBeNull();
   });
 });

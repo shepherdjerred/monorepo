@@ -1,4 +1,21 @@
+import { z } from "zod";
+
 const DEFAULT_MAX_REQUEST_BYTES = 1_500_000;
+
+const ApplicationOperationStateSchema = z.object({
+  status: z
+    .object({
+      operationState: z
+        .object({
+          startedAt: z.string().optional(),
+          finishedAt: z.string().optional(),
+          phase: z.string().optional(),
+          operation: z.unknown().optional(),
+        })
+        .optional(),
+    })
+    .optional(),
+});
 
 export type SyncOperationResource = {
   group: string;
@@ -76,4 +93,13 @@ export function batchManifestOverrides(
     batches.push(current);
   }
   return batches;
+}
+
+export function operationStateIdentity(application: unknown): string | null {
+  const operationState =
+    ApplicationOperationStateSchema.parse(application).status?.operationState;
+  if (operationState === undefined) {
+    return null;
+  }
+  return JSON.stringify(operationState);
 }

@@ -37,6 +37,7 @@ import {
 } from "../src/cdk8s/src/application-release-policy.ts";
 import {
   batchManifestOverrides,
+  operationStateIdentity,
   type SyncOperationResource,
 } from "./argocd-manifest-overrides.ts";
 import { latestPublishedVersion } from "./helm-release-core.ts";
@@ -326,9 +327,10 @@ async function sync(
   if (appName === "apps" && options.prune) {
     await assertRootPruneSafe(token);
   }
+  const previousOperationIdentity = operationStateIdentity(
+    await getApplication(appName, token),
+  );
   const url = `${serverUrl()}/api/v1/applications/${appName}/sync`;
-  // Operations started before this instant are a previous sync, not ours.
-  const postedAt = Date.now();
   const res = await fetch(url, {
     method: "POST",
     headers: {
@@ -363,10 +365,10 @@ async function sync(
       ? status["operationState"]
       : {};
     const phase = typeof op["phase"] === "string" ? op["phase"] : "";
-    const startedAt =
-      typeof op["startedAt"] === "string" ? Date.parse(op["startedAt"]) : NaN;
-    // Ignore a stale operationState from an earlier sync (30s clock-skew slack).
-    const isOurs = !Number.isNaN(startedAt) && startedAt >= postedAt - 30_000;
+    const currentOperationIdentity = operationStateIdentity(app);
+    const isOurs =
+      currentOperationIdentity !== null &&
+      currentOperationIdentity !== previousOperationIdentity;
     console.log(
       `Operation: ${phase || "(pending)"}${isOurs ? "" : " [previous op]"} ` +
         `(${elapsed.toString()}/${timeoutSeconds.toString()}s)`,
