@@ -3,7 +3,7 @@ id: glitter-discord-acceptance-operator
 type: todo
 status: complete
 board: false
-origin: packages/docs/plans/2026-07-26_glitter-discord-source-of-truth.md
+origin: packages/docs/archive/completed/2026-07-26_glitter-discord-source-of-truth.md
 ---
 
 # Provision and acceptance-test the Glitter Discord corpus pipeline

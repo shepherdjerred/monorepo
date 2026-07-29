@@ -8,7 +8,8 @@ board: false
 # Plan: Extract `discord-style-cards` package + daily Temporal refresh pipeline
 
 > Superseded by
-> `plans/2026-07-26_glitter-discord-source-of-truth.md`, which replaces the
+> `archive/completed/2026-07-26_glitter-discord-source-of-truth.md`, which
+> replaces the
 > export-driven daily design with a verified mirrored corpus and weekly refresh.
 
 ## Context

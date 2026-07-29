@@ -693,6 +693,8 @@ pass.
 - Archived the completed Discord/SeaweedFS operator-acceptance TODO and removed
   its obsolete R2 requirements. Narrowed the remaining credential TODO to the
   OpenAI quota-gated weekly refresh acceptance only.
+- Reconciled and archived the completed source-of-truth implementation plan so
+  the active workboard no longer advertises obsolete pre-seed tasks.
 - Verified the production deployment is fully observed and Ready at immutable
   worker image
   `2.0.0-7052@sha256:580e41600ab0c1cc33d9d4f91a68c1ac7cc2126de68b6ade291b092719d8e4b2`.
