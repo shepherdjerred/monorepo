@@ -31,6 +31,16 @@ function rawUrl(sources: Sources, path: string): string {
   return `https://raw.githubusercontent.com/ArchipelagoMW/Archipelago/${sources.archipelago.commit}/${sources.archipelago.worldPath}/${path}`;
 }
 
+export function archipelagoRandomizerMetadataLines(
+  locations: readonly string[],
+  events: readonly string[],
+): [string, string] {
+  return [
+    `Archipelago randomizer check identifiers (not vanilla rewards): ${compactList(locations) || "none"}`,
+    `Archipelago randomizer logic identifiers (not vanilla events): ${compactList(events) || "none"}`,
+  ];
+}
+
 export async function buildWorldRecords(
   sources: Sources,
 ): Promise<KnowledgeRecord[]> {
@@ -57,8 +67,10 @@ export async function buildWorldRecords(
           `Terrain/features: ${features.join(", ") || "none recorded"}`,
           `Connected regions: ${compactList(region.exits) || "none"}`,
           `Warps: ${compactList(region.warps) || "none"}`,
-          `Locations and rewards: ${compactList(region.locations) || "none"}`,
-          `Events: ${compactList(region.events) || "none"}`,
+          ...archipelagoRandomizerMetadataLines(
+            region.locations,
+            region.events,
+          ),
         ].join("\n"),
         source: {
           id: "archipelago",

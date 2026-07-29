@@ -1,6 +1,6 @@
 ---
 name: pokemon-world
-description: Search Pokémon Emerald maps, regions, connections, warps, terrain, rewards, and encounter-capable areas. Use when an objective involves locating a place, choosing a route, understanding where a warp leads, or planning travel.
+description: Search Pokémon Emerald maps, regions, connections, warps, terrain, and encounter-capable areas. Use when an objective involves locating a place, choosing a route, understanding where a warp leads, or planning travel.
 ---
 
 # Pokémon World
@@ -24,4 +24,7 @@ Query world knowledge only when the current objective needs geographic facts.
 
 4. Treat the result as game knowledge, not current emulator state. Re-observe before acting.
 
-World records describe topology and static features. They do not prove that a conditional obstacle is currently passable and they are not a quest solver.
+World records describe topology and static features. Archipelago check and
+logic identifiers are labeled as randomizer metadata, not vanilla rewards or
+events. The records do not prove that a conditional obstacle is currently
+passable and they are not a quest solver.

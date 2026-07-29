@@ -91,11 +91,14 @@ excludes invalid runs from its denominator.
 `knowledge/cc-by-nc-sa-2.5/walkthrough.json` are committed generator output.
 Never hand-edit them. `scripts/generate-knowledge.ts` validates
 `knowledge/sources.json`, fetches only pinned upstream revisions, validates the
-normalized records, sorts them deterministically, and fails if Bulbapedia's
-current revisions have drifted from the manifest.
+normalized records, and sorts them deterministically. Bulbapedia requests use
+the exact revision IDs from the manifest rather than the pages' current
+revisions.
 
-- Archipelago supplies the MIT-licensed Emerald region graph.
+- Archipelago supplies the MIT-licensed Emerald region graph. Its randomizer
+  check and logic identifiers are labeled as non-vanilla metadata.
 - PokeAPI supplies BSD-3-Clause Generation III species, move, and item data.
+  Item membership is generation-wide and does not prove Emerald availability.
 - Bulbapedia supplies the separately stored full walkthrough under CC
   BY-NC-SA 2.5; preserve `knowledge/cc-by-nc-sa-2.5/NOTICE.md` and per-record
   attribution.

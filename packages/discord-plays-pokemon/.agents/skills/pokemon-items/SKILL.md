@@ -1,6 +1,6 @@
 ---
 name: pokemon-items
-description: Search Pokémon Emerald item identifiers, categories, and shop costs. Use when an objective depends on obtaining, recognizing, buying, or budgeting for an item.
+description: Search Generation III item identifiers, categories, and catalog costs. Use when an objective depends on recognizing, buying, or budgeting for an item.
 ---
 
 # Pokémon Items
@@ -12,4 +12,7 @@ pokemonctl knowledge search "Poke Ball cost" --domain items --limit 3
 pokemonctl knowledge get "items:poke-ball"
 ```
 
-The catalog describes game data. It does not say what the player currently owns or can currently buy; use `pokemonctl observe` for live inventory and money.
+The PokeAPI catalog is generation-wide, excludes known FireRed/LeafGreen-only
+key items, and does not prove that another item is obtainable in Emerald. It
+also does not say what the player currently owns or can currently buy; use
+`pokemonctl observe` for live inventory and money.

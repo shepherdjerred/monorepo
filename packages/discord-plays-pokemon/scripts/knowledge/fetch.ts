@@ -1,29 +1,38 @@
 import { parse } from "csv-parse/sync";
 import type { z } from "zod";
 
-export async function fetchText(url: string): Promise<string> {
+export const KNOWLEDGE_FETCH_TIMEOUT_MS = 30_000;
+
+async function fetchResponse(
+  url: string,
+  timeoutMs: number,
+): Promise<Response> {
   const response = await fetch(url, {
     headers: {
       "user-agent":
         "discord-plays-pokemon-knowledge-generator/1.0 (https://github.com/shepherdjerred/monorepo)",
     },
+    signal: AbortSignal.timeout(timeoutMs),
   });
   if (!response.ok) {
     throw new Error(`failed to fetch ${url}: ${String(response.status)}`);
   }
+  return response;
+}
+
+export async function fetchText(
+  url: string,
+  timeoutMs = KNOWLEDGE_FETCH_TIMEOUT_MS,
+): Promise<string> {
+  const response = await fetchResponse(url, timeoutMs);
   return response.text();
 }
 
-export async function fetchJson(url: string): Promise<unknown> {
-  const response = await fetch(url, {
-    headers: {
-      "user-agent":
-        "discord-plays-pokemon-knowledge-generator/1.0 (https://github.com/shepherdjerred/monorepo)",
-    },
-  });
-  if (!response.ok) {
-    throw new Error(`failed to fetch ${url}: ${String(response.status)}`);
-  }
+export async function fetchJson(
+  url: string,
+  timeoutMs = KNOWLEDGE_FETCH_TIMEOUT_MS,
+): Promise<unknown> {
+  const response = await fetchResponse(url, timeoutMs);
   return response.json();
 }
 

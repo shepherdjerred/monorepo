@@ -181,12 +181,48 @@ const GENERATION_3_PHYSICAL_TYPES = new Set([
   "steel",
 ]);
 
-function generation3DamageClass(
+const STATUS_DAMAGE_CLASS_ID = 1;
+const PHYSICAL_DAMAGE_CLASS_ID = 2;
+const SPECIAL_DAMAGE_CLASS_ID = 3;
+
+export function generation3DamageClass(
   type: string,
-  power: number | undefined,
+  damageClassId: number,
 ): "physical" | "special" | "status" {
-  if (power === undefined) return "status";
+  if (damageClassId === STATUS_DAMAGE_CLASS_ID) return "status";
+  if (
+    damageClassId !== PHYSICAL_DAMAGE_CLASS_ID &&
+    damageClassId !== SPECIAL_DAMAGE_CLASS_ID
+  ) {
+    throw new Error(
+      `unknown PokeAPI move damage class id ${String(damageClassId)}`,
+    );
+  }
   return GENERATION_3_PHYSICAL_TYPES.has(type) ? "physical" : "special";
+}
+
+export function generation3PowerLabel(
+  power: number | undefined,
+  damageClass: "physical" | "special" | "status",
+): string {
+  if (power !== undefined) return String(power);
+  return damageClass === "status" ? "status" : "fixed or variable";
+}
+
+export const CONFIRMED_FRLG_ONLY_ITEM_IDENTIFIERS = [
+  "tea",
+  "tri-pass",
+  "rainbow-pass",
+  "ruby",
+  "sapphire",
+] as const;
+
+const confirmedFrlgOnlyItemIdentifiers = new Set<string>(
+  CONFIRMED_FRLG_ONLY_ITEM_IDENTIFIERS,
+);
+
+export function includeGeneration3Item(identifier: string): boolean {
+  return !confirmedFrlgOnlyItemIdentifiers.has(identifier);
 }
 
 export async function buildPokeApiRecords(
@@ -305,7 +341,7 @@ export async function buildPokeApiRecords(
     );
     const typeName =
       typeNames.get(versioned.type_id) ?? `type-${String(versioned.type_id)}`;
-    const damageClass = generation3DamageClass(typeName, versioned.power);
+    const damageClass = generation3DamageClass(typeName, move.damage_class_id);
     records.push({
       id: `battle:move:${move.identifier}`,
       domain: "battle",
@@ -314,27 +350,40 @@ export async function buildPokeApiRecords(
       tags: [typeName, damageClass],
       body: [
         `Type: ${typeName}`,
-        `Power: ${String(versioned.power ?? "status")}; accuracy: ${String(versioned.accuracy ?? "always")}; PP: ${String(versioned.pp ?? "unknown")}`,
+        `Power: ${generation3PowerLabel(versioned.power, damageClass)}; accuracy: ${String(versioned.accuracy ?? "always")}; PP: ${String(versioned.pp ?? "unknown")}`,
         `Priority: ${String(versioned.priority)}; Generation III damage class: ${damageClass}`,
       ].join("\n"),
       source,
     });
   }
 
-  const emeraldItemIds = new Set(
+  // PokeAPI's item_game_indices table is generation-scoped, not
+  // version-scoped. Its Generation III rows include FireRed/LeafGreen key
+  // items, and the pinned pokeemerald constants retain those IDs for
+  // cross-game compatibility rather than proving Emerald availability.
+  const generation3ItemIds = new Set(
     itemIndices
       .filter((entry) => entry.generation_id === sources.pokeapi.generationId)
       .map((entry) => entry.item_id),
   );
-  for (const item of items.filter((entry) => emeraldItemIds.has(entry.id))) {
+  for (const item of items.filter(
+    (entry) =>
+      generation3ItemIds.has(entry.id) &&
+      includeGeneration3Item(entry.identifier),
+  )) {
     records.push({
       id: `items:${item.identifier}`,
       domain: "items",
       title: humanizeIdentifier(item.identifier),
       aliases: [item.identifier],
-      tags: [`category-${String(item.category_id)}`],
+      tags: [
+        "generation-3",
+        "availability-unverified",
+        `category-${String(item.category_id)}`,
+      ],
       body: [
-        `Emerald item identifier: ${item.identifier}`,
+        `Generation III item identifier: ${item.identifier}`,
+        "Availability: this generation-wide catalog entry does not prove the item is obtainable in Pokémon Emerald.",
         `Shop cost: ${String(item.cost)}; category id: ${String(item.category_id)}`,
       ].join("\n"),
       source,

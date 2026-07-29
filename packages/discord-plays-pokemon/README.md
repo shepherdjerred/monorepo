@@ -47,10 +47,13 @@ Goal Mode gives Codex a compact operating policy and loads game facts only
 when needed. The `pokemonctl knowledge search` and `knowledge get` commands
 query a committed, validated Pokémon Emerald corpus:
 
-- Archipelago's Emerald region graph for maps, connections, warps, terrain,
-  events, and rewards.
+- Archipelago's Emerald region graph for maps, connections, warps, and terrain;
+  randomizer check and logic identifiers remain explicitly labeled as
+  non-vanilla metadata.
 - PokeAPI's Generation III data for species, Emerald level-up moves, battle
-  moves, and items.
+  moves, and generation-wide item identifiers. Known FireRed/LeafGreen-only
+  key items are excluded, but remaining catalog membership does not prove
+  Emerald availability.
 - Bulbapedia's complete 22-part Emerald walkthrough, stored separately under
   `knowledge/cc-by-nc-sa-2.5/` and attributed under CC BY-NC-SA 2.5.
 

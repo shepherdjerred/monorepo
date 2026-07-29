@@ -29,6 +29,11 @@ const QueryResponseSchema = z.object({
 });
 
 const MAX_BODY_CHARS = 6000;
+export const BULBAPEDIA_REQUEST_DELAY_MS = 5000;
+type BulbapediaPagePin = Sources["bulbapedia"]["pages"][number];
+type BulbapediaPage = z.infer<
+  typeof QueryResponseSchema
+>["query"]["pages"][number];
 
 function chunkText(text: string): string[] {
   const paragraphs = text
@@ -64,40 +69,59 @@ function pageSlug(title: string): string {
     .toLowerCase();
 }
 
+export function buildBulbapediaRequestUrl(
+  api: string,
+  pin: BulbapediaPagePin,
+): string {
+  const url = new URL(api);
+  url.search = new URLSearchParams({
+    action: "query",
+    format: "json",
+    formatversion: "2",
+    prop: "extracts|revisions",
+    explaintext: "1",
+    exsectionformat: "plain",
+    rvprop: "ids|timestamp",
+    revids: String(pin.revision),
+  }).toString();
+  return url.toString();
+}
+
+export function parsePinnedBulbapediaPage(
+  raw: unknown,
+  pin: BulbapediaPagePin,
+): BulbapediaPage {
+  const response = QueryResponseSchema.parse(raw);
+  const page = response.query.pages.at(0);
+  if (page === undefined) {
+    throw new Error(`Bulbapedia omitted revision ${String(pin.revision)}`);
+  }
+  const revision = page.revisions.at(0);
+  if (
+    revision?.revid !== pin.revision ||
+    revision.timestamp !== pin.timestamp
+  ) {
+    throw new Error(
+      `Bulbapedia returned unexpected revision data for ${pin.title}`,
+    );
+  }
+  return page;
+}
+
 export async function buildBulbapediaRecords(
   sources: Sources,
 ): Promise<KnowledgeRecord[]> {
   const records: KnowledgeRecord[] = [];
 
-  for (const pin of sources.bulbapedia.pages) {
-    const url = new URL(sources.bulbapedia.api);
-    url.search = new URLSearchParams({
-      action: "query",
-      format: "json",
-      formatversion: "2",
-      prop: "extracts|revisions",
-      explaintext: "1",
-      exsectionformat: "plain",
-      rvprop: "ids|timestamp",
-      titles: pin.title,
-    }).toString();
-    const response = QueryResponseSchema.parse(await fetchJson(url.toString()));
-    const page = response.query.pages.at(0);
-    if (page === undefined) {
-      throw new Error(`Bulbapedia omitted ${pin.title}`);
+  for (const [index, pin] of sources.bulbapedia.pages.entries()) {
+    if (index > 0) {
+      await Bun.sleep(BULBAPEDIA_REQUEST_DELAY_MS);
     }
-    const revision = page.revisions.at(0);
-    if (
-      revision?.revid !== pin.revision ||
-      revision.timestamp !== pin.timestamp
-    ) {
-      throw new Error(
-        `Bulbapedia revision drift for ${pin.title}; update knowledge/sources.json intentionally`,
-      );
-    }
+    const url = buildBulbapediaRequestUrl(sources.bulbapedia.api, pin);
+    const page = parsePinnedBulbapediaPage(await fetchJson(url), pin);
     const chunks = chunkText(page.extract);
-    chunks.forEach((body, index) => {
-      const sequence = index + 1;
+    chunks.forEach((body, chunkIndex) => {
+      const sequence = chunkIndex + 1;
       records.push({
         id: `progression:bulbapedia:${pageSlug(pin.title)}:${String(sequence)}`,
         domain: "progression",

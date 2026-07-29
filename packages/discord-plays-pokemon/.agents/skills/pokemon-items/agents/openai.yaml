@@ -1,4 +1,4 @@
 interface:
   display_name: "Pokemon Items"
-  short_description: "Search Pokemon Emerald item identifiers, categories, and costs"
-  default_prompt: "Use Pokemon item knowledge when an objective depends on an item."
+  short_description: "Search Generation III item identifiers and costs"
+  default_prompt: "Use $pokemon-items when a Pokemon objective depends on identifying or budgeting for an item."
