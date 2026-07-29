@@ -4,6 +4,7 @@ import { archipelagoRandomizerMetadataLines } from "./archipelago.ts";
 import {
   BULBAPEDIA_REQUEST_DELAY_MS,
   buildBulbapediaRequestUrl,
+  extractBulbapediaPlainText,
   parsePinnedBulbapediaPage,
 } from "./bulbapedia.ts";
 import { KNOWLEDGE_FETCH_TIMEOUT_MS } from "./fetch.ts";
@@ -153,7 +154,7 @@ describe("Archipelago world metadata", () => {
 });
 
 describe("pinned Bulbapedia requests", () => {
-  test("requests the exact revision instead of the current page title", () => {
+  test("requests rendered content for the exact oldid", () => {
     const url = new URL(
       buildBulbapediaRequestUrl(
         "https://bulbapedia.bulbagarden.net/w/api.php",
@@ -161,47 +162,73 @@ describe("pinned Bulbapedia requests", () => {
       ),
     );
 
-    expect(url.searchParams.get("revids")).toBe("4512784");
+    expect(url.searchParams.get("action")).toBe("parse");
+    expect(url.searchParams.get("oldid")).toBe("4512784");
     expect(url.searchParams.has("titles")).toBe(false);
-    expect(url.searchParams.get("prop")).toBe("extracts|revisions");
-    expect(url.searchParams.get("rvprop")).toBe("ids|timestamp");
+    expect(url.searchParams.has("revids")).toBe(false);
+    expect(url.searchParams.get("prop")).toBe("text|revid");
+    expect(url.searchParams.get("disablelimitreport")).toBe("1");
+    expect(url.searchParams.get("disableeditsection")).toBe("1");
+    expect(url.searchParams.get("disabletoc")).toBe("1");
   });
 
-  test("accepts only response metadata matching the pinned revision", () => {
+  test("couples rendered text to the matching revision payload", () => {
     const page = {
       pageid: 76_032,
       title: BULBAPEDIA_PIN.title,
-      extract: "Pinned walkthrough text.",
-      revisions: [
-        {
-          revid: BULBAPEDIA_PIN.revision,
-          timestamp: BULBAPEDIA_PIN.timestamp,
-        },
-      ],
+      revid: BULBAPEDIA_PIN.revision,
+      text: '<div class="mw-parser-output"><p>Pinned text.</p></div>',
     };
-    expect(
-      parsePinnedBulbapediaPage({ query: { pages: [page] } }, BULBAPEDIA_PIN),
-    ).toEqual(page);
+    expect(parsePinnedBulbapediaPage({ parse: page }, BULBAPEDIA_PIN)).toEqual(
+      page,
+    );
     expect(() =>
       parsePinnedBulbapediaPage(
         {
-          query: {
-            pages: [
-              {
-                ...page,
-                revisions: [
-                  {
-                    revid: BULBAPEDIA_PIN.revision + 1,
-                    timestamp: BULBAPEDIA_PIN.timestamp,
-                  },
-                ],
-              },
-            ],
+          parse: {
+            ...page,
+            revid: BULBAPEDIA_PIN.revision + 1,
+            text: "Text from a later revision.",
           },
         },
         BULBAPEDIA_PIN,
       ),
-    ).toThrow("returned unexpected revision data");
+    ).toThrow("returned unexpected parsed revision");
+    expect(() =>
+      parsePinnedBulbapediaPage(
+        {
+          parse: {
+            ...page,
+            title: "Walkthrough:Pokémon Emerald/Current",
+          },
+        },
+        BULBAPEDIA_PIN,
+      ),
+    ).toThrow("returned unexpected parsed revision");
+  });
+
+  test("extracts deterministic plain text from pinned rendered HTML", async () => {
+    const html = `
+      <div class="mw-parser-output">
+        <table><tr><td>Navigation from latest state</td></tr></table>
+        <h2>Start &amp; setup</h2>
+        <p>Pinned&#160;walkthrough<br>Second line.</p>
+        <ul><li>First step</li><li>Second step</li></ul>
+        <div class="partycontainer">Rendered battle card</div>
+        <sup class="reference">[1]</sup>
+      </div>
+    `;
+    expect(await extractBulbapediaPlainText(html)).toBe(
+      "Start & setup\n\nPinned walkthrough\nSecond line.\n\nFirst step\nSecond step",
+    );
+    await expect(
+      extractBulbapediaPlainText(
+        '<div class="mw-parser-output"><p>Unsupported &copy;</p></div>',
+      ),
+    ).rejects.toThrow("unsupported HTML entity &copy;");
+    await expect(
+      extractBulbapediaPlainText("<p>Missing article container</p>"),
+    ).rejects.toThrow("omitted .mw-parser-output");
   });
 
   test("uses bounded requests and the documented polite delay", () => {
