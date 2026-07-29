@@ -40,4 +40,4 @@
 +++ b/code/Makefile
 @@ -225 +225 @@
 -	-s EXTRA_EXPORTED_RUNTIME_METHODS="['callMain','cwrap']" \
-+	-s EXPORTED_RUNTIME_METHODS="['callMain','cwrap']" \
++	-s EXPORTED_RUNTIME_METHODS="['callMain','cwrap','HEAPU8']" \

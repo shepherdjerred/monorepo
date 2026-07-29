@@ -92,6 +92,15 @@ For symbolized JS, PR #1274 added on-demand capture:
 `kubectl exec -n mario-kart deploy/mario-kart -- sh -c 'kill -USR2 1'` runs the
 JSC sampling profiler for ~30s and writes folded stacks (speedscope) to the logs.
 
+**N64 timing contract:** `_runMainLoop` advances one 60 Hz vertical interrupt;
+MK64 renders one video frame every two interrupts. Pace core steps at 60 Hz,
+drain audio after every step, and emit video after every second step at 30 fps.
+Do not batch both core steps into one video deadline: the resulting 24–60 ms
+burst misses the 33 ms output budget. One core call per 30 fps output frame
+slows game time and 44.1 kHz PCM to 0.5×; ffmpeg then blocks on audio, queues
+video, and the frame gate drops roughly half the frames. The ROM-gated
+`e2e:audio --rom` duration assertion is the end-to-end guard.
+
 ## Conventions
 
 - Bun only; strict TS; no `as` casts; no `.then/.catch` (use async/await); Bun

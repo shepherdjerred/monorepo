@@ -37,9 +37,10 @@ export async function resolveRom(arg?: string): Promise<string> {
   );
 }
 
-/** Boot a headless emulator. Defaults to sprint mode (fps: 1000) for fast menu
- *  navigation; pass `fps: 30` to pace the loop in realtime for perf
- *  measurement. The emulator's own `setFps()` can flip pacing mid-run. */
+/** Boot a headless emulator. Defaults to sprint mode (1000 output frames/s,
+ *  two N64 VI ticks each) for fast menu navigation; pass `fps: 30` to pace
+ *  game time and video in realtime for perf measurement. The emulator's own
+ *  `setFps()` can flip pacing mid-run. */
 export async function bootEmulator(opts: {
   rom: string;
   seats?: number;

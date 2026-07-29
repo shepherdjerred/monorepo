@@ -1,15 +1,3 @@
---- a/code/Makefile	2026-06-12 18:39:54
-+++ b/code/Makefile	2026-06-12 18:40:15
-@@ -227,7 +227,8 @@
-     '_neilGetAudioWritePosition','_neil_serialize','_neil_unserialize','_neil_toast_message', \
-     '_neil_export_eep','_neil_export_sra','_neil_export_fla','_neil_reset','_toggleFPS', '_neil_send_mobile_controls', \
-     '_neil_set_buffer_remaining','_neil_set_endframe_callback','_neil_set_double_speed', \
--    '_neilGetVideoBuffer','_neilGetVideoHeight','_neilSetRom','_neil_send_mobile_controls_player']" \
-+    '_neilGetVideoBuffer','_neilGetVideoHeight','_neilSetRom','_neil_send_mobile_controls_player', \
-+    '_neilGetRdram','_neilGetRdramSize']" \
- 	-s INVOKE_RUN=0
- 	# outputs n64wasm.js + n64wasm.wasm in this dir; build-wasm.sh copies them.
-     
 --- a/code/mymain.cpp	2026-06-12 18:39:54
 +++ b/code/mymain.cpp	2026-06-12 18:46:42
 @@ -42,6 +42,19 @@

@@ -8,8 +8,9 @@ export const WIDTH = 640;
 // value the stream pipeline is sized for (MK64 NTSC).
 export const HEIGHT = 240;
 
-// MK64 displays ~30fps; we step the emulator at this rate (8.3ms/frame in the
-// spike → ~3x headroom). Overridable via config.emulator.fps.
+// MK64 displays ~30 fps. N64Emulator paces output at this rate but advances two
+// 60 Hz vertical interrupts per output frame so the game/audio clock stays
+// realtime. The output cadence is overridable via config.emulator.fps.
 export const N64_FPS = 30;
 
 // MK64's native framebuffer is 640x240 (a horizontally-doubled 320x240), which

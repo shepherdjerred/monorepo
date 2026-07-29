@@ -28,6 +28,7 @@
 //
 // Exits non-zero on any failed assertion.
 import { spawnSync } from "node:child_process";
+import { once } from "node:events";
 import { PassThrough } from "node:stream";
 import { prepareStream, Encoders } from "@shepherdjerred/discord-video-stream";
 import { createAudioTransport } from "#src/stream/audio-transport.ts";
@@ -50,6 +51,26 @@ const out = (s: string): void => {
 const err = (s: string): void => {
   process.stderr.write(`${s}\n`);
 };
+
+async function encoderExitSignal(
+  encoderPromise: Promise<unknown>,
+): Promise<"encoder-exited"> {
+  await encoderPromise;
+  return "encoder-exited";
+}
+
+export async function waitForVideoDrain(
+  video: PassThrough,
+  encoderPromise: Promise<unknown>,
+): Promise<void> {
+  const result = await Promise.race([
+    once(video, "drain"),
+    encoderExitSignal(encoderPromise),
+  ]);
+  if (result === "encoder-exited") {
+    throw new Error("ffmpeg exited before video input completed");
+  }
+}
 
 function requireBinary(name: string): void {
   const r = spawnSync(name, ["-version"], { encoding: "utf8" });
@@ -107,6 +128,10 @@ async function renderBroadcast(pcm: Buffer): Promise<string> {
     }),
   });
 
+  // FileSink overwrites from offset zero but does not remove stale trailing
+  // bytes from a longer prior run. Truncate first so ffprobe only sees this
+  // invocation's container.
+  await Bun.write(TMP_NUT, "");
   const writer = Bun.file(TMP_NUT).writer();
   output.on("data", (chunk: Buffer) => {
     void writer.write(chunk);
@@ -118,7 +143,11 @@ async function renderBroadcast(pcm: Buffer): Promise<string> {
   const seconds = pcm.byteLength / (AUDIO_SAMPLE_RATE * AUDIO_CHANNELS * 2);
   const frames = Math.max(1, Math.ceil(seconds * N64_FPS));
   const frame = Buffer.alloc(WIDTH * HEIGHT * 4, 0x80);
-  for (let i = 0; i < frames; i++) video.write(Buffer.from(frame));
+  for (let i = 0; i < frames; i++) {
+    if (!video.write(frame)) {
+      await waitForVideoDrain(video, promise);
+    }
+  }
   video.end();
 
   await promise.catch((error: unknown) => {
@@ -283,10 +312,10 @@ async function runRom(romArg: string | undefined): Promise<void> {
     chunks.push(pcm);
   });
 
-  // ~1200 wasm frames at the N64's ~30 fps = ~40 s of game time, enough to cover
-  // the Nintendo/N64 splash logos and the title-screen jingle. The harness boots
-  // the emulator in sprint mode (fps:1000) so this completes in a few seconds of
-  // wall clock.
+  // 1200 output frames at 30 fps = ~40 s of game time, enough to cover the
+  // Nintendo/N64 splash logos and the title-screen jingle. Each output frame
+  // advances two 60 Hz N64 VI ticks. The harness boots the emulator in sprint
+  // mode (fps:1000) so this completes in a few seconds of wall clock.
   const TARGET_FRAMES = 1200;
   await new Promise<void>((resolve) => {
     let frame = 0;
@@ -305,6 +334,14 @@ async function runRom(romArg: string | undefined): Promise<void> {
     `drained ${String(chunks.length)} chunks, ${String(realPcm.byteLength)} bytes`,
   );
   assert(realPcm.byteLength > 0, "emulator produced audio samples via onAudio");
+  const expectedAudioSeconds = TARGET_FRAMES / N64_FPS;
+  const actualAudioSeconds =
+    realPcm.byteLength / (AUDIO_SAMPLE_RATE * AUDIO_CHANNELS * 2);
+  const durationRatio = actualAudioSeconds / expectedAudioSeconds;
+  assert(
+    durationRatio >= 0.95 && durationRatio <= 1.05,
+    `emulator PCM duration tracks game time (${actualAudioSeconds.toFixed(2)}s / ${expectedAudioSeconds.toFixed(2)}s = ${durationRatio.toFixed(3)}x)`,
+  );
   const realRms = rms(realPcm);
   assert(
     realRms > 20,
@@ -362,4 +399,6 @@ async function main(): Promise<void> {
   process.exit(0);
 }
 
-await main();
+if (import.meta.main) {
+  await main();
+}
