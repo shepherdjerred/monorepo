@@ -74,6 +74,20 @@ excluded.
 - If `7074` no longer validates, mint a new complete release pair from current
   `main`; do not promote an unverifiable candidate.
 
+## Remaining
+
+- [ ] Publish and merge the recovery PR, then verify the exact-head Buildkite
+      and production rollout.
+- [ ] Implement and verify season autocomplete resilience.
+- [ ] Add and verify season schedule runway telemetry and alerts.
+- [ ] Promote the hardened release and complete production acceptance.
+
+## Comment Log
+
+- 2026-07-29: Restored the canonical top-level remaining-work inventory after
+  Buildkite #7203 correctly rejected the active board plan for recording open
+  tasks only inside its session log.
+
 ## Session Log — 2026-07-29
 
 ### Done
@@ -83,6 +97,8 @@ excluded.
   metadata, immutable archive verification jobs, and ancestry from the season
   fix.
 - Updated the GitOps production pin to the exact verified release pair.
+- Preserved the open recovery and resilience work in the canonical top-level
+  board workflow section required by `check-docs`.
 
 ### Remaining
 
