@@ -116,6 +116,14 @@ system against a copied live save and the exact goal `get me a pokeman`.
   modern item prices are omitted; Emerald uses Deoxys Speed Forme; mythical
   species are labeled distinctly; and species records include both forward
   and backward Emerald-era evolution methods and conditions.
+- 2026-07-28: Final lifecycle review found that accepted control requests
+  could outlive their goal, starts could overlap timeout teardown, Discord
+  could acknowledge lease-rejected input, startup errors could be
+  misclassified as provider failures, and the benchmark worker could return
+  before history persistence. Goal-scoped control gates now drain before lease
+  release, teardown rejects new starts, lease conflicts are typed and reported
+  to the user, only explicit provider startup failures are classified, and
+  each run uses an isolated helper directory and waits for its history record.
 
 ## Session Log — 2026-07-28
 
@@ -128,7 +136,8 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - Implemented a general engine checkpoint and ordered atomic flash
   persistence. A rebuilt real WASM passed an independent checkpoint/reboot
   integration test against a copied live save.
-- Verified the backend (248 tests, one opt-in live-save test skipped), package
+- Verified the combined backend (254 tests, one opt-in live-save test skipped),
+  package
   typecheck/lint, knowledge/build
   scripts, the exhaustive root `bun run verify` graph (217/217 tasks), and a
   clean Docker `smoke` build that rebuilt the patched WASM and passed both the
@@ -147,6 +156,12 @@ system against a copied live save and the exact goal `get me a pokeman`.
   follow-up corpus findings across the stack with focused regression tests.
   The pinned knowledge generator completed against all four source revisions
   and reproduced 1,759 permissive plus 39 CC BY-NC-SA records.
+- Addressed the final seven control and benchmark lifecycle findings. Control
+  requests now carry and enforce goal identity, terminal paths drain accepted
+  requests before releasing input, teardown is exclusive, Discord reports
+  lease denial without a false acknowledgement, benchmark helpers are
+  per-run, history persistence is awaited, and unknown startup exceptions
+  remain harness failures.
 
 ### Remaining
 
