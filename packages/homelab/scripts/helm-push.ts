@@ -18,7 +18,7 @@ import {
   latestPublishedVersion,
   planCharts,
   plannedChartRevision,
-  verifyRecordedFingerprint,
+  verifyArchiveDigest,
   type ChartInput,
   type PublishedChart,
 } from "./helm-release-core.ts";
@@ -83,11 +83,13 @@ async function fetchPublishedChart(
       `ChartMuseum download failed for ${input.name}@${latest.version}: HTTP ${archiveResponse.status.toString()}`,
     );
   }
+  const archiveBytes = await archiveResponse.arrayBuffer();
+  verifyArchiveDigest(input.name, latest.version, latest.digest, archiveBytes);
   const archive = path.join(
     temporaryDirectory,
     `${input.name}-${latest.version}.tgz`,
   );
-  await Bun.write(archive, await archiveResponse.arrayBuffer());
+  await Bun.write(archive, archiveBytes);
   const extracted = path.join(
     temporaryDirectory,
     `${input.name}-${latest.version}`,
@@ -95,26 +97,11 @@ async function fetchPublishedChart(
   await runCommand(["mkdir", "-p", extracted]);
   await runCommand(["tar", "-xzf", archive, "-C", extracted]);
   const chartDirectory = path.join(extracted, input.name);
-  const chartYamlPath = path.join(chartDirectory, "Chart.yaml");
-  const chartYaml = await Bun.file(chartYamlPath).text();
-  const fingerprintLine = chartYaml
-    .split("\n")
-    .map((line) => line.trim())
-    .find((line) => line.startsWith("ci.sjer.red/content-fingerprint:"));
-  const recordedFingerprint = fingerprintLine
-    ?.slice(fingerprintLine.indexOf(":") + 1)
-    .trim()
-    .replaceAll('"', "");
   const actualFingerprint = await fingerprintChart(
     chartDirectory,
     path.join(chartDirectory, "templates", `${input.name}.k8s.yaml`),
   );
-  const fingerprint = verifyRecordedFingerprint(
-    input.name,
-    recordedFingerprint,
-    actualFingerprint,
-  );
-  return { version: latest.version, fingerprint };
+  return { version: latest.version, fingerprint: actualFingerprint };
 }
 
 async function stageChart(
@@ -137,10 +124,7 @@ async function stageChart(
   const withVersion = chartYaml
     .replace(/^version:.*$/m, `version: "${version}"`)
     .replace(/^appVersion:.*$/m, `appVersion: "${version}"`);
-  await Bun.write(
-    chartYamlPath,
-    `${withVersion.trimEnd()}\nannotations:\n  ci.sjer.red/content-fingerprint: "${input.fingerprint}"\n`,
-  );
+  await Bun.write(chartYamlPath, `${withVersion.trimEnd()}\n`);
   await runCommand(["helm", "lint", "--strict", chartDirectory]);
   await runCommand(["helm", "template", "release-validation", chartDirectory]);
   await runCommand([

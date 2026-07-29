@@ -1,12 +1,24 @@
 import path from "node:path";
 import { Glob } from "bun";
+import { parse as parseYaml } from "yaml";
 import { z } from "zod";
+import { canonicalJson } from "./canonical-json.ts";
 
 const BUILD_VERSION_RE = /^2\.0\.0-(\d+)$/;
+const CONTENT_FINGERPRINT_ANNOTATION = "ci.sjer.red/content-fingerprint";
 
 const ChartMuseumEntrySchema = z.object({
   version: z.string(),
   urls: z.array(z.string()).min(1),
+  digest: z.string().regex(/^[a-f\d]{64}$/),
+});
+
+const ChartMetadataSchema = z.looseObject({
+  apiVersion: z.string().min(1),
+  name: z.string().min(1),
+  version: z.string().min(1),
+  appVersion: z.string().min(1),
+  annotations: z.record(z.string(), z.string()).optional(),
 });
 
 export type ChartInput = {
@@ -73,14 +85,21 @@ function chartYamlValue(source: string, key: string): string {
 }
 
 function normalizedChartYaml(source: string): string {
-  const withoutFingerprint = source
-    .replace(/^version:.*$/m, 'version: "$version"')
-    .replace(/^appVersion:.*$/m, 'appVersion: "$appVersion"')
-    .replace(
-      /^ {2}ci\.sjer\.red\/content-fingerprint:\s*"?sha256:[a-f\d]+"?\s*/m,
-      "",
-    );
-  return withoutFingerprint.replace(/\nannotations:\s*$/, "\n");
+  const metadata = ChartMetadataSchema.parse(parseYaml(source));
+  const { annotations: sourceAnnotations, ...metadataWithoutAnnotations } =
+    metadata;
+  const annotations = Object.fromEntries(
+    Object.entries(sourceAnnotations ?? {}).filter(
+      ([key]) => key !== CONTENT_FINGERPRINT_ANNOTATION,
+    ),
+  );
+  const normalized = {
+    ...metadataWithoutAnnotations,
+    version: "$version",
+    appVersion: "$appVersion",
+    ...(Object.keys(annotations).length === 0 ? {} : { annotations }),
+  };
+  return canonicalJson(normalized);
 }
 
 export async function fingerprintChart(
@@ -112,20 +131,20 @@ export async function fingerprintChart(
   return `sha256:${hasher.digest("hex")}`;
 }
 
-export function verifyRecordedFingerprint(
+export function verifyArchiveDigest(
   chartName: string,
-  recordedFingerprint: string | undefined,
-  actualFingerprint: string,
-): string {
-  if (
-    recordedFingerprint !== undefined &&
-    recordedFingerprint !== actualFingerprint
-  ) {
+  version: string,
+  expectedDigest: string,
+  archive: ArrayBuffer,
+): void {
+  const actualDigest = new Bun.CryptoHasher("sha256")
+    .update(archive)
+    .digest("hex");
+  if (actualDigest !== expectedDigest) {
     throw new Error(
-      `${chartName}: published content fingerprint mismatch: recorded ${recordedFingerprint}, actual ${actualFingerprint}`,
+      `${chartName}@${version}: ChartMuseum archive digest mismatch: expected ${expectedDigest}, actual ${actualDigest}`,
     );
   }
-  return actualFingerprint;
 }
 
 export async function discoverChartInputs(
@@ -204,6 +223,7 @@ export function latestPublishedVersion(rawEntries: unknown):
   | {
       readonly version: string;
       readonly url: string;
+      readonly digest: string;
     }
   | undefined {
   const entries = z.array(ChartMuseumEntrySchema).parse(rawEntries);
@@ -214,14 +234,25 @@ export function latestPublishedVersion(rawEntries: unknown):
     }
     const buildNumber = Number.parseInt(match[1] ?? "", 10);
     return Number.isSafeInteger(buildNumber)
-      ? [{ version: entry.version, url: entry.urls[0] ?? "", buildNumber }]
+      ? [
+          {
+            version: entry.version,
+            url: entry.urls[0] ?? "",
+            digest: entry.digest,
+            buildNumber,
+          },
+        ]
       : [];
   });
   buildEntries.sort((left, right) => right.buildNumber - left.buildNumber);
   const latest = buildEntries[0];
   return latest === undefined
     ? undefined
-    : { version: latest.version, url: latest.url };
+    : {
+        version: latest.version,
+        url: latest.url,
+        digest: latest.digest,
+      };
 }
 
 export function planCharts(

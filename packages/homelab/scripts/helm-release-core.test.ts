@@ -9,7 +9,7 @@ import {
   latestPublishedVersion,
   planCharts,
   plannedChartRevision,
-  verifyRecordedFingerprint,
+  verifyArchiveDigest,
   type ChartInput,
 } from "./helm-release-core.ts";
 
@@ -95,7 +95,7 @@ describe("discoverChartInputs", () => {
     }
   });
 
-  test("normalizes the generated fingerprint metadata after packaging", async () => {
+  test("normalizes Helm metadata rewriting and legacy fingerprint annotations", async () => {
     const directory = await fixture();
     try {
       const chartDirectory = path.join(directory, "helm/worker");
@@ -107,13 +107,15 @@ describe("discoverChartInputs", () => {
       );
       await Bun.write(generatedTemplate, Bun.file(manifestPath));
       const chartYamlPath = path.join(chartDirectory, "Chart.yaml");
-      const chartYaml = await Bun.file(chartYamlPath).text();
       await Bun.write(
         chartYamlPath,
-        `${chartYaml
-          .replace(/^version:.*$/m, 'version: "2.0.0-42"')
-          .replace(/^appVersion:.*$/m, 'appVersion: "2.0.0-42"')
-          .trimEnd()}\nannotations:\n  ci.sjer.red/content-fingerprint: "${original}"\n`,
+        `annotations:
+  ci.sjer.red/content-fingerprint: "${original}"
+apiVersion: v2
+appVersion: 2.0.0-42
+name: worker
+version: 2.0.0-42
+`,
       );
       expect(await fingerprintChart(chartDirectory, generatedTemplate)).toBe(
         original,
@@ -124,12 +126,15 @@ describe("discoverChartInputs", () => {
   });
 });
 
-test("verifyRecordedFingerprint rejects inconsistent chart metadata", () => {
+test("verifyArchiveDigest rejects bytes that differ from ChartMuseum metadata", () => {
   expect(() =>
-    verifyRecordedFingerprint("worker", "sha256:recorded", "sha256:actual"),
-  ).toThrow(
-    "worker: published content fingerprint mismatch: recorded sha256:recorded, actual sha256:actual",
-  );
+    verifyArchiveDigest(
+      "worker",
+      "2.0.0-42",
+      "0".repeat(64),
+      new TextEncoder().encode("archive").buffer,
+    ),
+  ).toThrow("worker@2.0.0-42: ChartMuseum archive digest mismatch: expected");
 });
 
 test("assertReleaseNotStale rejects an older concurrent build", () => {
@@ -189,12 +194,25 @@ describe("planCharts", () => {
 test("latestPublishedVersion includes red or canceled producers", () => {
   expect(
     latestPublishedVersion([
-      { version: "2.0.0-19", urls: ["charts/worker-2.0.0-19.tgz"] },
-      { version: "2.0.0-21", urls: ["charts/worker-2.0.0-21.tgz"] },
-      { version: "1.0.0", urls: ["charts/worker-1.0.0.tgz"] },
+      {
+        version: "2.0.0-19",
+        urls: ["charts/worker-2.0.0-19.tgz"],
+        digest: "1".repeat(64),
+      },
+      {
+        version: "2.0.0-21",
+        urls: ["charts/worker-2.0.0-21.tgz"],
+        digest: "2".repeat(64),
+      },
+      {
+        version: "1.0.0",
+        urls: ["charts/worker-1.0.0.tgz"],
+        digest: "3".repeat(64),
+      },
     ]),
   ).toEqual({
     version: "2.0.0-21",
     url: "charts/worker-2.0.0-21.tgz",
+    digest: "2".repeat(64),
   });
 });
