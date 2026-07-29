@@ -631,3 +631,37 @@ pass.
   unchanged.
 - The Glitter production worker and corpus were not mutated by this Scout
   release follow-up.
+
+## Session Log — 2026-07-29 (npm publish retry hardening)
+
+### Done
+
+- Updated the npm publisher to run through the repository's transient-failure
+  classifier, so a failed npm token-introspection preflight can return
+  Buildkite's retryable exit code instead of terminating the main release
+  chain immediately.
+- Extended transient classification for Bun transport cause codes and explicit
+  HTTP/status 5xx syntax without treating source line numbers in an error stack
+  as response statuses.
+- Preserved the known Helm `504 Gateway Time-out` response as retryable and
+  added regressions for both that spelling and a logical error at source line 515.
+- Passed all 31 focused classifier tests, root-script typecheck and lint, and
+  the complete affected verification surface for PR
+  [#1828](https://github.com/shepherdjerred/monorepo/pull/1828).
+
+### Remaining
+
+- Merge PR #1828 after its replacement current-head Buildkite and review gates
+  pass, then require the authoritative merged-main release and Scout production
+  reconciliation lanes to pass.
+- Restore the Temporal worker OpenAI project's quota, then complete the two
+  deterministic dry runs, real refresh, consumer smoke tests, and deliberate
+  weekly schedule unpause.
+
+### Caveats
+
+- The retry classifier remains fail-fast for logical failures and 4xx
+  responses; only explicit 5xx, known network/TLS signatures, and known
+  overlapping Argo operations receive Buildkite's transient exit code.
+- This CI hardening did not mutate the production Glitter corpus, schedules, or
+  worker credentials.

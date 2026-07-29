@@ -19,19 +19,51 @@
 export const EXIT_TRANSIENT = 34;
 
 export const TRANSIENT_ERROR_PATTERN =
-  // 5xx status signatures (incl. GitHub's GraphQL 500 envelope, which carries
-  // no numeric status: "Something went wrong while executing your query").
+  // Explicit HTTP 5xx status signatures. A bare 5xx number is deliberately
+  // excluded because Error.stack contains source line numbers, which must not
+  // turn an ordinary logical failure at (for example) line 515 into a retry.
+  // GitHub's GraphQL 500 envelope carries no numeric status, so its stable
+  // message remains listed separately.
   // "another operation is already in progress" is ArgoCD code 9: a sync/refresh
   // op from an overlapping build or auto-sync still holds the app; the step's
   // automatic retry lands after it completes (build 6296).
-  /\b(?:500|502|503|504)\b|Internal Server Error|Bad Gateway|Proxy Error|Service Unavailable|Gateway Timeout|Something went wrong while executing your query|secondary rate limit|ECONNRESET|ECONNREFUSED|EAI_AGAIN|ETIMEDOUT|i\/o timeout|TLS handshake|tls: handshake|connection reset|connection refused|temporary failure in name resolution|dial tcp|another operation is already in progress/i;
+  /\bHTTP(?:\/\d(?:\.\d)?)?\s+5\d\d\b|\b(?:response\s+)?status(?:\s+code)?(?:\s+|[=:]\s*)5\d\d\b|Internal Server Error|Bad Gateway|Proxy Error|Service Unavailable|Gateway Time-?out|Something went wrong while executing your query|secondary rate limit|ECONNRESET|ECONNREFUSED|EAI_AGAIN|ETIMEDOUT|i\/o timeout|TLS handshake|tls: handshake|connection reset|connection refused|temporary failure in name resolution|dial tcp|failed to open socket|unable to connect|able to access the url|another operation is already in progress/i;
+
+const TRANSIENT_ERROR_CODES = new Set<string>([
+  "ConnectionRefused",
+  "ConnectionClosed",
+  "ConnectionResetByPeer",
+  "FailedToOpenSocket",
+  "Timeout",
+  "ECONNRESET",
+  "ECONNREFUSED",
+  "ECONNABORTED",
+  "ETIMEDOUT",
+  "EAI_AGAIN",
+  "ENOTFOUND",
+  "EPIPE",
+]);
+
+function hasTransientErrorCode(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+  if (
+    "code" in error &&
+    typeof error.code === "string" &&
+    TRANSIENT_ERROR_CODES.has(error.code)
+  ) {
+    return true;
+  }
+  return "cause" in error && hasTransientErrorCode(error.cause);
+}
 
 export function isTransientError(error: unknown): boolean {
   const text =
     error instanceof Error
       ? `${error.message}\n${error.stack ?? ""}`
       : String(error);
-  return TRANSIENT_ERROR_PATTERN.test(text);
+  return TRANSIENT_ERROR_PATTERN.test(text) || hasTransientErrorCode(error);
 }
 
 /**
