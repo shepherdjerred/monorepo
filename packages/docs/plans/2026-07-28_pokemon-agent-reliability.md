@@ -129,6 +129,14 @@ system against a copied live save and the exact goal `get me a pokeman`.
   Emerald data, and friendship evolutions retain the version-supported
   high-friendship condition without presenting the current numeric threshold
   as historical data.
+- 2026-07-28: Final control review found three misleading observation paths.
+  Observation ABI v2 now selects the battler whose actual local-player handler
+  is awaiting action, move, target, or yes/no input, so AI/link partners and a
+  completed first battler cannot masquerade as readiness. Dialog visibility and
+  input readiness are separate engine facts backed by text-printer and script
+  wait state, so `advance` refuses cutscenes, auto-scroll, and text that is still
+  printing. `observe` is compact by default while `observe --full` preserves the
+  canonical diagnostic payload.
 
 ## Session Log — 2026-07-28
 
@@ -141,10 +149,9 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - Implemented a general engine checkpoint and ordered atomic flash
   persistence. A rebuilt real WASM passed an independent checkpoint/reboot
   integration test against a copied live save.
-- Verified the combined backend (254 tests, one opt-in live-save test skipped),
-  package
-  typecheck/lint, knowledge/build
-  scripts, the exhaustive root `bun run verify` graph (217/217 tasks), and a
+- Verified the combined backend (258 tests, one opt-in live-save test skipped),
+  all 19 knowledge/build script tests, package typecheck/lint, the exhaustive
+  root `bun run verify` graph (217/217 tasks), and a
   clean Docker `smoke` build that rebuilt the patched WASM and passed both the
   ABI and in-image application checks.
 - Completed a manual general-control playthrough through the first rival,
@@ -171,6 +178,10 @@ system against a copied live save and the exact goal `get me a pokeman`.
   normalized every Emerald friendship evolution to a nonnumeric
   high-friendship condition. The pinned generator reproduced 1,759 permissive
   and 39 CC BY-NC-SA records, and all 19 generator/corpus tests pass.
+- Replaced heuristic double-battle and dialog readiness with authoritative
+  engine hooks, bumped the packed observation ABI and public observation schema
+  to v2, and unified compact/full CLI formatting across observations and action
+  outcomes. The rebuilt 13.4 MiB WASM passes the mandatory Docker ABI boot test.
 
 ### Remaining
 
