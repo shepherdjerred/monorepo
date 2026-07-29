@@ -138,15 +138,9 @@ const LeagueValueSchema = z.union([
     dislikes: StringListSchema,
   }),
 ]);
-export const StyleCardSchema = z.strictObject({
+
+const StyleCardContentShape = {
   author: z.string().min(1),
-  coverage: z.strictObject({
-    messages: z.number().int().nonnegative(),
-    date_range: z.string(),
-    truncated: z.boolean().optional(),
-    "truncated?": z.boolean().optional(),
-    notes: z.string(),
-  }),
   voice: StringListSchema,
   style_markers: StringListSchema,
   topics: StringListSchema,
@@ -154,15 +148,82 @@ export const StyleCardSchema = z.strictObject({
   behaviors: StringListSchema,
   personality: StringListSchema,
   humor_or_tone: StringListSchema,
-  quotes: StringListSchema,
   summary: z.union([z.string(), StringListSchema]),
   likes_dislikes: StringListSchema,
   league: z.record(z.string(), LeagueValueSchema),
   other_games: StringListSchema,
   how_to_mimic: StringListSchema,
+} as const;
+
+export const LegacyStyleCardSchema = z.strictObject({
+  ...StyleCardContentShape,
+  coverage: z.strictObject({
+    messages: z.number().int().nonnegative(),
+    date_range: z.string(),
+    truncated: z.boolean().optional(),
+    "truncated?": z.boolean().optional(),
+    notes: z.string(),
+  }),
+  quotes: StringListSchema,
   sample_messages: StringListSchema,
   concerns: StringListSchema.optional(),
 });
+export type LegacyStyleCard = z.infer<typeof LegacyStyleCardSchema>;
+
+const StyleDateRangeSchema = z.strictObject({
+  start: IsoInstantSchema,
+  end: IsoInstantSchema,
+});
+
+export const StyleCardCoverageV2Schema = z.strictObject({
+  source_snapshot_sha256: z.string().regex(/^[a-f0-9]{64}$/u),
+  corpus: z.strictObject({
+    messages: z.number().int().nonnegative(),
+    date_range: StyleDateRangeSchema,
+  }),
+  evidence: z.strictObject({
+    safe_messages: z.number().int().nonnegative(),
+    summarized_messages: z.number().int().nonnegative(),
+    chunks: z.number().int().nonnegative(),
+    direct_recent_messages: z.number().int().nonnegative(),
+    date_range: StyleDateRangeSchema,
+    strategy: z.literal("all-safe-monthly-chunks-plus-latest-500"),
+  }),
+  notes: z.string(),
+});
+export type StyleCardCoverageV2 = z.infer<typeof StyleCardCoverageV2Schema>;
+
+export const SituationalExamplesSchema = z.strictObject({
+  provenance: z.literal("synthetic"),
+  happy_or_excited: z.array(z.string()).length(3),
+  angry_or_frustrated: z.array(z.string()).length(3),
+  sad_or_disappointed: z.array(z.string()).length(3),
+  supportive_or_caring: z.array(z.string()).length(3),
+  playful_or_teasing: z.array(z.string()).length(3),
+  neutral_or_logistical: z.array(z.string()).length(3),
+});
+export type SituationalExamples = z.infer<typeof SituationalExamplesSchema>;
+
+export const StylePromptContextSchema = z.strictObject({
+  ...StyleCardContentShape,
+  quotes: z.array(z.string()).length(20),
+  sample_messages: z.array(z.string()).length(30),
+  situational_examples: SituationalExamplesSchema,
+  concerns: StringListSchema,
+});
+export type StylePromptContext = z.infer<typeof StylePromptContextSchema>;
+
+export const StyleCardV2Schema = z.strictObject({
+  schemaVersion: z.literal(2),
+  coverage: StyleCardCoverageV2Schema,
+  ...StylePromptContextSchema.shape,
+});
+export type StyleCardV2 = z.infer<typeof StyleCardV2Schema>;
+
+export const StyleCardSchema = z.union([
+  LegacyStyleCardSchema,
+  StyleCardV2Schema,
+]);
 export type StyleCard = z.infer<typeof StyleCardSchema>;
 
 export const StyleCardsDocumentSchema = z.record(

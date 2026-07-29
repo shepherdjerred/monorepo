@@ -5,7 +5,13 @@ import {
   relationshipsDocument,
   styleCards as validatedStyleCards,
 } from "./generated-data.ts";
-import type { Person, RelationshipEvent } from "./schema.ts";
+import {
+  StyleCardV2Schema,
+  type Person,
+  type RelationshipEvent,
+  type StyleCard,
+  type StylePromptContext,
+} from "./schema.ts";
 
 export const people = peopleDocument.people;
 export const relationshipEvents = relationshipsDocument.events;
@@ -33,6 +39,30 @@ export function getStyleCard(
 ): (typeof styleCards)[string] | undefined {
   const person = getPerson(value);
   return person === undefined ? undefined : styleCards[person.id];
+}
+
+export function getStylePromptContext(
+  value: string,
+): StylePromptContext | undefined {
+  const styleCard = getStyleCard(value);
+  return styleCard === undefined
+    ? undefined
+    : styleCardToPromptContext(styleCard);
+}
+
+export function styleCardToPromptContext(
+  styleCard: StyleCard,
+): StylePromptContext | undefined {
+  const result = StyleCardV2Schema.safeParse(styleCard);
+  if (!result.success) {
+    return undefined;
+  }
+  const {
+    coverage: _coverage,
+    schemaVersion: _schemaVersion,
+    ...context
+  } = result.data;
+  return context;
 }
 
 export function listStyleCardNames(): string[] {
