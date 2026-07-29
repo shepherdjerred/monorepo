@@ -46,6 +46,15 @@ function stableSignature(observation: GameObservationV2): string {
   return meaningfulStateSignature(observation);
 }
 
+function interactionReady(observation: GameObservationV2): boolean {
+  return (
+    observation.phase === "overworld" &&
+    observation.world !== null &&
+    observation.readiness.inputReady &&
+    observation.readiness.playerStable
+  );
+}
+
 export class GameController {
   private locked = false;
   private readonly lockWaiters: (() => void)[] = [];
@@ -130,17 +139,19 @@ export class GameController {
       let after: GameObservationV2;
       let settleTimedOut = false;
 
+      if (!interactionReady(beforeObservation)) {
+        const options: ActionOutcomeOptions =
+          direction === undefined
+            ? { inputApplied: false }
+            : { inputApplied: false, direction };
+        return this.outcome("interact", before, beforeObservation, options);
+      }
+
       if (
         direction !== undefined &&
         beforeObservation.world !== null &&
         beforeObservation.world.facing !== direction
       ) {
-        if (!beforeObservation.readiness.inputReady) {
-          return this.outcome("interact", before, beforeObservation, {
-            inputApplied: false,
-            direction,
-          });
-        }
         await this.port.press({
           command: commandForDirection(direction),
           quantity: 1,
@@ -149,6 +160,7 @@ export class GameController {
         after = turn.observation;
         settleTimedOut ||= turn.timedOut;
         if (
+          !interactionReady(after) ||
           after.phase !== beforeObservation.phase ||
           mapChanged(beforeObservation, after) ||
           after.world?.facing !== direction

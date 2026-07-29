@@ -206,6 +206,28 @@ describe("decodeEngineObservation", () => {
     expect(battle?.actionCursor).toBe(3);
   });
 
+  test("decodes external battle bag and party selection readiness", () => {
+    for (const [rawMenu, menu] of [
+      [3, "bag"],
+      [4, "party"],
+    ] as const) {
+      const bytes = validBytes();
+      const view = new DataView(bytes.buffer);
+      view.setUint8(8, 3);
+      view.setUint8(9, 0b010);
+      view.setUint8(28, 1);
+      view.setUint8(30, rawMenu);
+      view.setUint8(31, 4);
+      view.setUint8(40, 2);
+
+      const observation = decodeEngineObservation(bytes);
+
+      expect(observation.readiness.inputReady).toBe(true);
+      expect(observation.battle?.inputBattler).toBe(2);
+      expect(observation.battle?.menu).toBe(menu);
+    }
+  });
+
   test("does not report other or absent battle controller work as ready", () => {
     for (const menu of [0, 6]) {
       const bytes = validBytes();

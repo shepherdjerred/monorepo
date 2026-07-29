@@ -34,6 +34,7 @@ const config = [
         "src/goal/codex-trace.test.ts",
         "src/goal/discord-message.test.ts",
         "src/goal/e2e-goal.integration.test.ts",
+        "src/goal/game-controller-interact.test.ts",
         "src/goal/game-controller.test.ts",
         "src/goal/game-state-summary.test.ts",
         "src/goal/goal-manager.test.ts",
@@ -49,7 +50,7 @@ const config = [
       ],
       // Test files are excluded from tsconfig (bun test globals aren't visible
       // to tsc), so they fall to the default project; raise the cap.
-      maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 43,
+      maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 44,
     },
   }),
   {

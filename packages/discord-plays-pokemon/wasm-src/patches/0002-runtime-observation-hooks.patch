@@ -68,14 +68,10 @@ diff --git a/src/battle_controller_player.c b/src/battle_controller_player.c
 index 2e259c5a4..15ce4290d 100644
 --- a/src/battle_controller_player.c
 +++ b/src/battle_controller_player.c
-@@ -96,8 +96,25 @@ static void PlayerCmdEnd(void);
- static void PlayerBufferRunCommand(void);
-+static void HandleInputChooseAction(void);
- static void HandleInputChooseTarget(void);
- static void HandleInputChooseMove(void);
-+static void PlayerHandleYesNoInput(void);
- static void MoveSelectionCreateCursorAt(u8, u8);
- static void MoveSelectionDestroyCursorAt(u8);
+@@ -3145,3 +3145,26 @@ static void PlayerHandleEndLinkBattle(void)
+ static void PlayerCmdEnd(void)
+ {
+ }
 +
 +u8 WasmGetPlayerInputMenuState(u8 battler)
 +{
@@ -89,11 +85,16 @@ index 2e259c5a4..15ce4290d 100644
 +        return WASM_BATTLE_MENU_TARGET;
 +    if (gBattlerControllerFuncs[battler] == PlayerHandleYesNoInput)
 +        return WASM_BATTLE_MENU_YES_NO;
++    if (gBattlerControllerFuncs[battler] == CompleteWhenChoseItem
++     && gMain.callback2 != BattleMainCB2
++     && !gPaletteFade.active)
++        return WASM_BATTLE_MENU_BAG;
++    if (gBattlerControllerFuncs[battler] == WaitForMonSelection
++     && gMain.callback2 != BattleMainCB2
++     && !gPaletteFade.active)
++        return WASM_BATTLE_MENU_PARTY;
 +    return WASM_BATTLE_MENU_NONE;
 +}
- static void MoveSelectionDisplayPpNumber(void);
- static void MoveSelectionDisplayPpString(void);
- static void MoveSelectionDisplayMoveType(void);
 diff --git a/src/field_message_box.c b/src/field_message_box.c
 index f59a0429e..5c41eed9c 100755
 --- a/src/field_message_box.c

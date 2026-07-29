@@ -116,12 +116,23 @@ describe("buildPrompt", () => {
     expect(prompt.toLowerCase()).toContain("untrusted input");
   });
 
-  test("includes the Emerald domain primer + chord guidance", () => {
+  test("includes the Emerald primer and makes semantic controls primary", () => {
     const prompt = buildPrompt("Reach Petalburg", baseContext);
     expect(prompt).toContain("Pokémon Emerald");
     expect(prompt).toContain("Stone");
     expect(prompt).toContain("Knuckle");
-    expect(prompt.toLowerCase()).toContain("chord");
+    expect(prompt).toContain("pokemonctl observe");
+    expect(prompt).toContain("pokemonctl tap");
+    expect(prompt).toContain("pokemonctl move");
+    expect(prompt).toContain("pokemonctl interact");
+    expect(prompt).toContain("pokemonctl map show");
+    expect(prompt).toContain("pokemonctl navigate");
+    expect(prompt).toContain("bounded travel");
+    expect(prompt).toContain("current map");
+    expect(prompt).toContain("finite step budget");
+    expect(prompt).toContain(
+      "Raw pokemonctl press and pokemonctl chord are escape hatches only",
+    );
   });
 
   test("includes the state + history subcommand pointers", () => {
@@ -207,10 +218,12 @@ describe("buildPrompt", () => {
     expect(prompt).toContain("pokemonctl write MEMORY.md");
   });
 
-  test("documents the higher goal-bot chord limits", () => {
+  test("bounds raw controls as escape hatches", () => {
     const prompt = buildPrompt("Reach Petalburg", baseContext);
-    expect(prompt).toContain("60_d");
-    expect(prompt.toLowerCase()).toContain("above the discord chat limits");
+    expect(prompt).toContain(
+      "semantic controls cannot express the next atomic action",
+    );
+    expect(prompt).toContain("Never issue a blind long chord");
   });
 
   test("instructs read-before-write curation of MEMORY.md", () => {
