@@ -3,8 +3,8 @@ id: plan-2026-07-27-glitter-corpus-live-rollout
 type: plan
 status: in-progress
 board: true
-verification: operator
-disposition: blocked
+verification: agent
+disposition: active
 ---
 
 # Complete the Glitter Discord Corpus Rollout
@@ -18,12 +18,15 @@ run published recovery-verified snapshot
 `07d2998a-c2d0-4f15-aaab-c365bb103066` with 267 channels and 212,415 unique
 messages.
 
-Only weekly context-refresh acceptance remains. The workflow and credential
-projection are deployed, but its fixed-time dry run fails closed on OpenAI HTTP
-429 `insufficient_quota`. Keep only `glitter-context-refresh-weekly` paused
-until quota is restored or a different production credential is explicitly
-authorized, two identical dry runs pass, the real refresh and consumer smokes
-pass, and the schedule is deliberately unpaused.
+Only final weekly context-refresh acceptance remains. After the OpenAI project
+was topped up, the pinned rehearsal completed the four missing style cards
+while reusing the nine immutable SeaweedFS artifacts. Two dry runs returned the
+same proposal checksum, and the real run reused the same proposal without any
+additional OpenAI calls. It opened human-review PR
+[#1834](https://github.com/shepherdjerred/monorepo/pull/1834). Keep only
+`glitter-context-refresh-weekly` paused until that generated content is
+accepted and merged, hosted CI and downstream smoke checks pass, and the
+schedule is deliberately unpaused.
 
 ## Implementation
 
@@ -40,12 +43,13 @@ pass, and the schedule is deliberately unpaused.
       deliberately activate `glitter-corpus-daily`.
 - [x] Deploy the exact immutable Temporal worker image and verify ArgoCD,
       schedule state, metrics, and storage-integrity alerts.
-- [ ] Restore the Temporal worker OpenAI project's quota or explicitly
-      authorize a different production OpenAI credential.
-- [ ] Run the snapshot-pinned fixed-time weekly dry run twice and require
+- [x] Restore the Temporal worker OpenAI project's quota.
+- [x] Run the snapshot-pinned fixed-time weekly dry run twice and require
       byte-identical outputs and proposal checksums.
-- [ ] Run the real refresh, inspect its sole PR or no-diff result, and
-      smoke-test the shared package, Birmel, Scout, and Glitter consumers.
+- [x] Run the real refresh, inspect its sole PR, and smoke-test the shared
+      package, Birmel, Scout, and Glitter consumers.
+- [ ] Accept and merge generated-context PR #1834 after its human review and
+      current-head Buildkite complete.
 - [ ] Deliberately unpause `glitter-context-refresh-weekly`, verify its next
       action and observability, then archive this plan and its related TODOs.
 
@@ -62,10 +66,11 @@ pass, and the schedule is deliberately unpaused.
       canonical snapshot.
 - [x] Run and verify manual and scheduled daily cycles, then deliberately
       activate `glitter-corpus-daily`.
-- [ ] Run the weekly context refresh twice as fixed-time dry runs and require
+- [x] Run the weekly context refresh twice as fixed-time dry runs and require
       identical snapshot/proposal checksums and outputs.
-- [ ] Run one real weekly refresh, review its sole PR or no-diff result, and
-      smoke-test the shared package, Birmel, Scout, and Glitter.
+- [x] Run one real weekly refresh, inspect its sole PR, and smoke-test the
+      shared package, Birmel, Scout, and Glitter.
+- [ ] Accept and merge generated-context PR #1834.
 - [ ] Deliberately unpause `glitter-context-refresh-weekly`, confirm its
       next-run time, and verify clean corpus/context observability.
 
@@ -91,7 +96,8 @@ pass, and the schedule is deliberately unpaused.
 - [x] Approve inventory and complete the production canary.
 - [x] Complete the full backfill and recovery verification.
 - [x] Accept the daily workflow and unpause its schedule.
-- [ ] Accept the weekly workflow and unpause its schedule.
+- [ ] Complete human review and merge PR #1834.
+- [ ] Unpause and accept the weekly workflow.
 - [ ] Complete and archive this plan and the related TODOs.
 
 ## Assumptions
@@ -821,3 +827,68 @@ pass, and the schedule is deliberately unpaused.
   access to the OpenAI dashboard or successful 1Password operator
   authentication.
 - No credential value was read, printed, copied, substituted, or changed.
+
+## Session Log — 2026-07-29 (quota restoration and cached acceptance)
+
+### Done
+
+- Verified the cache-enabled production worker and recovery-verified pinned
+  corpus snapshot.
+- Completed the first dry run by reusing nine immutable generation artifacts
+  and generating only the four missing style cards.
+- Completed a second byte-identical dry run and the real refresh with zero
+  additional OpenAI calls; all three returned proposal SHA-256
+  `9f558af01bf18f2082499c61cd400b44b27bb1e0f93e878978c1cf785e582538`.
+- Opened generated-context PR #1834 and passed focused build, typecheck, test,
+  and lint for Glitter context, Birmel, Scout data, and the Glitter app.
+
+### Remaining
+
+- Complete human review and current-head Buildkite #7145 for PR #1834.
+- Merge PR #1834, run merged-main and production consumer smoke checks, then
+  deliberately unpause `glitter-context-refresh-weekly`.
+- Complete and archive this plan and its related TODOs.
+
+### Caveats
+
+- The weekly schedule remains deliberately paused.
+- PR #1834 requires subjective human review and is never auto-merged.
+- The generated-context proposal is cached; review, CI, and real-run retries do
+  not require another OpenAI generation.
+- Current-head Buildkite #7145 is scheduled but cannot start while the
+  dedicated CI node `liskov` is offline; Kubernetes last received its heartbeat
+  at 11:04 PDT and deliberately does not fall back to the production node.
+
+## Session Log — 2026-07-29 (production corpus inclusion audit)
+
+### Done
+
+- Reran the full production recovery verifier against snapshot
+  `07d2998a-c2d0-4f15-aaab-c365bb103066` at SHA-256
+  `04b53f7bbf0a3186297d14e5522aa2edc0992fb7def721e4e6faa1f68ef5b776`.
+  It reconstructed all 267 complete channel states and returned 212,415 unique
+  message IDs.
+- Independently loaded the trusted seed projection and the final projection.
+  All 76,762 unique seed message IDs are present in the final snapshot; neither
+  projection contains duplicate message IDs.
+- Audited Aaron's generated coverage count. The final projection contains
+  10,036 unique messages by Aaron: all 5,539 seed IDs plus 4,497 messages beyond
+  the seed, across 102 channels. All 10,036 selected current observations came
+  from the Discord REST capture.
+
+### Remaining
+
+- Decide whether the 13 channels excluded for missing message-history
+  permission should be added to the approved corpus scope. If so, grant access,
+  regenerate inventory, and complete their backfill before making a
+  whole-guild completeness claim.
+- Complete human review and current-head CI for generated-context PR #1834.
+
+### Caveats
+
+- “All messages” is proven for the 267 approved channels the bot could read at
+  the snapshot boundary, not for the 13 inaccessible channels. The other 17
+  excluded inventory entries are non-message channel types.
+- Aaron's prior `coverage.messages: 5011` described an explicitly truncated
+  sample with a narrower date range; it was not a prior full-corpus count and
+  should not be interpreted as having doubled.

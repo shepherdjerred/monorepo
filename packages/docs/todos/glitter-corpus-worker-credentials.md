@@ -1,10 +1,10 @@
 ---
 id: glitter-corpus-worker-credentials
 type: todo
-status: planned
+status: in-progress
 board: true
-verification: operator
-disposition: blocked
+verification: agent
+disposition: active
 origin: packages/docs/logs/2026-07-26_pr-1700-glitter-shared-context.md
 source_marker: false
 ---
@@ -16,27 +16,25 @@ the deployed Temporal worker, and covered by the committed non-secret vault
 snapshot. The trusted seed, full backfill, daily capture, recovery verification,
 and observability gates all pass. `glitter-corpus-daily` is active in production.
 
-The remaining credential boundary is the Temporal worker's existing
-`OPENAI_API_KEY`. The fixed-time, snapshot-pinned production dry run reached the
-generation activity, but both configured attempts failed closed on OpenAI HTTP
-429 `insufficient_quota`. The worker credential is intentionally distinct from
-the Birmel and Pokémon credentials.
+The Temporal worker's OpenAI project was topped up without changing its
+credential. The pinned production rehearsal then reused nine existing
+SeaweedFS generation artifacts and generated only the four missing style cards.
+Two dry runs returned the same proposal checksum, and the real run opened
+human-review PR [#1834](https://github.com/shepherdjerred/monorepo/pull/1834)
+without making additional OpenAI calls.
 
 ## Remaining
 
-- [ ] In the OpenAI dashboard, identify the project that owns
-      `OPENAI_API_KEY` from 1Password item
-      `mjgnqqh37jxyzseqrddde2jgaq` and restore its usable quota or billing
-      balance. If support is needed, provide request ID
-      `req_3b7c0ed562be4905ae4c68e65f2e71ba`. Alternatively, explicitly authorize
-      a different production OpenAI credential for this workflow.
-- [ ] Rerun the fixed-time dry run twice against snapshot
+- [x] Restore usable quota for the project that owns the Temporal worker's
+      existing `OPENAI_API_KEY`.
+- [x] Rerun the fixed-time dry run twice against snapshot
       `dbb59f00-3f6b-4cab-a87c-6d8a65e21d62` at SHA-256
       `e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9`
       and require complete output equality.
-- [ ] Run the real refresh with the same pin, inspect its sole PR or no-diff
-      result, and smoke-test the shared package, Birmel, Scout, and Glitter
-      consumers.
+- [x] Run the real refresh with the same pin, inspect its sole PR, and
+      smoke-test the shared package, Birmel, Scout, and Glitter consumers.
+- [ ] Accept and merge generated-context PR #1834 after human review and
+      current-head Buildkite complete.
 - [ ] Unpause `glitter-context-refresh-weekly` only after those acceptance
       gates pass, then complete and archive this TODO and the live rollout plan.
 
@@ -63,3 +61,40 @@ the Birmel and Pokémon credentials.
   `OPENAI_API_KEY`. The API returned no project or organization header, and a
   metadata-only 1Password lookup timed out; the operator must identify that
   key's owning project in the OpenAI dashboard and restore quota there.
+- 2026-07-29 — The operator topped up the existing OpenAI project. The next
+  pinned dry run reused nine generation artifacts, generated the four missing
+  cards, and completed with proposal SHA-256
+  `9f558af01bf18f2082499c61cd400b44b27bb1e0f93e878978c1cf785e582538`.
+  A second dry run returned the same result with zero OpenAI calls. The real
+  run reused the same proposal with zero OpenAI calls and opened PR #1834.
+
+## Session Log — 2026-07-29 (quota restoration and cached acceptance)
+
+### Done
+
+- Verified the cache-enabled production worker and recovery-verified pinned
+  corpus snapshot.
+- Completed the first dry run by reusing nine immutable generation artifacts
+  and generating only the four missing style cards.
+- Completed a second byte-identical dry run and the real refresh with zero
+  additional OpenAI calls; all three returned proposal SHA-256
+  `9f558af01bf18f2082499c61cd400b44b27bb1e0f93e878978c1cf785e582538`.
+- Opened generated-context PR #1834 and passed focused build, typecheck, test,
+  and lint for Glitter context, Birmel, Scout data, and the Glitter app.
+
+### Remaining
+
+- Complete human review and current-head Buildkite #7145 for PR #1834.
+- Merge PR #1834, run merged-main and production consumer smoke checks, then
+  deliberately unpause `glitter-context-refresh-weekly`.
+- Complete and archive this TODO and the live rollout plan.
+
+### Caveats
+
+- The weekly schedule remains deliberately paused.
+- PR #1834 requires subjective human review and is never auto-merged.
+- The generated-context proposal is cached; review, CI, and real-run retries do
+  not require another OpenAI generation.
+- Current-head Buildkite #7145 is scheduled but cannot start while the
+  dedicated CI node `liskov` is offline; Kubernetes last received its heartbeat
+  at 11:04 PDT and deliberately does not fall back to the production node.
