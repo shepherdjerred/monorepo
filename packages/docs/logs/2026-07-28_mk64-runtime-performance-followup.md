@@ -347,6 +347,10 @@ Worker-thread performance change did not improve the delivered stream.
 - Stopped the Discord test session, closed the browser and port forwards, and
   restored Argo CD automated reconciliation. The Application returned to
   `Synced / Healthy` on declared image `2.0.0-6874`.
+- Replaced dynamic metric-name regular expressions with a literal,
+  line-oriented Prometheus parser after Buildkite Semgrep rejected the first
+  implementation. The focused parser suite passes 11 tests, typecheck, and
+  lint.
 
 ### Remaining
 

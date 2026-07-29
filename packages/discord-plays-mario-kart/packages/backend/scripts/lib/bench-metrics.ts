@@ -39,8 +39,29 @@ function helpHint(metricsUrl: string): string {
 // labels we don't filter on.
 // ---------------------------------------------------------------------------
 
-function escapeRegex(s: string): string {
-  return s.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+type MetricSample = {
+  name: string;
+  rawLabels: string;
+  value: number;
+};
+
+const METRIC_LINE_PATTERN = /^([a-z_:][\w:]*)(?:\{([^}]*)\})?\s+(\S+)/i;
+const LABEL_PATTERN = /(?:^|,)([a-z_]\w*)="((?:\\.|[^"\\])*)"/gi;
+
+function metricSamples(text: string, name: string): MetricSample[] {
+  const samples: MetricSample[] = [];
+  for (const line of text.split("\n")) {
+    const match = METRIC_LINE_PATTERN.exec(line);
+    if (match?.[1] !== name) continue;
+    const value = Number(match[3]);
+    if (!Number.isFinite(value)) continue;
+    samples.push({
+      name: match[1],
+      rawLabels: match[2] ?? "",
+      value,
+    });
+  }
+  return samples;
 }
 
 /** Build a label-set matcher. Tolerates extra labels and either order. */
@@ -48,11 +69,14 @@ function matchesLabels(
   rawLabels: string,
   required: Record<string, string>,
 ): boolean {
-  for (const [k, v] of Object.entries(required)) {
-    const re = new RegExp(
-      `(?:^|,)${escapeRegex(k)}="${escapeRegex(v)}"(?:,|$)`,
-    );
-    if (!re.test(rawLabels)) return false;
+  const actual = new Map<string, string>();
+  for (const match of rawLabels.matchAll(LABEL_PATTERN)) {
+    const name = match[1];
+    const value = match[2];
+    if (name !== undefined && value !== undefined) actual.set(name, value);
+  }
+  for (const [name, value] of Object.entries(required)) {
+    if (actual.get(name) !== value) return false;
   }
   return true;
 }
@@ -63,19 +87,10 @@ function readNumber(
   name: string,
   labels?: Record<string, string>,
 ): number | null {
-  // Lines look like: `name 123` or `name{a="x",b="y"} 123`.
-  const re = new RegExp(
-    String.raw`^${escapeRegex(name)}(?:\{([^}]*)\})?\s+(\S+)`,
-    "gm",
-  );
-  let m: RegExpExecArray | null = re.exec(text);
-  while (m !== null) {
-    const rawLabels = m.at(1) ?? "";
-    if (!labels || matchesLabels(rawLabels, labels)) {
-      const v = Number(m[2]);
-      return Number.isFinite(v) ? v : null;
+  for (const sample of metricSamples(text, name)) {
+    if (labels === undefined || matchesLabels(sample.rawLabels, labels)) {
+      return sample.value;
     }
-    m = re.exec(text);
   }
   return null;
 }
@@ -89,18 +104,10 @@ export function counter(
 }
 
 export function counterSum(m: ScrapedMetrics, name: string): number {
-  const re = new RegExp(
-    String.raw`^${escapeRegex(name)}(?:\{[^}]*\})?\s+(\S+)`,
-    "gm",
+  return metricSamples(m.text, name).reduce(
+    (sum, sample) => sum + sample.value,
+    0,
   );
-  let sum = 0;
-  let match: RegExpExecArray | null = re.exec(m.text);
-  while (match !== null) {
-    const value = Number(match[1]);
-    if (Number.isFinite(value)) sum += value;
-    match = re.exec(m.text);
-  }
-  return sum;
 }
 
 export function gauge(
@@ -126,14 +133,9 @@ export function histogramQuantile(
   q: number,
   labels?: Record<string, string>,
 ): number {
-  const re = new RegExp(
-    String.raw`^${escapeRegex(name)}_bucket\{([^}]*)\}\s+(\d+(?:\.\d+)?)`,
-    "gm",
-  );
   const rows: { le: number; cum: number }[] = [];
-  let mm: RegExpExecArray | null = re.exec(m.text);
-  while (mm !== null) {
-    const rawLabels = mm[1] ?? "";
+  for (const sample of metricSamples(m.text, `${name}_bucket`)) {
+    const rawLabels = sample.rawLabels;
     const leMatch = /(?:^|,)le="([^"]+)"(?:,|$)/.exec(rawLabels);
     const leRaw = leMatch?.[1];
     if (
@@ -141,9 +143,8 @@ export function histogramQuantile(
       (labels === undefined || matchesLabels(rawLabels, labels))
     ) {
       const le = leRaw === "+Inf" ? Number.POSITIVE_INFINITY : Number(leRaw);
-      rows.push({ le, cum: Number(mm[2] ?? "0") });
+      rows.push({ le, cum: sample.value });
     }
-    mm = re.exec(m.text);
   }
   rows.sort((a, b) => a.le - b.le);
   const last = rows.at(-1);

@@ -60,6 +60,22 @@ describe("counter / gauge", () => {
     expect(audio).toBeGreaterThanOrEqual(0);
     expect(counterSum(m, "stream_send_late_frames_total")).toBe(video + audio);
   });
+
+  it("matches metric and label names literally without dynamic regexes", () => {
+    const m: ScrapedMetrics = {
+      text: [
+        'safe_metric_total{kind="video",extra="kept"} 7',
+        'safe_metric_total{extra="kept",kind="audio"} 11',
+        "safe_metric_total_suffix 13",
+      ].join("\n"),
+      ts: 1_700_000_000_000,
+    };
+
+    expect(counter(m, "safe_metric_total", { kind: "video" })).toBe(7);
+    expect(counter(m, "safe_metric_total", { kind: "audio" })).toBe(11);
+    expect(counterSum(m, "safe_metric_total")).toBe(18);
+    expect(counter(m, "safe_metric_total.*")).toBe(0);
+  });
 });
 
 describe("histogramQuantile", () => {
