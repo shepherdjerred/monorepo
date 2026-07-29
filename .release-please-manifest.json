@@ -1,5 +1,5 @@
 {
   "packages/astro-opengraph-images": "1.17.3",
-  "packages/webring": "1.7.1",
+  "packages/webring": "1.7.2",
   "packages/homelab/src/helm-types": "1.5.0"
 }
