@@ -8,6 +8,7 @@ import {
 const EVOLUTION_TABLE_PATH = "src/data/pokemon/evolution.h";
 const EVOLUTION_SCENE_PATH = "src/evolution_scene.c";
 const POKEMON_PATH = "src/pokemon.c";
+const ROCK_SMASH_SCRIPT_PATH = "data/maps/MauvilleCity_House1/scripts.inc";
 
 function rawUrl(repository: string, commit: string, file: string): string {
   return `${repository.replace(/\.git$/, "")}/raw/${commit}/${file}`;
@@ -80,6 +81,21 @@ export function validateWurmpleSource(
   }
 }
 
+export function validateRockSmashSource(script: string): void {
+  const normalizedScript = normalizedSource(script);
+  if (
+    !normalizedScript.includes(
+      "MauvilleCity_House1_EventScript_RockSmashDude::",
+    ) ||
+    !normalizedScript.includes("giveitem ITEM_HM_ROCK_SMASH") ||
+    !normalizedScript.includes("setflag FLAG_RECEIVED_HM_ROCK_SMASH")
+  ) {
+    throw new Error(
+      "pinned pokeemerald source no longer has the expected Mauville City HM06 Rock Smash gift",
+    );
+  }
+}
+
 export function createPokeemeraldKnowledgeSource(
   license: Sources["pokeemeraldWasm"]["license"],
   upstreamRepository: string,
@@ -104,15 +120,47 @@ export async function buildPokeemeraldRecords(
     upstreamRepository,
     commit,
   );
-  const [evolutionTable, evolutionScene, pokemonSource] = await Promise.all([
-    fetchText(rawUrl(repository, commit, EVOLUTION_TABLE_PATH)),
-    fetchText(rawUrl(repository, commit, EVOLUTION_SCENE_PATH)),
-    fetchText(rawUrl(repository, commit, POKEMON_PATH)),
-  ]);
+  const [evolutionTable, evolutionScene, pokemonSource, rockSmashScript] =
+    await Promise.all([
+      fetchText(rawUrl(repository, commit, EVOLUTION_TABLE_PATH)),
+      fetchText(rawUrl(repository, commit, EVOLUTION_SCENE_PATH)),
+      fetchText(rawUrl(repository, commit, POKEMON_PATH)),
+      fetchText(rawUrl(repository, commit, ROCK_SMASH_SCRIPT_PATH)),
+    ]);
   validateShedinjaSource(evolutionTable, evolutionScene);
   validateWurmpleSource(evolutionTable, pokemonSource);
+  validateRockSmashSource(rockSmashScript);
 
   return [
+    {
+      id: "progression:hm06-rock-smash-acquisition-emerald",
+      domain: "progression",
+      title: "HM06 Rock Smash acquisition in Emerald",
+      aliases: [
+        "HM06",
+        "Rock Smash",
+        "Rock Smash Dude",
+        "Mauville City",
+        "where to get HM06 Rock Smash",
+      ],
+      tags: [
+        "pokemon-emerald",
+        "hm06",
+        "rock-smash",
+        "mauville-city",
+        "acquisition",
+      ],
+      body: [
+        "In Pokémon Emerald, obtain HM06 (Rock Smash) by talking to the Rock Smash Dude in his house in Mauville City.",
+        "The pinned Mauville City house event gives HM06 and records the one-time gift, so this is the actual acquisition rather than a later use mention.",
+      ].join("\n"),
+      sources: [
+        {
+          ...source,
+          url: `${repository}/blob/${commit}/${ROCK_SMASH_SCRIPT_PATH}`,
+        },
+      ],
+    },
     {
       id: "species:shedinja-creation-emerald",
       domain: "species",

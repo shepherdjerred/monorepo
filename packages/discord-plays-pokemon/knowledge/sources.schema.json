@@ -22,6 +22,7 @@
     },
     "archipelago": {
       "type": "object",
+      "additionalProperties": false,
       "required": ["repository", "commit", "license", "worldPath"],
       "properties": {
         "repository": { "type": "string", "format": "uri" },
@@ -32,6 +33,7 @@
     },
     "pokeapi": {
       "type": "object",
+      "additionalProperties": false,
       "required": [
         "repository",
         "commit",
@@ -53,6 +55,7 @@
     },
     "bulbapedia": {
       "type": "object",
+      "additionalProperties": false,
       "required": ["api", "license", "licenseUrl", "attribution", "pages"],
       "properties": {
         "api": { "type": "string", "format": "uri" },
@@ -65,6 +68,7 @@
           "maxItems": 22,
           "items": {
             "type": "object",
+            "additionalProperties": false,
             "required": ["title", "revision", "timestamp"],
             "properties": {
               "title": { "type": "string" },

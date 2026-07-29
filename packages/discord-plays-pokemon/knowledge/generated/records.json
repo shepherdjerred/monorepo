@@ -10816,6 +10816,34 @@
     ]
   },
   {
+    "id": "progression:hm06-rock-smash-acquisition-emerald",
+    "domain": "progression",
+    "title": "HM06 Rock Smash acquisition in Emerald",
+    "aliases": [
+      "HM06",
+      "Rock Smash",
+      "Rock Smash Dude",
+      "Mauville City",
+      "where to get HM06 Rock Smash"
+    ],
+    "tags": [
+      "pokemon-emerald",
+      "hm06",
+      "rock-smash",
+      "mauville-city",
+      "acquisition"
+    ],
+    "body": "In Pokémon Emerald, obtain HM06 (Rock Smash) by talking to the Rock Smash Dude in his house in Mauville City.\nThe pinned Mauville City house event gives HM06 and records the one-time gift, so this is the actual acquisition rather than a later use mention.",
+    "sources": [
+      {
+        "id": "pokeemerald-wasm",
+        "url": "https://github.com/ottohg/pokeemerald-wasm/blob/c101be5ac2ae53c5d18ee063f16eeeda751639f8/data/maps/MauvilleCity_House1/scripts.inc",
+        "license": "No license declared",
+        "revision": "c101be5ac2ae53c5d18ee063f16eeeda751639f8"
+      }
+    ]
+  },
+  {
     "id": "species:abra",
     "domain": "species",
     "title": "Abra",

@@ -192,5 +192,16 @@ describe("KnowledgeBase", () => {
       "progression:bulbapedia:emerald-part-10:1",
     );
     expect(flyResults.at(0)?.excerpt).toContain("HM02 (Fly)");
+    const rockSmashResults = base.search("where to get HM06 Rock Smash", {
+      domain: "progression",
+      limit: 5,
+    });
+    expect(rockSmashResults.at(0)?.id).toBe(
+      "progression:hm06-rock-smash-acquisition-emerald",
+    );
+    expect(rockSmashResults.at(0)?.excerpt).toContain(
+      "obtain HM06 (Rock Smash)",
+    );
+    expect(rockSmashResults.at(0)?.excerpt).toContain("Mauville City");
   });
 });

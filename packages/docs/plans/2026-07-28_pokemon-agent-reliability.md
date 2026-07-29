@@ -351,11 +351,19 @@ system against a copied live save and the exact goal `get me a pokeman`.
   retained a 41-second hard wall cap.
 - Added regressions for source-path replacement, the empty post-process signal
   grace, either-bound grace expiry, and pending-evidence hard-cap behavior.
-- Added reward acquisition vocabulary and evidence-position excerpts so `how
-to get fly` ranks the HM02 reward passage first and shows the acquisition
-  text.
+- Added reward acquisition vocabulary and evidence-position excerpts so
+  `how to get fly` ranks the HM02 reward passage first and shows the
+  acquisition text.
+- Added an Emerald-specific HM06 acquisition record from the pinned
+  `MauvilleCity_House1` gift event. The exact query
+  `where to get HM06 Rock Smash` now ranks that record first and identifies the
+  Rock Smash Dude's house in Mauville City.
+- Made every nested source-manifest object closed in the language-neutral JSON
+  Schema and added draft-2020 validation regressions for typos inside a source
+  object and a Bulbapedia page pin.
 - Verified all 313 middle-layer and 318 composed-top backend tests, the 61
-  focused benchmark tests, backend typecheck, backend lint, and formatting.
+  focused benchmark tests, all 30 knowledge/build script tests, backend and
+  scripts typecheck/lint, and formatting.
 
 ### Remaining
 

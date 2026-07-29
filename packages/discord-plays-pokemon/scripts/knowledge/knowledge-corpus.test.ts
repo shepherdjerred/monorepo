@@ -169,4 +169,21 @@ describe("committed generated knowledge", () => {
     );
     expect(route.body).not.toContain("Locations and rewards:");
   });
+
+  test("includes the pinned Emerald HM06 acquisition", () => {
+    const rockSmash = requiredRecord(
+      "progression:hm06-rock-smash-acquisition-emerald",
+    );
+    expect(rockSmash.body).toContain(
+      "obtain HM06 (Rock Smash) by talking to the Rock Smash Dude in his house in Mauville City",
+    );
+    expect(rockSmash.sources).toEqual([
+      {
+        id: "pokeemerald-wasm",
+        url: `${pokeemeraldUpstream.repository.replace(/\.git$/, "")}/blob/${pokeemeraldUpstream.commit}/data/maps/MauvilleCity_House1/scripts.inc`,
+        license: "No license declared",
+        revision: pokeemeraldUpstream.commit,
+      },
+    ]);
+  });
 });

@@ -1,4 +1,6 @@
 import { describe, expect, test } from "bun:test";
+import Ajv2020 from "ajv/dist/2020.js";
+import addFormats from "ajv-formats";
 import { z } from "zod";
 import { archipelagoRandomizerMetadataLines } from "./archipelago.ts";
 import {
@@ -15,6 +17,7 @@ import {
   includeGeneration3Item,
   moveForVersion,
 } from "./pokeapi.ts";
+import { SourcesSchema } from "./model.ts";
 import {
   emeraldShedinjaEvolutionCondition,
   emeraldWurmpleEvolutionCondition,
@@ -23,6 +26,7 @@ import {
 } from "./pokeapi-relations.ts";
 import {
   validateShedinjaSource,
+  validateRockSmashSource,
   validateWurmpleSource,
 } from "./pokeemerald.ts";
 
@@ -47,6 +51,8 @@ const KnowledgeJsonSchema = z.object({
   }),
 });
 
+const JsonSchema = z.record(z.string(), z.unknown());
+
 test("source JSON Schema accepts its own $schema property", async () => {
   const schema = SourceJsonSchema.parse(
     await Bun.file(
@@ -55,6 +61,47 @@ test("source JSON Schema accepts its own $schema property", async () => {
   );
   expect(schema.required).toContain("$schema");
   expect(schema.properties["$schema"]).toBeDefined();
+});
+
+test("source JSON Schema rejects unknown nested source and page keys", async () => {
+  const schema = JsonSchema.parse(
+    await Bun.file(
+      new URL("../../knowledge/sources.schema.json", import.meta.url),
+    ).json(),
+  );
+  const manifest = SourcesSchema.parse(
+    await Bun.file(
+      new URL("../../knowledge/sources.json", import.meta.url),
+    ).json(),
+  );
+  const ajv = new Ajv2020({ strict: true });
+  addFormats(ajv);
+  const validate = ajv.compile(schema);
+
+  expect(validate(manifest)).toBe(true);
+  expect(
+    validate({
+      ...manifest,
+      archipelago: {
+        ...manifest.archipelago,
+        repositorry: manifest.archipelago.repository,
+      },
+    }),
+  ).toBe(false);
+  expect(validate.errors?.at(0)?.keyword).toBe("additionalProperties");
+
+  expect(
+    validate({
+      ...manifest,
+      bulbapedia: {
+        ...manifest.bulbapedia,
+        pages: manifest.bulbapedia.pages.map((page, index) =>
+          index === 0 ? { ...page, revison: 1 } : page,
+        ),
+      },
+    }),
+  ).toBe(false);
+  expect(validate.errors?.at(0)?.keyword).toBe("additionalProperties");
 });
 
 test("record JSON Schema requires non-empty structured provenance", async () => {
@@ -246,6 +293,22 @@ describe("Generation III evolution normalization", () => {
     expect(() =>
       emeraldWurmpleEvolutionCondition("level-up", "silcoon", 8),
     ).toThrow("expected level-7 level-up condition");
+  });
+});
+
+describe("Emerald HM acquisition normalization", () => {
+  test("requires the pinned Mauville City HM06 gift event", () => {
+    const script = `
+      MauvilleCity_House1_EventScript_RockSmashDude::
+        giveitem ITEM_HM_ROCK_SMASH
+        setflag FLAG_RECEIVED_HM_ROCK_SMASH
+    `;
+    expect(validateRockSmashSource(script)).toBeUndefined();
+    expect(() =>
+      validateRockSmashSource(
+        script.replace("ITEM_HM_ROCK_SMASH", "ITEM_POTION"),
+      ),
+    ).toThrow("Mauville City HM06 Rock Smash gift");
   });
 });
 
