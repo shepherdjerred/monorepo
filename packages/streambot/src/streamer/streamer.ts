@@ -8,7 +8,6 @@ import {
   type MediaConnectionCloseInfo,
   type Player,
 } from "@shepherdjerred/discord-video-stream";
-import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type {
   JoinVoiceInput,
@@ -44,9 +43,20 @@ import {
   streamSegmentDurationSeconds,
   streamSegmentsTotal,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
-
+import {
+  createVoiceCloseTracker,
+  EMPTY_VOICE_CLOSE_SOURCE,
+  type VoiceCloseInfo,
+  type VoiceCloseSource,
+  type VoiceCloseTracker,
+} from "@shepherdjerred/streambot/streamer/voice-close-source.ts";
+import type {
+  PlayerFactory,
+  StreamerDependencies,
+  StreamerLike,
+  StreamObserverFactory,
+} from "@shepherdjerred/streambot/streamer/streamer-types.ts";
 const log = logger.child("streamer");
-
 /**
  * Owns the selfbot voice connection and ffmpeg streaming via `@shepherdjerred/discord-video-stream`
  * (our fork). Its methods are the playback machine's `joinVoice` / `runStream` / `leaveVoice`
@@ -56,50 +66,6 @@ const log = logger.child("streamer");
  * Live controls (`setVolume`, `seek`) act on the currently-playing {@link Player} as side-channels,
  * independent of the machine.
  */
-/** Factory for the seekable player — injectable so tests can drive playback without a live stream. */
-export type PlayerFactory = typeof createSeekablePlayer;
-
-/**
- * The streamer surface the pool/session layer depends on. Extends `PooledUserbot` (the
- * shared lib's minimum) with streambot's video-streaming methods. Lets a `UserbotEntry`
- * hold a real {@link StreambotStreamer} in production and a lightweight fake in tests
- * without type assertions.
- */
-export type StreamerLike = PooledUserbot & {
-  joinVoice: (
-    input: JoinVoiceInput,
-    signal: AbortSignal,
-  ) => Promise<VoiceHandle>;
-  runStream: (input: RunStreamInput, signal: AbortSignal) => Promise<void>;
-  leaveVoice: (input: LeaveVoiceInput, signal: AbortSignal) => Promise<void>;
-  setVolume: (percent: number) => Promise<boolean>;
-  seek: (seconds: number) => Promise<boolean>;
-  getPosition: () => number | null;
-  /** Most recent Discord-side voice ws close observed on this userbot, or null if none yet. */
-  lastVoiceCloseInfo: () => VoiceCloseInfo | null;
-  /**
-   * Register the (single) callback fired when Discord closes the voice connection out from under
-   * us. Locally-initiated stops never fire it. Pass null to clear.
-   */
-  setVoiceCloseListener: (
-    listener: ((info: VoiceCloseInfo) => void) | null,
-  ) => void;
-  /**
-   * Register the (single) callback fired when the active segment's ffmpeg stops producing output
-   * while its process stays alive (see STALL_AFTER_SECONDS). The session layer routes it into the
-   * machine's stall recovery. Pass null to clear.
-   */
-  setStallListener: (listener: ((info: StallInfo) => void) | null) => void;
-};
-
-/** A Discord-side voice connection death, timestamped for freshness-based classification. */
-export type VoiceCloseInfo = {
-  code: number;
-  /** True for Discord's 4014 "disconnected" — a deliberate removal (e.g. moderator disconnect). */
-  deliberate: boolean;
-  atMs: number;
-};
-
 export class StreambotStreamer implements StreamerLike {
   private readonly client: Client;
   private readonly streamer: Streamer;
@@ -111,32 +77,47 @@ export class StreambotStreamer implements StreamerLike {
   private readonly now: () => number;
   /** Injectable player factory (defaults to the fork's real one) so tests can supply a fake. */
   private readonly createPlayer: PlayerFactory;
+  /** Injectable observer factory so startup and seek races are deterministic in tests. */
+  private readonly createObserver: StreamObserverFactory;
   private player: Player | null = null;
   /** Last known playback offset (seconds), captured per segment so a HW→SW retry can resume there. */
   private lastPlaybackPositionSeconds = 0;
   /** Offset (seconds) the current segment started playing at (initial resume seek or last live seek). */
   private segmentStartOffsetSeconds = 0;
+  /**
+   * Seek target visible to the synchronously-starting observer before the replacement attach
+   * succeeds. Public position tracking continues from the prior anchor until seek() commits.
+   */
+  private pendingSeekOffsetSeconds: number | null = null;
+  /** Last delivered public position, frozen while a replacement seek pipeline attaches. */
+  private pendingSeekPreviousPositionSeconds: number | null = null;
+  /** Monotonic owner for overlapping seek completions; only the newest request may update anchors. */
+  private seekGeneration = 0;
   /** Wall-clock (ms) when the current segment began playing; null when nothing is playing. */
   private segmentStartedAtMs: number | null = null;
-  /** Most recent Discord-side voice ws close (never set by local stops). */
-  private lastVoiceClose: VoiceCloseInfo | null = null;
+  /** Close state for the current connection; retained recovery leases outlive pool reuse. */
+  private voiceCloseTracker: VoiceCloseTracker | null = null;
   /** Session-layer callback for Discord-side voice closes; cleared between sessions. */
   private voiceCloseListener: ((info: VoiceCloseInfo) => void) | null = null;
   /** Session-layer callback for mid-stream ffmpeg stalls; cleared between sessions. */
   private stallListener: ((info: StallInfo) => void) | null = null;
-  /** Unsubscribes the current voice connection's close handler; null when not joined. */
-  private detachVoiceCloseHandler: (() => void) | null = null;
-
   constructor(
     userToken: UserToken,
     config: Pick<Config, "stream">,
     now: () => number = Date.now,
-    createPlayer: PlayerFactory = createSeekablePlayer,
+    dependencies: PlayerFactory | StreamerDependencies = {},
   ) {
     this.userToken = userToken;
     this.config = config;
     this.now = now;
-    this.createPlayer = createPlayer;
+    this.createPlayer =
+      typeof dependencies === "function"
+        ? dependencies
+        : (dependencies.createPlayer ?? createSeekablePlayer);
+    this.createObserver =
+      typeof dependencies === "function"
+        ? createStreamObserver
+        : (dependencies.createObserver ?? createStreamObserver);
     this.client = new Client();
     this.streamer = new Streamer(this.client);
     // Gateway health observability: a dropped/invalidated userbot gateway kills streaming
@@ -157,7 +138,6 @@ export class StreambotStreamer implements StreamerLike {
       log.warn("userbot client error", { error: getErrorMessage(error) });
     });
   }
-
   /**
    * Log in and wait for the gateway to finish hydrating — `client.guilds.cache` is empty until the
    * `ready` event fires, so the pool's membership snapshot ({@link guildIds}) would be wrong if we
@@ -176,7 +156,6 @@ export class StreambotStreamer implements StreamerLike {
       guilds: this.client.guilds.cache.size,
     });
   }
-
   /**
    * Discord user id of the logged-in streamer (for the alone-in-VC check). Throws if
    * called before {@link login} resolves — `login` awaits the gateway `ready` event,
@@ -189,7 +168,6 @@ export class StreambotStreamer implements StreamerLike {
     }
     return id;
   }
-
   /** Guild ids this userbot is a member of (snapshot of the gateway cache after {@link login}). */
   guildIds(): GuildId[] {
     return [...this.client.guilds.cache.keys()].map((id) =>
@@ -208,7 +186,6 @@ export class StreambotStreamer implements StreamerLike {
     }
     await Promise.resolve();
   }
-
   /** Apply a volume percentage (0-200) to the live stream; false when nothing is playing. */
   async setVolume(percent: number): Promise<boolean> {
     if (this.player === null) {
@@ -216,26 +193,53 @@ export class StreambotStreamer implements StreamerLike {
     }
     return this.player.setVolume(Math.max(0, percent) / 100);
   }
-
   /** Seek the live stream to an absolute offset (seconds); false when nothing is playing. */
   async seek(seconds: number): Promise<boolean> {
     if (this.player === null) {
       return false;
     }
+    const player = this.player;
     const target = Math.max(0, seconds);
-    await this.player.seek(target);
-    // Re-anchor the elapsed clock so getPosition() tracks from the new offset.
-    this.segmentStartOffsetSeconds = target;
-    this.segmentStartedAtMs = this.now();
+    const previousPositionSeconds = this.getPosition();
+    const seekGeneration = ++this.seekGeneration;
+    // The replacement observer can begin synchronously inside player.seek(), so expose the target
+    // to stall accounting immediately. Do not commit the public position anchor until the real
+    // player confirms its replacement pipeline attached successfully.
+    this.pendingSeekOffsetSeconds = target;
+    this.pendingSeekPreviousPositionSeconds = previousPositionSeconds;
+    try {
+      await player.seek(target);
+    } catch (error) {
+      if (this.seekGeneration === seekGeneration && this.player === player) {
+        this.pendingSeekOffsetSeconds = null;
+        this.pendingSeekPreviousPositionSeconds = null;
+        // A replacement attach failure also rejects player.finished. If the playback owner won that
+        // race, it has already cleared this.player and stopped the clock; do not restart a clock for
+        // dead media while the machine prepares recovery.
+        if (previousPositionSeconds !== null) {
+          this.segmentStartOffsetSeconds = previousPositionSeconds;
+          this.segmentStartedAtMs = this.now();
+        }
+      }
+      throw error;
+    }
+    if (this.seekGeneration === seekGeneration && this.player === player) {
+      this.segmentStartOffsetSeconds = target;
+      this.segmentStartedAtMs = this.now();
+      this.pendingSeekOffsetSeconds = null;
+      this.pendingSeekPreviousPositionSeconds = null;
+    }
     return true;
   }
-
   /**
    * Current playback position in seconds (segment start offset + real time since it began playing),
    * or null when nothing is playing. Used to checkpoint resume state — unlike the fork's
    * `Player.position`, this advances with the clock.
    */
   getPosition(): number | null {
+    if (this.pendingSeekPreviousPositionSeconds !== null) {
+      return this.pendingSeekPreviousPositionSeconds;
+    }
     if (this.segmentStartedAtMs === null) {
       return null;
     }
@@ -245,25 +249,29 @@ export class StreambotStreamer implements StreamerLike {
       this.now(),
     );
   }
-
   lastVoiceCloseInfo(): VoiceCloseInfo | null {
-    return this.lastVoiceClose;
+    return this.voiceCloseTracker?.lastVoiceCloseInfo() ?? null;
   }
 
+  captureVoiceCloseSource(): VoiceCloseSource {
+    return this.voiceCloseTracker?.retain() ?? EMPTY_VOICE_CLOSE_SOURCE;
+  }
   setVoiceCloseListener(
     listener: ((info: VoiceCloseInfo) => void) | null,
   ): void {
     this.voiceCloseListener = listener;
   }
-
   setStallListener(listener: ((info: StallInfo) => void) | null): void {
     this.stallListener = listener;
   }
-
+  /** Revoke ownership from every in-flight seek and clear its shared public-position state. */
+  private invalidatePendingSeek(): void {
+    this.seekGeneration += 1;
+    this.pendingSeekOffsetSeconds = null;
+    this.pendingSeekPreviousPositionSeconds = null;
+  }
   private safeStop(): void {
-    // Detach first so the ws close triggered by our own teardown can never fire the listener.
-    this.detachVoiceCloseHandler?.();
-    this.detachVoiceCloseHandler = null;
+    this.invalidatePendingSeek();
     try {
       this.player?.stop();
     } catch (error) {
@@ -271,6 +279,8 @@ export class StreambotStreamer implements StreamerLike {
     }
     this.player = null;
     this.segmentStartedAtMs = null;
+    this.voiceCloseTracker?.release();
+    this.voiceCloseTracker = null;
     try {
       this.streamer.stopStream();
     } catch (error) {
@@ -284,38 +294,44 @@ export class StreambotStreamer implements StreamerLike {
   }
 
   readonly joinVoice = async (input: JoinVoiceInput): Promise<VoiceHandle> => {
-    // Clear any close info left over from a prior session on this (pooled, reusable) userbot.
-    // Otherwise a stale `deliberate` close from a different (guild, channel) could be re-read by a
-    // pending reconnect timer and misclassify a transient drop as deliberate — deleting saved state.
-    // A `null` baseline classifies as transient (the safe direction: reconnect and preserve state).
-    this.lastVoiceClose = null;
+    this.voiceCloseTracker?.release();
+    this.voiceCloseTracker = null;
     await this.streamer.joinVoice(input.guildId, input.channelId);
     const connection = this.streamer.voiceConnection;
     if (connection === undefined) {
       throw new Error("voice connection missing after joinVoice resolved");
     }
-    // Surface Discord-side connection deaths (the fork only emits `close` for non-resumable,
-    // remotely-initiated closes). A Discord session end closes the voice connection, which
-    // cascades to the stream connection, so subscribing here covers both.
+    const activeConnection = connection;
+    // Surface Discord-side connection deaths (the fork emits `close` for non-resumable,
+    // remotely-initiated closes). VoiceConnection also relays its active Go-Live child's close,
+    // so this one observer covers either transport without a listener-installation race.
+    const voiceCloseListener = this.voiceCloseListener;
+    function detachCloseHandler(): void {
+      activeConnection.off("close", onClose);
+    }
+    const tracker = createVoiceCloseTracker(detachCloseHandler);
     const onClose = (info: MediaConnectionCloseInfo) => {
       const close: VoiceCloseInfo = {
         code: info.code,
         deliberate: info.deliberate,
         atMs: this.now(),
       };
-      this.lastVoiceClose = close;
-      log.warn("voice connection closed by Discord", {
+      // Once Discord has explicitly disconnected the streamer, a later transient close from the
+      // other media transport must not erase that classification. A late deliberate close may,
+      // however, replace the transient signal that started recovery.
+      if (!tracker.record(close)) {
+        return;
+      }
+      log.warn("Discord media connection closed", {
         guildId: input.guildId,
         channelId: input.channelId,
         code: close.code,
         deliberate: close.deliberate,
       });
-      this.voiceCloseListener?.(close);
+      voiceCloseListener?.(close);
     };
-    connection.on("close", onClose);
-    this.detachVoiceCloseHandler = () => {
-      connection.off("close", onClose);
-    };
+    activeConnection.on("close", onClose);
+    this.voiceCloseTracker = tracker;
     log.info("joined voice", {
       guildId: input.guildId,
       channelId: input.channelId,
@@ -386,6 +402,9 @@ export class StreambotStreamer implements StreamerLike {
   ): Promise<void> {
     const { stream } = this.config;
     const useHardware = pipelineMode !== "sw";
+    // A pooled userbot may begin a new session while an old seek's replacement pipeline is still
+    // attaching. Revoke that continuation before exposing any state for this segment.
+    this.invalidatePendingSeek();
     const prepareOpts = {
       width: stream.width,
       height: stream.height,
@@ -435,7 +454,12 @@ export class StreambotStreamer implements StreamerLike {
     // Observability seam — forwards ffmpeg command/codec/progress and send-frametime stats to the
     // Prometheus metrics. Passed to both prepare (ffmpeg events) and play (send stats). The stall
     // watchdog routes to the session layer, which converts it into the machine's stall recovery.
-    const { observer, dispose: disposeObserver } = createStreamObserver(
+    // The observer can begin a progress epoch synchronously during player construction/startup, so
+    // establish the requested media offset first. Keep segmentStartedAtMs null until start()
+    // succeeds: public checkpoint time must not advance before playback is actually attached.
+    this.segmentStartOffsetSeconds = startSeconds;
+    this.segmentStartedAtMs = null;
+    const { observer, dispose: disposeObserver } = this.createObserver(
       useHardware,
       this.now,
       (lastMediaSeconds) => {
@@ -448,10 +472,12 @@ export class StreambotStreamer implements StreamerLike {
         // across live seeks). We deliberately do NOT derive this from `getPosition()`: the wall-clock
         // tracker over-counts when ffmpeg was producing below realtime before it froze, which would
         // skip unseen media. Fall back to the segment start if no media time was parsed yet.
+        const segmentStartOffsetSeconds =
+          this.pendingSeekOffsetSeconds ?? this.segmentStartOffsetSeconds;
         const positionSeconds =
           lastMediaSeconds === undefined
-            ? this.segmentStartOffsetSeconds
-            : this.segmentStartOffsetSeconds + lastMediaSeconds;
+            ? segmentStartOffsetSeconds
+            : segmentStartOffsetSeconds + lastMediaSeconds;
         this.stallListener?.({
           positionSeconds,
           reason: `ffmpeg produced no output for ${String(STALL_AFTER_SECONDS)}s`,
@@ -489,6 +515,10 @@ export class StreambotStreamer implements StreamerLike {
         await player.finished;
       } catch {
         // Intentionally swallowed here; real error handling happens on the awaited paths below.
+      } finally {
+        if (this.player === player) {
+          this.invalidatePendingSeek();
+        }
       }
     })();
 
@@ -510,8 +540,7 @@ export class StreambotStreamer implements StreamerLike {
     try {
       await player.start();
       playbackStarted = true;
-      // Anchor the elapsed clock at the segment's start offset so getPosition() tracks live position.
-      this.segmentStartOffsetSeconds = startSeconds;
+      // Start the public elapsed clock only after playback attaches successfully.
       this.segmentStartedAtMs = this.now();
       try {
         await player.setVolume(Math.max(0, input.volume) / 100);
@@ -568,9 +597,10 @@ export class StreambotStreamer implements StreamerLike {
       // Capture where playback reached (incl. live seeks) before dropping the player, so a HW→SW
       // retry can resume there. Uses the wall-clock tracker, not the fork's segment-offset
       // `Player.position`, falling back to the requested offset if playback never started.
-      this.lastPlaybackPositionSeconds = this.getPosition() ?? startSeconds;
-      this.segmentStartedAtMs = null;
       if (this.player === player) {
+        this.lastPlaybackPositionSeconds = this.getPosition() ?? startSeconds;
+        this.invalidatePendingSeek();
+        this.segmentStartedAtMs = null;
         this.player = null;
       }
       streamActive.set(0);

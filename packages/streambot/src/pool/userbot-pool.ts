@@ -1,7 +1,7 @@
 import { UserbotPool as SharedUserbotPool } from "@shepherdjerred/discord-stream-lifecycle/pool/userbot-pool";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
-import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer.ts";
+import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer-types.ts";
 import {
   UserTokenSchema,
   type UserToken,

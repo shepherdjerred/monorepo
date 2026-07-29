@@ -258,6 +258,25 @@ describe("createSeekablePlayer", () => {
     expect(f.destroyed).toContain(0);
   });
 
+  test("a replacement attach failure rejects seek and the active playback", async () => {
+    const streamer = makeStreamer();
+    const attachError = new Error("replacement pipeline could not attach");
+    const f = makeDeps([undefined, attachError]);
+    const player = createSeekablePlayer(streamer, "video.mkv", {}, f.deps);
+    await player.start();
+
+    // Install the finished rejection observer before triggering the failure, matching the
+    // production owner that awaits it throughout playback.
+    const finishedFailure = player.finished.catch((error: unknown) => error);
+    await expect(player.seek(90)).rejects.toThrow(
+      "replacement pipeline could not attach",
+    );
+    expect(await finishedFailure).toBe(attachError);
+
+    expect(f.signals[1]?.aborted).toBe(true);
+    expect(streamer.calls.stopStream).toBe(1);
+  });
+
   test("a superseded segment ending does not resolve finished", async () => {
     const streamer = makeStreamer();
     const f = makeDeps();

@@ -52,6 +52,37 @@ async function run(cmd: string[]): Promise<void> {
   }
 }
 
+async function runWithin(cmd: string[], timeoutMs: number): Promise<void> {
+  const proc = Bun.spawn(cmd, {
+    stdout: "pipe",
+    stderr: "pipe",
+    stdin: "ignore",
+  });
+  let timedOut = false;
+  const timeout = setTimeout(() => {
+    timedOut = true;
+    proc.kill();
+  }, timeoutMs);
+  try {
+    const [stderr, code] = await Promise.all([
+      new Response(proc.stderr).text(),
+      proc.exited,
+    ]);
+    if (timedOut) {
+      throw new Error(
+        `command exceeded ${String(timeoutMs)}ms: ${cmd.join(" ")}`,
+      );
+    }
+    if (code !== 0) {
+      throw new Error(
+        `command failed (${String(code)}): ${cmd.join(" ")}\n${stderr.trim().slice(-800)}`,
+      );
+    }
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 /** Render exactly one frame of `input` at input-seek `ss` through a -vf chain, to a PNG. */
 async function grabFrame(
   input: string,
@@ -538,6 +569,51 @@ describe("VAAPI graph canvas branch (real ffmpeg, GPU stages swapped for softwar
       1,
     );
     expect(Buffer.compare(withOverlay, without)).not.toBe(0);
+  });
+
+  test("the subtitle canvas terminates when the primary video reaches EOF", async () => {
+    const resolved = await resolveSubtitleForFile(
+      config,
+      sidecarClip,
+      undefined,
+      NEVER_ABORT,
+    );
+    if (resolved === undefined) throw new Error("expected a subtitle");
+
+    const graph = buildVaapiVideoGraph({
+      width: 320,
+      height: 240,
+      frameRate: 10,
+      inputColor: "sdr",
+      subtitle: { path: resolved.path, startTime: 0 },
+    });
+    if (graph.kind !== "filterComplex") throw new Error("expected complex");
+    const proxyGraph = graph.graph.map((chain) =>
+      chain
+        .replace("scale_vaapi=w=320:h=240:format=nv12", "scale=320:240")
+        .replace(",hwupload[subs]", "[subs]")
+        .replace("overlay_vaapi", "overlay"),
+    );
+    expect(proxyGraph.join(";")).toContain("overlay=shortest=1");
+
+    // No -frames:v or -t guard: ffmpeg must terminate because the three-second primary input
+    // ended. Without shortest=1, the color source is infinite and this command hits the timeout.
+    await runWithin(
+      [
+        config.ffmpegPath,
+        "-y",
+        "-i",
+        sidecarClip,
+        "-filter_complex",
+        proxyGraph.join(";"),
+        "-map",
+        `[${graph.mapLabel}]`,
+        "-f",
+        "null",
+        "-",
+      ],
+      10_000,
+    );
   });
 });
 

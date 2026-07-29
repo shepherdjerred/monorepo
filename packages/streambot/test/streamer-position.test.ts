@@ -1,8 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import {
-  StreambotStreamer,
-  type PlayerFactory,
-} from "@shepherdjerred/streambot/streamer/streamer.ts";
+import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
+import type {
+  PlayerFactory,
+  StreamObserverFactory,
+} from "@shepherdjerred/streambot/streamer/streamer-types.ts";
 import { StreamCrashError } from "@shepherdjerred/streambot/streamer/stream-errors.ts";
 import {
   loadConfig,
@@ -42,35 +43,65 @@ type SegmentControl = {
   resolve: () => void;
   reject: (error: unknown) => void;
   startTime: number | undefined;
+  seekTargets: number[];
 };
+
+function createVoidDeferred(): {
+  promise: Promise<void>;
+  resolve: () => void;
+  reject: (error: unknown) => void;
+} {
+  const deferred = Promise.withResolvers<null>();
+  return {
+    promise: (async () => {
+      await deferred.promise;
+    })(),
+    resolve: () => deferred.resolve(null),
+    reject: deferred.reject,
+  };
+}
 
 /**
  * A fake player factory that records the `-ss` start time and lets the test end each segment.
  * `startErrors[i]` makes segment i's `start()` reject — the startup-failure path, as opposed to
  * rejecting `finished` (a mid-stream crash).
  */
-function makeFakeFactory(startErrors: (Error | undefined)[] = []) {
+function makeFakeFactory(
+  startErrors: (Error | undefined)[] = [],
+  seekErrors: (Error | undefined)[] = [],
+  seekGates: (Promise<void> | undefined)[] = [],
+) {
   const segments: SegmentControl[] = [];
   const factory: PlayerFactory = (_streamer, _input, options) => {
-    let resolve!: () => void;
-    let reject!: (error: unknown) => void;
-    const finished = new Promise<void>((res, rej) => {
-      resolve = res;
-      reject = rej;
+    const segmentIndex = segments.length;
+    const finished = createVoidDeferred();
+    const startError = startErrors[segmentIndex];
+    const seekError = seekErrors[segmentIndex];
+    const seekGate = seekGates[segmentIndex];
+    const seekTargets: number[] = [];
+    segments.push({
+      resolve: finished.resolve,
+      reject: finished.reject,
+      startTime: options?.prepare?.startTime,
+      seekTargets,
     });
-    const startError = startErrors[segments.length];
-    segments.push({ resolve, reject, startTime: options?.prepare?.startTime });
     return {
       start: () =>
         startError === undefined
           ? Promise.resolve()
           : Promise.reject(startError),
-      seek: () => Promise.resolve(),
+      seek: async (seconds) => {
+        seekTargets.push(seconds);
+        if (seekError !== undefined) {
+          throw seekError;
+        }
+        await seekGate;
+      },
       setVolume: () => Promise.resolve(true),
       stop: () => {
-        resolve();
+        finished.resolve();
       },
-      finished,
+      finished: finished.promise,
       position: 0,
     };
   };
@@ -83,6 +114,61 @@ function flush(): Promise<void> {
 }
 
 describe("StreambotStreamer position tracking", () => {
+  test("a startup-time stall uses the new segment offset before playback starts", async () => {
+    const start = createVoidDeferred();
+    const finished = createVoidDeferred();
+    let onStall: ((lastMediaSeconds: number | undefined) => void) | undefined;
+    const observerFactory: StreamObserverFactory = (
+      _hardware,
+      _now,
+      nextOnStall,
+    ) => {
+      onStall = nextOnStall;
+      return { observer: {}, dispose: () => null };
+    };
+    const factory: PlayerFactory = () => ({
+      start: () => {
+        onStall?.(0.33);
+        return start.promise;
+      },
+      seek: () => Promise.resolve(),
+      setVolume: () => Promise.resolve(true),
+      stop: finished.resolve,
+      finished: finished.promise,
+      position: 0,
+    });
+    const streamer = new StreambotStreamer(
+      USER_TOKEN,
+      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "false" })),
+      Date.now,
+      { createPlayer: factory, createObserver: observerFactory },
+    );
+    let stallPosition: number | undefined;
+    streamer.setStallListener((info) => {
+      stallPosition = info.positionSeconds;
+    });
+
+    const run = streamer.runStream(
+      {
+        voice: VOICE,
+        resolved: RESOLVED,
+        volume: 100,
+        seekSeconds: 3804,
+        pipelineMode: "sw",
+      },
+      new AbortController().signal,
+    );
+    await flush();
+
+    expect(stallPosition).toBeCloseTo(3804.33, 5);
+    expect(streamer.getPosition()).toBeNull();
+
+    start.resolve();
+    await flush();
+    finished.resolve();
+    await run;
+  });
+
   test("getPosition advances with the clock from the seek offset, then clears", async () => {
     const clock = { ms: 1000 };
     const { factory, segments } = makeFakeFactory();
@@ -119,6 +205,281 @@ describe("StreambotStreamer position tracking", () => {
     expect(streamer.getPosition()).toBeNull();
   });
 
+  test("a successful live seek re-anchors the position before returning", async () => {
+    const clock = { ms: 1000 };
+    const { factory, segments } = makeFakeFactory();
+    const streamer = new StreambotStreamer(
+      USER_TOKEN,
+      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "false" })),
+      () => clock.ms,
+      factory,
+    );
+    const run = streamer.runStream(
+      {
+        voice: VOICE,
+        resolved: RESOLVED,
+        volume: 100,
+        seekSeconds: 30,
+        pipelineMode: "sw",
+      },
+      new AbortController().signal,
+    );
+    await flush();
+
+    clock.ms = 6000;
+    expect(streamer.getPosition()).toBe(35);
+    await expect(streamer.seek(120)).resolves.toBe(true);
+    expect(segments[0]?.seekTargets).toEqual([120]);
+    expect(streamer.getPosition()).toBe(120);
+
+    clock.ms = 8000;
+    expect(streamer.getPosition()).toBe(122);
+    segments[0]?.resolve();
+    await run;
+  });
+
+  test("a live seek freezes position while its replacement attaches", async () => {
+    const clock = { ms: 1000 };
+    const seekAttach = createVoidDeferred();
+    const { factory, segments } = makeFakeFactory([], [], [seekAttach.promise]);
+    const streamer = new StreambotStreamer(
+      USER_TOKEN,
+      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "false" })),
+      () => clock.ms,
+      factory,
+    );
+    const run = streamer.runStream(
+      {
+        voice: VOICE,
+        resolved: RESOLVED,
+        volume: 100,
+        seekSeconds: 30,
+        pipelineMode: "sw",
+      },
+      new AbortController().signal,
+    );
+    await flush();
+
+    clock.ms = 6000;
+    const seek = streamer.seek(120);
+    await flush();
+    clock.ms = 9000;
+    expect(streamer.getPosition()).toBe(35);
+
+    seekAttach.resolve();
+    await expect(seek).resolves.toBe(true);
+    expect(streamer.getPosition()).toBe(120);
+
+    clock.ms = 11_000;
+    expect(streamer.getPosition()).toBe(122);
+    segments[0]?.resolve();
+    await run;
+  });
+});
+
+describe("StreambotStreamer overlapping seeks", () => {
+  test("an older completion cannot overwrite the newer seek's rollback anchor", async () => {
+    const clock = { ms: 1000 };
+    const firstAttach = createVoidDeferred();
+    const secondAttach = createVoidDeferred();
+    const finished = createVoidDeferred();
+    let seekCount = 0;
+    const factory: PlayerFactory = () => ({
+      start: () => Promise.resolve(),
+      seek: async () => {
+        const attach = seekCount === 0 ? firstAttach : secondAttach;
+        seekCount += 1;
+        await attach.promise;
+      },
+      setVolume: () => Promise.resolve(true),
+      stop: finished.resolve,
+      finished: finished.promise,
+      position: 0,
+    });
+    const streamer = new StreambotStreamer(
+      USER_TOKEN,
+      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "false" })),
+      () => clock.ms,
+      factory,
+    );
+    const run = streamer.runStream(
+      {
+        voice: VOICE,
+        resolved: RESOLVED,
+        volume: 100,
+        seekSeconds: 30,
+        pipelineMode: "sw",
+      },
+      new AbortController().signal,
+    );
+    await flush();
+
+    clock.ms = 6000;
+    const firstSeek = streamer.seek(120);
+    await flush();
+    const secondSeek = streamer.seek(240);
+    await flush();
+
+    firstAttach.resolve();
+    await expect(firstSeek).resolves.toBe(true);
+    clock.ms = 9000;
+    expect(streamer.getPosition()).toBe(35);
+
+    secondAttach.reject(new Error("newer seek failed"));
+    await expect(secondSeek).rejects.toThrow("newer seek failed");
+    expect(streamer.getPosition()).toBe(35);
+
+    finished.resolve();
+    await run;
+  });
+
+  test("a stopped session's late seek cannot overwrite a reused userbot's clock", async () => {
+    const clock = { ms: 1000 };
+    const oldSeekAttach = createVoidDeferred();
+    const { factory, segments } = makeFakeFactory(
+      [],
+      [],
+      [oldSeekAttach.promise],
+    );
+    const streamer = new StreambotStreamer(
+      USER_TOKEN,
+      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "false" })),
+      () => clock.ms,
+      factory,
+    );
+    const oldAbort = new AbortController();
+    const oldRun = streamer.runStream(
+      {
+        voice: VOICE,
+        resolved: RESOLVED,
+        volume: 100,
+        seekSeconds: 30,
+        pipelineMode: "sw",
+      },
+      oldAbort.signal,
+    );
+    await flush();
+
+    clock.ms = 6000;
+    const oldSeek = streamer.seek(120);
+    await flush();
+    oldAbort.abort();
+    await oldRun;
+    expect(streamer.getPosition()).toBeNull();
+
+    clock.ms = 10_000;
+    const newRun = streamer.runStream(
+      {
+        voice: VOICE,
+        resolved: RESOLVED,
+        volume: 100,
+        seekSeconds: 240,
+        pipelineMode: "sw",
+      },
+      new AbortController().signal,
+    );
+    await flush();
+    clock.ms = 12_000;
+    expect(streamer.getPosition()).toBe(242);
+
+    oldSeekAttach.resolve();
+    await expect(oldSeek).resolves.toBe(true);
+    clock.ms = 13_000;
+    expect(streamer.getPosition()).toBe(243);
+
+    segments[1]?.resolve();
+    await newRun;
+  });
+});
+
+describe("StreambotStreamer seek rollback", () => {
+  test("a failed live seek restores the prior playback anchor", async () => {
+    const clock = { ms: 1000 };
+    const seekError = new Error("seek restart failed");
+    const { factory, segments } = makeFakeFactory([], [seekError]);
+    const streamer = new StreambotStreamer(
+      USER_TOKEN,
+      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "false" })),
+      () => clock.ms,
+      factory,
+    );
+    const run = streamer.runStream(
+      {
+        voice: VOICE,
+        resolved: RESOLVED,
+        volume: 100,
+        seekSeconds: 30,
+        pipelineMode: "sw",
+      },
+      new AbortController().signal,
+    );
+    await flush();
+
+    clock.ms = 6000;
+    expect(streamer.getPosition()).toBe(35);
+    await expect(streamer.seek(120)).rejects.toThrow("seek restart failed");
+    expect(segments[0]?.seekTargets).toEqual([120]);
+    expect(streamer.getPosition()).toBe(35);
+
+    segments[0]?.resolve();
+    await run;
+  });
+});
+
+describe("StreambotStreamer seek failure lifecycle", () => {
+  test("a fatal replacement failure leaves the clock stopped after playback exits", async () => {
+    const clock = { ms: 1000 };
+    const finished = createVoidDeferred();
+    const replacementError = new Error("replacement attach failed");
+    const factory: PlayerFactory = () => ({
+      start: () => Promise.resolve(),
+      seek: () => {
+        finished.reject(replacementError);
+        return Promise.reject(replacementError);
+      },
+      setVolume: () => Promise.resolve(true),
+      stop: finished.resolve,
+      finished: finished.promise,
+      position: 0,
+    });
+    const streamer = new StreambotStreamer(
+      USER_TOKEN,
+      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "false" })),
+      () => clock.ms,
+      factory,
+    );
+    const run = streamer.runStream(
+      {
+        voice: VOICE,
+        resolved: RESOLVED,
+        volume: 100,
+        seekSeconds: 30,
+        pipelineMode: "sw",
+      },
+      new AbortController().signal,
+    );
+    const runFailure = (async (): Promise<unknown> => {
+      try {
+        await run;
+        return null;
+      } catch (error) {
+        return error;
+      }
+    })();
+    await flush();
+
+    clock.ms = 6000;
+    await expect(streamer.seek(120)).rejects.toThrow(
+      "replacement attach failed",
+    );
+    expect(await runFailure).toBeInstanceOf(StreamCrashError);
+
+    clock.ms = 10_000;
+    expect(streamer.getPosition()).toBeNull();
+  });
+});
+
+describe("StreambotStreamer failure position tracking", () => {
   test("a mid-stream failure surfaces as StreamCrashError with the elapsed position — no in-streamer retry", async () => {
     const clock = { ms: 1000 };
     const { factory, segments } = makeFakeFactory();

@@ -9,10 +9,8 @@ import type {
   UserbotEntry,
   UserbotProvider,
 } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
-import type {
-  StreamerLike,
-  VoiceCloseInfo,
-} from "@shepherdjerred/streambot/streamer/streamer.ts";
+import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer-types.ts";
+import type { VoiceCloseInfo } from "@shepherdjerred/streambot/streamer/voice-close-source.ts";
 import type { Announcement } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import type {
   ResolvedSource,
@@ -50,20 +48,45 @@ const RESOLVED: ResolvedSource = {
  */
 type FakeStreamer = StreamerLike & {
   triggerVoiceClose: (info: VoiceCloseInfo) => void;
+  triggerVoiceCloseForConnection: (
+    connectionIndex: number,
+    info: VoiceCloseInfo,
+  ) => void;
   positionSeconds: { value: number | null };
   lastRunStreamInput: { value: RunStreamInput | null };
 };
 
 function fakeStreamer(): FakeStreamer {
-  let lastClose: VoiceCloseInfo | null = null;
   let listener: ((info: VoiceCloseInfo) => void) | null = null;
+  const connections: {
+    close: { value: VoiceCloseInfo | null };
+    listener: ((info: VoiceCloseInfo) => void) | null;
+  }[] = [];
   const positionSeconds = { value: 0 };
   const lastRunStreamInput: { value: RunStreamInput | null } = { value: null };
+  const triggerVoiceCloseForConnection = (
+    connectionIndex: number,
+    info: VoiceCloseInfo,
+  ): void => {
+    const connection = connections[connectionIndex];
+    if (connection === undefined) {
+      throw new Error(
+        `missing fake voice connection ${String(connectionIndex)}`,
+      );
+    }
+    connection.close.value = info;
+    connection.listener?.(info);
+  };
   return {
     login: () => Promise.resolve(),
     guildIds: () => [GUILD],
-    joinVoice: (input) =>
-      Promise.resolve({ guildId: input.guildId, channelId: input.channelId }),
+    joinVoice: (input) => {
+      connections.push({ close: { value: null }, listener });
+      return Promise.resolve({
+        guildId: input.guildId,
+        channelId: input.channelId,
+      });
+    },
     runStream: (input, signal) =>
       new Promise<void>((resolve) => {
         lastRunStreamInput.value = input;
@@ -81,7 +104,14 @@ function fakeStreamer(): FakeStreamer {
     getPosition: () => positionSeconds.value,
     userId: () => "200000000000000000",
     destroy: () => Promise.resolve(),
-    lastVoiceCloseInfo: () => lastClose,
+    lastVoiceCloseInfo: () => connections.at(-1)?.close.value ?? null,
+    captureVoiceCloseSource: () => {
+      const close = connections.at(-1)?.close ?? { value: null };
+      return {
+        lastVoiceCloseInfo: () => close.value,
+        release: () => null,
+      };
+    },
     setVoiceCloseListener: (next) => {
       listener = next;
     },
@@ -89,9 +119,9 @@ function fakeStreamer(): FakeStreamer {
       /* stall recovery is exercised at the machine layer */
     },
     triggerVoiceClose: (info) => {
-      lastClose = info;
-      listener?.(info);
+      triggerVoiceCloseForConnection(connections.length - 1, info);
     },
+    triggerVoiceCloseForConnection,
     positionSeconds,
     lastRunStreamInput,
   };
@@ -575,6 +605,106 @@ describe("SessionManager voice-loss recovery", () => {
     await manager.destroyAll();
   });
 
+  test("a late 4014 reclassifies a gateway-first detach before reconnect", async () => {
+    const config = await makeReconnectConfig();
+    const pool = fakePool(1);
+    const { manager, announced } = makeManager(config, pool.provider);
+    await startStreaming(manager, announced);
+
+    const streamer = pool.streamers[0];
+    if (streamer === undefined) throw new Error("missing fake streamer");
+    streamer.positionSeconds.value = 123;
+
+    // The command gateway wins the race and initially has no close code, so recovery preserves
+    // state and arms a transient reconnect.
+    manager.notifyStreamerDetached({
+      guildId: GUILD,
+      channelId: CHANNEL_A,
+    });
+    await waitUntil(() => manager.getExisting(GUILD, CHANNEL_A) === null);
+
+    // The Go-Live transport's close arrives after session teardown. The real streamer keeps this
+    // close observation alive even though the session-layer callback has been cleared.
+    streamer.triggerVoiceClose({
+      code: 4014,
+      deliberate: true,
+      atMs: Date.now(),
+    });
+
+    await waitUntil(
+      () =>
+        announced.some((a) =>
+          announcementText(a.message).includes(
+            "streamer was disconnected from voice (close code 4014) — staying disconnected",
+          ),
+        ),
+      5000,
+    );
+    expect(manager.getExisting(GUILD, CHANNEL_A)).toBeNull();
+    expect(pool.acquireCount()).toBe(1);
+    const file = stateFilePath(config.state.dir, GUILD, CHANNEL_A);
+    await waitForAsync(async () => !(await Bun.file(file).exists()));
+
+    await manager.destroyAll();
+  });
+});
+
+describe("SessionManager incident-scoped voice recovery", () => {
+  test("a late 4014 stays bound to its incident after the userbot is reused", async () => {
+    const config = await makeReconnectConfig();
+    const pool = fakePool(1);
+    const { manager, announced } = makeManager(config, pool.provider);
+    await startStreaming(manager, announced);
+
+    manager.notifyStreamerDetached({
+      guildId: GUILD,
+      channelId: CHANNEL_A,
+    });
+    await waitUntil(() => manager.getExisting(GUILD, CHANNEL_A) === null);
+
+    const replacement = manager.ensureForPlay({
+      guildId: GUILD,
+      voiceChannelId: CHANNEL_B,
+      statusChannelId: STATUS,
+    });
+    if (replacement === null) {
+      throw new Error("expected the released userbot to serve a new session");
+    }
+    replacement.dispatch({
+      type: "ADD",
+      source: { kind: "file", path: "/other.mkv", title: "Other" },
+      requesterId: USER,
+    });
+    await waitUntil(() => manager.getExisting(GUILD, CHANNEL_B) !== null);
+
+    const streamer = pool.streamers[0];
+    if (streamer === undefined) throw new Error("missing fake streamer");
+    streamer.triggerVoiceCloseForConnection(0, {
+      code: 4014,
+      deliberate: true,
+      atMs: Date.now(),
+    });
+
+    await waitUntil(
+      () =>
+        announced.some((announcement) =>
+          announcementText(announcement.message).includes(
+            "streamer was disconnected from voice (close code 4014) — staying disconnected",
+          ),
+        ),
+      5000,
+    );
+    expect(manager.getExisting(GUILD, CHANNEL_A)).toBeNull();
+    expect(manager.getExisting(GUILD, CHANNEL_B)).not.toBeNull();
+    expect(pool.acquireCount()).toBe(2);
+    const file = stateFilePath(config.state.dir, GUILD, CHANNEL_A);
+    await waitForAsync(async () => !(await Bun.file(file).exists()));
+
+    await manager.destroyAll();
+  });
+});
+
+describe("SessionManager voice recovery policy", () => {
   test("reconnect disabled: transient close stays down like today, but announces the reason", async () => {
     const config = await makeReconnectConfig({ enabled: false });
     const pool = fakePool(1);

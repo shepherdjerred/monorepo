@@ -156,7 +156,7 @@ export function buildVaapiVideoGraph(spec: VideoGraphSpec): VideoGraph {
     graph: [
       `[0:v]${base}[base]`,
       `${subsBranch}[subs]`,
-      "[base][subs]overlay_vaapi[vout]",
+      "[base][subs]overlay_vaapi=shortest=1[vout]",
     ],
     mapLabel: "vout",
   };

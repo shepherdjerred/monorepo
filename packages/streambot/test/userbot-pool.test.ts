@@ -3,7 +3,7 @@ import {
   UserbotPool,
   type StreamerFactory,
 } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
-import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer.ts";
+import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer-types.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import {
   GuildIdSchema,
@@ -43,6 +43,10 @@ function fakeStreamer(guilds: GuildId[], onLogin?: () => Promise<void>) {
     seek: () => Promise.resolve(true),
     getPosition: () => null,
     lastVoiceCloseInfo: () => null,
+    captureVoiceCloseSource: () => ({
+      lastVoiceCloseInfo: () => null,
+      release: () => null,
+    }),
     setVoiceCloseListener: () => {
       /* pool tests never simulate voice closes */
     },

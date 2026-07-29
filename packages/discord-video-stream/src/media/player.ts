@@ -203,8 +203,15 @@ export function createSeekablePlayer(
         teardownConn();
         throw err;
       }
+      // A replacement attach failure leaves no playable segment: the previous pipeline was
+      // already superseded above. Reject both seek() (so the caller does not report success) and
+      // finished (so the playback owner enters its crash-recovery path), and tear down the paired
+      // ffmpeg/Go-Live resources immediately.
+      stopped = true;
+      abort.abort();
+      teardownConn();
       fail(err);
-      return;
+      throw err;
     }
     if (gen !== generation) {
       pipeline.destroy();

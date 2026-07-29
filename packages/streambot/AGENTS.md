@@ -133,8 +133,15 @@ Runs against a dedicated **test** Discord server (never the production `streambo
 J=$(op item get streambot-config --vault "Homelab (Kubernetes)" --format json --reveal)
 export BOT_TOKEN=$(echo "$J" | jq -r '.fields[]|select((.label//.id)=="BOT_TOKEN").value')
 export USER_TOKENS=$(echo "$J" | jq -r '.fields[]|select((.label//.id)=="TOKEN").value')
-E2E_GUILD_ID=1337623164146155593 E2E_VIDEO_CHANNEL_ID=1337623164955398253 bun run e2e
+VIDEOS_DIR=/tmp E2E_GUILD_ID=1337623164146155593 E2E_VIDEO_CHANNEL_ID=1337623164955398253 bun run e2e
 ```
+
+`bun run e2e:voice-recovery` uses the same environment and dedicated server. It lets a short
+subtitled fixture reach natural EOF and verifies the machine advances to its idle-wait state without
+a stall retry, then starts a second stream and uses `E2E_MODERATOR_USER_TOKEN` to disconnect the
+userbot. That identity must belong to the test guild and have **Move Members** permission. The run
+fails if close code `4014` does not surface or if Streambot reacquires a userbot after the reconnect
+window.
 
 The homelab deployment sources `USER_TOKENS` (comma-separated pool) from that 1P item.
 
