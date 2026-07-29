@@ -192,6 +192,12 @@ system against a copied live save and the exact goal `get me a pokeman`.
   v0.39.0 and its compatible `golang.org/x/*` dependency set. Go tests, vet,
   golangci-lint, and the exact repository Trivy HIGH/CRITICAL scan all pass
   locally with zero findings.
+- 2026-07-28: The replacement benchmark review found two invalid-measurement
+  paths. An unexplained nonzero Codex exit now becomes a harness error before
+  evaluation while retaining its exit code in the artifact. The runner now
+  resolves both target and runner Git top-level directories, then rejects
+  symlink-resolved output and runtime-overlay paths inside either worktree
+  before reserving them.
 
 ## Session Log — 2026-07-28
 
@@ -276,6 +282,10 @@ system against a copied live save and the exact goal `get me a pokeman`.
   tests, vet, and golangci-lint pass, and the CI-equivalent Trivy scan reports
   zero HIGH/CRITICAL vulnerabilities across all five detected dependency
   manifests.
+- Closed the final two benchmark review findings. Unclassified nonzero Codex
+  exits cannot reach the catch evaluator, their harness-error artifacts retain
+  the actual exit code, and target/runner Git-root containment protects both
+  benchmark output and runtime overlays, including symlink aliases.
 
 ### Remaining
 
