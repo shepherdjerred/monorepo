@@ -37,17 +37,33 @@ async function resolveProspectivePath(filePath: string): Promise<string> {
   }
 }
 
-export async function requireBenchmarkOutputOutsideImplementation(
-  implementationRoot: string,
-  outputDirectory: string,
+export type BenchmarkGitWorktree = {
+  root: string;
+  label: string;
+};
+
+export function benchmarkGitWorktrees(
+  targetGitRoot: string,
+  runnerGitRoot: string,
+): readonly BenchmarkGitWorktree[] {
+  return [
+    { root: targetGitRoot, label: "target implementation" },
+    { root: runnerGitRoot, label: "benchmark runner" },
+  ];
+}
+
+export async function requireBenchmarkPathOutsideGitWorktrees(
+  worktrees: readonly BenchmarkGitWorktree[],
+  candidatePath: string,
+  candidateLabel: string,
 ): Promise<void> {
-  const [resolvedImplementation, resolvedOutput] = await Promise.all([
-    realpath(implementationRoot),
-    resolveProspectivePath(outputDirectory),
-  ]);
-  if (pathIsInside(resolvedImplementation, resolvedOutput)) {
-    throw new Error(
-      `benchmark output must be outside the target implementation: ${outputDirectory}`,
-    );
+  const resolvedCandidate = await resolveProspectivePath(candidatePath);
+  for (const worktree of worktrees) {
+    const resolvedWorktree = await realpath(worktree.root);
+    if (pathIsInside(resolvedWorktree, resolvedCandidate)) {
+      throw new Error(
+        `${candidateLabel} must be outside the ${worktree.label} Git worktree: ${candidatePath}`,
+      );
+    }
   }
 }

@@ -97,6 +97,29 @@ function serializeSnapshot(snapshotValue: GameSnapshot) {
   };
 }
 
+function workerResult(exitCode: number | null) {
+  return BenchmarkWorkerResultSchema.parse({
+    schemaVersion: 1,
+    goalState: {
+      id: "goal-1",
+      goal: "catch a Pokemon",
+      requestedBy: "benchmark",
+      startedAt: STARTED_AT,
+      status: "completed",
+      finishedAt: FINISHED_AT,
+      exitCode,
+    },
+    initialSnapshot: serializeSnapshot(initial),
+    finalSnapshot: serializeSnapshot(afterCatch),
+    catchEvents: [catchEvent()],
+    persistedSave: {
+      persistedAt: "2026-07-28T10:06:00.000Z",
+      byteLength: 128 * 1024,
+      snapshot: serializeSnapshot(afterCatch),
+    },
+  });
+}
+
 describe("evaluateCatchBenchmark", () => {
   test("requires event, live state, and persisted save evidence", () => {
     const result = evaluateCatchBenchmark({
@@ -257,31 +280,11 @@ describe("evaluateCatchBenchmark", () => {
   });
 
   test("does not trust the target decoder for persisted catch evidence", () => {
-    const workerResult = BenchmarkWorkerResultSchema.parse({
-      schemaVersion: 1,
-      goalState: {
-        id: "goal-1",
-        goal: "catch a Pokemon",
-        requestedBy: "benchmark",
-        startedAt: STARTED_AT,
-        status: "completed",
-        finishedAt: FINISHED_AT,
-        exitCode: 0,
-      },
-      initialSnapshot: serializeSnapshot(initial),
-      finalSnapshot: serializeSnapshot(afterCatch),
-      catchEvents: [catchEvent()],
-      persistedSave: {
-        persistedAt: "2026-07-28T10:06:00.000Z",
-        byteLength: 128 * 1024,
-        snapshot: serializeSnapshot(afterCatch),
-      },
-    });
-
     const result = evaluateWorkerCatch({
-      workerResult,
+      workerResult: workerResult(0),
       providerFailure: null,
       persistedSnapshot: initial,
+      codexExitCode: 0,
     });
 
     expect(result?.success).toBe(false);
@@ -289,5 +292,16 @@ describe("evaluateCatchBenchmark", () => {
     expect(result?.failures).toContain(
       "persisted state contains no delta for the caught species",
     );
+  });
+
+  test("rejects an unexplained nonzero Codex exit before evaluation", () => {
+    expect(() =>
+      evaluateWorkerCatch({
+        workerResult: workerResult(70),
+        providerFailure: null,
+        persistedSnapshot: afterCatch,
+        codexExitCode: 70,
+      }),
+    ).toThrow("Codex exited with unclassified nonzero code 70");
   });
 });

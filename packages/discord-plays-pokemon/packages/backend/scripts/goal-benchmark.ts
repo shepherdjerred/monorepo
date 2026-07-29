@@ -6,7 +6,10 @@ import {
   buildBenchmarkSummary,
   parseBenchmarkArgs,
 } from "#src/goal/benchmark-harness.ts";
-import { requireBenchmarkOutputOutsideImplementation } from "#src/goal/benchmark-output-location.ts";
+import {
+  benchmarkGitWorktrees,
+  requireBenchmarkPathOutsideGitWorktrees,
+} from "#src/goal/benchmark-output-location.ts";
 import { validateCatchBenchmarkSourceSave } from "#src/goal/benchmark-source-save.ts";
 import { runBenchmarkSeries } from "#src/goal/benchmark-series.ts";
 import {
@@ -113,7 +116,14 @@ async function resolveImplementationRoot(
     path.join(packageRoot, "wasm-src/upstream.json"),
     "implementation upstream manifest",
   );
-  return { packageRoot, backendRoot };
+  return {
+    packageRoot,
+    backendRoot,
+    gitRoot: await commandOutput(
+      ["git", "rev-parse", "--show-toplevel"],
+      packageRoot,
+    ),
+  };
 }
 
 async function main(): Promise<void> {
@@ -133,15 +143,20 @@ async function main(): Promise<void> {
   const implementation = await resolveImplementationRoot(
     args.implementationRoot,
   );
-  await requireBenchmarkOutputOutsideImplementation(
-    implementation.packageRoot,
+  const runnerGitRoot = await commandOutput(
+    ["git", "rev-parse", "--show-toplevel"],
+    PACKAGE_ROOT,
+  );
+  await requireBenchmarkPathOutsideGitWorktrees(
+    benchmarkGitWorktrees(implementation.gitRoot, runnerGitRoot),
     args.output,
+    "benchmark output",
   );
   await requireCleanGitWorktree(
-    implementation.packageRoot,
+    implementation.gitRoot,
     "target implementation",
   );
-  await requireCleanGitWorktree(PACKAGE_ROOT, "benchmark runner");
+  await requireCleanGitWorktree(runnerGitRoot, "benchmark runner");
   const [
     sourceSaveSha256,
     wasmSha256,
@@ -179,6 +194,7 @@ async function main(): Promise<void> {
     return await runBenchmarkOnce({
       args,
       implementation,
+      runnerGitRoot,
       workerSource: WORKER_SOURCE,
       run,
       sourceSaveBytes,

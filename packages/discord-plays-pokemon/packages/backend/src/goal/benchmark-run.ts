@@ -11,7 +11,10 @@ import {
   BENCHMARK_PROVIDER_FAILURE_FILE,
   classifyCodexProviderFailure,
 } from "./benchmark-provider-failure.ts";
-import { requireBenchmarkOutputOutsideImplementation } from "./benchmark-output-location.ts";
+import {
+  benchmarkGitWorktrees,
+  requireBenchmarkPathOutsideGitWorktrees,
+} from "./benchmark-output-location.ts";
 import {
   benchmarkRuntimeOverlayDirectory,
   prepareBenchmarkRuntimeOverlay,
@@ -19,6 +22,7 @@ import {
 import {
   artifactPaths,
   evaluateWorkerCatch,
+  harnessErrorLifecycle,
   harnessRunOutcome,
   readProviderStartupFailure,
   resultStatus,
@@ -32,6 +36,7 @@ import { computeCost } from "./pricing.ts";
 export type BenchmarkImplementation = {
   packageRoot: string;
   backendRoot: string;
+  gitRoot: string;
 };
 
 export type BenchmarkProvenanceInput = {
@@ -197,6 +202,7 @@ async function readTelemetry(runDirectory: string): Promise<{
 type RunBenchmarkOnceInput = {
   args: BenchmarkArgs;
   implementation: BenchmarkImplementation;
+  runnerGitRoot: string;
   workerSource: string;
   run: number;
   sourceSaveBytes: Uint8Array;
@@ -209,11 +215,26 @@ export async function runBenchmarkOnce(
   const { args, implementation, run } = input;
   const runName = `run-${String(run).padStart(3, "0")}`;
   const runDirectory = path.join(args.output, runName);
-  await requireBenchmarkOutputOutsideImplementation(
+  const prospectiveRuntimeDirectory = benchmarkRuntimeOverlayDirectory(
     implementation.packageRoot,
-    args.output,
+    runDirectory,
   );
-  benchmarkRuntimeOverlayDirectory(implementation.packageRoot, runDirectory);
+  const protectedWorktrees = benchmarkGitWorktrees(
+    implementation.gitRoot,
+    input.runnerGitRoot,
+  );
+  await Promise.all([
+    requireBenchmarkPathOutsideGitWorktrees(
+      protectedWorktrees,
+      args.output,
+      "benchmark output",
+    ),
+    requireBenchmarkPathOutsideGitWorktrees(
+      protectedWorktrees,
+      prospectiveRuntimeDirectory,
+      "benchmark runtime overlay",
+    ),
+  ]);
   await reserveBenchmarkDirectory(runDirectory, "benchmark run");
   const resultPath = path.join(runDirectory, "result.json");
   const inputSavePath = path.join(runDirectory, "input.flash");
@@ -249,6 +270,7 @@ export async function runBenchmarkOnce(
   const harnessStartedAt = new Date().toISOString();
   const harnessStartMs = Date.now();
   let workerExitCode: number | null = null;
+  let codexExitCode: number | null = null;
   try {
     workerExitCode = await runWorker(
       implementation,
@@ -264,6 +286,7 @@ export async function runBenchmarkOnce(
     const workerResult = BenchmarkWorkerResultSchema.parse(
       await Bun.file(path.join(runDirectory, "worker-result.json")).json(),
     );
+    codexExitCode = workerResult.goalState.exitCode ?? null;
     const finishedAt = workerResult.goalState.finishedAt;
     const durationMs =
       Date.parse(finishedAt) - Date.parse(workerResult.goalState.startedAt);
@@ -277,7 +300,7 @@ export async function runBenchmarkOnce(
     const telemetryInput = await readTelemetry(runDirectory);
     const providerFailure = classifyCodexProviderFailure({
       jsonl: telemetryInput.jsonl,
-      codexExitCode: workerResult.goalState.exitCode ?? null,
+      codexExitCode,
     });
     if (providerFailure !== null) {
       await writeBenchmarkJson(
@@ -289,6 +312,7 @@ export async function runBenchmarkOnce(
       workerResult,
       providerFailure,
       persistedSnapshot,
+      codexExitCode,
     });
     const telemetry = telemetryForArtifact({
       raw: telemetryInput.raw,
@@ -343,7 +367,7 @@ export async function runBenchmarkOnce(
         finishedAt,
         durationMs,
         goalStatus: workerResult.goalState.status,
-        codexExitCode: workerResult.goalState.exitCode ?? null,
+        codexExitCode,
         workerExitCode,
       },
       evidence: {
@@ -380,7 +404,7 @@ export async function runBenchmarkOnce(
     const startupFailure = await readProviderStartupFailure(runDirectory);
     const providerFailure = classifyCodexProviderFailure({
       jsonl: telemetryInput.jsonl,
-      codexExitCode: null,
+      codexExitCode,
       startupError: startupFailure?.message ?? null,
     });
     if (providerFailure !== null) {
@@ -433,14 +457,13 @@ export async function runBenchmarkOnce(
         traceIdentifier: null,
         codexJsonlSha256: telemetryInput.jsonlSha256,
       },
-      lifecycle: {
+      lifecycle: harnessErrorLifecycle({
         startedAt: harnessStartedAt,
         finishedAt: new Date().toISOString(),
         durationMs,
-        goalStatus: null,
-        codexExitCode: null,
+        codexExitCode,
         workerExitCode,
-      },
+      }),
       evidence: null,
       evaluation: null,
       telemetry: {

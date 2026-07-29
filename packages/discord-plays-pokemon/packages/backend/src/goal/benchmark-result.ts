@@ -73,7 +73,17 @@ export function evaluateWorkerCatch(input: {
   workerResult: BenchmarkWorkerResult;
   providerFailure: BenchmarkProviderFailure | null;
   persistedSnapshot: CatchStateEvidence;
+  codexExitCode: number | null;
 }): CatchBenchmarkResult | null {
+  if (
+    input.codexExitCode !== null &&
+    input.codexExitCode !== 0 &&
+    input.providerFailure === null
+  ) {
+    throw new Error(
+      `Codex exited with unclassified nonzero code ${String(input.codexExitCode)}`,
+    );
+  }
   if (input.providerFailure !== null) return null;
   return evaluateCatchBenchmark({
     startedAt: input.workerResult.goalState.startedAt,
@@ -101,6 +111,23 @@ export function harnessRunOutcome(
   providerFailure: BenchmarkProviderFailure | null,
 ): BenchmarkRunOutcome {
   return providerFailure === null ? "harness-error" : "invalid-provider";
+}
+
+export function harnessErrorLifecycle(input: {
+  startedAt: string;
+  finishedAt: string;
+  durationMs: number;
+  codexExitCode: number | null;
+  workerExitCode: number | null;
+}) {
+  return {
+    startedAt: input.startedAt,
+    finishedAt: input.finishedAt,
+    durationMs: input.durationMs,
+    goalStatus: null,
+    codexExitCode: input.codexExitCode,
+    workerExitCode: input.workerExitCode,
+  };
 }
 
 export function resultStatus(

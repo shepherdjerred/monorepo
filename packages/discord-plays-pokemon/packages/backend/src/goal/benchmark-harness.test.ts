@@ -1,6 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
-import { mkdir, mkdtemp, readdir, rm, stat, symlink } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  realpath,
+  readdir,
+  rm,
+  stat,
+  symlink,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import {
   DEFAULT_BENCHMARK_GOAL,
@@ -20,13 +28,14 @@ import {
   requireCleanGitWorktree,
   reserveBenchmarkDirectory,
 } from "./benchmark-run.ts";
-import { requireBenchmarkOutputOutsideImplementation } from "./benchmark-output-location.ts";
+import { requireBenchmarkPathOutsideGitWorktrees } from "./benchmark-output-location.ts";
 import {
   OPTIONAL_CODEX_INSTRUCTION_PATHS,
   prepareBenchmarkRuntimeOverlay,
   REQUIRED_CODEX_INSTRUCTION_PATHS,
 } from "./benchmark-runtime-overlay.ts";
 import { runBenchmarkSeries } from "./benchmark-series.ts";
+import { harnessErrorLifecycle } from "./benchmark-result.ts";
 import { prepareRuntimeTools } from "./goal-runtime-env.ts";
 
 const SAVE_SLOT_BYTES = 0xe0_00;
@@ -812,39 +821,66 @@ describe("benchmark artifact reservation", () => {
 });
 
 describe("benchmark output containment", () => {
-  test("rejects target paths and filesystem aliases without creating artifacts", async () => {
+  test("rejects output and runtime paths inside either Git worktree", async () => {
     const root = await mkdtemp(path.join(tmpdir(), "pokemon-output-location-"));
-    const implementationRoot = path.join(root, "implementation");
-    const alias = path.join(root, "implementation-alias");
-    await mkdir(implementationRoot);
-    await symlink(implementationRoot, alias, "dir");
+    const targetRoot = path.join(root, "target");
+    const runnerRoot = path.join(root, "runner");
+    const targetAlias = path.join(root, "target-alias");
+    await Promise.all([mkdir(targetRoot), mkdir(runnerRoot)]);
+    await symlink(targetRoot, targetAlias, "dir");
+    const worktrees = [
+      { root: targetRoot, label: "target implementation" },
+      { root: runnerRoot, label: "benchmark runner" },
+    ];
 
     try {
       await expect(
-        requireBenchmarkOutputOutsideImplementation(
-          implementationRoot,
-          implementationRoot,
+        requireBenchmarkPathOutsideGitWorktrees(
+          worktrees,
+          path.join(targetRoot, "benchmark-artifacts"),
+          "benchmark output",
         ),
       ).rejects.toThrow(
-        "benchmark output must be outside the target implementation",
+        "benchmark output must be outside the target implementation Git worktree",
       );
       await expect(
-        requireBenchmarkOutputOutsideImplementation(
-          implementationRoot,
-          path.join(implementationRoot, "benchmark-artifacts"),
+        requireBenchmarkPathOutsideGitWorktrees(
+          worktrees,
+          path.join(runnerRoot, "benchmark-artifacts"),
+          "benchmark output",
         ),
       ).rejects.toThrow(
-        "benchmark output must be outside the target implementation",
+        "benchmark output must be outside the benchmark runner Git worktree",
       );
       await expect(
-        requireBenchmarkOutputOutsideImplementation(
-          implementationRoot,
-          path.join(alias, "benchmark-artifacts"),
+        requireBenchmarkPathOutsideGitWorktrees(
+          worktrees,
+          path.join(targetAlias, "benchmark-artifacts"),
+          "benchmark output",
         ),
       ).rejects.toThrow(
-        "benchmark output must be outside the target implementation",
+        "benchmark output must be outside the target implementation Git worktree",
       );
-      expect(await readdir(implementationRoot)).toEqual([]);
+      await expect(
+        requireBenchmarkPathOutsideGitWorktrees(
+          worktrees,
+          path.join(targetRoot, "artifacts/run-001/runtime"),
+          "benchmark runtime overlay",
+        ),
+      ).rejects.toThrow(
+        "benchmark runtime overlay must be outside the target implementation Git worktree",
+      );
+      await expect(
+        requireBenchmarkPathOutsideGitWorktrees(
+          worktrees,
+          path.join(runnerRoot, "artifacts/run-001/runtime"),
+          "benchmark runtime overlay",
+        ),
+      ).rejects.toThrow(
+        "benchmark runtime overlay must be outside the benchmark runner Git worktree",
+      );
+      expect(await readdir(targetRoot)).toEqual([]);
+      expect(await readdir(runnerRoot)).toEqual([]);
     } finally {
       await rm(root, { recursive: true, force: true });
     }
@@ -856,9 +892,10 @@ describe("benchmark output containment", () => {
     await mkdir(implementationRoot);
     try {
       await expect(
-        requireBenchmarkOutputOutsideImplementation(
-          implementationRoot,
+        requireBenchmarkPathOutsideGitWorktrees(
+          [{ root: implementationRoot, label: "target implementation" }],
           path.join(root, "implementation-copy", "benchmark-artifacts"),
+          "benchmark output",
         ),
       ).resolves.toBeUndefined();
     } finally {
@@ -871,7 +908,7 @@ describe("benchmark output containment", () => {
       path.resolve(import.meta.dir, "../../scripts/goal-benchmark.ts"),
     ).text();
     const containmentCheck = source.indexOf(
-      "await requireBenchmarkOutputOutsideImplementation(",
+      "await requireBenchmarkPathOutsideGitWorktrees(",
     );
     const artifactReservation = source.indexOf(
       'await reserveBenchmarkDirectory(args.output, "benchmark output")',
@@ -879,6 +916,9 @@ describe("benchmark output containment", () => {
 
     expect(containmentCheck).toBeGreaterThan(-1);
     expect(artifactReservation).toBeGreaterThan(containmentCheck);
+    expect(source).toContain(
+      "benchmarkGitWorktrees(implementation.gitRoot, runnerGitRoot)",
+    );
   });
 });
 
@@ -1049,6 +1089,25 @@ describe("benchmark runtime overlay", () => {
     } finally {
       await rm(root, { recursive: true, force: true });
     }
+  });
+});
+
+test("harness-error lifecycle preserves the actual Codex exit code", () => {
+  expect(
+    harnessErrorLifecycle({
+      startedAt: "2026-07-29T13:00:00.000Z",
+      finishedAt: "2026-07-29T13:01:00.000Z",
+      durationMs: 60_000,
+      codexExitCode: 70,
+      workerExitCode: 0,
+    }),
+  ).toEqual({
+    startedAt: "2026-07-29T13:00:00.000Z",
+    finishedAt: "2026-07-29T13:01:00.000Z",
+    durationMs: 60_000,
+    goalStatus: null,
+    codexExitCode: 70,
+    workerExitCode: 0,
   });
 });
 
@@ -1230,6 +1289,14 @@ describe("requireCleanGitWorktree", () => {
       await expect(
         requireCleanGitWorktree(directory, "target implementation"),
       ).resolves.toBeUndefined();
+      const nestedDirectory = path.join(directory, "packages", "nested");
+      await mkdir(nestedDirectory, { recursive: true });
+      expect(
+        await commandOutput(
+          ["git", "rev-parse", "--show-toplevel"],
+          nestedDirectory,
+        ),
+      ).toBe(await realpath(directory));
       await Bun.write(path.join(directory, "target.txt"), "dirty\n");
       await expect(
         requireCleanGitWorktree(directory, "target implementation"),
