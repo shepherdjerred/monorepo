@@ -4,7 +4,12 @@ import { GameHeader } from "#src/html/loading-screen/game-header.tsx";
 import { StandardLayout } from "#src/html/loading-screen/standard-layout.tsx";
 import { ArenaLayout } from "#src/html/loading-screen/arena-layout.tsx";
 
-export function LoadingScreen({ data }: { data: LoadingScreenData }) {
+type NonClassicLoadingScreenData = Exclude<
+  LoadingScreenData,
+  { layout: "classic" }
+>;
+
+export function LoadingScreen({ data }: { data: NonClassicLoadingScreenData }) {
   const layoutContent =
     data.layout === "arena" ? (
       <ArenaLayout data={data} />

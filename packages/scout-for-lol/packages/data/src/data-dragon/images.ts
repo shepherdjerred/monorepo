@@ -261,6 +261,13 @@ export async function getLaneIconBase64(lane: Lane): Promise<string> {
   return loadImageAsBase64(relativePath, "image/png");
 }
 
+export async function getClassicBackgroundBase64(): Promise<string> {
+  return loadImageAsBase64(
+    "./assets/img/background/classic-jade.png",
+    "image/png",
+  );
+}
+
 // Champion loading screen art (tall portrait images used in LoL loading screen)
 
 export async function validateChampionLoadingImage(

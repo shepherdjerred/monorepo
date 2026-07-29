@@ -4,6 +4,7 @@ import type {
   MatchId,
   CompletedMatch,
   ArenaMatch,
+  ClassicMatch,
   QueueType,
   RawMatch,
   RawTimeline,
@@ -23,6 +24,7 @@ import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import {
   matchToSvg,
   arenaMatchToSvg,
+  classicMatchToSvg,
   svgToPng,
   setItemMissHandler,
 } from "@scout-for-lol/report";
@@ -41,6 +43,8 @@ import {
   reportsFailedTotal,
   scoutItemCacheMissTotal,
 } from "#src/metrics/index.ts";
+import { ensureClassicFontsConfigured } from "#src/league/classic-fonts.ts";
+import { buildClassicMatch } from "./match-report-classic.ts";
 
 const logger = createLogger("postmatch-match-report-generator");
 
@@ -90,17 +94,22 @@ function formatGameCompletionMessage(
 
 /** Create image attachments for Discord message */
 async function createMatchImage(
-  matchToRender: CompletedMatch | ArenaMatch,
+  matchToRender: CompletedMatch | ArenaMatch | ClassicMatch,
   matchId: MatchId,
 ): Promise<[AttachmentBuilder, EmbedBuilder]> {
-  const svgData =
-    matchToRender.queueType === "arena"
-      ? await arenaMatchToSvg(matchToRender)
-      : await matchToSvg(matchToRender, {
-          // Gate the new ranked banner/square designs to beta + local dev;
-          // prod keeps the legacy report until the redesign is promoted.
-          enableRankedDesigns: configuration.environment !== "prod",
-        });
+  let svgData: string;
+  if (matchToRender.queueType === "arena") {
+    svgData = await arenaMatchToSvg(matchToRender);
+  } else if (matchToRender.queueType === "classic") {
+    await ensureClassicFontsConfigured();
+    svgData = await classicMatchToSvg(matchToRender);
+  } else {
+    svgData = await matchToSvg(matchToRender, {
+      // Gate the new ranked banner/square designs to beta + local dev;
+      // prod keeps the legacy report until the redesign is promoted.
+      enableRankedDesigns: configuration.environment !== "prod",
+    });
+  }
   const svg = z.string().parse(svgData);
   const image = z.instanceof(Uint8Array).parse(await svgToPng(svg));
 
@@ -136,6 +145,24 @@ async function createMatchImage(
     image: { url: `attachment://${attachmentName}` },
   });
   return [attachment, embed];
+}
+
+async function processClassicMatch(
+  matchData: RawMatch,
+  matchId: MatchId,
+  playersInMatch: PlayerConfigEntry[],
+): Promise<MessageCreateOptions> {
+  logger.info(`[generateMatchReport] 🕰️ Processing as League Classic match`);
+  const classicMatch = buildClassicMatch(matchData, playersInMatch);
+  const [attachment, embed] = await createMatchImage(classicMatch, matchId);
+  return {
+    content: formatGameCompletionMessage(
+      playersInMatch.map((player) => player.alias),
+      "classic",
+    ),
+    files: [attachment],
+    embeds: [embed],
+  };
 }
 
 /**
@@ -360,6 +387,20 @@ export async function generateMatchReport(
       `[generateMatchReport] 👥 Found ${playersInMatch.length.toString()} tracked player(s) in match: ${playersInMatch.map((p) => p.alias).join(", ")}`,
     );
 
+    const queueType = resolveQueueTypeFromGame(
+      matchData.info.queueId,
+      matchData.info.gameMode,
+    );
+    if (queueType === "classic") {
+      const result = await processClassicMatch(
+        matchData,
+        matchId,
+        playersInMatch,
+      );
+      reportsGeneratedTotal.inc({ queue_type: queueType });
+      return result;
+    }
+
     // Get full player data with ranks
     const players = await Promise.all(
       playersInMatch.map((playerConfig) => getPlayer(playerConfig)),
@@ -391,12 +432,12 @@ export async function generateMatchReport(
       return undefined;
     }
 
-    const queueType =
+    const generatedQueueType =
       resolveQueueTypeFromGame(
         matchData.info.queueId,
         matchData.info.gameMode,
       ) ?? "unknown";
-    reportsGeneratedTotal.inc({ queue_type: queueType });
+    reportsGeneratedTotal.inc({ queue_type: generatedQueueType });
 
     return result;
   } catch (error) {

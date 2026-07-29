@@ -14,6 +14,7 @@ export const QueueTypeSchema = z.enum([
   "quickplay",
   "swiftplay",
   "arena",
+  "classic",
   "brawl",
   "aram mayhem",
   "draft pick",
@@ -55,7 +56,9 @@ export function parseQueueType(input: number): QueueType | undefined {
       .with(1740, () => "arena")
       .with(1750, () => "arena")
       .with(2300, () => "brawl")
+      .with(4310, () => "classic")
       .with(2400, () => "aram mayhem")
+      .with(2450, () => "aram mayhem")
       .with(3200, () => "aram mayhem")
       .with(3220, () => "aram mayhem")
       .with(3270, () => "aram mayhem")
@@ -105,6 +108,9 @@ export function resolveQueueTypeFromGame(
   gameMode: string,
   gameType?: string,
 ): QueueType | undefined {
+  if (gameMode === "JADE") {
+    return "classic";
+  }
   if (isArenaQueueOrMode(queueId, gameMode)) {
     return "arena";
   }
@@ -133,6 +139,7 @@ export function queueTypeToDisplayString(queueType: QueueType): string {
     .with("arurf", () => "ARURF")
     .with("urf", () => "URF")
     .with("arena", () => "arena")
+    .with("classic", () => "League Classic")
     .with("brawl", () => "brawl")
     .with("aram mayhem", () => "ARAM: Mayhem")
     .with("easy doom bots", () => "Easy Doom Bots")

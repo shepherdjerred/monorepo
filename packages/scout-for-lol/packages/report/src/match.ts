@@ -44,8 +44,8 @@ export function toMatch(
     rawMatch.info.gameMode,
   );
 
-  if (queueType === "arena") {
-    throw new Error("arena matches are not supported");
+  if (queueType === "arena" || queueType === "classic") {
+    throw new Error(`${queueType} matches are not supported`);
   }
 
   return {

@@ -2,6 +2,7 @@
 *.env
 *.png
 !src/html/**/*.png
+artifacts/
 chats.json
 state.json
 matches

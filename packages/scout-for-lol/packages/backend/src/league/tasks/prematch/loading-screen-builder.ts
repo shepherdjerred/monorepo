@@ -3,6 +3,7 @@ import type {
   RawCurrentGameParticipant,
   LoadingScreenData,
   LoadingScreenParticipant,
+  ClassicLoadingScreenParticipant,
   NonStandardLoadingScreenParticipant,
   LoadingScreenBan,
   LoadingScreenLayout,
@@ -25,6 +26,9 @@ import {
   inferStandardLanesWithCurrentPriors,
   isArenaQueueOrMode,
   resolveQueueTypeFromGame,
+  resolveClassicChampionKey,
+  getModernChampionIdForClassic,
+  getModernSpellIdForClassic,
 } from "@scout-for-lol/data/index.ts";
 import {
   getChampionDisplayName,
@@ -47,6 +51,13 @@ export class RecoverableLoadingScreenDataError extends Error {
   }
 }
 
+export class UnsupportedLoadingScreenQueueError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "UnsupportedLoadingScreenQueueError";
+  }
+}
+
 type BuildParticipantContext = {
   trackedPuuids: ReadonlySet<string>;
   layout: LoadingScreenLayout;
@@ -61,6 +72,9 @@ type RankedBuiltParticipant = BaseBuiltParticipant & { ranks?: Ranks };
  * we only attempt to render known queue types.
  */
 function determineLayout(gameInfo: RawCurrentGameInfo): LoadingScreenLayout {
+  if (gameInfo.gameMode === "JADE" || gameInfo.gameQueueConfigId === 4310) {
+    return "classic";
+  }
   if (isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode)) {
     return "arena";
   }
@@ -192,6 +206,32 @@ function buildParticipant(
   };
 }
 
+function buildClassicParticipant(
+  participant: RawCurrentGameParticipant,
+  trackedPuuids: ReadonlySet<string>,
+): ClassicLoadingScreenParticipant {
+  const championName = resolveClassicChampionKey(participant.championId);
+  const puuid =
+    participant.puuid === null
+      ? null
+      : LeaguePuuidSchema.parse(participant.puuid);
+  const team = resolveTeam(participant, "classic");
+  if (team !== "blue" && team !== "red") {
+    throw new Error("Classic participant has a non-standard team");
+  }
+  return {
+    puuid,
+    summonerName: participant.riotId,
+    championId: LoadingScreenChampionIdSchema.parse(participant.championId),
+    championName,
+    championDisplayName: getChampionDisplayName(participant.championId),
+    team,
+    spell1Id: SummonerSpellIdSchema.parse(participant.spell1Id),
+    spell2Id: SummonerSpellIdSchema.parse(participant.spell2Id),
+    isTrackedPlayer: puuid !== null && trackedPuuids.has(puuid),
+  };
+}
+
 function laneInferenceKey(index: number): string {
   return `participant:${index.toString()}`;
 }
@@ -308,6 +348,65 @@ function inferStandardParticipants(
   return inferred;
 }
 
+const CLASSIC_LANE_ORDER = [
+  "top",
+  "jungle",
+  "middle",
+  "adc",
+  "support",
+] as const;
+
+function orderFullClassicTeam(
+  participants: ClassicLoadingScreenParticipant[],
+): ClassicLoadingScreenParticipant[] {
+  const inference = inferStandardLanesWithCurrentPriors(
+    participants.map((participant, index) => ({
+      participantKey: laneInferenceKey(index),
+      championId: LoadingScreenChampionIdSchema.parse(
+        getModernChampionIdForClassic(participant.championId),
+      ),
+      spell1Id: SummonerSpellIdSchema.parse(
+        getModernSpellIdForClassic(participant.spell1Id) ??
+          participant.spell1Id,
+      ),
+      spell2Id: SummonerSpellIdSchema.parse(
+        getModernSpellIdForClassic(participant.spell2Id) ??
+          participant.spell2Id,
+      ),
+    })),
+  );
+  const laneByIndex = new Map(
+    inference.assignments.map((assignment) => [
+      Number(assignment.participantKey.replace("participant:", "")),
+      assignment.lane,
+    ]),
+  );
+  return participants
+    .map((participant, index) => ({
+      participant,
+      lane: laneByIndex.get(index),
+    }))
+    .toSorted(
+      (left, right) =>
+        CLASSIC_LANE_ORDER.indexOf(left.lane ?? "support") -
+        CLASSIC_LANE_ORDER.indexOf(right.lane ?? "support"),
+    )
+    .map((entry) => entry.participant);
+}
+
+function orderClassicParticipants(
+  participants: ClassicLoadingScreenParticipant[],
+): ClassicLoadingScreenParticipant[] {
+  const blue = participants.filter(
+    (participant) => participant.team === "blue",
+  );
+  const red = participants.filter((participant) => participant.team === "red");
+  if (blue.length !== 5 || red.length !== 5) {
+    return participants;
+  }
+  return [...orderFullClassicTeam(blue), ...orderFullClassicTeam(red)];
+}
+
 /**
  * Resolve banned champions to loading screen ban objects.
  */
@@ -351,7 +450,7 @@ export async function buildLoadingScreenData(
     gameInfo.gameType,
   );
   if (queueType === undefined) {
-    throw new Error(
+    throw new UnsupportedLoadingScreenQueueError(
       `Unknown queue type for queue config ID ${gameInfo.gameQueueConfigId.toString()} (gameId=${gameInfo.gameId.toString()}, mapId=${gameInfo.mapId.toString()}, gameMode=${gameInfo.gameMode}, gameType=${gameInfo.gameType})`,
     );
   }
@@ -370,6 +469,23 @@ export async function buildLoadingScreenData(
       `${error instanceof Error ? error.message : String(error)} (gameId=${gameInfo.gameId.toString()}, queueConfigId=${gameInfo.gameQueueConfigId.toString()}, gameMode=${gameInfo.gameMode})`,
       { cause: error },
     );
+  }
+
+  if (layout === "classic") {
+    const participants = orderClassicParticipants(
+      gameInfo.participants.map((participant) =>
+        buildClassicParticipant(participant, trackedPuuids),
+      ),
+    );
+    return LoadingScreenDataSchema.parse({
+      gameId: GameIdSchema.parse(gameInfo.gameId),
+      queueType: "classic",
+      queueDisplayName,
+      layout: "classic",
+      mapName,
+      participants,
+      gameStartTime: gameInfo.gameStartTime,
+    });
   }
 
   // Build base participant data (without ranks)

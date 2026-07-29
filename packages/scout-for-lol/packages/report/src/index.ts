@@ -22,6 +22,10 @@ export { Report } from "./html/report.tsx";
 export { toMatch } from "./match.ts";
 export { arenaMatchToImage, arenaMatchToSvg } from "./html/arena/index.tsx";
 export {
+  classicMatchToImage,
+  classicMatchToSvg,
+} from "./html/classic/index.tsx";
+export {
   loadingScreenToSvg,
   loadingScreenToImage,
 } from "./html/loading-screen/index.tsx";
@@ -29,6 +33,10 @@ export {
   setItemMissHandler,
   type ItemMissEvent,
 } from "./dataDragon/image-cache.ts";
+export {
+  classicFontManifest,
+  configureClassicGillSansFonts,
+} from "./assets/classic-fonts.ts";
 export {
   getChampionInfo,
   extractRunes,

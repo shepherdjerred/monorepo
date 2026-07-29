@@ -75,12 +75,12 @@ describe("buildLoadingScreenData with real spectator payload", () => {
     // Check game-level fields
     expect(Number(parsed.gameId)).toBe(5_532_792_625);
     expect(parsed.queueType).toBe("flex");
-    expect(parsed.isRanked).toBe(true);
     expect(parsed.layout).toBe("standard");
     expect(parsed.mapName).toBe("Summoner's Rift");
     if (parsed.layout !== "standard") {
       throw new Error("Expected standard loading screen data");
     }
+    expect(parsed.isRanked).toBe(true);
 
     // Check participants
     expect(parsed.participants).toHaveLength(10);
@@ -119,6 +119,52 @@ describe("buildLoadingScreenData with real spectator payload", () => {
 });
 
 describe("buildLoadingScreenData layout variants", () => {
+  test("builds a narrow 5v5 Classic payload with exact Jade assets", async () => {
+    const baseGameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-ranked-flex.json`,
+    );
+    const classicChampionIds = [
+      60_103, 60_012, 60_032, 60_034, 60_001, 60_022, 60_053, 60_063, 60_031,
+      60_042,
+    ];
+    const trackedPuuid = baseGameInfo.participants[0]?.puuid;
+    if (trackedPuuid === null || trackedPuuid === undefined) {
+      throw new Error("Classic fixture requires a tracked PUUID");
+    }
+    const gameInfo = RawCurrentGameInfoSchema.parse({
+      ...baseGameInfo,
+      gameQueueConfigId: 4310,
+      mapId: 453,
+      gameMode: "JADE",
+      bannedChampions: [],
+      participants: baseGameInfo.participants.map((participant, index) => ({
+        ...participant,
+        championId: classicChampionIds[index],
+        spell1Id: 74,
+        spell2Id: 714,
+      })),
+    });
+
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set([trackedPuuid]),
+      "AMERICA_NORTH",
+    );
+
+    expect(result.layout).toBe("classic");
+    if (result.layout !== "classic") {
+      throw new Error("Expected Classic loading screen data");
+    }
+    expect(result.queueType).toBe("classic");
+    expect(result.mapName).toBe("Classic Rift");
+    expect(result.participants).toHaveLength(10);
+    expect(result.participants[0]?.championName).toStartWith("Jade_");
+    expect(result.participants[0]?.isTrackedPlayer).toBe(true);
+    expect("bans" in result).toBe(false);
+    expect("isRanked" in result).toBe(false);
+    expect("ranks" in (result.participants[0] ?? {})).toBe(false);
+  });
+
   test("queue 2400 (ARAM: Mayhem) with Rek'Sai resolves without throwing", async () => {
     // Start from the ranked-flex payload and mutate just enough to simulate
     // an ARAM Mayhem game with Rek'Sai in it — the two previously-failing
@@ -149,6 +195,9 @@ describe("buildLoadingScreenData layout variants", () => {
     expect(String(parsed.queueDisplayName)).toBe("ARAM: Mayhem");
     expect(parsed.layout).toBe("aram");
     expect(parsed.mapName).toBe("Howling Abyss");
+    if (parsed.layout !== "aram") {
+      throw new Error("Expected ARAM loading screen data");
+    }
     expect(parsed.bans).toHaveLength(0);
 
     const reksai = parsed.participants.find((p) => p.championName === "RekSai");
@@ -211,11 +260,11 @@ describe("buildLoadingScreenData layout variants", () => {
     expect(parsed.queueType).toBe("custom");
     expect(String(parsed.queueDisplayName)).toBe("custom");
     expect(parsed.layout).toBe("standard");
-    expect(parsed.isRanked).toBe(false);
     expect(parsed.mapName).toBe("Summoner's Rift");
     if (parsed.layout !== "standard") {
       throw new Error("Expected standard loading screen data");
     }
+    expect(parsed.isRanked).toBe(false);
 
     // Clean 5v5.
     expect(parsed.participants).toHaveLength(10);

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   LoadingScreenDataSchema,
+  ClassicLoadingScreenDataSchema,
   LoadingScreenParticipantSchema,
   LoadingScreenBanSchema,
   LoadingScreenLayoutSchema,
@@ -22,6 +23,7 @@ describe("LoadingScreenLayoutSchema", () => {
     expect(LoadingScreenLayoutSchema.parse("standard")).toBe("standard");
     expect(LoadingScreenLayoutSchema.parse("aram")).toBe("aram");
     expect(LoadingScreenLayoutSchema.parse("arena")).toBe("arena");
+    expect(LoadingScreenLayoutSchema.parse("classic")).toBe("classic");
   });
 
   test("rejects invalid layout", () => {
@@ -275,6 +277,9 @@ describe("LoadingScreenDataSchema", () => {
     expect(Number(result.gameId)).toBe(12_345);
     expect(result.layout).toBe("standard");
     expect(result.participants).toHaveLength(10);
+    if (result.layout !== "standard") {
+      throw new Error("expected standard loading-screen data");
+    }
     expect(result.bans).toHaveLength(2);
   });
 
@@ -314,6 +319,9 @@ describe("LoadingScreenDataSchema", () => {
     };
     const result = LoadingScreenDataSchema.parse(aramData);
     expect(result.layout).toBe("aram");
+    if (result.layout !== "aram") {
+      throw new Error("expected ARAM loading-screen data");
+    }
     expect(result.bans).toHaveLength(0);
   });
 
@@ -372,6 +380,72 @@ describe("LoadingScreenDataSchema", () => {
       LoadingScreenDataSchema.parse({
         ...validData,
         gameId: 0,
+      }),
+    ).toThrow();
+  });
+});
+
+describe("ClassicLoadingScreenDataSchema", () => {
+  test.each([
+    [5, 5],
+    [3, 2],
+    [1, 1],
+  ])("accepts Classic %iv%i teams", (blueCount, redCount) => {
+    const participants = [
+      ...Array.from({ length: blueCount }, (_, index) =>
+        makeNonStandardParticipant(
+          makePuuid(`c-blue-${index.toString()}`),
+          "blue",
+        ),
+      ),
+      ...Array.from({ length: redCount }, (_, index) =>
+        makeNonStandardParticipant(
+          makePuuid(`c-red-${index.toString()}`),
+          "red",
+        ),
+      ),
+    ];
+    const result = ClassicLoadingScreenDataSchema.parse({
+      gameId: GameIdSchema.parse(7_933_730_085),
+      queueType: "classic",
+      queueDisplayName: makeQueueDisplayName("classic"),
+      layout: "classic",
+      mapName: "Classic Rift",
+      participants,
+      gameStartTime: Date.now(),
+    });
+    expect(result.participants).toHaveLength(blueCount + redCount);
+  });
+
+  test.each([
+    [0, 1],
+    [1, 0],
+    [6, 1],
+    [1, 6],
+  ])("rejects Classic %iv%i teams", (blueCount, redCount) => {
+    const participants = [
+      ...Array.from({ length: blueCount }, (_, index) =>
+        makeNonStandardParticipant(
+          makePuuid(`x-blue-${index.toString()}`),
+          "blue",
+        ),
+      ),
+      ...Array.from({ length: redCount }, (_, index) =>
+        makeNonStandardParticipant(
+          makePuuid(`x-red-${index.toString()}`),
+          "red",
+        ),
+      ),
+    ];
+    expect(() =>
+      ClassicLoadingScreenDataSchema.parse({
+        gameId: GameIdSchema.parse(7_933_730_085),
+        queueType: "classic",
+        queueDisplayName: makeQueueDisplayName("classic"),
+        layout: "classic",
+        mapName: "Classic Rift",
+        participants,
+        gameStartTime: Date.now(),
       }),
     ).toThrow();
   });

@@ -12,6 +12,8 @@ export type Rune = z.infer<typeof RuneSchema>;
 export type Champion = z.infer<typeof ChampionSchema>;
 export const ChampionSchema = z.object({
   riotIdGameName: z.string().min(0),
+  riotIdTagLine: z.string().min(1).optional(),
+  championId: z.number().int().positive().optional(),
   championName: z.string().min(0),
   kills: z.number().nonnegative(),
   deaths: z.number().nonnegative(),
