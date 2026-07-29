@@ -332,16 +332,36 @@ Worker-thread performance change did not improve the delivered stream.
 - Passed MK64 backend typecheck, lint, and 137 tests; MK64 root checks;
   discord-video-stream build, typecheck, and 60 tests; and streambot typecheck,
   lint, and 384 package tests.
+- Published code commit `15ac4124b` to PR #1779 and deployed its immutable
+  image to the live Kubernetes workload for acceptance.
+- Ran a 30-second, four-controller live VAAPI acceptance sample. It sustained
+  29.95 emulator fps, reported hardware encoding engaged, recorded 903 ticks,
+  populated packet/send and input-to-stream histograms, and recorded zero
+  correlation failures.
+- Reproduced the reported lag objectively: packet-ready, send-complete, and
+  input-to-stream p95 values fell in the `<=2500 ms` bucket. Signed A/V content
+  offset averaged `-198.5 ms` (`-263.6` to `-180.8 ms`), meaning video content
+  lagged audio at the server-owned stream boundary.
+- Recorded the calibration output as an
+  [asciinema artifact](https://public.sjer.red/pr/assets/1779/mk64-stream-latency.cast.html).
+- Stopped the Discord test session, closed the browser and port forwards, and
+  restored Argo CD automated reconciliation. The Application returned to
+  `Synced / Healthy` on declared image `2.0.0-6874`.
 
 ### Remaining
 
-- [ ] Publish the updated PR and restore the temporary acceptance deployment.
-- [ ] Exercise the passive metrics on the live VAAPI stream and record the
-      resulting baseline.
-- [ ] Restore normal Argo CD reconciliation after live acceptance.
+- [ ] Wait for replacement current-head Buildkite CI and human review of
+      PR #1779.
+- [ ] Use the new evidence to design the separate video-latency reduction; this
+      plan measures and attributes latency but does not change buffering policy.
 
 ### Caveats
 
 - The ROM-backed and live VAAPI checks are not CI-portable.
 - The synthetic calibration validates the same H.264/Opus/NUT media boundary
   but uses the software encoder locally; VAAPI is covered by the live run.
+- Prometheus histogram quantiles report the configured bucket boundary, so the
+  live `2500 ms` p95 values are upper bounds rather than exact percentiles.
+- Discord transport and client playback remain intentionally excluded. The
+  measured `-198.5 ms` offset and stream delays exist before Discord receives
+  the RTP packets.
