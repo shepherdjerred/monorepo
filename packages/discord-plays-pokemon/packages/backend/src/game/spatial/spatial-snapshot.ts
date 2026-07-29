@@ -25,6 +25,11 @@ const PLAYER_AVATAR_FLAGS_OFFSET = 0x00;
 // PlayerAvatar size — well over the fields we read. SaveBlock1 unused here
 // (we get position + map from the player's ObjectEvent).
 const PLAYER_AVATAR_MIN_SIZE = 0x06;
+const SAVE_BLOCK_1_LOCATION_OFFSET = 0x04;
+const WARP_DATA_MAP_GROUP_OFFSET = 0x00;
+const WARP_DATA_MAP_NUM_OFFSET = 0x01;
+const SAVE_BLOCK_1_LOCATION_MIN_SIZE =
+  SAVE_BLOCK_1_LOCATION_OFFSET + WARP_DATA_MAP_NUM_OFFSET + 1;
 
 // ObjectEvent field offsets (see include/global.fieldmap.h struct ObjectEvent).
 // /*0x00*/ u32 active:1, ... (bit 0 of byte 0)
@@ -121,16 +126,17 @@ function decodeFacing(raw: number): Facing {
 // surface. The ON_FOOT / CONTROLLABLE / FORCED flags exist on the same byte
 // but all collapse to "on foot" in our label set (the AI only cares about
 // the visible distinct modes), so we don't pull them in here.
-const PA_FLAG_MACH_BIKE = 0x01;
-const PA_FLAG_ACRO_BIKE = 0x02;
-const PA_FLAG_SURFING = 0x04;
-const PA_FLAG_UNDERWATER = 0x08;
-const PA_FLAG_DASH = 0x40;
+const PA_FLAG_MACH_BIKE = 0x02;
+const PA_FLAG_ACRO_BIKE = 0x04;
+const PA_FLAG_SURFING = 0x08;
+const PA_FLAG_UNDERWATER = 0x10;
+const PA_FLAG_DASH = 0x80;
 
 function describeMovementMode(flags: number): string {
   if ((flags & PA_FLAG_SURFING) !== 0) return "surfing";
   if ((flags & PA_FLAG_UNDERWATER) !== 0) return "diving";
-  if ((flags & (PA_FLAG_MACH_BIKE | PA_FLAG_ACRO_BIKE)) !== 0) return "biking";
+  if ((flags & PA_FLAG_MACH_BIKE) !== 0) return "mach bike";
+  if ((flags & PA_FLAG_ACRO_BIKE) !== 0) return "acro bike";
   if ((flags & PA_FLAG_DASH) !== 0) return "running";
   return "on foot";
 }
@@ -186,14 +192,27 @@ export function readSpatialSnapshot(
     return null;
   }
 
+  const saveBlock1 = reader.u32(symbols.gSaveBlock1Ptr);
+  if (
+    !validPointer(saveBlock1, SAVE_BLOCK_1_LOCATION_MIN_SIZE, reader.byteLength)
+  ) {
+    return null;
+  }
   const flags = reader.u8(avatar + PLAYER_AVATAR_FLAGS_OFFSET);
 
   const x = reader.s16(playerBase + OE_CURRENT_COORDS_X_OFFSET);
   const y = reader.s16(playerBase + OE_CURRENT_COORDS_Y_OFFSET);
   const facingWord = reader.u16(playerBase + OE_FACING_OFFSET);
   const facing = decodeFacing(facingWord & OE_FACING_MASK);
-  const mapGroup = reader.u8(playerBase + OE_MAP_GROUP_OFFSET);
-  const mapNum = reader.u8(playerBase + OE_MAP_NUM_OFFSET);
+  // The player's ObjectEvent retains the old map identity across seamless
+  // camera connections. SaveBlock1.location is what the engine itself updates
+  // in LoadMapFromCameraTransition and is authoritative for the current map.
+  const mapGroup = reader.u8(
+    saveBlock1 + SAVE_BLOCK_1_LOCATION_OFFSET + WARP_DATA_MAP_GROUP_OFFSET,
+  );
+  const mapNum = reader.u8(
+    saveBlock1 + SAVE_BLOCK_1_LOCATION_OFFSET + WARP_DATA_MAP_NUM_OFFSET,
+  );
   const onTileBehaviorRaw = reader.u8(playerBase + OE_METATILE_BEHAVIOR_OFFSET);
 
   // Walk the ObjectEvent array and pick out active, same-map, non-invisible,

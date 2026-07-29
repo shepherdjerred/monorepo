@@ -99,7 +99,16 @@ if (import.meta.main) {
     upstream.commit,
   ]);
   const makefile = await Bun.file(`${workDirectory}/Makefile`).text();
-  if (!makefile.includes("export=gSaveBlock2Ptr")) {
+  const hasExtraExports = makefile.includes("export=gSaveBlock2Ptr");
+  const hasObservationBridge = await Bun.file(
+    `${workDirectory}/src/wasm_observation.c`,
+  ).exists();
+  if (hasExtraExports !== hasObservationBridge) {
+    throw new Error(
+      `Cached wasm source at ${workDirectory} has an incomplete patch series; use a fresh WORKDIR`,
+    );
+  }
+  if (!hasExtraExports) {
     for (const patch of new Bun.Glob("*.patch").scanSync({
       cwd: `${root}/wasm-src/patches`,
       absolute: true,

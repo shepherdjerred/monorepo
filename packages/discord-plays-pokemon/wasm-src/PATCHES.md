@@ -41,9 +41,9 @@ wasm-src/
 
 Applied in order with `patch -p1` (paths are `a/… b/…`):
 
-| Patch                      | Touches    | What it does                                                                                                                                                                                                                                                                                                                 |
-| -------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `0001-extra-exports.patch` | `Makefile` | Adds `--export=gSaveBlock2Ptr --export=gPlayerParty --export=gPlayerPartyCount --export=gBattleResults` to the `wasm-ld` link line. ottohg's link line is a curated list (not `--export-all`), so without this `packages/backend/src/emulator/symbols.ts` resolves null for every game-state global except `gSaveBlock1Ptr`. |
+| Patch                      | Touches                              | What it does                                                                                                                                                                                                                                       |
+| -------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0001-extra-exports.patch` | `Makefile`, `src/wasm_observation.c` | Adds the game-state global exports plus `WasmReadObservation`. The versioned 32-byte observation bridge reports authoritative phase, field-input readiness, map/position/facing, movement state, and directional collision from the engine itself. |
 
 ## Build
 
@@ -64,7 +64,8 @@ Applied in order with `patch -p1` (paths are `a/… b/…`):
 The image build boots the freshly-built wasm and runs two tests against it:
 
 - `packages/backend/src/emulator/emulator-symbols.integration.test.ts` — every
-  `GAME_SYMBOL_NAMES` global resolves and snapshot reads don't throw.
+  required global/function resolves, the observation ABI validates, and
+  snapshot reads don't throw.
 - `packages/backend/src/emulator/audio/audio-fingerprint.test.ts` — captured PCM
   matches the committed mel/chroma/onset baseline.
 

@@ -37,6 +37,9 @@ describeWasm("emulator game symbols (real wasm)", () => {
     // contract is "doesn't throw", which is what the watcher relies on.
     expect(() => readGameSnapshot(reader, symbols)).not.toThrow();
     expect(() => readSpatialSnapshot(reader, symbols)).not.toThrow();
+    const bootObservation = emulator.engineObservation();
+    expect(bootObservation.version).toBe(1);
+    expect(bootObservation.size).toBe(32);
 
     // Run a few hundred frames and confirm reads stay safe as the game runs.
     emulator.start();
@@ -50,5 +53,8 @@ describeWasm("emulator game symbols (real wasm)", () => {
     expect(emulator.frame).toBeGreaterThan(target - 1);
     expect(() => readGameSnapshot(reader, symbols)).not.toThrow();
     expect(() => readSpatialSnapshot(reader, symbols)).not.toThrow();
+    expect(emulator.engineObservation().frame).toBeGreaterThan(
+      bootObservation.frame,
+    );
   }, 30_000);
 });

@@ -5,10 +5,15 @@ type RequestBody = Record<string, unknown>;
 function usage(): string {
   return [
     "Usage:",
+    "  pokemonctl observe [--screenshot] [--full]",
+    "  pokemonctl tap <button> [--repeat n]",
+    "  pokemonctl move <north|south|west|east> [--tiles n]",
+    "  pokemonctl interact [north|south|west|east|ahead]",
+    "  pokemonctl wait --until <ready|stable|phase-change> [--timeout-ms n]",
     "  pokemonctl screenshot",
     "  pokemonctl press <button> [--quantity n] [--hold-ms n]",
     '  pokemonctl chord "<commands>"',
-    "  pokemonctl wait --seconds n",
+    "  pokemonctl wait --seconds n  # compatibility delay",
     "  pokemonctl status",
     "  pokemonctl state",
     "  pokemonctl history [--limit n]",
@@ -113,6 +118,69 @@ async function handlePress(args: string[]): Promise<void> {
   );
 }
 
+async function handleObserve(args: string[]): Promise<void> {
+  const params = new URLSearchParams();
+  if (args.includes("--screenshot")) params.set("screenshot", "true");
+  if (args.includes("--full")) params.set("full", "true");
+  const query = params.size === 0 ? "" : `?${params.toString()}`;
+  printJsonText(await request("GET", `/observe${query}`));
+}
+
+async function handleTap(args: string[]): Promise<void> {
+  const button = args.at(0);
+  if (button === undefined) {
+    throw new Error("tap requires a button");
+  }
+  const repeat = readNumberFlag(args, "--repeat") ?? 1;
+  printJsonText(await request("POST", "/tap", { command: button, repeat }));
+}
+
+function normalizeDirection(value: string): string {
+  switch (value.toLowerCase()) {
+    case "north":
+    case "up":
+    case "u":
+      return "north";
+    case "south":
+    case "down":
+    case "d":
+      return "south";
+    case "west":
+    case "left":
+    case "l":
+      return "west";
+    case "east":
+    case "right":
+    case "r":
+      return "east";
+    default:
+      throw new Error(`invalid direction: ${value}`);
+  }
+}
+
+async function handleMove(args: string[]): Promise<void> {
+  const rawDirection = args.at(0);
+  if (rawDirection === undefined) {
+    throw new Error("move requires a direction");
+  }
+  const direction = normalizeDirection(rawDirection);
+  const tiles = readNumberFlag(args, "--tiles") ?? 1;
+  printJsonText(await request("POST", "/move", { direction, tiles }));
+}
+
+async function handleInteract(args: string[]): Promise<void> {
+  const rawDirection = args.at(0);
+  const direction =
+    rawDirection === undefined || rawDirection === "ahead"
+      ? undefined
+      : normalizeDirection(rawDirection);
+  printJsonText(
+    await request("POST", "/interact", {
+      ...(direction === undefined ? {} : { direction }),
+    }),
+  );
+}
+
 async function handleChord(args: string[]): Promise<void> {
   const value = args.at(0);
   if (value === undefined) {
@@ -123,11 +191,22 @@ async function handleChord(args: string[]): Promise<void> {
 
 async function handleWait(args: string[]): Promise<void> {
   const seconds = readNumberFlag(args, "--seconds");
-  if (seconds === undefined) {
-    throw new Error("wait requires --seconds");
+  if (seconds !== undefined) {
+    await Bun.sleep(seconds * 1000);
+    printJson({ ok: true, waitedSeconds: seconds });
+    return;
   }
-  await Bun.sleep(seconds * 1000);
-  printJson({ ok: true, waitedSeconds: seconds });
+  const untilIndex = args.indexOf("--until");
+  const until = args.at(untilIndex + 1);
+  if (
+    untilIndex === -1 ||
+    (until !== "ready" && until !== "stable" && until !== "phase-change")
+  ) {
+    throw new Error("wait requires --until ready, stable, or phase-change");
+  }
+  const timeoutMs = readNumberFlag(args, "--timeout-ms") ?? 10_000;
+  const maxFrames = Math.max(1, Math.round(timeoutMs / (1000 / 59.7275)));
+  printJsonText(await request("POST", "/wait", { until, maxFrames }));
 }
 
 async function handleHistory(args: string[]): Promise<void> {
@@ -192,6 +271,10 @@ async function handleWrite(args: string[]): Promise<void> {
 }
 
 const HANDLERS = new Map<string, (args: string[]) => Promise<void>>([
+  ["observe", handleObserve],
+  ["tap", handleTap],
+  ["move", handleMove],
+  ["interact", handleInteract],
   [
     "screenshot",
     async () => {

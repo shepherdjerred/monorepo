@@ -10,6 +10,9 @@ import {
   type GoalControlServerOptions,
 } from "./control-context.ts";
 import { jsonResponse, routeRequest } from "./control-routes.ts";
+import { GameController } from "./game-controller.ts";
+import { readGameObservation } from "./game-observation.ts";
+import { enqueueCommand } from "#src/emulator/command-sink.ts";
 
 export type GoalControlServer = ReturnType<typeof Bun.serve>;
 
@@ -32,9 +35,19 @@ export function startGoalControlServer(
   options: GoalControlServerOptions,
 ): GoalControlServer {
   const timing = timingFromConfig(options.config);
+  const controller = new GameController({
+    observe: () => readGameObservation(options.emulator),
+    press: async (command) => {
+      await enqueueCommand(options.emulator, command, timing);
+    },
+    waitFrames: async (frames) => {
+      await options.emulator.queuePress(0, frames, 0);
+    },
+  });
   const context: GoalControlContext = {
     ...options,
     timing,
+    controller,
     fs: { memoryRead: false },
   };
 

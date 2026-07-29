@@ -24,6 +24,11 @@ import {
 import { logger } from "#src/logger.ts";
 import { createMemoryReader, type MemoryReader } from "./memory.ts";
 import { createGameSymbols, type GameSymbols } from "./symbols.ts";
+import {
+  decodeEngineObservation,
+  ENGINE_OBSERVATION_SIZE,
+  type EngineObservationV1,
+} from "./engine-observation.ts";
 
 // Minimal view of the wasm exports we depend on, validated at runtime so we
 // never assert types we haven't checked.
@@ -31,6 +36,7 @@ type WasmExports = {
   memory: WebAssembly.Memory;
   agbMain: () => void;
   runFrame: () => void;
+  readObservation: () => number;
 };
 
 function requireFunction(
@@ -46,6 +52,25 @@ function requireFunction(
   // Reflect.apply lets us invoke the validated export without a type assertion.
   return () => {
     Reflect.apply(value, undefined, []);
+  };
+}
+
+function requireNumberFunction(
+  exports: Bun.WebAssembly.Exports,
+  name: string,
+): () => number {
+  const value = exports[name];
+  if (typeof value !== "function") {
+    throw new TypeError(
+      `wasm module is missing required function export: ${name}`,
+    );
+  }
+  return () => {
+    const result: unknown = Reflect.apply(value, undefined, []);
+    if (typeof result !== "number" || !Number.isInteger(result)) {
+      throw new TypeError(`wasm export ${name} did not return an integer`);
+    }
+    return result;
   };
 }
 
@@ -110,6 +135,10 @@ export class Emulator {
       memory,
       agbMain: requireFunction(instance.exports, "AgbMain"),
       runFrame: requireFunction(instance.exports, "WasmRunFrame"),
+      readObservation: requireNumberFunction(
+        instance.exports,
+        "WasmReadObservation",
+      ),
     };
 
     // Views must be refreshed after instantiation, before any BIOS import or
@@ -171,6 +200,19 @@ export class Emulator {
     }
     this.cachedGameSymbols ??= createGameSymbols(this.rawExports);
     return this.cachedGameSymbols;
+  }
+
+  /** Versioned, engine-authored phase/readiness/spatial observation. */
+  engineObservation(): EngineObservationV1 {
+    const exports = this.exports;
+    if (exports === undefined) {
+      throw new Error("emulator is not initialized");
+    }
+    const pointer = exports.readObservation();
+    const reader = this.memoryReader();
+    return decodeEngineObservation(
+      reader.bytes(pointer, ENGINE_OBSERVATION_SIZE),
+    );
   }
 
   /** Render the current frame to a fresh RGBA buffer (for screenshots). */
