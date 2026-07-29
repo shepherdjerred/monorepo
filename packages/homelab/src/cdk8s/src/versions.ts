@@ -76,7 +76,7 @@ const versions = {
   // not managed by renovate — updated by version commit-back
   // Self-built from pinned upstream source with the Chinese Google Books patch.
   "shepherdjerred/bindery":
-    "2.0.0-6733@sha256:8f9930bde79ab2034c308f5618c9481044796989e1be87046457604a2a176cba",
+    "2.0.0-6744@sha256:0904c09ca30be4211e3109bb8fd9d259180e91129bd1ce52a66b7d75cbcb3f69",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   // Calibre-Web Automated — library + ingest + Send-to-Kindle path
   "crocodilestick/calibre-web-automated":
@@ -320,7 +320,7 @@ const versions = {
   // Custom temporal-worker image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/temporal-worker":
-    "2.0.0-6733@sha256:e922c0b1fdcf96a1f0db89566dc09a1dabe25de3c799c834052e9bd70a2d69d2",
+    "2.0.0-6744@sha256:7455ba5a50a1a87202343a700f650012a446d6e2ae649bce3a6f8639c74ff102",
   // Custom TRMNL dashboard image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/trmnl-dashboard":
