@@ -140,14 +140,14 @@ resource "buildkite_pipeline" "reporting" {
   YAML
 }
 
-# Keep the recurring trigger disabled until the pipeline succeeds manually.
-# The rollout branch enables it after that evidence exists.
+# The recurring trigger was enabled after the dedicated pipeline succeeded
+# manually on the rollout branch.
 resource "buildkite_pipeline_schedule" "reporting_daily" {
   pipeline_id = buildkite_pipeline.reporting.id
   label       = "Daily complete test and coverage reporting"
-  cronline    = "0 3 * * *"
+  cronline    = "0 3 * * * America/Los_Angeles"
   branch      = "main"
   commit      = "HEAD"
   message     = "Daily complete test and coverage reporting"
-  enabled     = false
+  enabled     = true
 }
