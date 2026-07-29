@@ -60,6 +60,9 @@ export type GoalBenchmarkTelemetry = {
   ignoredInputs: number;
   screenshots: number;
   knowledgeQueries: number;
+  compactObservations: number;
+  fullObservations: number;
+  toolOutputCharacters: number;
   errors: number;
   inputTokens: number;
   cachedInputTokens: number;

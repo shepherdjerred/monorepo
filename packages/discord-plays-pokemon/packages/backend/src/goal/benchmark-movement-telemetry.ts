@@ -70,56 +70,42 @@ const DIRECTIONAL_ARGUMENTS = new Set([
   "r",
 ]);
 
-export function directionalMovementObservation(
+export function directionalMovementObservations(
   command: string,
   output: string,
-): MovementObservation | undefined {
-  const structured = structuredMovementObservation(output);
-  if (structured !== undefined) {
-    const structuredDecision = structuredMovementDecision(structured);
-    if (structuredDecision === true) return structured.observation;
-    if (structuredDecision === false) return undefined;
-    if (
-      isDirectionalMovementCommand(command) &&
-      structured.fieldContext !== false
-    ) {
-      return structured.observation;
+): readonly MovementObservation[] {
+  const structured = structuredMovementObservations(output);
+  const observations: MovementObservation[] = [];
+  for (const entry of structured) {
+    const structuredDecision = structuredMovementDecision(entry);
+    if (structuredDecision === true) {
+      observations.push(entry.observation);
+      continue;
     }
-    return undefined;
+    if (
+      structuredDecision === undefined &&
+      isDirectionalMovementCommand(command) &&
+      entry.fieldContext !== false
+    ) {
+      observations.push(entry.observation);
+    }
   }
-  if (!isDirectionalMovementCommand(command)) return undefined;
+  if (structured.length > 0) return observations;
+  if (!isDirectionalMovementCommand(command)) return [];
   const locations = legacyLocations(output);
-  if (locations.length === 0) return undefined;
-  return {
-    before: locations.length > 1 ? locations.at(0) : undefined,
-    after: locations.at(-1),
-    stopped: false,
-  };
+  if (locations.length === 0) return [];
+  return [
+    {
+      before: locations.length > 1 ? locations.at(0) : undefined,
+      after: locations.at(-1),
+      stopped: false,
+    },
+  ];
 }
 
-export function positionLoopOccurred(
-  state: MovementLoopState,
-  observation: MovementObservation,
-): boolean {
-  const before = observation.before ?? state.lastPosition;
-  const after = observation.after;
-  if (before !== undefined) {
-    state.visitedPositions.add(positionKey(before));
-  }
-  if (after === undefined) return false;
-  const unchanged =
-    before !== undefined && positionKey(before) === positionKey(after);
-  const returned = !unchanged && state.visitedPositions.has(positionKey(after));
-  state.visitedPositions.add(positionKey(after));
-  state.lastPosition = after;
-  return unchanged || returned;
-}
-
-function structuredMovementObservation(
-  output: string,
+function movementObservation(
+  parsed: unknown,
 ): StructuredMovementObservation | undefined {
-  const parsed = parseJsonOutput(output);
-  if (parsed === undefined) return undefined;
   const outer = RecordSchema.safeParse(parsed);
   if (!outer.success) return undefined;
   const candidate = outer.data["outcome"] ?? outer.data;
@@ -159,6 +145,58 @@ function structuredMovementObservation(
     fieldContext:
       fieldContext(outcome.data.before) ?? fieldContext(outcome.data.after),
   };
+}
+
+function structuredMovementObservations(
+  output: string,
+): readonly StructuredMovementObservation[] {
+  const observations: StructuredMovementObservation[] = [];
+  for (const parsed of parseJsonOutputs(output)) {
+    const observation = movementObservation(parsed);
+    if (observation !== undefined) observations.push(observation);
+  }
+  return observations;
+}
+
+function parseJsonOutputs(output: string): readonly unknown[] {
+  const wholeOutput = parseJsonValue(output);
+  if (wholeOutput !== undefined) return [wholeOutput];
+  const parsed: unknown[] = [];
+  for (const line of output.split("\n")) {
+    const value = parseJsonValue(line);
+    if (value !== undefined) parsed.push(value);
+  }
+  return parsed;
+}
+
+function parseJsonValue(output: string): unknown {
+  const trimmed = output.trim();
+  const firstBrace = trimmed.indexOf("{");
+  const lastBrace = trimmed.lastIndexOf("}");
+  if (firstBrace === -1 || lastBrace < firstBrace) return undefined;
+  try {
+    return JSON.parse(trimmed.slice(firstBrace, lastBrace + 1));
+  } catch {
+    return undefined;
+  }
+}
+
+export function positionLoopOccurred(
+  state: MovementLoopState,
+  observation: MovementObservation,
+): boolean {
+  const before = observation.before ?? state.lastPosition;
+  const after = observation.after;
+  if (before !== undefined) {
+    state.visitedPositions.add(positionKey(before));
+  }
+  if (after === undefined) return false;
+  const unchanged =
+    before !== undefined && positionKey(before) === positionKey(after);
+  const returned = !unchanged && state.visitedPositions.has(positionKey(after));
+  state.visitedPositions.add(positionKey(after));
+  state.lastPosition = after;
+  return unchanged || returned;
 }
 
 function structuredMovementDecision(
@@ -240,18 +278,6 @@ function movementPosition(value: unknown): MovementPosition | undefined {
       : undefined);
   if (map === undefined) return undefined;
   return { map: String(map), x: position.x, y: position.y };
-}
-
-function parseJsonOutput(output: string): unknown {
-  const trimmed = output.trim();
-  const firstBrace = trimmed.indexOf("{");
-  const lastBrace = trimmed.lastIndexOf("}");
-  if (firstBrace === -1 || lastBrace < firstBrace) return undefined;
-  try {
-    return JSON.parse(trimmed.slice(firstBrace, lastBrace + 1));
-  } catch {
-    return undefined;
-  }
 }
 
 function legacyLocations(output: string): MovementPosition[] {

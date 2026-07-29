@@ -65,13 +65,60 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - Deliver the work as a small git-spice stack with focused verification and
   visual evidence.
 
+### 5. Approved reliability follow-up
+
+Implement the remaining qualitative gaps as three additional git-spice layers.
+The controls provide bounded, inspectable primitives; the model remains
+responsible for game strategy and route choice.
+
+1. **Benchmark truth**
+   - Require the loaded save to reach a continued, input-ready overworld and
+     remain spatially stable across consecutive samples before starting a run.
+   - Parse every JSON value from chained `pokemonctl` output instead of treating
+     an entire shell response as one value.
+   - Count compact observations, full observations, tool-output characters,
+     movement attempts, stops, repeated-position loops, and explicit ignored
+     inputs exactly.
+   - Replay the existing successful trace through the corrected parser. Do not
+     spend model quota on repeat trials in this phase.
+2. **Semantic gameplay**
+   - Make compact observations decision-complete for normal play while keeping
+     `observe --full` byte-for-byte diagnostic.
+   - Add `map exits` plus bounded `navigate --exit <id>`. The command may inspect
+     and traverse one selected current-map exit; it must not choose a route or
+     chain maps.
+   - Add named battle actions for move, run, item, switch, and target selection.
+     Each action executes the caller's explicit choice and settles at the next
+     authoritative decision point; it must not choose battle strategy.
+3. **Decision policy**
+   - Teach the agent to inspect compact state first, identify prerequisites
+     before moving, and issue one targeted knowledge query early when the
+     acquisition path is unknown.
+   - Rank knowledge excerpts by coverage, proximity, and acquisition evidence
+     so the decisive reward paragraph is returned rather than a prior incidental
+     mention.
+   - Prefer semantic exit and battle actions, one gameplay-changing operation
+     per shell command, and the settled action result over a redundant appended
+     observation.
+
+Acceptance is focused package tests, typecheck, lint, staged-file checks, a
+rebuilt real-WASM ABI/smoke gate for C observation changes, CLI recordings for
+the visible semantic controls, current-head Buildkite, and clean review threads
+for every stack layer. Repeat model measurements and Kubernetes mutation remain
+deferred by explicit direction.
+
 ## Remaining
 
 - [x] Implement and verify the observation/control foundation.
 - [x] Implement and verify the compact prompt and benchmark harness.
 - [x] Implement and verify the knowledge corpus, retrieval, and skills.
-- [ ] Complete repeated local evaluation and iterate on failures.
 - [x] Publish the restacked #1803/#1805 heads and record replacement CI/review.
+- [x] Implement benchmark-truth corrections.
+- [ ] Implement and publish compact semantic exits and named battle actions.
+- [ ] Implement and publish early-prerequisite prompt and excerpt ranking.
+- [x] Replay the existing successful trace through the corrected telemetry.
+- [ ] Complete focused, real-WASM, Buildkite, and review verification for all
+      new stack layers.
 
 ## Comment Log
 
@@ -204,6 +251,14 @@ system against a copied live save and the exact goal `get me a pokeman`.
   admitting later contamination. Path-like Codex binary arguments are
   normalized against the operator's original working directory before the
   worker switches to its runtime overlay; bare PATH commands remain unchanged.
+- 2026-07-29: Approved the qualitative reliability follow-up for gaps 2 through 6. Repeat paid measurements are deferred. Navigation is bounded to inspecting
+  and traversing a caller-selected current-map exit, battle commands execute
+  named caller choices, and neither capability may become a deterministic
+  solver.
+- 2026-07-29: The corrected parser replayed the existing successful candidate
+  trace without another model run. It reports 141 movement actions, 54 stops,
+  52 repeated-position loops, zero explicit ignored inputs, 44 compact
+  observations, 233 full observations, and 721,752 tool-output characters.
 
 ## Session Log — 2026-07-28
 
@@ -460,3 +515,33 @@ system against a copied live save and the exact goal `get me a pokeman`.
   `/tmp/pokemon-catch-measurement.pk4fVl/candidate-0665aa9/`.
 - The interrupted second run is not a valid model measurement and must not be
   included in the success-rate denominator.
+
+## Session Log — 2026-07-29 (benchmark truth)
+
+### Done
+
+- Tightened benchmark boot readiness to require a continued, input-ready,
+  stable overworld with initialized game, snapshot, spatial, and world evidence
+  on two consecutive emulator frames.
+- Parsed every structured JSON line from chained command output and counted
+  movement, stops, loops, and each explicit ignored-input occurrence.
+- Added compact/full observation invocation and exact completed tool-output
+  character telemetry to run artifacts and summaries.
+- Replayed the existing successful trace with corrected totals: 141 movement
+  actions, 54 stops, 52 loops, 44 compact observations, 233 full observations,
+  and 721,752 output characters.
+- Verified all 323 backend tests, typecheck, and lint.
+
+### Remaining
+
+- Publish the benchmark-truth stack layer and complete its current-head
+  Buildkite and review verification.
+- Implement the compact observation, selected-exit navigation, named battle
+  actions, prerequisite prompt, and knowledge-excerpt layers above it.
+
+### Caveats
+
+- Observation totals count explicit `pokemonctl observe` invocations in command
+  text; tool-output characters count completed aggregated output exactly once.
+- The replay is corrected analysis of an existing run, not a new reliability
+  measurement.

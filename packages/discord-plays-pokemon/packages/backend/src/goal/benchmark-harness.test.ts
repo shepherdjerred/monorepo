@@ -10,11 +10,11 @@ import {
   symlink,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
+import { summarizeCodexJsonl } from "./benchmark-codex-telemetry.ts";
 import {
   DEFAULT_BENCHMARK_GOAL,
   buildBenchmarkSummary,
   parseBenchmarkArgs,
-  summarizeCodexJsonl,
   type BenchmarkRunOutcome,
   type BenchmarkRunSummaryEntry,
 } from "./benchmark-harness.ts";
@@ -150,6 +150,9 @@ function benchmarkEntry(
       turns: 1,
       toolCalls: 2,
       errors: 0,
+      compactObservations: 1,
+      fullObservations: 2,
+      toolOutputCharacters: 1000,
       inputTokens: 100,
       outputTokens: 20,
       reasoningOutputTokens: 10,
@@ -485,6 +488,9 @@ describe("summarizeCodexJsonl", () => {
       ignoredInputs: 0,
       screenshots: 2,
       knowledgeQueries: 1,
+      compactObservations: 1,
+      fullObservations: 0,
+      toolOutputCharacters: 22,
       inputTokens: 100,
       cachedInputTokens: 80,
       outputTokens: 20,
@@ -1167,11 +1173,16 @@ test("harness-error lifecycle preserves the actual Codex exit code", () => {
   });
 });
 
-test("benchmark worker does not import runner-only benchmark helpers", async () => {
+test("benchmark worker imports only its worker-safe benchmark helper", async () => {
   const worker = await Bun.file(
     path.resolve(import.meta.dir, "../../scripts/goal-benchmark-worker.ts"),
   ).text();
-  expect(worker).not.toContain("#src/goal/benchmark-");
+  const benchmarkImports = [
+    ...worker.matchAll(/from "(#src\/goal\/benchmark-[^"]+)"/gu),
+  ].map((match) => match[1]);
+  expect(benchmarkImports).toEqual([
+    "#src/goal/benchmark-worker-boot-readiness.ts",
+  ]);
   expect(worker).toContain('started.kind === "missing_credential"');
   expect(worker).toContain(".some((entry) => entry.id === goalId)");
   expect(worker).not.toContain("helper_dir:");
@@ -1247,6 +1258,9 @@ describe("buildBenchmarkSummary", () => {
           turns: 2,
           toolCalls: 3,
           errors: 0,
+          compactObservations: 1,
+          fullObservations: 2,
+          toolOutputCharacters: 1000,
           inputTokens: 100,
           outputTokens: 20,
           reasoningOutputTokens: 10,
@@ -1263,6 +1277,9 @@ describe("buildBenchmarkSummary", () => {
           turns: 4,
           toolCalls: 5,
           errors: 1,
+          compactObservations: 3,
+          fullObservations: 4,
+          toolOutputCharacters: 2000,
           inputTokens: 200,
           outputTokens: 40,
           reasoningOutputTokens: 20,
@@ -1286,6 +1303,9 @@ describe("buildBenchmarkSummary", () => {
       turns: 6,
       toolCalls: 8,
       errors: 1,
+      compactObservations: 4,
+      fullObservations: 6,
+      toolOutputCharacters: 3000,
       inputTokens: 300,
       outputTokens: 60,
       reasoningOutputTokens: 30,

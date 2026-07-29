@@ -35,6 +35,7 @@ const config = [
         "src/goal/benchmark-evaluator.test.ts",
         "src/goal/benchmark-harness.test.ts",
         "src/goal/benchmark-save-oracle.test.ts",
+        "src/goal/benchmark-telemetry.test.ts",
         "src/goal/codex-jsonl.test.ts",
         "src/goal/codex-trace.test.ts",
         "src/goal/discord-message.test.ts",
@@ -57,7 +58,7 @@ const config = [
       ],
       // Test files are excluded from tsconfig (bun test globals aren't visible
       // to tsc), so they fall to the default project; raise the cap.
-      maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 50,
+      maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 60,
     },
   }),
   {
