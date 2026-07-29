@@ -74,7 +74,6 @@ describe("prepareStream audioInput", () => {
       const zeroAnalyzeIndexes = args.flatMap((arg, index) =>
         arg === "-analyzeduration" && args[index + 1] === "0" ? [index] : [],
       );
-
       expect(inputIndexes).toHaveLength(2);
       expect(noBufferIndexes).toHaveLength(2);
       expect(zeroAnalyzeIndexes).toHaveLength(2);

@@ -13,7 +13,7 @@ describe("buildAudioInputOptions", () => {
         sampleRate: 13_379,
         channels: 2,
       }),
-    ).toEqual(["-f", "f32le", "-ar", "13379", "-ac", "2"]);
+    ).toEqual(["-f", "f32le", "-ar", "13379", "-ac", "2", "-probesize", "32"]);
   });
 
   test("emits the ffmpeg raw-PCM flags for mario-kart's s16le format", () => {
@@ -23,7 +23,7 @@ describe("buildAudioInputOptions", () => {
         sampleRate: 44_100,
         channels: 2,
       }),
-    ).toEqual(["-f", "s16le", "-ar", "44100", "-ac", "2"]);
+    ).toEqual(["-f", "s16le", "-ar", "44100", "-ac", "2", "-probesize", "32"]);
   });
 });
 
@@ -43,6 +43,8 @@ describe("createAudioTransport", () => {
         "44100",
         "-ac",
         "2",
+        "-probesize",
+        "32",
       ]);
     } finally {
       transport.close();

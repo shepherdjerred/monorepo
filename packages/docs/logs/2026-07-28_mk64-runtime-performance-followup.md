@@ -140,12 +140,24 @@ Worker-thread performance change did not improve the delivered stream.
 - Added an argument-order regression test that requires one low-latency option
   set before each `-i`; passed all 60 `discord-video-stream` tests plus the 127
   backend tests, typecheck, and backend lint.
+- Published and deployed commit
+  `36495b83e2ede69b497b03c54afcd7d8a08cd5df`. The corrected option
+  placement was visible in the live command, but ffmpeg still consumed the
+  short synchronized pre-roll and polled for more audio while the video sink
+  remained backpressured. `/proc` confirmed an empty PCM socket receive queue
+  and a polling ffmpeg process.
+- Added `-probesize 32` (ffmpeg's minimum legal value) only to the two inputs
+  whose formats are fully declared: raw BGRA video and the shared raw-PCM audio
+  transport. This avoids weakening format discovery for container, HLS, or
+  other generic `minimizeLatency` callers.
+- Passed all 60 `discord-video-stream`, 9 `discord-plays-core`, and 127 MK64
+  backend tests plus typecheck and the configured package lint gates.
 
 ### Remaining
 
-- Commit and publish the corrected input-option placement, build and deploy an
-  immutable image from that PR head, restart the Discord session, and obtain
-  manual confirmation that audio is synchronized.
+- Commit and publish the raw-input probe bound, build and deploy an immutable
+  image from that PR head, restart the Discord session, and obtain manual
+  confirmation that audio is synchronized.
 - Fix the separate Worker teardown ordering error found when `/stop` ended the
   successful test session. It is tracked in
   [`mk64-worker-session-stop-reset-order`](../todos/mk64-worker-session-stop-reset-order.md).
@@ -177,6 +189,10 @@ Worker-thread performance change did not improve the delivered stream.
   for correct input initialization. Its first live candidate exposed that the
   nominal low-latency flags were attached after the input scope and therefore
   could not prevent the startup probe wall.
+- `analyzeduration=0` did not eliminate the byte-probe dependency by itself.
+  The probe-size override must remain scoped to explicitly typed raw inputs;
+  applying the minimum globally could break codec/container discovery for
+  other stream sources.
 - `/stop` completed and the stream shut down, but its asynchronous session-end
   callback ran after `WorkerEmulator.stop()` and logged
   `emulator worker is not running`. That distinct lifecycle defect is now

@@ -204,6 +204,10 @@ export class GameStreamer extends GameStreamerBase {
         `${String(WIDTH)}x${String(HEIGHT)}`,
         "-framerate",
         String(SRC_FPS),
+        // Raw BGRA is fully described above; the minimum legal probe size
+        // prevents ffmpeg waiting on a live pipe before it begins encoding.
+        "-probesize",
+        "32",
       ],
       // Raw-frame input → keep hardwareAcceleratedDecoding off; Encoders.vaapi()
       // then uploads frames to the GPU (format=nv12|vaapi, hwupload) and encodes
