@@ -53,6 +53,42 @@ describe("prepareStream audioInput", () => {
     }
   });
 
+  test("binds low-latency probe options to both live inputs", () => {
+    const { command, output, promise } = prepareStream("video.nut", {
+      includeAudio: true,
+      minimizeLatency: true,
+      audioInput: {
+        source: "tcp://127.0.0.1:1",
+        inputOptions: ["-f", "s16le", "-ar", "44100", "-ac", "2"],
+      },
+    });
+    promise.catch(() => {});
+    try {
+      const args = ffmpegArgs(command);
+      const inputIndexes = args.flatMap((arg, index) =>
+        arg === "-i" ? [index] : [],
+      );
+      const noBufferIndexes = args.flatMap((arg, index) =>
+        arg === "nobuffer" ? [index] : [],
+      );
+      const zeroAnalyzeIndexes = args.flatMap((arg, index) =>
+        arg === "-analyzeduration" && args[index + 1] === "0" ? [index] : [],
+      );
+      expect(inputIndexes).toHaveLength(2);
+      expect(noBufferIndexes).toHaveLength(2);
+      expect(zeroAnalyzeIndexes).toHaveLength(2);
+      expect(noBufferIndexes[0]).toBeLessThan(inputIndexes[0]);
+      expect(zeroAnalyzeIndexes[0]).toBeLessThan(inputIndexes[0]);
+      expect(noBufferIndexes[1]).toBeGreaterThan(inputIndexes[0]);
+      expect(noBufferIndexes[1]).toBeLessThan(inputIndexes[1]);
+      expect(zeroAnalyzeIndexes[1]).toBeGreaterThan(inputIndexes[0]);
+      expect(zeroAnalyzeIndexes[1]).toBeLessThan(inputIndexes[1]);
+    } finally {
+      killQuietly(command);
+      output.destroy();
+    }
+  });
+
   test("falls back to mapping audio from the primary input when audioInput is absent", () => {
     const { command, output, promise } = prepareStream("video.mkv", {
       includeAudio: true,

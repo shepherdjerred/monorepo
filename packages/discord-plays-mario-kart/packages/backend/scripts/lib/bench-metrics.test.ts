@@ -4,14 +4,18 @@ import { compareSummaries, renderCompareTable } from "./bench-compare.ts";
 import {
   BENCH_SUMMARY_VERSION,
   buildSummary,
-  counter,
   emptyGaugePoll,
-  gauge,
-  histogramQuantile,
   sampleGauges,
   type BenchSummary,
-  type ScrapedMetrics,
 } from "./bench-metrics.ts";
+import {
+  counter,
+  counterSum,
+  gauge,
+  histogramDeltaQuantile,
+  histogramQuantile,
+  type ScrapedMetrics,
+} from "./prometheus-metrics.ts";
 
 const fixturePath = path.join(
   import.meta.dirname,
@@ -57,6 +61,23 @@ describe("counter / gauge", () => {
     });
     expect(video).toBeGreaterThanOrEqual(0);
     expect(audio).toBeGreaterThanOrEqual(0);
+    expect(counterSum(m, "stream_send_late_frames_total")).toBe(video + audio);
+  });
+
+  it("matches metric and label names literally without dynamic regexes", () => {
+    const m: ScrapedMetrics = {
+      text: [
+        'safe_metric_total{kind="video",extra="kept"} 7',
+        'safe_metric_total{extra="kept",kind="audio"} 11',
+        "safe_metric_total_suffix 13",
+      ].join("\n"),
+      ts: 1_700_000_000_000,
+    };
+
+    expect(counter(m, "safe_metric_total", { kind: "video" })).toBe(7);
+    expect(counter(m, "safe_metric_total", { kind: "audio" })).toBe(11);
+    expect(counterSum(m, "safe_metric_total")).toBe(18);
+    expect(counter(m, "safe_metric_total.*")).toBe(0);
   });
 });
 
@@ -95,6 +116,38 @@ describe("histogramQuantile", () => {
     // depends on workload; just confirm we got a number, not NaN.
     expect(Number.isNaN(v)).toBe(false);
     expect(Number.isNaN(a)).toBe(false);
+  });
+
+  it("computes measurement-window quantiles from bucket deltas", () => {
+    const start: ScrapedMetrics = {
+      text: [
+        'latency_ms_bucket{kind="video",le="10"} 1000',
+        'latency_ms_bucket{kind="video",le="20"} 1000',
+        'latency_ms_bucket{kind="video",le="+Inf"} 1000',
+      ].join("\n"),
+      ts: 1,
+    };
+    const end: ScrapedMetrics = {
+      text: [
+        'latency_ms_bucket{kind="video",le="10"} 1000',
+        'latency_ms_bucket{kind="video",le="20"} 1010',
+        'latency_ms_bucket{kind="video",le="+Inf"} 1010',
+      ].join("\n"),
+      ts: 2,
+    };
+
+    expect(histogramQuantile(end, "latency_ms", 0.95, { kind: "video" })).toBe(
+      10,
+    );
+    expect(
+      histogramDeltaQuantile({
+        start,
+        end,
+        name: "latency_ms",
+        q: 0.95,
+        labels: { kind: "video" },
+      }),
+    ).toBe(20);
   });
 });
 
@@ -164,6 +217,13 @@ function makeSummary(overrides: Partial<BenchSummary["stream"]>): BenchSummary {
       send_frametime_ratio_audio_p95: 0.8,
       send_late_frames_video_delta: 0,
       send_late_frames_audio_delta: 0,
+      packet_ready_delay_video_p95: 33,
+      packet_ready_delay_audio_p95: 25,
+      send_complete_delay_video_p95: 50,
+      send_complete_delay_audio_p95: 33,
+      av_content_offset_ms: { min: -5, mean: 0, max: 5, last: 0 },
+      av_content_skew_abs_ms_p95: 8,
+      latency_correlation_failures_delta: 0,
       ...overrides,
     },
     input: {
@@ -171,6 +231,8 @@ function makeSummary(overrides: Partial<BenchSummary["stream"]>): BenchSummary {
       controller_rtt_ms_p95: 75,
       input_apply_delay_ms_p50: 5,
       input_apply_delay_ms_p95: 15,
+      input_to_packet_ready_ms_p95: 75,
+      input_to_send_complete_ms_p95: 100,
     },
   };
 }

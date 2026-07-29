@@ -37,10 +37,21 @@ const METRIC_DEFS: MetricDef[] = [
   { path: "stream.send_frametime_ratio_audio_p95", direction: "lower" },
   { path: "stream.send_late_frames_video_delta", direction: "lower" },
   { path: "stream.send_late_frames_audio_delta", direction: "lower" },
+  { path: "stream.packet_ready_delay_video_p95", direction: "lower" },
+  { path: "stream.packet_ready_delay_audio_p95", direction: "lower" },
+  { path: "stream.send_complete_delay_video_p95", direction: "lower" },
+  { path: "stream.send_complete_delay_audio_p95", direction: "lower" },
+  { path: "stream.av_content_skew_abs_ms_p95", direction: "lower" },
+  {
+    path: "stream.latency_correlation_failures_delta",
+    direction: "lower",
+  },
   { path: "input.controller_rtt_ms_p50", direction: "lower" },
   { path: "input.controller_rtt_ms_p95", direction: "lower" },
   { path: "input.input_apply_delay_ms_p50", direction: "lower" },
   { path: "input.input_apply_delay_ms_p95", direction: "lower" },
+  { path: "input.input_to_packet_ready_ms_p95", direction: "lower" },
+  { path: "input.input_to_send_complete_ms_p95", direction: "lower" },
 ];
 
 function dig(obj: unknown, dottedPath: string): number | null {

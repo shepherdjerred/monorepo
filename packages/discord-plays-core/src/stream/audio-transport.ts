@@ -26,6 +26,10 @@ export function buildAudioInputOptions(
     String(options.sampleRate),
     "-ac",
     String(options.channels),
+    // The format/rate/channels are explicit, so probing megabytes of a live
+    // PCM socket cannot discover anything and delays multi-input startup.
+    "-probesize",
+    "32",
   ];
 }
 

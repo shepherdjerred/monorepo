@@ -4,6 +4,8 @@ import {
   createStreamObserver,
   newSessionStats,
   parseTimemarkSeconds,
+  prometheusLatencyObservations,
+  resetStreamLatencyMetrics,
 } from "./stream-observer.ts";
 import { notifyStreamSessionEnded } from "./game-streamer.ts";
 import { registry } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
@@ -105,11 +107,21 @@ describe("notifyStreamSessionEnded", () => {
   });
 });
 
+describe("resetStreamLatencyMetrics", () => {
+  it("clears the signed A/V gauge between sessions", async () => {
+    prometheusLatencyObservations.observeAvContentOffset(-198.5);
+    expect(await metricValue("stream_av_content_offset_ms")).toBe(-198.5);
+
+    resetStreamLatencyMetrics();
+    expect(await metricValue("stream_av_content_offset_ms")).toBe(0);
+  });
+});
+
 describe("createStreamObserver", () => {
   it("derives the speed ratio from timemark advance vs wall clock", async () => {
     const clock = makeClock();
     const session = newSessionStats();
-    const observer = createStreamObserver(session, clock.now);
+    const observer = createStreamObserver(session, { now: clock.now });
 
     observer.onProgress?.({ timemark: "00:00:01.00" });
     clock.advance(2000);
@@ -123,7 +135,7 @@ describe("createStreamObserver", () => {
   it("does not write a ratio when the timemark has not advanced", async () => {
     const clock = makeClock();
     const session = newSessionStats();
-    const observer = createStreamObserver(session, clock.now);
+    const observer = createStreamObserver(session, { now: clock.now });
 
     observer.onProgress?.({ timemark: "00:00:05.00" });
     clock.advance(1000);
@@ -153,15 +165,21 @@ describe("createStreamObserver", () => {
 
     observer.onSendStats?.({
       kind: "video",
+      ptsMs: 0,
       ratio: 1.5,
       sendTime: 50,
       frametime: 33.3,
+      behindMs: 0,
+      syncWaitMs: 0,
     });
     observer.onSendStats?.({
       kind: "video",
+      ptsMs: 33.3,
       ratio: 0.5,
       sendTime: 16,
       frametime: 33.3,
+      behindMs: 0,
+      syncWaitMs: 0,
     });
 
     expect(
@@ -198,7 +216,9 @@ describe("createStreamObserver", () => {
     const warnSpy = spyOn(logger, "warn").mockImplementation(() => logger);
     try {
       const clock = makeClock();
-      const observer = createStreamObserver(newSessionStats(), clock.now);
+      const observer = createStreamObserver(newSessionStats(), {
+        now: clock.now,
+      });
 
       // Prime, then deliver slow samples: media advances 0.5s per 1s of wall
       // clock (ratio 0.5). Warn fires on the 5th consecutive slow sample.

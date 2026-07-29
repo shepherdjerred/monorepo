@@ -19,6 +19,8 @@ export type EmulatorFrame = {
   rgba: Buffer;
   height: number;
   seatActivity: boolean[];
+  contentTimeMs: number;
+  inputReceivedAtMs?: number;
 };
 
 type PendingRequest = {
@@ -46,7 +48,7 @@ export class WorkerEmulator {
   private readyReject: ((error: Error) => void) | undefined;
   private stoppedResolve: (() => void) | undefined;
   private onFrameCb: ((frame: EmulatorFrame) => void) | undefined;
-  private onAudioCb: ((pcm: Buffer) => void) | undefined;
+  private onAudioCb: ((pcm: Buffer, contentEndMs: number) => void) | undefined;
   private onSnapshotCb: ((snapshot: Mk64Snapshot) => void) | undefined;
   private lastHeight = HEIGHT;
   private lastSeatActivity: boolean[] = [];
@@ -240,7 +242,7 @@ export class WorkerEmulator {
     this.onFrameCb = cb;
   }
 
-  onAudio(cb: (pcm: Buffer) => void): void {
+  onAudio(cb: (pcm: Buffer, contentEndMs: number) => void): void {
     this.onAudioCb = cb;
   }
 
@@ -395,7 +397,7 @@ export class WorkerEmulator {
     if (cb !== undefined) {
       const pcm = bufferView(msg.pcm);
       this.safeInvoke("audio", () => {
-        cb(pcm);
+        cb(pcm, msg.contentEndMs);
       });
     }
   }
@@ -411,6 +413,10 @@ export class WorkerEmulator {
       rgba: bufferView(msg.rgba),
       height: msg.height,
       seatActivity: msg.seatActivity,
+      contentTimeMs: msg.contentTimeMs,
+      ...(msg.inputReceivedAtMs === undefined
+        ? {}
+        : { inputReceivedAtMs: msg.inputReceivedAtMs }),
     };
     this.lastHeight = msg.height;
     this.lastSeatActivity = msg.seatActivity;

@@ -43,6 +43,12 @@ automated gate; these harnesses are for driving the real game.
   address map.
 - **`e2e-input.ts`** / **`e2e-input-assert.ts`** — prove a web keypress reaches
   the game (frame-hash diff).
+- **`e2e-stream-latency.ts`** (`bun run e2e:stream-latency`) — encode
+  synchronized video flashes and audio chirps through the production
+  H.264/Opus/NUT pipeline, decode them, and report media delay and signed A/V
+  offset without including Discord. Positive A/V offset means audio lags.
+  `--audio-delay-ms` and `--video-delay-frames` inject known delays for analyzer
+  validation.
 - **`lib/harness.ts`** — reusable primitives: `resolveRom`, `bootEmulator`
   (sprint mode, deterministic per-tick), `driveUntil({schedule, until,
 timeoutFrames, onTick})`, `captureScreenshot({path, names, screenMode})`.
@@ -86,11 +92,30 @@ Diagnosis: `stream_sink_buffer_bytes` growing unbounded is the smoking gun;
 `stream_ffmpeg_speed_ratio` < 1 sustained; the `e2e:perf` harness drives only
 the emulator path (empty `onFrame`) so it can't exercise the sink.
 
+For server-owned latency attribution, use the stream observer metrics rather
+than visual estimates from Discord. `stream_packet_ready_delay_ms` and
+`stream_send_complete_delay_ms` cover raw-media availability to encoded packet
+readiness and RTP completion. `stream_input_to_packet_ready_ms` and
+`stream_input_to_send_complete_ms` correlate a controller receipt with the
+first video packet containing that state. `stream_av_content_offset_ms` is
+signed source-content skew (positive means audio lags); correlation misses must
+increment `stream_latency_correlation_failures_total` instead of silently
+guessing.
+
 Profiling: node-wide `pyroscope.ebpf` → Pyroscope has `mario-kart/main`, but
 ~64% of Bun samples are `[unknown]` (eBPF can't symbolize Bun's JIT'd JS/wasm).
 For symbolized JS, PR #1274 added on-demand capture:
 `kubectl exec -n mario-kart deploy/mario-kart -- sh -c 'kill -USR2 1'` runs the
 JSC sampling profiler for ~30s and writes folded stacks (speedscope) to the logs.
+
+**N64 timing contract:** `_runMainLoop` advances one 60 Hz vertical interrupt;
+MK64 renders one video frame every two interrupts. Pace core steps at 60 Hz,
+drain audio after every step, and emit video after every second step at 30 fps.
+Do not batch both core steps into one video deadline: the resulting 24–60 ms
+burst misses the 33 ms output budget. One core call per 30 fps output frame
+slows game time and 44.1 kHz PCM to 0.5×; ffmpeg then blocks on audio, queues
+video, and the frame gate drops roughly half the frames. The ROM-gated
+`e2e:audio --rom` duration assertion is the end-to-end guard.
 
 ## Conventions
 

@@ -91,6 +91,7 @@ describe("BaseMediaStream pacing telemetry", () => {
     await writeFrame(stream, 100 / 3);
     expect(stats).toHaveLength(2);
     for (const s of stats) {
+      expect(s.ptsMs).toBeGreaterThanOrEqual(0);
       expect(s.behindMs).toBe(0);
       expect(s.syncWaitMs).toBe(0);
       expect(s.syncEvent).toBeUndefined();

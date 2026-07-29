@@ -1,4 +1,10 @@
-import type { PassThrough, Readable } from "node:stream";
+import type { Readable } from "node:stream";
+
+export type FrameSink = Readable & {
+  readonly writableLength: number;
+  write: (frame: Buffer) => boolean;
+  end: () => void;
+};
 
 export type VoiceTarget = {
   readonly guildId: string;
@@ -6,7 +12,7 @@ export type VoiceTarget = {
 };
 
 export type EncoderHandles = {
-  readonly sink: PassThrough;
+  readonly sink: FrameSink;
   readonly output: Readable;
   readonly playing: Promise<void>;
 };
@@ -22,7 +28,7 @@ export type StreamTeardownReason =
 
 export type RawGoLiveContext = {
   readonly voiceTarget: VoiceTarget;
-  readonly frameSink: PassThrough | null;
+  readonly frameSink: FrameSink | null;
   readonly encoder: EncoderHandles | null;
   readonly retries: number;
   readonly maxRetries: number;
@@ -48,7 +54,7 @@ export type RawGoLiveEvent =
 export type DesiredStreamContext = {
   readonly desired: boolean;
   readonly voiceTarget: VoiceTarget;
-  readonly frameSink: PassThrough | null;
+  readonly frameSink: FrameSink | null;
   readonly maxRetries: number;
   readonly teardownReason: StreamTeardownReason | null;
 };
@@ -101,7 +107,7 @@ export type RawGoLiveDeps = {
     input: { readonly target: VoiceTarget },
     signal: AbortSignal,
   ) => Promise<void>;
-  readonly prepareEncoder: () => Promise<EncoderHandles>;
+  readonly prepareEncoder: (signal: AbortSignal) => Promise<EncoderHandles>;
   readonly runStream: (
     handles: { readonly output: Readable; readonly playing: Promise<void> },
     signal: AbortSignal,

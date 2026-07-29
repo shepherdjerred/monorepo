@@ -21,6 +21,29 @@ export type WasmHostRuntime = {
   readonly fs: object;
 };
 
+export const REQUIRED_EMSCRIPTEN_MODULE_FUNCTIONS = [
+  "_malloc",
+  "_neilSetRom",
+  "_neilGetVideoBuffer",
+  "_neilGetVideoHeight",
+  "_neilGetRdram",
+  "_neilGetSoundBufferResampledAddress",
+  "_neilGetAudioWritePosition",
+  "_runMainLoop",
+  "_neil_reset",
+  "_neil_send_mobile_controls_player",
+  "callMain",
+  "cwrap",
+] as const;
+
+export const REQUIRED_EMSCRIPTEN_FS_FUNCTIONS = [
+  "writeFile",
+  "mkdir",
+  "readFile",
+  "readdir",
+  "stat",
+] as const;
+
 // Shared no-op for the many browser/DOM methods the glue calls but we ignore.
 const noop = (): void => {
   /* intentional shim no-op */
@@ -212,6 +235,35 @@ function requireObject(value: unknown, name: string): object {
   return value;
 }
 
+export function requireEmscriptenFunction(
+  host: object,
+  name: string,
+): (...args: unknown[]) => unknown {
+  const fn: unknown = Reflect.get(host, name);
+  if (typeof fn !== "function") {
+    throw new TypeError(`emscripten export missing or not callable: ${name}`);
+  }
+  return (...args: unknown[]): unknown => Reflect.apply(fn, host, args);
+}
+
+/**
+ * Validate the complete facade consumed by N64Emulator. The ROM-free image
+ * smoke goes through this same function, so a generated image cannot pass CI
+ * with only a subset of the production Emscripten contract.
+ */
+export function validateWasmHostRuntime(runtime: WasmHostRuntime): void {
+  for (const name of REQUIRED_EMSCRIPTEN_MODULE_FUNCTIONS) {
+    requireEmscriptenFunction(runtime.module, name);
+  }
+  const heap: unknown = Reflect.get(runtime.module, "HEAPU8");
+  if (!(heap instanceof Uint8Array)) {
+    throw new TypeError("emscripten export missing or invalid: HEAPU8");
+  }
+  for (const name of REQUIRED_EMSCRIPTEN_FS_FUNCTIONS) {
+    requireEmscriptenFunction(runtime.fs, name);
+  }
+}
+
 /**
  * Load and initialize the browser-built Emscripten runtime in the headless
  * worker environment. This stops before callMain so image smoke can validate
@@ -244,8 +296,10 @@ export async function initializeWasmHost(
   (0, eval)(glue);
   await ready;
 
-  return {
+  const runtime: WasmHostRuntime = {
     module: requireObject(Reflect.get(globalThis, "Module"), "Module"),
     fs: requireObject(Reflect.get(globalThis, "FS"), "FS"),
   };
+  validateWasmHostRuntime(runtime);
+  return runtime;
 }

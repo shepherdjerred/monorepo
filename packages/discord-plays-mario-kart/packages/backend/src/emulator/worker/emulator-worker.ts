@@ -9,6 +9,7 @@
 // as it does on the main thread (wasm-host.ts's contract holds).
 import { N64Emulator } from "#src/emulator/n64-emulator.ts";
 import { readSnapshot } from "#src/emulator/mk64-memory.ts";
+import { MAX_AUDIO_IN_FLIGHT, MAX_FRAMES_IN_FLIGHT } from "./backpressure.ts";
 import { createBatchingMetricSink } from "./metric-bridge.ts";
 import { parseMainMessage } from "./protocol.ts";
 import type { WorkerInitOpts, WorkerToMain } from "./protocol.ts";
@@ -59,15 +60,12 @@ let snapshotEveryNFrames = 10;
 // same bound-latency-degrade-fps tradeoff the main-thread sink drop-gate makes.
 // ~3 frames ≈ 100ms at 30fps: enough headroom for normal jitter, small enough
 // to keep transferred RGBA buffers from accumulating.
-const MAX_FRAMES_IN_FLIGHT = 3;
 let framesInFlight = 0;
 
-// Same backpressure for audio. Without it the worker keeps draining PCM every
-// tick while a stalled main event loop can't dequeue, so chunks pile in the
-// port queue and later replay as stale audio into the transport sink (growing
-// A/V latency + memory). Bounded in step with frames so audio and video drop
-// together and stay roughly aligned under load.
-const MAX_AUDIO_IN_FLIGHT = 3;
+// Audio has the same ~100 ms time-based headroom as video. Since audio drains
+// at 60 Hz and video emits at 30 Hz, its chunk bound is twice the frame bound.
+// Without a bound, stale audio would accumulate in the port queue; with only
+// three chunks, PCM would drop after ~50 ms while video remained buffered.
 let audioInFlight = 0;
 
 function requireEmulator(): N64Emulator {
@@ -94,7 +92,7 @@ async function handleInit(opts: WorkerInitOpts): Promise<void> {
   });
   await emu.init();
 
-  emu.onFrame((rgba) => {
+  emu.onFrame((rgba, contentTimeMs) => {
     frameCount += 1;
     // Race snapshots decode in the worker (RDRAM lives here); only the small
     // decoded snapshot crosses to the main thread. A bad read must never break
@@ -117,23 +115,26 @@ async function handleInit(opts: WorkerInitOpts): Promise<void> {
       return;
     }
     framesInFlight += 1;
+    const inputReceivedAtMs = emu.takePendingFrameInputReceivedAtMs();
     post(
       {
         kind: "frame",
         rgba,
         height: emu.height,
         seatActivity: emu.seatActivity(),
+        contentTimeMs,
+        ...(inputReceivedAtMs === undefined ? {} : { inputReceivedAtMs }),
       },
       transferListFor(rgba),
     );
   });
-  emu.onAudio((pcm) => {
+  emu.onAudio((pcm, contentEndMs) => {
     if (audioInFlight >= MAX_AUDIO_IN_FLIGHT) {
       // Main thread is behind; drop this chunk rather than growing the queue.
       return;
     }
     audioInFlight += 1;
-    post({ kind: "audio", pcm }, transferListFor(pcm));
+    post({ kind: "audio", pcm, contentEndMs }, transferListFor(pcm));
   });
 
   emulator = emu;

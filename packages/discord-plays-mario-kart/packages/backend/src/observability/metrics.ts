@@ -56,7 +56,7 @@ export const streamFrameWriteMs = new Histogram({
 
 export const streamFramesDroppedTotal = new Counter({
   name: "stream_frames_dropped_total",
-  help: "Frames dropped before the ffmpeg pipe because the input queue exceeded its latency budget (encode/send path below realtime); keeps end-to-end lag bounded",
+  help: "Oldest queued raw-video frames evicted to keep video content near the continuous audio timeline",
   registers: [registry],
 });
 
@@ -100,5 +100,59 @@ export const streamSendLateFramesTotal = new Counter({
   name: "stream_send_late_frames_total",
   help: "Frames whose RTP send exceeded their frametime budget",
   labelNames: ["kind"],
+  registers: [registry],
+});
+
+const PIPELINE_LATENCY_BUCKETS = [
+  1, 2, 4, 8, 16, 25, 33, 50, 75, 100, 150, 250, 500, 1000, 2500,
+];
+
+export const streamPacketReadyDelayMs = new Histogram({
+  name: "stream_packet_ready_delay_ms",
+  help: "Time from raw media becoming available to its matching encoded NUT packet becoming ready, in ms",
+  buckets: PIPELINE_LATENCY_BUCKETS,
+  labelNames: ["kind"],
+  registers: [registry],
+});
+
+export const streamSendCompleteDelayMs = new Histogram({
+  name: "stream_send_complete_delay_ms",
+  help: "Time from raw media becoming available to its matching RTP send completing, in ms",
+  buckets: PIPELINE_LATENCY_BUCKETS,
+  labelNames: ["kind"],
+  registers: [registry],
+});
+
+export const streamInputToPacketReadyMs = new Histogram({
+  name: "stream_input_to_packet_ready_ms",
+  help: "Time from controller input receipt to the first matching encoded video packet becoming ready, in ms",
+  buckets: PIPELINE_LATENCY_BUCKETS,
+  registers: [registry],
+});
+
+export const streamInputToSendCompleteMs = new Histogram({
+  name: "stream_input_to_send_complete_ms",
+  help: "Time from controller input receipt to the first matching RTP video send completing, in ms",
+  buckets: PIPELINE_LATENCY_BUCKETS,
+  registers: [registry],
+});
+
+export const streamAvContentOffsetMs = new Gauge({
+  name: "stream_av_content_offset_ms",
+  help: "Video source-content offset minus audio source-content offset at encoded output, in ms; positive means audio content lags video",
+  registers: [registry],
+});
+
+export const streamAvContentSkewAbsMs = new Histogram({
+  name: "stream_av_content_skew_abs_ms",
+  help: "Absolute source-content offset between encoded video and audio packets, in ms",
+  buckets: [1, 2, 4, 8, 16, 25, 33, 50, 60, 75, 100, 150, 250, 500, 1000],
+  registers: [registry],
+});
+
+export const streamLatencyCorrelationFailuresTotal = new Counter({
+  name: "stream_latency_correlation_failures_total",
+  help: "Packets that could not be correlated with their raw media or send checkpoint",
+  labelNames: ["kind", "reason"],
   registers: [registry],
 });

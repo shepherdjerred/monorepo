@@ -72,6 +72,23 @@ describe("InputLatencyTracker", () => {
     expect(observed.toSorted((a, b) => a - b)).toEqual([5, 15]);
   });
 
+  it("reports the seat and original receipt timestamp for frame correlation", () => {
+    const clock = makeClock();
+    const tracker = new InputLatencyTracker(4, clock.now);
+    tracker.record(2, 900);
+    clock.advance(25);
+
+    const observed: {
+      delayMs: number;
+      seat: number;
+      receivedAtMs: number;
+    }[] = [];
+    tracker.drainAll((delayMs, seat, receivedAtMs) => {
+      observed.push({ delayMs, seat, receivedAtMs });
+    });
+    expect(observed).toEqual([{ delayMs: 125, seat: 2, receivedAtMs: 900 }]);
+  });
+
   it("clear drops a pending sample", () => {
     const clock = makeClock();
     const tracker = new InputLatencyTracker(4, clock.now);

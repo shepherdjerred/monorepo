@@ -7,13 +7,6 @@ type SmokeResult =
   | { readonly kind: "ready" }
   | { readonly kind: "error"; readonly message: string };
 
-function requireCallable(host: object, name: string): void {
-  const value: unknown = Reflect.get(host, name);
-  if (typeof value !== "function") {
-    throw new TypeError(`required runtime export is not callable: ${name}`);
-  }
-}
-
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
@@ -21,7 +14,7 @@ function errorMessage(error: unknown): string {
 async function initialize(data: unknown): Promise<void> {
   try {
     const { wasmDir } = RequestSchema.parse(data);
-    const { module, fs } = await initializeWasmHost({
+    await initializeWasmHost({
       wasmDir,
       print: (message) => {
         console.warn(`[n64 smoke] ${message}`);
@@ -30,10 +23,6 @@ async function initialize(data: unknown): Promise<void> {
         console.error(`[n64 smoke] ${message}`);
       },
     });
-
-    requireCallable(module, "_runMainLoop");
-    requireCallable(module, "callMain");
-    requireCallable(fs, "writeFile");
 
     const result: SmokeResult = { kind: "ready" };
     postMessage(result);

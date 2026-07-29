@@ -5,7 +5,12 @@ import {
   restoreHostToMemfs,
   type FsModule,
 } from "./save-persistence.ts";
-import { initializeWasmHost } from "./wasm-host.ts";
+import { initializeWasmHost, requireEmscriptenFunction } from "./wasm-host.ts";
+import {
+  shouldEmitVideoFrame,
+  viIntervalMs,
+  VI_TICKS_PER_VIDEO_FRAME,
+} from "./vi-timing.ts";
 import { buildConfigTxt } from "./config-txt.ts";
 import { drainRing } from "./audio-ring.ts";
 import {
@@ -83,19 +88,6 @@ export type N64EmulatorOptions = {
   metrics?: MetricSink;
 };
 
-function requireFn(
-  host: object,
-  name: string,
-): (...args: unknown[]) => unknown {
-  const f: unknown = Reflect.get(host, name);
-  if (typeof f !== "function") {
-    throw new TypeError(`emscripten export missing or not callable: ${name}`);
-  }
-  return (...args: unknown[]): unknown => {
-    const result: unknown = Reflect.apply(f, host, args);
-    return result;
-  };
-}
 function asNumber(u: unknown): number {
   if (typeof u !== "number") throw new TypeError("expected number from wasm");
   return u;
@@ -121,20 +113,24 @@ export class N64Emulator {
   private fs: FsModule | undefined;
   private readonly inputs: PlayerInputState[];
   private readonly inputLatency = new InputLatencyTracker(MAX_SEATS);
-  private onFrameCb: ((rgba: Buffer) => void) | undefined;
-  private onAudioCb: ((pcm: Buffer) => void) | undefined;
+  private onFrameCb:
+    | ((rgba: Buffer, contentTimeMs: number) => void)
+    | undefined;
+  private onAudioCb: ((pcm: Buffer, contentEndMs: number) => void) | undefined;
+  private pendingFrameInputReceivedAtMs: number | undefined;
   // Ring-buffer read cursor (int16 sample index) — how far we've drained audio.
   private audioReadPos = 0;
   private running = false;
   private timer: ReturnType<typeof setTimeout> | undefined;
   private nextAt = 0;
   private frameMs: number;
+  private completedViTicks = 0;
   private lastHeight = 240;
 
   constructor(opts: N64EmulatorOptions) {
     this.opts = opts;
     this.metrics = opts.metrics ?? createPromMetricSink();
-    this.frameMs = 1000 / opts.fps;
+    this.frameMs = viIntervalMs(opts.fps);
     this.inputs = Array.from({ length: MAX_SEATS }, () =>
       structuredClone(EMPTY_INPUT),
     );
@@ -158,27 +154,33 @@ export class N64Emulator {
     });
 
     // Build the typed runtime facade (validated FFI wrappers).
-    const malloc = requireFn(mod, "_malloc");
+    const malloc = requireEmscriptenFunction(mod, "_malloc");
     const heap = (): Uint8Array => {
       const h: unknown = Reflect.get(mod, "HEAPU8");
       if (!(h instanceof Uint8Array)) throw new TypeError("HEAPU8 unavailable");
       return h;
     };
-    const setRom = requireFn(mod, "_neilSetRom");
-    const videoBuffer = requireFn(mod, "_neilGetVideoBuffer");
-    const videoHeight = requireFn(mod, "_neilGetVideoHeight");
-    const rdramBase = requireFn(mod, "_neilGetRdram");
-    const soundBuffer = requireFn(mod, "_neilGetSoundBufferResampledAddress");
-    const audioWritePos = requireFn(mod, "_neilGetAudioWritePosition");
-    const runMainLoop = requireFn(mod, "_runMainLoop");
-    const reset = requireFn(mod, "_neil_reset");
-    const callMain = requireFn(mod, "callMain");
-    const cwrap = requireFn(mod, "cwrap");
-    const fsWrite = requireFn(fs, "writeFile");
-    const fsMkdir = requireFn(fs, "mkdir");
-    const fsReadFile = requireFn(fs, "readFile");
-    const fsReaddir = requireFn(fs, "readdir");
-    const fsStat = requireFn(fs, "stat");
+    const setRom = requireEmscriptenFunction(mod, "_neilSetRom");
+    const videoBuffer = requireEmscriptenFunction(mod, "_neilGetVideoBuffer");
+    const videoHeight = requireEmscriptenFunction(mod, "_neilGetVideoHeight");
+    const rdramBase = requireEmscriptenFunction(mod, "_neilGetRdram");
+    const soundBuffer = requireEmscriptenFunction(
+      mod,
+      "_neilGetSoundBufferResampledAddress",
+    );
+    const audioWritePos = requireEmscriptenFunction(
+      mod,
+      "_neilGetAudioWritePosition",
+    );
+    const runMainLoop = requireEmscriptenFunction(mod, "_runMainLoop");
+    const reset = requireEmscriptenFunction(mod, "_neil_reset");
+    const callMain = requireEmscriptenFunction(mod, "callMain");
+    const cwrap = requireEmscriptenFunction(mod, "cwrap");
+    const fsWrite = requireEmscriptenFunction(fs, "writeFile");
+    const fsMkdir = requireEmscriptenFunction(fs, "mkdir");
+    const fsReadFile = requireEmscriptenFunction(fs, "readFile");
+    const fsReaddir = requireEmscriptenFunction(fs, "readdir");
+    const fsStat = requireEmscriptenFunction(fs, "stat");
     // Build the typed FS facade for save persistence APIs.
     const fsFacade: FsModule = {
       writeFile: (p, data) => {
@@ -306,7 +308,7 @@ export class N64Emulator {
     logger.info("n64 emulator booted");
   }
 
-  onFrame(cb: (rgba: Buffer) => void): void {
+  onFrame(cb: (rgba: Buffer, contentTimeMs: number) => void): void {
     this.onFrameCb = cb;
   }
 
@@ -317,9 +319,21 @@ export class N64Emulator {
    * doesn't flush a backlog of pre-subscription samples (which would leave audio
    * permanently leading video).
    */
-  onAudio(cb: (pcm: Buffer) => void): void {
+  onAudio(cb: (pcm: Buffer, contentEndMs: number) => void): void {
     this.onAudioCb = cb;
     this.resyncAudioCursor();
+  }
+
+  /**
+   * Consume the earliest controller receipt represented by the next frame that
+   * actually crosses the Worker boundary. The Worker calls this only after its
+   * in-flight gate accepts the frame, so a port-level drop cannot lose the
+   * correlation before a later visible frame carries the applied HUD state.
+   */
+  takePendingFrameInputReceivedAtMs(): number | undefined {
+    const receivedAtMs = this.pendingFrameInputReceivedAtMs;
+    this.pendingFrameInputReceivedAtMs = undefined;
+    return receivedAtMs;
   }
 
   /** Snap the audio read cursor to the core's current write position. */
@@ -368,7 +382,7 @@ export class N64Emulator {
    * is constructed once at the target fps and never calls this.
    */
   setFps(fps: number): void {
-    this.frameMs = 1000 / fps;
+    this.frameMs = viIntervalMs(fps);
   }
 
   /** Zero a player's input (e.g. on disconnect) so a held key doesn't stick. */
@@ -442,6 +456,8 @@ export class N64Emulator {
       this.clearPlayerInput(player);
     }
     rt.reset();
+    this.completedViTicks = 0;
+    this.pendingFrameInputReceivedAtMs = undefined;
     this.lastHeight = HEIGHT;
     // The loop was stopped across reset(), so audio kept being written without
     // being drained; snap the cursor forward so we don't dump that gap on resume.
@@ -504,37 +520,54 @@ export class N64Emulator {
       );
     }
     // Everything pending is now latched into this tick.
-    this.inputLatency.drainAll((ms) => {
+    this.inputLatency.drainAll((ms, _seat, receivedAtMs) => {
       this.metrics.observeInputApplyDelayMs(ms);
+      this.pendingFrameInputReceivedAtMs =
+        this.pendingFrameInputReceivedAtMs === undefined
+          ? receivedAtMs
+          : Math.min(this.pendingFrameInputReceivedAtMs, receivedAtMs);
     });
 
     const emulateStart = performance.now();
     rt.runMainLoop();
     this.metrics.observeEmulateMs(performance.now() - emulateStart);
+    this.completedViTicks += 1;
+    const videoFrameReady = shouldEmitVideoFrame(this.completedViTicks);
 
-    const cb = this.onFrameCb;
-    if (cb !== undefined) {
-      const vbuf = rt.videoBuffer();
-      const h = rt.videoHeight();
-      if (vbuf && h) {
-        this.lastHeight = h;
-        // Copy out of the (reused) heap view before handing off.
-        const copyStart = performance.now();
-        cb(Buffer.from(rt.heap().subarray(vbuf, vbuf + WIDTH * h * 4)));
-        this.metrics.observeCopyMs(performance.now() - copyStart);
+    if (videoFrameReady) {
+      const cb = this.onFrameCb;
+      if (cb !== undefined) {
+        const vbuf = rt.videoBuffer();
+        const h = rt.videoHeight();
+        if (vbuf && h) {
+          this.lastHeight = h;
+          // Copy out of the (reused) heap view before handing off.
+          const copyStart = performance.now();
+          const contentTimeMs =
+            (this.completedViTicks - VI_TICKS_PER_VIDEO_FRAME) * this.frameMs;
+          cb(
+            Buffer.from(rt.heap().subarray(vbuf, vbuf + WIDTH * h * 4)),
+            contentTimeMs,
+          );
+          this.metrics.observeCopyMs(performance.now() - copyStart);
+        }
       }
     }
 
-    // Drain the audio the core produced this tick (after runMainLoop). Always
-    // drained while subscribed — even when the stream sink is idle — so the read
-    // cursor tracks the write head and a later stream start doesn't flush a
-    // backlog. The sink is a no-op until a broadcast is live.
+    // Drain audio after every 60 Hz VI tick, not only the 30 Hz video ticks.
+    // This keeps the ring cursor and the stream's 44.1 kHz input moving in
+    // realtime without batching two core steps into one video deadline.
     const audioCb = this.onAudioCb;
     if (audioCb !== undefined) {
       const pcm = this.drainAudio();
-      if (pcm.length > 0) audioCb(pcm);
+      if (pcm.length > 0) {
+        audioCb(pcm, this.completedViTicks * this.frameMs);
+      }
     }
-    this.metrics.incTicks(1);
+    if (videoFrameReady) {
+      // Keep this metric's established meaning: achieved output frame rate.
+      this.metrics.incTicks(1);
+    }
   }
 
   private loop(): void {

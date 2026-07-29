@@ -11,6 +11,10 @@ import { AVCodecID } from "./LibavCodecId.js";
 import { PassThrough } from "node:stream";
 import type { CodecParameters, Packet } from "node-av";
 import type { Readable } from "node:stream";
+import type {
+  PacketReadyStats,
+  StreamObserver,
+} from "./StreamObserver.js";
 
 type MediaStreamInfoCommon = {
   index: number;
@@ -104,9 +108,26 @@ function parseOpusPacketDuration(frame: Uint8Array) {
 
 type DemuxerOptions = {
   format: "matroska" | "nut";
+  observer?: StreamObserver;
 };
 
-export async function demux(input: Readable, { format }: DemuxerOptions) {
+function packetReadyStats(
+  kind: PacketReadyStats["kind"],
+  packet: Packet,
+): PacketReadyStats {
+  const scale = (packet.timeBase.num / packet.timeBase.den) * 1000;
+  const ptsMs = Number(packet.pts) * scale;
+  const durationMs = Number(packet.duration) * scale;
+  if (!Number.isFinite(ptsMs) || !Number.isFinite(durationMs)) {
+    throw new Error(`invalid ${kind} packet timing`);
+  }
+  return { kind, ptsMs, durationMs };
+}
+
+export async function demux(
+  input: Readable,
+  { format, observer }: DemuxerOptions,
+) {
   const loggerFormat = new Log("demux:format");
   const loggerFrameCommon = new Log("demux:frame:common");
   const loggerFrameVideo = new Log("demux:frame:video");
@@ -289,6 +310,7 @@ export async function demux(input: Readable, { format }: DemuxerOptions) {
             // dropping these video packets. Track backpressure separately.
             for (const packet of packets) {
               if (!packet) continue;
+              observer?.onPacketReady?.(packetReadyStats("video", packet));
               if (!vPipe.write(packet)) resume = false;
             }
           } else if (aInfo && aInfo.index === streamIndex) {
@@ -303,6 +325,7 @@ export async function demux(input: Readable, { format }: DemuxerOptions) {
               continue;
             }
             packet.duration ||= BigInt(parseOpusPacketDuration(packet.data));
+            observer?.onPacketReady?.(packetReadyStats("audio", packet));
             if (!aPipe.write(packet)) resume = false;
           }
           inPacket.free();

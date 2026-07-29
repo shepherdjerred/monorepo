@@ -1,10 +1,11 @@
-import type { PassThrough, Readable } from "node:stream";
+import type { Readable } from "node:stream";
 import type { Client } from "discord.js-selfbot-v13";
 import { Streamer, playStream } from "@shepherdjerred/discord-video-stream";
 import type { PlayStreamOptions } from "@shepherdjerred/discord-video-stream";
 import { createDesiredStreamMachine } from "@shepherdjerred/discord-stream-lifecycle";
 import type {
   EncoderHandles,
+  FrameSink,
   RawGoLiveDeps,
 } from "@shepherdjerred/discord-stream-lifecycle/types";
 import { createTransitionLogInspector } from "@shepherdjerred/discord-stream-lifecycle/debug/transition-logger";
@@ -46,7 +47,7 @@ export abstract class GameStreamerBase {
   private readonly actor: Actor<ReturnType<typeof createDesiredStreamMachine>>;
   // Mirror of the machine's live frame sink, kept in sync via subscription so
   // the per-frame hot path is a single null check + write.
-  protected frameSink: PassThrough | null = null;
+  protected frameSink: FrameSink | null = null;
   // Loopback PCM transport — sink fed by `pushAudio`, piped to ffmpeg. Created
   // in the subclass's buildEncoder() and torn down when the broadcast stops.
   protected audioTransport: AudioTransport | null = null;
@@ -167,7 +168,7 @@ export abstract class GameStreamerBase {
    * the machine's `prepareEncoder` step. The subclass sets `this.audioTransport`
    * here and returns the encoder handles.
    */
-  protected abstract buildEncoder(): Promise<EncoderHandles>;
+  protected abstract buildEncoder(signal: AbortSignal): Promise<EncoderHandles>;
 
   /**
    * Extra work after the library's `leaveVoice` runs (reset metrics, log a
@@ -199,8 +200,8 @@ export abstract class GameStreamerBase {
             this.streamer.leaveVoice();
           }
         }),
-      prepareEncoder: () =>
-        withSpan("stream.prepareEncoder", () => this.buildEncoder()),
+      prepareEncoder: (signal) =>
+        withSpan("stream.prepareEncoder", () => this.buildEncoder(signal)),
       runStream: ({ output, playing }) => this.runStream(output, playing),
       leaveVoice: (playing) =>
         withSpan("stream.leaveVoice", async () => {

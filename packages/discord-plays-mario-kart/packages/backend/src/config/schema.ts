@@ -95,7 +95,8 @@ export const ConfigSchema = z.strictObject({
     // Path to the Mario Kart 64 ROM (.z64/.v64). Provided at runtime via a
     // volume — never baked into the image. Copyrighted; you supply your own.
     rom_path: z.string().min(1),
-    // Emulator step rate. MK64 displays ~30fps; the host has huge headroom.
+    // Output frame cadence. Each output frame advances two 60 Hz N64 vertical
+    // interrupts so game time and 44.1 kHz audio remain realtime.
     fps: z.number().positive().default(30),
     // angrylion software renderer (no GPU). Always true for headless.
     software_render: z.boolean().default(true),

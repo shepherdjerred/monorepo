@@ -108,8 +108,6 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
       snapshotEveryNFrames: config.leaderboard.poll_every_n_frames,
     });
     await emulator.init();
-    emulator.start();
-    logger.info("emulator running", { guildId: session.guildId });
 
     // Leaderboard store: per-guild via the factory.forGuild(guildId) helper.
     const prisma = createPrisma(databaseUrl(config.leaderboard.db_path));
@@ -133,6 +131,10 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
         Bun.env["STREAM_HARDWARE_ACCELERATION"] === "true" ||
         config.stream.video.hardware_acceleration,
       vaapiDevice: Bun.env["VAAPI_DEVICE"] ?? config.stream.video.vaapi_device,
+      onEncoderStarted: () => {
+        emulator.start();
+        logger.info("emulator running", { guildId: session.guildId });
+      },
       onSessionEnded: () => {
         try {
           emulator.restartFromStartMenu("stream_session_ended");
@@ -173,10 +175,15 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
     // Per-frame pipeline: overlay → stream. Race decoding happens in the Worker.
     emulator.onFrame((frame) => {
       applyStreamOverlays(frame.rgba, frame.height, overlayContext());
-      streamer.pushFrame(frame.rgba);
+      streamer.pushFrame(frame.rgba, {
+        contentTimeMs: frame.contentTimeMs,
+        ...(frame.inputReceivedAtMs === undefined
+          ? {}
+          : { inputReceivedAtMs: frame.inputReceivedAtMs }),
+      });
     });
-    emulator.onAudio((pcm) => {
-      streamer.pushAudio(pcm);
+    emulator.onAudio((pcm, contentEndMs) => {
+      streamer.pushAudio(pcm, contentEndMs);
     });
 
     await streamer.start();
