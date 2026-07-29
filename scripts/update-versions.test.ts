@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 
 import {
-  legacyBuildNumberFromSubject,
+  generatedBuildNumberFromSubject,
   pushWithExactLease,
   resetVersionBumpBranch,
 } from "./update-versions.ts";
@@ -14,7 +14,7 @@ import {
   parsePinCandidates,
   parsePinCandidatesState,
   parseVersionsSource,
-  reconstructLegacyPinState,
+  reconstructGeneratedBranchPinState,
   rewriteVersionsSource,
   serializePinCandidatesState,
   validateStateAgainstVersions,
@@ -215,7 +215,7 @@ describe("versions.ts integrity", () => {
       "unchanged": "v1@${A}",
     }`);
 
-    expect(reconstructLegacyPinState(base, pending, 42).pins).toEqual({
+    expect(reconstructGeneratedBranchPinState(base, pending, 42).pins).toEqual({
       [KEY]: { buildNumber: 42, version: "v2", digest: B },
     });
   });
@@ -224,9 +224,26 @@ describe("versions.ts integrity", () => {
     const base = parseVersionsSource('{"chart":"1.0.0"}');
     const pending = parseVersionsSource('{"chart":"2.0.0"}');
 
-    expect(() => reconstructLegacyPinState(base, pending, 42)).toThrow(
-      "legacy bump changed non-image version chart",
+    expect(() => reconstructGeneratedBranchPinState(base, pending, 42)).toThrow(
+      "generated bump changed non-image version chart",
     );
+  });
+
+  test("recovers branch changes when a persisted state file is empty", () => {
+    const base = parseVersionsSource(`{"${KEY}":"v1@${A}"}`);
+    const pending = parseVersionsSource(`{"${KEY}":"v2@${B}"}`);
+    const persisted = parsePinCandidatesState(
+      '{"schema":"pin-candidates-state/v1","pins":{}}',
+    );
+    const reconstructed = reconstructGeneratedBranchPinState(base, pending, 42);
+    const combined = mergePinStates(persisted, reconstructed);
+
+    validateStateAgainstVersions(combined, pending);
+    expect(combined.pins[KEY]).toEqual({
+      buildNumber: 42,
+      version: "v2",
+      digest: B,
+    });
   });
 });
 
@@ -235,13 +252,13 @@ describe("legacy generated branch metadata", () => {
     "chore: update image pins from build 6922\n",
     "chore: bump image versions to 2.0.0-6922",
   ])("parses the generated commit subject: %s", (subject) => {
-    expect(legacyBuildNumberFromSubject(subject)).toBe(6922);
+    expect(generatedBuildNumberFromSubject(subject)).toBe(6922);
   });
 
   test("rejects an ambiguous commit subject", () => {
-    expect(() => legacyBuildNumberFromSubject("chore: update images")).toThrow(
-      "unexpected subject",
-    );
+    expect(() =>
+      generatedBuildNumberFromSubject("chore: update images"),
+    ).toThrow("unexpected subject");
   });
 });
 

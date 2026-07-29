@@ -71,7 +71,7 @@ export function parseVersionsSource(source: string): Map<string, string> {
   return entries;
 }
 
-export function reconstructLegacyPinState(
+export function reconstructGeneratedBranchPinState(
   baseVersions: Map<string, string>,
   pendingVersions: Map<string, string>,
   buildNumber: number,
@@ -87,7 +87,7 @@ export function reconstructLegacyPinState(
     }
     const baseIsImage = baseValue?.includes("@sha256:") ?? false;
     if (!baseIsImage) {
-      throw new Error(`legacy bump changed non-image version ${key}`);
+      throw new Error(`generated bump changed non-image version ${key}`);
     }
     const separator = pendingValue.lastIndexOf("@");
     const version = pendingValue.slice(0, separator);
