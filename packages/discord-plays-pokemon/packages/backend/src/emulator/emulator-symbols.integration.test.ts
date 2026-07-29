@@ -10,28 +10,38 @@ import { BUTTON } from "./constants.ts";
 // built from source in the Dagger image build (and locally by
 // scripts/build-wasm.ts), where this gate runs against the real artifact. When
 // the wasm is absent (plain `bun run test` on a clean checkout), skip.
+//
+// The checkpoint/reboot test deterministically creates a new game when no
+// operator save is supplied. This keeps the Docker ABI stage self-contained
+// while still exercising the real title screen, save code, and reboot path.
+// Operators can override the source save for additional manual coverage.
 
 const WASM_PATH =
   Bun.env.POKEMON_WASM_PATH ??
   new URL("../../assets/pokeemerald.wasm", import.meta.url).pathname;
+const CHECKPOINT_SOURCE_SAVE_PATH = Bun.env.POKEMON_LIVE_SAVE_PATH;
+const FLASH_SAVE_BYTES = 128 * 1024;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function continueLoadedSave(
+async function reachPlayableOverworld(
   emulator: Emulator,
 ): Promise<ReturnType<Emulator["engineObservation"]>> {
-  const deadline = Date.now() + 30_000;
+  const deadline = Date.now() + 120_000;
   for (;;) {
     const observation = emulator.engineObservation();
     if (observation.world !== null && observation.readiness.inputReady) {
       return observation;
     }
     if (Date.now() >= deadline) {
-      throw new Error("loaded save did not reach the overworld");
+      throw new Error("game did not reach a playable overworld");
     }
-    await emulator.queuePress(BUTTON.a, 3, 45);
+    // A fresh game accepts the default menu, gender, and player-name choices
+    // with A. One released frame preserves distinct key-down edges while
+    // minimizing the real-time cost of deterministic prerequisite generation.
+    await emulator.queuePress(BUTTON.a, 1, 1);
   }
 }
 
@@ -89,21 +99,12 @@ describeWasm("emulator game symbols (real wasm)", () => {
       bootObservation.frame,
     );
   }, 30_000);
-});
 
-const liveSavePath = Bun.env.POKEMON_LIVE_SAVE_PATH;
-const testLiveSave =
-  liveSavePath !== undefined && Bun.file(liveSavePath).size > 0
-    ? test
-    : test.skip;
-
-testLiveSave(
-  "decodes and checkpoints live state that survives an independent reboot",
-  async () => {
-    if (liveSavePath === undefined) {
-      throw new Error("POKEMON_LIVE_SAVE_PATH is required");
-    }
-    const sourceSave = await Bun.file(liveSavePath).bytes();
+  test("checkpoints deterministic state that survives an independent reboot", async () => {
+    const sourceSave =
+      CHECKPOINT_SOURCE_SAVE_PATH === undefined
+        ? new Uint8Array(FLASH_SAVE_BYTES).fill(0xff)
+        : await Bun.file(CHECKPOINT_SOURCE_SAVE_PATH).bytes();
     const checkpointPath = `${Bun.env.TMPDIR ?? "/tmp"}/pokemon-checkpoint-${crypto.randomUUID()}.sav`;
     await Bun.write(checkpointPath, sourceSave);
     try {
@@ -115,7 +116,7 @@ testLiveSave(
       emulator.start();
       let observation: ReturnType<Emulator["engineObservation"]>;
       try {
-        observation = await continueLoadedSave(emulator);
+        observation = await reachPlayableOverworld(emulator);
         const startingWorld = observation.world;
         if (startingWorld === null) {
           throw new Error("loaded save has no world before movement");
@@ -159,7 +160,7 @@ testLiveSave(
       verifier.start();
       let persistedObservation: ReturnType<Emulator["engineObservation"]>;
       try {
-        persistedObservation = await continueLoadedSave(verifier);
+        persistedObservation = await reachPlayableOverworld(verifier);
       } finally {
         await verifier.stopAndFlush();
       }
@@ -180,18 +181,23 @@ testLiveSave(
       expect(persistedSnapshot.party).toEqual(liveSnapshot.party);
       expect(persistedSnapshot.dexOwned).toEqual(liveSnapshot.dexOwned);
 
-      const details = readGameSaveDetails(
+      const liveDetails = readGameSaveDetails(
         emulator.memoryReader(),
         emulator.gameSymbols(),
       );
-      if (details === null) {
+      if (liveDetails === null) {
         throw new Error("live save details were unavailable");
       }
-      expect(details.money).toBe(3000);
-      expect(details.progression.hasPokemon).toBe(true);
+      const persistedDetails = readGameSaveDetails(
+        verifier.memoryReader(),
+        verifier.gameSymbols(),
+      );
+      if (persistedDetails === null) {
+        throw new Error("persisted save details were unavailable after reboot");
+      }
+      expect(persistedDetails).toEqual(liveDetails);
     } finally {
       await Bun.file(checkpointPath).delete();
     }
-  },
-  90_000,
-);
+  }, 180_000);
+});
