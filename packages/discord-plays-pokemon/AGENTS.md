@@ -26,6 +26,21 @@ Dockerfile's `ENV` copy). Freshness:
 
 The notifier polls emulator memory (~2×/s) for faints/badges/evolutions/catches. Read-side modules: `packages/backend/src/emulator/{memory,symbols}.ts`, `src/game/events/`; debug with `packages/backend/scripts/probe-memory.ts`.
 
+- Goal-mode decisions use the versioned C observation ABI in
+  `wasm-src/patches/0001-extra-exports.patch` and
+  `packages/backend/src/emulator/engine-observation.ts`. Keep the packed C
+  struct, exported byte size, decoder offsets, and the mandatory Docker
+  `wasm-abi-test` stage in sync. Do not reconstruct volatile phase, map,
+  collision, or battle-controller state from guessed TypeScript offsets.
+- Semantic goal input is serialized by `GameController`, and `GoalManager`
+  holds the emulator's exclusive `goal` input lease for the full process
+  lifecycle. New input paths must identify their input source; no Discord/web
+  command may interleave while the lease is held. Terminal paths must claim an
+  active goal synchronously before awaiting so timeout, replacement, shutdown,
+  and process exit cannot release twice.
+- `pokemonctl navigate` is a bounded current-map movement helper, not a story
+  solver. It must re-read collision and nearby objects, replan when a tile is
+  blocked, and stop on map/phase/readiness changes.
 - The wasm exports **every C global as a `WebAssembly.Global`** (name section present) — resolve addresses by symbol via `instance.exports.<name>.value`, never hard-code. Key symbols: `gSaveBlock1Ptr`, `gSaveBlock2Ptr`, `gPlayerParty`, `gPlayerPartyCount`, `gBattleResults`.
 - The **data segment lives in LOW linear memory (~0x5e_0000–0x63_0000), NOT at GBA EWRAM 0x02000000.** Only hardware-mapped regions (REG 0x04.., VRAM 0x06.., FLASH 0x0e..) are at GBA addresses — pointer-validity checks must allow low addresses.
 - `gSaveBlock1Ptr`/`gSaveBlock2Ptr` are pointers the game **relocates periodically** (anti-cheat) — dereference fresh every poll, never cache the target.

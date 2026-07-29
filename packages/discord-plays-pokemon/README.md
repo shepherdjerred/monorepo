@@ -18,6 +18,12 @@ Fully headless — no browser, no emulator UI, no GPU, no desktop:
   (a self-bot Go-Live), so viewers watch in the voice channel.
 - **Input** — a Discord bot takes button/chord commands (plus an optional web
   UI) and feeds them into the emulator's input queue.
+- **Goal agent** — optional Codex goal mode reads a versioned engine observation
+  (phase, readiness, current map, collision, party, inventory, progression, and
+  battle state) and plays through serialized semantic controls. Its primary
+  local interface is `pokemonctl observe`, `tap`, `move`, `interact`, `wait`,
+  `map show`, and bounded current-map `navigate`; raw `press` and `chord` remain
+  compatibility escape hatches.
 - **Notifications** — the bot polls the emulator's memory (~2×/sec) and posts
   Discord embeds for in-game events: faints, gym badges, evolutions, catches,
   level-ups, whiteouts, and new Pokédex entries. Configure under
@@ -27,6 +33,11 @@ Fully headless — no browser, no emulator UI, no GPU, no desktop:
 The WASM is **built from source** (ottohg pinned at `OTTOHG_SHA` +
 our export patch) by `scripts/build-wasm.ts`. It is not committed; Renovate
 advances the upstream pin. See `wasm-src/PATCHES.md`.
+
+The Docker build runs the real-WASM observation ABI integration test before the
+tested artifact can enter the runtime image. This is deliberately mandatory:
+unit tests using constructed snapshots are not sufficient evidence that the C
+layout and TypeScript decoder still agree.
 
 ## Deployment
 
