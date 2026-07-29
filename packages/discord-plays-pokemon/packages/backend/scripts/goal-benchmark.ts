@@ -10,7 +10,7 @@ import {
   benchmarkGitWorktrees,
   requireBenchmarkPathOutsideGitWorktrees,
 } from "#src/goal/benchmark-output-location.ts";
-import { validateCatchBenchmarkSourceSave } from "#src/goal/benchmark-source-save.ts";
+import { captureCatchBenchmarkSourceSave } from "#src/goal/benchmark-source-save.ts";
 import { runBenchmarkSeries } from "#src/goal/benchmark-series.ts";
 import {
   commandOutput,
@@ -138,8 +138,7 @@ async function main(): Promise<void> {
   await requireFile(WORKER_SOURCE, "benchmark worker source");
   await requireFile(EVALUATOR_SOURCE, "benchmark evaluator source");
   await requireFile(SAVE_ORACLE_SOURCE, "benchmark save oracle source");
-  const sourceSaveBytes = await Bun.file(args.save).bytes();
-  validateCatchBenchmarkSourceSave(sourceSaveBytes);
+  const sourceSave = await captureCatchBenchmarkSourceSave(args.save);
   const implementation = await resolveImplementationRoot(
     args.implementationRoot,
   );
@@ -158,7 +157,6 @@ async function main(): Promise<void> {
   );
   await requireCleanGitWorktree(runnerGitRoot, "benchmark runner");
   const [
-    sourceSaveSha256,
     wasmSha256,
     targetCommit,
     runnerCommit,
@@ -168,7 +166,6 @@ async function main(): Promise<void> {
     codexVersion,
     bunVersion,
   ] = await Promise.all([
-    sha256File(args.save),
     sha256File(args.wasm),
     commandOutput(["git", "rev-parse", "HEAD"], implementation.packageRoot),
     commandOutput(["git", "rev-parse", "HEAD"], PACKAGE_ROOT),
@@ -197,9 +194,9 @@ async function main(): Promise<void> {
       runnerGitRoot,
       workerSource: WORKER_SOURCE,
       run,
-      sourceSaveBytes,
+      sourceSaveBytes: sourceSave.bytes,
       provenance: {
-        inputSaveSha256: sourceSaveSha256,
+        inputSaveSha256: sourceSave.sha256,
         wasmSha256,
         targetPinnedWasmCommit: upstream.commit,
         targetCommit,
@@ -223,7 +220,7 @@ async function main(): Promise<void> {
       implementationRoot: implementation.packageRoot,
     },
     provenance: {
-      inputSaveSha256: sourceSaveSha256,
+      inputSaveSha256: sourceSave.sha256,
       wasmSha256,
       targetPinnedWasmCommit: upstream.commit,
       wasmIdentity: {

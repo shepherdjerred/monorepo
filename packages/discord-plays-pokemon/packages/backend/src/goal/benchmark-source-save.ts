@@ -14,6 +14,24 @@ type SaveSlotPartyCount = Readonly<{
   partyCount: number;
 }>;
 
+export type CapturedBenchmarkSourceSave = Readonly<{
+  bytes: Uint8Array;
+  sha256: string;
+}>;
+
+export async function captureCatchBenchmarkSourceSave(
+  filePath: string,
+): Promise<CapturedBenchmarkSourceSave> {
+  const bytes = await Bun.file(filePath).bytes();
+  validateCatchBenchmarkSourceSave(bytes);
+  const hasher = new Bun.CryptoHasher("sha256");
+  hasher.update(bytes);
+  return {
+    bytes,
+    sha256: hasher.digest("hex"),
+  };
+}
+
 function saveSlotPartyCount(
   slot: ValidatedEmeraldSaveSlot,
 ): SaveSlotPartyCount {

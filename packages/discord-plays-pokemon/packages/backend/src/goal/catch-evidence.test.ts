@@ -4,7 +4,11 @@ import type { GameSnapshot } from "#src/game/events/types.ts";
 import {
   CATCH_EVIDENCE_SETTLE_MAX_FRAMES,
   CATCH_EVIDENCE_SETTLE_MAX_MS,
+  POST_PROCESS_CATCH_OBSERVATION_HARD_MAX_MS,
+  POST_PROCESS_CATCH_SIGNAL_GRACE_MAX_FRAMES,
+  POST_PROCESS_CATCH_SIGNAL_GRACE_MAX_MS,
   createCatchEvidenceSettler,
+  shouldContinuePostProcessCatchObservation,
 } from "./catch-evidence.ts";
 
 function mon(personality: number, species: number): ParsedPartyMon {
@@ -46,6 +50,71 @@ const starter = mon(1, 277);
 const poochyena = mon(2, 286);
 const zigzagoon = mon(3, 288);
 const initial = snapshot([starter], [251]);
+
+describe("post-process catch observation", () => {
+  const processEndedFrame = 100;
+  const processEndedAtMs = 1000;
+
+  test("keeps observing for a catch signal when no evidence is pending", () => {
+    expect(
+      shouldContinuePostProcessCatchObservation({
+        processEndedFrame,
+        processEndedAtMs,
+        observedFrame: processEndedFrame,
+        observedAtMs: processEndedAtMs,
+        pendingCount: 0,
+      }),
+    ).toBe(true);
+  });
+
+  test("ends an empty signal grace when either frame or wall time expires", () => {
+    expect(
+      shouldContinuePostProcessCatchObservation({
+        processEndedFrame,
+        processEndedAtMs,
+        observedFrame:
+          processEndedFrame + POST_PROCESS_CATCH_SIGNAL_GRACE_MAX_FRAMES + 1,
+        observedAtMs: processEndedAtMs + 1000,
+        pendingCount: 0,
+      }),
+    ).toBe(false);
+    expect(
+      shouldContinuePostProcessCatchObservation({
+        processEndedFrame,
+        processEndedAtMs,
+        observedFrame: processEndedFrame + 30,
+        observedAtMs:
+          processEndedAtMs + POST_PROCESS_CATCH_SIGNAL_GRACE_MAX_MS + 1,
+        pendingCount: 0,
+      }),
+    ).toBe(false);
+  });
+
+  test("extends pending evidence past grace but enforces the hard wall cap", () => {
+    expect(
+      shouldContinuePostProcessCatchObservation({
+        processEndedFrame,
+        processEndedAtMs,
+        observedFrame:
+          processEndedFrame + POST_PROCESS_CATCH_SIGNAL_GRACE_MAX_FRAMES + 1,
+        observedAtMs:
+          processEndedAtMs + POST_PROCESS_CATCH_SIGNAL_GRACE_MAX_MS + 1,
+        pendingCount: 1,
+      }),
+    ).toBe(true);
+    expect(
+      shouldContinuePostProcessCatchObservation({
+        processEndedFrame,
+        processEndedAtMs,
+        observedFrame:
+          processEndedFrame + POST_PROCESS_CATCH_SIGNAL_GRACE_MAX_FRAMES + 1,
+        observedAtMs:
+          processEndedAtMs + POST_PROCESS_CATCH_OBSERVATION_HARD_MAX_MS,
+        pendingCount: 1,
+      }),
+    ).toBe(false);
+  });
+});
 
 describe("benchmark catch evidence settling", () => {
   test("waits for a delayed exact party and Pokedex delta", () => {

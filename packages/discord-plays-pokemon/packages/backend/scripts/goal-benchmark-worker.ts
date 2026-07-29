@@ -8,8 +8,8 @@ import type { GameSnapshot } from "#src/game/events/types.ts";
 import { createGameEventWatcher } from "#src/game/events/watcher.ts";
 import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
 import {
-  CATCH_EVIDENCE_SETTLE_MAX_MS,
   createCatchEvidenceSettler,
+  shouldContinuePostProcessCatchObservation,
   type CatchEvidenceSettler,
   type CatchEventEvidence,
 } from "#src/goal/catch-evidence.ts";
@@ -205,9 +205,19 @@ async function waitForGoal(
 }
 async function waitForCatchEvidence(
   settler: CatchEvidenceSettler,
+  emulator: Emulator,
 ): Promise<void> {
-  const deadline = Date.now() + CATCH_EVIDENCE_SETTLE_MAX_MS + 1000;
-  while (settler.pendingCount() > 0 && Date.now() < deadline) {
+  const processEndedFrame = emulator.frame;
+  const processEndedAtMs = Date.now();
+  while (
+    shouldContinuePostProcessCatchObservation({
+      processEndedFrame,
+      processEndedAtMs,
+      observedFrame: emulator.frame,
+      observedAtMs: Date.now(),
+      pendingCount: settler.pendingCount(),
+    })
+  ) {
     await Bun.sleep(100);
   }
 }
@@ -427,7 +437,7 @@ async function main(): Promise<void> {
     await processCapture.completed();
     pollCatchEvidence(emulator.frame);
     throwCatchCaptureError();
-    await waitForCatchEvidence(catchEvidenceSettler);
+    await waitForCatchEvidence(catchEvidenceSettler, emulator);
     const finalEvidence = await waitForLiveSnapshot(
       emulator,
       config.bootTimeoutSeconds,

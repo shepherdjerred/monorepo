@@ -18,7 +18,10 @@ import {
   type BenchmarkRunOutcome,
   type BenchmarkRunSummaryEntry,
 } from "./benchmark-harness.ts";
-import { validateCatchBenchmarkSourceSave } from "./benchmark-source-save.ts";
+import {
+  captureCatchBenchmarkSourceSave,
+  validateCatchBenchmarkSourceSave,
+} from "./benchmark-source-save.ts";
 import {
   classifyCodexProviderFailure,
   type BenchmarkProviderFailure,
@@ -246,6 +249,33 @@ describe("parseBenchmarkArgs", () => {
 });
 
 describe("validateCatchBenchmarkSourceSave", () => {
+  test("captures immutable bytes and provenance before the source path changes", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "pokemon-source-save-"));
+    const savePath = path.join(root, "source.sav");
+    const original = await Bun.file(
+      new URL("../game/events/testdata/after_starter.sav", import.meta.url),
+    ).bytes();
+    const replacement = await Bun.file(
+      new URL("../game/events/testdata/champion.sav", import.meta.url),
+    ).bytes();
+    const originalHasher = new Bun.CryptoHasher("sha256");
+    originalHasher.update(original);
+    const replacementHasher = new Bun.CryptoHasher("sha256");
+    replacementHasher.update(replacement);
+
+    try {
+      await Bun.write(savePath, original);
+      const captured = await captureCatchBenchmarkSourceSave(savePath);
+      await Bun.write(savePath, replacement);
+
+      expect(captured.bytes).toEqual(original);
+      expect(captured.sha256).toBe(originalHasher.digest("hex"));
+      expect(captured.sha256).not.toBe(replacementHasher.digest("hex"));
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
   test("accepts a real source save with room for caught Pokemon", async () => {
     const save = await Bun.file(
       new URL("../game/events/testdata/after_starter.sav", import.meta.url),

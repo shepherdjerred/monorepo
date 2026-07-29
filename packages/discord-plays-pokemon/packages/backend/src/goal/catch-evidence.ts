@@ -23,6 +23,10 @@ export type CatchEventEvidence = {
 
 export const CATCH_EVIDENCE_SETTLE_MAX_FRAMES = 1800;
 export const CATCH_EVIDENCE_SETTLE_MAX_MS = 30_000;
+export const POST_PROCESS_CATCH_SIGNAL_GRACE_MAX_FRAMES = 600;
+export const POST_PROCESS_CATCH_SIGNAL_GRACE_MAX_MS = 10_000;
+export const POST_PROCESS_CATCH_OBSERVATION_HARD_MAX_MS =
+  POST_PROCESS_CATCH_SIGNAL_GRACE_MAX_MS + CATCH_EVIDENCE_SETTLE_MAX_MS + 1000;
 
 export type CatchSignal = {
   occurredAt: string;
@@ -50,6 +54,33 @@ export type CatchEvidenceSettler = {
   pendingCount: () => number;
   finish: () => readonly CatchEventEvidence[];
 };
+
+export type PostProcessCatchObservation = {
+  processEndedFrame: number;
+  processEndedAtMs: number;
+  observedFrame: number;
+  observedAtMs: number;
+  pendingCount: number;
+};
+
+export function shouldContinuePostProcessCatchObservation(
+  observation: PostProcessCatchObservation,
+): boolean {
+  validatePostProcessObservation(observation);
+  if (
+    observation.observedAtMs >=
+    observation.processEndedAtMs + POST_PROCESS_CATCH_OBSERVATION_HARD_MAX_MS
+  ) {
+    return false;
+  }
+  const signalGraceActive =
+    observation.observedFrame <=
+      observation.processEndedFrame +
+        POST_PROCESS_CATCH_SIGNAL_GRACE_MAX_FRAMES &&
+    observation.observedAtMs <=
+      observation.processEndedAtMs + POST_PROCESS_CATCH_SIGNAL_GRACE_MAX_MS;
+  return signalGraceActive || observation.pendingCount > 0;
+}
 
 export function createCatchEvidenceSettler(
   initialSnapshot: GameSnapshot,
@@ -181,6 +212,36 @@ function validateSample(
   }
   if (sample.capturedAtMs < lastCapturedAtMs) {
     throw new Error("catch evidence sample times must be monotonic");
+  }
+}
+
+function validatePostProcessObservation(
+  observation: PostProcessCatchObservation,
+): void {
+  for (const [field, value] of [
+    ["processEndedFrame", observation.processEndedFrame],
+    ["observedFrame", observation.observedFrame],
+    ["pendingCount", observation.pendingCount],
+  ] as const) {
+    if (!Number.isInteger(value) || value < 0) {
+      throw new Error(`${field} must be a nonnegative integer`);
+    }
+  }
+  for (const [field, value] of [
+    ["processEndedAtMs", observation.processEndedAtMs],
+    ["observedAtMs", observation.observedAtMs],
+  ] as const) {
+    if (!Number.isFinite(value) || value < 0) {
+      throw new Error(`${field} must be a nonnegative finite number`);
+    }
+  }
+  if (
+    observation.observedFrame < observation.processEndedFrame ||
+    observation.observedAtMs < observation.processEndedAtMs
+  ) {
+    throw new Error(
+      "post-process catch observation cannot precede process completion",
+    );
   }
 }
 

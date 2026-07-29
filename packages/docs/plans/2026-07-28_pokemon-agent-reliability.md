@@ -68,7 +68,7 @@ system against a copied live save and the exact goal `get me a pokeman`.
 ## Remaining
 
 - [x] Implement and verify the observation/control foundation.
-- [ ] Implement and verify the compact prompt and benchmark harness.
+- [x] Implement and verify the compact prompt and benchmark harness.
 - [ ] Implement and verify the knowledge corpus, retrieval, and skills.
 - [ ] Complete repeated local evaluation and iterate on failures.
 - [ ] Publish the review-ready stack and record CI/live verification.
@@ -105,8 +105,15 @@ system against a copied live save and the exact goal `get me a pokeman`.
   boundary.
 - Added focused delayed-state, cross-catch contamination, frame-timeout,
   wall-timeout, and final-flush regressions.
-- Verified all 308 backend tests, the 57 focused benchmark tests, backend
-  typecheck, and backend lint.
+- Captured and hashed the source save from one immutable byte read so later
+  path changes cannot make the benchmark input disagree with its provenance.
+- Kept observing for a late catch signal for at most 600 frames or 10 seconds
+  after Codex exits, extended observation while event evidence is pending, and
+  retained a 41-second hard wall cap.
+- Added regressions for source-path replacement, the empty post-process signal
+  grace, either-bound grace expiry, and pending-evidence hard-cap behavior.
+- Verified all 313 backend tests, the 61 focused benchmark tests, backend
+  typecheck, backend lint, and formatting.
 
 ### Remaining
 
