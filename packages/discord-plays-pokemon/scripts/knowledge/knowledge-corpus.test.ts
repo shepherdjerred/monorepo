@@ -1,8 +1,31 @@
 import { describe, expect, test } from "bun:test";
-import { KnowledgeRecordsSchema } from "./model.ts";
+import { z } from "zod";
+import {
+  KnowledgeRecordsSchema,
+  SourcesSchema,
+  type KnowledgeSource,
+} from "./model.ts";
 import { CONFIRMED_FRLG_ONLY_ITEM_IDENTIFIERS } from "./pokeapi.ts";
 
-const packageRoot = new URL("../..", import.meta.url).pathname;
+const packageRootUrl = new URL("../..", import.meta.url);
+const packageRoot = packageRootUrl.pathname;
+const PokeemeraldUpstreamSchema = z.strictObject({
+  $schema: z.string().min(1),
+  repository: z.url(),
+  branch: z.string().min(1),
+  commit: z.string().regex(/^[0-9a-f]{40}$/),
+});
+const sources = SourcesSchema.parse(
+  await Bun.file(new URL("knowledge/sources.json", packageRootUrl)).json(),
+);
+const pokeemeraldUpstream = PokeemeraldUpstreamSchema.parse(
+  await Bun.file(
+    new URL(
+      sources.pokeemeraldWasm.manifest,
+      new URL("knowledge/", packageRootUrl),
+    ),
+  ).json(),
+);
 const records = KnowledgeRecordsSchema.parse(
   await Bun.file(`${packageRoot}/knowledge/generated/records.json`).json(),
 );
@@ -82,12 +105,21 @@ describe("committed generated knowledge", () => {
     expect(shedinjaCreation.body).toContain(
       "leave at least one party slot empty",
     );
-    expect(shedinjaCreation.source).toEqual({
+    const pokeApiSource: KnowledgeSource = {
+      id: "pokeapi",
+      url: `${sources.pokeapi.repository}/tree/${sources.pokeapi.commit}/${sources.pokeapi.csvPath}`,
+      license: "BSD-3-Clause",
+      revision: sources.pokeapi.commit,
+    };
+    const pokeemeraldSource: KnowledgeSource = {
       id: "pokeemerald-wasm",
-      url: "https://github.com/ottohg/pokeemerald-wasm/tree/c101be5ac2ae53c5d18ee063f16eeeda751639f8",
+      url: `${pokeemeraldUpstream.repository.replace(/\.git$/, "")}/tree/${pokeemeraldUpstream.commit}`,
       license: "No license declared",
-      revision: "c101be5ac2ae53c5d18ee063f16eeeda751639f8",
-    });
+      revision: pokeemeraldUpstream.commit,
+    };
+    expect(nincada.sources).toEqual([pokeApiSource, pokeemeraldSource]);
+    expect(shedinja.sources).toEqual([pokeApiSource, pokeemeraldSource]);
+    expect(shedinjaCreation.sources).toEqual([pokeemeraldSource]);
     for (const record of records.filter(
       (entry) => entry.domain === "species",
     )) {

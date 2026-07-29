@@ -4,6 +4,7 @@ import {
   compactList,
   humanizeIdentifier,
   type KnowledgeRecord,
+  type KnowledgeSource,
   type Sources,
 } from "./model.ts";
 import {
@@ -237,6 +238,7 @@ export function includeGeneration3Item(identifier: string): boolean {
 
 export async function buildPokeApiRecords(
   sources: Sources,
+  shedinjaMechanicSource: KnowledgeSource,
 ): Promise<KnowledgeRecord[]> {
   const [
     species,
@@ -301,8 +303,8 @@ export async function buildPokeApiRecords(
     (row) => row.pokemon_id,
   );
   const sourceUrl = `${sources.pokeapi.repository}/tree/${sources.pokeapi.commit}/${sources.pokeapi.csvPath}`;
-  const source = {
-    id: "pokeapi" as const,
+  const source: KnowledgeSource = {
+    id: "pokeapi",
     url: sourceUrl,
     license: sources.pokeapi.license,
     revision: sources.pokeapi.commit,
@@ -381,7 +383,10 @@ export async function buildPokeApiRecords(
         `Evolves to: ${evolution.successors.join("; ") || "none"}`,
         `Emerald level-up moves (level:move): ${compactList(learnedMoves, 60) || "none"}`,
       ].join("\n"),
-      source,
+      sources:
+        row.identifier === "nincada" || row.identifier === "shedinja"
+          ? [source, shedinjaMechanicSource]
+          : [source],
     });
   }
 
@@ -411,7 +416,7 @@ export async function buildPokeApiRecords(
         `Power: ${generation3PowerLabel(versioned.power, damageClass)}; accuracy: ${String(versioned.accuracy ?? "always")}; PP: ${String(versioned.pp ?? "unknown")}`,
         `Priority: ${String(versioned.priority)}; Generation III damage class: ${damageClass}`,
       ].join("\n"),
-      source,
+      sources: [source],
     });
   }
 
@@ -452,7 +457,7 @@ export async function buildPokeApiRecords(
         "Availability: this generation-wide catalog entry does not prove the item is obtainable in Pokémon Emerald.",
         `Category id: ${String(item.category_id)}. Price is omitted because PokeAPI's item cost is not version-specific.`,
       ].join("\n"),
-      source,
+      sources: [source],
     });
   }
 

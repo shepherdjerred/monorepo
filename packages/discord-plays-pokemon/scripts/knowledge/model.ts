@@ -22,11 +22,12 @@ export const KnowledgeRecordSchema = z.strictObject({
   aliases: z.array(z.string()),
   tags: z.array(z.string()),
   body: z.string().min(1),
-  source: KnowledgeSourceSchema,
+  sources: z.array(KnowledgeSourceSchema).min(1),
 });
 
 export const KnowledgeRecordsSchema = z.array(KnowledgeRecordSchema);
 
+export type KnowledgeSource = z.infer<typeof KnowledgeSourceSchema>;
 export type KnowledgeRecord = z.infer<typeof KnowledgeRecordSchema>;
 
 export const SourcesSchema = z.strictObject({

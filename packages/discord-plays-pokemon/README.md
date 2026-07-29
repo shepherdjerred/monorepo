@@ -60,8 +60,11 @@ query a committed, validated Pokémon Emerald corpus:
 - Bulbapedia's complete 22-part Emerald walkthrough, stored separately under
   `knowledge/cc-by-nc-sa-2.5/` and attributed under CC BY-NC-SA 2.5.
 
-All source revisions are pinned in `knowledge/sources.json`. Regenerate the
-checked-in data with `bun run generate:knowledge`. Five focused skills under
+All source revisions are pinned in `knowledge/sources.json`, and each record
+exposes a non-empty `sources` array with every contributing revision and
+license. Composite species facts such as Shedinja creation therefore cite both
+PokeAPI and pokeemerald-wasm. Regenerate the checked-in data with
+`bun run generate:knowledge`. Five focused skills under
 `.agents/skills/pokemon-*` teach the agent when to search each domain without
 putting the encyclopedia in every prompt. Knowledge is advisory; live
 `pokemonctl observe` state and action outcomes remain authoritative.

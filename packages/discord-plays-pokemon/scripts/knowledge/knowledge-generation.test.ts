@@ -31,6 +31,16 @@ const SourceJsonSchema = z.object({
   required: z.array(z.string()),
   properties: z.record(z.string(), z.unknown()),
 });
+const KnowledgeJsonSchema = z.object({
+  items: z.object({
+    required: z.array(z.string()),
+    properties: z.object({
+      sources: z.object({
+        minItems: z.number().int().positive(),
+      }),
+    }),
+  }),
+});
 
 test("source JSON Schema accepts its own $schema property", async () => {
   const schema = SourceJsonSchema.parse(
@@ -40,6 +50,17 @@ test("source JSON Schema accepts its own $schema property", async () => {
   );
   expect(schema.required).toContain("$schema");
   expect(schema.properties["$schema"]).toBeDefined();
+});
+
+test("record JSON Schema requires non-empty structured provenance", async () => {
+  const schema = KnowledgeJsonSchema.parse(
+    await Bun.file(
+      new URL("../../knowledge/schema.json", import.meta.url),
+    ).json(),
+  );
+  expect(schema.items.required).toContain("sources");
+  expect(schema.items.required).not.toContain("source");
+  expect(schema.items.properties.sources.minItems).toBe(1);
 });
 
 describe("Generation III move normalization", () => {

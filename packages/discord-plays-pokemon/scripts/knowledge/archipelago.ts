@@ -72,12 +72,14 @@ export async function buildWorldRecords(
             region.events,
           ),
         ].join("\n"),
-        source: {
-          id: "archipelago",
-          url,
-          license: sources.archipelago.license,
-          revision: sources.archipelago.commit,
-        },
+        sources: [
+          {
+            id: "archipelago",
+            url,
+            license: sources.archipelago.license,
+            revision: sources.archipelago.commit,
+          },
+        ],
       });
     }
   }

@@ -1,5 +1,9 @@
 import { fetchText } from "./fetch.ts";
-import { type KnowledgeRecord, type Sources } from "./model.ts";
+import {
+  type KnowledgeRecord,
+  type KnowledgeSource,
+  type Sources,
+} from "./model.ts";
 
 const EVOLUTION_TABLE_PATH = "src/data/pokemon/evolution.h";
 const EVOLUTION_SCENE_PATH = "src/evolution_scene.c";
@@ -44,12 +48,30 @@ export function validateShedinjaSource(
   }
 }
 
+export function createPokeemeraldKnowledgeSource(
+  license: Sources["pokeemeraldWasm"]["license"],
+  upstreamRepository: string,
+  commit: string,
+): KnowledgeSource {
+  return {
+    id: "pokeemerald-wasm",
+    url: `${upstreamRepository.replace(/\.git$/, "")}/tree/${commit}`,
+    license,
+    revision: commit,
+  };
+}
+
 export async function buildPokeemeraldRecords(
   license: Sources["pokeemeraldWasm"]["license"],
   upstreamRepository: string,
   commit: string,
 ): Promise<KnowledgeRecord[]> {
   const repository = upstreamRepository.replace(/\.git$/, "");
+  const source = createPokeemeraldKnowledgeSource(
+    license,
+    upstreamRepository,
+    commit,
+  );
   const [evolutionTable, evolutionScene] = await Promise.all([
     fetchText(rawUrl(repository, commit, EVOLUTION_TABLE_PATH)),
     fetchText(rawUrl(repository, commit, EVOLUTION_SCENE_PATH)),
@@ -79,12 +101,7 @@ export async function buildPokeemeraldRecords(
         "In Pokémon Emerald, Nincada's level-20 evolution produces Ninjask and creates Shedinja only when the party has fewer than six members.",
         "Required setup: leave at least one party slot empty before Nincada evolves.",
       ].join("\n"),
-      source: {
-        id: "pokeemerald-wasm",
-        url: `${repository}/tree/${commit}`,
-        license,
-        revision: commit,
-      },
+      sources: [source],
     },
   ];
 }

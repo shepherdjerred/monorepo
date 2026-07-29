@@ -16,12 +16,21 @@ const KnowledgeRecordSchema = z.strictObject({
   aliases: z.array(z.string()),
   tags: z.array(z.string()),
   body: z.string().min(1),
-  source: z.strictObject({
-    id: z.enum(["pokeemerald-wasm", "archipelago", "pokeapi", "bulbapedia"]),
-    url: z.url(),
-    license: z.string().min(1),
-    revision: z.string().min(1),
-  }),
+  sources: z
+    .array(
+      z.strictObject({
+        id: z.enum([
+          "pokeemerald-wasm",
+          "archipelago",
+          "pokeapi",
+          "bulbapedia",
+        ]),
+        url: z.url(),
+        license: z.string().min(1),
+        revision: z.string().min(1),
+      }),
+    )
+    .min(1),
 });
 
 const KnowledgeRecordsSchema = z.array(KnowledgeRecordSchema);
@@ -33,7 +42,7 @@ export type KnowledgeSearchResult = {
   domain: KnowledgeDomain;
   title: string;
   excerpt: string;
-  source: KnowledgeRecord["source"];
+  sources: KnowledgeRecord["sources"];
   score: number;
 };
 
@@ -160,7 +169,7 @@ export class KnowledgeBase {
         domain: record.domain,
         title: record.title,
         excerpt: excerpt(record.body, queryTerms),
-        source: record.source,
+        sources: record.sources,
         score,
       }));
   }

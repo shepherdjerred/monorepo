@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { KnowledgeBase, loadKnowledgeBase } from "./knowledge.ts";
 
-const source = {
+const testSource = {
   id: "pokeapi" as const,
   url: "https://example.com/source",
   license: "test",
@@ -18,7 +18,7 @@ describe("KnowledgeBase", () => {
         aliases: ["National Dex 280"],
         tags: ["psychic"],
         body: "A Pokémon found on Route 102.",
-        source,
+        sources: [testSource],
       },
       {
         id: "world:route-102",
@@ -27,7 +27,7 @@ describe("KnowledgeBase", () => {
         aliases: [],
         tags: ["grass"],
         body: "Ralts can appear here.",
-        source,
+        sources: [testSource],
       },
     ]);
 
@@ -45,7 +45,7 @@ describe("KnowledgeBase", () => {
         aliases: [],
         tags: ["psychic"],
         body: "A Pokémon.",
-        source,
+        sources: [testSource],
       },
       {
         id: "items:potion",
@@ -54,7 +54,7 @@ describe("KnowledgeBase", () => {
         aliases: [],
         tags: ["healing"],
         body: "Restores a Pokémon's HP.",
-        source,
+        sources: [testSource],
       },
     ]);
 
@@ -82,6 +82,22 @@ describe("KnowledgeBase", () => {
     );
     expect(base.get("battle:move:crunch")?.body).toContain(
       "Generation III damage class: special",
+    );
+    const expectedShedinjaSourceIds = ["pokeapi", "pokeemerald-wasm"];
+    expect(
+      base.get("species:nincada")?.sources.map((source) => source.id),
+    ).toEqual(expectedShedinjaSourceIds);
+    expect(
+      base.get("species:shedinja")?.sources.map((source) => source.id),
+    ).toEqual(expectedShedinjaSourceIds);
+    const nincadaSearchResult = base
+      .search("nincada", { domain: "species", limit: 5 })
+      .find((result) => result.id === "species:nincada");
+    expect(nincadaSearchResult?.excerpt).toContain(
+      "only with an empty party slot",
+    );
+    expect(nincadaSearchResult?.sources.map((source) => source.id)).toEqual(
+      expectedShedinjaSourceIds,
     );
     const surfResults = base.search("how to get surf", { limit: 3 });
     expect(

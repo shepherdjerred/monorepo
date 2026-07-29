@@ -4,7 +4,10 @@ import { buildWorldRecords } from "./knowledge/archipelago.ts";
 import { buildBulbapediaRecords } from "./knowledge/bulbapedia.ts";
 import { KnowledgeRecordsSchema, SourcesSchema } from "./knowledge/model.ts";
 import { buildPokeApiRecords } from "./knowledge/pokeapi.ts";
-import { buildPokeemeraldRecords } from "./knowledge/pokeemerald.ts";
+import {
+  buildPokeemeraldRecords,
+  createPokeemeraldKnowledgeSource,
+} from "./knowledge/pokeemerald.ts";
 
 const packageRoot = path.resolve(import.meta.dir, "..");
 const sourcesPath = path.join(packageRoot, "knowledge", "sources.json");
@@ -16,10 +19,15 @@ const pokeemeraldManifestPath = path.resolve(
 const pokeemeraldUpstream = parsePokemonUpstream(
   await Bun.file(pokeemeraldManifestPath).json(),
 );
+const pokeemeraldKnowledgeSource = createPokeemeraldKnowledgeSource(
+  sources.pokeemeraldWasm.license,
+  pokeemeraldUpstream.repository,
+  pokeemeraldUpstream.commit,
+);
 
 const [world, pokeapi, pokeemerald, bulbapedia] = await Promise.all([
   buildWorldRecords(sources),
-  buildPokeApiRecords(sources),
+  buildPokeApiRecords(sources, pokeemeraldKnowledgeSource),
   buildPokeemeraldRecords(
     sources.pokeemeraldWasm.license,
     pokeemeraldUpstream.repository,

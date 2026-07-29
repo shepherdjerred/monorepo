@@ -211,12 +211,14 @@ export async function buildBulbapediaRecords(
         ],
         tags: ["walkthrough", "pokemon-emerald", pageSlug(pin.title)],
         body,
-        source: {
-          id: "bulbapedia",
-          url: `https://bulbapedia.bulbagarden.net/wiki/${encodeURI(pin.title.replaceAll(" ", "_"))}?oldid=${String(pin.revision)}`,
-          license: sources.bulbapedia.license,
-          revision: String(pin.revision),
-        },
+        sources: [
+          {
+            id: "bulbapedia",
+            url: `https://bulbapedia.bulbagarden.net/wiki/${encodeURI(pin.title.replaceAll(" ", "_"))}?oldid=${String(pin.revision)}`,
+            license: sources.bulbapedia.license,
+            revision: String(pin.revision),
+          },
+        ],
       });
     });
   }

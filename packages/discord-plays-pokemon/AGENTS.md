@@ -105,7 +105,10 @@ revisions.
 - The pinned pokeemerald-wasm source supplies narrow, validated
   Emerald-specific mechanics such as Shedinja's empty-party-slot requirement.
   Its repository declares no license; record that accurately and summarize
-  behavior without copying source text.
+  behavior without copying source text. Knowledge records have a required
+  non-empty `sources` array so composite facts expose every contributing
+  revision and license; the generic Nincada and Shedinja species records cite
+  both PokeAPI and pokeemerald-wasm.
 - Bulbapedia supplies the separately stored full walkthrough under CC
   BY-NC-SA 2.5; preserve `knowledge/cc-by-nc-sa-2.5/NOTICE.md` and per-record
   attribution.
