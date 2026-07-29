@@ -175,10 +175,22 @@ Worker-thread performance change did not improve the delivered stream.
   up. Later progress events cannot release a steady-state pause.
 - Added state-transition tests covering the PCM gate, first-progress release,
   drain re-arm, steady-state drain release, and reset behavior.
+- Published and deployed commit
+  `88d9994eed5a9d6c3675bdc1826a40932cfc1348`. The live run exposed an
+  event-order edge: ffmpeg reported progress before the one-second PCM gate
+  allowed the emulator to pause. The callback was consumed too early, so the
+  later pause still waited only for `drain`; telemetry showed zero drops and
+  nonzero ffmpeg progress but `stream_emulator_paused 1`. The candidate was
+  stopped and the known-good stream restored.
+- Made the initial full-sink event install its single drain watcher even before
+  the PCM gate. Encoder progress now applies the startup bypass only while that
+  queue is outstanding, whether the PCM gate has paused the emulator yet or
+  not. This preserves the bypass across the observed live event order, while a
+  queue that already drained uses normal steady-state control.
 
 ### Remaining
 
-- Publish the first-progress flow-control candidate, deploy its immutable
+- Publish the event-order-safe flow-control candidate, deploy its immutable
   image, restart the Discord session, validate live performance telemetry, and
   obtain manual confirmation that audio is synchronized.
 - Fix the separate Worker teardown ordering error found when `/stop` ended the
@@ -224,6 +236,10 @@ Worker-thread performance change did not improve the delivered stream.
   emulator to continue feeding PCM before its startup video queue could fully
   drain. First encoder progress is therefore a one-time initialization signal;
   only `drain` may release later backpressure pauses.
+- The first implementation consumed that one-time signal even when no sink
+  backlog was active. Live ordering demonstrated that progress can precede the
+  PCM-gated pause, so the corrected transition keys the bypass to an
+  outstanding full-sink interval rather than to the first callback globally.
 - `/stop` completed and the stream shut down, but its asynchronous session-end
   callback ran after `WorkerEmulator.stop()` and logged
   `emulator worker is not running`. That distinct lifecycle defect is now

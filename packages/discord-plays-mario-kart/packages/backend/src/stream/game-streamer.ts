@@ -79,11 +79,16 @@ export const MIN_AUDIO_PREROLL_BYTES =
   AUDIO_SAMPLE_RATE * AUDIO_CHANNELS * Int16Array.BYTES_PER_ELEMENT;
 
 export type EncoderFlowAction = "pause" | "resume" | undefined;
+export type EncoderFlowDecision = {
+  action: EncoderFlowAction;
+  watchDrain: boolean;
+};
 
 export class EncoderFlowControl {
   private audioPrerollBytes = 0;
   private backpressureArmed = true;
-  private encoderProgressSeen = false;
+  private startupBypassApplied = false;
+  private waitingForDrain = false;
   private paused = false;
 
   onAudio(bytes: number): void {
@@ -93,29 +98,35 @@ export class EncoderFlowControl {
     );
   }
 
-  onVideoWrite(canContinue: boolean): EncoderFlowAction {
+  onVideoWrite(canContinue: boolean): EncoderFlowDecision {
+    if (canContinue) {
+      return { action: undefined, watchDrain: false };
+    }
+    const watchDrain = !this.waitingForDrain;
+    this.waitingForDrain = true;
     if (
-      canContinue ||
       this.paused ||
       !this.backpressureArmed ||
       this.audioPrerollBytes < MIN_AUDIO_PREROLL_BYTES
     ) {
-      return undefined;
+      return { action: undefined, watchDrain };
     }
     this.paused = true;
     this.backpressureArmed = false;
-    return "pause";
+    return { action: "pause", watchDrain };
   }
 
   onProgress(): EncoderFlowAction {
-    if (this.encoderProgressSeen) return undefined;
-    this.encoderProgressSeen = true;
+    if (this.startupBypassApplied || !this.waitingForDrain) return undefined;
+    this.startupBypassApplied = true;
+    this.backpressureArmed = false;
     if (!this.paused) return undefined;
     this.paused = false;
     return "resume";
   }
 
   onDrain(): EncoderFlowAction {
+    this.waitingForDrain = false;
     this.backpressureArmed = true;
     if (!this.paused) return undefined;
     this.paused = false;
@@ -126,7 +137,8 @@ export class EncoderFlowControl {
     const action = this.paused ? "resume" : undefined;
     this.audioPrerollBytes = 0;
     this.backpressureArmed = true;
-    this.encoderProgressSeen = false;
+    this.startupBypassApplied = false;
+    this.waitingForDrain = false;
     this.paused = false;
     return action;
   }
@@ -183,11 +195,11 @@ export class GameStreamer extends GameStreamerBase {
     streamFrameWriteMs.observe(performance.now() - pushAt);
     if (this.session) this.session.framesPushed++;
     sinkBufferBytes.set(sink.writableLength);
-    const action = this.encoderFlowControl.onVideoWrite(canContinue);
-    if (action === "pause") {
+    const decision = this.encoderFlowControl.onVideoWrite(canContinue);
+    if (decision.watchDrain) {
       sink.once("drain", this.handleFrameSinkDrain);
     }
-    this.applyEncoderFlowAction(action);
+    this.applyEncoderFlowAction(decision.action);
   }
 
   override pushAudio(pcm: Buffer): void {
