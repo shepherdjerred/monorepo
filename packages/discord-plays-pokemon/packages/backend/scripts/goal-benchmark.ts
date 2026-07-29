@@ -6,6 +6,7 @@ import {
   buildBenchmarkSummary,
   parseBenchmarkArgs,
 } from "#src/goal/benchmark-harness.ts";
+import { validateCatchBenchmarkSourceSave } from "#src/goal/benchmark-source-save.ts";
 import { runBenchmarkSeries } from "#src/goal/benchmark-series.ts";
 import {
   commandOutput,
@@ -17,7 +18,6 @@ import {
   type BenchmarkImplementation,
 } from "#src/goal/benchmark-run.ts";
 
-const FLASH_SAVE_BYTES = 128 * 1024;
 const PACKAGE_ROOT = path.resolve(import.meta.dir, "../../..");
 const WORKER_SOURCE = path.join(import.meta.dir, "goal-benchmark-worker.ts");
 const EVALUATOR_SOURCE = path.resolve(
@@ -123,11 +123,7 @@ async function main(): Promise<void> {
   await requireFile(WORKER_SOURCE, "benchmark worker source");
   await requireFile(EVALUATOR_SOURCE, "benchmark evaluator source");
   const sourceSaveBytes = await Bun.file(args.save).bytes();
-  if (sourceSaveBytes.length !== FLASH_SAVE_BYTES) {
-    throw new Error(
-      `source save must be exactly ${String(FLASH_SAVE_BYTES)} bytes; got ${String(sourceSaveBytes.length)}`,
-    );
-  }
+  validateCatchBenchmarkSourceSave(sourceSaveBytes);
   const implementation = await resolveImplementationRoot(
     args.implementationRoot,
   );

@@ -2,7 +2,7 @@ import path from "node:path";
 import { z } from "zod";
 import type { GameSnapshot } from "#src/game/events/types.ts";
 import {
-  movementObservation,
+  directionalMovementObservation,
   positionLoopOccurred,
   type MovementLoopState,
 } from "./benchmark-movement-telemetry.ts";
@@ -334,14 +334,12 @@ function countCommandEvent(
   ]
     .filter((value) => value !== undefined)
     .join("\n");
-  if (isMovementCommand(command)) {
-    const observation = movementObservation(output);
-    if (observation !== undefined) {
-      result.movementActions += 1;
-      if (observation.stopped) result.movementStops += 1;
-      if (positionLoopOccurred(state, observation)) {
-        result.repeatedPositionLoops += 1;
-      }
+  const observation = directionalMovementObservation(command, output);
+  if (observation !== undefined) {
+    result.movementActions += 1;
+    if (observation.stopped) result.movementStops += 1;
+    if (positionLoopOccurred(state, observation)) {
+      result.repeatedPositionLoops += 1;
     }
   }
   if (/ignored input/i.test(output)) result.ignoredInputs += 1;
@@ -349,7 +347,13 @@ function countCommandEvent(
 
 function commandText(command: string | unknown[] | undefined): string {
   if (typeof command === "string") return command;
-  if (Array.isArray(command)) return command.map(String).join(" ");
+  if (Array.isArray(command)) {
+    const parts: string[] = [];
+    for (const value of command) {
+      if (typeof value === "string") parts.push(value);
+    }
+    return parts.join(" ");
+  }
   return "";
 }
 
@@ -369,12 +373,6 @@ function classifyNonMovementCommand(
   ) {
     telemetry.knowledgeQueries += 1;
   }
-}
-
-function isMovementCommand(command: string): boolean {
-  return /\bpokemonctl\s+(?:press|chord|move|tap|navigate|interact)\b/.test(
-    command,
-  );
 }
 
 export type BenchmarkRunOutcome =

@@ -22,6 +22,68 @@ Dockerfile's `ENV` copy). Freshness:
   to a merged Renovate pin bump (hosted Renovate can't run the generators in
   its own PR).
 
+## Goal-agent benchmark
+
+`packages/backend` exposes the operator-only `benchmark:goal` command for
+repeatable real-model catch measurements. Run it from a clean, fully set-up
+checkout of the implementation being measured. Keep the source save and output
+directory outside that checkout: the target fails preflight when its Git
+worktree is dirty, and every output path must be new.
+
+The required inputs are:
+
+- `--save`: an immutable, exactly 131,072-byte Pokémon Emerald flash save.
+  Remove any 16-byte RTC trailer from a copied save; never point the benchmark
+  at the live save. The active save slot must decode successfully and the party
+  must have an empty slot so a catch produces independent party-identity
+  evidence.
+- `--wasm`: the built `pokeemerald.wasm` for the implementation under test.
+  `bun scripts/build-wasm.ts` writes
+  `packages/backend/assets/pokeemerald.wasm`. The harness records the file's
+  SHA-256 and the target's configured upstream pin, but does not prove that the
+  external file was built from that pin.
+- `--output`: a nonexistent artifact directory. Existing results are never
+  overwritten.
+
+From `packages/discord-plays-pokemon/packages/backend`:
+
+```bash
+bun run benchmark:goal \
+  --save /absolute/path/to/copied-emerald.sav \
+  --wasm ./assets/pokeemerald.wasm \
+  --output /absolute/path/to/artifacts/candidate-<commit> \
+  --runs 3 \
+  --goal "get me a pokeman"
+```
+
+Each run starts from a fresh harness-owned copy of the same source save. Use
+`--implementation-root /path/to/clean/copy` when the harness runner and target
+implementation are different checkouts; both a monorepo root and this package
+root are accepted. Record the exact goal, model, reasoning, runtime, source-save
+hash, WASM hash, target commit, and runner commit when comparing results. See
+the dynamically loaded `pokemon-goal-benchmark` skill for the complete
+clean-copy and artifact-reading workflow.
+
+The command prints `summary.json` after writing it last. Interpret
+`summary.json` first, then each `run-NNN/result.json`:
+
+- `success` is valid only when the strict evaluator correlates a post-start
+  catch event to the same new species in post-event state, final live state,
+  and the persisted 128 KiB save written after the catch.
+- `game-failure` is a valid measurement that did not satisfy that evaluator.
+  Read `evaluation.failures`; do not infer success from Codex prose, a
+  screenshot, or process exit alone.
+- `invalid-provider` is quota, authentication, startup, or turn failure from
+  the model provider. `evaluation` is null, the series stops early, and the run
+  must not count as a gameplay failure.
+- `harness-error` is an invalid measurement caused by boot, worker, persistence,
+  artifact, or other harness failure. Fix the cause and rerun.
+
+Exit `0` means every requested run succeeded; `1` means one or more valid runs
+failed the game evaluator; `2` means an invalid provider measurement, harness
+error, invalid argument, or preflight failure. `summary.json.successRate`
+excludes invalid runs from its denominator.
+
 ## Reading live game state from the wasm
 
 The notifier polls emulator memory (~2×/s) for faints/badges/evolutions/catches. Read-side modules: `packages/backend/src/emulator/{memory,symbols}.ts`, `src/game/events/`; debug with `packages/backend/scripts/probe-memory.ts`.

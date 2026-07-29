@@ -29,7 +29,19 @@ const MovementPositionSchema = z.looseObject({
 const ObservationSchema = z.looseObject({
   world: z.unknown().nullable(),
 });
+const ActionObservationSchema = z.looseObject({
+  phase: z.string().optional(),
+  context: z
+    .union([
+      z.string(),
+      z.looseObject({
+        kind: z.string(),
+      }),
+    ])
+    .optional(),
+});
 const ActionOutcomeSchema = z.looseObject({
+  action: z.string().optional(),
   before: z.unknown().optional(),
   after: z.unknown().optional(),
   blocked: z.boolean().optional(),
@@ -37,11 +49,45 @@ const ActionOutcomeSchema = z.looseObject({
   stopReason: z.string().nullable().optional(),
 });
 
-export function movementObservation(
+type StructuredMovementObservation = Readonly<{
+  observation: MovementObservation;
+  action: string | undefined;
+  fieldContext: boolean | undefined;
+}>;
+
+const DIRECTIONAL_ARGUMENTS = new Set([
+  "north",
+  "south",
+  "west",
+  "east",
+  "up",
+  "down",
+  "left",
+  "right",
+  "u",
+  "d",
+  "l",
+  "r",
+]);
+
+export function directionalMovementObservation(
+  command: string,
   output: string,
 ): MovementObservation | undefined {
   const structured = structuredMovementObservation(output);
-  if (structured !== undefined) return structured;
+  if (structured !== undefined) {
+    const structuredDecision = structuredMovementDecision(structured);
+    if (structuredDecision === true) return structured.observation;
+    if (structuredDecision === false) return undefined;
+    if (
+      isDirectionalMovementCommand(command) &&
+      structured.fieldContext !== false
+    ) {
+      return structured.observation;
+    }
+    return undefined;
+  }
+  if (!isDirectionalMovementCommand(command)) return undefined;
   const locations = legacyLocations(output);
   if (locations.length === 0) return undefined;
   return {
@@ -71,7 +117,7 @@ export function positionLoopOccurred(
 
 function structuredMovementObservation(
   output: string,
-): MovementObservation | undefined {
+): StructuredMovementObservation | undefined {
   const parsed = parseJsonOutput(output);
   if (parsed === undefined) return undefined;
   const outer = RecordSchema.safeParse(parsed);
@@ -99,15 +145,81 @@ function structuredMovementObservation(
   const normalStopReasons = new Set(["completed", "target-reached"]);
   const stopReason = outcome.data.stopReason?.trim().toLowerCase();
   return {
-    before,
-    after,
-    stopped:
-      outcome.data.blocked === true ||
-      (status !== undefined && stoppedStatuses.has(status)) ||
-      (stopReason !== undefined &&
-        stopReason.length > 0 &&
-        !normalStopReasons.has(stopReason)),
+    observation: {
+      before,
+      after,
+      stopped:
+        outcome.data.blocked === true ||
+        (status !== undefined && stoppedStatuses.has(status)) ||
+        (stopReason !== undefined &&
+          stopReason.length > 0 &&
+          !normalStopReasons.has(stopReason)),
+    },
+    action: outcome.data.action,
+    fieldContext:
+      fieldContext(outcome.data.before) ?? fieldContext(outcome.data.after),
   };
+}
+
+function structuredMovementDecision(
+  structured: StructuredMovementObservation,
+): boolean | undefined {
+  const action = structured.action?.trim().toLowerCase();
+  if (action === undefined) return undefined;
+  if (
+    action === "navigate" ||
+    /^move:(?:north|south|west|east)$/u.test(action)
+  ) {
+    return true;
+  }
+  const tap = /^tap:([a-z]+)$/u.exec(action);
+  if (tap !== null) {
+    const argument = tap[1];
+    if (argument === undefined || !DIRECTIONAL_ARGUMENTS.has(argument)) {
+      return false;
+    }
+    return structured.fieldContext;
+  }
+  if (
+    action === "interact" ||
+    action === "advance" ||
+    action.startsWith("wait:") ||
+    action === "chord:raw"
+  ) {
+    return false;
+  }
+  return undefined;
+}
+
+function fieldContext(value: unknown): boolean | undefined {
+  const parsed = ActionObservationSchema.safeParse(value);
+  if (!parsed.success) return undefined;
+  if (parsed.data.phase !== undefined) {
+    return parsed.data.phase === "overworld";
+  }
+  const context = parsed.data.context;
+  if (typeof context === "string") return context === "field";
+  return context?.kind === undefined ? undefined : context.kind === "field";
+}
+
+function isDirectionalMovementCommand(command: string): boolean {
+  const invocation =
+    /(?:^|[\s"'`;|&])(?:[^\s"'`;|&]+\/)?pokemonctl["']?\s+(navigate|move|tap|press)\b(?:\s+["']?([a-z]+)["']?)?/giu;
+  for (const match of command.matchAll(invocation)) {
+    const subcommand = match[1]?.toLowerCase();
+    if (subcommand === "navigate") return true;
+    const argument = match[2]?.toLowerCase();
+    if (
+      (subcommand === "move" ||
+        subcommand === "tap" ||
+        subcommand === "press") &&
+      argument !== undefined &&
+      DIRECTIONAL_ARGUMENTS.has(argument)
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function movementPosition(value: unknown): MovementPosition | undefined {

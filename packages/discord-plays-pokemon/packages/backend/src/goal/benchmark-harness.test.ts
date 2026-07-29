@@ -10,6 +10,7 @@ import {
   type BenchmarkRunOutcome,
   type BenchmarkRunSummaryEntry,
 } from "./benchmark-harness.ts";
+import { validateCatchBenchmarkSourceSave } from "./benchmark-source-save.ts";
 import {
   classifyCodexProviderFailure,
   type BenchmarkProviderFailure,
@@ -29,6 +30,23 @@ function productionObservation(x: number) {
   return {
     schemaVersion: 1,
     id: `observation-${String(x)}`,
+    world: {
+      map: "Route 101",
+      mapGroup: 0,
+      mapNum: 16,
+      x,
+      y: 8,
+    },
+  };
+}
+
+function actionObservation(phase: "overworld" | "battle" | "other", x: number) {
+  return {
+    schemaVersion: 2,
+    phase,
+    context: {
+      kind: phase === "overworld" ? "field" : phase,
+    },
     world: {
       map: "Route 101",
       mapGroup: 0,
@@ -123,6 +141,50 @@ describe("parseBenchmarkArgs", () => {
         "/work",
       ),
     ).toThrow("exceeds 49151");
+  });
+});
+
+describe("validateCatchBenchmarkSourceSave", () => {
+  test("accepts a real source save with room for caught Pokemon", async () => {
+    const save = await Bun.file(
+      new URL("../game/events/testdata/after_starter.sav", import.meta.url),
+    ).bytes();
+
+    expect(() => validateCatchBenchmarkSourceSave(save)).not.toThrow();
+  });
+
+  test("rejects a real full-party save before a benchmark can run", async () => {
+    const save = await Bun.file(
+      new URL("../game/events/testdata/champion.sav", import.meta.url),
+    ).bytes();
+
+    expect(() => validateCatchBenchmarkSourceSave(save)).toThrow(
+      "source save has a full party; catch benchmark requires an empty party slot so every successful catch produces independent party-identity evidence",
+    );
+  });
+
+  test("rejects malformed flash images without guessing at party capacity", () => {
+    expect(() =>
+      validateCatchBenchmarkSourceSave(new Uint8Array(128 * 1024)),
+    ).toThrow("source save has no valid slot containing SaveBlock1 party data");
+    expect(() =>
+      validateCatchBenchmarkSourceSave(new Uint8Array(128 * 1024 - 1)),
+    ).toThrow("source save must be exactly 131072 bytes; got 131071");
+  });
+
+  test("rejects incomplete slots even when their remaining sectors look valid", async () => {
+    const save = Uint8Array.from(
+      await Bun.file(
+        new URL("../game/events/testdata/after_starter.sav", import.meta.url),
+      ).bytes(),
+    );
+    const view = new DataView(save.buffer, save.byteOffset, save.byteLength);
+    view.setUint32(0xf_f8, 0, true);
+    view.setUint32(0xe0_00 + 0xf_f8, 0, true);
+
+    expect(() => validateCatchBenchmarkSourceSave(save)).toThrow(
+      "source save has no valid slot containing SaveBlock1 party data",
+    );
   });
 });
 
@@ -231,7 +293,7 @@ describe("summarizeCodexJsonl", () => {
       },
       {
         id: "move-stopped",
-        command: "pokemonctl tap north",
+        command: "pokemonctl tap down",
         output: {
           status: "stopped",
           stopReason: "collision",
@@ -257,7 +319,128 @@ describe("summarizeCodexJsonl", () => {
     expect(telemetry.movementStops).toBe(1);
     expect(telemetry.repeatedPositionLoops).toBe(2);
   });
+});
 
+describe("summarizeCodexJsonl movement filtering", () => {
+  test("counts only directional field controls as movement", () => {
+    const commands = [
+      {
+        id: "battle-confirm",
+        command: ["pokemonctl", "tap", "a"],
+        output: {
+          action: "tap:a",
+          status: "applied",
+          stopReason: "completed",
+          before: actionObservation("battle", 10),
+          after: actionObservation("battle", 10),
+        },
+      },
+      {
+        id: "open-menu",
+        command: "pokemonctl press start",
+        output: {
+          action: "tap:start",
+          status: "applied",
+          stopReason: "completed",
+          before: actionObservation("overworld", 10),
+          after: actionObservation("other", 10),
+        },
+      },
+      {
+        id: "interact",
+        command: "pokemonctl interact east",
+        output: {
+          action: "interact",
+          status: "applied",
+          stopReason: "completed",
+          before: actionObservation("overworld", 10),
+          after: actionObservation("overworld", 10),
+        },
+      },
+      {
+        id: "battle-cursor",
+        command: "pokemonctl tap down",
+        output: {
+          action: "tap:down",
+          status: "applied",
+          stopReason: "completed",
+          before: actionObservation("battle", 10),
+          after: actionObservation("battle", 10),
+        },
+      },
+      {
+        id: "battle-raw-direction",
+        command: "pokemonctl press up --hold-ms 100",
+        output: {
+          action: "press:raw",
+          status: "applied",
+          stopReason: "completed",
+          before: actionObservation("battle", 10),
+          after: actionObservation("battle", 10),
+        },
+      },
+      {
+        id: "blocked-semantic-move",
+        command: ["bun", "run", "pokemonctl-entrypoint.sh"],
+        output: {
+          action: "move:east",
+          status: "stopped",
+          stopReason: "collision",
+          before: actionObservation("overworld", 10),
+          after: actionObservation("overworld", 10),
+        },
+      },
+      {
+        id: "wrapped-navigation",
+        command: [
+          "/bin/zsh",
+          "-lc",
+          "/runtime/.pokemon-goal-bin/pokemonctl navigate --x 11 --y 8",
+          { ignored: true },
+        ],
+        output: {
+          outcome: {
+            action: "navigate",
+            status: "arrived",
+            stopReason: "target-reached",
+            before: actionObservation("overworld", 10),
+            after: actionObservation("overworld", 11),
+          },
+        },
+      },
+      {
+        id: "field-directional-tap",
+        command: "'/runtime/.pokemon-goal-bin/pokemonctl' tap l",
+        output: {
+          action: "tap:l",
+          status: "applied",
+          stopReason: "completed",
+          before: actionObservation("overworld", 11),
+          after: actionObservation("overworld", 11),
+        },
+      },
+    ].map(({ id, command, output }) => ({
+      type: "item.completed",
+      item: {
+        id,
+        type: "command_execution",
+        command,
+        aggregated_output: JSON.stringify(output),
+        exit_code: 0,
+      },
+    }));
+
+    const telemetry = summarizeCodexJsonl(
+      commands.map((line) => JSON.stringify(line)).join("\n"),
+    );
+    expect(telemetry.toolCalls).toBe(8);
+    expect(telemetry.movementActions).toBe(3);
+    expect(telemetry.movementStops).toBe(1);
+    expect(telemetry.repeatedPositionLoops).toBe(2);
+  });
+});
+
+describe("summarizeCodexJsonl observation formats", () => {
   test("reads production observation worlds and treats completed as normal", () => {
     const line = {
       type: "item.completed",
@@ -317,12 +500,23 @@ describe("summarizeCodexJsonl", () => {
           exit_code: 0,
         },
       },
+      {
+        type: "item.completed",
+        item: {
+          id: "legacy-menu",
+          type: "command_execution",
+          command: "pokemonctl press start",
+          aggregated_output:
+            "Location: Littleroot Town @ (12, 7) facing north, on foot",
+          exit_code: 0,
+        },
+      },
     ];
     const telemetry = summarizeCodexJsonl(
       lines.map((line) => JSON.stringify(line)).join("\n"),
     );
 
-    expect(telemetry.toolCalls).toBe(3);
+    expect(telemetry.toolCalls).toBe(4);
     expect(telemetry.movementActions).toBe(2);
     expect(telemetry.repeatedPositionLoops).toBe(1);
   });
