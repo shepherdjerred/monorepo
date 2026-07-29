@@ -168,7 +168,8 @@ export function createArgoCdApp(chart: Chart) {
         // exec.enabled toggles the ArgoCD UI pod-terminal (kubectl exec). Kept
         // off: argocd-server is internet-reachable via the Cloudflare tunnel and
         // an enabled terminal turns an admin-credential compromise into in-pod
-        // RCE. The buildkite account only has applications sync/get, not exec.
+        // RCE. The buildkite account only has the release workflow's application
+        // sync/get access plus root-app manifest override, not exec.
         "exec.enabled": false,
         "timeout.reconciliation": "60s",
         "statusbadge.enabled": true,
@@ -219,9 +220,11 @@ return hs`,
       rbac: {
         // The release step reconciles the exact child revisions published by
         // the coordinated Helm release, so it needs sync access to the same
-        // project-wide Application set it can already read.
+        // project-wide Application set it can already read. Suspending
+        // repository-backed child auto-sync uses a manifest override only on
+        // the root app-of-apps Application.
         "policy.csv":
-          "p, buildkite, applications, sync, default/*, allow\np, buildkite, applications, get, default/*, allow",
+          "p, buildkite, applications, sync, default/*, allow\np, buildkite, applications, get, default/*, allow\np, buildkite, applications, override, default/apps, allow",
       },
     },
   };
