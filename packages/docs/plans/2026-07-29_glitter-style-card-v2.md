@@ -137,12 +137,16 @@ weekly production schedule.
   Colin, and Richard as synthesis baselines.
 - Added direct last-entry and metadata-leak sentinels for Birmel's classifier
   and Scout's shared frontend/backend prompt serializer.
-- Passed the serialized affected verification surface (79/79 tasks), 762
+- Passed the serialized affected verification surface (79/79 tasks), 764
   Temporal tests, 1,213 Scout backend tests, 94 Scout report tests, focused
   Birmel and Scout sentinel tests, and forced consumer typecheck/lint.
 - Addressed both P2 findings from the first Codex review: summary and League
   now use evidence-backed patch decisions, and billed parse failures are
   persisted before throwing so activity retries cannot spend twice.
+- Addressed the replacement review's spend-safety findings: every
+  post-completion artifact-finalization failure is non-retryable with billed
+  usage in its failure details, and the weekly workflow deadline now covers
+  both complete seven-hour activity attempts plus backoff.
 - Hardened the native Temporal good-morning integration cases against
   full-repository CI contention after build #7180 exposed Bun's 5-second
   default timeout; all five repeated focused runs passed with the explicit

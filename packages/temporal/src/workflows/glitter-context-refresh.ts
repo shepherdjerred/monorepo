@@ -7,6 +7,8 @@ import type {
 
 const { refreshGlitterContext } =
   proxyActivities<GlitterContextRefreshActivities>({
+    // The weekly schedule's 15h workflow deadline accommodates both complete
+    // attempts plus the retry backoff.
     startToCloseTimeout: "7 hours",
     heartbeatTimeout: "60 seconds",
     retry: {

@@ -1,4 +1,5 @@
 import { z } from "zod/v4";
+import { ApplicationFailure } from "@temporalio/common";
 import { sha256 } from "#shared/glitter-corpus-projection.ts";
 import {
   getObjectBytes,
@@ -65,6 +66,30 @@ export type GenerationArtifactResult<Response> = {
   usage: GenerationUsage;
 };
 
+function billedGenerationFinalizationFailure(input: {
+  error: unknown;
+  key: string;
+  model: string;
+  callSite: string;
+  requestSha256: string;
+  usage: GenerationUsage;
+}): ApplicationFailure {
+  const reason =
+    input.error instanceof Error ? input.error.message : String(input.error);
+  return ApplicationFailure.nonRetryable(
+    `A billed Glitter completion could not be finalized into its immutable artifact at ${input.key}: ${reason}. Automatic retry is disabled to prevent rebilling the same request; inspect storage and rerun deliberately.`,
+    "BilledGenerationFinalizationError",
+    {
+      key: input.key,
+      model: input.model,
+      callSite: input.callSite,
+      requestSha256: input.requestSha256,
+      usage: input.usage,
+      reason,
+    },
+  );
+}
+
 function parseStoredResponse<Response>(input: {
   stored: unknown;
   key: string;
@@ -130,36 +155,48 @@ export async function readOrCreateGenerationArtifact<Response>(input: {
   }
 
   const generated = await input.generate();
-  const response = input.responseSchema.parse(generated.response);
-  const usage = GenerationUsageSchema.parse(generated.usage);
-  await input.store.create(
-    key,
-    GenerationArtifactSchema.parse({
-      schemaVersion: GENERATION_ARTIFACT_SCHEMA_VERSION,
+  const reportedUsage = generated.usage;
+  try {
+    const usage = GenerationUsageSchema.parse(reportedUsage);
+    const response = input.responseSchema.parse(generated.response);
+    await input.store.create(
+      key,
+      GenerationArtifactSchema.parse({
+        schemaVersion: GENERATION_ARTIFACT_SCHEMA_VERSION,
+        model: input.model,
+        callSite: input.callSite,
+        requestSha256,
+        responseSha256: sha256(jsonBytes(response)),
+        response,
+        usage,
+      }),
+    );
+
+    const persisted = await input.store.read(key);
+    if (persisted === undefined) {
+      throw new Error(
+        `Glitter generation artifact disappeared after creation: ${key}`,
+      );
+    }
+    return parseStoredResponse({
+      stored: persisted,
+      key,
+      cacheStatus: "miss",
       model: input.model,
       callSite: input.callSite,
       requestSha256,
-      responseSha256: sha256(jsonBytes(response)),
-      response,
-      usage,
-    }),
-  );
-
-  const persisted = await input.store.read(key);
-  if (persisted === undefined) {
-    throw new Error(
-      `Glitter generation artifact disappeared after creation: ${key}`,
-    );
+      responseSchema: input.responseSchema,
+    });
+  } catch (error: unknown) {
+    throw billedGenerationFinalizationFailure({
+      error,
+      key,
+      model: input.model,
+      callSite: input.callSite,
+      requestSha256,
+      usage: reportedUsage,
+    });
   }
-  return parseStoredResponse({
-    stored: persisted,
-    key,
-    cacheStatus: "miss",
-    model: input.model,
-    callSite: input.callSite,
-    requestSha256,
-    responseSchema: input.responseSchema,
-  });
 }
 
 export function createCorpusGenerationArtifactStore(

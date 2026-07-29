@@ -381,7 +381,10 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 11 * * 1",
     taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "8 hours",
+    // The activity allows two complete 7h attempts separated by a 2m
+    // backoff. Keep the workflow deadline above that 14h2m retry envelope so
+    // a late first-attempt failure does not strand the paid run.
+    workflowExecutionTimeout: "15 hours",
     memo: "Weekly GPT-5.6 Luna extraction and Sol synthesis of shared Glitter style cards plus evidence-backed relationship history from the verified corpus",
     initialPauseNote:
       "Awaiting credentialed dry-run against the first approved complete snapshot",

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod/v4";
+import { ApplicationFailure } from "@temporalio/common";
 import {
   generationArtifactKey,
   generationRequestSha256,
@@ -163,7 +164,7 @@ describe("Glitter context generation artifacts", () => {
     ).rejects.toThrow("response checksum mismatch");
   });
 
-  test("does not persist a schema-invalid generated response", async () => {
+  test("fails non-retryably after a billed schema-invalid response", async () => {
     let createCount = 0;
     const store: GenerationArtifactStore = {
       read: () => Promise.resolve(),
@@ -172,8 +173,9 @@ describe("Glitter context generation artifacts", () => {
       },
     };
 
-    await expect(
-      readOrCreateGenerationArtifact({
+    let failure: unknown;
+    try {
+      await readOrCreateGenerationArtifact({
         store,
         model: "test-model",
         callSite: "style-card",
@@ -188,9 +190,82 @@ describe("Glitter context generation artifacts", () => {
             costUsd: 0.01,
           },
         }),
-      }),
-    ).rejects.toThrow();
+      });
+    } catch (error: unknown) {
+      failure = error;
+    }
+    if (!(failure instanceof ApplicationFailure)) {
+      throw new TypeError("Expected a non-retryable ApplicationFailure");
+    }
+    expect(failure.type).toBe("BilledGenerationFinalizationError");
+    expect(failure.nonRetryable).toBe(true);
     expect(createCount).toBe(0);
+  });
+});
+
+describe("Glitter billed completion artifacts", () => {
+  test("fails non-retryably when a billed response cannot be persisted", async () => {
+    let generationCount = 0;
+    const store: GenerationArtifactStore = {
+      read: () => Promise.resolve(),
+      create: async () => {
+        throw new Error("SeaweedFS unavailable");
+      },
+    };
+
+    let failure: unknown;
+    try {
+      await readOrCreateGenerationArtifact({
+        store,
+        model: "test-model",
+        callSite: "style-card",
+        request: { prompt: "billed but not persisted" },
+        responseSchema: ResponseSchema,
+        generate: async () => {
+          generationCount += 1;
+          return {
+            response: { value: "paid result" },
+            usage: {
+              inputTokens: 10,
+              outputTokens: 2,
+              cachedInputTokens: 0,
+              costUsd: 0.01,
+            },
+          };
+        },
+      });
+    } catch (error: unknown) {
+      failure = error;
+    }
+    if (!(failure instanceof ApplicationFailure)) {
+      throw new TypeError("Expected a non-retryable ApplicationFailure");
+    }
+    expect(failure.type).toBe("BilledGenerationFinalizationError");
+    expect(failure.nonRetryable).toBe(true);
+    expect(failure.message).toContain("Automatic retry is disabled");
+    expect(failure.details).toEqual([
+      {
+        key: generationArtifactKey({
+          callSite: "style-card",
+          requestSha256: generationRequestSha256({
+            prompt: "billed but not persisted",
+          }),
+        }),
+        model: "test-model",
+        callSite: "style-card",
+        requestSha256: generationRequestSha256({
+          prompt: "billed but not persisted",
+        }),
+        usage: {
+          inputTokens: 10,
+          outputTokens: 2,
+          cachedInputTokens: 0,
+          costUsd: 0.01,
+        },
+        reason: "SeaweedFS unavailable",
+      },
+    ]);
+    expect(generationCount).toBe(1);
   });
 
   test("persists billed parse failures so an activity retry cannot spend twice", async () => {
