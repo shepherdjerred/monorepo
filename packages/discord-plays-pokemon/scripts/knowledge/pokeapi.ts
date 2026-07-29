@@ -235,14 +235,6 @@ export function includeGeneration3Item(identifier: string): boolean {
   return !confirmedFrlgOnlyItemIdentifiers.has(identifier);
 }
 
-function emeraldEvolutionCrossReference(
-  identifier: string,
-): string | undefined {
-  return identifier === "nincada" || identifier === "shedinja"
-    ? "Emerald-specific Shedinja creation requirement: see species:shedinja-creation-emerald."
-    : undefined;
-}
-
 export async function buildPokeApiRecords(
   sources: Sources,
 ): Promise<KnowledgeRecord[]> {
@@ -387,11 +379,8 @@ export async function buildPokeApiRecords(
         `Height: ${String(form.height / 10)} m; weight: ${String(form.weight / 10)} kg`,
         `Evolves from: ${evolution.predecessor}`,
         `Evolves to: ${evolution.successors.join("; ") || "none"}`,
-        emeraldEvolutionCrossReference(row.identifier),
         `Emerald level-up moves (level:move): ${compactList(learnedMoves, 60) || "none"}`,
-      ]
-        .filter((line) => line !== undefined)
-        .join("\n"),
+      ].join("\n"),
       source,
     });
   }

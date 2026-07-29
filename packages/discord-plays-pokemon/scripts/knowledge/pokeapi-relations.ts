@@ -125,6 +125,19 @@ export type EvolutionReferences = {
   types: ReadonlyMap<number, string>;
 };
 
+export function emeraldShedinjaEvolutionCondition(
+  trigger: string,
+  evolvedSpeciesIdentifier: string,
+): string | undefined {
+  if (trigger !== "shed") return undefined;
+  if (evolvedSpeciesIdentifier !== "shedinja") {
+    throw new Error(
+      `PokeAPI shed evolution unexpectedly targets ${evolvedSpeciesIdentifier}`,
+    );
+  }
+  return "Emerald special: when Nincada evolves at level 20, Shedinja is created alongside Ninjask only with an empty party slot; evidence: species:shedinja-creation-emerald";
+}
+
 type SpeciesReference = Readonly<{
   id: number;
   identifier: string;
@@ -142,6 +155,18 @@ function evolutionCondition(
     "evolution_triggers",
     `evolution for species ${String(evolution.evolved_species_id)}`,
   );
+  const evolvedSpecies = requirePokeApiReference(
+    references.species,
+    evolution.evolved_species_id,
+    "pokemon_species",
+    `evolution target ${String(evolution.evolved_species_id)}`,
+  );
+  const emeraldShedinja = emeraldShedinjaEvolutionCondition(
+    trigger,
+    evolvedSpecies.identifier,
+  );
+  if (emeraldShedinja !== undefined) return emeraldShedinja;
+
   const details: string[] = [humanizeIdentifier(trigger)];
   if (evolution.minimum_level !== undefined) {
     details.push(`level ${String(evolution.minimum_level)}`);

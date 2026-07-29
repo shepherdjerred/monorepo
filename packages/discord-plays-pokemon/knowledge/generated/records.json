@@ -12549,7 +12549,7 @@
     "title": "Nincada",
     "aliases": ["nincada", "National Dex 290"],
     "tags": ["bug", "ground", "generation-3", "ordinary"],
-    "body": "National Pokédex: 290\nTypes: bug/ground\nHeight: 0.5 m; weight: 5.5 kg\nEvolves from: none\nEvolves to: Ninjask (Level Up, level 20); Shedinja (Shed)\nEmerald-specific Shedinja creation requirement: see species:shedinja-creation-emerald.\nEmerald level-up moves (level:move): 1:scratch, 1:harden, 5:leech-life, 9:sand-attack, 14:fury-swipes, 19:mind-reader, 25:false-swipe, 31:mud-slap, 38:metal-claw, 45:dig",
+    "body": "National Pokédex: 290\nTypes: bug/ground\nHeight: 0.5 m; weight: 5.5 kg\nEvolves from: none\nEvolves to: Ninjask (Level Up, level 20); Shedinja (Emerald special: when Nincada evolves at level 20, Shedinja is created alongside Ninjask only with an empty party slot; evidence: species:shedinja-creation-emerald)\nEmerald level-up moves (level:move): 1:scratch, 1:harden, 5:leech-life, 9:sand-attack, 14:fury-swipes, 19:mind-reader, 25:false-swipe, 31:mud-slap, 38:metal-claw, 45:dig",
     "source": {
       "id": "pokeapi",
       "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",
@@ -13529,7 +13529,7 @@
     "title": "Shedinja",
     "aliases": ["shedinja", "National Dex 292"],
     "tags": ["bug", "ghost", "generation-3", "ordinary"],
-    "body": "National Pokédex: 292\nTypes: bug/ghost\nHeight: 0.8 m; weight: 1.2 kg\nEvolves from: Nincada (Shed)\nEvolves to: none\nEmerald-specific Shedinja creation requirement: see species:shedinja-creation-emerald.\nEmerald level-up moves (level:move): 1:scratch, 1:harden, 5:leech-life, 9:sand-attack, 14:fury-swipes, 19:mind-reader, 25:spite, 31:confuse-ray, 38:shadow-ball, 45:grudge",
+    "body": "National Pokédex: 292\nTypes: bug/ghost\nHeight: 0.8 m; weight: 1.2 kg\nEvolves from: Nincada (Emerald special: when Nincada evolves at level 20, Shedinja is created alongside Ninjask only with an empty party slot; evidence: species:shedinja-creation-emerald)\nEvolves to: none\nEmerald level-up moves (level:move): 1:scratch, 1:harden, 5:leech-life, 9:sand-attack, 14:fury-swipes, 19:mind-reader, 25:spite, 31:confuse-ray, 38:shadow-ball, 45:grudge",
     "source": {
       "id": "pokeapi",
       "url": "https://github.com/PokeAPI/pokeapi/tree/dbef1b8570119d49b06943bc8ba6f0288d5872d5/data/v2/csv",

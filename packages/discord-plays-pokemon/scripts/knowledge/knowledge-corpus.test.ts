@@ -66,9 +66,15 @@ describe("committed generated knowledge", () => {
     const rayquaza = requiredRecord("species:rayquaza");
     expect(rayquaza.body).not.toContain("Capture rate:");
     const nincada = requiredRecord("species:nincada");
-    expect(nincada.body).toContain("see species:shedinja-creation-emerald");
+    expect(nincada.body).toContain(
+      "Shedinja (Emerald special: when Nincada evolves at level 20, Shedinja is created alongside Ninjask only with an empty party slot; evidence: species:shedinja-creation-emerald)",
+    );
+    expect(nincada.body).not.toContain("Shedinja (Shed)");
     const shedinja = requiredRecord("species:shedinja");
-    expect(shedinja.body).toContain("see species:shedinja-creation-emerald");
+    expect(shedinja.body).toContain(
+      "Evolves from: Nincada (Emerald special: when Nincada evolves at level 20, Shedinja is created alongside Ninjask only with an empty party slot; evidence: species:shedinja-creation-emerald)",
+    );
+    expect(shedinja.body).not.toContain("Nincada (Shed)");
     const shedinjaCreation = requiredRecord(
       "species:shedinja-creation-emerald",
     );

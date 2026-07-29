@@ -37,6 +37,11 @@ export function validateShedinjaSource(
       "pinned pokeemerald source no longer has the expected empty-party-slot Shedinja condition",
     );
   }
+  if (normalizedScene.includes("POKE_BALL")) {
+    throw new Error(
+      "pinned pokeemerald source now checks for a Poké Ball when creating Shedinja; update the generated knowledge requirement",
+    );
+  }
 }
 
 export async function buildPokeemeraldRecords(

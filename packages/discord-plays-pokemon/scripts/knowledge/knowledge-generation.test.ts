@@ -14,6 +14,7 @@ import {
   includeGeneration3Item,
 } from "./pokeapi.ts";
 import {
+  emeraldShedinjaEvolutionCondition,
   generation3FriendshipCondition,
   requirePokeApiReference,
 } from "./pokeapi-relations.ts";
@@ -116,6 +117,24 @@ describe("Generation III evolution normalization", () => {
     expect(() => validateShedinjaSource(table, "no party condition")).toThrow(
       "empty-party-slot Shedinja condition",
     );
+    expect(() =>
+      validateShedinjaSource(
+        table,
+        `${scene} CheckBagHasItem(ITEM_POKE_BALL, 1);`,
+      ),
+    ).toThrow("now checks for a Poké Ball");
+  });
+
+  test("expands PokeAPI's generic shed trigger with pinned Emerald facts", () => {
+    expect(emeraldShedinjaEvolutionCondition("shed", "shedinja")).toContain(
+      "Nincada evolves at level 20, Shedinja is created alongside Ninjask only with an empty party slot",
+    );
+    expect(
+      emeraldShedinjaEvolutionCondition("level-up", "ninjask"),
+    ).toBeUndefined();
+    expect(() =>
+      emeraldShedinjaEvolutionCondition("shed", "missingno"),
+    ).toThrow("shed evolution unexpectedly targets missingno");
   });
 });
 
