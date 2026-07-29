@@ -1,7 +1,7 @@
 ---
 id: log-2026-07-29-main-checkpoint-publication
 type: log
-status: in-progress
+status: complete
 board: false
 ---
 
@@ -20,10 +20,12 @@ checkout.
 - Checked linked public references before publication; public references
   returned 200, while authenticated PagerDuty links redirected to login and the
   Buildkite build page returned 403 without an authenticated browser session.
+- Committed and pushed the explicit documentation snapshot to `main` as
+  `646cafee0` (`docs(docs): add session investigation logs`).
 
 ### Remaining
 
-- Commit and push the explicit documentation snapshot to `main`.
+- None.
 
 ### Caveats
 
