@@ -56,13 +56,17 @@ describe("applyApplicationReleasePolicy", () => {
     expect(workerManifest.metadata.finalizers).toEqual([
       APPLICATION_RESOURCES_FINALIZER,
     ]);
-    expect(workerManifest.spec.syncPolicy?.automated).toBeUndefined();
+    expect(workerManifest.spec.syncPolicy?.automated).toEqual({
+      enabled: false,
+    });
 
     const rootManifest = ManifestSchema.parse(root.toJson());
     expect(
       rootManifest.metadata.annotations[APPLICATION_LIFECYCLE_ANNOTATION],
     ).toBe("retain");
     expect(rootManifest.metadata.finalizers).toBeUndefined();
-    expect(rootManifest.spec.syncPolicy?.automated).toBeUndefined();
+    expect(rootManifest.spec.syncPolicy?.automated).toEqual({
+      enabled: false,
+    });
   });
 });
