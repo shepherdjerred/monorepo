@@ -160,8 +160,24 @@ describe("Generation III move normalization", () => {
       power: 35,
       pp: 10,
       accuracy: 95,
-      priority: 0,
+      priority: undefined,
     });
+  });
+
+  test("omits current move priority when the changelog does not version it", () => {
+    const currentExtremeSpeed = {
+      id: 245,
+      identifier: "extreme-speed",
+      generation_id: 2,
+      type_id: 1,
+      power: 80,
+      pp: 5,
+      accuracy: 100,
+      priority: 2,
+      damage_class_id: 2,
+    };
+
+    expect(moveForVersion(currentExtremeSpeed, [], 6).priority).toBeUndefined();
   });
 
   test("treats fixed and variable damage attacks as damaging moves", () => {
@@ -476,6 +492,11 @@ describe("pinned Bulbapedia requests", () => {
         <p>Pinned&#160;walkthrough<br>Second line.</p>
         <ul><li>First step</li><li>Second step</li></ul>
         <div class="partycontainer">Rendered battle card</div>
+        <div class="PKMNcontainer">
+          <div class="PKMNmovename">Fly</div>
+          <div class="PKMNmovetype">Flying</div>
+          <div class="PKMNmovecat">Status</div>
+        </div>
         <sup class="reference">[1]</sup>
       </div>
     `;

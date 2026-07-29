@@ -34,7 +34,7 @@ type HiddenPowerMove = {
 type HiddenPowerValues = {
   accuracy?: number | undefined;
   pp?: number | undefined;
-  priority: number;
+  priority: number | undefined;
 };
 
 export function createHiddenPowerRecord(
@@ -52,7 +52,9 @@ export function createHiddenPowerRecord(
     body: [
       `Type: determined by the attacking Pokémon's IVs; one of ${allTypes.join(", ")}.`,
       `Power: 30-70 based on the attacking Pokémon's IVs; accuracy: ${String(versioned.accuracy ?? "always")}; PP: ${String(versioned.pp ?? "unknown")}`,
-      `Priority: ${String(versioned.priority)}; Generation III damage class follows the IV-derived type: physical for ${PHYSICAL_TYPES.join(", ")}; special for ${SPECIAL_TYPES.join(", ")}.`,
+      versioned.priority === undefined
+        ? `Generation III damage class follows the IV-derived type: physical for ${PHYSICAL_TYPES.join(", ")}; special for ${SPECIAL_TYPES.join(", ")}.`
+        : `Priority: ${String(versioned.priority)}; Generation III damage class follows the IV-derived type: physical for ${PHYSICAL_TYPES.join(", ")}; special for ${SPECIAL_TYPES.join(", ")}.`,
     ].join("\n"),
     sources: [...sources],
   };

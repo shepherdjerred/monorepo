@@ -91,7 +91,9 @@ describe("KnowledgeBase", () => {
       base.search("Pokéblock Case", { limit: 2 }).map((result) => result.id),
     ).toEqual(["items:pokeblock-case"]);
   });
+});
 
+describe("knowledge acquisition search", () => {
   test("ranks acquisition evidence above repeated usage mentions", () => {
     const base = new KnowledgeBase([
       {
@@ -134,7 +136,78 @@ describe("KnowledgeBase", () => {
     ]);
   });
 
-  test("loads and searches the committed corpus", async () => {
+  test("requires the complete acquisition subject in an acquisition passage", () => {
+    const base = new KnowledgeBase([
+      {
+        id: "progression:mach-bike",
+        domain: "progression",
+        title: "Rydel's Cycles",
+        aliases: [],
+        tags: [],
+        body: "Rydel gives you the Mach Bike or the Acro Bike.",
+        sources: [testSource],
+      },
+      {
+        id: "progression:macho-brace",
+        domain: "progression",
+        title: "Macho Brace reward",
+        aliases: [],
+        tags: [],
+        body: "The family gives you the Macho Brace as a reward.",
+        sources: [testSource],
+      },
+      {
+        id: "progression:pokeblock-case",
+        domain: "progression",
+        title: "Contest Hall receptionist",
+        aliases: [],
+        tags: [],
+        body: "The receptionist gives you a Pokéblock Case.",
+        sources: [testSource],
+      },
+      {
+        id: "progression:safari-zone",
+        domain: "progression",
+        title: "Safari Zone",
+        aliases: [],
+        tags: [],
+        body: "Only Trainers who have received a Pokéblock Case may enter.",
+        sources: [testSource],
+      },
+      {
+        id: "progression:feebas",
+        domain: "progression",
+        title: "Feebas location",
+        aliases: [],
+        tags: [],
+        body: "Feebas can be found on six fishing tiles on Route 119.",
+        sources: [testSource],
+      },
+      {
+        id: "progression:itemfinder",
+        domain: "progression",
+        title: "Itemfinder",
+        aliases: [],
+        tags: [],
+        body: "A rival hands over the Itemfinder.",
+        sources: [testSource],
+      },
+    ]);
+
+    expect(base.search("how to get Mach Bike", { limit: 1 }).at(0)?.id).toBe(
+      "progression:mach-bike",
+    );
+    expect(
+      base.search("where to get Pokéblock Case", { limit: 1 }).at(0)?.id,
+    ).toBe("progression:pokeblock-case");
+    expect(base.search("where to find Feebas", { limit: 1 }).at(0)?.id).toBe(
+      "progression:feebas",
+    );
+  });
+});
+
+describe("committed knowledge corpus", () => {
+  test("loads core world, species, and battle facts", async () => {
     const base = await loadKnowledgeBase();
     const results = base.search("Route 101 wild encounter", {
       domain: "world",
@@ -168,6 +241,10 @@ describe("KnowledgeBase", () => {
     expect(nincadaSearchResult?.sources.map((source) => source.id)).toEqual(
       expectedShedinjaSourceIds,
     );
+  });
+
+  test("finds HM acquisition passages", async () => {
+    const base = await loadKnowledgeBase();
     const surfResults = base.search("how to get surf", { limit: 3 });
     expect(
       surfResults.some(
@@ -203,6 +280,36 @@ describe("KnowledgeBase", () => {
       "obtain HM06 (Rock Smash)",
     );
     expect(rockSmashResults.at(0)?.excerpt).toContain("Mauville City");
+  });
+
+  test("finds exact item and species acquisition passages", async () => {
+    const base = await loadKnowledgeBase();
+    expect(base.search("where to find Feebas", { limit: 1 }).at(0)?.id).toBe(
+      "progression:bulbapedia:emerald-part-10:1",
+    );
+    expect(
+      base.search("where to get Pokéblock Case", { limit: 1 }).at(0)?.id,
+    ).toBe("progression:bulbapedia:emerald-part-13:1");
+    expect(base.search("how to get Mach Bike", { limit: 1 }).at(0)?.id).toBe(
+      "progression:bulbapedia:emerald-part-5:1",
+    );
+    expect(base.search("how to get Acro Bike", { limit: 1 }).at(0)?.id).toBe(
+      "progression:bulbapedia:emerald-part-5:1",
+    );
+  });
+
+  test("omits unsupported move priority and battle-card markup", async () => {
+    const base = await loadKnowledgeBase();
+    expect(
+      base.get("progression:bulbapedia:emerald-part-18:1")?.body,
+    ).not.toContain("FlyFlyingStatus");
+    for (const moveId of [
+      "battle:move:extreme-speed",
+      "battle:move:fake-out",
+      "battle:move:roar",
+    ]) {
+      expect(base.get(moveId)?.body).not.toContain("Priority:");
+    }
   });
 });
 

@@ -395,12 +395,68 @@ system against a copied live save and the exact goal `get me a pokeman`.
 
 ### Remaining
 
-- Rerun three clean-copy candidate trials when Codex quota is available. Do
-  not compare the current provider-invalid artifacts to the valid 0/3
-  baseline.
+- Run two more consecutive clean-copy candidate trials from the same immutable
+  source save. The first valid candidate trial succeeded, but one run does not
+  establish repeatability.
+- Fix benchmark boot preflight so it requires a continued, input-ready game
+  rather than accepting a title/attract-state snapshot with loaded save data.
+- Parse every JSON line from chained `pokemonctl` command output so movement,
+  movement-stop, repeated-position-loop, and ignored-input telemetry is
+  trustworthy.
+- Reduce navigation and context cost: the successful run needed 287 tool calls
+  and 35.5M input tokens, frequently requested `observe --full`, guessed map
+  targets, and crossed encounter grass repeatedly.
 - Run a production goal only after three consecutive local successes.
 
 ### Caveats
 
-- This repair validates the harness timing behavior with deterministic tests;
-  a clean-copy real-model benchmark remains the final acceptance measurement.
+- Candidate commit `0665aa9991fd68c9cc62c0608acd5e1bbcac84f0`
+  completed one strict clean-copy catch benchmark successfully in 25m14s:
+  Wurmple species `290` was correlated across the post-start catch event,
+  post-event state, final live state, and persisted save.
+- The successful run used 287 tool calls, 29 screenshots, eight knowledge
+  queries, 35.5M input tokens (98.5% cached), and an estimated $4.31. The
+  movement telemetry fields are invalid for this run because their parser
+  missed chained JSON outputs.
+
+## Session Log — 2026-07-29 (catch benchmark)
+
+### Done
+
+- Copied the live Kubernetes Emerald flash without mutating the PVC and
+  verified its exact 131,072-byte size and SHA-256
+  `34672c1bf24ff9ddb8b13bb942c1fdae670afad881eb01e928e9ee07b48e73a2`.
+- Ran the full candidate at exact commit
+  `0665aa9991fd68c9cc62c0608acd5e1bbcac84f0` with candidate WASM SHA-256
+  `2444d913c9a22d18e4aa8fe4881d52c5dbc717e76df44e77a5eb4d03f5b326bb`,
+  exact goal `get me a pokeman`, `gpt-5.6-luna`, and medium reasoning.
+- Observed the agent leave Birch's lab, train Torchic, recover from an
+  incorrect prerequisite hypothesis, win the Route 103 rival battle, return
+  for the Pokédex and five Poké Balls, and catch Wurmple.
+- Passed the independent strict evaluator with catch-event, post-event,
+  live-party/Pokédex, persisted-save, exact-species, save-ordering, and
+  128-KiB save-integrity evidence.
+- Stopped the automatically started second trial after the user accepted the
+  qualitative behavior, avoiding an unrequested additional hour and model
+  cost.
+- Identified benchmark boot-state and chained-output telemetry defects, plus
+  high navigation/tool/context cost, as the next concrete improvement targets.
+
+### Remaining
+
+- Complete two more consecutive clean-copy successes before claiming reliable
+  candidate performance or running the production goal.
+- Fix and verify the boot-state and movement-telemetry defects.
+- Reduce unnecessary full observations, map-target guesses, and wild-encounter
+  overhead without introducing a deterministic quest solver.
+- Merge/deploy the prompt and knowledge PRs before production comparison; the
+  current Kubernetes image contains only the merged semantic-controls layer.
+
+### Caveats
+
+- The valid comparison is baseline `0/3` versus candidate `1/1`; this
+  demonstrates capability, not a statistically reliable success rate.
+- Candidate run artifacts are ephemeral under
+  `/tmp/pokemon-catch-measurement.pk4fVl/candidate-0665aa9/`.
+- The interrupted second run is not a valid model measurement and must not be
+  included in the success-rate denominator.

@@ -63,7 +63,7 @@ export async function extractBulbapediaPlainText(
   let ignoredDepth = 0;
   const transformed = new HTMLRewriter()
     .on(
-      "table, style, script, noscript, figure, .mw-editsection, sup.reference, .references, .navbox, .toc, .partycontainer",
+      "table, style, script, noscript, figure, .mw-editsection, sup.reference, .references, .navbox, .toc, .partycontainer, .PKMNcontainer",
       {
         element(element) {
           ignoredDepth += 1;

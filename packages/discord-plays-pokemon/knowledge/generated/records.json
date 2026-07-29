@@ -5,7 +5,7 @@
     "title": "Absorb",
     "aliases": ["absorb"],
     "tags": ["grass", "special"],
-    "body": "Type: grass\nPower: 20; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: special",
+    "body": "Type: grass\nPower: 20; accuracy: 100; PP: 20\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -21,7 +21,7 @@
     "title": "Acid",
     "aliases": ["acid"],
     "tags": ["poison", "physical"],
-    "body": "Type: poison\nPower: 40; accuracy: 100; PP: 30\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: poison\nPower: 40; accuracy: 100; PP: 30\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -37,7 +37,7 @@
     "title": "Acid Armor",
     "aliases": ["acid-armor"],
     "tags": ["poison", "status"],
-    "body": "Type: poison\nPower: status; accuracy: always; PP: 40\nPriority: 0; Generation III damage class: status",
+    "body": "Type: poison\nPower: status; accuracy: always; PP: 40\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -53,7 +53,7 @@
     "title": "Aerial Ace",
     "aliases": ["aerial-ace"],
     "tags": ["flying", "physical"],
-    "body": "Type: flying\nPower: 60; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: flying\nPower: 60; accuracy: always; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -69,7 +69,7 @@
     "title": "Aeroblast",
     "aliases": ["aeroblast"],
     "tags": ["flying", "physical"],
-    "body": "Type: flying\nPower: 100; accuracy: 95; PP: 5\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: flying\nPower: 100; accuracy: 95; PP: 5\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -85,7 +85,7 @@
     "title": "Agility",
     "aliases": ["agility"],
     "tags": ["psychic", "status"],
-    "body": "Type: psychic\nPower: status; accuracy: always; PP: 30\nPriority: 0; Generation III damage class: status",
+    "body": "Type: psychic\nPower: status; accuracy: always; PP: 30\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -101,7 +101,7 @@
     "title": "Air Cutter",
     "aliases": ["air-cutter"],
     "tags": ["flying", "physical"],
-    "body": "Type: flying\nPower: 55; accuracy: 95; PP: 25\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: flying\nPower: 55; accuracy: 95; PP: 25\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -117,7 +117,7 @@
     "title": "Amnesia",
     "aliases": ["amnesia"],
     "tags": ["psychic", "status"],
-    "body": "Type: psychic\nPower: status; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: psychic\nPower: status; accuracy: always; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -133,7 +133,7 @@
     "title": "Ancient Power",
     "aliases": ["ancient-power"],
     "tags": ["rock", "physical"],
-    "body": "Type: rock\nPower: 60; accuracy: 100; PP: 5\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: rock\nPower: 60; accuracy: 100; PP: 5\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -149,7 +149,7 @@
     "title": "Arm Thrust",
     "aliases": ["arm-thrust"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: 15; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: 15; accuracy: 100; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -165,7 +165,7 @@
     "title": "Aromatherapy",
     "aliases": ["aromatherapy"],
     "tags": ["grass", "status"],
-    "body": "Type: grass\nPower: status; accuracy: always; PP: 5\nPriority: 0; Generation III damage class: status",
+    "body": "Type: grass\nPower: status; accuracy: always; PP: 5\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -181,7 +181,7 @@
     "title": "Assist",
     "aliases": ["assist"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -197,7 +197,7 @@
     "title": "Astonish",
     "aliases": ["astonish"],
     "tags": ["ghost", "physical"],
-    "body": "Type: ghost\nPower: 30; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: ghost\nPower: 30; accuracy: 100; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -213,7 +213,7 @@
     "title": "Attract",
     "aliases": ["attract"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 100; PP: 15\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -229,7 +229,7 @@
     "title": "Aurora Beam",
     "aliases": ["aurora-beam"],
     "tags": ["ice", "special"],
-    "body": "Type: ice\nPower: 65; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: special",
+    "body": "Type: ice\nPower: 65; accuracy: 100; PP: 20\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -245,7 +245,7 @@
     "title": "Barrage",
     "aliases": ["barrage"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 15; accuracy: 85; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 15; accuracy: 85; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -261,7 +261,7 @@
     "title": "Barrier",
     "aliases": ["barrier"],
     "tags": ["psychic", "status"],
-    "body": "Type: psychic\nPower: status; accuracy: always; PP: 30\nPriority: 0; Generation III damage class: status",
+    "body": "Type: psychic\nPower: status; accuracy: always; PP: 30\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -277,7 +277,7 @@
     "title": "Baton Pass",
     "aliases": ["baton-pass"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 40\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 40\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -293,7 +293,7 @@
     "title": "Beat Up",
     "aliases": ["beat-up"],
     "tags": ["dark", "special"],
-    "body": "Type: dark\nPower: 10; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: special",
+    "body": "Type: dark\nPower: 10; accuracy: 100; PP: 10\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -309,7 +309,7 @@
     "title": "Belly Drum",
     "aliases": ["belly-drum"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -325,7 +325,7 @@
     "title": "Bide",
     "aliases": ["bide"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: fixed or variable; accuracy: always; PP: 10\nPriority: 1; Generation III damage class: physical",
+    "body": "Type: normal\nPower: fixed or variable; accuracy: always; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -341,7 +341,7 @@
     "title": "Bind",
     "aliases": ["bind"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 15; accuracy: 75; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 15; accuracy: 75; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -357,7 +357,7 @@
     "title": "Bite",
     "aliases": ["bite"],
     "tags": ["dark", "special"],
-    "body": "Type: dark\nPower: 60; accuracy: 100; PP: 25\nPriority: 0; Generation III damage class: special",
+    "body": "Type: dark\nPower: 60; accuracy: 100; PP: 25\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -373,7 +373,7 @@
     "title": "Blast Burn",
     "aliases": ["blast-burn"],
     "tags": ["fire", "special"],
-    "body": "Type: fire\nPower: 150; accuracy: 90; PP: 5\nPriority: 0; Generation III damage class: special",
+    "body": "Type: fire\nPower: 150; accuracy: 90; PP: 5\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -389,7 +389,7 @@
     "title": "Blaze Kick",
     "aliases": ["blaze-kick"],
     "tags": ["fire", "special"],
-    "body": "Type: fire\nPower: 85; accuracy: 90; PP: 10\nPriority: 0; Generation III damage class: special",
+    "body": "Type: fire\nPower: 85; accuracy: 90; PP: 10\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -405,7 +405,7 @@
     "title": "Blizzard",
     "aliases": ["blizzard"],
     "tags": ["ice", "special"],
-    "body": "Type: ice\nPower: 120; accuracy: 70; PP: 5\nPriority: 0; Generation III damage class: special",
+    "body": "Type: ice\nPower: 120; accuracy: 70; PP: 5\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -421,7 +421,7 @@
     "title": "Block",
     "aliases": ["block"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 5\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 5\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -437,7 +437,7 @@
     "title": "Body Slam",
     "aliases": ["body-slam"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 85; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 85; accuracy: 100; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -453,7 +453,7 @@
     "title": "Bone Club",
     "aliases": ["bone-club"],
     "tags": ["ground", "physical"],
-    "body": "Type: ground\nPower: 65; accuracy: 85; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: ground\nPower: 65; accuracy: 85; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -469,7 +469,7 @@
     "title": "Bone Rush",
     "aliases": ["bone-rush"],
     "tags": ["ground", "physical"],
-    "body": "Type: ground\nPower: 25; accuracy: 80; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: ground\nPower: 25; accuracy: 80; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -485,7 +485,7 @@
     "title": "Bonemerang",
     "aliases": ["bonemerang"],
     "tags": ["ground", "physical"],
-    "body": "Type: ground\nPower: 50; accuracy: 90; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: ground\nPower: 50; accuracy: 90; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -501,7 +501,7 @@
     "title": "Bounce",
     "aliases": ["bounce"],
     "tags": ["flying", "physical"],
-    "body": "Type: flying\nPower: 85; accuracy: 85; PP: 5\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: flying\nPower: 85; accuracy: 85; PP: 5\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -517,7 +517,7 @@
     "title": "Brick Break",
     "aliases": ["brick-break"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: 75; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: 75; accuracy: 100; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -533,7 +533,7 @@
     "title": "Bubble",
     "aliases": ["bubble"],
     "tags": ["water", "special"],
-    "body": "Type: water\nPower: 20; accuracy: 100; PP: 30\nPriority: 0; Generation III damage class: special",
+    "body": "Type: water\nPower: 20; accuracy: 100; PP: 30\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -549,7 +549,7 @@
     "title": "Bubble Beam",
     "aliases": ["bubble-beam"],
     "tags": ["water", "special"],
-    "body": "Type: water\nPower: 65; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: special",
+    "body": "Type: water\nPower: 65; accuracy: 100; PP: 20\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -565,7 +565,7 @@
     "title": "Bulk Up",
     "aliases": ["bulk-up"],
     "tags": ["fighting", "status"],
-    "body": "Type: fighting\nPower: status; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: fighting\nPower: status; accuracy: always; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -581,7 +581,7 @@
     "title": "Bullet Seed",
     "aliases": ["bullet-seed"],
     "tags": ["grass", "special"],
-    "body": "Type: grass\nPower: 10; accuracy: 100; PP: 30\nPriority: 0; Generation III damage class: special",
+    "body": "Type: grass\nPower: 10; accuracy: 100; PP: 30\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -597,7 +597,7 @@
     "title": "Calm Mind",
     "aliases": ["calm-mind"],
     "tags": ["psychic", "status"],
-    "body": "Type: psychic\nPower: status; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: psychic\nPower: status; accuracy: always; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -613,7 +613,7 @@
     "title": "Camouflage",
     "aliases": ["camouflage"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -629,7 +629,7 @@
     "title": "Charge",
     "aliases": ["charge"],
     "tags": ["electric", "status"],
-    "body": "Type: electric\nPower: status; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: electric\nPower: status; accuracy: always; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -645,7 +645,7 @@
     "title": "Charm",
     "aliases": ["charm"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 100; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -661,7 +661,7 @@
     "title": "Clamp",
     "aliases": ["clamp"],
     "tags": ["water", "special"],
-    "body": "Type: water\nPower: 35; accuracy: 75; PP: 10\nPriority: 0; Generation III damage class: special",
+    "body": "Type: water\nPower: 35; accuracy: 75; PP: 10\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -677,7 +677,7 @@
     "title": "Comet Punch",
     "aliases": ["comet-punch"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 18; accuracy: 85; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 18; accuracy: 85; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -693,7 +693,7 @@
     "title": "Confuse Ray",
     "aliases": ["confuse-ray"],
     "tags": ["ghost", "status"],
-    "body": "Type: ghost\nPower: status; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: ghost\nPower: status; accuracy: 100; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -709,7 +709,7 @@
     "title": "Confusion",
     "aliases": ["confusion"],
     "tags": ["psychic", "special"],
-    "body": "Type: psychic\nPower: 50; accuracy: 100; PP: 25\nPriority: 0; Generation III damage class: special",
+    "body": "Type: psychic\nPower: 50; accuracy: 100; PP: 25\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -725,7 +725,7 @@
     "title": "Constrict",
     "aliases": ["constrict"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 10; accuracy: 100; PP: 35\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 10; accuracy: 100; PP: 35\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -741,7 +741,7 @@
     "title": "Conversion",
     "aliases": ["conversion"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 30\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 30\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -757,7 +757,7 @@
     "title": "Conversion 2",
     "aliases": ["conversion-2"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 30\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 30\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -773,7 +773,7 @@
     "title": "Cosmic Power",
     "aliases": ["cosmic-power"],
     "tags": ["psychic", "status"],
-    "body": "Type: psychic\nPower: status; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: psychic\nPower: status; accuracy: always; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -789,7 +789,7 @@
     "title": "Cotton Spore",
     "aliases": ["cotton-spore"],
     "tags": ["grass", "status"],
-    "body": "Type: grass\nPower: status; accuracy: 85; PP: 40\nPriority: 0; Generation III damage class: status",
+    "body": "Type: grass\nPower: status; accuracy: 85; PP: 40\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -805,7 +805,7 @@
     "title": "Counter",
     "aliases": ["counter"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: fixed or variable; accuracy: 100; PP: 20\nPriority: -5; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: fixed or variable; accuracy: 100; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -821,7 +821,7 @@
     "title": "Covet",
     "aliases": ["covet"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 40; accuracy: 100; PP: 40\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 40; accuracy: 100; PP: 40\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -837,7 +837,7 @@
     "title": "Crabhammer",
     "aliases": ["crabhammer"],
     "tags": ["water", "special"],
-    "body": "Type: water\nPower: 90; accuracy: 85; PP: 10\nPriority: 0; Generation III damage class: special",
+    "body": "Type: water\nPower: 90; accuracy: 85; PP: 10\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -853,7 +853,7 @@
     "title": "Cross Chop",
     "aliases": ["cross-chop"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: 100; accuracy: 80; PP: 5\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: 100; accuracy: 80; PP: 5\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -869,7 +869,7 @@
     "title": "Crunch",
     "aliases": ["crunch"],
     "tags": ["dark", "special"],
-    "body": "Type: dark\nPower: 80; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: special",
+    "body": "Type: dark\nPower: 80; accuracy: 100; PP: 15\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -885,7 +885,7 @@
     "title": "Crush Claw",
     "aliases": ["crush-claw"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 75; accuracy: 95; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 75; accuracy: 95; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -901,7 +901,7 @@
     "title": "Curse",
     "aliases": ["curse"],
     "tags": ["unknown", "status"],
-    "body": "Type: unknown\nPower: status; accuracy: always; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: unknown\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -917,7 +917,7 @@
     "title": "Cut",
     "aliases": ["cut"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 50; accuracy: 95; PP: 30\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 50; accuracy: 95; PP: 30\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -933,7 +933,7 @@
     "title": "Defense Curl",
     "aliases": ["defense-curl"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 40\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 40\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -949,7 +949,7 @@
     "title": "Destiny Bond",
     "aliases": ["destiny-bond"],
     "tags": ["ghost", "status"],
-    "body": "Type: ghost\nPower: status; accuracy: always; PP: 5\nPriority: 0; Generation III damage class: status",
+    "body": "Type: ghost\nPower: status; accuracy: always; PP: 5\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -965,7 +965,7 @@
     "title": "Detect",
     "aliases": ["detect"],
     "tags": ["fighting", "status"],
-    "body": "Type: fighting\nPower: status; accuracy: always; PP: 5\nPriority: 4; Generation III damage class: status",
+    "body": "Type: fighting\nPower: status; accuracy: always; PP: 5\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -981,7 +981,7 @@
     "title": "Dig",
     "aliases": ["dig"],
     "tags": ["ground", "physical"],
-    "body": "Type: ground\nPower: 60; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: ground\nPower: 60; accuracy: 100; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -997,7 +997,7 @@
     "title": "Disable",
     "aliases": ["disable"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 55; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 55; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -1013,7 +1013,7 @@
     "title": "Dive",
     "aliases": ["dive"],
     "tags": ["water", "special"],
-    "body": "Type: water\nPower: 60; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: special",
+    "body": "Type: water\nPower: 60; accuracy: 100; PP: 10\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -1029,7 +1029,7 @@
     "title": "Dizzy Punch",
     "aliases": ["dizzy-punch"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 70; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 70; accuracy: 100; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1045,7 +1045,7 @@
     "title": "Doom Desire",
     "aliases": ["doom-desire"],
     "tags": ["steel", "physical"],
-    "body": "Type: steel\nPower: 120; accuracy: 85; PP: 5\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: steel\nPower: 120; accuracy: 85; PP: 5\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1061,7 +1061,7 @@
     "title": "Double Edge",
     "aliases": ["double-edge"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 120; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 120; accuracy: 100; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1077,7 +1077,7 @@
     "title": "Double Kick",
     "aliases": ["double-kick"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: 30; accuracy: 100; PP: 30\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: 30; accuracy: 100; PP: 30\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1093,7 +1093,7 @@
     "title": "Double Slap",
     "aliases": ["double-slap"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 15; accuracy: 85; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 15; accuracy: 85; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1109,7 +1109,7 @@
     "title": "Double Team",
     "aliases": ["double-team"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 15\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 15\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -1125,7 +1125,7 @@
     "title": "Dragon Breath",
     "aliases": ["dragon-breath"],
     "tags": ["dragon", "special"],
-    "body": "Type: dragon\nPower: 60; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: special",
+    "body": "Type: dragon\nPower: 60; accuracy: 100; PP: 20\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -1141,7 +1141,7 @@
     "title": "Dragon Claw",
     "aliases": ["dragon-claw"],
     "tags": ["dragon", "special"],
-    "body": "Type: dragon\nPower: 80; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: special",
+    "body": "Type: dragon\nPower: 80; accuracy: 100; PP: 15\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -1157,7 +1157,7 @@
     "title": "Dragon Dance",
     "aliases": ["dragon-dance"],
     "tags": ["dragon", "status"],
-    "body": "Type: dragon\nPower: status; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: dragon\nPower: status; accuracy: always; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -1173,7 +1173,7 @@
     "title": "Dragon Rage",
     "aliases": ["dragon-rage"],
     "tags": ["dragon", "special"],
-    "body": "Type: dragon\nPower: fixed or variable; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: special",
+    "body": "Type: dragon\nPower: fixed or variable; accuracy: 100; PP: 10\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -1189,7 +1189,7 @@
     "title": "Dream Eater",
     "aliases": ["dream-eater"],
     "tags": ["psychic", "special"],
-    "body": "Type: psychic\nPower: 100; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: special",
+    "body": "Type: psychic\nPower: 100; accuracy: 100; PP: 15\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -1205,7 +1205,7 @@
     "title": "Drill Peck",
     "aliases": ["drill-peck"],
     "tags": ["flying", "physical"],
-    "body": "Type: flying\nPower: 80; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: flying\nPower: 80; accuracy: 100; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1221,7 +1221,7 @@
     "title": "Dynamic Punch",
     "aliases": ["dynamic-punch"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: 100; accuracy: 50; PP: 5\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: 100; accuracy: 50; PP: 5\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1237,7 +1237,7 @@
     "title": "Earthquake",
     "aliases": ["earthquake"],
     "tags": ["ground", "physical"],
-    "body": "Type: ground\nPower: 100; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: ground\nPower: 100; accuracy: 100; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1253,7 +1253,7 @@
     "title": "Egg Bomb",
     "aliases": ["egg-bomb"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 100; accuracy: 75; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 100; accuracy: 75; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1269,7 +1269,7 @@
     "title": "Ember",
     "aliases": ["ember"],
     "tags": ["fire", "special"],
-    "body": "Type: fire\nPower: 40; accuracy: 100; PP: 25\nPriority: 0; Generation III damage class: special",
+    "body": "Type: fire\nPower: 40; accuracy: 100; PP: 25\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -1285,7 +1285,7 @@
     "title": "Encore",
     "aliases": ["encore"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 100; PP: 5\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 100; PP: 5\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -1301,7 +1301,7 @@
     "title": "Endeavor",
     "aliases": ["endeavor"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: fixed or variable; accuracy: 100; PP: 5\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: fixed or variable; accuracy: 100; PP: 5\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1317,7 +1317,7 @@
     "title": "Endure",
     "aliases": ["endure"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nPriority: 4; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -1333,7 +1333,7 @@
     "title": "Eruption",
     "aliases": ["eruption"],
     "tags": ["fire", "special"],
-    "body": "Type: fire\nPower: 150; accuracy: 100; PP: 5\nPriority: 0; Generation III damage class: special",
+    "body": "Type: fire\nPower: 150; accuracy: 100; PP: 5\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -1349,7 +1349,7 @@
     "title": "Explosion",
     "aliases": ["explosion"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 250; accuracy: 100; PP: 5\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 250; accuracy: 100; PP: 5\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1365,7 +1365,7 @@
     "title": "Extrasensory",
     "aliases": ["extrasensory"],
     "tags": ["psychic", "special"],
-    "body": "Type: psychic\nPower: 80; accuracy: 100; PP: 30\nPriority: 0; Generation III damage class: special",
+    "body": "Type: psychic\nPower: 80; accuracy: 100; PP: 30\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -1381,7 +1381,7 @@
     "title": "Extreme Speed",
     "aliases": ["extreme-speed"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 80; accuracy: 100; PP: 5\nPriority: 2; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 80; accuracy: 100; PP: 5\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1397,7 +1397,7 @@
     "title": "Facade",
     "aliases": ["facade"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 70; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 70; accuracy: 100; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1413,7 +1413,7 @@
     "title": "Fake Out",
     "aliases": ["fake-out"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 40; accuracy: 100; PP: 10\nPriority: 3; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 40; accuracy: 100; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1429,7 +1429,7 @@
     "title": "Fake Tears",
     "aliases": ["fake-tears"],
     "tags": ["dark", "status"],
-    "body": "Type: dark\nPower: status; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: dark\nPower: status; accuracy: 100; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -1445,7 +1445,7 @@
     "title": "False Swipe",
     "aliases": ["false-swipe"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 40; accuracy: 100; PP: 40\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 40; accuracy: 100; PP: 40\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1461,7 +1461,7 @@
     "title": "Feather Dance",
     "aliases": ["feather-dance"],
     "tags": ["flying", "status"],
-    "body": "Type: flying\nPower: status; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: status",
+    "body": "Type: flying\nPower: status; accuracy: 100; PP: 15\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -1477,7 +1477,7 @@
     "title": "Feint Attack",
     "aliases": ["feint-attack"],
     "tags": ["dark", "special"],
-    "body": "Type: dark\nPower: 60; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: special",
+    "body": "Type: dark\nPower: 60; accuracy: always; PP: 20\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -1493,7 +1493,7 @@
     "title": "Fire Blast",
     "aliases": ["fire-blast"],
     "tags": ["fire", "special"],
-    "body": "Type: fire\nPower: 120; accuracy: 85; PP: 5\nPriority: 0; Generation III damage class: special",
+    "body": "Type: fire\nPower: 120; accuracy: 85; PP: 5\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -1509,7 +1509,7 @@
     "title": "Fire Punch",
     "aliases": ["fire-punch"],
     "tags": ["fire", "special"],
-    "body": "Type: fire\nPower: 75; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: special",
+    "body": "Type: fire\nPower: 75; accuracy: 100; PP: 15\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -1525,7 +1525,7 @@
     "title": "Fire Spin",
     "aliases": ["fire-spin"],
     "tags": ["fire", "special"],
-    "body": "Type: fire\nPower: 15; accuracy: 70; PP: 15\nPriority: 0; Generation III damage class: special",
+    "body": "Type: fire\nPower: 15; accuracy: 70; PP: 15\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -1541,7 +1541,7 @@
     "title": "Fissure",
     "aliases": ["fissure"],
     "tags": ["ground", "physical"],
-    "body": "Type: ground\nPower: fixed or variable; accuracy: 30; PP: 5\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: ground\nPower: fixed or variable; accuracy: 30; PP: 5\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1557,7 +1557,7 @@
     "title": "Flail",
     "aliases": ["flail"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: fixed or variable; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: fixed or variable; accuracy: 100; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1573,7 +1573,7 @@
     "title": "Flame Wheel",
     "aliases": ["flame-wheel"],
     "tags": ["fire", "special"],
-    "body": "Type: fire\nPower: 60; accuracy: 100; PP: 25\nPriority: 0; Generation III damage class: special",
+    "body": "Type: fire\nPower: 60; accuracy: 100; PP: 25\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -1589,7 +1589,7 @@
     "title": "Flamethrower",
     "aliases": ["flamethrower"],
     "tags": ["fire", "special"],
-    "body": "Type: fire\nPower: 95; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: special",
+    "body": "Type: fire\nPower: 95; accuracy: 100; PP: 15\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -1605,7 +1605,7 @@
     "title": "Flash",
     "aliases": ["flash"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 70; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 70; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -1621,7 +1621,7 @@
     "title": "Flatter",
     "aliases": ["flatter"],
     "tags": ["dark", "status"],
-    "body": "Type: dark\nPower: status; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: status",
+    "body": "Type: dark\nPower: status; accuracy: 100; PP: 15\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -1637,7 +1637,7 @@
     "title": "Fly",
     "aliases": ["fly"],
     "tags": ["flying", "physical"],
-    "body": "Type: flying\nPower: 70; accuracy: 95; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: flying\nPower: 70; accuracy: 95; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1653,7 +1653,7 @@
     "title": "Focus Energy",
     "aliases": ["focus-energy"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 30\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 30\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -1669,7 +1669,7 @@
     "title": "Focus Punch",
     "aliases": ["focus-punch"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: 150; accuracy: 100; PP: 20\nPriority: -3; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: 150; accuracy: 100; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1701,7 +1701,7 @@
     "title": "Foresight",
     "aliases": ["foresight"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 40\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 40\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -1717,7 +1717,7 @@
     "title": "Frenzy Plant",
     "aliases": ["frenzy-plant"],
     "tags": ["grass", "special"],
-    "body": "Type: grass\nPower: 150; accuracy: 90; PP: 5\nPriority: 0; Generation III damage class: special",
+    "body": "Type: grass\nPower: 150; accuracy: 90; PP: 5\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -1733,7 +1733,7 @@
     "title": "Frustration",
     "aliases": ["frustration"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: fixed or variable; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: fixed or variable; accuracy: 100; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1749,7 +1749,7 @@
     "title": "Fury Attack",
     "aliases": ["fury-attack"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 15; accuracy: 85; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 15; accuracy: 85; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1765,7 +1765,7 @@
     "title": "Fury Cutter",
     "aliases": ["fury-cutter"],
     "tags": ["bug", "physical"],
-    "body": "Type: bug\nPower: 10; accuracy: 95; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: bug\nPower: 10; accuracy: 95; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1781,7 +1781,7 @@
     "title": "Fury Swipes",
     "aliases": ["fury-swipes"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 18; accuracy: 80; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 18; accuracy: 80; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1797,7 +1797,7 @@
     "title": "Future Sight",
     "aliases": ["future-sight"],
     "tags": ["psychic", "special"],
-    "body": "Type: psychic\nPower: 80; accuracy: 90; PP: 15\nPriority: 0; Generation III damage class: special",
+    "body": "Type: psychic\nPower: 80; accuracy: 90; PP: 15\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -1813,7 +1813,7 @@
     "title": "Giga Drain",
     "aliases": ["giga-drain"],
     "tags": ["grass", "special"],
-    "body": "Type: grass\nPower: 60; accuracy: 100; PP: 5\nPriority: 0; Generation III damage class: special",
+    "body": "Type: grass\nPower: 60; accuracy: 100; PP: 5\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -1829,7 +1829,7 @@
     "title": "Glare",
     "aliases": ["glare"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 75; PP: 30\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 75; PP: 30\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -1845,7 +1845,7 @@
     "title": "Grass Whistle",
     "aliases": ["grass-whistle"],
     "tags": ["grass", "status"],
-    "body": "Type: grass\nPower: status; accuracy: 55; PP: 15\nPriority: 0; Generation III damage class: status",
+    "body": "Type: grass\nPower: status; accuracy: 55; PP: 15\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -1861,7 +1861,7 @@
     "title": "Growl",
     "aliases": ["growl"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 100; PP: 40\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 100; PP: 40\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -1877,7 +1877,7 @@
     "title": "Growth",
     "aliases": ["growth"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 40\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 40\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -1893,7 +1893,7 @@
     "title": "Grudge",
     "aliases": ["grudge"],
     "tags": ["ghost", "status"],
-    "body": "Type: ghost\nPower: status; accuracy: always; PP: 5\nPriority: 0; Generation III damage class: status",
+    "body": "Type: ghost\nPower: status; accuracy: always; PP: 5\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -1909,7 +1909,7 @@
     "title": "Guillotine",
     "aliases": ["guillotine"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: fixed or variable; accuracy: 30; PP: 5\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: fixed or variable; accuracy: 30; PP: 5\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1925,7 +1925,7 @@
     "title": "Gust",
     "aliases": ["gust"],
     "tags": ["flying", "physical"],
-    "body": "Type: flying\nPower: 40; accuracy: 100; PP: 35\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: flying\nPower: 40; accuracy: 100; PP: 35\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -1941,7 +1941,7 @@
     "title": "Hail",
     "aliases": ["hail"],
     "tags": ["ice", "status"],
-    "body": "Type: ice\nPower: status; accuracy: always; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: ice\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -1957,7 +1957,7 @@
     "title": "Harden",
     "aliases": ["harden"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 30\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 30\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -1973,7 +1973,7 @@
     "title": "Haze",
     "aliases": ["haze"],
     "tags": ["ice", "status"],
-    "body": "Type: ice\nPower: status; accuracy: always; PP: 30\nPriority: 0; Generation III damage class: status",
+    "body": "Type: ice\nPower: status; accuracy: always; PP: 30\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -1989,7 +1989,7 @@
     "title": "Headbutt",
     "aliases": ["headbutt"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 70; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 70; accuracy: 100; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -2005,7 +2005,7 @@
     "title": "Heal Bell",
     "aliases": ["heal-bell"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 5\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 5\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2021,7 +2021,7 @@
     "title": "Heat Wave",
     "aliases": ["heat-wave"],
     "tags": ["fire", "special"],
-    "body": "Type: fire\nPower: 100; accuracy: 90; PP: 10\nPriority: 0; Generation III damage class: special",
+    "body": "Type: fire\nPower: 100; accuracy: 90; PP: 10\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -2037,7 +2037,7 @@
     "title": "Helping Hand",
     "aliases": ["helping-hand"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 20\nPriority: 5; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2053,7 +2053,7 @@
     "title": "Hidden Power",
     "aliases": ["hidden-power"],
     "tags": ["variable-type", "variable-power", "physical-or-special"],
-    "body": "Type: determined by the attacking Pokémon's IVs; one of fighting, flying, poison, ground, rock, bug, ghost, steel, fire, water, grass, electric, psychic, ice, dragon, dark.\nPower: 30-70 based on the attacking Pokémon's IVs; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class follows the IV-derived type: physical for fighting, flying, poison, ground, rock, bug, ghost, steel; special for fire, water, grass, electric, psychic, ice, dragon, dark.",
+    "body": "Type: determined by the attacking Pokémon's IVs; one of fighting, flying, poison, ground, rock, bug, ghost, steel, fire, water, grass, electric, psychic, ice, dragon, dark.\nPower: 30-70 based on the attacking Pokémon's IVs; accuracy: 100; PP: 15\nGeneration III damage class follows the IV-derived type: physical for fighting, flying, poison, ground, rock, bug, ghost, steel; special for fire, water, grass, electric, psychic, ice, dragon, dark.",
     "sources": [
       {
         "id": "pokeapi",
@@ -2075,7 +2075,7 @@
     "title": "High Jump Kick",
     "aliases": ["high-jump-kick"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: 85; accuracy: 90; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: 85; accuracy: 90; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -2091,7 +2091,7 @@
     "title": "Horn Attack",
     "aliases": ["horn-attack"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 65; accuracy: 100; PP: 25\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 65; accuracy: 100; PP: 25\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -2107,7 +2107,7 @@
     "title": "Horn Drill",
     "aliases": ["horn-drill"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: fixed or variable; accuracy: 30; PP: 5\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: fixed or variable; accuracy: 30; PP: 5\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -2123,7 +2123,7 @@
     "title": "Howl",
     "aliases": ["howl"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 40\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 40\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2139,7 +2139,7 @@
     "title": "Hydro Cannon",
     "aliases": ["hydro-cannon"],
     "tags": ["water", "special"],
-    "body": "Type: water\nPower: 150; accuracy: 90; PP: 5\nPriority: 0; Generation III damage class: special",
+    "body": "Type: water\nPower: 150; accuracy: 90; PP: 5\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -2155,7 +2155,7 @@
     "title": "Hydro Pump",
     "aliases": ["hydro-pump"],
     "tags": ["water", "special"],
-    "body": "Type: water\nPower: 120; accuracy: 80; PP: 5\nPriority: 0; Generation III damage class: special",
+    "body": "Type: water\nPower: 120; accuracy: 80; PP: 5\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -2171,7 +2171,7 @@
     "title": "Hyper Beam",
     "aliases": ["hyper-beam"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 150; accuracy: 90; PP: 5\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 150; accuracy: 90; PP: 5\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -2187,7 +2187,7 @@
     "title": "Hyper Fang",
     "aliases": ["hyper-fang"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 80; accuracy: 90; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 80; accuracy: 90; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -2203,7 +2203,7 @@
     "title": "Hyper Voice",
     "aliases": ["hyper-voice"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 90; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 90; accuracy: 100; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -2219,7 +2219,7 @@
     "title": "Hypnosis",
     "aliases": ["hypnosis"],
     "tags": ["psychic", "status"],
-    "body": "Type: psychic\nPower: status; accuracy: 60; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: psychic\nPower: status; accuracy: 60; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2235,7 +2235,7 @@
     "title": "Ice Ball",
     "aliases": ["ice-ball"],
     "tags": ["ice", "special"],
-    "body": "Type: ice\nPower: 30; accuracy: 90; PP: 20\nPriority: 0; Generation III damage class: special",
+    "body": "Type: ice\nPower: 30; accuracy: 90; PP: 20\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -2251,7 +2251,7 @@
     "title": "Ice Beam",
     "aliases": ["ice-beam"],
     "tags": ["ice", "special"],
-    "body": "Type: ice\nPower: 95; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: special",
+    "body": "Type: ice\nPower: 95; accuracy: 100; PP: 10\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -2267,7 +2267,7 @@
     "title": "Ice Punch",
     "aliases": ["ice-punch"],
     "tags": ["ice", "special"],
-    "body": "Type: ice\nPower: 75; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: special",
+    "body": "Type: ice\nPower: 75; accuracy: 100; PP: 15\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -2283,7 +2283,7 @@
     "title": "Icicle Spear",
     "aliases": ["icicle-spear"],
     "tags": ["ice", "special"],
-    "body": "Type: ice\nPower: 10; accuracy: 100; PP: 30\nPriority: 0; Generation III damage class: special",
+    "body": "Type: ice\nPower: 10; accuracy: 100; PP: 30\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -2299,7 +2299,7 @@
     "title": "Icy Wind",
     "aliases": ["icy-wind"],
     "tags": ["ice", "special"],
-    "body": "Type: ice\nPower: 55; accuracy: 95; PP: 15\nPriority: 0; Generation III damage class: special",
+    "body": "Type: ice\nPower: 55; accuracy: 95; PP: 15\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -2315,7 +2315,7 @@
     "title": "Imprison",
     "aliases": ["imprison"],
     "tags": ["psychic", "status"],
-    "body": "Type: psychic\nPower: status; accuracy: always; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: psychic\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2331,7 +2331,7 @@
     "title": "Ingrain",
     "aliases": ["ingrain"],
     "tags": ["grass", "status"],
-    "body": "Type: grass\nPower: status; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: grass\nPower: status; accuracy: always; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2347,7 +2347,7 @@
     "title": "Iron Defense",
     "aliases": ["iron-defense"],
     "tags": ["steel", "status"],
-    "body": "Type: steel\nPower: status; accuracy: always; PP: 15\nPriority: 0; Generation III damage class: status",
+    "body": "Type: steel\nPower: status; accuracy: always; PP: 15\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2363,7 +2363,7 @@
     "title": "Iron Tail",
     "aliases": ["iron-tail"],
     "tags": ["steel", "physical"],
-    "body": "Type: steel\nPower: 100; accuracy: 75; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: steel\nPower: 100; accuracy: 75; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -2379,7 +2379,7 @@
     "title": "Jump Kick",
     "aliases": ["jump-kick"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: 70; accuracy: 95; PP: 25\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: 70; accuracy: 95; PP: 25\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -2395,7 +2395,7 @@
     "title": "Karate Chop",
     "aliases": ["karate-chop"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: 50; accuracy: 100; PP: 25\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: 50; accuracy: 100; PP: 25\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -2411,7 +2411,7 @@
     "title": "Kinesis",
     "aliases": ["kinesis"],
     "tags": ["psychic", "status"],
-    "body": "Type: psychic\nPower: status; accuracy: 80; PP: 15\nPriority: 0; Generation III damage class: status",
+    "body": "Type: psychic\nPower: status; accuracy: 80; PP: 15\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2427,7 +2427,7 @@
     "title": "Knock Off",
     "aliases": ["knock-off"],
     "tags": ["dark", "special"],
-    "body": "Type: dark\nPower: 20; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: special",
+    "body": "Type: dark\nPower: 20; accuracy: 100; PP: 20\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -2443,7 +2443,7 @@
     "title": "Leaf Blade",
     "aliases": ["leaf-blade"],
     "tags": ["grass", "special"],
-    "body": "Type: grass\nPower: 70; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: special",
+    "body": "Type: grass\nPower: 70; accuracy: 100; PP: 15\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -2459,7 +2459,7 @@
     "title": "Leech Life",
     "aliases": ["leech-life"],
     "tags": ["bug", "physical"],
-    "body": "Type: bug\nPower: 20; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: bug\nPower: 20; accuracy: 100; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -2475,7 +2475,7 @@
     "title": "Leech Seed",
     "aliases": ["leech-seed"],
     "tags": ["grass", "status"],
-    "body": "Type: grass\nPower: status; accuracy: 90; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: grass\nPower: status; accuracy: 90; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2491,7 +2491,7 @@
     "title": "Leer",
     "aliases": ["leer"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 100; PP: 30\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 100; PP: 30\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2507,7 +2507,7 @@
     "title": "Lick",
     "aliases": ["lick"],
     "tags": ["ghost", "physical"],
-    "body": "Type: ghost\nPower: 20; accuracy: 100; PP: 30\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: ghost\nPower: 20; accuracy: 100; PP: 30\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -2523,7 +2523,7 @@
     "title": "Light Screen",
     "aliases": ["light-screen"],
     "tags": ["psychic", "status"],
-    "body": "Type: psychic\nPower: status; accuracy: always; PP: 30\nPriority: 0; Generation III damage class: status",
+    "body": "Type: psychic\nPower: status; accuracy: always; PP: 30\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2539,7 +2539,7 @@
     "title": "Lock On",
     "aliases": ["lock-on"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 5\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 5\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2555,7 +2555,7 @@
     "title": "Lovely Kiss",
     "aliases": ["lovely-kiss"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 75; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 75; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2571,7 +2571,7 @@
     "title": "Low Kick",
     "aliases": ["low-kick"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: fixed or variable; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: fixed or variable; accuracy: 100; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -2587,7 +2587,7 @@
     "title": "Luster Purge",
     "aliases": ["luster-purge"],
     "tags": ["psychic", "special"],
-    "body": "Type: psychic\nPower: 95; accuracy: 100; PP: 5\nPriority: 0; Generation III damage class: special",
+    "body": "Type: psychic\nPower: 95; accuracy: 100; PP: 5\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -2603,7 +2603,7 @@
     "title": "Mach Punch",
     "aliases": ["mach-punch"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: 40; accuracy: 100; PP: 30\nPriority: 1; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: 40; accuracy: 100; PP: 30\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -2619,7 +2619,7 @@
     "title": "Magic Coat",
     "aliases": ["magic-coat"],
     "tags": ["psychic", "status"],
-    "body": "Type: psychic\nPower: status; accuracy: always; PP: 15\nPriority: 4; Generation III damage class: status",
+    "body": "Type: psychic\nPower: status; accuracy: always; PP: 15\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2635,7 +2635,7 @@
     "title": "Magical Leaf",
     "aliases": ["magical-leaf"],
     "tags": ["grass", "special"],
-    "body": "Type: grass\nPower: 60; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: special",
+    "body": "Type: grass\nPower: 60; accuracy: always; PP: 20\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -2651,7 +2651,7 @@
     "title": "Magnitude",
     "aliases": ["magnitude"],
     "tags": ["ground", "physical"],
-    "body": "Type: ground\nPower: fixed or variable; accuracy: 100; PP: 30\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: ground\nPower: fixed or variable; accuracy: 100; PP: 30\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -2667,7 +2667,7 @@
     "title": "Mean Look",
     "aliases": ["mean-look"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 5\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 5\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2683,7 +2683,7 @@
     "title": "Meditate",
     "aliases": ["meditate"],
     "tags": ["psychic", "status"],
-    "body": "Type: psychic\nPower: status; accuracy: always; PP: 40\nPriority: 0; Generation III damage class: status",
+    "body": "Type: psychic\nPower: status; accuracy: always; PP: 40\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2699,7 +2699,7 @@
     "title": "Mega Drain",
     "aliases": ["mega-drain"],
     "tags": ["grass", "special"],
-    "body": "Type: grass\nPower: 40; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: special",
+    "body": "Type: grass\nPower: 40; accuracy: 100; PP: 10\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -2715,7 +2715,7 @@
     "title": "Mega Kick",
     "aliases": ["mega-kick"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 120; accuracy: 75; PP: 5\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 120; accuracy: 75; PP: 5\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -2731,7 +2731,7 @@
     "title": "Mega Punch",
     "aliases": ["mega-punch"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 80; accuracy: 85; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 80; accuracy: 85; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -2747,7 +2747,7 @@
     "title": "Megahorn",
     "aliases": ["megahorn"],
     "tags": ["bug", "physical"],
-    "body": "Type: bug\nPower: 120; accuracy: 85; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: bug\nPower: 120; accuracy: 85; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -2763,7 +2763,7 @@
     "title": "Memento",
     "aliases": ["memento"],
     "tags": ["dark", "status"],
-    "body": "Type: dark\nPower: status; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: dark\nPower: status; accuracy: 100; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2779,7 +2779,7 @@
     "title": "Metal Claw",
     "aliases": ["metal-claw"],
     "tags": ["steel", "physical"],
-    "body": "Type: steel\nPower: 50; accuracy: 95; PP: 35\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: steel\nPower: 50; accuracy: 95; PP: 35\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -2795,7 +2795,7 @@
     "title": "Metal Sound",
     "aliases": ["metal-sound"],
     "tags": ["steel", "status"],
-    "body": "Type: steel\nPower: status; accuracy: 85; PP: 40\nPriority: 0; Generation III damage class: status",
+    "body": "Type: steel\nPower: status; accuracy: 85; PP: 40\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2811,7 +2811,7 @@
     "title": "Meteor Mash",
     "aliases": ["meteor-mash"],
     "tags": ["steel", "physical"],
-    "body": "Type: steel\nPower: 100; accuracy: 85; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: steel\nPower: 100; accuracy: 85; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -2827,7 +2827,7 @@
     "title": "Metronome",
     "aliases": ["metronome"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2843,7 +2843,7 @@
     "title": "Milk Drink",
     "aliases": ["milk-drink"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 5\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 5\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2859,7 +2859,7 @@
     "title": "Mimic",
     "aliases": ["mimic"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2875,7 +2875,7 @@
     "title": "Mind Reader",
     "aliases": ["mind-reader"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 40\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 40\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2891,7 +2891,7 @@
     "title": "Minimize",
     "aliases": ["minimize"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2907,7 +2907,7 @@
     "title": "Mirror Coat",
     "aliases": ["mirror-coat"],
     "tags": ["psychic", "special"],
-    "body": "Type: psychic\nPower: fixed or variable; accuracy: 100; PP: 20\nPriority: -5; Generation III damage class: special",
+    "body": "Type: psychic\nPower: fixed or variable; accuracy: 100; PP: 20\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -2923,7 +2923,7 @@
     "title": "Mirror Move",
     "aliases": ["mirror-move"],
     "tags": ["flying", "status"],
-    "body": "Type: flying\nPower: status; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: flying\nPower: status; accuracy: always; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2939,7 +2939,7 @@
     "title": "Mist",
     "aliases": ["mist"],
     "tags": ["ice", "status"],
-    "body": "Type: ice\nPower: status; accuracy: always; PP: 30\nPriority: 0; Generation III damage class: status",
+    "body": "Type: ice\nPower: status; accuracy: always; PP: 30\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2955,7 +2955,7 @@
     "title": "Mist Ball",
     "aliases": ["mist-ball"],
     "tags": ["psychic", "special"],
-    "body": "Type: psychic\nPower: 70; accuracy: 100; PP: 5\nPriority: 0; Generation III damage class: special",
+    "body": "Type: psychic\nPower: 70; accuracy: 100; PP: 5\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -2971,7 +2971,7 @@
     "title": "Moonlight",
     "aliases": ["moonlight"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 5\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 5\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -2987,7 +2987,7 @@
     "title": "Morning Sun",
     "aliases": ["morning-sun"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 5\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 5\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3003,7 +3003,7 @@
     "title": "Mud Shot",
     "aliases": ["mud-shot"],
     "tags": ["ground", "physical"],
-    "body": "Type: ground\nPower: 55; accuracy: 95; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: ground\nPower: 55; accuracy: 95; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3019,7 +3019,7 @@
     "title": "Mud Slap",
     "aliases": ["mud-slap"],
     "tags": ["ground", "physical"],
-    "body": "Type: ground\nPower: 20; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: ground\nPower: 20; accuracy: 100; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3035,7 +3035,7 @@
     "title": "Mud Sport",
     "aliases": ["mud-sport"],
     "tags": ["ground", "status"],
-    "body": "Type: ground\nPower: status; accuracy: always; PP: 15\nPriority: 0; Generation III damage class: status",
+    "body": "Type: ground\nPower: status; accuracy: always; PP: 15\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3051,7 +3051,7 @@
     "title": "Muddy Water",
     "aliases": ["muddy-water"],
     "tags": ["water", "special"],
-    "body": "Type: water\nPower: 95; accuracy: 85; PP: 10\nPriority: 0; Generation III damage class: special",
+    "body": "Type: water\nPower: 95; accuracy: 85; PP: 10\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -3067,7 +3067,7 @@
     "title": "Nature Power",
     "aliases": ["nature-power"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3083,7 +3083,7 @@
     "title": "Needle Arm",
     "aliases": ["needle-arm"],
     "tags": ["grass", "special"],
-    "body": "Type: grass\nPower: 60; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: special",
+    "body": "Type: grass\nPower: 60; accuracy: 100; PP: 15\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -3099,7 +3099,7 @@
     "title": "Night Shade",
     "aliases": ["night-shade"],
     "tags": ["ghost", "physical"],
-    "body": "Type: ghost\nPower: fixed or variable; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: ghost\nPower: fixed or variable; accuracy: 100; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3115,7 +3115,7 @@
     "title": "Nightmare",
     "aliases": ["nightmare"],
     "tags": ["ghost", "status"],
-    "body": "Type: ghost\nPower: status; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: status",
+    "body": "Type: ghost\nPower: status; accuracy: 100; PP: 15\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3131,7 +3131,7 @@
     "title": "Octazooka",
     "aliases": ["octazooka"],
     "tags": ["water", "special"],
-    "body": "Type: water\nPower: 65; accuracy: 85; PP: 10\nPriority: 0; Generation III damage class: special",
+    "body": "Type: water\nPower: 65; accuracy: 85; PP: 10\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -3147,7 +3147,7 @@
     "title": "Odor Sleuth",
     "aliases": ["odor-sleuth"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 40\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 40\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3163,7 +3163,7 @@
     "title": "Outrage",
     "aliases": ["outrage"],
     "tags": ["dragon", "special"],
-    "body": "Type: dragon\nPower: 90; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: special",
+    "body": "Type: dragon\nPower: 90; accuracy: 100; PP: 15\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -3179,7 +3179,7 @@
     "title": "Overheat",
     "aliases": ["overheat"],
     "tags": ["fire", "special"],
-    "body": "Type: fire\nPower: 140; accuracy: 90; PP: 5\nPriority: 0; Generation III damage class: special",
+    "body": "Type: fire\nPower: 140; accuracy: 90; PP: 5\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -3195,7 +3195,7 @@
     "title": "Pain Split",
     "aliases": ["pain-split"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3211,7 +3211,7 @@
     "title": "Pay Day",
     "aliases": ["pay-day"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 40; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 40; accuracy: 100; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3227,7 +3227,7 @@
     "title": "Peck",
     "aliases": ["peck"],
     "tags": ["flying", "physical"],
-    "body": "Type: flying\nPower: 35; accuracy: 100; PP: 35\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: flying\nPower: 35; accuracy: 100; PP: 35\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3243,7 +3243,7 @@
     "title": "Perish Song",
     "aliases": ["perish-song"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 5\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 5\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3259,7 +3259,7 @@
     "title": "Petal Dance",
     "aliases": ["petal-dance"],
     "tags": ["grass", "special"],
-    "body": "Type: grass\nPower: 70; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: special",
+    "body": "Type: grass\nPower: 70; accuracy: 100; PP: 20\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -3275,7 +3275,7 @@
     "title": "Pin Missile",
     "aliases": ["pin-missile"],
     "tags": ["bug", "physical"],
-    "body": "Type: bug\nPower: 14; accuracy: 85; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: bug\nPower: 14; accuracy: 85; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3291,7 +3291,7 @@
     "title": "Poison Fang",
     "aliases": ["poison-fang"],
     "tags": ["poison", "physical"],
-    "body": "Type: poison\nPower: 50; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: poison\nPower: 50; accuracy: 100; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3307,7 +3307,7 @@
     "title": "Poison Gas",
     "aliases": ["poison-gas"],
     "tags": ["poison", "status"],
-    "body": "Type: poison\nPower: status; accuracy: 55; PP: 40\nPriority: 0; Generation III damage class: status",
+    "body": "Type: poison\nPower: status; accuracy: 55; PP: 40\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3323,7 +3323,7 @@
     "title": "Poison Powder",
     "aliases": ["poison-powder"],
     "tags": ["poison", "status"],
-    "body": "Type: poison\nPower: status; accuracy: 75; PP: 35\nPriority: 0; Generation III damage class: status",
+    "body": "Type: poison\nPower: status; accuracy: 75; PP: 35\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3339,7 +3339,7 @@
     "title": "Poison Sting",
     "aliases": ["poison-sting"],
     "tags": ["poison", "physical"],
-    "body": "Type: poison\nPower: 15; accuracy: 100; PP: 35\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: poison\nPower: 15; accuracy: 100; PP: 35\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3355,7 +3355,7 @@
     "title": "Poison Tail",
     "aliases": ["poison-tail"],
     "tags": ["poison", "physical"],
-    "body": "Type: poison\nPower: 50; accuracy: 100; PP: 25\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: poison\nPower: 50; accuracy: 100; PP: 25\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3371,7 +3371,7 @@
     "title": "Pound",
     "aliases": ["pound"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 40; accuracy: 100; PP: 35\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 40; accuracy: 100; PP: 35\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3387,7 +3387,7 @@
     "title": "Powder Snow",
     "aliases": ["powder-snow"],
     "tags": ["ice", "special"],
-    "body": "Type: ice\nPower: 40; accuracy: 100; PP: 25\nPriority: 0; Generation III damage class: special",
+    "body": "Type: ice\nPower: 40; accuracy: 100; PP: 25\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -3403,7 +3403,7 @@
     "title": "Present",
     "aliases": ["present"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: fixed or variable; accuracy: 90; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: fixed or variable; accuracy: 90; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3419,7 +3419,7 @@
     "title": "Protect",
     "aliases": ["protect"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nPriority: 4; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3435,7 +3435,7 @@
     "title": "Psybeam",
     "aliases": ["psybeam"],
     "tags": ["psychic", "special"],
-    "body": "Type: psychic\nPower: 65; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: special",
+    "body": "Type: psychic\nPower: 65; accuracy: 100; PP: 20\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -3451,7 +3451,7 @@
     "title": "Psych Up",
     "aliases": ["psych-up"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3467,7 +3467,7 @@
     "title": "Psychic",
     "aliases": ["psychic"],
     "tags": ["psychic", "special"],
-    "body": "Type: psychic\nPower: 90; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: special",
+    "body": "Type: psychic\nPower: 90; accuracy: 100; PP: 10\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -3483,7 +3483,7 @@
     "title": "Psycho Boost",
     "aliases": ["psycho-boost"],
     "tags": ["psychic", "special"],
-    "body": "Type: psychic\nPower: 140; accuracy: 90; PP: 5\nPriority: 0; Generation III damage class: special",
+    "body": "Type: psychic\nPower: 140; accuracy: 90; PP: 5\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -3499,7 +3499,7 @@
     "title": "Psywave",
     "aliases": ["psywave"],
     "tags": ["psychic", "special"],
-    "body": "Type: psychic\nPower: fixed or variable; accuracy: 80; PP: 15\nPriority: 0; Generation III damage class: special",
+    "body": "Type: psychic\nPower: fixed or variable; accuracy: 80; PP: 15\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -3515,7 +3515,7 @@
     "title": "Pursuit",
     "aliases": ["pursuit"],
     "tags": ["dark", "special"],
-    "body": "Type: dark\nPower: 40; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: special",
+    "body": "Type: dark\nPower: 40; accuracy: 100; PP: 20\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -3531,7 +3531,7 @@
     "title": "Quick Attack",
     "aliases": ["quick-attack"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 40; accuracy: 100; PP: 30\nPriority: 1; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 40; accuracy: 100; PP: 30\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3547,7 +3547,7 @@
     "title": "Rage",
     "aliases": ["rage"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 20; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 20; accuracy: 100; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3563,7 +3563,7 @@
     "title": "Rain Dance",
     "aliases": ["rain-dance"],
     "tags": ["water", "status"],
-    "body": "Type: water\nPower: status; accuracy: always; PP: 5\nPriority: 0; Generation III damage class: status",
+    "body": "Type: water\nPower: status; accuracy: always; PP: 5\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3579,7 +3579,7 @@
     "title": "Rapid Spin",
     "aliases": ["rapid-spin"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 20; accuracy: 100; PP: 40\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 20; accuracy: 100; PP: 40\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3595,7 +3595,7 @@
     "title": "Razor Leaf",
     "aliases": ["razor-leaf"],
     "tags": ["grass", "special"],
-    "body": "Type: grass\nPower: 55; accuracy: 95; PP: 25\nPriority: 0; Generation III damage class: special",
+    "body": "Type: grass\nPower: 55; accuracy: 95; PP: 25\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -3611,7 +3611,7 @@
     "title": "Razor Wind",
     "aliases": ["razor-wind"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 80; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 80; accuracy: 100; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3627,7 +3627,7 @@
     "title": "Recover",
     "aliases": ["recover"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3643,7 +3643,7 @@
     "title": "Recycle",
     "aliases": ["recycle"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3659,7 +3659,7 @@
     "title": "Reflect",
     "aliases": ["reflect"],
     "tags": ["psychic", "status"],
-    "body": "Type: psychic\nPower: status; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: psychic\nPower: status; accuracy: always; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3675,7 +3675,7 @@
     "title": "Refresh",
     "aliases": ["refresh"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3691,7 +3691,7 @@
     "title": "Rest",
     "aliases": ["rest"],
     "tags": ["psychic", "status"],
-    "body": "Type: psychic\nPower: status; accuracy: always; PP: 5\nPriority: 0; Generation III damage class: status",
+    "body": "Type: psychic\nPower: status; accuracy: always; PP: 5\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3707,7 +3707,7 @@
     "title": "Return",
     "aliases": ["return"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: fixed or variable; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: fixed or variable; accuracy: 100; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3723,7 +3723,7 @@
     "title": "Revenge",
     "aliases": ["revenge"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: 60; accuracy: 100; PP: 10\nPriority: -4; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: 60; accuracy: 100; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3739,7 +3739,7 @@
     "title": "Reversal",
     "aliases": ["reversal"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: fixed or variable; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: fixed or variable; accuracy: 100; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3755,7 +3755,7 @@
     "title": "Roar",
     "aliases": ["roar"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 100; PP: 20\nPriority: -6; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 100; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3771,7 +3771,7 @@
     "title": "Rock Blast",
     "aliases": ["rock-blast"],
     "tags": ["rock", "physical"],
-    "body": "Type: rock\nPower: 25; accuracy: 80; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: rock\nPower: 25; accuracy: 80; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3787,7 +3787,7 @@
     "title": "Rock Slide",
     "aliases": ["rock-slide"],
     "tags": ["rock", "physical"],
-    "body": "Type: rock\nPower: 75; accuracy: 90; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: rock\nPower: 75; accuracy: 90; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3803,7 +3803,7 @@
     "title": "Rock Smash",
     "aliases": ["rock-smash"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: 20; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: 20; accuracy: 100; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3819,7 +3819,7 @@
     "title": "Rock Throw",
     "aliases": ["rock-throw"],
     "tags": ["rock", "physical"],
-    "body": "Type: rock\nPower: 50; accuracy: 90; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: rock\nPower: 50; accuracy: 90; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3835,7 +3835,7 @@
     "title": "Rock Tomb",
     "aliases": ["rock-tomb"],
     "tags": ["rock", "physical"],
-    "body": "Type: rock\nPower: 50; accuracy: 80; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: rock\nPower: 50; accuracy: 80; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3851,7 +3851,7 @@
     "title": "Role Play",
     "aliases": ["role-play"],
     "tags": ["psychic", "status"],
-    "body": "Type: psychic\nPower: status; accuracy: always; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: psychic\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3867,7 +3867,7 @@
     "title": "Rolling Kick",
     "aliases": ["rolling-kick"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: 60; accuracy: 85; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: 60; accuracy: 85; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3883,7 +3883,7 @@
     "title": "Rollout",
     "aliases": ["rollout"],
     "tags": ["rock", "physical"],
-    "body": "Type: rock\nPower: 30; accuracy: 90; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: rock\nPower: 30; accuracy: 90; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3899,7 +3899,7 @@
     "title": "Sacred Fire",
     "aliases": ["sacred-fire"],
     "tags": ["fire", "special"],
-    "body": "Type: fire\nPower: 100; accuracy: 95; PP: 5\nPriority: 0; Generation III damage class: special",
+    "body": "Type: fire\nPower: 100; accuracy: 95; PP: 5\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -3915,7 +3915,7 @@
     "title": "Safeguard",
     "aliases": ["safeguard"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 25\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 25\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3931,7 +3931,7 @@
     "title": "Sand Attack",
     "aliases": ["sand-attack"],
     "tags": ["ground", "status"],
-    "body": "Type: ground\nPower: status; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: status",
+    "body": "Type: ground\nPower: status; accuracy: 100; PP: 15\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3947,7 +3947,7 @@
     "title": "Sand Tomb",
     "aliases": ["sand-tomb"],
     "tags": ["ground", "physical"],
-    "body": "Type: ground\nPower: 15; accuracy: 70; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: ground\nPower: 15; accuracy: 70; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -3963,7 +3963,7 @@
     "title": "Sandstorm",
     "aliases": ["sandstorm"],
     "tags": ["rock", "status"],
-    "body": "Type: rock\nPower: status; accuracy: always; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: rock\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3979,7 +3979,7 @@
     "title": "Scary Face",
     "aliases": ["scary-face"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 90; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 90; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -3995,7 +3995,7 @@
     "title": "Scratch",
     "aliases": ["scratch"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 40; accuracy: 100; PP: 35\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 40; accuracy: 100; PP: 35\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4011,7 +4011,7 @@
     "title": "Screech",
     "aliases": ["screech"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 85; PP: 40\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 85; PP: 40\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4027,7 +4027,7 @@
     "title": "Secret Power",
     "aliases": ["secret-power"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 70; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 70; accuracy: 100; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4043,7 +4043,7 @@
     "title": "Seismic Toss",
     "aliases": ["seismic-toss"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: fixed or variable; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: fixed or variable; accuracy: 100; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4059,7 +4059,7 @@
     "title": "Self Destruct",
     "aliases": ["self-destruct"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 200; accuracy: 100; PP: 5\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 200; accuracy: 100; PP: 5\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4075,7 +4075,7 @@
     "title": "Shadow Ball",
     "aliases": ["shadow-ball"],
     "tags": ["ghost", "physical"],
-    "body": "Type: ghost\nPower: 80; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: ghost\nPower: 80; accuracy: 100; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4091,7 +4091,7 @@
     "title": "Shadow Punch",
     "aliases": ["shadow-punch"],
     "tags": ["ghost", "physical"],
-    "body": "Type: ghost\nPower: 60; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: ghost\nPower: 60; accuracy: always; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4107,7 +4107,7 @@
     "title": "Sharpen",
     "aliases": ["sharpen"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 30\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 30\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4123,7 +4123,7 @@
     "title": "Sheer Cold",
     "aliases": ["sheer-cold"],
     "tags": ["ice", "special"],
-    "body": "Type: ice\nPower: fixed or variable; accuracy: 30; PP: 5\nPriority: 0; Generation III damage class: special",
+    "body": "Type: ice\nPower: fixed or variable; accuracy: 30; PP: 5\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -4139,7 +4139,7 @@
     "title": "Shock Wave",
     "aliases": ["shock-wave"],
     "tags": ["electric", "special"],
-    "body": "Type: electric\nPower: 60; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: special",
+    "body": "Type: electric\nPower: 60; accuracy: always; PP: 20\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -4155,7 +4155,7 @@
     "title": "Signal Beam",
     "aliases": ["signal-beam"],
     "tags": ["bug", "physical"],
-    "body": "Type: bug\nPower: 75; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: bug\nPower: 75; accuracy: 100; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4171,7 +4171,7 @@
     "title": "Silver Wind",
     "aliases": ["silver-wind"],
     "tags": ["bug", "physical"],
-    "body": "Type: bug\nPower: 60; accuracy: 100; PP: 5\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: bug\nPower: 60; accuracy: 100; PP: 5\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4187,7 +4187,7 @@
     "title": "Sing",
     "aliases": ["sing"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 55; PP: 15\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 55; PP: 15\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4203,7 +4203,7 @@
     "title": "Sketch",
     "aliases": ["sketch"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 1\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 1\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4219,7 +4219,7 @@
     "title": "Skill Swap",
     "aliases": ["skill-swap"],
     "tags": ["psychic", "status"],
-    "body": "Type: psychic\nPower: status; accuracy: always; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: psychic\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4235,7 +4235,7 @@
     "title": "Skull Bash",
     "aliases": ["skull-bash"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 100; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 100; accuracy: 100; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4251,7 +4251,7 @@
     "title": "Sky Attack",
     "aliases": ["sky-attack"],
     "tags": ["flying", "physical"],
-    "body": "Type: flying\nPower: 140; accuracy: 90; PP: 5\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: flying\nPower: 140; accuracy: 90; PP: 5\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4267,7 +4267,7 @@
     "title": "Sky Uppercut",
     "aliases": ["sky-uppercut"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: 85; accuracy: 90; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: 85; accuracy: 90; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4283,7 +4283,7 @@
     "title": "Slack Off",
     "aliases": ["slack-off"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 5\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 5\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4299,7 +4299,7 @@
     "title": "Slam",
     "aliases": ["slam"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 80; accuracy: 75; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 80; accuracy: 75; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4315,7 +4315,7 @@
     "title": "Slash",
     "aliases": ["slash"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 70; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 70; accuracy: 100; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4331,7 +4331,7 @@
     "title": "Sleep Powder",
     "aliases": ["sleep-powder"],
     "tags": ["grass", "status"],
-    "body": "Type: grass\nPower: status; accuracy: 75; PP: 15\nPriority: 0; Generation III damage class: status",
+    "body": "Type: grass\nPower: status; accuracy: 75; PP: 15\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4347,7 +4347,7 @@
     "title": "Sleep Talk",
     "aliases": ["sleep-talk"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4363,7 +4363,7 @@
     "title": "Sludge",
     "aliases": ["sludge"],
     "tags": ["poison", "physical"],
-    "body": "Type: poison\nPower: 65; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: poison\nPower: 65; accuracy: 100; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4379,7 +4379,7 @@
     "title": "Sludge Bomb",
     "aliases": ["sludge-bomb"],
     "tags": ["poison", "physical"],
-    "body": "Type: poison\nPower: 90; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: poison\nPower: 90; accuracy: 100; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4395,7 +4395,7 @@
     "title": "Smelling Salts",
     "aliases": ["smelling-salts"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 60; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 60; accuracy: 100; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4411,7 +4411,7 @@
     "title": "Smog",
     "aliases": ["smog"],
     "tags": ["poison", "physical"],
-    "body": "Type: poison\nPower: 20; accuracy: 70; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: poison\nPower: 20; accuracy: 70; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4427,7 +4427,7 @@
     "title": "Smokescreen",
     "aliases": ["smokescreen"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 100; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4443,7 +4443,7 @@
     "title": "Snatch",
     "aliases": ["snatch"],
     "tags": ["dark", "status"],
-    "body": "Type: dark\nPower: status; accuracy: always; PP: 10\nPriority: 4; Generation III damage class: status",
+    "body": "Type: dark\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4459,7 +4459,7 @@
     "title": "Snore",
     "aliases": ["snore"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 40; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 40; accuracy: 100; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4475,7 +4475,7 @@
     "title": "Soft Boiled",
     "aliases": ["soft-boiled"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 5\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 5\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4491,7 +4491,7 @@
     "title": "Solar Beam",
     "aliases": ["solar-beam"],
     "tags": ["grass", "special"],
-    "body": "Type: grass\nPower: 120; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: special",
+    "body": "Type: grass\nPower: 120; accuracy: 100; PP: 10\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -4507,7 +4507,7 @@
     "title": "Sonic Boom",
     "aliases": ["sonic-boom"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: fixed or variable; accuracy: 90; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: fixed or variable; accuracy: 90; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4523,7 +4523,7 @@
     "title": "Spark",
     "aliases": ["spark"],
     "tags": ["electric", "special"],
-    "body": "Type: electric\nPower: 65; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: special",
+    "body": "Type: electric\nPower: 65; accuracy: 100; PP: 20\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -4539,7 +4539,7 @@
     "title": "Spider Web",
     "aliases": ["spider-web"],
     "tags": ["bug", "status"],
-    "body": "Type: bug\nPower: status; accuracy: always; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: bug\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4555,7 +4555,7 @@
     "title": "Spike Cannon",
     "aliases": ["spike-cannon"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 20; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 20; accuracy: 100; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4571,7 +4571,7 @@
     "title": "Spikes",
     "aliases": ["spikes"],
     "tags": ["ground", "status"],
-    "body": "Type: ground\nPower: status; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: ground\nPower: status; accuracy: always; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4587,7 +4587,7 @@
     "title": "Spit Up",
     "aliases": ["spit-up"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: fixed or variable; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: fixed or variable; accuracy: 100; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4603,7 +4603,7 @@
     "title": "Spite",
     "aliases": ["spite"],
     "tags": ["ghost", "status"],
-    "body": "Type: ghost\nPower: status; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: ghost\nPower: status; accuracy: 100; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4619,7 +4619,7 @@
     "title": "Splash",
     "aliases": ["splash"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 40\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 40\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4635,7 +4635,7 @@
     "title": "Spore",
     "aliases": ["spore"],
     "tags": ["grass", "status"],
-    "body": "Type: grass\nPower: status; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: status",
+    "body": "Type: grass\nPower: status; accuracy: 100; PP: 15\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4651,7 +4651,7 @@
     "title": "Steel Wing",
     "aliases": ["steel-wing"],
     "tags": ["steel", "physical"],
-    "body": "Type: steel\nPower: 70; accuracy: 90; PP: 25\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: steel\nPower: 70; accuracy: 90; PP: 25\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4667,7 +4667,7 @@
     "title": "Stockpile",
     "aliases": ["stockpile"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4683,7 +4683,7 @@
     "title": "Stomp",
     "aliases": ["stomp"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 65; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 65; accuracy: 100; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4699,7 +4699,7 @@
     "title": "Strength",
     "aliases": ["strength"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 80; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 80; accuracy: 100; PP: 15\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4715,7 +4715,7 @@
     "title": "String Shot",
     "aliases": ["string-shot"],
     "tags": ["bug", "status"],
-    "body": "Type: bug\nPower: status; accuracy: 95; PP: 40\nPriority: 0; Generation III damage class: status",
+    "body": "Type: bug\nPower: status; accuracy: 95; PP: 40\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4731,7 +4731,7 @@
     "title": "Struggle",
     "aliases": ["struggle"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 50; accuracy: always; PP: 1\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 50; accuracy: always; PP: 1\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4747,7 +4747,7 @@
     "title": "Stun Spore",
     "aliases": ["stun-spore"],
     "tags": ["grass", "status"],
-    "body": "Type: grass\nPower: status; accuracy: 75; PP: 30\nPriority: 0; Generation III damage class: status",
+    "body": "Type: grass\nPower: status; accuracy: 75; PP: 30\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4763,7 +4763,7 @@
     "title": "Submission",
     "aliases": ["submission"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: 80; accuracy: 80; PP: 25\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: 80; accuracy: 80; PP: 25\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4779,7 +4779,7 @@
     "title": "Substitute",
     "aliases": ["substitute"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4795,7 +4795,7 @@
     "title": "Sunny Day",
     "aliases": ["sunny-day"],
     "tags": ["fire", "status"],
-    "body": "Type: fire\nPower: status; accuracy: always; PP: 5\nPriority: 0; Generation III damage class: status",
+    "body": "Type: fire\nPower: status; accuracy: always; PP: 5\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4811,7 +4811,7 @@
     "title": "Super Fang",
     "aliases": ["super-fang"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: fixed or variable; accuracy: 90; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: fixed or variable; accuracy: 90; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4827,7 +4827,7 @@
     "title": "Superpower",
     "aliases": ["superpower"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: 120; accuracy: 100; PP: 5\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: 120; accuracy: 100; PP: 5\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4843,7 +4843,7 @@
     "title": "Supersonic",
     "aliases": ["supersonic"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 55; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 55; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4859,7 +4859,7 @@
     "title": "Surf",
     "aliases": ["surf"],
     "tags": ["water", "special"],
-    "body": "Type: water\nPower: 95; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: special",
+    "body": "Type: water\nPower: 95; accuracy: 100; PP: 15\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -4875,7 +4875,7 @@
     "title": "Swagger",
     "aliases": ["swagger"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 90; PP: 15\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 90; PP: 15\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4891,7 +4891,7 @@
     "title": "Swallow",
     "aliases": ["swallow"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4907,7 +4907,7 @@
     "title": "Sweet Kiss",
     "aliases": ["sweet-kiss"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 75; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 75; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4923,7 +4923,7 @@
     "title": "Sweet Scent",
     "aliases": ["sweet-scent"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 100; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4939,7 +4939,7 @@
     "title": "Swift",
     "aliases": ["swift"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 60; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 60; accuracy: always; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -4955,7 +4955,7 @@
     "title": "Swords Dance",
     "aliases": ["swords-dance"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 30\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 30\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4971,7 +4971,7 @@
     "title": "Synthesis",
     "aliases": ["synthesis"],
     "tags": ["grass", "status"],
-    "body": "Type: grass\nPower: status; accuracy: always; PP: 5\nPriority: 0; Generation III damage class: status",
+    "body": "Type: grass\nPower: status; accuracy: always; PP: 5\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -4987,7 +4987,7 @@
     "title": "Tackle",
     "aliases": ["tackle"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 35; accuracy: 95; PP: 35\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 35; accuracy: 95; PP: 35\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -5003,7 +5003,7 @@
     "title": "Tail Glow",
     "aliases": ["tail-glow"],
     "tags": ["bug", "status"],
-    "body": "Type: bug\nPower: status; accuracy: always; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: bug\nPower: status; accuracy: always; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -5019,7 +5019,7 @@
     "title": "Tail Whip",
     "aliases": ["tail-whip"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 100; PP: 30\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 100; PP: 30\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -5035,7 +5035,7 @@
     "title": "Take Down",
     "aliases": ["take-down"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 90; accuracy: 85; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 90; accuracy: 85; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -5051,7 +5051,7 @@
     "title": "Taunt",
     "aliases": ["taunt"],
     "tags": ["dark", "status"],
-    "body": "Type: dark\nPower: status; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: dark\nPower: status; accuracy: 100; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -5067,7 +5067,7 @@
     "title": "Teeter Dance",
     "aliases": ["teeter-dance"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 100; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -5099,7 +5099,7 @@
     "title": "Thief",
     "aliases": ["thief"],
     "tags": ["dark", "special"],
-    "body": "Type: dark\nPower: 40; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: special",
+    "body": "Type: dark\nPower: 40; accuracy: 100; PP: 10\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -5115,7 +5115,7 @@
     "title": "Thrash",
     "aliases": ["thrash"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 90; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 90; accuracy: 100; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -5131,7 +5131,7 @@
     "title": "Thunder",
     "aliases": ["thunder"],
     "tags": ["electric", "special"],
-    "body": "Type: electric\nPower: 120; accuracy: 70; PP: 10\nPriority: 0; Generation III damage class: special",
+    "body": "Type: electric\nPower: 120; accuracy: 70; PP: 10\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -5147,7 +5147,7 @@
     "title": "Thunder Punch",
     "aliases": ["thunder-punch"],
     "tags": ["electric", "special"],
-    "body": "Type: electric\nPower: 75; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: special",
+    "body": "Type: electric\nPower: 75; accuracy: 100; PP: 15\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -5163,7 +5163,7 @@
     "title": "Thunder Shock",
     "aliases": ["thunder-shock"],
     "tags": ["electric", "special"],
-    "body": "Type: electric\nPower: 40; accuracy: 100; PP: 30\nPriority: 0; Generation III damage class: special",
+    "body": "Type: electric\nPower: 40; accuracy: 100; PP: 30\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -5179,7 +5179,7 @@
     "title": "Thunder Wave",
     "aliases": ["thunder-wave"],
     "tags": ["electric", "status"],
-    "body": "Type: electric\nPower: status; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: electric\nPower: status; accuracy: 100; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -5195,7 +5195,7 @@
     "title": "Thunderbolt",
     "aliases": ["thunderbolt"],
     "tags": ["electric", "special"],
-    "body": "Type: electric\nPower: 95; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: special",
+    "body": "Type: electric\nPower: 95; accuracy: 100; PP: 15\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -5211,7 +5211,7 @@
     "title": "Tickle",
     "aliases": ["tickle"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 100; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -5227,7 +5227,7 @@
     "title": "Torment",
     "aliases": ["torment"],
     "tags": ["dark", "status"],
-    "body": "Type: dark\nPower: status; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: status",
+    "body": "Type: dark\nPower: status; accuracy: 100; PP: 15\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -5243,7 +5243,7 @@
     "title": "Toxic",
     "aliases": ["toxic"],
     "tags": ["poison", "status"],
-    "body": "Type: poison\nPower: status; accuracy: 85; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: poison\nPower: status; accuracy: 85; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -5259,7 +5259,7 @@
     "title": "Transform",
     "aliases": ["transform"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -5275,7 +5275,7 @@
     "title": "Tri Attack",
     "aliases": ["tri-attack"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 80; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 80; accuracy: 100; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -5291,7 +5291,7 @@
     "title": "Trick",
     "aliases": ["trick"],
     "tags": ["psychic", "status"],
-    "body": "Type: psychic\nPower: status; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: psychic\nPower: status; accuracy: 100; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -5307,7 +5307,7 @@
     "title": "Triple Kick",
     "aliases": ["triple-kick"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: 10; accuracy: 90; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: 10; accuracy: 90; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -5323,7 +5323,7 @@
     "title": "Twineedle",
     "aliases": ["twineedle"],
     "tags": ["bug", "physical"],
-    "body": "Type: bug\nPower: 25; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: bug\nPower: 25; accuracy: 100; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -5339,7 +5339,7 @@
     "title": "Twister",
     "aliases": ["twister"],
     "tags": ["dragon", "special"],
-    "body": "Type: dragon\nPower: 40; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: special",
+    "body": "Type: dragon\nPower: 40; accuracy: 100; PP: 20\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -5355,7 +5355,7 @@
     "title": "Uproar",
     "aliases": ["uproar"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 50; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 50; accuracy: 100; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -5371,7 +5371,7 @@
     "title": "Vice Grip",
     "aliases": ["vice-grip"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 55; accuracy: 100; PP: 30\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 55; accuracy: 100; PP: 30\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -5387,7 +5387,7 @@
     "title": "Vine Whip",
     "aliases": ["vine-whip"],
     "tags": ["grass", "special"],
-    "body": "Type: grass\nPower: 35; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: special",
+    "body": "Type: grass\nPower: 35; accuracy: 100; PP: 10\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -5403,7 +5403,7 @@
     "title": "Vital Throw",
     "aliases": ["vital-throw"],
     "tags": ["fighting", "physical"],
-    "body": "Type: fighting\nPower: 70; accuracy: always; PP: 10\nPriority: -1; Generation III damage class: physical",
+    "body": "Type: fighting\nPower: 70; accuracy: always; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -5419,7 +5419,7 @@
     "title": "Volt Tackle",
     "aliases": ["volt-tackle"],
     "tags": ["electric", "special"],
-    "body": "Type: electric\nPower: 120; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: special",
+    "body": "Type: electric\nPower: 120; accuracy: 100; PP: 15\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -5435,7 +5435,7 @@
     "title": "Water Gun",
     "aliases": ["water-gun"],
     "tags": ["water", "special"],
-    "body": "Type: water\nPower: 40; accuracy: 100; PP: 25\nPriority: 0; Generation III damage class: special",
+    "body": "Type: water\nPower: 40; accuracy: 100; PP: 25\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -5451,7 +5451,7 @@
     "title": "Water Pulse",
     "aliases": ["water-pulse"],
     "tags": ["water", "special"],
-    "body": "Type: water\nPower: 60; accuracy: 100; PP: 20\nPriority: 0; Generation III damage class: special",
+    "body": "Type: water\nPower: 60; accuracy: 100; PP: 20\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -5467,7 +5467,7 @@
     "title": "Water Sport",
     "aliases": ["water-sport"],
     "tags": ["water", "status"],
-    "body": "Type: water\nPower: status; accuracy: always; PP: 15\nPriority: 0; Generation III damage class: status",
+    "body": "Type: water\nPower: status; accuracy: always; PP: 15\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -5483,7 +5483,7 @@
     "title": "Water Spout",
     "aliases": ["water-spout"],
     "tags": ["water", "special"],
-    "body": "Type: water\nPower: 150; accuracy: 100; PP: 5\nPriority: 0; Generation III damage class: special",
+    "body": "Type: water\nPower: 150; accuracy: 100; PP: 5\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -5499,7 +5499,7 @@
     "title": "Waterfall",
     "aliases": ["waterfall"],
     "tags": ["water", "special"],
-    "body": "Type: water\nPower: 80; accuracy: 100; PP: 15\nPriority: 0; Generation III damage class: special",
+    "body": "Type: water\nPower: 80; accuracy: 100; PP: 15\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -5515,7 +5515,7 @@
     "title": "Weather Ball",
     "aliases": ["weather-ball"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 50; accuracy: 100; PP: 10\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 50; accuracy: 100; PP: 10\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -5531,7 +5531,7 @@
     "title": "Whirlpool",
     "aliases": ["whirlpool"],
     "tags": ["water", "special"],
-    "body": "Type: water\nPower: 15; accuracy: 70; PP: 15\nPriority: 0; Generation III damage class: special",
+    "body": "Type: water\nPower: 15; accuracy: 70; PP: 15\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",
@@ -5547,7 +5547,7 @@
     "title": "Whirlwind",
     "aliases": ["whirlwind"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: 100; PP: 20\nPriority: -6; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: 100; PP: 20\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -5563,7 +5563,7 @@
     "title": "Will O Wisp",
     "aliases": ["will-o-wisp"],
     "tags": ["fire", "status"],
-    "body": "Type: fire\nPower: status; accuracy: 75; PP: 15\nPriority: 0; Generation III damage class: status",
+    "body": "Type: fire\nPower: status; accuracy: 75; PP: 15\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -5579,7 +5579,7 @@
     "title": "Wing Attack",
     "aliases": ["wing-attack"],
     "tags": ["flying", "physical"],
-    "body": "Type: flying\nPower: 60; accuracy: 100; PP: 35\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: flying\nPower: 60; accuracy: 100; PP: 35\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -5595,7 +5595,7 @@
     "title": "Wish",
     "aliases": ["wish"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -5611,7 +5611,7 @@
     "title": "Withdraw",
     "aliases": ["withdraw"],
     "tags": ["water", "status"],
-    "body": "Type: water\nPower: status; accuracy: always; PP: 40\nPriority: 0; Generation III damage class: status",
+    "body": "Type: water\nPower: status; accuracy: always; PP: 40\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -5627,7 +5627,7 @@
     "title": "Wrap",
     "aliases": ["wrap"],
     "tags": ["normal", "physical"],
-    "body": "Type: normal\nPower: 15; accuracy: 85; PP: 20\nPriority: 0; Generation III damage class: physical",
+    "body": "Type: normal\nPower: 15; accuracy: 85; PP: 20\nGeneration III damage class: physical",
     "sources": [
       {
         "id": "pokeapi",
@@ -5643,7 +5643,7 @@
     "title": "Yawn",
     "aliases": ["yawn"],
     "tags": ["normal", "status"],
-    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nPriority: 0; Generation III damage class: status",
+    "body": "Type: normal\nPower: status; accuracy: always; PP: 10\nGeneration III damage class: status",
     "sources": [
       {
         "id": "pokeapi",
@@ -5659,7 +5659,7 @@
     "title": "Zap Cannon",
     "aliases": ["zap-cannon"],
     "tags": ["electric", "special"],
-    "body": "Type: electric\nPower: 100; accuracy: 50; PP: 5\nPriority: 0; Generation III damage class: special",
+    "body": "Type: electric\nPower: 100; accuracy: 50; PP: 5\nGeneration III damage class: special",
     "sources": [
       {
         "id": "pokeapi",

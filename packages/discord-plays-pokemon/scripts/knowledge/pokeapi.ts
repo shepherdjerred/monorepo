@@ -127,6 +127,9 @@ type PokemonTypeRow = z.infer<typeof PokemonTypeRows>[number];
 type PokemonTypePastRow = z.infer<typeof PokemonTypePastRows>[number];
 type MoveRow = z.infer<typeof MoveRows>[number];
 type MoveChangelogRow = z.infer<typeof MoveChangelogRows>[number];
+type VersionedMove = Pick<MoveRow, "type_id" | "power" | "pp" | "accuracy"> & {
+  priority: number | undefined;
+};
 
 function rawUrl(sources: Sources, file: string): string {
   return `https://raw.githubusercontent.com/PokeAPI/pokeapi/${sources.pokeapi.commit}/${sources.pokeapi.csvPath}/${file}`;
@@ -163,7 +166,7 @@ export function moveForVersion(
   move: MoveRow,
   changelog: readonly MoveChangelogRow[],
   versionGroupId: number,
-): Pick<MoveRow, "type_id" | "power" | "pp" | "accuracy" | "priority"> {
+): VersionedMove {
   const historical = changelog
     .filter((entry) => entry.changed_in_version_group_id > versionGroupId)
     .sort(
@@ -181,9 +184,8 @@ export function moveForVersion(
     accuracy:
       historical.find((entry) => entry.accuracy !== undefined)?.accuracy ??
       move.accuracy,
-    priority:
-      historical.find((entry) => entry.priority !== undefined)?.priority ??
-      move.priority,
+    priority: historical.find((entry) => entry.priority !== undefined)
+      ?.priority,
   };
 }
 
@@ -414,7 +416,9 @@ export async function buildPokeApiRecords(
       body: [
         `Type: ${typeName}`,
         `Power: ${generation3PowerLabel(versioned.power, damageClass)}; accuracy: ${String(versioned.accuracy ?? "always")}; PP: ${String(versioned.pp ?? "unknown")}`,
-        `Priority: ${String(versioned.priority)}; Generation III damage class: ${damageClass}`,
+        versioned.priority === undefined
+          ? `Generation III damage class: ${damageClass}`
+          : `Priority: ${String(versioned.priority)}; Generation III damage class: ${damageClass}`,
       ].join("\n"),
       sources: [source],
     });

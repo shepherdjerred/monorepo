@@ -83,20 +83,20 @@ const ACQUISITION_EVIDENCE_TERMS = new Set([
   "give",
   "given",
   "gives",
+  "found",
   "hand",
   "handed",
   "hands",
   "obtain",
   "obtained",
   "receive",
-  "received",
   "receives",
   "reward",
   "rewarded",
   "rewards",
 ]);
-const ACQUISITION_EVIDENCE_SCORE = 50;
-const HM_ACQUISITION_EVIDENCE_SCORE = 100;
+const ACQUISITION_EVIDENCE_SCORE = 150;
+const HM_ACQUISITION_EVIDENCE_SCORE = 200;
 
 type AcquisitionEvidence = Readonly<{
   score: number;
@@ -139,28 +139,56 @@ function containsAnyTerm(value: string, candidates: ReadonlySet<string>) {
     .some((term) => candidates.has(term));
 }
 
+function containsAcquisitionSubjectAnchor(
+  value: string,
+  queryTerms: readonly string[],
+): boolean {
+  const valueTerms = new Set(normalize(value).split(" "));
+  return queryTerms.some(
+    (term) =>
+      valueTerms.has(term) ||
+      (term === "bike" &&
+        (valueTerms.has("bicycle") || valueTerms.has("bicycles"))),
+  );
+}
+
 function acquisitionEvidence(
   record: KnowledgeRecord,
   queryTerms: readonly string[],
 ): AcquisitionEvidence | undefined {
+  if (record.domain !== "progression") {
+    return undefined;
+  }
   let bestEvidence: AcquisitionEvidence | undefined;
   let searchFrom = 0;
-  for (const sentence of record.body.split(/[.!?]\s+|\n+/)) {
-    const position = record.body.indexOf(sentence, searchFrom);
+  for (const passage of record.body.split(/\n{2,}/)) {
+    const position = record.body.indexOf(passage, searchFrom);
     if (position === -1) {
-      throw new Error("knowledge sentence must originate from its record body");
+      throw new Error("knowledge passage must originate from its record body");
     }
-    searchFrom = position + sentence.length;
-    const normalizedSentence = normalize(sentence);
+    searchFrom = position + passage.length;
+    const normalizedPassage = normalize(passage);
+    const passageTerms = new Set(normalizedPassage.split(" "));
+    const evidenceSentence = passage
+      .split(/[.!?]\s+|\n+/)
+      .find(
+        (sentence) =>
+          containsAnyTerm(sentence, ACQUISITION_EVIDENCE_TERMS) &&
+          containsAcquisitionSubjectAnchor(sentence, queryTerms),
+      );
     const isRelevantEvidence =
-      queryTerms.some((term) => normalizedSentence.includes(term)) &&
-      containsAnyTerm(sentence, ACQUISITION_EVIDENCE_TERMS);
+      queryTerms.length > 0 &&
+      queryTerms.every((term) => passageTerms.has(term)) &&
+      evidenceSentence !== undefined;
     if (!isRelevantEvidence) continue;
-    const score = /\bhm\d+\b/u.test(normalizedSentence)
+    const score = /\bhm\d+\b/u.test(normalizedPassage)
       ? HM_ACQUISITION_EVIDENCE_SCORE
       : ACQUISITION_EVIDENCE_SCORE;
     if (bestEvidence === undefined || score > bestEvidence.score) {
-      bestEvidence = { score, position };
+      bestEvidence = {
+        score,
+        position: position + passage.indexOf(evidenceSentence),
+      };
     }
   }
   return bestEvidence;
@@ -220,11 +248,13 @@ export class KnowledgeBase {
     query: string,
     options: { domain?: KnowledgeDomain; limit: number },
   ): KnowledgeSearchResult[] {
-    const queryTerms = terms(query);
+    const acquisitionIntent = containsAnyTerm(query, ACQUISITION_QUERY_TERMS);
+    const queryTerms = terms(query).filter(
+      (term) => !acquisitionIntent || !ACQUISITION_QUERY_TERMS.has(term),
+    );
     if (queryTerms.length === 0) {
       throw new Error("knowledge query must contain searchable text");
     }
-    const acquisitionIntent = containsAnyTerm(query, ACQUISITION_QUERY_TERMS);
     return this.#records
       .filter(
         (record) =>
