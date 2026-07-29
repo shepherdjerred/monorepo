@@ -21,6 +21,7 @@ import {
   mapResponse,
   routeSemanticRequest,
 } from "./semantic-control-routes.ts";
+import { KnowledgeDomainSchema, loadKnowledgeBase } from "./knowledge.ts";
 
 const PressRequestSchema = z.strictObject({
   command: z.string().min(1),
@@ -56,6 +57,16 @@ const WriteRequestSchema = z.strictObject({
 
 const HistoryQuerySchema = z.strictObject({
   limit: z.coerce.number().int().min(1).max(10).optional(),
+});
+
+const KnowledgeSearchQuerySchema = z.strictObject({
+  q: z.string().min(2).max(200),
+  domain: KnowledgeDomainSchema.optional(),
+  limit: z.coerce.number().int().min(1).max(10).optional(),
+});
+
+const KnowledgeGetQuerySchema = z.strictObject({
+  id: z.string().min(1).max(300),
 });
 
 function goalChordLimits(goal: Config["game"]["goal"]): ChordLimits {
@@ -138,6 +149,41 @@ function historyResponse(
     logBody: body,
     requestMeta: { limit },
   };
+}
+
+async function knowledgeSearchResponse(request: Request): Promise<Response> {
+  const parsed = KnowledgeSearchQuerySchema.safeParse(queryParams(request));
+  if (!parsed.success) {
+    return jsonResponse(
+      {
+        error:
+          "knowledge search requires q (2-200 chars), optional domain, and limit 1-10",
+      },
+      400,
+    );
+  }
+  const base = await loadKnowledgeBase();
+  return jsonResponse({
+    query: parsed.data.q,
+    results: base.search(parsed.data.q, {
+      ...(parsed.data.domain === undefined
+        ? {}
+        : { domain: parsed.data.domain }),
+      limit: parsed.data.limit ?? 5,
+    }),
+  });
+}
+
+async function knowledgeGetResponse(request: Request): Promise<Response> {
+  const parsed = KnowledgeGetQuerySchema.safeParse(queryParams(request));
+  if (!parsed.success) {
+    return jsonResponse({ error: "knowledge get requires an id" }, 400);
+  }
+  const base = await loadKnowledgeBase();
+  const record = base.get(parsed.data.id);
+  return record === undefined
+    ? jsonResponse({ error: "knowledge record not found" }, 404)
+    : jsonResponse(record);
 }
 
 async function listResponse(
@@ -428,6 +474,22 @@ export async function routeRequest(
         response: result.response,
         requestMeta: result.requestMeta,
         logBody: truncateForToolLog(result.logBody),
+      };
+    }
+    case "GET /knowledge/search": {
+      const response = await knowledgeSearchResponse(request);
+      return {
+        response,
+        requestMeta: queryParams(request),
+        logBody: { status: response.status },
+      };
+    }
+    case "GET /knowledge/get": {
+      const response = await knowledgeGetResponse(request);
+      return {
+        response,
+        requestMeta: queryParams(request),
+        logBody: { status: response.status },
       };
     }
     case "POST /screenshot":

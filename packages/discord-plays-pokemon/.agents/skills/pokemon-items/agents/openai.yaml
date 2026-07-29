@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pokemon Items"
+  short_description: "Search Pokemon Emerald item identifiers, categories, and costs"
+  default_prompt: "Use Pokemon item knowledge when an objective depends on an item."

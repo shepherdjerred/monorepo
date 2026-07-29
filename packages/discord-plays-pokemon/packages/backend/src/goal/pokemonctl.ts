@@ -26,6 +26,8 @@ function usage(): string {
     "  pokemonctl status",
     "  pokemonctl state",
     "  pokemonctl history [--limit n]",
+    '  pokemonctl knowledge search "<query>" [--domain <domain>] [--limit n]',
+    "  pokemonctl knowledge get <record-id>",
     '  pokemonctl progress "message"',
     "  pokemonctl list [path]",
     "  pokemonctl read <path>",
@@ -298,6 +300,50 @@ async function handleProgress(args: string[]): Promise<void> {
   printJsonText(await request("POST", "/progress", { message }));
 }
 
+function readStringFlag(args: string[], name: string): string | undefined {
+  const index = args.indexOf(name);
+  if (index === -1) {
+    return undefined;
+  }
+  const value = args.at(index + 1);
+  if (value === undefined) {
+    throw new Error(`${name} requires a value`);
+  }
+  return value;
+}
+
+async function handleKnowledge(args: string[]): Promise<void> {
+  const operation = args.at(0);
+  const value = args.at(1);
+  if (operation === "search") {
+    if (value === undefined || value.startsWith("--")) {
+      throw new Error("knowledge search requires a query");
+    }
+    const domain = readStringFlag(args, "--domain");
+    const limit = readNumberFlag(args, "--limit");
+    const params = new URLSearchParams({ q: value });
+    if (domain !== undefined) params.set("domain", domain);
+    if (limit !== undefined) params.set("limit", String(limit));
+    printJsonText(
+      await request("GET", `/knowledge/search?${params.toString()}`),
+    );
+    return;
+  }
+  if (operation === "get") {
+    if (value === undefined || value.startsWith("--")) {
+      throw new Error("knowledge get requires a record id");
+    }
+    printJsonText(
+      await request(
+        "GET",
+        `/knowledge/get?${new URLSearchParams({ id: value }).toString()}`,
+      ),
+    );
+    return;
+  }
+  throw new Error("knowledge requires search or get");
+}
+
 // ── Scoped memory filesystem (LIST / READ / GREP / WRITE). ────────────────────
 
 async function handleList(args: string[]): Promise<void> {
@@ -371,6 +417,7 @@ const HANDLERS = new Map<string, (args: string[]) => Promise<void>>([
     },
   ],
   ["history", handleHistory],
+  ["knowledge", handleKnowledge],
   ["press", handlePress],
   ["chord", handleChord],
   ["wait", handleWait],

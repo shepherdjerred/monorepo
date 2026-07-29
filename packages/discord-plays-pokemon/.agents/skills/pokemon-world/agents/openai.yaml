@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pokemon World"
+  short_description: "Search Emerald maps, regions, connections, warps, and terrain"
+  default_prompt: "Use Pokemon world knowledge when planning travel or locating a place."

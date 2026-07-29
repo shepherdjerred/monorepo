@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pokemon Species"
+  short_description: "Search Generation III species, types, and learned moves"
+  default_prompt: "Use Pokemon species knowledge when identifying or planning around a Pokemon."

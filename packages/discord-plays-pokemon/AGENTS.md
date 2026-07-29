@@ -85,6 +85,29 @@ failed the game evaluator; `2` means an invalid provider measurement, harness
 error, invalid argument, or preflight failure. `summary.json.successRate`
 excludes invalid runs from its denominator.
 
+## Goal agent knowledge corpus
+
+`knowledge/generated/records.json` and
+`knowledge/cc-by-nc-sa-2.5/walkthrough.json` are committed generator output.
+Never hand-edit them. `scripts/generate-knowledge.ts` validates
+`knowledge/sources.json`, fetches only pinned upstream revisions, validates the
+normalized records, sorts them deterministically, and fails if Bulbapedia's
+current revisions have drifted from the manifest.
+
+- Archipelago supplies the MIT-licensed Emerald region graph.
+- PokeAPI supplies BSD-3-Clause Generation III species, move, and item data.
+- Bulbapedia supplies the separately stored full walkthrough under CC
+  BY-NC-SA 2.5; preserve `knowledge/cc-by-nc-sa-2.5/NOTICE.md` and per-record
+  attribution.
+- Runtime access is bounded through `pokemonctl knowledge search` and
+  `pokemonctl knowledge get`; do not embed the corpus in the base prompt.
+- `.agents/skills/pokemon-{world,progression,species,items,battle}` are focused
+  discovery instructions, not copies of the underlying facts.
+
+After updating a source pin, run `bun run generate:knowledge`, then verify the
+scripts and backend packages. The Temporal data refresh also regenerates this
+corpus and treats any drift as a reviewable change.
+
 ## Reading live game state from the wasm
 
 The notifier polls emulator memory (~2×/s) for faints/badges/evolutions/catches. Read-side modules: `packages/backend/src/emulator/{memory,symbols}.ts`, `src/game/events/`; debug with `packages/backend/scripts/probe-memory.ts`.

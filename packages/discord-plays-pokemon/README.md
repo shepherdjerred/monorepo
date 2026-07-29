@@ -41,6 +41,25 @@ tested artifact can enter the runtime image. This is deliberately mandatory:
 unit tests using constructed snapshots are not sufficient evidence that the C
 layout and TypeScript decoder still agree.
 
+## Goal agent knowledge
+
+Goal Mode gives Codex a compact operating policy and loads game facts only
+when needed. The `pokemonctl knowledge search` and `knowledge get` commands
+query a committed, validated Pokémon Emerald corpus:
+
+- Archipelago's Emerald region graph for maps, connections, warps, terrain,
+  events, and rewards.
+- PokeAPI's Generation III data for species, Emerald level-up moves, battle
+  moves, and items.
+- Bulbapedia's complete 22-part Emerald walkthrough, stored separately under
+  `knowledge/cc-by-nc-sa-2.5/` and attributed under CC BY-NC-SA 2.5.
+
+All source revisions are pinned in `knowledge/sources.json`. Regenerate the
+checked-in data with `bun run generate:knowledge`. Five focused skills under
+`.agents/skills/pokemon-*` teach the agent when to search each domain without
+putting the encyclopedia in every prompt. Knowledge is advisory; live
+`pokemonctl observe` state and action outcomes remain authoritative.
+
 ## Deployment
 
 Runs on the homelab Kubernetes cluster via ArgoCD

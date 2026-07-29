@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pokemon Progression"
+  short_description: "Search the complete Pokemon Emerald walkthrough and progression"
+  default_prompt: "Use Pokemon progression knowledge when deciding what story step comes next."

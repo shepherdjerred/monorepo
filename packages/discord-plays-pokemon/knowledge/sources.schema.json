@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pokeemeraldWasm", "archipelago", "pokeapi", "bulbapedia"],
+  "properties": {
+    "pokeemeraldWasm": {
+      "type": "object",
+      "required": ["repository", "manifest"],
+      "properties": {
+        "repository": { "type": "string", "format": "uri" },
+        "manifest": { "type": "string" }
+      }
+    },
+    "archipelago": {
+      "type": "object",
+      "required": ["repository", "commit", "license", "worldPath"],
+      "properties": {
+        "repository": { "type": "string", "format": "uri" },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "license": { "const": "MIT" },
+        "worldPath": { "type": "string" }
+      }
+    },
+    "pokeapi": {
+      "type": "object",
+      "required": [
+        "repository",
+        "commit",
+        "license",
+        "csvPath",
+        "versionId",
+        "versionGroupId",
+        "generationId"
+      ],
+      "properties": {
+        "repository": { "type": "string", "format": "uri" },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "license": { "const": "BSD-3-Clause" },
+        "csvPath": { "type": "string" },
+        "versionId": { "const": 9 },
+        "versionGroupId": { "const": 6 },
+        "generationId": { "const": 3 }
+      }
+    },
+    "bulbapedia": {
+      "type": "object",
+      "required": ["api", "license", "licenseUrl", "attribution", "pages"],
+      "properties": {
+        "api": { "type": "string", "format": "uri" },
+        "license": { "const": "CC BY-NC-SA 2.5" },
+        "licenseUrl": { "type": "string", "format": "uri" },
+        "attribution": { "type": "string" },
+        "pages": {
+          "type": "array",
+          "minItems": 22,
+          "maxItems": 22,
+          "items": {
+            "type": "object",
+            "required": ["title", "revision", "timestamp"],
+            "properties": {
+              "title": { "type": "string" },
+              "revision": { "type": "integer", "minimum": 1 },
+              "timestamp": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
