@@ -108,7 +108,7 @@ After merge and GitOps reconciliation:
 - [x] Implement dependency, migration, patch, test, and generated-type changes.
 - [x] Complete focused and repository-wide verification.
 - [x] Publish the consolidated draft git-spice pull request.
-- [ ] Drive the pull request to ready for human review.
+- [x] Drive the pull request to ready for human review.
 - [ ] Complete pre-merge PostgreSQL and backup gates.
 - [ ] After human merge, verify current main CI and complete the PostgreSQL maintenance event.
 
@@ -138,15 +138,22 @@ After merge and GitOps reconciliation:
 - Reproduced the required `ci/merge-conflict` result with its exact explicit-merge-base command, restacked with git-spice onto `9be7cdadfc`, and resolved the two mechanical image-validator overlaps by retaining current `main` fixture data and Unicorn-required switch-case braces.
 - Verified the restacked head with the focused eight-test image-validator suite, the exact merge-tree oracle, and the exhaustive local verification gate: all 217 tasks passed in 3m50s.
 - Accepted a current-head reviewer finding that `ffmpeg-static` was present in the lock package table but absent from the `discord-video-stream` importer, regenerated the root lockfile, and revalidated the frozen install, native integration test, and package typecheck.
+- Drove pull request #1791 through green current-head Buildkite build [6873](https://buildkite.com/sjerred/monorepo/builds/6873), resolved all review threads, confirmed a clean merge tree, and observed its merge as `52f25f271`.
+- Verified current-main Buildkite build [6874](https://buildkite.com/sjerred/monorepo/builds/6874) passed all selected main, release, deployment, reconciliation, and summary lanes.
+- Confirmed postgres-operator v2.0.0 reconciled successfully; all four single-member databases rolled serially to ready `spilo-18:4.1-p2` primaries with zero restarts, and their Bugsink, Plausible, Grafana, and Temporal consumers remained ready.
+- Identified four v2 CRD defaults that left the healthy postgres-operator Application perpetually `OutOfSync`, encoded them explicitly in the typed Helm values, and added a synthesis regression test.
 
 ### Remaining
 
-- Publish the restacked pull request #1791 head and drive its replacement Buildkite and current-head review gates to green.
-- When the pull request is otherwise merge-ready, confirm all four PostgreSQL resources and create/validate the pre-merge Velero backup.
-- After human merge, verify current `main`, reconcile postgres-operator v2, remove only the four obsolete DCS Endpoints, and validate the post-migration backup.
+- Wait for the serialized pre-migration Velero backup to reach a terminal phase and validate its complete R2 volume data set.
+- Remove only the four verified obsolete DCS config Endpoints, retain the database service Endpoints, and revalidate the four databases and their clients.
+- Create and validate the post-migration full backup after the first backup releases the ZFS writer.
+- Publish the small postgres-operator desired-state follow-up and drive its current-head Buildkite and review gates to green.
 
 ### Caveats
 
-- The PostgreSQL operator v2 change is stateful and must not merge until all four database resources report `Running` and a complete on-demand backup is confirmed.
+- The pre-migration backup was created before merge and is actively uploading full ZFS volume data to R2, but it had not reached a terminal Velero phase when the merge occurred.
 - The post-merge DCS cleanup removes only obsolete `*-postgresql-config` Endpoints; service Endpoints remain.
+- The active ConfigMap DCS contains each cluster's `-config` and `-leader` keys. The optional `-failover` key is absent because no failover is pending; its absence is not a migration failure.
+- The live postgres-operator Application is healthy but remains `OutOfSync` until the four Kubernetes-defaulted v2 fields are made explicit by the follow-up change.
 - Unicorn 69's `recommended` preset is not treated as an automatically accepted policy change. The shared config now positively enumerates the 137 previously reviewed rules against the v69 plugin, so future policy additions remain explicit, reviewable changes.
