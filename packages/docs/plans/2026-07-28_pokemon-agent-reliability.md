@@ -71,7 +71,7 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - [x] Implement and verify the compact prompt and benchmark harness.
 - [x] Implement and verify the knowledge corpus, retrieval, and skills.
 - [ ] Complete repeated local evaluation and iterate on failures.
-- [x] Publish the review-ready stack and record CI/live verification.
+- [ ] Publish the review-ready stack and record CI/live verification.
 
 ## Comment Log
 
@@ -218,7 +218,7 @@ system against a copied live save and the exact goal `get me a pokeman`.
 - Implemented a general engine checkpoint and ordered atomic flash
   persistence. A rebuilt real WASM passed an independent checkpoint/reboot
   integration test against a copied live save.
-- Verified the combined backend (308 tests, zero failures or skips), all 27
+- Verified the combined backend (310 tests, zero failures or skips), all 27
   knowledge/build script tests, package typecheck/lint, the exhaustive
   root `bun run verify` graph (217/217 tasks), and a clean Docker `smoke` build
   that rebuilt the patched WASM, passed both mandatory real-emulator ABI and
@@ -306,15 +306,16 @@ system against a copied live save and the exact goal `get me a pokeman`.
   removes combining marks before punctuation folding, so `Pokéblock Case`
   remains a single semantic token and ranks the actual case record rather than
   the unrelated Block move.
-- Completed hosted verification for every code-bearing stack head. Buildkite
-  #7093 for #1802, #7103 for #1803, and #7110 for #1805 passed all authoritative
-  lanes, including exhaustive verification, container smoke, security scans,
-  deployment dry-runs, and the review gate. Each exact head received a fresh
-  clean Codex signal, had zero unresolved GraphQL review threads, and was
-  mergeable with a clean merge state.
+- Closed the late navigation review finding. A failed step remains learned for
+  normal planning, but `no-route` gets one bounded revalidation against current
+  NPC occupancy and authoritative static collision, allowing a transiently
+  occupied corridor tile to recover while all retries still consume
+  `maxSteps`.
 
 ### Remaining
 
+- Monitor the restacked replacement heads through Buildkite and fresh Codex
+  review.
 - Rerun three clean-copy candidate trials when Codex quota is available. Do
   not compare the current provider-invalid artifacts to the valid 0/3
   baseline.
