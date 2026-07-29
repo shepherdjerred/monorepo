@@ -53,11 +53,18 @@ snapshot paths cannot be silently omitted from an automated PR.
   repository safety checks.
 - Rendered and inspected before/after banner and square fixtures for PR
   evidence.
+- Committed and pushed the repair as `1dd4aa494`, and published the inspected
+  before/after fixtures on PR #1827.
+- Confirmed PR #1827 is mergeable with no review threads on the repaired head.
+- Traced replacement Buildkite build #7151's queued state to the `liskov`
+  worker: it stopped heartbeating at 11:04–11:05 PDT, is `NotReady`,
+  unreachable, and cordoned, and its Talos API times out.
 
 ### Remaining
 
-- Commit and push the repair to PR #1827.
-- Publish the inspected visual evidence and monitor replacement CI and review.
+- Restore or power on `liskov`, then monitor a Buildkite build for the final PR
+  head through a green result.
+- Merge PR #1827 after current-head CI and automated review pass.
 
 ### Caveats
 
@@ -65,3 +72,6 @@ snapshot paths cannot be silently omitted from an automated PR.
   directly rather than converted into a git-spice stack.
 - The durable staging safeguard takes effect in automation after this PR is
   merged and the updated Temporal worker is deployed.
+- Buildkite cannot execute any repository code while `liskov` is unreachable
+  because CI jobs are affinity-bound to that worker; no live cluster mutation
+  was attempted.
