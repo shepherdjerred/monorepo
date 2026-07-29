@@ -234,6 +234,10 @@ to eval case classification.
   ownership, and pipeline validation. `bunx turbo run test:e2e
 --filter=@scout-for-lol/evals` passed 6/6 and the final affected repository
   gate passed 221/221 tasks.
+- Committed the implementation as `ad390d37d`, restacked it onto current `main`,
+  and opened PR [#1777](https://github.com/shepherdjerred/monorepo/pull/1777)
+  with desktop and mobile screenshots. Post-restack verification passed 63/63
+  affected tasks and 6/6 browser workflows.
 
 ### Remaining
 
@@ -254,5 +258,5 @@ to eval case classification.
   the first controlled prompt experiment.
 - Per the requested test scope, the new browser suite is fully hermetic and does
   not rerun credentialed Beta SQLite, S3, or OpenAI operations.
-- Changes remain uncommitted in the `feature/scout-review-evals` worktree; no
-  pull request was created because this session did not request one.
+- PR #1777 is open from `feature/scout-review-evals`; Buildkite and automated
+  review remain the merge-time gates.
