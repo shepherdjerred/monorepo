@@ -21,7 +21,11 @@ import {
   reserveBenchmarkDirectory,
 } from "./benchmark-run.ts";
 import { requireBenchmarkOutputOutsideImplementation } from "./benchmark-output-location.ts";
-import { prepareBenchmarkRuntimeOverlay } from "./benchmark-runtime-overlay.ts";
+import {
+  OPTIONAL_CODEX_INSTRUCTION_PATHS,
+  prepareBenchmarkRuntimeOverlay,
+  REQUIRED_CODEX_INSTRUCTION_PATHS,
+} from "./benchmark-runtime-overlay.ts";
 import { runBenchmarkSeries } from "./benchmark-series.ts";
 import { prepareRuntimeTools } from "./goal-runtime-env.ts";
 
@@ -879,6 +883,41 @@ describe("benchmark output containment", () => {
 });
 
 describe("benchmark runtime overlay", () => {
+  test("matches the production image's Codex instruction surface", async () => {
+    const dockerfile = await Bun.file(
+      path.resolve(import.meta.dir, "../../../../Dockerfile"),
+    ).text();
+    const scopedCopyStart = dockerfile.indexOf("# Scoped source closure.");
+    const scopedCopyEnd = dockerfile.indexOf(
+      "# Keep the deployed Codex instruction surface",
+      scopedCopyStart,
+    );
+    const runtimePresenceEnd = dockerfile.indexOf(
+      "# Built artifacts from the build stage.",
+      scopedCopyEnd,
+    );
+
+    expect(scopedCopyStart).toBeGreaterThan(-1);
+    expect(scopedCopyEnd).toBeGreaterThan(scopedCopyStart);
+    expect(runtimePresenceEnd).toBeGreaterThan(scopedCopyEnd);
+
+    const scopedCopy = dockerfile.slice(scopedCopyStart, scopedCopyEnd);
+    const runtimePresenceChecks = dockerfile.slice(
+      scopedCopyEnd,
+      runtimePresenceEnd,
+    );
+    const instructionPaths = [
+      ...REQUIRED_CODEX_INSTRUCTION_PATHS,
+      ...OPTIONAL_CODEX_INSTRUCTION_PATHS,
+    ];
+
+    for (const relativePath of instructionPaths) {
+      const dockerPath = `packages/discord-plays-pokemon/${relativePath}`;
+      expect(scopedCopy).toContain(`  ${dockerPath} \\`);
+      expect(runtimePresenceChecks).toContain(dockerPath);
+    }
+  });
+
   test("copies only the target runtime surface and isolates helper writes", async () => {
     const root = await mkdtemp(path.join(tmpdir(), "pokemon-runtime-overlay-"));
     const implementationRoot = path.join(root, "implementation");

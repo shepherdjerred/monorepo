@@ -178,7 +178,9 @@ COPY --from=prod-deps /app/ /app/
 # below.
 COPY --parents \
   tsconfig.base.json \
+  packages/discord-plays-pokemon/AGENTS.md \
   packages/discord-plays-pokemon/config.example.toml \
+  packages/discord-plays-pokemon/.agents \
   packages/discord-plays-pokemon/packages/backend \
   packages/discord-plays-pokemon/packages/common \
   packages/discord-plays-core \
@@ -187,6 +189,12 @@ COPY --parents \
   packages/llm-models \
   packages/llm-observability \
   ./
+
+# Keep the deployed Codex instruction surface identical to the benchmark
+# runtime overlay and fail the image build if either input is omitted.
+RUN test -s packages/discord-plays-pokemon/AGENTS.md \
+  && test -d packages/discord-plays-pokemon/.agents/skills \
+  && test -n "$(find packages/discord-plays-pokemon/.agents/skills -mindepth 2 -maxdepth 2 -type f -name SKILL.md -print -quit)"
 
 # Built artifacts from the build stage.
 COPY --from=build /app/packages/discord-stream-lifecycle/dist packages/discord-stream-lifecycle/dist

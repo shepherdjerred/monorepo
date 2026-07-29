@@ -1,13 +1,16 @@
 import path from "node:path";
 import { cp, lstat, mkdir } from "node:fs/promises";
 
+export const REQUIRED_CODEX_INSTRUCTION_PATHS = ["AGENTS.md"] as const;
+export const OPTIONAL_CODEX_INSTRUCTION_PATHS = [".agents"] as const;
+
 const REQUIRED_RUNTIME_PATHS = [
-  "AGENTS.md",
+  ...REQUIRED_CODEX_INSTRUCTION_PATHS,
   "packages/backend/src/goal",
   "packages/backend/node_modules/zod",
 ] as const;
 
-const OPTIONAL_RUNTIME_PATHS = [".agents", "CLAUDE.md"] as const;
+const OPTIONAL_RUNTIME_PATHS = OPTIONAL_CODEX_INSTRUCTION_PATHS;
 const POKEMONCTL_RELATIVE_PATH = "packages/backend/src/goal/pokemonctl.ts";
 
 function pathIsInside(parent: string, candidate: string): boolean {
