@@ -262,17 +262,37 @@ export async function navigateGame(
       });
     }
 
-    const blocked = new Set(failedMovementTiles);
+    const currentlyOccupiedTiles = new Set<string>();
     for (const object of world.nearby) {
-      blocked.add(coordinateKey(world.x + object.dx, world.y + object.dy));
+      currentlyOccupiedTiles.add(
+        coordinateKey(world.x + object.dx, world.y + object.dy),
+      );
     }
-    const direction = findNextPathStep({
+    const blocked = new Set([
+      ...failedMovementTiles,
+      ...currentlyOccupiedTiles,
+    ]);
+    let direction = findNextPathStep({
       readMapTile: options.readMapTile,
       start: { x: world.x, y: world.y },
       target: options.target,
       bounds,
       blocked,
     });
+    if (direction === null && failedMovementTiles.size > 0) {
+      // A zero-movement press can be caused by an NPC that entered the tile
+      // after the preceding observation. Revalidate learned failures once
+      // against the current static map and object positions before declaring
+      // no route. Retried presses still consume maxSteps, preserving the
+      // navigation bound even when an unobserved blocker never moves.
+      direction = findNextPathStep({
+        readMapTile: options.readMapTile,
+        start: { x: world.x, y: world.y },
+        target: options.target,
+        bounds,
+        blocked: currentlyOccupiedTiles,
+      });
+    }
     if (direction === null) {
       return navigationResult({
         stopReason: "no-route",

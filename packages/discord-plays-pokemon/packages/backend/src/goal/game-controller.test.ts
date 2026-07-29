@@ -552,6 +552,74 @@ describe("GameController navigation", () => {
     ]);
   });
 
+  test("revalidates a failed corridor tile after a transient blocker moves", async () => {
+    const allowed = new Set(["5,5", "6,5", "7,5"]);
+    const blocked = new Set<string>();
+    for (let x = 1; x <= 9; x += 1) {
+      for (let y = 1; y <= 9; y += 1) {
+        const key = `${String(x)},${String(y)}`;
+        if (!allowed.has(key)) blocked.add(key);
+      }
+    }
+    const start = observation({ x: 5, y: 5, facing: "east" });
+    const port = new FakeControlPort(
+      start,
+      [
+        // A transient blocker arrives after planning, so the first semantic
+        // move exhausts its turn/move presses without changing coordinates.
+        observation({ frame: 12, x: 5, y: 5, facing: "east" }),
+        observation({ frame: 24, x: 5, y: 5, facing: "east" }),
+        // The next observation no longer reports a blocker in the corridor.
+        observation({ frame: 36, x: 6, y: 5, facing: "east" }),
+        observation({ frame: 48, x: 7, y: 5, facing: "east" }),
+      ],
+      { blocked },
+    );
+    const controller = new GameController(port);
+
+    const result = await controller.navigate({ x: 7, y: 5 }, 3, 4);
+
+    expect(result.status).toBe("arrived");
+    expect(result.stopReason).toBe("target-reached");
+    expect(result.attemptsMade).toBe(3);
+    expect(result.stepsTaken).toBe(2);
+    expect(port.presses.map((press) => press.command)).toEqual([
+      "right",
+      "right",
+      "right",
+      "right",
+    ]);
+  });
+
+  test("bounds revalidation when an unobserved blocker never moves", async () => {
+    const allowed = new Set(["5,5", "6,5"]);
+    const blocked = new Set<string>();
+    for (let x = 1; x <= 9; x += 1) {
+      for (let y = 1; y <= 9; y += 1) {
+        const key = `${String(x)},${String(y)}`;
+        if (!allowed.has(key)) blocked.add(key);
+      }
+    }
+    const start = observation({ x: 5, y: 5, facing: "east" });
+    const port = new FakeControlPort(start, [], { blocked });
+    const controller = new GameController(port);
+
+    const result = await controller.navigate({ x: 6, y: 5 }, 3, 4);
+
+    expect(result.status).toBe("stopped");
+    expect(result.stopReason).toBe("max-steps");
+    expect(result.attemptsMade).toBe(3);
+    expect(result.stepsTaken).toBe(0);
+    expect(port.presses.map((press) => press.command)).toEqual([
+      "right",
+      "right",
+      "right",
+      "right",
+      "right",
+      "right",
+    ]);
+  });
+
   test("stops navigation when movement crosses a map boundary", async () => {
     const start = observation({ x: 5, y: 5, facing: "east" });
     const port = new FakeControlPort(start, [
