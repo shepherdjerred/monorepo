@@ -233,7 +233,7 @@ describe("Competition List Query", () => {
   });
 
   test("activeOnly includes season-based competitions whose season is still active", async () => {
-    // 2026_SEASON_2_ACT_2 ends 2026-08-12 — still future-ending as of 2026-05-11
+    const duringSeason = new Date("2026-07-01T00:00:00-07:00");
     await createCompetition(
       prisma,
       createTestCompetitionInput(serverId, ownerId1, channelId, {
@@ -247,6 +247,7 @@ describe("Competition List Query", () => {
 
     const activeComps = await getCompetitionsByServer(prisma, serverId, {
       activeOnly: true,
+      now: duringSeason,
     });
     expect(activeComps).toHaveLength(1);
     expect(activeComps[0]?.title).toBe("Season Comp");

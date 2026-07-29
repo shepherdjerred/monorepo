@@ -50,6 +50,7 @@ describe("seasons", () => {
         "2026_SEASON_1_ACT_2",
         "2026_SEASON_2_ACT_1",
         "2026_SEASON_2_ACT_2",
+        "2026_SEASON_3_ACT_1",
       ] as const;
       for (const id of validIds) {
         const result = SeasonIdSchema.safeParse(id);
@@ -169,6 +170,14 @@ describe("seasons", () => {
     test("should return undefined for invalid season", () => {
       const dates = getSeasonDates("INVALID_SEASON");
       expect(dates).toBeUndefined();
+    });
+
+    test("should use the Season 3 Act 1 patch boundaries", () => {
+      const dates = getSeasonDates("2026_SEASON_3_ACT_1");
+      expect(dates).toEqual({
+        startDate: new Date("2026-07-29T12:00:00-07:00"),
+        endDate: new Date("2026-09-22T23:59:59-07:00"),
+      });
     });
   });
 
