@@ -161,9 +161,10 @@ export async function getCompetitionsByServer(
   options?: {
     activeOnly?: boolean;
     ownerId?: DiscordAccountId;
+    now?: Date;
   },
 ): Promise<CompetitionWithCriteria[]> {
-  const now = new Date();
+  const now = options?.now ?? new Date();
 
   const raw = await prisma.competition.findMany({
     where: {
@@ -194,9 +195,10 @@ export async function getCompetitionsByServerPaginated(
     ownerId?: DiscordAccountId;
     limit: number;
     cursor?: number;
+    now?: Date;
   },
 ): Promise<{ items: CompetitionWithCriteria[]; nextCursor: number | null }> {
-  const now = new Date();
+  const now = options.now ?? new Date();
 
   const raw = await prisma.competition.findMany({
     where: {
@@ -232,9 +234,8 @@ export async function getCompetitionsByServerPaginated(
  */
 export async function getActiveCompetitions(
   prisma: ExtendedPrismaClient,
+  now = new Date(),
 ): Promise<CompetitionWithCriteria[]> {
-  const now = new Date();
-
   const raw = await prisma.competition.findMany({
     where: activeOnlyWhere(now),
     orderBy: {

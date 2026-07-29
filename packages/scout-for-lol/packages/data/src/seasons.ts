@@ -30,6 +30,7 @@ export const SeasonIdSchema = z.enum([
   "2026_SEASON_1_ACT_2",
   "2026_SEASON_2_ACT_1",
   "2026_SEASON_2_ACT_2",
+  "2026_SEASON_3_ACT_1",
 ]);
 
 export type SeasonId = z.infer<typeof SeasonIdSchema>;
@@ -80,6 +81,12 @@ export const SEASONS: Record<SeasonId, SeasonData> = {
     displayName: "Pandemonium (Act 2)",
     startDate: new Date("2026-06-10T00:00:00-07:00"),
     endDate: new Date("2026-07-28T23:59:59-07:00"),
+  },
+  "2026_SEASON_3_ACT_1": {
+    id: "2026_SEASON_3_ACT_1",
+    displayName: "League Classic (Act 1)",
+    startDate: new Date("2026-07-29T12:00:00-07:00"),
+    endDate: new Date("2026-09-22T23:59:59-07:00"),
   },
 };
 

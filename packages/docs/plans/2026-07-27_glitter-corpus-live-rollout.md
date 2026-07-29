@@ -481,9 +481,10 @@ pass.
 
 ### Remaining
 
-- Restore the merge-generated main build after Playwright 1.62 changed the
-  amd64 Chromium directory from `chrome-linux` to `chrome-linux64`, then deploy
-  the merged snapshot-pin worker image through GitOps.
+- Restore the merge-generated main build after its application-image smoke
+  exposed Scout's expired season catalog. Add 2026 Season 3 Act 1 from Riot's
+  published season start and patch schedule, then deploy the merged
+  snapshot-pin worker image through GitOps.
 - Restore quota for the OpenAI project used by the Temporal worker, or
   explicitly authorize a different production OpenAI credential for this
   workflow.

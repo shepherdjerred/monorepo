@@ -297,7 +297,7 @@ describe("getCompetitionsByServer", () => {
   });
 
   test("activeOnly includes season-based comp tied to a future-ending season", async () => {
-    // 2026_SEASON_2_ACT_2 ends 2026-08-12 — still active as of 2026-05-11
+    const duringSeason = new Date("2026-07-01T00:00:00-07:00");
     await createCompetition(prisma, {
       serverId: testGuildId("123456789012345678"),
       ownerId: testAccountId("987654321098765432"),
@@ -313,7 +313,7 @@ describe("getCompetitionsByServer", () => {
     const activeOnly = await getCompetitionsByServer(
       prisma,
       testGuildId("123456789012345678"),
-      { activeOnly: true },
+      { activeOnly: true, now: duringSeason },
     );
 
     expect(activeOnly).toHaveLength(1);
@@ -321,6 +321,7 @@ describe("getCompetitionsByServer", () => {
   });
 
   test("activeOnly excludes comp with endProcessedAt set even if season is still active", async () => {
+    const duringSeason = new Date("2026-07-01T00:00:00-07:00");
     const comp = await createCompetition(prisma, {
       serverId: testGuildId("123456789012345678"),
       ownerId: testAccountId("987654321098765432"),
@@ -343,7 +344,7 @@ describe("getCompetitionsByServer", () => {
     const activeOnly = await getCompetitionsByServer(
       prisma,
       testGuildId("123456789012345678"),
-      { activeOnly: true },
+      { activeOnly: true, now: duringSeason },
     );
 
     expect(activeOnly).toHaveLength(0);
@@ -487,6 +488,7 @@ describe("getActiveCompetitions", () => {
   });
 
   test("includes season-based comp tied to a future-ending season", async () => {
+    const duringSeason = new Date("2026-07-01T00:00:00-07:00");
     await createCompetition(prisma, {
       serverId: testGuildId("123456789012345678"),
       ownerId: testAccountId("987654321098765432"),
@@ -499,7 +501,7 @@ describe("getActiveCompetitions", () => {
       criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
     });
 
-    const active = await getActiveCompetitions(prisma);
+    const active = await getActiveCompetitions(prisma, duringSeason);
     expect(active).toHaveLength(1);
     expect(active[0]?.title).toBe("Active-Season Cron Comp");
   });
