@@ -24,7 +24,7 @@ const versions = {
   // not managed by renovate — built from packages/streambot; CI's version commit-back fills the
   // real tag@digest after the first image push. Seed digest is a placeholder until then.
   "shepherdjerred/streambot":
-    "2.0.0-7040@sha256:bdf288e0c25afd190504d0723c4ebb12d9969abf3e4a2336f5eb1ff267d19a6c",
+    "2.0.0-7052@sha256:79cc1bc08052e9d6ec69077cb7559bf9a82bae50bdf7d40beba0b928cf8a995c",
   // not managed by renovate — built from upstream redlib's glibc Dockerfile.ubuntu
   // at REDLIB_SOURCE_REF (pinned in the since-removed CI pipeline). The published image is
   // musl/Alpine, which Reddit blocks during OAuth (redlib-org/redlib#551 —
@@ -150,7 +150,7 @@ const versions = {
   openebs: "4.5.1",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
-    "2.0.0-7040@sha256:ad845c34e31c34b1c9ed84bdaed25dac384d0ae1b3cf1accc6eabdd103449e29",
+    "2.0.0-7052@sha256:f5e6add31cb08c1919c667dff6216318aca82d2918758f6bc742552a2ff3e024",
   // Prod promotion = merging the Renovate PR for this pin. Each 2.0.0-<n>
   // tag is minted by the scout-tag-release CI step only after site version
   // <n> is archived, pointing at the backend digest beta serves it against —
@@ -163,20 +163,20 @@ const versions = {
     "2.0.0-6673@sha256:1020003c3939fadb6d4c1bcd0fd362c1ada9865a427d51171fe65528120b33e7",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
-    "2.0.0-7040@sha256:eef97944b98a0779093ecd7647fd27c4d0341b8c5b95a6df88d7ccb321812fad",
+    "2.0.0-7052@sha256:ce01641ea2c36fbaab2528939037a887acd7e99f43268d9b1e341f5f3366f376",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/starlight-karma-bot
   "shepherdjerred/starlight-karma-bot/prod":
     "2.0.0-6673@sha256:4e0aaa2bc818f4e98c67462bfe95c722ea470a266b6c95f6861b7dc6a5da240f",
   // not managed by renovate
   "shepherdjerred/birmel":
-    "2.0.0-7040@sha256:03a914c75ebf8105ecb2e3f56bc25d88a05a18e9e36159402ea92a76683b8fc8",
+    "2.0.0-7052@sha256:d09ff0fc92597ad4262407bae5c417a98b479b14284ec6fc97c6ce53f289e78d",
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
-    "2.0.0-7040@sha256:ffab19ab6732bb93fc11a276b37c6da23a618221711584e3804e1ddec45740a9",
+    "2.0.0-7052@sha256:be49faaa4e55a1f8c54d6f11f02a833587bee5a0071cdaf609aa51069f96baed",
   // not managed by renovate — placeholder digest; CI version-commit-back fills
   // the real digest after the first successful image push.
   "shepherdjerred/discord-plays-mario-kart":
-    "2.0.0-7040@sha256:8a5f5faf3506d6a925bda17eda27db3d6575fc149c6508b1118aba2f554ac672",
+    "2.0.0-7052@sha256:3f43c98e33cf35231f3319f94bf92ff0666d2d4fb213fba796e507bbb983b523",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "freshrss/freshrss":
     "1.29.1@sha256:ab6b363102ccdbc39f6a62db926f567c61a5289bf25ba460f1c34423d8cc1a4d",
@@ -301,7 +301,7 @@ const versions = {
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
-    "2.0.0-7040@sha256:040a3b566ce434cb65214bafa4e94eca731052fb9d8fe782d52711abef14f576",
+    "2.0.0-7052@sha256:143352d8610ecfe2565ca6ef6061c691675b8aac7c0bec8f6ef564af1539dd36",
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
@@ -322,11 +322,11 @@ const versions = {
   // Custom temporal-worker image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/temporal-worker":
-    "2.0.0-7040@sha256:072d5e652aa9bf24cd5a38dc0de1c7c8183445f926d0a5603619deef1f6ba388",
+    "2.0.0-7052@sha256:580e41600ab0c1cc33d9d4f91a68c1ac7cc2126de68b6ade291b092719d8e4b2",
   // Custom TRMNL dashboard image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/trmnl-dashboard":
-    "2.0.0-7040@sha256:1c85c353f50760586fdd2b9b2961c2e4494852b9780603d5b854abb16134c2ce",
+    "2.0.0-7052@sha256:278b35aca98a02c5e80d561d7dc90a7d3d0ddae714118f4cce0cb32e1c5dafa3",
 };
 
 applyCurrentBuildImageOverrides(versions);
