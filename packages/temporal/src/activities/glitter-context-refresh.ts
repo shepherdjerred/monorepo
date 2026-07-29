@@ -19,7 +19,10 @@ import {
 } from "#observability/metrics.ts";
 import { rootInstallWithoutHooks } from "./bot-clone.ts";
 import { runCommand } from "./data-dragon-shell.ts";
-import { loadVerifiedGlitterCorpus } from "./glitter-context-refresh-corpus.ts";
+import {
+  GlitterCorpusSnapshotPinSchema,
+  loadVerifiedGlitterCorpus,
+} from "./glitter-context-refresh-corpus.ts";
 import {
   generateStyleCard,
   proposeRelationships,
@@ -69,6 +72,7 @@ export const GlitterContextRefreshInputSchema = z
   .object({
     dryRun: z.boolean().default(false),
     now: z.iso.datetime({ offset: true }).optional(),
+    snapshot: GlitterCorpusSnapshotPinSchema.optional(),
   })
   .strict();
 export type GlitterContextRefreshInput = z.input<
@@ -77,6 +81,7 @@ export type GlitterContextRefreshInput = z.input<
 
 export type GlitterContextRefreshResult = {
   outcome: "pr-created" | "no-diff" | "dry-run";
+  snapshotId: string;
   snapshotSha256: string;
   proposalSha256: string;
   eligiblePeople: string[];
@@ -268,7 +273,7 @@ export const glitterContextRefreshActivities = {
     }, 10_000);
 
     try {
-      const corpus = await loadVerifiedGlitterCorpus();
+      const corpus = await loadVerifiedGlitterCorpus(input.snapshot);
       const generationArtifactStore = createCorpusGenerationArtifactStore(
         createCorpusStoreFromEnv(),
       );
@@ -318,7 +323,7 @@ export const glitterContextRefreshActivities = {
 
       const relationshipsEvaluated = shouldEvaluateRelationships(
         generationState.relationshipSourceSnapshotChecksum,
-        corpus.pointer.snapshotSha256,
+        corpus.reference.snapshotSha256,
       );
       let updatedRelationships = relationshipsDocument;
       let relationshipProposalCount = 0;
@@ -343,7 +348,7 @@ export const glitterContextRefreshActivities = {
           proposals,
           people: peopleDocument.people,
           evidence,
-          snapshotSha256: corpus.pointer.snapshotSha256,
+          snapshotSha256: corpus.reference.snapshotSha256,
           recordedAt: refreshedAt,
         });
         updatedRelationships = applied.document;
@@ -367,7 +372,7 @@ export const glitterContextRefreshActivities = {
         state: generationState,
         refreshedPeople,
         candidates,
-        snapshotSha256: corpus.pointer.snapshotSha256,
+        snapshotSha256: corpus.reference.snapshotSha256,
         refreshedAt,
         relationshipsEvaluated: persistRelationshipEvaluation,
       });
@@ -385,7 +390,8 @@ export const glitterContextRefreshActivities = {
       glitterContextRefreshRelationshipProposals.set(relationshipProposalCount);
 
       const baseResult = {
-        snapshotSha256: corpus.pointer.snapshotSha256,
+        snapshotId: corpus.reference.snapshotId,
+        snapshotSha256: corpus.reference.snapshotSha256,
         proposalSha256,
         eligiblePeople: candidates.map((candidate) => candidate.person.id),
         refreshedPeople: [...refreshedPeople].toSorted(),
@@ -419,7 +425,7 @@ export const glitterContextRefreshActivities = {
       const body = [
         "Automated weekly Glitter context refresh from Temporal.",
         "",
-        `Verified snapshot: \`${corpus.pointer.snapshotSha256}\``,
+        `Verified snapshot: \`${corpus.reference.snapshotSha256}\``,
         `Style cards refreshed: ${String(refreshedPeople.size)}`,
         `Relationship updates proposed: ${String(relationshipProposalCount)}`,
         "",

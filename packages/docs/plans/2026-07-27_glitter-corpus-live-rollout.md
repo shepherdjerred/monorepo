@@ -108,8 +108,9 @@ pass.
 - [x] Publish and merge the SeaweedFS storage/deployment wiring.
 - [x] Upload and verify the trusted seed.
 - [x] Approve inventory and complete the production canary.
-- [ ] Complete the full backfill and recovery verification.
-- [ ] Accept daily and weekly workflows and unpause both schedules.
+- [x] Complete the full backfill and recovery verification.
+- [x] Accept the daily workflow and unpause its schedule.
+- [ ] Accept the weekly workflow and unpause its schedule.
 - [ ] Complete and archive this plan and the related TODOs.
 
 ## Assumptions
@@ -426,3 +427,86 @@ pass.
 - The repaired worker image exists at
   `sha256:ffb5e5cb47b21e65f41385c3c4660de367ff4a12a18f26df1582a25af7086af1`,
   but production remains on the prior image until the GitOps pin merges.
+
+## Session Log — 2026-07-29 (deterministic production acceptance)
+
+### Done
+
+- Preserved canonical style-card authors across refreshes and merged the
+  regression through PR
+  [#1798](https://github.com/shepherdjerred/monorepo/pull/1798).
+- Ran two production dry runs at fixed time `2026-07-30T00:00:00Z` against
+  snapshot
+  `e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9`.
+  Both selected the same 13 people and changed the same 14 paths, but produced
+  different proposal checksums, proving the model seed alone was not
+  deterministic.
+- Added request-addressed immutable generation artifacts under the guild's
+  private SeaweedFS prefix. Artifact creation is conditional, generated and
+  stored responses are schema-validated, and every reuse verifies identity and
+  response checksum. OpenAI seed zero remains an additional best-effort
+  control.
+- Passed seven focused cache/generation tests, all 751 Temporal tests,
+  typecheck, lint, and all 30 affected repository gates. Merged the repair
+  through PR
+  [#1804](https://github.com/shepherdjerred/monorepo/pull/1804).
+- Followed main Buildkite #6914 through its exact `temporal-worker` image build
+  and smoke. It published digest
+  `sha256:576a087a11e1b2e1e2de03310b6c46d2263af5c31da12bf130a8cd5df4367ca0`.
+- Detected that the shared pending-image PR was force-updated by a later main
+  build and dropped the Temporal pin before merge. Published the verified
+  digest in dedicated GitOps PR
+  [#1806](https://github.com/shepherdjerred/monorepo/pull/1806), passed all
+  current-head gates, and merged it.
+- Passed authoritative main Buildkite #6925 including Argo reconciliation.
+  ArgoCD refreshed the Temporal chart to `2.0.0-6925`; deployment generation
+  224 is fully observed and Ready. Pod
+  `temporal-temporal-worker-585c8f7675-8h66b` runs with zero restarts at the
+  exact #6914 image digest.
+- Started the first cache-backed fixed-time production dry run as workflow
+  `glitter-context-refresh-manual-3946b9a2-1cae-4796-9c54-5ed4a48219d7`.
+  It created nine schema-valid immutable style artifacts totaling 115,302
+  bytes, then failed closed on OpenAI's explicit billing/quota-exceeded 429.
+  It created no branch, commit, pull request, or generated-context mutation.
+- Confirmed `glitter-corpus-daily` remains unpaused with its next action at
+  `2026-07-29T11:15:00Z`, while `glitter-context-refresh-weekly` remains paused
+  with its next nominal action at `2026-08-03T18:00:00Z`.
+- Added an exact manual snapshot pin consisting of the immutable snapshot UUID
+  and SHA-256. Pinned refreshes derive and verify that immutable object directly
+  and do not consult `snapshots/latest.json`, so the live daily schedule cannot
+  change acceptance input between runs.
+- Added focused coverage proving a pin ignores a newer latest pointer and fails
+  closed on checksum or embedded-identity mismatch. Updated the operator and
+  operations guide to require the same pin for both dry runs and the real run.
+
+### Remaining
+
+- Merge and deploy the snapshot-pin repair through this pull request.
+- Restore quota for the OpenAI project used by the Temporal worker, or
+  explicitly authorize a different production OpenAI credential for this
+  workflow.
+- Rerun the same fixed-time dry run with snapshot
+  `dbb59f00-3f6b-4cab-a87c-6d8a65e21d62` at checksum
+  `e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9`.
+  It will reuse the nine accepted artifacts and generate only the four missing
+  style cards.
+- Run the fixed-time dry run again with the same pin and require complete output
+  equality, including the proposal checksum.
+- Run the real fixed-time refresh with the same pin, inspect its sole PR or
+  no-diff result, and smoke-test the shared package, Birmel, Scout, and Glitter
+  consumers.
+- Deliberately unpause `glitter-context-refresh-weekly`, verify schedule and
+  storage-integrity observability, then complete and archive this plan and its
+  related TODOs.
+
+### Caveats
+
+- The worker's OpenAI key is distinct from the Birmel and Pokémon production
+  keys. Reusing either would cross a credential and billing boundary and
+  requires explicit operator authorization.
+- A 1Password metadata-only lookup was attempted to inspect the Temporal item,
+  but local authorization timed out. No secret value was revealed, written, or
+  changed.
+- The nine persisted artifacts are the intended safe resume mechanism; retries
+  against the same pinned snapshot will not pay for or regenerate those
+  accepted responses.

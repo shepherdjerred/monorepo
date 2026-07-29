@@ -252,7 +252,15 @@ age.
 ## Shared-context refresh acceptance
 
 Leave `glitter-context-refresh-weekly` paused until the first complete snapshot
-passes recovery verification. Then run two fixed-time dry runs:
+passes recovery verification. Capture the verified immutable snapshot identity:
+
+```bash
+cd packages/temporal
+bun run glitter:verify-corpus
+```
+
+Then run two fixed-time dry runs with the exact `snapshotId` and
+`snapshotSha256` returned by that command:
 
 ```bash
 TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 \
@@ -260,12 +268,14 @@ TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 \
   bun run glitter:operate context-refresh \
   --dry-run=true \
   --now=<fixed-iso-timestamp> \
+  --snapshot-id=<verified-snapshot-uuid> \
+  --snapshot-sha256=<verified-snapshot-sha256> \
   --wait=true
 ```
 
 Verify:
 
-- the result names the exact published snapshot checksum;
+- the result names the exact pinned snapshot ID and checksum;
 - both runs return the same `proposalSha256`, `changedFiles`, and generated
   result;
 - only eligible people are refreshed (20 new messages or 90 days);
@@ -282,14 +292,16 @@ card. Responses are schema-validated before creation, conditional creation
 makes concurrent first writers converge on one winner, and every reuse verifies
 the stored response checksum. A dry run can create these derived artifacts, but
 it does not create a Git branch, commit, or pull request. Repeated dry runs,
-activity retries, and the subsequent real run reuse the same artifacts.
+activity retries, and the subsequent real run reuse the same artifacts. The
+snapshot pin bypasses `snapshots/latest.json`, so daily corpus publication
+cannot change the acceptance input between those runs.
 
-Run once with `--dry-run=false --wait=true` only after those checks pass. It
-may open one human-reviewed pull request and never auto-merges. Activity
-retries reuse a branch derived from the Temporal workflow run ID, so they
-update or reuse the same exact-head proposal rather than opening duplicates. A
-`no-diff` result opens no pull request. After reviewing that first PR, unpause
-the Monday 11:00 America/Los_Angeles schedule.
+Run once with `--dry-run=false`, the same `--now`, both snapshot pin flags, and
+`--wait=true` only after those checks pass. It may open one human-reviewed pull
+request and never auto-merges. Activity retries reuse a branch derived from the
+Temporal workflow run ID, so they update or reuse the same exact-head proposal
+rather than opening duplicates. A `no-diff` result opens no pull request. After
+reviewing that first PR, unpause the Monday 11:00 America/Los_Angeles schedule.
 
 ## Incident response
 
