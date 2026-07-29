@@ -130,4 +130,19 @@ describe("BaseMediaConnection close handling", () => {
     // Regression: upstream treated its own code-1000 close as resumable and opened a new socket.
     expect(conn.sockets).toHaveLength(1);
   });
+
+  test("local stop() still surfaces a racing moderator disconnect exactly once", () => {
+    const conn = connect();
+    const closes = collectCloses(conn);
+
+    conn.stop();
+    // The command gateway can trigger teardown before this transport receives Discord's 4014.
+    conn.sockets[0]?.fireClose(4014);
+    conn.sockets[0]?.fireClose(4014);
+
+    expect(closes).toEqual([
+      { code: 4014, canResume: false, deliberate: true },
+    ]);
+    expect(conn.sockets).toHaveLength(1);
+  });
 });

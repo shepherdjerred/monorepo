@@ -53,21 +53,20 @@ describe("VoiceConnection stream close relay", () => {
     expect(closes).toEqual([CLOSE]);
   });
 
-  test("detaches the old child when the Go-Live connection changes", () => {
+  test("keeps a cleared child observable through teardown, then replaces it", () => {
     const { voice, first, second } = makeConnections();
     const closes: MediaConnectionCloseInfo[] = [];
     voice.on("close", (info) => closes.push(info));
 
     voice.streamConnection = first;
+    voice.streamConnection = undefined;
+    first.emit("close", CLOSE);
+    expect(closes).toEqual([CLOSE]);
+
     voice.streamConnection = second;
     first.emit("close", CLOSE);
-    expect(closes).toHaveLength(0);
-
-    second.emit("close", CLOSE);
     expect(closes).toEqual([CLOSE]);
-
-    voice.streamConnection = undefined;
     second.emit("close", CLOSE);
-    expect(closes).toEqual([CLOSE]);
+    expect(closes).toEqual([CLOSE, CLOSE]);
   });
 });

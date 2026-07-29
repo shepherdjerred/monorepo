@@ -81,6 +81,7 @@ export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEv
   private _webRtcWrapper;
   private _webRtcParams: WebRtcParameters | null = null;
   private _closed = false;
+  private _deliberateCloseEmitted = false;
   public ready: (conn: WebRtcConnWrapper) => void;
 
   private _streamer: Streamer;
@@ -194,7 +195,18 @@ export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEv
 
         // A locally-initiated stop() closes the ws with a resumable-looking code (1000/1005);
         // without this guard that close spawned a phantom resume socket after every normal stop.
+        // Discord's 4014 can race behind that local teardown when a moderator disconnect reaches
+        // the command gateway first. Surface that deliberate close exactly once so callers can
+        // cancel a pending reconnect, while continuing to suppress the local socket close.
         if (this._closed) {
+          if (e.code === 4_014 && !this._deliberateCloseEmitted) {
+            this._deliberateCloseEmitted = true;
+            this.emit("close", {
+              code: e.code,
+              canResume,
+              deliberate: true,
+            });
+          }
           this._logger.info(
             { code: e.code },
             "voice gateway websocket closed after local stop",
@@ -213,6 +225,7 @@ export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEv
         } else {
           this._closed = true;
           this._webRtcWrapper?.close();
+          this._deliberateCloseEmitted = e.code === 4_014;
           this.emit("close", {
             code: e.code,
             canResume,

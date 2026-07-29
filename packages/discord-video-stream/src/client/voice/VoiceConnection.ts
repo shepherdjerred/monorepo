@@ -4,6 +4,13 @@ import type { StreamConnection } from "./StreamConnection.js";
 
 export class VoiceConnection extends BaseMediaConnection {
   private _streamConnection: StreamConnection | undefined;
+  /**
+   * The active or most recently stopped Go-Live transport. A remote 4014 can arrive after
+   * Streamer.stopStream() clears streamConnection, so keep its close relay until a replacement
+   * child takes ownership. Once this VoiceConnection becomes unreachable, the stopped child and
+   * relay are collected together.
+   */
+  private observedStreamConnection: StreamConnection | undefined;
   private readonly relayStreamClose = (
     info: MediaConnectionCloseInfo,
   ): void => {
@@ -18,9 +25,13 @@ export class VoiceConnection extends BaseMediaConnection {
     if (connection === this._streamConnection) {
       return;
     }
-    this._streamConnection?.off("close", this.relayStreamClose);
     this._streamConnection = connection;
-    this._streamConnection?.on("close", this.relayStreamClose);
+    if (connection === undefined) {
+      return;
+    }
+    this.observedStreamConnection?.off("close", this.relayStreamClose);
+    this.observedStreamConnection = connection;
+    this.observedStreamConnection.on("close", this.relayStreamClose);
   }
 
   public override get daveChannelId() {

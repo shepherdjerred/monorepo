@@ -72,6 +72,10 @@ losses continue to reconnect.
 - Traced Buildkite #6775 to the new live harness's optional-chain lint finding,
   corrected it, and re-ran Streambot lint, typecheck, and 44 focused regression
   tests successfully.
+- Addressed the review gate's teardown-race finding by retaining the stopped
+  Go-Live child's close relay until replacement and allowing a racing `4014`
+  through local-stop suppression exactly once; the fork's build, typecheck, and
+  62 tests plus Streambot's affected checks pass.
 
 ### Remaining
 
