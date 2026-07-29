@@ -67,16 +67,18 @@ losses continue to reconnect.
 - Added `e2e:voice-recovery` and proved a real subtitled stream in the dedicated
   Discord guild reaches natural EOF and advances to `waiting` without a stall
   retry.
-- Opened draft PR #1778.
+- Passed the staged pre-commit checks, opened draft PR #1778, and attached the
+  supplied failure screenshot plus the available verification evidence.
+- Traced Buildkite #6775 to the new live harness's optional-chain lint finding,
+  corrected it, and re-ran Streambot lint, typecheck, and 44 focused regression
+  tests successfully.
 
 ### Remaining
 
 - Provision a test-guild identity with **Move Members**, then complete the live
   `4014` phase tracked by
   `packages/docs/todos/streambot-live-4014-e2e-permission.md`.
-- Re-run staged pre-commit checks, publish the latest commit, and complete
-  Buildkite verification.
-- Attach the supplied failure screenshot and available verification evidence to
+- Keep the current PR head green in Buildkite and complete review/merge for
   PR #1778.
 
 ### Caveats
@@ -85,6 +87,6 @@ losses continue to reconnect.
   filter discovery. The same suite passes in the Streambot runtime image,
   which contains the required filters.
 - The command bot and default test user both receive Discord error `50013`
-  (Missing Permissions) when attempting a moderator disconnect. The live `4014` check
-  therefore remains permission-blocked; direct and gateway-first late `4014`
-  paths are covered by deterministic tests.
+  (Missing Permissions) when attempting a moderator disconnect. The live
+  `4014` check therefore remains permission-blocked; direct and gateway-first
+  late `4014` paths are covered by deterministic tests.

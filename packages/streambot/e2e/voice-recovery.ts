@@ -233,8 +233,11 @@ async function main(): Promise<void> {
       () => deliberate.view().state === "streaming",
       60_000,
     );
-    const active = sessions.activeSessionByChannel(guildId, channelId);
-    if (active === null || active.userId === null) {
+    const activeUserId = sessions.activeSessionByChannel(
+      guildId,
+      channelId,
+    )?.userId;
+    if (activeUserId === null || activeUserId === undefined) {
       throw new Error("live E2E streamer user id was unavailable");
     }
 
@@ -242,7 +245,7 @@ async function main(): Promise<void> {
     if (guild === undefined) {
       throw new Error("moderator test identity is not in the E2E guild");
     }
-    const member = await guild.members.fetch(active.userId);
+    const member = await guild.members.fetch(activeUserId);
     await member.voice.disconnect("Streambot deliberate 4014 live E2E");
     await waitUntil(
       "4014-disconnected session to tear down",
