@@ -29,6 +29,24 @@ describe("applicationReadiness", () => {
       ).ready,
     ).toBe(false);
   });
+
+  test("ignores a terminal failure recorded for an older revision", () => {
+    expect(
+      applicationReadiness(
+        {
+          status: {
+            sync: { status: "Synced", revision: "2.0.0-42" },
+            health: { status: "Healthy" },
+            operationState: {
+              phase: "Failed",
+              syncResult: { revision: "2.0.0-41" },
+            },
+          },
+        },
+        true,
+      ).ready,
+    ).toBe(true);
+  });
 });
 
 describe("releaseTreeReadiness", () => {
@@ -62,6 +80,57 @@ describe("releaseTreeReadiness", () => {
     ).toEqual({
       ready: false,
       failures: ["stuck: Sync=OutOfSync Health=Healthy", "missing: missing"],
+    });
+  });
+
+  test("ignores a terminal failure recorded for an older revision", () => {
+    const list = {
+      items: [
+        {
+          metadata: { name: "advanced" },
+          status: {
+            sync: { status: "Synced", revision: "2.0.0-42" },
+            health: { status: "Healthy" },
+            operationState: {
+              phase: "Failed",
+              syncResult: { revision: "2.0.0-41" },
+            },
+          },
+        },
+        {
+          metadata: { name: "current-failure" },
+          status: {
+            sync: { status: "Synced", revision: "2.0.0-42" },
+            health: { status: "Healthy" },
+            operationState: {
+              phase: "Failed",
+              syncResult: { revision: "2.0.0-42" },
+            },
+          },
+        },
+        {
+          metadata: { name: "unversioned-failure" },
+          status: {
+            sync: { status: "Synced", revision: "2.0.0-42" },
+            health: { status: "Healthy" },
+            operationState: { phase: "Error" },
+          },
+        },
+      ],
+    };
+    expect(
+      releaseTreeReadiness(list, [
+        { name: "apps" },
+        { name: "advanced", revision: "2.0.0-42" },
+        { name: "current-failure", revision: "2.0.0-42" },
+        { name: "unversioned-failure", revision: "2.0.0-42" },
+      ]),
+    ).toEqual({
+      ready: false,
+      failures: [
+        "current-failure: Operation=Failed",
+        "unversioned-failure: Operation=Error",
+      ],
     });
   });
 });
@@ -108,6 +177,17 @@ describe("unreadyApplicationSummaries", () => {
               },
             },
           ],
+        },
+      },
+      {
+        metadata: { name: "stale-failure" },
+        status: {
+          sync: { status: "Synced", revision: "2.0.0-42" },
+          health: { status: "Healthy" },
+          operationState: {
+            phase: "Failed",
+            syncResult: { revision: "2.0.0-41" },
+          },
         },
       },
     ],
