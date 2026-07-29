@@ -35,6 +35,13 @@ import {
   APPLICATION_RESOURCES_FINALIZER,
   REPOSITORY_CHART_URLS,
 } from "../src/cdk8s/src/application-release-policy.ts";
+import {
+  batchManifestOverrides,
+  completedOperationIdentity,
+  requestedOperationIdentity,
+  SYNC_REQUEST_ID_INFO_NAME,
+  type SyncOperationResource,
+} from "./argocd-manifest-overrides.ts";
 import { latestPublishedVersion } from "./helm-release-core.ts";
 import { z } from "zod";
 
@@ -174,10 +181,10 @@ async function suspendRepositoryAutoSync(
     );
   }
   const rendered = ManifestResponseSchema.parse(await manifestsResponse.json());
-  const suspended = rendered.manifests.map((manifestSource) => {
+  const suspended = rendered.manifests.flatMap((manifestSource) => {
     const parsed = RenderedObjectSchema.parse(JSON.parse(manifestSource));
     if (parsed.kind !== "Application") {
-      return manifestSource;
+      return [];
     }
     const application = RenderedApplicationSchema.parse(parsed);
     if (
@@ -186,7 +193,7 @@ async function suspendRepositoryAutoSync(
       application.spec.syncPolicy === undefined ||
       !Object.hasOwn(application.spec.syncPolicy, "automated")
     ) {
-      return manifestSource;
+      return [];
     }
     const syncPolicy = Object.fromEntries(
       Object.entries(application.spec.syncPolicy).filter(
@@ -194,12 +201,31 @@ async function suspendRepositoryAutoSync(
       ),
     );
     console.log(`suspending auto-sync: ${application.metadata.name}`);
-    return JSON.stringify({
-      ...application,
-      spec: { ...application.spec, syncPolicy },
-    });
+    return [
+      {
+        manifest: JSON.stringify({
+          ...application,
+          spec: { ...application.spec, syncPolicy },
+        }),
+        resource: {
+          group: "argoproj.io",
+          kind: "Application",
+          name: application.metadata.name,
+        },
+      },
+    ];
   });
-  await sync(rootAppName, timeoutSeconds, false, false, undefined, suspended);
+  const batches = batchManifestOverrides(suspended);
+  for (const [index, batch] of batches.entries()) {
+    console.log(
+      `syncing suspended Application batch ${(index + 1).toString()}/${batches.length.toString()} (${batch.manifests.length.toString()} resources)`,
+    );
+    await sync(rootAppName, timeoutSeconds, false, {
+      prune: false,
+      manifests: batch.manifests,
+      resources: batch.resources,
+    });
+  }
 }
 
 async function assertExpectedAppsRevisionIsLatest(
@@ -277,30 +303,34 @@ async function assertRootPruneSafe(token: string): Promise<void> {
  * that caused it, where Buildkite's automatic retry re-syncs through
  * transient webhook downtime.
  */
+type SyncOptions = {
+  prune: boolean;
+  revision?: string;
+  manifests?: readonly string[];
+  resources?: readonly SyncOperationResource[];
+};
+
 async function sync(
   appName: string,
   timeoutSeconds: number,
   dryRun: boolean,
-  prune: boolean,
-  revision?: string,
-  manifests?: readonly string[],
+  options: SyncOptions,
 ): Promise<void> {
   console.log(
-    `--- argocd sync: ${appName}${prune ? " (prune)" : ""}${dryRun ? " (dry run)" : ""}`,
+    `--- argocd sync: ${appName}${options.prune ? " (prune)" : ""}${dryRun ? " (dry run)" : ""}`,
   );
   if (dryRun) {
     console.log(
-      `DRYRUN: would POST sync for ArgoCD app ${appName}${prune ? " with pruning" : ""}`,
+      `DRYRUN: would POST sync for ArgoCD app ${appName}${options.prune ? " with pruning" : ""}`,
     );
     return;
   }
   const token = requireEnv("ARGOCD_TOKEN");
-  if (appName === "apps" && prune) {
+  if (appName === "apps" && options.prune) {
     await assertRootPruneSafe(token);
   }
+  const requestId = crypto.randomUUID();
   const url = `${serverUrl()}/api/v1/applications/${appName}/sync`;
-  // Operations started before this instant are a previous sync, not ours.
-  const postedAt = Date.now();
   const res = await fetch(url, {
     method: "POST",
     headers: {
@@ -308,9 +338,15 @@ async function sync(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      prune,
-      ...(revision === undefined ? {} : { revision }),
-      ...(manifests === undefined ? {} : { manifests }),
+      prune: options.prune,
+      infos: [{ name: SYNC_REQUEST_ID_INFO_NAME, value: requestId }],
+      ...(options.revision === undefined ? {} : { revision: options.revision }),
+      ...(options.manifests === undefined
+        ? {}
+        : { manifests: options.manifests }),
+      ...(options.resources === undefined
+        ? {}
+        : { resources: options.resources }),
     }),
   });
   if (!res.ok) {
@@ -319,6 +355,7 @@ async function sync(
       `Sync failed: HTTP ${res.status.toString()} ${res.statusText}\n${body}`,
     );
   }
+  const operationIdentity = requestedOperationIdentity(await res.json());
   console.log(`sync operation started: ${appName}`);
 
   const deadline = Date.now() + timeoutSeconds * 1000;
@@ -330,10 +367,7 @@ async function sync(
       ? status["operationState"]
       : {};
     const phase = typeof op["phase"] === "string" ? op["phase"] : "";
-    const startedAt =
-      typeof op["startedAt"] === "string" ? Date.parse(op["startedAt"]) : NaN;
-    // Ignore a stale operationState from an earlier sync (30s clock-skew slack).
-    const isOurs = !Number.isNaN(startedAt) && startedAt >= postedAt - 30_000;
+    const isOurs = completedOperationIdentity(app) === operationIdentity;
     console.log(
       `Operation: ${phase || "(pending)"}${isOurs ? "" : " [previous op]"} ` +
         `(${elapsed.toString()}/${timeoutSeconds.toString()}s)`,
@@ -385,7 +419,10 @@ async function reconcileRelease(
     root.status?.sync?.status !== "Synced" ||
     root.status.sync.revision !== appsRelease.revision
   ) {
-    await sync("apps", timeoutSeconds, false, false, appsRelease.revision);
+    await sync("apps", timeoutSeconds, false, {
+      prune: false,
+      revision: appsRelease.revision,
+    });
   }
   for (const wanted of expected) {
     if (wanted.name === "apps") {
@@ -402,13 +439,10 @@ async function reconcileRelease(
     ) {
       continue;
     }
-    await sync(
-      wanted.name,
-      timeoutSeconds,
-      false,
-      wanted.prune,
-      wanted.revision,
-    );
+    await sync(wanted.name, timeoutSeconds, false, {
+      prune: wanted.prune,
+      revision: wanted.revision,
+    });
   }
   await releaseHealthWait(expectedPath, timeoutSeconds, false);
 }
@@ -731,15 +765,14 @@ async function main(): Promise<void> {
   }
 
   switch (subcommand) {
-    case "sync":
-      await sync(
-        app,
-        timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
-        dryRun,
-        argv.includes("--prune"),
-        flag(argv, "revision"),
-      );
+    case "sync": {
+      const revision = flag(argv, "revision");
+      await sync(app, timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S, dryRun, {
+        prune: argv.includes("--prune"),
+        ...(revision === undefined ? {} : { revision }),
+      });
       return;
+    }
     case "delete-application": {
       const project = flag(argv, "project");
       if (project === undefined) {

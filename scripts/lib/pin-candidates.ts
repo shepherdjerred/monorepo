@@ -71,6 +71,39 @@ export function parseVersionsSource(source: string): Map<string, string> {
   return entries;
 }
 
+export function reconstructGeneratedBranchPinState(
+  baseVersions: Map<string, string>,
+  pendingVersions: Map<string, string>,
+  buildNumber: number,
+): PinCandidatesState {
+  let state = PinCandidatesStateSchema.parse({
+    schema: "pin-candidates-state/v1",
+    pins: {},
+  });
+  for (const [key, pendingValue] of pendingVersions) {
+    const baseValue = baseVersions.get(key);
+    if (pendingValue === baseValue) {
+      continue;
+    }
+    const baseIsImage = baseValue?.includes("@sha256:") ?? false;
+    if (!baseIsImage) {
+      throw new Error(`generated bump changed non-image version ${key}`);
+    }
+    const separator = pendingValue.lastIndexOf("@");
+    const version = pendingValue.slice(0, separator);
+    const digest = pendingValue.slice(separator + 1);
+    state = mergePinCandidates(
+      state,
+      PinCandidatesSchema.parse({
+        schema: "pin-candidates/v1",
+        buildNumber,
+        candidates: { [key]: { version, digest } },
+      }),
+    );
+  }
+  return state;
+}
+
 function imageKeys(versions: Map<string, string>): Set<string> {
   return new Set(
     [...versions.entries()]
@@ -132,6 +165,16 @@ export function mergePinStates(
     });
   }
   return merged;
+}
+
+export function fillMissingPinState(
+  primary: PinCandidatesState,
+  fallback: PinCandidatesState,
+): PinCandidatesState {
+  return PinCandidatesStateSchema.parse({
+    schema: "pin-candidates-state/v1",
+    pins: { ...fallback.pins, ...primary.pins },
+  });
 }
 
 export function mergePinCandidates(
