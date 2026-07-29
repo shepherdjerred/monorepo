@@ -1,7 +1,7 @@
 ---
 id: ci-base-digest-pin
 type: todo
-status: planned
+status: in-progress
 board: true
 verification: agent
 disposition: active
@@ -40,10 +40,10 @@ write win of the reduction levers.
 
 ## Remaining
 
-- [ ] Replace all five `.buildkite/pipeline.yml` `ci-base:latest` references with one validated digest-pinned reference and `IfNotPresent`.
-- [ ] Teach the CI image refresh/version-bump flow to carry the built digest into a narrow bump PR without an unpinned intermediate state.
-- [ ] Make pipeline validation reject mutable or divergent CI base references.
-- [ ] Add tests for no-change, changed-digest, and failed-bump behavior.
+- [x] Replace all five `.buildkite/pipeline.yml` `ci-base:latest` references with one validated digest-pinned reference and `IfNotPresent`.
+- [x] Teach the CI image refresh/version-bump flow to carry the built digest into a narrow bump PR without an unpinned intermediate state.
+- [x] Make pipeline validation reject mutable or divergent CI base references.
+- [x] Add tests for no-change, changed-digest, and failed-bump behavior.
 - [ ] Prove one main-branch image change produces and lands a digest bump before pods consume it.
 
 ## Comment Log
@@ -55,3 +55,9 @@ write win of the reduction levers.
 ### 2026-07-27 — board audit reconciliation
 
 - Confirmed as the only accepted residual from the completed CI write-reduction implementation plan; implementation must target the current static pipeline.
+
+### 2026-07-28 — implementation
+
+- PR #1776 adds independent immutable pins and monotonic candidate-to-pin
+  promotion for `ci-base` and `ci-playwright`; the remaining proof requires a
+  post-merge main build against live GHCR and the generated pin PR.

@@ -193,6 +193,18 @@ if obj.status ~= nil then
       hs.message = obj.status.health.message
     end
   end
+  if obj.status.sync == nil or obj.status.sync.status ~= "Synced" then
+    if hs.status == "Healthy" then
+      hs.status = "Progressing"
+    end
+    hs.message = "Application is not Synced"
+  end
+  if obj.status.operationState ~= nil and
+     obj.status.operationState.phase ~= nil and
+     obj.status.operationState.phase ~= "Succeeded" then
+    hs.status = "Progressing"
+    hs.message = "Application operation is " .. obj.status.operationState.phase
+  end
 end
 return hs`,
         // Exclude ephemeral Velero resources from tracking
@@ -205,13 +217,11 @@ return hs`,
   - PodVolumeRestore`,
       },
       rbac: {
-        // The release step syncs/prunes the root app, waits for both the ArgoCD
-        // and root-app trees, and explicitly foreground-deletes the retired
-        // Kueue child Application. Argo CD's delete handler performs its own
-        // get authorization before the delete authorization, including when
-        // the Application is already absent.
+        // The release step reconciles the exact child revisions published by
+        // the coordinated Helm release, so it needs sync access to the same
+        // project-wide Application set it can already read.
         "policy.csv":
-          "p, buildkite, applications, sync, default/apps, allow\np, buildkite, applications, get, default/*, allow\np, buildkite, applications, delete, default/kueue, allow",
+          "p, buildkite, applications, sync, default/*, allow\np, buildkite, applications, get, default/*, allow",
       },
     },
   };

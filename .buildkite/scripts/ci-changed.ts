@@ -1,8 +1,7 @@
 import {
   FixedCorpusConfigurationError,
   fixedCorpusForcesLane,
-  globalPaths,
-  lanePaths,
+  selectorPathsForLane,
 } from "./migration-core.ts";
 
 async function execute(
@@ -95,7 +94,7 @@ async function main(): Promise<number> {
     console.log(`${lane}: selected targets ${targets}`);
     return 0;
   }
-  const paths = lanePaths[lane];
+  const paths = selectorPathsForLane(lane);
   if (paths === undefined) {
     console.error(`WARN: unknown CI selector lane ${lane}; running it`);
     return 0;
@@ -107,7 +106,6 @@ async function main(): Promise<number> {
     base,
     "HEAD",
     "--",
-    ...globalPaths,
     ...paths,
   ]);
   if (changed.exitCode !== 0)

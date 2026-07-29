@@ -1,3 +1,5 @@
+import { applyCurrentBuildImageOverrides } from "./release-configuration.ts";
+
 const versions = {
   // renovate: datasource=helm registryUrl=https://1password.github.io/connect-helm-charts/ versioning=semver
   connect: "2.4.1",
@@ -326,6 +328,8 @@ const versions = {
   "shepherdjerred/trmnl-dashboard":
     "2.0.0-6874@sha256:f3595168d3a7eebed144601ce2498461ed7dbd46370d92d717e2e446b2ed88d1",
 };
+
+applyCurrentBuildImageOverrides(versions);
 
 /**
  * SHA-256 of the GitHub release tarball for `fuatakgun/eufy_security`, pinned

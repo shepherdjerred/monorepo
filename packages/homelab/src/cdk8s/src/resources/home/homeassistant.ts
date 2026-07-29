@@ -52,9 +52,13 @@ export async function createHomeAssistantDeployment(chart: Chart) {
     claim.claim,
   );
 
-  const glob = new Glob("../../config/homeassistant/*");
+  const configDirectory = `${import.meta.dir}/../../../config/homeassistant`;
+  const glob = new Glob("*");
   const files: string[] = [];
-  for await (const entry of glob.scan("config/homeassistant")) {
+  for await (const entry of glob.scan({
+    cwd: configDirectory,
+    onlyFiles: true,
+  })) {
     const name = entry.split("/").pop() ?? entry;
     if (name) {
       files.push(name);
@@ -62,7 +66,7 @@ export async function createHomeAssistantDeployment(chart: Chart) {
   }
 
   const config = new ConfigMap(chart, "ha-cm");
-  config.addDirectory(`${import.meta.dir}/../../../config/homeassistant`);
+  config.addDirectory(configDirectory);
   const configVolume = Volume.fromConfigMap(chart, "ha-cm-volume", config);
 
   // Pod-template annotation so a config change triggers a rollout. The config
@@ -74,11 +78,7 @@ export async function createHomeAssistantDeployment(chart: Chart) {
   const configHasher = new Bun.CryptoHasher("sha256");
   for (const file of [...files].sort()) {
     configHasher.update(file);
-    configHasher.update(
-      await Bun.file(
-        `${import.meta.dir}/../../../config/homeassistant/${file}`,
-      ).text(),
-    );
+    configHasher.update(await Bun.file(`${configDirectory}/${file}`).text());
   }
   deployment.podMetadata.addAnnotation(
     "config-hash",

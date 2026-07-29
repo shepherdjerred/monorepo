@@ -7,16 +7,15 @@ import {
   selectBase,
 } from "./migration-core.ts";
 
-test("selects the newest green commit other than the head", () => {
-  expect(selectBase([{ commit: "head" }, { commit: "base" }], "head")).toBe(
-    "base",
-  );
+test("selects the newest valid green commit, including the current head", () => {
+  expect(selectBase([{ commit: "head" }, { commit: "base" }])).toBe("head");
+  expect(selectBase([{}, { commit: "" }, { commit: "base" }])).toBe("base");
 });
 
 test("rejects malformed API data", () => {
-  expect(() => selectBase({}, "head")).toThrow("array");
-  expect(() => selectBase([{}, { commit: "" }], "head")).toThrow(
-    "no earlier green commit",
+  expect(() => selectBase({})).toThrow("array");
+  expect(() => selectBase([{}, { commit: "" }])).toThrow(
+    "no valid green commit",
   );
 });
 

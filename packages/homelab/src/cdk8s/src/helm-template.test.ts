@@ -82,7 +82,11 @@ async function helmTemplateChart(chartName: string): Promise<{
   const manifestPath = path.join(DIST_DIR, `${chartName}.k8s.yaml`);
   const manifestFile = Bun.file(manifestPath);
   if (!(await manifestFile.exists())) {
-    return { exitCode: 0, stdout: "", stderr: "" };
+    return {
+      exitCode: 1,
+      stdout: "",
+      stderr: `Synthesized manifest is missing: ${manifestPath}`,
+    };
   }
 
   const tempDir = await mkdtemp(path.join(tmpdir(), `helm-test-${chartName}-`));

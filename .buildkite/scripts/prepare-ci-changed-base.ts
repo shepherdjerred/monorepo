@@ -2,17 +2,16 @@ import { $ } from "bun";
 import {
   fixedCorpusForcesLane,
   fixedCorpusLaneMetadata,
-  globalPaths,
   laneMetadata,
-  lanePaths,
+  selectorPathsForLane,
   selectBase,
 } from "./migration-core.ts";
 
 async function laneChanged(base: string, lane: string): Promise<boolean> {
-  const paths = lanePaths[lane];
+  const paths = selectorPathsForLane(lane);
   if (paths === undefined) throw new Error(`Unknown precomputed lane: ${lane}`);
   const child = Bun.spawn(
-    ["git", "diff", "--quiet", base, "HEAD", "--", ...globalPaths, ...paths],
+    ["git", "diff", "--quiet", base, "HEAD", "--", ...paths],
     { stdout: "inherit", stderr: "inherit" },
   );
   const exitCode = await child.exited;
@@ -26,8 +25,6 @@ if (import.meta.main) {
   if (token === undefined) throw new Error("BUILDKITE_API_TOKEN is required");
   const organization = Bun.env["BUILDKITE_ORGANIZATION_SLUG"] ?? "sjerred";
   const pipeline = Bun.env["BUILDKITE_PIPELINE_SLUG"] ?? "monorepo";
-  const rawHead = await $`git rev-parse HEAD`.text();
-  const head = Bun.env["BUILDKITE_COMMIT"] ?? rawHead.trim();
   const response = await fetch(
     `https://api.buildkite.com/v2/organizations/${organization}/pipelines/${pipeline}/builds?branch=main&state=passed&per_page=20`,
     {
@@ -38,7 +35,7 @@ if (import.meta.main) {
   if (!response.ok) {
     throw new Error(`Buildkite API returned ${response.status.toString()}`);
   }
-  const base = selectBase(await response.json(), head);
+  const base = selectBase(await response.json());
   await $`git cat-file -e ${`${base}^{commit}`}`;
   await $`git merge-base --is-ancestor ${base} HEAD`;
   await $`buildkite-agent meta-data set ci-changed-base ${base}`;

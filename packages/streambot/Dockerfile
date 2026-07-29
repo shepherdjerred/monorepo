@@ -99,20 +99,20 @@ RUN set -e; \
 
 # yt-dlp standalone binary from the release CDN (rate-limit-proof, SHA-verified),
 # installed at the config-default path /usr/local/bin/yt-dlp. Per-arch asset,
-# SHA2-256SUMS check, retries. Independent of the app layers below.
+# pinned checksum, retries. Independent of the app layers below.
+# renovate: datasource=github-releases depName=yt-dlp/yt-dlp
+ARG YT_DLP_VERSION=2026.07.04
 RUN set -e; \
     arch="$(dpkg --print-architecture)"; \
     if [ "$arch" = "amd64" ]; then asset=yt-dlp_linux; \
     elif [ "$arch" = "arm64" ]; then asset=yt-dlp_linux_aarch64; \
     else echo "unsupported architecture: $arch" >&2; exit 1; fi; \
-    base=https://github.com/yt-dlp/yt-dlp/releases/latest/download; \
+    base="https://github.com/yt-dlp/yt-dlp/releases/download/${YT_DLP_VERSION}"; \
     curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 "$base/$asset" -o "/tmp/$asset"; \
     curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 "$base/SHA2-256SUMS" -o /tmp/SHA2-256SUMS; \
-    cd /tmp; \
-    grep " $asset$" SHA2-256SUMS > "$asset.sha256"; \
-    sha256sum -c "$asset.sha256"; \
+    (cd /tmp && sha256sum -c --ignore-missing SHA2-256SUMS); \
     install -D -m 0755 "/tmp/$asset" /usr/local/bin/yt-dlp; \
-    rm -f "/tmp/$asset" /tmp/SHA2-256SUMS "/tmp/$asset.sha256"
+    rm -f "/tmp/$asset" /tmp/SHA2-256SUMS
 
 # Production node_modules + workspace manifests. The isolated-linker tree uses
 # relative symlinks (store at node_modules/.bun), so copying the whole install

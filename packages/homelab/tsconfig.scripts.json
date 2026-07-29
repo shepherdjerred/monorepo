@@ -7,6 +7,9 @@
   "include": [
     "scripts/helm-set-version.ts",
     "scripts/helm-set-version.test.ts",
+    "scripts/helm-release-core.ts",
+    "scripts/helm-release-core.test.ts",
+    "scripts/helm-push.ts",
     "scripts/lint-helm.ts",
     "scripts/lint-helm.test.ts",
     "scripts/migration-core.ts",

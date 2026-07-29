@@ -10,8 +10,8 @@
 
 import { describe, expect, test } from "bun:test";
 import {
-  globalPaths,
   lanePaths as selectorLanePaths,
+  selectorPathsForLane,
   summaryLanes,
 } from "./migration-core.ts";
 
@@ -53,30 +53,25 @@ async function loadPipelineSteps(): Promise<Map<string, PipelineStep>> {
   return steps;
 }
 
-type SelectorLanes = {
-  globalPaths: string[];
-  lanePaths: Map<string, string[]>;
-};
-
-async function loadSelectorLanes(): Promise<SelectorLanes> {
+async function loadSelectorLanes(): Promise<Map<string, string[]>> {
   const lanePaths = new Map<string, string[]>();
   for (const [lane, paths] of Object.entries(selectorLanePaths)) {
     lanePaths.set(lane, [...paths]);
   }
-  return { globalPaths: [...globalPaths], lanePaths };
+  return lanePaths;
 }
 
 // Which PR-side step gates each main lane's inputs. `images` is exempt here:
 // both sides delegate to select-image-targets.ts, whose own test suite plus
-// validate-pipeline.ts cover the images-pr glob list. `ci-image` is exempt
-// because the refresh step is main-only and its PR-side inputs are already
-// covered by `.buildkite/**` on every gated step.
+// validate-pipeline.ts cover the images-pr glob list. CI toolchain candidates
+// are exempt because their generated digest PRs test the candidate images.
 const LANE_TO_STEP: Record<string, string | null> = {
   playwright: "playwright-e2e-pr",
   resume: "resume-build-pr",
   "docker-e2e": "docker-e2e-pr",
   images: null,
-  "ci-image": null,
+  "ci-base": null,
+  "ci-playwright": null,
   "helm-types": "pr-dryrun",
   tofu: "pr-dryrun",
   helm: "pr-dryrun",
@@ -115,15 +110,13 @@ function coveredBy(path: string, globs: readonly string[]): boolean {
 
 describe("lane↔if_changed coverage", () => {
   test("every ci-changed.ts lane maps to a PR step and vice versa", async () => {
-    const { lanePaths } = await loadSelectorLanes();
+    const lanePaths = await loadSelectorLanes();
     const lanes = new Set([...lanePaths.keys(), "images"]);
     expect([...lanes].sort()).toEqual(Object.keys(LANE_TO_STEP).sort());
   });
 
   test("every lane input is covered by its PR step's if_changed globs", async () => {
     const steps = await loadPipelineSteps();
-    const { globalPaths: selectorGlobalPaths, lanePaths } =
-      await loadSelectorLanes();
     const uncovered: string[] = [];
     for (const [lane, stepKey] of Object.entries(LANE_TO_STEP)) {
       if (stepKey === null) continue;
@@ -131,11 +124,11 @@ describe("lane↔if_changed coverage", () => {
       if (step === undefined || step.include.length === 0) {
         throw new Error(`step ${stepKey} is missing or has no if_changed`);
       }
-      const entries = lanePaths.get(lane);
+      const entries = selectorPathsForLane(lane);
       if (entries === undefined) {
         throw new Error(`lane ${lane} not found in ci-changed.ts`);
       }
-      for (const entry of [...selectorGlobalPaths, ...entries]) {
+      for (const entry of entries) {
         for (const sample of await samplePaths(entry)) {
           if (!coveredBy(sample, step.include)) {
             uncovered.push(`${lane} → ${stepKey}: ${entry} (sample ${sample})`);

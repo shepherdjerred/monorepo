@@ -14,7 +14,7 @@
 // Outside Buildkite (BUILDKITE != "true") the markdown goes to stdout so the
 // script can be exercised locally.
 
-import { ALL_IMAGE_TARGETS } from "./select-image-targets.ts";
+import { ALL_IMAGE_TARGETS } from "./image-targets.ts";
 import type { SelectionReport } from "./select-image-targets.ts";
 
 type PushOutcome = {

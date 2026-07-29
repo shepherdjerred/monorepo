@@ -4,12 +4,15 @@ import { tmpdir } from "node:os";
 import nodePath from "node:path";
 
 import {
-  ALL_IMAGE_TARGETS,
   changedPathsSince,
   selectImageTargets,
   selectImageTargetsWithReasons,
   type SelectorInputs,
 } from "./select-image-targets.ts";
+import {
+  ALL_IMAGE_TARGETS,
+  APPLICATION_IMAGE_TARGETS,
+} from "./image-targets.ts";
 import {
   closureFingerprint,
   closurePackageIds,
@@ -76,24 +79,54 @@ describe("selectImageTargets", () => {
     ]);
   });
 
-  test("selects every image for shared build inputs", async () => {
-    expect(await select([".buildkite/pipeline.yml"])).toEqual(
-      ALL_IMAGE_TARGETS,
-    );
-    expect(await select([".mise.toml"])).toEqual(ALL_IMAGE_TARGETS);
-    expect(await select(["turbo.json"])).toEqual(ALL_IMAGE_TARGETS);
-    expect(await select(["tsconfig.base.json"])).toEqual(ALL_IMAGE_TARGETS);
-    // Root manifests with NO FilePair provided fail open to ALL.
+  test("selects only applications for shared application image inputs", async () => {
+    for (const path of [
+      ".buildkite/application-image-smoke.Dockerfile",
+      ".buildkite/scripts/application-image-runtime.ts",
+      ".buildkite/scripts/smoke-app-in-image.ts",
+      ".dockerignore",
+      "bunfig.toml",
+      "tsconfig.base.json",
+    ]) {
+      const result = await selectImageTargetsWithReasons([path], REPO_ROOT);
+      expect(result.targets).toEqual(APPLICATION_IMAGE_TARGETS);
+      expect(result.targets).not.toContain("infra");
+      expect(result.report.targets["birmel"]).toEqual([
+        `shared application image input: ${path} (matches ${path})`,
+      ]);
+    }
+  });
+
+  test("selects every image when build or selector machinery changes", async () => {
+    for (const path of [
+      "docker-bake.hcl",
+      ".buildkite/pipeline.yml",
+      ".buildkite/scripts/bake-images.ts",
+      ".buildkite/scripts/bake-retry.ts",
+      ".buildkite/scripts/buildkit-env.ts",
+      ".buildkite/scripts/image-targets.ts",
+      ".buildkite/scripts/migration-core.ts",
+      ".buildkite/scripts/select-image-targets.ts",
+      ".buildkite/scripts/select-image-targets-lockfile.ts",
+      ".buildkite/scripts/select-image-targets-workspaces.ts",
+    ]) {
+      expect(await select([path])).toEqual(ALL_IMAGE_TARGETS);
+    }
+  });
+
+  test("does not rebuild images for orchestration-only inputs", async () => {
+    for (const path of [
+      ".buildkite/scripts/upload-pipeline.sh",
+      ".mise.toml",
+      "turbo.json",
+    ]) {
+      expect(await select([path])).toEqual([]);
+    }
+  });
+
+  test("fails open for root manifests when contents are unavailable", async () => {
     expect(await select(["package.json"])).toEqual(ALL_IMAGE_TARGETS);
     expect(await select(["scripts/package.json"])).toEqual(ALL_IMAGE_TARGETS);
-    // Image-shaping CI scripts stay global; other CI scripts do not.
-    expect(await select([".buildkite/scripts/bake-images.ts"])).toEqual(
-      ALL_IMAGE_TARGETS,
-    );
-    expect(await select([".buildkite/scripts/migration-core.ts"])).toEqual(
-      ALL_IMAGE_TARGETS,
-    );
-    expect(await select([".buildkite/scripts/upload-pipeline.sh"])).toEqual([]);
   });
 
   test("attributes a workspace package.json to its closure, not ALL images", async () => {
@@ -106,6 +139,15 @@ describe("selectImageTargets", () => {
     expect(await select(["packages/scout-for-lol/tsconfig.base.json"])).toEqual(
       ["scout-for-lol"],
     );
+  });
+
+  test("selects Scout for its contract-hash implementation with an exact reason", async () => {
+    const path = "packages/scout-for-lol/scripts/contract-hash.ts";
+    const result = await selectImageTargetsWithReasons([path], REPO_ROOT);
+    expect(result.targets).toEqual(["scout-for-lol"]);
+    expect(result.report.targets["scout-for-lol"]).toEqual([
+      `configured extra input: ${path} (matches ${path})`,
+    ]);
   });
 
   test("selects nothing for unrelated documentation", async () => {
@@ -466,6 +508,20 @@ describe("selection reasons", () => {
     ]);
     expect(report.targets["tasknotes-server"]).toEqual([
       "workspace closure: packages/tasknotes-server/src/index.ts under packages/tasknotes-server/",
+    ]);
+  });
+
+  test("records every matching path instead of hiding later causes", async () => {
+    const { report } = await selectImageTargetsWithReasons(
+      [
+        "packages/tasknotes-server/src/index.ts",
+        "packages/tasknotes-server/src/routes.ts",
+      ],
+      REPO_ROOT,
+    );
+    expect(report.targets["tasknotes-server"]).toEqual([
+      "workspace closure: packages/tasknotes-server/src/index.ts under packages/tasknotes-server/",
+      "workspace closure: packages/tasknotes-server/src/routes.ts under packages/tasknotes-server/",
     ]);
   });
 

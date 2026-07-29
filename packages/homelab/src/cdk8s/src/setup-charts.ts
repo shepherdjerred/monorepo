@@ -29,6 +29,7 @@ import { createTurboCacheChart } from "./cdk8s-charts/turbo-cache.ts";
 import { createBuildkitdChart } from "./cdk8s-charts/buildkitd.ts";
 import { createServiceProbesChart } from "./resources/monitoring/service-probes-chart.ts";
 import { resetProbeRegistry } from "./misc/probe-registry.ts";
+import { applyApplicationReleasePolicy } from "./application-release-policy.ts";
 
 /**
  * Sets up all charts for the application
@@ -81,4 +82,5 @@ export async function setupCharts(app: App): Promise<void> {
   // Must run last: reads the probe registry populated by every
   // TailscaleIngress/createIngress/createCloudflareTunnelBinding call above.
   createServiceProbesChart(app);
+  applyApplicationReleasePolicy(app);
 }

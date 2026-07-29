@@ -3,7 +3,6 @@ import {
   annotate,
   ensureBuilder,
   execute,
-  imageLayers,
   lastGreenCommit,
   manifestDigest,
   pushImages,
@@ -12,11 +11,16 @@ import {
   type CommandExecutor,
   writeFallbackReport,
 } from "./bake-images.ts";
+import {
+  imageRuntimeFingerprint,
+  runExactCandidateSmoke,
+  runtimeFingerprintFromImage,
+} from "./application-image-runtime.ts";
 import type { BuildxCommandResult } from "./bake-retry.ts";
 import {
   caddyfileEntitlementArguments,
   expandTargets,
-  findPinnedDigest,
+  findManagedImagePin,
   knownImageTargets,
   parseBakeArguments,
   parseBuildkiteCommits,
@@ -48,6 +52,10 @@ async function greenCommit(): Promise<string> {
   return "green";
 }
 
+async function currentGreenCommit(): Promise<string> {
+  return "current";
+}
+
 async function invalidManifestExecutor(): Promise<BuildxCommandResult> {
   return commandResult(0, JSON.stringify({ digest: "latest" }));
 }
@@ -56,8 +64,18 @@ async function failingExecutor(): Promise<BuildxCommandResult> {
   return commandResult(1);
 }
 
-async function layerExecutor(): Promise<BuildxCommandResult> {
-  return commandResult(0, '["sha256:one","sha256:two"]');
+async function imageExecutor(): Promise<BuildxCommandResult> {
+  return commandResult(
+    0,
+    JSON.stringify({
+      architecture: "amd64",
+      os: "linux",
+      rootfs: { type: "layers", diff_ids: ["sha256:one", "sha256:two"] },
+      config: { Cmd: ["bun", "src/index.ts"], WorkingDir: "/app" },
+      created: "ignored",
+      history: [{ created: "ignored" }],
+    }),
+  );
 }
 
 test("grants caddyfile read access to smoke and push bakes", () => {
@@ -78,15 +96,23 @@ test("expands the infra group into invokable targets", () => {
   expect(expandTargets(["infra"])).not.toContain("infra");
 });
 
-test("reads production and beta image pins", () => {
-  const digest = `sha256:${"a".repeat(64)}`;
+test("selects the exact commit-back pin and never the prod promotion pin", () => {
+  const betaDigest = `sha256:${"a".repeat(64)}`;
+  const prodDigest = `sha256:${"b".repeat(64)}`;
   expect(
-    findPinnedDigest(
-      `  "shepherdjerred/example/beta": {\n    digest: "${digest}",\n`,
+    findManagedImagePin(
+      [
+        `  "shepherdjerred/example/prod": "2.0.0-1@${prodDigest}",`,
+        `  "shepherdjerred/example/beta":`,
+        `    "2.0.0-2@${betaDigest}",`,
+      ].join("\n"),
       "example",
     ),
-  ).toBe(digest);
-  expect(findPinnedDigest("", "example")).toBeUndefined();
+  ).toEqual({
+    key: "shepherdjerred/example/beta",
+    digest: betaDigest,
+  });
+  expect(findManagedImagePin("", "example")).toBeUndefined();
 });
 
 test("only accepts documented flags", () => {
@@ -158,7 +184,7 @@ test("annotates with the expected report arguments", async () => {
   ]);
 });
 
-test("resolves the last distinct green Buildkite commit", async () => {
+test("resolves the newest green Buildkite commit, including the current head", async () => {
   const fetcher = Object.assign(
     async () => Response.json([{ commit: "green-commit" }], { status: 200 }),
     { preconnect: fetch.preconnect },
@@ -184,7 +210,7 @@ test("resolves the last distinct green Buildkite commit", async () => {
     await lastGreenCommit("green-commit", fetcher, executor, {
       BUILDKITE_API_TOKEN: "token",
     }),
-  ).toBeUndefined();
+  ).toBe("green-commit");
 });
 
 test("selects affected image targets from the merge base", async () => {
@@ -279,6 +305,24 @@ test("builds every known image target for the fixed CI I/O corpus", async () => 
   expect(commands).toEqual([]);
 });
 
+test("uses a same-head green base as an empty image diff", async () => {
+  const commands: string[][] = [];
+  const executor: CommandExecutor = async (command) => {
+    commands.push([...command]);
+    return commandResult(0, "[]\n");
+  };
+
+  expect(
+    await selectedTargets(
+      { affected: false, push: true },
+      "current",
+      executor,
+      currentGreenCommit,
+    ),
+  ).toEqual({ targets: [], fallbackReason: "" });
+  expect(commands[0]).toContain("current");
+});
+
 test("validates image manifest digests", async () => {
   const digest = `sha256:${"a".repeat(64)}`;
   const success: CommandExecutor = async () =>
@@ -293,12 +337,58 @@ test("validates image manifest digests", async () => {
   );
 });
 
-test("returns image layers only for successful inspections", async () => {
-  expect(await imageLayers("example:tag", layerExecutor)).toEqual([
-    "sha256:one",
-    "sha256:two",
-  ]);
-  expect(await imageLayers("example:tag", failingExecutor)).toBeUndefined();
+test("fingerprints rootfs and runtime OCI config without build identity", async () => {
+  const base = {
+    architecture: "amd64",
+    os: "linux",
+    rootfs: { type: "layers", diff_ids: ["sha256:one"] },
+    config: {
+      Cmd: ["bun", "src/index.ts"],
+      Env: ["PATH=/usr/bin", "VERSION=1", "GIT_SHA=old"],
+      WorkingDir: "/app",
+    },
+    created: "yesterday",
+    history: [{ created_by: "old builder" }],
+  };
+  const reordered = {
+    history: [{ created_by: "new builder" }],
+    created: "today",
+    config: {
+      WorkingDir: "/app",
+      Env: ["PATH=/usr/bin", "VERSION=2", "GIT_SHA=new"],
+      Cmd: ["bun", "src/index.ts"],
+    },
+    rootfs: { diff_ids: ["sha256:one"], type: "layers" },
+    os: "linux",
+    architecture: "amd64",
+  };
+  expect(runtimeFingerprintFromImage(reordered)).toBe(
+    runtimeFingerprintFromImage(base),
+  );
+  expect(
+    runtimeFingerprintFromImage({
+      ...base,
+      config: { ...base.config, Cmd: ["bun", "src/worker.ts"] },
+    }),
+  ).not.toBe(runtimeFingerprintFromImage(base));
+  expect(
+    runtimeFingerprintFromImage({
+      ...base,
+      config: { ...base.config, User: "1001:1001" },
+    }),
+  ).not.toBe(runtimeFingerprintFromImage(base));
+  expect(
+    runtimeFingerprintFromImage({ ...base, "os.version": "next" }),
+  ).not.toBe(runtimeFingerprintFromImage(base));
+  expect(await imageRuntimeFingerprint("example:tag", imageExecutor)).toMatch(
+    /^[a-f\d]{64}$/,
+  );
+  expect(
+    await imageRuntimeFingerprint("example:tag", failingExecutor),
+  ).toBeUndefined();
+  expect(() => runtimeFingerprintFromImage({})).toThrow(
+    "architecture, os, and rootfs",
+  );
 });
 
 test("creates the remote BuildKit builder only when missing", async () => {
@@ -343,11 +433,55 @@ test("runs smoke targets with contract and Caddyfile inputs", async () => {
   });
 });
 
-test("pushes images, reuses identical layers, and tags Starlight", async () => {
+test("runs application smoke against the exact candidate digest", async () => {
+  const commands: string[][] = [];
+  const executor: CommandExecutor = async (command) => {
+    commands.push([...command]);
+    return commandResult();
+  };
+  const digest = `sha256:${"a".repeat(64)}`;
+  await runExactCandidateSmoke(
+    {
+      target: "scout-for-lol",
+      candidate: `ghcr.io/shepherdjerred/scout-for-lol@${digest}`,
+      contractHash: "contract",
+    },
+    executor,
+    {},
+  );
+  expect(commands).toHaveLength(1);
+  expect(commands[0]).toContain(
+    ".buildkite/application-image-smoke.Dockerfile",
+  );
+  expect(commands[0]).toContain(
+    `CANDIDATE_IMAGE=ghcr.io/shepherdjerred/scout-for-lol@${digest}`,
+  );
+  expect(commands[0]).toContain("SMOKE_TARGET=scout-for-lol");
+  expect(commands[0]).toContain("EXPECTED_CONTRACT_HASH=contract");
+  await expect(
+    runExactCandidateSmoke(
+      {
+        target: "infra",
+        candidate: "example@sha256:bad",
+        contractHash: "",
+      },
+      executor,
+      {},
+    ),
+  ).rejects.toThrow("not defined");
+});
+
+test("smokes exact candidates, reuses identical runtime fingerprints, and tags Starlight", async () => {
   const digest = `sha256:${"b".repeat(64)}`;
   const pinned = `sha256:${"a".repeat(64)}`;
   const commands: string[][] = [];
+  const events: string[] = [];
+  const manifestReferences: string[] = [];
   const metadata: Readonly<Record<string, string>>[] = [];
+  const candidateMetadata: {
+    digests: Readonly<Record<string, string>>;
+    buildNumber: string;
+  }[] = [];
   const writes: { path: string; contents: string }[] = [];
   const executor: CommandExecutor = async (command) => {
     commands.push([...command]);
@@ -366,14 +500,34 @@ test("pushes images, reuses identical layers, and tags Starlight", async () => {
       environment: {},
       readVersions: async () =>
         [
+          `  "shepherdjerred/birmel": "2.0.0-1@${pinned}",`,
+          `  "shepherdjerred/scout-for-lol/beta": "2.0.0-2@${pinned}",`,
           `  "shepherdjerred/scout-for-lol/prod": "2.0.0-1@${pinned}",`,
+          `  "shepherdjerred/starlight-karma-bot/beta": "2.0.0-2@${pinned}",`,
           `  "shepherdjerred/starlight-karma-bot/prod": "2.0.0-1@${pinned}",`,
         ].join("\n"),
-      getManifestDigest: async () => digest,
-      getImageLayers: async (image) =>
-        image.includes("scout-for-lol") ? ["same"] : undefined,
+      getManifestDigest: async (image) => {
+        manifestReferences.push(image);
+        return digest;
+      },
+      getRuntimeFingerprint: async (image) => {
+        events.push(`fingerprint:${image}`);
+        if (image.includes("scout-for-lol")) {
+          return "same";
+        }
+        if (image.includes("starlight-karma-bot") && image.endsWith(pinned)) {
+          return;
+        }
+        return image.endsWith(pinned) ? "old" : "new";
+      },
+      smokeCandidate: async (target, candidate) => {
+        events.push(`smoke:${target}:${candidate}`);
+      },
       writeMetadata: async (value) => {
         metadata.push(value);
+      },
+      writeCandidates: async (digests, buildNumber) => {
+        candidateMetadata.push({ digests, buildNumber });
       },
       writeText: async (path, contents) => {
         writes.push({ path, contents });
@@ -383,14 +537,35 @@ test("pushes images, reuses identical layers, and tags Starlight", async () => {
 
   expect(commands[0]).toContain("--push");
   expect(commands.some((command) => command.includes("imagetools"))).toBe(true);
+  expect(manifestReferences).toEqual([
+    "ghcr.io/shepherdjerred/birmel:candidate-commit",
+    "ghcr.io/shepherdjerred/scout-for-lol:candidate-commit",
+    "ghcr.io/shepherdjerred/starlight-karma-bot:candidate-commit",
+  ]);
+  expect(events[0]).toBe(
+    `smoke:birmel:ghcr.io/shepherdjerred/birmel@${digest}`,
+  );
+  expect(events[1]).toBe(`fingerprint:ghcr.io/shepherdjerred/birmel@${digest}`);
+  expect(events).toContain(
+    `smoke:scout-for-lol:ghcr.io/shepherdjerred/scout-for-lol@${digest}`,
+  );
   expect(metadata).toEqual([
     {
       "shepherdjerred/birmel": digest,
-      "shepherdjerred/starlight-karma-bot": digest,
+      "shepherdjerred/starlight-karma-bot/beta": digest,
+    },
+  ]);
+  expect(candidateMetadata).toEqual([
+    {
+      digests: {
+        "shepherdjerred/birmel": digest,
+        "shepherdjerred/starlight-karma-bot/beta": digest,
+      },
+      buildNumber: "42",
     },
   ]);
   expect(JSON.parse(writes[0]?.contents ?? "")).toEqual([
-    { image: "birmel", outcome: "no-pin-bumped" },
+    { image: "birmel", outcome: "bumped" },
     { image: "scout-for-lol", outcome: "content-unchanged" },
     {
       image: "starlight-karma-bot",

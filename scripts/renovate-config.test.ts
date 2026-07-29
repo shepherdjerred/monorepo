@@ -14,7 +14,12 @@ const RenovateConfigSchema = z.object({
     z.object({
       description: z.string().optional(),
       matchFileNames: z.array(z.string()).optional(),
+      matchDepNames: z.array(z.string()).optional(),
+      matchManagers: z.array(z.string()).optional(),
+      matchPackageNames: z.array(z.string()).optional(),
+      groupName: z.string().optional(),
       enabled: z.boolean().optional(),
+      minimumReleaseAge: z.union([z.string(), z.literal(false)]).optional(),
     }),
   ),
   ignorePaths: z.array(z.string()),
@@ -38,6 +43,86 @@ test("excludes all sandbox dependency files", async () => {
       "Sandbox is personal scratch space outside maintained dependency automation",
     matchFileNames: ["sandbox/**"],
     enabled: false,
+  });
+});
+
+test("drives Playwright upgrades from the official image source only", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+  const rule = config.packageRules.find(
+    (candidate) =>
+      candidate.description ===
+      "Playwright client packages are promoted atomically with the tested ci-playwright image digest; Renovate owns only the official Dockerfile source pin.",
+  );
+  expect(rule).toEqual({
+    description:
+      "Playwright client packages are promoted atomically with the tested ci-playwright image digest; Renovate owns only the official Dockerfile source pin.",
+    matchManagers: ["npm"],
+    matchPackageNames: ["playwright", "@playwright/test"],
+    enabled: false,
+    minimumReleaseAge: false,
+  });
+
+  const dockerfile = await Bun.file(
+    `${root}/.buildkite/ci-playwright/Dockerfile`,
+  ).text();
+  expect(dockerfile).toContain(
+    "# renovate: datasource=docker depName=mcr.microsoft.com/playwright",
+  );
+  expect(dockerfile).toMatch(
+    /^FROM mcr\.microsoft\.com\/playwright:v\d+\.\d+\.\d+-noble@sha256:[a-f0-9]{64}$/m,
+  );
+});
+
+test("updates application Dockerfile tool pins without hardcoded test fixtures", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+  const manager = config.customManagers.find(
+    (candidate) =>
+      candidate.description ===
+      "Pinned tool versions in application Dockerfile ARGs",
+  );
+  if (manager === undefined) {
+    throw new Error("Application Dockerfile ARG Renovate manager is missing");
+  }
+  const expression = manager.matchStrings[0];
+  if (expression === undefined) {
+    throw new Error("Application Dockerfile ARG Renovate matcher is missing");
+  }
+  const pinsByFile = await Promise.all(
+    manager.managerFilePatterns.map(async (path) => {
+      const source = await Bun.file(`${root}/${path}`).text();
+      return [...source.matchAll(new RegExp(expression, "gm"))].map(
+        (match) => ({
+          depName: match.groups?.["depName"],
+          currentValue: match.groups?.["currentValue"],
+        }),
+      );
+    }),
+  );
+  const pins = pinsByFile.flat();
+  expect(pins).toEqual([
+    { depName: "yt-dlp/yt-dlp", currentValue: expect.stringMatching(/^\d/) },
+    { depName: "uv", currentValue: expect.stringMatching(/^\d/) },
+    { depName: "yt-dlp/yt-dlp", currentValue: expect.stringMatching(/^\d/) },
+  ]);
+
+  const ytDlpRule = config.packageRules.find(
+    (candidate) =>
+      candidate.description ===
+      "Keep the yt-dlp binary pin synchronized across application images",
+  );
+  expect(ytDlpRule).toEqual({
+    description:
+      "Keep the yt-dlp binary pin synchronized across application images",
+    groupName: "yt-dlp image binary",
+    matchDepNames: ["yt-dlp/yt-dlp"],
+    matchFileNames: [
+      "packages/birmel/Dockerfile",
+      "packages/streambot/Dockerfile",
+    ],
   });
 });
 

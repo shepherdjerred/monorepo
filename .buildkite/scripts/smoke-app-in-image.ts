@@ -14,6 +14,19 @@ if (target === undefined || target.length === 0) {
   throw new Error("CI_IMAGE_SMOKE_TARGET is required");
 }
 
+if (target === "scout-for-lol") {
+  const expectedContractHash = Bun.env["EXPECTED_CONTRACT_HASH"];
+  if (
+    expectedContractHash !== undefined &&
+    expectedContractHash.length > 0 &&
+    Bun.env["CONTRACT_HASH"] !== expectedContractHash
+  ) {
+    throw new Error(
+      `Scout contract hash mismatch: expected ${expectedContractHash}, found ${String(Bun.env["CONTRACT_HASH"])}`,
+    );
+  }
+}
+
 type SmokeResult = { readonly exitCode: number; readonly output: string };
 
 async function runShell(
@@ -266,7 +279,7 @@ const commands: Record<
     env: {
       VAULT_PATH: "/tmp/smoke-vault",
       AUTH_TOKEN: "smoke-test-token",
-      PORT: "3000",
+      PORT: "18789",
     },
   },
   "temporal-worker": {
@@ -302,7 +315,7 @@ const commands: Record<
       "pid=$!",
       "trap 'if kill -0 $pid; then kill $pid; if wait $pid; then :; else cleanup_status=$?; [ $cleanup_status -eq 143 ] || exit $cleanup_status; fi; fi' EXIT",
       "for _ in $(seq 1 30); do",
-      "  if grep -Fq 'listening on :3000' /tmp/trmnl-smoke.log; then exit 0; fi",
+      "  if grep -Fq 'listening on :18790' /tmp/trmnl-smoke.log; then exit 0; fi",
       "  if ! kill -0 $pid; then cat /tmp/trmnl-smoke.log; exit 1; fi",
       "  sleep 1",
       "done",
@@ -313,6 +326,7 @@ const commands: Record<
       TRMNL_API_KEY: "smoke-test-dummy",
       HA_TOKEN: "smoke-test-dummy",
       HA_URL: "http://127.0.0.1:9999",
+      PORT: "18790",
     },
   },
   "scout-for-lol": {
@@ -320,7 +334,7 @@ const commands: Record<
       "set -eu",
       "cd /app/packages/scout-for-lol/packages/backend",
       "set +e",
-      'output="$(timeout 45s sh -c "bunx prisma migrate deploy && bun run src/index.ts" 2>&1)"',
+      'output="$(timeout 45s sh -c "bun x --no-install prisma migrate deploy && bun run src/index.ts" 2>&1)"',
       "status=$?",
       String.raw`printf '%s\n' "$output"`,
       String.raw`[ "$status" -eq 0 ] || [ "$status" -eq 124 ] || printf "%s\n" "$output" | grep -iE "` +
@@ -332,7 +346,7 @@ const commands: Record<
       APPLICATION_ID: "000000000000000000",
       RIOT_API_KEY: "smoke-test-dummy",
       DATABASE_URL: "file:/tmp/smoke-test.db",
-      PORT: "3000",
+      PORT: "18791",
     },
   },
   "discord-plays-pokemon": {
@@ -356,7 +370,7 @@ const commands: Record<
       "bun run smoke:wasm-host",
       "cd /app/packages/discord-plays-mario-kart",
       "set +e",
-      'output="$(timeout 60s sh -c "cd packages/backend && bunx prisma db push && cd /app/packages/discord-plays-mario-kart && exec bun packages/backend/src/index.ts" 2>&1)"',
+      'output="$(timeout 60s sh -c "cd packages/backend && bun x --no-install prisma db push && cd /app/packages/discord-plays-mario-kart && exec bun packages/backend/src/index.ts" 2>&1)"',
       "status=$?",
       String.raw`printf '%s\n' "$output"`,
       String.raw`[ "$status" -eq 0 ] || [ "$status" -eq 124 ] || printf "%s\n" "$output" | grep -iE "` +

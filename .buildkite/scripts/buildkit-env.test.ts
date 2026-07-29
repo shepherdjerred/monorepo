@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { registryLoginCommand } from "./migration-core.ts";
+import { registryLoginCommand } from "./build-ci-image-core.ts";
 
 test("does not log in without a token", () => {
   expect(registryLoginCommand()).toBeUndefined();

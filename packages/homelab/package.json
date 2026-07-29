@@ -20,9 +20,9 @@
   },
   "scripts": {
     "build": "tsc --noEmit -p tsconfig.scripts.json",
-    "test": "bun test scripts/helm-set-version.test.ts scripts/lint-helm.test.ts scripts/velero-backups.test.ts scripts/migration-smoke.test.ts",
+    "test": "bun test scripts/helm-set-version.test.ts scripts/helm-release-core.test.ts scripts/lint-helm.test.ts scripts/velero-backups.test.ts scripts/migration-smoke.test.ts",
     "test:coverage": "bun test --config ../../scripts/bunfig.coverage.toml --coverage scripts/helm-set-version.test.ts scripts/lint-helm.test.ts scripts/velero-backups.test.ts",
-    "lint": "eslint scripts/helm-set-version.ts scripts/helm-set-version.test.ts scripts/lint-helm.ts scripts/lint-helm.test.ts scripts/velero-backups.ts scripts/velero-backups.test.ts scripts/migration-core.ts scripts/migration-smoke.test.ts",
+    "lint": "eslint scripts/helm-set-version.ts scripts/helm-set-version.test.ts scripts/helm-release-core.ts scripts/helm-release-core.test.ts scripts/helm-push.ts scripts/lint-helm.ts scripts/lint-helm.test.ts scripts/velero-backups.ts scripts/velero-backups.test.ts scripts/migration-core.ts scripts/migration-smoke.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.scripts.json",
     "check:talos": "bun src/talos/update-image-id.ts --check",
     "lint:helm": "bun scripts/lint-helm.ts",

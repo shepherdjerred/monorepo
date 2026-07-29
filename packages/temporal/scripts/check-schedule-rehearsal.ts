@@ -74,7 +74,23 @@ async function writeTrackedFilesManifest(manifestPath: string): Promise<void> {
       `git ls-files failed with exit code ${String(exitCode)}: ${stderr}`,
     );
   }
-  await writeFile(manifestPath, new Uint8Array(stdout));
+  const trackedFiles = new TextDecoder()
+    .decode(stdout)
+    .split("\0")
+    .filter((file) => file.length > 0);
+  const trackedFileStates = await Promise.all(
+    trackedFiles.map(async (file) => ({
+      exists: await Bun.file(path.join(REPO_ROOT, file)).exists(),
+      file,
+    })),
+  );
+  const existingFiles = trackedFileStates
+    .filter(({ exists }) => exists)
+    .map(({ file }) => file);
+  await writeFile(
+    manifestPath,
+    `${existingFiles.join("\0")}${existingFiles.length > 0 ? "\0" : ""}`,
+  );
 }
 
 /**
