@@ -8,10 +8,8 @@ import { readGameSnapshot } from "#src/game/events/snapshot.ts";
 import type { GameSnapshot } from "#src/game/events/types.ts";
 import { createGameEventWatcher } from "#src/game/events/watcher.ts";
 import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
-import {
-  GoalManager,
-  type GoalProcessSpawner,
-} from "#src/goal/goal-manager.ts";
+import { GoalManager } from "#src/goal/goal-manager.ts";
+import type { GoalProcessSpawner } from "#src/goal/goal-types.ts";
 import { startGoalControlServer } from "#src/goal/control-server.ts";
 const WorkerConfigSchema = z.strictObject({
   schemaVersion: z.literal(1),
@@ -54,32 +52,29 @@ type ProcessCapture = {
   spawner: GoalProcessSpawner;
   completed: () => Promise<void>;
 };
-const EXTERNAL_PROVIDER_STARTUP_PATTERN =
-  /\b(?:quota|billing|usage limit|credit balance|rate limit|too many requests|429|auth(?:entication|orization)?|unauthorized|forbidden|log(?:ged)? in|login|required credentials?|api key|oauth|401|403)\b/i;
 async function startBenchmarkGoal(
   manager: GoalManager,
   goal: string,
   runDirectory: string,
 ): Promise<void> {
-  try {
-    const started = await manager.startGoal({
-      goal,
-      requesterId: "benchmark-operator",
-      channelId: "benchmark",
-    });
-    if (started.kind === "started") return;
-    throw new Error(`goal did not start: ${started.kind}: ${started.content}`);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (EXTERNAL_PROVIDER_STARTUP_PATTERN.test(message)) {
-      const failure = { schemaVersion: 1, phase: "startup", message };
-      await Bun.write(
-        path.join(runDirectory, "provider-startup-failure.json"),
-        `${JSON.stringify(failure)}\n`,
-      );
-    }
-    throw error;
+  const started = await manager.startGoal({
+    goal,
+    requesterId: "benchmark-operator",
+    channelId: "benchmark",
+  });
+  if (started.kind === "started") return;
+  if (started.kind === "missing_credential") {
+    const failure = {
+      schemaVersion: 1,
+      phase: "startup",
+      message: started.content,
+    };
+    await Bun.write(
+      path.join(runDirectory, "provider-startup-failure.json"),
+      `${JSON.stringify(failure)}\n`,
+    );
   }
+  throw new Error(`goal did not start: ${started.kind}: ${started.content}`);
 }
 function serializeSnapshot(snapshot: GameSnapshot): SerializedSnapshot {
   return {

@@ -1,6 +1,5 @@
 import type { CodexJsonlParser } from "@shepherdjerred/llm-observability/codex-jsonl";
-import type { GoalProcess } from "./goal-manager.ts";
-import type { GoalState } from "./goal-types.ts";
+import type { GoalProcess, GoalState } from "./goal-types.ts";
 import type { CodexTrace } from "./codex-trace.ts";
 
 export type ActiveGoal = {

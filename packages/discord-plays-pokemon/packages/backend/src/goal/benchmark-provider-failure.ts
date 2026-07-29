@@ -68,8 +68,10 @@ export function classifyCodexProviderFailure(
   input: ProviderFailureClassificationInput,
 ): BenchmarkProviderFailure | null {
   if (input.startupError !== undefined && input.startupError !== null) {
+    const kind = recognizedProviderKind(input.startupError);
+    if (kind === null) return null;
     return providerFailure({
-      kind: classifiedKind(input.startupError, "provider-startup"),
+      kind,
       phase: "startup",
       source: "startup-exception",
       message: input.startupError,
@@ -146,13 +148,22 @@ function failureMessage(
   return `Codex emitted ${eventType}`;
 }
 
+function recognizedProviderKind(
+  message: string,
+): Extract<
+  BenchmarkProviderFailure["kind"],
+  "quota" | "authentication"
+> | null {
+  if (QUOTA_PATTERN.test(message)) return "quota";
+  if (AUTHENTICATION_PATTERN.test(message)) return "authentication";
+  return null;
+}
+
 function classifiedKind(
   message: string,
   fallback: "provider-startup" | "provider-turn",
 ): BenchmarkProviderFailure["kind"] {
-  if (QUOTA_PATTERN.test(message)) return "quota";
-  if (AUTHENTICATION_PATTERN.test(message)) return "authentication";
-  return fallback;
+  return recognizedProviderKind(message) ?? fallback;
 }
 
 function providerFailure(

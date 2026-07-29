@@ -395,6 +395,13 @@ describe("classifyCodexProviderFailure", () => {
     });
     expect(
       classifyCodexProviderFailure({
+        jsonl: "",
+        codexExitCode: null,
+        startupError: "EACCES writing runtime helper",
+      }),
+    ).toBeNull();
+    expect(
+      classifyCodexProviderFailure({
         jsonl: [
           JSON.stringify({ type: "turn.started" }),
           JSON.stringify({ type: "turn.completed", usage: {} }),
@@ -456,7 +463,7 @@ test("benchmark worker does not import runner-only benchmark helpers", async () 
     path.resolve(import.meta.dir, "../../scripts/goal-benchmark-worker.ts"),
   ).text();
   expect(worker).not.toContain("#src/goal/benchmark-");
-  expect(worker).toContain("EXTERNAL_PROVIDER_STARTUP_PATTERN.test(message)");
+  expect(worker).toContain('started.kind === "missing_credential"');
   expect(worker).toContain(".some((entry) => entry.id === goalId)");
   expect(worker).toContain(
     'helper_dir: path.join(config.runDirectory, ".pokemon-goal-bin")',
