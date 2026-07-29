@@ -76,7 +76,7 @@ const versions = {
   // not managed by renovate — updated by version commit-back
   // Self-built from pinned upstream source with the Chinese Google Books patch.
   "shepherdjerred/bindery":
-    "2.0.0-6744@sha256:0904c09ca30be4211e3109bb8fd9d259180e91129bd1ce52a66b7d75cbcb3f69",
+    "2.0.0-6746@sha256:6fb6c929bcbde84abf572cc079bd37a0cacab0eb778c69ec5656baac4f4eb7c9",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   // Calibre-Web Automated — library + ingest + Send-to-Kindle path
   "crocodilestick/calibre-web-automated":
