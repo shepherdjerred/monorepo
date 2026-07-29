@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 
 import {
+  legacyBuildNumberFromSubject,
   pushWithExactLease,
   resetVersionBumpBranch,
 } from "./update-versions.ts";
@@ -13,6 +14,7 @@ import {
   parsePinCandidates,
   parsePinCandidatesState,
   parseVersionsSource,
+  reconstructLegacyPinState,
   rewriteVersionsSource,
   serializePinCandidatesState,
   validateStateAgainstVersions,
@@ -201,6 +203,45 @@ describe("versions.ts integrity", () => {
     expect(() =>
       parseVersionsSource(`{"${KEY}":"v@${A}","${KEY}":"v@${A}"}`),
     ).toThrow("duplicate");
+  });
+
+  test("reconstructs only image changes from a legacy generated branch", () => {
+    const base = parseVersionsSource(`{
+      "${KEY}": "v1@${A}",
+      "unchanged": "v1@${A}",
+    }`);
+    const pending = parseVersionsSource(`{
+      "${KEY}": "v2@${B}",
+      "unchanged": "v1@${A}",
+    }`);
+
+    expect(reconstructLegacyPinState(base, pending, 42).pins).toEqual({
+      [KEY]: { buildNumber: 42, version: "v2", digest: B },
+    });
+  });
+
+  test("rejects non-image changes in a legacy generated branch", () => {
+    const base = parseVersionsSource('{"chart":"1.0.0"}');
+    const pending = parseVersionsSource('{"chart":"2.0.0"}');
+
+    expect(() => reconstructLegacyPinState(base, pending, 42)).toThrow(
+      "legacy bump changed non-image version chart",
+    );
+  });
+});
+
+describe("legacy generated branch metadata", () => {
+  test.each([
+    "chore: update image pins from build 6922\n",
+    "chore: bump image versions to 2.0.0-6922",
+  ])("parses the generated commit subject: %s", (subject) => {
+    expect(legacyBuildNumberFromSubject(subject)).toBe(6922);
+  });
+
+  test("rejects an ambiguous commit subject", () => {
+    expect(() => legacyBuildNumberFromSubject("chore: update images")).toThrow(
+      "unexpected subject",
+    );
   });
 });
 

@@ -5,6 +5,9 @@
     "types": ["bun"]
   },
   "include": [
+    "scripts/argocd.ts",
+    "scripts/argocd-manifest-overrides.ts",
+    "scripts/argocd-manifest-overrides.test.ts",
     "scripts/helm-set-version.ts",
     "scripts/helm-set-version.test.ts",
     "scripts/helm-release-core.ts",
