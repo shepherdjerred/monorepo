@@ -245,6 +245,73 @@ Route 101 tall grass contains wild Pokémon encounters.`,
   });
 });
 
+describe("knowledge passage matching", () => {
+  test("matches whole passage terms instead of substrings", () => {
+    const base = new KnowledgeBase([
+      {
+        id: "progression:incidental",
+        domain: "progression",
+        title: "Incidental path",
+        aliases: [],
+        tags: [],
+        body: "A shortcut beside Route 103 leads north.",
+        sources: [testSource],
+      },
+      {
+        id: "progression:decisive",
+        domain: "progression",
+        title: "Required field move",
+        aliases: [],
+        tags: [],
+        body: "Use Cut on Route 104 to reach the item.",
+        sources: [testSource],
+      },
+    ]);
+
+    const results = base.search("cut route", {
+      domain: "progression",
+      limit: 2,
+    });
+
+    expect(results.map((result) => result.id)).toEqual([
+      "progression:decisive",
+      "progression:incidental",
+    ]);
+    expect(results.at(0)?.excerpt).toBe(
+      "Use Cut on Route 104 to reach the item.",
+    );
+  });
+
+  test("ranks complete term coverage above the maximum proximity bonus", () => {
+    const base = new KnowledgeBase([
+      {
+        id: "world:partial",
+        domain: "world",
+        title: "Partial evidence",
+        aliases: [],
+        tags: [],
+        body: "Alpha beta are adjacent.",
+        sources: [testSource],
+      },
+      {
+        id: "world:complete",
+        domain: "world",
+        title: "Complete evidence",
+        aliases: [],
+        tags: [],
+        body: `Alpha ${"intervening details ".repeat(40)}beta ${"more intervening details ".repeat(40)}gamma.`,
+        sources: [testSource],
+      },
+    ]);
+
+    expect(
+      base
+        .search("alpha beta gamma", { domain: "world", limit: 2 })
+        .map((result) => result.id),
+    ).toEqual(["world:complete", "world:partial"]);
+  });
+});
+
 describe("committed knowledge corpus", () => {
   test("loads core world, species, and battle facts", async () => {
     const base = await loadKnowledgeBase();
@@ -280,6 +347,22 @@ describe("committed knowledge corpus", () => {
     expect(nincadaSearchResult?.sources.map((source) => source.id)).toEqual(
       expectedShedinjaSourceIds,
     );
+  });
+
+  test("uses the closest repeated-term window for the long Latios passage", async () => {
+    const base = await loadKnowledgeBase();
+    const result = base
+      .search("latios status condition", {
+        domain: "progression",
+        limit: 1,
+      })
+      .at(0);
+
+    expect(result?.id).toBe("progression:bulbapedia:emerald-part-20:1");
+    expect(result?.excerpt).toContain(
+      "Latios/Latias is afflicted by a status condition",
+    );
+    expect(result?.excerpt).toContain("the Pokédex tracks its movements");
   });
 
   test("finds HM acquisition passages", async () => {

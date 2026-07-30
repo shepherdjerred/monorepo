@@ -97,8 +97,8 @@ const ACQUISITION_EVIDENCE_TERMS = new Set([
 ]);
 const ACQUISITION_EVIDENCE_SCORE = 150;
 const HM_ACQUISITION_EVIDENCE_SCORE = 200;
-const COVERAGE_TERM_SCORE = 15;
 const PROXIMITY_MAX_SCORE = 30;
+const COVERAGE_TERM_SCORE = PROXIMITY_MAX_SCORE + 1;
 const PROXIMITY_MAX_SPAN = 600;
 
 type AcquisitionEvidence = Readonly<{
@@ -108,6 +108,17 @@ type AcquisitionEvidence = Readonly<{
 
 type PassageEvidence = Readonly<{
   score: number;
+  position: number;
+}>;
+
+type TermOccurrence = Readonly<{
+  term: string;
+  position: number;
+}>;
+
+type MatchingWindow = Readonly<{
+  coverage: number;
+  span: number;
   position: number;
 }>;
 
@@ -128,6 +139,72 @@ function terms(value: string): string[] {
         .filter((term) => term.length > 1 && !SEARCH_STOPWORDS.has(term)),
     ),
   ];
+}
+
+function matchingWindow(
+  value: string,
+  queryTerms: readonly string[],
+): MatchingWindow | undefined {
+  const queryTermSet = new Set(queryTerms);
+  const termOccurrences: TermOccurrence[] = [];
+  for (const match of value.matchAll(/[\p{L}\p{N}]+/gu)) {
+    const term = normalize(match[0]);
+    if (queryTermSet.has(term)) {
+      termOccurrences.push({ term, position: match.index });
+    }
+    for (const component of term.matchAll(/\p{L}+|\p{N}+/gu)) {
+      if (component[0] !== term && queryTermSet.has(component[0])) {
+        termOccurrences.push({
+          term: component[0],
+          position: match.index + component.index,
+        });
+      }
+    }
+  }
+  if (termOccurrences.length === 0) {
+    return undefined;
+  }
+
+  const coverage = new Set(termOccurrences.map((occurrence) => occurrence.term))
+    .size;
+  const counts = new Map<string, number>();
+  let coveredTerms = 0;
+  let leftIndex = 0;
+  let bestSpan = Number.POSITIVE_INFINITY;
+  let bestPosition = 0;
+
+  for (const right of termOccurrences) {
+    const rightCount = counts.get(right.term) ?? 0;
+    if (rightCount === 0) {
+      coveredTerms += 1;
+    }
+    counts.set(right.term, rightCount + 1);
+
+    while (coveredTerms === coverage) {
+      const left = termOccurrences[leftIndex];
+      if (left === undefined) {
+        throw new Error("matching window must have a left occurrence");
+      }
+      const span = right.position - left.position;
+      if (span < bestSpan) {
+        bestSpan = span;
+        bestPosition = left.position;
+      }
+      const leftCount = counts.get(left.term);
+      if (leftCount === undefined) {
+        throw new Error("matching window must count its left occurrence");
+      }
+      if (leftCount === 1) {
+        counts.delete(left.term);
+        coveredTerms -= 1;
+      } else {
+        counts.set(left.term, leftCount - 1);
+      }
+      leftIndex += 1;
+    }
+  }
+
+  return { coverage, span: bestSpan, position: bestPosition };
 }
 
 function occurrences(haystack: string, needle: string): number {
@@ -214,25 +291,18 @@ function passageEvidence(
       throw new Error("knowledge passage must originate from its record body");
     }
     searchFrom = position + passage.length;
-    const normalizedPassage = normalize(passage);
-    const positions = queryTerms
-      .map((term) => normalizedPassage.indexOf(term))
-      .filter((termPosition) => termPosition >= 0);
-    const coverage = positions.length;
-    if (coverage === 0) continue;
-    const span =
-      coverage === 1
-        ? PROXIMITY_MAX_SPAN
-        : Math.max(...positions) - Math.min(...positions);
+    const window = matchingWindow(passage, queryTerms);
+    if (window === undefined) continue;
     const proximityScore =
-      coverage < 2
+      window.coverage < 2
         ? 0
         : Math.round(
-            PROXIMITY_MAX_SCORE * Math.max(0, 1 - span / PROXIMITY_MAX_SPAN),
+            PROXIMITY_MAX_SCORE *
+              Math.max(0, 1 - window.span / PROXIMITY_MAX_SPAN),
           );
-    const score = coverage * COVERAGE_TERM_SCORE + proximityScore;
+    const score = window.coverage * COVERAGE_TERM_SCORE + proximityScore;
     if (best === undefined || score > best.score) {
-      best = { score, position };
+      best = { score, position: position + window.position };
     }
   }
   return best;
@@ -266,12 +336,9 @@ function excerpt(
   queryTerms: readonly string[],
   preferredPosition?: number,
 ): string {
-  const normalizedBody = normalize(body);
-  const positions = queryTerms
-    .map((term) => normalizedBody.indexOf(term))
-    .filter((position) => position >= 0);
-  const first = preferredPosition ?? Math.min(...positions);
-  const start = Number.isFinite(first) ? Math.max(0, first - 200) : 0;
+  const first =
+    preferredPosition ?? matchingWindow(body, queryTerms)?.position ?? 0;
+  const start = Math.max(0, first - 200);
   const sliced = body.slice(start, start + SEARCH_EXCERPT_CHARS);
   return `${start > 0 ? "…" : ""}${sliced}${start + sliced.length < body.length ? "…" : ""}`;
 }
