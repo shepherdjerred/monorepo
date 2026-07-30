@@ -286,21 +286,7 @@ async function battleTargetResponse(
   request: Request,
 ): Promise<Routed> {
   const parsed = BattleTargetRequestSchema.parse(await parseJsonBody(request));
-  const battler =
-    "battler" in parsed
-      ? parsed.battler
-      : context.controller
-          .observe()
-          .battle?.battlers.find(
-            (candidate) =>
-              candidate.side === "player" &&
-              candidate.active &&
-              candidate.partyIndex === parsed.partySlot - 1,
-          )?.battler;
-  if (battler === undefined) {
-    throw new Error("requested party slot is not an active battle target");
-  }
-  const outcome = await context.controller.battleTarget(battler);
+  const outcome = await context.controller.battleTarget(parsed);
   return {
     response: jsonResponse(outcome),
     requestMeta: parsed,

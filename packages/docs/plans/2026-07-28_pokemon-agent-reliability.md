@@ -1004,3 +1004,31 @@ deferred by explicit direction.
 - The separate deep directional-warp thread on #1847 and the four #1848
   findings remain unchanged.
 - Shared-cache Buildkite retries and cache mutations remain explicitly deferred.
+
+## Session Log — 2026-07-29 (locked party-target resolution)
+
+### Done
+
+- Passed the parsed battler-or-party-slot target selection unchanged from the
+  semantic route into `GameController`.
+- Resolved a party slot against the live active lineup only after the
+  controller acquired its existing exclusive-operation lock, then reused the
+  established battle-target validation and timeout path.
+- Added a deterministic queued-control regression where a preceding switch
+  reuses a battler index for another party member before the target operation
+  acquires the lock; the stale party-slot request now rejects without input.
+- Passed the focused controller and battle-control suites, backend typecheck,
+  changed-file ESLint, and changed-file Prettier checks.
+
+### Remaining
+
+- Await current-head Buildkite and hosted-review responses for PRs #1847 and
+  #1848.
+
+### Caveats
+
+- Explicit battler targeting retains its existing validation, navigation, and
+  timeout behavior.
+- The deep directional-warp and warp-elevation threads on #1847 and the four
+  #1848 findings remain unchanged.
+- Shared-cache Buildkite retries and cache mutations remain explicitly deferred.

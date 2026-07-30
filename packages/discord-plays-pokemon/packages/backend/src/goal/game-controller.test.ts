@@ -105,6 +105,86 @@ function observation(input: ObservationInput = {}): GameObservationV2 {
   };
 }
 
+function targetObservation(
+  frame: number,
+  allyPartyIndex: number,
+): GameObservationV2 {
+  const current = observation({ frame, phase: "battle" });
+  const battle = current.battle;
+  if (battle === null) throw new Error("test observation has no battle");
+  return {
+    ...current,
+    battle: {
+      ...battle,
+      typeFlags: 1,
+      battlersCount: 4,
+      menu: "target",
+      moveCursor: 0,
+      targetBattler: 2,
+      moves: [
+        {
+          slot: 1,
+          moveId: 33,
+          move: "TACKLE",
+          currentPp: 35,
+          maxPp: 35,
+          usable: true,
+        },
+      ],
+      battlers: [
+        {
+          battler: 0,
+          side: "player",
+          position: 0,
+          active: true,
+          speciesId: 258,
+          species: "Mudkip",
+          hp: 20,
+          maxHp: 20,
+          partyIndex: 0,
+          status: 0,
+        },
+        {
+          battler: 1,
+          side: "opponent",
+          position: 1,
+          active: true,
+          speciesId: 263,
+          species: "Zigzagoon",
+          hp: 15,
+          maxHp: 15,
+          partyIndex: 0,
+          status: 0,
+        },
+        {
+          battler: 2,
+          side: "player",
+          position: 2,
+          active: true,
+          speciesId: 252,
+          species: "Treecko",
+          hp: 19,
+          maxHp: 19,
+          partyIndex: allyPartyIndex,
+          status: 0,
+        },
+        {
+          battler: 3,
+          side: "opponent",
+          position: 3,
+          active: true,
+          speciesId: 261,
+          species: "Poochyena",
+          hp: 14,
+          maxHp: 14,
+          partyIndex: 1,
+          status: 0,
+        },
+      ],
+    },
+  };
+}
+
 function mapTopology(
   input: Readonly<{
     connections?: EngineMapTopologyV1["connections"];
@@ -433,6 +513,33 @@ describe("GameController", () => {
     expect(outcome.stopReason).toBe("completed");
     expect(outcome.battleChanged).toBe(true);
     expect(outcome.stateChanged).toBe(true);
+  });
+
+  test("resolves a queued party-slot target after a preceding switch", async () => {
+    const port = new FakeControlPort(targetObservation(10, 1), []);
+    const controller = new GameController(port);
+    const switchStarted = Promise.withResolvers<undefined>();
+    const releaseSwitch = Promise.withResolvers<undefined>();
+    const precedingSwitch = controller.perform(
+      "test:preceding-forced-switch",
+      async () => {
+        switchStarted.resolve();
+        await releaseSwitch.promise;
+        // The switch reuses battler 2 for party slot 3. Party slot 2 is no
+        // longer active when the queued target operation acquires the lock.
+        port.setObservation(targetObservation(20, 2));
+      },
+    );
+    await switchStarted.promise;
+
+    const queuedTarget = controller.battleTarget({ partySlot: 2 });
+    releaseSwitch.resolve();
+    await precedingSwitch;
+
+    await expect(queuedTarget).rejects.toThrow(
+      "requested party slot is not an active battle target",
+    );
+    expect(port.presses).toEqual([]);
   });
 
   test("recognizes a dialog waiting for input as an applied advance", async () => {

@@ -27,6 +27,10 @@ import {
 
 export type WaitCondition = "ready" | "stable" | "phase-change";
 
+export type BattleTargetSelection =
+  | Readonly<{ battler: number }>
+  | Readonly<{ partySlot: number }>;
+
 export type GameControlPort = {
   observe: () => GameObservationV2;
   renderFrame: () => Uint8Array;
@@ -194,10 +198,26 @@ export class GameController {
     );
   }
 
-  async battleTarget(targetBattler: number): Promise<ActionOutcomeV1> {
-    return await this.exclusive(
-      async () => await this.battle.target(targetBattler),
-    );
+  async battleTarget(
+    selection: BattleTargetSelection,
+  ): Promise<ActionOutcomeV1> {
+    return await this.exclusive(async () => {
+      const targetBattler =
+        "battler" in selection
+          ? selection.battler
+          : this.port
+              .observe()
+              .battle?.battlers.find(
+                (candidate) =>
+                  candidate.side === "player" &&
+                  candidate.active &&
+                  candidate.partyIndex === selection.partySlot - 1,
+              )?.battler;
+      if (targetBattler === undefined) {
+        throw new Error("requested party slot is not an active battle target");
+      }
+      return await this.battle.target(targetBattler);
+    });
   }
 
   async interact(direction?: CardinalDirection): Promise<ActionOutcomeV1> {
