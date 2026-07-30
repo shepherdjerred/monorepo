@@ -10,8 +10,13 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "lucide-react";
+import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
+import {
+  formatAggregateRatingScore,
+  type RatingScoreSelection,
+} from "#client/aggregate-score.ts";
 import { useDocumentTitle } from "#client/document-title.ts";
 import { ScoreField } from "#client/score-field.tsx";
 import { useTRPC } from "#client/trpc.ts";
@@ -27,6 +32,7 @@ import { Textarea } from "#components/ui/textarea.tsx";
 import {
   CaseIdSchema,
   DatasetIdSchema,
+  type HumanRating,
   HumanRatingSchema,
 } from "#shared/schema.ts";
 
@@ -42,6 +48,90 @@ function Evidence({
       <summary>{label}</summary>
       <pre>{value || "No content recorded."}</pre>
     </details>
+  );
+}
+
+function HumanScorecardForm({
+  defaultRating,
+  errorMessage,
+  isPending,
+  onSubmit,
+}: {
+  defaultRating: HumanRating | null;
+  errorMessage: string | null;
+  isPending: boolean;
+  onSubmit: (event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>) => void;
+}): React.JSX.Element {
+  const [selection, setSelection] = useState<RatingScoreSelection>(() => ({
+    anchoredness: defaultRating?.anchoredness,
+    entertainment: defaultRating?.entertainment,
+    styleRecognizability: defaultRating?.styleRecognizability,
+  }));
+
+  return (
+    <form className="space-y-5" onSubmit={onSubmit}>
+      <ScoreField
+        defaultScore={defaultRating?.anchoredness}
+        description="Does the joke grow from this match's distinctive story?"
+        legend="Anchoredness"
+        name="anchoredness"
+        onScoreChange={(anchoredness) => {
+          setSelection((current) => ({ ...current, anchoredness }));
+        }}
+      />
+      <ScoreField
+        defaultScore={defaultRating?.entertainment}
+        description="Is it funny, memorable, quotable, or reaction-worthy?"
+        legend="Entertainment"
+        name="entertainment"
+        onScoreChange={(entertainment) => {
+          setSelection((current) => ({ ...current, entertainment }));
+        }}
+      />
+      <ScoreField
+        defaultScore={defaultRating?.styleRecognizability}
+        description="Is the assigned voice distinctly recognizable?"
+        legend="Style recognizability"
+        name="styleRecognizability"
+        onScoreChange={(styleRecognizability) => {
+          setSelection((current) => ({
+            ...current,
+            styleRecognizability,
+          }));
+        }}
+      />
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+        <p className="text-sm font-medium text-slate-700">Overall score</p>
+        <output
+          aria-label="Overall score"
+          aria-live="polite"
+          className="mt-1 block text-2xl font-semibold text-slate-950"
+        >
+          {formatAggregateRatingScore(selection)}
+        </output>
+        <p className="mt-1 text-xs text-slate-500">
+          Simple mean of the three rubric dimensions.
+        </p>
+      </div>
+      <label className="field-label text-slate-950" htmlFor="case-note">
+        Optional note
+        <Textarea
+          defaultValue={defaultRating?.note}
+          id="case-note"
+          maxLength={2000}
+          name="note"
+          placeholder="What drove the score?"
+        />
+      </label>
+      {errorMessage === null ? null : (
+        <p className="text-sm text-red-700" role="alert">
+          {errorMessage}
+        </p>
+      )}
+      <Button className="w-full" disabled={isPending} type="submit">
+        Save and next <ArrowRightIcon />
+      </Button>
+    </form>
   );
 }
 
@@ -210,55 +300,13 @@ export function CasePage(): React.JSX.Element {
                   Generate a review before rating this case.
                 </p>
               ) : (
-                <form
-                  className="space-y-5"
+                <HumanScorecardForm
+                  defaultRating={detail.rating}
+                  errorMessage={rateMutation.error?.message ?? null}
+                  isPending={rateMutation.isPending}
                   key={detail.generation.id}
                   onSubmit={submit}
-                >
-                  <ScoreField
-                    defaultScore={detail.rating?.anchoredness}
-                    description="Does the joke grow from this match's distinctive story?"
-                    legend="Anchoredness"
-                    name="anchoredness"
-                  />
-                  <ScoreField
-                    defaultScore={detail.rating?.entertainment}
-                    description="Is it funny, memorable, quotable, or reaction-worthy?"
-                    legend="Entertainment"
-                    name="entertainment"
-                  />
-                  <ScoreField
-                    defaultScore={detail.rating?.styleRecognizability}
-                    description="Is the assigned voice distinctly recognizable?"
-                    legend="Style recognizability"
-                    name="styleRecognizability"
-                  />
-                  <label
-                    className="field-label text-slate-950"
-                    htmlFor="case-note"
-                  >
-                    Optional note
-                    <Textarea
-                      defaultValue={detail.rating?.note}
-                      id="case-note"
-                      maxLength={2000}
-                      name="note"
-                      placeholder="What drove the score?"
-                    />
-                  </label>
-                  {rateMutation.error === null ? null : (
-                    <p className="text-sm text-red-700" role="alert">
-                      {rateMutation.error.message}
-                    </p>
-                  )}
-                  <Button
-                    className="w-full"
-                    disabled={rateMutation.isPending}
-                    type="submit"
-                  >
-                    Save and next <ArrowRightIcon />
-                  </Button>
-                </form>
+                />
               )}
             </CardContent>
           </Card>

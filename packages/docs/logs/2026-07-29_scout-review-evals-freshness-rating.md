@@ -50,6 +50,9 @@ board: false
   the case UI now displays prompts from the generation beside its output.
 - Made dataset creation, every materialized case, and every baseline generation
   one atomic SQLite operation, with rollback and successful-batch coverage.
+- Added a live read-only overall score to the human scorecard, calculated as the
+  displayed two-decimal simple mean of the three rubric dimensions and restored
+  from persisted ratings on revisit.
 - Verified PR #1777 with the focused eval tests, typecheck, changed-file ESLint,
   changed-file Prettier checks, Buildkite pipeline validator, lane-coverage
   tests, and an independent merge-tree check.

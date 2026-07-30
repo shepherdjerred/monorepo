@@ -11,11 +11,13 @@ export function ScoreField({
   description,
   legend,
   name,
+  onScoreChange,
 }: {
   defaultScore: EvalScore | undefined;
   description: string;
   legend: string;
   name: string;
+  onScoreChange?: (score: EvalScore) => void;
 }): React.JSX.Element {
   return (
     <fieldset className="score-field">
@@ -27,6 +29,9 @@ export function ScoreField({
             <input
               defaultChecked={defaultScore === option.score}
               name={name}
+              onChange={() => {
+                onScoreChange?.(option.score);
+              }}
               required
               type="radio"
               value={option.score}

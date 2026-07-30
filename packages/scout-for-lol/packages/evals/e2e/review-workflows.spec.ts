@@ -65,8 +65,8 @@ test("creates an empty draft and validates local form input", async ({
   await page.goto("/");
   await expect(page).toHaveTitle("Datasets | Scout Review Evals");
 
-  await page.getByLabel("Dataset name").fill("   ");
-  await page.getByLabel("Stable key").fill("   ");
+  await page.getByLabel("Dataset name").fill(" ".repeat(3));
+  await page.getByLabel("Stable key").fill(" ".repeat(3));
   await page.getByRole("button", { name: "Create draft" }).click();
   await expect(page.getByRole("alert")).toBeVisible();
   await expect(page).toHaveURL("/");
@@ -121,9 +121,12 @@ test("rates cases, navigates, and reloads persisted calibration", async ({
 
   await page.getByText("Deterministic match facts", { exact: true }).click();
   await expect(page.getByText("Jerred went 10/1/8")).toBeVisible();
+  const overallScore = page.getByLabel("Overall score");
+  await expect(overallScore).toHaveText("Select all three scores");
   await selectScore(page, "Anchoredness", "Great");
   await selectScore(page, "Entertainment", "Okay");
   await selectScore(page, "Style recognizability", "Great");
+  await expect(overallScore).toHaveText("2.67 / 3");
   const note = page.getByLabel("Optional note");
   await expect(note).toHaveAttribute("maxlength", "2000");
   await note.fill("Specific to the wall-stun pattern.");
@@ -144,11 +147,13 @@ test("rates cases, navigates, and reloads persisted calibration", async ({
   await expect(page.getByLabel("Optional note")).toHaveValue(
     "Specific to the wall-stun pattern.",
   );
+  await expect(page.getByLabel("Overall score")).toHaveText("2.67 / 3");
   await page.goForward();
 
   await selectScore(page, "Anchoredness", "Bad");
   await selectScore(page, "Entertainment", "Okay");
   await selectScore(page, "Style recognizability", "Okay");
+  await expect(page.getByLabel("Overall score")).toHaveText("1.67 / 3");
   await page.getByRole("button", { name: "Save and next" }).click();
   await expect(
     page.getByRole("heading", { name: "Rating Workflow", level: 1 }),
