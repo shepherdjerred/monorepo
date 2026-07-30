@@ -154,8 +154,13 @@ def generate_summary(content, prompt, summary_path):
                 "project_doc_max_bytes=0",
                 "--model",
                 MODEL,
+                # The worker pod is already the isolation boundary (ephemeral,
+                # non-root, throwaway clone) — any --sandbox value other than
+                # danger-full-access makes codex shell out to bwrap to build a
+                # Linux namespace, which an unprivileged container refuses.
+                # See agent-task-command.ts's codexCommand() for the same fix.
                 "--sandbox",
-                "read-only",
+                "danger-full-access",
                 "--output-schema",
                 str(schema_path),
                 "-o",

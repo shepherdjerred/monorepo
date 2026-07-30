@@ -90,8 +90,14 @@ async function codexCommand(
     args: [
       "codex",
       "exec",
+      // The worker pod is already the isolation boundary (ephemeral, non-root,
+      // scoped ServiceAccount, throwaway /tmp clone) — Codex's own OS-level
+      // sandbox needs bwrap to create a Linux namespace, which an unprivileged
+      // container refuses ("No permissions to create a new namespace"), so any
+      // --sandbox value other than danger-full-access hard-fails before the
+      // first command runs. See README.md's cog block for the same fix.
       "--sandbox",
-      "read-only",
+      "danger-full-access",
       "--config",
       'approval_policy="never"',
       "--json",
