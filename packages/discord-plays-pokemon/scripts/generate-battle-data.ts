@@ -231,8 +231,9 @@ function battleUseFromItemBody(body: string): ItemBattleUse {
   const battleUseFunction = /\.battleUseFunc\s*=\s*(\w+)/.exec(body)?.[1];
   switch (battleUseFunction) {
     case undefined:
-    case "ItemUseInBattle_EnigmaBerry":
       return "unavailable";
+    case "ItemUseInBattle_EnigmaBerry":
+      return "party";
     case "ItemUseInBattle_StatIncrease":
       return "direct";
     case "ItemUseInBattle_Escape":

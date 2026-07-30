@@ -243,6 +243,20 @@ function expectEngineConfirmedReviveTarget(): void {
   });
 }
 
+function enigmaBerryObservation(): GameObservationV2 {
+  return observation({
+    frame: 10,
+    inventory: [
+      {
+        itemId: 175,
+        item: "ENIGMA BERRY",
+        quantity: 1,
+        pocket: "berries",
+      },
+    ],
+  });
+}
+
 describe("GameBattleControl move actions", () => {
   test("selects a named move through action and move cursors", async () => {
     const port = new BattlePort(observation({ frame: 10, actionCursor: 1 }), [
@@ -889,6 +903,42 @@ describe("GameBattleControl item actions", () => {
       "a",
       "a",
     ]);
+  });
+});
+
+describe("Enigma Berry battle preflight", () => {
+  test("routes a usable live effect through engine preflight", () => {
+    const current = enigmaBerryObservation();
+    const battle = current.battle;
+    if (battle === null) throw new Error("test observation has no battle");
+
+    expect(
+      requireBattleItemSelection(current, battle, 175, {
+        partySlot: 1,
+        canUseOnBattler: () => false,
+        canUseOnPartyMon: (itemId, partySlot) =>
+          itemId === 175 && partySlot === 1,
+      }),
+    ).toEqual({
+      inventoryItem: {
+        itemId: 175,
+        item: "ENIGMA BERRY",
+        quantity: 1,
+        pocket: "berries",
+      },
+      pocket: 3,
+    });
+  });
+
+  test("rejects a genuinely unusable live effect before input", async () => {
+    const port = new BattlePort(enigmaBerryObservation(), [], {
+      partyItemApplicable: false,
+    });
+
+    await expect(new GameBattleControl(port).item(175, 1)).rejects.toThrow(
+      "requested item has no effect on the requested party slot",
+    );
+    expect(port.presses).toEqual([]);
   });
 });
 

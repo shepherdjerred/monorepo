@@ -772,3 +772,27 @@ deferred by explicit direction.
 - PR #1848's two passage-ranking findings remain unchanged.
 - No WASM rebuild is required because this change uses existing decoded
   battler-position observations and does not change engine exports.
+
+## Session Log — 2026-07-29 (Enigma Berry battle effects)
+
+### Done
+
+- Classified the dynamic Enigma Berry battle handler as party-targeted so its
+  live e-Reader effect reaches the existing engine eligibility query.
+- Added focused coverage for both an engine-approved Enigma Berry effect and a
+  genuinely ineffective live effect rejected before controller input.
+- Regenerated the pinned item interaction catalog and passed focused tests,
+  typecheck, and lint.
+
+### Remaining
+
+- Publish the #1847 fix, restack and publish #1848, and complete current-head
+  Buildkite and hosted-review verification for both pull requests.
+
+### Caveats
+
+- Enigma Berry HP and status restoration uses the party-item action; dynamic
+  PP-restoring and X-item effects remain unsupported by this action shape.
+- No WASM rebuild is required because the existing party-mon eligibility export
+  already reads the save's live Enigma Berry effect.
+- The other #1847 route finding and all #1848 findings remain unchanged.

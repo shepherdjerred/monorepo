@@ -785,6 +785,7 @@ export const ITEM_BATTLE_USES: Readonly<
   "140": "party",
   "141": "party",
   "142": "party",
+  "175": "party",
 };
 
 export function itemBattleUse(id: number): ItemBattleUse {

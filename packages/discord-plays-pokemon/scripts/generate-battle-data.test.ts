@@ -144,6 +144,11 @@ describe("battle data generation", () => {
           {
             .itemId = ITEM_POKE_DOLL,
             .battleUseFunc = ItemUseInBattle_Escape,
+          },
+          [ITEM_ENIGMA_BERRY] =
+          {
+            .itemId = ITEM_ENIGMA_BERRY,
+            .battleUseFunc = ItemUseInBattle_EnigmaBerry,
           },`,
         new Map([
           ["ITEM_NONE", 0],
@@ -152,6 +157,7 @@ describe("battle data generation", () => {
           ["ITEM_ETHER", 3],
           ["ITEM_X_ATTACK", 4],
           ["ITEM_POKE_DOLL", 5],
+          ["ITEM_ENIGMA_BERRY", 6],
         ]),
       ),
     ).toEqual([
@@ -161,6 +167,7 @@ describe("battle data generation", () => {
       "move",
       "direct",
       "escape",
+      "party",
     ]);
   });
 });
