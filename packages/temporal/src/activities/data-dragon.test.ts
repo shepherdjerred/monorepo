@@ -6,6 +6,12 @@ import {
   type GitStatusEntry,
 } from "./data-dragon-diff.ts";
 import { runCommand } from "./data-dragon-shell.ts";
+import {
+  branchName,
+  dataDragonPrTitle,
+  findExistingDataDragonPrUrl,
+  type OpenPrSummary,
+} from "./data-dragon-util.ts";
 import type { DataDragonUpdateInput } from "./data-dragon.ts";
 
 function parseStatusLines(lines: string[]): GitStatusEntry[] {
@@ -183,6 +189,81 @@ describe("shouldCreateDataDragonPr", () => {
     ]);
 
     expect(shouldCreateDataDragonPr(changes)).toBe(true);
+  });
+});
+
+// A genuine bot PR: same-repo head on the automation's branch convention.
+function dataDragonBotPr(version: string, url: string): OpenPrSummary {
+  return {
+    url,
+    title: dataDragonPrTitle(version),
+    headRefName: branchName(version, "6d94e121abcdef"),
+    isCrossRepository: false,
+  };
+}
+
+describe("findExistingDataDragonPrUrl", () => {
+  test("finds an open bot PR whose title exactly matches the target version", () => {
+    const openPrs: OpenPrSummary[] = [
+      dataDragonBotPr("16.15.1", "https://github.com/x/y/pull/1827"),
+      {
+        url: "https://github.com/x/y/pull/1800",
+        title: "chore: unrelated",
+        headRefName: "chore/unrelated",
+        isCrossRepository: false,
+      },
+    ];
+
+    expect(findExistingDataDragonPrUrl(openPrs, "16.15.1")).toBe(
+      "https://github.com/x/y/pull/1827",
+    );
+  });
+
+  test("returns undefined when no open PR targets the version", () => {
+    const openPrs: OpenPrSummary[] = [
+      {
+        url: "https://github.com/x/y/pull/1800",
+        title: "chore: unrelated",
+        headRefName: "chore/unrelated",
+        isCrossRepository: false,
+      },
+    ];
+
+    expect(findExistingDataDragonPrUrl(openPrs, "16.15.1")).toBeUndefined();
+  });
+
+  test("does not match a different target version", () => {
+    const openPrs = [
+      dataDragonBotPr("16.14.1", "https://github.com/x/y/pull/1700"),
+    ];
+
+    expect(findExistingDataDragonPrUrl(openPrs, "16.15.1")).toBeUndefined();
+  });
+
+  test("ignores a fork PR that spoofs the title (cross-repository head)", () => {
+    const openPrs: OpenPrSummary[] = [
+      {
+        url: "https://github.com/x/y/pull/9999",
+        title: dataDragonPrTitle("16.15.1"),
+        headRefName: branchName("16.15.1", "attacker0"),
+        isCrossRepository: true,
+      },
+    ];
+
+    expect(findExistingDataDragonPrUrl(openPrs, "16.15.1")).toBeUndefined();
+  });
+
+  test("ignores a same-repo PR whose head is not on the automation branch", () => {
+    const openPrs: OpenPrSummary[] = [
+      {
+        url: "https://github.com/x/y/pull/9998",
+        title: dataDragonPrTitle("16.15.1"),
+        headRefName: "feature/manual-data-dragon-tweak",
+        isCrossRepository: false,
+      },
+    ];
+
+    expect(findExistingDataDragonPrUrl(openPrs, "16.15.1")).toBeUndefined();
   });
 });
 

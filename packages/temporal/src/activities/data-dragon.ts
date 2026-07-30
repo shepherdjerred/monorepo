@@ -27,7 +27,10 @@ import { recordRun } from "./data-dragon-metrics.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import {
   branchName,
+  dataDragonPrTitle,
   failureReason,
+  findExistingDataDragonPrUrl,
+  listOpenDataDragonPrs,
   validateVersion,
 } from "./data-dragon-util.ts";
 
@@ -90,7 +93,7 @@ export type DataDragonUpdateResult = DataDragonUpdateInput & {
   commitHash: string | undefined;
   prUrl: string | undefined;
   outcome: "success" | "skipped";
-  reason: "pr-created" | "no-diff" | "image-only-diff";
+  reason: "pr-created" | "no-diff" | "image-only-diff" | "pr-already-open";
   emailSent?: boolean;
   emailMessageId?: string;
 };
@@ -213,6 +216,41 @@ export const dataDragonActivities = {
     try {
       const tokenResult = await createGitHubAppInstallationToken();
       const githubToken = tokenResult.token;
+
+      // Skip if a prior run's PR for this exact target version is still
+      // open (e.g. blocked on CI) — otherwise every schedule tick reopens a
+      // duplicate PR for the same bump until the first one merges.
+      const openPrs = await listOpenDataDragonPrs(REPO_SLUG, githubToken);
+      const existingPrUrl = findExistingDataDragonPrUrl(
+        openPrs,
+        input.latestVersion,
+      );
+      if (existingPrUrl !== undefined) {
+        const durationSeconds = (Date.now() - start) / 1000;
+        recordRun({
+          mode: input.mode,
+          outcome: "skipped",
+          reason: "pr-already-open",
+          currentVersion: input.currentVersion,
+          latestVersion: input.latestVersion,
+          durationSeconds,
+        });
+        jsonLog("info", "Skipped Data Dragon update; PR already open", {
+          ...input,
+          existingPrUrl,
+          durationSeconds,
+        });
+        return {
+          ...input,
+          changedFiles: [],
+          branchName: undefined,
+          commitHash: undefined,
+          prUrl: existingPrUrl,
+          outcome: "skipped",
+          reason: "pr-already-open",
+        };
+      }
+
       jsonLog("info", "Starting Data Dragon update", input);
       await runCommand(["mkdir", "-p", tempDir], { cwd: "/tmp" });
       const askpass = await writeGitAskpass(tempDir);
@@ -343,7 +381,7 @@ export const dataDragonActivities = {
       });
 
       const branch = branchName(input.latestVersion, id);
-      const title = `chore: update Scout Data Dragon to ${input.latestVersion}`;
+      const title = dataDragonPrTitle(input.latestVersion);
       const body = [
         "Automated Scout Data Dragon refresh from Temporal.",
         "",
