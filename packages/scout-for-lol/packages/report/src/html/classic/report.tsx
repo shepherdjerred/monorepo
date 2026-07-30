@@ -1,5 +1,8 @@
 import type { ClassicChampion, ClassicMatch, Team } from "@scout-for-lol/data";
-import { getSummonerSpellImageNameById } from "@scout-for-lol/data";
+import {
+  championNameToDisplayName,
+  getSummonerSpellImageNameById,
+} from "@scout-for-lol/data";
 import {
   getChampionImage,
   getChampionSplashImage,
@@ -185,7 +188,7 @@ function PlayerRow({
               lineHeight: classicTypography.size.caption.lineHeight,
             }}
           >
-            {champion.championName}
+            {championNameToDisplayName(champion.championName)}
           </span>
         </div>
       </Column>

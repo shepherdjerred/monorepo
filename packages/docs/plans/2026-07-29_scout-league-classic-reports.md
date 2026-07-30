@@ -161,6 +161,9 @@ renderers, and enrichment behavior must not change.
 - Updated the AsusWRT provider's Go dependency closure to
   `golang.org/x/text` 0.39.0 after current-head Trivy identified
   CVE-2026-56852; module verification and the full provider test suite pass.
+- Converted Classic postmatch champion asset keys to user-facing labels and
+  added renderer-level coverage proving `Jade_` identifiers do not leak into
+  visible report text.
 - Published draft PR #1849 on top of refresh PR #1827 with accepted full 5v5,
   partial 3v2, and postmatch screenshots.
 
@@ -176,3 +179,6 @@ renderers, and enrichment behavior must not change.
   or included in a public container or artifact.
 - Live Match-V5 acceptance depends on Riot exposing a Classic match during the
   validation window.
+- Buildkite #7204 also reports invalid visual-guide workflow status and a
+  missing frontend converter return; those remain for subsequent focused
+  repair cycles.
