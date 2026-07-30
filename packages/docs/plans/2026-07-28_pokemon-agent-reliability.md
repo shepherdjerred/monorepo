@@ -847,3 +847,26 @@ deferred by explicit direction.
 - The forced-replacement settling finding on #1847 and all #1848 findings
   remain unchanged.
 - Shared-cache Buildkite retries and cache mutations remain explicitly deferred.
+
+## Session Log — 2026-07-29 (forced-replacement settlement)
+
+### Done
+
+- Reused the forced-replacement rule's exact input-ready `SEND_OUT` predicate
+  when settling completed battle commands.
+- Applied the predicate to move confirmation as well as the shared
+  post-command settlement path used by items, switches, targets, and Run.
+- Added focused regressions proving a ready forced replacement completes
+  immediately while transient and non-replacement party states time out.
+- Passed the focused controller test file plus backend typecheck and lint.
+
+### Remaining
+
+- Await current-head hosted-review responses for PRs #1847 and #1848.
+
+### Caveats
+
+- Only an input-ready party action with the engine's `SEND_OUT` action code is
+  settled; non-input-ready and other party decisions remain unsettled.
+- The Struggle finding on #1847 and all #1848 findings remain unchanged.
+- Shared-cache Buildkite retries and cache mutations remain explicitly deferred.

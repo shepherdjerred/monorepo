@@ -83,16 +83,22 @@ export function requireForcedReplacementPartySlot(
   battle: BattleState,
   partySlot: number,
 ): void {
-  if (
-    battle.menu !== "party" ||
-    battle.party?.inputReady !== true ||
-    battle.party.action !== PARTY_ACTION_SEND_OUT
-  ) {
+  if (!isForcedReplacementPartyDecision(battle)) {
     throw new Error(
       "forced replacement requires an input-ready Send Out party decision",
     );
   }
   requireReplacementPartySlot(observation, battle, partySlot);
+}
+
+export function isForcedReplacementPartyDecision(
+  battle: GameObservationV2["battle"],
+): boolean {
+  return (
+    battle?.menu === "party" &&
+    battle.party?.inputReady === true &&
+    battle.party.action === PARTY_ACTION_SEND_OUT
+  );
 }
 
 export function requireBattleRun(

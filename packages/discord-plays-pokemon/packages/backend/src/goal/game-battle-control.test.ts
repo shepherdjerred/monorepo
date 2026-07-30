@@ -423,6 +423,66 @@ describe("GameBattleControl move actions", () => {
   });
 });
 
+describe("GameBattleControl forced replacement settlement", () => {
+  test("settles when a completed move opens an input-ready forced replacement", async () => {
+    const port = new BattlePort(observation({ frame: 10 }), [
+      observation({ frame: 12, menu: "move" }),
+      observation({
+        frame: 14,
+        menu: "party",
+        battleParty: {
+          inputReady: true,
+          slot: 0,
+          layout: 0,
+          action: 1,
+        },
+      }),
+    ]);
+
+    const outcome = await new GameBattleControl(port).move({ moveId: 33 });
+
+    expect(outcome.status).toBe("applied");
+    expect(outcome.stopReason).toBe("completed");
+    expect(port.presses.map((press) => press.command)).toEqual(["a", "a"]);
+  });
+
+  test.each([
+    {
+      name: "a transient non-input-ready party state",
+      battleParty: {
+        inputReady: false,
+        slot: 0,
+        layout: 0,
+        action: 1,
+      },
+    },
+    {
+      name: "an input-ready non-replacement party decision",
+      battleParty: {
+        inputReady: true,
+        slot: 0,
+        layout: 0,
+        action: 3,
+      },
+    },
+  ])("does not settle on $name", async ({ battleParty }) => {
+    const port = new BattlePort(observation({ frame: 10 }), [
+      observation({ frame: 12, menu: "move" }),
+      observation({
+        frame: 14,
+        menu: "party",
+        battleParty,
+      }),
+    ]);
+
+    const outcome = await new GameBattleControl(port).move({ moveId: 33 });
+
+    expect(outcome.status).toBe("applied");
+    expect(outcome.stopReason).toBe("settle-timeout");
+    expect(port.presses.map((press) => press.command)).toEqual(["a", "a"]);
+  });
+});
+
 describe("GameBattleControl target navigation", () => {
   const battlers: BattleState["battlers"] = [
     {

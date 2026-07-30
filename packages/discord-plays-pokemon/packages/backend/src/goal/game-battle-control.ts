@@ -11,6 +11,7 @@ import {
   type ActionOutcomeV1,
 } from "./game-action-outcome.ts";
 import {
+  isForcedReplacementPartyDecision,
   requireBattleItemSelection,
   requireBattleMoveSelection,
   requireBattleRun,
@@ -84,9 +85,8 @@ export class GameBattleControl {
     timedOut ||= await this.selectGridCursor("move", matchingMove.slot - 1);
     timedOut ||= await this.pressAndAwait("a", (observation) => {
       return (
-        observation.phase !== "battle" ||
         observation.battle?.menu === "target" ||
-        observation.battle?.menu === "action"
+        nextActionOrBattleEnd(observation)
       );
     });
 
@@ -424,7 +424,9 @@ function targetNavigationCommand(
 
 function nextActionOrBattleEnd(observation: GameObservationV2): boolean {
   return (
-    observation.phase !== "battle" || observation.battle?.menu === "action"
+    observation.phase !== "battle" ||
+    observation.battle?.menu === "action" ||
+    isForcedReplacementPartyDecision(observation.battle)
   );
 }
 
