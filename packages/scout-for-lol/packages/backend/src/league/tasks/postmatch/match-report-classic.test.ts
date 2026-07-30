@@ -1,5 +1,6 @@
 import { describe, expect, mock, test } from "bun:test";
 import {
+  type ClassicMatch,
   PlayerConfigEntrySchema,
   RawMatchSchema,
   type RawMatch,
@@ -45,6 +46,91 @@ async function classicMatchFixture(): Promise<RawMatch> {
     },
   });
 }
+
+type ClassicIdentityOverrides = {
+  readonly riotIdGameName: string | undefined;
+  readonly riotIdTagline: string;
+  readonly summonerName: string;
+};
+
+async function buildFirstParticipantClassicMatch(
+  identity: ClassicIdentityOverrides,
+): Promise<ClassicMatch> {
+  const fixture = await classicMatchFixture();
+  const rawMatch = RawMatchSchema.parse({
+    ...fixture,
+    info: {
+      ...fixture.info,
+      participants: fixture.info.participants.map((participant, index) =>
+        index === 0 ? { ...participant, ...identity } : participant,
+      ),
+    },
+  });
+  const trackedParticipant = rawMatch.info.participants[0];
+  if (trackedParticipant === undefined) {
+    throw new Error("Classic identity fixture has no tracked participant");
+  }
+  const trackedPlayer = PlayerConfigEntrySchema.parse({
+    alias: "Classic Identity",
+    league: {
+      leagueAccount: {
+        puuid: trackedParticipant.puuid,
+        region: "AMERICA_NORTH",
+      },
+    },
+  });
+  const result = buildClassicMatch(rawMatch, [trackedPlayer]);
+  if (result === undefined) {
+    throw new Error("Classic identity fixture unexpectedly produced no match");
+  }
+  return result;
+}
+
+describe("buildClassicMatch identity normalization", () => {
+  test("uses the legacy summoner name when the Riot game name is missing", async () => {
+    const result = await buildFirstParticipantClassicMatch({
+      riotIdGameName: undefined,
+      riotIdTagline: "TAG",
+      summonerName: "Legacy Summoner",
+    });
+
+    expect(result.players[0]?.champion.riotIdGameName).toBe("Legacy Summoner");
+    expect(result.players[0]?.champion.riotIdTagLine).toBe("TAG");
+  });
+
+  test("uses an explicit placeholder when the Riot tagline is empty", async () => {
+    const result = await buildFirstParticipantClassicMatch({
+      riotIdGameName: "Complete Name",
+      riotIdTagline: "",
+      summonerName: "Legacy Summoner",
+    });
+
+    expect(result.players[0]?.champion.riotIdGameName).toBe("Complete Name");
+    expect(result.players[0]?.champion.riotIdTagLine).toBe("Unknown");
+  });
+
+  test("uses explicit placeholders when every participant name is unavailable", async () => {
+    const result = await buildFirstParticipantClassicMatch({
+      riotIdGameName: undefined,
+      riotIdTagline: "",
+      summonerName: "",
+    });
+
+    expect(result.players[0]?.champion.riotIdGameName).toBe("Unknown");
+    expect(result.players[0]?.champion.riotIdTagLine).toBe("Unknown");
+  });
+
+  test("preserves complete Riot IDs", async () => {
+    const result = await buildFirstParticipantClassicMatch({
+      riotIdGameName: "Riot Name",
+      riotIdTagline: "R1OT",
+      summonerName: "Legacy Summoner",
+    });
+
+    expect(result.players[0]?.champion.riotIdGameName).toBe("Riot Name");
+    expect(result.players[0]?.champion.riotIdTagLine).toBe("R1OT");
+  });
+});
 
 describe("buildClassicMatch", () => {
   test("groups full rosters by team ID and keeps the narrow Classic model", async () => {

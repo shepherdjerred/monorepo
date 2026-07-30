@@ -185,6 +185,9 @@ renderers, and enrichment behavior must not change.
 - Moved private Classic font validation into the fail-fast backend startup
   sequence before the health server, Discord login, or cron imports can serve
   traffic, with injected success and failure-ordering tests.
+- Normalized incomplete external Classic participant identities to legacy
+  summoner names or explicit `Unknown` placeholders, preserving strict report
+  models without aborting a whole roster.
 - Published draft PR #1849 on top of refresh PR #1827 with accepted full 5v5,
   partial 3v2, and postmatch screenshots.
 

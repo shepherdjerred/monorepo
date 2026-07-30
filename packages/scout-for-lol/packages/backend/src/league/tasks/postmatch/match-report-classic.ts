@@ -19,23 +19,32 @@ import { participantMismatchTotal } from "#src/metrics/index.ts";
 
 const logger = createLogger("postmatch-match-report-classic");
 
-function requireRiotIdGameName(participant: RawParticipant): string {
-  if (
-    participant.riotIdGameName === undefined ||
-    participant.riotIdGameName.length === 0
-  ) {
-    throw new Error(
-      `Classic match participant ${participant.puuid} has no Riot ID game name`,
-    );
+const UNKNOWN_RIOT_ID_COMPONENT = "Unknown";
+
+function nonBlank(value: string | undefined): string | undefined {
+  if (value === undefined || value.trim().length === 0) {
+    return;
   }
-  return participant.riotIdGameName;
+  return value;
+}
+
+function resolveClassicIdentity(
+  participant: RawParticipant,
+): Pick<ClassicChampion, "riotIdGameName" | "riotIdTagLine"> {
+  return {
+    riotIdGameName:
+      nonBlank(participant.riotIdGameName) ??
+      nonBlank(participant.summonerName) ??
+      UNKNOWN_RIOT_ID_COMPONENT,
+    riotIdTagLine:
+      nonBlank(participant.riotIdTagline) ?? UNKNOWN_RIOT_ID_COMPONENT,
+  };
 }
 
 function toClassicChampion(participant: RawParticipant): ClassicChampion {
   return {
     puuid: participant.puuid,
-    riotIdGameName: requireRiotIdGameName(participant),
-    riotIdTagLine: participant.riotIdTagline,
+    ...resolveClassicIdentity(participant),
     championId: participant.championId,
     championName: resolveClassicChampionKey(participant.championId),
     kills: participant.kills,
