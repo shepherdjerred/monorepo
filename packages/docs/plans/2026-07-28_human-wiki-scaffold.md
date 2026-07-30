@@ -143,16 +143,20 @@ attempt to author a comprehensive monorepo atlas.
 - Passed LeetCode unit tests, typecheck, lint, the complete 3,879-problem
   embedding build, and a forced startup-failure build that completed with all
   3,879 problems indexed in FTS5 and no fatal shutdown.
+- Published the embedding-readiness fix as `a575507db`; exact-head Buildkite
+  build 7235 passed the exhaustive Turbo verification lane.
+- Made working-document publication fail when any allowlist entry is absent
+  from the discovered Markdown corpus, reporting every stale path in a
+  deterministic error.
+- Added focused valid, configured-stale, and multi-stale allowlist tests; wiki
+  unit tests, lint, typecheck, build, and Playwright coverage pass.
 - Passed focused wiki unit tests, lint, typecheck, build, and Playwright
   coverage; liveness-checked every new GitHub link target.
 
 ### Remaining
 
-- Publish the embedding readiness fix and await replacement Buildkite CI plus
-  hosted Codex review.
-- Address the current-head review finding requiring stale working-document
-  publication allowlist entries to fail instead of silently creating 404
-  routes.
+- Publish the stale-allowlist validation fix and await replacement Buildkite CI
+  plus hosted Codex review.
 - After merge and deployment, run the live HTTP, cache-header, CSP, sitemap,
   robots, and public-corpus verification.
 
@@ -163,6 +167,5 @@ attempt to author a comprehensive monorepo atlas.
   added.
 - The first-deployment ordering is statically verified but cannot be exercised
   end to end until the main-only infrastructure and site lanes run after merge.
-- Exact-head Buildkite build 7232 is the authoritative failing predecessor; a
-  replacement build on the embedding-fix commit is still required to prove the
-  Linux worker now selects the FTS5-only path.
+- GitHub still reports a stale merge-conflict failure, while an independent
+  `git merge-tree` against `origin/main` succeeds.

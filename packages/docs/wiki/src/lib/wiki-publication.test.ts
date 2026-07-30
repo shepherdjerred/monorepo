@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+  assertPublicWorkingDocumentPathsExist,
   isPublicWorkingDirectoryPath,
   isPublicWorkingDocumentPath,
   publicWorkingDocumentPaths,
@@ -15,6 +16,33 @@ describe("public working document allowlist", () => {
         "plans/private-infrastructure.md",
       ]),
     ).toEqual(["plans/2026-07-28_human-wiki-scaffold.md"]);
+  });
+
+  test("rejects every stale publication path", () => {
+    expect(() => {
+      assertPublicWorkingDocumentPathsExist(
+        ["plans/renamed.md", "todos/deleted.md", "guides/mistyped.md"],
+        new Set(["plans/current.md"]),
+      );
+    }).toThrow(
+      [
+        "Public working document allowlist contains paths that were not discovered:",
+        "- guides/mistyped.md",
+        "- plans/renamed.md",
+        "- todos/deleted.md",
+      ].join("\n"),
+    );
+  });
+
+  test("rejects the configured allowlist when its document is missing", () => {
+    expect(() => {
+      publicWorkingDocumentPaths(["plans/private-infrastructure.md"]);
+    }).toThrow(
+      [
+        "Public working document allowlist contains paths that were not discovered:",
+        "- plans/2026-07-28_human-wiki-scaffold.md",
+      ].join("\n"),
+    );
   });
 
   test("recognizes only published documents and their generated directories", () => {
