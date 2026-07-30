@@ -7,6 +7,8 @@
     "build": "vite build",
     "dev": "bun run src/dev.ts",
     "discover": "bun run src/scripts/discover-candidates.ts",
+    "dataset:export": "bun run src/scripts/export-dataset.ts",
+    "dataset:import": "bun run src/scripts/import-dataset.ts",
     "launch": "bun run build && bun run src/server/index.ts --open",
     "materialize": "bun run src/scripts/materialize-dataset.ts",
     "start": "bun run src/server/index.ts",

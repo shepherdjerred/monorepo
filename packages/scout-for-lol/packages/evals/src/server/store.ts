@@ -3,6 +3,10 @@ import { z } from "zod";
 
 import { openEvalDatabase } from "#server/database.ts";
 import {
+  exportDatasetFromDatabase,
+  importDatasetIntoDatabase,
+} from "#server/dataset-transfer-store.ts";
+import {
   generationSetRevision,
   requireCurrentGenerationSet,
   SELECT_FRESHNESS_RATING_SQL,
@@ -21,14 +25,19 @@ import {
   DATASET_SUMMARY_SQL,
   NextOrdinalRowSchema,
   NextVersionRowSchema,
+  parseCaseSummary,
+  readCaseSummary,
+  readDatasetSummary,
 } from "#server/store-queries.ts";
 import {
   CaseArtifactSchema,
   CaseDetailSchema,
   CaseIdSchema,
-  CaseSummarySchema,
+  type CaseSummary,
   CreateDatasetInputSchema,
   DatasetIdSchema,
+  type DatasetExport,
+  type DatasetSummary,
   DatasetSummarySchema,
   FreshnessRatingSchema,
   GenerationIdSchema,
@@ -43,12 +52,6 @@ import {
 const AddMaterializedCaseInputSchema = z.strictObject({
   datasetId: DatasetIdSchema,
   artifact: CaseArtifactSchema,
-});
-
-const DatasetSummaryRowSchema = DatasetSummarySchema;
-
-const CaseSummaryRowSchema = CaseSummarySchema.omit({ isRated: true }).extend({
-  isRated: z.union([z.literal(0), z.literal(1)]),
 });
 
 const ArtifactRowSchema = z.strictObject({ artifactJson: z.string().min(1) });
@@ -74,38 +77,6 @@ export type Generation = z.infer<typeof GenerationSchema>;
 export type CaseDetail = z.infer<typeof CaseDetailSchema>;
 export type StyleBatch = z.infer<typeof StyleBatchSchema>;
 
-function parseCaseSummary(row: unknown): z.infer<typeof CaseSummarySchema> {
-  const parsed = CaseSummaryRowSchema.parse(row);
-  return CaseSummarySchema.parse({
-    ...parsed,
-    isRated: parsed.isRated === 1,
-  });
-}
-
-function readDatasetSummary(
-  database: Database,
-  datasetId: string,
-): z.infer<typeof DatasetSummarySchema> {
-  return DatasetSummaryRowSchema.parse(
-    database
-      .query(
-        `${DATASET_SUMMARY_SQL}
-         WHERE d.id = ?
-         GROUP BY d.id`,
-      )
-      .get(datasetId),
-  );
-}
-
-function readCaseSummary(
-  database: Database,
-  caseId: string,
-): z.infer<typeof CaseSummarySchema> {
-  return parseCaseSummary(
-    database.query(`${CASE_SUMMARY_SQL} WHERE c.id = ?`).get(caseId),
-  );
-}
-
 export class EvalStore {
   readonly #database: Database;
 
@@ -117,8 +88,8 @@ export class EvalStore {
     return this.#database.transaction(operation)();
   }
 
-  public listDatasets(): z.infer<typeof DatasetSummarySchema>[] {
-    return z.array(DatasetSummaryRowSchema).parse(
+  public listDatasets(): DatasetSummary[] {
+    return z.array(DatasetSummarySchema).parse(
       this.#database
         .query(
           `${DATASET_SUMMARY_SQL}
@@ -129,9 +100,7 @@ export class EvalStore {
     );
   }
 
-  public createDataset(
-    input: CreateDatasetInput,
-  ): z.infer<typeof DatasetSummarySchema> {
+  public createDataset(input: CreateDatasetInput): DatasetSummary {
     const parsed = CreateDatasetInputSchema.parse(input);
     return this.#database.transaction(() => {
       const versionRow = NextVersionRowSchema.parse(
@@ -163,9 +132,7 @@ export class EvalStore {
     })();
   }
 
-  public finalizeDataset(
-    datasetId: string,
-  ): z.infer<typeof DatasetSummarySchema> {
+  public finalizeDataset(datasetId: string): DatasetSummary {
     const id = DatasetIdSchema.parse(datasetId);
     const current = readDatasetSummary(this.#database, id);
     if (current.status === "finalized") {
@@ -195,9 +162,15 @@ export class EvalStore {
     return readDatasetSummary(this.#database, id);
   }
 
-  public addMaterializedCase(
-    input: AddMaterializedCaseInput,
-  ): z.infer<typeof CaseSummarySchema> {
+  public exportDataset(datasetId: string): DatasetExport {
+    return exportDatasetFromDatabase(this.#database, datasetId);
+  }
+
+  public importDataset(value: unknown): DatasetSummary {
+    return importDatasetIntoDatabase(this.#database, value);
+  }
+
+  public addMaterializedCase(input: AddMaterializedCaseInput): CaseSummary {
     const parsed = AddMaterializedCaseInputSchema.parse(input);
     return this.#database.transaction(() => {
       const ordinalRow = NextOrdinalRowSchema.parse(
@@ -235,7 +208,7 @@ export class EvalStore {
     })();
   }
 
-  public listCases(datasetId: string): z.infer<typeof CaseSummarySchema>[] {
+  public listCases(datasetId: string): CaseSummary[] {
     const id = DatasetIdSchema.parse(datasetId);
     return this.#database
       .query(
@@ -489,6 +462,5 @@ export class EvalStore {
   }
 }
 
-export function createEvalStore(databasePath: string): EvalStore {
-  return new EvalStore(openEvalDatabase(databasePath));
-}
+export const createEvalStore = (databasePath: string): EvalStore =>
+  new EvalStore(openEvalDatabase(databasePath));

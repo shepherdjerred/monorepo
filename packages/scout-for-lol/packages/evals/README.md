@@ -68,6 +68,32 @@ sanitized Beta snapshot supplies that mapping and materialization fails if the
 target is absent. API keys remain server-side and are never included in the
 Vite bundle.
 
+## Transfer A Finalized Dataset
+
+Export a finalized dataset to the versioned, checksummed JSON interchange
+format:
+
+```bash
+bun run --filter=@scout-for-lol/evals dataset:export -- \
+  --dataset <dataset-id> \
+  --output ./calibration-export.json
+```
+
+Import that file into another eval database:
+
+```bash
+bun run --filter=@scout-for-lol/evals dataset:import -- \
+  --input ./calibration-export.json \
+  --database ./imported-evals.sqlite
+```
+
+Exports preserve the dataset ID and version, ordered immutable cases, every
+generation and human rating, and style freshness ratings. Import validates the
+strict schema and SHA-256 checksum before opening a transaction. It rejects
+dataset ID, dataset key/version, case ID, and generation ID collisions; it
+never overwrites records or silently assigns a different version. Export also
+refuses to overwrite an existing output file.
+
 ## Browser Tests
 
 The Playwright suite runs the production-built client against the real
@@ -93,6 +119,9 @@ mutate dedicated datasets in one in-memory store.
   coverage.
 - Allowed materialization specs to target the `datasetId` created by the app,
   with fail-fast draft validation and atomic persistence into that same record.
+- Added strict, checksummed dataset export/import through store, tRPC, and CLI
+  surfaces with deterministic round trips and explicit ID and version collision
+  failures.
 
 ### Remaining
 
@@ -107,3 +136,5 @@ mutate dedicated datasets in one in-memory store.
   `bun run --filter=@scout-for-lol/evals sync-beta`.
 - A materialization spec must provide exactly one of `dataset` or `datasetId`;
   an existing target must be a draft.
+- Dataset imports preserve IDs and versions exactly, so operators must resolve
+  collisions rather than expecting overwrite or automatic renumbering.

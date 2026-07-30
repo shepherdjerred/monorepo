@@ -1,4 +1,7 @@
+import type { Database } from "bun:sqlite";
 import { z } from "zod";
+
+import { CaseSummarySchema, DatasetSummarySchema } from "#shared/schema.ts";
 
 export const NextVersionRowSchema = z.strictObject({
   nextVersion: z.number().int().positive(),
@@ -60,3 +63,41 @@ export const CASE_SUMMARY_SQL = `
   LEFT JOIN human_ratings latest_rating
     ON latest_rating.generation_id = latest_generation.id
 `;
+
+const CaseSummaryRowSchema = CaseSummarySchema.omit({ isRated: true }).extend({
+  isRated: z.union([z.literal(0), z.literal(1)]),
+});
+
+export function parseCaseSummary(
+  row: unknown,
+): z.infer<typeof CaseSummarySchema> {
+  const parsed = CaseSummaryRowSchema.parse(row);
+  return CaseSummarySchema.parse({
+    ...parsed,
+    isRated: parsed.isRated === 1,
+  });
+}
+
+export function readDatasetSummary(
+  database: Database,
+  datasetId: string,
+): z.infer<typeof DatasetSummarySchema> {
+  return DatasetSummarySchema.parse(
+    database
+      .query(
+        `${DATASET_SUMMARY_SQL}
+         WHERE d.id = ?
+         GROUP BY d.id`,
+      )
+      .get(datasetId),
+  );
+}
+
+export function readCaseSummary(
+  database: Database,
+  caseId: string,
+): z.infer<typeof CaseSummarySchema> {
+  return parseCaseSummary(
+    database.query(`${CASE_SUMMARY_SQL} WHERE c.id = ?`).get(caseId),
+  );
+}

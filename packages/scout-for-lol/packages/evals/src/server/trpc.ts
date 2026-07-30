@@ -19,6 +19,14 @@ const datasetsRouter = t.router({
     .input(EvalSchema.DatasetInputSchema)
     .output(EvalSchema.DatasetSummarySchema)
     .mutation(({ ctx, input }) => ctx.store.finalizeDataset(input.datasetId)),
+  export: t.procedure
+    .input(EvalSchema.DatasetInputSchema)
+    .output(EvalSchema.DatasetExportSchema)
+    .query(({ ctx, input }) => ctx.store.exportDataset(input.datasetId)),
+  import: t.procedure
+    .input(EvalSchema.DatasetExportSchema)
+    .output(EvalSchema.DatasetSummarySchema)
+    .mutation(({ ctx, input }) => ctx.store.importDataset(input)),
 });
 
 const casesRouter = t.router({

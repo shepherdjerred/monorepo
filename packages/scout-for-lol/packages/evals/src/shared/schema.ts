@@ -226,9 +226,147 @@ export const StyleBatchSchema = z.strictObject({
   rating: FreshnessRatingSchema.nullable(),
 });
 
+export const DatasetExportMetadataSchema = DatasetSummarySchema.pick({
+  id: true,
+  key: true,
+  version: true,
+  name: true,
+  description: true,
+  status: true,
+  createdAt: true,
+  finalizedAt: true,
+}).extend({
+  status: z.literal("finalized"),
+  finalizedAt: z.iso.datetime(),
+});
+
+export const DatasetExportGenerationSchema = z.strictObject({
+  generation: GenerationSchema,
+  rating: HumanRatingSchema.nullable(),
+});
+
+export const DatasetExportCaseSchema = z.strictObject({
+  id: CaseIdSchema,
+  ordinal: z.number().int().nonnegative(),
+  artifact: CaseArtifactSchema,
+  generations: z.array(DatasetExportGenerationSchema),
+});
+
+export const DatasetExportFreshnessRatingSchema = z.strictObject({
+  styleKey: z.string().min(1),
+  rating: FreshnessRatingSchema,
+});
+
+export const DatasetExportPayloadSchema = z
+  .strictObject({
+    schemaVersion: z.literal(1),
+    dataset: DatasetExportMetadataSchema,
+    cases: z.array(DatasetExportCaseSchema).min(1),
+    freshnessRatings: z.array(DatasetExportFreshnessRatingSchema),
+  })
+  .superRefine((payload, context) => {
+    const caseIds = new Set<string>();
+    const generationIds = new Set<string>();
+    const memberships = new Set<string>();
+    const styles = new Set<string>();
+    const generatedStyles = new Set<string>();
+
+    for (const [position, evalCase] of payload.cases.entries()) {
+      if (evalCase.ordinal !== position) {
+        context.addIssue({
+          code: "custom",
+          message: `Case ordinal ${String(evalCase.ordinal)} must match its array position ${String(position)}`,
+          path: ["cases", position, "ordinal"],
+        });
+      }
+      if (caseIds.has(evalCase.id)) {
+        context.addIssue({
+          code: "custom",
+          message: `Duplicate case id ${evalCase.id}`,
+          path: ["cases", position, "id"],
+        });
+      }
+      caseIds.add(evalCase.id);
+
+      const membership = [
+        evalCase.artifact.matchId,
+        evalCase.artifact.targetPlayerPuuid,
+        evalCase.artifact.styleKey,
+      ].join("\0");
+      if (memberships.has(membership)) {
+        context.addIssue({
+          code: "custom",
+          message: "Duplicate match-player-style case membership",
+          path: ["cases", position, "artifact"],
+        });
+      }
+      memberships.add(membership);
+      styles.add(evalCase.artifact.styleKey);
+      if (evalCase.generations.length > 0) {
+        generatedStyles.add(evalCase.artifact.styleKey);
+      }
+
+      for (const [
+        generationPosition,
+        record,
+      ] of evalCase.generations.entries()) {
+        if (generationIds.has(record.generation.id)) {
+          context.addIssue({
+            code: "custom",
+            message: `Duplicate generation id ${record.generation.id}`,
+            path: [
+              "cases",
+              position,
+              "generations",
+              generationPosition,
+              "generation",
+              "id",
+            ],
+          });
+        }
+        generationIds.add(record.generation.id);
+      }
+    }
+
+    let previousStyleKey: string | undefined;
+    for (const [position, freshness] of payload.freshnessRatings.entries()) {
+      if (!styles.has(freshness.styleKey)) {
+        context.addIssue({
+          code: "custom",
+          message: `Freshness style ${freshness.styleKey} has no dataset cases`,
+          path: ["freshnessRatings", position, "styleKey"],
+        });
+      }
+      if (!generatedStyles.has(freshness.styleKey)) {
+        context.addIssue({
+          code: "custom",
+          message: `Freshness style ${freshness.styleKey} has no generations`,
+          path: ["freshnessRatings", position, "styleKey"],
+        });
+      }
+      if (
+        previousStyleKey !== undefined &&
+        previousStyleKey >= freshness.styleKey
+      ) {
+        context.addIssue({
+          code: "custom",
+          message: "Freshness ratings must have unique sorted style keys",
+          path: ["freshnessRatings", position, "styleKey"],
+        });
+      }
+      previousStyleKey = freshness.styleKey;
+    }
+  });
+
+export const DatasetExportSchema = DatasetExportPayloadSchema.safeExtend({
+  sha256: z.string().regex(/^[\da-f]{64}$/),
+});
+
 export type DatasetSummary = z.infer<typeof DatasetSummarySchema>;
 export type CaseSummary = z.infer<typeof CaseSummarySchema>;
 export type CaseArtifact = z.infer<typeof CaseArtifactSchema>;
 export type FrozenRenderedPrompts = z.infer<typeof FrozenRenderedPromptsSchema>;
 export type HumanRating = z.infer<typeof HumanRatingSchema>;
 export type EvalScore = z.infer<typeof EvalScoreSchema>;
+export type DatasetExportPayload = z.infer<typeof DatasetExportPayloadSchema>;
+export type DatasetExport = z.infer<typeof DatasetExportSchema>;
