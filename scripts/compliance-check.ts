@@ -1,5 +1,4 @@
 import { Glob } from "bun";
-import { readdir } from "node:fs/promises";
 import { z } from "zod";
 import { isNoopScript } from "./migration-core.ts";
 
@@ -9,9 +8,55 @@ const PackageJsonSchema = z
     devDependencies: z.record(z.string(), z.string()).optional(),
     peerDependencies: z.record(z.string(), z.string()).optional(),
     scripts: z.record(z.string(), z.string()).optional(),
-    workspaces: z
-      .union([z.array(z.string()), z.object({ packages: z.array(z.string()) })])
-      .optional(),
+  })
+  .loose();
+
+const WorkspacePatternSchema = z
+  .string()
+  .min(1)
+  .refine(
+    (pattern) => {
+      const pathPattern = pattern.startsWith("!") ? pattern.slice(1) : pattern;
+      return (
+        pathPattern.length > 0 &&
+        pathPattern === pathPattern.trim() &&
+        pathPattern !== "." &&
+        !pathPattern.startsWith("/") &&
+        !pathPattern.endsWith("/") &&
+        !pathPattern.endsWith("/package.json") &&
+        !pathPattern.includes("\\") &&
+        !pathPattern.split("/").includes("..")
+      );
+    },
+    {
+      message:
+        "workspace patterns must be relative package directories without parent traversal",
+    },
+  );
+
+const WorkspacePatternsSchema = z
+  .array(WorkspacePatternSchema)
+  .min(1)
+  .superRefine((patterns, context) => {
+    const seen = new Set<string>();
+    for (const [index, pattern] of patterns.entries()) {
+      if (seen.has(pattern)) {
+        context.addIssue({
+          code: "custom",
+          message: `duplicate workspace pattern: ${pattern}`,
+          path: [index],
+        });
+      }
+      seen.add(pattern);
+    }
+  });
+
+const RootPackageJsonSchema = z
+  .object({
+    workspaces: z.union([
+      WorkspacePatternsSchema,
+      z.object({ packages: WorkspacePatternsSchema }),
+    ]),
   })
   .loose();
 
@@ -93,7 +138,11 @@ packages/discord-plays-pokemon/packages/frontend:test
 packages/scout-for-lol/packages/app:test
 packages/scout-for-lol/packages/data:build
 packages/scout-for-lol/packages/desktop:test
+packages/scout-for-lol/packages/desktop/src-tauri:build
+packages/scout-for-lol/packages/desktop/src-tauri:test
+packages/scout-for-lol/packages/desktop/src-tauri:typecheck
 packages/scout-for-lol/packages/frontend:test
+packages/scout-for-lol/packages/report:build
 packages/scout-for-lol/packages/ui:build
 packages/scout-for-lol/packages/ui:test
 packages/scout-for-lol:build
@@ -118,42 +167,87 @@ packages/discord-plays-mario-kart/packages/backend:build
     .split("\n"),
 );
 
+function getWorkspacePatterns(
+  rootPackageJson: z.infer<typeof RootPackageJsonSchema>,
+): string[] {
+  return Array.isArray(rootPackageJson.workspaces)
+    ? rootPackageJson.workspaces
+    : rootPackageJson.workspaces.packages;
+}
+
+function scanWorkspacePattern(root: string, pattern: string): string[] {
+  const packagePaths = [
+    ...new Glob(`${pattern}/package.json`).scanSync({
+      cwd: root,
+      onlyFiles: true,
+    }),
+  ].sort((left, right) => left.localeCompare(right));
+  if (packagePaths.length === 0) {
+    throw new Error(`workspace pattern matched no packages: ${pattern}`);
+  }
+  return packagePaths.map((packagePath) =>
+    packagePath.slice(0, -"/package.json".length),
+  );
+}
+
+function resolveWorkspaceDirectories(
+  root: string,
+  workspacePatterns: string[],
+): string[] {
+  const includedByPattern = new Map<string, string>();
+  for (const pattern of workspacePatterns.filter(
+    (candidate) => !candidate.startsWith("!"),
+  )) {
+    for (const directory of scanWorkspacePattern(root, pattern)) {
+      const previousPattern = includedByPattern.get(directory);
+      if (previousPattern !== undefined) {
+        throw new Error(
+          `workspace ${directory} is matched by both ${previousPattern} and ${pattern}`,
+        );
+      }
+      includedByPattern.set(directory, pattern);
+    }
+  }
+
+  for (const pattern of workspacePatterns.filter((candidate) =>
+    candidate.startsWith("!"),
+  )) {
+    for (const directory of scanWorkspacePattern(root, pattern.slice(1))) {
+      includedByPattern.delete(directory);
+    }
+  }
+
+  return [...includedByPattern.keys()].sort((left, right) =>
+    left.localeCompare(right),
+  );
+}
+
 export async function findComplianceErrors(root: string): Promise<string[]> {
-  const rootPackageText = await Bun.file(`${root}/package.json`).text();
+  const rootPackageJson = RootPackageJsonSchema.parse(
+    await Bun.file(`${root}/package.json`).json(),
+  );
+  const workspacePatterns = getWorkspacePatterns(rootPackageJson);
   const errors: string[] = [];
-  if (rootPackageText.includes('"!packages/')) {
+  if (workspacePatterns.some((pattern) => pattern.startsWith("!"))) {
     errors.push("package.json contains excluded workspaces (!packages/...)");
   }
 
   const packages = new Map<string, z.infer<typeof PackageJsonSchema>>();
-  async function visit(directory: string): Promise<void> {
-    if (packages.has(directory)) return;
-    const file = Bun.file(`${root}/${directory}/package.json`);
-    if (!(await file.exists())) return;
-    const packageJson = PackageJsonSchema.parse(await file.json());
-    packages.set(directory, packageJson);
-    const workspacePatterns = Array.isArray(packageJson.workspaces)
-      ? packageJson.workspaces
-      : (packageJson.workspaces?.packages ?? []);
-    for (const pattern of workspacePatterns) {
-      for (const packagePath of new Glob(
-        `${directory}/${pattern}/package.json`,
-      ).scanSync({ cwd: root, onlyFiles: true })) {
-        await visit(packagePath.slice(0, -"/package.json".length));
-      }
-    }
-  }
-
-  for (const entry of await readdir(`${root}/packages`, {
-    withFileTypes: true,
-  })) {
-    if (entry.isDirectory()) await visit(`packages/${entry.name}`);
-  }
-
-  for (const [directory, packageJson] of [...packages].sort(([left], [right]) =>
-    left.localeCompare(right),
+  for (const directory of resolveWorkspaceDirectories(
+    root,
+    workspacePatterns,
   )) {
+    packages.set(
+      directory,
+      PackageJsonSchema.parse(
+        await Bun.file(`${root}/${directory}/package.json`).json(),
+      ),
+    );
+  }
+
+  for (const [directory, packageJson] of packages) {
     errors.push(...collectTypeScriptToolchainErrors(directory, packageJson));
+    if (directory === "scripts") continue;
     for (const script of requiredScripts) {
       const key = `${directory}:${script}`;
       const command = packageJson.scripts?.[script];
@@ -165,12 +259,6 @@ export async function findComplianceErrors(root: string): Promise<string[]> {
       }
     }
   }
-  const scriptsPackageJson = PackageJsonSchema.parse(
-    await Bun.file(`${root}/scripts/package.json`).json(),
-  );
-  errors.push(
-    ...collectTypeScriptToolchainErrors("scripts", scriptsPackageJson),
-  );
   return errors;
 }
 
