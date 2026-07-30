@@ -1,7 +1,10 @@
 import type { PipelineTraces, StageTrace } from "@scout-for-lol/data";
 import { describe, expect, test } from "bun:test";
 
-import { freezeRenderedPrompts } from "#materialization/materialize-case.ts";
+import {
+  buildMaterializedGeneration,
+  freezeRenderedPrompts,
+} from "#materialization/materialize-case.ts";
 
 function stageTrace(stage: string): StageTrace {
   return {
@@ -80,5 +83,25 @@ describe("freezeRenderedPrompts", () => {
     expect(() => freezeRenderedPrompts(traces)).toThrow(
       "Timeline chunk index 1 must match its array position 0",
     );
+  });
+});
+
+describe("buildMaterializedGeneration", () => {
+  test("carries the initial materialization prompts into the generation", () => {
+    const traces = multiChunkTraces();
+    const renderedPrompts = freezeRenderedPrompts(traces);
+
+    expect(
+      buildMaterializedGeneration({
+        outputText: "A generated review.",
+        renderedPrompts,
+        trace: traces.reviewText,
+      }),
+    ).toMatchObject({
+      outputText: "A generated review.",
+      promptRevision:
+        "ea74739b82bee79254c160ca4b2df5a1c3322a417ea3da1d8e7c0b4dfbfd0d20",
+      renderedPrompts,
+    });
   });
 });

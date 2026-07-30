@@ -288,14 +288,22 @@ export function CasePage(): React.JSX.Element {
               label="Personality instructions"
               value={context.personalityInstructions}
             />
-            <Evidence
-              label="Exact system prompt"
-              value={context.renderedPrompts.reviewText.systemPrompt}
-            />
-            <Evidence
-              label="Exact user prompt"
-              value={context.renderedPrompts.reviewText.userPrompt}
-            />
+            {detail.generation === null ? null : (
+              <>
+                <Evidence
+                  label="Exact system prompt"
+                  value={
+                    detail.generation.renderedPrompts.reviewText.systemPrompt
+                  }
+                />
+                <Evidence
+                  label="Exact user prompt"
+                  value={
+                    detail.generation.renderedPrompts.reviewText.userPrompt
+                  }
+                />
+              </>
+            )}
           </div>
         </section>
       </div>

@@ -1,9 +1,12 @@
+import { Database } from "bun:sqlite";
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 
 import { openEvalDatabase } from "#server/database.ts";
+import { parseGenerationRow } from "#server/generation.ts";
 import { applyMigrations, MIGRATIONS } from "#server/migrations.ts";
 import { createEvalStore, EvalStore } from "#server/store.ts";
+import { FrozenRenderedPromptsSchema } from "#shared/schema.ts";
 import { makeCaseArtifact } from "#testing/eval-fixtures.ts";
 
 const SqliteConfigRowSchema = z.strictObject({
@@ -36,6 +39,14 @@ const SECOND_ARTIFACT = makeCaseArtifact({
   championName: "Shaco",
   performanceSlice: "terrible",
   styleKey: "aaron",
+});
+
+const RERUN_PROMPTS = FrozenRenderedPromptsSchema.parse({
+  ...FIRST_ARTIFACT.context.renderedPrompts,
+  reviewText: {
+    systemPrompt: "Rerun review system prompt.",
+    userPrompt: "Rerun review user prompt.",
+  },
 });
 
 describe("SQLite setup and migrations", () => {
@@ -100,6 +111,47 @@ describe("SQLite setup and migrations", () => {
     } finally {
       database.close();
     }
+  });
+
+  test("refuses to invent prompts for existing generation rows", () => {
+    const database = new Database(":memory:", { strict: true });
+    try {
+      database.run("CREATE TABLE generations (id TEXT NOT NULL) STRICT");
+      database.run("INSERT INTO generations (id) VALUES ('older-generation')");
+
+      const migration = MIGRATIONS.find(({ version }) => version === 3);
+      const beforeApply = migration?.beforeApply;
+      if (beforeApply === undefined) {
+        throw new Error("Expected generation prompt migration precondition");
+      }
+
+      expect(() => beforeApply(database)).toThrow(
+        "Generation prompt migration requires rematerializing existing generations",
+      );
+    } finally {
+      database.close();
+    }
+  });
+
+  test("strictly validates stored generation prompts", () => {
+    expect(() =>
+      parseGenerationRow({
+        id: "generation-id",
+        outputText: "A generated review.",
+        model: "test-model",
+        promptRevision: "test-revision",
+        renderedPromptsJson: JSON.stringify({
+          ...FIRST_ARTIFACT.context.renderedPrompts,
+          unexpectedPromptStage: {
+            systemPrompt: "Unexpected system prompt.",
+            userPrompt: "Unexpected user prompt.",
+          },
+        }),
+        durationMs: null,
+        inputTokens: null,
+        outputTokens: null,
+      }),
+    ).toThrow(/unexpectedPromptStage/);
   });
 });
 
@@ -281,6 +333,7 @@ describe("EvalStore generations and ratings", () => {
         outputText: "Poppy built a wall and invoiced the enemy team for it.",
         model: "test-model",
         promptRevision: "baseline-v1",
+        renderedPrompts: FIRST_ARTIFACT.context.renderedPrompts,
         durationMs: 120,
         inputTokens: 400,
         outputTokens: 30,
@@ -295,6 +348,9 @@ describe("EvalStore generations and ratings", () => {
         },
       });
       expect(firstRating.anchoredness).toBe(3);
+      expect(firstGeneration.renderedPrompts).toEqual(
+        FIRST_ARTIFACT.context.renderedPrompts,
+      );
       expect(store.getCaseDetail(dataset.id, evalCase.id).rating).toEqual(
         firstRating,
       );
@@ -305,12 +361,22 @@ describe("EvalStore generations and ratings", () => {
         outputText: "Ten kills on Poppy: traffic laws have been abolished.",
         model: "test-model-2",
         promptRevision: "candidate-v2",
+        renderedPrompts: RERUN_PROMPTS,
         durationMs: null,
         inputTokens: null,
         outputTokens: null,
       });
-      expect(store.getCaseDetail(dataset.id, evalCase.id)).toMatchObject({
-        generation: { id: secondGeneration.id },
+      const rerunDetail = store.getCaseDetail(dataset.id, evalCase.id);
+      expect(rerunDetail).toMatchObject({
+        artifact: {
+          context: {
+            renderedPrompts: FIRST_ARTIFACT.context.renderedPrompts,
+          },
+        },
+        generation: {
+          id: secondGeneration.id,
+          renderedPrompts: RERUN_PROMPTS,
+        },
         rating: null,
         summary: { generationId: secondGeneration.id, isRated: false },
       });
@@ -352,6 +418,7 @@ describe("EvalStore generations and ratings", () => {
         outputText: "A generated review.",
         model: "test-model",
         promptRevision: "v1",
+        renderedPrompts: FIRST_ARTIFACT.context.renderedPrompts,
         durationMs: null,
         inputTokens: null,
         outputTokens: null,
@@ -401,6 +468,7 @@ describe("EvalStore freshness ratings and row validation", () => {
         outputText: "Old first output.",
         model: "test",
         promptRevision: "v1",
+        renderedPrompts: FIRST_ARTIFACT.context.renderedPrompts,
         durationMs: null,
         inputTokens: null,
         outputTokens: null,
@@ -410,6 +478,7 @@ describe("EvalStore freshness ratings and row validation", () => {
         outputText: "Latest first output.",
         model: "test",
         promptRevision: "v2",
+        renderedPrompts: FIRST_ARTIFACT.context.renderedPrompts,
         durationMs: null,
         inputTokens: null,
         outputTokens: null,
@@ -419,6 +488,7 @@ describe("EvalStore freshness ratings and row validation", () => {
         outputText: "Second output.",
         model: "test",
         promptRevision: "v1",
+        renderedPrompts: SECOND_ARTIFACT.context.renderedPrompts,
         durationMs: null,
         inputTokens: null,
         outputTokens: null,
@@ -473,6 +543,7 @@ describe("EvalStore freshness ratings and row validation", () => {
         outputText: "Newest first output.",
         model: "test",
         promptRevision: "v3",
+        renderedPrompts: RERUN_PROMPTS,
         durationMs: null,
         inputTokens: null,
         outputTokens: null,

@@ -1,10 +1,10 @@
-import { seedE2eStore } from "./fixtures.ts";
+import { seedEndToEndStore } from "./fixtures.ts";
 
 import { createApp } from "#server/app.ts";
 import { createEvalStore } from "#server/store.ts";
 
 const store = createEvalStore(":memory:");
-seedE2eStore(store);
+seedEndToEndStore(store);
 const app = createApp(store);
 const server = Bun.serve({
   fetch: app.fetch,

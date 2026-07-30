@@ -45,6 +45,9 @@ board: false
 - Bound freshness rating mutations to a typed revision of the ordered latest
   generation IDs displayed to the reviewer, rejecting stale submissions
   transactionally when any generation changes.
+- Added strict per-generation rendered-prompt persistence and query parsing so
+  materialized baselines and divergent reruns retain their own exact inputs;
+  the case UI now displays prompts from the generation beside its output.
 - Verified PR #1777 with the focused eval tests, typecheck, changed-file ESLint,
   changed-file Prettier checks, Buildkite pipeline validator, lane-coverage
   tests, and an independent merge-tree check.
@@ -52,8 +55,6 @@ board: false
 ### Remaining
 
 - Address the other remaining P2 review findings on PR #1777.
-- Store the exact rendered prompt set with each appended generation so rerun
-  output remains auditable independently of the case artifact snapshot.
 - Let replacement Buildkite CI and a current-head Codex review validate the
   published CI-remediation head.
 
@@ -67,5 +68,9 @@ board: false
   shipped and SQLite stores it as validated JSON. Local draft databases created
   from earlier PR heads require rematerialization so strict reads contain the
   newly required rendered prompts.
+- The generation-prompt migration intentionally does not synthesize prompt
+  evidence for existing generation rows. Earlier local databases containing
+  generations must be rematerialized rather than accepting an invented
+  fallback.
 - Two earlier-session documentation files remain dirty and were preserved
   byte-for-byte.

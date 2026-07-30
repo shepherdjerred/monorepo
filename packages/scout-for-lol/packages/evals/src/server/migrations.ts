@@ -6,6 +6,17 @@ const MigrationLedgerRowSchema = z.strictObject({
   name: z.string().min(1),
 });
 
+const GenerationCountRowSchema = z.strictObject({
+  count: z.number().int().nonnegative(),
+});
+
+type Migration = Readonly<{
+  version: number;
+  name: string;
+  sql: string;
+  beforeApply?: (database: Database) => void;
+}>;
+
 const MIGRATION_LEDGER_SQL = `
   CREATE TABLE IF NOT EXISTS schema_migrations (
     version INTEGER PRIMARY KEY,
@@ -14,7 +25,7 @@ const MIGRATION_LEDGER_SQL = `
   ) STRICT;
 `;
 
-export const MIGRATIONS = [
+export const MIGRATIONS: readonly Migration[] = [
   {
     version: 1,
     name: "initial_eval_store",
@@ -157,6 +168,29 @@ export const MIGRATIONS = [
       END;
     `,
   },
+  {
+    version: 3,
+    name: "generation_rendered_prompts",
+    beforeApply: (database) => {
+      const { count } = GenerationCountRowSchema.parse(
+        database.query("SELECT COUNT(*) AS count FROM generations").get(),
+      );
+      if (count > 0) {
+        throw new Error(
+          "Generation prompt migration requires rematerializing existing generations",
+        );
+      }
+    },
+    sql: `
+      ALTER TABLE generations
+      ADD COLUMN rendered_prompts_json TEXT
+      CHECK (
+        rendered_prompts_json IS NOT NULL
+        AND json_valid(rendered_prompts_json)
+        AND json_type(rendered_prompts_json) = 'object'
+      );
+    `,
+  },
 ] as const;
 
 function validateMigrationOrder(): void {
@@ -212,6 +246,7 @@ export function applyMigrations(database: Database): void {
     }
 
     database.transaction(() => {
+      migration.beforeApply?.(database);
       database.run(migration.sql);
       database
         .query(

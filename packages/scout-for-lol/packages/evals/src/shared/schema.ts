@@ -166,6 +166,7 @@ export const GenerationSchema = z.strictObject({
   outputText: z.string().min(1),
   model: z.string().min(1),
   promptRevision: z.string().min(1),
+  renderedPrompts: FrozenRenderedPromptsSchema,
   durationMs: z.number().int().nonnegative().nullable(),
   inputTokens: z.number().int().nonnegative().nullable(),
   outputTokens: z.number().int().nonnegative().nullable(),

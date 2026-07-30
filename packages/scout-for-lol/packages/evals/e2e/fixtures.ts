@@ -13,9 +13,10 @@ type SeedCase = {
 };
 
 function addGeneratedCase(store: EvalStore, datasetId: string, seed: SeedCase) {
+  const artifact = makeCaseArtifact(seed);
   const evalCase = store.addMaterializedCase({
     datasetId,
-    artifact: makeCaseArtifact(seed),
+    artifact,
   });
   if (seed.previousOutputText !== undefined) {
     store.recordGeneration({
@@ -26,6 +27,7 @@ function addGeneratedCase(store: EvalStore, datasetId: string, seed: SeedCase) {
       outputText: seed.previousOutputText,
       outputTokens: 20,
       promptRevision: `${seed.matchId}-old`,
+      renderedPrompts: artifact.context.renderedPrompts,
     });
   }
   store.recordGeneration({
@@ -36,6 +38,7 @@ function addGeneratedCase(store: EvalStore, datasetId: string, seed: SeedCase) {
     outputText: seed.outputText,
     outputTokens: 24,
     promptRevision: `${seed.matchId}-latest`,
+    renderedPrompts: artifact.context.renderedPrompts,
   });
 }
 
@@ -60,7 +63,7 @@ function seedDataset(
   if (input.finalized) store.finalizeDataset(dataset.id);
 }
 
-export function seedE2eStore(store: EvalStore): void {
+export function seedEndToEndStore(store: EvalStore): void {
   store.createDataset({
     key: "empty-draft",
     name: "Empty Draft",

@@ -11,6 +11,11 @@ import {
   UPSERT_FRESHNESS_RATING_SQL,
 } from "#server/freshness.ts";
 import {
+  INSERT_GENERATION_SQL,
+  parseGenerationRow,
+  SELECT_GENERATION_SQL,
+} from "#server/generation.ts";
+import {
   CASE_SUMMARY_SQL,
   CaseCountRowSchema,
   DATASET_SUMMARY_SQL,
@@ -284,20 +289,9 @@ export class EvalStore {
     const generation =
       summary.generationId === null
         ? null
-        : GenerationSchema.parse(
+        : parseGenerationRow(
             this.#database
-              .query(
-                `SELECT
-                   id,
-                   output_text AS outputText,
-                   model,
-                   prompt_revision AS promptRevision,
-                   duration_ms AS durationMs,
-                   input_tokens AS inputTokens,
-                   output_tokens AS outputTokens
-                 FROM generations
-                 WHERE id = ?`,
-              )
+              .query(SELECT_GENERATION_SQL)
               .get(summary.generationId),
           );
     const rawRating =
@@ -333,24 +327,21 @@ export class EvalStore {
       outputText: parsed.outputText,
       model: parsed.model,
       promptRevision: parsed.promptRevision,
+      renderedPrompts: parsed.renderedPrompts,
       durationMs: parsed.durationMs,
       inputTokens: parsed.inputTokens,
       outputTokens: parsed.outputTokens,
     });
     this.#database.transaction(() => {
       this.#database
-        .query(
-          `INSERT INTO generations (
-             id, case_id, output_text, model, prompt_revision, duration_ms,
-             input_tokens, output_tokens, created_at
-           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        )
+        .query(INSERT_GENERATION_SQL)
         .run(
           generation.id,
           parsed.caseId,
           generation.outputText,
           generation.model,
           generation.promptRevision,
+          JSON.stringify(generation.renderedPrompts),
           generation.durationMs,
           generation.inputTokens,
           generation.outputTokens,

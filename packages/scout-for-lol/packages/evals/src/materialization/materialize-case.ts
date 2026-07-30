@@ -41,6 +41,12 @@ export type MaterializedCase = {
   generation: Omit<RecordGenerationInput, "caseId">;
 };
 
+type MaterializedGenerationSource = {
+  outputText: string;
+  renderedPrompts: FrozenRenderedPrompts;
+  trace: PipelineTraces["reviewText"];
+};
+
 type MaterializationDependencies = {
   corpus: BetaCorpus;
   openai: OpenAIClient;
@@ -114,6 +120,23 @@ export function freezeRenderedPrompts(
   });
 }
 
+export function buildMaterializedGeneration({
+  outputText,
+  renderedPrompts,
+  trace,
+}: MaterializedGenerationSource): Omit<RecordGenerationInput, "caseId"> {
+  const { systemPrompt, userPrompt } = renderedPrompts.reviewText;
+  return {
+    durationMs: trace.durationMs,
+    inputTokens: trace.tokensPrompt ?? null,
+    model: trace.model.model,
+    outputText,
+    outputTokens: trace.tokensCompletion ?? null,
+    promptRevision: sha256(`${systemPrompt}\0${userPrompt}`),
+    renderedPrompts,
+  };
+}
+
 function textOnlyStages(): PipelineStagesConfig {
   const defaults = getDefaultStageConfigs();
   return {
@@ -170,7 +193,6 @@ export async function materializeCase(
     stages,
   });
   const renderedPrompts = freezeRenderedPrompts(output.traces);
-  const { systemPrompt, userPrompt } = renderedPrompts.reviewText;
   const modelSettings = FrozenModelSettingsSchema.parse({
     matchSummary: freezeModel(stages.matchSummary.model),
     reviewText: freezeModel(stages.reviewText.model),
@@ -224,13 +246,10 @@ export async function materializeCase(
   const trace = output.traces.reviewText;
   return {
     artifact,
-    generation: {
-      durationMs: trace.durationMs,
-      inputTokens: trace.tokensPrompt ?? null,
-      model: trace.model.model,
+    generation: buildMaterializedGeneration({
       outputText: output.review.text,
-      outputTokens: trace.tokensCompletion ?? null,
-      promptRevision: sha256(`${systemPrompt}\0${userPrompt}`),
-    },
+      renderedPrompts,
+      trace,
+    }),
   };
 }
