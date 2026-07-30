@@ -4,6 +4,7 @@ import type {
   MatchId,
   CompletedMatch,
   ArenaMatch,
+  ClassicMatch,
   QueueType,
   RawMatch,
   RawTimeline,
@@ -23,6 +24,7 @@ import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import {
   matchToSvg,
   arenaMatchToSvg,
+  classicMatchToSvg,
   svgToPng,
   setItemMissHandler,
 } from "@scout-for-lol/report";
@@ -41,6 +43,8 @@ import {
   reportsFailedTotal,
   scoutItemCacheMissTotal,
 } from "#src/metrics/index.ts";
+import { ensureClassicFontsConfigured } from "#src/league/classic-fonts.ts";
+import { buildClassicMatch } from "./match-report-classic.ts";
 
 const logger = createLogger("postmatch-match-report-generator");
 
@@ -90,17 +94,22 @@ function formatGameCompletionMessage(
 
 /** Create image attachments for Discord message */
 async function createMatchImage(
-  matchToRender: CompletedMatch | ArenaMatch,
+  matchToRender: CompletedMatch | ArenaMatch | ClassicMatch,
   matchId: MatchId,
 ): Promise<[AttachmentBuilder, EmbedBuilder]> {
-  const svgData =
-    matchToRender.queueType === "arena"
-      ? await arenaMatchToSvg(matchToRender)
-      : await matchToSvg(matchToRender, {
-          // Gate the new ranked banner/square designs to beta + local dev;
-          // prod keeps the legacy report until the redesign is promoted.
-          enableRankedDesigns: configuration.environment !== "prod",
-        });
+  let svgData: string;
+  if (matchToRender.queueType === "arena") {
+    svgData = await arenaMatchToSvg(matchToRender);
+  } else if (matchToRender.queueType === "classic") {
+    await ensureClassicFontsConfigured();
+    svgData = await classicMatchToSvg(matchToRender);
+  } else {
+    svgData = await matchToSvg(matchToRender, {
+      // Gate the new ranked banner/square designs to beta + local dev;
+      // prod keeps the legacy report until the redesign is promoted.
+      enableRankedDesigns: configuration.environment !== "prod",
+    });
+  }
   const svg = z.string().parse(svgData);
   const image = z.instanceof(Uint8Array).parse(await svgToPng(svg));
 
@@ -136,6 +145,30 @@ async function createMatchImage(
     image: { url: `attachment://${attachmentName}` },
   });
   return [attachment, embed];
+}
+
+async function processClassicMatch(
+  matchData: RawMatch,
+  matchId: MatchId,
+  playersInMatch: PlayerConfigEntry[],
+): Promise<MessageCreateOptions | undefined> {
+  logger.info(`[generateMatchReport] 🕰️ Processing as League Classic match`);
+  const classicMatch = buildClassicMatch(matchData, playersInMatch);
+  if (classicMatch === undefined) {
+    logger.warn(
+      `[generateMatchReport] All tracked players filtered out due to participant mismatch in Classic match ${matchId}`,
+    );
+    return undefined;
+  }
+  const [attachment, embed] = await createMatchImage(classicMatch, matchId);
+  return {
+    content: formatGameCompletionMessage(
+      classicMatch.players.map((player) => player.playerConfig.alias),
+      "classic",
+    ),
+    files: [attachment],
+    embeds: [embed],
+  };
 }
 
 /**
@@ -318,6 +351,23 @@ export type GenerateMatchReportOptions = {
   targetGuildIds: DiscordGuildId[];
 };
 
+export type GenerateMatchReportDependencies = {
+  processClassicMatch: typeof processClassicMatch;
+  getPlayer: typeof getPlayer;
+  fetchTimelineIfStandardMatch: typeof fetchTimelineIfStandardMatch;
+  processArenaMatch: typeof processArenaMatch;
+  processStandardMatch: typeof processStandardMatch;
+};
+
+const defaultGenerateMatchReportDependencies: GenerateMatchReportDependencies =
+  {
+    processClassicMatch,
+    getPlayer,
+    fetchTimelineIfStandardMatch,
+    processArenaMatch,
+    processStandardMatch,
+  };
+
 /**
  * Generate a match report message for Discord
  *
@@ -330,6 +380,7 @@ export async function generateMatchReport(
   matchData: RawMatch,
   trackedPlayers: PlayerConfigEntry[],
   options: GenerateMatchReportOptions,
+  dependencies: GenerateMatchReportDependencies = defaultGenerateMatchReportDependencies,
 ): Promise<MessageCreateOptions | undefined> {
   const matchId = MatchIdSchema.parse(matchData.metadata.matchId);
   logger.info(
@@ -360,13 +411,32 @@ export async function generateMatchReport(
       `[generateMatchReport] 👥 Found ${playersInMatch.length.toString()} tracked player(s) in match: ${playersInMatch.map((p) => p.alias).join(", ")}`,
     );
 
+    const queueType = resolveQueueTypeFromGame(
+      matchData.info.queueId,
+      matchData.info.gameMode,
+    );
+    if (queueType === "classic") {
+      const result = await dependencies.processClassicMatch(
+        matchData,
+        matchId,
+        playersInMatch,
+      );
+      if (result === undefined) {
+        return undefined;
+      }
+      reportsGeneratedTotal.inc({ queue_type: queueType });
+      return result;
+    }
+
     // Get full player data with ranks
     const players = await Promise.all(
-      playersInMatch.map((playerConfig) => getPlayer(playerConfig)),
+      playersInMatch.map((playerConfig) =>
+        dependencies.getPlayer(playerConfig),
+      ),
     );
 
     // Fetch timeline data for standard matches (to provide game progression context for AI reviews)
-    const timelineData = await fetchTimelineIfStandardMatch(
+    const timelineData = await dependencies.fetchTimelineIfStandardMatch(
       matchData,
       matchId,
       playersInMatch,
@@ -377,8 +447,13 @@ export async function generateMatchReport(
       matchData.info.queueId,
       matchData.info.gameMode,
     )
-      ? await processArenaMatch(players, matchData, matchId, playersInMatch)
-      : await processStandardMatch({
+      ? await dependencies.processArenaMatch(
+          players,
+          matchData,
+          matchId,
+          playersInMatch,
+        )
+      : await dependencies.processStandardMatch({
           players,
           matchData,
           matchId,
@@ -391,12 +466,12 @@ export async function generateMatchReport(
       return undefined;
     }
 
-    const queueType =
+    const generatedQueueType =
       resolveQueueTypeFromGame(
         matchData.info.queueId,
         matchData.info.gameMode,
       ) ?? "unknown";
-    reportsGeneratedTotal.inc({ queue_type: queueType });
+    reportsGeneratedTotal.inc({ queue_type: generatedQueueType });
 
     return result;
   } catch (error) {

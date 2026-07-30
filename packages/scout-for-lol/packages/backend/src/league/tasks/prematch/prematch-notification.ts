@@ -20,8 +20,10 @@ import { uniqueBy } from "remeda";
 import * as Sentry from "@sentry/bun";
 import {
   RecoverableLoadingScreenDataError,
+  UnsupportedLoadingScreenQueueError,
   buildLoadingScreenData,
 } from "#src/league/tasks/prematch/loading-screen-builder.ts";
+import { ensureClassicFontsConfigured } from "#src/league/classic-fonts.ts";
 import {
   loadingScreenToImage,
   loadingScreenToSvg,
@@ -197,6 +199,9 @@ export async function sendPrematchNotification(
       trackedPuuidSet,
       region,
     );
+    if (loadingScreenData.layout === "classic") {
+      await ensureClassicFontsConfigured();
+    }
 
     const [image, svg] = await Promise.all([
       loadingScreenToImage(loadingScreenData),
@@ -256,15 +261,33 @@ export async function sendPrematchNotification(
       error,
     );
     if (!isRecoverable) {
-      Sentry.captureException(error, {
-        tags: {
-          source: "prematch-loading-screen",
-          gameId,
-          gameQueueConfigId: gameInfo.gameQueueConfigId.toString(),
-          mapId: gameInfo.mapId.toString(),
-          gameMode: gameInfo.gameMode,
-        },
-      });
+      const context =
+        error instanceof UnsupportedLoadingScreenQueueError
+          ? {
+              fingerprint: [
+                "prematch-unsupported-queue",
+                gameInfo.gameQueueConfigId.toString(),
+                gameInfo.gameMode,
+                gameInfo.mapId.toString(),
+              ],
+              tags: {
+                source: "prematch-loading-screen",
+                gameId,
+                gameQueueConfigId: gameInfo.gameQueueConfigId.toString(),
+                mapId: gameInfo.mapId.toString(),
+                gameMode: gameInfo.gameMode,
+              },
+            }
+          : {
+              tags: {
+                source: "prematch-loading-screen",
+                gameId,
+                gameQueueConfigId: gameInfo.gameQueueConfigId.toString(),
+                mapId: gameInfo.mapId.toString(),
+                gameMode: gameInfo.gameMode,
+              },
+            };
+      Sentry.captureException(error, context);
     }
     // Continue with text-only notification
   }

@@ -31,6 +31,7 @@ import {
 import { validateCaddySmokeContracts } from "./validate-pipeline-caddy.ts";
 import { validateImageMigrationContracts } from "./validate-image-migration.ts";
 import { validateReleasePipelineContracts } from "./validate-pipeline-release.ts";
+import { validateScoutPipelineContracts } from "./validate-pipeline-scout.ts";
 import { fixedCorpusMode, lanePaths, summarySteps } from "./migration-core.ts";
 
 const PIPELINE_PATH = ".buildkite/pipeline.yml";
@@ -103,6 +104,7 @@ const { stepStarts, keys, stepBlocks } = collectStepBlocks(lines, {
   pathGatedPrKeys: PATH_GATED_PR_KEYS,
   globalIfChanged: GLOBAL_IF_CHANGED,
 });
+await validateScoutPipelineContracts(stepBlocks);
 
 const mainHardSteps = [...stepBlocks]
   .filter(

@@ -10,6 +10,7 @@ describe("mapIdToName", () => {
     [22, "Star Guardian"],
     [30, "Rings of Wrath"],
     [35, "The Bandlewood"],
+    [453, "Classic Rift"],
   ];
 
   test.each(cases)("map id %i resolves to %s", (id, expected) => {
