@@ -1,0 +1,240 @@
+import { describe, expect, it } from "bun:test";
+import { ApplicationFailure, WorkflowFailedError } from "@temporalio/client";
+import { RetryState } from "@temporalio/common";
+import type { AlertmanagerAlert, AlertPoster } from "#lib/alertmanager.ts";
+import {
+  buildVisibilityQuery,
+  pollWorkflowFailuresOnce,
+  type WorkflowVisibilityClient,
+} from "./workflow-failure-watch.ts";
+
+const NOW = new Date("2026-07-30T18:00:00.000Z");
+const LOOKBACK_MS = 15 * 60 * 1000;
+const TTL_MS = 6 * 60 * 60 * 1000;
+
+type ExecutionInfo = {
+  workflowId: string;
+  runId: string;
+  type: string;
+  taskQueue: string;
+  closeTime?: Date;
+  status: { name: string };
+};
+
+/** Fake satisfying `WorkflowVisibilityClient`'s structural shape. */
+function fakeClient(
+  executions: ExecutionInfo[],
+  results: Record<string, () => Promise<unknown>>,
+): WorkflowVisibilityClient {
+  return {
+    workflow: {
+      list() {
+        return {
+          async *[Symbol.asyncIterator]() {
+            for (const execution of executions) {
+              yield execution;
+            }
+          },
+        };
+      },
+      getHandle(workflowId: string, runId: string) {
+        const key = `${workflowId}/${runId}`;
+        const resolver = results[key];
+        return {
+          result: () => {
+            if (resolver === undefined) {
+              throw new Error(`no fake result configured for ${key}`);
+            }
+            return resolver();
+          },
+        };
+      },
+    },
+  };
+}
+
+function rejectWithApplicationFailure(message: string): () => Promise<unknown> {
+  return () =>
+    Promise.reject(
+      new WorkflowFailedError(
+        "workflow execution failed",
+        ApplicationFailure.nonRetryable(message, "TestFailure"),
+        RetryState.NON_RETRYABLE_FAILURE,
+      ),
+    );
+}
+
+function capturingPoster(): {
+  poster: AlertPoster;
+  calls: { alerts: AlertmanagerAlert[] }[];
+} {
+  const calls: { alerts: AlertmanagerAlert[] }[] = [];
+  const poster: AlertPoster = (alerts) => {
+    calls.push({ alerts });
+    return Promise.resolve();
+  };
+  return { poster, calls };
+}
+
+describe("buildVisibilityQuery", () => {
+  it("filters to Failed/TimedOut closed after the lookback boundary", () => {
+    const since = new Date("2026-07-30T17:45:00.000Z");
+    expect(buildVisibilityQuery(since)).toBe(
+      'ExecutionStatus IN ("Failed", "TimedOut") AND CloseTime > "2026-07-30T17:45:00.000Z"',
+    );
+  });
+});
+
+describe("pollWorkflowFailuresOnce", () => {
+  it("posts one alert per failed execution and increments scanned/alerted", async () => {
+    const client = fakeClient(
+      [
+        {
+          workflowId: "wf-1",
+          runId: "run-1",
+          type: "syncGolinks",
+          taskQueue: "default",
+          closeTime: new Date("2026-07-30T17:50:00.000Z"),
+          status: { name: "FAILED" },
+        },
+        {
+          workflowId: "wf-2",
+          runId: "run-2",
+          type: "homelabAuditWorkflow",
+          taskQueue: "agent-task",
+          closeTime: new Date("2026-07-30T17:52:00.000Z"),
+          status: { name: "TIMED_OUT" },
+        },
+      ],
+      {
+        "wf-1/run-1": rejectWithApplicationFailure("golink 500"),
+        "wf-2/run-2": rejectWithApplicationFailure("execution timed out"),
+      },
+    );
+    const { poster, calls } = capturingPoster();
+
+    const result = await pollWorkflowFailuresOnce(client, poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      ttlMs: TTL_MS,
+    });
+
+    expect(result).toEqual({ scanned: 2, alerted: 2, errored: 0 });
+    expect(calls.length).toBe(1);
+    expect(calls[0]?.alerts.length).toBe(2);
+    const workflowIds = calls[0]?.alerts.map((a) => a.labels["workflowId"]);
+    expect(workflowIds).toEqual(["wf-1", "wf-2"]);
+  });
+
+  it("skips executions missing FAILED/TIMED_OUT status or closeTime", async () => {
+    const client = fakeClient(
+      [
+        {
+          workflowId: "wf-running",
+          runId: "run-1",
+          type: "syncGolinks",
+          taskQueue: "default",
+          status: { name: "RUNNING" },
+        },
+        {
+          workflowId: "wf-no-close-time",
+          runId: "run-2",
+          type: "syncGolinks",
+          taskQueue: "default",
+          status: { name: "FAILED" },
+        },
+      ],
+      {},
+    );
+    const { poster, calls } = capturingPoster();
+
+    const result = await pollWorkflowFailuresOnce(client, poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      ttlMs: TTL_MS,
+    });
+
+    expect(result).toEqual({ scanned: 0, alerted: 0, errored: 0 });
+    expect(calls.length).toBe(0);
+  });
+
+  it("skips a single execution whose detail extraction fails and still posts the rest", async () => {
+    const client = fakeClient(
+      [
+        {
+          workflowId: "wf-1",
+          runId: "run-1",
+          type: "syncGolinks",
+          taskQueue: "default",
+          closeTime: new Date("2026-07-30T17:50:00.000Z"),
+          status: { name: "FAILED" },
+        },
+        {
+          workflowId: "wf-2",
+          runId: "run-2",
+          type: "syncGolinks",
+          taskQueue: "default",
+          closeTime: new Date("2026-07-30T17:52:00.000Z"),
+          status: { name: "FAILED" },
+        },
+      ],
+      {
+        "wf-1/run-1": () => Promise.reject(new Error("gRPC unavailable")),
+        "wf-2/run-2": rejectWithApplicationFailure("golink 500"),
+      },
+    );
+    const { poster, calls } = capturingPoster();
+
+    const result = await pollWorkflowFailuresOnce(client, poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      ttlMs: TTL_MS,
+    });
+
+    expect(result).toEqual({ scanned: 2, alerted: 1, errored: 1 });
+    expect(calls[0]?.alerts.length).toBe(1);
+    expect(calls[0]?.alerts[0]?.labels["workflowId"]).toBe("wf-2");
+  });
+
+  it("throws when every execution in a non-empty batch fails detail extraction", async () => {
+    const client = fakeClient(
+      [
+        {
+          workflowId: "wf-1",
+          runId: "run-1",
+          type: "syncGolinks",
+          taskQueue: "default",
+          closeTime: new Date("2026-07-30T17:50:00.000Z"),
+          status: { name: "FAILED" },
+        },
+      ],
+      {
+        "wf-1/run-1": () => Promise.reject(new Error("gRPC unavailable")),
+      },
+    );
+    const { poster, calls } = capturingPoster();
+
+    await expect(
+      pollWorkflowFailuresOnce(client, poster, {
+        now: NOW,
+        lookbackMs: LOOKBACK_MS,
+        ttlMs: TTL_MS,
+      }),
+    ).rejects.toThrow(/systematic failure/);
+    expect(calls.length).toBe(0);
+  });
+
+  it("does not call the poster when nothing failed", async () => {
+    const client = fakeClient([], {});
+    const { poster, calls } = capturingPoster();
+
+    const result = await pollWorkflowFailuresOnce(client, poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      ttlMs: TTL_MS,
+    });
+
+    expect(result).toEqual({ scanned: 0, alerted: 0, errored: 0 });
+    expect(calls.length).toBe(0);
+  });
+});

@@ -7,7 +7,7 @@ import {
   type StoredObjectReceipt,
 } from "#shared/glitter-corpus.ts";
 import { sha256 } from "#shared/glitter-corpus-projection.ts";
-import { glitterCorpusStorageIntegrityFailuresTotal } from "#observability/metrics.ts";
+import { glitterCorpusStorageIntegrityFailuresTotal } from "#observability/metrics-glitter.ts";
 import {
   getObjectBytes,
   objectEtag,

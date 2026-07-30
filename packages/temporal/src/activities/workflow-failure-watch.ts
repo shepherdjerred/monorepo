@@ -1,0 +1,276 @@
+import { Context } from "@temporalio/activity";
+import * as Sentry from "@sentry/bun";
+import { WorkflowFailedError } from "@temporalio/client";
+import { createTemporalClient } from "#client";
+import {
+  type AlertmanagerAlert,
+  type AlertPoster,
+  createAlertmanagerPoster,
+} from "#lib/alertmanager.ts";
+import {
+  buildWorkflowFailureAlert,
+  type FailedWorkflowExecution,
+  type WorkflowFailureDetail,
+} from "#shared/workflow-failure-alert.ts";
+import { temporalFailureWatcherAlertsTotal } from "#observability/metrics.ts";
+
+/**
+ * Polls the Temporal visibility API for workflow executions that closed as
+ * Failed/TimedOut in the lookback window, extracts each execution's
+ * structured failure via `handle.result()`, and posts one detail-rich alert
+ * per execution to Alertmanager (which already routes to PagerDuty — see
+ * `packages/homelab/.../argo-applications/prometheus.ts`). Stateless: no
+ * checkpoint is persisted between polls, matching `observe-review-signals.ts`.
+ * Safe to overlap polls because Alertmanager dedups by label set (identity =
+ * alertname + workflowType + taskQueue + workflowId + runId).
+ */
+
+const COMPONENT = "temporal-failure-watch";
+const HEARTBEAT_INTERVAL_MS = 10_000;
+
+// 3x the schedule's 5-minute cron, so a single missed tick or worker restart
+// can't create a gap. Overlap across polls is safe — see module doc above.
+const DEFAULT_LOOKBACK_MS = 15 * 60 * 1000;
+
+// Matches XCODE_CLOUD_ALERT_TTL_SECONDS's rationale (xcode-cloud-webhook.ts):
+// keeps a failure visible across a workday without lingering forever if
+// polling stops re-observing it (there's no "next success" signal to resolve
+// a specific past failure early, unlike the Xcode Cloud build-outcome case).
+const DEFAULT_ALERT_TTL_SECONDS = 6 * 60 * 60;
+
+const FAILURE_STATUS_NAMES = ["FAILED", "TIMED_OUT"] as const;
+type FailureStatusName = (typeof FAILURE_STATUS_NAMES)[number];
+
+export type PollWorkflowFailuresResult = {
+  scanned: number;
+  alerted: number;
+  errored: number;
+};
+
+/** Narrow structural slice of `Client["workflow"]` — real client and test fakes both satisfy it. */
+export type WorkflowVisibilityClient = {
+  workflow: {
+    list: (options: { query: string }) => AsyncIterable<{
+      workflowId: string;
+      runId: string;
+      type: string;
+      taskQueue: string;
+      closeTime?: Date;
+      status: { name: string };
+    }>;
+    getHandle: (
+      workflowId: string,
+      runId: string,
+    ) => {
+      result: () => Promise<unknown>;
+    };
+  };
+};
+
+function jsonLog(
+  level: "info" | "warning" | "error",
+  message: string,
+  fields: Record<string, unknown> = {},
+): void {
+  console.warn(
+    JSON.stringify({ level, msg: message, component: COMPONENT, ...fields }),
+  );
+}
+
+function requiredEnv(name: string): string {
+  const value = Bun.env[name];
+  if (value === undefined || value === "") {
+    throw new Error(`${name} is required`);
+  }
+  return value;
+}
+
+function readTtlMs(): number {
+  const raw = Bun.env["TEMPORAL_FAILURE_ALERT_TTL_SECONDS"];
+  if (raw === undefined || raw === "") {
+    return DEFAULT_ALERT_TTL_SECONDS * 1000;
+  }
+  const parsed = Number.parseInt(raw, 10);
+  if (Number.isNaN(parsed) || parsed <= 0) {
+    throw new Error(
+      `TEMPORAL_FAILURE_ALERT_TTL_SECONDS must be a positive integer, got ${raw}`,
+    );
+  }
+  return parsed * 1000;
+}
+
+function toFailureStatusName(name: string): FailureStatusName | undefined {
+  return FAILURE_STATUS_NAMES.find((candidate) => candidate === name);
+}
+
+export function buildVisibilityQuery(since: Date): string {
+  return `ExecutionStatus IN ("Failed", "TimedOut") AND CloseTime > "${since.toISOString()}"`;
+}
+
+/**
+ * Extracts the structured failure from a closed Failed/TimedOut execution.
+ * `handle.result()` on an already-closed execution rejects immediately (no
+ * blocking) with `WorkflowFailedError`, whose `.cause` is the TemporalFailure
+ * subclass (ApplicationFailure/ActivityFailure/TimeoutFailure/...) carrying
+ * the same type/message/stack the Temporal UI shows.
+ */
+async function fetchFailureDetail(
+  client: WorkflowVisibilityClient,
+  workflowId: string,
+  runId: string,
+): Promise<WorkflowFailureDetail> {
+  try {
+    await client.workflow.getHandle(workflowId, runId).result();
+    // The visibility query already filtered to Failed/TimedOut, so a
+    // resolved result() here means the execution's terminal state changed
+    // between list() and this call (or the query matched unexpectedly) —
+    // surface it as a detail-extraction failure rather than silently
+    // skipping, so it's visible in Sentry.
+    throw new Error(
+      `workflow ${workflowId}/${runId} unexpectedly resolved while polling failures`,
+    );
+  } catch (error) {
+    if (error instanceof WorkflowFailedError) {
+      const cause = error.cause;
+      return {
+        failureType: cause?.name ?? "UnknownFailure",
+        message: cause?.message ?? error.message,
+        stack: cause?.stack,
+      };
+    }
+    throw error;
+  }
+}
+
+export type PollWorkflowFailuresOptions = {
+  now: Date;
+  lookbackMs: number;
+  ttlMs: number;
+};
+
+/**
+ * One poll cycle. Injectable client/poster/clock for tests; the real
+ * activity below supplies the live Temporal client, the Alertmanager HTTP
+ * poster, and `new Date()`.
+ */
+export async function pollWorkflowFailuresOnce(
+  client: WorkflowVisibilityClient,
+  poster: AlertPoster,
+  options: PollWorkflowFailuresOptions,
+): Promise<PollWorkflowFailuresResult> {
+  const { now, lookbackMs, ttlMs } = options;
+  const since = new Date(now.getTime() - lookbackMs);
+  const query = buildVisibilityQuery(since);
+
+  const executions: FailedWorkflowExecution[] = [];
+  for await (const info of client.workflow.list({ query })) {
+    const status = toFailureStatusName(info.status.name);
+    if (status === undefined || info.closeTime === undefined) {
+      continue;
+    }
+    executions.push({
+      workflowId: info.workflowId,
+      runId: info.runId,
+      workflowType: info.type,
+      taskQueue: info.taskQueue,
+      closeTime: info.closeTime,
+      status,
+    });
+  }
+
+  const alerts: AlertmanagerAlert[] = [];
+  let errored = 0;
+  for (const execution of executions) {
+    try {
+      const failure = await fetchFailureDetail(
+        client,
+        execution.workflowId,
+        execution.runId,
+      );
+      alerts.push(buildWorkflowFailureAlert(execution, failure, now, ttlMs));
+    } catch (error) {
+      errored += 1;
+      const message = error instanceof Error ? error.message : String(error);
+      Sentry.withScope((scope) => {
+        scope.setTag("component", COMPONENT);
+        scope.setContext("workflowFailureWatch", {
+          workflowId: execution.workflowId,
+          runId: execution.runId,
+          workflowType: execution.workflowType,
+        });
+        Sentry.captureException(error);
+      });
+      jsonLog(
+        "warning",
+        "failed to extract failure detail for execution; skipping",
+        {
+          workflowId: execution.workflowId,
+          runId: execution.runId,
+          workflowType: execution.workflowType,
+          error: message,
+        },
+      );
+    }
+  }
+
+  // Isolated per-execution detail-extraction failures are tolerated, but if
+  // EVERY execution in a non-empty batch failed, the cause is systematic
+  // (e.g. the Temporal server rejected result() calls broadly) — throw so
+  // Temporal retries instead of silently reporting a clean poll that alerted
+  // on nothing.
+  if (executions.length > 0 && alerts.length === 0) {
+    throw new Error(
+      `workflow-failure-watch found ${String(executions.length)} failed execution(s) but could not extract detail for any of them (${String(errored)} errored); treating as a systematic failure so Temporal retries.`,
+    );
+  }
+
+  if (alerts.length > 0) {
+    await poster(alerts);
+    // Recorded after the poster succeeds, mirroring observe-review-signals.ts —
+    // an activity retry after a failed post re-alerts (safe: Alertmanager
+    // dedups by label) but this counter is informational only, not exactly-once.
+    for (const alert of alerts) {
+      temporalFailureWatcherAlertsTotal.inc({
+        workflowType: alert.labels["workflowType"] ?? "unknown",
+      });
+    }
+  }
+
+  jsonLog("info", "workflow-failure-watch poll complete", {
+    scanned: executions.length,
+    alerted: alerts.length,
+    errored,
+  });
+
+  return { scanned: executions.length, alerted: alerts.length, errored };
+}
+
+async function runPollWorkflowFailuresImpl(): Promise<PollWorkflowFailuresResult> {
+  const client = await createTemporalClient();
+  const poster = createAlertmanagerPoster(requiredEnv("ALERTMANAGER_URL"));
+  return pollWorkflowFailuresOnce(client, poster, {
+    now: new Date(),
+    lookbackMs: DEFAULT_LOOKBACK_MS,
+    ttlMs: readTtlMs(),
+  });
+}
+
+export type WorkflowFailureWatchActivities =
+  typeof workflowFailureWatchActivities;
+
+export const workflowFailureWatchActivities = {
+  async pollWorkflowFailures(): Promise<PollWorkflowFailuresResult> {
+    const start = Date.now();
+    const heartbeat = setInterval(() => {
+      Context.current().heartbeat({
+        phase: "pollWorkflowFailures",
+        elapsedMs: Date.now() - start,
+      });
+    }, HEARTBEAT_INTERVAL_MS);
+    try {
+      return await runPollWorkflowFailuresImpl();
+    } finally {
+      clearInterval(heartbeat);
+    }
+  },
+};

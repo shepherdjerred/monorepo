@@ -3,7 +3,7 @@ import {
   DiscordApiMessageSchema,
   type DiscordApiMessage,
 } from "#shared/glitter-corpus.ts";
-import { glitterCorpusDiscordRequestsTotal } from "#observability/metrics.ts";
+import { glitterCorpusDiscordRequestsTotal } from "#observability/metrics-glitter.ts";
 import {
   createGlitterDiscordRateLimitCoordinator,
   type GlitterDiscordRateLimitCoordinator,
