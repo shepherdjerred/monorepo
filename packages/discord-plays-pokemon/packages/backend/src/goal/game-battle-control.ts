@@ -73,7 +73,20 @@ export class GameBattleControl {
   async move(selection: BattleMoveSelection): Promise<ActionOutcomeV1> {
     const before = this.capture();
     const battle = this.requireDecision(before.observation, ["action", "move"]);
-    const matchingMove = requireBattleMoveSelection(battle, selection);
+    const decision = requireBattleMoveSelection(battle, selection);
+
+    if (decision.kind === "forced-struggle") {
+      if (battle.menu !== "action") {
+        throw new Error(
+          "forced Struggle requires an input-ready action decision",
+        );
+      }
+      let timedOut = await this.selectGridCursor("action", 0);
+      timedOut ||= await this.pressAndAwait("a", nextActionOrBattleEnd);
+      return this.outcome("battle:move:struggle", before, timedOut);
+    }
+
+    const matchingMove = decision.move;
 
     let timedOut = false;
     if (battle.menu === "action") {

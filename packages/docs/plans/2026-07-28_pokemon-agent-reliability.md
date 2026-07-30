@@ -870,3 +870,31 @@ deferred by explicit direction.
   settled; non-input-ready and other party decisions remain unsettled.
 - The Struggle finding on #1847 and all #1848 findings remain unchanged.
 - Shared-cache Buildkite retries and cache mutations remain explicitly deferred.
+
+## Session Log — 2026-07-29 (forced Struggle)
+
+### Done
+
+- Traced Emerald's action-selection path and confirmed it checks all four move
+  limitations before opening the move menu, then assigns Struggle itself.
+- Routed an explicit exact-name Struggle request through Fight without
+  fabricating or selecting a live move slot.
+- Preserved fail-fast rejection for Struggle when any move remains legal and
+  for an individually exhausted or disabled move alongside a legal alternative.
+- Added focused controller and CLI regressions and passed backend tests,
+  typecheck, and lint.
+
+### Remaining
+
+- Await current-head hosted-review responses for PRs #1847 and #1848.
+
+### Caveats
+
+- Struggle has no caller-selected target; Emerald chooses its target as part of
+  the forced engine action.
+- No WASM rebuild is required because the existing live move limitation bits
+  already match Emerald's `AreAllMovesUnusable` decision.
+- The directional-warp `U-Zlx` finding surfaced after publication and remains
+  untouched.
+- All #1848 findings remain unchanged.
+- Shared-cache Buildkite retries and cache mutations remain explicitly deferred.

@@ -423,6 +423,172 @@ describe("GameBattleControl move actions", () => {
   });
 });
 
+describe("GameBattleControl forced Struggle", () => {
+  test("lets the engine progress when all four moves have no PP", async () => {
+    const exhaustedMoves: BattleState["moves"] = [
+      {
+        slot: 1,
+        moveId: 33,
+        move: "TACKLE",
+        currentPp: 0,
+        maxPp: 35,
+        usable: false,
+      },
+      {
+        slot: 2,
+        moveId: 45,
+        move: "GROWL",
+        currentPp: 0,
+        maxPp: 40,
+        usable: false,
+      },
+      {
+        slot: 3,
+        moveId: 39,
+        move: "TAIL WHIP",
+        currentPp: 0,
+        maxPp: 30,
+        usable: false,
+      },
+      {
+        slot: 4,
+        moveId: 43,
+        move: "LEER",
+        currentPp: 0,
+        maxPp: 30,
+        usable: false,
+      },
+    ];
+    const port = new BattlePort(
+      observation({ frame: 10, moves: exhaustedMoves }),
+      [observation({ frame: 12, moves: exhaustedMoves })],
+    );
+
+    const outcome = await new GameBattleControl(port).move({ moveId: 165 });
+
+    expect(outcome.action).toBe("battle:move:struggle");
+    expect(outcome.status).toBe("applied");
+    expect(outcome.stopReason).toBe("completed");
+    expect(port.presses.map((press) => press.command)).toEqual(["a"]);
+  });
+
+  test("lets the engine progress when limitations make every move unusable", async () => {
+    const limitedMoves: BattleState["moves"] = [
+      {
+        slot: 1,
+        moveId: 33,
+        move: "TACKLE",
+        currentPp: 35,
+        maxPp: 35,
+        usable: false,
+      },
+      {
+        slot: 2,
+        moveId: 45,
+        move: "GROWL",
+        currentPp: 40,
+        maxPp: 40,
+        usable: false,
+      },
+    ];
+    const port = new BattlePort(
+      observation({ frame: 10, moves: limitedMoves }),
+      [observation({ frame: 12, moves: limitedMoves })],
+    );
+
+    const outcome = await new GameBattleControl(port).move({ moveId: 165 });
+
+    expect(outcome.action).toBe("battle:move:struggle");
+    expect(outcome.stopReason).toBe("completed");
+    expect(port.presses.map((press) => press.command)).toEqual(["a"]);
+  });
+
+  test.each([
+    {
+      name: "exhausted",
+      selectedMove: {
+        slot: 1,
+        moveId: 33,
+        move: "TACKLE",
+        currentPp: 0,
+        maxPp: 35,
+        usable: false,
+      },
+      error: "requested move has no remaining PP",
+    },
+    {
+      name: "disabled",
+      selectedMove: {
+        slot: 1,
+        moveId: 33,
+        move: "TACKLE",
+        currentPp: 35,
+        maxPp: 35,
+        usable: false,
+      },
+      error: "requested move is currently disabled by battle rules",
+    },
+  ])(
+    "rejects an individually $name move when another move is legal",
+    async ({ selectedMove, error }) => {
+      const port = new BattlePort(
+        observation({
+          frame: 10,
+          moves: [
+            selectedMove,
+            {
+              slot: 2,
+              moveId: 45,
+              move: "GROWL",
+              currentPp: 40,
+              maxPp: 40,
+              usable: true,
+            },
+          ],
+        }),
+        [],
+      );
+
+      await expect(
+        new GameBattleControl(port).move({ slot: 1 }),
+      ).rejects.toThrow(error);
+      expect(port.presses).toEqual([]);
+    },
+  );
+
+  test("rejects forced Struggle while any legal move remains", async () => {
+    const port = new BattlePort(
+      observation({
+        frame: 10,
+        moves: [
+          {
+            slot: 1,
+            moveId: 33,
+            move: "TACKLE",
+            currentPp: 0,
+            maxPp: 35,
+            usable: false,
+          },
+          {
+            slot: 2,
+            moveId: 45,
+            move: "GROWL",
+            currentPp: 40,
+            maxPp: 40,
+            usable: true,
+          },
+        ],
+      }),
+      [],
+    );
+
+    await expect(
+      new GameBattleControl(port).move({ moveId: 165 }),
+    ).rejects.toThrow("forced Struggle requires every move to be unavailable");
+    expect(port.presses).toEqual([]);
+  });
+});
+
 describe("GameBattleControl forced replacement settlement", () => {
   test("settles when a completed move opens an input-ready forced replacement", async () => {
     const port = new BattlePort(observation({ frame: 10 }), [
@@ -1087,6 +1253,7 @@ describe("pokemonctl battle arguments", () => {
       "--target-battler",
       "1",
     ]);
+    await handlePokemonctlBattle(context, ["move", "Struggle"]);
     await handlePokemonctlBattle(context, [
       "item",
       "Poké Ball",
@@ -1102,11 +1269,16 @@ describe("pokemonctl battle arguments", () => {
       },
       {
         method: "POST",
+        route: "/battle/move",
+        body: { moveId: 165 },
+      },
+      {
+        method: "POST",
         route: "/battle/item",
         body: { itemId: 4, partySlot: 2 },
       },
     ]);
-    expect(printed).toEqual(["{}", "{}"]);
+    expect(printed).toEqual(["{}", "{}", "{}"]);
   });
 
   test("rejects an unknown move before making a request", async () => {

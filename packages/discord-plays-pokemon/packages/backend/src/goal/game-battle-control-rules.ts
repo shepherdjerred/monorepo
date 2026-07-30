@@ -1,5 +1,8 @@
 import { itemBattleUse } from "#src/game/battle/generated/item-names.ts";
-import { moveTarget } from "#src/game/battle/generated/move-names.ts";
+import {
+  moveTarget,
+  resolveMoveId,
+} from "#src/game/battle/generated/move-names.ts";
 import type { GameObservationV2 } from "./game-observation.ts";
 
 type BattleMoveSelection = Readonly<{
@@ -20,6 +23,10 @@ export type BattleItemSelection = Readonly<{
   pocket: number;
 }>;
 
+export type BattleMoveDecision =
+  | Readonly<{ kind: "selected-move"; move: BattleMove }>
+  | Readonly<{ kind: "forced-struggle" }>;
+
 type BattleItemPreflight = Readonly<{
   partySlot: number | undefined;
   canUseOnBattler: (itemId: number, battler: number) => boolean;
@@ -31,6 +38,11 @@ const BATTLE_TYPE_TRAINER = 1 << 3;
 const PARTY_ACTION_SEND_OUT = 1;
 const MOVE_TARGET_SELECTED = 0;
 const MOVE_TARGET_USER_OR_SELECTED = 1 << 1;
+const FORCED_STRUGGLE_MOVE_ID = resolveMoveId("STRUGGLE");
+
+if (FORCED_STRUGGLE_MOVE_ID === undefined) {
+  throw new Error("generated move catalog does not contain Struggle");
+}
 
 const INVENTORY_POCKET_INDEX = new Map([
   ["items", 0],
@@ -43,7 +55,20 @@ const INVENTORY_POCKET_INDEX = new Map([
 export function requireBattleMoveSelection(
   battle: BattleState,
   selection: BattleMoveSelection,
-): BattleMove {
+): BattleMoveDecision {
+  if (
+    selection.slot === undefined &&
+    selection.moveId === FORCED_STRUGGLE_MOVE_ID
+  ) {
+    if (battle.moves.some((move) => move.usable)) {
+      throw new Error("forced Struggle requires every move to be unavailable");
+    }
+    if (selection.targetBattler !== undefined) {
+      throw new Error("forced Struggle target is selected by the engine");
+    }
+    return { kind: "forced-struggle" };
+  }
+
   const matchingMove =
     selection.slot === undefined
       ? battle.moves.find((move) => move.moveId === selection.moveId)
@@ -64,7 +89,7 @@ export function requireBattleMoveSelection(
       selection.targetBattler,
     );
   }
-  return matchingMove;
+  return { kind: "selected-move", move: matchingMove };
 }
 
 export function requireSwitchablePartySlot(
