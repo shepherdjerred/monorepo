@@ -2,6 +2,7 @@ import { type ChatInputCommandInteraction } from "discord.js";
 import {
   CompetitionIdSchema,
   getCompetitionStatus,
+  hasSeasonEnded,
   type CompetitionId,
   type CompetitionWithCriteria,
   type DiscordAccountId,
@@ -22,15 +23,24 @@ export type DatesEditSchema =
   | ReturnType<typeof FixedDatesEditArgsSchema.parse>
   | ReturnType<typeof SeasonEditArgsSchema.parse>;
 
+type ParseDatesArgsInput = {
+  startDateStr: string | null;
+  endDateStr: string | null;
+  seasonStr: string | null;
+  isDraft: boolean;
+  now?: Date;
+};
+
 /**
  * Parse dates from edit arguments
  */
-export function parseDatesArgs(
-  startDateStr: string | null,
-  endDateStr: string | null,
-  seasonStr: string | null,
-  isDraft: boolean,
-):
+export function parseDatesArgs({
+  startDateStr,
+  endDateStr,
+  seasonStr,
+  isDraft,
+  now = new Date(),
+}: ParseDatesArgsInput):
   | { success: true; dates?: DatesEditSchema }
   | { success: false; error: string } {
   if (startDateStr === null && endDateStr === null && seasonStr === null) {
@@ -72,12 +82,20 @@ export function parseDatesArgs(
   }
 
   if (hasSeason && seasonStr) {
+    const dates = SeasonEditArgsSchema.parse({
+      dateType: "SEASON",
+      season: seasonStr,
+    });
+    if (hasSeasonEnded(dates.season, now) === true) {
+      return {
+        success: false,
+        error: `Cannot edit competition to season ${dates.season} - this season has already ended`,
+      };
+    }
+
     return {
       success: true,
-      dates: SeasonEditArgsSchema.parse({
-        dateType: "SEASON",
-        season: seasonStr,
-      }),
+      dates,
     };
   }
 

@@ -76,10 +76,12 @@ excluded.
 
 ## Remaining
 
-- [ ] Publish and merge the recovery PR, then verify the exact-head Buildkite
-      and production rollout.
-- [ ] Implement and verify season autocomplete resilience.
-- [ ] Add and verify season schedule runway telemetry and alerts.
+- [ ] Verify the exact recovery merge-head Buildkite run and production
+      rollout.
+- [ ] Monitor resilience PR #1851 through its current-head Buildkite run and
+      review.
+- [ ] Verify autocomplete behavior and telemetry in beta after the resilience
+      release is deployed.
 - [ ] Promote the hardened release and complete production acceptance.
 
 ## Comment Log
@@ -96,20 +98,40 @@ excluded.
 - Revalidated the `2.0.0-7074` OCI tag, backend digest, Buildkite release
   metadata, immutable archive verification jobs, and ancestry from the season
   fix.
-- Updated the GitOps production pin to the exact verified release pair.
+- Published and merged recovery PR #1850, updating the GitOps production pin
+  to the exact verified release pair at merge commit `78d0abbb9`.
 - Preserved the open recovery and resilience work in the canonical top-level
   board workflow section required by `check-docs`.
+- Replaced static season choices with strict autocomplete and removed the
+  module-load outage boundary.
+- Added deterministic season-boundary tests, schedule-end telemetry, and
+  production warning and critical alerts.
+- Passed focused builds, typechecks, lint, complete package test suites, and
+  the backend container smoke test for the resilience changes.
+- Published draft resilience PR #1851 directly against `main`.
+- Restacked PR #1851 onto current `main` at `1daec4ea6`, resolving the plan
+  conflict while retaining its canonical board workflow and newer recovery
+  evidence.
+- Rejected ended season IDs in the Discord edit argument path before they can
+  reach competition persistence, with deterministic expired/current coverage.
+- Repassed the focused edit test, backend typecheck and lint, and changed-file
+  formatting checks after the review fix.
 
 ### Remaining
 
-- [ ] Publish and merge the recovery PR, then verify the exact-head Buildkite
-      and production rollout.
-- [ ] Implement and verify season autocomplete resilience.
-- [ ] Add and verify season schedule runway telemetry and alerts.
+- [ ] Verify the exact recovery merge-head Buildkite run and production
+      rollout.
+- [ ] Monitor resilience PR #1851 through its current-head Buildkite run and
+      review.
+- [ ] Verify autocomplete behavior and telemetry in beta after the resilience
+      release is deployed.
 - [ ] Promote the hardened release and complete production acceptance.
 
 ### Caveats
 
-- Production was still unavailable at the start of implementation.
-- Current `main` Buildkite had a pipeline-upload `stack_error`; the recovery
-  merge needs an exact-head green build.
+- Production was still on the crashing `2.0.0-6673` pod immediately after the
+  recovery merge; Argo CD had not yet reconciled the new pin.
+- The recovery merge still needs exact-head Buildkite and live rollout
+  confirmation.
+- The restacked resilience head requires a replacement Buildkite run and Codex
+  review before beta acceptance.

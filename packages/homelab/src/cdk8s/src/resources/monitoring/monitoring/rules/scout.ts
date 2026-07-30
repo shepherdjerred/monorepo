@@ -204,6 +204,36 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
       name: "scout-bot-health",
       rules: [
         {
+          alert: "ScoutSeasonScheduleExpiring",
+          annotations: {
+            summary: "Scout production season metadata expires soon",
+            message:
+              "Scout production's latest bundled League season ends in 3–14 days. Review the scout-season-refresh-weekly PR and promote the resulting minted Scout release pair before autocomplete expires.",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            '(max by (environment) (scout_season_schedule_end_timestamp_seconds{environment="prod"}) - time() < 1209600) and (max by (environment) (scout_season_schedule_end_timestamp_seconds{environment="prod"}) - time() >= 259200)',
+          ),
+          for: "30m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
+          alert: "ScoutSeasonScheduleCritical",
+          annotations: {
+            summary: "Scout production season metadata is critical",
+            message:
+              "Scout production's latest bundled League season ends in under 3 days or has expired. Merge the season refresh and promote its complete Scout release pair immediately; fixed-date competitions and other backend features remain available.",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'max by (environment) (scout_season_schedule_end_timestamp_seconds{environment="prod"}) - time() < 259200',
+          ),
+          for: "30m",
+          labels: {
+            severity: "critical",
+          },
+        },
+        {
           // Whole-bot outage: if Scout drops off Discord nothing posts at all.
           // Previously only caught indirectly (and slowly) by the report-missed
           // alert; this pages within minutes.
