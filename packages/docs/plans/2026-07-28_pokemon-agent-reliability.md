@@ -898,3 +898,31 @@ deferred by explicit direction.
   untouched.
 - All #1848 findings remain unchanged.
 - Shared-cache Buildkite retries and cache mutations remain explicitly deferred.
+
+## Session Log — 2026-07-29 (directional warp exclusion)
+
+### Done
+
+- Replaced the competing-warp tile blacklist with directed movement-edge
+  exclusions derived from each warp's engine-reported activation.
+- Blocked all four inbound edges for nonselected step warps and only the
+  required inbound edge for nonselected directional warps.
+- Added focused regressions proving a triggering directional edge returns
+  `no-route` without input while the same tile remains traversable from a safe
+  side.
+- Passed focused controller tests plus backend typecheck and lint.
+
+### Remaining
+
+- Await current-head hosted-review responses for PRs #1847 and #1848.
+
+### Caveats
+
+- Unsupported warps contribute no blocked edge because selected-exit navigation
+  cannot activate them.
+- No WASM rebuild is required because directional activation already exists in
+  the topology ABI.
+- The same-map warp traversal `U-gat` finding surfaced after publication and
+  remains untouched.
+- All #1848 findings remain unchanged.
+- Shared-cache Buildkite retries and cache mutations remain explicitly deferred.

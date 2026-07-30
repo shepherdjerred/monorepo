@@ -1,22 +1,65 @@
+import type { CardinalDirection } from "#src/emulator/engine-observation.ts";
 import type { EngineMapTopologyV1 } from "#src/emulator/engine-map-topology.ts";
 import type { GameObservationV2 } from "./game-observation.ts";
+
+const DIRECTION_OFFSETS: readonly Readonly<{
+  direction: CardinalDirection;
+  dx: number;
+  dy: number;
+}>[] = [
+  { direction: "north", dx: 0, dy: -1 },
+  { direction: "south", dx: 0, dy: 1 },
+  { direction: "west", dx: -1, dy: 0 },
+  { direction: "east", dx: 1, dy: 0 },
+];
 
 export function coordinateKey(x: number, y: number): string {
   return `${String(x)},${String(y)}`;
 }
 
-export function competingAutomaticWarpTriggers(
+export function movementEdgeKey(
+  from: Readonly<{ x: number; y: number }>,
+  to: Readonly<{ x: number; y: number }>,
+): string {
+  return `${coordinateKey(from.x, from.y)}>${coordinateKey(to.x, to.y)}`;
+}
+
+export function competingAutomaticWarpEdges(
   topology: EngineMapTopologyV1,
   exitId: string,
 ): ReadonlySet<string> {
-  return new Set(
-    topology.warps
-      .filter(
-        (warp) =>
-          warp.activation === "step" && exitId !== `warp:${String(warp.index)}`,
-      )
-      .map((warp) => coordinateKey(warp.trigger.x, warp.trigger.y)),
-  );
+  const edges = new Set<string>();
+  for (const warp of topology.warps) {
+    if (
+      warp.activation === "unsupported" ||
+      exitId === `warp:${String(warp.index)}`
+    ) {
+      continue;
+    }
+    const triggeringDirections =
+      warp.activation === "step"
+        ? DIRECTION_OFFSETS
+        : DIRECTION_OFFSETS.filter(
+            (candidate) => candidate.direction === warp.activation,
+          );
+    if (triggeringDirections.length === 0) {
+      throw new RangeError(
+        `unknown directional warp activation: ${warp.activation}`,
+      );
+    }
+    for (const direction of triggeringDirections) {
+      edges.add(
+        movementEdgeKey(
+          {
+            x: warp.trigger.x - direction.dx,
+            y: warp.trigger.y - direction.dy,
+          },
+          warp.trigger,
+        ),
+      );
+    }
+  }
+  return edges;
 }
 
 export function occupiedTiles(

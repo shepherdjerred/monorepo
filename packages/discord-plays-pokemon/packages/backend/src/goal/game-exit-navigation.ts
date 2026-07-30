@@ -2,8 +2,9 @@ import type { CardinalDirection } from "#src/emulator/engine-observation.ts";
 import type { EngineMapTopologyV1 } from "#src/emulator/engine-map-topology.ts";
 import type { ActionOutcomeV1 } from "./game-action-outcome.ts";
 import {
-  competingAutomaticWarpTriggers,
+  competingAutomaticWarpEdges,
   coordinateKey,
+  movementEdgeKey,
   occupiedTiles,
 } from "./game-exit-navigation-blocks.ts";
 import type { GameObservationV2 } from "./game-observation.ts";
@@ -227,7 +228,8 @@ function findPathStep(options: {
   readMapTile: ExitNavigationOptions["readMapTile"];
   start: Readonly<{ x: number; y: number }>;
   activations: readonly ExitActivation[];
-  blocked: ReadonlySet<string>;
+  blockedTiles: ReadonlySet<string>;
+  blockedEdges: ReadonlySet<string>;
 }): ExitPathStep | null {
   const activationByPosition = new Map<string, ExitActivation>();
   for (const activation of options.activations) {
@@ -257,7 +259,8 @@ function findPathStep(options: {
       };
       if (!inBounds(options.topology, next)) continue;
       const key = coordinateKey(next.x, next.y);
-      if (visited.has(key) || options.blocked.has(key)) continue;
+      if (visited.has(key) || options.blockedTiles.has(key)) continue;
+      if (options.blockedEdges.has(movementEdgeKey(current, next))) continue;
       if (options.readMapTile(next.x, next.y)?.passable !== true) continue;
       visited.add(key);
       const initial = firstStep.get(currentKey) ?? candidate.direction;
@@ -392,7 +395,7 @@ export async function navigateGameExit(
   if ("outcome" in prepared) return prepared.outcome;
   const { before, topology, activations } = prepared;
 
-  const competingWarpTriggers = competingAutomaticWarpTriggers(
+  const competingWarpEdges = competingAutomaticWarpEdges(
     topology,
     options.exitId,
   );
@@ -420,11 +423,8 @@ export async function navigateGameExit(
       readMapTile: options.readMapTile,
       start: { x: current.world.x, y: current.world.y },
       activations,
-      blocked: new Set([
-        ...competingWarpTriggers,
-        ...failedMovementTiles,
-        ...occupied,
-      ]),
+      blockedTiles: new Set([...failedMovementTiles, ...occupied]),
+      blockedEdges: competingWarpEdges,
     });
     if (path === null && failedMovementTiles.size > 0) {
       path = findPathStep({
@@ -432,7 +432,8 @@ export async function navigateGameExit(
         readMapTile: options.readMapTile,
         start: { x: current.world.x, y: current.world.y },
         activations,
-        blocked: new Set([...competingWarpTriggers, ...occupied]),
+        blockedTiles: occupied,
+        blockedEdges: competingWarpEdges,
       });
     }
     if (path === null) {

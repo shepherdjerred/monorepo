@@ -870,3 +870,127 @@ describe("GameController exit navigation", () => {
     expect(port.presses).toEqual([]);
   });
 });
+
+describe("GameController directional warp exclusion", () => {
+  test("does not enter an unselected directional warp from its triggering edge", async () => {
+    const topology = mapTopology({
+      warps: [
+        {
+          version: 1,
+          size: 24,
+          index: 3,
+          trigger: { x: 11, y: 9, elevation: 0, behavior: 0 },
+          activation: "step",
+          destination: {
+            mapGroup: 1,
+            mapNum: 2,
+            warpId: 0,
+            dynamic: false,
+            landing: { x: 7, y: 7 },
+          },
+        },
+        {
+          version: 1,
+          size: 24,
+          index: 4,
+          trigger: { x: 9, y: 9, elevation: 0, behavior: 0 },
+          activation: "east",
+          destination: {
+            mapGroup: 1,
+            mapNum: 3,
+            warpId: 0,
+            dynamic: false,
+            landing: { x: 8, y: 8 },
+          },
+        },
+      ],
+    });
+    const corridor = new Set(["7,9", "8,9", "9,9", "10,9", "11,9"]);
+    const blocked = new Set<string>();
+    for (let x = 7; x <= 12; x += 1) {
+      for (let y = 7; y <= 12; y += 1) {
+        const key = `${String(x)},${String(y)}`;
+        if (!corridor.has(key)) blocked.add(key);
+      }
+    }
+    const port = new FakeControlPort(
+      observation({ x: 7, y: 9, facing: "east" }),
+      [],
+      { topology, blocked },
+    );
+
+    const result = await new GameController(port).navigateExit("warp:3", 5);
+
+    expect(result.status).toBe("stopped");
+    expect(result.stopReason).toBe("no-route");
+    expect(result.attemptsMade).toBe(0);
+    expect(result.stepsTaken).toBe(0);
+    expect(port.presses).toEqual([]);
+  });
+
+  test("can cross a directional warp trigger from a non-triggering side", async () => {
+    const topology = mapTopology({
+      warps: [
+        {
+          version: 1,
+          size: 24,
+          index: 3,
+          trigger: { x: 7, y: 9, elevation: 0, behavior: 0 },
+          activation: "step",
+          destination: {
+            mapGroup: 1,
+            mapNum: 2,
+            warpId: 0,
+            dynamic: false,
+            landing: { x: 7, y: 7 },
+          },
+        },
+        {
+          version: 1,
+          size: 24,
+          index: 4,
+          trigger: { x: 9, y: 9, elevation: 0, behavior: 0 },
+          activation: "east",
+          destination: {
+            mapGroup: 1,
+            mapNum: 3,
+            warpId: 0,
+            dynamic: false,
+            landing: { x: 8, y: 8 },
+          },
+        },
+      ],
+    });
+    const corridor = new Set(["7,9", "8,9", "9,9", "10,9", "11,9"]);
+    const blocked = new Set<string>();
+    for (let x = 7; x <= 12; x += 1) {
+      for (let y = 7; y <= 12; y += 1) {
+        const key = `${String(x)},${String(y)}`;
+        if (!corridor.has(key)) blocked.add(key);
+      }
+    }
+    const port = new FakeControlPort(
+      observation({ x: 11, y: 9, facing: "west" }),
+      [
+        observation({ frame: 12, x: 10, y: 9, facing: "west" }),
+        observation({ frame: 24, x: 9, y: 9, facing: "west" }),
+        observation({ frame: 36, x: 8, y: 9, facing: "west" }),
+        observation({ frame: 48, x: 7, y: 9, facing: "west" }),
+      ],
+      { topology, blocked },
+    );
+
+    const result = await new GameController(port).navigateExit("warp:3", 4);
+
+    expect(result.status).toBe("triggered");
+    expect(result.stopReason).toBe("exit-triggered");
+    expect(result.attemptsMade).toBe(4);
+    expect(result.stepsTaken).toBe(4);
+    expect(port.presses.map((press) => press.command)).toEqual([
+      "left",
+      "left",
+      "left",
+      "left",
+    ]);
+  });
+});
