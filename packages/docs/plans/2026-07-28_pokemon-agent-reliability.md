@@ -645,3 +645,26 @@ deferred by explicit direction.
   the semantic item action does not accept a move choice.
 - The existing Buildkite script-coverage failure is queued for a separate
   remediation cycle and is not bypassed by these changes.
+
+## Session Log — 2026-07-29 (semantic runtime skills)
+
+### Done
+
+- Updated the runtime `pokemon-battle` skill with live eligibility fields and
+  the exact semantic move, item, switch, run, and target command forms.
+- Updated the runtime `pokemon-world` skill with engine-authored exit
+  discovery, stable IDs, selected-exit traversal, and same-map navigation.
+- Regenerated both OpenAI skill metadata files and passed the skill schema and
+  focused Markdown validation.
+
+### Remaining
+
+- Complete replacement Buildkite and hosted-review verification for PRs #1847
+  and #1848.
+
+### Caveats
+
+- The existing script-coverage failure remains queued for its separate
+  remediation cycle.
+- PR #1848 retains its separate passage-coverage-versus-metadata review
+  finding; this #1847 documentation cycle does not alter ranking behavior.
