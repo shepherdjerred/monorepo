@@ -48,11 +48,18 @@ export async function fetchRawMatchPair(
   ]);
   const rawMatchJson: unknown = JSON.parse(matchText);
   const rawTimelineJson: unknown = JSON.parse(timelineText);
+  const rawMatch = RawMatchSchema.parse(rawMatchJson);
+  const rawTimeline = RawTimelineSchema.parse(rawTimelineJson);
+  if (rawMatch.metadata.matchId !== rawTimeline.metadata.matchId) {
+    throw new Error(
+      `Raw match/timeline matchId mismatch: match ${rawMatch.metadata.matchId}, timeline ${rawTimeline.metadata.matchId}`,
+    );
+  }
   return {
     matchText,
     timelineText,
-    rawMatch: RawMatchSchema.parse(rawMatchJson),
-    rawTimeline: RawTimelineSchema.parse(rawTimelineJson),
+    rawMatch,
+    rawTimeline,
   };
 }
 
@@ -82,7 +89,8 @@ export async function listCandidateMatchKeys(
         MaxKeys: 1000,
       }),
     );
-    for (const object of response.Contents ?? []) {
+    const contents = response.Contents ?? [];
+    for (const object of contents) {
       if (object.Key !== undefined && MATCH_KEY_PATTERN.test(object.Key)) {
         keys.push(object.Key);
       }
@@ -97,7 +105,7 @@ export async function listCandidateMatchKeys(
       );
     }
   } while (continuationToken !== undefined);
-  return keys.toSorted();
+  return keys.toSorted((left, right) => left.localeCompare(right));
 }
 
 export function sha256(value: string): string {

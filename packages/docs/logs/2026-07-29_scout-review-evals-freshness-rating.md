@@ -32,13 +32,16 @@ board: false
 - Reproduced Buildkite #7226's missing `@shepherdjerred/eslint-config` failure
   from a clean archive with the old filtered closure, then verified the corrected
   closure with a fresh install and Turbo-driven eval lint.
+- Made S3 materialization reject independently valid raw match and timeline
+  documents when their metadata match IDs differ, before constructing a source
+  pair, with regression coverage through the S3 fetch boundary.
 - Verified PR #1777 with the focused eval tests, typecheck, changed-file ESLint,
   changed-file Prettier checks, Buildkite pipeline validator, lane-coverage
   tests, and an independent merge-tree check.
 
 ### Remaining
 
-- Address the remaining P2 review findings on PR #1777.
+- Address the other remaining P2 review findings on PR #1777.
 - Let replacement Buildkite CI and a current-head Codex review validate the
   published CI-remediation head.
 
