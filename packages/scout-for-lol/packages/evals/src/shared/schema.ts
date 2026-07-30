@@ -196,17 +196,21 @@ export const FreshnessRatingSchema = z.strictObject({
   note: z.string().max(2000),
 });
 
+export const GenerationSetRevisionSchema = z.string().regex(/^[\da-f]{64}$/);
+
 export const StyleBatchInputSchema = z.strictObject({
   datasetId: DatasetIdSchema,
   styleKey: z.string().trim().min(1),
 });
 
 export const UpsertFreshnessRatingInputSchema = StyleBatchInputSchema.extend({
+  generationSetRevision: GenerationSetRevisionSchema,
   rating: FreshnessRatingSchema,
 });
 
 const StyleReviewSchema = z.strictObject({
   caseId: CaseIdSchema,
+  generationId: GenerationIdSchema,
   playerName: z.string().min(1),
   championName: z.string().min(1),
   performanceSlice: PerformanceSliceSchema,
@@ -216,6 +220,7 @@ const StyleReviewSchema = z.strictObject({
 export const StyleBatchSchema = z.strictObject({
   datasetId: DatasetIdSchema,
   styleKey: z.string().min(1),
+  generationSetRevision: GenerationSetRevisionSchema,
   reviews: z.array(StyleReviewSchema),
   rating: FreshnessRatingSchema.nullable(),
 });

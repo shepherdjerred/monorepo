@@ -3,6 +3,14 @@ import { z } from "zod";
 
 import { openEvalDatabase } from "#server/database.ts";
 import {
+  generationSetRevision,
+  requireCurrentGenerationSet,
+  SELECT_FRESHNESS_RATING_SQL,
+  type FreshnessRating,
+  type UpsertFreshnessRatingInput,
+  UPSERT_FRESHNESS_RATING_SQL,
+} from "#server/freshness.ts";
+import {
   CASE_SUMMARY_SQL,
   CaseCountRowSchema,
   DATASET_SUMMARY_SQL,
@@ -57,13 +65,9 @@ export type RecordGenerationInput = z.input<typeof RecordGenerationInputSchema>;
 export type UpsertHumanRatingInput = z.input<
   typeof UpsertHumanRatingInputSchema
 >;
-export type UpsertFreshnessRatingInput = z.input<
-  typeof UpsertFreshnessRatingInputSchema
->;
 export type Generation = z.infer<typeof GenerationSchema>;
 export type CaseDetail = z.infer<typeof CaseDetailSchema>;
 export type StyleBatch = z.infer<typeof StyleBatchSchema>;
-export type FreshnessRating = z.infer<typeof FreshnessRatingSchema>;
 
 function parseCaseSummary(row: unknown): z.infer<typeof CaseSummarySchema> {
   const parsed = CaseSummaryRowSchema.parse(row);
@@ -416,6 +420,7 @@ export class EvalStore {
         .query(
           `SELECT
                c.id AS caseId,
+               latest_generation.id AS generationId,
                c.target_player_name AS playerName,
                c.champion_name AS championName,
                c.performance_slice AS performanceSlice,
@@ -439,17 +444,14 @@ export class EvalStore {
       );
     }
     const rawRating = this.#database
-      .query(
-        `SELECT score, note
-         FROM freshness_ratings
-         WHERE dataset_id = ? AND style_key = ?`,
-      )
+      .query(SELECT_FRESHNESS_RATING_SQL)
       .get(id, style);
     const rating =
       rawRating === null ? null : FreshnessRatingRowSchema.parse(rawRating);
     return StyleBatchSchema.parse({
       datasetId: id,
       styleKey: style,
+      generationSetRevision: generationSetRevision(reviews),
       reviews,
       rating,
     });
@@ -459,35 +461,32 @@ export class EvalStore {
     input: UpsertFreshnessRatingInput,
   ): FreshnessRating {
     const parsed = UpsertFreshnessRatingInputSchema.parse(input);
-    this.listStyleBatch(parsed.datasetId, parsed.styleKey);
-    const timestamp = new Date().toISOString();
-    this.#database
-      .query(
-        `INSERT INTO freshness_ratings (
-           dataset_id, style_key, score, note, created_at, updated_at
-         ) VALUES (?, ?, ?, ?, ?, ?)
-         ON CONFLICT(dataset_id, style_key) DO UPDATE SET
-           score = excluded.score,
-           note = excluded.note,
-           updated_at = excluded.updated_at`,
-      )
-      .run(
+    return this.#database.transaction(() => {
+      const currentBatch = this.listStyleBatch(
         parsed.datasetId,
         parsed.styleKey,
-        parsed.rating.score,
-        parsed.rating.note,
-        timestamp,
-        timestamp,
       );
-    return FreshnessRatingRowSchema.parse(
+      requireCurrentGenerationSet(
+        parsed.generationSetRevision,
+        currentBatch.generationSetRevision,
+      );
+      const timestamp = new Date().toISOString();
       this.#database
-        .query(
-          `SELECT score, note
-           FROM freshness_ratings
-           WHERE dataset_id = ? AND style_key = ?`,
-        )
-        .get(parsed.datasetId, parsed.styleKey),
-    );
+        .query(UPSERT_FRESHNESS_RATING_SQL)
+        .run(
+          parsed.datasetId,
+          parsed.styleKey,
+          parsed.rating.score,
+          parsed.rating.note,
+          timestamp,
+          timestamp,
+        );
+      return FreshnessRatingRowSchema.parse(
+        this.#database
+          .query(SELECT_FRESHNESS_RATING_SQL)
+          .get(parsed.datasetId, parsed.styleKey),
+      );
+    })();
   }
 
   public close(): void {

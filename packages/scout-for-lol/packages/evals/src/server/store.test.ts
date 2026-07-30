@@ -405,7 +405,7 @@ describe("EvalStore freshness ratings and row validation", () => {
         inputTokens: null,
         outputTokens: null,
       });
-      store.recordGeneration({
+      const displayedFirstGeneration = store.recordGeneration({
         caseId: first.id,
         outputText: "Latest first output.",
         model: "test",
@@ -414,7 +414,7 @@ describe("EvalStore freshness ratings and row validation", () => {
         inputTokens: null,
         outputTokens: null,
       });
-      store.recordGeneration({
+      const displayedSecondGeneration = store.recordGeneration({
         caseId: second.id,
         outputText: "Second output.",
         model: "test",
@@ -430,33 +430,45 @@ describe("EvalStore freshness ratings and row validation", () => {
       expect(() =>
         store.upsertFreshnessRating({
           datasetId: dataset.id,
+          generationSetRevision: "0".repeat(64),
           styleKey: "missing-style",
           rating: { score: 2, note: "Should not be stored." },
         }),
       ).toThrow("no generated reviews");
 
-      expect(store.listStyleBatch(dataset.id, "aaron")).toMatchObject({
+      const displayedBatch = store.listStyleBatch(dataset.id, "aaron");
+      expect(displayedBatch).toMatchObject({
         datasetId: dataset.id,
         styleKey: "aaron",
         reviews: [
-          { caseId: first.id, outputText: "Latest first output." },
-          { caseId: second.id, outputText: "Second output." },
+          {
+            caseId: first.id,
+            generationId: displayedFirstGeneration.id,
+            outputText: "Latest first output.",
+          },
+          {
+            caseId: second.id,
+            generationId: displayedSecondGeneration.id,
+            outputText: "Second output.",
+          },
         ],
         rating: null,
       });
       store.upsertFreshnessRating({
         datasetId: dataset.id,
+        generationSetRevision: displayedBatch.generationSetRevision,
         styleKey: "aaron",
         rating: { score: 2, note: "Some repetition." },
       });
       const edited = store.upsertFreshnessRating({
         datasetId: dataset.id,
+        generationSetRevision: displayedBatch.generationSetRevision,
         styleKey: "aaron",
         rating: { score: 3, note: "Varied after another read." },
       });
       expect(store.listStyleBatch(dataset.id, "aaron").rating).toEqual(edited);
 
-      store.recordGeneration({
+      const newestFirstGeneration = store.recordGeneration({
         caseId: first.id,
         outputText: "Newest first output.",
         model: "test",
@@ -465,13 +477,35 @@ describe("EvalStore freshness ratings and row validation", () => {
         inputTokens: null,
         outputTokens: null,
       });
-      expect(store.listStyleBatch(dataset.id, "aaron")).toMatchObject({
+      const refreshedBatch = store.listStyleBatch(dataset.id, "aaron");
+      expect(refreshedBatch).toMatchObject({
         reviews: [
-          { caseId: first.id, outputText: "Newest first output." },
-          { caseId: second.id, outputText: "Second output." },
+          {
+            caseId: first.id,
+            generationId: newestFirstGeneration.id,
+            outputText: "Newest first output.",
+          },
+          {
+            caseId: second.id,
+            generationId: displayedSecondGeneration.id,
+            outputText: "Second output.",
+          },
         ],
         rating: null,
       });
+      expect(refreshedBatch.generationSetRevision).not.toBe(
+        displayedBatch.generationSetRevision,
+      );
+      expect(() =>
+        store.upsertFreshnessRating({
+          datasetId: dataset.id,
+          generationSetRevision: displayedBatch.generationSetRevision,
+          styleKey: "aaron",
+          rating: { score: 1, note: "Stale evidence." },
+        }),
+      ).toThrow(
+        "Freshness generation set changed; reload the batch before rating",
+      );
 
       const count = CountRowSchema.parse(
         database

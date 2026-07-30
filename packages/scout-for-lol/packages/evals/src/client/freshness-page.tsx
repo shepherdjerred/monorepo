@@ -72,6 +72,7 @@ export function FreshnessPage(): React.JSX.Element {
     const data = Object.fromEntries(new FormData(event.currentTarget));
     mutation.mutate({
       datasetId: datasetResult.data,
+      generationSetRevision: batch.generationSetRevision,
       styleKey,
       rating: FreshnessRatingSchema.parse({
         score: Number(data["freshness"]),
