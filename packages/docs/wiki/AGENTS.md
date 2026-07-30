@@ -43,8 +43,11 @@ Human pages live in `src/content/docs/`.
 - Curated explanations belong here.
 - Plans, logs, TODOs, research notes, and agent handoff context remain in the
   parent `packages/docs/` taxonomy.
-- The custom content loader renders parent docs under `/working/`; never copy
-  them into the human wiki.
+- Parent docs are private by default. The custom content loader renders only
+  exact paths in `src/lib/wiki-publication.ts` under `/working/`.
+- To publish a parent document, first review it for public-data safety, then add
+  its `packages/docs/`-relative path to the explicit allowlist. Never copy an
+  approved working document into the curated wiki.
 - When implementation changes a meaningful boundary, workflow, or architectural
   reason, update the nearest curated page in the same change.
 

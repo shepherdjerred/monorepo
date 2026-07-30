@@ -173,11 +173,22 @@ attempt to author a comprehensive monorepo atlas.
 - Passed the two focused competition suites (28 tests), Scout backend typecheck
   and lint with zero errors, and the complete backend suite (1,213 passing,
   6 skipped, 0 failing).
+- Documented the explicit file-by-file `/working/` publication allowlist in the
+  parent docs instructions, wiki instructions, and `monorepo-docs` skill.
+- Corrected the skill's root verification command to the existing
+  `bun run check-todos` entrypoint and kept the live and chezmoi-source skill
+  copies byte-identical.
+- Removed the wiki config files from ESLint's global ignores, fixed the
+  Playwright config issues this exposed, and verified the Bun-global restriction
+  is active for both Astro and Playwright configuration.
+- Passed wiki lint and typecheck, both skill schema checks, the live/source
+  skill comparison, calculated ESLint config assertions, and the root
+  1,011-document docs check.
 
 ### Remaining
 
-- Await replacement Buildkite CI and hosted Codex review for the published
-  Scout season-boundary test fix.
+- Await replacement Buildkite CI and hosted Codex review after this review-fix
+  cycle is published.
 - After merge and deployment, run the live HTTP, cache-header, CSP, sitemap,
   robots, and public-corpus verification.
 
@@ -193,3 +204,6 @@ attempt to author a comprehensive monorepo atlas.
 - Production callers still default active filtering to the wall clock; the
   explicit instant is an opt-in seam for deterministic tests and replayable
   queries, not a fallback around season expiry.
+- Buildkite 7246's `@shepherdjerred/glitter-context` dependency-closure failure
+  is separate from these review findings; PR #1849 is independently diagnosing
+  the same root and its evidence can be reused in the next CI cycle.

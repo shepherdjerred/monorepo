@@ -29,8 +29,11 @@ Use the parent workflow taxonomy for agent-operational artifacts:
 - `logs/`: the default session record
 - `todos/`: deferred work and source-marker records
 
-Do not copy a workflow document into the wiki. The site already renders the
-working corpus under `/working/`.
+Do not copy a workflow document into the wiki. Parent docs are private by
+default; the site renders only exact paths listed in
+`packages/docs/wiki/src/lib/wiki-publication.ts` under `/working/`. To publish a
+workflow document, first review it for public-data safety, then add its
+`packages/docs/`-relative path to that explicit allowlist.
 
 ## Author the human wiki
 
@@ -70,7 +73,6 @@ workflow document even when a curated wiki page is also updated.
 For workflow-document changes, run the relevant root docs checks:
 
 ```bash
-bun run check-docs
 bun run check-todos
 ```
 

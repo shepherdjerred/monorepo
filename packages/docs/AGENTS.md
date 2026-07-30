@@ -56,9 +56,12 @@ docs/
 
 **Wiki vs workflow docs:** Put durable human understanding in `wiki/`. Keep
 session state, implementation detail, evidence trails, and future work in the
-existing workflow taxonomy. The wiki renders the workflow corpus under
-`/working/`, so do not duplicate it. Follow `wiki/AGENTS.md` for its terse,
-visual-first authoring contract.
+existing workflow taxonomy. The wiki publishes only exact workflow-document
+paths listed in `wiki/src/lib/wiki-publication.ts` under `/working/`; it does
+not publish the parent corpus automatically. Before adding a path, review that
+document for secrets, private host details, personal data, and sensitive
+incident evidence. Do not duplicate an approved working document as a curated
+page. Follow `wiki/AGENTS.md` for its terse, visual-first authoring contract.
 
 ## Conventions
 
