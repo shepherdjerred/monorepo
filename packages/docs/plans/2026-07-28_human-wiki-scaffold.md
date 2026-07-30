@@ -176,8 +176,8 @@ attempt to author a comprehensive monorepo atlas.
 
 ### Remaining
 
-- Publish the Scout season-boundary test fix and await replacement Buildkite CI
-  plus hosted Codex review.
+- Await replacement Buildkite CI and hosted Codex review for the published
+  Scout season-boundary test fix.
 - After merge and deployment, run the live HTTP, cache-header, CSP, sitemap,
   robots, and public-corpus verification.
 
