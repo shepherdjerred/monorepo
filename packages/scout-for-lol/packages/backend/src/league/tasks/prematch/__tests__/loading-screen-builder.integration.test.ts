@@ -345,6 +345,38 @@ describe("buildLoadingScreenData layout variants", () => {
   });
 });
 
+describe("buildLoadingScreenData for The Bandlewood", () => {
+  test("queue 2450 KIWI_JADE uses the ARAM layout", async () => {
+    const baseGameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-ranked-flex.json`,
+    );
+    const gameInfo = RawCurrentGameInfoSchema.parse({
+      ...baseGameInfo,
+      gameQueueConfigId: 2450,
+      mapId: 35,
+      gameMode: "KIWI_JADE",
+      bannedChampions: [],
+    });
+
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set(),
+      "AMERICA_NORTH",
+    );
+
+    const parsed = LoadingScreenDataSchema.parse(result);
+    expect(parsed.queueType).toBe("aram mayhem");
+    expect(String(parsed.queueDisplayName)).toBe("ARAM: Mayhem");
+    expect(parsed.layout).toBe("aram");
+    expect(parsed.mapName).toBe("The Bandlewood");
+    if (parsed.layout !== "aram") {
+      throw new Error("Expected ARAM loading screen data");
+    }
+    expect(parsed.bans).toHaveLength(0);
+    expect(parsed.participants).toHaveLength(10);
+  });
+});
+
 describe("buildLoadingScreenData with Arena spectator payloads", () => {
   test("queue 1700 (Arena) uses playerSubteamId for arenaTeam, not teamId", async () => {
     // Spectator V5 reports teamId as 100/200 even for Arena games — the real

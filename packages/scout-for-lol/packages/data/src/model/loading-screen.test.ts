@@ -11,7 +11,10 @@ import {
   GameIdSchema,
   QueueDisplayNameSchema,
   makeQueueDisplayName,
+  loadingScreenLayoutForQueueType,
+  type LoadingScreenLayout,
 } from "#src/model/loading-screen.ts";
+import type { QueueType } from "#src/model/state.ts";
 import { LeaguePuuidSchema } from "#src/model/league-account.ts";
 import { ArenaTeamIdSchema } from "#src/model/arena/arena.ts";
 
@@ -29,6 +32,26 @@ describe("LoadingScreenLayoutSchema", () => {
   test("rejects invalid layout", () => {
     expect(() => LoadingScreenLayoutSchema.parse("invalid")).toThrow();
   });
+
+  const queueLayoutCases: {
+    queueType: QueueType;
+    layout: LoadingScreenLayout;
+  }[] = [
+    { queueType: "aram", layout: "aram" },
+    { queueType: "aram clash", layout: "aram" },
+    { queueType: "aram mayhem", layout: "aram" },
+    { queueType: "arena", layout: "arena" },
+    { queueType: "classic", layout: "classic" },
+    { queueType: "solo", layout: "standard" },
+    { queueType: "custom", layout: "standard" },
+  ];
+
+  test.each(queueLayoutCases)(
+    "maps $queueType to the $layout layout",
+    ({ queueType, layout }) => {
+      expect(loadingScreenLayoutForQueueType(queueType)).toBe(layout);
+    },
+  );
 });
 
 describe("branded type schemas", () => {

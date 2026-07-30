@@ -175,6 +175,10 @@ renderers, and enrichment behavior must not change.
 - Made the frontend review tool reject unsupported League Classic matches
   explicitly while keeping queue selection exhaustive, with a schema-validated
   converter regression wired into the frontend test gate.
+- Replaced the loading-screen builder's duplicate queue-ID layout catalog with
+  exhaustive shared queue-to-layout classification, routing queue 2450
+  `KIWI_JADE` on The Bandlewood through the ARAM report path while preserving
+  existing ARAM and Classic layouts.
 - Published draft PR #1849 on top of refresh PR #1827 with accepted full 5v5,
   partial 3v2, and postmatch screenshots.
 

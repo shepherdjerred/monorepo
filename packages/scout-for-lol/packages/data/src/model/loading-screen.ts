@@ -1,11 +1,16 @@
 import { z } from "zod";
 import { RanksSchema } from "#src/model/rank.ts";
-import { QueueTypeSchema, queueTypeToDisplayString } from "#src/model/state.ts";
+import {
+  QueueTypeSchema,
+  queueTypeToDisplayString,
+  type QueueType,
+} from "#src/model/state.ts";
 import { TeamSchema } from "#src/model/team.ts";
 import { LeaguePuuidSchema } from "#src/model/league-account.ts";
 import { MapNameSchema } from "#src/model/map.ts";
 import { ArenaTeamIdSchema } from "#src/model/arena/arena.ts";
 import { LaneSchema } from "#src/model/lane.ts";
+import { match } from "ts-pattern";
 
 /**
  * Layout mode determines how participants are arranged visually.
@@ -20,6 +25,34 @@ export const LoadingScreenLayoutSchema = z.enum([
   "arena",
   "classic",
 ]);
+
+export function loadingScreenLayoutForQueueType(
+  queueType: QueueType,
+): LoadingScreenLayout {
+  return match(queueType)
+    .returnType<LoadingScreenLayout>()
+    .with("aram", "aram clash", "aram mayhem", () => "aram")
+    .with("arena", () => "arena")
+    .with("classic", () => "classic")
+    .with(
+      "solo",
+      "flex",
+      "ranked 5s",
+      "clash",
+      "arurf",
+      "urf",
+      "quickplay",
+      "swiftplay",
+      "brawl",
+      "draft pick",
+      "easy doom bots",
+      "normal doom bots",
+      "hard doom bots",
+      "custom",
+      () => "standard",
+    )
+    .exhaustive();
+}
 
 /**
  * Branded type for Riot game IDs (from spectator API).

@@ -24,11 +24,11 @@ import {
   ArenaTeamIdSchema,
   GameIdSchema,
   inferStandardLanesWithCurrentPriors,
-  isArenaQueueOrMode,
   resolveQueueTypeFromGame,
   resolveClassicChampionKey,
   getModernChampionIdForClassic,
   getModernSpellIdForClassic,
+  loadingScreenLayoutForQueueType,
 } from "@scout-for-lol/data/index.ts";
 import {
   getChampionDisplayName,
@@ -36,7 +36,6 @@ import {
 } from "#src/utils/champion.ts";
 import { getRankByPuuid } from "#src/league/model/rank.ts";
 import { createLogger } from "#src/logger.ts";
-import { match } from "ts-pattern";
 
 const logger = createLogger("prematch-loading-screen-builder");
 
@@ -65,75 +64,6 @@ type BuildParticipantContext = {
 
 type BaseBuiltParticipant = Omit<NonStandardLoadingScreenParticipant, "ranks">;
 type RankedBuiltParticipant = BaseBuiltParticipant & { ranks?: Ranks };
-
-/**
- * Determine the layout mode based on queue config ID.
- * Throws on unknown queue IDs — caller is responsible for ensuring
- * we only attempt to render known queue types.
- */
-function determineLayout(gameInfo: RawCurrentGameInfo): LoadingScreenLayout {
-  if (gameInfo.gameMode === "JADE" || gameInfo.gameQueueConfigId === 4310) {
-    return "classic";
-  }
-  if (isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode)) {
-    return "arena";
-  }
-
-  return (
-    match(gameInfo.gameQueueConfigId)
-      .with(450, () => "aram" as const) // ARAM
-      .with(720, () => "aram" as const) // ARAM Clash
-      .with(2400, () => "aram" as const) // ARAM: Mayhem
-      .with(3200, () => "aram" as const) // ARAM: Mayhem MMR variant
-      .with(3270, () => "aram" as const) // ARAM: Mayhem
-      .with(0, () => "standard" as const) // Custom
-      .with(3100, () => "standard" as const) // Custom
-      .with(400, () => "standard" as const) // Draft Pick
-      .with(RANKED_SOLO_QUEUE_ID, () => "standard" as const) // Ranked Solo
-      .with(RANKED_FLEX_QUEUE_ID, () => "standard" as const) // Ranked Flex
-      .with(480, () => "standard" as const) // Swiftplay
-      .with(490, () => "standard" as const) // Quickplay
-      .with(700, () => "standard" as const) // Clash
-      .with(710, () => "standard" as const) // Ranked 5s (premade SR 5v5)
-      .with(900, () => "standard" as const) // ARURF
-      .with(1900, () => "standard" as const) // URF
-      .with(2300, () => "standard" as const) // Brawl
-      .with(3130, () => "standard" as const) // Easy Doom Bots
-      .with(4220, () => "standard" as const) // Normal Doom Bots
-      .with(4250, () => "standard" as const) // Hard Doom Bots
-      // Unknown queue ID (e.g. custom games, which carry ad-hoc queue IDs like
-      // 3110 that are absent from queues.json): fall back to the game mode + map
-      // to pick a layout, so custom games on standard maps still render.
-      .otherwise(() => layoutFromModeAndMap(gameInfo))
-  );
-}
-
-const ARAM_MAP_ID = 12;
-const SUMMONERS_RIFT_MAP_ID = 11;
-
-/**
- * Derive a layout from game mode and map for queue IDs that aren't enumerated
- * above. Custom games are structurally identical to their ranked/normal
- * counterparts (a custom Summoner's Rift draft is a 5v5; a custom ARAM is an
- * ARAM), so the mode/map is a reliable signal. Arena is already handled by the
- * `isArenaQueueOrMode` check at the top of `determineLayout`.
- */
-function layoutFromModeAndMap(
-  gameInfo: RawCurrentGameInfo,
-): LoadingScreenLayout {
-  if (gameInfo.gameMode === "ARAM" || gameInfo.mapId === ARAM_MAP_ID) {
-    return "aram";
-  }
-  if (
-    gameInfo.gameMode === "CLASSIC" ||
-    gameInfo.mapId === SUMMONERS_RIFT_MAP_ID
-  ) {
-    return "standard";
-  }
-  throw new Error(
-    `Unknown queue config ID ${gameInfo.gameQueueConfigId.toString()} — cannot determine loading screen layout (gameId=${gameInfo.gameId.toString()}, mapId=${gameInfo.mapId.toString()}, gameMode=${gameInfo.gameMode})`,
-  );
-}
 
 /**
  * Resolve team assignment for a participant.
@@ -460,7 +390,7 @@ export async function buildLoadingScreenData(
     gameInfo.gameQueueConfigId === RANKED_SOLO_QUEUE_ID ||
     gameInfo.gameQueueConfigId === RANKED_FLEX_QUEUE_ID ||
     gameInfo.gameQueueConfigId === RANKED_5S_QUEUE_ID;
-  const layout = determineLayout(gameInfo);
+  const layout = loadingScreenLayoutForQueueType(queueType);
   let mapName: ReturnType<typeof mapIdToName>;
   try {
     mapName = mapIdToName(gameInfo.mapId);
