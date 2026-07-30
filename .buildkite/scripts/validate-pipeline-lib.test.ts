@@ -16,9 +16,9 @@ function hasForbiddenDockerInDockerPath(source: string): boolean {
 
 const nativeTypeScriptDependency =
   '"@typescript/native": "npm:typescript@7.0.2"';
-const nativeTypeScriptInvocations = [
-  '"bun node_modules/@typescript/native/bin/tsc',
-  '"PATH=node_modules/@typescript/native/bin:$PATH tsc',
+const nativeTypeScriptCommands = [
+  "bun node_modules/@typescript/native/bin/tsc --noEmit",
+  "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
 ] as const;
 
 async function withPackageManifest(
@@ -39,7 +39,7 @@ async function withPackageManifest(
 
 function validateNativeTypeScriptPackage(manifestPath: string): Promise<void> {
   return assertPackageTokens([
-    [manifestPath, [nativeTypeScriptDependency], nativeTypeScriptInvocations],
+    [manifestPath, [nativeTypeScriptDependency], nativeTypeScriptCommands],
   ]);
 }
 
@@ -60,6 +60,25 @@ describe("Docker-in-Docker pipeline guard", () => {
 });
 
 describe("CI package tool dependency guard", () => {
+  test("accepts the designated native TypeScript command", async () => {
+    await withPackageManifest(
+      {
+        scripts: {
+          typecheck: "bun node_modules/@typescript/native/bin/tsc --noEmit",
+        },
+        devDependencies: {
+          "@typescript/native": "npm:typescript@7.0.2",
+          typescript: "^6.0.3",
+        },
+      },
+      async (manifestPath) => {
+        await expect(
+          validateNativeTypeScriptPackage(manifestPath),
+        ).resolves.toBeUndefined();
+      },
+    );
+  });
+
   test("accepts the declared native TypeScript alias selected through PATH", async () => {
     await withPackageManifest(
       {
@@ -116,7 +135,30 @@ describe("CI package tool dependency guard", () => {
         await expect(
           validateNativeTypeScriptPackage(manifestPath),
         ).rejects.toThrow(
-          `[validate-pipeline] CI package ${manifestPath} is missing an allowed tool invocation: ${nativeTypeScriptInvocations.join(" or ")}`,
+          `[validate-pipeline] CI package ${manifestPath} has invalid scripts.typecheck command "bunx --no-install tsc --noEmit"; expected ${nativeTypeScriptCommands.join(" or ")}`,
+        );
+      },
+    );
+  });
+
+  test("rejects an invalid typecheck even when another script uses the native compiler", async () => {
+    await withPackageManifest(
+      {
+        scripts: {
+          native:
+            "bun node_modules/@typescript/native/bin/tsc --noEmit --pretty",
+          typecheck: "bunx --no-install tsc --noEmit",
+        },
+        devDependencies: {
+          "@typescript/native": "npm:typescript@7.0.2",
+          typescript: "^6.0.3",
+        },
+      },
+      async (manifestPath) => {
+        await expect(
+          validateNativeTypeScriptPackage(manifestPath),
+        ).rejects.toThrow(
+          `[validate-pipeline] CI package ${manifestPath} has invalid scripts.typecheck command "bunx --no-install tsc --noEmit"; expected ${nativeTypeScriptCommands.join(" or ")}`,
         );
       },
     );

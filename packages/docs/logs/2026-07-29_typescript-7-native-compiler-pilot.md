@@ -35,11 +35,13 @@ Additional integration changes:
   the split compiler/API toolchain.
 - `scripts/new-package.test.ts` pins the generated manifest contract.
 - `.buildkite/scripts/validate-pipeline-lib.ts` supports checking both explicit
-  tool dependencies and exact allowed command invocations.
+  tool dependencies and the exact designated `scripts.typecheck` command.
 - `.buildkite/scripts/validate-pipeline.ts` requires the CDK8s manifest to
   declare the native alias and invoke its package-local compiler.
 - `.buildkite/scripts/validate-pipeline-lib.test.ts` covers accepted native
-  commands and rejects missing aliases or undeclared compiler invocations.
+  commands, rejects missing aliases or undeclared compiler invocations, and
+  proves that an allowed command in another script cannot mask a regressed
+  `scripts.typecheck`.
 
 ## Verification
 
@@ -49,8 +51,13 @@ The migration was exercised with:
 - Native TypeScript typechecks for all six pilot surfaces.
 - Focused tests and lint for root scripts, ESLint config, CDK8s, Tasks for
   Obsidian, and Scout.
-- `bun test ./.buildkite/scripts/validate-pipeline-lib.test.ts` — 5 tests
-  passed, including the native dependency and invocation contract.
+- `bun test ./.buildkite/scripts/validate-pipeline-lib.test.ts` — 7 tests
+  passed, including direct positive and negative `scripts.typecheck` cases and
+  the mixed-script regression.
+- `bun .buildkite/scripts/validate-pipeline.ts` — the live 29-step pipeline
+  passed its structural and package-manifest contracts.
+- `cd scripts && bun run typecheck` and `bun lint-buildkite.ts` — root scripts
+  and Buildkite validation code passed typechecking and lint.
 - `cd packages/tasks-for-obsidian && bun run scripts/check-release-bundle.ts`
   — exit 0; Metro produced a 10,376,414-byte iOS Release bundle and sourcemap,
   with exactly one bundled copy each of `react`, `react-native`, and
@@ -66,8 +73,10 @@ The migration was exercised with:
   manifests listed above while preserving TypeScript 6 for API consumers.
 - Updated new-package scaffolding and tests so new workspaces use the same
   split toolchain.
-- Added CI validation that couples the explicit native dependency to an
-  allowed package-local invocation.
+- Added CI validation that couples the explicit native dependency to an exact
+  allowed command in the designated `scripts.typecheck` field.
+- Added a mixed-script regression test proving that unrelated allowed commands
+  cannot mask a reverted typecheck command.
 - Recorded the exact Release Metro bundle result required for the Tasks for
   Obsidian dependency change.
 - Verified the current pipeline guard tests and the canonical docs model.
@@ -89,8 +98,9 @@ The migration was exercised with:
   replacement of the `typescript` dependency.
 - Package-local native compiler paths are required by the isolated linker and
   CI's no-auto-install invariant.
-- Buildkite build #7264 was red on the pre-documentation head
-  `bd23e5c13f47998ed1e767f636d531a1af102396`; it is not evidence for the
-  replacement head.
+- Buildkite build #7301 on
+  `6dfaba5e42b98d82817be94c5140f07b9eb9e06c` failed during dependency setup
+  because Bun could not access its temporary directory; downstream failures
+  are fallout and replacement-head CI remains required.
 - Restacking the lower branch changes child PR #1843's head SHA even though
   this cycle does not modify its recursive-manifest finding.

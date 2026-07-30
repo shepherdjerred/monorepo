@@ -484,8 +484,8 @@ await assertPackageTokens([
       '"format:generated-helm": "prettier --no-config"',
     ],
     [
-      '"bun node_modules/@typescript/native/bin/tsc',
-      '"PATH=node_modules/@typescript/native/bin:$PATH tsc',
+      "bun node_modules/@typescript/native/bin/tsc --noEmit",
+      "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     ],
   ],
   ["packages/sjer.red/package.json", ['"bun x --no-install playwright test']],
