@@ -25,6 +25,12 @@
   },
   {
     "namespace": "buildkite",
+    "name": "buildkite-bun-cache-control",
+    "backup": "disabled",
+    "reason": "Disposable Bun cache coordination locks"
+  },
+  {
+    "namespace": "buildkite",
     "name": "buildkite-git-mirrors-liskov",
     "backup": "disabled",
     "reason": "Rebuildable Git mirror cache"
