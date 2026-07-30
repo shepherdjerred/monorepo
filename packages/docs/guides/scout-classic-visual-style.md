@@ -1,7 +1,7 @@
 ---
 id: scout-classic-visual-style
 type: guide
-status: active
+status: complete
 board: false
 ---
 
@@ -159,6 +159,8 @@ controls.
   and partial postmatch reports using the checksum-pinned fonts.
 - Attached the accepted full prematch, partial prematch, and full postmatch
   renders to PR #1849.
+- Marked this completed guide with the canonical `complete` workflow status
+  after focused docs validation rejected the non-taxonomy `active` value.
 
 ### Remaining
 

@@ -164,6 +164,8 @@ renderers, and enrichment behavior must not change.
 - Converted Classic postmatch champion asset keys to user-facing labels and
   added renderer-level coverage proving `Jade_` identifiers do not leak into
   visible report text.
+- Corrected the completed Classic visual guide's canonical workflow status and
+  validated the full docs model.
 - Published draft PR #1849 on top of refresh PR #1827 with accepted full 5v5,
   partial 3v2, and postmatch screenshots.
 
@@ -179,6 +181,5 @@ renderers, and enrichment behavior must not change.
   or included in a public container or artifact.
 - Live Match-V5 acceptance depends on Riot exposing a Classic match during the
   validation window.
-- Buildkite #7204 also reports invalid visual-guide workflow status and a
-  missing frontend converter return; those remain for subsequent focused
-  repair cycles.
+- Buildkite #7217 still reports a missing frontend converter return; that
+  remains for the next focused repair cycle.
