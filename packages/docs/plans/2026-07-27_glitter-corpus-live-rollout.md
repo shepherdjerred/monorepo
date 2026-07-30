@@ -46,10 +46,21 @@ schedule is deliberately unpaused.
 - [x] Restore the Temporal worker OpenAI project's quota.
 - [x] Run the snapshot-pinned fixed-time weekly dry run twice and require
       byte-identical outputs and proposal checksums.
-- [x] Run the real refresh, inspect its sole PR, and smoke-test the shared
-      package, Birmel, Scout, and Glitter consumers.
-- [ ] Accept and merge generated-context PR #1834 after its human review and
-      current-head Buildkite complete.
+- [x] Run the real refresh, inspect its sole PR, and complete pre-merge
+      package-level smoke tests for the shared package, Birmel, Scout, and
+      Glitter consumers.
+- [ ] Correct generated-context PR #1834's coverage metadata so verified-corpus
+      message counts are explicitly distinct from the bounded 200-message model
+      evidence sample; regenerate and re-review affected cards if that correction
+      changes generated content.
+- [ ] Complete #1834's current-head Buildkite and merge it only after the
+      metadata correction and subjective generated-content review are ready.
+- [ ] After #1834 merges, run merged-main and production consumer smoke checks
+      before allowing the weekly schedule to be unpaused.
+- [ ] Once every deterministic CI, metadata, merge, and downstream smoke check
+      passes, transition this plan to `status: awaiting-human` with
+      `verification: human` and add the documented observable `## Human
+Verification` scenario for subjective generated-content acceptance.
 - [ ] Deliberately unpause `glitter-context-refresh-weekly`, verify its next
       action and observability, then archive this plan and its related TODOs.
 
@@ -68,9 +79,12 @@ schedule is deliberately unpaused.
       activate `glitter-corpus-daily`.
 - [x] Run the weekly context refresh twice as fixed-time dry runs and require
       identical snapshot/proposal checksums and outputs.
-- [x] Run one real weekly refresh, inspect its sole PR, and smoke-test the
-      shared package, Birmel, Scout, and Glitter.
-- [ ] Accept and merge generated-context PR #1834.
+- [x] Run one real weekly refresh, inspect its sole PR, and complete pre-merge
+      package-level smoke tests for the shared package, Birmel, Scout, and
+      Glitter consumers.
+- [ ] Correct #1834's coverage metadata, then complete current-head CI and
+      subjective generated-content review before merging it.
+- [ ] Run merged-main and production consumer smoke checks after #1834 merges.
 - [ ] Deliberately unpause `glitter-context-refresh-weekly`, confirm its
       next-run time, and verify clean corpus/context observability.
 
@@ -96,7 +110,12 @@ schedule is deliberately unpaused.
 - [x] Approve inventory and complete the production canary.
 - [x] Complete the full backfill and recovery verification.
 - [x] Accept the daily workflow and unpause its schedule.
-- [ ] Complete human review and merge PR #1834.
+- [ ] Correct #1834's coverage metadata to distinguish verified-corpus message
+      counts from the bounded 200-message model evidence sample.
+- [ ] Complete #1834's deterministic CI and merged-main/production consumer
+      smokes, then transition this plan to `awaiting-human` / `verification:
+human` with an observable generated-content review scenario.
+- [ ] Complete that subjective human review and merge PR #1834.
 - [ ] Unpause and accept the weekly workflow.
 - [ ] Complete and archive this plan and the related TODOs.
 
@@ -162,6 +181,33 @@ schedule is deliberately unpaused.
 - The prepared homelab change is intentionally uncommitted because the offline
   vault check proves all three new R2 fields are absent from the committed
   snapshot.
+
+## Session Log — 2026-07-29 (acceptance-gate correction)
+
+### Done
+
+- Separated completed pre-merge package smoke tests from the still-required
+  merged-main and production consumer smoke checks.
+- Added the uncompleted metadata correction that must distinguish verified-corpus
+  coverage from the bounded 200-message model evidence sample before acceptance.
+- Recorded the staged handoff: remain `in-progress` while deterministic work is
+  outstanding, then use `awaiting-human`, `verification: human`, and an
+  observable generated-content acceptance scenario.
+
+### Remaining
+
+- Correct #1834's coverage metadata, complete its current-head Buildkite, merge
+  it, and run merged-main plus production consumer smoke checks.
+- Move the plan to the documented human-acceptance state only after those
+  deterministic gates pass; keep `glitter-context-refresh-weekly` paused until
+  acceptance and unpause verification complete.
+
+### Caveats
+
+- PR #1834's current Buildkite #7145 failed in the bootstrap pipeline-upload
+  job with a `stack_error`; no repository verification job ran.
+- This documentation change does not mark generated content, CI, merged-main
+  smoke checks, production smoke checks, or schedule acceptance complete.
 
 ## Session Log — 2026-07-28
 

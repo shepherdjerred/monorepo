@@ -31,10 +31,19 @@ without making additional OpenAI calls.
       `dbb59f00-3f6b-4cab-a87c-6d8a65e21d62` at SHA-256
       `e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9`
       and require complete output equality.
-- [x] Run the real refresh with the same pin, inspect its sole PR, and
-      smoke-test the shared package, Birmel, Scout, and Glitter consumers.
-- [ ] Accept and merge generated-context PR #1834 after human review and
-      current-head Buildkite complete.
+- [x] Run the real refresh with the same pin, inspect its sole PR, and complete
+      pre-merge package-level smoke tests for the shared package, Birmel, Scout,
+      and Glitter consumers.
+- [ ] Correct #1834's coverage metadata so verified-corpus message counts remain
+      distinct from the bounded 200-message model evidence sample; regenerate and
+      re-review affected cards if the correction changes generated content.
+- [ ] Complete #1834's current-head Buildkite, merge it after the metadata
+      correction and subjective generated-content review are ready, then run
+      merged-main and production consumer smoke checks.
+- [ ] After every deterministic CI and smoke gate passes, transition this TODO
+      to `status: awaiting-human` with `verification: human` and add a `## Human
+Verification` scenario: review the generated style cards for accurate,
+      socially acceptable personas and explicitly accept or reject the proposal.
 - [ ] Unpause `glitter-context-refresh-weekly` only after those acceptance
       gates pass, then complete and archive this TODO and the live rollout plan.
 
@@ -98,3 +107,29 @@ without making additional OpenAI calls.
 - Current-head Buildkite #7145 is scheduled but cannot start while the
   dedicated CI node `liskov` is offline; Kubernetes last received its heartbeat
   at 11:04 PDT and deliberately does not fall back to the production node.
+
+## Session Log — 2026-07-29 (acceptance-gate correction)
+
+### Done
+
+- Distinguished completed pre-merge package smoke tests from the required
+  merged-main and production consumer smoke checks.
+- Added the uncompleted metadata correction that must keep verified-corpus
+  coverage distinct from the bounded 200-message model evidence sample.
+- Recorded the staged state transition to human verification only after every
+  deterministic CI and smoke gate has passed.
+
+### Remaining
+
+- Correct #1834's metadata, complete current-head CI, merge it, and run
+  merged-main and production consumer smoke checks.
+- Transition this TODO to `awaiting-human` / `verification: human` with the
+  documented observable acceptance scenario, then obtain the subjective review
+  before unpausing the weekly schedule.
+
+### Caveats
+
+- PR #1834's Buildkite #7145 failed during bootstrap pipeline upload with a
+  `stack_error`; no repository verification job ran.
+- The weekly schedule remains paused, and this document does not treat the
+  generated content or any remaining acceptance gate as complete.
