@@ -129,6 +129,11 @@ attempt to author a comprehensive monorepo atlas.
 - Added a pipeline-validator invariant for the provisioning dependency and
   passed the focused validator, lane-coverage tests, Buildkite-script lint,
   typecheck, and formatting checks.
+- Fixed the LeetCode search command's floating embedding-process shutdown
+  promise with explicit awaited, error-propagating lifecycle handling.
+- Added focused lifecycle tests proving shutdown completion is awaited, failed
+  exits propagate, and keyword-only searches remain a no-op; LeetCode test,
+  lint, and local macOS build all pass.
 - Passed focused wiki unit tests, lint, typecheck, build, and Playwright
   coverage; liveness-checked every new GitHub link target.
 
@@ -136,6 +141,9 @@ attempt to author a comprehensive monorepo atlas.
 
 - Await replacement Buildkite CI and hosted Codex review on the published
   public-data, link-routing, Astro-lint, and deployment-ordering fixes.
+- Fix the separate Linux CI embedding availability defect: `isAvailable()`
+  currently reports true when `uv` exists even though the MLX server cannot
+  start on the Buildkite worker.
 - After merge and deployment, run the live HTTP, cache-header, CSP, sitemap,
   robots, and public-corpus verification.
 
@@ -146,6 +154,6 @@ attempt to author a comprehensive monorepo atlas.
   added.
 - The first-deployment ordering is statically verified but cannot be exercised
   end to end until the main-only infrastructure and site lanes run after merge.
-- Exact-head Buildkite build 7212 remained hard-red because LeetCode lint found
-  a floating promise in `packages/leetcode/src/search.ts:218` and its search
-  build could not start the embedding server. Trivy exit 7 was soft-failed.
+- Exact-head Buildkite build 7225 showed the lint and startup failures have
+  distinct causes. The embedding build passes on macOS, so that local result
+  does not prove the Linux MLX server path used by Buildkite.
