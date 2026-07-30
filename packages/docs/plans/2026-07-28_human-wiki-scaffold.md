@@ -150,12 +150,23 @@ attempt to author a comprehensive monorepo atlas.
   deterministic error.
 - Added focused valid, configured-stale, and multi-stale allowlist tests; wiki
   unit tests, lint, typecheck, build, and Playwright coverage pass.
+- Published the stale-allowlist validation as `81bfdc12d`; exact-head Buildkite
+  build 7236 passed the exhaustive Turbo verification lane.
+- Added `packages/docs/wiki/package.json` to all 14 frozen-install Docker
+  contexts and narrowly exposed only that manifest through `.dockerignore`.
+- Extended the image validator to derive explicit workspace manifests from the
+  root workspace list and check every frozen-install stage, with focused
+  coverage for derived paths, multi-stage success, missing manifests, and the
+  Docker context exception.
+- Passed the pipeline validator, focused image-validator tests, root-scripts
+  typecheck and lint, and a representative BuildKit `prod-deps` target whose
+  frozen filtered install completed successfully.
 - Passed focused wiki unit tests, lint, typecheck, build, and Playwright
   coverage; liveness-checked every new GitHub link target.
 
 ### Remaining
 
-- Publish the stale-allowlist validation fix and await replacement Buildkite CI
+- Publish the Docker workspace-context fix and await replacement Buildkite CI
   plus hosted Codex review.
 - After merge and deployment, run the live HTTP, cache-header, CSP, sitemap,
   robots, and public-corpus verification.

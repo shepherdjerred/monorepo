@@ -3,11 +3,94 @@ import {
   requireAllPresent,
   requireNonePresent,
 } from "./validate-pipeline-lib.ts";
+import { asRecord } from "../../scripts/lib/json.ts";
 
 type SmokePort = {
   readonly image: string;
   readonly port: number;
 };
+
+const COMMON_WORKSPACE_PATHS = [
+  /^packages\/[^/]+$/u,
+  /^packages\/[^/]+\/packages\/[^/]+$/u,
+] as const;
+
+export function explicitWorkspaceManifests(
+  workspacePaths: readonly string[],
+): string[] {
+  return workspacePaths
+    .filter(
+      (workspacePath) =>
+        !COMMON_WORKSPACE_PATHS.some((pattern) => pattern.test(workspacePath)),
+    )
+    .map((workspacePath) => `${workspacePath}/package.json`)
+    .sort();
+}
+
+export function assertWorkspaceInstallContexts(
+  dockerfile: string,
+  image: string,
+  explicitManifests: readonly string[],
+): void {
+  const lines = dockerfile.split("\n");
+  let stage = "unnamed-stage";
+
+  for (const [lineIndex, line] of lines.entries()) {
+    const stageMatch = /^FROM .+\sAS\s+(\S+)$/iu.exec(line);
+    if (stageMatch?.[1] !== undefined) {
+      stage = stageMatch[1];
+    }
+    if (!/^RUN bun install --frozen-lockfile\b/u.test(line)) {
+      continue;
+    }
+
+    let copyStart = lineIndex - 1;
+    while (
+      copyStart >= 0 &&
+      !/^COPY --parents\b/u.test(lines[copyStart] ?? "") &&
+      !/^FROM\b/u.test(lines[copyStart] ?? "")
+    ) {
+      copyStart--;
+    }
+    const copyStartLine = lines[copyStart];
+    if (
+      copyStart < 0 ||
+      copyStartLine === undefined ||
+      !/^COPY --parents\b/u.test(copyStartLine)
+    ) {
+      fail(`${image} ${stage} frozen install has no manifest COPY context`);
+    }
+
+    const copyBlock = lines.slice(copyStart, lineIndex).join("\n");
+    const missingManifests = explicitManifests.filter(
+      (manifest) => !copyBlock.includes(manifest),
+    );
+    if (missingManifests.length > 0) {
+      fail(
+        [
+          `${image} ${stage} frozen install is missing workspace manifests:`,
+          ...missingManifests.map((manifest) => `- ${manifest}`),
+        ].join("\n"),
+      );
+    }
+  }
+}
+
+export function assertWikiManifestInDockerContext(dockerignore: string): void {
+  const rules = new Set(dockerignore.split("\n").map((line) => line.trim()));
+  for (const required of [
+    "packages/docs/*",
+    "!packages/docs/wiki",
+    "packages/docs/wiki/*",
+    "!packages/docs/wiki/package.json",
+  ]) {
+    if (!rules.has(required)) {
+      fail(
+        `.dockerignore is missing wiki workspace manifest context rule ${required}`,
+      );
+    }
+  }
+}
 
 function smokeStage(dockerfile: string, image: string): string {
   const marker = /^FROM .+ AS smoke$/m.exec(dockerfile);
@@ -202,6 +285,40 @@ export async function validateImageMigrationContracts(
   const dockerBake = await Bun.file("docker-bake.hcl").text();
   if (dockerBake.includes('variable "READ_CACHE"')) {
     fail("docker-bake.hcl retained the rejected Buildx experiment cache mode");
+  }
+  assertWikiManifestInDockerContext(await Bun.file(".dockerignore").text());
+  const rootPackage = asRecord(await Bun.file("package.json").json());
+  const rawWorkspaces = rootPackage?.["workspaces"];
+  if (!Array.isArray(rawWorkspaces)) {
+    fail("root package.json workspaces must be an array");
+  }
+  const workspacePaths: string[] = [];
+  for (const workspacePath of rawWorkspaces) {
+    if (typeof workspacePath !== "string") {
+      fail("root package.json workspaces must contain only strings");
+    }
+    workspacePaths.push(workspacePath);
+  }
+  const requiredManifests = explicitWorkspaceManifests(workspacePaths);
+  const appDockerfiles = new Set<string>();
+  for (const match of dockerBake.matchAll(
+    /^\s*dockerfile\s*=\s*"([^"]+)"\s*$/gmu,
+  )) {
+    const dockerfilePath = match[1];
+    if (dockerfilePath === undefined) {
+      fail("docker-bake.hcl contains an empty Dockerfile path");
+    }
+    appDockerfiles.add(dockerfilePath);
+  }
+  if (appDockerfiles.size === 0) {
+    fail("docker-bake.hcl contains no app Dockerfiles");
+  }
+  for (const dockerfilePath of appDockerfiles) {
+    assertWorkspaceInstallContexts(
+      await Bun.file(dockerfilePath).text(),
+      dockerfilePath,
+      requiredManifests,
+    );
   }
 
   const buildCiImage = await Bun.file(
