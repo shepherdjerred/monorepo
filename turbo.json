@@ -186,6 +186,7 @@
     "//#compliance-check": {
       "inputs": [
         "scripts/compliance-check.ts",
+        "scripts/package.json",
         "packages/*/package.json",
         "packages/*/packages/*/package.json",
         "packages/*/eslint.config.*",
