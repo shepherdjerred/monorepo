@@ -13,6 +13,8 @@ export const BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC =
   "buildkite:pod_parent_fs_writes_bytes:pod_lifetime_max_seen_24h";
 export const BUILDKITE_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC =
   "buildkite:pod_parent_fs_writes_bytes_by_job_total";
+export const BUILDKITE_BUN_CACHE_PVC = "buildkite-bun-cache";
+export const BUILDKITE_BUN_CACHE_GC_CRONJOB = "buildkite-bun-cache-gc";
 
 const POD_LABEL_METADATA = [
   "label_buildkite_com_job_uuid",
@@ -77,6 +79,43 @@ function containerCounter(metric: string): string {
     }
   )`,
   );
+}
+
+function buildkiteBunCacheUsageRatio(): string {
+  // kubelet_volume_stats metrics disappear whenever no pod mounts the PVC.
+  // Join the always-on ZFS dataset telemetry to kube-state-metrics so the
+  // alert remains present between Buildkite jobs and stays scoped to this PVC.
+  return `label_replace(
+  max by (node, dataset_name) (
+    zfs_dataset_used_bytes{
+      node="liskov",
+      dataset_name=~".*/pvc-.*"
+    }
+    /
+    (
+      zfs_dataset_used_bytes{
+        node="liskov",
+        dataset_name=~".*/pvc-.*"
+      }
+      +
+      zfs_dataset_available_bytes{
+        node="liskov",
+        dataset_name=~".*/pvc-.*"
+      }
+    )
+  ),
+  "volumename",
+  "$1",
+  "dataset_name",
+  ".*/(pvc-.*)"
+)
+* on (volumename) group_left(namespace, persistentvolumeclaim)
+max by (volumename, namespace, persistentvolumeclaim) (
+  kube_persistentvolumeclaim_info{
+    namespace="buildkite",
+    persistentvolumeclaim="${BUILDKITE_BUN_CACHE_PVC}"
+  }
+)`;
 }
 
 export function getBuildkiteRuleGroups(): PrometheusRuleSpecGroups[] {
@@ -239,6 +278,74 @@ and on ()
           for: "5m",
           labels: {
             severity: "info",
+            category: "ci",
+            namespace: "buildkite",
+          },
+        },
+        {
+          alert: "BuildkiteBunCacheUsageHigh",
+          annotations: {
+            summary: "Buildkite Bun cache is more than 75% full",
+            description: escapePrometheusTemplate(
+              "The shared Buildkite Bun cache PVC {{ $labels.persistentvolumeclaim }} is {{ $value | humanizePercentage }} full. The collector should clear it at 60%; investigate collector health and lock contention.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            `(${buildkiteBunCacheUsageRatio()}) > 0.75`,
+          ),
+          for: "10m",
+          labels: {
+            severity: "warning",
+            category: "ci",
+            namespace: "buildkite",
+          },
+        },
+        {
+          alert: "BuildkiteBunCacheUsageCritical",
+          annotations: {
+            summary: "Buildkite Bun cache is more than 90% full",
+            description: escapePrometheusTemplate(
+              "The shared Buildkite Bun cache PVC {{ $labels.persistentvolumeclaim }} is {{ $value | humanizePercentage }} full and approaching install failure.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            `(${buildkiteBunCacheUsageRatio()}) > 0.9`,
+          ),
+          for: "5m",
+          labels: {
+            severity: "critical",
+            category: "ci",
+            namespace: "buildkite",
+          },
+        },
+        {
+          alert: "BuildkiteBunCacheCollectorStale",
+          annotations: {
+            summary: "Buildkite Bun cache collector has not succeeded",
+            description:
+              "The five-minute Buildkite Bun cache collector has not completed successfully in the last 20 minutes.",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(`(
+  time() - kube_cronjob_status_last_successful_time{
+    namespace="buildkite",
+    cronjob="${BUILDKITE_BUN_CACHE_GC_CRONJOB}"
+  } > 1200
+)
+or
+(
+  time() - kube_cronjob_created{
+    namespace="buildkite",
+    cronjob="${BUILDKITE_BUN_CACHE_GC_CRONJOB}"
+  } > 1200
+  unless on (namespace, cronjob)
+  kube_cronjob_status_last_successful_time{
+    namespace="buildkite",
+    cronjob="${BUILDKITE_BUN_CACHE_GC_CRONJOB}"
+  }
+)`),
+          for: "1m",
+          labels: {
+            severity: "warning",
             category: "ci",
             namespace: "buildkite",
           },

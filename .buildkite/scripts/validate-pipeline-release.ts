@@ -151,7 +151,7 @@ async function validatePublishing(
 
   const releasePlease = stepBlocks.get("release-please");
   const releaseInstall =
-    "bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --production";
+    ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --production";
   if (!hasTrimmedLine(releasePlease, releaseInstall)) {
     fail(
       `release-please lane is missing exact filtered install ${releaseInstall}`,
@@ -160,7 +160,7 @@ async function validatePublishing(
 
   requireIncludes(
     stepBlocks.get("version-commit-back"),
-    "bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
+    ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
     "version commit-back is missing its Zod-owning filtered install",
   );
 
