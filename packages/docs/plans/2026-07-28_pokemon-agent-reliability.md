@@ -796,3 +796,29 @@ deferred by explicit direction.
 - No WASM rebuild is required because the existing party-mon eligibility export
   already reads the save's live Enigma Berry effect.
 - The other #1847 route finding and all #1848 findings remain unchanged.
+
+## Session Log — 2026-07-29 (live battle move state)
+
+### Done
+
+- Replaced controller-buffer move decoding with authoritative per-battler move
+  IDs, current PP, and PP-Up-derived maximum PP from Emerald's live battle
+  state.
+- Preserved the existing live move-limitation query for Disable, PP depletion,
+  Torment, Taunt, Imprison, Encore, and Choice Band restrictions.
+- Added first-turn, later-turn stale-order, absent-move, and disabled-move
+  regressions, plus a source-contract test for the live engine fields.
+- Rebuilt the real WASM and passed focused tests, the real-WASM ABI/reboot
+  smoke, typecheck, and lint.
+
+### Remaining
+
+- Publish the #1847 fix, restack and publish #1848, and complete current-head
+  hosted-review verification for both pull requests.
+
+### Caveats
+
+- The observation ABI remains version 4 and 144 bytes; only the source of its
+  existing move records changed.
+- The rebuilt WASM asset is ignored and remains a local verification artifact.
+- The #1847 warp finding and all #1848 findings remain unchanged.

@@ -367,6 +367,24 @@ describe("patch source identity and ABI validation", () => {
       "+        if (gBattleMons[other].ability == ABILITY_SHADOW_TAG)",
     );
   });
+
+  test("reads first-turn and later-turn moves from live battler state", async () => {
+    const liveMovesPatch = await Bun.file(
+      `${import.meta.dir}/../wasm-src/patches/0005-live-battle-moves.patch`,
+    ).text();
+
+    expect(liveMovesPatch).toContain(
+      "+                u16 move = gBattleMons[battler].moves[moveSlot];",
+    );
+    expect(liveMovesPatch).toContain(
+      "+                    gBattleMons[battler].pp[moveSlot];",
+    );
+    expect(liveMovesPatch).toContain(
+      "+                        move, gBattleMons[battler].ppBonuses, moveSlot);",
+    );
+    expect(liveMovesPatch).not.toContain("+            moveInfo =");
+    expect(liveMovesPatch).not.toContain("+                    gBattleBufferA");
+  });
 });
 
 describe("WASM build orchestration", () => {

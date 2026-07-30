@@ -258,7 +258,7 @@ function enigmaBerryObservation(): GameObservationV2 {
 }
 
 describe("GameBattleControl move actions", () => {
-  test("selects a named move through action and move cursors", async () => {
+  test("selects an ordinary first-turn move before opening Fight", async () => {
     const port = new BattlePort(observation({ frame: 10, actionCursor: 1 }), [
       observation({ frame: 12, actionCursor: 0 }),
       observation({ frame: 14, menu: "move", moveCursor: 2 }),
@@ -276,6 +276,58 @@ describe("GameBattleControl move actions", () => {
       "up",
       "a",
     ]);
+  });
+
+  test("uses the live later-turn move slot instead of stale prior order", async () => {
+    const currentMoves: BattleState["moves"] = [
+      {
+        slot: 1,
+        moveId: 45,
+        move: "GROWL",
+        currentPp: 40,
+        maxPp: 40,
+        usable: true,
+      },
+      {
+        slot: 2,
+        moveId: 33,
+        move: "TACKLE",
+        currentPp: 34,
+        maxPp: 35,
+        usable: true,
+      },
+    ];
+    const port = new BattlePort(
+      observation({ frame: 20, moves: currentMoves }),
+      [
+        observation({ frame: 22, menu: "move", moves: currentMoves }),
+        observation({
+          frame: 24,
+          menu: "move",
+          moveCursor: 1,
+          moves: currentMoves,
+        }),
+        observation({ frame: 26 }),
+      ],
+    );
+
+    const outcome = await new GameBattleControl(port).move({ moveId: 33 });
+
+    expect(outcome.status).toBe("applied");
+    expect(port.presses.map((press) => press.command)).toEqual([
+      "a",
+      "right",
+      "a",
+    ]);
+  });
+
+  test("rejects a move absent from the live battler state before input", async () => {
+    const port = new BattlePort(observation({ frame: 10 }), []);
+
+    await expect(
+      new GameBattleControl(port).move({ moveId: 45 }),
+    ).rejects.toThrow("requested move is not available to the input battler");
+    expect(port.presses).toEqual([]);
   });
 
   test("rejects an explicit target when the move cannot open a target menu", async () => {
