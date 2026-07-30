@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { parsePokemonUpstream } from "./lib/upstream.ts";
 import { writeWasmArtifact } from "./lib/wasm-artifact.ts";
+import { fingerprintPatchSeries, newFilesInPatchSeries } from "./build-wasm.ts";
 
 const temporaryDirectories: string[] = [];
 
@@ -53,4 +54,38 @@ test("keeps the observation bridge closing brace inside its new-file hunk", asyn
 
   expect(patch).toContain("@@ -0,0 +1,595 @@");
   expect(patch.trimEnd().endsWith("+}")).toBe(true);
+});
+
+test("fingerprints the complete ordered patch series", async () => {
+  const temporaryDirectory = await mkdtemp(
+    path.join(tmpdir(), "pokemon-wasm-patches-"),
+  );
+  temporaryDirectories.push(temporaryDirectory);
+  const firstPatch = path.join(temporaryDirectory, "0001-first.patch");
+  const secondPatch = path.join(temporaryDirectory, "0002-second.patch");
+  await Promise.all([
+    Bun.write(firstPatch, "first patch\n"),
+    Bun.write(secondPatch, "second patch\n"),
+  ]);
+
+  const initial = await fingerprintPatchSeries([secondPatch, firstPatch]);
+  expect(await fingerprintPatchSeries([firstPatch, secondPatch])).toBe(initial);
+
+  await Bun.write(secondPatch, "changed second patch\n");
+  expect(await fingerprintPatchSeries([firstPatch, secondPatch])).not.toBe(
+    initial,
+  );
+});
+
+test("identifies only files introduced by the patch series", async () => {
+  const patchPaths = [
+    ...new Bun.Glob("*.patch").scanSync({
+      cwd: `${import.meta.dir}/../wasm-src/patches`,
+      absolute: true,
+    }),
+  ];
+
+  expect(await newFilesInPatchSeries(patchPaths)).toEqual([
+    "src/wasm_observation.c",
+  ]);
 });

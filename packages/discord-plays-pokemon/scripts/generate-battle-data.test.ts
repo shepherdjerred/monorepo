@@ -3,9 +3,13 @@ import {
   buildCatalog,
   normalizeCatalogName,
   parseContiguousIds,
+  parseItemBattleUses,
   parseItemNames,
   parseMoveNames,
+  parseMoveTargets,
   renderCatalogModule,
+  renderItemBattleUses,
+  renderMoveTargets,
 } from "./generate-battle-data.ts";
 
 describe("battle data generation", () => {
@@ -88,6 +92,80 @@ describe("battle data generation", () => {
     ]).toEqual([["ITEM_POKE_BALL", "POKé BALL"]]);
   });
 
+  test("parses move targets into numeric ID order", () => {
+    expect(
+      parseMoveTargets(
+        `
+          [MOVE_NONE] =
+          {
+            .target = MOVE_TARGET_USER,
+          },
+          [MOVE_POUND] =
+          {
+            .target = MOVE_TARGET_SELECTED,
+          },`,
+        new Map([
+          ["MOVE_NONE", 0],
+          ["MOVE_POUND", 1],
+        ]),
+      ),
+    ).toEqual([16, 0]);
+  });
+
+  test("parses supported battle-item interaction shapes", () => {
+    expect(
+      parseItemBattleUses(
+        `
+          [ITEM_NONE] =
+          {
+            .itemId = ITEM_NONE,
+          },
+          [ITEM_POKE_BALL] =
+          {
+            .itemId = ITEM_POKE_BALL,
+            .battleUseFunc = ItemUseInBattle_PokeBall,
+          },
+          [ITEM_POTION] =
+          {
+            .itemId = ITEM_POTION,
+            .battleUseFunc = ItemUseInBattle_Medicine,
+          },
+          [ITEM_ETHER] =
+          {
+            .itemId = ITEM_ETHER,
+            .battleUseFunc = ItemUseInBattle_PPRecovery,
+          },
+          [ITEM_X_ATTACK] =
+          {
+            .itemId = ITEM_X_ATTACK,
+            .battleUseFunc = ItemUseInBattle_StatIncrease,
+          },
+          [ITEM_POKE_DOLL] =
+          {
+            .itemId = ITEM_POKE_DOLL,
+            .battleUseFunc = ItemUseInBattle_Escape,
+          },`,
+        new Map([
+          ["ITEM_NONE", 0],
+          ["ITEM_POKE_BALL", 1],
+          ["ITEM_POTION", 2],
+          ["ITEM_ETHER", 3],
+          ["ITEM_X_ATTACK", 4],
+          ["ITEM_POKE_DOLL", 5],
+        ]),
+      ),
+    ).toEqual([
+      "unavailable",
+      "poke-ball",
+      "party",
+      "move",
+      "direct",
+      "escape",
+    ]);
+  });
+});
+
+describe("battle data catalog rendering", () => {
   test("resolves semantic TM designators through their numeric item ID", () => {
     expect([
       ...parseItemNames(
@@ -183,6 +261,15 @@ describe("battle data generation", () => {
     expect(output).toContain("export const MOVES_COUNT = 2;");
     expect(output).toContain(
       "export function resolveMoveId(name: string): number | undefined",
+    );
+  });
+
+  test("renders move-target and battle-item lookup APIs", () => {
+    expect(renderMoveTargets([16, 0])).toContain(
+      "export function moveTarget(id: number): number",
+    );
+    expect(renderItemBattleUses(["unavailable", "party"])).toContain(
+      "export function itemBattleUse(id: number): ItemBattleUse",
     );
   });
 });

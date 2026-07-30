@@ -712,3 +712,84 @@ export function itemName(id: number): string {
 export function resolveItemId(name: string): number | undefined {
   return ITEM_IDS_BY_NORMALIZED_NAME[normalizeCatalogName(name)];
 }
+
+export type ItemBattleUse =
+  | "unavailable"
+  | "direct"
+  | "escape"
+  | "party"
+  | "move"
+  | "poke-ball";
+
+export const ITEM_BATTLE_USES: Readonly<
+  Partial<Record<number, ItemBattleUse>>
+> = {
+  "1": "poke-ball",
+  "2": "poke-ball",
+  "3": "poke-ball",
+  "4": "poke-ball",
+  "5": "poke-ball",
+  "6": "poke-ball",
+  "7": "poke-ball",
+  "8": "poke-ball",
+  "9": "poke-ball",
+  "10": "poke-ball",
+  "11": "poke-ball",
+  "12": "poke-ball",
+  "13": "party",
+  "14": "party",
+  "15": "party",
+  "16": "party",
+  "17": "party",
+  "18": "party",
+  "19": "party",
+  "20": "party",
+  "21": "party",
+  "22": "party",
+  "23": "party",
+  "24": "party",
+  "25": "party",
+  "26": "party",
+  "27": "party",
+  "28": "party",
+  "29": "party",
+  "30": "party",
+  "31": "party",
+  "32": "party",
+  "33": "party",
+  "34": "move",
+  "35": "move",
+  "36": "move",
+  "37": "move",
+  "38": "party",
+  "39": "party",
+  "40": "party",
+  "41": "party",
+  "44": "party",
+  "73": "direct",
+  "74": "direct",
+  "75": "direct",
+  "76": "direct",
+  "77": "direct",
+  "78": "direct",
+  "79": "direct",
+  "80": "escape",
+  "81": "escape",
+  "133": "party",
+  "134": "party",
+  "135": "party",
+  "136": "party",
+  "137": "party",
+  "138": "move",
+  "139": "party",
+  "140": "party",
+  "141": "party",
+  "142": "party",
+};
+
+export function itemBattleUse(id: number): ItemBattleUse {
+  if (!Number.isInteger(id) || id < 0 || id >= ITEMS_COUNT) {
+    throw new RangeError(`unknown item ID: ${String(id)}`);
+  }
+  return ITEM_BATTLE_USES[id] ?? "unavailable";
+}

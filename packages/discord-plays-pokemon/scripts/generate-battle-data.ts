@@ -10,6 +10,14 @@ type Catalog = {
   idsByNormalizedName: Record<string, number>;
 };
 
+export type ItemBattleUse =
+  | "unavailable"
+  | "direct"
+  | "escape"
+  | "party"
+  | "move"
+  | "poke-ball";
+
 type RenderCatalogOptions = {
   sourceRef: string;
   generatorPath: string;
@@ -20,6 +28,17 @@ type RenderCatalogOptions = {
   resolverFunction: string;
   names: string[];
   idsByNormalizedName: Record<string, number>;
+};
+
+const MOVE_TARGET_VALUES: Readonly<Record<string, number>> = {
+  MOVE_TARGET_SELECTED: 0,
+  MOVE_TARGET_DEPENDS: 1,
+  MOVE_TARGET_USER_OR_SELECTED: 1 << 1,
+  MOVE_TARGET_RANDOM: 1 << 2,
+  MOVE_TARGET_BOTH: 1 << 3,
+  MOVE_TARGET_USER: 1 << 4,
+  MOVE_TARGET_FOES_AND_ALLY: 1 << 5,
+  MOVE_TARGET_OPPONENTS_FIELD: 1 << 6,
 };
 
 function addUniqueName(
@@ -113,6 +132,21 @@ export function parseMoveNames(source: string): Map<string, string> {
   return names;
 }
 
+function resolveItemSymbol(
+  designatedSymbol: string,
+  body: string,
+  ids: ReadonlyMap<string, number>,
+): string {
+  const itemIdSymbol = /\.itemId\s*=\s*(ITEM_\w+)/.exec(body)?.[1];
+  const symbol = ids.has(designatedSymbol) ? designatedSymbol : itemIdSymbol;
+  if (symbol === undefined || !ids.has(symbol)) {
+    throw new Error(
+      `item definition ${designatedSymbol} does not resolve to a numeric item ID`,
+    );
+  }
+  return symbol;
+}
+
 export function parseItemNames(
   source: string,
   ids: Map<string, number>,
@@ -132,16 +166,110 @@ export function parseItemNames(
     if (displayName === undefined) {
       throw new Error(`item name missing for ${designatedSymbol}`);
     }
-    const itemIdSymbol = /\.itemId\s*=\s*(ITEM_\w+)/.exec(body)?.[1];
-    const symbol = ids.has(designatedSymbol) ? designatedSymbol : itemIdSymbol;
-    if (symbol === undefined || !ids.has(symbol)) {
-      throw new Error(
-        `item name ${designatedSymbol} does not resolve to a numeric item ID`,
-      );
-    }
+    const symbol = resolveItemSymbol(designatedSymbol, body, ids);
     addUniqueName(names, symbol, displayName);
   }
   return names;
+}
+
+function buildIndexedValues<T>(
+  ids: ReadonlyMap<string, number>,
+  values: ReadonlyMap<string, T>,
+  label: string,
+): T[] {
+  const indexed: (T | undefined)[] = Array.from({ length: ids.size });
+  for (const [symbol, id] of ids) {
+    const value = values.get(symbol);
+    if (value === undefined) {
+      throw new Error(`${label} missing for ${symbol}`);
+    }
+    indexed[id] = value;
+  }
+  return indexed.map((value, id) => {
+    if (value === undefined) {
+      throw new Error(`${label} missing for ID ${String(id)}`);
+    }
+    return value;
+  });
+}
+
+export function parseMoveTargets(
+  source: string,
+  ids: ReadonlyMap<string, number>,
+): number[] {
+  const targets = new Map<string, number>();
+  const entries = [...source.matchAll(/^\s*\[MOVE_\w+\]\s*=\s*$/gm)];
+  for (const [index, match] of entries.entries()) {
+    const designator = match[0].trim();
+    const closingBracket = designator.indexOf("]");
+    if (closingBracket === -1) {
+      throw new Error("move target designator is missing a closing bracket");
+    }
+    const symbol = designator.slice(1, closingBracket);
+    if (!ids.has(symbol)) {
+      throw new Error(`move target does not resolve to a numeric move ID`);
+    }
+    const nextEntry = entries[index + 1];
+    const body = source.slice(match.index, nextEntry?.index);
+    const targetSymbol = /\.target\s*=\s*(MOVE_TARGET_\w+)/.exec(body)?.[1];
+    if (targetSymbol === undefined) {
+      throw new Error(`move target missing for ${symbol}`);
+    }
+    const target = MOVE_TARGET_VALUES[targetSymbol];
+    if (target === undefined) {
+      throw new Error(`unknown move target ${targetSymbol} for ${symbol}`);
+    }
+    if (targets.has(symbol)) {
+      throw new Error(`duplicate move target for ${symbol}`);
+    }
+    targets.set(symbol, target);
+  }
+  return buildIndexedValues(ids, targets, "move target");
+}
+
+function battleUseFromItemBody(body: string): ItemBattleUse {
+  const battleUseFunction = /\.battleUseFunc\s*=\s*(\w+)/.exec(body)?.[1];
+  switch (battleUseFunction) {
+    case undefined:
+    case "ItemUseInBattle_EnigmaBerry":
+      return "unavailable";
+    case "ItemUseInBattle_StatIncrease":
+      return "direct";
+    case "ItemUseInBattle_Escape":
+      return "escape";
+    case "ItemUseInBattle_Medicine":
+      return "party";
+    case "ItemUseInBattle_PPRecovery":
+      return "move";
+    case "ItemUseInBattle_PokeBall":
+      return "poke-ball";
+    default:
+      throw new Error(`unknown battle item function ${battleUseFunction}`);
+  }
+}
+
+export function parseItemBattleUses(
+  source: string,
+  ids: ReadonlyMap<string, number>,
+): ItemBattleUse[] {
+  const uses = new Map<string, ItemBattleUse>();
+  const entries = [...source.matchAll(/^\s*\[ITEM_\w+\]\s*=\s*$/gm)];
+  for (const [index, match] of entries.entries()) {
+    const trimmedDesignator = match[0].trim();
+    const closingBracket = trimmedDesignator.indexOf("]");
+    if (closingBracket === -1) {
+      throw new Error(`invalid item designator ${trimmedDesignator}`);
+    }
+    const designatedSymbol = trimmedDesignator.slice(1, closingBracket);
+    const nextEntry = entries[index + 1];
+    const body = source.slice(match.index, nextEntry?.index);
+    const symbol = resolveItemSymbol(designatedSymbol, body, ids);
+    if (uses.has(symbol)) {
+      throw new Error(`duplicate battle item use for ${symbol}`);
+    }
+    uses.set(symbol, battleUseFromItemBody(body));
+  }
+  return buildIndexedValues(ids, uses, "battle item use");
 }
 
 export function normalizeCatalogName(value: string): string {
@@ -231,6 +359,47 @@ export function ${options.resolverFunction}(name: string): number | undefined {
 `;
 }
 
+export function renderMoveTargets(targets: readonly number[]): string {
+  return `
+export const MOVE_TARGETS: readonly number[] = ${JSON.stringify(targets)};
+
+export function moveTarget(id: number): number {
+  const target = MOVE_TARGETS[id];
+  if (target === undefined) {
+    throw new RangeError(\`unknown move ID: \${String(id)}\`);
+  }
+  return target;
+}
+`;
+}
+
+export function renderItemBattleUses(uses: readonly ItemBattleUse[]): string {
+  const actionableUses: Record<number, ItemBattleUse> = {};
+  for (const [id, use] of uses.entries()) {
+    if (use !== "unavailable") actionableUses[id] = use;
+  }
+  return `
+export type ItemBattleUse =
+  | "unavailable"
+  | "direct"
+  | "escape"
+  | "party"
+  | "move"
+  | "poke-ball";
+
+export const ITEM_BATTLE_USES: Readonly<
+  Partial<Record<number, ItemBattleUse>>
+> = ${JSON.stringify(actionableUses)};
+
+export function itemBattleUse(id: number): ItemBattleUse {
+  if (!Number.isInteger(id) || id < 0 || id >= ITEMS_COUNT) {
+    throw new RangeError(\`unknown item ID: \${String(id)}\`);
+  }
+  return ITEM_BATTLE_USES[id] ?? "unavailable";
+}
+`;
+}
+
 async function fetchText(rawRoot: string, path: string): Promise<string> {
   const response = await fetch(`${rawRoot}/${path}`);
   if (!response.ok) {
@@ -253,20 +422,26 @@ async function formatGeneratedFiles(paths: string[]): Promise<void> {
 export async function generateBattleData(): Promise<void> {
   const sourceRef = await readOttohgSha();
   const rawRoot = `https://raw.githubusercontent.com/ottohg/pokeemerald-wasm/${sourceRef}`;
-  const [moveIdsSource, moveNamesSource, itemIdsSource, itemNamesSource] =
-    await Promise.all([
-      fetchText(rawRoot, "include/constants/moves.h"),
-      fetchText(rawRoot, "src/data/text/move_names.h"),
-      fetchText(rawRoot, "include/constants/items.h"),
-      fetchText(rawRoot, "src/data/items.h"),
-    ]);
+  const [
+    moveIdsSource,
+    moveNamesSource,
+    moveDataSource,
+    itemIdsSource,
+    itemNamesSource,
+  ] = await Promise.all([
+    fetchText(rawRoot, "include/constants/moves.h"),
+    fetchText(rawRoot, "src/data/text/move_names.h"),
+    fetchText(rawRoot, "src/data/battle_moves.h"),
+    fetchText(rawRoot, "include/constants/items.h"),
+    fetchText(rawRoot, "src/data/items.h"),
+  ]);
 
-  const moves = buildCatalog(
-    parseContiguousIds(moveIdsSource, "MOVE_", "MOVES_COUNT"),
-    parseMoveNames(moveNamesSource),
-  );
+  const moveIds = parseContiguousIds(moveIdsSource, "MOVE_", "MOVES_COUNT");
+  const moves = buildCatalog(moveIds, parseMoveNames(moveNamesSource));
+  const moveTargets = parseMoveTargets(moveDataSource, moveIds);
   const itemIds = parseContiguousIds(itemIdsSource, "ITEM_", "ITEMS_COUNT");
   const items = buildCatalog(itemIds, parseItemNames(itemNamesSource, itemIds));
+  const itemBattleUses = parseItemBattleUses(itemNamesSource, itemIds);
 
   const moveOutput = new URL(
     "../packages/backend/src/game/battle/generated/move-names.ts",
@@ -280,7 +455,7 @@ export async function generateBattleData(): Promise<void> {
   await Promise.all([
     Bun.write(
       moveOutput,
-      renderCatalogModule({
+      `${renderCatalogModule({
         sourceRef,
         generatorPath: "scripts/generate-battle-data.ts",
         countExport: "MOVES_COUNT",
@@ -290,11 +465,11 @@ export async function generateBattleData(): Promise<void> {
         resolverFunction: "resolveMoveId",
         names: moves.names,
         idsByNormalizedName: moves.idsByNormalizedName,
-      }),
+      })}${renderMoveTargets(moveTargets)}`,
     ),
     Bun.write(
       itemOutput,
-      renderCatalogModule({
+      `${renderCatalogModule({
         sourceRef,
         generatorPath: "scripts/generate-battle-data.ts",
         countExport: "ITEMS_COUNT",
@@ -304,7 +479,7 @@ export async function generateBattleData(): Promise<void> {
         resolverFunction: "resolveItemId",
         names: items.names,
         idsByNormalizedName: items.idsByNormalizedName,
-      }),
+      })}${renderItemBattleUses(itemBattleUses)}`,
     ),
   ]);
   await formatGeneratedFiles([moveOutput, itemOutput]);

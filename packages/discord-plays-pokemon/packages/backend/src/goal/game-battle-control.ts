@@ -10,6 +10,11 @@ import {
   visualChangeRatio,
   type ActionOutcomeV1,
 } from "./game-action-outcome.ts";
+import {
+  requireBattleItemSelection,
+  requireBattleMoveSelection,
+  requireSwitchablePartySlot,
+} from "./game-battle-control-rules.ts";
 import type { GameObservationV2 } from "./game-observation.ts";
 
 export type BattleMoveSelection = Readonly<{
@@ -51,39 +56,13 @@ const UNSUPPORTED_BATTLE_TYPE_MASK =
   (1 << 27) |
   (1 << 31);
 
-const INVENTORY_POCKET_INDEX = new Map([
-  ["items", 0],
-  ["poke-balls", 1],
-  ["tm-hm", 2],
-  ["berries", 3],
-  ["key-items", 4],
-]);
-
 export class GameBattleControl {
   constructor(private readonly port: BattleControlPort) {}
 
   async move(selection: BattleMoveSelection): Promise<ActionOutcomeV1> {
     const before = this.capture();
     const battle = this.requireDecision(before.observation, ["action", "move"]);
-    const matchingMove =
-      selection.slot === undefined
-        ? battle.moves.find((move) => move.moveId === selection.moveId)
-        : battle.moves.find((move) => move.slot === selection.slot);
-    if (matchingMove === undefined || matchingMove.moveId === 0) {
-      throw new Error("requested move is not available to the input battler");
-    }
-    if (matchingMove.currentPp === 0) {
-      throw new Error("requested move has no remaining PP");
-    }
-    if (
-      selection.targetBattler !== undefined &&
-      !battle.battlers.some(
-        (battler) =>
-          battler.battler === selection.targetBattler && battler.active,
-      )
-    ) {
-      throw new Error("requested target battler is not active");
-    }
+    const matchingMove = requireBattleMoveSelection(battle, selection);
 
     let timedOut = false;
     if (battle.menu === "action") {
@@ -101,7 +80,16 @@ export class GameBattleControl {
       );
     });
 
-    if (this.port.observe().battle?.menu === "target") {
+    const selectedMoveObservation = this.port.observe();
+    if (
+      selection.targetBattler !== undefined &&
+      selectedMoveObservation.battle?.menu !== "target"
+    ) {
+      throw new Error(
+        "engine did not expose the validated target as a selectable choice",
+      );
+    }
+    if (selectedMoveObservation.battle?.menu === "target") {
       if (selection.targetBattler === undefined) {
         return this.outcome(
           `battle:move:${String(matchingMove.slot)}`,
@@ -130,30 +118,24 @@ export class GameBattleControl {
   async switch(partySlot: number): Promise<ActionOutcomeV1> {
     const before = this.capture();
     this.requireDecision(before.observation, ["action"]);
-    this.requireSwitchablePartySlot(before.observation, partySlot);
+    requireSwitchablePartySlot(before.observation, partySlot);
     let timedOut = await this.selectGridCursor("action", 2);
     timedOut ||= await this.pressAndAwait("a", partyInputReady);
     timedOut ||= await this.selectPartySlot(partySlot);
+    timedOut ||= await this.pressAndAwait("a", partySelectionMenuReady);
     timedOut ||= await this.pressAndAwait("a", nextActionOrBattleEnd);
     return this.outcome(`battle:switch:${String(partySlot)}`, before, timedOut);
   }
 
   async item(itemId: number, partySlot?: number): Promise<ActionOutcomeV1> {
     const before = this.capture();
-    this.requireDecision(before.observation, ["action"]);
-    const inventoryItem = before.observation.game?.inventory.find(
-      (item) => item.itemId === itemId && item.quantity > 0,
+    const battle = this.requireDecision(before.observation, ["action"]);
+    const { inventoryItem, pocket } = requireBattleItemSelection(
+      before.observation,
+      battle,
+      itemId,
+      partySlot,
     );
-    if (inventoryItem === undefined) {
-      throw new Error("requested item is not present in the bag");
-    }
-    const pocket = INVENTORY_POCKET_INDEX.get(inventoryItem.pocket);
-    if (pocket === undefined) {
-      throw new RangeError(`unknown inventory pocket: ${inventoryItem.pocket}`);
-    }
-    if (partySlot !== undefined) {
-      this.requireUsablePartySlot(before.observation, partySlot);
-    }
 
     let timedOut = await this.selectGridCursor("action", 1);
     timedOut ||= await this.pressAndAwait(
@@ -216,37 +198,6 @@ export class GameBattleControl {
       );
     }
     return battle;
-  }
-
-  private requireUsablePartySlot(
-    observation: GameObservationV2,
-    partySlot: number,
-  ): void {
-    if (!Number.isInteger(partySlot) || partySlot < 1 || partySlot > 6) {
-      throw new RangeError("party slot must be an integer from 1 through 6");
-    }
-    const partyMember = observation.game?.party.at(partySlot - 1);
-    if (
-      partyMember === undefined ||
-      partyMember.isEgg ||
-      partyMember.hp === 0
-    ) {
-      throw new Error("requested party slot is not a usable Pokémon");
-    }
-  }
-
-  private requireSwitchablePartySlot(
-    observation: GameObservationV2,
-    partySlot: number,
-  ): void {
-    this.requireUsablePartySlot(observation, partySlot);
-    const activePartySlots =
-      observation.battle?.battlers
-        .filter((battler) => battler.side === "player" && battler.active)
-        .map((battler) => battler.partyIndex) ?? [];
-    if (activePartySlots.includes(partySlot - 1)) {
-      throw new Error("requested party slot is already active");
-    }
   }
 
   private async pressAndAwait(
@@ -421,6 +372,14 @@ function nextActionOrBattleEnd(observation: GameObservationV2): boolean {
 
 function partyInputReady(observation: GameObservationV2): boolean {
   return observation.battle?.party?.inputReady === true;
+}
+
+function partySelectionMenuReady(observation: GameObservationV2): boolean {
+  return (
+    observation.phase !== "battle" ||
+    (observation.battle?.menu === "party" &&
+      observation.battle.party?.inputReady === false)
+  );
 }
 
 function itemSelectionAdvanced(observation: GameObservationV2): boolean {

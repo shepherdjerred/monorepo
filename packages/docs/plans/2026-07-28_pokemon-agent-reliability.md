@@ -583,3 +583,33 @@ deferred by explicit direction.
   `docker info`; no engine compile result has been inferred from that host
   runtime failure.
 - Repeat paid model measurements remain explicitly deferred.
+
+## Session Log — 2026-07-29 (semantic gameplay review fixes)
+
+### Done
+
+- Triaged the five current hosted review findings on exact PR #1847 head
+  `3ac341da933615ea3b3721e4afcb14c330cccbb4`.
+- Added generated move-target and battle-item interaction metadata from the
+  pinned Emerald source, with fail-fast parsing and catalog tests.
+- Confirmed the Shift submenu after voluntary party selection; required and
+  validated item recipients; rejected unsupported, unavailable, and
+  trainer-ineligible items before input; and rejected explicit move targets
+  that the engine cannot expose.
+- Fingerprinted the complete WASM patch series, reset and reapplied changed
+  source patches while preserving cached build tools, and verified every
+  required observation-v3 bridge symbol before compilation.
+- Rebuilt the real WASM and passed all 349 backend tests, all 50 script tests,
+  and package-scoped TypeScript and ESLint checks.
+- Published the fix to PR #1847, restacked its decision-policy child PR #1848
+  with git-spice, and requested fresh hosted reviews for both new heads.
+
+### Remaining
+
+- Complete current-head Buildkite and hosted review verification.
+
+### Caveats
+
+- The rebuilt WASM asset is ignored and remains a local verification artifact;
+  CI rebuilds it from the fingerprinted patch series.
+- Repeat paid model measurements remain explicitly deferred.
