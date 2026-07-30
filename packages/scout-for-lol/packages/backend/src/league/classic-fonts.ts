@@ -5,9 +5,6 @@ import {
 } from "@scout-for-lol/report";
 import { createS3Client } from "#src/storage/s3-client.ts";
 
-let configured = false;
-let configurationPromise: Promise<void> | undefined;
-
 function verifySha256(
   bytes: Uint8Array,
   expected: string,
@@ -66,13 +63,37 @@ async function configureFromPrivateStorage(): Promise<void> {
     regular: new Uint8Array(regularBytes).buffer,
     bold: new Uint8Array(boldBytes).buffer,
   });
-  configured = true;
 }
 
-export async function ensureClassicFontsConfigured(): Promise<void> {
-  if (configured) {
-    return;
+export function createClassicFontInitializer(
+  configure: () => Promise<void>,
+): () => Promise<void> {
+  let configured = false;
+  let configurationPromise: Promise<void> | undefined;
+
+  async function configureOnce(): Promise<void> {
+    try {
+      await configure();
+      configured = true;
+    } catch (error: unknown) {
+      configurationPromise = undefined;
+      throw error;
+    }
   }
-  configurationPromise ??= configureFromPrivateStorage();
-  await configurationPromise;
+
+  return async function ensureConfigured(): Promise<void> {
+    if (configured) {
+      return;
+    }
+    configurationPromise ??= configureOnce();
+    await configurationPromise;
+  };
+}
+
+const ensurePrivateFontsConfigured = createClassicFontInitializer(
+  configureFromPrivateStorage,
+);
+
+export async function ensureClassicFontsConfigured(): Promise<void> {
+  await ensurePrivateFontsConfigured();
 }
