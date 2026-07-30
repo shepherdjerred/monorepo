@@ -90,11 +90,13 @@ function readGenerationRating(
   return row === null ? null : HumanRatingSchema.parse(row);
 }
 
-export function exportDatasetFromDatabase(
+function readDatasetExportSnapshot(
   database: Database,
-  datasetId: string,
+  id: string,
 ): DatasetExport {
-  const id = DatasetIdSchema.parse(datasetId);
+  if (!database.inTransaction) {
+    throw new Error("Dataset export requires an active SQLite transaction");
+  }
   const dataset = readDatasetMetadata(database, id);
   const caseRows = z.array(DatasetCaseRowSchema).parse(
     database
@@ -156,6 +158,16 @@ export function exportDatasetFromDatabase(
       rating,
     })),
   });
+}
+
+export function exportDatasetFromDatabase(
+  database: Database,
+  datasetId: string,
+): DatasetExport {
+  const id = DatasetIdSchema.parse(datasetId);
+  return database
+    .transaction(() => readDatasetExportSnapshot(database, id))
+    .deferred();
 }
 
 function requireNoDatasetCollision(

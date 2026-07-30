@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, spyOn, test } from "bun:test";
 
 import {
   importDatasetExportFile,
@@ -9,7 +9,8 @@ import {
   parseDatasetExport,
   serializeDatasetExport,
 } from "#server/dataset-transfer.ts";
-import { createEvalStore } from "#server/store.ts";
+import { openEvalDatabase } from "#server/database.ts";
+import { createEvalStore, EvalStore } from "#server/store.ts";
 import { DatasetExportPayloadSchema } from "#shared/schema.ts";
 import { makeFinalizedRatedDataset } from "#testing/eval-fixtures.ts";
 
@@ -33,6 +34,17 @@ function replaceExportDataset(
       freshnessRatings: parsed.freshnessRatings,
     }),
   );
+}
+
+async function deleteSqliteFiles(databasePath: string): Promise<void> {
+  for (const path of [
+    databasePath,
+    `${databasePath}-shm`,
+    `${databasePath}-wal`,
+  ]) {
+    const file = Bun.file(path);
+    if (await file.exists()) await file.delete();
+  }
 }
 
 describe("dataset export and import", () => {
@@ -211,6 +223,59 @@ describe("dataset export and import", () => {
       ).toThrow("Case ordinal 1 must match its array position 0");
     } finally {
       source.close();
+    }
+  });
+});
+
+describe("dataset export snapshot", () => {
+  test("keeps concurrent generation and freshness writes out", async () => {
+    const databasePath = `./dataset-snapshot-${crypto.randomUUID()}.sqlite`;
+    const writerDatabase = openEvalDatabase(databasePath);
+    const readerDatabase = openEvalDatabase(databasePath);
+    const writer = new EvalStore(writerDatabase);
+    const reader = new EvalStore(readerDatabase);
+    try {
+      const fixture = makeFinalizedRatedDataset(writer, "snapshot");
+      const artifact = writer.getCaseDetail(
+        fixture.dataset.id,
+        fixture.caseId,
+      ).artifact;
+      const originalQuery = readerDatabase.query.bind(readerDatabase);
+      let didWrite = false;
+      spyOn(readerDatabase, "query").mockImplementation((sql) => {
+        if (!didWrite && sql.includes("FROM freshness_ratings")) {
+          didWrite = true;
+          writer.recordGeneration({
+            caseId: fixture.caseId,
+            outputText: "Concurrent generation.",
+            model: "test-model",
+            promptRevision: "concurrent-v3",
+            renderedPrompts: artifact.context.renderedPrompts,
+            durationMs: null,
+            inputTokens: null,
+            outputTokens: null,
+          });
+        }
+        return originalQuery(sql);
+      });
+
+      const snapshot = reader.exportDataset(fixture.dataset.id);
+      expect(didWrite).toBe(true);
+      expect(snapshot.cases[0]?.generations).toHaveLength(2);
+      expect(snapshot.freshnessRatings).toEqual([
+        {
+          styleKey: "aaron",
+          rating: { score: 3, note: "Varied enough." },
+        },
+      ]);
+
+      const current = reader.exportDataset(fixture.dataset.id);
+      expect(current.cases[0]?.generations).toHaveLength(3);
+      expect(current.freshnessRatings).toEqual([]);
+    } finally {
+      reader.close();
+      writer.close();
+      await deleteSqliteFiles(databasePath);
     }
   });
 });

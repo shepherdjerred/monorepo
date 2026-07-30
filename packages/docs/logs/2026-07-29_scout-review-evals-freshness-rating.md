@@ -62,6 +62,9 @@ board: false
 - Added a deterministic, checksummed dataset interchange format with
   transactional store, tRPC, and CLI export/import; imports preserve exact IDs
   and versions and reject collisions without overwriting.
+- Bound every dataset export read to one deferred SQLite transaction so
+  concurrent generation and rating writes cannot produce a torn, valid-checksum
+  snapshot.
 - Verified PR #1777 with the focused eval tests, typecheck, changed-file ESLint,
   changed-file Prettier checks, Buildkite pipeline validator, lane-coverage
   tests, and an independent merge-tree check.
