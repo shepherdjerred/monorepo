@@ -206,7 +206,7 @@ fallback).
 
 ### Remaining
 
-- Commit, open a draft PR via git-spice, and watch Buildkite CI to green before requesting review.
+- Draft PR opened: https://github.com/shepherdjerred/monorepo/pull/1861. Watch Buildkite CI to green, then promote to ready for review.
 - The live-cluster dry run noted above — needs an operator with `TEMPORAL_ADDRESS` port-forward access, which this environment does not have.
 
 ### Caveats
