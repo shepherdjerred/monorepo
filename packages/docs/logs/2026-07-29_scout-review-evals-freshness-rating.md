@@ -39,6 +39,9 @@ board: false
   artifact that freezes match-summary, ordered timeline chunk, timeline
   aggregate, single-timeline, and final-review requests; finalized SQLite
   round-trip and multi-chunk validation tests cover persistence and ordering.
+- Made file-backed eval database startup recursively create missing parent
+  directories before opening SQLite, with focused coverage for fresh nested
+  paths and unchanged in-memory behavior.
 - Verified PR #1777 with the focused eval tests, typecheck, changed-file ESLint,
   changed-file Prettier checks, Buildkite pipeline validator, lane-coverage
   tests, and an independent merge-tree check.
@@ -46,6 +49,8 @@ board: false
 ### Remaining
 
 - Address the other remaining P2 review findings on PR #1777.
+- Bind freshness submissions to the exact generation set displayed by the open
+  form so a stale submission cannot rate newly appended output.
 - Let replacement Buildkite CI and a current-head Codex review validate the
   published CI-remediation head.
 
