@@ -27,6 +27,55 @@ export const CaseInputSchema = z.strictObject({
   datasetId: DatasetIdSchema,
 });
 
+export const FrozenRenderedPromptSchema = z.strictObject({
+  systemPrompt: z.string().min(1),
+  userPrompt: z.string().min(1),
+});
+
+export const FrozenTimelineChunkPromptSchema = z.strictObject({
+  chunkIndex: z.number().int().nonnegative(),
+  timeRange: z.string().min(1),
+  systemPrompt: z.string().min(1),
+  userPrompt: z.string().min(1),
+});
+
+const FrozenTimelineChunkPromptsSchema = z
+  .array(FrozenTimelineChunkPromptSchema)
+  .min(2)
+  .superRefine((chunks, context) => {
+    for (const [position, chunk] of chunks.entries()) {
+      if (chunk.chunkIndex !== position) {
+        context.addIssue({
+          code: "custom",
+          message: `Timeline chunk index ${chunk.chunkIndex.toString()} must match its array position ${position.toString()}`,
+          path: [position, "chunkIndex"],
+        });
+      }
+    }
+  });
+
+const FrozenSingleTimelinePromptsSchema = z.strictObject({
+  mode: z.literal("single"),
+  summary: FrozenRenderedPromptSchema,
+});
+
+const FrozenChunkedTimelinePromptsSchema = z.strictObject({
+  mode: z.literal("chunked"),
+  chunks: FrozenTimelineChunkPromptsSchema,
+  aggregate: FrozenRenderedPromptSchema,
+});
+
+const FrozenTimelinePromptsSchema = z.discriminatedUnion("mode", [
+  FrozenSingleTimelinePromptsSchema,
+  FrozenChunkedTimelinePromptsSchema,
+]);
+
+export const FrozenRenderedPromptsSchema = z.strictObject({
+  matchSummary: FrozenRenderedPromptSchema,
+  timeline: FrozenTimelinePromptsSchema,
+  reviewText: FrozenRenderedPromptSchema,
+});
+
 export const ReviewContextSchema = z.strictObject({
   deterministicFacts: z.string().min(1),
   matchSummary: z.string().min(1),
@@ -37,8 +86,7 @@ export const ReviewContextSchema = z.strictObject({
   styleCard: z.string().min(1),
   personalityInstructions: z.string().min(1),
   selectedBehaviors: z.array(z.string()),
-  systemPrompt: z.string().min(1),
-  userPrompt: z.string().min(1),
+  renderedPrompts: FrozenRenderedPromptsSchema,
 });
 
 export const FrozenModelConfigSchema = z.strictObject({
@@ -157,23 +205,24 @@ export const UpsertFreshnessRatingInputSchema = StyleBatchInputSchema.extend({
   rating: FreshnessRatingSchema,
 });
 
+const StyleReviewSchema = z.strictObject({
+  caseId: CaseIdSchema,
+  playerName: z.string().min(1),
+  championName: z.string().min(1),
+  performanceSlice: PerformanceSliceSchema,
+  outputText: z.string().min(1),
+});
+
 export const StyleBatchSchema = z.strictObject({
   datasetId: DatasetIdSchema,
   styleKey: z.string().min(1),
-  reviews: z.array(
-    z.strictObject({
-      caseId: CaseIdSchema,
-      playerName: z.string().min(1),
-      championName: z.string().min(1),
-      performanceSlice: PerformanceSliceSchema,
-      outputText: z.string().min(1),
-    }),
-  ),
+  reviews: z.array(StyleReviewSchema),
   rating: FreshnessRatingSchema.nullable(),
 });
 
 export type DatasetSummary = z.infer<typeof DatasetSummarySchema>;
 export type CaseSummary = z.infer<typeof CaseSummarySchema>;
 export type CaseArtifact = z.infer<typeof CaseArtifactSchema>;
+export type FrozenRenderedPrompts = z.infer<typeof FrozenRenderedPromptsSchema>;
 export type HumanRating = z.infer<typeof HumanRatingSchema>;
 export type EvalScore = z.infer<typeof EvalScoreSchema>;

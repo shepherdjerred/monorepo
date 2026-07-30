@@ -4,6 +4,7 @@ import {
   getDefaultStageConfigs,
   type ModelConfig,
   type OpenAIClient,
+  type PipelineTraces,
   type PipelineStagesConfig,
 } from "@scout-for-lol/data";
 import {
@@ -29,7 +30,10 @@ import {
   CaseArtifactSchema,
   FrozenModelConfigSchema,
   FrozenModelSettingsSchema,
+  FrozenRenderedPromptSchema,
+  FrozenRenderedPromptsSchema,
   type CaseArtifact,
+  type FrozenRenderedPrompts,
 } from "#shared/schema.ts";
 
 export type MaterializedCase = {
@@ -52,6 +56,62 @@ function requiredStageText(value: string | undefined, stage: string): string {
 
 function freezeModel(config: ModelConfig) {
   return FrozenModelConfigSchema.parse(config);
+}
+
+function freezeRenderedPrompt(
+  trace: PipelineTraces["reviewText"],
+  stage: string,
+) {
+  return FrozenRenderedPromptSchema.parse({
+    systemPrompt: requiredStageText(
+      trace.request.systemPrompt,
+      `${stage} system prompt`,
+    ),
+    userPrompt: requiredStageText(
+      trace.request.userPrompt,
+      `${stage} user prompt`,
+    ),
+  });
+}
+
+export function freezeRenderedPrompts(
+  traces: PipelineTraces,
+): FrozenRenderedPrompts {
+  if (traces.matchSummary === undefined) {
+    throw new Error("Match summary did not produce a trace");
+  }
+  if (traces.timelineSummary === undefined) {
+    throw new Error("Timeline summary did not produce a trace");
+  }
+  const timeline =
+    traces.timelineChunks === undefined
+      ? {
+          mode: "single",
+          summary: freezeRenderedPrompt(
+            traces.timelineSummary,
+            "Timeline summary",
+          ),
+        }
+      : {
+          mode: "chunked",
+          chunks: traces.timelineChunks.map((chunk) => ({
+            chunkIndex: chunk.chunkIndex,
+            timeRange: chunk.timeRange,
+            ...freezeRenderedPrompt(
+              chunk.trace,
+              `Timeline chunk ${chunk.chunkIndex.toString()}`,
+            ),
+          })),
+          aggregate: freezeRenderedPrompt(
+            traces.timelineSummary,
+            "Timeline aggregate",
+          ),
+        };
+  return FrozenRenderedPromptsSchema.parse({
+    matchSummary: freezeRenderedPrompt(traces.matchSummary, "Match summary"),
+    timeline,
+    reviewText: freezeRenderedPrompt(traces.reviewText, "Review text"),
+  });
 }
 
 function textOnlyStages(): PipelineStagesConfig {
@@ -109,14 +169,8 @@ export async function materializeCase(
     },
     stages,
   });
-  const systemPrompt = requiredStageText(
-    output.traces.reviewText.request.systemPrompt,
-    "Review system prompt",
-  );
-  const userPrompt = requiredStageText(
-    output.traces.reviewText.request.userPrompt,
-    "Review user prompt",
-  );
+  const renderedPrompts = freezeRenderedPrompts(output.traces);
+  const { systemPrompt, userPrompt } = renderedPrompts.reviewText;
   const modelSettings = FrozenModelSettingsSchema.parse({
     matchSummary: freezeModel(stages.matchSummary.model),
     reviewText: freezeModel(stages.reviewText.model),
@@ -139,14 +193,13 @@ export async function materializeCase(
       patchContext: spec.patchContext,
       personalityInstructions: personality.instructions,
       playerHistory: spec.playerHistory,
+      renderedPrompts,
       selectedBehaviors: spec.selectedBehaviors,
       styleCard: personality.styleCard,
-      systemPrompt,
       timelineSummary: requiredStageText(
         output.intermediate.timelineSummaryText,
         "Timeline summary",
       ),
-      userPrompt,
     },
     matchId: source.rawMatch.metadata.matchId,
     modelSettings,

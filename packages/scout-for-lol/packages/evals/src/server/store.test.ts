@@ -6,7 +6,7 @@ import { applyMigrations, MIGRATIONS } from "#server/migrations.ts";
 import { createEvalStore, EvalStore } from "#server/store.ts";
 import { makeCaseArtifact } from "#testing/eval-fixtures.ts";
 
-const SqliteConfigurationRowSchema = z.strictObject({
+const SqliteConfigRowSchema = z.strictObject({
   foreignKeys: z.literal(1),
   busyTimeout: z.literal(5000),
 });
@@ -59,7 +59,7 @@ describe("SQLite setup and migrations", () => {
             .get(),
         );
       expect(
-        SqliteConfigurationRowSchema.parse({
+        SqliteConfigRowSchema.parse({
           ...foreignKeys,
           ...busyTimeout,
         }),
@@ -194,6 +194,10 @@ describe("EvalStore datasets and cases", () => {
 
       expect(finalized.status).toBe("finalized");
       expect(finalized.finalizedAt).not.toBeNull();
+      expect(
+        store.getCaseDetail(dataset.id, evalCase.id).artifact.context
+          .renderedPrompts,
+      ).toEqual(FIRST_ARTIFACT.context.renderedPrompts);
       expect(() => store.finalizeDataset(dataset.id)).toThrow(
         "already finalized",
       );

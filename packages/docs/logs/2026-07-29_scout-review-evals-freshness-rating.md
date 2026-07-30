@@ -35,6 +35,10 @@ board: false
 - Made S3 materialization reject independently valid raw match and timeline
   documents when their metadata match IDs differ, before constructing a source
   pair, with regression coverage through the S3 fetch boundary.
+- Replaced the final-review-only prompt fields with a strict rendered-prompt
+  artifact that freezes match-summary, ordered timeline chunk, timeline
+  aggregate, single-timeline, and final-review requests; finalized SQLite
+  round-trip and multi-chunk validation tests cover persistence and ordering.
 - Verified PR #1777 with the focused eval tests, typecheck, changed-file ESLint,
   changed-file Prettier checks, Buildkite pipeline validator, lane-coverage
   tests, and an independent merge-tree check.
@@ -47,8 +51,13 @@ board: false
 
 ### Caveats
 
-- Package-wide tracked-source ESLint passes. The ignored, local-only
+- Focused ESLint passes for every changed TypeScript file. The ignored,
+  local-only
   `data/create-calibration-20-spec.ts` remains outside the committed TypeScript
   project and requires `--ignore-pattern data` when present.
+- The eval artifact remains schema version 1 because its initial format has not
+  shipped and SQLite stores it as validated JSON. Local draft databases created
+  from earlier PR heads require rematerialization so strict reads contain the
+  newly required rendered prompts.
 - Two earlier-session documentation files remain dirty and were preserved
   byte-for-byte.

@@ -290,9 +290,12 @@ export function CasePage(): React.JSX.Element {
             />
             <Evidence
               label="Exact system prompt"
-              value={context.systemPrompt}
+              value={context.renderedPrompts.reviewText.systemPrompt}
             />
-            <Evidence label="Exact user prompt" value={context.userPrompt} />
+            <Evidence
+              label="Exact user prompt"
+              value={context.renderedPrompts.reviewText.userPrompt}
+            />
           </div>
         </section>
       </div>

@@ -58,8 +58,37 @@ export function makeCaseArtifact(overrides: {
       styleCard: `${overrides.styleKey} style card`,
       personalityInstructions: "Be funny and specific.",
       selectedBehaviors: ["tease the player"],
-      systemPrompt: "Write a post-match review.",
-      userPrompt: "Review this match.",
+      renderedPrompts: {
+        matchSummary: {
+          systemPrompt: "Summarize the match.",
+          userPrompt: "Summarize these match facts.",
+        },
+        timeline: {
+          mode: "chunked",
+          chunks: [
+            {
+              chunkIndex: 0,
+              timeRange: "0:00 - 10:00",
+              systemPrompt: "Summarize this timeline chunk.",
+              userPrompt: "Opening timeline events.",
+            },
+            {
+              chunkIndex: 1,
+              timeRange: "10:00 - 20:00",
+              systemPrompt: "Summarize this timeline chunk.",
+              userPrompt: "Closing timeline events.",
+            },
+          ],
+          aggregate: {
+            systemPrompt: "Aggregate timeline chunks.",
+            userPrompt: "Combine the ordered summaries.",
+          },
+        },
+        reviewText: {
+          systemPrompt: "Write a post-match review.",
+          userPrompt: "Review this match.",
+        },
+      },
     },
     rawMatch: { metadata: { matchId: overrides.matchId } },
     rawTimeline: { frames: [] },
