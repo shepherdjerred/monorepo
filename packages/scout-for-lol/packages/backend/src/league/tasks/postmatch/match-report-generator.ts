@@ -151,13 +151,19 @@ async function processClassicMatch(
   matchData: RawMatch,
   matchId: MatchId,
   playersInMatch: PlayerConfigEntry[],
-): Promise<MessageCreateOptions> {
+): Promise<MessageCreateOptions | undefined> {
   logger.info(`[generateMatchReport] 🕰️ Processing as League Classic match`);
   const classicMatch = buildClassicMatch(matchData, playersInMatch);
+  if (classicMatch === undefined) {
+    logger.warn(
+      `[generateMatchReport] All tracked players filtered out due to participant mismatch in Classic match ${matchId}`,
+    );
+    return undefined;
+  }
   const [attachment, embed] = await createMatchImage(classicMatch, matchId);
   return {
     content: formatGameCompletionMessage(
-      playersInMatch.map((player) => player.alias),
+      classicMatch.players.map((player) => player.playerConfig.alias),
       "classic",
     ),
     files: [attachment],
@@ -415,6 +421,9 @@ export async function generateMatchReport(
         matchId,
         playersInMatch,
       );
+      if (result === undefined) {
+        return undefined;
+      }
       reportsGeneratedTotal.inc({ queue_type: queueType });
       return result;
     }

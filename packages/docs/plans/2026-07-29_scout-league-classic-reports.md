@@ -169,6 +169,9 @@ renderers, and enrichment behavior must not change.
 - Made private Classic font initialization retry after a rejected attempt while
   retaining one shared attempt for concurrent renders, with focused concurrency
   and retry tests.
+- Matched the standard report path's known Riot participant-mismatch handling:
+  Classic reports now skip metadata-only tracked players, retain present
+  players, and return no report only when none remain.
 - Published draft PR #1849 on top of refresh PR #1827 with accepted full 5v5,
   partial 3v2, and postmatch screenshots.
 

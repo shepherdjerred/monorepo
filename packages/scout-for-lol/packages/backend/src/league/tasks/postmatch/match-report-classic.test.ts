@@ -64,6 +64,9 @@ describe("buildClassicMatch", () => {
     });
 
     const result = buildClassicMatch(rawMatch, [trackedPlayer]);
+    if (result === undefined) {
+      throw new Error("Classic match unexpectedly omitted its tracked player");
+    }
 
     expect(result.queueType).toBe("classic");
     expect(result.mapName).toBe("Classic Rift");
@@ -108,9 +111,84 @@ describe("buildClassicMatch", () => {
     });
 
     const result = buildClassicMatch(partial, [trackedPlayer]);
+    if (result === undefined) {
+      throw new Error("Partial Classic match unexpectedly omitted its player");
+    }
 
     expect(result.teams.blue).toHaveLength(3);
     expect(result.teams.red).toHaveLength(2);
+  });
+
+  test("skips metadata-only tracked participants while retaining present players", async () => {
+    const rawMatch = await classicMatchFixture();
+    const presentParticipant = rawMatch.info.participants[0];
+    const missingParticipant = rawMatch.info.participants[1];
+    if (presentParticipant === undefined || missingParticipant === undefined) {
+      throw new Error("Classic fixture is missing mismatch test participants");
+    }
+    const mismatch = RawMatchSchema.parse({
+      ...rawMatch,
+      info: {
+        ...rawMatch.info,
+        participants: rawMatch.info.participants.filter(
+          (participant) => participant.puuid !== missingParticipant.puuid,
+        ),
+      },
+    });
+    const presentPlayer = PlayerConfigEntrySchema.parse({
+      alias: "Present Classic",
+      league: {
+        leagueAccount: {
+          puuid: presentParticipant.puuid,
+          region: "AMERICA_NORTH",
+        },
+      },
+    });
+    const missingPlayer = PlayerConfigEntrySchema.parse({
+      alias: "Metadata-only Classic",
+      league: {
+        leagueAccount: {
+          puuid: missingParticipant.puuid,
+          region: "AMERICA_NORTH",
+        },
+      },
+    });
+
+    const result = buildClassicMatch(mismatch, [presentPlayer, missingPlayer]);
+    if (result === undefined) {
+      throw new Error("Classic match omitted its remaining tracked player");
+    }
+
+    expect(result.players).toHaveLength(1);
+    expect(result.players[0]?.playerConfig.alias).toBe("Present Classic");
+  });
+
+  test("returns no report model when every tracked participant is metadata-only", async () => {
+    const rawMatch = await classicMatchFixture();
+    const missingParticipant = rawMatch.info.participants[0];
+    if (missingParticipant === undefined) {
+      throw new Error("Classic fixture is missing a mismatch test participant");
+    }
+    const mismatch = RawMatchSchema.parse({
+      ...rawMatch,
+      info: {
+        ...rawMatch.info,
+        participants: rawMatch.info.participants.filter(
+          (participant) => participant.puuid !== missingParticipant.puuid,
+        ),
+      },
+    });
+    const missingPlayer = PlayerConfigEntrySchema.parse({
+      alias: "Metadata-only Classic",
+      league: {
+        leagueAccount: {
+          puuid: missingParticipant.puuid,
+          region: "AMERICA_NORTH",
+        },
+      },
+    });
+
+    expect(buildClassicMatch(mismatch, [missingPlayer])).toBeUndefined();
   });
 
   test("routes before rank, timeline, history, and AI dependencies", async () => {

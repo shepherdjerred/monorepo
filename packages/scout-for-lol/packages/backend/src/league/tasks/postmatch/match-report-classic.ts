@@ -14,6 +14,10 @@ import {
   parseTeam,
   resolveClassicChampionKey,
 } from "@scout-for-lol/data";
+import { createLogger } from "#src/logger.ts";
+import { participantMismatchTotal } from "#src/metrics/index.ts";
+
+const logger = createLogger("postmatch-match-report-classic");
 
 function requireRiotIdGameName(participant: RawParticipant): string {
   if (
@@ -67,7 +71,7 @@ function requireTeam(participant: RawParticipant): Team {
 export function buildClassicMatch(
   matchData: RawMatch,
   playersInMatch: PlayerConfigEntry[],
-): ClassicMatch {
+): ClassicMatch | undefined {
   const blue = matchData.info.participants
     .filter((participant) => requireTeam(participant) === "blue")
     .map((participant) => toClassicChampion(participant));
@@ -75,23 +79,52 @@ export function buildClassicMatch(
     .filter((participant) => requireTeam(participant) === "red")
     .map((participant) => toClassicChampion(participant));
 
-  const players = playersInMatch.map((playerConfig) => {
-    const participant = findParticipant(
-      playerConfig.league.leagueAccount.puuid,
-      matchData.info.participants,
-    );
-    if (participant === undefined) {
-      throw new Error(
-        `Tracked Classic player ${playerConfig.alias} was absent from the match participant payload`,
+  const players = playersInMatch
+    .map((playerConfig) => {
+      const searchingFor = playerConfig.league.leagueAccount.puuid;
+      const participant = findParticipant(
+        searchingFor,
+        matchData.info.participants,
       );
-    }
-    return {
-      playerConfig,
-      outcome: getOutcome(participant),
-      champion: toClassicChampion(participant),
-      team: requireTeam(participant),
-    };
-  });
+      if (participant === undefined) {
+        const metadataPuuids = matchData.metadata.participants;
+        const infoPuuids = matchData.info.participants.map(
+          (candidate) => candidate.puuid,
+        );
+
+        logger.warn(
+          "Classic participant mismatch: in metadata but not in info (skipping player)",
+          {
+            searchingFor,
+            playerAlias: playerConfig.alias,
+            matchId: matchData.metadata.matchId,
+            queueId: matchData.info.queueId,
+            inMetadata: metadataPuuids.includes(searchingFor),
+            inInfo: infoPuuids.includes(searchingFor),
+            metadataPuuids,
+            infoPuuids,
+            metadataCount: metadataPuuids.length,
+            infoCount: infoPuuids.length,
+            mismatchedCounts: metadataPuuids.length !== infoPuuids.length,
+            emptyPuuidsInInfo: infoPuuids.filter((puuid) => puuid === "")
+              .length,
+          },
+        );
+        participantMismatchTotal.inc({ queue_type: "classic" });
+        return;
+      }
+      return {
+        playerConfig,
+        outcome: getOutcome(participant),
+        champion: toClassicChampion(participant),
+        team: requireTeam(participant),
+      };
+    })
+    .filter((player) => player !== undefined);
+
+  if (players.length === 0) {
+    return undefined;
+  }
 
   const mapName = mapIdToName(matchData.info.mapId);
   if (mapName !== "Classic Rift") {
