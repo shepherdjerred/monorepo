@@ -26,6 +26,12 @@ board: false
 - Restacked PR #1777 onto current `main` with git-spice and resolved the
   Playwright lane conflict by preserving main's pinned CI image while retaining
   the eval package's install, Turbo filters, and change-selection inputs.
+- Added the parent `scout-for-lol` workspace to both Playwright lanes' filtered
+  installs so the isolated linker includes the workspace that owns the shared
+  Scout ESLint config and its direct dependencies.
+- Reproduced Buildkite #7226's missing `@shepherdjerred/eslint-config` failure
+  from a clean archive with the old filtered closure, then verified the corrected
+  closure with a fresh install and Turbo-driven eval lint.
 - Verified PR #1777 with the focused eval tests, typecheck, changed-file ESLint,
   changed-file Prettier checks, Buildkite pipeline validator, lane-coverage
   tests, and an independent merge-tree check.
@@ -33,8 +39,8 @@ board: false
 ### Remaining
 
 - Address the remaining P2 review findings on PR #1777.
-- Let Buildkite and a current-head Codex review validate the published
-  restacked head.
+- Let replacement Buildkite CI and a current-head Codex review validate the
+  published CI-remediation head.
 
 ### Caveats
 
