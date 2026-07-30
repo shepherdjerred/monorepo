@@ -15,7 +15,11 @@ const THRESHOLDS = {
 
 export type ExceptionalGameResult =
   | { isExceptional: false }
-  | { isExceptional: true; reason: string };
+  | {
+      isExceptional: true;
+      performancePolarity: "negative" | "neutral" | "positive";
+      reason: string;
+    };
 
 export type ExceptionalParticipantStats = {
   kills: number;
@@ -37,21 +41,39 @@ function exceptionallyGood(
   stats: ExceptionalParticipantStats,
 ): ExceptionalGameResult | undefined {
   const kda = calculateKda(stats);
-  if (stats.pentaKills > 0) return { isExceptional: true, reason: "pentakill" };
+  if (stats.pentaKills > 0) {
+    return {
+      isExceptional: true,
+      performancePolarity: "positive",
+      reason: "pentakill",
+    };
+  }
   if (stats.quadraKills > 0)
-    return { isExceptional: true, reason: "quadrakill" };
+    return {
+      isExceptional: true,
+      performancePolarity: "positive",
+      reason: "quadrakill",
+    };
   if (
     stats.deaths === 0 &&
     stats.win &&
     stats.kills + stats.assists >= THRESHOLDS.minParticipationForPerfectGame
   ) {
-    return { isExceptional: true, reason: "perfect game (0 deaths with win)" };
+    return {
+      isExceptional: true,
+      performancePolarity: "positive",
+      reason: "perfect game (0 deaths with win)",
+    };
   }
   if (
     kda >= THRESHOLDS.highKda &&
     stats.kills >= THRESHOLDS.minKillsForHighKda
   ) {
-    return { isExceptional: true, reason: `high KDA (${kda.toFixed(1)})` };
+    return {
+      isExceptional: true,
+      performancePolarity: "positive",
+      reason: `high KDA (${kda.toFixed(1)})`,
+    };
   }
   return undefined;
 }
@@ -63,6 +85,7 @@ function exceptionallyBad(
   if (stats.deaths >= THRESHOLDS.manyDeaths) {
     return {
       isExceptional: true,
+      performancePolarity: "negative",
       reason: `many deaths (${stats.deaths.toString()})`,
     };
   }
@@ -70,10 +93,18 @@ function exceptionallyBad(
     kda <= THRESHOLDS.lowKda &&
     stats.deaths >= THRESHOLDS.minDeathsForLowKda
   ) {
-    return { isExceptional: true, reason: `very bad KDA (${kda.toFixed(1)})` };
+    return {
+      isExceptional: true,
+      performancePolarity: "negative",
+      reason: `very bad KDA (${kda.toFixed(1)})`,
+    };
   }
   if (stats.gameEndedInEarlySurrender && !stats.win) {
-    return { isExceptional: true, reason: "early surrender loss" };
+    return {
+      isExceptional: true,
+      performancePolarity: "negative",
+      reason: "early surrender loss",
+    };
   }
   return undefined;
 }
@@ -85,14 +116,26 @@ function durationExtreme(
   const kda = calculateKda(stats);
   if (durationInSeconds < THRESHOLDS.fastGameSeconds) {
     if (stats.win && kda >= THRESHOLDS.stompParticipationKda) {
-      return { isExceptional: true, reason: "fast win (stomp)" };
+      return {
+        isExceptional: true,
+        performancePolarity: "positive",
+        reason: "fast win (stomp)",
+      };
     }
     if (!stats.win && kda < 1) {
-      return { isExceptional: true, reason: "fast loss (stomped)" };
+      return {
+        isExceptional: true,
+        performancePolarity: "negative",
+        reason: "fast loss (stomped)",
+      };
     }
   }
   if (durationInSeconds > THRESHOLDS.longGameSeconds) {
-    return { isExceptional: true, reason: "very long game" };
+    return {
+      isExceptional: true,
+      performancePolarity: "neutral",
+      reason: "very long game",
+    };
   }
   return undefined;
 }

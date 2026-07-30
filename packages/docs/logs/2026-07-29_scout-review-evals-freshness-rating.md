@@ -68,6 +68,9 @@ board: false
 - Made AI review selection reject a selected tracked player whose PUUID is
   absent from the accompanying raw match instead of silently treating the
   contract mismatch as a non-exceptional performance.
+- Preserved positive, negative, and neutral classifier polarity in exceptional
+  results so candidate discovery suggests calibration slices from performance
+  rather than match outcome.
 - Verified PR #1777 with the focused eval tests, typecheck, changed-file ESLint,
   changed-file Prettier checks, Buildkite pipeline validator, lane-coverage
   tests, and an independent merge-tree check.

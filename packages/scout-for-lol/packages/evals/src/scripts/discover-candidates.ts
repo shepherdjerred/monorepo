@@ -15,6 +15,7 @@ import {
   fetchRawMatch,
   listCandidateMatchKeys,
 } from "#materialization/s3-source.ts";
+import { suggestPerformanceSlice } from "./suggest-performance-slice.ts";
 
 const OptionsSchema = z.strictObject({
   corpusPath: z.string().min(1),
@@ -35,8 +36,9 @@ try {
     BETA_CORPUS_BUCKET,
     options.prefix,
   );
+  const limitedMatchKeys = matchKeys.slice(-options.limit);
   const candidates = [];
-  for (const matchKey of matchKeys.slice(-options.limit)) {
+  for (const matchKey of limitedMatchKeys) {
     const match = await fetchRawMatch(client, BETA_CORPUS_BUCKET, matchKey);
     const trackedProfiles = corpus.trackedProfilesForMatch(match);
     if (trackedProfiles.length === 0) continue;
@@ -82,11 +84,7 @@ try {
           kills: participant.kills,
           puuid: participant.puuid,
           riotId: `${participant.riotIdGameName ?? "Unknown"}#${participant.riotIdTagline}`,
-          suggestedPerformanceSlice: exceptional.isExceptional
-            ? participant.win
-              ? "great"
-              : "terrible"
-            : "average",
+          suggestedPerformanceSlice: suggestPerformanceSlice(exceptional),
           targetPlayerId: playerId,
           win: participant.win,
         };

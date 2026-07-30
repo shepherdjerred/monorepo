@@ -22,13 +22,21 @@ describe("classifyExceptionalPerformance", () => {
         { ...BASE_STATS, assists: 12, deaths: 1, kills: 8 },
         1800,
       ),
-    ).toEqual({ isExceptional: true, reason: "high KDA (20.0)" });
+    ).toEqual({
+      isExceptional: true,
+      performancePolarity: "positive",
+      reason: "high KDA (20.0)",
+    });
     expect(
       classifyExceptionalPerformance(
         { ...BASE_STATS, deaths: 11, kills: 1, win: false },
         1800,
       ),
-    ).toEqual({ isExceptional: true, reason: "many deaths (11)" });
+    ).toEqual({
+      isExceptional: true,
+      performancePolarity: "negative",
+      reason: "many deaths (11)",
+    });
   });
 
   test("uses the selected participant for stomp qualification", () => {
@@ -37,7 +45,11 @@ describe("classifyExceptionalPerformance", () => {
         { ...BASE_STATS, deaths: 1, kills: 2, win: true },
         900,
       ),
-    ).toEqual({ isExceptional: true, reason: "fast win (stomp)" });
+    ).toEqual({
+      isExceptional: true,
+      performancePolarity: "positive",
+      reason: "fast win (stomp)",
+    });
     expect(classifyExceptionalPerformance(BASE_STATS, 1800)).toEqual({
       isExceptional: false,
     });

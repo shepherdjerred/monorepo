@@ -198,6 +198,7 @@ describe("getAiReviewDecision", () => {
     expect(decision.selectedPlayer.playerConfig.alias).toBe("Selected");
     expect(decision.exceptionalResult).toEqual({
       isExceptional: true,
+      performancePolarity: "positive",
       reason: "high KDA (22.0)",
     });
     expect(decision.shouldGenerateReview).toBe(true);
