@@ -314,12 +314,16 @@ steps:
         - "package.json"
         - "patches/**"
         - "turbo.json"
+        - "packages/glitter-context/**"
+        - "packages/llm-models/**"
         - "packages/scout-for-lol/packages/data/**"
         - "packages/scout-for-lol/packages/report/**"
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile --filter '@scout-for-lol/report' --production
+      bun --no-install run --cwd packages/glitter-context build:runtime
+      bun --no-install run --cwd packages/llm-models build:runtime
       font_dir=$$(mktemp -d)
       trap 'rm -rf "$$font_dir"' EXIT
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"

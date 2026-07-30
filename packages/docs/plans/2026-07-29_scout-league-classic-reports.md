@@ -179,6 +179,9 @@ renderers, and enrichment behavior must not change.
   exhaustive shared queue-to-layout classification, routing queue 2450
   `KIWI_JADE` on The Bandlewood through the ARAM report path while preserving
   existing ARAM and Classic layouts.
+- Made the production-filtered Classic visual lane build the runtime artifacts
+  exported by Glitter Context and LLM Models, and guarded both the package
+  scripts and lane input/install closure in pipeline validation.
 - Published draft PR #1849 on top of refresh PR #1827 with accepted full 5v5,
   partial 3v2, and postmatch screenshots.
 
