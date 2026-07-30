@@ -235,15 +235,36 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
         {
+          // "pr-merge-failed" was dropped from this regex: `gh pr merge
+          // --auto` failures are caught locally in the activity and never
+          // reach the outer catch that produces this reason label, so that
+          // value could never be produced here. ScoutDataDragonAutoMergeFailed
+          // below covers that signal via its own dedicated counter.
           alert: "ScoutDataDragonPrAutomationFailed",
           annotations: {
             summary: "Scout Data Dragon PR automation failed",
             description: escapePrometheusTemplate(
-              "The Scout Data Dragon updater failed while pushing, creating, or auto-merging a PR. Failure reason: {{ $labels.reason }}.",
+              "The Scout Data Dragon updater failed while pushing or creating a PR. Failure reason: {{ $labels.reason }}.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'max_over_time(scout_data_dragon_runs{outcome="failed",reason=~"git-push-failed|pr-create-failed|pr-merge-failed"}[24h]) > 0',
+            'max_over_time(scout_data_dragon_runs{outcome="failed",reason=~"git-push-failed|pr-create-failed"}[24h]) > 0',
+          ),
+          for: "15m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
+          alert: "ScoutDataDragonAutoMergeFailed",
+          annotations: {
+            summary: "Scout Data Dragon PR auto-merge setup failed",
+            description: escapePrometheusTemplate(
+              "The Scout Data Dragon updater created a PR but failed to enable auto-merge {{ $value }} time(s) in the last 24 hours. The PR needs a manual merge — check open chore/scout-data-dragon-* PRs.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "increase(scout_data_dragon_auto_merge_failures[24h]) > 0",
           ),
           for: "15m",
           labels: {

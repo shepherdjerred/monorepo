@@ -60,3 +60,36 @@ describe("Temporal workflow outcome rules", () => {
     );
   });
 });
+
+describe("Scout Data Dragon failure rules", () => {
+  function findFailureRule(alertName: string) {
+    const failureGroup = getTemporalRuleGroups().find(
+      (group) => group.name === "temporal-workflow-failures",
+    );
+    if (failureGroup?.rules === undefined) {
+      throw new Error("Missing temporal-workflow-failures rule group");
+    }
+    const rule = failureGroup.rules.find((r) => r.alert === alertName);
+    if (rule === undefined) {
+      throw new Error(`Missing ${alertName} rule`);
+    }
+    const expression = rule.expr.value;
+    if (typeof expression !== "string") {
+      throw new TypeError(
+        `Expected ${alertName} rule expression to be a string`,
+      );
+    }
+    return expression;
+  }
+
+  test("ScoutDataDragonAutoMergeFailed alerts on the dedicated auto-merge-failure counter", () => {
+    const expression = findFailureRule("ScoutDataDragonAutoMergeFailed");
+    expect(expression).toContain("scout_data_dragon_auto_merge_failures");
+  });
+
+  test("ScoutDataDragonPrAutomationFailed no longer references the unreachable pr-merge-failed reason", () => {
+    const expression = findFailureRule("ScoutDataDragonPrAutomationFailed");
+    expect(expression).not.toContain("pr-merge-failed");
+    expect(expression).toContain("git-push-failed|pr-create-failed");
+  });
+});
