@@ -327,17 +327,21 @@ export function createQBitTorrentDeployment(
           limit: Size.mebibytes(64),
         },
       },
-      startup: Probe.fromHttpGet("/health", {
+      // Keep pod lifecycle tied to the local HAProxy listener, not the remote
+      // ShelfBridge backend. `/health` below deliberately reports backend
+      // availability for diagnosis, but a ShelfBridge outage must not remove
+      // the otherwise healthy qBittorrent WebUI and metrics endpoints.
+      startup: Probe.fromTcpSocket({
         port: SHELFBRIDGE_RELAY_HEALTH_PORT,
         periodSeconds: Duration.seconds(5),
         failureThreshold: 30,
       }),
-      liveness: Probe.fromHttpGet("/health", {
+      liveness: Probe.fromTcpSocket({
         port: SHELFBRIDGE_RELAY_HEALTH_PORT,
         periodSeconds: Duration.seconds(30),
         failureThreshold: 3,
       }),
-      readiness: Probe.fromHttpGet("/health", {
+      readiness: Probe.fromTcpSocket({
         port: SHELFBRIDGE_RELAY_HEALTH_PORT,
         periodSeconds: Duration.seconds(10),
         failureThreshold: 3,
@@ -365,6 +369,14 @@ export function createQBitTorrentDeployment(
         port: 8080,
         periodSeconds: Duration.seconds(10),
         failureThreshold: 90,
+      }),
+      // Unlike ShelfBridge availability, qBittorrent's own WebUI listener is
+      // part of this pod's service contract. Stop routing WebUI and metrics
+      // traffic when that local listener is unavailable after startup.
+      readiness: Probe.fromTcpSocket({
+        port: 8080,
+        periodSeconds: Duration.seconds(10),
+        failureThreshold: 3,
       }),
       resources: {
         memory: {

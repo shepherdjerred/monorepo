@@ -25,6 +25,11 @@ const ProbeSchema = z
       })
       .optional(),
     periodSeconds: z.number(),
+    tcpSocket: z
+      .object({
+        port: z.number(),
+      })
+      .optional(),
   })
   .loose();
 
@@ -257,23 +262,23 @@ describe("qBittorrent ShelfBridge relay", () => {
     });
   });
 
-  it("reports ready only when the fixed ShelfBridge backend is healthy", () => {
+  it("keeps relay readiness independent from ShelfBridge backend health", () => {
     const relay = getContainer("shelfbridge-relay");
 
     expect(relay.startupProbe).toEqual({
       failureThreshold: 30,
-      httpGet: { path: "/health", port: 8404, scheme: "HTTP" },
       periodSeconds: 5,
+      tcpSocket: { port: 8404 },
     });
     expect(relay.livenessProbe).toEqual({
       failureThreshold: 3,
-      httpGet: { path: "/health", port: 8404, scheme: "HTTP" },
       periodSeconds: 30,
+      tcpSocket: { port: 8404 },
     });
     expect(relay.readinessProbe).toEqual({
       failureThreshold: 3,
-      httpGet: { path: "/health", port: 8404, scheme: "HTTP" },
       periodSeconds: 10,
+      tcpSocket: { port: 8404 },
     });
 
     const config = relayConfigMap.data["haproxy.cfg"];
@@ -284,8 +289,24 @@ describe("qBittorrent ShelfBridge relay", () => {
     expect(config).toContain(
       "monitor fail if { nbsrv(shelfbridge_backend) lt 1 }",
     );
+    expect(config).toContain("monitor-uri /health");
     expect(config.match(/^\s*server\s+/gm)).toHaveLength(1);
     expect(config).not.toContain("server-template");
+  });
+
+  it("removes qBittorrent endpoints when its own WebUI listener is unavailable", () => {
+    const qbittorrent = getContainer("qbittorrent");
+
+    expect(qbittorrent.startupProbe).toEqual({
+      failureThreshold: 90,
+      periodSeconds: 10,
+      tcpSocket: { port: 8080 },
+    });
+    expect(qbittorrent.readinessProbe).toEqual({
+      failureThreshold: 3,
+      periodSeconds: 10,
+      tcpSocket: { port: 8080 },
+    });
   });
 
   it("does not expose either relay port through a Kubernetes Service", () => {
