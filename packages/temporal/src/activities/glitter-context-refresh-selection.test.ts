@@ -15,6 +15,7 @@ function message(input: {
   content?: string;
   attachments?: boolean;
   bot?: boolean;
+  timestamp?: string;
 }) {
   return CurrentMessageSchema.parse({
     schemaVersion: 1,
@@ -32,7 +33,7 @@ function message(input: {
       avatar: null,
     },
     content: input.content ?? `message ${input.id}`,
-    timestamp: "2026-07-01T00:00:00.000Z",
+    timestamp: input.timestamp ?? "2026-07-01T00:00:00.000Z",
     editedTimestamp: null,
     type: 0,
     flags: "0",
@@ -83,14 +84,16 @@ describe("Glitter context refresh selection", () => {
     const messages = Array.from({ length: 40 }, (_, index) =>
       message({ id: String(49_999_999_999_999_981n + BigInt(index)) }),
     );
-    expect(
-      selectStyleRefreshCandidates({
-        people: [person],
-        state: [state],
-        messages,
-        now: new Date("2026-07-20T00:00:00.000Z"),
-      }),
-    ).toHaveLength(1);
+    const candidates = selectStyleRefreshCandidates({
+      people: [person],
+      state: [state],
+      messages,
+      now: new Date("2026-07-20T00:00:00.000Z"),
+    });
+
+    expect(candidates).toHaveLength(1);
+    expect(candidates[0]?.safeMessages).toHaveLength(40);
+    expect(candidates[0]?.directRecentMessages).toHaveLength(40);
   });
 
   test("refreshes quarterly even below the incremental threshold", () => {
@@ -139,5 +142,26 @@ describe("Glitter context refresh selection", () => {
         message({ id: "60000000000000005", content: "bot text", bot: true }),
       ),
     ).toBe(false);
+  });
+
+  test("retains the complete safe corpus and bounds only direct evidence", () => {
+    const messages = Array.from({ length: 620 }, (_, index) =>
+      message({
+        id: String(60_000_000_000_000_000n + BigInt(index)),
+        content: `safe message ${String(index)}`,
+      }),
+    );
+    const candidates = selectStyleRefreshCandidates({
+      people: [person],
+      state: [state],
+      messages,
+      now: new Date("2026-07-20T00:00:00.000Z"),
+    });
+
+    expect(candidates[0]?.safeMessages).toHaveLength(620);
+    expect(candidates[0]?.directRecentMessages).toHaveLength(500);
+    expect(candidates[0]?.directRecentMessages[0]?.content).toBe(
+      "safe message 120",
+    );
   });
 });

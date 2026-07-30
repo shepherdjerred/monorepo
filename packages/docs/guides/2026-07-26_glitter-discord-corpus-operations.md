@@ -267,6 +267,7 @@ TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 \
   TEMPORAL_TLS=true \
   bun run glitter:operate context-refresh \
   --dry-run=true \
+  --max-estimated-cost-usd=50 \
   --now=<fixed-iso-timestamp> \
   --snapshot-id=<verified-snapshot-uuid> \
   --snapshot-sha256=<verified-snapshot-sha256> \
@@ -278,8 +279,15 @@ Verify:
 - the result names the exact pinned snapshot ID and checksum;
 - both runs return the same `proposalSha256`, `changedFiles`, and generated
   result;
+- the first cold run stays below its explicit `$50` uncached generation budget,
+  and the second run reports cache hits for the same artifact keys;
 - only eligible people are refreshed (20 new messages or 90 days);
-- every style sample is an exact safe corpus candidate;
+- every safe message is included exactly once in deterministic UTC-month
+  extraction chunks of at most 250 messages;
+- every V2 style card contains exactly 20 verbatim quotes, 30 verbatim sample
+  messages, and three synthetic examples for each of the six situations;
+- V2 coverage records the complete corpus, safe evidence, chunk, direct recent,
+  date-range, strategy, and source-checksum facts separately;
 - relationship changes cite available message IDs and preserve superseded
   events as `historical`;
 - `changedFiles` contains only shared-package data and generated-data paths;
@@ -296,12 +304,15 @@ activity retries, and the subsequent real run reuse the same artifacts. The
 snapshot pin bypasses `snapshots/latest.json`, so daily corpus publication
 cannot change the acceptance input between those runs.
 
-Run once with `--dry-run=false`, the same `--now`, both snapshot pin flags, and
-`--wait=true` only after those checks pass. It may open one human-reviewed pull
-request and never auto-merges. Activity retries reuse a branch derived from the
-Temporal workflow run ID, so they update or reuse the same exact-head proposal
-rather than opening duplicates. A `no-diff` result opens no pull request. After
-reviewing that first PR, unpause the Monday 11:00 America/Los_Angeles schedule.
+Run once with `--dry-run=false`, the same `$50` budget, `--now`, both snapshot
+pin flags, and `--wait=true` only after those checks pass. It may open one
+human-reviewed pull request and never auto-merges. Activity retries reuse a
+branch derived from the Temporal workflow run ID, so they update or reuse the
+same exact-head proposal rather than opening duplicates. A `no-diff` result
+opens no pull request. After the V2 data PR is reviewed and merged, verify
+Birmel and Scout receive the complete metadata-free prompt context in
+production. Then unpause the Monday 11:00 America/Los_Angeles schedule; its
+configured uncached budget is `$10` per run.
 
 ## Incident response
 
@@ -376,3 +387,21 @@ Treat it as a correctness event, not as an object to overwrite.
   evidence requires an independent backup to survive total SeaweedFS loss.
 - The failed canary runs wrote immutable request/response evidence but did not
   publish `latest.json`; failed-closed evidence remains safe to retain.
+
+## Session Log — 2026-07-29
+
+### Done
+
+- Documented the explicit `$50` cold acceptance budget, `$10` scheduled budget,
+  complete safe-corpus chunking, V2 cardinality checks, cache reuse evidence,
+  and consumer smoke-test gate.
+
+### Remaining
+
+- Run the two pinned dry runs, promote the cached real run, review and merge its
+  V2 data PR, verify deployed Birmel and Scout prompts, and resume the schedule.
+
+### Caveats
+
+- The weekly context-refresh schedule remains intentionally paused until every
+  acceptance gate above is complete.

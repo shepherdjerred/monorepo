@@ -2,52 +2,15 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.sjer.red/glitter-context/style-card.schema.json",
   "title": "Glitter style card",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "author",
-    "coverage",
-    "voice",
-    "style_markers",
-    "topics",
-    "relationships",
-    "behaviors",
-    "personality",
-    "humor_or_tone",
-    "quotes",
-    "summary",
-    "likes_dislikes",
-    "league",
-    "other_games",
-    "how_to_mimic",
-    "sample_messages"
+  "oneOf": [
+    { "$ref": "#/$defs/legacyStyleCard" },
+    { "$ref": "#/$defs/styleCardV2" }
   ],
-  "properties": {
-    "author": { "type": "string", "minLength": 1 },
-    "coverage": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["messages", "date_range", "notes"],
-      "properties": {
-        "messages": { "type": "integer", "minimum": 0 },
-        "date_range": { "type": "string" },
-        "truncated": { "type": "boolean" },
-        "truncated?": { "type": "boolean" },
-        "notes": { "type": "string" }
-      }
+  "$defs": {
+    "stringList": {
+      "type": "array",
+      "items": { "type": "string" }
     },
-    "voice": { "$ref": "#/$defs/stringList" },
-    "style_markers": { "$ref": "#/$defs/stringList" },
-    "topics": { "$ref": "#/$defs/stringList" },
-    "relationships": { "$ref": "#/$defs/stringList" },
-    "behaviors": { "$ref": "#/$defs/stringList" },
-    "personality": { "$ref": "#/$defs/stringList" },
-    "humor_or_tone": { "$ref": "#/$defs/stringList" },
-    "quotes": { "$ref": "#/$defs/stringList" },
-    "summary": {
-      "oneOf": [{ "type": "string" }, { "$ref": "#/$defs/stringList" }]
-    },
-    "likes_dislikes": { "$ref": "#/$defs/stringList" },
     "league": {
       "type": "object",
       "additionalProperties": {
@@ -66,15 +29,243 @@
         ]
       }
     },
-    "other_games": { "$ref": "#/$defs/stringList" },
-    "how_to_mimic": { "$ref": "#/$defs/stringList" },
-    "sample_messages": { "$ref": "#/$defs/stringList" },
-    "concerns": { "$ref": "#/$defs/stringList" }
-  },
-  "$defs": {
-    "stringList": {
-      "type": "array",
-      "items": { "type": "string" }
+    "contentProperties": {
+      "type": "object",
+      "properties": {
+        "author": { "type": "string", "minLength": 1 },
+        "voice": { "$ref": "#/$defs/stringList" },
+        "style_markers": { "$ref": "#/$defs/stringList" },
+        "topics": { "$ref": "#/$defs/stringList" },
+        "relationships": { "$ref": "#/$defs/stringList" },
+        "behaviors": { "$ref": "#/$defs/stringList" },
+        "personality": { "$ref": "#/$defs/stringList" },
+        "humor_or_tone": { "$ref": "#/$defs/stringList" },
+        "summary": {
+          "oneOf": [{ "type": "string" }, { "$ref": "#/$defs/stringList" }]
+        },
+        "likes_dislikes": { "$ref": "#/$defs/stringList" },
+        "league": { "$ref": "#/$defs/league" },
+        "other_games": { "$ref": "#/$defs/stringList" },
+        "how_to_mimic": { "$ref": "#/$defs/stringList" }
+      }
+    },
+    "legacyStyleCard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "author",
+        "coverage",
+        "voice",
+        "style_markers",
+        "topics",
+        "relationships",
+        "behaviors",
+        "personality",
+        "humor_or_tone",
+        "quotes",
+        "summary",
+        "likes_dislikes",
+        "league",
+        "other_games",
+        "how_to_mimic",
+        "sample_messages"
+      ],
+      "properties": {
+        "author": { "type": "string", "minLength": 1 },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["messages", "date_range", "notes"],
+          "properties": {
+            "messages": { "type": "integer", "minimum": 0 },
+            "date_range": { "type": "string" },
+            "truncated": { "type": "boolean" },
+            "truncated?": { "type": "boolean" },
+            "notes": { "type": "string" }
+          }
+        },
+        "voice": { "$ref": "#/$defs/stringList" },
+        "style_markers": { "$ref": "#/$defs/stringList" },
+        "topics": { "$ref": "#/$defs/stringList" },
+        "relationships": { "$ref": "#/$defs/stringList" },
+        "behaviors": { "$ref": "#/$defs/stringList" },
+        "personality": { "$ref": "#/$defs/stringList" },
+        "humor_or_tone": { "$ref": "#/$defs/stringList" },
+        "quotes": { "$ref": "#/$defs/stringList" },
+        "summary": {
+          "oneOf": [{ "type": "string" }, { "$ref": "#/$defs/stringList" }]
+        },
+        "likes_dislikes": { "$ref": "#/$defs/stringList" },
+        "league": { "$ref": "#/$defs/league" },
+        "other_games": { "$ref": "#/$defs/stringList" },
+        "how_to_mimic": { "$ref": "#/$defs/stringList" },
+        "sample_messages": { "$ref": "#/$defs/stringList" },
+        "concerns": { "$ref": "#/$defs/stringList" }
+      }
+    },
+    "dateRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {
+        "start": { "type": "string", "format": "date-time" },
+        "end": { "type": "string", "format": "date-time" }
+      }
+    },
+    "situationalExamples": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provenance",
+        "happy_or_excited",
+        "angry_or_frustrated",
+        "sad_or_disappointed",
+        "supportive_or_caring",
+        "playful_or_teasing",
+        "neutral_or_logistical"
+      ],
+      "properties": {
+        "provenance": { "const": "synthetic" },
+        "happy_or_excited": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "angry_or_frustrated": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "sad_or_disappointed": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "supportive_or_caring": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "playful_or_teasing": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "neutral_or_logistical": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 3,
+          "maxItems": 3
+        }
+      }
+    },
+    "styleCardV2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "author",
+        "coverage",
+        "voice",
+        "style_markers",
+        "topics",
+        "relationships",
+        "behaviors",
+        "personality",
+        "humor_or_tone",
+        "quotes",
+        "summary",
+        "likes_dislikes",
+        "league",
+        "other_games",
+        "how_to_mimic",
+        "sample_messages",
+        "situational_examples",
+        "concerns"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 2 },
+        "author": { "type": "string", "minLength": 1 },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source_snapshot_sha256", "corpus", "evidence", "notes"],
+          "properties": {
+            "source_snapshot_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "corpus": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["messages", "date_range"],
+              "properties": {
+                "messages": { "type": "integer", "minimum": 0 },
+                "date_range": { "$ref": "#/$defs/dateRange" }
+              }
+            },
+            "evidence": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "safe_messages",
+                "summarized_messages",
+                "chunks",
+                "direct_recent_messages",
+                "date_range",
+                "strategy"
+              ],
+              "properties": {
+                "safe_messages": { "type": "integer", "minimum": 0 },
+                "summarized_messages": { "type": "integer", "minimum": 0 },
+                "chunks": { "type": "integer", "minimum": 0 },
+                "direct_recent_messages": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "date_range": { "$ref": "#/$defs/dateRange" },
+                "strategy": {
+                  "const": "all-safe-monthly-chunks-plus-latest-500"
+                }
+              }
+            },
+            "notes": { "type": "string" }
+          }
+        },
+        "voice": { "$ref": "#/$defs/stringList" },
+        "style_markers": { "$ref": "#/$defs/stringList" },
+        "topics": { "$ref": "#/$defs/stringList" },
+        "relationships": { "$ref": "#/$defs/stringList" },
+        "behaviors": { "$ref": "#/$defs/stringList" },
+        "personality": { "$ref": "#/$defs/stringList" },
+        "humor_or_tone": { "$ref": "#/$defs/stringList" },
+        "quotes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 20,
+          "maxItems": 20
+        },
+        "summary": {
+          "oneOf": [{ "type": "string" }, { "$ref": "#/$defs/stringList" }]
+        },
+        "likes_dislikes": { "$ref": "#/$defs/stringList" },
+        "league": { "$ref": "#/$defs/league" },
+        "other_games": { "$ref": "#/$defs/stringList" },
+        "how_to_mimic": { "$ref": "#/$defs/stringList" },
+        "sample_messages": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 30,
+          "maxItems": 30
+        },
+        "situational_examples": { "$ref": "#/$defs/situationalExamples" },
+        "concerns": { "$ref": "#/$defs/stringList" }
+      }
     }
   }
 }

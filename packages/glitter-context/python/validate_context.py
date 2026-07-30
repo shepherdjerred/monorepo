@@ -131,7 +131,7 @@ class RelationshipsDocument(DocumentModel):
         return self
 
 
-class Coverage(BaseModel):
+class LegacyCoverage(BaseModel):
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
     messages: int = Field(ge=0)
     date_range: str
@@ -149,10 +149,9 @@ class LeagueLanes(BaseModel):
 LeagueValue = str | list[str] | LeagueLanes
 
 
-class StyleCard(BaseModel):
+class StyleCardContent(BaseModel):
     model_config = ConfigDict(extra="forbid")
     author: str = Field(min_length=1)
-    coverage: Coverage
     voice: list[str]
     style_markers: list[str]
     topics: list[str]
@@ -166,8 +165,69 @@ class StyleCard(BaseModel):
     league: dict[str, LeagueValue]
     other_games: list[str]
     how_to_mimic: list[str]
+
+
+class LegacyStyleCard(StyleCardContent):
+    coverage: LegacyCoverage
+    quotes: list[str]
     sample_messages: list[str]
     concerns: list[str] | None = None
+
+
+class StyleDateRange(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    start: AwareDatetime
+    end: AwareDatetime
+
+
+class CorpusCoverage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    messages: int = Field(ge=0)
+    date_range: StyleDateRange
+
+
+class EvidenceCoverage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    safe_messages: int = Field(ge=0)
+    summarized_messages: int = Field(ge=0)
+    chunks: int = Field(ge=0)
+    direct_recent_messages: int = Field(ge=0)
+    date_range: StyleDateRange
+    strategy: Literal["all-safe-monthly-chunks-plus-latest-500"]
+
+
+class StyleCardCoverageV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    source_snapshot_sha256: Checksum
+    corpus: CorpusCoverage
+    evidence: EvidenceCoverage
+    notes: str
+
+
+SyntheticExamples = Annotated[list[str], Field(min_length=3, max_length=3)]
+
+
+class SituationalExamples(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    provenance: Literal["synthetic"]
+    happy_or_excited: SyntheticExamples
+    angry_or_frustrated: SyntheticExamples
+    sad_or_disappointed: SyntheticExamples
+    supportive_or_caring: SyntheticExamples
+    playful_or_teasing: SyntheticExamples
+    neutral_or_logistical: SyntheticExamples
+
+
+class StyleCardV2(StyleCardContent):
+    schemaVersion: Literal[2]
+    coverage: StyleCardCoverageV2
+    quotes: Annotated[list[str], Field(min_length=20, max_length=20)]
+    sample_messages: Annotated[list[str], Field(min_length=30, max_length=30)]
+    situational_examples: SituationalExamples
+    concerns: list[str]
+
+
+StyleCard = LegacyStyleCard | StyleCardV2
 
 
 class GenerationStateEntry(BaseModel):
@@ -203,7 +263,7 @@ def main() -> None:
     )
     LoreDocument.model_validate(load_json(DATA_ROOT / "lore.json"))
 
-    style_adapter = TypeAdapter(StyleCard)
+    style_adapter: TypeAdapter[StyleCard] = TypeAdapter(StyleCard)
     style_files = sorted((DATA_ROOT / "style-cards").glob("*_style.json"))
     for path in style_files:
         style_adapter.validate_python(load_json(path))

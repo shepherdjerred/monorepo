@@ -20,7 +20,7 @@ function usage(): never {
       "  bun run glitter:operate canary --guild-id=<id> --guild-slug=<slug> --channel-id=<id> [--seed-prefix=<prefix>] [--max-pages=<n>]",
       "  bun run glitter:operate backfill --inventory-key=<key> --inventory-sha=<sha256> [--seed-prefix=<prefix>] [--max-pages=<n>] [--wait=true]",
       "  bun run glitter:operate daily [--wait=true]",
-      "  bun run glitter:operate context-refresh --dry-run=<true|false> [--now=<iso>] [--snapshot-id=<uuid> --snapshot-sha256=<sha256>] [--wait=true]",
+      "  bun run glitter:operate context-refresh --dry-run=<true|false> --max-estimated-cost-usd=<usd> [--now=<iso>] [--snapshot-id=<uuid> --snapshot-sha256=<sha256>] [--wait=true]",
     ].join("\n"),
   );
   process.exit(2);
@@ -206,6 +206,7 @@ async function runContextRefresh(
   const parsed = z
     .object({
       "dry-run": z.enum(["true", "false"]),
+      "max-estimated-cost-usd": z.coerce.number().positive(),
       now: z.iso.datetime({ offset: true }).optional(),
       "snapshot-id": z.uuid().optional(),
       "snapshot-sha256": z
@@ -232,6 +233,7 @@ async function runContextRefresh(
     args: [
       {
         dryRun: parsed["dry-run"] === "true",
+        maxEstimatedCostUsd: parsed["max-estimated-cost-usd"],
         ...(parsed.now === undefined ? {} : { now: parsed.now }),
         ...(snapshot === undefined ? {} : { snapshot }),
       },
@@ -247,6 +249,19 @@ async function runContextRefresh(
         eligiblePeople: z.array(z.string()),
         refreshedPeople: z.array(z.string()),
         relationshipProposalCount: z.number().int().nonnegative(),
+        generation: z
+          .object({
+            maxUncachedCostUsd: z.number().nonnegative(),
+            preflightEstimatedCostUsd: z.number().nonnegative(),
+            actualUncachedCostUsd: z.number().nonnegative(),
+            cacheHits: z.number().int().nonnegative(),
+            cacheMisses: z.number().int().nonnegative(),
+            inputTokens: z.number().int().nonnegative(),
+            outputTokens: z.number().int().nonnegative(),
+            cachedInputTokens: z.number().int().nonnegative(),
+            artifactKeys: z.array(z.string()),
+          })
+          .strict(),
         changedFiles: z.array(z.string()),
         branchName: z.string().optional(),
         commitHash: z.string().optional(),

@@ -6,6 +6,7 @@ import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { getOpenAIResponsesProviderOptions } from "@shepherdjerred/birmel/voltagent/openai-provider-options.ts";
 import { buildPersonaPrompt } from "@shepherdjerred/birmel/persona/style-transform.ts";
+import type { PersonaPromptContext } from "@shepherdjerred/birmel/persona/style-transform.ts";
 
 const logger = loggers.discord.child("should-respond-classifier");
 
@@ -31,6 +32,18 @@ export type ClassifyShouldRespondInput = {
   userId: string;
 };
 
+export function buildClassifierPersonaBlock(
+  persona: string,
+  personaPrompt: PersonaPromptContext | null,
+): string {
+  if (personaPrompt === null) {
+    return `You are "${persona}".`;
+  }
+  return personaPrompt.format === "thick"
+    ? `You are "${personaPrompt.name}". Your complete writing-style context is:\n${JSON.stringify(personaPrompt.style)}`
+    : `You are "${personaPrompt.name}". Your voice:\n${personaPrompt.voice}`;
+}
+
 /**
  * Decide whether the bot should respond to a message that did NOT directly
  * mention it, given the bot was recently engaged in the channel. Uses the cheap
@@ -54,10 +67,10 @@ export async function classifyShouldRespond(
     async (span) => {
       try {
         const personaPrompt = buildPersonaPrompt(persona);
-        const personaBlock =
-          personaPrompt == null
-            ? `You are "${persona}".`
-            : `You are "${personaPrompt.name}". Your voice:\n${personaPrompt.voice}`;
+        const personaBlock = buildClassifierPersonaBlock(
+          persona,
+          personaPrompt,
+        );
 
         const { output: object } = await generateText({
           model: openai(config.openai.classifierModel),

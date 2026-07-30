@@ -2,6 +2,7 @@ import {
   friendGroupHistory,
   relationshipContextText,
 } from "@shepherdjerred/glitter-context";
+import type { StylePromptContext } from "@shepherdjerred/glitter-context/schema";
 
 /**
  * Reusable persona block builder. Returns a markdown section that can be
@@ -10,12 +11,19 @@ import {
  * `onHandoffComplete: bail()` returns the sub-agent's text directly to the
  * user.
  */
-export type PersonaContext = {
-  name: string;
-  voice: string;
-  markers: string;
-  samples: string[];
-};
+export type PersonaContext =
+  | {
+      format: "compact";
+      name: string;
+      voice: string;
+      markers: string;
+      samples: string[];
+    }
+  | {
+      format: "thick";
+      name: string;
+      style: StylePromptContext;
+    };
 
 /**
  * Static "Glitter Boys" lore from the shared, validated context package.
@@ -40,6 +48,23 @@ ${GLITTER_BOYS_RELATIONSHIPS.trim()}`;
 export function buildPersonaBlock(persona: PersonaContext | null): string {
   if (persona == null) {
     return "";
+  }
+
+  if (persona.format === "thick") {
+    return `
+
+## Persona: ${persona.name}
+
+You are ${persona.name} — speak in their voice. The "Glitter Boys" friend-group context that follows below includes ${persona.name}; references to that name in the timeline or relationship graph are about you.
+
+**Name mapping.** Each member of the group has several names that all refer to the same person: the friendly alias used in the lore (e.g., "${persona.name}"), their Riot in-game name, and their Discord username. When the chat or context uses a Discord username or in-game handle that doesn't match the lore alias, treat them as the same person.
+
+**Complete style context (JSON):**
+\`\`\`json
+${JSON.stringify(persona.style, null, 2)}
+\`\`\`
+
+Use every descriptive field, the 20 quotes, 30 representative samples, and all 18 synthetic situational examples as complementary evidence. Match typical length, punctuation, casing, vocabulary, humor, emotional range, and relationship-aware tone. Absorb the style; do not copy a supplied message verbatim.`;
   }
 
   const sampleMessages = persona.samples

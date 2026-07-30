@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { mkdir, rm } from "node:fs/promises";
 import { Context } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
@@ -10,6 +9,7 @@ import {
   StyleCardSchema,
   type GenerationStateDocument,
   type GenerationStateEntry,
+  type StyleCard,
 } from "@shepherdjerred/glitter-context/schema";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import {
@@ -24,10 +24,18 @@ import {
   loadVerifiedGlitterCorpus,
 } from "./glitter-context-refresh-corpus.ts";
 import {
-  generateStyleCard,
+  estimateRelationshipGenerationCost,
   proposeRelationships,
 } from "./glitter-context-refresh-generate.ts";
+import {
+  estimateStyleGenerationCost,
+  generateStyleCard,
+} from "./glitter-context-refresh-style-generation.ts";
 import { createCorpusGenerationArtifactStore } from "./glitter-context-refresh-cache.ts";
+import {
+  GenerationBudget,
+  type GenerationBudgetSummary,
+} from "./glitter-context-refresh-budget.ts";
 import {
   applyRelationshipProposals,
   selectRelationshipEvidence,
@@ -44,6 +52,10 @@ import {
   openSeasonRefreshPr,
   parsePorcelainPaths,
 } from "./scout-season-refresh-git.ts";
+import {
+  glitterContextProposalChecksum,
+  glitterContextRunIdentity,
+} from "./glitter-context-refresh-identity.ts";
 
 const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
 const REPO_SLUG = "shepherdjerred/monorepo";
@@ -71,6 +83,7 @@ export function shouldPersistRelationshipEvaluation(input: {
 export const GlitterContextRefreshInputSchema = z
   .object({
     dryRun: z.boolean().default(false),
+    maxEstimatedCostUsd: z.number().positive().default(10),
     now: z.iso.datetime({ offset: true }).optional(),
     snapshot: GlitterCorpusSnapshotPinSchema.optional(),
   })
@@ -87,48 +100,12 @@ export type GlitterContextRefreshResult = {
   eligiblePeople: string[];
   refreshedPeople: string[];
   relationshipProposalCount: number;
+  generation: GenerationBudgetSummary;
   changedFiles: string[];
   branchName: string | undefined;
   commitHash: string | undefined;
   prUrl: string | undefined;
 };
-
-export function glitterContextProposalChecksum(
-  files: readonly {
-    path: string;
-    bytes: Uint8Array | null;
-  }[],
-): string {
-  const hash = createHash("sha256");
-  for (const file of files.toSorted((left, right) =>
-    left.path.localeCompare(right.path),
-  )) {
-    hash.update(file.path);
-    hash.update("\0");
-    if (file.bytes === null) {
-      hash.update("deleted");
-    } else {
-      hash.update(String(file.bytes.length));
-      hash.update("\0");
-      hash.update(file.bytes);
-    }
-    hash.update("\0");
-  }
-  return hash.digest("hex");
-}
-
-export function glitterContextRunIdentity(rawRunId: string): {
-  runId: string;
-  tempDir: string;
-  branch: string;
-} {
-  const runId = z.uuid().parse(rawRunId);
-  return {
-    runId,
-    tempDir: `/tmp/glitter-context-refresh-${runId}`,
-    branch: `chore/glitter-context-refresh-${runId}`,
-  };
-}
 
 function jsonText(value: unknown): string {
   return `${JSON.stringify(value, null, 2)}\n`;
@@ -276,6 +253,7 @@ export const glitterContextRefreshActivities = {
       const corpus = await loadVerifiedGlitterCorpus(input.snapshot);
       const generationArtifactStore = createCorpusGenerationArtifactStore(
         createCorpusStoreFromEnv(),
+        runId,
       );
       await mkdir(tempDir, { recursive: true });
       await simpleGit().clone(REPO_URL, repoDir, [
@@ -303,6 +281,55 @@ export const glitterContextRefreshActivities = {
         now,
       });
       glitterContextRefreshPeople.set({ state: "eligible" }, candidates.length);
+      const existingCards = new Map<string, StyleCard>();
+      for (const candidate of candidates) {
+        existingCards.set(
+          candidate.person.id,
+          StyleCardSchema.parse(
+            await readJson(styleCardPath(repoDir, candidate.person.id)),
+          ),
+        );
+      }
+      const relationshipsEvaluated = shouldEvaluateRelationships(
+        generationState.relationshipSourceSnapshotChecksum,
+        corpus.reference.snapshotSha256,
+      );
+      const relationshipEvidence = relationshipsEvaluated
+        ? selectRelationshipEvidence({
+            people: peopleDocument.people,
+            messages: corpus.messages,
+          })
+        : [];
+      const relationshipGenerationInput = {
+        people: peopleDocument.people.map((person) => ({
+          id: person.id,
+          displayName: person.displayName,
+        })),
+        currentRelationships: relationshipsDocument.events.filter(
+          (event) => event.status === "current",
+        ),
+        evidence: relationshipEvidence,
+      };
+      const generationBudget = new GenerationBudget(input.maxEstimatedCostUsd);
+      const stylePreflightCost = candidates.reduce((total, candidate) => {
+        const existingCard = existingCards.get(candidate.person.id);
+        if (existingCard === undefined) {
+          throw new Error(
+            `missing existing style card for ${candidate.person.id}`,
+          );
+        }
+        return (
+          total +
+          estimateStyleGenerationCost({
+            candidate,
+            existingCard,
+          })
+        );
+      }, 0);
+      generationBudget.setPreflightEstimatedCostUsd(
+        stylePreflightCost +
+          estimateRelationshipGenerationCost(relationshipGenerationInput),
+      );
 
       const refreshedPeople = new Set<string>();
       for (const candidate of candidates) {
@@ -311,43 +338,36 @@ export const glitterContextRefreshActivities = {
           personId: candidate.person.id,
         });
         const path = styleCardPath(repoDir, candidate.person.id);
-        const existingCard = StyleCardSchema.parse(await readJson(path));
+        const existingCard = existingCards.get(candidate.person.id);
+        if (existingCard === undefined) {
+          throw new Error(
+            `missing existing style card for ${candidate.person.id}`,
+          );
+        }
         const card = await generateStyleCard({
           candidate,
           existingCard,
+          sourceSnapshotSha256: corpus.reference.snapshotSha256,
           artifactStore: generationArtifactStore,
+          budget: generationBudget,
         });
         await Bun.write(path, jsonText(card));
         refreshedPeople.add(candidate.person.id);
       }
 
-      const relationshipsEvaluated = shouldEvaluateRelationships(
-        generationState.relationshipSourceSnapshotChecksum,
-        corpus.reference.snapshotSha256,
-      );
       let updatedRelationships = relationshipsDocument;
       let relationshipProposalCount = 0;
       if (relationshipsEvaluated) {
-        const evidence = selectRelationshipEvidence({
-          people: peopleDocument.people,
-          messages: corpus.messages,
-        });
         const proposals = await proposeRelationships({
-          people: peopleDocument.people.map((person) => ({
-            id: person.id,
-            displayName: person.displayName,
-          })),
-          currentRelationships: relationshipsDocument.events.filter(
-            (event) => event.status === "current",
-          ),
-          evidence,
+          ...relationshipGenerationInput,
           artifactStore: generationArtifactStore,
+          budget: generationBudget,
         });
         const applied = applyRelationshipProposals({
           document: relationshipsDocument,
           proposals,
           people: peopleDocument.people,
-          evidence,
+          evidence: relationshipEvidence,
           snapshotSha256: corpus.reference.snapshotSha256,
           recordedAt: refreshedAt,
         });
@@ -396,6 +416,7 @@ export const glitterContextRefreshActivities = {
         eligiblePeople: candidates.map((candidate) => candidate.person.id),
         refreshedPeople: [...refreshedPeople].toSorted(),
         relationshipProposalCount,
+        generation: generationBudget.summary(),
         changedFiles: files,
       };
       if (files.length === 0) {
@@ -428,6 +449,8 @@ export const glitterContextRefreshActivities = {
         `Verified snapshot: \`${corpus.reference.snapshotSha256}\``,
         `Style cards refreshed: ${String(refreshedPeople.size)}`,
         `Relationship updates proposed: ${String(relationshipProposalCount)}`,
+        `Uncached generation cost: $${baseResult.generation.actualUncachedCostUsd.toFixed(4)} / $${baseResult.generation.maxUncachedCostUsd.toFixed(2)}`,
+        `Generation cache: ${String(baseResult.generation.cacheHits)} hits, ${String(baseResult.generation.cacheMisses)} misses`,
         "",
         "The model received only bounded, attachment-free, mention-free,",
         "URL-free corpus samples. Relationship changes cite exact message IDs.",
