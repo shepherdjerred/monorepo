@@ -23,15 +23,18 @@ board: false
   candidate discovery output.
 - Replaced the eval package's `bunx` lint and typecheck scripts with
   `bun x --no-install`, matching the Bun-only Buildkite runtime.
+- Restacked PR #1777 onto current `main` with git-spice and resolved the
+  Playwright lane conflict by preserving main's pinned CI image while retaining
+  the eval package's install, Turbo filters, and change-selection inputs.
 - Verified PR #1777 with the focused eval tests, typecheck, changed-file ESLint,
-  and changed-file Prettier checks.
+  changed-file Prettier checks, Buildkite pipeline validator, lane-coverage
+  tests, and an independent merge-tree check.
 
 ### Remaining
 
-- Resolve the `.buildkite/pipeline.yml` conflict with current `origin/main`.
 - Address the remaining P2 review findings on PR #1777.
-- Let Buildkite and a current-head Codex review validate the next published
-  commit.
+- Let Buildkite and a current-head Codex review validate the published
+  restacked head.
 
 ### Caveats
 
