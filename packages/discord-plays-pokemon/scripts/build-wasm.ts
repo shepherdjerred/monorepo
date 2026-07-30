@@ -217,6 +217,11 @@ async function checkoutRevision(
     );
   }
   await runRequired(
+    ["git", "-C", workDirectory, "reset", "--hard"],
+    undefined,
+    runCommand,
+  );
+  await runRequired(
     ["git", "-C", workDirectory, "checkout", "--detach", commit],
     undefined,
     runCommand,
@@ -362,11 +367,6 @@ export async function buildWasm(
     workDirectory,
     dependencies.runCommand,
   );
-  await checkoutRevision(
-    upstream.commit,
-    workDirectory,
-    dependencies.runCommand,
-  );
 
   const patchPaths = [
     ...new Bun.Glob("*.patch").scanSync({
@@ -383,6 +383,11 @@ export async function buildWasm(
   const cachedFingerprint = await readCachedFingerprint(fingerprintPath);
   const patchSeriesRefreshed = cachedFingerprint !== sourceFingerprint;
   if (patchSeriesRefreshed) {
+    await checkoutRevision(
+      upstream.commit,
+      workDirectory,
+      dependencies.runCommand,
+    );
     await refreshPatchSeries(
       upstream.commit,
       workDirectory,

@@ -1062,3 +1062,64 @@ deferred by explicit direction.
   remain unchanged.
 - The four #1848 findings remain unchanged.
 - Shared-cache Buildkite retries and cache mutations remain explicitly deferred.
+
+## Session Log — 2026-07-29 (cached WASM pin refresh)
+
+### Done
+
+- Refreshed the exact PR stack and isolated the cached-worktree failure before
+  patch refresh.
+- Reordered source identity handling so an exact pin-and-patch fingerprint
+  reuses the cached tree, while changed source identity resets tracked patches
+  before switching upstream commits.
+- Added a focused pin-change regression that simulates stale tracked patches,
+  requires reset-before-checkout ordering, and verifies the current patch set
+  and fingerprint.
+- Passed the focused 16-test WASM build suite, package typecheck, changed-file
+  ESLint and Prettier, docs validation, and Markdown lint.
+- Passed the staged pre-commit checks, including Gitleaks and suppression
+  detection.
+
+### Remaining
+
+- Await current-head Buildkite for PR #1847 and the git-spice-required #1848
+  child restack.
+
+### Caveats
+
+- The deep directional-warp and failed-navigation-edge threads on #1847 remain
+  unchanged.
+- The four #1848 knowledge findings remain unchanged.
+- Hosted review is intentionally deferred because the provider reports an
+  explicit usage limit.
+
+## Session Log — 2026-07-29 (directed exit replanning)
+
+### Done
+
+- Replaced destination-tile failures in selected-exit navigation with
+  persistent directed movement edges shared with the existing warp-edge
+  exclusions.
+- Removed the replan fallback that discarded learned failures, while preserving
+  dynamic occupied-tile handling and the bounded movement budget.
+- Added a focused directional-obstruction regression that retains the failed
+  edge across replans, approaches its destination tile from another side, and
+  traverses the selected exit.
+- Passed the focused 34-test controller suite, backend typecheck, changed-file
+  ESLint and Prettier, docs validation, and Markdown lint.
+- Passed the staged pre-commit checks, including Gitleaks and suppression
+  detection.
+
+### Remaining
+
+- Await current-head Buildkite for PR #1847 and the git-spice-required #1848
+  child restack.
+
+### Caveats
+
+- The remaining #1847 finding `U-wi6` and the four #1848 knowledge findings
+  remain unchanged.
+- Coordinate-target navigation keeps its separate transient-blocker
+  revalidation behavior; this fix changes only selected-exit routing.
+- Hosted review is intentionally deferred because the provider reports an
+  explicit usage limit.

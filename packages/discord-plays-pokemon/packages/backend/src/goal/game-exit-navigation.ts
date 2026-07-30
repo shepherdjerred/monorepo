@@ -397,11 +397,9 @@ export async function navigateGameExit(
   if ("outcome" in prepared) return prepared.outcome;
   const { before, topology, activations } = prepared;
 
-  const competingWarpEdges = competingAutomaticWarpEdges(
-    topology,
-    options.exitId,
+  const blockedMovementEdges = new Set(
+    competingAutomaticWarpEdges(topology, options.exitId),
   );
-  const failedMovementTiles = new Set<string>();
   let attemptsMade = 0;
   let stepsTaken = 0;
   let after = before;
@@ -420,24 +418,14 @@ export async function navigateGameExit(
       });
     }
     const occupied = occupiedTiles(current);
-    let path = findPathStep({
+    const path = findPathStep({
       topology,
       readMapTile: options.readMapTile,
       start: { x: current.world.x, y: current.world.y },
       activations,
-      blockedTiles: new Set([...failedMovementTiles, ...occupied]),
-      blockedEdges: competingWarpEdges,
+      blockedTiles: occupied,
+      blockedEdges: blockedMovementEdges,
     });
-    if (path === null && failedMovementTiles.size > 0) {
-      path = findPathStep({
-        topology,
-        readMapTile: options.readMapTile,
-        start: { x: current.world.x, y: current.world.y },
-        activations,
-        blockedTiles: occupied,
-        blockedEdges: competingWarpEdges,
-      });
-    }
     if (path === null) {
       return exitResult({
         exitId: options.exitId,
@@ -484,7 +472,9 @@ export async function navigateGameExit(
       });
     }
     if (step.tilesMoved === 0) {
-      failedMovementTiles.add(coordinateKey(intended.x, intended.y));
+      blockedMovementEdges.add(
+        movementEdgeKey({ x: current.world.x, y: current.world.y }, intended),
+      );
       continue;
     }
     stepsTaken += step.tilesMoved;

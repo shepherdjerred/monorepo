@@ -19,6 +19,7 @@ import { parsePokemonUpstream } from "./lib/upstream.ts";
 import { writeWasmArtifact } from "./lib/wasm-artifact.ts";
 
 const UPSTREAM_COMMIT = "0123456789abcdef0123456789abcdef01234567";
+const PREVIOUS_UPSTREAM_COMMIT = "1123456789abcdef0123456789abcdef01234567";
 const WASM_HEADER = [0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00] as const;
 const temporaryDirectories: string[] = [];
 
@@ -150,11 +151,13 @@ function createFakeBuild(
     revisionExists?: boolean;
     completePatch?: boolean;
     validArtifact?: boolean;
+    staleTrackedPatches?: boolean;
   }> = {},
 ): FakeBuild {
   const commands: string[][] = [];
   const patches: string[] = [];
   const logs: string[] = [];
+  let staleTrackedPatches = options.staleTrackedPatches === true;
   const runCommand = async (command: readonly string[]): Promise<number> => {
     const captured = [...command];
     commands.push(captured);
@@ -165,6 +168,12 @@ function createFakeBuild(
       await Bun.write(`${fixture.workDirectory}/.git/HEAD`, "detached\n", {
         createPath: true,
       });
+    }
+    if (captured.includes("reset")) {
+      staleTrackedPatches = false;
+    }
+    if (captured.includes("checkout") && staleTrackedPatches) {
+      return 1;
     }
     if (captured.includes("tools")) {
       await Bun.write(
@@ -438,6 +447,65 @@ describe("WASM build orchestration", () => {
     expect(commandWasRun(fake.commands, "fetch")).toBe(false);
     expect(commandWasRun(fake.commands, "reset")).toBe(false);
     expect(commandWasRun(fake.commands, "tools")).toBe(false);
+  });
+
+  test("resets stale patches before checking out and applying a new upstream pin", async () => {
+    const fixture = await createBuildFixture();
+    const previousPatchFingerprint = await fingerprintPatchSeries([
+      fixture.patchPath,
+    ]);
+    await seedCheckout(
+      fixture,
+      fingerprintPatchedSource(
+        PREVIOUS_UPSTREAM_COMMIT,
+        previousPatchFingerprint,
+      ),
+    );
+    await Bun.write(
+      fixture.patchPath,
+      "--- /dev/null\n+++ b/src/wasm_observation.c\n@@ -0,0 +1 @@\n+/* current patch set */}\n",
+    );
+    const currentPatchFingerprint = await fingerprintPatchSeries([
+      fixture.patchPath,
+    ]);
+    const fake = createFakeBuild(fixture, {
+      revisionExists: true,
+      staleTrackedPatches: true,
+    });
+
+    await buildWasm(fixture.options, fake.dependencies);
+
+    const resetIndex = fake.commands.findIndex((command) =>
+      command.includes("reset"),
+    );
+    const checkoutIndex = fake.commands.findIndex((command) =>
+      command.includes("checkout"),
+    );
+    expect(resetIndex).toBeGreaterThanOrEqual(0);
+    expect(checkoutIndex).toBeGreaterThan(resetIndex);
+    expect(fake.commands[resetIndex]).toEqual([
+      "git",
+      "-C",
+      fixture.workDirectory,
+      "reset",
+      "--hard",
+    ]);
+    expect(fake.commands[checkoutIndex]).toEqual([
+      "git",
+      "-C",
+      fixture.workDirectory,
+      "checkout",
+      "--detach",
+      UPSTREAM_COMMIT,
+    ]);
+    expect(fake.patches).toEqual([fixture.patchPath]);
+    expect(
+      await Bun.file(
+        `${fixture.workDirectory}/.git/pokemon-wasm-patch-fingerprint`,
+      ).text(),
+    ).toBe(
+      `${fingerprintPatchedSource(UPSTREAM_COMMIT, currentPatchFingerprint)}\n`,
+    );
   });
 
   test("rejects an incomplete refreshed ABI before blessing the cache", async () => {

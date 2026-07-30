@@ -1014,6 +1014,79 @@ describe("GameController exit navigation", () => {
   });
 });
 
+describe("GameController directed exit replanning", () => {
+  test("retains a blocked directed edge while approaching its destination from another side", async () => {
+    const topology = mapTopology({
+      connections: [
+        {
+          version: 1,
+          size: 24,
+          index: 0,
+          direction: "east",
+          destination: { mapGroup: 0, mapNum: 1 },
+          offset: 0,
+          span: {
+            start: { x: 12, y: 9 },
+            end: { x: 12, y: 9 },
+          },
+        },
+      ],
+    });
+    const passable = new Set(["9,9", "10,9", "11,9", "12,9", "9,10", "10,10"]);
+    const blocked = new Set<string>();
+    for (let x = 7; x <= 12; x += 1) {
+      for (let y = 7; y <= 12; y += 1) {
+        const key = `${String(x)},${String(y)}`;
+        if (!passable.has(key)) blocked.add(key);
+      }
+    }
+    const port = new FakeControlPort(
+      observation({ x: 9, y: 9, facing: "east" }),
+      [
+        // Raw collision says (10,9) is passable, but the directed (9,9) ->
+        // (10,9) movement is obstructed like the wrong side of a ledge.
+        observation({ frame: 12, x: 9, y: 9, facing: "east" }),
+        observation({ frame: 24, x: 9, y: 9, facing: "east" }),
+        // Replanning retains that edge, takes the southern approach, and
+        // enters the same (10,9) destination successfully from below.
+        observation({ frame: 36, x: 9, y: 10, facing: "south" }),
+        observation({ frame: 48, x: 10, y: 10, facing: "east" }),
+        observation({ frame: 60, x: 10, y: 9, facing: "north" }),
+        observation({ frame: 72, x: 11, y: 9, facing: "east" }),
+        observation({ frame: 84, x: 12, y: 9, facing: "east" }),
+        observation({
+          frame: 96,
+          x: 7,
+          y: 9,
+          facing: "east",
+          mapNum: 1,
+        }),
+      ],
+      { topology, blocked },
+    );
+
+    const result = await new GameController(port).navigateExit(
+      "connection:0",
+      7,
+    );
+
+    expect(result.status).toBe("traversed");
+    expect(result.stopReason).toBe("exit-traversed");
+    expect(result.attemptsMade).toBe(7);
+    expect(result.stepsTaken).toBe(5);
+    expect(port.presses.map((press) => press.command)).toEqual([
+      "right",
+      "right",
+      "down",
+      "right",
+      "up",
+      "right",
+      "right",
+      "right",
+    ]);
+  });
+});
+
 describe("GameController same-map warp traversal", () => {
   test("reports the exported destination landing as traversed despite elevation mismatch", async () => {
     const topology = sameMapWarpTopology(2);
