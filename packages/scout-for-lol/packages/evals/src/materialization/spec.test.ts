@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
 
-import { MaterializationSpecSchema } from "#materialization/spec.ts";
+import {
+  materializationDatasetTarget,
+  MaterializationSpecSchema,
+} from "#materialization/spec.ts";
 
 function validSpec() {
   return {
@@ -36,6 +39,34 @@ describe("MaterializationSpecSchema", () => {
       targetPlayerId: 12,
       targetPlayerPuuid: "p".repeat(78),
     });
+  });
+
+  test("targets an existing UI-created draft by dataset ID", () => {
+    const spec = validSpec();
+    const datasetId = "ui-created-dataset-id";
+    const parsed = MaterializationSpecSchema.parse({
+      bucket: spec.bucket,
+      cases: spec.cases,
+      datasetId,
+    });
+
+    expect(materializationDatasetTarget(parsed)).toEqual({ datasetId });
+  });
+
+  test("requires exactly one new or existing dataset target", () => {
+    const spec = validSpec();
+
+    expect(
+      MaterializationSpecSchema.safeParse({
+        ...spec,
+        datasetId: "ambiguous-dataset-id",
+      }).success,
+    ).toBe(false);
+    const { dataset: omittedDataset, ...missingTarget } = spec;
+    expect(omittedDataset).toBeDefined();
+    expect(MaterializationSpecSchema.safeParse(missingTarget).success).toBe(
+      false,
+    );
   });
 
   test("rejects personalities outside the calibration set", () => {

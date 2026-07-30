@@ -53,6 +53,9 @@ board: false
 - Added a live read-only overall score to the human scorecard, calculated as the
   displayed two-decimal simple mean of the three rubric dimensions and restored
   from persisted ratings on revisit.
+- Made app-created drafts actionable materialization targets by accepting their
+  displayed `datasetId`, validating draft status before model calls, and writing
+  the generated batch into that same dataset atomically.
 - Verified PR #1777 with the focused eval tests, typecheck, changed-file ESLint,
   changed-file Prettier checks, Buildkite pipeline validator, lane-coverage
   tests, and an independent merge-tree check.

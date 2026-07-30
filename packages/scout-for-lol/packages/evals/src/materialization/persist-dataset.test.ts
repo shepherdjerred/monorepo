@@ -51,7 +51,7 @@ describe("persistMaterializedDataset", () => {
       expect(() =>
         persistMaterializedDataset(
           store,
-          { key: "atomic", name: "Atomic dataset" },
+          { dataset: { key: "atomic", name: "Atomic dataset" } },
           [firstCase, firstCase],
         ),
       ).toThrow("UNIQUE constraint failed");
@@ -73,7 +73,7 @@ describe("persistMaterializedDataset", () => {
     try {
       const persisted = persistMaterializedDataset(
         store,
-        { key: "successful", name: "Successful dataset" },
+        { dataset: { key: "successful", name: "Successful dataset" } },
         [
           materializedCase(FIRST_ARTIFACT, "First output."),
           materializedCase(SECOND_ARTIFACT, "Second output."),
@@ -115,6 +115,60 @@ describe("persistMaterializedDataset", () => {
           renderedPrompts: SECOND_ARTIFACT.context.renderedPrompts,
         },
       });
+    } finally {
+      store.close();
+    }
+  });
+
+  test("materializes a UI-created draft without creating another version", () => {
+    const store = createEvalStore(":memory:");
+    try {
+      const uiDraft = store.createDataset({
+        key: "ui-created",
+        name: "UI-created draft",
+      });
+
+      const persisted = persistMaterializedDataset(
+        store,
+        { datasetId: uiDraft.id },
+        [materializedCase(FIRST_ARTIFACT, "UI draft output.")],
+      );
+
+      expect(persisted.datasetId).toBe(uiDraft.id);
+      expect(store.listDatasets()).toMatchObject([
+        {
+          id: uiDraft.id,
+          version: 1,
+          caseCount: 1,
+        },
+      ]);
+      expect(store.listCases(uiDraft.id)).toMatchObject([
+        {
+          id: persisted.caseIds[0],
+          generationId: expect.any(String),
+        },
+      ]);
+    } finally {
+      store.close();
+    }
+  });
+
+  test("rejects a finalized target before writing cases", () => {
+    const store = createEvalStore(":memory:");
+    try {
+      const dataset = persistMaterializedDataset(
+        store,
+        { dataset: { key: "finalized", name: "Finalized dataset" } },
+        [materializedCase(FIRST_ARTIFACT, "Finalized output.")],
+      );
+      store.finalizeDataset(dataset.datasetId);
+
+      expect(() =>
+        persistMaterializedDataset(store, { datasetId: dataset.datasetId }, [
+          materializedCase(SECOND_ARTIFACT, "Rejected output."),
+        ]),
+      ).toThrow(`Dataset ${dataset.datasetId} is finalized`);
+      expect(store.listCases(dataset.datasetId)).toHaveLength(1);
     } finally {
       store.close();
     }

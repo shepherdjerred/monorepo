@@ -7,9 +7,15 @@ import {
 } from "#materialization/beta-corpus.ts";
 import { materializeCase } from "#materialization/materialize-case.ts";
 import { createOpenAIClient } from "#materialization/openai-client.ts";
-import { persistMaterializedDataset } from "#materialization/persist-dataset.ts";
+import {
+  persistMaterializedDataset,
+  validateMaterializationTarget,
+} from "#materialization/persist-dataset.ts";
 import { createS3Client } from "#materialization/s3-source.ts";
-import { readMaterializationSpec } from "#materialization/spec.ts";
+import {
+  materializationDatasetTarget,
+  readMaterializationSpec,
+} from "#materialization/spec.ts";
 import { createEvalStore } from "#server/store.ts";
 
 const OptionsSchema = z.strictObject({
@@ -33,24 +39,22 @@ const s3 = createS3Client();
 const openai = createOpenAIClient(options.apiKey);
 const corpus = new BetaCorpus(options.corpusPath);
 try {
-  const materialized = [];
-  for (const [index, caseSpec] of spec.cases.entries()) {
-    await Bun.write(
-      Bun.stderr,
-      `Generating case ${String(index + 1)}/${String(spec.cases.length)}: ${caseSpec.matchKey}\n`,
-    );
-    materialized.push(
-      await materializeCase({ corpus, openai, s3 }, spec.bucket, caseSpec),
-    );
-  }
-
+  const target = materializationDatasetTarget(spec);
   const store = createEvalStore(options.databasePath);
   try {
-    const persisted = persistMaterializedDataset(
-      store,
-      spec.dataset,
-      materialized,
-    );
+    validateMaterializationTarget(store, target);
+    const materialized = [];
+    for (const [index, caseSpec] of spec.cases.entries()) {
+      await Bun.write(
+        Bun.stderr,
+        `Generating case ${String(index + 1)}/${String(spec.cases.length)}: ${caseSpec.matchKey}\n`,
+      );
+      materialized.push(
+        await materializeCase({ corpus, openai, s3 }, spec.bucket, caseSpec),
+      );
+    }
+
+    const persisted = persistMaterializedDataset(store, target, materialized);
     await Bun.write(Bun.stdout, `${JSON.stringify(persisted, null, 2)}\n`);
   } finally {
     store.close();

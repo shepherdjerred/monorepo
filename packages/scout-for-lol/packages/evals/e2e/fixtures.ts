@@ -1,3 +1,4 @@
+import { persistMaterializedDataset } from "#materialization/persist-dataset.ts";
 import type { EvalStore } from "#server/store.ts";
 import { makeCaseArtifact } from "#testing/eval-fixtures.ts";
 
@@ -160,4 +161,32 @@ export function seedEndToEndStore(store: EvalStore): void {
       },
     ],
   });
+}
+
+export function materializeEndToEndDraft(
+  store: EvalStore,
+  datasetId: string,
+): { datasetId: string; caseIds: string[] } {
+  const artifact = makeCaseArtifact({
+    matchId: "NA1_E2E_UI_DRAFT",
+    playerName: "Draft Player",
+    puuid: "puuid-ui-draft",
+    championName: "Taliyah",
+    performanceSlice: "great",
+    styleKey: "aaron",
+  });
+  return persistMaterializedDataset(store, { datasetId }, [
+    {
+      artifact,
+      generation: {
+        durationMs: 125,
+        inputTokens: 70,
+        model: "gpt-5.6-sol",
+        outputText: "Draft Player turned every wall into a launch pad.",
+        outputTokens: 25,
+        promptRevision: "ui-draft-latest",
+        renderedPrompts: artifact.context.renderedPrompts,
+      },
+    },
+  ]);
 }

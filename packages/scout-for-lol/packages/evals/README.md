@@ -39,7 +39,9 @@ boundary.
 
 ## Materialize A Draft
 
-Create a JSON spec with dataset metadata and explicit cases. Each case requires
+Create a JSON spec with explicit cases and either new `dataset` metadata or the
+`datasetId` shown by an existing draft in the app. These targets are mutually
+exclusive. Each case requires
 `matchKey`, `timelineKey`, the synced Beta `targetPlayerId`,
 `targetPlayerPuuid`, `performanceSlice`, `styleKey` (`aaron` or `nekoryan`),
 and frozen selected behaviors. Optional
@@ -56,9 +58,10 @@ AWS_PROFILE=seaweedfs OPENAI_API_KEY=... \
 The command prepares every case before writing the dataset. It downloads and
 hashes exact S3 bodies, validates Riot schemas, builds explicit tracked-player
 matches, runs the text-only review pipeline, freezes summaries and prompts, and
-records one baseline generation. It leaves the dataset as a draft. Inspect the
-case list in the app and use **Finalize dataset** only after approving membership;
-finalization permanently locks case artifacts.
+records one baseline generation. Existing targets must still be drafts; invalid
+or finalized IDs fail before model calls. It leaves the dataset as a draft.
+Inspect the case list in the app and use **Finalize dataset** only after
+approving membership; finalization permanently locks case artifacts.
 
 Raw S3 objects do not identify Scout aliases or tracked-player membership. The
 sanitized Beta snapshot supplies that mapping and materialization fails if the
@@ -88,6 +91,8 @@ mutate dedicated datasets in one in-memory store.
   an explicit Beta player.
 - Updated candidate discovery, package scripts, documentation, and regression
   coverage.
+- Allowed materialization specs to target the `datasetId` created by the app,
+  with fail-fast draft validation and atomic persistence into that same record.
 
 ### Remaining
 
@@ -100,3 +105,5 @@ mutate dedicated datasets in one in-memory store.
   discovery.
 - Existing version 1 Beta corpus snapshots must be regenerated with
   `bun run --filter=@scout-for-lol/evals sync-beta`.
+- A materialization spec must provide exactly one of `dataset` or `datasetId`;
+  an existing target must be a draft.

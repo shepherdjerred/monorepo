@@ -201,33 +201,51 @@ export function DatasetPage(): React.JSX.Element {
           </Card>
 
           {dataset.status === "draft" ? (
-            <Card className="border shadow-none">
-              <CardHeader>
-                <CardTitle>Finalize dataset</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4 text-sm leading-6 text-slate-600">
-                  Finalizing permanently locks case membership and artifacts.
-                </p>
-                {finalizeMutation.error === null ? null : (
-                  <p className="mb-3 text-sm text-red-700" role="alert">
-                    {finalizeMutation.error.message}
+            <>
+              <Card className="border shadow-none">
+                <CardHeader>
+                  <CardTitle>Materialize cases</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="mb-3 text-sm leading-6 text-slate-600">
+                    Target this draft from a materialization spec:
                   </p>
-                )}
-                <Button
-                  className="w-full"
-                  disabled={
-                    dataset.caseCount === 0 || finalizeMutation.isPending
-                  }
-                  onClick={() => {
-                    finalizeMutation.mutate({ datasetId: dataset.id });
-                  }}
-                  variant="outline"
-                >
-                  Finalize dataset
-                </Button>
-              </CardContent>
-            </Card>
+                  <pre
+                    aria-label="Materialization target"
+                    className="whitespace-pre-wrap break-all rounded-md bg-slate-950 p-3 text-xs text-slate-50"
+                  >
+                    {JSON.stringify({ datasetId: dataset.id }, null, 2)}
+                  </pre>
+                </CardContent>
+              </Card>
+              <Card className="border shadow-none">
+                <CardHeader>
+                  <CardTitle>Finalize dataset</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="mb-4 text-sm leading-6 text-slate-600">
+                    Finalizing permanently locks case membership and artifacts.
+                  </p>
+                  {finalizeMutation.error === null ? null : (
+                    <p className="mb-3 text-sm text-red-700" role="alert">
+                      {finalizeMutation.error.message}
+                    </p>
+                  )}
+                  <Button
+                    className="w-full"
+                    disabled={
+                      dataset.caseCount === 0 || finalizeMutation.isPending
+                    }
+                    onClick={() => {
+                      finalizeMutation.mutate({ datasetId: dataset.id });
+                    }}
+                    variant="outline"
+                  >
+                    Finalize dataset
+                  </Button>
+                </CardContent>
+              </Card>
+            </>
           ) : null}
         </aside>
       </div>

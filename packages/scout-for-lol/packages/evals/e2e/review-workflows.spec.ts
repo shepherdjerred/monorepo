@@ -87,6 +87,29 @@ test("creates an empty draft and validates local form input", async ({
   await expect(
     page.getByRole("button", { name: "Finalize dataset" }),
   ).toBeDisabled();
+
+  const datasetId = new URL(page.url()).pathname.split("/").at(-1);
+  if (datasetId === undefined || datasetId === "") {
+    throw new Error("Created draft URL did not contain a dataset ID");
+  }
+  await expect(page.getByLabel("Materialization target")).toHaveText(
+    JSON.stringify({ datasetId }, null, 2),
+  );
+
+  const materializationResponse = await page.request.post(
+    `/e2e/materialize/${encodeURIComponent(datasetId)}`,
+  );
+  expect(materializationResponse.status()).toBe(200);
+  expect(await materializationResponse.json()).toEqual({
+    datasetId,
+    caseIds: [expect.any(String)],
+  });
+
+  await page.reload();
+  await expect(page.getByText("Draft Player on Taliyah")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Finalize dataset" }),
+  ).toBeEnabled();
 });
 
 test("finalizes populated membership and persists the result", async ({

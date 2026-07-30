@@ -1,7 +1,11 @@
 import { z } from "zod";
 
 import { BETA_CORPUS_BUCKET } from "#materialization/beta-corpus.ts";
-import { PerformanceSliceSchema } from "#shared/schema.ts";
+import {
+  CreateDatasetInputSchema,
+  DatasetIdSchema,
+  PerformanceSliceSchema,
+} from "#shared/schema.ts";
 
 export const EvalStyleKeySchema = z.enum(["aaron", "nekoryan"]);
 
@@ -19,20 +23,42 @@ export const MaterializationCaseSpecSchema = z.strictObject({
   patchContext: z.string().default(""),
 });
 
-export const MaterializationSpecSchema = z.strictObject({
-  dataset: z.strictObject({
-    key: z.string().trim().min(1),
-    name: z.string().trim().min(1),
-    description: z.string().default(""),
-  }),
+const MaterializationSpecFields = {
   bucket: z.literal(BETA_CORPUS_BUCKET).default(BETA_CORPUS_BUCKET),
   cases: z.array(MaterializationCaseSpecSchema).min(1),
-});
+};
+
+export const MaterializationDatasetTargetSchema = z.union([
+  z.strictObject({ dataset: CreateDatasetInputSchema }),
+  z.strictObject({ datasetId: DatasetIdSchema }),
+]);
+
+export const MaterializationSpecSchema = z.union([
+  z.strictObject({
+    ...MaterializationSpecFields,
+    dataset: CreateDatasetInputSchema,
+  }),
+  z.strictObject({
+    ...MaterializationSpecFields,
+    datasetId: DatasetIdSchema,
+  }),
+]);
 
 export type MaterializationCaseSpec = z.infer<
   typeof MaterializationCaseSpecSchema
 >;
+export type MaterializationDatasetTarget = z.input<
+  typeof MaterializationDatasetTargetSchema
+>;
 export type MaterializationSpec = z.infer<typeof MaterializationSpecSchema>;
+
+export function materializationDatasetTarget(
+  spec: MaterializationSpec,
+): MaterializationDatasetTarget {
+  return "datasetId" in spec
+    ? { datasetId: spec.datasetId }
+    : { dataset: spec.dataset };
+}
 
 export async function readMaterializationSpec(
   path: string,
