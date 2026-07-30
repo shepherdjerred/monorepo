@@ -134,16 +134,25 @@ attempt to author a comprehensive monorepo atlas.
 - Added focused lifecycle tests proving shutdown completion is awaited, failed
   exits propagate, and keyword-only searches remain a no-op; LeetCode test,
   lint, and local macOS build all pass.
+- Replaced the LeetCode embedding client's `uv`-only availability check with a
+  real server-readiness probe, ensuring failed startup processes are killed,
+  reaped, and cleared before selecting the FTS5-only build path.
+- Restored embedded Python stderr after model initialization failures and made
+  shutdown cleanup unconditional while preserving startup, shutdown, and
+  cleanup errors.
+- Passed LeetCode unit tests, typecheck, lint, the complete 3,879-problem
+  embedding build, and a forced startup-failure build that completed with all
+  3,879 problems indexed in FTS5 and no fatal shutdown.
 - Passed focused wiki unit tests, lint, typecheck, build, and Playwright
   coverage; liveness-checked every new GitHub link target.
 
 ### Remaining
 
-- Await replacement Buildkite CI and hosted Codex review on the published
-  public-data, link-routing, Astro-lint, and deployment-ordering fixes.
-- Fix the separate Linux CI embedding availability defect: `isAvailable()`
-  currently reports true when `uv` exists even though the MLX server cannot
-  start on the Buildkite worker.
+- Publish the embedding readiness fix and await replacement Buildkite CI plus
+  hosted Codex review.
+- Address the current-head review finding requiring stale working-document
+  publication allowlist entries to fail instead of silently creating 404
+  routes.
 - After merge and deployment, run the live HTTP, cache-header, CSP, sitemap,
   robots, and public-corpus verification.
 
@@ -154,6 +163,6 @@ attempt to author a comprehensive monorepo atlas.
   added.
 - The first-deployment ordering is statically verified but cannot be exercised
   end to end until the main-only infrastructure and site lanes run after merge.
-- Exact-head Buildkite build 7225 showed the lint and startup failures have
-  distinct causes. The embedding build passes on macOS, so that local result
-  does not prove the Linux MLX server path used by Buildkite.
+- Exact-head Buildkite build 7232 is the authoritative failing predecessor; a
+  replacement build on the embedding-fix commit is still required to prove the
+  Linux worker now selects the FTS5-only path.
