@@ -163,10 +163,20 @@ attempt to author a comprehensive monorepo atlas.
   frozen filtered install completed successfully.
 - Passed focused wiki unit tests, lint, typecheck, build, and Playwright
   coverage; liveness-checked every new GitHub link target.
+- Diagnosed Buildkite build 7240's three Scout backend failures as stale test
+  clocks that still treated the now-ended `2026_SEASON_2_ACT_2` fixture as
+  future-ending.
+- Added explicit active-filter instants to the competition query APIs and
+  derived integration-test boundary times from the seeded season row, retaining
+  strict exclusion at the season end while making future metadata corrections
+  safe.
+- Passed the two focused competition suites (28 tests), Scout backend typecheck
+  and lint with zero errors, and the complete backend suite (1,213 passing,
+  6 skipped, 0 failing).
 
 ### Remaining
 
-- Publish the Docker workspace-context fix and await replacement Buildkite CI
+- Publish the Scout season-boundary test fix and await replacement Buildkite CI
   plus hosted Codex review.
 - After merge and deployment, run the live HTTP, cache-header, CSP, sitemap,
   robots, and public-corpus verification.
@@ -180,3 +190,6 @@ attempt to author a comprehensive monorepo atlas.
   end to end until the main-only infrastructure and site lanes run after merge.
 - GitHub still reports a stale merge-conflict failure, while an independent
   `git merge-tree` against `origin/main` succeeds.
+- Production callers still default active filtering to the wall clock; the
+  explicit instant is an opt-in seam for deterministic tests and replayable
+  queries, not a fallback around season expiry.
