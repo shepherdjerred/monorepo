@@ -24,6 +24,7 @@ if (firstRawPlayer === undefined || secondRawPlayer === undefined) {
 
 const firstPuuid = LeaguePuuidSchema.parse(firstRawPlayer.puuid);
 const secondPuuid = LeaguePuuidSchema.parse(secondRawPlayer.puuid);
+const mismatchedPuuid = LeaguePuuidSchema.parse("z".repeat(78));
 
 type Performance = Pick<
   RawParticipant,
@@ -79,12 +80,16 @@ function buildRawMatch(
   });
 }
 
-function buildCompletedMatch(firstAlias: string, secondAlias: string) {
+function buildCompletedMatch(
+  firstAlias: string,
+  secondAlias: string,
+  firstPlayerPuuid: typeof firstPuuid = firstPuuid,
+) {
   return CompletedMatchSchema.parse({
     queueType: "solo",
     durationInSeconds: 1800,
     players: [
-      buildCompletedPlayer(firstAlias, firstPuuid),
+      buildCompletedPlayer(firstAlias, firstPlayerPuuid),
       buildCompletedPlayer(secondAlias, secondPuuid),
     ],
     teams: {
@@ -153,6 +158,19 @@ function getRequiredDecision(
 }
 
 describe("getAiReviewDecision", () => {
+  test("rejects a selected player absent from the raw match", () => {
+    spyOn(Math, "random").mockReturnValue(0);
+
+    expect(() =>
+      getAiReviewDecision(
+        buildCompletedMatch("Selected", "Tracked", mismatchedPuuid),
+        buildRawMatch(neutralPerformance, neutralPerformance),
+      ),
+    ).toThrow(
+      `Selected player Selected (${mismatchedPuuid}) is absent from raw match ${rawMatchFixture.metadata.matchId}`,
+    );
+  });
+
   test("rejects a neutral selected player when another tracked player is exceptional", () => {
     const decision = getRequiredDecision(
       "Selected",

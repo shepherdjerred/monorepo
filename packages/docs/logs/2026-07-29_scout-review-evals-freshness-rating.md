@@ -65,6 +65,9 @@ board: false
 - Bound every dataset export read to one deferred SQLite transaction so
   concurrent generation and rating writes cannot produce a torn, valid-checksum
   snapshot.
+- Made AI review selection reject a selected tracked player whose PUUID is
+  absent from the accompanying raw match instead of silently treating the
+  contract mismatch as a non-exceptional performance.
 - Verified PR #1777 with the focused eval tests, typecheck, changed-file ESLint,
   changed-file Prettier checks, Buildkite pipeline validator, lane-coverage
   tests, and an independent merge-tree check.

@@ -116,7 +116,11 @@ export function isExceptionalGame(
   const participant = matchData.info.participants.find(
     (candidate) => candidate.puuid === player.league.leagueAccount.puuid,
   );
-  if (participant === undefined) return { isExceptional: false };
+  if (participant === undefined) {
+    throw new Error(
+      `Selected player ${player.alias} (${player.league.leagueAccount.puuid}) is absent from raw match ${matchData.metadata.matchId}`,
+    );
+  }
   return classifyExceptionalPerformance(
     {
       assists: participant.assists,
