@@ -10,6 +10,7 @@ import {
   parseMarkdownDocument,
   serializeMarkdownDocument,
 } from "#shared/markdown";
+import { workflowDocumentPaths } from "#shared/docs-path";
 import {
   archiveFrontmatter,
   DocumentListResponseSchema,
@@ -129,9 +130,9 @@ export class DocumentStore {
 
   private fileSignatures(): Map<string, string> {
     const glob = new Bun.Glob("**/*.md");
-    const paths = [
-      ...glob.scanSync({ cwd: this.docsRoot, onlyFiles: true }),
-    ].sort();
+    const paths = workflowDocumentPaths(
+      glob.scanSync({ cwd: this.docsRoot, onlyFiles: true }),
+    );
     return new Map(
       paths.map((path) => {
         const file = Bun.file(`${this.docsRoot}/${path}`);
@@ -175,9 +176,9 @@ export class DocumentStore {
 
   private async buildSnapshot(): Promise<DocumentIndexSnapshot> {
     const glob = new Bun.Glob("**/*.md");
-    const paths = [
-      ...glob.scanSync({ cwd: this.docsRoot, onlyFiles: true }),
-    ].sort();
+    const paths = workflowDocumentPaths(
+      glob.scanSync({ cwd: this.docsRoot, onlyFiles: true }),
+    );
     const entries = await Promise.all(
       paths.map(async (path) => ({
         path,

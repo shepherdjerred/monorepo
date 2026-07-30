@@ -128,6 +128,16 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     target: "s3",
     immutablePrefixes: ["_astro/"],
   },
+  {
+    bucket: "wiki-sjer-red",
+    name: "wiki",
+    url: "https://wiki.sjer.red",
+    buildDir: "packages/docs/wiki",
+    buildCmd: "bun --no-install run astro build",
+    distDir: "packages/docs/wiki/dist",
+    target: "s3",
+    immutablePrefixes: ["_astro/"],
+  },
   // NOTE: the scout-for-lol buckets (scout-frontend, scout-frontend-beta) are
   // deliberately NOT in this catalog. Their deploys are versioned and
   // stage-pinned via scripts/scout-site-release.ts (archive / deploy-beta /

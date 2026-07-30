@@ -28,6 +28,7 @@ type ReadResult = {
 
 type TypedReader = {
   read: () => Promise<ReadResult>;
+  cancel: () => Promise<void>;
 };
 
 function getReader(stdout: ReadableStream<Uint8Array>): TypedReader {
@@ -36,6 +37,9 @@ function getReader(stdout: ReadableStream<Uint8Array>): TypedReader {
     async read(): Promise<ReadResult> {
       const result = await raw.read();
       return { value: result.value, done: result.done };
+    },
+    async cancel(): Promise<void> {
+      await raw.cancel();
     },
   };
 }
@@ -60,12 +64,13 @@ os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
 warnings.filterwarnings("ignore")
 
 _stderr = sys.stderr
-sys.stderr = open(os.devnull, "w")
-
-from mlx_embedding_models.embedding import EmbeddingModel
-
-model = EmbeddingModel.from_registry("bge-m3")
-sys.stderr = _stderr
+with open(os.devnull, "w") as quiet_stderr:
+    sys.stderr = quiet_stderr
+    try:
+        from mlx_embedding_models.embedding import EmbeddingModel
+        model = EmbeddingModel.from_registry("bge-m3")
+    finally:
+        sys.stderr = _stderr
 print(json.dumps({"ready": True}), flush=True)
 
 for line in sys.stdin:
@@ -86,9 +91,12 @@ for line in sys.stdin:
                 for j in range(0, len(t), max_chars):
                     expanded.append(t[j:j+max_chars])
                     index_map.append(i)
-        sys.stderr = open(os.devnull, "w")
-        raw_embeddings = model.encode(expanded)
-        sys.stderr = _stderr
+        with open(os.devnull, "w") as quiet_stderr:
+            sys.stderr = quiet_stderr
+            try:
+                raw_embeddings = model.encode(expanded)
+            finally:
+                sys.stderr = _stderr
         import numpy as np
         num_originals = len(texts)
         result = []
@@ -102,9 +110,29 @@ for line in sys.stdin:
                 result.append(avg.tolist())
         print(json.dumps({"embeddings": result}), flush=True)
     except Exception as e:
-        sys.stderr = _stderr
         print(json.dumps({"error": str(e)}), flush=True)
 `;
+
+export async function probeEmbeddingAvailability(
+  start: () => Promise<void>,
+  cleanup: () => Promise<void>,
+): Promise<boolean> {
+  try {
+    await start();
+    return true;
+  } catch (startupError) {
+    try {
+      await cleanup();
+    } catch (cleanupError) {
+      throw new AggregateError(
+        [startupError, cleanupError],
+        "Embedding server startup and cleanup failed",
+        { cause: cleanupError },
+      );
+    }
+    return false;
+  }
+}
 
 export class EmbeddingClient {
   private proc: ReturnType<typeof Bun.spawn> | null = null;
@@ -116,42 +144,55 @@ export class EmbeddingClient {
 
   async isAvailable(): Promise<boolean> {
     if (this.available != null) return this.available;
+    if (!(await this.isUvAvailable())) {
+      this.available = false;
+      return false;
+    }
+
+    this.available = await probeEmbeddingAvailability(
+      async () => {
+        await this.startServer();
+      },
+      async () => {
+        await this.cleanupProcess();
+      },
+    );
+    return this.available;
+  }
+
+  private async isUvAvailable(): Promise<boolean> {
     try {
       const check = Bun.spawn(["uv", "--version"], {
         stdout: "pipe",
         stderr: "pipe",
       });
-      await check.exited;
-      this.available = check.exitCode === 0;
+      return (await check.exited) === 0;
     } catch {
-      this.available = false;
+      return false;
     }
-    return this.available;
   }
 
   async ensureStarted(): Promise<void> {
     if (this.ready && this.proc != null) return;
-    if (this.proc != null) {
-      try {
-        this.proc.kill();
-      } catch {
-        /* ignore */
-      }
-      this.proc = null;
-      this.reader = null;
-      this.ready = false;
-    }
     if (!(await this.isAvailable())) {
       throw new Error(
-        "uv is required for embeddings. Install from https://docs.astral.sh/uv/",
+        "Embedding server is unavailable; use keyword search instead",
       );
     }
+    if (!this.ready || this.proc == null) {
+      throw new Error("Embedding server availability state is inconsistent");
+    }
+  }
+
+  private async startServer(): Promise<void> {
+    if (this.proc != null) await this.cleanupProcess();
+
     const scriptPath = path.join(tmpdir(), "leetcode-embed-server.py");
     await Bun.write(scriptPath, EMBED_SERVER_SCRIPT);
     this.proc = Bun.spawn(["uv", "run", scriptPath], {
       stdin: "pipe",
       stdout: "pipe",
-      stderr: "pipe",
+      stderr: "inherit",
     });
     const stdout = this.proc.stdout;
     if (stdout == null || typeof stdout === "number") {
@@ -164,6 +205,28 @@ export class EmbeddingClient {
     const msg = ReadyMessageSchema.parse(JSON.parse(firstLine));
     if (msg.error != null && msg.error !== "") throw new Error(msg.error);
     this.ready = true;
+  }
+
+  private resetProcessState(): void {
+    this.proc = null;
+    this.reader = null;
+    this.lineBuffer = "";
+    this.ready = false;
+  }
+
+  private async cleanupProcess(): Promise<void> {
+    const proc = this.proc;
+    const reader = this.reader;
+
+    try {
+      if (proc != null) {
+        if (proc.exitCode === null) proc.kill();
+        await proc.exited;
+      }
+      await reader?.cancel();
+    } finally {
+      this.resetProcessState();
+    }
   }
 
   async embed(texts: string[]): Promise<number[][]> {
@@ -195,17 +258,21 @@ export class EmbeddingClient {
       }
       if (Date.now() > deadline)
         throw new Error("Embedding server read timeout");
-      const result = await Promise.race([
-        this.reader.read(),
-        new Promise<never>((_, reject) =>
-          setTimeout(
-            () => {
-              reject(new Error("Embedding server read timeout"));
-            },
-            Math.max(1000, deadline - Date.now()),
-          ),
-        ),
-      ]);
+      let timeoutId: ReturnType<typeof setTimeout> | undefined;
+      const timeout = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(
+          () => {
+            reject(new Error("Embedding server read timeout"));
+          },
+          Math.max(1000, deadline - Date.now()),
+        );
+      });
+      let result: ReadResult;
+      try {
+        result = await Promise.race([this.reader.read(), timeout]);
+      } finally {
+        if (timeoutId !== undefined) clearTimeout(timeoutId);
+      }
       if (result.done)
         return this.lineBuffer.length > 0 ? this.lineBuffer : null;
       if (result.value != null)
@@ -213,20 +280,46 @@ export class EmbeddingClient {
     }
   }
 
-  shutdown(): void {
-    if (this.proc != null) {
-      try {
-        const stdin = getStdinWriter(this.proc);
-        stdin.end();
-      } catch {
-        /* ignore */
+  async shutdown(): Promise<void> {
+    const proc = this.proc;
+    if (proc == null) return;
+
+    let shutdownError: Error | undefined;
+    try {
+      const stdin = getStdinWriter(proc);
+      stdin.end();
+      const exitCode = await proc.exited;
+      if (exitCode !== 0) {
+        shutdownError = new Error(
+          `Embedding server exited with code ${String(exitCode)}`,
+        );
       }
-      this.proc.kill();
-      this.proc = null;
-      this.reader = null;
-      this.lineBuffer = "";
-      this.ready = false;
+    } catch (error) {
+      shutdownError =
+        error instanceof Error
+          ? error
+          : new Error("Embedding server shutdown failed", { cause: error });
     }
+
+    try {
+      await this.cleanupProcess();
+    } catch (cleanupError) {
+      const normalizedCleanupError =
+        cleanupError instanceof Error
+          ? cleanupError
+          : new Error("Embedding server cleanup failed", {
+              cause: cleanupError,
+            });
+      if (shutdownError !== undefined) {
+        throw new AggregateError(
+          [shutdownError, normalizedCleanupError],
+          "Embedding server shutdown and cleanup failed",
+          { cause: cleanupError },
+        );
+      }
+      throw normalizedCleanupError;
+    }
+    if (shutdownError !== undefined) throw shutdownError;
   }
 }
 

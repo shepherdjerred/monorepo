@@ -20,6 +20,7 @@ FROM base AS deps
 COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
+  packages/docs/wiki/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
   packages/scout-for-lol/packages/desktop/src-tauri/package.json \
@@ -53,6 +54,7 @@ FROM base AS prod-deps
 COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
+  packages/docs/wiki/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
   packages/scout-for-lol/packages/desktop/src-tauri/package.json \

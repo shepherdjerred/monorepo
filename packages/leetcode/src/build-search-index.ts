@@ -137,7 +137,7 @@ async function main() {
   }
 
   await flushEmbeddings();
-  if (embeddingsAvailable) embedder.shutdown();
+  if (embeddingsAvailable) await embedder.shutdown();
 
   searchDb.close();
   sourceDb.close();

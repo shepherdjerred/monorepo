@@ -34,6 +34,26 @@ const scoutCsp = [
   "form-action 'self' https://discord.com",
 ].join("; ");
 
+/**
+ * Starlight's Pagefind search loads a same-origin WASM module in a web worker.
+ * Mermaid diagrams are initialized by Astro's generated inline module script.
+ * Keep the policy otherwise self-contained: the wiki has no analytics, remote
+ * fonts, embeds, or third-party asset hosts.
+ */
+const wikiCsp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "connect-src 'self'",
+  "worker-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join("; ");
+
 // DNS records for all sites are managed by OpenTofu (src/tofu/cloudflare/).
 export const staticSites: StaticSiteConfig[] = [
   {
@@ -105,6 +125,18 @@ export const staticSites: StaticSiteConfig[] = [
   { hostname: "ppl.glitter-boys.com", bucket: "glitter-boys-ppl" },
   { hostname: "cook.sjer.red", bucket: "cook" },
   { hostname: "stocks.sjer.red", bucket: "stocks-sjer-red" },
+  {
+    hostname: "wiki.sjer.red",
+    bucket: "wiki-sjer-red",
+    probes: [
+      {
+        endpoint: "sitemap",
+        path: "/sitemap-index.xml",
+        module: "http_2xx",
+      },
+    ],
+    responseHeaders: { "Content-Security-Policy": wikiCsp },
+  },
   // Public artifact host. PR screenshots are served from the `pr/assets/<n>/`
   // prefix; uploads go through `toolkit pr asset`.
   { hostname: "public.sjer.red", bucket: "public-sjer-red" },

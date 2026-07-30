@@ -1,0 +1,14 @@
+diff --git a/schemas/head.ts b/schemas/head.ts
+index b4f3d08..0618c87 100644
+--- a/schemas/head.ts
++++ b/schemas/head.ts
+@@ -2 +2 @@
+-import yaml from 'js-yaml';
++import * as yaml from 'js-yaml';
+diff --git a/utils/translations-fs.ts b/utils/translations-fs.ts
+index c94b94a..ffbc5f5 100644
+--- a/utils/translations-fs.ts
++++ b/utils/translations-fs.ts
+@@ -4 +4 @@
+-import yaml from 'js-yaml';
++import * as yaml from 'js-yaml';

@@ -10,6 +10,7 @@ import {
   splitFrontmatter,
 } from "#shared/markdown";
 import type { ParsedMarkdownDocument } from "#shared/markdown";
+import { workflowDocumentPaths } from "#shared/docs-path";
 import { FrontmatterSchema } from "#shared/schema";
 
 const REPO_ROOT = decodeURIComponent(
@@ -276,7 +277,9 @@ async function validateFile(
 
 export async function validateDocs(): Promise<ValidationError[]> {
   const glob = new Bun.Glob("**/*.md");
-  const paths = [...glob.scanSync({ cwd: DOCS_ROOT, onlyFiles: true })].sort();
+  const paths = workflowDocumentPaths(
+    glob.scanSync({ cwd: DOCS_ROOT, onlyFiles: true }),
+  );
   const context: ValidationContext = {
     errors: [],
     ids: new Map<string, string>(),
@@ -345,7 +348,9 @@ async function main(): Promise<void> {
     process.exit(1);
   }
   const glob = new Bun.Glob("**/*.md");
-  const count = [...glob.scanSync({ cwd: DOCS_ROOT, onlyFiles: true })].length;
+  const count = workflowDocumentPaths(
+    glob.scanSync({ cwd: DOCS_ROOT, onlyFiles: true }),
+  ).length;
   console.log(`check-docs: ${String(count)} Markdown documents, all OK`);
 }
 
