@@ -64,8 +64,191 @@ const requiredScripts = ["build", "test", "lint", "typecheck"] as const;
 const nativeTypeScriptCommand =
   "PATH=node_modules/@typescript/native/bin:$PATH tsc";
 const nativeTypeScriptVersion = "npm:typescript@7.0.2";
-const legacyTypeScriptCommandPattern =
-  /(?:^|&&|\|\||;)\s*(?:bunx(?:\s+--no-install)?\s+)?tsc(?:\s|$)/;
+const bunGlobalFlagsBeforeX = new Set([
+  "-b",
+  "-i",
+  "--bun",
+  "--cpu-prof",
+  "--cpu-prof-md",
+  "--experimental-http2-fetch",
+  "--experimental-http3-fetch",
+  "--expose-gc",
+  "--heap-prof",
+  "--heap-prof-md",
+  "--hot",
+  "--no-addons",
+  "--no-clear-screen",
+  "--no-deprecation",
+  "--no-env-file",
+  "--no-install",
+  "--no-orphans",
+  "--prefer-latest",
+  "--prefer-offline",
+  "--redis-preconnect",
+  "--silent",
+  "--smol",
+  "--sql-preconnect",
+  "--throw-deprecation",
+  "--use-bundled-ca",
+  "--use-openssl-ca",
+  "--use-system-ca",
+  "--watch",
+]);
+const bunGlobalValueOptionsBeforeX = new Set([
+  "-c",
+  "-r",
+  "--conditions",
+  "--config",
+  "--console-depth",
+  "--cpu-prof-dir",
+  "--cpu-prof-interval",
+  "--cpu-prof-name",
+  "--cron-period",
+  "--cron-title",
+  "--cwd",
+  "--dns-result-order",
+  "--elide-lines",
+  "--env-file",
+  "--fetch-preconnect",
+  "--heap-prof-dir",
+  "--heap-prof-name",
+  "--import",
+  "--install",
+  "--inspect",
+  "--inspect-brk",
+  "--inspect-wait",
+  "--max-http-header-size",
+  "--port",
+  "--preload",
+  "--require",
+  "--shell",
+  "--unhandled-rejections",
+  "--user-agent",
+]);
+const bunxFlags = new Set(["--bun", "--no-install", "--silent", "--verbose"]);
+
+function tokenizeShellCommands(script: string): string[][] {
+  const commands: string[][] = [];
+  let tokens: string[] = [];
+  let token = "";
+  let quote: "'" | '"' | undefined;
+  let escaped = false;
+
+  function finishToken(): void {
+    if (token.length === 0) return;
+    tokens.push(token);
+    token = "";
+  }
+
+  function finishCommand(): void {
+    finishToken();
+    if (tokens.length === 0) return;
+    commands.push(tokens);
+    tokens = [];
+  }
+
+  for (let index = 0; index < script.length; index += 1) {
+    const character = script[index];
+    if (character === undefined) continue;
+    if (escaped) {
+      token += character;
+      escaped = false;
+      continue;
+    }
+    if (character === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (quote !== undefined) {
+      if (character === quote) {
+        quote = undefined;
+      } else {
+        token += character;
+      }
+      continue;
+    }
+    if (character === "'" || character === '"') {
+      quote = character;
+      continue;
+    }
+    if (/\s/.test(character)) {
+      finishToken();
+      if (character === "\n") finishCommand();
+      continue;
+    }
+    if (character === ";" || character === "|" || character === "&") {
+      finishCommand();
+      if (script[index + 1] === character) index += 1;
+      continue;
+    }
+    token += character;
+  }
+
+  if (escaped) token += "\\";
+  finishCommand();
+  return commands;
+}
+
+function isBunGlobalOptionBeforeX(token: string): boolean {
+  if (bunGlobalFlagsBeforeX.has(token)) return true;
+  const equalsIndex = token.indexOf("=");
+  return (
+    equalsIndex > 0 &&
+    bunGlobalValueOptionsBeforeX.has(token.slice(0, equalsIndex)) &&
+    token.slice(equalsIndex + 1).length > 0
+  );
+}
+
+function findBunxExecutable(
+  tokens: string[],
+  startIndex: number,
+): string | undefined {
+  let index = startIndex;
+  while (index < tokens.length) {
+    const token = tokens[index];
+    if (token === undefined) return undefined;
+    if (bunxFlags.has(token)) {
+      index += 1;
+      continue;
+    }
+    if (token === "-p" || token === "--package") {
+      index += 2;
+      continue;
+    }
+    if (token.startsWith("--package=") && token.length > "--package=".length) {
+      index += 1;
+      continue;
+    }
+    return token;
+  }
+  return undefined;
+}
+
+export function invokesAmbiguousTypeScriptCompiler(script: string): boolean {
+  return tokenizeShellCommands(script).some((tokens) => {
+    const executable = tokens[0];
+    if (executable === "tsc") return true;
+    if (executable === "bunx") {
+      return findBunxExecutable(tokens, 1) === "tsc";
+    }
+    if (executable !== "bun") return false;
+
+    let index = 1;
+    while (index < tokens.length) {
+      const token = tokens[index];
+      if (
+        token === undefined ||
+        token === "x" ||
+        !isBunGlobalOptionBeforeX(token)
+      ) {
+        break;
+      }
+      index += 1;
+    }
+    if (tokens[index] !== "x") return false;
+    return findBunxExecutable(tokens, index + 1) === "tsc";
+  });
+}
 
 function collectTypeScriptToolchainErrors(
   directory: string,
@@ -77,7 +260,7 @@ function collectTypeScriptToolchainErrors(
     command.includes(nativeTypeScriptCommand),
   );
   const usesAmbiguousCompiler = Object.values(scripts).some((command) =>
-    legacyTypeScriptCommandPattern.test(command),
+    invokesAmbiguousTypeScriptCompiler(command),
   );
   const nativeTypeScriptDependency =
     packageJson.devDependencies?.["@typescript/native"];
@@ -99,7 +282,7 @@ function collectTypeScriptToolchainErrors(
     );
   }
   for (const [name, command] of Object.entries(scripts)) {
-    if (legacyTypeScriptCommandPattern.test(command)) {
+    if (invokesAmbiguousTypeScriptCompiler(command)) {
       errors.push(
         `${directory} script ${name} invokes ambiguous tsc instead of ${nativeTypeScriptCommand}`,
       );

@@ -4,7 +4,10 @@ import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
-import { findComplianceErrors } from "./compliance-check.ts";
+import {
+  findComplianceErrors,
+  invokesAmbiguousTypeScriptCompiler,
+} from "./compliance-check.ts";
 import { isNoopScript } from "./migration-core.ts";
 
 const TurboConfigSchema = z
@@ -101,6 +104,39 @@ test("Turbo compliance inputs cover deeply nested workspace manifests", async ()
   } finally {
     await rm(root, { force: true, recursive: true });
   }
+});
+
+describe("invokesAmbiguousTypeScriptCompiler", () => {
+  test.each([
+    "tsc --noEmit",
+    "bunx tsc --noEmit",
+    "bunx --no-install tsc --noEmit",
+    "bunx --bun --verbose tsc --noEmit",
+    "bunx -p typescript tsc --noEmit",
+    "bun x tsc --noEmit",
+    "bun --bun x --no-install tsc --noEmit",
+    "bun --cwd=. x --silent tsc --noEmit",
+    "bun --preload=./setup.ts x --no-install tsc --noEmit",
+    "bun --conditions=development --smol x tsc --noEmit",
+    "bun x --package typescript tsc --noEmit",
+    "eslint . && bun --silent x --verbose tsc --noEmit",
+  ])("recognizes %s", (command) => {
+    expect(invokesAmbiguousTypeScriptCompiler(command)).toBe(true);
+  });
+
+  test.each([
+    "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "bun run tsc --noEmit",
+    "bun test tsc",
+    "bun x eslint tsc",
+    "bunx eslint tsc",
+    "bun x --package tsc eslint",
+    "bun --cwd . x --no-install tsc --noEmit",
+    'echo "bun x tsc --noEmit"',
+    "mybun x tsc --noEmit",
+  ])("ignores %s", (command) => {
+    expect(invokesAmbiguousTypeScriptCompiler(command)).toBe(false);
+  });
 });
 
 describe("isNoopScript", () => {
@@ -221,29 +257,35 @@ test.each([
   }
 });
 
-test("rejects ambiguous TypeScript compiler commands and missing native aliases", async () => {
-  const root = await mkdtemp(path.join(tmpdir(), "compliance-check-"));
-  try {
-    await writeRootManifest(root, ["packages/example"]);
-    await writeWorkspacePackage(root, "packages/example", {
-      scripts: {
-        ...compliantScripts,
-        typecheck: "bunx --no-install tsc --noEmit",
-      },
-      devDependencies: { typescript: "^6.0.3" },
-    });
+test.each([
+  "bunx --no-install tsc --noEmit",
+  "bun --bun x --no-install tsc --noEmit",
+])(
+  "rejects ambiguous compiler command %s and a missing native alias",
+  async (typecheck) => {
+    const root = await mkdtemp(path.join(tmpdir(), "compliance-check-"));
+    try {
+      await writeRootManifest(root, ["packages/example"]);
+      await writeWorkspacePackage(root, "packages/example", {
+        scripts: {
+          ...compliantScripts,
+          typecheck,
+        },
+        devDependencies: { typescript: "^6.0.3" },
+      });
 
-    const errors = await findComplianceErrors(root);
-    expect(errors).toContain(
-      "packages/example script typecheck invokes ambiguous tsc instead of PATH=node_modules/@typescript/native/bin:$PATH tsc",
-    );
-    expect(errors).toContain(
-      "packages/example must declare @typescript/native as npm:typescript@7.0.2",
-    );
-  } finally {
-    await rm(root, { force: true, recursive: true });
-  }
-});
+      const errors = await findComplianceErrors(root);
+      expect(errors).toContain(
+        "packages/example script typecheck invokes ambiguous tsc instead of PATH=node_modules/@typescript/native/bin:$PATH tsc",
+      );
+      expect(errors).toContain(
+        "packages/example must declare @typescript/native as npm:typescript@7.0.2",
+      );
+    } finally {
+      await rm(root, { force: true, recursive: true });
+    }
+  },
+);
 
 test("rejects native compiler aliases that no script invokes", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "compliance-check-"));
