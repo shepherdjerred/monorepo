@@ -18,6 +18,7 @@ import {
   type RatingScoreSelection,
 } from "#client/aggregate-score.ts";
 import { useDocumentTitle } from "#client/document-title.ts";
+import { generationPromptEvidence } from "#client/generation-prompt-evidence.ts";
 import { ScoreField } from "#client/score-field.tsx";
 import { useTRPC } from "#client/trpc.ts";
 import { Badge } from "#components/ui/badge.tsx";
@@ -336,22 +337,17 @@ export function CasePage(): React.JSX.Element {
               label="Personality instructions"
               value={context.personalityInstructions}
             />
-            {detail.generation === null ? null : (
-              <>
-                <Evidence
-                  label="Exact system prompt"
-                  value={
-                    detail.generation.renderedPrompts.reviewText.systemPrompt
-                  }
-                />
-                <Evidence
-                  label="Exact user prompt"
-                  value={
-                    detail.generation.renderedPrompts.reviewText.userPrompt
-                  }
-                />
-              </>
-            )}
+            {detail.generation === null
+              ? null
+              : generationPromptEvidence(detail.generation.renderedPrompts).map(
+                  (evidence) => (
+                    <Evidence
+                      key={evidence.key}
+                      label={evidence.label}
+                      value={evidence.value}
+                    />
+                  ),
+                )}
           </div>
         </section>
       </div>

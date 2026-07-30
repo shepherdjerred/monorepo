@@ -128,6 +128,40 @@ test("finalizes populated membership and persists the result", async ({
   await expect(page).toHaveTitle("Finalization Candidate | Scout Review Evals");
 });
 
+test("shows every frozen prompt stage in case context", async ({ page }) => {
+  await openDataset(page, "Rating Workflow");
+  await page.getByRole("button", { name: "Resume rating" }).click();
+
+  const promptLabels = page
+    .locator(".evidence-panel > summary")
+    .filter({ hasText: "prompt" });
+  await expect(promptLabels).toHaveText([
+    "Match summary system prompt",
+    "Match summary user prompt",
+    "Timeline chunk 1 (0:00 - 10:00) system prompt",
+    "Timeline chunk 1 (0:00 - 10:00) user prompt",
+    "Timeline chunk 2 (10:00 - 20:00) system prompt",
+    "Timeline chunk 2 (10:00 - 20:00) user prompt",
+    "Timeline aggregate system prompt",
+    "Timeline aggregate user prompt",
+    "Final review system prompt",
+    "Final review user prompt",
+  ]);
+
+  await page.getByText("Match summary system prompt", { exact: true }).click();
+  await expect(page.getByText("Summarize the match.")).toBeVisible();
+  await page
+    .getByText("Timeline chunk 2 (10:00 - 20:00) user prompt", { exact: true })
+    .click();
+  await expect(page.getByText("Closing timeline events.")).toBeVisible();
+  await page
+    .getByText("Timeline aggregate user prompt", { exact: true })
+    .click();
+  await expect(page.getByText("Combine the ordered summaries.")).toBeVisible();
+  await page.getByText("Final review user prompt", { exact: true }).click();
+  await expect(page.getByText("Review this match.")).toBeVisible();
+});
+
 test("rates cases, navigates, and reloads persisted calibration", async ({
   page,
 }) => {

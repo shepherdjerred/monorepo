@@ -71,6 +71,8 @@ board: false
 - Preserved positive, negative, and neutral classifier polarity in exceptional
   results so candidate discovery suggests calibration slices from performance
   rather than match outcome.
+- Rendered every frozen generation prompt in case audit context, ordered from
+  match summary through single or chunked timeline stages to the final review.
 - Verified PR #1777 with the focused eval tests, typecheck, changed-file ESLint,
   changed-file Prettier checks, Buildkite pipeline validator, lane-coverage
   tests, and an independent merge-tree check.
