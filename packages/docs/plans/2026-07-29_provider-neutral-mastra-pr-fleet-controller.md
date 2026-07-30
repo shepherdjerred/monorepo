@@ -79,7 +79,7 @@ grant models unrestricted repository or external-system access.
 - [x] Scaffold and implement the package and root command.
 - [x] Add unit and integration tests.
 - [x] Run focused verification and repair every failure.
-- [ ] Record the terminal demonstration and publish the draft PR.
+- [x] Record the terminal demonstration and publish the draft PR.
 - [ ] Verify current-head Buildkite, merge-tree, and review readiness.
 
 ## Comment Log
@@ -87,6 +87,9 @@ grant models unrestricted repository or external-system access.
 - 2026-07-29: Approved for implementation. V1 uses model APIs only, one model
   per invocation, queued steering, ephemeral controller state, and no coupling
   to native coding-agent CLIs or Temporal.
+- 2026-07-29: Published draft PR
+  [#1855](https://github.com/shepherdjerred/monorepo/pull/1855) and attached the
+  hosted asciinema terminal artifact.
 
 ## Session Log — 2026-07-29
 
@@ -104,11 +107,11 @@ grant models unrestricted repository or external-system access.
 - Passed package typecheck, test, lint, build, a live OpenAI Mastra routing
   smoke, a live read-only PR evidence probe, and a real `sandbox-exec`
   validation probe.
+- Published draft PR #1855 and uploaded a live terminal recording to the PR.
 
 ### Remaining
 
-- Record and upload the terminal artifact, publish the draft PR, and validate
-  its current-head Buildkite and hosted review results.
+- Validate PR #1855's current-head Buildkite and hosted review results.
 
 ### Caveats
 
