@@ -17,11 +17,16 @@ import type {
   ReviewThread,
 } from "./types.ts";
 
-/** Bot-authored pull requests do not require a provider code review. */
-export function reviewGateSkipReasonForAuthor(
-  author: PullRequestAuthor,
-): "bot-author" | null {
-  return author.type === "Bot" ? "bot-author" : null;
+/** Return a skip only when the provider explicitly cannot review bot PRs. */
+export function reviewGateSkipReasonForAuthor(input: {
+  author: PullRequestAuthor;
+  provider: ReviewProvider;
+}): "bot-author" | null {
+  if (input.provider.botAuthoredPullRequestPolicy === "review") {
+    return null;
+  }
+
+  return input.author.type === "Bot" ? "bot-author" : null;
 }
 
 /**

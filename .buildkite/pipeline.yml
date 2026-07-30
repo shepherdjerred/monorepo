@@ -842,8 +842,8 @@ steps:
   # REVIEW_PROVIDER (default codex); wait-for-review.ts polls only while the
   # provider is still reviewing the head commit, then fails fast with the
   # unresolved-thread list. GitHub bot-authored PRs keep this explicit required
-  # step, but it passes immediately without requesting or polling for a provider
-  # review.
+  # step. Providers declare whether they can review bot PRs; Codex currently
+  # passes those PRs immediately, while Greptile keeps its normal review gate.
   - label: ":robot_face: review gate"
     key: review-gate
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")

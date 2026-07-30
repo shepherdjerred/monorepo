@@ -22,20 +22,38 @@ function thread(overrides: Partial<ReviewThread>): ReviewThread {
 }
 
 describe("reviewGateSkipReasonForAuthor", () => {
-  test("skips an author whose GitHub account type is Bot", () => {
+  test("skips a GitHub Bot author when Codex cannot review it", () => {
     expect(
       reviewGateSkipReasonForAuthor({
-        login: "long-summer-intern[bot]",
-        type: "Bot",
+        author: {
+          login: "long-summer-intern[bot]",
+          type: "Bot",
+        },
+        provider: codexProvider,
       }),
     ).toBe("bot-author");
   });
 
-  test("does not skip a human author", () => {
+  test("does not skip the same GitHub Bot author when Greptile can review it", () => {
     expect(
       reviewGateSkipReasonForAuthor({
-        login: "shepherdjerred",
-        type: "User",
+        author: {
+          login: "long-summer-intern[bot]",
+          type: "Bot",
+        },
+        provider: greptileProvider,
+      }),
+    ).toBeNull();
+  });
+
+  test("does not skip a human author for Codex", () => {
+    expect(
+      reviewGateSkipReasonForAuthor({
+        author: {
+          login: "shepherdjerred",
+          type: "User",
+        },
+        provider: codexProvider,
       }),
     ).toBeNull();
   });
@@ -43,8 +61,11 @@ describe("reviewGateSkipReasonForAuthor", () => {
   test("fails closed for a new GitHub account type", () => {
     expect(
       reviewGateSkipReasonForAuthor({
-        login: "future-service",
-        type: "ServiceAccount",
+        author: {
+          login: "future-service",
+          type: "ServiceAccount",
+        },
+        provider: codexProvider,
       }),
     ).toBeNull();
   });
@@ -52,8 +73,11 @@ describe("reviewGateSkipReasonForAuthor", () => {
   test("does not infer bot status from the login", () => {
     expect(
       reviewGateSkipReasonForAuthor({
-        login: "lookalike[bot]",
-        type: "User",
+        author: {
+          login: "lookalike[bot]",
+          type: "User",
+        },
+        provider: codexProvider,
       }),
     ).toBeNull();
   });

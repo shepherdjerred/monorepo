@@ -356,7 +356,10 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
         number,
         token,
       });
-      const authorSkipReason = reviewGateSkipReasonForAuthor(pullRequestAuthor);
+      const authorSkipReason = reviewGateSkipReasonForAuthor({
+        author: pullRequestAuthor,
+        provider,
+      });
       if (authorSkipReason !== null) {
         console.log(
           JSON.stringify({
