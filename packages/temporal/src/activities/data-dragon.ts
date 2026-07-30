@@ -23,11 +23,15 @@ import {
   disarmGitHooks,
   installScoutWorkspace,
 } from "./bot-clone.ts";
-import { recordRun } from "./data-dragon-metrics.ts";
+import { recordAutoMergeFailure, recordRun } from "./data-dragon-metrics.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import {
   branchName,
+  dataDragonPrTitle,
   failureReason,
+  hasMatchingPrTitle,
+  isFinalAttempt,
+  UPDATE_DATA_DRAGON_MAX_ATTEMPTS,
   validateVersion,
 } from "./data-dragon-util.ts";
 
@@ -178,17 +182,56 @@ export const dataDragonActivities = {
   },
 
   async recordDataDragonSkipped(
-    input: DataDragonVersionState & { mode: DataDragonUpdateMode },
+    input: DataDragonVersionState & {
+      mode: DataDragonUpdateMode;
+      reason: string;
+    },
   ): Promise<void> {
     await Promise.resolve();
     recordRun({
       mode: input.mode,
       outcome: "skipped",
-      reason: "version-current",
+      reason: input.reason,
       currentVersion: input.currentVersion,
       latestVersion: input.latestVersion,
     });
-    jsonLog("info", "Skipped Data Dragon update; version is current", input);
+    jsonLog("info", "Skipped Data Dragon update", input);
+  },
+
+  /**
+   * Whether a PR bumping to `latestVersion` is already open. Prevents the
+   * duplicate-PR pattern behind #1827/#1856: a prior run's PR stuck on CI
+   * (or unmerged for any reason) meant the next scheduled run, seeing the
+   * same `updateRequired: true`, opened a second PR for the identical
+   * version bump. The broad server-side `--search` term plus an exact
+   * client-side title comparison sidesteps GitHub search's fuzzy
+   * tokenization of version strings containing dots.
+   */
+  async hasOpenDataDragonPr(latestVersion: string): Promise<boolean> {
+    const tokenResult = await createGitHubAppInstallationToken();
+    const output = await runCommand(
+      [
+        "gh",
+        "pr",
+        "list",
+        "--repo",
+        REPO_SLUG,
+        "--state",
+        "open",
+        "--search",
+        `${latestVersion} in:title`,
+        "--json",
+        "title",
+      ],
+      { cwd: "/tmp", env: { GH_TOKEN: tokenResult.token } },
+    );
+    const prs = z
+      .array(z.object({ title: z.string() }))
+      .parse(JSON.parse(output));
+    return hasMatchingPrTitle(
+      prs.map((pr) => pr.title),
+      latestVersion,
+    );
   },
 
   async updateDataDragon(
@@ -343,7 +386,7 @@ export const dataDragonActivities = {
       });
 
       const branch = branchName(input.latestVersion, id);
-      const title = `chore: update Scout Data Dragon to ${input.latestVersion}`;
+      const title = dataDragonPrTitle(input.latestVersion);
       const body = [
         "Automated Scout Data Dragon refresh from Temporal.",
         "",
@@ -414,6 +457,7 @@ export const dataDragonActivities = {
           { cwd: repoDir, env: { GH_TOKEN: githubToken }, redactOutput: true },
         );
       } catch (error: unknown) {
+        recordAutoMergeFailure(input.mode);
         jsonLog("warning", "Data Dragon PR auto-merge setup failed", {
           ...input,
           branch,
@@ -452,16 +496,30 @@ export const dataDragonActivities = {
       };
     } catch (error) {
       const durationSeconds = (Date.now() - start) / 1000;
-      recordRun({
-        mode: input.mode,
-        outcome: "failed",
-        reason: failureReason(error),
-        currentVersion: input.currentVersion,
-        latestVersion: input.latestVersion,
-        durationSeconds,
-      });
+      const attempt = Context.current().info.attempt;
+      const finalAttempt = isFinalAttempt(
+        attempt,
+        UPDATE_DATA_DRAGON_MAX_ATTEMPTS,
+      );
+      // Only the final attempt's failure feeds the outcome="failed" metric
+      // (and therefore the paging alert) — an earlier attempt Temporal is
+      // about to retry must not page just because it will self-heal
+      // (PagerDuty #6948: attempt 1 failed on a transient npm registry
+      // blip, attempt 2 succeeded 3 minutes before the page fired).
+      if (finalAttempt) {
+        recordRun({
+          mode: input.mode,
+          outcome: "failed",
+          reason: failureReason(error),
+          currentVersion: input.currentVersion,
+          latestVersion: input.latestVersion,
+          durationSeconds,
+        });
+      }
       jsonLog("error", "Data Dragon update failed", {
         ...input,
+        attempt,
+        finalAttempt,
         durationSeconds,
         error: error instanceof Error ? error.message : String(error),
       });

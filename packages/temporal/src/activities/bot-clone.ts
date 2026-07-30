@@ -2,6 +2,55 @@ import { runCommand } from "./data-dragon-shell.ts";
 
 export type BotCloneCommandRunner = typeof runCommand;
 
+// Mirrors scripts/lib/transient.ts's TRANSIENT_ERROR_PATTERN, kept in sync by
+// hand: that package (@shepherdjerred/root-scripts) has no `exports` map and
+// isn't set up as a cross-package library (its own doc comment scopes it to
+// CI-script exit-code semantics), so this duplicates the minimal classifier
+// rather than reshaping that package's boundary. Root cause of PagerDuty
+// #6948: a `registry.npmjs.org` tarball-extraction blip during
+// rootInstallWithoutHooks forced Temporal's full 5-minute-backoff activity
+// retry, redoing the whole clone+build+asset-download pipeline for one
+// flaky install.
+const TRANSIENT_INSTALL_ERROR_PATTERN =
+  /\bHTTP(?:\/\d(?:\.\d)?)?\s+5\d\d\b|ECONNRESET|ECONNREFUSED|EAI_AGAIN|ETIMEDOUT|connection reset|connection refused|temporary failure in name resolution|Fail extracting tarball|failed to download/i;
+
+export function isTransientInstallError(error: unknown): boolean {
+  const text =
+    error instanceof Error
+      ? `${error.message}\n${error.stack ?? ""}`
+      : String(error);
+  return TRANSIENT_INSTALL_ERROR_PATTERN.test(text);
+}
+
+/**
+ * Retries `attempt` a few times on a transient-looking failure with a short
+ * fixed delay, so a registry blip costs seconds instead of falling through to
+ * Temporal's much coarser 5-minute activity-level retry (which redoes the
+ * entire clone + build + asset-download pipeline). Non-transient errors
+ * (a genuinely broken lockfile, a real config error) still fail immediately.
+ * Exported so tests can override `delaySeconds` to 0 and avoid real sleeps.
+ */
+export async function withInstallRetry(
+  attempt: () => Promise<void>,
+  maxAttempts = 3,
+  delaySeconds = 5,
+): Promise<void> {
+  for (let i = 1; i <= maxAttempts; i += 1) {
+    try {
+      await attempt();
+      return;
+    } catch (error) {
+      if (i === maxAttempts || !isTransientInstallError(error)) {
+        throw error;
+      }
+      console.warn(
+        `bun install attempt ${String(i)} failed transiently, retrying in ${String(delaySeconds)}s: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      await Bun.sleep(delaySeconds * 1000);
+    }
+  }
+}
+
 // Environment preparation for the ephemeral bot clones the deterministic
 // PR-creating activities (data-dragon, scout-season-refresh, readme-refresh)
 // make under /tmp. Every activity that clones the monorepo MUST prepare the
@@ -45,10 +94,15 @@ export async function rootInstallWithoutHooks(
   repoDir: string,
   commandRunner: BotCloneCommandRunner = runCommand,
 ): Promise<void> {
-  await commandRunner(
-    ["bun", "install", "--frozen-lockfile", "--ignore-scripts"],
-    { cwd: repoDir, env: { BUN_INSTALL_CACHE_DIR: botCloneCacheDir(repoDir) } },
-  );
+  await withInstallRetry(async () => {
+    await commandRunner(
+      ["bun", "install", "--frozen-lockfile", "--ignore-scripts"],
+      {
+        cwd: repoDir,
+        env: { BUN_INSTALL_CACHE_DIR: botCloneCacheDir(repoDir) },
+      },
+    );
+  });
 }
 
 /**

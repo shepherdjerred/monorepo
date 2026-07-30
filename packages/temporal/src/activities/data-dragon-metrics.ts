@@ -18,6 +18,7 @@ function metrics(): {
   duration: ReturnType<typeof metricMeter.createHistogram>;
   changedFiles: ReturnType<typeof metricMeter.createGauge>;
   versionInfo: ReturnType<typeof metricMeter.createGauge>;
+  autoMergeFailures: ReturnType<typeof metricMeter.createCounter>;
 } {
   return {
     runs: metricMeter.createCounter(
@@ -48,6 +49,11 @@ function metrics(): {
       "1",
       "Scout Data Dragon latest version info",
     ),
+    autoMergeFailures: metricMeter.createCounter(
+      "scout_data_dragon_auto_merge_failures",
+      "1",
+      "Scout Data Dragon PR auto-merge setup failures",
+    ),
   };
 }
 
@@ -76,4 +82,15 @@ export function recordRun(input: DataDragonRunMetrics): void {
   if (input.prCreated === true) {
     meter.prs.add(1, { mode: input.mode });
   }
+}
+
+/**
+ * Records that a PR was opened but its auto-merge setup (`gh pr merge
+ * --auto`) failed — the caller catches and logs this locally without
+ * throwing, so it never reaches `recordRun`'s outcome="failed" path. Without
+ * a dedicated signal, a PR can sit unmerged indefinitely with no page (this
+ * is exactly what happened to PR #1856).
+ */
+export function recordAutoMergeFailure(mode: DataDragonUpdateMode): void {
+  metrics().autoMergeFailures.add(1, { mode });
 }

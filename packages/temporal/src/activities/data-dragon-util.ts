@@ -4,8 +4,49 @@ export function validateVersion(version: string): void {
   }
 }
 
+// Shared between the workflow's proxyActivities retry policy
+// (workflows/data-dragon.ts) and the activity's final-attempt check below,
+// so the two can never drift apart.
+export const UPDATE_DATA_DRAGON_MAX_ATTEMPTS = 2;
+
+/**
+ * Temporal transparently retries a failed activity attempt; `attempt` is
+ * 1-indexed via `Context.current().info.attempt`. Only the final attempt's
+ * outcome should feed the `outcome="failed"` metric that backs the paging
+ * alert — an earlier attempt that gets retried and later succeeds must not
+ * page (PagerDuty #6948).
+ */
+export function isFinalAttempt(attempt: number, maxAttempts: number): boolean {
+  return attempt >= maxAttempts;
+}
+
 export function branchName(version: string, id: string): string {
   return `chore/scout-data-dragon-${version}-${id.slice(0, 8)}`;
+}
+
+/**
+ * The exact PR title used both when opening a new Data Dragon PR and when
+ * checking for an already-open one (`hasOpenDataDragonPr` in data-dragon.ts).
+ * A single source keeps the two paths from drifting apart — the dedup check
+ * only works because it compares against literally the same string a PR
+ * would be created with.
+ */
+export function dataDragonPrTitle(version: string): string {
+  return `chore: update Scout Data Dragon to ${version}`;
+}
+
+/**
+ * Whether an already-open PR (by title) targets this exact Data Dragon
+ * version. GitHub's `--search` is fuzzy (its tokenizer doesn't treat a
+ * version string's dots specially), so callers should search broadly on the
+ * server side and use this for an exact client-side check.
+ */
+export function hasMatchingPrTitle(
+  openPrTitles: string[],
+  version: string,
+): boolean {
+  const title = dataDragonPrTitle(version);
+  return openPrTitles.includes(title);
 }
 
 export function failureReason(error: unknown): string {
