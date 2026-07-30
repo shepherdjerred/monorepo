@@ -37,13 +37,15 @@ without making additional OpenAI calls.
 - [ ] Correct #1834's coverage metadata so verified-corpus message counts remain
       distinct from the bounded 200-message model evidence sample; regenerate and
       re-review affected cards if the correction changes generated content.
-- [ ] Complete #1834's current-head Buildkite, merge it after the metadata
-      correction and subjective generated-content review are ready, then run
-      merged-main and production consumer smoke checks.
-- [ ] After every deterministic CI and smoke gate passes, transition this TODO
-      to `status: awaiting-human` with `verification: human` and add a `## Human
-Verification` scenario: review the generated style cards for accurate,
-      socially acceptable personas and explicitly accept or reject the proposal.
+- [ ] Complete #1834's current-head Buildkite after the metadata correction.
+- [ ] When pre-merge agent work is complete, set this TODO to
+      `status: awaiting-human` and `verification: human`.
+- [ ] Add a `## Human Verification` scenario: review the generated style cards
+      for accurate, socially acceptable personas and explicitly accept or reject
+      the proposal.
+- [ ] After human acceptance, return this TODO to `status: in-progress` with
+      `verification: agent`, merge #1834, and run merged-main and production
+      consumer smoke checks.
 - [ ] Unpause `glitter-context-refresh-weekly` only after those acceptance
       gates pass, then complete and archive this TODO and the live rollout plan.
 
@@ -116,16 +118,15 @@ Verification` scenario: review the generated style cards for accurate,
   merged-main and production consumer smoke checks.
 - Added the uncompleted metadata correction that must keep verified-corpus
   coverage distinct from the bounded 200-message model evidence sample.
-- Recorded the staged state transition to human verification only after every
-  deterministic CI and smoke gate has passed.
+- Recorded the staged transition from pre-merge agent verification to human
+  acceptance, followed by post-merge agent verification.
 
 ### Remaining
 
-- Correct #1834's metadata, complete current-head CI, merge it, and run
-  merged-main and production consumer smoke checks.
-- Transition this TODO to `awaiting-human` / `verification: human` with the
-  documented observable acceptance scenario, then obtain the subjective review
-  before unpausing the weekly schedule.
+- Correct #1834's metadata and complete current-head CI, then transition this
+  TODO to `awaiting-human` / `verification: human` for subjective review.
+- After acceptance, return the TODO to agent verification, merge #1834, and run
+  merged-main and production consumer smoke checks before schedule unpause.
 
 ### Caveats
 
@@ -133,3 +134,25 @@ Verification` scenario: review the generated style cards for accurate,
   `stack_error`; no repository verification job ran.
 - The weekly schedule remains paused, and this document does not treat the
   generated content or any remaining acceptance gate as complete.
+
+## Session Log — 2026-07-29 (human-review ordering correction)
+
+### Done
+
+- Removed the circular requirement for merged-main and production smoke checks
+  before the generated-content review that must precede merge.
+- Aligned this TODO with the rollout plan's pre-merge agent, human acceptance,
+  and post-merge agent phases.
+
+### Remaining
+
+- Correct #1834's coverage metadata and complete its current-head CI.
+- Move this TODO to `awaiting-human` / `verification: human`, complete the
+  observable generated-content review, then return it to agent verification for
+  merge and post-merge smoke checks.
+
+### Caveats
+
+- The existing pre-merge package smoke evidence remains complete.
+- PR #1834, merged-main checks, production consumer smokes, weekly-schedule
+  unpause, and final acceptance all remain incomplete.

@@ -53,14 +53,15 @@ schedule is deliberately unpaused.
       message counts are explicitly distinct from the bounded 200-message model
       evidence sample; regenerate and re-review affected cards if that correction
       changes generated content.
-- [ ] Complete #1834's current-head Buildkite and merge it only after the
-      metadata correction and subjective generated-content review are ready.
-- [ ] After #1834 merges, run merged-main and production consumer smoke checks
-      before allowing the weekly schedule to be unpaused.
-- [ ] Once every deterministic CI, metadata, merge, and downstream smoke check
-      passes, transition this plan to `status: awaiting-human` with
-      `verification: human` and add the documented observable `## Human
-Verification` scenario for subjective generated-content acceptance.
+- [ ] Complete #1834's current-head Buildkite after the metadata correction.
+- [ ] When pre-merge agent work is complete, set this plan to
+      `status: awaiting-human` and `verification: human`.
+- [ ] Add a `## Human Verification` scenario that asks the reviewer to inspect
+      the generated style cards for accurate, socially acceptable personas and
+      explicitly accept or reject the proposal.
+- [ ] After human acceptance, return this plan to `status: in-progress` with
+      `verification: agent`, merge #1834, and run merged-main and production
+      consumer smoke checks before allowing the weekly schedule to be unpaused.
 - [ ] Deliberately unpause `glitter-context-refresh-weekly`, verify its next
       action and observability, then archive this plan and its related TODOs.
 
@@ -112,10 +113,12 @@ Verification` scenario for subjective generated-content acceptance.
 - [x] Accept the daily workflow and unpause its schedule.
 - [ ] Correct #1834's coverage metadata to distinguish verified-corpus message
       counts from the bounded 200-message model evidence sample.
-- [ ] Complete #1834's deterministic CI and merged-main/production consumer
-      smokes, then transition this plan to `awaiting-human` / `verification:
-human` with an observable generated-content review scenario.
-- [ ] Complete that subjective human review and merge PR #1834.
+- [ ] Complete #1834's current-head CI, then transition this plan to
+      `awaiting-human` / `verification: human` with the observable
+      generated-content review scenario.
+- [ ] Complete the subjective human review before merging PR #1834.
+- [ ] Return this plan to `in-progress` / `verification: agent`, merge #1834,
+      and complete merged-main and production consumer smoke checks.
 - [ ] Unpause and accept the weekly workflow.
 - [ ] Complete and archive this plan and the related TODOs.
 
@@ -190,17 +193,15 @@ human` with an observable generated-content review scenario.
   merged-main and production consumer smoke checks.
 - Added the uncompleted metadata correction that must distinguish verified-corpus
   coverage from the bounded 200-message model evidence sample before acceptance.
-- Recorded the staged handoff: remain `in-progress` while deterministic work is
-  outstanding, then use `awaiting-human`, `verification: human`, and an
-  observable generated-content acceptance scenario.
+- Recorded the staged handoff from pre-merge agent work to subjective human
+  acceptance, followed by post-merge agent verification.
 
 ### Remaining
 
-- Correct #1834's coverage metadata, complete its current-head Buildkite, merge
-  it, and run merged-main plus production consumer smoke checks.
-- Move the plan to the documented human-acceptance state only after those
-  deterministic gates pass; keep `glitter-context-refresh-weekly` paused until
-  acceptance and unpause verification complete.
+- Correct #1834's coverage metadata and complete its current-head Buildkite,
+  then obtain subjective human acceptance before merging it.
+- Return the plan to agent verification after acceptance, merge #1834, and run
+  merged-main plus production consumer smoke checks.
 
 ### Caveats
 
@@ -208,6 +209,28 @@ human` with an observable generated-content review scenario.
   job with a `stack_error`; no repository verification job ran.
 - This documentation change does not mark generated content, CI, merged-main
   smoke checks, production smoke checks, or schedule acceptance complete.
+
+## Session Log — 2026-07-29 (human-review ordering correction)
+
+### Done
+
+- Removed the circular requirement for merged-main and production smoke checks
+  before the generated-content review that must precede merge.
+- Made the workflow phases explicit: pre-merge agent gates, human acceptance,
+  then post-merge agent verification.
+
+### Remaining
+
+- Correct #1834's coverage metadata and complete its current-head CI.
+- Transition this plan to `awaiting-human` / `verification: human`, complete the
+  observable generated-content review, then return it to agent verification for
+  merge and post-merge smoke checks.
+
+### Caveats
+
+- The existing pre-merge package smoke evidence remains complete.
+- PR #1834, merged-main checks, production consumer smokes, weekly-schedule
+  unpause, and final acceptance all remain incomplete.
 
 ## Session Log — 2026-07-28
 
