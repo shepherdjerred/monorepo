@@ -36,15 +36,62 @@ const ApplicationSchema = z
                 }),
               }),
               "pod-spec-patch": z.object({
+                volumes: z.array(
+                  z.object({
+                    name: z.string(),
+                    persistentVolumeClaim: z.object({
+                      claimName: z.string(),
+                    }),
+                  }),
+                ),
                 containers: z.array(
                   z.object({
                     name: z.string(),
                     resources: ResourceRequirementsSchema.optional(),
+                    env: z
+                      .array(
+                        z.object({
+                          name: z.string(),
+                          value: z.string(),
+                        }),
+                      )
+                      .optional(),
+                    volumeMounts: z
+                      .array(
+                        z.object({
+                          name: z.string(),
+                          mountPath: z.string(),
+                        }),
+                      )
+                      .optional(),
                   }),
                 ),
               }),
             }),
           }),
+        }),
+      }),
+    }),
+  })
+  .loose();
+
+const PersistentVolumeClaimSchema = z
+  .object({
+    kind: z.literal("PersistentVolumeClaim"),
+    metadata: z.object({
+      name: z.string(),
+      namespace: z.literal("buildkite"),
+      labels: z.object({
+        "velero.io/backup": z.literal("disabled"),
+        "velero.io/exclude-from-backup": z.literal("true"),
+      }),
+    }),
+    spec: z.object({
+      accessModes: z.tuple([z.literal("ReadWriteMany")]),
+      storageClassName: z.string(),
+      resources: z.object({
+        requests: z.object({
+          storage: z.string(),
         }),
       }),
     }),
@@ -104,10 +151,15 @@ function synthBuildkiteResources() {
   const cachePruneCronJob = resources.find(
     (manifest) => CachePruneCronJobSchema.safeParse(manifest).success,
   );
+  const persistentVolumeClaims = resources.flatMap((manifest) => {
+    const result = PersistentVolumeClaimSchema.safeParse(manifest);
+    return result.success ? [result.data] : [];
+  });
   return {
     application: ApplicationSchema.parse(application),
     hooks: ConfigMapSchema.parse(hooks),
     cachePruneCronJob: CachePruneCronJobSchema.parse(cachePruneCronJob),
+    persistentVolumeClaims,
   };
 }
 
@@ -118,19 +170,69 @@ describe("Buildkite application", () => {
       application.spec.source.helm.valuesObject.config["pod-spec-patch"]
         .containers;
 
-    expect(containers).toContainEqual({
-      name: "checkout",
-      resources: {
-        requests: { cpu: "50m", memory: "1Gi" },
-        limits: { cpu: "400m", memory: "2Gi" },
+    expect(containers).toContainEqual(
+      expect.objectContaining({
+        name: "checkout",
+        resources: {
+          requests: { cpu: "50m", memory: "1Gi" },
+          limits: { cpu: "400m", memory: "2Gi" },
+        },
+      }),
+    );
+    expect(containers).toContainEqual(
+      expect.objectContaining({
+        name: "agent",
+        resources: {
+          requests: { cpu: "50m", memory: "64Mi" },
+          limits: { cpu: "400m", memory: "768Mi" },
+        },
+      }),
+    );
+  });
+
+  it("renders separate disposable Bun data and control volumes", () => {
+    const { application, persistentVolumeClaims } = synthBuildkiteResources();
+    const podSpecPatch =
+      application.spec.source.helm.valuesObject.config["pod-spec-patch"];
+    const commandContainer = podSpecPatch.containers.find(
+      (container) => container.name === "container-0",
+    );
+
+    expect(persistentVolumeClaims).toContainEqual(
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          name: "buildkite-bun-cache",
+        }),
+        spec: expect.objectContaining({
+          accessModes: ["ReadWriteMany"],
+          resources: { requests: { storage: "60Gi" } },
+        }),
+      }),
+    );
+    expect(persistentVolumeClaims).toContainEqual(
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          name: "buildkite-bun-cache-control",
+        }),
+        spec: expect.objectContaining({
+          accessModes: ["ReadWriteMany"],
+          resources: { requests: { storage: "1Gi" } },
+        }),
+      }),
+    );
+    expect(podSpecPatch.volumes).toContainEqual({
+      name: "buildkite-bun-cache-control",
+      persistentVolumeClaim: {
+        claimName: "buildkite-bun-cache-control",
       },
     });
-    expect(containers).toContainEqual({
-      name: "agent",
-      resources: {
-        requests: { cpu: "50m", memory: "64Mi" },
-        limits: { cpu: "400m", memory: "768Mi" },
-      },
+    expect(commandContainer?.volumeMounts).toContainEqual({
+      name: "buildkite-bun-cache-control",
+      mountPath: "/buildkite/bun-cache-control",
+    });
+    expect(commandContainer?.env).toContainEqual({
+      name: "BUN_INSTALL_CACHE_DIR",
+      value: "/buildkite/bun-cache",
     });
   });
 

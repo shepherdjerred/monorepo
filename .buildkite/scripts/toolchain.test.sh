@@ -31,6 +31,12 @@ if ! rg -Fq 'ln -sf "$(mise which gh)" /usr/local/bin/gh' "$CI_IMAGE" ||
   exit 1
 fi
 
+if ! rg -wq 'util-linux' "$CI_IMAGE" ||
+  ! rg -Fq '&& flock --version' "$CI_IMAGE"; then
+  echo "ci image must explicitly install and verify flock for cross-pod cache locking" >&2
+  exit 1
+fi
+
 if rg -q 'apt-get|playwright install|bun x' "$CI_PLAYWRIGHT_IMAGE" ||
   ! rg -Fq 'Bun.file("/ms-playwright/.docker-info").json()' "$CI_PLAYWRIGHT_IMAGE" ||
   ! rg -Fq 'typeof info.driverVersion !== "string"' "$CI_PLAYWRIGHT_IMAGE" ||
