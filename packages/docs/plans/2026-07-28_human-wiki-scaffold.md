@@ -184,6 +184,19 @@ attempt to author a comprehensive monorepo atlas.
 - Passed wiki lint and typecheck, both skill schema checks, the live/source
   skill comparison, calculated ESLint config assertions, and the root
   1,011-document docs check.
+- Removed the duplicate hook-free root installs from the Scout queue-windows
+  and showcase refresh activities, leaving `installScoutWorkspace` as the
+  single owner of root installation plus both required producer builds.
+- Added focused bot-clone and activity-source invariants that prove one root
+  install, both `llm-models` and `glitter-context` builds, and no caller-owned
+  install in the two affected activities.
+- Restacked the full PR onto `main` at `96f640057`, preserving current pipeline
+  and Scout query APIs while carrying forward the wiki additions and
+  deterministic season-boundary fixtures; regenerated the root lockfile and
+  proved a frozen root install.
+- Passed the focused regression tests, all 338 Temporal activity tests,
+  Temporal typecheck, Prettier, Markdown lint, staged-file safety hooks, and
+  `git diff --check`.
 
 ### Remaining
 
@@ -199,11 +212,19 @@ attempt to author a comprehensive monorepo atlas.
   added.
 - The first-deployment ordering is statically verified but cannot be exercised
   end to end until the main-only infrastructure and site lanes run after merge.
-- GitHub still reports a stale merge-conflict failure, while an independent
-  `git merge-tree` against `origin/main` succeeds.
+- The local stack is cleanly restacked on current `main`; GitHub will not
+  reflect the rewritten ancestry until the stack is submitted.
 - Production callers still default active filtering to the wall clock; the
   explicit instant is an opt-in seam for deterministic tests and replayable
   queries, not a fallback around season expiry.
 - Buildkite 7246's `@shepherdjerred/glitter-context` dependency-closure failure
   is separate from these review findings; PR #1849 is independently diagnosing
   the same root and its evidence can be reused in the next CI cycle.
+- Buildkite 7250's next authoritative failure is the Scout backend image smoke:
+  Discord command registration refuses to start because the bundled season
+  metadata has no active season. PR #1851 contains the related expiry-safe
+  command intent and should be inspected in the next remediation cycle.
+- The canonical Temporal lint task is not green after the restack: the newly
+  enabled Unicorn rules report 1,079 errors across the package. Migrating that
+  package-wide surface is intentionally not folded into this narrow
+  duplicate-install review fix.

@@ -2,7 +2,7 @@ import { Context } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { runCommand } from "./data-dragon-shell.ts";
-import { rootInstallWithoutHooks, installScoutWorkspace } from "./bot-clone.ts";
+import { installScoutWorkspace } from "./bot-clone.ts";
 import {
   changedFilesInPaths,
   getUnifiedDiff,
@@ -99,9 +99,8 @@ export const scoutShowcaseRefreshActivities = {
         "1",
       ]);
 
-      await rootInstallWithoutHooks(repoDir);
-      // Builds the llm-models file: producer first — the scout workspace
-      // install copies a broken package without it (see bot-clone.ts).
+      // Installs the root workspace once without hooks, then builds the shared
+      // producers Scout imports (see bot-clone.ts).
       await installScoutWorkspace(repoDir);
 
       await runCommand(

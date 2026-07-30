@@ -230,9 +230,10 @@ export const dataDragonActivities = {
         "1",
       ]);
 
-      // Builds the llm-models `file:` producer before the workspace install —
-      // without it the updater's snapshot-refresh `bun test` dies with
-      // `Cannot find module '@shepherdjerred/llm-models'`.
+      // Installs the root workspace once without hooks, then builds the shared
+      // producers Scout imports. Without the llm-models build, the updater's
+      // snapshot-refresh `bun test` dies with `Cannot find module
+      // '@shepherdjerred/llm-models'`.
       await installScoutWorkspace(repoDir);
       await runCommand(
         ["bun", "run", "update-data-dragon", input.latestVersion],

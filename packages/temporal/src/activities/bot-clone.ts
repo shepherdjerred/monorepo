@@ -1,5 +1,7 @@
 import { runCommand } from "./data-dragon-shell.ts";
 
+export type BotCloneCommandRunner = typeof runCommand;
+
 // Environment preparation for the ephemeral bot clones the deterministic
 // PR-creating activities (data-dragon, scout-season-refresh, readme-refresh)
 // make under /tmp. Every activity that clones the monorepo MUST prepare the
@@ -39,8 +41,11 @@ export function botCloneCacheDir(repoDir: string): string {
  * markdownlint) have no lifecycle scripts of their own, so `--ignore-scripts`
  * loses nothing else.
  */
-export async function rootInstallWithoutHooks(repoDir: string): Promise<void> {
-  await runCommand(
+export async function rootInstallWithoutHooks(
+  repoDir: string,
+  commandRunner: BotCloneCommandRunner = runCommand,
+): Promise<void> {
+  await commandRunner(
     ["bun", "install", "--frozen-lockfile", "--ignore-scripts"],
     { cwd: repoDir, env: { BUN_INSTALL_CACHE_DIR: botCloneCacheDir(repoDir) } },
   );
@@ -51,10 +56,13 @@ export async function rootInstallWithoutHooks(repoDir: string): Promise<void> {
  * already-installed bot clone. Its `dist/` entrypoint is gitignored, so a
  * fresh clone ships it unbuilt even though the root install links it.
  */
-export async function buildLlmModels(repoDir: string): Promise<void> {
+export async function buildLlmModels(
+  repoDir: string,
+  commandRunner: BotCloneCommandRunner = runCommand,
+): Promise<void> {
   const pkgDir = `${repoDir}/packages/llm-models`;
   const cacheDir = botCloneCacheDir(repoDir);
-  await runCommand(["bun", "run", "build"], {
+  await commandRunner(["bun", "run", "build"], {
     cwd: pkgDir,
     env: { BUN_INSTALL_CACHE_DIR: cacheDir },
   });
@@ -66,10 +74,13 @@ export async function buildLlmModels(repoDir: string): Promise<void> {
  * Scout and Temporal consumers must never run before this producer has been
  * generated and built.
  */
-export async function buildGlitterContext(repoDir: string): Promise<void> {
+export async function buildGlitterContext(
+  repoDir: string,
+  commandRunner: BotCloneCommandRunner = runCommand,
+): Promise<void> {
   const pkgDir = `${repoDir}/packages/glitter-context`;
   const cacheDir = botCloneCacheDir(repoDir);
-  await runCommand(["bun", "run", "build"], {
+  await commandRunner(["bun", "run", "build"], {
     cwd: pkgDir,
     env: { BUN_INSTALL_CACHE_DIR: cacheDir },
   });
@@ -81,10 +92,13 @@ export async function buildGlitterContext(repoDir: string): Promise<void> {
  * in this monorepo: every workspace dependency is resolved by the root
  * package.json and root bun.lock.
  */
-export async function installScoutWorkspace(repoDir: string): Promise<void> {
-  await rootInstallWithoutHooks(repoDir);
-  await buildLlmModels(repoDir);
-  await buildGlitterContext(repoDir);
+export async function installScoutWorkspace(
+  repoDir: string,
+  commandRunner: BotCloneCommandRunner = runCommand,
+): Promise<void> {
+  await rootInstallWithoutHooks(repoDir, commandRunner);
+  await buildLlmModels(repoDir, commandRunner);
+  await buildGlitterContext(repoDir, commandRunner);
 }
 
 /**

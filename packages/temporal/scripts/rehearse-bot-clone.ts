@@ -146,7 +146,7 @@ async function ensureScratchGitRepo(
 
 async function rehearseScoutWorkspace(repoDir: string): Promise<void> {
   console.error(
-    "[rehearsal] scout: installScoutWorkspace (builds shared producers)",
+    "[rehearsal] scout: installScoutWorkspace (root install + shared producers)",
   );
   await installScoutWorkspace(repoDir);
   console.error("[rehearsal] scout: resolving @shepherdjerred/llm-models");
