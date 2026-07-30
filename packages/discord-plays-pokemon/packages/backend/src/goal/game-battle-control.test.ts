@@ -1115,9 +1115,25 @@ describe("GameBattleControl item actions", () => {
     );
     expect(port.presses).toEqual([]);
   });
+});
 
-  test("finds and confirms a named battle item", async () => {
-    const port = new BattlePort(observation({ frame: 10 }), [
+describe("GameBattleControl Bag navigation", () => {
+  test("moves down from an earlier Bag entry and confirms selection", async () => {
+    const inventory: GameState["inventory"] = [
+      {
+        itemId: 3,
+        item: "GREAT BALL",
+        quantity: 2,
+        pocket: "poke-balls",
+      },
+      {
+        itemId: 4,
+        item: "POKé BALL",
+        quantity: 5,
+        pocket: "poke-balls",
+      },
+    ];
+    const port = new BattlePort(observation({ frame: 10, inventory }), [
       observation({ frame: 12, actionCursor: 1 }),
       observation({
         frame: 14,
@@ -1130,6 +1146,7 @@ describe("GameBattleControl item actions", () => {
           itemId: 13,
           item: "POTION",
         },
+        inventory,
       }),
       observation({
         frame: 16,
@@ -1142,6 +1159,7 @@ describe("GameBattleControl item actions", () => {
           itemId: 3,
           item: "GREAT BALL",
         },
+        inventory,
       }),
       observation({
         frame: 18,
@@ -1154,6 +1172,7 @@ describe("GameBattleControl item actions", () => {
           itemId: 4,
           item: "POKé BALL",
         },
+        inventory,
       }),
       observation({
         frame: 20,
@@ -1166,8 +1185,9 @@ describe("GameBattleControl item actions", () => {
           itemId: 4,
           item: "POKé BALL",
         },
+        inventory,
       }),
-      observation({ frame: 22, actionCursor: 0 }),
+      observation({ frame: 22, actionCursor: 0, inventory }),
     ]);
 
     const outcome = await new GameBattleControl(port).item(4);
@@ -1178,6 +1198,120 @@ describe("GameBattleControl item actions", () => {
       "a",
       "right",
       "down",
+      "a",
+      "a",
+    ]);
+  });
+
+  test("moves up from a later Bag entry and confirms selection", async () => {
+    const inventory: GameState["inventory"] = [
+      {
+        itemId: 3,
+        item: "GREAT BALL",
+        quantity: 2,
+        pocket: "poke-balls",
+      },
+      {
+        itemId: 4,
+        item: "POKé BALL",
+        quantity: 5,
+        pocket: "poke-balls",
+      },
+    ];
+    const port = new BattlePort(observation({ frame: 10, inventory }), [
+      observation({ frame: 12, actionCursor: 1, inventory }),
+      observation({
+        frame: 14,
+        menu: "bag",
+        actionCursor: 1,
+        bag: {
+          state: "list",
+          pocket: 1,
+          position: 1,
+          itemId: 4,
+          item: "POKé BALL",
+        },
+        inventory,
+      }),
+      observation({
+        frame: 16,
+        menu: "bag",
+        actionCursor: 1,
+        bag: {
+          state: "list",
+          pocket: 1,
+          position: 0,
+          itemId: 3,
+          item: "GREAT BALL",
+        },
+        inventory,
+      }),
+      observation({
+        frame: 18,
+        menu: "bag",
+        actionCursor: 1,
+        bag: {
+          state: "use-confirm",
+          pocket: 1,
+          position: 0,
+          itemId: 3,
+          item: "GREAT BALL",
+        },
+        inventory,
+      }),
+      observation({ frame: 20, actionCursor: 0, inventory }),
+    ]);
+
+    const outcome = await new GameBattleControl(port).item(3);
+
+    expect(outcome.status).toBe("applied");
+    expect(outcome.stopReason).toBe("completed");
+    expect(port.presses.map((press) => press.command)).toEqual([
+      "right",
+      "a",
+      "up",
+      "a",
+      "a",
+    ]);
+  });
+
+  test("confirms an already-selected Bag item without moving the list", async () => {
+    const port = new BattlePort(observation({ frame: 10 }), [
+      observation({ frame: 12, actionCursor: 1 }),
+      observation({
+        frame: 14,
+        menu: "bag",
+        actionCursor: 1,
+        bag: {
+          state: "list",
+          pocket: 1,
+          position: 0,
+          itemId: 4,
+          item: "POKé BALL",
+        },
+      }),
+      observation({
+        frame: 16,
+        menu: "bag",
+        actionCursor: 1,
+        bag: {
+          state: "use-confirm",
+          pocket: 1,
+          position: 0,
+          itemId: 4,
+          item: "POKé BALL",
+        },
+      }),
+      observation({ frame: 18, actionCursor: 0 }),
+    ]);
+
+    const outcome = await new GameBattleControl(port).item(4);
+
+    expect(outcome.status).toBe("applied");
+    expect(outcome.stopReason).toBe("completed");
+    expect(port.presses.map((press) => press.command)).toEqual([
+      "right",
+      "a",
       "a",
       "a",
     ]);

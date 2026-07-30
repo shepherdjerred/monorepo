@@ -950,3 +950,30 @@ deferred by explicit direction.
   from unrelated state changes.
 - The four #1848 findings remain unchanged.
 - Shared-cache Buildkite retries and cache mutations remain explicitly deferred.
+
+## Session Log — 2026-07-29 (bidirectional Bag navigation)
+
+### Done
+
+- Derived the requested item's current pocket position from authoritative saved
+  inventory order and moved the remembered Bag cursor toward it with `up` or
+  `down`.
+- Preserved item-identity confirmation, pocket selection, quantities, use
+  confirmation, and timeout behavior.
+- Added focused regressions for cursor-below upward movement, cursor-above
+  downward movement, and an already-selected item.
+- Passed the focused battle-control suite, backend typecheck, changed-file
+  ESLint, and changed-file Prettier checks.
+
+### Remaining
+
+- Await current-head Buildkite and hosted-review responses for PRs #1847 and
+  #1848.
+
+### Caveats
+
+- If live inventory no longer contains the item or the observed item disagrees
+  at its recorded position, selection returns the existing timeout outcome
+  rather than guessing.
+- The four #1848 findings remain unchanged.
+- Shared-cache Buildkite retries and cache mutations remain explicitly deferred.

@@ -4,6 +4,7 @@ import type {
 } from "#src/emulator/engine-observation.ts";
 import type { CommandInput } from "#src/game/command/command-input.ts";
 import type { Command } from "#src/game/command/command.ts";
+import type { InventoryPocket } from "#src/game/game-save-details.ts";
 import {
   actionOutcome,
   meaningfulStateSignature,
@@ -353,19 +354,24 @@ export class GameBattleControl {
 
   private async selectBagItem(
     itemId: number,
-    pocket: string,
+    pocket: InventoryPocket,
   ): Promise<boolean> {
-    const itemCount =
+    const pocketItems =
       this.port
         .observe()
-        .game?.inventory.filter((item) => item.pocket === pocket).length ?? 0;
-    for (let attempt = 0; attempt <= itemCount; attempt += 1) {
+        .game?.inventory.filter((item) => item.pocket === pocket) ?? [];
+    const targetPosition = pocketItems.findIndex(
+      (item) => item.itemId === itemId,
+    );
+    if (targetPosition === -1) return true;
+    for (let attempt = 0; attempt <= pocketItems.length; attempt += 1) {
       const bag = this.port.observe().battle?.bag;
       if (bag?.state !== "list") return true;
       if (bag.itemId === itemId) return false;
+      if (bag.position === targetPosition) return true;
       const previousPosition = bag.position;
       const timedOut = await this.pressAndAwait(
-        "down",
+        bag.position < targetPosition ? "down" : "up",
         (observation) =>
           observation.battle?.bag?.state === "list" &&
           observation.battle.bag.position !== previousPosition,
