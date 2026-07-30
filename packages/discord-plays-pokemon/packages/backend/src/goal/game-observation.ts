@@ -59,12 +59,14 @@ export type GameObservationV2 = Readonly<{
     targetBattler: number | null;
     currentMove: number;
     chosenMove: number;
+    switchAllowed: boolean;
     moves: readonly Readonly<{
       slot: number;
       moveId: number;
       move: string;
       currentPp: number;
       maxPp: number;
+      usable: boolean;
     }>[];
     bag: Readonly<{
       state: "list" | "use-confirm";

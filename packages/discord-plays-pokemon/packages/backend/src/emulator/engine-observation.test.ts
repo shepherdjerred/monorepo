@@ -246,7 +246,7 @@ describe("engine map topology decoders", () => {
 describe("decodeEngineObservation", () => {
   test("decodes a valid stable overworld observation", () => {
     const observation = decodeEngineObservation(validBytes());
-    expect(observation.version).toBe(3);
+    expect(observation.version).toBe(4);
     expect(observation.frame).toBe(42);
     expect(observation.phase).toBe("overworld");
     expect(observation.readiness).toEqual({
@@ -366,6 +366,8 @@ describe("decodeEngineObservation battle decisions", () => {
     view.setUint16(120, 45, true);
     view.setUint8(122, 20);
     view.setUint8(123, 25);
+    view.setUint8(142, 0b0010);
+    view.setUint8(143, 1);
 
     const battle = decodeEngineObservation(bytes).battle;
 
@@ -375,9 +377,22 @@ describe("decodeEngineObservation battle decisions", () => {
     expect(battle?.inputBattler).toBe(0);
     expect(battle?.moveCursor).toBe(3);
     expect(battle?.targetBattler).toBe(1);
+    expect(battle?.switchAllowed).toBeTrue();
     expect(battle?.moves).toEqual([
-      { slot: 1, moveId: 33, currentPp: 35, maxPp: 35 },
-      { slot: 2, moveId: 45, currentPp: 20, maxPp: 25 },
+      {
+        slot: 1,
+        moveId: 33,
+        currentPp: 35,
+        maxPp: 35,
+        usable: true,
+      },
+      {
+        slot: 2,
+        moveId: 45,
+        currentPp: 20,
+        maxPp: 25,
+        usable: false,
+      },
     ]);
     expect(battle?.battlers).toEqual([
       {

@@ -29,6 +29,7 @@ type BattleControlPort = Readonly<{
   press: (command: CommandInput) => Promise<void>;
   waitFrames: (frames: number) => Promise<void>;
   readMapTile: (x: number, y: number) => EngineMapTile | null;
+  canUseBattleItemOnPartyMon: (itemId: number, partySlot: number) => boolean;
 }>;
 
 type ControlSnapshot = Readonly<{
@@ -117,8 +118,8 @@ export class GameBattleControl {
 
   async switch(partySlot: number): Promise<ActionOutcomeV1> {
     const before = this.capture();
-    this.requireDecision(before.observation, ["action"]);
-    requireSwitchablePartySlot(before.observation, partySlot);
+    const battle = this.requireDecision(before.observation, ["action"]);
+    requireSwitchablePartySlot(before.observation, battle, partySlot);
     let timedOut = await this.selectGridCursor("action", 2);
     timedOut ||= await this.pressAndAwait("a", partyInputReady);
     timedOut ||= await this.selectPartySlot(partySlot);
@@ -134,7 +135,14 @@ export class GameBattleControl {
       before.observation,
       battle,
       itemId,
-      partySlot,
+      {
+        partySlot,
+        canUseOnPartyMon: (candidateItemId, candidatePartySlot) =>
+          this.port.canUseBattleItemOnPartyMon(
+            candidateItemId,
+            candidatePartySlot,
+          ),
+      },
     );
 
     let timedOut = await this.selectGridCursor("action", 1);

@@ -13,10 +13,16 @@ type BattleMove = BattleState["moves"][number];
 type InventoryItem = NonNullable<
   GameObservationV2["game"]
 >["inventory"][number];
+type PartyMember = NonNullable<GameObservationV2["game"]>["party"][number];
 
 export type BattleItemSelection = Readonly<{
   inventoryItem: InventoryItem;
   pocket: number;
+}>;
+
+type BattleItemPreflight = Readonly<{
+  partySlot: number | undefined;
+  canUseOnPartyMon: (itemId: number, partySlot: number) => boolean;
 }>;
 
 const BATTLE_TYPE_DOUBLE = 1;
@@ -46,6 +52,9 @@ export function requireBattleMoveSelection(
   if (matchingMove.currentPp === 0) {
     throw new Error("requested move has no remaining PP");
   }
+  if (!matchingMove.usable) {
+    throw new Error("requested move is currently disabled by battle rules");
+  }
   if (selection.targetBattler !== undefined) {
     requireSelectableMoveTarget(
       battle,
@@ -58,13 +67,16 @@ export function requireBattleMoveSelection(
 
 export function requireSwitchablePartySlot(
   observation: GameObservationV2,
+  battle: BattleState,
   partySlot: number,
 ): void {
   requireUsablePartySlot(observation, partySlot);
-  const activePartySlots =
-    observation.battle?.battlers
-      .filter((battler) => battler.side === "player" && battler.active)
-      .map((battler) => battler.partyIndex) ?? [];
+  if (!battle.switchAllowed) {
+    throw new Error("the input battler is currently prevented from switching");
+  }
+  const activePartySlots = battle.battlers
+    .filter((battler) => battler.side === "player" && battler.active)
+    .map((battler) => battler.partyIndex);
   if (activePartySlots.includes(partySlot - 1)) {
     throw new Error("requested party slot is already active");
   }
@@ -74,7 +86,7 @@ export function requireBattleItemSelection(
   observation: GameObservationV2,
   battle: BattleState,
   itemId: number,
-  partySlot?: number,
+  preflight: BattleItemPreflight,
 ): BattleItemSelection {
   const inventoryItem = observation.game?.inventory.find(
     (item) => item.itemId === itemId && item.quantity > 0,
@@ -86,7 +98,7 @@ export function requireBattleItemSelection(
   if (pocket === undefined) {
     throw new RangeError(`unknown inventory pocket: ${inventoryItem.pocket}`);
   }
-  requireItemInteraction(observation, battle, itemId, partySlot);
+  requireItemInteraction(observation, battle, itemId, preflight);
   return { inventoryItem, pocket };
 }
 
@@ -94,13 +106,24 @@ function requireUsablePartySlot(
   observation: GameObservationV2,
   partySlot: number,
 ): void {
+  const partyMember = requirePartyMember(observation, partySlot);
+  if (partyMember.hp === 0) {
+    throw new Error("requested party slot is not a usable Pokémon");
+  }
+}
+
+function requirePartyMember(
+  observation: GameObservationV2,
+  partySlot: number,
+): PartyMember {
   if (!Number.isInteger(partySlot) || partySlot < 1 || partySlot > 6) {
     throw new RangeError("party slot must be an integer from 1 through 6");
   }
   const partyMember = observation.game?.party.at(partySlot - 1);
-  if (partyMember === undefined || partyMember.isEgg || partyMember.hp === 0) {
-    throw new Error("requested party slot is not a usable Pokémon");
+  if (partyMember === undefined || partyMember.isEgg) {
+    throw new Error("requested party slot is not a Pokémon");
   }
+  return partyMember;
 }
 
 function requireSelectableMoveTarget(
@@ -144,8 +167,9 @@ function requireItemInteraction(
   observation: GameObservationV2,
   battle: BattleState,
   itemId: number,
-  partySlot?: number,
+  preflight: BattleItemPreflight,
 ): void {
+  const partySlot = preflight.partySlot;
   const use = itemBattleUse(itemId);
   switch (use) {
     case "unavailable":
@@ -158,7 +182,12 @@ function requireItemInteraction(
       if (partySlot === undefined) {
         throw new Error("requested item requires a party slot");
       }
-      requireUsablePartySlot(observation, partySlot);
+      requirePartyMember(observation, partySlot);
+      if (!preflight.canUseOnPartyMon(itemId, partySlot)) {
+        throw new Error(
+          "requested item has no effect on the requested party slot",
+        );
+      }
       return;
     case "poke-ball":
       if ((battle.typeFlags & BATTLE_TYPE_TRAINER) !== 0) {

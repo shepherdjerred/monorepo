@@ -132,6 +132,10 @@ class InteractionPort implements GameControlPort {
   readMapTopology(): null {
     return null;
   }
+
+  canUseBattleItemOnPartyMon(): boolean {
+    return true;
+  }
 }
 
 const INVALID_INITIAL_STATES: readonly Readonly<{

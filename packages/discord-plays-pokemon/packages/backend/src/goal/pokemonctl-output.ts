@@ -36,6 +36,7 @@ const BattleSchema = z.looseObject({
   targetBattler: z.number().int().nullable(),
   currentMove: z.number().int(),
   chosenMove: z.number().int(),
+  switchAllowed: z.boolean(),
   moves: z.array(
     z.looseObject({
       slot: z.number().int(),
@@ -43,6 +44,7 @@ const BattleSchema = z.looseObject({
       move: z.string(),
       currentPp: z.number().int(),
       maxPp: z.number().int(),
+      usable: z.boolean(),
     }),
   ),
   bag: z
@@ -180,6 +182,7 @@ function compactBattleDecision(
     targetBattler: battle.targetBattler,
     currentMove: battle.currentMove,
     chosenMove: battle.chosenMove,
+    switchAllowed: battle.switchAllowed,
     moves: battle.moves,
     bag: battle.bag,
     party: battle.party,

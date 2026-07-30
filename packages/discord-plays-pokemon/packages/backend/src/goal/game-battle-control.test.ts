@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { CommandInput } from "#src/game/command/command-input.ts";
 import { GameBattleControl } from "./game-battle-control.ts";
+import { requireBattleItemSelection } from "./game-battle-control-rules.ts";
 import type { GameObservationV2 } from "./game-observation.ts";
 import { handlePokemonctlBattle } from "./pokemonctl-battle.ts";
 
@@ -15,6 +16,7 @@ type BattleInput = Readonly<{
   moveCursor?: number;
   targetBattler?: number | null;
   moves?: BattleState["moves"];
+  switchAllowed?: boolean;
   bag?: BattleState["bag"];
   battleParty?: BattleState["party"];
   battlers?: BattleState["battlers"];
@@ -59,6 +61,7 @@ function observation(input: BattleInput): GameObservationV2 {
         input.targetBattler === undefined ? 1 : input.targetBattler,
       currentMove: 0,
       chosenMove: 0,
+      switchAllowed: input.switchAllowed ?? true,
       moves: input.moves ?? [
         {
           slot: 1,
@@ -66,6 +69,7 @@ function observation(input: BattleInput): GameObservationV2 {
           move: "TACKLE",
           currentPp: 35,
           maxPp: 35,
+          usable: true,
         },
       ],
       bag: input.bag ?? null,
@@ -143,6 +147,7 @@ class BattlePort {
   constructor(
     initial: GameObservationV2,
     afterPress: readonly GameObservationV2[],
+    private readonly itemApplicable = true,
   ) {
     this.current = initial;
     this.afterPress = [...afterPress];
@@ -169,6 +174,52 @@ class BattlePort {
   readMapTile(): null {
     return null;
   }
+
+  canUseBattleItemOnPartyMon(): boolean {
+    return this.itemApplicable;
+  }
+}
+
+function expectEngineConfirmedReviveTarget(): void {
+  const current = observation({
+    frame: 10,
+    inventory: [
+      {
+        itemId: 24,
+        item: "REVIVE",
+        quantity: 1,
+        pocket: "items",
+      },
+    ],
+    gameParty: [
+      {
+        speciesId: 258,
+        species: "Mudkip",
+        nickname: "Mudkip",
+        level: 5,
+        hp: 0,
+        maxHp: 20,
+        isEgg: false,
+      },
+    ],
+  });
+  const battle = current.battle;
+  if (battle === null) throw new Error("test observation has no battle");
+
+  expect(
+    requireBattleItemSelection(current, battle, 24, {
+      partySlot: 1,
+      canUseOnPartyMon: (itemId, partySlot) => itemId === 24 && partySlot === 1,
+    }),
+  ).toEqual({
+    inventoryItem: {
+      itemId: 24,
+      item: "REVIVE",
+      quantity: 1,
+      pocket: "items",
+    },
+    pocket: 0,
+  });
 }
 
 describe("GameBattleControl move actions", () => {
@@ -203,6 +254,30 @@ describe("GameBattleControl move actions", () => {
     ).rejects.toThrow(
       "requested move does not expose a selectable target in this battle",
     );
+    expect(port.presses).toEqual([]);
+  });
+
+  test("rejects a battle-limited move before sending input", async () => {
+    const port = new BattlePort(
+      observation({
+        frame: 10,
+        moves: [
+          {
+            slot: 1,
+            moveId: 33,
+            move: "TACKLE",
+            currentPp: 35,
+            maxPp: 35,
+            usable: false,
+          },
+        ],
+      }),
+      [],
+    );
+
+    await expect(
+      new GameBattleControl(port).move({ moveId: 33 }),
+    ).rejects.toThrow("requested move is currently disabled by battle rules");
     expect(port.presses).toEqual([]);
   });
 
@@ -305,6 +380,38 @@ describe("GameBattleControl move actions", () => {
 });
 
 describe("GameBattleControl party actions", () => {
+  test("rejects a trapped switch before sending input", async () => {
+    const gameParty: GameState["party"] = [
+      {
+        speciesId: 258,
+        species: "Mudkip",
+        nickname: "Mudkip",
+        level: 5,
+        hp: 20,
+        maxHp: 20,
+        isEgg: false,
+      },
+      {
+        speciesId: 252,
+        species: "Treecko",
+        nickname: "Treecko",
+        level: 5,
+        hp: 19,
+        maxHp: 19,
+        isEgg: false,
+      },
+    ];
+    const port = new BattlePort(
+      observation({ frame: 10, gameParty, switchAllowed: false }),
+      [],
+    );
+
+    await expect(new GameBattleControl(port).switch(2)).rejects.toThrow(
+      "the input battler is currently prevented from switching",
+    );
+    expect(port.presses).toEqual([]);
+  });
+
   test("confirms Shift after selecting a voluntary switch target", async () => {
     const gameParty: GameState["party"] = [
       {
@@ -430,6 +537,40 @@ describe("GameBattleControl item actions", () => {
     );
     expect(port.presses).toEqual([]);
   });
+
+  test("rejects medicine with no effect before opening the Bag", async () => {
+    for (const item of [
+      { itemId: 13, item: "POTION" },
+      { itemId: 14, item: "ANTIDOTE" },
+    ]) {
+      const port = new BattlePort(
+        observation({
+          frame: 10,
+          inventory: [
+            {
+              ...item,
+              quantity: 1,
+              pocket: "items",
+            },
+          ],
+        }),
+        [],
+        false,
+      );
+
+      await expect(
+        new GameBattleControl(port).item(item.itemId, 1),
+      ).rejects.toThrow(
+        "requested item has no effect on the requested party slot",
+      );
+      expect(port.presses).toEqual([]);
+    }
+  });
+
+  test(
+    "allows an engine-confirmed Revive target to be fainted",
+    expectEngineConfirmedReviveTarget,
+  );
 
   test("rejects a Poké Ball in a trainer battle before input", async () => {
     const port = new BattlePort(

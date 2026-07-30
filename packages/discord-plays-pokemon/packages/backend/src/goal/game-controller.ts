@@ -34,6 +34,7 @@ export type GameControlPort = {
   waitFrames: (frames: number) => Promise<void>;
   readMapTile: (x: number, y: number) => EngineMapTile | null;
   readMapTopology: () => EngineMapTopologyV1 | null;
+  canUseBattleItemOnPartyMon: (itemId: number, partySlot: number) => boolean;
 };
 
 type ControlSnapshot = Readonly<{

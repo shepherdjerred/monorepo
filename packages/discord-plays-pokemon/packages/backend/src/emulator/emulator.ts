@@ -24,11 +24,17 @@ import { logger } from "#src/logger.ts";
 import { createMemoryReader, type MemoryReader } from "./memory.ts";
 import { createGameSymbols, type GameSymbols } from "./symbols.ts";
 import {
+  bindEngineBattleEligibilityExports,
+  canUseEngineBattleItemOnPartyMon,
+  type EngineBattleEligibilityExports,
+} from "./engine-battle-eligibility.ts";
+import {
+  bindEngineMapTileExport,
   decodeEngineMapTile,
   decodeEngineObservation,
   ENGINE_OBSERVATION_SIZE,
   type EngineMapTile,
-  type EngineObservationV3,
+  type EngineObservationV4,
 } from "./engine-observation.ts";
 import {
   bindEngineMapTopologyExports,
@@ -46,6 +52,7 @@ type WasmExports = {
   runFrame: () => void;
   readObservation: () => number;
   readMapTile: (x: number, y: number) => number;
+  battleEligibility: EngineBattleEligibilityExports;
   mapTopology: EngineMapTopologyExports;
   checkpointSave: () => number;
 };
@@ -78,25 +85,6 @@ function requireNumberFunction(
   }
   return () => {
     const result: unknown = Reflect.apply(value, undefined, []);
-    if (typeof result !== "number" || !Number.isInteger(result)) {
-      throw new TypeError(`wasm export ${name} did not return an integer`);
-    }
-    return result;
-  };
-}
-
-function requireNumberFunction2(
-  exports: Bun.WebAssembly.Exports,
-  name: string,
-): (first: number, second: number) => number {
-  const value = exports[name];
-  if (typeof value !== "function") {
-    throw new TypeError(
-      `wasm module is missing required function export: ${name}`,
-    );
-  }
-  return (first, second) => {
-    const result: unknown = Reflect.apply(value, undefined, [first, second]);
     if (typeof result !== "number" || !Number.isInteger(result)) {
       throw new TypeError(`wasm export ${name} did not return an integer`);
     }
@@ -187,7 +175,8 @@ export class Emulator {
         instance.exports,
         "WasmReadObservation",
       ),
-      readMapTile: requireNumberFunction2(instance.exports, "WasmReadMapTile"),
+      readMapTile: bindEngineMapTileExport(instance.exports),
+      battleEligibility: bindEngineBattleEligibilityExports(instance.exports),
       mapTopology: bindEngineMapTopologyExports(instance.exports),
       checkpointSave: requireNumberFunction(
         instance.exports,
@@ -257,7 +246,7 @@ export class Emulator {
   }
 
   /** Versioned, engine-authored phase/readiness/spatial observation. */
-  engineObservation(): EngineObservationV3 {
+  engineObservation(): EngineObservationV4 {
     const exports = this.exports;
     if (exports === undefined) {
       throw new Error("emulator is not initialized");
@@ -279,6 +268,16 @@ export class Emulator {
       throw new TypeError("map tile coordinates must be integers");
     }
     return decodeEngineMapTile(x, y, exports.readMapTile(x, y));
+  }
+
+  engineCanUseBattleItemOnPartyMon(itemId: number, partySlot: number): boolean {
+    const exports = this.exports;
+    if (exports === undefined) throw new Error("emulator is not initialized");
+    return canUseEngineBattleItemOnPartyMon(
+      exports.battleEligibility,
+      itemId,
+      partySlot,
+    );
   }
 
   /** Read the current map's engine-authored connections and warp events. */

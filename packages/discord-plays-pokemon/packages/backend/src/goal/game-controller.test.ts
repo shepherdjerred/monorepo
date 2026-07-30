@@ -69,8 +69,13 @@ function observation(input: ObservationInput = {}): GameObservationV2 {
             menu: "action",
             actionCursor: input.battleActionCursor ?? 0,
             moveCursor: 0,
+            targetBattler: null,
             currentMove: 0,
             chosenMove: 0,
+            switchAllowed: true,
+            moves: [],
+            bag: null,
+            party: null,
             battlers: [],
           }
         : null,
@@ -185,6 +190,10 @@ class FakeControlPort implements GameControlPort {
 
   readMapTopology(): EngineMapTopologyV1 | null {
     return this.topology;
+  }
+
+  canUseBattleItemOnPartyMon(): boolean {
+    return true;
   }
 }
 

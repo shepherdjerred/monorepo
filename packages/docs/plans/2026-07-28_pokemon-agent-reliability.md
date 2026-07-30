@@ -613,3 +613,35 @@ deferred by explicit direction.
 - The rebuilt WASM asset is ignored and remains a local verification artifact;
   CI rebuilds it from the fingerprinted patch series.
 - Repeat paid model measurements remain explicitly deferred.
+
+## Session Log — 2026-07-29 (battle eligibility review fixes)
+
+### Done
+
+- Added an observation-v4 engine contract for per-move limitations and
+  voluntary-switch eligibility, matching Emerald's Disable, Torment, Taunt,
+  Imprison, Encore, Choice Band, trapping-status, Battle Arena, Shadow Tag,
+  Arena Trap, and Magnet Pull rules.
+- Added a pure WASM preflight query for party-targeted battle medicine and
+  wired move, switch, and item actions to reject invalid choices before sending
+  controller input.
+- Kept Revive-compatible fainted party targets eligible for the authoritative
+  item query while retaining alive-only validation for voluntary switches.
+- Rebuilt the real WASM, invoked the new export through the runtime binding,
+  and passed focused semantic-control tests plus backend/common package
+  typecheck and lint.
+
+### Remaining
+
+- Update the runtime Pokemon battle and world skills for the new semantic
+  observation fields in the next review cycle.
+- Complete replacement Buildkite and hosted-review verification for PRs #1847
+  and #1848.
+
+### Caveats
+
+- Party-targeted HP, revive, major-status, confusion, and infatuation medicine
+  use the engine-owned item-effect table. PP medicine remains rejected because
+  the semantic item action does not accept a move choice.
+- The existing Buildkite script-coverage failure is queued for a separate
+  remediation cycle and is not bypassed by these changes.

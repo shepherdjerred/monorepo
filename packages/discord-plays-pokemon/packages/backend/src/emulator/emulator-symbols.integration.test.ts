@@ -79,10 +79,11 @@ describeWasm("emulator game symbols (real wasm)", () => {
     expect(() => readGameSnapshot(reader, symbols)).not.toThrow();
     expect(() => readSpatialSnapshot(reader, symbols)).not.toThrow();
     const bootObservation = emulator.engineObservation();
-    expect(bootObservation.version).toBe(3);
+    expect(bootObservation.version).toBe(4);
     expect(bootObservation.size).toBe(144);
     expect(() => emulator.engineMapTile(0, 0)).not.toThrow();
     expect(emulator.engineMapTopology()).toBeNull();
+    expect(emulator.engineCanUseBattleItemOnPartyMon(13, 1)).toBe(false);
 
     // Run a few hundred frames and confirm reads stay safe as the game runs.
     emulator.start();

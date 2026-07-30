@@ -1,4 +1,4 @@
-export const ENGINE_OBSERVATION_VERSION = 3;
+export const ENGINE_OBSERVATION_VERSION = 4;
 export const ENGINE_OBSERVATION_SIZE = 144;
 
 export type CardinalDirection = "north" | "south" | "west" | "east";
@@ -34,8 +34,28 @@ export type EngineMapTile = Readonly<{
   passable: boolean;
 }>;
 
-export type EngineObservationV3 = Readonly<{
-  version: 3;
+export function bindEngineMapTileExport(
+  exports: Bun.WebAssembly.Exports,
+): (x: number, y: number) => number {
+  const value = exports["WasmReadMapTile"];
+  if (typeof value !== "function") {
+    throw new TypeError(
+      "wasm module is missing required function export: WasmReadMapTile",
+    );
+  }
+  return (x, y) => {
+    const result: unknown = Reflect.apply(value, undefined, [x, y]);
+    if (typeof result !== "number" || !Number.isInteger(result)) {
+      throw new TypeError(
+        "wasm export WasmReadMapTile did not return an integer",
+      );
+    }
+    return result;
+  };
+}
+
+export type EngineObservationV4 = Readonly<{
+  version: 4;
   size: 144;
   frame: number;
   phase: EnginePhase;
@@ -74,11 +94,13 @@ export type EngineObservationV3 = Readonly<{
     targetBattler: number | null;
     currentMove: number;
     chosenMove: number;
+    switchAllowed: boolean;
     moves: readonly Readonly<{
       slot: number;
       moveId: number;
       currentPp: number;
       maxPp: number;
+      usable: boolean;
     }>[];
     bag: Readonly<{
       state: "list" | "use-confirm";
@@ -222,7 +244,7 @@ export function decodeEngineMapTile(
 
 export function decodeEngineObservation(
   bytes: Uint8Array,
-): EngineObservationV3 {
+): EngineObservationV4 {
   if (bytes.byteLength < ENGINE_OBSERVATION_SIZE) {
     throw new RangeError(
       `engine observation is too short: ${String(bytes.byteLength)} bytes`,
@@ -279,6 +301,13 @@ export function decodeEngineObservation(
       `invalid battle party readiness: ${String(partyInputReady)}`,
     );
   }
+  const switchAllowed = view.getUint8(143);
+  if (switchAllowed !== 0 && switchAllowed !== 1) {
+    throw new RangeError(
+      `invalid battle switch eligibility: ${String(switchAllowed)}`,
+    );
+  }
+  const moveLimitations = view.getUint8(142);
   const battle = inBattle
     ? {
         typeFlags: view.getUint32(32, true),
@@ -294,6 +323,7 @@ export function decodeEngineObservation(
           view.getUint8(114) < battlersCount ? view.getUint8(114) : null,
         currentMove: view.getUint16(110, true),
         chosenMove: view.getUint16(112, true),
+        switchAllowed: switchAllowed === 1,
         moves: Array.from({ length: moveCount }, (_, slot) => {
           const offset = 116 + slot * 4;
           return {
@@ -301,6 +331,7 @@ export function decodeEngineObservation(
             moveId: view.getUint16(offset, true),
             currentPp: view.getUint8(offset + 2),
             maxPp: view.getUint8(offset + 3),
+            usable: (moveLimitations & (1 << slot)) === 0,
           };
         }),
         bag:

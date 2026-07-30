@@ -16,6 +16,7 @@ const battle = {
   targetBattler: 1,
   currentMove: 33,
   chosenMove: 0,
+  switchAllowed: true,
   moves: [
     {
       slot: 1,
@@ -23,6 +24,7 @@ const battle = {
       move: "TACKLE",
       currentPp: 35,
       maxPp: 35,
+      usable: true,
     },
   ],
   bag: null,
@@ -218,6 +220,7 @@ test("keeps semantic verification evidence compact by default", () => {
       targetBattler: 1,
       currentMove: 33,
       chosenMove: 0,
+      switchAllowed: true,
       moves: battle.moves,
       bag: null,
       party: null,
@@ -234,6 +237,7 @@ test("keeps semantic verification evidence compact by default", () => {
       targetBattler: 1,
       currentMove: 33,
       chosenMove: 0,
+      switchAllowed: true,
       moves: battle.moves,
       bag: null,
       party: null,

@@ -189,6 +189,7 @@ if (import.meta.main) {
     "WasmReadMapTopology",
     "WasmReadMapConnection",
     "WasmReadMapWarp",
+    "WasmCanUseBattleItemOnPartyMon",
     "WasmCheckpointSave",
   ];
   const patchSeriesComplete =

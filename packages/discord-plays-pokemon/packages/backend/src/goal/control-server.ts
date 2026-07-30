@@ -49,6 +49,8 @@ export function startGoalControlServer(
     },
     readMapTile: (x, y) => options.emulator.engineMapTile(x, y),
     readMapTopology: () => options.emulator.engineMapTopology(),
+    canUseBattleItemOnPartyMon: (itemId, partySlot) =>
+      options.emulator.engineCanUseBattleItemOnPartyMon(itemId, partySlot),
   });
   const context: GoalControlContext = {
     ...options,
