@@ -185,10 +185,11 @@
     },
     "//#compliance-check": {
       "inputs": [
+        "package.json",
         "scripts/compliance-check.ts",
         "scripts/package.json",
-        "packages/*/package.json",
-        "packages/*/packages/*/package.json",
+        "packages/**/package.json",
+        "!packages/**/node_modules/**",
         "packages/*/eslint.config.*",
         "packages/*/tsconfig.json"
       ]

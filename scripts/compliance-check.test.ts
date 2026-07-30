@@ -1,9 +1,40 @@
+import { Glob } from "bun";
 import { describe, expect, test } from "bun:test";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { z } from "zod";
 import { findComplianceErrors } from "./compliance-check.ts";
 import { isNoopScript } from "./migration-core.ts";
+
+const TurboConfigSchema = z
+  .object({
+    tasks: z
+      .object({
+        "//#compliance-check": z.object({ inputs: z.array(z.string()) }),
+      })
+      .loose(),
+  })
+  .loose();
+
+function collectTaskInputs(root: string, patterns: string[]): string[] {
+  const inputs = new Set<string>();
+  for (const pattern of patterns) {
+    const isExclusion = pattern.startsWith("!");
+    const glob = isExclusion ? pattern.slice(1) : pattern;
+    for (const file of new Glob(glob).scanSync({
+      cwd: root,
+      onlyFiles: true,
+    })) {
+      if (isExclusion) {
+        inputs.delete(file);
+      } else {
+        inputs.add(file);
+      }
+    }
+  }
+  return [...inputs].sort((left, right) => left.localeCompare(right));
+}
 
 async function writeRootManifest(
   root: string,
@@ -35,6 +66,42 @@ const compliantScripts = {
   lint: "eslint .",
   typecheck: "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
 };
+
+test("Turbo compliance inputs cover deeply nested workspace manifests", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "compliance-inputs-"));
+  try {
+    await writeRootManifest(root, [
+      "packages/homelab/src/cdk8s",
+      "packages/homelab/src/helm-types",
+    ]);
+    await writeWorkspacePackage(root, "packages/homelab/src/cdk8s", {});
+    await writeWorkspacePackage(root, "packages/homelab/src/helm-types", {});
+    await writeWorkspacePackage(
+      root,
+      "packages/homelab/node_modules/dependency",
+      {},
+    );
+    await Bun.write(`${root}/scripts/compliance-check.ts`, "");
+
+    const turboConfig = TurboConfigSchema.parse(
+      Bun.JSONC.parse(
+        await Bun.file(path.join(import.meta.dir, "..", "turbo.json")).text(),
+      ),
+    );
+
+    expect(
+      collectTaskInputs(root, turboConfig.tasks["//#compliance-check"].inputs),
+    ).toEqual([
+      "package.json",
+      "packages/homelab/src/cdk8s/package.json",
+      "packages/homelab/src/helm-types/package.json",
+      "scripts/compliance-check.ts",
+      "scripts/package.json",
+    ]);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
 
 describe("isNoopScript", () => {
   test.each([
