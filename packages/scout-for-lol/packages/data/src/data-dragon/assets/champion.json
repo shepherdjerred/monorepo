@@ -245,6 +245,306 @@
       "key": "427",
       "name": "Ivern"
     },
+    "Jade_Ahri": {
+      "id": "Jade_Ahri",
+      "key": "60103",
+      "name": "Ahri"
+    },
+    "Jade_Alistar": {
+      "id": "Jade_Alistar",
+      "key": "60012",
+      "name": "Alistar"
+    },
+    "Jade_Amumu": {
+      "id": "Jade_Amumu",
+      "key": "60032",
+      "name": "Amumu"
+    },
+    "Jade_Anivia": {
+      "id": "Jade_Anivia",
+      "key": "60034",
+      "name": "Anivia"
+    },
+    "Jade_Annie": {
+      "id": "Jade_Annie",
+      "key": "60001",
+      "name": "Annie"
+    },
+    "Jade_Ashe": {
+      "id": "Jade_Ashe",
+      "key": "60022",
+      "name": "Ashe"
+    },
+    "Jade_Blitzcrank": {
+      "id": "Jade_Blitzcrank",
+      "key": "60053",
+      "name": "Blitzcrank"
+    },
+    "Jade_Brand": {
+      "id": "Jade_Brand",
+      "key": "60063",
+      "name": "Brand"
+    },
+    "Jade_Chogath": {
+      "id": "Jade_Chogath",
+      "key": "60031",
+      "name": "Cho'Gath"
+    },
+    "Jade_Corki": {
+      "id": "Jade_Corki",
+      "key": "60042",
+      "name": "Corki"
+    },
+    "Jade_DrMundo": {
+      "id": "Jade_DrMundo",
+      "key": "60036",
+      "name": "Dr. Mundo"
+    },
+    "Jade_Evelynn": {
+      "id": "Jade_Evelynn",
+      "key": "60028",
+      "name": "Evelynn"
+    },
+    "Jade_Ezreal": {
+      "id": "Jade_Ezreal",
+      "key": "60081",
+      "name": "Ezreal"
+    },
+    "Jade_Fiddlesticks": {
+      "id": "Jade_Fiddlesticks",
+      "key": "60009",
+      "name": "Fiddlesticks"
+    },
+    "Jade_Gangplank": {
+      "id": "Jade_Gangplank",
+      "key": "60041",
+      "name": "Gangplank"
+    },
+    "Jade_Garen": {
+      "id": "Jade_Garen",
+      "key": "60086",
+      "name": "Garen"
+    },
+    "Jade_Gragas": {
+      "id": "Jade_Gragas",
+      "key": "60079",
+      "name": "Gragas"
+    },
+    "Jade_Heimerdinger": {
+      "id": "Jade_Heimerdinger",
+      "key": "60074",
+      "name": "Heimerdinger"
+    },
+    "Jade_Janna": {
+      "id": "Jade_Janna",
+      "key": "60040",
+      "name": "Janna"
+    },
+    "Jade_JarvanIV": {
+      "id": "Jade_JarvanIV",
+      "key": "60059",
+      "name": "Jarvan IV"
+    },
+    "Jade_Jax": {
+      "id": "Jade_Jax",
+      "key": "60024",
+      "name": "Jax"
+    },
+    "Jade_Karthus": {
+      "id": "Jade_Karthus",
+      "key": "60030",
+      "name": "Karthus"
+    },
+    "Jade_Kassadin": {
+      "id": "Jade_Kassadin",
+      "key": "60038",
+      "name": "Kassadin"
+    },
+    "Jade_Katarina": {
+      "id": "Jade_Katarina",
+      "key": "60055",
+      "name": "Katarina"
+    },
+    "Jade_Kayle": {
+      "id": "Jade_Kayle",
+      "key": "60010",
+      "name": "Kayle"
+    },
+    "Jade_KogMaw": {
+      "id": "Jade_KogMaw",
+      "key": "60096",
+      "name": "Kog'Maw"
+    },
+    "Jade_LeeSin": {
+      "id": "Jade_LeeSin",
+      "key": "60064",
+      "name": "Lee Sin"
+    },
+    "Jade_Leona": {
+      "id": "Jade_Leona",
+      "key": "60089",
+      "name": "Leona"
+    },
+    "Jade_Lulu": {
+      "id": "Jade_Lulu",
+      "key": "60117",
+      "name": "Lulu"
+    },
+    "Jade_Lux": {
+      "id": "Jade_Lux",
+      "key": "60099",
+      "name": "Lux"
+    },
+    "Jade_Malphite": {
+      "id": "Jade_Malphite",
+      "key": "60054",
+      "name": "Malphite"
+    },
+    "Jade_Malzahar": {
+      "id": "Jade_Malzahar",
+      "key": "60090",
+      "name": "Malzahar"
+    },
+    "Jade_MasterYi": {
+      "id": "Jade_MasterYi",
+      "key": "60011",
+      "name": "Master Yi"
+    },
+    "Jade_MissFortune": {
+      "id": "Jade_MissFortune",
+      "key": "60021",
+      "name": "Miss Fortune"
+    },
+    "Jade_Morgana": {
+      "id": "Jade_Morgana",
+      "key": "60025",
+      "name": "Morgana"
+    },
+    "Jade_Nasus": {
+      "id": "Jade_Nasus",
+      "key": "60075",
+      "name": "Nasus"
+    },
+    "Jade_Nidalee": {
+      "id": "Jade_Nidalee",
+      "key": "60076",
+      "name": "Nidalee"
+    },
+    "Jade_Nunu": {
+      "id": "Jade_Nunu",
+      "key": "60020",
+      "name": "Nunu & Willump"
+    },
+    "Jade_Olaf": {
+      "id": "Jade_Olaf",
+      "key": "60002",
+      "name": "Olaf"
+    },
+    "Jade_Pantheon": {
+      "id": "Jade_Pantheon",
+      "key": "60080",
+      "name": "Pantheon"
+    },
+    "Jade_Rammus": {
+      "id": "Jade_Rammus",
+      "key": "60033",
+      "name": "Rammus"
+    },
+    "Jade_Ryze": {
+      "id": "Jade_Ryze",
+      "key": "60013",
+      "name": "Ryze"
+    },
+    "Jade_Shaco": {
+      "id": "Jade_Shaco",
+      "key": "60035",
+      "name": "Shaco"
+    },
+    "Jade_Singed": {
+      "id": "Jade_Singed",
+      "key": "60027",
+      "name": "Singed"
+    },
+    "Jade_Sion": {
+      "id": "Jade_Sion",
+      "key": "60014",
+      "name": "Sion"
+    },
+    "Jade_Sivir": {
+      "id": "Jade_Sivir",
+      "key": "60015",
+      "name": "Sivir"
+    },
+    "Jade_Skarner": {
+      "id": "Jade_Skarner",
+      "key": "60072",
+      "name": "Skarner"
+    },
+    "Jade_Sona": {
+      "id": "Jade_Sona",
+      "key": "60037",
+      "name": "Sona"
+    },
+    "Jade_Soraka": {
+      "id": "Jade_Soraka",
+      "key": "60016",
+      "name": "Soraka"
+    },
+    "Jade_Taric": {
+      "id": "Jade_Taric",
+      "key": "60044",
+      "name": "Taric"
+    },
+    "Jade_Teemo": {
+      "id": "Jade_Teemo",
+      "key": "60017",
+      "name": "Teemo"
+    },
+    "Jade_Tristana": {
+      "id": "Jade_Tristana",
+      "key": "60018",
+      "name": "Tristana"
+    },
+    "Jade_Tryndamere": {
+      "id": "Jade_Tryndamere",
+      "key": "60023",
+      "name": "Tryndamere"
+    },
+    "Jade_TwistedFate": {
+      "id": "Jade_TwistedFate",
+      "key": "60004",
+      "name": "Twisted Fate"
+    },
+    "Jade_Twitch": {
+      "id": "Jade_Twitch",
+      "key": "60029",
+      "name": "Twitch"
+    },
+    "Jade_Vayne": {
+      "id": "Jade_Vayne",
+      "key": "60067",
+      "name": "Vayne"
+    },
+    "Jade_Veigar": {
+      "id": "Jade_Veigar",
+      "key": "60045",
+      "name": "Veigar"
+    },
+    "Jade_Warwick": {
+      "id": "Jade_Warwick",
+      "key": "60019",
+      "name": "Warwick"
+    },
+    "Jade_Wukong": {
+      "id": "Jade_Wukong",
+      "key": "60062",
+      "name": "Wukong"
+    },
+    "Jade_Zilean": {
+      "id": "Jade_Zilean",
+      "key": "60026",
+      "name": "Zilean"
+    },
     "Janna": {
       "id": "Janna",
       "key": "40",

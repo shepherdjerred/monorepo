@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Rakan": {
       "id": "Rakan",
@@ -10,7 +10,7 @@
       "title": "The Charmer",
       "image": {
         "full": "Rakan.png",
-        "sprite": "champion3.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 240,
         "y": 48,
@@ -589,10 +589,10 @@
           "rangeBurn": "850",
           "image": {
             "full": "RakanQ.png",
-            "sprite": "spell10.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 384,
-            "y": 144,
+            "x": 192,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -732,10 +732,10 @@
           "rangeBurn": "600",
           "image": {
             "full": "RakanW.png",
-            "sprite": "spell10.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 432,
-            "y": 144,
+            "x": 240,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -875,10 +875,10 @@
           "rangeBurn": "650",
           "image": {
             "full": "RakanE.png",
-            "sprite": "spell11.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 0,
-            "y": 0,
+            "x": 288,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -992,10 +992,10 @@
           "rangeBurn": "150",
           "image": {
             "full": "RakanR.png",
-            "sprite": "spell11.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 48,
-            "y": 0,
+            "x": 336,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1007,7 +1007,7 @@
         "description": "Rakan periodically gains a shield.",
         "image": {
           "full": "Rakan_P.png",
-          "sprite": "passive3.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 240,
           "y": 48,

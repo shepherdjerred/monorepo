@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Orianna": {
       "id": "Orianna",
@@ -10,7 +10,7 @@
       "title": "the Lady of Clockwork",
       "image": {
         "full": "Orianna.png",
-        "sprite": "champion3.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 384,
         "y": 0,
@@ -463,10 +463,10 @@
           "rangeBurn": "815",
           "image": {
             "full": "OrianaIzunaCommand.png",
-            "sprite": "spell10.png",
+            "sprite": "spell16.png",
             "group": "spell",
-            "x": 0,
-            "y": 48,
+            "x": 288,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -608,10 +608,10 @@
           "rangeBurn": "225",
           "image": {
             "full": "OrianaDissonanceCommand.png",
-            "sprite": "spell10.png",
+            "sprite": "spell16.png",
             "group": "spell",
-            "x": 48,
-            "y": 48,
+            "x": 336,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -753,10 +753,10 @@
           "rangeBurn": "1095",
           "image": {
             "full": "OrianaRedactCommand.png",
-            "sprite": "spell10.png",
+            "sprite": "spell16.png",
             "group": "spell",
-            "x": 96,
-            "y": 48,
+            "x": 384,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -868,10 +868,10 @@
           "rangeBurn": "410",
           "image": {
             "full": "OrianaDetonateCommand.png",
-            "sprite": "spell10.png",
+            "sprite": "spell16.png",
             "group": "spell",
-            "x": 144,
-            "y": 48,
+            "x": 432,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -883,7 +883,7 @@
         "description": "Orianna's Attacks deal additional magic damage. This damage increases the more Orianna Attacks the same target.",
         "image": {
           "full": "OriannaPassive.png",
-          "sprite": "passive3.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 384,
           "y": 0,

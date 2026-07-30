@@ -1,0 +1,767 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Lux": {
+      "id": "Jade_Lux",
+      "key": "60099",
+      "name": "Lux",
+      "title": "The Lady of Luminosity",
+      "image": {
+        "full": "Jade_Lux.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 384,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60099000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60099002",
+          "num": 2,
+          "name": "Spellthief Lux",
+          "chromas": false
+        },
+        {
+          "id": "60099017",
+          "num": 17,
+          "name": "Dark Cosmic Lux",
+          "chromas": false
+        },
+        {
+          "id": "60099018",
+          "num": 18,
+          "name": "Cosmic Lux",
+          "chromas": false
+        },
+        {
+          "id": "60099061",
+          "num": 61,
+          "name": "Faerie Court Lux",
+          "chromas": false
+        },
+        {
+          "id": "60099062",
+          "num": 62,
+          "name": "Faerie Court Lux (Ruby)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "60099063",
+          "num": 63,
+          "name": "Faerie Court Lux (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "60099064",
+          "num": 64,
+          "name": "Faerie Court Lux (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "60099065",
+          "num": 65,
+          "name": "Faerie Court Lux (Catseye)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "60099066",
+          "num": 66,
+          "name": "Faerie Court Lux (Emerald)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "60099067",
+          "num": 67,
+          "name": "Faerie Court Lux (Sapphire)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "60099068",
+          "num": 68,
+          "name": "Faerie Court Lux (Pearl)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "60099069",
+          "num": 69,
+          "name": "Faerie Court Lux (Turquoise)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "60099072",
+          "num": 72,
+          "name": "Panda Pal Lux",
+          "chromas": false
+        },
+        {
+          "id": "60099073",
+          "num": 73,
+          "name": "Panda Pal Lux (Ruby)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "60099074",
+          "num": 74,
+          "name": "Panda Pal Lux (Turquoise)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "60099075",
+          "num": 75,
+          "name": "Panda Pal Lux (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "60099076",
+          "num": 76,
+          "name": "Panda Pal Lux (Catseye)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "60099077",
+          "num": 77,
+          "name": "Panda Pal Lux (Amethyst)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "60099078",
+          "num": 78,
+          "name": "Panda Pal Lux (Sapphire)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "60099079",
+          "num": 79,
+          "name": "Panda Pal Lux (Pearl)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "60099080",
+          "num": 80,
+          "name": "Panda Pal Lux (Obsidian)",
+          "chromas": false,
+          "parentSkin": 72
+        }
+      ],
+      "lore": "- Light Binding's (Q) second target is half as affective<br>- Final Spark (R) is now German - Finales Funkeln",
+      "blurb": "- Light Binding's (Q) second target is half as affective<br>- Final Spark (R) is now German - Finales Funkeln",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Mage",
+        "Support"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 2,
+        "defense": 4,
+        "magic": 9,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 424,
+        "hpperlevel": 79,
+        "mp": 300,
+        "mpperlevel": 50,
+        "movespeed": 330,
+        "armor": 16,
+        "armorperlevel": 4,
+        "spellblock": 30,
+        "spellblockperlevel": 0,
+        "attackrange": 550,
+        "hpregen": 5.05,
+        "hpregenperlevel": 0.55,
+        "mpregen": 6.6,
+        "mpregenperlevel": 0.6,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 53.3,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 1.36,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "Jade_LuxLightBinding",
+          "name": "Light Binding",
+          "description": "Lux releases a sphere of light that binds and deals damage to up to two enemy units.",
+          "tooltip": "Fires a ball of light, <status>Rooting</status> the first enemy hit for 2 seconds and dealing <magicDamage>{{ totaldamagett }} magic damage</magicDamage>. The second enemy is dealt <magicDamage>{{ halftotaldamagett }}</magicDamage> and <status>Rooted</status> for 1 second.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Base Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            15,
+            14,
+            13,
+            12,
+            11
+          ],
+          "cooldownBurn": "15/14/13/12/11",
+          "cost": [
+            50,
+            60,
+            70,
+            80,
+            90
+          ],
+          "costBurn": "50/60/70/80/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              80,
+              120,
+              160,
+              200,
+              240
+            ],
+            [
+              50,
+              50,
+              50,
+              50,
+              50
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "80/120/160/200/240",
+            "50",
+            "2",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1175,
+            1175,
+            1175,
+            1175,
+            1175
+          ],
+          "rangeBurn": "1175",
+          "image": {
+            "full": "Jade_LuxLightBinding.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 288,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_LuxPrismaticWave",
+          "name": "Prismatic Barrier",
+          "description": "Lux throws her wand and bends the light around any friendly target it touches, protecting them from enemy damage.",
+          "tooltip": "Throws Lux's wand to a target location and back, <shield>shielding</shield> herself and all allied Champions it touches from <shield>{{ totalshieldtt }} damage</shield> for 3 seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Shield Amount",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ baseshieldamount }} -> {{ baseshieldamountNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            14,
+            13,
+            12,
+            11,
+            10
+          ],
+          "cooldownBurn": "14/13/12/11/10",
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              2,
+              4,
+              6,
+              8,
+              10
+            ],
+            [
+              40,
+              55,
+              70,
+              85,
+              100
+            ],
+            [
+              2.5,
+              2.5,
+              2.5,
+              2.5,
+              2.5
+            ],
+            [
+              100,
+              100,
+              100,
+              100,
+              100
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "2/4/6/8/10",
+            "40/55/70/85/100",
+            "2.5",
+            "100",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1150,
+            1150,
+            1150,
+            1150,
+            1150
+          ],
+          "rangeBurn": "1150",
+          "image": {
+            "full": "Jade_LuxPrismaticWave.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 336,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_LuxLightStrikeKugel",
+          "name": "Lucent Singularity",
+          "description": "Fires an anomaly of twisted light to an area, which slows nearby enemies. Lux can detonate it to damage enemies in the area of effect.",
+          "tooltip": "Create a zone that <status>Slows</status> enemies by {{ slowpercent }}%. After 5 seconds the zone detonates dealing <magicDamage>{{ totaldamagett }} magic damage</magicDamage>.<br /><br /><recast>Recast</recast> to detonate early.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Base Damage",
+              "Movement Slow",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ slowpercent }}% -> {{ slowpercentNL }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "cooldownBurn": "10",
+          "cost": [
+            70,
+            85,
+            100,
+            115,
+            130
+          ],
+          "costBurn": "70/85/100/115/130",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              25,
+              30,
+              35,
+              40,
+              45
+            ],
+            [
+              60,
+              105,
+              150,
+              215,
+              265
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              310,
+              310,
+              310,
+              310,
+              310
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "25/30/35/40/45",
+            "60/105/150/215/265",
+            "5",
+            "310",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "Jade_LuxLightStrikeKugel.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 384,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_LuxR",
+          "name": "Finales Funkeln",
+          "description": "After gathering energy, Lux fires a beam of light that deals damage to all targets in the area.  In addition, triggers Lux's passive ability and refreshes the Illumination debuff duration.",
+          "tooltip": "Channels a dazzling ray of light dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to all enemies in a line. <spellName>Finales Funkeln</spellName> ignites and refreshes <spellName>Illumination</spellName>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Base Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            80,
+            65,
+            50
+          ],
+          "cooldownBurn": "80/65/50",
+          "cost": [
+            100,
+            100,
+            100
+          ],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            3340,
+            3340,
+            3340
+          ],
+          "rangeBurn": "3340",
+          "image": {
+            "full": "Jade_LuxR.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 432,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Illumination",
+        "description": "Lux's damaging spells charge the target with energy for 6 seconds. Lux's next attack ignites the energy, dealing bonus magic damage (depending on Lux's level) to the target.",
+        "image": {
+          "full": "Jade_LuxIlluminatingFraulein.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 384,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

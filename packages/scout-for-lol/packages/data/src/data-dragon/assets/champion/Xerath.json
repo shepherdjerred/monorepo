@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Xerath": {
       "id": "Xerath",
@@ -10,7 +10,7 @@
       "title": "the Magus Ascendant",
       "image": {
         "full": "Xerath.png",
-        "sprite": "champion5.png",
+        "sprite": "champion7.png",
         "group": "champion",
         "x": 384,
         "y": 0,
@@ -420,10 +420,10 @@
           "rangeBurn": "750",
           "image": {
             "full": "XerathArcanopulseChargeUp.png",
-            "sprite": "spell16.png",
+            "sprite": "spell22.png",
             "group": "spell",
-            "x": 0,
-            "y": 48,
+            "x": 288,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -565,10 +565,10 @@
           "rangeBurn": "1000",
           "image": {
             "full": "XerathArcaneBarrage2.png",
-            "sprite": "spell16.png",
+            "sprite": "spell22.png",
             "group": "spell",
-            "x": 48,
-            "y": 48,
+            "x": 336,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -708,10 +708,10 @@
           "rangeBurn": "1050",
           "image": {
             "full": "XerathMageSpear.png",
-            "sprite": "spell16.png",
+            "sprite": "spell22.png",
             "group": "spell",
-            "x": 96,
-            "y": 48,
+            "x": 384,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -827,10 +827,10 @@
           "rangeBurn": "5000",
           "image": {
             "full": "XerathLocusOfPower2.png",
-            "sprite": "spell16.png",
+            "sprite": "spell22.png",
             "group": "spell",
-            "x": 144,
-            "y": 48,
+            "x": 432,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -842,7 +842,7 @@
         "description": "Xerath's basic attacks periodically restore Mana. Whenever Xerath kills a unit, this cooldown is reduced.",
         "image": {
           "full": "Xerath_Passive1.png",
-          "sprite": "passive5.png",
+          "sprite": "passive7.png",
           "group": "passive",
           "x": 384,
           "y": 0,

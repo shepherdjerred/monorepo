@@ -12,6 +12,26 @@ export function renderChangelogToHtml(content: ReactNode): string {
 
 export const changelog: ChangelogEntry[] = [
   buildChangelogEntry({
+    date: "2026 07 30",
+    banner: "Updated for League patch 26.15",
+    sections: [
+      {
+        title: "Game Data",
+        color: "indigo",
+        items: [
+          "Champion, item, summoner spell, and rune data refreshed for League patch 26.15",
+          "League Classic is live: a retro game mode with 60 champions on their classic-era kits and old items like Heart of Gold.",
+          "ARAM: Mayhem adds two new augments, Chain Reaction and Pat on the Back.",
+          "Season 3 opens with a Bel'Veth rework and a broad Arena/Mayhem augment rebalance.",
+        ],
+      },
+    ],
+    link: {
+      label: "Read Riot's full Patch 26.15 notes",
+      href: "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-15-notes",
+    },
+  }),
+  buildChangelogEntry({
     date: "2026 07 25",
     banner: "Ranked report redesign and delegated dashboard roles",
     sections: [

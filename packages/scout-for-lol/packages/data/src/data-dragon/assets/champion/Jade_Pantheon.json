@@ -1,0 +1,838 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Pantheon": {
+      "id": "Jade_Pantheon",
+      "key": "60080",
+      "name": "Pantheon",
+      "title": "The Artisan of War",
+      "image": {
+        "full": "Jade_Pantheon.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 384,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60080000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60080001",
+          "num": 1,
+          "name": "Myrmidon Pantheon",
+          "chromas": false
+        },
+        {
+          "id": "60080006",
+          "num": 6,
+          "name": "Dragonslayer Pantheon",
+          "chromas": false
+        },
+        {
+          "id": "60080008",
+          "num": 8,
+          "name": "Baker Pantheon",
+          "chromas": false
+        },
+        {
+          "id": "60080009",
+          "num": 9,
+          "name": "Dragonslayer Pantheon (Pearl)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "60080010",
+          "num": 10,
+          "name": "Dragonslayer Pantheon (Amethyst)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "60080011",
+          "num": 11,
+          "name": "Dragonslayer Pantheon (Sandstone)",
+          "chromas": true,
+          "parentSkin": 6
+        },
+        {
+          "id": "60080012",
+          "num": 12,
+          "name": "Dragonslayer Pantheon (Obsidian)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "60080013",
+          "num": 13,
+          "name": "Dragonslayer Pantheon (Catseye)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "60080014",
+          "num": 14,
+          "name": "Dragonslayer Pantheon (Emerald)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "60080015",
+          "num": 15,
+          "name": "Dragonslayer Pantheon (Ruby)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "60080025",
+          "num": 25,
+          "name": "Ruined Pantheon",
+          "chromas": false
+        },
+        {
+          "id": "60080026",
+          "num": 26,
+          "name": "Prestige Ascended Pantheon",
+          "chromas": false
+        },
+        {
+          "id": "60080027",
+          "num": 27,
+          "name": "Ruined Pantheon (Ruby)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60080028",
+          "num": 28,
+          "name": "Ruined Pantheon (Citrine)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60080029",
+          "num": 29,
+          "name": "Ruined Pantheon (Amethyst)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60080030",
+          "num": 30,
+          "name": "Ruined Pantheon (Sapphire)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60080031",
+          "num": 31,
+          "name": "Ruined Pantheon (Emerald)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60080032",
+          "num": 32,
+          "name": "Ruined Pantheon (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60080033",
+          "num": 33,
+          "name": "Ruined Pantheon (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60080034",
+          "num": 34,
+          "name": "Ruined Pantheon (Pearl)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60080035",
+          "num": 35,
+          "name": "Ruined Pantheon (Cursed)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60080038",
+          "num": 38,
+          "name": "Chosen of the Wolf Pantheon",
+          "chromas": false
+        },
+        {
+          "id": "60080039",
+          "num": 39,
+          "name": "Chosen of the Wolf Pantheon (Ruby)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "60080040",
+          "num": 40,
+          "name": "Chosen of the Wolf Pantheon (Emerald)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "60080041",
+          "num": 41,
+          "name": "Chosen of the Wolf Pantheon (Tanzanite)",
+          "chromas": true,
+          "parentSkin": 38
+        },
+        {
+          "id": "60080042",
+          "num": 42,
+          "name": "Chosen of the Wolf Pantheon (Sapphire)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "60080043",
+          "num": 43,
+          "name": "Chosen of the Wolf Pantheon (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "60080044",
+          "num": 44,
+          "name": "Chosen of the Wolf Pantheon (Obsidian)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "60080045",
+          "num": 45,
+          "name": "Chosen of the Wolf Pantheon (Turquoise)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "60080046",
+          "num": 46,
+          "name": "Chosen of the Wolf Pantheon (Citrine)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "60080301",
+          "num": 301,
+          "name": "Classic Pantheon",
+          "chromas": false
+        },
+        {
+          "id": "60080302",
+          "num": 302,
+          "name": "Classic Pantheon (Myrmidon)",
+          "chromas": false,
+          "parentSkin": 301
+        }
+      ],
+      "lore": "- Aegis Protection (P) blocks damage after casting multiple times<br>- Grand Skyfall (R) is a circle AoE<br>- Heartseeker Strike (E) - Pantheon stands still and strikes",
+      "blurb": "- Aegis Protection (P) blocks damage after casting multiple times<br>- Grand Skyfall (R) is a circle AoE<br>- Heartseeker Strike (E) - Pantheon stands still and strikes",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 9,
+        "defense": 4,
+        "magic": 3,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 520,
+        "hpperlevel": 87,
+        "mp": 244,
+        "mpperlevel": 34,
+        "movespeed": 355,
+        "armor": 25,
+        "armorperlevel": 3.9,
+        "spellblock": 31.25,
+        "spellblockperlevel": 1.25,
+        "attackrange": 150,
+        "hpregen": 7.4,
+        "hpregenperlevel": 0.65,
+        "mpregen": 7.05,
+        "mpregenperlevel": 0.45,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 53.6,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 2.95,
+        "attackspeed": 0.679
+      },
+      "spells": [
+        {
+          "id": "Jade_PantheonQ",
+          "name": "Spear Shot",
+          "description": "Pantheon hurls his spear at an opponent, dealing damage.",
+          "tooltip": "Pantheon hurls his spear at an opponent, dealing<physicalDamage> {{ totaldamage }} physical damage</physicalDamage>. {{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            4,
+            4,
+            4,
+            4,
+            4
+          ],
+          "cooldownBurn": "4",
+          "cost": [
+            45,
+            45,
+            45,
+            45,
+            45
+          ],
+          "costBurn": "45",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
+          "rangeBurn": "600",
+          "image": {
+            "full": "Jade_PantheonQ.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 288,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_PantheonW",
+          "name": "Aegis of Zeonia",
+          "description": "Pantheon leaps at an enemy and bashes the enemy with his shield, stunning them.  After finishing the attack, Pantheon readies himself to block the next attack.",
+          "tooltip": "Pantheon leaps at the target enemy and deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Stuns</status> them for {{ stunduration }} second(s). Pantheon also instantly refreshes his <spellName>Aegis Protection</spellName>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            13,
+            12,
+            11,
+            10,
+            9
+          ],
+          "cooldownBurn": "13/12/11/10/9",
+          "cost": [
+            55,
+            55,
+            55,
+            55,
+            55
+          ],
+          "costBurn": "55",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
+          "rangeBurn": "600",
+          "image": {
+            "full": "Jade_PantheonW.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 336,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_PantheonE",
+          "name": "Heartseeker Strike",
+          "description": "Pantheon focuses and unleashes 3 swift strikes to the area in front of him, dealing double damage to champions. Pantheon also becomes more aware of his enemy's vital spots, allowing him to always crit enemies below 15% health.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> <spellName>Spear Shot</spellName>, <spellName>Heartseeker Strike</spellName>, and Pantheon's basic attacks gain 100% critical strike chance against targets below {{ passivecritthreshold*100 }}% health.<br /><br /><spellActive>Active:</spellActive> Pantheon channels and deals {{ numberofstrikes }} swift strikes in front of him for <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> per strike (total <physicalDamage>{{ maximumdamagetooltip }}</physicalDamage>).{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
+          "cooldownBurn": "10/9/8/7/6",
+          "cost": [
+            45,
+            50,
+            55,
+            60,
+            65
+          ],
+          "costBurn": "45/50/55/60/65",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
+          "rangeBurn": "400",
+          "image": {
+            "full": "Jade_PantheonE.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 384,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_PantheonR",
+          "name": "Grand Skyfall",
+          "description": "Pantheon composes himself and then leaps into the air to a target, striking all enemy units in an area. Enemies closer to the impact point take more damage.",
+          "tooltip": "Pantheon gathers his strength and then leaps high into the air, crashing down at the target area a few seconds later. Deals up to <magicDamage>{{ maxdamage }} magic damage</magicDamage> to units at the center (down to <magicDamage>{{ mindamage }} magic damage</magicDamage> at the edge) and <status>Slows</status> them by {{ slowamount*100 }}% for {{ slowduration }} second.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            150,
+            135,
+            120
+          ],
+          "cooldownBurn": "150/135/120",
+          "cost": [
+            100,
+            100,
+            100
+          ],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            5500,
+            5500,
+            5500
+          ],
+          "rangeBurn": "5500",
+          "image": {
+            "full": "Jade_PantheonR.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 432,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Aegis Protection",
+        "description": "After attacking or casting spells 4 times, Pantheon will block the next incoming basic attack or turret attack.",
+        "image": {
+          "full": "Jade_Pantheon_Passive.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 384,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

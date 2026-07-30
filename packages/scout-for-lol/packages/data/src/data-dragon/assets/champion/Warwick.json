@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Warwick": {
       "id": "Warwick",
@@ -10,7 +10,7 @@
       "title": "the Uncaged Wrath of Zaun",
       "image": {
         "full": "Warwick.png",
-        "sprite": "champion5.png",
+        "sprite": "champion7.png",
         "group": "champion",
         "x": 288,
         "y": 0,
@@ -479,7 +479,7 @@
           "id": "WarwickQ",
           "name": "Jaws of the Beast",
           "description": "Warwick lunges forward and bites his target, dealing damage based on their maximum health and healing for damage dealt.",
-          "tooltip": "<tap>Tap:</tap> Warwick lunges forward and bites, dealing <magicDamage>{{ basebitedamage }} plus {{ targetpercenthpdamage }}% max Health magic damage</magicDamage> and <healing>healing for {{ e3 }}% of the damage dealt</healing>.<br /><br /><hold>Hold:</hold> Warwick lunges and clamps his jaws on the target, leaping behind them. While clamped, Warwick follows all movement of the target. After releasing his hold, he does the same damage and healing.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<tap>Tap:</tap> Warwick lunges forward and bites, dealing <magicDamage>{{ basebitedamage }} plus {{ targetpercenthpdamage }}% max Health magic damage</magicDamage> and <healing>healing for {{ lifestealpercent }}% of the damage dealt</healing>.<br /><br /><hold>Hold:</hold> Warwick lunges and clamps his jaws on the target, leaping behind them. While clamped, Warwick follows all movement of the target. After releasing his hold, he does the same damage and healing.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Healing",
@@ -488,7 +488,7 @@
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ e3 }}% -> {{ e3NL }}%",
+              "{{ lifestealpercent }}% -> {{ lifestealpercentNL }}%",
               "{{ targetpercenthpdamage }}% -> {{ targetpercenthpdamageNL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
@@ -522,53 +522,53 @@
               0
             ],
             [
-              100,
-              150,
-              200,
-              250,
-              300
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              25,
-              37.5,
-              50,
-              62.5,
-              75
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              150,
-              165,
-              180,
-              195,
-              210
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              450,
-              450,
-              450,
-              450,
-              450
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              200,
-              200,
-              200,
-              200,
-              200
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              300,
-              300,
-              300,
-              300,
-              300
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              425,
-              425,
-              425,
-              425,
-              425
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
               0,
@@ -588,13 +588,13 @@
           "effectBurn": [
             null,
             "0",
-            "100/150/200/250/300",
-            "25/37.5/50/62.5/75",
-            "150/165/180/195/210",
-            "450",
-            "200",
-            "300",
-            "425",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
             "0",
             "0"
           ],
@@ -611,10 +611,10 @@
           "rangeBurn": "365",
           "image": {
             "full": "WarwickQ.png",
-            "sprite": "spell16.png",
+            "sprite": "spell22.png",
             "group": "spell",
-            "x": 96,
-            "y": 0,
+            "x": 384,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -658,46 +658,46 @@
           "effect": [
             null,
             [
-              35,
-              42.5,
-              50,
-              57.5,
-              65
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              70,
-              80,
-              90,
-              100,
-              110
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              10,
-              15,
-              20,
-              25,
-              30
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              80,
-              90,
-              100,
-              110,
-              120
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              30,
-              30,
-              30,
-              30,
-              30
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              8,
-              8,
-              8,
-              8,
-              8
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
               0,
@@ -730,12 +730,12 @@
           ],
           "effectBurn": [
             null,
-            "35/42.5/50/57.5/65",
-            "70/80/90/100/110",
-            "10/15/20/25/30",
-            "80/90/100/110/120",
-            "30",
-            "8",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
             "0",
             "0",
             "0",
@@ -754,10 +754,10 @@
           "rangeBurn": "4000",
           "image": {
             "full": "WarwickW.png",
-            "sprite": "spell16.png",
+            "sprite": "spell22.png",
             "group": "spell",
-            "x": 144,
-            "y": 0,
+            "x": 432,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -767,14 +767,14 @@
           "id": "WarwickE",
           "name": "Primal Howl",
           "description": "Warwick gains damage reduction for 2.5 seconds. At the end, or if re-activated, he howls, causing nearby enemies to flee for 1 second.",
-          "tooltip": "Warwick gains {{ e1 }}% damage reduction for 2.5 seconds. After it ends, Warwick howls, <status>Fearing</status> nearby enemies for {{ e3 }} second. Warwick can <recast>Recast</recast> to end the Ability early.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Warwick gains {{ dramount }}% damage reduction for {{ drduration }} seconds. After it ends, Warwick howls, <status>Fearing</status> nearby enemies for {{ fearduration }} second. Warwick can <recast>Recast</recast> to end the Ability early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage Reduction",
               "Cooldown"
             ],
             "effect": [
-              "{{ e1 }}% -> {{ e1NL }}%",
+              "{{ dramount }}% -> {{ dramountNL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -799,46 +799,46 @@
           "effect": [
             null,
             [
-              35,
-              40,
-              45,
-              50,
-              55
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              2.75,
-              2.75,
-              2.75,
-              2.75,
-              2.75
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              1,
-              1,
-              1,
-              1,
-              1
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              1,
-              1,
-              1,
-              1,
-              1
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              800,
-              800,
-              800,
-              800,
-              800
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              400,
-              400,
-              400,
-              400,
-              400
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
               0,
@@ -871,12 +871,12 @@
           ],
           "effectBurn": [
             null,
-            "35/40/45/50/55",
-            "2.75",
-            "1",
-            "1",
-            "800",
-            "400",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
             "0",
             "0",
             "0",
@@ -895,10 +895,10 @@
           "rangeBurn": "375",
           "image": {
             "full": "WarwickE.png",
-            "sprite": "spell16.png",
+            "sprite": "spell22.png",
             "group": "spell",
-            "x": 192,
-            "y": 0,
+            "x": 0,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -1010,10 +1010,10 @@
           "rangeBurn": "25000",
           "image": {
             "full": "WarwickR.png",
-            "sprite": "spell16.png",
+            "sprite": "spell22.png",
             "group": "spell",
-            "x": 240,
-            "y": 0,
+            "x": 48,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -1025,7 +1025,7 @@
         "description": "Warwick's basic attacks deal bonus magic damage. If Warwick is below 50% health, he heals the same amount. If Warwick is below 25% health, this healing triples.",
         "image": {
           "full": "WarwickP.png",
-          "sprite": "passive5.png",
+          "sprite": "passive7.png",
           "group": "passive",
           "x": 288,
           "y": 0,

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Sivir": {
       "id": "Sivir",
@@ -10,7 +10,7 @@
       "title": "the Battle Mistress",
       "image": {
         "full": "Sivir.png",
-        "sprite": "champion4.png",
+        "sprite": "champion6.png",
         "group": "champion",
         "x": 240,
         "y": 0,
@@ -745,10 +745,10 @@
           "rangeBurn": "1200",
           "image": {
             "full": "SivirQ.png",
-            "sprite": "spell12.png",
+            "sprite": "spell19.png",
             "group": "spell",
-            "x": 384,
-            "y": 144,
+            "x": 192,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -886,10 +886,10 @@
           "rangeBurn": "20",
           "image": {
             "full": "SivirW.png",
-            "sprite": "spell12.png",
+            "sprite": "spell19.png",
             "group": "spell",
-            "x": 432,
-            "y": 144,
+            "x": 240,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1027,10 +1027,10 @@
           "rangeBurn": "20",
           "image": {
             "full": "SivirE.png",
-            "sprite": "spell13.png",
+            "sprite": "spell19.png",
             "group": "spell",
-            "x": 0,
-            "y": 0,
+            "x": 288,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1144,10 +1144,10 @@
           "rangeBurn": "1000",
           "image": {
             "full": "SivirR.png",
-            "sprite": "spell13.png",
+            "sprite": "spell19.png",
             "group": "spell",
-            "x": 48,
-            "y": 0,
+            "x": 336,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1159,7 +1159,7 @@
         "description": "Sivir gains a short burst of Move Speed when she attacks an enemy champion.",
         "image": {
           "full": "Sivir_Passive.png",
-          "sprite": "passive4.png",
+          "sprite": "passive6.png",
           "group": "passive",
           "x": 240,
           "y": 0,

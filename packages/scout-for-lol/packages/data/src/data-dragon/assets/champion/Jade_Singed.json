@@ -1,0 +1,709 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Singed": {
+      "id": "Jade_Singed",
+      "key": "60027",
+      "name": "Singed",
+      "title": "The Mad Chemist",
+      "image": {
+        "full": "Jade_Singed.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 96,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60027000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60027001",
+          "num": 1,
+          "name": "Riot Squad Singed",
+          "chromas": false
+        },
+        {
+          "id": "60027002",
+          "num": 2,
+          "name": "Hextech Singed",
+          "chromas": false
+        },
+        {
+          "id": "60027005",
+          "num": 5,
+          "name": "Augmented Singed",
+          "chromas": false
+        },
+        {
+          "id": "60027006",
+          "num": 6,
+          "name": "Snow Day Singed",
+          "chromas": false
+        },
+        {
+          "id": "60027009",
+          "num": 9,
+          "name": "Beekeeper Singed",
+          "chromas": false
+        },
+        {
+          "id": "60027019",
+          "num": 19,
+          "name": "Astronaut Singed",
+          "chromas": false
+        },
+        {
+          "id": "60027020",
+          "num": 20,
+          "name": "Astronaut Singed (Ruby)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "60027021",
+          "num": 21,
+          "name": "Astronaut Singed (Catseye)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "60027022",
+          "num": 22,
+          "name": "Astronaut Singed (Sapphire)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "60027023",
+          "num": 23,
+          "name": "Astronaut Singed (Emerald)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "60027024",
+          "num": 24,
+          "name": "Astronaut Singed (Obsidian)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "60027025",
+          "num": 25,
+          "name": "Astronaut Singed (Amethyst)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "60027026",
+          "num": 26,
+          "name": "Astronaut Singed (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "60027027",
+          "num": 27,
+          "name": "Astronaut Singed (Turquoise)",
+          "chromas": false,
+          "parentSkin": 19
+        }
+      ],
+      "lore": "- Empowered Bulwark (P) gains health with Mana",
+      "blurb": "- Empowered Bulwark (P) gains health with Mana",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Tank",
+        "Mage"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 4,
+        "defense": 8,
+        "magic": 7,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 487,
+        "hpperlevel": 82,
+        "mp": 260,
+        "mpperlevel": 45,
+        "movespeed": 345,
+        "armor": 25.5,
+        "armorperlevel": 3.5,
+        "spellblock": 30,
+        "spellblockperlevel": 0,
+        "attackrange": 125,
+        "hpregen": 7.65,
+        "hpregenperlevel": 0.55,
+        "mpregen": 7.15,
+        "mpregenperlevel": 0.55,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 60.025,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 1.81,
+        "attackspeed": 0.613
+      },
+      "spells": [
+        {
+          "id": "Jade_SingedPoisonTrail",
+          "name": "Poison Trail",
+          "description": "Leaves a trail of poison behind Singed, dealing damage to enemies caught in the path.",
+          "tooltip": "<toggle>Toggle: </toggle>Singed lays a poisonous trail that deals <magicDamage>{{ damagepersecond }} magic damage</magicDamage> per second.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ basedamagepersecond }} -> {{ basedamagepersecondNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "cooldownBurn": "0",
+          "cost": [
+            13,
+            13,
+            13,
+            13,
+            13
+          ],
+          "costBurn": "13",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
+          "rangeBurn": "20",
+          "image": {
+            "full": "Jade_SingedPoisonTrail.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 96,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_SingedMegaAdhesive",
+          "name": "Mega Adhesive",
+          "description": "Throws a vial of mega adhesive on the ground, slowing enemies who walk on it.",
+          "tooltip": "Leaves a sticky area on the ground for 5 seconds, <status>Slowing</status> enemies in the area by {{ slowpercent }}% (lasts 1 second after leaving).{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Slow",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ slowpercent }}% -> {{ slowpercentNL }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            14,
+            14,
+            14,
+            14,
+            14
+          ],
+          "cooldownBurn": "14",
+          "cost": [
+            70,
+            80,
+            90,
+            100,
+            110
+          ],
+          "costBurn": "70/80/90/100/110",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "Jade_SingedMegaAdhesive.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 144,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_SingedFling",
+          "name": "Fling",
+          "description": "Damages target enemy unit and flings them into the air behind Singed.",
+          "tooltip": "Singed flings an enemy over his shoulder, dealing <magicDamage>{{ damage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "@AbilityResourceName@ Cost",
+              "Damage"
+            ],
+            "effect": [
+              "{{ cost }} -> {{ costNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "cooldownBurn": "10",
+          "cost": [
+            100,
+            110,
+            120,
+            130,
+            140
+          ],
+          "costBurn": "100/110/120/130/140",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              80,
+              125,
+              170,
+              215,
+              260
+            ],
+            [
+              1,
+              1.25,
+              1.5,
+              1.75,
+              2
+            ],
+            [
+              6,
+              6.5,
+              7,
+              7.5,
+              8
+            ],
+            [
+              420,
+              420,
+              420,
+              420,
+              420
+            ],
+            [
+              300,
+              300,
+              300,
+              300,
+              300
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "80/125/170/215/260",
+            "1/1.25/1.5/1.75/2",
+            "6/6.5/7/7.5/8",
+            "420",
+            "300",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            125,
+            125,
+            125,
+            125,
+            125
+          ],
+          "rangeBurn": "125",
+          "image": {
+            "full": "Jade_SingedFling.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 192,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_SingedInsanityPotion",
+          "name": "Insanity Potion",
+          "description": "Singed drinks a potent brew of chemicals, granting him increased combat stats.",
+          "tooltip": "Singed drinks a potent brew of chemicals, granting him <magicDamage>{{ statamount }} Ability Power</magicDamage>, <scaleArmor>Armor</scaleArmor>, <scaleMR>Magic Resist</scaleMR>, <speed>Movement Speed</speed>, <healing>Health Regeneration</healing>, and <scaleMana>Mana Regeneration</scaleMana> for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Bonus Stats"
+            ],
+            "effect": [
+              "{{ statamount }} -> {{ statamountNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            100,
+            100,
+            100
+          ],
+          "cooldownBurn": "100",
+          "cost": [
+            150,
+            150,
+            150
+          ],
+          "costBurn": "150",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            20,
+            20,
+            20
+          ],
+          "rangeBurn": "20",
+          "image": {
+            "full": "Jade_SingedInsanityPotion.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 240,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Empowered Bulwark",
+        "description": "Increases Singed's <scaleHealth>Health</scaleHealth> by 25 for every 100 Mana he has.",
+        "image": {
+          "full": "Jade_Singed_Passive.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 96,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

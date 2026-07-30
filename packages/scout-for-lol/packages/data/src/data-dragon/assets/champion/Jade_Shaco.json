@@ -1,0 +1,761 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Shaco": {
+      "id": "Jade_Shaco",
+      "key": "60035",
+      "name": "Shaco",
+      "title": "The Demon Jester",
+      "image": {
+        "full": "Jade_Shaco.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 48,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60035000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60035001",
+          "num": 1,
+          "name": "Mad Hatter Shaco",
+          "chromas": false
+        },
+        {
+          "id": "60035006",
+          "num": 6,
+          "name": "Masked Shaco",
+          "chromas": false
+        },
+        {
+          "id": "60035043",
+          "num": 43,
+          "name": "Soul Fighter Shaco",
+          "chromas": false
+        },
+        {
+          "id": "60035044",
+          "num": 44,
+          "name": "Prestige Soul Fighter Shaco",
+          "chromas": false
+        },
+        {
+          "id": "60035045",
+          "num": 45,
+          "name": "Soul Fighter Shaco (Ruby)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60035046",
+          "num": 46,
+          "name": "Soul Fighter Shaco (Emerald)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60035047",
+          "num": 47,
+          "name": "Soul Fighter Shaco (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60035048",
+          "num": 48,
+          "name": "Soul Fighter Shaco (Turquoise)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60035049",
+          "num": 49,
+          "name": "Soul Fighter Shaco (Catseye)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60035050",
+          "num": 50,
+          "name": "Soul Fighter Shaco (Sapphire)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60035051",
+          "num": 51,
+          "name": "Soul Fighter Shaco (Amethyst)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60035052",
+          "num": 52,
+          "name": "Soul Fighter Shaco (Obsidian)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60035053",
+          "num": 53,
+          "name": "Soul Fighter Shaco (Limitless)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60035064",
+          "num": 64,
+          "name": "Cat-in-the-Box Shaco",
+          "chromas": false
+        },
+        {
+          "id": "60035065",
+          "num": 65,
+          "name": "Cat-in-the-Box Shaco (Ruby)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "60035066",
+          "num": 66,
+          "name": "Cat-in-the-Box Shaco (Emerald)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "60035067",
+          "num": 67,
+          "name": "Cat-in-the-Box Shaco (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "60035068",
+          "num": 68,
+          "name": "Cat-in-the-Box Shaco (Catseye)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "60035069",
+          "num": 69,
+          "name": "Cat-in-the-Box Shaco (Pearl)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "60035070",
+          "num": 70,
+          "name": "Cat-in-the-Box Shaco (Obsidian)",
+          "chromas": false,
+          "parentSkin": 64
+        }
+      ],
+      "lore": "- Hallucinate (R) clone explodes dealing more damage but doesn't spawn boxes<br>- Jack in the box (W) can be placed closer together",
+      "blurb": "- Hallucinate (R) clone explodes dealing more damage but doesn't spawn boxes<br>- Jack in the box (W) can be placed closer together",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Assassin"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 8,
+        "defense": 4,
+        "magic": 6,
+        "difficulty": 9
+      },
+      "stats": {
+        "hp": 525,
+        "hpperlevel": 84,
+        "mp": 270,
+        "mpperlevel": 40,
+        "movespeed": 350,
+        "armor": 22.5,
+        "armorperlevel": 3.5,
+        "spellblock": 31.25,
+        "spellblockperlevel": 1.25,
+        "attackrange": 125,
+        "hpregen": 8,
+        "hpregenperlevel": 0.55,
+        "mpregen": 6.85,
+        "mpregenperlevel": 0.45,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 55.2,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 3,
+        "attackspeed": 0.694
+      },
+      "spells": [
+        {
+          "id": "Jade_ShacoDeceive",
+          "name": "Deceive",
+          "description": "Shaco becomes invisible and teleports to target location. His next attack is guaranteed to critically strike.",
+          "tooltip": "Shaco teleports nearby and becomes <keywordStealth>Invisible</keywordStealth> for 3.5 seconds.<br /><br />His next basic attack within the next {{ enhancedattackduration }} seconds will critically strike for {{ modifiedqcritdamagetooltip }} damage.<br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Critical Strike Damage",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ critdamagebonusleveluptooltip }}% -> {{ critdamagebonusleveluptooltipNL }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
+          "cooldownBurn": "11",
+          "cost": [
+            90,
+            80,
+            70,
+            60,
+            50
+          ],
+          "costBurn": "90/80/70/60/50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
+          "rangeBurn": "400",
+          "image": {
+            "full": "Jade_ShacoDeceive.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 384,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_ShacoJackInTheBox",
+          "name": "Jack In The Box",
+          "description": "Shaco creates an animated Jack-in-the-Box at target location, which will wait, invisible, to Fear nearby units and attack them when some come nearby.",
+          "tooltip": "Shaco creates a trap that becomes <keywordStealth>Invisible</keywordStealth> after {{ stealthtimer }} seconds and lasts for {{ trapduration }} seconds. It activates when an enemy comes near <status>Fearing</status> nearby enemies for {{ fearduration }} seconds.<br /><br />Once activated, the trap fires at nearby enemies for {{ traptriggeredlifetime }} seconds, dealing <magicDamage>{{ boxtotaldamage_jade }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Fear Duration",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ boxbasedamage_jade }} -> {{ boxbasedamage_jadeNL }}",
+              "{{ fearduration }} -> {{ feardurationNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            16,
+            16,
+            16,
+            16,
+            16
+          ],
+          "cooldownBurn": "16",
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              35,
+              50,
+              65,
+              80,
+              95
+            ],
+            [
+              200,
+              300,
+              400,
+              500,
+              600
+            ],
+            [
+              0.5,
+              0.75,
+              1,
+              1.25,
+              1.5
+            ],
+            [
+              40,
+              40,
+              40,
+              40,
+              40
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "35/50/65/80/95",
+            "200/300/400/500/600",
+            "0.5/0.75/1/1.25/1.5",
+            "40",
+            "2",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            425,
+            425,
+            425,
+            425,
+            425
+          ],
+          "rangeBurn": "425",
+          "image": {
+            "full": "Jade_ShacoJackInTheBox.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 432,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_ShacoTwoShivPoison",
+          "name": "Two-Shiv Poison",
+          "description": "Shaco's Shivs passively poison targets on hit, slowing them and applying a miss chance to minions. He can throw his Shivs to deal damage and poison the target.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> While this Ability is off Cooldown, Shaco's Attacks <status>Slow</status> the target by {{ slowamount*-100 }}% for {{ slowdurationpassive }} seconds. Also reduces minions' chance to hit by {{ misschance*100 }}% for {{ slowdurationpassive }} seconds.<br /><br /><spellActive>Active:</spellActive> Shaco throws a shiv, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to target enemy and <status>Slowing</status> by {{ slowamount*-100 }}% for {{ slowdurationactive }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Shiv Damage",
+              "Slow",
+              "Miss Chance",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowamount*-100.000000 }}% -> {{ slowamountnl*-100.000000 }}%",
+              "{{ misschance*100.000000 }}% -> {{ misschancenl*100.000000 }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
+          "cooldownBurn": "8",
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            625,
+            625,
+            625,
+            625,
+            625
+          ],
+          "rangeBurn": "625",
+          "image": {
+            "full": "Jade_ShacoTwoShivPoison.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 0,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_ShacoHallucinateFull",
+          "name": "Hallucinate",
+          "description": "Shaco creates an illusion of himself near him, which can attack nearby enemies. Upon death, it explodes, dealing damage to nearby enemies.",
+          "tooltip": "Shaco vanishes briefly and reappears with a clone that lasts up to {{ clonelifetime }} seconds. The clone deals {{ cloneaadamagepercent*100 }}% of Shaco's damage and receives {{ jade_shacodamagetakentooltip*100 }}% increased damage.<br /><br />On death, the clone detonates, dealing <magicDamage>{{ explosiontotaldamage }} magic damage</magicDamage> to nearby enemies.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "On Death Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ explosionbasedamage }} -> {{ explosionbasedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            100,
+            90,
+            80
+          ],
+          "cooldownBurn": "100/90/80",
+          "cost": [
+            100,
+            100,
+            100
+          ],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              6,
+              6,
+              6
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "6",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            200,
+            200,
+            200
+          ],
+          "rangeBurn": "200",
+          "image": {
+            "full": "Jade_ShacoHallucinateFull.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 48,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Backstab",
+        "description": "Shaco deals 20% bonus damage when striking a unit from behind.",
+        "image": {
+          "full": "Jester_CarefulStrikes.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 48,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

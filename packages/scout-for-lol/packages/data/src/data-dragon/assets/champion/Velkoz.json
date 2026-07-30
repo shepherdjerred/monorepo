@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Velkoz": {
       "id": "Velkoz",
@@ -10,7 +10,7 @@
       "title": "the Eye of the Void",
       "image": {
         "full": "Velkoz.png",
-        "sprite": "champion4.png",
+        "sprite": "champion6.png",
         "group": "champion",
         "x": 432,
         "y": 96,
@@ -443,10 +443,10 @@
           "rangeBurn": "1050",
           "image": {
             "full": "VelkozQ.png",
-            "sprite": "spell15.png",
+            "sprite": "spell21.png",
             "group": "spell",
-            "x": 192,
-            "y": 48,
+            "x": 0,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -588,10 +588,10 @@
           "rangeBurn": "1050",
           "image": {
             "full": "VelkozW.png",
-            "sprite": "spell15.png",
+            "sprite": "spell21.png",
             "group": "spell",
-            "x": 240,
-            "y": 48,
+            "x": 48,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -731,10 +731,10 @@
           "rangeBurn": "810",
           "image": {
             "full": "VelkozE.png",
-            "sprite": "spell15.png",
+            "sprite": "spell21.png",
             "group": "spell",
-            "x": 288,
-            "y": 48,
+            "x": 96,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -846,10 +846,10 @@
           "rangeBurn": "1575",
           "image": {
             "full": "VelkozR.png",
-            "sprite": "spell15.png",
+            "sprite": "spell21.png",
             "group": "spell",
-            "x": 336,
-            "y": 48,
+            "x": 144,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -861,7 +861,7 @@
         "description": "Vel'Koz's abilities apply <keywordName>Organic Deconstruction</keywordName> to enemies on hit. If 3 stacks are accumulated, the enemy will take a burst of true damage.",
         "image": {
           "full": "VelKoz_Passive.png",
-          "sprite": "passive4.png",
+          "sprite": "passive6.png",
           "group": "passive",
           "x": 432,
           "y": 96,

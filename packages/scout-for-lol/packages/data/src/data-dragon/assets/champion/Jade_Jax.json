@@ -1,0 +1,712 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Jax": {
+      "id": "Jade_Jax",
+      "key": "60024",
+      "name": "Jax",
+      "title": "Grandmaster at Arms",
+      "image": {
+        "full": "Jade_Jax.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 432,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60024000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60024002",
+          "num": 2,
+          "name": "Vandal Jax",
+          "chromas": false
+        },
+        {
+          "id": "60024003",
+          "num": 3,
+          "name": "Angler Jax",
+          "chromas": false
+        },
+        {
+          "id": "60024004",
+          "num": 4,
+          "name": "PAX Jax",
+          "chromas": false
+        },
+        {
+          "id": "60024013",
+          "num": 13,
+          "name": "God Staff Jax",
+          "chromas": false
+        },
+        {
+          "id": "60024014",
+          "num": 14,
+          "name": "Mecha Kingdoms Jax",
+          "chromas": false
+        },
+        {
+          "id": "60024015",
+          "num": 15,
+          "name": "Mecha Kingdoms Jax (Ruby)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60024016",
+          "num": 16,
+          "name": "Mecha Kingdoms Jax (Peridot)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60024017",
+          "num": 17,
+          "name": "Mecha Kingdoms Jax (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60024018",
+          "num": 18,
+          "name": "Mecha Kingdoms Jax (Peacekeeper)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60024019",
+          "num": 19,
+          "name": "Mecha Kingdoms Jax (Pearl)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60024032",
+          "num": 32,
+          "name": "Neo PAX Jax",
+          "chromas": false
+        },
+        {
+          "id": "60024042",
+          "num": 42,
+          "name": "Magma Chamber Jax",
+          "chromas": false
+        },
+        {
+          "id": "60024301",
+          "num": 301,
+          "name": "Classic Jax",
+          "chromas": false
+        },
+        {
+          "id": "60024302",
+          "num": 302,
+          "name": "Classic Jax (Vandal)",
+          "chromas": true,
+          "parentSkin": 301
+        }
+      ],
+      "lore": "- Grandmaster's Might (R) grants stacking attack speed per strike<br>- Equipment Mastery (P) grants health for power",
+      "blurb": "- Grandmaster's Might (R) grants stacking attack speed per strike<br>- Equipment Mastery (P) grants health for power",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Fighter"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 7,
+        "defense": 5,
+        "magic": 7,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 506,
+        "hpperlevel": 83,
+        "mp": 265,
+        "mpperlevel": 35,
+        "movespeed": 350,
+        "armor": 25.5,
+        "armorperlevel": 3.2,
+        "spellblock": 31.25,
+        "spellblockperlevel": 1.25,
+        "attackrange": 125,
+        "hpregen": 8,
+        "hpregenperlevel": 0.55,
+        "mpregen": 7.1,
+        "mpregenperlevel": 0.7,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 59.675,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 3.4,
+        "attackspeed": 0.638
+      },
+      "spells": [
+        {
+          "id": "Jade_JaxQ",
+          "name": "Leap Strike",
+          "description": "Jax leaps and strikes.",
+          "tooltip": "Jax leaps to a target unit, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> if it is an enemy.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            17,
+            14,
+            11,
+            8,
+            5
+          ],
+          "cooldownBurn": "17/14/11/8/5",
+          "cost": [
+            65,
+            65,
+            65,
+            65,
+            65
+          ],
+          "costBurn": "65",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
+          "rangeBurn": "700",
+          "image": {
+            "full": "Jade_JaxQ.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 0,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_JaxW",
+          "name": "Empower",
+          "description": "Jax's next attack or Leap Strike deals bonus damage and damages nearby enemies.",
+          "tooltip": "Jax charges his weapon with energy, causing his next basic attack or Leap Strike to deal an additional <magicDamage>{{ totaldamage }} magic damage</magicDamage> to his target and nearby enemies.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            7,
+            6,
+            5,
+            4,
+            3
+          ],
+          "cooldownBurn": "7/6/5/4/3",
+          "cost": [
+            35,
+            35,
+            35,
+            35,
+            35
+          ],
+          "costBurn": "35",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
+          "rangeBurn": "300",
+          "image": {
+            "full": "Jade_JaxW.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 48,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_JaxE",
+          "name": "Counter Strike",
+          "description": "Jax enters a defensive stance, dodging all incoming basic attacks and taking less damage from area of effect abilities. Then he stuns surrounding enemies and damages them.",
+          "tooltip": "Jax enters a defensive stance for up to {{ dodgeduration }} seconds, dodging incoming Attacks and taking {{ aoedamagereduction }}% less damage from area of effect Abilities. This Ability automatically <recast>Recasts</recast> at the end of the duration.<br /><br /><recast>Recast</recast>: Jax deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Stuns</status> nearby enemies for {{ stunduration }} second. <br /><br />The damage is increased by {{ percentincreasedperdodge*100 }}% per Attack dodged, up to a maximum of <physicalDamage>{{ maxdamage }}</physicalDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            18,
+            16,
+            14,
+            12,
+            10
+          ],
+          "cooldownBurn": "18/16/14/12/10",
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
+          "costBurn": "70/75/80/85/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
+          "rangeBurn": "300",
+          "image": {
+            "full": "Jade_JaxE.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 96,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_JaxR",
+          "name": "Grandmaster's Might",
+          "description": "Jax gains attack speed when he strikes. Every third consecutive attack deals bonus damage.",
+          "tooltip": "<spellPassive>Passive</spellPassive>: Jax gains <attackSpeed>{{ attackspeedperstack*100 }}% attack speed</attackSpeed> every strike, stacking up to {{ maxstacks }} times. Every third consecutive strike deals an additional <magicDamage>{{ onhitdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Attack Speed",
+              "Passive Damage"
+            ],
+            "effect": [
+              "{{ attackspeedperstack*100.000000 }}% -> {{ attackspeedperstacknl*100.000000 }}%",
+              "{{ passivebasedamage }} -> {{ passivebasedamageNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            0,
+            0,
+            0
+          ],
+          "cooldownBurn": "0",
+          "cost": [
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": "Passive",
+          "maxammo": "-1",
+          "range": [
+            400,
+            400,
+            400
+          ],
+          "rangeBurn": "400",
+          "image": {
+            "full": "Jade_JaxR.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 144,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "Passive"
+        }
+      ],
+      "passive": {
+        "name": "Equipment Mastery",
+        "description": "Jax's gains bonus Health based on his bonus Attack Damage and Ability Power from items.",
+        "image": {
+          "full": "Armsmaster_MasterOfArms.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 432,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

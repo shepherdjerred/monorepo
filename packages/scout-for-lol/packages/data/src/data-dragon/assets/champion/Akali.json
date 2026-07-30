@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Akali": {
       "id": "Akali",
@@ -880,10 +880,10 @@
           "rangeBurn": "550",
           "image": {
             "full": "AkaliQ.png",
-            "sprite": "spell0.png",
+            "sprite": "spell1.png",
             "group": "spell",
-            "x": 288,
-            "y": 96,
+            "x": 96,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1023,10 +1023,10 @@
           "rangeBurn": "350",
           "image": {
             "full": "AkaliW.png",
-            "sprite": "spell0.png",
+            "sprite": "spell1.png",
             "group": "spell",
-            "x": 336,
-            "y": 96,
+            "x": 144,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1164,10 +1164,10 @@
           "rangeBurn": "825",
           "image": {
             "full": "AkaliE.png",
-            "sprite": "spell0.png",
+            "sprite": "spell1.png",
             "group": "spell",
-            "x": 384,
-            "y": 96,
+            "x": 192,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1283,10 +1283,10 @@
           "rangeBurn": "675",
           "image": {
             "full": "AkaliR.png",
-            "sprite": "spell0.png",
+            "sprite": "spell1.png",
             "group": "spell",
-            "x": 432,
-            "y": 96,
+            "x": 240,
+            "y": 0,
             "w": 48,
             "h": 48
           },

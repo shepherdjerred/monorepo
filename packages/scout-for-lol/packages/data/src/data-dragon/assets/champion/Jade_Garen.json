@@ -1,0 +1,746 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Garen": {
+      "id": "Jade_Garen",
+      "key": "60086",
+      "name": "Garen",
+      "title": "The Might of Deamcia",
+      "image": {
+        "full": "Jade_Garen.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 192,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60086000",
+          "num": 0,
+          "name": "default",
+          "chromas": true
+        },
+        {
+          "id": "60086005",
+          "num": 5,
+          "name": "Rugged Garen",
+          "chromas": false
+        },
+        {
+          "id": "60086007",
+          "num": 7,
+          "name": "Garen Noble Garnet",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
+          "id": "60086008",
+          "num": 8,
+          "name": "Garen Noble Plum",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
+          "id": "60086009",
+          "num": 9,
+          "name": "Garen Noble Ivory",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
+          "id": "60086013",
+          "num": 13,
+          "name": "God-King Garen",
+          "chromas": false
+        },
+        {
+          "id": "60086014",
+          "num": 14,
+          "name": "Demacia Vice Garen",
+          "chromas": false
+        },
+        {
+          "id": "60086015",
+          "num": 15,
+          "name": "Demacia Vice Garen (Ruby)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60086016",
+          "num": 16,
+          "name": "Demacia Vice Garen (Pearl)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60086017",
+          "num": 17,
+          "name": "Demacia Vice Garen (Obsidian)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60086018",
+          "num": 18,
+          "name": "Demacia Vice Garen (Sapphire)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60086019",
+          "num": 19,
+          "name": "Demacia Vice Garen (Catseye)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60086020",
+          "num": 20,
+          "name": "Demacia Vice Garen (Amethyst)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60086021",
+          "num": 21,
+          "name": "Demacia Vice Garen (Neon Noir)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60086022",
+          "num": 22,
+          "name": "Mecha Kingdoms Garen",
+          "chromas": true
+        },
+        {
+          "id": "60086023",
+          "num": 23,
+          "name": "Prestige Mecha Kingdoms Garen",
+          "chromas": false
+        },
+        {
+          "id": "60086044",
+          "num": 44,
+          "name": "Fallen God-King Garen",
+          "chromas": false
+        },
+        {
+          "id": "60086301",
+          "num": 301,
+          "name": "Classic Garen",
+          "chromas": false
+        },
+        {
+          "id": "60086302",
+          "num": 302,
+          "name": "Classic Garen (Desert Trooper)",
+          "chromas": false,
+          "parentSkin": 301
+        }
+      ],
+      "lore": "- Demacian Justice (R) does magic damage",
+      "blurb": "- Demacian Justice (R) does magic damage",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
+      "partype": "None",
+      "info": {
+        "attack": 7,
+        "defense": 7,
+        "magic": 1,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 551,
+        "hpperlevel": 96,
+        "mp": 0,
+        "mpperlevel": 0,
+        "movespeed": 345,
+        "armor": 25.7,
+        "armorperlevel": 2.7,
+        "spellblock": 31.25,
+        "spellblockperlevel": 1.25,
+        "attackrange": 125,
+        "hpregen": 8.2,
+        "hpregenperlevel": 0.75,
+        "mpregen": 0,
+        "mpregenperlevel": 0,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 55.5,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 2.9,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "Jade_GarenQ",
+          "name": "Decisive Strike",
+          "description": "Garen gains a burst of Move Speed, breaking free of all slows affecting him. His next attack strikes a vital area of his foe, dealing bonus damage and silencing them.",
+          "tooltip": "Garen breaks free from all slows affecting him and gains <speed>{{ movementspeedamount*100 }}% Movement Speed</speed> for {{ movementspeedduration }} seconds.<br /><br />His next basic attack deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>silences</status> his target for {{ silenceduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Move Speed Duration",
+              "Silence Duration"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ movementspeedduration }} -> {{ movementspeeddurationNL }}",
+              "{{ silenceduration }} -> {{ silencedurationNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
+          "cooldownBurn": "8",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
+          "rangeBurn": "300",
+          "image": {
+            "full": "Jade_GarenQ.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 0,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "Jade_GarenW",
+          "name": "Courage",
+          "description": "Garen performs a dance of death with his sword, dealing damage around him for the duration.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Garen's gains an additional 20% value from bonus <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR>.<br /><br /><spellActive>Active: </spellActive>Garen gains a defensive shield for {{ buffduration }} seconds, reducing incoming damage by {{ damagereduction*100 }}% and granting 30% Crowd Control Reduction.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Duration",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ buffduration }} -> {{ buffdurationNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            24,
+            23,
+            22,
+            21,
+            20
+          ],
+          "cooldownBurn": "24/23/22/21/20",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "rangeBurn": "0",
+          "image": {
+            "full": "Jade_GarenW.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 48,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "Jade_GarenE",
+          "name": "Judgment",
+          "description": "Garen rapidly spins his sword around his body, dealing physical damage to nearby enemies.",
+          "tooltip": "Garen rapidly spins his sword around his body for {{ duration }} seconds, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to nearby enemies every second. Garen can move through units while spinning but moves 20% slower when travelling directly through units.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Base Damage per Second",
+              "Total Attack Damage Ratio",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamagepersecond }} -> {{ basedamagepersecondNL }}",
+              "{{ baseadratiopersecond*100.000000 }}% -> {{ baseadratiopersecondnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            13,
+            12,
+            11,
+            10,
+            9
+          ],
+          "cooldownBurn": "13/12/11/10/9",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [
+            325,
+            325,
+            325,
+            325,
+            325
+          ],
+          "rangeBurn": "325",
+          "image": {
+            "full": "Jade_GarenE.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 96,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "Jade_GarenR",
+          "name": "Demacian Justice",
+          "description": "Garen calls upon the might of Demacia to attempt to execute an enemy champion.",
+          "tooltip": "Garen calls upon the might of Demacia to attempt to execute an enemy champion, dealing <magicDamage>{{ basedamage }} magic damage</magicDamage> plus 1 damage for every {{ executedamage }} health they are missing.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Missing Health Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ executedamage }} -> {{ executedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            160,
+            120,
+            80
+          ],
+          "cooldownBurn": "160/120/80",
+          "cost": [
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [
+            400,
+            400,
+            400
+          ],
+          "rangeBurn": "400",
+          "image": {
+            "full": "Jade_GarenR.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 144,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        }
+      ],
+      "passive": {
+        "name": "Perseverance",
+        "description": "If Garen has not recently been struck by damage or enemy abilities, he regenerates a percentage of his total health each second.",
+        "image": {
+          "full": "Jade_Garen_Passive.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 192,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

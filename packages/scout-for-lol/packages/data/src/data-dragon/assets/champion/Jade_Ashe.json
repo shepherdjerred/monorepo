@@ -1,0 +1,745 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Ashe": {
+      "id": "Jade_Ashe",
+      "key": "60022",
+      "name": "Ashe",
+      "title": "The Frost Archer",
+      "image": {
+        "full": "Jade_Ashe.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 192,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60022000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60022005",
+          "num": 5,
+          "name": "Amethyst Ashe",
+          "chromas": false
+        },
+        {
+          "id": "60022006",
+          "num": 6,
+          "name": "Heartseeker Ashe",
+          "chromas": false
+        },
+        {
+          "id": "60022007",
+          "num": 7,
+          "name": "Marauder Ashe",
+          "chromas": false
+        },
+        {
+          "id": "60022008",
+          "num": 8,
+          "name": "PROJECT: Ashe",
+          "chromas": false
+        },
+        {
+          "id": "60022011",
+          "num": 11,
+          "name": "Cosmic Queen Ashe",
+          "chromas": false
+        },
+        {
+          "id": "60022012",
+          "num": 12,
+          "name": "Cosmic Queen Ashe (Obsidian)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "60022013",
+          "num": 13,
+          "name": "Cosmic Queen Ashe (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "60022014",
+          "num": 14,
+          "name": "Cosmic Queen Ashe (Emerald)",
+          "chromas": true,
+          "parentSkin": 11
+        },
+        {
+          "id": "60022015",
+          "num": 15,
+          "name": "Cosmic Queen Ashe (Sapphire)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "60022016",
+          "num": 16,
+          "name": "Cosmic Queen Ashe (Ruby)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "60022017",
+          "num": 17,
+          "name": "High Noon Ashe",
+          "chromas": true
+        },
+        {
+          "id": "60022018",
+          "num": 18,
+          "name": "High Noon Ashe (Ruby)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "60022019",
+          "num": 19,
+          "name": "High Noon Ashe (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "60022020",
+          "num": 20,
+          "name": "High Noon Ashe (Obsidian)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "60022021",
+          "num": 21,
+          "name": "High Noon Ashe (Nomad)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "60022022",
+          "num": 22,
+          "name": "High Noon Ashe (Amethyst)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "60022062",
+          "num": 62,
+          "name": "PROJECT: Ashe Mythic Chroma",
+          "chromas": true,
+          "parentSkin": 8
+        },
+        {
+          "id": "60022065",
+          "num": 65,
+          "name": "Crystalis Motus Ashe",
+          "chromas": false
+        },
+        {
+          "id": "60022066",
+          "num": 66,
+          "name": "Crystalis Motus Ashe (Reclaimed)",
+          "chromas": false,
+          "parentSkin": 65
+        }
+      ],
+      "lore": "- Frost Shot (Q) toggles slowing basic attacks<br>- Focus (P) builds up critical strikes out of combat<br>- Hawkshot (E) grants bonus gold on kill",
+      "blurb": "- Frost Shot (Q) toggles slowing basic attacks<br>- Focus (P) builds up critical strikes out of combat<br>- Hawkshot (E) grants bonus gold on kill",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Marksman",
+        "Support"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 7,
+        "defense": 3,
+        "magic": 2,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 474,
+        "hpperlevel": 79,
+        "mp": 208,
+        "mpperlevel": 35,
+        "movespeed": 325,
+        "armor": 18.9,
+        "armorperlevel": 3.4,
+        "spellblock": 30,
+        "spellblockperlevel": 0,
+        "attackrange": 600,
+        "hpregen": 5.05,
+        "hpregenperlevel": 0.55,
+        "mpregen": 6.7,
+        "mpregenperlevel": 0.4,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 49,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 4,
+        "attackspeed": 0.658
+      },
+      "spells": [
+        {
+          "id": "Jade_AsheQ",
+          "name": "Frost Shot",
+          "description": "While active, each of Ashe's basic attacks slow her targets. This drains Mana with each attack.",
+          "tooltip": "<toggle>Toggle:</toggle> Basic Attacks <status>Slow</status> enemies by {{ slowpercent*-100 }}% over {{ slowduration }} seconds.</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Slow"
+            ],
+            "effect": [
+              "{{ slowpercent*-100.000000 }} -> {{ slowpercentnl*-100.000000 }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "cooldownBurn": "1",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              6,
+              6,
+              6,
+              6,
+              6
+            ],
+            [
+              20,
+              30,
+              40,
+              50,
+              60
+            ],
+            [
+              0.22,
+              0.235,
+              0.25,
+              0.265,
+              0.28
+            ],
+            [
+              1.1,
+              1.175,
+              1.25,
+              1.325,
+              1.4
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "4",
+            "4",
+            "6",
+            "20/30/40/50/60",
+            "0.22/0.235/0.25/0.265/0.28",
+            "1.1/1.175/1.25/1.325/1.4",
+            "1",
+            "1",
+            "1",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
+          "rangeBurn": "400",
+          "image": {
+            "full": "Jade_AsheQ.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 0,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_AsheVolley",
+          "name": "Volley",
+          "description": "Ashe fires 7 arrows in a cone for increased damage.  Volley also applies Ashe's current level of Frost Shot.",
+          "tooltip": "Fires arrows in a cone, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. <spellName>Volley</spellName> applies <spellName>Frost Shot's</spellName> <status>Slow</status> effect.</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            16,
+            13,
+            10,
+            7,
+            4
+          ],
+          "cooldownBurn": "16/13/10/7/4",
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1200,
+            1200,
+            1200,
+            1200,
+            1200
+          ],
+          "rangeBurn": "1200",
+          "image": {
+            "full": "Jade_AsheVolley.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 48,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_AsheSpiritOfTheHawk",
+          "name": "Hawkshot",
+          "description": "Each time Ashe kills a unit, she gains some extra gold. Ashe can activate to send her Hawk Spirit on a scouting mission.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Ashe gains <gold>{{ additionalgold }} extra gold</gold> whenever she kills an enemy.<br /><br /><spellActive>Active:</spellActive> Ashe sends forth a hawk to grant vision in an area for 5 seconds. It also reveals the area as it flies through.</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Range",
+              "Bonus Gold"
+            ],
+            "effect": [
+              "{{ castrange }} -> {{ castrangeNL }}",
+              "{{ additionalgold }} -> {{ additionalgoldNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "cooldownBurn": "60",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              50,
+              90,
+              130,
+              170,
+              210
+            ],
+            [
+              25000,
+              25000,
+              25000,
+              25000,
+              25000
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "3",
+            "50/90/130/170/210",
+            "25000",
+            "5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "1",
+          "range": [
+            2500,
+            3250,
+            4000,
+            4750,
+            5500
+          ],
+          "rangeBurn": "2500/3250/4000/4750/5500",
+          "image": {
+            "full": "Jade_AsheSpiritOfTheHawk.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 96,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_AsheEnchantedCrystalArrow",
+          "name": "Enchanted Crystal Arrow",
+          "description": "Ashe fires a missile of ice in a straight line.  If the arrow collides with an enemy Champion, it deals damage and stuns the Champion for up to 3.5 seconds, based on how far the arrow has traveled.  In addition, surrounding enemy units take damage and are slowed.",
+          "tooltip": "Ashe launches a crystal arrow of ice in a line that <status>Stuns</status> an enemy Champion dealing <magicDamage>{{ rmaindamage }} magic damage</magicDamage>. <status>Stun</status> duration increases with distance travelled, up to {{ maxstunduration }} seconds. Surrounding enemies are <status>Slowed</status> by 50% for 3 seconds and take <magicDamage>{{ rmaindamagesplashtooltip }} damage.</magicDamage></mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ rbasedamage }} -> {{ rbasedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            100,
+            90,
+            80
+          ],
+          "cooldownBurn": "100/90/80",
+          "cost": [
+            150,
+            150,
+            150
+          ],
+          "costBurn": "150",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            25000,
+            25000,
+            25000
+          ],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "Jade_AsheEnchantedCrystalArrow.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 144,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Focus",
+        "description": "Ashe gains stacks of <spellName>Focus</spellName> while out-of-combat. When Ashe has 100 stacks of <spellName>Focus</spellName>, her next basic Attack will critically strike.",
+        "image": {
+          "full": "Jade_Ashe_P.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 192,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

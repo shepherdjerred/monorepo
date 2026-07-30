@@ -1,0 +1,723 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Vayne": {
+      "id": "Jade_Vayne",
+      "key": "60067",
+      "name": "Vayne",
+      "title": "The Night Hunter",
+      "image": {
+        "full": "Jade_Vayne.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 192,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60067000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60067004",
+          "num": 4,
+          "name": "Heartseeker Vayne",
+          "chromas": false
+        },
+        {
+          "id": "60067006",
+          "num": 6,
+          "name": "Arclight Vayne",
+          "chromas": false
+        },
+        {
+          "id": "60067010",
+          "num": 10,
+          "name": "Soulstealer Vayne",
+          "chromas": false
+        },
+        {
+          "id": "60067011",
+          "num": 11,
+          "name": "PROJECT: Vayne",
+          "chromas": false
+        },
+        {
+          "id": "60067044",
+          "num": 44,
+          "name": "Dawnbringer Vayne",
+          "chromas": false
+        },
+        {
+          "id": "60067045",
+          "num": 45,
+          "name": "Dawnbringer Vayne (Ruby)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60067046",
+          "num": 46,
+          "name": "Dawnbringer Vayne (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60067047",
+          "num": 47,
+          "name": "Dawnbringer Vayne (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60067048",
+          "num": 48,
+          "name": "Dawnbringer Vayne (Sapphire)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60067049",
+          "num": 49,
+          "name": "Dawnbringer Vayne (Emerald)",
+          "chromas": true,
+          "parentSkin": 44
+        },
+        {
+          "id": "60067050",
+          "num": 50,
+          "name": "Dawnbringer Vayne (Citrine)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60067051",
+          "num": 51,
+          "name": "Dawnbringer Vayne (Obsidian)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60067052",
+          "num": 52,
+          "name": "Dawnbringer Vayne (Rainbow)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60067053",
+          "num": 53,
+          "name": "Soulstealer Vayne (First Decennial)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "60067054",
+          "num": 54,
+          "name": "Soulstealer Vayne (Tenfold Triumph)",
+          "chromas": false,
+          "parentSkin": 10
+        }
+      ],
+      "lore": "- Final Hour (R) can not be extended",
+      "blurb": "- Final Hour (R) can not be extended",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Marksman",
+        "Assassin"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 10,
+        "defense": 1,
+        "magic": 1,
+        "difficulty": 8
+      },
+      "stats": {
+        "hp": 442,
+        "hpperlevel": 83,
+        "mp": 208,
+        "mpperlevel": 35,
+        "movespeed": 330,
+        "armor": 16.7,
+        "armorperlevel": 3.4,
+        "spellblock": 30,
+        "spellblockperlevel": 0,
+        "attackrange": 550,
+        "hpregen": 5.05,
+        "hpregenperlevel": 0.55,
+        "mpregen": 6.7,
+        "mpregenperlevel": 0.4,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 53.25,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 3.1,
+        "attackspeed": 0.658
+      },
+      "spells": [
+        {
+          "id": "Jade_VayneQ",
+          "name": "Tumble",
+          "description": "Vayne tumbles, maneuvering to carefully place her next shot.  Her next attack deals bonus damage.",
+          "tooltip": "Rolls a short distance. The next basic attack within {{ buffduration }} seconds deals <physicalDamage>{{ scalingdamagetotal }} bonus physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Cooldown",
+              "Attack Damage Ratio"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ scalingdamage*100.000000 }}% -> {{ scalingdamagenl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "cooldownBurn": "6/5/4/3/2",
+          "cost": [
+            30,
+            30,
+            30,
+            30,
+            30
+          ],
+          "costBurn": "30",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
+          "rangeBurn": "300",
+          "image": {
+            "full": "Jade_VayneQ.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 0,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_VayneW",
+          "name": "Silver Bolts",
+          "description": "Vayne tips her bolts with a rare metal, toxic to evil things.  The third consecutive attack or ability against the same target deals a percentage of the target's maximum Health as bonus true damage. (Max: 200 damage vs. Monsters)",
+          "tooltip": "Every third consecutive attack or ability against an enemy deals an additional {{ basedamage }} plus {{ maxhealthratio*100 }}% of the enemy's maximum Health <trueDamage>true damage</trueDamage>. (Max: 200 damage vs. Monsters){{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Base Damage",
+              "Maximum Health Damage"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ maxhealthratio*100.000000 }}% -> {{ maxhealthrationl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "cooldownBurn": "0",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": "Passive",
+          "maxammo": "-1",
+          "range": [
+            750,
+            750,
+            750,
+            750,
+            750
+          ],
+          "rangeBurn": "750",
+          "image": {
+            "full": "Jade_VayneW.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 48,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "Passive"
+        },
+        {
+          "id": "Jade_VayneE",
+          "name": "Condemn",
+          "description": "Vayne draws a heavy crossbow from her back, and fires a huge bolt at her target, dealing damage and knocking them back.  If they collide with terrain, they are impaled, dealing bonus damage and stunning them.",
+          "tooltip": "Fires a bolt that deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and knocks the enemy back. Enemies that collide with terrain take <physicalDamage>{{ totaldamagewithspell }} additional physical damage</physicalDamage> and are <status>Stunned</status> for 1.5 seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Cooldown",
+              "Base Damage"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ firsthitdamage }} -> {{ firsthitdamageNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            20,
+            18,
+            16,
+            14,
+            12
+          ],
+          "cooldownBurn": "20/18/16/14/12",
+          "cost": [
+            90,
+            90,
+            90,
+            90,
+            90
+          ],
+          "costBurn": "90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            550,
+            550,
+            550,
+            550,
+            550
+          ],
+          "rangeBurn": "550",
+          "image": {
+            "full": "Jade_VayneE.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 96,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_VayneR",
+          "name": "Final Hour",
+          "description": "Readying herself for an epic confrontation, Vayne gains increased Attack Damage, invisibility during Tumble, and triple the bonus Movement Speed from Night Hunter.",
+          "tooltip": "Gains <physicalDamage>{{ admod }} Bonus Attack Damage</physicalDamage> for {{ duration }} seconds. While active, Tumble grants <keywordStealth>Invisibility</keywordStealth> for 1 second, and <spellName>Night Hunter's</spellName> bonus <speed>Movement Speed</speed> is increased to 90.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Cooldown",
+              "Duration",
+              "Attack Damage"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ duration }} -> {{ durationNL }}",
+              "{{ admod }} -> {{ admodNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            100,
+            85,
+            70
+          ],
+          "cooldownBurn": "100/85/70",
+          "cost": [
+            80,
+            80,
+            80
+          ],
+          "costBurn": "80",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1,
+            1,
+            1
+          ],
+          "rangeBurn": "1",
+          "image": {
+            "full": "Jade_VayneR.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 144,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Night Hunter",
+        "description": "Vayne ruthlessly hunts evil-doers. She gains 30 Movement Speed when moving toward nearby enemy champions.",
+        "image": {
+          "full": "Jade_Vayne_NightHunter.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 192,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Pyke": {
       "id": "Pyke",
@@ -10,7 +10,7 @@
       "title": "the Bloodharbor Ripper",
       "image": {
         "full": "Pyke.png",
-        "sprite": "champion3.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 96,
         "y": 48,
@@ -782,10 +782,10 @@
           "rangeBurn": "400",
           "image": {
             "full": "PykeQ.png",
-            "sprite": "spell10.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 288,
-            "y": 96,
+            "x": 96,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -921,10 +921,10 @@
           "rangeBurn": "600",
           "image": {
             "full": "PykeW.png",
-            "sprite": "spell10.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 336,
-            "y": 96,
+            "x": 144,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1062,10 +1062,10 @@
           "rangeBurn": "550",
           "image": {
             "full": "PykeE.png",
-            "sprite": "spell10.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 384,
-            "y": 96,
+            "x": 192,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1175,10 +1175,10 @@
           "rangeBurn": "750",
           "image": {
             "full": "PykeR.png",
-            "sprite": "spell10.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 432,
-            "y": 96,
+            "x": 240,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1190,7 +1190,7 @@
         "description": "When Pyke is hidden from enemies, he regenerates damage that he has recently taken from champions. Pyke also cannot gain extra Maximum Health from any source, and instead gains Bonus AD.",
         "image": {
           "full": "PykePassive.png",
-          "sprite": "passive3.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 96,
           "y": 48,

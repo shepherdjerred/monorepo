@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Kaisa": {
       "id": "Kaisa",
@@ -10,7 +10,7 @@
       "title": "Daughter of the Void",
       "image": {
         "full": "Kaisa.png",
-        "sprite": "champion1.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 240,
         "y": 96,
@@ -734,10 +734,10 @@
           "rangeBurn": "600",
           "image": {
             "full": "KaisaQ.png",
-            "sprite": "spell5.png",
+            "sprite": "spell12.png",
             "group": "spell",
-            "x": 384,
-            "y": 144,
+            "x": 192,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -877,10 +877,10 @@
           "rangeBurn": "3000",
           "image": {
             "full": "KaisaW.png",
-            "sprite": "spell5.png",
+            "sprite": "spell12.png",
             "group": "spell",
-            "x": 432,
-            "y": 144,
+            "x": 240,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1020,10 +1020,10 @@
           "rangeBurn": "1",
           "image": {
             "full": "KaisaE.png",
-            "sprite": "spell6.png",
+            "sprite": "spell12.png",
             "group": "spell",
-            "x": 0,
-            "y": 0,
+            "x": 288,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1139,10 +1139,10 @@
           "rangeBurn": "2000/2500/3000",
           "image": {
             "full": "KaisaR.png",
-            "sprite": "spell6.png",
+            "sprite": "spell12.png",
             "group": "spell",
-            "x": 48,
-            "y": 0,
+            "x": 336,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1154,7 +1154,7 @@
         "description": "Kai'Sa's basic attacks stack Plasma, dealing increasing bonus magic damage. Allies' immobilizing effects help stack Plasma. Additionally, Kai'Sa's item purchases upgrade her basic spells to have more powerful properties.",
         "image": {
           "full": "Kaisa_Passive.png",
-          "sprite": "passive1.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 240,
           "y": 96,

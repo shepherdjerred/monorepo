@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Kayle": {
       "id": "Kayle",
@@ -10,7 +10,7 @@
       "title": "the Righteous",
       "image": {
         "full": "Kayle.png",
-        "sprite": "champion2.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 48,
         "y": 0,
@@ -615,6 +615,12 @@
           "name": "Spirit Blossom Kayle (Paragon)",
           "chromas": false,
           "parentSkin": 78
+        },
+        {
+          "id": "10088",
+          "num": 88,
+          "name": "Founders Silver Kayle",
+          "chromas": false
         }
       ],
       "lore": "Born to a Targonian Aspect at the height of the Rune Wars, Kayle honored her mother's legacy by fighting for justice on wings of divine flame. She and her twin sister Morgana were the protectors of Demacia for many years—until Kayle became disillusioned with the repeated failings of mortals, and abandoned this realm altogether. Still, legends are told of her punishing the unjust with her fiery swords, and many hope that she will one day return…",
@@ -799,10 +805,10 @@
           "rangeBurn": "900",
           "image": {
             "full": "KayleQ.png",
-            "sprite": "spell6.png",
+            "sprite": "spell12.png",
             "group": "spell",
-            "x": 96,
-            "y": 96,
+            "x": 384,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -942,10 +948,10 @@
           "rangeBurn": "900",
           "image": {
             "full": "KayleW.png",
-            "sprite": "spell6.png",
+            "sprite": "spell12.png",
             "group": "spell",
-            "x": 144,
-            "y": 96,
+            "x": 432,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -1085,10 +1091,10 @@
           "rangeBurn": "550",
           "image": {
             "full": "KayleE.png",
-            "sprite": "spell6.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 192,
-            "y": 96,
+            "x": 0,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1204,10 +1210,10 @@
           "rangeBurn": "900",
           "image": {
             "full": "KayleR.png",
-            "sprite": "spell6.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 240,
-            "y": 96,
+            "x": 48,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1219,7 +1225,7 @@
         "description": "Kayle's attacks are empowered by the heavens as she levels up and spends skill points. Her wings are lit aflame as she progressively gains Attack Speed, Move Speed, Attack Range, and waves of fire on her attacks.",
         "image": {
           "full": "Kayle_P.png",
-          "sprite": "passive2.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 48,
           "y": 0,

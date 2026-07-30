@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Fiora": {
       "id": "Fiora",
@@ -880,10 +880,10 @@
           "rangeBurn": "400",
           "image": {
             "full": "FioraQ.png",
-            "sprite": "spell3.png",
+            "sprite": "spell4.png",
             "group": "spell",
-            "x": 192,
-            "y": 144,
+            "x": 0,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1021,10 +1021,10 @@
           "rangeBurn": "750",
           "image": {
             "full": "FioraW.png",
-            "sprite": "spell3.png",
+            "sprite": "spell4.png",
             "group": "spell",
-            "x": 240,
-            "y": 144,
+            "x": 48,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1164,10 +1164,10 @@
           "rangeBurn": "425",
           "image": {
             "full": "FioraE.png",
-            "sprite": "spell3.png",
+            "sprite": "spell4.png",
             "group": "spell",
-            "x": 288,
-            "y": 144,
+            "x": 96,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1281,10 +1281,10 @@
           "rangeBurn": "500",
           "image": {
             "full": "FioraR.png",
-            "sprite": "spell3.png",
+            "sprite": "spell4.png",
             "group": "spell",
-            "x": 336,
-            "y": 144,
+            "x": 144,
+            "y": 48,
             "w": 48,
             "h": 48
           },

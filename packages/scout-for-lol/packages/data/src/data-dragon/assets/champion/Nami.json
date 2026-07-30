@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Nami": {
       "id": "Nami",
@@ -10,7 +10,7 @@
       "title": "the Tidecaller",
       "image": {
         "full": "Nami.png",
-        "sprite": "champion2.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 432,
         "y": 96,
@@ -530,7 +530,7 @@
           "id": "NamiQ",
           "name": "Aqua Prison",
           "description": "Sends a bubble to a target area, dealing damage and stunning all enemies on impact.",
-          "tooltip": "Nami hurls a bubble, <status>Stunning</status> for {{ e2 }} seconds and dealing <magicDamage>{{ totaldamagett }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Nami hurls a bubble, <status>Stunning</status> for {{ stunduration }} seconds and dealing <magicDamage>{{ totaldamagett }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -658,10 +658,10 @@
           "rangeBurn": "875",
           "image": {
             "full": "NamiQ.png",
-            "sprite": "spell9.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 192,
-            "y": 48,
+            "x": 0,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -801,10 +801,10 @@
           "rangeBurn": "725",
           "image": {
             "full": "NamiW.png",
-            "sprite": "spell9.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 240,
-            "y": 48,
+            "x": 48,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -944,10 +944,10 @@
           "rangeBurn": "800",
           "image": {
             "full": "NamiE.png",
-            "sprite": "spell9.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 288,
-            "y": 48,
+            "x": 96,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -957,7 +957,7 @@
           "id": "NamiR",
           "name": "Tidal Wave",
           "description": "Summons a massive Tidal Wave that knocks up, slows, and damages enemies. Allies hit gain double the effect of Surging Tides.",
-          "tooltip": "Nami summons a tidal wave, <status>Knocking Up</status> for 0.5 seconds, <status>Slowing</status> by {{ e4 }}%, and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. The duration of the <status>Slow</status> increases based on distance the wave traveled, up to {{ e5 }} seconds.<br /><br />Allies hit by the wave gain double the effect of <spellName>Surging Tides</spellName>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Nami summons a tidal wave, <status>Knocking Up</status> for 0.5 seconds, <status>Slowing</status> by {{ slowamount }}%, and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. The duration of the <status>Slow</status> increases based on distance the wave traveled, up to {{ maxslowduration }} seconds.<br /><br />Allies hit by the wave gain double the effect of <spellName>Surging Tides</spellName>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -1059,10 +1059,10 @@
           "rangeBurn": "2550",
           "image": {
             "full": "NamiR.png",
-            "sprite": "spell9.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 336,
-            "y": 48,
+            "x": 144,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -1074,7 +1074,7 @@
         "description": "When Nami's Abilities hit allied champions they gain Move Speed for a short duration.",
         "image": {
           "full": "NamiPassive.png",
-          "sprite": "passive2.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 432,
           "y": 96,

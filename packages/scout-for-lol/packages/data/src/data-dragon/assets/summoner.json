@@ -1,6 +1,6 @@
 {
   "type": "summoner",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "SummonerBarrier": {
       "id": "SummonerBarrier",
@@ -67,27 +67,26 @@
       "key": "21",
       "summonerLevel": 4,
       "modes": [
-        "ULTBOOK",
-        "PRACTICETOOL",
-        "URF",
-        "NEXUSBLITZ",
-        "ONEFORALL",
-        "WIPMODEWIP",
-        "RUBY",
-        "SWIFTPLAY",
-        "KIWI",
         "ARAM",
-        "CLASSIC",
         "TUTORIAL",
-        "BRAWL",
+        "KIWI",
+        "ULTBOOK",
         "FIRSTBLOOD",
-        "WIPMODEWIP3",
-        "RUBY_TRIAL_2",
-        "RUBY_TRIAL_3",
+        "SWIFTPLAY",
+        "CLASSIC",
+        "PRACTICETOOL",
+        "RUBY",
         "RUBY_TRIAL_1",
+        "BRAWL",
+        "URF",
+        "KIWI_JADE",
+        "RUBY_TRIAL_3",
+        "ONEFORALL",
         "ASSASSINATE",
         "ARSR",
-        "DOOMBOTSTEEMO"
+        "NEXUSBLITZ",
+        "DOOMBOTSTEEMO",
+        "RUBY_TRIAL_2"
       ],
       "costType": "No Cost",
       "maxammo": "-1",
@@ -100,6 +99,174 @@
         "sprite": "spell0.png",
         "group": "spell",
         "x": 0,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "resource": "No Cost"
+    },
+    "SummonerBarrier_Jade": {
+      "id": "SummonerBarrier_Jade",
+      "name": "Barrier",
+      "description": "Gain a short duration shield. Summoner's Resolve: Barrier's Shield is increased.",
+      "tooltip": "Gain a <shield>{{ shieldstrengthfinal }} damage Shield</shield> for {{ shieldduration }} seconds.<br /><br />",
+      "maxrank": 1,
+      "cooldown": [
+        210
+      ],
+      "cooldownBurn": "210",
+      "cost": [
+        0
+      ],
+      "costBurn": "0",
+      "datavalues": {},
+      "effect": [
+        null,
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "effectBurn": [
+        null,
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "vars": [],
+      "key": "721",
+      "summonerLevel": 1,
+      "modes": [
+        "JADE"
+      ],
+      "costType": "No Cost",
+      "maxammo": "-1",
+      "range": [
+        1200
+      ],
+      "rangeBurn": "1200",
+      "image": {
+        "full": "SummonerBarrier_Jade.png",
+        "sprite": "spell0.png",
+        "group": "spell",
+        "x": 48,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "resource": "No Cost"
+    },
+    "SummonerBattleCry_Jade": {
+      "id": "SummonerBattleCry_Jade",
+      "name": "Surge",
+      "description": "Temporarily empowers your champion, granting Attack Speed  and Ability Power for the duration. Summoner's Wrath: Increases the Attack Speed bonus by 5% and the Ability Power bonus by 10%.",
+      "tooltip": "Empowers your champion, granting <attackSpeed>{{ totalasactual }} Attack Speed</attackSpeed>  and <scaleAP>{{ totalapactual }} Ability Power</scaleAP> for 12 seconds.<br /><br />",
+      "maxrank": 1,
+      "cooldown": [
+        180
+      ],
+      "cooldownBurn": "180",
+      "cost": [
+        0
+      ],
+      "costBurn": "0",
+      "datavalues": {},
+      "effect": [
+        null,
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "effectBurn": [
+        null,
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "vars": [],
+      "key": "716",
+      "summonerLevel": 1,
+      "modes": [
+        "JADE"
+      ],
+      "costType": "No Cost",
+      "maxammo": "-1",
+      "range": [
+        200
+      ],
+      "rangeBurn": "200",
+      "image": {
+        "full": "SummonerBattleCry_Jade.png",
+        "sprite": "spell0.png",
+        "group": "spell",
+        "x": 96,
         "y": 0,
         "w": 48,
         "h": 48
@@ -171,26 +338,25 @@
       "key": "1",
       "summonerLevel": 9,
       "modes": [
-        "ULTBOOK",
-        "PRACTICETOOL",
-        "URF",
-        "NEXUSBLITZ",
-        "ONEFORALL",
-        "WIPMODEWIP",
-        "RUBY",
-        "SWIFTPLAY",
-        "KIWI",
         "ARAM",
-        "CLASSIC",
         "TUTORIAL",
-        "BRAWL",
+        "KIWI",
+        "ULTBOOK",
         "FIRSTBLOOD",
-        "WIPMODEWIP3",
-        "RUBY_TRIAL_2",
-        "RUBY_TRIAL_3",
+        "SWIFTPLAY",
+        "CLASSIC",
+        "PRACTICETOOL",
+        "RUBY",
         "RUBY_TRIAL_1",
+        "BRAWL",
+        "URF",
+        "KIWI_JADE",
+        "RUBY_TRIAL_3",
+        "ONEFORALL",
         "ARSR",
-        "DOOMBOTSTEEMO"
+        "NEXUSBLITZ",
+        "DOOMBOTSTEEMO",
+        "RUBY_TRIAL_2"
       ],
       "costType": "No Cost",
       "maxammo": "-1",
@@ -202,7 +368,91 @@
         "full": "SummonerBoost.png",
         "sprite": "spell0.png",
         "group": "spell",
-        "x": 48,
+        "x": 144,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "resource": "No Cost"
+    },
+    "SummonerBoost_Jade": {
+      "id": "SummonerBoost_Jade",
+      "name": "Cleanse",
+      "description": "Removes all disables and summoner spell debuffs affecting your champion and temporarily lowers the duration of incoming disables. Summoner's Resolve: Extends the Tenacity buff duration.",
+      "tooltip": "Removes all disables and summoner spell debuffs affecting your champion and reduces the duration of disables by 65% for the next {{ tenacitydurationfinalcalc }} seconds.<br /><br />",
+      "maxrank": 1,
+      "cooldown": [
+        210
+      ],
+      "cooldownBurn": "210",
+      "cost": [
+        0
+      ],
+      "costBurn": "0",
+      "datavalues": {},
+      "effect": [
+        null,
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "effectBurn": [
+        null,
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "vars": [],
+      "key": "71",
+      "summonerLevel": 1,
+      "modes": [
+        "JADE"
+      ],
+      "costType": "No Cost",
+      "maxammo": "-1",
+      "range": [
+        200
+      ],
+      "rangeBurn": "200",
+      "image": {
+        "full": "SummonerBoost_Jade.png",
+        "sprite": "spell0.png",
+        "group": "spell",
+        "x": 192,
         "y": 0,
         "w": 48,
         "h": 48
@@ -286,7 +536,7 @@
         "full": "SummonerCherryFlash.png",
         "sprite": "spell0.png",
         "group": "spell",
-        "x": 96,
+        "x": 240,
         "y": 0,
         "w": 48,
         "h": 48
@@ -370,7 +620,91 @@
         "full": "SummonerCherryHold.png",
         "sprite": "spell0.png",
         "group": "spell",
-        "x": 144,
+        "x": 288,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "resource": "No Cost"
+    },
+    "SummonerClairvoyance_Jade": {
+      "id": "SummonerClairvoyance_Jade",
+      "name": "Clairvoyance",
+      "description": "Reveals a small area of the map for your team for a short duration. Summoner's Insight: Retain sight on units revealed by Clairvoyance for 5 seconds.",
+      "tooltip": "Reveals a small area of the map for your team for 5 seconds.<br /><br />",
+      "maxrank": 1,
+      "cooldown": [
+        60
+      ],
+      "cooldownBurn": "60",
+      "cost": [
+        0
+      ],
+      "costBurn": "0",
+      "datavalues": {},
+      "effect": [
+        null,
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "effectBurn": [
+        null,
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "vars": [],
+      "key": "75",
+      "summonerLevel": 1,
+      "modes": [
+        "JADE"
+      ],
+      "costType": "No Cost",
+      "maxammo": "-1",
+      "range": [
+        25000
+      ],
+      "rangeBurn": "25000",
+      "image": {
+        "full": "SummonerClairvoyance_Jade.png",
+        "sprite": "spell0.png",
+        "group": "spell",
+        "x": 336,
         "y": 0,
         "w": 48,
         "h": 48
@@ -381,7 +715,7 @@
       "id": "SummonerDot",
       "name": "Ignite",
       "description": "Deals true damage over time to target enemy champion and reduces healing effects on them for the duration.",
-      "tooltip": "Deals <trueDamage>{{ tooltiptruedamagecalculation }} true damage</trueDamage> to target enemy champion over 5 seconds and applies <keyword>{{ grievousamount*100 }}% Grievous Wounds</keyword> for the duration.<br /><br /><keyword>Wounds</keyword>: Reduces the effectiveness of Healing and Regeneration effects.",
+      "tooltip": "Deals <trueDamage>{{ tooltiptruedamagecalculation }} true damage</trueDamage> to target enemy champion over 5 seconds and applies <keyword>{{ grievousamount*100 }}% Grievous Wounds</keyword> for the duration.<br /><br /><keyword>Wounds</keyword>: Reduces the effectiveness of Healing and Regeneration effects.<br /><br />",
       "maxrank": 1,
       "cooldown": [
         180
@@ -442,27 +776,26 @@
       "key": "14",
       "summonerLevel": 9,
       "modes": [
-        "ULTBOOK",
-        "PRACTICETOOL",
-        "URF",
-        "NEXUSBLITZ",
-        "ONEFORALL",
-        "WIPMODEWIP",
-        "RUBY",
-        "SWIFTPLAY",
-        "KIWI",
         "ARAM",
-        "CLASSIC",
         "TUTORIAL",
-        "BRAWL",
+        "KIWI",
+        "ULTBOOK",
         "FIRSTBLOOD",
-        "WIPMODEWIP3",
-        "RUBY_TRIAL_2",
-        "RUBY_TRIAL_3",
+        "SWIFTPLAY",
+        "CLASSIC",
+        "PRACTICETOOL",
+        "RUBY",
         "RUBY_TRIAL_1",
+        "BRAWL",
+        "URF",
+        "KIWI_JADE",
+        "RUBY_TRIAL_3",
+        "ONEFORALL",
         "ASSASSINATE",
         "ARSR",
-        "DOOMBOTSTEEMO"
+        "NEXUSBLITZ",
+        "DOOMBOTSTEEMO",
+        "RUBY_TRIAL_2"
       ],
       "costType": "No Cost",
       "maxammo": "-1",
@@ -474,7 +807,91 @@
         "full": "SummonerDot.png",
         "sprite": "spell0.png",
         "group": "spell",
-        "x": 192,
+        "x": 384,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "resource": "No Cost"
+    },
+    "SummonerDot_Jade": {
+      "id": "SummonerDot_Jade",
+      "name": "Ignite",
+      "description": "Deals true damage over time to target enemy champion and reduces healing effects on them for the duration. Summoner's Wrath: While Ignite is on cooldown, gain 5 Ability Power and Attack Damage.",
+      "tooltip": "Deals <trueDamage>{{ tooltiptruedamagecalculation }} true damage</trueDamage> to target enemy champion over 5 seconds and applies <keyword>{{ grievousamount*100 }}% Grievous Wounds</keyword> for the duration.<br /><br /><keyword>Wounds</keyword>: Reduces the effectiveness of Healing and Regeneration effects.<br /><br />",
+      "maxrank": 1,
+      "cooldown": [
+        210
+      ],
+      "cooldownBurn": "210",
+      "cost": [
+        0
+      ],
+      "costBurn": "0",
+      "datavalues": {},
+      "effect": [
+        null,
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "effectBurn": [
+        null,
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "vars": [],
+      "key": "714",
+      "summonerLevel": 1,
+      "modes": [
+        "JADE"
+      ],
+      "costType": "No Cost",
+      "maxammo": "-1",
+      "range": [
+        600
+      ],
+      "rangeBurn": "600",
+      "image": {
+        "full": "SummonerDot_Jade.png",
+        "sprite": "spell0.png",
+        "group": "spell",
+        "x": 432,
         "y": 0,
         "w": 48,
         "h": 48
@@ -547,22 +964,22 @@
       "summonerLevel": 4,
       "modes": [
         "URF",
-        "RUBY",
-        "WIPMODEWIP",
-        "ARAM",
-        "ONEFORALL",
-        "NEXUSBLITZ",
         "PRACTICETOOL",
-        "DOOMBOTSTEEMO",
-        "TUTORIAL",
-        "ARSR",
         "CLASSIC",
         "ULTBOOK",
-        "RUBY_TRIAL_2",
+        "DOOMBOTSTEEMO",
+        "ARAM",
+        "RUBY_TRIAL_3",
+        "NEXUSBLITZ",
         "SWIFTPLAY",
-        "RUBY_TRIAL_1",
+        "ONEFORALL",
+        "TUTORIAL",
+        "RUBY",
+        "WIPMODEWIP",
+        "RUBY_TRIAL_2",
         "WIPMODEWIP3",
-        "RUBY_TRIAL_3"
+        "RUBY_TRIAL_1",
+        "ARSR"
       ],
       "costType": "No Cost",
       "maxammo": "-1",
@@ -574,8 +991,92 @@
         "full": "SummonerExhaust.png",
         "sprite": "spell0.png",
         "group": "spell",
-        "x": 240,
-        "y": 0,
+        "x": 0,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "resource": "No Cost"
+    },
+    "SummonerExhaust_Jade": {
+      "id": "SummonerExhaust_Jade",
+      "name": "Exhaust",
+      "description": "Slows target enemy champion and reduces their Attack Speed and damage dealt. Summoner's Wrath: Exhaust also reduces the target's Armor and Magic Resist by 10.",
+      "tooltip": "Exhausts target enemy champion, reducing their Movement Speed and Damage dealt by {{ damagereduction }}% for 2.5 seconds and reducing their Attack Speed by {{ attackspeedreduction }}% for the duration.<br /><br />",
+      "maxrank": 1,
+      "cooldown": [
+        210
+      ],
+      "cooldownBurn": "210",
+      "cost": [
+        0
+      ],
+      "costBurn": "0",
+      "datavalues": {},
+      "effect": [
+        null,
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "effectBurn": [
+        null,
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "vars": [],
+      "key": "73",
+      "summonerLevel": 1,
+      "modes": [
+        "JADE"
+      ],
+      "costType": "No Cost",
+      "maxammo": "-1",
+      "range": [
+        550
+      ],
+      "rangeBurn": "550",
+      "image": {
+        "full": "SummonerExhaust_Jade.png",
+        "sprite": "spell0.png",
+        "group": "spell",
+        "x": 48,
+        "y": 48,
         "w": 48,
         "h": 48
       },
@@ -646,28 +1147,27 @@
       "key": "4",
       "summonerLevel": 7,
       "modes": [
-        "CLASSIC",
-        "NEXUSBLITZ",
         "ARAM",
-        "FIRSTBLOOD",
-        "PRACTICETOOL",
-        "BRAWL",
-        "WIPMODEWIP",
-        "URF",
-        "WIPMODEWIP3",
-        "SNOWURF",
-        "SWIFTPLAY",
         "TUTORIAL",
-        "ONEFORALL",
-        "ULTBOOK",
-        "RUBY_TRIAL_3",
-        "WIPMODEWIP4",
-        "RUBY",
-        "DOOMBOTSTEEMO",
         "KIWI",
-        "RUBY_TRIAL_2",
+        "ULTBOOK",
+        "FIRSTBLOOD",
+        "SWIFTPLAY",
+        "CLASSIC",
+        "PRACTICETOOL",
+        "RUBY",
         "RUBY_TRIAL_1",
-        "ARSR"
+        "BRAWL",
+        "WIPMODEWIP4",
+        "URF",
+        "SNOWURF",
+        "KIWI_JADE",
+        "RUBY_TRIAL_3",
+        "ONEFORALL",
+        "ARSR",
+        "NEXUSBLITZ",
+        "DOOMBOTSTEEMO",
+        "RUBY_TRIAL_2"
       ],
       "costType": "No Cost",
       "maxammo": "-1",
@@ -679,8 +1179,176 @@
         "full": "SummonerFlash.png",
         "sprite": "spell0.png",
         "group": "spell",
-        "x": 288,
-        "y": 0,
+        "x": 96,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "resource": "No Cost"
+    },
+    "SummonerFlash_Jade": {
+      "id": "SummonerFlash_Jade",
+      "name": "Flash",
+      "description": "Teleports you a short distance toward your cursor. Summoner's Insight: Reduces Flash's Cooldown by 15 seconds.",
+      "tooltip": "Teleports you a short distance toward your cursor.<br /><br />",
+      "maxrank": 1,
+      "cooldown": [
+        300
+      ],
+      "cooldownBurn": "300",
+      "cost": [
+        0
+      ],
+      "costBurn": "0",
+      "datavalues": {},
+      "effect": [
+        null,
+        [
+          400
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "effectBurn": [
+        null,
+        "400",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "vars": [],
+      "key": "74",
+      "summonerLevel": 1,
+      "modes": [
+        "JADE"
+      ],
+      "costType": "No Cost",
+      "maxammo": "-1",
+      "range": [
+        425
+      ],
+      "rangeBurn": "425",
+      "image": {
+        "full": "SummonerFlash_Jade.png",
+        "sprite": "spell0.png",
+        "group": "spell",
+        "x": 144,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "resource": "No Cost"
+    },
+    "SummonerFortify_Jade": {
+      "id": "SummonerFortify_Jade",
+      "name": "Fortify",
+      "description": "Grants invulnerability to all Allied Turrets and causes them to attack 100% faster for 6 seconds. Summoner's Resolve: Turrets deal splash damage around their target.",
+      "tooltip": "<spellPassive>Passive</spellPassive>: While Fortify is off cooldown, deal <scaleAD>{{ bonusminiondamage }} bonus damage</scaleAD> to minions on-hit.<br /><br /><spellActive>Active</spellActive>: Grants invulnerability to all Allied Turrets and causes them to attack {{ attackspeed*100 }}% faster for {{ duration }} seconds.<br /><br />",
+      "maxrank": 1,
+      "cooldown": [
+        180
+      ],
+      "cooldownBurn": "180",
+      "cost": [
+        0
+      ],
+      "costBurn": "0",
+      "datavalues": {},
+      "effect": [
+        null,
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "effectBurn": [
+        null,
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "vars": [],
+      "key": "705",
+      "summonerLevel": 1,
+      "modes": [
+        "JADE"
+      ],
+      "costType": "No Cost",
+      "maxammo": "-1",
+      "range": [
+        25000
+      ],
+      "rangeBurn": "25000",
+      "image": {
+        "full": "SummonerFortify_Jade.png",
+        "sprite": "spell0.png",
+        "group": "spell",
+        "x": 192,
+        "y": 48,
         "w": 48,
         "h": 48
       },
@@ -751,27 +1419,28 @@
       "key": "6",
       "summonerLevel": 1,
       "modes": [
-        "ULTBOOK",
-        "PRACTICETOOL",
-        "URF",
-        "NEXUSBLITZ",
-        "ONEFORALL",
-        "RUBY",
-        "TUTORIAL_MODULE_2",
-        "SWIFTPLAY",
-        "KIWI",
         "ARAM",
-        "CLASSIC",
-        "TUTORIAL",
         "TUTORIAL_MODULE_1",
-        "BRAWL",
+        "TUTORIAL",
+        "KIWI",
+        "ULTBOOK",
         "FIRSTBLOOD",
-        "RUBY_TRIAL_2",
-        "RUBY_TRIAL_3",
+        "SWIFTPLAY",
+        "CLASSIC",
+        "PRACTICETOOL",
+        "RUBY",
         "RUBY_TRIAL_1",
+        "BRAWL",
+        "URF",
+        "KIWI_JADE",
+        "RUBY_TRIAL_3",
+        "TUTORIAL_MODULE_2",
+        "ONEFORALL",
         "ASSASSINATE",
         "ARSR",
-        "DOOMBOTSTEEMO"
+        "NEXUSBLITZ",
+        "DOOMBOTSTEEMO",
+        "RUBY_TRIAL_2"
       ],
       "costType": "No Cost",
       "maxammo": "-1",
@@ -783,8 +1452,92 @@
         "full": "SummonerHaste.png",
         "sprite": "spell0.png",
         "group": "spell",
-        "x": 336,
-        "y": 0,
+        "x": 240,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "resource": "No Cost"
+    },
+    "SummonerHaste_Jade": {
+      "id": "SummonerHaste_Jade",
+      "name": "Ghost",
+      "description": "Gain Move Speed and ignore unit collision for the duration. Summoner's Wrath: Bonus Move Speed granted by Ghost is increased.",
+      "tooltip": "Gain <speed>{{ movespeedmodfinal }} Move Speed</speed> and become <keyword>Ghosted</keyword> for {{ duration }} seconds.<br /><br /><keyword>Ghost</keyword>: Ignore collision with other units.<br /><br />",
+      "maxrank": 1,
+      "cooldown": [
+        240
+      ],
+      "cooldownBurn": "240",
+      "cost": [
+        0
+      ],
+      "costBurn": "0",
+      "datavalues": {},
+      "effect": [
+        null,
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "effectBurn": [
+        null,
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "vars": [],
+      "key": "76",
+      "summonerLevel": 1,
+      "modes": [
+        "JADE"
+      ],
+      "costType": "No Cost",
+      "maxammo": "-1",
+      "range": [
+        200
+      ],
+      "rangeBurn": "200",
+      "image": {
+        "full": "SummonerHaste_Jade.png",
+        "sprite": "spell0.png",
+        "group": "spell",
+        "x": 288,
+        "y": 48,
         "w": 48,
         "h": 48
       },
@@ -855,28 +1608,27 @@
       "key": "7",
       "summonerLevel": 1,
       "modes": [
-        "ULTBOOK",
-        "PRACTICETOOL",
-        "URF",
-        "NEXUSBLITZ",
-        "ONEFORALL",
-        "WIPMODEWIP",
-        "RUBY",
-        "TUTORIAL_MODULE_2",
-        "SWIFTPLAY",
-        "KIWI",
         "ARAM",
-        "CLASSIC",
-        "TUTORIAL",
         "TUTORIAL_MODULE_1",
-        "BRAWL",
-        "WIPMODEWIP3",
-        "RUBY_TRIAL_2",
-        "RUBY_TRIAL_3",
+        "TUTORIAL",
+        "KIWI",
+        "ULTBOOK",
+        "SWIFTPLAY",
+        "CLASSIC",
+        "PRACTICETOOL",
+        "RUBY",
         "RUBY_TRIAL_1",
+        "BRAWL",
+        "URF",
+        "KIWI_JADE",
+        "RUBY_TRIAL_3",
+        "TUTORIAL_MODULE_2",
+        "ONEFORALL",
         "ASSASSINATE",
         "ARSR",
-        "DOOMBOTSTEEMO"
+        "NEXUSBLITZ",
+        "DOOMBOTSTEEMO",
+        "RUBY_TRIAL_2"
       ],
       "costType": "No Cost",
       "maxammo": "-1",
@@ -888,8 +1640,92 @@
         "full": "SummonerHeal.png",
         "sprite": "spell0.png",
         "group": "spell",
+        "x": 336,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "resource": "No Cost"
+    },
+    "SummonerHeal_Jade": {
+      "id": "SummonerHeal_Jade",
+      "name": "Heal",
+      "description": "Restores Health to your champion and to nearby allies. Summoner's Resolve: Gain 5 Health per level.",
+      "tooltip": "Restores {{ totalheal }} Health to your champion and nearby allies.<br /><br />",
+      "maxrank": 1,
+      "cooldown": [
+        300
+      ],
+      "cooldownBurn": "300",
+      "cost": [
+        0
+      ],
+      "costBurn": "0",
+      "datavalues": {},
+      "effect": [
+        null,
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "effectBurn": [
+        null,
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "vars": [],
+      "key": "77",
+      "summonerLevel": 1,
+      "modes": [
+        "JADE"
+      ],
+      "costType": "No Cost",
+      "maxammo": "-1",
+      "range": [
+        600
+      ],
+      "rangeBurn": "600",
+      "image": {
+        "full": "SummonerHeal_Jade.png",
+        "sprite": "spell0.png",
+        "group": "spell",
         "x": 384,
-        "y": 0,
+        "y": 48,
         "w": 48,
         "h": 48
       },
@@ -960,9 +1796,9 @@
       "key": "13",
       "summonerLevel": 6,
       "modes": [
-        "KIWI",
         "ARAM",
-        "FIRSTBLOOD"
+        "FIRSTBLOOD",
+        "KIWI_JADE"
       ],
       "costType": "No Cost",
       "maxammo": "-1",
@@ -975,7 +1811,91 @@
         "sprite": "spell0.png",
         "group": "spell",
         "x": 432,
-        "y": 0,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "resource": "No Cost"
+    },
+    "SummonerMana_Jade": {
+      "id": "SummonerMana_Jade",
+      "name": "Clarity",
+      "description": "Restores all nearby allied champions' mana. Summoner's Insight: Restores 25% more mana.",
+      "tooltip": "Restores <scaleMana>{{ selfmanaactual }}% maximum Mana</scaleMana> to your Champion and <scaleMana>{{ allymanaactual }}%</scaleMana> to nearby allies.<br /><br />",
+      "maxrank": 1,
+      "cooldown": [
+        135
+      ],
+      "cooldownBurn": "135",
+      "cost": [
+        0
+      ],
+      "costBurn": "0",
+      "datavalues": {},
+      "effect": [
+        null,
+        [
+          40
+        ],
+        [
+          40
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "effectBurn": [
+        null,
+        "40",
+        "40",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "vars": [],
+      "key": "713",
+      "summonerLevel": 1,
+      "modes": [
+        "JADE"
+      ],
+      "costType": "No Cost",
+      "maxammo": "-1",
+      "range": [
+        600
+      ],
+      "rangeBurn": "600",
+      "image": {
+        "full": "SummonerMana_Jade.png",
+        "sprite": "spell0.png",
+        "group": "spell",
+        "x": 0,
+        "y": 96,
         "w": 48,
         "h": 48
       },
@@ -1058,8 +1978,8 @@
         "full": "SummonerPoroRecall.png",
         "sprite": "spell0.png",
         "group": "spell",
-        "x": 0,
-        "y": 48,
+        "x": 48,
+        "y": 96,
         "w": 48,
         "h": 48
       },
@@ -1142,8 +2062,176 @@
         "full": "SummonerPoroThrow.png",
         "sprite": "spell0.png",
         "group": "spell",
-        "x": 48,
-        "y": 48,
+        "x": 96,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "resource": "No Cost"
+    },
+    "SummonerRally_Jade": {
+      "id": "SummonerRally_Jade",
+      "name": "Rally",
+      "description": "Summons a temporary beacon which increases allied Attack damage in an area. Summoner's Wrath: Rally additionally gives Ability Power.",
+      "tooltip": "Summons a beacon with <scaleHealth>{{ hpcalc }} Health</scaleHealth> for 15 seconds which creates an aura that increases allied <scaleAD>Attack damage by {{ adcalc }}</scaleAD>.<br /><br />",
+      "maxrank": 1,
+      "cooldown": [
+        270
+      ],
+      "cooldownBurn": "270",
+      "cost": [
+        0
+      ],
+      "costBurn": "0",
+      "datavalues": {},
+      "effect": [
+        null,
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "effectBurn": [
+        null,
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "vars": [],
+      "key": "709",
+      "summonerLevel": 1,
+      "modes": [
+        "JADE"
+      ],
+      "costType": "No Cost",
+      "maxammo": "-1",
+      "range": [
+        25000
+      ],
+      "rangeBurn": "25000",
+      "image": {
+        "full": "SummonerRally_Jade.png",
+        "sprite": "spell0.png",
+        "group": "spell",
+        "x": 144,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "resource": "No Cost"
+    },
+    "SummonerRevive_Jade": {
+      "id": "SummonerRevive_Jade",
+      "name": "Revive",
+      "description": "Instantly revives your champion at your team's Summoner Platform and increases their Movement Speed for a short duration. Summoner's Insight: Revive temporarily grants the user 220-560 Health.",
+      "tooltip": "Instantly revives your champion at your team's Summoner Platform and grants <speed>+{{ spell.summonerrevive_jade:bonusmovespeed*100 }}%</speed> Movement Speed that decays over 12 seconds.<br /><br />",
+      "maxrank": 1,
+      "cooldown": [
+        510
+      ],
+      "cooldownBurn": "510",
+      "cost": [
+        0
+      ],
+      "costBurn": "0",
+      "datavalues": {},
+      "effect": [
+        null,
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "effectBurn": [
+        null,
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "vars": [],
+      "key": "777",
+      "summonerLevel": 1,
+      "modes": [
+        "JADE"
+      ],
+      "costType": "No Cost",
+      "maxammo": "-1",
+      "range": [
+        200
+      ],
+      "rangeBurn": "200",
+      "image": {
+        "full": "SummonerRevive_Jade.png",
+        "sprite": "spell0.png",
+        "group": "spell",
+        "x": 192,
+        "y": 96,
         "w": 48,
         "h": 48
       },
@@ -1234,8 +2322,92 @@
         "full": "SummonerSmite.png",
         "sprite": "spell0.png",
         "group": "spell",
-        "x": 96,
-        "y": 48,
+        "x": 240,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "resource": "No Cost"
+    },
+    "SummonerSmite_Jade": {
+      "id": "SummonerSmite_Jade",
+      "name": "Smite",
+      "description": "Deals true damage to target enemy minion or pet. Summoner's Resolve: Smite grants 10 gold per cast.",
+      "tooltip": "Deals {{ smitedamage }} true damage to target enemy minion or pet.<br /><br />",
+      "maxrank": 1,
+      "cooldown": [
+        70
+      ],
+      "cooldownBurn": "70",
+      "cost": [
+        0
+      ],
+      "costBurn": "0",
+      "datavalues": {},
+      "effect": [
+        null,
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "effectBurn": [
+        null,
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "vars": [],
+      "key": "711",
+      "summonerLevel": 1,
+      "modes": [
+        "JADE"
+      ],
+      "costType": "No Cost",
+      "maxammo": "-1",
+      "range": [
+        760
+      ],
+      "rangeBurn": "760",
+      "image": {
+        "full": "SummonerSmite_Jade.png",
+        "sprite": "spell0.png",
+        "group": "spell",
+        "x": 288,
+        "y": 96,
         "w": 48,
         "h": 48
       },
@@ -1318,8 +2490,8 @@
         "full": "SummonerSnowURFSnowball_Mark.png",
         "sprite": "spell0.png",
         "group": "spell",
-        "x": 144,
-        "y": 48,
+        "x": 336,
+        "y": 96,
         "w": 48,
         "h": 48
       },
@@ -1390,10 +2562,10 @@
       "key": "32",
       "summonerLevel": 6,
       "modes": [
+        "KIWI",
+        "KIWI_JADE",
         "ARAM",
-        "FIRSTBLOOD",
-        "WIPMODEWIP5",
-        "KIWI"
+        "FIRSTBLOOD"
       ],
       "costType": "No Cost",
       "maxammo": "-1",
@@ -1405,8 +2577,92 @@
         "full": "SummonerSnowball.png",
         "sprite": "spell0.png",
         "group": "spell",
-        "x": 192,
-        "y": 48,
+        "x": 384,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "resource": "No Cost"
+    },
+    "SummonerSpell_Promote_Jade": {
+      "id": "SummonerSpell_Promote_Jade",
+      "name": "Promote",
+      "description": "Promotes a minion, granting it bonus stats, an empowering aura, and causing it to grant the caster gold for its kills. Summoner's Wrath: The Siege Rider's bonus Attack Damage aura also affects Champions.",
+      "tooltip": "Promotes an allied minion to a <keywordMajor>Siege Rider</keywordMajor> with <healing>{{ unithealth }} Health</healing> and <physicalDamage>{{ unitdamage }} Attack Damage</physicalDamage> who grants the caster gold for its kills.<br /><br />The <keywordMajor>Siege Rider</keywordMajor> has an aura that provides <physicalDamage>{{ damageaura }} Attack Damage</physicalDamage> and <scaleArmor>{{ armoraura }} Armor</scaleArmor> to nearby minions.<br /><br />",
+      "maxrank": 1,
+      "cooldown": [
+        270
+      ],
+      "cooldownBurn": "270",
+      "cost": [
+        0
+      ],
+      "costBurn": "0",
+      "datavalues": {},
+      "effect": [
+        null,
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "effectBurn": [
+        null,
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "vars": [],
+      "key": "720",
+      "summonerLevel": 1,
+      "modes": [
+        "JADE"
+      ],
+      "costType": "No Cost",
+      "maxammo": "-1",
+      "range": [
+        4294967295
+      ],
+      "rangeBurn": "4294967295",
+      "image": {
+        "full": "SummonerSpell_Promote_Jade.png",
+        "sprite": "spell0.png",
+        "group": "spell",
+        "x": 432,
+        "y": 96,
         "w": 48,
         "h": 48
       },
@@ -1477,18 +2733,18 @@
       "key": "12",
       "summonerLevel": 7,
       "modes": [
-        "TUTORIAL",
-        "ULTBOOK",
-        "ARSR",
         "CLASSIC",
-        "RUBY_TRIAL_2",
-        "ASSASSINATE",
-        "PRACTICETOOL",
-        "DOOMBOTSTEEMO",
-        "ONEFORALL",
         "SWIFTPLAY",
+        "ULTBOOK",
         "WIPMODEWIP4",
+        "DOOMBOTSTEEMO",
+        "PRACTICETOOL",
+        "ONEFORALL",
         "RUBY",
+        "ARSR",
+        "RUBY_TRIAL_2",
+        "TUTORIAL",
+        "ASSASSINATE",
         "RUBY_TRIAL_3",
         "RUBY_TRIAL_1"
       ],
@@ -1502,8 +2758,92 @@
         "full": "SummonerTeleport.png",
         "sprite": "spell0.png",
         "group": "spell",
-        "x": 240,
-        "y": 48,
+        "x": 0,
+        "y": 144,
+        "w": 48,
+        "h": 48
+      },
+      "resource": "No Cost"
+    },
+    "SummonerTeleport_Jade": {
+      "id": "SummonerTeleport_Jade",
+      "name": "Teleport",
+      "description": "After a short channel, your champion teleports to a target allied minion, turret, or ward. Summoner's Insight: Teleport's channel time is reduced.",
+      "tooltip": "After channeling for {{ channeltimefinal }} seconds, your champion teleports to target allied minion, turret, or ward.<br /><br />",
+      "maxrank": 1,
+      "cooldown": [
+        300
+      ],
+      "cooldownBurn": "300",
+      "cost": [
+        0
+      ],
+      "costBurn": "0",
+      "datavalues": {},
+      "effect": [
+        null,
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "effectBurn": [
+        null,
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "vars": [],
+      "key": "712",
+      "summonerLevel": 1,
+      "modes": [
+        "JADE"
+      ],
+      "costType": "No Cost",
+      "maxammo": "-1",
+      "range": [
+        25000
+      ],
+      "rangeBurn": "25000",
+      "image": {
+        "full": "SummonerTeleport_Jade.png",
+        "sprite": "spell0.png",
+        "group": "spell",
+        "x": 48,
+        "y": 144,
         "w": 48,
         "h": 48
       },
@@ -1586,8 +2926,8 @@
         "full": "Summoner_UltBookPlaceholder.png",
         "sprite": "spell0.png",
         "group": "spell",
-        "x": 288,
-        "y": 48,
+        "x": 96,
+        "y": 144,
         "w": 48,
         "h": 48
       },
@@ -1670,8 +3010,8 @@
         "full": "Summoner_UltBookSmitePlaceholder.png",
         "sprite": "spell0.png",
         "group": "spell",
-        "x": 336,
-        "y": 48,
+        "x": 144,
+        "y": 144,
         "w": 48,
         "h": 48
       },

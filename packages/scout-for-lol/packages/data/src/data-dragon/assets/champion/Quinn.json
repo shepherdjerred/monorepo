@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Quinn": {
       "id": "Quinn",
@@ -10,7 +10,7 @@
       "title": "Demacia's Wings",
       "image": {
         "full": "Quinn.png",
-        "sprite": "champion3.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 192,
         "y": 48,
@@ -426,10 +426,10 @@
           "rangeBurn": "1025",
           "image": {
             "full": "QuinnQ.png",
-            "sprite": "spell10.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 192,
-            "y": 144,
+            "x": 0,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -569,10 +569,10 @@
           "rangeBurn": "2100",
           "image": {
             "full": "QuinnW.png",
-            "sprite": "spell10.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 240,
-            "y": 144,
+            "x": 48,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -710,10 +710,10 @@
           "rangeBurn": "675",
           "image": {
             "full": "QuinnE.png",
-            "sprite": "spell10.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 288,
-            "y": 144,
+            "x": 96,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -827,10 +827,10 @@
           "rangeBurn": "700",
           "image": {
             "full": "QuinnR.png",
-            "sprite": "spell10.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 336,
-            "y": 144,
+            "x": 144,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -842,7 +842,7 @@
         "description": "Valor, Quinn's Demacian eagle, periodically marks enemies with <keywordMajor>Harrier</keywordMajor>. Quinn's first basic attack against <keywordMajor>Harrier</keywordMajor> targets will deal bonus physical damage.",
         "image": {
           "full": "Quinn_Passive.png",
-          "sprite": "passive3.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 192,
           "y": 48,
