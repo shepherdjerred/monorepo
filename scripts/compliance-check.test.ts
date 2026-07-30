@@ -119,6 +119,11 @@ describe("invokesAmbiguousTypeScriptCompiler", () => {
     "bun --preload=./setup.ts x --no-install tsc --noEmit",
     "bun --conditions=development --smol x tsc --noEmit",
     "bun x --package typescript tsc --noEmit",
+    "NODE_OPTIONS=--max-old-space-size=4096 tsc --noEmit",
+    "CI=1 NODE_OPTIONS=--max-old-space-size=4096 tsc --noEmit",
+    "PATH=node_modules/@typescript/native/bin:$PATH PATH=/usr/bin tsc --noEmit",
+    "NODE_OPTIONS=--max-old-space-size=4096 bunx --no-install tsc --noEmit",
+    "CI=1 NODE_OPTIONS=--max-old-space-size=4096 bun --bun x --no-install tsc --noEmit",
     "eslint . && bun --silent x --verbose tsc --noEmit",
   ])("recognizes %s", (command) => {
     expect(invokesAmbiguousTypeScriptCompiler(command)).toBe(true);
@@ -126,6 +131,9 @@ describe("invokesAmbiguousTypeScriptCompiler", () => {
 
   test.each([
     "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "CI=1 PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "PATH=/usr/bin PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    'COMPILER="tsc --noEmit" eslint .',
     "bun run tsc --noEmit",
     "bun test tsc",
     "bun x eslint tsc",

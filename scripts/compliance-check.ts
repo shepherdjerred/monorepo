@@ -61,8 +61,9 @@ const RootPackageJsonSchema = z
   .loose();
 
 const requiredScripts = ["build", "test", "lint", "typecheck"] as const;
-const nativeTypeScriptCommand =
-  "PATH=node_modules/@typescript/native/bin:$PATH tsc";
+const nativeTypeScriptPathAssignment =
+  "PATH=node_modules/@typescript/native/bin:$PATH";
+const nativeTypeScriptCommand = `${nativeTypeScriptPathAssignment} tsc`;
 const nativeTypeScriptVersion = "npm:typescript@7.0.2";
 const bunGlobalFlagsBeforeX = new Set([
   "-b",
@@ -199,6 +200,33 @@ function isBunGlobalOptionBeforeX(token: string): boolean {
   );
 }
 
+function isShellEnvironmentAssignment(token: string): boolean {
+  const equalsIndex = token.indexOf("=");
+  return equalsIndex > 0 && /^[a-z_]\w*$/i.test(token.slice(0, equalsIndex));
+}
+
+function findShellExecutableIndex(tokens: string[]): number {
+  let index = 0;
+  while (index < tokens.length) {
+    const token = tokens[index];
+    if (token === undefined || !isShellEnvironmentAssignment(token)) break;
+    index += 1;
+  }
+  return index;
+}
+
+function usesNativeTypeScriptPath(
+  tokens: string[],
+  executableIndex: number,
+): boolean {
+  let pathAssignment: string | undefined;
+  for (let index = 0; index < executableIndex; index += 1) {
+    const token = tokens[index];
+    if (token?.startsWith("PATH=") === true) pathAssignment = token;
+  }
+  return pathAssignment === nativeTypeScriptPathAssignment;
+}
+
 function findBunxExecutable(
   tokens: string[],
   startIndex: number,
@@ -226,14 +254,17 @@ function findBunxExecutable(
 
 export function invokesAmbiguousTypeScriptCompiler(script: string): boolean {
   return tokenizeShellCommands(script).some((tokens) => {
-    const executable = tokens[0];
-    if (executable === "tsc") return true;
+    const executableIndex = findShellExecutableIndex(tokens);
+    const executable = tokens[executableIndex];
+    if (executable === "tsc") {
+      return !usesNativeTypeScriptPath(tokens, executableIndex);
+    }
     if (executable === "bunx") {
-      return findBunxExecutable(tokens, 1) === "tsc";
+      return findBunxExecutable(tokens, executableIndex + 1) === "tsc";
     }
     if (executable !== "bun") return false;
 
-    let index = 1;
+    let index = executableIndex + 1;
     while (index < tokens.length) {
       const token = tokens[index];
       if (
