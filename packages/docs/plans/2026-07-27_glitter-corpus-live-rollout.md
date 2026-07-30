@@ -53,7 +53,15 @@ schedule is deliberately unpaused.
       message counts are explicitly distinct from the bounded 200-message model
       evidence sample; regenerate and re-review affected cards if that correction
       changes generated content.
-- [ ] Complete #1834's current-head Buildkite after the metadata correction.
+- [ ] Decide and record whether Glitter style cards are recent-behavior snapshots
+      or cumulative personas. If recent snapshots are selected, explicitly record
+      the bounded recent-window contract. If cumulative personas are selected,
+      implement time-stratified sampling and/or field-level merge behavior that
+      retains uncontradicted observations, regenerate the proposal, and re-review
+      Jerred, Virmel, Brian, Danny, Edward, Hirza, Irfan, and Ryan before
+      acceptance.
+- [ ] Complete #1834's current-head Buildkite after the metadata correction and
+      any persona-contract implementation work.
 - [ ] When pre-merge agent work is complete, set this plan to
       `status: awaiting-human` and `verification: human`.
 - [ ] Add a `## Human Verification` scenario that asks the reviewer to inspect
@@ -83,8 +91,9 @@ schedule is deliberately unpaused.
 - [x] Run one real weekly refresh, inspect its sole PR, and complete pre-merge
       package-level smoke tests for the shared package, Birmel, Scout, and
       Glitter consumers.
-- [ ] Correct #1834's coverage metadata, then complete current-head CI and
-      subjective generated-content review before merging it.
+- [ ] Correct #1834's coverage metadata, decide and satisfy the persona contract,
+      then complete current-head CI and subjective generated-content review
+      before merging it.
 - [ ] Run merged-main and production consumer smoke checks after #1834 merges.
 - [ ] Deliberately unpause `glitter-context-refresh-weekly`, confirm its
       next-run time, and verify clean corpus/context observability.
@@ -113,9 +122,15 @@ schedule is deliberately unpaused.
 - [x] Accept the daily workflow and unpause its schedule.
 - [ ] Correct #1834's coverage metadata to distinguish verified-corpus message
       counts from the bounded 200-message model evidence sample.
-- [ ] Complete #1834's current-head CI, then transition this plan to
-      `awaiting-human` / `verification: human` with the observable
-      generated-content review scenario.
+- [ ] Decide and record the style-card persona contract before acceptance. A
+      recent-snapshot decision must explicitly record the bounded recent-window
+      behavior. A cumulative-persona decision must block acceptance until
+      time-stratified sampling and/or field-level merge behavior is implemented,
+      the proposal is regenerated, and Jerred, Virmel, Brian, Danny, Edward,
+      Hirza, Irfan, and Ryan are re-reviewed.
+- [ ] Complete #1834's current-head CI after the selected persona-contract work,
+      then transition this plan to `awaiting-human` / `verification: human` with
+      the observable generated-content review scenario.
 - [ ] Complete the subjective human review before merging PR #1834.
 - [ ] Return this plan to `in-progress` / `verification: agent`, merge #1834,
       and complete merged-main and production consumer smoke checks.
@@ -961,3 +976,36 @@ schedule is deliberately unpaused.
 - Aaron's prior `coverage.messages: 5011` described an explicitly truncated
   sample with a narrower date range; it was not a prior full-corpus count and
   should not be interpreted as having doubled.
+
+## Session Log — 2026-07-29 (persona-contract gate)
+
+### Done
+
+- Added an explicit pre-acceptance decision gate for recent-behavior snapshots
+  versus cumulative personas.
+- Recorded the required conditional follow-through: document the bounded recent
+  window when snapshots are intended, or implement cumulative sampling/merge
+  behavior, regenerate, and re-review all eight cards when cumulative personas
+  are intended.
+
+### Remaining
+
+- Choose and record the Glitter style-card persona contract.
+- If cumulative personas are selected, implement time-stratified sampling and/or
+  field-level merge behavior that retains uncontradicted observations, regenerate
+  the proposal, and re-review Jerred, Virmel, Brian, Danny, Edward, Hirza, Irfan,
+  and Ryan before acceptance.
+- Complete the metadata correction and current-head Buildkite verification, then
+  transition the workflow to human acceptance.
+- Complete the eight-card subjective human review before merging PR #1834.
+- After acceptance, return the workflow to agent execution, merge PR #1834, run
+  the merged-main and production consumer smokes, and only then unpause Glitter
+  and complete/archive the rollout records.
+
+### Caveats
+
+- No persona-contract decision has been made; the generated cards remain pending
+  acceptance.
+- The current implementation behaves as a bounded recent-window rewrite despite
+  earlier preservation language, so cumulative-persona acceptance requires the
+  implementation and re-review work above.
