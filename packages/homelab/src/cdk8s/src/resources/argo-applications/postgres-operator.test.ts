@@ -10,14 +10,17 @@ const PostgresOperatorApplicationSchema = z.object({
   spec: z.object({
     source: z.object({
       helm: z.object({
-        valuesObject: z.object({
-          configGeneral: z.object({
-            enable_maintenance_windows: z.literal(true),
+        valuesObject: z.looseObject({
+          configGeneral: z.looseObject({
+            kubernetes_use_configmaps: z.literal(true),
+            workers: z.literal(1),
           }),
-          configLogicalBackup: z.object({
-            logical_backup_successful_jobs_history_limit: z.literal(3),
-            logical_backup_failed_jobs_history_limit: z.literal(3),
-            logical_backup_ttl_seconds_after_finished: z.literal(86_400),
+          configKubernetes: z.object({
+            enable_cross_namespace_secret: z.literal(true),
+            enable_pod_disruption_budget: z.literal(false),
+          }),
+          configPatroni: z.object({
+            enable_patroni_failsafe_mode: z.literal(true),
           }),
         }),
       }),
@@ -26,7 +29,7 @@ const PostgresOperatorApplicationSchema = z.object({
 });
 
 describe("Postgres Operator Argo CD application", () => {
-  it("declares CRD defaults that would otherwise cause live-state drift", () => {
+  it("only overrides deployment-specific operator settings", () => {
     const app = new App();
     const chart = new Chart(app, "test");
     createPostgresOperatorApp(chart);
@@ -39,17 +42,23 @@ describe("Postgres Operator Argo CD application", () => {
       throw new Error("Postgres Operator Application was not synthesized");
     }
 
-    expect(manifest.data.spec.source.helm.valuesObject).toEqual(
+    const values = manifest.data.spec.source.helm.valuesObject;
+    expect(values.configGeneral).toEqual({
+      kubernetes_use_configmaps: true,
+      workers: 1,
+    });
+    expect(values.configKubernetes).toEqual(
       expect.objectContaining({
-        configGeneral: expect.objectContaining({
-          enable_maintenance_windows: true,
-        }),
-        configLogicalBackup: {
-          logical_backup_successful_jobs_history_limit: 3,
-          logical_backup_failed_jobs_history_limit: 3,
-          logical_backup_ttl_seconds_after_finished: 86_400,
-        },
+        enable_cross_namespace_secret: true,
+        enable_pod_disruption_budget: false,
       }),
     );
+    expect(values.configPatroni).toEqual({
+      enable_patroni_failsafe_mode: true,
+    });
+    expect(values.configGeneral).not.toHaveProperty(
+      "enable_maintenance_windows",
+    );
+    expect(values).not.toHaveProperty("configLogicalBackup");
   });
 });

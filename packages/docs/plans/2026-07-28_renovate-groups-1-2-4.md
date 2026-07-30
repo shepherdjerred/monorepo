@@ -141,19 +141,19 @@ After merge and GitOps reconciliation:
 - Drove pull request #1791 through green current-head Buildkite build [6873](https://buildkite.com/sjerred/monorepo/builds/6873), resolved all review threads, confirmed a clean merge tree, and observed its merge as `52f25f271`.
 - Verified current-main Buildkite build [6874](https://buildkite.com/sjerred/monorepo/builds/6874) passed all selected main, release, deployment, reconciliation, and summary lanes.
 - Confirmed postgres-operator v2.0.0 reconciled successfully; all four single-member databases rolled serially to ready `spilo-18:4.1-p2` primaries with zero restarts, and their Bugsink, Plausible, Grafana, and Temporal consumers remained ready.
-- Identified four v2 CRD defaults that left the healthy postgres-operator Application perpetually `OutOfSync`, encoded them explicitly in the typed Helm values, and added a synthesis regression test.
+- Verified the pinned v2 chart renders the four intended operator defaults without local overrides, confirmed the live postgres-operator Application is `Synced` and `Healthy`, and added synthesis plus rendered-manifest regression coverage.
 
 ### Remaining
 
 - Wait for the serialized pre-migration Velero backup to reach a terminal phase and validate its complete R2 volume data set.
 - Remove only the four verified obsolete DCS config Endpoints, retain the database service Endpoints, and revalidate the four databases and their clients.
 - Create and validate the post-migration full backup after the first backup releases the ZFS writer.
-- Publish the small postgres-operator desired-state follow-up and drive its current-head Buildkite and review gates to green.
+- Publish the small postgres-operator rendered-default regression follow-up and drive its current-head Buildkite and review gates to green.
 
 ### Caveats
 
 - The pre-migration backup was created before merge and is actively uploading full ZFS volume data to R2, but it had not reached a terminal Velero phase when the merge occurred.
 - The post-merge DCS cleanup removes only obsolete `*-postgresql-config` Endpoints; service Endpoints remain.
 - The active ConfigMap DCS contains each cluster's `-config` and `-leader` keys. The optional `-failover` key is absent because no failover is pending; its absence is not a migration failure.
-- The live postgres-operator Application is healthy but remains `OutOfSync` until the four Kubernetes-defaulted v2 fields are made explicit by the follow-up change.
+- The live postgres-operator Application is `Synced` and `Healthy`; the follow-up guards the four current v2 defaults at the actual Helm-rendered `OperatorConfiguration` boundary.
 - Unicorn 69's `recommended` preset is not treated as an automatically accepted policy change. The shared config now positively enumerates the 137 previously reviewed rules against the v69 plugin, so future policy additions remain explicit, reviewable changes.

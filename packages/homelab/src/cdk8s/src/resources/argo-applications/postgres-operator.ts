@@ -16,9 +16,6 @@ export function createPostgresOperatorApp(chart: Chart) {
       // migration explicit so a future chart default cannot move clusters back
       // to the deprecated Endpoints-backed DCS.
       kubernetes_use_configmaps: true,
-      // Keep CRD-defaulted values explicit so the live OperatorConfiguration
-      // remains identical to the Helm-rendered desired state in Argo CD.
-      enable_maintenance_windows: true,
       // Four single-instance databases share this single-node cluster. Reconcile
       // them serially during the v2 maintenance event to limit disruption.
       workers: 1,
@@ -39,13 +36,6 @@ export function createPostgresOperatorApp(chart: Chart) {
     configPatroni: {
       // Configure Patroni for single-node setup
       enable_patroni_failsafe_mode: true,
-    },
-    configLogicalBackup: {
-      // These v2 CRD defaults are persisted by the Kubernetes API even when the
-      // chart omits them, which otherwise leaves the application OutOfSync.
-      logical_backup_successful_jobs_history_limit: 3,
-      logical_backup_failed_jobs_history_limit: 3,
-      logical_backup_ttl_seconds_after_finished: 86_400,
     },
     // Resource configuration for single-node deployment
     resources: {
