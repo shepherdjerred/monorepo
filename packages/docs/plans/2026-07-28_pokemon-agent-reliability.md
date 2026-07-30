@@ -926,3 +926,27 @@ deferred by explicit direction.
   remains untouched.
 - All #1848 findings remain unchanged.
 - Shared-cache Buildkite retries and cache mutations remain explicitly deferred.
+
+## Session Log — 2026-07-29 (same-map warp traversal)
+
+### Done
+
+- Recognized a selected same-map warp as `exit-traversed` when the settled
+  observation matches its engine-exported destination landing.
+- Preserved trigger-only and genuine activation-no-effect outcomes with focused
+  controller regressions.
+- Passed the focused controller suite, backend typecheck, changed-file ESLint,
+  and changed-file Prettier checks.
+
+### Remaining
+
+- Await current-head Buildkite and hosted-review responses for PRs #1847 and
+  #1848.
+
+### Caveats
+
+- Same-map traversal is reported only from a resolved exported landing that
+  differs from the trigger; an unresolved dynamic destination is not guessed
+  from unrelated state changes.
+- The four #1848 findings remain unchanged.
+- Shared-cache Buildkite retries and cache mutations remain explicitly deferred.

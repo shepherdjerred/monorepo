@@ -125,6 +125,27 @@ function mapTopology(
   };
 }
 
+function sameMapWarpTopology(): EngineMapTopologyV1 {
+  return mapTopology({
+    warps: [
+      {
+        version: 1,
+        size: 24,
+        index: 3,
+        trigger: { x: 10, y: 9, elevation: 0, behavior: 0 },
+        activation: "step",
+        destination: {
+          mapGroup: 0,
+          mapNum: 0,
+          warpId: 1,
+          dynamic: false,
+          landing: { x: 8, y: 8 },
+        },
+      },
+    ],
+  });
+}
+
 class FakeControlPort implements GameControlPort {
   readonly presses: CommandInput[] = [];
   private current: GameObservationV2;
@@ -868,6 +889,56 @@ describe("GameController exit navigation", () => {
     expect(missing.stopReason).toBe("exit-not-found");
     expect(unsupported.stopReason).toBe("exit-not-navigable");
     expect(port.presses).toEqual([]);
+  });
+});
+
+describe("GameController same-map warp traversal", () => {
+  test("reports the exported destination landing as traversed", async () => {
+    const topology = sameMapWarpTopology();
+    const port = new FakeControlPort(
+      observation({ x: 10, y: 10, facing: "north" }),
+      [observation({ frame: 12, x: 8, y: 8, facing: "south" })],
+      { topology },
+    );
+
+    const result = await new GameController(port).navigateExit("warp:3", 1);
+
+    expect(result.status).toBe("traversed");
+    expect(result.stopReason).toBe("exit-traversed");
+    expect(result.attemptsMade).toBe(1);
+    expect(result.stepsTaken).toBe(4);
+    expect(port.presses.map((press) => press.command)).toEqual(["up"]);
+  });
+
+  test("still reports reaching only the trigger as triggered", async () => {
+    const topology = sameMapWarpTopology();
+    const port = new FakeControlPort(
+      observation({ x: 10, y: 10, facing: "north" }),
+      [observation({ frame: 12, x: 10, y: 9, facing: "north" })],
+      { topology },
+    );
+
+    const result = await new GameController(port).navigateExit("warp:3", 1);
+
+    expect(result.status).toBe("triggered");
+    expect(result.stopReason).toBe("exit-triggered");
+    expect(result.attemptsMade).toBe(1);
+    expect(result.stepsTaken).toBe(1);
+    expect(port.presses.map((press) => press.command)).toEqual(["up"]);
+  });
+
+  test("preserves activation no-effect when the player does not move", async () => {
+    const topology = sameMapWarpTopology();
+    const unchanged = observation({ x: 10, y: 10, facing: "north" });
+    const port = new FakeControlPort(unchanged, [unchanged], { topology });
+
+    const result = await new GameController(port).navigateExit("warp:3", 1);
+
+    expect(result.status).toBe("stopped");
+    expect(result.stopReason).toBe("activation-no-effect");
+    expect(result.attemptsMade).toBe(1);
+    expect(result.stepsTaken).toBe(0);
+    expect(port.presses.map((press) => press.command)).toEqual(["up", "up"]);
   });
 });
 

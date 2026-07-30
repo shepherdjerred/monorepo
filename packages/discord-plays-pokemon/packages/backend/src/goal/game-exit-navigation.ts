@@ -4,8 +4,10 @@ import type { ActionOutcomeV1 } from "./game-action-outcome.ts";
 import {
   competingAutomaticWarpEdges,
   coordinateKey,
+  mapMatchesTopology,
   movementEdgeKey,
   occupiedTiles,
+  reachedSelectedSameMapWarpLanding,
 } from "./game-exit-navigation-blocks.ts";
 import type { GameObservationV2 } from "./game-observation.ts";
 import type {
@@ -64,17 +66,6 @@ function nextCoordinate(
 ): Readonly<{ x: number; y: number }> {
   const movement = delta(direction);
   return { x: x + movement.dx, y: y + movement.dy };
-}
-
-function mapMatches(
-  observation: GameObservationV2,
-  topology: EngineMapTopologyV1,
-): boolean {
-  return (
-    observation.world !== null &&
-    observation.world.mapGroup === topology.mapGroup &&
-    observation.world.mapNum === topology.mapNum
-  );
 }
 
 function inBounds(
@@ -300,7 +291,7 @@ function prepareExitNavigation(
       }),
     };
   }
-  if (!mapMatches(before, topology)) {
+  if (!mapMatchesTopology(before, topology)) {
     return {
       outcome: exitResult({
         exitId: options.exitId,
@@ -334,7 +325,8 @@ function currentNavigationStopReason(
   topology: EngineMapTopologyV1,
 ): ExitNavigationStopReason | null {
   if (observation.phase !== "overworld") return "phase-changed";
-  if (!mapMatches(observation, topology)) return "unexpected-map-change";
+  if (!mapMatchesTopology(observation, topology))
+    return "unexpected-map-change";
   if (observation.world === null || !observation.readiness.inputReady) {
     return "field-input-not-ready";
   }
@@ -348,7 +340,9 @@ function completedStepStopReason(
 ): ExitNavigationStopReason | null {
   if (settleTimedOut) return "settle-timeout";
   if (observation.phase !== "overworld") return "phase-changed";
-  return mapMatches(observation, topology) ? null : "unexpected-map-change";
+  return mapMatchesTopology(observation, topology)
+    ? null
+    : "unexpected-map-change";
 }
 
 async function activateSelectedExit(options: {
@@ -364,14 +358,19 @@ async function activateSelectedExit(options: {
   );
   const after = activation.after;
   const mapChanged =
-    after.world !== null && !mapMatches(after, options.topology);
+    after.world !== null && !mapMatchesTopology(after, options.topology);
+  const reachedWarpLanding = reachedSelectedSameMapWarpLanding(
+    options.topology,
+    options.navigation.exitId,
+    after,
+  );
   const reachedTrigger =
     options.path.activation.trigger !== null &&
     after.world !== null &&
     after.world.x === options.path.activation.trigger.x &&
     after.world.y === options.path.activation.trigger.y;
   let stopReason: ExitNavigationStopReason = "activation-no-effect";
-  if (mapChanged) {
+  if (mapChanged || reachedWarpLanding) {
     stopReason = "exit-traversed";
   } else if (after.phase !== "overworld" || reachedTrigger) {
     stopReason = "exit-triggered";

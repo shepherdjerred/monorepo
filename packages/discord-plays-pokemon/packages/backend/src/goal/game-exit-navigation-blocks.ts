@@ -24,6 +24,39 @@ export function movementEdgeKey(
   return `${coordinateKey(from.x, from.y)}>${coordinateKey(to.x, to.y)}`;
 }
 
+export function mapMatchesTopology(
+  observation: GameObservationV2,
+  topology: EngineMapTopologyV1,
+): boolean {
+  return (
+    observation.world !== null &&
+    observation.world.mapGroup === topology.mapGroup &&
+    observation.world.mapNum === topology.mapNum
+  );
+}
+
+export function reachedSelectedSameMapWarpLanding(
+  topology: EngineMapTopologyV1,
+  exitId: string,
+  observation: GameObservationV2,
+): boolean {
+  const warp = topology.warps.find(
+    (candidate) => exitId === `warp:${String(candidate.index)}`,
+  );
+  const world = observation.world;
+  if (warp === undefined || world === null) return false;
+  const landing = warp.destination.landing;
+  if (landing === null) return false;
+  return (
+    warp.destination.mapGroup === topology.mapGroup &&
+    warp.destination.mapNum === topology.mapNum &&
+    mapMatchesTopology(observation, topology) &&
+    (landing.x !== warp.trigger.x || landing.y !== warp.trigger.y) &&
+    world.x === landing.x &&
+    world.y === landing.y
+  );
+}
+
 export function competingAutomaticWarpEdges(
   topology: EngineMapTopologyV1,
   exitId: string,
