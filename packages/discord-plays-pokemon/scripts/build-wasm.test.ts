@@ -350,6 +350,9 @@ describe("patch source identity and ABI validation", () => {
 
     expect(observationPatch).toContain("@@ -0,0 +1,595 @@");
     expect(observationPatch.trimEnd().endsWith("+}")).toBe(true);
+    expect(observationPatch).toContain(
+      "+    sWasmObservation.battleTypeFlags = gBattleTypeFlags;",
+    );
     expect(eligibilityPatch).toContain(
       "+        if (GetBattlerSide(other) == GetBattlerSide(battler)\n" +
         "+         || (gAbsentBattlerFlags & (1u << other))\n" +

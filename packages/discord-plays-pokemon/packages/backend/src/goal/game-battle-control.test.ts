@@ -257,6 +257,15 @@ function enigmaBerryObservation(): GameObservationV2 {
   });
 }
 
+const BALL_INVENTORY: GameState["inventory"] = [
+  { itemId: 3, item: "GREAT BALL", quantity: 2, pocket: "poke-balls" },
+  { itemId: 4, item: "POKé BALL", quantity: 5, pocket: "poke-balls" },
+];
+
+const X_ATTACK_INVENTORY: GameState["inventory"] = [
+  { itemId: 75, item: "X ATTACK", quantity: 1, pocket: "items" },
+];
+
 describe("GameBattleControl move actions", () => {
   test("selects an ordinary first-turn move before opening Fight", async () => {
     const port = new BattlePort(observation({ frame: 10, actionCursor: 1 }), [
@@ -1115,24 +1124,47 @@ describe("GameBattleControl item actions", () => {
     );
     expect(port.presses).toEqual([]);
   });
+
+  test.each([
+    { name: "Battle Dome", typeFlags: 1 << 16 },
+    { name: "Battle Factory", typeFlags: 1 << 19 },
+    { name: "Battle Pike", typeFlags: 1 << 20 },
+  ])("rejects Bag items in $name before input", async ({ typeFlags }) => {
+    const port = new BattlePort(
+      observation({ frame: 10, typeFlags, inventory: X_ATTACK_INVENTORY }),
+      [],
+    );
+    await expect(new GameBattleControl(port).item(75)).rejects.toThrow(
+      "Bag items cannot be used in this battle",
+    );
+    expect(port.presses).toEqual([]);
+  });
+
+  test.each([
+    { name: "ordinary wild", typeFlags: 1 << 2 },
+    { name: "ordinary trainer", typeFlags: (1 << 2) | (1 << 3) },
+    { name: "ordinary double", typeFlags: (1 << 2) | 1 },
+  ])("allows Bag items in an $name battle", ({ typeFlags }) => {
+    const current = observation({
+      frame: 10,
+      typeFlags,
+      inventory: X_ATTACK_INVENTORY,
+    });
+    const battle = current.battle;
+    if (battle === null) throw new Error("test observation has no battle");
+    expect(
+      requireBattleItemSelection(current, battle, 75, {
+        partySlot: undefined,
+        canUseOnBattler: () => true,
+        canUseOnPartyMon: () => false,
+      }).pocket,
+    ).toBe(0);
+  });
 });
 
 describe("GameBattleControl Bag navigation", () => {
   test("moves down from an earlier Bag entry and confirms selection", async () => {
-    const inventory: GameState["inventory"] = [
-      {
-        itemId: 3,
-        item: "GREAT BALL",
-        quantity: 2,
-        pocket: "poke-balls",
-      },
-      {
-        itemId: 4,
-        item: "POKé BALL",
-        quantity: 5,
-        pocket: "poke-balls",
-      },
-    ];
+    const inventory = BALL_INVENTORY;
     const port = new BattlePort(observation({ frame: 10, inventory }), [
       observation({ frame: 12, actionCursor: 1 }),
       observation({
@@ -1204,20 +1236,7 @@ describe("GameBattleControl Bag navigation", () => {
   });
 
   test("moves up from a later Bag entry and confirms selection", async () => {
-    const inventory: GameState["inventory"] = [
-      {
-        itemId: 3,
-        item: "GREAT BALL",
-        quantity: 2,
-        pocket: "poke-balls",
-      },
-      {
-        itemId: 4,
-        item: "POKé BALL",
-        quantity: 5,
-        pocket: "poke-balls",
-      },
-    ];
+    const inventory = BALL_INVENTORY;
     const port = new BattlePort(observation({ frame: 10, inventory }), [
       observation({ frame: 12, actionCursor: 1, inventory }),
       observation({

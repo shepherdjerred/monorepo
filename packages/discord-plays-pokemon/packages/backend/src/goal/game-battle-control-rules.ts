@@ -34,7 +34,29 @@ type BattleItemPreflight = Readonly<{
 }>;
 
 const BATTLE_TYPE_DOUBLE = 1;
+const BATTLE_TYPE_LINK = 1 << 1;
 const BATTLE_TYPE_TRAINER = 1 << 3;
+const BATTLE_TYPE_BATTLE_TOWER = 1 << 8;
+const BATTLE_TYPE_EREADER_TRAINER = 1 << 11;
+const BATTLE_TYPE_DOME = 1 << 16;
+const BATTLE_TYPE_PALACE = 1 << 17;
+const BATTLE_TYPE_ARENA = 1 << 18;
+const BATTLE_TYPE_FACTORY = 1 << 19;
+const BATTLE_TYPE_PIKE = 1 << 20;
+const BATTLE_TYPE_RECORDED_LINK = 1 << 25;
+const BATTLE_TYPE_FRONTIER_NO_PYRAMID =
+  BATTLE_TYPE_BATTLE_TOWER |
+  BATTLE_TYPE_DOME |
+  BATTLE_TYPE_PALACE |
+  BATTLE_TYPE_ARENA |
+  BATTLE_TYPE_FACTORY |
+  BATTLE_TYPE_PIKE;
+// Matches Emerald's B_ACTION_USE_ITEM gate in the pinned battle_main.c.
+const BATTLE_TYPE_BAG_DISABLED =
+  BATTLE_TYPE_LINK |
+  BATTLE_TYPE_FRONTIER_NO_PYRAMID |
+  BATTLE_TYPE_EREADER_TRAINER |
+  BATTLE_TYPE_RECORDED_LINK;
 const PARTY_ACTION_SEND_OUT = 1;
 const MOVE_TARGET_SELECTED = 0;
 const MOVE_TARGET_USER_OR_SELECTED = 1 << 1;
@@ -172,6 +194,9 @@ export function requireBattleItemSelection(
   itemId: number,
   preflight: BattleItemPreflight,
 ): BattleItemSelection {
+  if ((battle.typeFlags & BATTLE_TYPE_BAG_DISABLED) !== 0) {
+    throw new Error("Bag items cannot be used in this battle");
+  }
   const inventoryItem = observation.game?.inventory.find(
     (item) => item.itemId === itemId && item.quantity > 0,
   );

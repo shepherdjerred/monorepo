@@ -977,3 +977,30 @@ deferred by explicit direction.
   rather than guessing.
 - The four #1848 findings remain unchanged.
 - Shared-cache Buildkite retries and cache mutations remain explicitly deferred.
+
+## Session Log — 2026-07-29 (Frontier Bag preflight)
+
+### Done
+
+- Mirrored Emerald's pinned `B_ACTION_USE_ITEM` battle-type gate against the
+  already-exported live `gBattleTypeFlags` value.
+- Rejected Bag actions before controller input in the Battle Dome, Battle
+  Factory, and Battle Pike while preserving ordinary wild, trainer, and double
+  battle item preflight.
+- Added named table-driven controller regressions plus a structural assertion
+  that the observation patch exports the authoritative battle-type flags.
+- Passed the focused controller and WASM patch suites, backend typecheck,
+  changed-file ESLint, and changed-file Prettier checks.
+
+### Remaining
+
+- Await current-head Buildkite and hosted-review responses for PRs #1847 and
+  #1848.
+
+### Caveats
+
+- Emerald excludes the Battle Pyramid from this Bag-disabled mask; the
+  controller independently rejects Pyramid battles as unsupported.
+- The separate deep directional-warp thread on #1847 and the four #1848
+  findings remain unchanged.
+- Shared-cache Buildkite retries and cache mutations remain explicitly deferred.
