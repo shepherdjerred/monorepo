@@ -34,6 +34,8 @@ export type GameControlPort = {
   waitFrames: (frames: number) => Promise<void>;
   readMapTile: (x: number, y: number) => EngineMapTile | null;
   readMapTopology: () => EngineMapTopologyV1 | null;
+  canRunFromBattle: (battler: number) => boolean;
+  canUseBattleItemOnBattler: (itemId: number, battler: number) => boolean;
   canUseBattleItemOnPartyMon: (itemId: number, partySlot: number) => boolean;
 };
 

@@ -276,7 +276,6 @@ async function handleBattle(args: string[]): Promise<void> {
       request,
       printActionText,
       readIntegerFlag,
-      readNumberFlag,
     },
     args,
   );

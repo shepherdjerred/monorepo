@@ -136,6 +136,14 @@ class InteractionPort implements GameControlPort {
   canUseBattleItemOnPartyMon(): boolean {
     return true;
   }
+
+  canUseBattleItemOnBattler(): boolean {
+    return true;
+  }
+
+  canRunFromBattle(): boolean {
+    return true;
+  }
 }
 
 const INVALID_INITIAL_STATES: readonly Readonly<{

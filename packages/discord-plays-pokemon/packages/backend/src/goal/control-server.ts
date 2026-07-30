@@ -49,6 +49,10 @@ export function startGoalControlServer(
     },
     readMapTile: (x, y) => options.emulator.engineMapTile(x, y),
     readMapTopology: () => options.emulator.engineMapTopology(),
+    canRunFromBattle: (battler) =>
+      options.emulator.engineCanRunFromBattle(battler),
+    canUseBattleItemOnBattler: (itemId, battler) =>
+      options.emulator.engineCanUseBattleItemOnBattler(itemId, battler),
     canUseBattleItemOnPartyMon: (itemId, partySlot) =>
       options.emulator.engineCanUseBattleItemOnPartyMon(itemId, partySlot),
   });

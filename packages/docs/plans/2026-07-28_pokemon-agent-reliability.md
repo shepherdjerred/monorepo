@@ -722,3 +722,31 @@ deferred by explicit direction.
 - The one-mebibyte artifact floor is a truncation guard, not a substitute for
   the real-WASM symbol and snapshot smoke.
 - The rebuilt WASM asset remains ignored and is not committed.
+
+## Session Log — 2026-07-29 (battle action preflight)
+
+### Done
+
+- Reused the pending move's generated target mode to reject illegal standalone
+  target selections before controller input.
+- Added read-only engine eligibility exports for direct battle-item effects and
+  deterministic Run restrictions, including stat caps, Guard Spec, trapping
+  statuses, Ingrain, Shadow Tag, Arena Trap, and Magnet Pull.
+- Switched `pokemonctl battle item --party-slot` to strict integer parsing so
+  fractional and trailing-text values fail before an HTTP request.
+- Rebuilt the real WASM and passed the symbol/reboot smoke, focused
+  zero-input controller tests, package typecheck and lint, and exact script
+  coverage at 100% functions and 98.39% lines.
+
+### Remaining
+
+- Publish the #1847 fix, restack and publish #1848, and complete current-head
+  Buildkite and hosted-review verification for both pull requests.
+
+### Caveats
+
+- Normal wild-battle speed escape odds remain selectable; Run preflight rejects
+  only deterministic prevention and preserves Emerald's Smoke Ball and Run Away
+  exceptions.
+- The rebuilt WASM asset is ignored and remains a local verification artifact.
+- PR #1848's two passage-ranking findings are unchanged.

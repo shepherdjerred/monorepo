@@ -84,6 +84,8 @@ describeWasm("emulator game symbols (real wasm)", () => {
     expect(() => emulator.engineMapTile(0, 0)).not.toThrow();
     expect(emulator.engineMapTopology()).toBeNull();
     expect(emulator.engineCanUseBattleItemOnPartyMon(13, 1)).toBe(false);
+    expect(emulator.engineCanUseBattleItemOnBattler(75, 0)).toBe(false);
+    expect(emulator.engineCanRunFromBattle(0)).toBe(false);
 
     // Run a few hundred frames and confirm reads stay safe as the game runs.
     emulator.start();

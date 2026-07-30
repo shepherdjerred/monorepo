@@ -22,6 +22,7 @@ export type BattleItemSelection = Readonly<{
 
 type BattleItemPreflight = Readonly<{
   partySlot: number | undefined;
+  canUseOnBattler: (itemId: number, battler: number) => boolean;
   canUseOnPartyMon: (itemId: number, partySlot: number) => boolean;
 }>;
 
@@ -94,10 +95,30 @@ export function requireForcedReplacementPartySlot(
   requireReplacementPartySlot(observation, battle, partySlot);
 }
 
-export function requireBattleRun(battle: BattleState): void {
+export function requireBattleRun(
+  battle: BattleState,
+  canRun: (battler: number) => boolean,
+): void {
   if ((battle.typeFlags & BATTLE_TYPE_TRAINER) !== 0) {
     throw new Error("cannot run from a trainer battle");
   }
+  const inputBattler = requireInputBattler(battle);
+  if (!canRun(inputBattler)) {
+    throw new Error("the input battler is currently prevented from running");
+  }
+}
+
+export function requirePendingMoveTarget(
+  battle: BattleState,
+  targetBattler: number,
+): void {
+  const pendingMove = battle.moves.find(
+    (move) => move.slot === battle.moveCursor + 1,
+  );
+  if (pendingMove === undefined || pendingMove.moveId === 0) {
+    throw new Error("target decision has no pending move");
+  }
+  requireSelectableMoveTarget(battle, pendingMove.moveId, targetBattler);
 }
 
 function requireReplacementPartySlot(
@@ -163,10 +184,7 @@ function requireSelectableMoveTarget(
   moveId: number,
   targetBattler: number,
 ): void {
-  const inputBattler = battle.inputBattler;
-  if (inputBattler === null) {
-    throw new Error("battle decision has no input battler");
-  }
+  const inputBattler = requireInputBattler(battle);
   if (
     !battle.battlers.some(
       (battler) => battler.battler === targetBattler && battler.active,
@@ -193,6 +211,13 @@ function requireSelectableMoveTarget(
   if (targetMode === MOVE_TARGET_SELECTED && targetBattler === inputBattler) {
     throw new Error("requested move cannot target its input battler");
   }
+}
+
+function requireInputBattler(battle: BattleState): number {
+  if (battle.inputBattler === null) {
+    throw new Error("battle decision has no input battler");
+  }
+  return battle.inputBattler;
 }
 
 function requireItemInteraction(
@@ -241,5 +266,9 @@ function requireItemInteraction(
       if (partySlot !== undefined) {
         throw new Error("requested item does not accept a party slot");
       }
+      if (!preflight.canUseOnBattler(itemId, requireInputBattler(battle))) {
+        throw new Error("requested item has no effect on the input battler");
+      }
+      return;
   }
 }

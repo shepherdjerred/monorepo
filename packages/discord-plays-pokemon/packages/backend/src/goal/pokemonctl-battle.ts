@@ -11,7 +11,6 @@ export type PokemonctlBattleContext = Readonly<{
   ) => Promise<string>;
   printActionText: (value: string, args: string[]) => void;
   readIntegerFlag: (args: string[], name: string) => number | undefined;
-  readNumberFlag: (args: string[], name: string) => number | undefined;
 }>;
 
 function positiveIntegerArgument(value: string, label: string): number {
@@ -87,7 +86,7 @@ async function handleItem(
   if (itemId === undefined) {
     throw new Error(`unknown item name: ${value}`);
   }
-  const partySlot = context.readNumberFlag(args, "--party-slot");
+  const partySlot = context.readIntegerFlag(args, "--party-slot");
   context.printActionText(
     await context.request("POST", "/battle/item", {
       itemId,

@@ -28,6 +28,8 @@ const REQUIRED_BRIDGE_SYMBOLS = [
   "WasmReadMapTopology",
   "WasmReadMapConnection",
   "WasmReadMapWarp",
+  "WasmCanRunFromBattle",
+  "WasmCanUseBattleItemOnBattler",
   "WasmCanUseBattleItemOnPartyMon",
   "WasmCheckpointSave",
 ] as const;

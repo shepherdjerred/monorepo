@@ -195,6 +195,14 @@ class FakeControlPort implements GameControlPort {
   canUseBattleItemOnPartyMon(): boolean {
     return true;
   }
+
+  canUseBattleItemOnBattler(): boolean {
+    return true;
+  }
+
+  canRunFromBattle(): boolean {
+    return true;
+  }
 }
 
 function renderedFrame(changedPixels = 0): Uint8Array {

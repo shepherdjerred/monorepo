@@ -61,6 +61,8 @@ function bridgeMakefile(): string {
     "export=WasmReadMapTopology",
     "export=WasmReadMapConnection",
     "export=WasmReadMapWarp",
+    "export=WasmCanRunFromBattle",
+    "export=WasmCanUseBattleItemOnBattler",
     "export=WasmCanUseBattleItemOnPartyMon",
     "export=WasmCheckpointSave",
   ].join("\n");
@@ -73,6 +75,8 @@ function bridgeSource(): string {
     "WasmReadMapTopology",
     "WasmReadMapConnection",
     "WasmReadMapWarp",
+    "WasmCanRunFromBattle",
+    "WasmCanUseBattleItemOnBattler",
     "WasmCanUseBattleItemOnPartyMon",
     "WasmCheckpointSave",
     "}",
@@ -350,6 +354,17 @@ describe("patch source identity and ABI validation", () => {
       "+        if (GetBattlerSide(other) == GetBattlerSide(battler)\n" +
         "+         || (gAbsentBattlerFlags & (1u << other))\n" +
         "+         || gBattleMons[other].hp == 0)",
+    );
+    expect(eligibilityPatch).toContain(
+      "+     || ((effect[0] & ITEM0_X_ATTACK)\n" +
+        "+         && gBattleMons[battler].statStages[STAT_ATK] < MAX_STAT_STAGE)",
+    );
+    expect(eligibilityPatch).toContain(
+      "+         & (STATUS2_ESCAPE_PREVENTION | STATUS2_WRAPPED))\n" +
+        "+     || (gStatuses3[battler] & STATUS3_ROOTED)",
+    );
+    expect(eligibilityPatch).toContain(
+      "+        if (gBattleMons[other].ability == ABILITY_SHADOW_TAG)",
     );
   });
 });

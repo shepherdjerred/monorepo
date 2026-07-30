@@ -25,7 +25,9 @@ import { createMemoryReader, type MemoryReader } from "./memory.ts";
 import { createGameSymbols, type GameSymbols } from "./symbols.ts";
 import {
   bindEngineBattleEligibilityExports,
-  canUseEngineBattleItemOnPartyMon,
+  canRunFromEngineBattle as canRun,
+  canUseEngineBattleItemOnBattler as canUseItemOnBattler,
+  canUseEngineBattleItemOnPartyMon as canUseItemOnPartyMon,
   type EngineBattleEligibilityExports,
 } from "./engine-battle-eligibility.ts";
 import {
@@ -38,7 +40,7 @@ import {
 } from "./engine-observation.ts";
 import {
   bindEngineMapTopologyExports,
-  readEngineMapTopology,
+  readEngineMapTopology as readMapTopology,
   type EngineMapTopologyExports,
   type EngineMapTopologyV1,
 } from "./engine-map-topology.ts";
@@ -229,10 +231,8 @@ export class Emulator {
 
   /** Typed read-only access to the wasm linear memory. Valid after init(). */
   memoryReader(): MemoryReader {
-    if (this.exports === undefined) {
-      throw new Error("emulator is not initialized");
-    }
-    this.cachedMemoryReader ??= createMemoryReader(this.exports.memory);
+    const memory = this.requireExports().memory;
+    this.cachedMemoryReader ??= createMemoryReader(memory);
     return this.cachedMemoryReader;
   }
 
@@ -247,10 +247,7 @@ export class Emulator {
 
   /** Versioned, engine-authored phase/readiness/spatial observation. */
   engineObservation(): EngineObservationV4 {
-    const exports = this.exports;
-    if (exports === undefined) {
-      throw new Error("emulator is not initialized");
-    }
+    const exports = this.requireExports();
     const pointer = exports.readObservation();
     const reader = this.memoryReader();
     return decodeEngineObservation(
@@ -260,10 +257,7 @@ export class Emulator {
 
   /** Read one live current-map grid tile through the engine's map API. */
   engineMapTile(x: number, y: number): EngineMapTile | null {
-    const exports = this.exports;
-    if (exports === undefined) {
-      throw new Error("emulator is not initialized");
-    }
+    const exports = this.requireExports();
     if (!Number.isInteger(x) || !Number.isInteger(y)) {
       throw new TypeError("map tile coordinates must be integers");
     }
@@ -271,20 +265,21 @@ export class Emulator {
   }
 
   engineCanUseBattleItemOnPartyMon(itemId: number, partySlot: number): boolean {
-    const exports = this.exports;
-    if (exports === undefined) throw new Error("emulator is not initialized");
-    return canUseEngineBattleItemOnPartyMon(
-      exports.battleEligibility,
-      itemId,
-      partySlot,
-    );
+    return canUseItemOnPartyMon(this.battleEligibility(), itemId, partySlot);
+  }
+
+  engineCanUseBattleItemOnBattler(itemId: number, battler: number): boolean {
+    return canUseItemOnBattler(this.battleEligibility(), itemId, battler);
+  }
+
+  engineCanRunFromBattle(battler: number): boolean {
+    return canRun(this.battleEligibility(), battler);
   }
 
   /** Read the current map's engine-authored connections and warp events. */
   engineMapTopology(): EngineMapTopologyV1 | null {
-    const exports = this.exports;
-    if (exports === undefined) throw new Error("emulator is not initialized");
-    return readEngineMapTopology(this.memoryReader(), exports.mapTopology);
+    const exports = this.requireExports();
+    return readMapTopology(this.memoryReader(), exports.mapTopology);
   }
 
   /** Render the current frame to a fresh RGBA buffer (for screenshots). */
@@ -298,10 +293,7 @@ export class Emulator {
    * durably flush the resulting emulated flash image before returning.
    */
   async checkpointSave(): Promise<void> {
-    const exports = this.exports;
-    if (exports === undefined) {
-      throw new Error("emulator is not initialized");
-    }
+    const exports = this.requireExports();
     const status = exports.checkpointSave();
     if (status !== 1) {
       throw new Error(
@@ -409,6 +401,16 @@ export class Emulator {
   private setKeys(mask: number): void {
     // KEYINPUT is active-low: a set bit means released.
     this.u16[KEYINPUT >> 1] = KEY_MASK ^ (mask & KEY_MASK);
+  }
+
+  private requireExports(): WasmExports {
+    if (this.exports === undefined)
+      throw new Error("emulator is not initialized");
+    return this.exports;
+  }
+
+  private battleEligibility(): EngineBattleEligibilityExports {
+    return this.requireExports().battleEligibility;
   }
 
   private scheduleNext(): void {

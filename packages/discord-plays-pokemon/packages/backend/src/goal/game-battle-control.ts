@@ -15,6 +15,7 @@ import {
   requireBattleMoveSelection,
   requireBattleRun,
   requireForcedReplacementPartySlot,
+  requirePendingMoveTarget,
   requireSwitchablePartySlot,
 } from "./game-battle-control-rules.ts";
 import type { GameObservationV2 } from "./game-observation.ts";
@@ -31,6 +32,8 @@ type BattleControlPort = Readonly<{
   press: (command: CommandInput) => Promise<void>;
   waitFrames: (frames: number) => Promise<void>;
   readMapTile: (x: number, y: number) => EngineMapTile | null;
+  canRunFromBattle: (battler: number) => boolean;
+  canUseBattleItemOnBattler: (itemId: number, battler: number) => boolean;
   canUseBattleItemOnPartyMon: (itemId: number, partySlot: number) => boolean;
 }>;
 
@@ -113,7 +116,7 @@ export class GameBattleControl {
   async run(): Promise<ActionOutcomeV1> {
     const before = this.capture();
     const battle = this.requireDecision(before.observation, ["action"]);
-    requireBattleRun(battle);
+    requireBattleRun(battle, (battler) => this.port.canRunFromBattle(battler));
     let timedOut = await this.selectGridCursor("action", 3);
     timedOut ||= await this.pressAndAwait("a", nextActionOrBattleEnd);
     return this.outcome("battle:run", before, timedOut);
@@ -151,6 +154,8 @@ export class GameBattleControl {
       itemId,
       {
         partySlot,
+        canUseOnBattler: (candidateItemId, battler) =>
+          this.port.canUseBattleItemOnBattler(candidateItemId, battler),
         canUseOnPartyMon: (candidateItemId, candidatePartySlot) =>
           this.port.canUseBattleItemOnPartyMon(
             candidateItemId,
@@ -183,13 +188,7 @@ export class GameBattleControl {
   async target(targetBattler: number): Promise<ActionOutcomeV1> {
     const before = this.capture();
     const battle = this.requireDecision(before.observation, ["target"]);
-    if (
-      !battle.battlers.some(
-        (battler) => battler.battler === targetBattler && battler.active,
-      )
-    ) {
-      throw new Error("requested target battler is not active");
-    }
+    requirePendingMoveTarget(battle, targetBattler);
     let timedOut = await this.selectTarget(targetBattler);
     timedOut ||= await this.pressAndAwait("a", nextActionOrBattleEnd);
     return this.outcome(

@@ -24,6 +24,12 @@ type BattleInput = Readonly<{
   gameParty?: GameState["party"];
 }>;
 
+type BattlePortOptions = Readonly<{
+  partyItemApplicable?: boolean;
+  directItemApplicable?: boolean;
+  runAllowed?: boolean;
+}>;
+
 function observation(input: BattleInput): GameObservationV2 {
   return {
     schemaVersion: 2,
@@ -143,14 +149,20 @@ class BattlePort {
   readonly presses: CommandInput[] = [];
   private current: GameObservationV2;
   private readonly afterPress: GameObservationV2[];
+  private readonly itemApplicable: boolean;
+  private readonly directItemApplicable: boolean;
+  private readonly runAllowed: boolean;
 
   constructor(
     initial: GameObservationV2,
     afterPress: readonly GameObservationV2[],
-    private readonly itemApplicable = true,
+    options: BattlePortOptions = {},
   ) {
     this.current = initial;
     this.afterPress = [...afterPress];
+    this.itemApplicable = options.partyItemApplicable ?? true;
+    this.directItemApplicable = options.directItemApplicable ?? true;
+    this.runAllowed = options.runAllowed ?? true;
   }
 
   observe(): GameObservationV2 {
@@ -177,6 +189,14 @@ class BattlePort {
 
   canUseBattleItemOnPartyMon(): boolean {
     return this.itemApplicable;
+  }
+
+  canUseBattleItemOnBattler(): boolean {
+    return this.directItemApplicable;
+  }
+
+  canRunFromBattle(): boolean {
+    return this.runAllowed;
   }
 }
 
@@ -209,6 +229,7 @@ function expectEngineConfirmedReviveTarget(): void {
   expect(
     requireBattleItemSelection(current, battle, 24, {
       partySlot: 1,
+      canUseOnBattler: () => false,
       canUseOnPartyMon: (itemId, partySlot) => itemId === 24 && partySlot === 1,
     }),
   ).toEqual({
@@ -278,6 +299,60 @@ describe("GameBattleControl move actions", () => {
     await expect(
       new GameBattleControl(port).move({ moveId: 33 }),
     ).rejects.toThrow("requested move is currently disabled by battle rules");
+    expect(port.presses).toEqual([]);
+  });
+
+  test("rejects a target the pending move cannot select before sending input", async () => {
+    const port = new BattlePort(
+      observation({
+        frame: 10,
+        menu: "target",
+        typeFlags: 1,
+        battlers: [
+          {
+            battler: 0,
+            side: "player",
+            position: 0,
+            active: true,
+            speciesId: 258,
+            species: "Mudkip",
+            hp: 20,
+            maxHp: 20,
+            partyIndex: 0,
+            status: 0,
+          },
+          {
+            battler: 1,
+            side: "opponent",
+            position: 1,
+            active: true,
+            speciesId: 263,
+            species: "Zigzagoon",
+            hp: 15,
+            maxHp: 15,
+            partyIndex: 0,
+            status: 0,
+          },
+          {
+            battler: 2,
+            side: "player",
+            position: 2,
+            active: true,
+            speciesId: 252,
+            species: "Treecko",
+            hp: 19,
+            maxHp: 19,
+            partyIndex: 1,
+            status: 0,
+          },
+        ],
+      }),
+      [],
+    );
+
+    await expect(new GameBattleControl(port).target(0)).rejects.toThrow(
+      "requested move cannot target its input battler",
+    );
     expect(port.presses).toEqual([]);
   });
 
@@ -586,6 +661,17 @@ describe("GameBattleControl run actions", () => {
     );
     expect(port.presses).toEqual([]);
   });
+
+  test("rejects Run while the input battler is trapped before sending input", async () => {
+    const port = new BattlePort(observation({ frame: 10 }), [], {
+      runAllowed: false,
+    });
+
+    await expect(new GameBattleControl(port).run()).rejects.toThrow(
+      "the input battler is currently prevented from running",
+    );
+    expect(port.presses).toEqual([]);
+  });
 });
 
 describe("GameBattleControl item actions", () => {
@@ -659,7 +745,7 @@ describe("GameBattleControl item actions", () => {
           ],
         }),
         [],
-        false,
+        { partyItemApplicable: false },
       );
 
       await expect(
@@ -669,6 +755,29 @@ describe("GameBattleControl item actions", () => {
       );
       expect(port.presses).toEqual([]);
     }
+  });
+
+  test("rejects an inapplicable direct battle item before opening the Bag", async () => {
+    const port = new BattlePort(
+      observation({
+        frame: 10,
+        inventory: [
+          {
+            itemId: 75,
+            item: "X ATTACK",
+            quantity: 1,
+            pocket: "items",
+          },
+        ],
+      }),
+      [],
+      { directItemApplicable: false },
+    );
+
+    await expect(new GameBattleControl(port).item(75)).rejects.toThrow(
+      "requested item has no effect on the input battler",
+    );
+    expect(port.presses).toEqual([]);
   });
 
   test(
@@ -804,11 +913,6 @@ describe("pokemonctl battle arguments", () => {
         const value = index === -1 ? undefined : args.at(index + 1);
         return value === undefined ? undefined : Number(value);
       },
-      readNumberFlag: (args: string[], name: string) => {
-        const index = args.indexOf(name);
-        const value = index === -1 ? undefined : args.at(index + 1);
-        return value === undefined ? undefined : Number(value);
-      },
     };
 
     await handlePokemonctlBattle(context, [
@@ -852,14 +956,46 @@ describe("pokemonctl battle arguments", () => {
       readIntegerFlag: () => {
         return;
       },
-      readNumberFlag: () => {
-        return;
-      },
     };
 
     await expect(
       handlePokemonctlBattle(context, ["move", "Not A Move"]),
     ).rejects.toThrow("unknown move name: Not A Move");
     expect(requestCount).toBe(0);
+  });
+
+  test("rejects a non-integer party slot before making a request", async () => {
+    for (const rawPartySlot of ["1.5", "2junk"]) {
+      let requestCount = 0;
+      const context = {
+        request: () => {
+          requestCount += 1;
+          return Promise.resolve("{}");
+        },
+        printActionText: () => {
+          throw new Error("unexpected battle output");
+        },
+        readIntegerFlag: (args: string[], name: string) => {
+          const index = args.indexOf(name);
+          const raw = index === -1 ? undefined : args.at(index + 1);
+          if (raw === undefined) return;
+          const value = Number(raw);
+          if (!Number.isInteger(value)) {
+            throw new TypeError(`${name} must be an integer`);
+          }
+          return value;
+        },
+      };
+
+      await expect(
+        handlePokemonctlBattle(context, [
+          "item",
+          "Potion",
+          "--party-slot",
+          rawPartySlot,
+        ]),
+      ).rejects.toThrow("--party-slot must be an integer");
+      expect(requestCount).toBe(0);
+    }
   });
 });
