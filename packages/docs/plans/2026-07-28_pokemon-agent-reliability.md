@@ -1032,3 +1032,33 @@ deferred by explicit direction.
 - The deep directional-warp and warp-elevation threads on #1847 and the four
   #1848 findings remain unchanged.
 - Shared-cache Buildkite retries and cache mutations remain explicitly deferred.
+
+## Session Log — 2026-07-29 (elevation-aware warp triggers)
+
+### Done
+
+- Advanced the packed engine observation ABI to expose the player object's
+  authoritative current elevation without changing the byte size.
+- Matched selected warp triggers using Emerald's coordinate and elevation rule,
+  including elevation `0` as the transition wildcard.
+- Preserved map changes, exported same-map landings, and phase changes as
+  authoritative transition evidence.
+- Added focused regressions for wrong and matching elevations, the transition
+  wildcard, map changes, and same-map landings.
+- Passed the focused controller, observation-decoder, and WASM-build suites;
+  backend typecheck; changed-file ESLint and Prettier; docs validation; and
+  Markdown lint.
+- Passed the staged pre-commit checks, including Gitleaks and suppression
+  detection.
+
+### Remaining
+
+- Await current-head Buildkite and hosted-review responses for PRs #1847 and
+  #1848.
+
+### Caveats
+
+- The separate deep directional-warp and cached-WASM-patch threads on #1847
+  remain unchanged.
+- The four #1848 findings remain unchanged.
+- Shared-cache Buildkite retries and cache mutations remain explicitly deferred.

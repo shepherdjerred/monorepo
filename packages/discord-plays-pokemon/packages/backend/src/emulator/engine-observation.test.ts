@@ -47,6 +47,7 @@ function validBytes(): Uint8Array {
   view.setUint8(22, 1);
   view.setUint8(23, 0);
   view.setUint8(24, 4);
+  view.setUint8(29, 3);
   view.setUint8(114, 4);
   return bytes;
 }
@@ -246,7 +247,7 @@ describe("engine map topology decoders", () => {
 describe("decodeEngineObservation", () => {
   test("decodes a valid stable overworld observation", () => {
     const observation = decodeEngineObservation(validBytes());
-    expect(observation.version).toBe(4);
+    expect(observation.version).toBe(5);
     expect(observation.frame).toBe(42);
     expect(observation.phase).toBe("overworld");
     expect(observation.readiness).toEqual({
@@ -264,6 +265,7 @@ describe("decodeEngineObservation", () => {
       mapNum: 4,
       x: 12,
       y: 7,
+      elevation: 3,
       facing: "north",
       avatarFlags: 0x80,
       movementMode: "running",

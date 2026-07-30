@@ -14,6 +14,7 @@ type ObservationInput = Readonly<{
   phase?: GameObservationV2["phase"];
   x?: number;
   y?: number;
+  elevation?: number;
   facing?: CardinalDirection;
   mapNum?: number;
   inputReady?: boolean;
@@ -85,6 +86,7 @@ function observation(input: ObservationInput = {}): GameObservationV2 {
       mapNum: input.mapNum ?? 0,
       x: input.x ?? 10,
       y: input.y ?? 10,
+      elevation: input.elevation ?? 0,
       facing: input.facing ?? "north",
       movementMode: "on foot",
       runningState: 0,
@@ -205,14 +207,19 @@ function mapTopology(
   };
 }
 
-function sameMapWarpTopology(): EngineMapTopologyV1 {
+function sameMapWarpTopology(triggerElevation = 0): EngineMapTopologyV1 {
   return mapTopology({
     warps: [
       {
         version: 1,
         size: 24,
         index: 3,
-        trigger: { x: 10, y: 9, elevation: 0, behavior: 0 },
+        trigger: {
+          x: 10,
+          y: 9,
+          elevation: triggerElevation,
+          behavior: 0,
+        },
         activation: "step",
         destination: {
           mapGroup: 0,
@@ -955,7 +962,15 @@ describe("GameController exit navigation", () => {
     });
     const port = new FakeControlPort(
       observation({ x: 10, y: 10, facing: "north" }),
-      [observation({ frame: 12, x: 10, y: 9, facing: "north" })],
+      [
+        observation({
+          frame: 12,
+          x: 10,
+          y: 9,
+          elevation: 3,
+          facing: "north",
+        }),
+      ],
       { topology },
     );
 
@@ -1000,11 +1015,19 @@ describe("GameController exit navigation", () => {
 });
 
 describe("GameController same-map warp traversal", () => {
-  test("reports the exported destination landing as traversed", async () => {
-    const topology = sameMapWarpTopology();
+  test("reports the exported destination landing as traversed despite elevation mismatch", async () => {
+    const topology = sameMapWarpTopology(2);
     const port = new FakeControlPort(
       observation({ x: 10, y: 10, facing: "north" }),
-      [observation({ frame: 12, x: 8, y: 8, facing: "south" })],
+      [
+        observation({
+          frame: 12,
+          x: 8,
+          y: 8,
+          elevation: 1,
+          facing: "south",
+        }),
+      ],
       { topology },
     );
 
@@ -1017,11 +1040,19 @@ describe("GameController same-map warp traversal", () => {
     expect(port.presses.map((press) => press.command)).toEqual(["up"]);
   });
 
-  test("still reports reaching only the trigger as triggered", async () => {
-    const topology = sameMapWarpTopology();
+  test("reports matching trigger coordinates and elevation as triggered", async () => {
+    const topology = sameMapWarpTopology(2);
     const port = new FakeControlPort(
       observation({ x: 10, y: 10, facing: "north" }),
-      [observation({ frame: 12, x: 10, y: 9, facing: "north" })],
+      [
+        observation({
+          frame: 12,
+          x: 10,
+          y: 9,
+          elevation: 2,
+          facing: "north",
+        }),
+      ],
       { topology },
     );
 
@@ -1031,6 +1062,57 @@ describe("GameController same-map warp traversal", () => {
     expect(result.stopReason).toBe("exit-triggered");
     expect(result.attemptsMade).toBe(1);
     expect(result.stepsTaken).toBe(1);
+    expect(port.presses.map((press) => press.command)).toEqual(["up"]);
+  });
+
+  test("does not report trigger coordinates at the wrong elevation as triggered", async () => {
+    const topology = sameMapWarpTopology(2);
+    const port = new FakeControlPort(
+      observation({ x: 10, y: 10, elevation: 1, facing: "north" }),
+      [
+        observation({
+          frame: 12,
+          x: 10,
+          y: 9,
+          elevation: 1,
+          facing: "north",
+        }),
+      ],
+      { topology },
+    );
+
+    const result = await new GameController(port).navigateExit("warp:3", 1);
+
+    expect(result.status).toBe("stopped");
+    expect(result.stopReason).toBe("activation-no-effect");
+    expect(result.attemptsMade).toBe(1);
+    expect(result.stepsTaken).toBe(1);
+    expect(port.presses.map((press) => press.command)).toEqual(["up"]);
+  });
+
+  test("keeps a map change authoritative despite trigger elevation mismatch", async () => {
+    const topology = sameMapWarpTopology(2);
+    const port = new FakeControlPort(
+      observation({ x: 10, y: 10, elevation: 1, facing: "north" }),
+      [
+        observation({
+          frame: 12,
+          x: 10,
+          y: 9,
+          elevation: 1,
+          facing: "north",
+          mapNum: 1,
+        }),
+      ],
+      { topology },
+    );
+
+    const result = await new GameController(port).navigateExit("warp:3", 1);
+
+    expect(result.status).toBe("traversed");
+    expect(result.stopReason).toBe("exit-traversed");
+    expect(result.attemptsMade).toBe(1);
+    expect(result.stepsTaken).toBe(0);
     expect(port.presses.map((press) => press.command)).toEqual(["up"]);
   });
 

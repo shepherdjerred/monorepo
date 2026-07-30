@@ -100,6 +100,7 @@ export type GameObservationV2 = Readonly<{
     mapNum: number;
     x: number;
     y: number;
+    elevation: number;
     facing: EngineFacing;
     movementMode: string;
     runningState: number;
@@ -199,6 +200,7 @@ export function readGameObservation(emulator: Emulator): GameObservationV2 {
           mapNum: engineWorld.mapNum,
           x: engineWorld.x,
           y: engineWorld.y,
+          elevation: engineWorld.elevation,
           facing: engineWorld.facing,
           movementMode: engineWorld.movementMode,
           runningState: engineWorld.runningState,

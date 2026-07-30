@@ -18,7 +18,7 @@ import type {
 type ExitActivation = Readonly<{
   approach: Readonly<{ x: number; y: number }>;
   direction: CardinalDirection;
-  trigger: Readonly<{ x: number; y: number }> | null;
+  trigger: Readonly<{ x: number; y: number; elevation: number }> | null;
 }>;
 
 type ExitPathStep = Readonly<{
@@ -35,6 +35,7 @@ type ExitNavigationOptions = Readonly<{
   maxSteps: number;
 }>;
 
+const ELEVATION_TRANSITION = 0;
 const DIRECTIONS: readonly Readonly<{
   direction: CardinalDirection;
   dx: number;
@@ -364,15 +365,17 @@ async function activateSelectedExit(options: {
     options.navigation.exitId,
     after,
   );
-  const reachedTrigger =
+  const reachedWarpTrigger =
     options.path.activation.trigger !== null &&
     after.world !== null &&
     after.world.x === options.path.activation.trigger.x &&
-    after.world.y === options.path.activation.trigger.y;
+    after.world.y === options.path.activation.trigger.y &&
+    (options.path.activation.trigger.elevation === ELEVATION_TRANSITION ||
+      after.world.elevation === options.path.activation.trigger.elevation);
   let stopReason: ExitNavigationStopReason = "activation-no-effect";
   if (mapChanged || reachedWarpLanding) {
     stopReason = "exit-traversed";
-  } else if (after.phase !== "overworld" || reachedTrigger) {
+  } else if (after.phase !== "overworld" || reachedWarpTrigger) {
     stopReason = "exit-triggered";
   } else if (activation.stopReason === "settle-timeout") {
     stopReason = "settle-timeout";

@@ -36,7 +36,7 @@ import {
   decodeEngineObservation,
   ENGINE_OBSERVATION_SIZE,
   type EngineMapTile,
-  type EngineObservationV4,
+  type EngineObservationV5,
 } from "./engine-observation.ts";
 import {
   bindEngineMapTopologyExports,
@@ -246,7 +246,7 @@ export class Emulator {
   }
 
   /** Versioned, engine-authored phase/readiness/spatial observation. */
-  engineObservation(): EngineObservationV4 {
+  engineObservation(): EngineObservationV5 {
     const exports = this.requireExports();
     const pointer = exports.readObservation();
     const reader = this.memoryReader();

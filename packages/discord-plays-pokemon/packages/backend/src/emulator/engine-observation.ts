@@ -1,4 +1,4 @@
-export const ENGINE_OBSERVATION_VERSION = 4;
+export const ENGINE_OBSERVATION_VERSION = 5;
 export const ENGINE_OBSERVATION_SIZE = 144;
 
 export type CardinalDirection = "north" | "south" | "west" | "east";
@@ -54,8 +54,8 @@ export function bindEngineMapTileExport(
   };
 }
 
-export type EngineObservationV4 = Readonly<{
-  version: 4;
+export type EngineObservationV5 = Readonly<{
+  version: 5;
   size: 144;
   frame: number;
   phase: EnginePhase;
@@ -74,6 +74,7 @@ export type EngineObservationV4 = Readonly<{
     mapNum: number;
     x: number;
     y: number;
+    elevation: number;
     facing: EngineFacing;
     avatarFlags: number;
     movementMode: string;
@@ -244,7 +245,7 @@ export function decodeEngineMapTile(
 
 export function decodeEngineObservation(
   bytes: Uint8Array,
-): EngineObservationV4 {
+): EngineObservationV5 {
   if (bytes.byteLength < ENGINE_OBSERVATION_SIZE) {
     throw new RangeError(
       `engine observation is too short: ${String(bytes.byteLength)} bytes`,
@@ -271,6 +272,7 @@ export function decodeEngineObservation(
         mapNum: view.getUint8(11),
         x: view.getInt16(12, true),
         y: view.getInt16(14, true),
+        elevation: view.getUint8(29),
         facing: facingFromRaw(view.getUint8(16)),
         avatarFlags,
         movementMode: movementModeFromFlags(avatarFlags),
