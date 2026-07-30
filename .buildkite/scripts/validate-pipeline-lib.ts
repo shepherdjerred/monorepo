@@ -164,16 +164,29 @@ export async function assertNoNestedBunRuntime(
 }
 
 // Assert each CI package manifest still declares its explicit tool
-// dependencies, so a dependency-minimized lane cannot fall back to auto-install.
+// dependencies and, during command migrations, invokes one exact allowed
+// command. A dependency-minimized lane must never fall back to auto-install.
 export async function assertPackageTokens(
-  specs: readonly (readonly [string, readonly string[]])[],
+  specs: readonly (readonly [
+    path: string,
+    required: readonly string[],
+    allowedInvocations?: readonly string[],
+  ])[],
 ): Promise<void> {
-  for (const [path, required] of specs) {
+  for (const [path, required, allowedInvocations] of specs) {
     const manifest = await Bun.file(path).text();
     for (const token of required) {
       if (!manifest.includes(token)) {
         fail(`CI package ${path} is missing explicit tool dependency ${token}`);
       }
+    }
+    if (
+      allowedInvocations !== undefined &&
+      !allowedInvocations.some((token) => manifest.includes(token))
+    ) {
+      fail(
+        `CI package ${path} is missing an allowed tool invocation: ${allowedInvocations.join(" or ")}`,
+      );
     }
   }
 }

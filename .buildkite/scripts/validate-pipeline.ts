@@ -477,11 +477,15 @@ await assertPackageTokens([
     "packages/homelab/src/cdk8s/package.json",
     [
       '"typescript":',
+      '"@typescript/native": "npm:typescript@7.0.2"',
       '"prettier":',
       '"bunx --no-install eslint',
-      '"bunx --no-install tsc',
       '"generate-helm-types": "bun --no-install run',
       '"format:generated-helm": "prettier --no-config"',
+    ],
+    [
+      '"bun node_modules/@typescript/native/bin/tsc',
+      '"PATH=node_modules/@typescript/native/bin:$PATH tsc',
     ],
   ],
   ["packages/sjer.red/package.json", ['"bun x --no-install playwright test']],
