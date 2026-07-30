@@ -736,6 +736,62 @@ describe("GameController exit navigation", () => {
     ]);
   });
 
+  test("does not route across an unselected automatic warp trigger", async () => {
+    const topology = mapTopology({
+      warps: [
+        {
+          version: 1,
+          size: 24,
+          index: 3,
+          trigger: { x: 11, y: 9, elevation: 0, behavior: 0 },
+          activation: "step",
+          destination: {
+            mapGroup: 1,
+            mapNum: 2,
+            warpId: 0,
+            dynamic: false,
+            landing: { x: 7, y: 7 },
+          },
+        },
+        {
+          version: 1,
+          size: 24,
+          index: 4,
+          trigger: { x: 9, y: 9, elevation: 0, behavior: 0 },
+          activation: "step",
+          destination: {
+            mapGroup: 1,
+            mapNum: 3,
+            warpId: 0,
+            dynamic: false,
+            landing: { x: 8, y: 8 },
+          },
+        },
+      ],
+    });
+    const corridor = new Set(["7,9", "8,9", "9,9", "10,9", "11,9"]);
+    const blocked = new Set<string>();
+    for (let x = 7; x <= 12; x += 1) {
+      for (let y = 7; y <= 12; y += 1) {
+        const key = `${String(x)},${String(y)}`;
+        if (!corridor.has(key)) blocked.add(key);
+      }
+    }
+    const port = new FakeControlPort(
+      observation({ x: 7, y: 9, facing: "east" }),
+      [],
+      { topology, blocked },
+    );
+
+    const result = await new GameController(port).navigateExit("warp:3", 5);
+
+    expect(result.status).toBe("stopped");
+    expect(result.stopReason).toBe("no-route");
+    expect(result.attemptsMade).toBe(0);
+    expect(result.stepsTaken).toBe(0);
+    expect(port.presses).toEqual([]);
+  });
+
   test("activates only the selected warp and stops without choosing a next route", async () => {
     const topology = mapTopology({
       warps: [
@@ -751,6 +807,20 @@ describe("GameController exit navigation", () => {
             warpId: 0,
             dynamic: false,
             landing: { x: 7, y: 7 },
+          },
+        },
+        {
+          version: 1,
+          size: 24,
+          index: 4,
+          trigger: { x: 11, y: 9, elevation: 0, behavior: 0 },
+          activation: "step",
+          destination: {
+            mapGroup: 1,
+            mapNum: 3,
+            warpId: 0,
+            dynamic: false,
+            landing: { x: 8, y: 8 },
           },
         },
       ],

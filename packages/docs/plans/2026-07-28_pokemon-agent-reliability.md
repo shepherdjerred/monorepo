@@ -822,3 +822,28 @@ deferred by explicit direction.
   existing move records changed.
 - The rebuilt WASM asset is ignored and remains a local verification artifact.
 - The #1847 warp finding and all #1848 findings remain unchanged.
+
+## Session Log — 2026-07-29 (selected-exit warp safety)
+
+### Done
+
+- Added every nonselected step-activated warp trigger to the selected exit
+  route's permanent blocked tiles.
+- Preserved the caller-selected warp trigger as a valid activation endpoint in
+  both initial planning and transient-blocker revalidation.
+- Added focused coverage proving a corridor through a competing automatic warp
+  returns `no-route` without input while a valid selected warp still activates.
+- Passed focused controller tests plus backend typecheck and lint.
+
+### Remaining
+
+- Publish the #1847 fix, restack and publish #1848, and complete current-head
+  hosted-review verification for both pull requests.
+
+### Caveats
+
+- Directional warp-arrow triggers are not added to the automatic-warp block set;
+  they activate only through their required directional input.
+- The forced-replacement settling finding on #1847 and all #1848 findings
+  remain unchanged.
+- Shared-cache Buildkite retries and cache mutations remain explicitly deferred.
