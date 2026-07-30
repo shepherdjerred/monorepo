@@ -694,3 +694,31 @@ deferred by explicit direction.
   targeting and other party decisions remain invalid for `battle switch`.
 - The rebuilt WASM asset is ignored and remains a local verification artifact.
 - PR #1848's separate passage-coverage-versus-metadata finding is unchanged.
+
+## Session Log — 2026-07-29 (WASM build coverage)
+
+### Done
+
+- Refactored the WASM build entrypoint into typed, injectable orchestration
+  units without changing its executable command.
+- Bound source-cache identity to the upstream commit, ordered patch contents,
+  and required bridge symbols, and refused to bless incomplete patched source.
+- Validated compiled artifact existence, minimum size, WASM header, and copied
+  size before running generated-data updates.
+- Added behavior tests for toolchain failures, subprocess and patch failures,
+  clone/fetch/build orchestration, cache reuse and invalidation, bridge
+  completeness, artifact rejection, and generator ordering.
+- Raised exact package script coverage from 87.18% functions and 72.36% lines
+  to 100% functions and 98.39% lines, then rebuilt and smoke-tested the real
+  WASM.
+
+### Remaining
+
+- Complete replacement Buildkite and hosted-review verification for PRs #1847
+  and #1848.
+
+### Caveats
+
+- The one-mebibyte artifact floor is a truncation guard, not a substitute for
+  the real-WASM symbol and snapshot smoke.
+- The rebuilt WASM asset remains ignored and is not committed.
