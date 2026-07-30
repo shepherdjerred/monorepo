@@ -48,6 +48,8 @@ board: false
 - Added strict per-generation rendered-prompt persistence and query parsing so
   materialized baselines and divergent reruns retain their own exact inputs;
   the case UI now displays prompts from the generation beside its output.
+- Made dataset creation, every materialized case, and every baseline generation
+  one atomic SQLite operation, with rollback and successful-batch coverage.
 - Verified PR #1777 with the focused eval tests, typecheck, changed-file ESLint,
   changed-file Prettier checks, Buildkite pipeline validator, lane-coverage
   tests, and an independent merge-tree check.

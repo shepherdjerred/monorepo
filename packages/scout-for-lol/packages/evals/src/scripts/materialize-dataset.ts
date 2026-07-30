@@ -7,6 +7,7 @@ import {
 } from "#materialization/beta-corpus.ts";
 import { materializeCase } from "#materialization/materialize-case.ts";
 import { createOpenAIClient } from "#materialization/openai-client.ts";
+import { persistMaterializedDataset } from "#materialization/persist-dataset.ts";
 import { createS3Client } from "#materialization/s3-source.ts";
 import { readMaterializationSpec } from "#materialization/spec.ts";
 import { createEvalStore } from "#server/store.ts";
@@ -45,20 +46,12 @@ try {
 
   const store = createEvalStore(options.databasePath);
   try {
-    const dataset = store.createDataset(spec.dataset);
-    const caseIds: string[] = [];
-    for (const evalCase of materialized) {
-      const summary = store.addMaterializedCase({
-        artifact: evalCase.artifact,
-        datasetId: dataset.id,
-      });
-      store.recordGeneration({ caseId: summary.id, ...evalCase.generation });
-      caseIds.push(summary.id);
-    }
-    await Bun.write(
-      Bun.stdout,
-      `${JSON.stringify({ datasetId: dataset.id, caseIds }, null, 2)}\n`,
+    const persisted = persistMaterializedDataset(
+      store,
+      spec.dataset,
+      materialized,
     );
+    await Bun.write(Bun.stdout, `${JSON.stringify(persisted, null, 2)}\n`);
   } finally {
     store.close();
   }

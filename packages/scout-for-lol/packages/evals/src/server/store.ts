@@ -113,6 +113,10 @@ export class EvalStore {
     this.#database = database;
   }
 
+  public runInTransaction<Result>(operation: () => Result): Result {
+    return this.#database.transaction(operation)();
+  }
+
   public listDatasets(): z.infer<typeof DatasetSummarySchema>[] {
     return z.array(DatasetSummaryRowSchema).parse(
       this.#database
