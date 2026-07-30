@@ -123,13 +123,19 @@ attempt to author a comprehensive monorepo atlas.
 - Enabled the shared Astro ESLint configuration and renamed the two Starlight
   component overrides to kebab-case filenames, leaving `.astro` syntax and
   correctness rules active.
+- Made the aggregate Buildkite `sites` step wait for `tofu-apply`, guaranteeing
+  the SeaweedFS static-site bucket exists before the wiki's first deployment
+  sync.
+- Added a pipeline-validator invariant for the provisioning dependency and
+  passed the focused validator, lane-coverage tests, Buildkite-script lint,
+  typecheck, and formatting checks.
 - Passed focused wiki unit tests, lint, typecheck, build, and Playwright
   coverage; liveness-checked every new GitHub link target.
 
 ### Remaining
 
 - Await replacement Buildkite CI and hosted Codex review on the published
-  public-data, link-routing, and Astro-lint fixes.
+  public-data, link-routing, Astro-lint, and deployment-ordering fixes.
 - After merge and deployment, run the live HTTP, cache-header, CSP, sitemap,
   robots, and public-corpus verification.
 
@@ -138,6 +144,8 @@ attempt to author a comprehensive monorepo atlas.
 - The initial allowlist contains only the wiki scaffold plan. Each additional
   working document requires an explicit public-data review before its path is
   added.
+- The first-deployment ordering is statically verified but cannot be exercised
+  end to end until the main-only infrastructure and site lanes run after merge.
 - Exact-head Buildkite build 7212 remained hard-red because LeetCode lint found
   a floating promise in `packages/leetcode/src/search.ts:218` and its search
   build could not start the embedding server. Trivy exit 7 was soft-failed.

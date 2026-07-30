@@ -153,6 +153,11 @@ requireIncludes(
   "depends_on: [verify, images, ci-base-refresh, ci-playwright-refresh]",
   "helm-push must wait for remote BuildKit consumers before publishing the floating buildkitd chart",
 );
+requireIncludes(
+  stepBlocks.get("sites"),
+  "depends_on: [verify, playwright-e2e-main, resume-build-main, tofu-apply]",
+  "sites must wait for tofu-apply to provision static-site buckets",
+);
 
 for (const key of ["playwright-e2e-pr", "playwright-e2e-main"]) {
   const block = stepBlocks.get(key);

@@ -1121,7 +1121,10 @@ steps:
   - label: ":rocket: deploy sites"
     key: sites
     if: build.branch == pipeline.default_branch
-    depends_on: [verify, playwright-e2e-main, resume-build-main]
+    # Static-site buckets are owned by the SeaweedFS tofu stack. Waiting for
+    # tofu-apply is a no-op when infra is unchanged, and guarantees a new
+    # bucket exists before its first deployment sync.
+    depends_on: [verify, playwright-e2e-main, resume-build-main, tofu-apply]
     cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/site-deploys
