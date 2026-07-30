@@ -65,17 +65,17 @@ index 3cf16ab7b..857983980 100644
 +
 +    for (other = 0; other < gBattlersCount; other++)
 +    {
-+        if (GetBattlerSide(other) != GetBattlerSide(battler))
-+        {
-+            if (gBattleMons[other].ability == ABILITY_SHADOW_TAG)
-+                return FALSE;
-+            if (gBattleMons[other].ability == ABILITY_ARENA_TRAP
-+             && !IS_BATTLER_OF_TYPE(battler, TYPE_FLYING)
-+             && gBattleMons[battler].ability != ABILITY_LEVITATE)
-+                return FALSE;
-+        }
++        if (GetBattlerSide(other) == GetBattlerSide(battler)
++         || (gAbsentBattlerFlags & (1u << other))
++         || gBattleMons[other].hp == 0)
++            continue;
++        if (gBattleMons[other].ability == ABILITY_SHADOW_TAG)
++            return FALSE;
++        if (gBattleMons[other].ability == ABILITY_ARENA_TRAP
++         && !IS_BATTLER_OF_TYPE(battler, TYPE_FLYING)
++         && gBattleMons[battler].ability != ABILITY_LEVITATE)
++            return FALSE;
 +        if (gBattleMons[other].ability == ABILITY_MAGNET_PULL
-+         && other != battler
 +         && IS_BATTLER_OF_TYPE(battler, TYPE_STEEL))
 +            return FALSE;
 +    }

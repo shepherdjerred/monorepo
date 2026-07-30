@@ -27,6 +27,7 @@ type BattleItemPreflight = Readonly<{
 
 const BATTLE_TYPE_DOUBLE = 1;
 const BATTLE_TYPE_TRAINER = 1 << 3;
+const PARTY_ACTION_SEND_OUT = 1;
 const MOVE_TARGET_SELECTED = 0;
 const MOVE_TARGET_USER_OR_SELECTED = 1 << 1;
 
@@ -70,10 +71,41 @@ export function requireSwitchablePartySlot(
   battle: BattleState,
   partySlot: number,
 ): void {
-  requireUsablePartySlot(observation, partySlot);
+  requireReplacementPartySlot(observation, battle, partySlot);
   if (!battle.switchAllowed) {
     throw new Error("the input battler is currently prevented from switching");
   }
+}
+
+export function requireForcedReplacementPartySlot(
+  observation: GameObservationV2,
+  battle: BattleState,
+  partySlot: number,
+): void {
+  if (
+    battle.menu !== "party" ||
+    battle.party?.inputReady !== true ||
+    battle.party.action !== PARTY_ACTION_SEND_OUT
+  ) {
+    throw new Error(
+      "forced replacement requires an input-ready Send Out party decision",
+    );
+  }
+  requireReplacementPartySlot(observation, battle, partySlot);
+}
+
+export function requireBattleRun(battle: BattleState): void {
+  if ((battle.typeFlags & BATTLE_TYPE_TRAINER) !== 0) {
+    throw new Error("cannot run from a trainer battle");
+  }
+}
+
+function requireReplacementPartySlot(
+  observation: GameObservationV2,
+  battle: BattleState,
+  partySlot: number,
+): void {
+  requireUsablePartySlot(observation, partySlot);
   const activePartySlots = battle.battlers
     .filter((battler) => battler.side === "player" && battler.active)
     .map((battler) => battler.partyIndex);

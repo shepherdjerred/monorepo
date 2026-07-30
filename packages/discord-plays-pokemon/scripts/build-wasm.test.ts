@@ -56,6 +56,23 @@ test("keeps the observation bridge closing brace inside its new-file hunk", asyn
   expect(patch.trimEnd().endsWith("+}")).toBe(true);
 });
 
+test("limits switch-trapping abilities to present opposing battlers", async () => {
+  const patch = await Bun.file(
+    `${import.meta.dir}/../wasm-src/patches/0004-battle-eligibility.patch`,
+  ).text();
+
+  expect(patch).toContain(
+    "+        if (GetBattlerSide(other) == GetBattlerSide(battler)\n" +
+      "+         || (gAbsentBattlerFlags & (1u << other))\n" +
+      "+         || gBattleMons[other].hp == 0)\n" +
+      "+            continue;",
+  );
+  expect(patch).toContain(
+    "+        if (gBattleMons[other].ability == ABILITY_MAGNET_PULL\n" +
+      "+         && IS_BATTLER_OF_TYPE(battler, TYPE_STEEL))",
+  );
+});
+
 test("fingerprints the complete ordered patch series", async () => {
   const temporaryDirectory = await mkdtemp(
     path.join(tmpdir(), "pokemon-wasm-patches-"),

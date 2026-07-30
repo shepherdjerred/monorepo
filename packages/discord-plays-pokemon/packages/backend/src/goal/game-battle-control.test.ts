@@ -412,6 +412,96 @@ describe("GameBattleControl party actions", () => {
     expect(port.presses).toEqual([]);
   });
 
+  test("selects an input-ready forced replacement without reopening the party", async () => {
+    const gameParty: GameState["party"] = [
+      {
+        speciesId: 258,
+        species: "Mudkip",
+        nickname: "Mudkip",
+        level: 5,
+        hp: 0,
+        maxHp: 20,
+        isEgg: false,
+      },
+      {
+        speciesId: 252,
+        species: "Treecko",
+        nickname: "Treecko",
+        level: 5,
+        hp: 19,
+        maxHp: 19,
+        isEgg: false,
+      },
+    ];
+    const initial = observation({
+      frame: 10,
+      menu: "party",
+      switchAllowed: false,
+      battleParty: {
+        inputReady: true,
+        slot: 0,
+        layout: 0,
+        action: 1,
+      },
+      gameParty,
+    });
+    const port = new BattlePort(initial, [
+      observation({
+        frame: 12,
+        menu: "party",
+        battleParty: {
+          inputReady: true,
+          slot: 1,
+          layout: 0,
+          action: 1,
+        },
+        gameParty,
+      }),
+      observation({
+        frame: 14,
+        menu: "party",
+        battleParty: {
+          inputReady: false,
+          slot: 6,
+          layout: 0,
+          action: 1,
+        },
+        gameParty,
+      }),
+      observation({ frame: 16, actionCursor: 0, gameParty }),
+    ]);
+
+    const outcome = await new GameBattleControl(port).switch(2);
+
+    expect(outcome.status).toBe("applied");
+    expect(port.presses.map((press) => press.command)).toEqual([
+      "down",
+      "a",
+      "a",
+    ]);
+  });
+
+  test("rejects a non-replacement party decision before sending input", async () => {
+    const port = new BattlePort(
+      observation({
+        frame: 10,
+        menu: "party",
+        battleParty: {
+          inputReady: true,
+          slot: 0,
+          layout: 0,
+          action: 3,
+        },
+      }),
+      [],
+    );
+
+    await expect(new GameBattleControl(port).switch(1)).rejects.toThrow(
+      "forced replacement requires an input-ready Send Out party decision",
+    );
+    expect(port.presses).toEqual([]);
+  });
+
   test("confirms Shift after selecting a voluntary switch target", async () => {
     const gameParty: GameState["party"] = [
       {
@@ -481,6 +571,20 @@ describe("GameBattleControl party actions", () => {
       "a",
       "a",
     ]);
+  });
+});
+
+describe("GameBattleControl run actions", () => {
+  test("rejects Run in a trainer battle before sending input", async () => {
+    const port = new BattlePort(
+      observation({ frame: 10, typeFlags: 1 << 3 }),
+      [],
+    );
+
+    await expect(new GameBattleControl(port).run()).rejects.toThrow(
+      "cannot run from a trainer battle",
+    );
+    expect(port.presses).toEqual([]);
   });
 });
 

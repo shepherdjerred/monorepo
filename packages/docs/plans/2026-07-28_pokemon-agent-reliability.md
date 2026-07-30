@@ -668,3 +668,29 @@ deferred by explicit direction.
   remediation cycle.
 - PR #1848 retains its separate passage-coverage-versus-metadata review
   finding; this #1847 documentation cycle does not alter ranking behavior.
+
+## Session Log — 2026-07-29 (battle decision eligibility)
+
+### Done
+
+- Added explicit forced-replacement support for Emerald's input-ready Send Out
+  party decision without weakening voluntary-switch trapping checks.
+- Rejected Run in trainer battles before controller input and limited trapping
+  abilities in the WASM switch preflight to present, living opponents.
+- Rebuilt the real WASM and passed focused control, patch-series, symbol smoke,
+  backend/common typecheck, and backend/common lint verification.
+- Published the review fixes to PR #1847 and restacked and published its child
+  PR #1848.
+
+### Remaining
+
+- Complete current-head Buildkite and hosted-review verification for PRs #1847
+  and #1848.
+- Address script coverage in its separate queued cycle.
+
+### Caveats
+
+- Forced replacement is admitted only for engine party action `SEND_OUT`; item
+  targeting and other party decisions remain invalid for `battle switch`.
+- The rebuilt WASM asset is ignored and remains a local verification artifact.
+- PR #1848's separate passage-coverage-versus-metadata finding is unchanged.

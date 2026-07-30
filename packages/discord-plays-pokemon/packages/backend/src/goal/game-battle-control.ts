@@ -13,6 +13,8 @@ import {
 import {
   requireBattleItemSelection,
   requireBattleMoveSelection,
+  requireBattleRun,
+  requireForcedReplacementPartySlot,
   requireSwitchablePartySlot,
 } from "./game-battle-control-rules.ts";
 import type { GameObservationV2 } from "./game-observation.ts";
@@ -110,7 +112,8 @@ export class GameBattleControl {
 
   async run(): Promise<ActionOutcomeV1> {
     const before = this.capture();
-    this.requireDecision(before.observation, ["action"]);
+    const battle = this.requireDecision(before.observation, ["action"]);
+    requireBattleRun(battle);
     let timedOut = await this.selectGridCursor("action", 3);
     timedOut ||= await this.pressAndAwait("a", nextActionOrBattleEnd);
     return this.outcome("battle:run", before, timedOut);
@@ -118,10 +121,21 @@ export class GameBattleControl {
 
   async switch(partySlot: number): Promise<ActionOutcomeV1> {
     const before = this.capture();
-    const battle = this.requireDecision(before.observation, ["action"]);
-    requireSwitchablePartySlot(before.observation, battle, partySlot);
-    let timedOut = await this.selectGridCursor("action", 2);
-    timedOut ||= await this.pressAndAwait("a", partyInputReady);
+    const battle = this.requireDecision(before.observation, [
+      "action",
+      "party",
+    ]);
+    const forcedReplacement = battle.menu === "party";
+    if (forcedReplacement) {
+      requireForcedReplacementPartySlot(before.observation, battle, partySlot);
+    } else {
+      requireSwitchablePartySlot(before.observation, battle, partySlot);
+    }
+    let timedOut = false;
+    if (!forcedReplacement) {
+      timedOut ||= await this.selectGridCursor("action", 2);
+      timedOut ||= await this.pressAndAwait("a", partyInputReady);
+    }
     timedOut ||= await this.selectPartySlot(partySlot);
     timedOut ||= await this.pressAndAwait("a", partySelectionMenuReady);
     timedOut ||= await this.pressAndAwait("a", nextActionOrBattleEnd);
