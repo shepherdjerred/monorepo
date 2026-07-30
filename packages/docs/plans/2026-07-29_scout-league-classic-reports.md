@@ -172,6 +172,9 @@ renderers, and enrichment behavior must not change.
 - Matched the standard report path's known Riot participant-mismatch handling:
   Classic reports now skip metadata-only tracked players, retain present
   players, and return no report only when none remain.
+- Made the frontend review tool reject unsupported League Classic matches
+  explicitly while keeping queue selection exhaustive, with a schema-validated
+  converter regression wired into the frontend test gate.
 - Published draft PR #1849 on top of refresh PR #1827 with accepted full 5v5,
   partial 3v2, and postmatch screenshots.
 
@@ -187,5 +190,5 @@ renderers, and enrichment behavior must not change.
   or included in a public container or artifact.
 - Live Match-V5 acceptance depends on Riot exposing a Classic match during the
   validation window.
-- Buildkite #7221 still reports a missing frontend converter return; that
-  remains for the next focused repair cycle.
+- Replacement current-head Buildkite and hosted-review results remain required
+  after publishing the latest repair.
