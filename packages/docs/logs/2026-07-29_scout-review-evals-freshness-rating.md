@@ -56,6 +56,9 @@ board: false
 - Made app-created drafts actionable materialization targets by accepting their
   displayed `datasetId`, validating draft status before model calls, and writing
   the generated batch into that same dataset atomically.
+- Rejected negative, fractional, and out-of-range caller-selected player indexes
+  before provider checks or backend review-generation work, replacing the
+  missing-player skip with a fail-fast contract error.
 - Verified PR #1777 with the focused eval tests, typecheck, changed-file ESLint,
   changed-file Prettier checks, Buildkite pipeline validator, lane-coverage
   tests, and an independent merge-tree check.

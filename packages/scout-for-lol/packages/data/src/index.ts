@@ -30,6 +30,7 @@ export {
   extractMatchData,
   getOrdinalSuffix,
 } from "./review/generator-helpers.ts";
+export { requirePlayerAtIndex } from "./review/player-index.ts";
 export {
   buildTimelineEnrichment,
   enrichTimelineData,
