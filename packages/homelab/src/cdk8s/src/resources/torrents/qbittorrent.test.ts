@@ -143,13 +143,17 @@ const ConfigMapSchema = z
 const ServiceSchema = z
   .object({
     kind: z.literal("Service"),
-    spec: z.object({
-      ports: z.array(
-        z.object({
-          port: z.number(),
-        }),
-      ),
-    }),
+    metadata: z.object({ name: z.string() }).loose(),
+    spec: z
+      .object({
+        ports: z.array(
+          z.object({
+            port: z.number(),
+          }),
+        ),
+        publishNotReadyAddresses: z.boolean().optional(),
+      })
+      .loose(),
   })
   .loose();
 
@@ -190,6 +194,12 @@ const deployment = DeploymentSchema.parse(
 );
 const relayConfigMap = ConfigMapSchema.parse(
   findManifest("ConfigMap", "qbittorrent-shelfbridge-relay-config"),
+);
+const qbittorrentService = ServiceSchema.parse(
+  findManifest("Service", "media-qbittorrent-service"),
+);
+const qbittorrentMetricsService = ServiceSchema.parse(
+  findManifest("Service", "media-qbittorrent-metrics-service"),
 );
 
 function getContainer(name: string): z.infer<typeof ContainerSchema> {
@@ -294,7 +304,7 @@ describe("qBittorrent ShelfBridge relay", () => {
     expect(config).not.toContain("server-template");
   });
 
-  it("removes qBittorrent endpoints when its own WebUI listener is unavailable", () => {
+  it("gates WebUI traffic on qBittorrent readiness while keeping metrics discoverable", () => {
     const qbittorrent = getContainer("qbittorrent");
 
     expect(qbittorrent.startupProbe).toEqual({
@@ -307,6 +317,14 @@ describe("qBittorrent ShelfBridge relay", () => {
       periodSeconds: 10,
       tcpSocket: { port: 8080 },
     });
+    expect(qbittorrentService.spec.publishNotReadyAddresses).toBeUndefined();
+    expect(qbittorrentService.spec.ports.map(({ port }) => port)).toEqual([
+      8080,
+    ]);
+    expect(qbittorrentMetricsService.spec.publishNotReadyAddresses).toBe(true);
+    expect(
+      qbittorrentMetricsService.spec.ports.map(({ port }) => port),
+    ).toEqual([17_871]);
   });
 
   it("does not expose either relay port through a Kubernetes Service", () => {

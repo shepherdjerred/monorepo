@@ -371,8 +371,10 @@ export function createQBitTorrentDeployment(
         failureThreshold: 90,
       }),
       // Unlike ShelfBridge availability, qBittorrent's own WebUI listener is
-      // part of this pod's service contract. Stop routing WebUI and metrics
-      // traffic when that local listener is unavailable after startup.
+      // part of this pod's service contract. Stop routing WebUI traffic when
+      // that local listener is unavailable after startup. The metrics Service
+      // publishes unready addresses separately so the healthy exporter can
+      // still expose qbittorrent_up=0.
       readiness: Probe.fromTcpSocket({
         port: 8080,
         periodSeconds: Duration.seconds(10),
@@ -481,6 +483,11 @@ export function createQBitTorrentDeployment(
 
   new Service(chart, "qbittorrent-metrics-service", {
     selector: deployment,
+    // qBittorrent readiness is pod-wide, but Prometheus must retain the
+    // exporter endpoint when the WebUI is down so qbittorrent_up=0 remains
+    // observable. The WebUI Service intentionally keeps the default readiness
+    // gating behavior.
+    publishNotReadyAddresses: true,
     metadata: {
       labels: {
         app: "qbittorrent",
