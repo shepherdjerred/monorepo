@@ -38,7 +38,7 @@ try {
   const candidates = [];
   for (const matchKey of matchKeys.slice(-options.limit)) {
     const match = await fetchRawMatch(client, BETA_CORPUS_BUCKET, matchKey);
-    const trackedProfiles = corpus.profilesForMatch(match);
+    const trackedProfiles = corpus.trackedProfilesForMatch(match);
     if (trackedProfiles.length === 0) continue;
     const queueType = resolveQueueTypeFromGame(
       match.info.queueId,
@@ -49,7 +49,8 @@ try {
       gameCreation: match.info.gameCreation,
       matchId: match.metadata.matchId,
       matchKey,
-      participants: trackedProfiles.map((profile) => {
+      participants: trackedProfiles.map((trackedProfile) => {
+        const { playerId, profile } = trackedProfile;
         const participant = match.info.participants.find(
           (candidate) => candidate.puuid === profile.league.leagueAccount.puuid,
         );
@@ -86,6 +87,7 @@ try {
               ? "great"
               : "terrible"
             : "average",
+          targetPlayerId: playerId,
           win: participant.win,
         };
       }),

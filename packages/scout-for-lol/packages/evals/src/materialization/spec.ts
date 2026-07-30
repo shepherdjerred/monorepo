@@ -10,6 +10,7 @@ export const MaterializationCaseSpecSchema = z.strictObject({
   timelineKey: z
     .string()
     .regex(/^games\/\d{4}\/\d{2}\/\d{2}\/.+\/timeline\.json$/),
+  targetPlayerId: z.number().int().positive(),
   targetPlayerPuuid: z.string().min(1),
   performanceSlice: PerformanceSliceSchema,
   styleKey: EvalStyleKeySchema,

@@ -40,8 +40,9 @@ boundary.
 ## Materialize A Draft
 
 Create a JSON spec with dataset metadata and explicit cases. Each case requires
-`matchKey`, `timelineKey`, `targetPlayerPuuid`, `performanceSlice`, `styleKey`
-(`aaron` or `nekoryan`), and frozen selected behaviors. Optional
+`matchKey`, `timelineKey`, the synced Beta `targetPlayerId`,
+`targetPlayerPuuid`, `performanceSlice`, `styleKey` (`aaron` or `nekoryan`),
+and frozen selected behaviors. Optional
 `playerHistory` and `patchContext` default to empty strings. The source bucket
 is fixed to `scout-beta`; tracked profiles are resolved from the synced Beta
 corpus snapshot rather than accepted from the spec.
@@ -78,3 +79,24 @@ The suite covers draft creation, finalization, individual ratings, browser
 history and deep links, freshness ratings, persistence, invalid route ownership,
 and narrow mobile layouts. Chromium runs single-worker because the scenarios
 mutate dedicated datasets in one in-memory store.
+
+## Session Log — 2026-07-29
+
+### Done
+
+- Preserved cross-guild Beta identities and required materialization to select
+  an explicit Beta player.
+- Updated candidate discovery, package scripts, documentation, and regression
+  coverage.
+
+### Remaining
+
+- Resolve the PR's Buildkite pipeline conflict and remaining P2 review findings.
+- Validate the published head in Buildkite and current-head review.
+
+### Caveats
+
+- Existing materialization specs must add `targetPlayerId` from candidate
+  discovery.
+- Existing version 1 Beta corpus snapshots must be regenerated with
+  `bun run --filter=@scout-for-lol/evals sync-beta`.

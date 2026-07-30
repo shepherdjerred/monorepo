@@ -16,18 +16,27 @@ board: false
   rating.
 - Added regression coverage in
   `packages/scout-for-lol/packages/evals/src/server/store.test.ts`.
+- Changed the Beta corpus snapshot identity to `(server_id, puuid)`, required
+  materialization specs to identify the Beta `targetPlayerId`, and scoped
+  tracked-player resolution to that player's guild.
+- Added cross-guild PUUID regression coverage and included `targetPlayerId` in
+  candidate discovery output.
+- Replaced the eval package's `bunx` lint and typecheck scripts with
+  `bun x --no-install`, matching the Bun-only Buildkite runtime.
 - Verified PR #1777 with the focused eval tests, typecheck, changed-file ESLint,
   and changed-file Prettier checks.
 
 ### Remaining
 
-- Address the three remaining P2 review findings on PR #1777.
-- Let Buildkite and a current-head Codex review validate the published commit.
+- Resolve the `.buildkite/pipeline.yml` conflict with current `origin/main`.
+- Address the remaining P2 review findings on PR #1777.
+- Let Buildkite and a current-head Codex review validate the next published
+  commit.
 
 ### Caveats
 
-- The package-wide lint command currently rejects
-  `data/create-calibration-20-spec.ts` because it is outside the TypeScript
-  project service; ESLint passes on both files changed in this fix.
+- Package-wide tracked-source ESLint passes. The ignored, local-only
+  `data/create-calibration-20-spec.ts` remains outside the committed TypeScript
+  project and requires `--ignore-pattern data` when present.
 - Two earlier-session documentation files remain dirty and were preserved
   byte-for-byte.

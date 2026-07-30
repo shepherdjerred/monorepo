@@ -28,13 +28,15 @@ export function defaultBetaCorpusPath(): string {
 
 const SnapshotMetadataSchema = z.strictObject({
   sourceStage: z.literal("beta"),
-  schemaVersion: z.literal("1"),
+  schemaVersion: z.literal("2"),
 });
 
-const StoredProfileSchema = BetaProfileRowSchema.omit({
-  accountId: true,
-  playerId: true,
+const TrackedProfileSchema = z.strictObject({
+  playerId: z.number().int().positive(),
+  profile: PlayerConfigEntrySchema,
 });
+
+export type TrackedProfile = z.infer<typeof TrackedProfileSchema>;
 
 const CREATE_METADATA_SQL = `
   CREATE TABLE metadata (
@@ -45,13 +47,14 @@ const CREATE_METADATA_SQL = `
 
 const CREATE_PROFILES_SQL = `
   CREATE TABLE profiles (
-    puuid TEXT PRIMARY KEY,
+    puuid TEXT NOT NULL,
     alias TEXT NOT NULL,
     region TEXT NOT NULL,
     discord_id TEXT,
     server_id TEXT NOT NULL,
     source_player_id INTEGER NOT NULL,
-    source_account_id INTEGER NOT NULL
+    source_account_id INTEGER NOT NULL UNIQUE,
+    PRIMARY KEY (server_id, puuid)
   ) STRICT
 `;
 
@@ -67,7 +70,7 @@ export function writeBetaCorpusSnapshot(
     const insertMetadata = database.query(
       "INSERT INTO metadata (key, value) VALUES (?, ?)",
     );
-    insertMetadata.run("schemaVersion", "1");
+    insertMetadata.run("schemaVersion", "2");
     insertMetadata.run("sourceStage", "beta");
     insertMetadata.run("sourcePod", sourcePod);
     insertMetadata.run("syncedAt", new Date().toISOString());
@@ -123,21 +126,34 @@ export class BetaCorpus {
     SnapshotMetadataSchema.parse(metadata);
   }
 
-  public getProfile(puuid: string): PlayerConfigEntry | undefined {
-    const row = this.#database
-      .query(
-        `SELECT
-           puuid,
-           alias,
-           region,
-           discord_id AS discordId,
-           server_id AS serverId
-         FROM profiles
-         WHERE puuid = ?`,
-      )
-      .get(puuid);
+  #parseProfile(row: unknown): BetaProfileRow | undefined {
     if (row === null) return undefined;
-    const profile = StoredProfileSchema.parse(row);
+    return BetaProfileRowSchema.parse(row);
+  }
+
+  #profileForServer(
+    serverId: string,
+    puuid: string,
+  ): BetaProfileRow | undefined {
+    return this.#parseProfile(
+      this.#database
+        .query(
+          `SELECT
+             source_account_id AS accountId,
+             alias,
+             discord_id AS discordId,
+             source_player_id AS playerId,
+             puuid,
+             region,
+             server_id AS serverId
+           FROM profiles
+           WHERE server_id = ? AND puuid = ?`,
+        )
+        .get(serverId, puuid),
+    );
+  }
+
+  #toPlayerConfig(profile: BetaProfileRow): PlayerConfigEntry {
     return PlayerConfigEntrySchema.parse({
       alias: profile.alias,
       discordAccount: {
@@ -152,11 +168,91 @@ export class BetaCorpus {
     });
   }
 
-  public profilesForMatch(rawMatch: RawMatch): PlayerConfigEntry[] {
+  public getProfile(
+    playerId: number,
+    puuid: string,
+  ): PlayerConfigEntry | undefined {
+    const row = this.#database
+      .query(
+        `SELECT
+           source_account_id AS accountId,
+           alias,
+           discord_id AS discordId,
+           source_player_id AS playerId,
+           puuid,
+           region,
+           server_id AS serverId
+         FROM profiles
+         WHERE source_player_id = ? AND puuid = ?`,
+      )
+      .get(playerId, puuid);
+    const profile = this.#parseProfile(row);
+    return profile === undefined ? undefined : this.#toPlayerConfig(profile);
+  }
+
+  public trackedProfilesForMatch(rawMatch: RawMatch): TrackedProfile[] {
+    const trackedProfiles: TrackedProfile[] = [];
+    for (const participant of rawMatch.info.participants) {
+      const rows = this.#database
+        .query(
+          `SELECT
+             source_account_id AS accountId,
+             alias,
+             discord_id AS discordId,
+             source_player_id AS playerId,
+             puuid,
+             region,
+             server_id AS serverId
+           FROM profiles
+           WHERE puuid = ?
+           ORDER BY server_id, source_player_id`,
+        )
+        .all(participant.puuid);
+      for (const row of z.array(BetaProfileRowSchema).parse(rows)) {
+        trackedProfiles.push(
+          TrackedProfileSchema.parse({
+            playerId: row.playerId,
+            profile: this.#toPlayerConfig(row),
+          }),
+        );
+      }
+    }
+    return z.array(TrackedProfileSchema).parse(trackedProfiles);
+  }
+
+  public profilesForMatch(
+    rawMatch: RawMatch,
+    targetPlayerId: number,
+    targetPlayerPuuid: string,
+  ): PlayerConfigEntry[] {
+    const targetRow = this.#parseProfile(
+      this.#database
+        .query(
+          `SELECT
+             source_account_id AS accountId,
+             alias,
+             discord_id AS discordId,
+             source_player_id AS playerId,
+             puuid,
+             region,
+             server_id AS serverId
+           FROM profiles
+           WHERE source_player_id = ? AND puuid = ?`,
+        )
+        .get(targetPlayerId, targetPlayerPuuid),
+    );
+    if (targetRow === undefined) {
+      throw new Error(
+        `Beta player ${String(targetPlayerId)} does not own account ${targetPlayerPuuid}`,
+      );
+    }
     const profiles: PlayerConfigEntry[] = [];
     for (const participant of rawMatch.info.participants) {
-      const profile = this.getProfile(participant.puuid);
-      if (profile !== undefined) profiles.push(profile);
+      const profile = this.#profileForServer(
+        targetRow.serverId,
+        participant.puuid,
+      );
+      if (profile !== undefined) profiles.push(this.#toPlayerConfig(profile));
     }
     return PlayerConfigSchema.parse(profiles);
   }

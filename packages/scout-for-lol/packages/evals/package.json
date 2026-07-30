@@ -11,10 +11,10 @@
     "materialize": "bun run src/scripts/materialize-dataset.ts",
     "start": "bun run src/server/index.ts",
     "sync-beta": "bun run src/scripts/sync-beta-corpus.ts",
-    "typecheck": "bunx tsc --noEmit",
+    "typecheck": "bun x --no-install tsc --noEmit",
     "test": "bun test src",
     "test:e2e": "bun run build && bun x --no-install playwright test",
-    "lint": "bunx eslint . --max-warnings=0"
+    "lint": "bun x --no-install eslint . --max-warnings=0"
   },
   "imports": {
     "#client/*": "./src/client/*",

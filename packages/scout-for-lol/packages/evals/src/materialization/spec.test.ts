@@ -13,6 +13,7 @@ function validSpec() {
         playerHistory: "Recent games",
         selectedBehaviors: ["Use one frozen joke behavior"],
         styleKey: "aaron",
+        targetPlayerId: 12,
         targetPlayerPuuid: "p".repeat(78),
         timelineKey: "games/2026/07/28/NA1_123/timeline.json",
       },
@@ -32,6 +33,7 @@ describe("MaterializationSpecSchema", () => {
     expect(parsed.cases[0]).toMatchObject({
       performanceSlice: "great",
       styleKey: "aaron",
+      targetPlayerId: 12,
       targetPlayerPuuid: "p".repeat(78),
     });
   });

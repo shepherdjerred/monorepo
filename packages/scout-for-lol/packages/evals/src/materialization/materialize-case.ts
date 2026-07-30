@@ -76,7 +76,11 @@ export async function materializeCase(
   );
   const processedMatch = buildCompletedMatch(
     source.rawMatch,
-    dependencies.corpus.profilesForMatch(source.rawMatch),
+    dependencies.corpus.profilesForMatch(
+      source.rawMatch,
+      spec.targetPlayerId,
+      spec.targetPlayerPuuid,
+    ),
   );
   const targetPlayerIndex = findTargetPlayerIndex(
     processedMatch,
