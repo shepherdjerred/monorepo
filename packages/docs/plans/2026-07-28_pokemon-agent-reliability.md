@@ -740,8 +740,8 @@ deferred by explicit direction.
 
 ### Remaining
 
-- Publish the #1847 fix, restack and publish #1848, and complete current-head
-  Buildkite and hosted-review verification for both pull requests.
+- Complete current-head Buildkite and hosted-review verification for PRs #1847
+  and #1848.
 
 ### Caveats
 
@@ -750,3 +750,25 @@ deferred by explicit direction.
   exceptions.
 - The rebuilt WASM asset is ignored and remains a local verification artifact.
 - PR #1848's two passage-ranking findings are unchanged.
+
+## Session Log — 2026-07-29 (allied battle targets)
+
+### Done
+
+- Replaced one-direction target cycling with position-aware navigation over
+  Emerald's target ring.
+- Added focused controller coverage proving horizontal opponent targeting uses
+  Left and cross-side allied targeting uses Down before confirming the choice.
+- Passed the focused battle/controller tests plus backend typecheck and lint.
+
+### Remaining
+
+- Publish the #1847 fix, restack and publish #1848, and complete current-head
+  Buildkite and hosted-review verification for both pull requests.
+
+### Caveats
+
+- The Enigma Berry review finding on #1847 remains unchanged.
+- PR #1848's two passage-ranking findings remain unchanged.
+- No WASM rebuild is required because this change uses existing decoded
+  battler-position observations and does not change engine exports.

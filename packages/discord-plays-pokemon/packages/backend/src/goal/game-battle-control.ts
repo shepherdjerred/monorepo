@@ -42,8 +42,12 @@ type ControlSnapshot = Readonly<{
   frame: Uint8Array;
 }>;
 
+type BattleState = NonNullable<GameObservationV2["battle"]>;
+
 const STEP_FRAMES = 2;
 const MAX_FRAMES = 360;
+// Emerald's clockwise target-navigation ring.
+const TARGET_POSITION_ORDER: readonly number[] = [0, 2, 3, 1];
 const UNSUPPORTED_BATTLE_TYPE_MASK =
   (1 << 1) |
   (1 << 5) |
@@ -287,7 +291,7 @@ export class GameBattleControl {
       if (battle.targetBattler === targetBattler) return false;
       const previousTarget = battle.targetBattler;
       const timedOut = await this.pressAndAwait(
-        "right",
+        targetNavigationCommand(battle, targetBattler),
         (observation) =>
           observation.battle?.menu === "target" &&
           observation.battle.targetBattler !== previousTarget,
@@ -383,6 +387,39 @@ export class GameBattleControl {
       ? base
       : { ...base, status: "applied", stopReason: "completed" };
   }
+}
+
+function targetNavigationCommand(
+  battle: BattleState,
+  targetBattler: number,
+): Command {
+  const current = battle.battlers.find(
+    (battler) => battler.battler === battle.targetBattler && battler.active,
+  );
+  if (current === undefined) {
+    throw new Error("target menu cursor does not identify an active battler");
+  }
+  const target = battle.battlers.find(
+    (battler) => battler.battler === targetBattler && battler.active,
+  );
+  if (target === undefined) {
+    throw new Error("requested target battler is not active");
+  }
+  const currentIndex = TARGET_POSITION_ORDER.indexOf(current.position);
+  const targetIndex = TARGET_POSITION_ORDER.indexOf(target.position);
+  if (currentIndex === -1 || targetIndex === -1) {
+    throw new RangeError("battle target has an unknown field position");
+  }
+  const forward =
+    (targetIndex - currentIndex + TARGET_POSITION_ORDER.length) %
+    TARGET_POSITION_ORDER.length;
+  const backward =
+    (currentIndex - targetIndex + TARGET_POSITION_ORDER.length) %
+    TARGET_POSITION_ORDER.length;
+  const forwardIsShortest = forward <= backward;
+  const sameSide = current.side === target.side;
+  if (sameSide) return forwardIsShortest ? "right" : "left";
+  return forwardIsShortest ? "down" : "up";
 }
 
 function nextActionOrBattleEnd(observation: GameObservationV2): boolean {

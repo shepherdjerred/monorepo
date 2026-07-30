@@ -355,67 +355,68 @@ describe("GameBattleControl move actions", () => {
     );
     expect(port.presses).toEqual([]);
   });
+});
 
-  test("applies an explicit selectable target in a double battle", async () => {
-    const battlers: BattleState["battlers"] = [
-      {
-        battler: 0,
-        side: "player",
-        position: 0,
-        active: true,
-        speciesId: 258,
-        species: "Mudkip",
-        hp: 20,
-        maxHp: 20,
-        partyIndex: 0,
-        status: 0,
-      },
-      {
-        battler: 1,
-        side: "opponent",
-        position: 1,
-        active: true,
-        speciesId: 263,
-        species: "Zigzagoon",
-        hp: 15,
-        maxHp: 15,
-        partyIndex: 0,
-        status: 0,
-      },
-      {
-        battler: 2,
-        side: "player",
-        position: 2,
-        active: true,
-        speciesId: 252,
-        species: "Treecko",
-        hp: 19,
-        maxHp: 19,
-        partyIndex: 1,
-        status: 0,
-      },
-      {
-        battler: 3,
-        side: "opponent",
-        position: 3,
-        active: true,
-        speciesId: 261,
-        species: "Poochyena",
-        hp: 14,
-        maxHp: 14,
-        partyIndex: 1,
-        status: 0,
-      },
-    ];
+describe("GameBattleControl target navigation", () => {
+  const battlers: BattleState["battlers"] = [
+    {
+      battler: 0,
+      side: "player",
+      position: 0,
+      active: true,
+      speciesId: 258,
+      species: "Mudkip",
+      hp: 20,
+      maxHp: 20,
+      partyIndex: 0,
+      status: 0,
+    },
+    {
+      battler: 1,
+      side: "opponent",
+      position: 1,
+      active: true,
+      speciesId: 263,
+      species: "Zigzagoon",
+      hp: 15,
+      maxHp: 15,
+      partyIndex: 0,
+      status: 0,
+    },
+    {
+      battler: 2,
+      side: "player",
+      position: 2,
+      active: true,
+      speciesId: 252,
+      species: "Treecko",
+      hp: 19,
+      maxHp: 19,
+      partyIndex: 1,
+      status: 0,
+    },
+    {
+      battler: 3,
+      side: "opponent",
+      position: 3,
+      active: true,
+      speciesId: 261,
+      species: "Poochyena",
+      hp: 14,
+      maxHp: 14,
+      partyIndex: 1,
+      status: 0,
+    },
+  ];
+
+  async function expectTargetNavigation(
+    targetBattler: number,
+    command: "down" | "left",
+  ): Promise<void> {
     const port = new BattlePort(
       observation({ frame: 10, typeFlags: 1, battlers }),
       [
-        observation({
-          frame: 12,
-          menu: "move",
-          typeFlags: 1,
-          battlers,
-        }),
+        observation({ frame: 12, menu: "move", typeFlags: 1, battlers }),
         observation({
           frame: 14,
           menu: "target",
@@ -427,30 +428,33 @@ describe("GameBattleControl move actions", () => {
           frame: 16,
           menu: "target",
           typeFlags: 1,
-          targetBattler: 3,
+          targetBattler,
           battlers,
         }),
-        observation({
-          frame: 18,
-          typeFlags: 1,
-          targetBattler: 3,
-          battlers,
-        }),
+        observation({ frame: 18, typeFlags: 1, targetBattler, battlers }),
       ],
     );
 
     const outcome = await new GameBattleControl(port).move({
       moveId: 33,
-      targetBattler: 3,
+      targetBattler,
     });
 
     expect(outcome.status).toBe("applied");
     expect(port.presses.map((press) => press.command)).toEqual([
       "a",
       "a",
-      "right",
+      command,
       "a",
     ]);
+  }
+
+  test("uses horizontal input for a same-side opponent target", async () => {
+    await expectTargetNavigation(3, "left");
+  });
+
+  test("uses vertical input for an allied target", async () => {
+    await expectTargetNavigation(2, "down");
   });
 });
 
