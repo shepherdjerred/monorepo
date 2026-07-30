@@ -182,6 +182,9 @@ renderers, and enrichment behavior must not change.
 - Made the production-filtered Classic visual lane build the runtime artifacts
   exported by Glitter Context and LLM Models, and guarded both the package
   scripts and lane input/install closure in pipeline validation.
+- Moved private Classic font validation into the fail-fast backend startup
+  sequence before the health server, Discord login, or cron imports can serve
+  traffic, with injected success and failure-ordering tests.
 - Published draft PR #1849 on top of refresh PR #1827 with accepted full 5v5,
   partial 3v2, and postmatch screenshots.
 
