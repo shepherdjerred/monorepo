@@ -1,6 +1,15 @@
-export function argumentValue(name: string): string | undefined {
-  const index = Bun.argv.indexOf(name);
-  return index === -1 ? undefined : Bun.argv[index + 1];
+export function argumentValue(
+  name: string,
+  commandLineArguments: readonly string[] = Bun.argv,
+): string | undefined {
+  const index = commandLineArguments.indexOf(name);
+  if (index === -1) return undefined;
+
+  const value = commandLineArguments[index + 1];
+  if (value === undefined || value.length === 0 || value.startsWith("-")) {
+    throw new Error(`Option ${name} requires a value`);
+  }
+  return value;
 }
 
 export function evalDatabasePath(): string {

@@ -75,6 +75,8 @@ board: false
   match summary through single or chunked timeline stages to the final review.
 - Locked freshness batch visibility and rating writes until every current
   generated case has an individual rating, with exact remaining counts.
+- Rejected value-taking CLI options that are trailing or followed by another
+  option while preserving absent-option defaults and valid values.
 - Verified PR #1777 with the focused eval tests, typecheck, changed-file ESLint,
   changed-file Prettier checks, Buildkite pipeline validator, lane-coverage
   tests, and an independent merge-tree check.
