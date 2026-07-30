@@ -8,6 +8,7 @@ import { ArrowLeftIcon, ArrowRightIcon, CheckCircle2Icon } from "lucide-react";
 import { Link, useParams } from "react-router";
 
 import { useDocumentTitle } from "#client/document-title.ts";
+import { freshnessAvailability } from "#client/freshness-availability.ts";
 import { useTRPC } from "#client/trpc.ts";
 import { Badge } from "#components/ui/badge.tsx";
 import { Button } from "#components/ui/button.tsx";
@@ -19,6 +20,53 @@ import {
 } from "#components/ui/card.tsx";
 import { Progress } from "#components/ui/progress.tsx";
 import { DatasetIdSchema } from "#shared/schema.ts";
+
+function FreshnessCard({
+  datasetId,
+  freshness,
+}: {
+  datasetId: string;
+  freshness: ReturnType<typeof freshnessAvailability>;
+}): React.JSX.Element {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Freshness</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {freshness.generatedCaseCount === 0 ? (
+          <p className="text-sm text-slate-500">
+            Generate reviews to unlock batch rating.
+          </p>
+        ) : null}
+        {freshness.missingRatingCount > 0 ? (
+          <p className="text-sm text-slate-500">
+            Complete {freshness.missingRatingCount} more individual{" "}
+            {freshness.missingRatingCount === 1 ? "rating" : "ratings"} to
+            unlock batch freshness.
+          </p>
+        ) : null}
+        {freshness.isAvailable
+          ? freshness.styleKeys.map((styleKey) => (
+              <Button
+                className="w-full justify-between"
+                key={styleKey}
+                nativeButton={false}
+                render={
+                  <Link
+                    to={`/datasets/${datasetId}/freshness/${encodeURIComponent(styleKey)}`}
+                  />
+                }
+                variant="outline"
+              >
+                {styleKey} <ArrowRightIcon />
+              </Button>
+            ))
+          : null}
+      </CardContent>
+    </Card>
+  );
+}
 
 export function DatasetPage(): React.JSX.Element {
   const parameters = useParams();
@@ -66,13 +114,7 @@ export function DatasetPage(): React.JSX.Element {
   const resumeCase = cases.find(
     (evalCase) => !evalCase.isRated && evalCase.generationId !== null,
   );
-  const styleKeys = [
-    ...new Set(
-      cases
-        .filter((evalCase) => evalCase.generationId !== null)
-        .map((evalCase) => evalCase.styleKey),
-    ),
-  ];
+  const freshness = freshnessAvailability(cases);
   const progress =
     dataset.caseCount === 0
       ? 0
@@ -172,33 +214,7 @@ export function DatasetPage(): React.JSX.Element {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Freshness</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {styleKeys.length === 0 ? (
-                <p className="text-sm text-slate-500">
-                  Generate reviews to unlock batch rating.
-                </p>
-              ) : null}
-              {styleKeys.map((styleKey) => (
-                <Button
-                  className="w-full justify-between"
-                  key={styleKey}
-                  nativeButton={false}
-                  render={
-                    <Link
-                      to={`/datasets/${dataset.id}/freshness/${encodeURIComponent(styleKey)}`}
-                    />
-                  }
-                  variant="outline"
-                >
-                  {styleKey} <ArrowRightIcon />
-                </Button>
-              ))}
-            </CardContent>
-          </Card>
+          <FreshnessCard datasetId={dataset.id} freshness={freshness} />
 
           {dataset.status === "draft" ? (
             <>

@@ -9,6 +9,7 @@ import {
 import {
   generationSetRevision,
   requireCurrentGenerationSet,
+  requireFreshnessAvailable,
   SELECT_FRESHNESS_RATING_SQL,
   type FreshnessRating,
   type UpsertFreshnessRatingInput,
@@ -411,6 +412,7 @@ export class EvalStore {
         `Dataset ${id} has no generated reviews for style ${style}`,
       );
     }
+    requireFreshnessAvailable(this.#database, id);
     const rawRating = this.#database
       .query(SELECT_FRESHNESS_RATING_SQL)
       .get(id, style);

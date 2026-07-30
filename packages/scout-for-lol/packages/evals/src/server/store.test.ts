@@ -49,6 +49,22 @@ const RERUN_PROMPTS = FrozenRenderedPromptsSchema.parse({
   },
 });
 
+function rateGeneration(
+  store: EvalStore,
+  generationId: string,
+  note: string,
+): void {
+  store.upsertHumanRating({
+    generationId,
+    rating: {
+      anchoredness: 3,
+      entertainment: 2,
+      styleRecognizability: 3,
+      note,
+    },
+  });
+}
+
 describe("SQLite setup and migrations", () => {
   test("enables connection safety pragmas and applies ordered migrations once", () => {
     const database = openEvalDatabase(":memory:");
@@ -505,6 +521,24 @@ describe("EvalStore freshness ratings and row validation", () => {
           rating: { score: 2, note: "Should not be stored." },
         }),
       ).toThrow("no generated reviews");
+      expect(() => store.listStyleBatch(dataset.id, "aaron")).toThrow(
+        "Freshness is locked until 2 current generated cases receive individual ratings",
+      );
+      expect(() =>
+        store.upsertFreshnessRating({
+          datasetId: dataset.id,
+          generationSetRevision: "0".repeat(64),
+          styleKey: "aaron",
+          rating: { score: 2, note: "Individual ratings are incomplete." },
+        }),
+      ).toThrow(
+        "Freshness is locked until 2 current generated cases receive individual ratings",
+      );
+      rateGeneration(store, displayedFirstGeneration.id, "First case rated.");
+      expect(() => store.listStyleBatch(dataset.id, "aaron")).toThrow(
+        "Freshness is locked until 1 current generated case receives individual ratings",
+      );
+      rateGeneration(store, displayedSecondGeneration.id, "Second case rated.");
 
       const displayedBatch = store.listStyleBatch(dataset.id, "aaron");
       expect(displayedBatch).toMatchObject({
@@ -548,6 +582,14 @@ describe("EvalStore freshness ratings and row validation", () => {
         inputTokens: null,
         outputTokens: null,
       });
+      expect(() => store.listStyleBatch(dataset.id, "aaron")).toThrow(
+        "Freshness is locked until 1 current generated case receives individual ratings",
+      );
+      rateGeneration(
+        store,
+        newestFirstGeneration.id,
+        "Newest case generation rated.",
+      );
       const refreshedBatch = store.listStyleBatch(dataset.id, "aaron");
       expect(refreshedBatch).toMatchObject({
         reviews: [

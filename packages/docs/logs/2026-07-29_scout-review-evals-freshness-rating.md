@@ -73,6 +73,8 @@ board: false
   rather than match outcome.
 - Rendered every frozen generation prompt in case audit context, ordered from
   match summary through single or chunked timeline stages to the final review.
+- Locked freshness batch visibility and rating writes until every current
+  generated case has an individual rating, with exact remaining counts.
 - Verified PR #1777 with the focused eval tests, typecheck, changed-file ESLint,
   changed-file Prettier checks, Buildkite pipeline validator, lane-coverage
   tests, and an independent merge-tree check.

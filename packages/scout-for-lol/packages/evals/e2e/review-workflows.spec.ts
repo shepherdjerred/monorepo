@@ -59,6 +59,17 @@ async function selectScore(
   await expect(radio).toBeChecked();
 }
 
+async function openStyleBatch(
+  page: Page,
+  datasetName: string,
+  styleKey: string,
+): Promise<void> {
+  await expect(
+    page.getByRole("heading", { name: datasetName, level: 1 }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: styleKey }).click();
+}
+
 test("creates an empty draft and validates local form input", async ({
   page,
 }) => {
@@ -229,7 +240,36 @@ test("rates freshness using latest generations and preserves the score", async (
   page,
 }) => {
   await openDataset(page, "Freshness Workflow");
-  await page.getByRole("button", { name: "nekoryan" }).click();
+  await expect(
+    page.getByText(
+      "Complete 2 more individual ratings to unlock batch freshness.",
+    ),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "nekoryan" })).toHaveCount(0);
+  const datasetUrl = page.url();
+  await page.goto(`${datasetUrl}/freshness/nekoryan`);
+  await expect(page.getByText("Freshness batch not found.")).toBeVisible();
+
+  await page.goto(datasetUrl);
+  await page.getByRole("button", { name: "Resume rating" }).click();
+  await selectScore(page, "Anchoredness", "Great");
+  await selectScore(page, "Entertainment", "Great");
+  await selectScore(page, "Style recognizability", "Okay");
+  await page.getByRole("button", { name: "Save and next" }).click();
+  await page.getByRole("button", { name: "Dataset" }).click();
+  await expect(
+    page.getByText(
+      "Complete 1 more individual rating to unlock batch freshness.",
+    ),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "nekoryan" })).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Resume rating" }).click();
+  await selectScore(page, "Anchoredness", "Okay");
+  await selectScore(page, "Entertainment", "Great");
+  await selectScore(page, "Style recognizability", "Great");
+  await page.getByRole("button", { name: "Save and next" }).click();
+  await openStyleBatch(page, "Freshness Workflow", "nekoryan");
   await expect(page).toHaveTitle("nekoryan freshness | Scout Review Evals");
   await expect(
     page.getByText("Colin made Cataclysm the enemy team's permanent address."),
@@ -246,11 +286,7 @@ test("rates freshness using latest generations and preserves the score", async (
   await expect(note).toHaveAttribute("maxlength", "2000");
   await note.fill("Distinct openings, but both close with enemy-team framing.");
   await page.getByRole("button", { name: "Save freshness" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Freshness Workflow", level: 1 }),
-  ).toBeVisible();
-
-  await page.getByRole("button", { name: "nekoryan" }).click();
+  await openStyleBatch(page, "Freshness Workflow", "nekoryan");
   await expect(
     page
       .getByRole("group", { name: "Across this batch" })
