@@ -155,7 +155,7 @@ function directChildren(
   const children = new Map<string, { label: string; route: string }>();
   for (const documentPath of documentPaths) {
     const relativePath = path.posix.relative(directory, documentPath);
-    if (relativePath.startsWith("../") || relativePath === "index.md") {
+    if (relativePath === "index.md" || relativePath.startsWith("../")) {
       continue;
     }
     const [firstSegment] = relativePath.split("/");
