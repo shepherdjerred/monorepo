@@ -45,19 +45,11 @@ import type {
   ScoutSeasonRefreshInput,
   ScoutSeasonRefreshResult,
 } from "#activities/scout-season-refresh.ts";
-import { prSummaryPipeline as _prSummaryPipeline } from "./pr-summary/index.ts";
-import { prReviewPipeline as _prReviewPipeline } from "./pr-review/index.ts";
-import {
-  prReactionListener as _prReactionListener,
-  type PrReactionListenerInput,
-} from "./pr-reaction-listener/index.ts";
 import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab-audit.ts";
 import type { RunHomelabAuditWorkflowInput } from "./homelab-audit.ts";
 import { agentTaskWorkflow as _agentTaskWorkflow } from "./agent-task.ts";
 import { cancelBuildkiteBuildsWorkflow as _cancelBuildkiteBuildsWorkflow } from "./cancel-buildkite-builds.ts";
 import { checkPrMergeConflictsWorkflow as _checkPrMergeConflictsWorkflow } from "./check-pr-merge-conflicts.ts";
-import { prBabysitWorkflow as _prBabysitWorkflow } from "./pr-babysit/index.ts";
-import type { PrBabysitWorkflowInput } from "#shared/pr-babysit/workflow-types.ts";
 import { observeReviewSignalsWorkflow as _observeReviewSignalsWorkflow } from "./observe-review-signals.ts";
 import type {
   ObserveReviewSignalsInput,
@@ -66,11 +58,7 @@ import type {
 import type {
   CancelBuildkiteBuildsInput,
   CheckPrMergeConflictsInput,
-  PrReviewPipelineInput,
-  PrSummaryInput,
 } from "#shared/schemas.ts";
-import type { PrReviewPipelineResult } from "./pr-review/index.ts";
-import type { RunSummaryResult } from "#activities/pr-review/summary.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
 import {
   runGlitterCorpusBackfill as _runGlitterCorpusBackfill,
@@ -203,18 +191,6 @@ export async function runScoutSeasonRefreshWorkflow(
   return _runScoutSeasonRefreshWorkflow(input);
 }
 
-export async function prReviewPipeline(
-  input: PrReviewPipelineInput,
-): Promise<PrReviewPipelineResult> {
-  return _prReviewPipeline(input);
-}
-
-export async function prSummaryPipeline(
-  input: PrSummaryInput,
-): Promise<RunSummaryResult> {
-  return _prSummaryPipeline(input);
-}
-
 export async function runHomelabAuditWorkflow(
   input: RunHomelabAuditWorkflowInput = {},
 ): Promise<void> {
@@ -223,12 +199,6 @@ export async function runHomelabAuditWorkflow(
 
 export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
   return _agentTaskWorkflow(input);
-}
-
-export async function prReactionListener(
-  input: PrReactionListenerInput,
-): Promise<void> {
-  return _prReactionListener(input);
 }
 
 export async function cancelBuildkiteBuildsWorkflow(
@@ -241,12 +211,6 @@ export async function checkPrMergeConflictsWorkflow(
   input: CheckPrMergeConflictsInput,
 ): Promise<void> {
   return _checkPrMergeConflictsWorkflow(input);
-}
-
-export async function prBabysitWorkflow(
-  input: PrBabysitWorkflowInput,
-): Promise<void> {
-  return _prBabysitWorkflow(input);
 }
 
 export async function observeReviewSignalsWorkflow(
