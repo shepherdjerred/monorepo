@@ -66,6 +66,15 @@ decision, archived the pr-babysit plan + two babysit todos as complete.
 
 - [ ] Push the docs commit and drive Buildkite `bun run verify` on PR #1863 to green.
 - [ ] Promote PR #1863 from draft to ready once CI passes.
+- [ ] **Operator (deploy-time): terminate the orphaned live `prReactionListener`.** It runs in prod under the fixed workflow ID `pr-review-reaction-listener` and continues-as-new indefinitely. Once this PR ships, no worker polls the `PR_REVIEW` queue, so its in-flight execution is stranded in `Running` with an unprocessed workflow task (it will never complete on its own). After the new worker image rolls out, terminate it (Tailscale-gated Temporal UI **Workflows → terminate**, or CLI):
+
+  ```bash
+  temporal workflow terminate --workflow-id pr-review-reaction-listener \
+    --reason "pr-review reaction-listener removed (PR #1863)"
+  ```
+
+  Also terminate any still-`Running` executions of the other removed workflow types if present (`temporal workflow list --query "ExecutionStatus='Running' AND (WorkflowType='prReviewPipeline' OR WorkflowType='prSummaryPipeline' OR WorkflowType='prBabysitWorkflow')"`); in practice these are webhook-started + the bot was gated off, so there should be none.
+
 - [ ] Post-merge: `git-spice repo sync`, remove the worktree, and archive this plan to `archive/completed/`.
 
 ## Session Log — 2026-07-30
@@ -85,6 +94,7 @@ decision, archived the pr-babysit plan + two babysit todos as complete.
 
 ### Caveats
 
+- **The live `prReactionListener` must be terminated by an operator at deploy time** (see Remaining) — removing its worker/code strands its in-flight execution in `Running`. This is a prod Temporal mutation, so it can't be done in the PR; it's a required post-rollout operator step.
 - The GitHub webhook (`pr-bot.sjer.red`, port 9466, `GITHUB_WEBHOOK_SECRET`, tofu webhook) is **deliberately kept** — it is load-bearing for the merge-conflict check + PR-closed build cancellation, which are NOT part of the removed bot.
 - `lib/pr-review-workdir.ts` is a **survivor** (used by agent-task); the name is legacy but it was intentionally not renamed to avoid churn.
 - `review-signals-collect` and the CI review gate are untouched by design.
