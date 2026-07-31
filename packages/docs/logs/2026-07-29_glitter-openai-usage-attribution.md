@@ -52,9 +52,11 @@ artifacts and failed before generating the four missing cards.
 
 ## Workflow Friction
 
-- The `monorepo-docs` skill directs operators to run `bun run check-docs`, but
-  the root package has no script by that name. `bun run check-todos` currently
-  invokes `packages/docs-board/src/cli/check-docs.ts` and performs the full
+- The `monorepo-docs` skill briefly directed operators to run `bun run
+check-docs`, a script that does not exist at the root; that guidance was
+  already corrected to `bun run check-todos` the same day, in PR #1784
+  (commit `befcb51f1`). `bun run check-todos` invokes
+  `packages/docs-board/src/cli/check-docs.ts` and performs the full
   document-model check.
 
 ## Session Log — 2026-07-29
