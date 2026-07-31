@@ -12,20 +12,17 @@ import type {
 // (see packages/temporal/CLAUDE.md on the workflow-bundle smoke test).
 import { UPDATE_DATA_DRAGON_MAX_ATTEMPTS } from "#activities/data-dragon-util.ts";
 
-const {
-  getDataDragonVersionState,
-  recordDataDragonSkipped,
-  hasOpenDataDragonPr,
-} = proxyActivities<DataDragonActivities>({
-  // Quick HTTP fetch + Zod parse, or a quick `gh pr list` — finishes in seconds.
-  startToCloseTimeout: "1 minute",
-  retry: {
-    maximumAttempts: 3,
-    initialInterval: "30 seconds",
-    backoffCoefficient: 2,
-    maximumInterval: "2 minutes",
-  },
-});
+const { getDataDragonVersionState, recordDataDragonSkipped } =
+  proxyActivities<DataDragonActivities>({
+    // Quick HTTP fetch + Zod parse, or a quick `gh pr list` — finishes in seconds.
+    startToCloseTimeout: "1 minute",
+    retry: {
+      maximumAttempts: 3,
+      initialInterval: "30 seconds",
+      backoffCoefficient: 2,
+      maximumInterval: "2 minutes",
+    },
+  });
 
 const { updateDataDragon } = proxyActivities<DataDragonActivities>({
   // Long: clones the monorepo, runs `bun install --frozen-lockfile`,
@@ -58,18 +55,16 @@ export async function runScoutDataDragonUpdate(
     return undefined;
   }
 
-  // Both modes skip if a PR bumping to this exact version is already open —
-  // opening a second one just duplicates work already captured in the
-  // pending PR (the mechanical cause behind duplicate PRs #1827/#1856).
-  if (await hasOpenDataDragonPr(state.latestVersion)) {
-    await recordDataDragonSkipped({
-      ...state,
-      mode,
-      reason: "pr-already-open",
-    });
-    return undefined;
-  }
-
+  // The "a PR for this exact version is already open" dedup guard (the
+  // mechanical cause behind duplicate PRs #1827/#1856) lives INSIDE
+  // updateDataDragon, not here, on purpose:
+  //   - Retry safety: Temporal retries the *activity*, not this workflow, so a
+  //     check here would be skipped on a retry that follows a prior attempt
+  //     which already opened the PR — the activity must recheck immediately
+  //     before it creates one.
+  //   - Determinism: keeping the workflow's command sequence unchanged
+  //     (getState → updateDataDragon) means a run started on an earlier
+  //     deploy replays cleanly, with no new `patched()` gate required.
   return await updateDataDragon({
     ...state,
     mode,

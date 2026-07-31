@@ -24,12 +24,12 @@ import {
   installScoutWorkspace,
 } from "./bot-clone.ts";
 import { recordAutoMergeFailure, recordRun } from "./data-dragon-metrics.ts";
+import { hasOpenDataDragonPr } from "./data-dragon-pr.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import {
   branchName,
   dataDragonPrTitle,
   failureReason,
-  hasMatchingPrTitle,
   isFinalAttempt,
   UPDATE_DATA_DRAGON_MAX_ATTEMPTS,
   validateVersion,
@@ -94,7 +94,7 @@ export type DataDragonUpdateResult = DataDragonUpdateInput & {
   commitHash: string | undefined;
   prUrl: string | undefined;
   outcome: "success" | "skipped";
-  reason: "pr-created" | "no-diff" | "image-only-diff";
+  reason: "pr-created" | "no-diff" | "image-only-diff" | "pr-already-open";
   emailSent?: boolean;
   emailMessageId?: string;
 };
@@ -198,42 +198,6 @@ export const dataDragonActivities = {
     jsonLog("info", "Skipped Data Dragon update", input);
   },
 
-  /**
-   * Whether a PR bumping to `latestVersion` is already open. Prevents the
-   * duplicate-PR pattern behind #1827/#1856: a prior run's PR stuck on CI
-   * (or unmerged for any reason) meant the next scheduled run, seeing the
-   * same `updateRequired: true`, opened a second PR for the identical
-   * version bump. The broad server-side `--search` term plus an exact
-   * client-side title comparison sidesteps GitHub search's fuzzy
-   * tokenization of version strings containing dots.
-   */
-  async hasOpenDataDragonPr(latestVersion: string): Promise<boolean> {
-    const tokenResult = await createGitHubAppInstallationToken();
-    const output = await runCommand(
-      [
-        "gh",
-        "pr",
-        "list",
-        "--repo",
-        REPO_SLUG,
-        "--state",
-        "open",
-        "--search",
-        `${latestVersion} in:title`,
-        "--json",
-        "title",
-      ],
-      { cwd: "/tmp", env: { GH_TOKEN: tokenResult.token } },
-    );
-    const prs = z
-      .array(z.object({ title: z.string() }))
-      .parse(JSON.parse(output));
-    return hasMatchingPrTitle(
-      prs.map((pr) => pr.title),
-      latestVersion,
-    );
-  },
-
   async updateDataDragon(
     input: DataDragonUpdateInput,
   ): Promise<DataDragonUpdateResult> {
@@ -256,6 +220,41 @@ export const dataDragonActivities = {
     try {
       const tokenResult = await createGitHubAppInstallationToken();
       const githubToken = tokenResult.token;
+
+      // Retry-safe dedup guard (#1827/#1856). Temporal retries the *activity*,
+      // not the workflow, so this must live here — not in the workflow — to
+      // cover the case where a prior attempt ran `gh pr create` then the worker
+      // died before the activity returned: the retry re-enters here, sees the
+      // open PR, and skips instead of opening a duplicate under a fresh
+      // UUID-suffixed branch. It also short-circuits a prior scheduled run's
+      // still-open PR, and does so before the expensive clone/install/refresh.
+      if (
+        await hasOpenDataDragonPr(REPO_SLUG, input.latestVersion, githubToken)
+      ) {
+        const durationSeconds = (Date.now() - start) / 1000;
+        recordRun({
+          mode: input.mode,
+          outcome: "skipped",
+          reason: "pr-already-open",
+          currentVersion: input.currentVersion,
+          latestVersion: input.latestVersion,
+          durationSeconds,
+        });
+        jsonLog("info", "Data Dragon update skipped; PR already open", {
+          ...input,
+          durationSeconds,
+        });
+        return {
+          ...input,
+          changedFiles: [],
+          branchName: undefined,
+          commitHash: undefined,
+          prUrl: undefined,
+          outcome: "skipped",
+          reason: "pr-already-open",
+        };
+      }
+
       jsonLog("info", "Starting Data Dragon update", input);
       await runCommand(["mkdir", "-p", tempDir], { cwd: "/tmp" });
       const askpass = await writeGitAskpass(tempDir);
