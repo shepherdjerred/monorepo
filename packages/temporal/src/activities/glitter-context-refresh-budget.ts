@@ -81,7 +81,7 @@ export class GenerationBudget {
     } else {
       this.#cacheMisses += 1;
     }
-    if (!artifact.billedToCurrentRun || alreadyRecorded) {
+    if (alreadyRecorded || !artifact.billedToCurrentRun) {
       return;
     }
     this.#actualUncachedCostUsd += artifact.usage.costUsd;
