@@ -64,6 +64,15 @@ export default defineConfig({
           ],
           label: "Homelab",
         },
+        {
+          items: [
+            { label: "Overview", link: "/temporal/" },
+            { label: "Scheduled automations", link: "/temporal/schedules/" },
+            { label: "Agent tasks", link: "/temporal/agent-tasks/" },
+            { label: "Event-driven surfaces", link: "/temporal/events/" },
+          ],
+          label: "Temporal",
+        },
       ],
       social: [
         {
