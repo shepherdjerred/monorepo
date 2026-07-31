@@ -3,7 +3,7 @@ id: babysit-greptile-outside-diff
 type: todo
 status: complete
 board: false
-origin: packages/docs/plans/2026-06-27_pr-babysit-bot.md
+origin: packages/docs/archive/completed/2026-06-27_pr-babysit-bot.md
 ---
 
 # Babysitter DoD: cover Greptile "comments outside of diff"

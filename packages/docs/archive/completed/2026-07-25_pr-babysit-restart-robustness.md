@@ -3,7 +3,7 @@ id: plan-2026-07-25-pr-babysit-restart-robustness
 type: plan
 status: complete
 board: false
-origin: packages/docs/todos/babysit-phase4-live-retest.md
+origin: packages/docs/archive/completed/babysit-phase4-live-retest.md
 ---
 
 # PR-babysit — restart robustness (self-contained activities)

@@ -1,13 +1,18 @@
 ---
 id: plan-2026-06-27-pr-babysit-bot
 type: plan
-status: in-progress
-board: true
-verification: agent
-disposition: active
+status: complete
+board: false
 ---
 
 # PR Babysitter Bot — GitHub-native "get this green" automation
+
+> **Resolved by removal (2026-07-30).** The entire pr-babysit feature — the
+> `prBabysitWorkflow`, its activities, the `issue_comment` webhook trigger, the
+> `PR_BABYSIT_*` env, and the `PR_BABYSIT` task queue — was removed from
+> `packages/temporal` and `packages/homelab` alongside the rest of the in-repo PR
+> review/summary/reaction-listener bot (it was dormant/gated off in production).
+> This plan is archived for design context only; nothing here is live.
 
 ## Status Notes (Historical)
 

@@ -1,10 +1,8 @@
 ---
 id: babysit-phase4-live-retest
 type: todo
-status: planned
-board: true
-verification: operator
-disposition: blocked
+status: complete
+board: false
 origin: packages/docs/archive/completed/2026-07-03_pr-babysit-live-test-fixes.md
 source_marker: false
 ---
@@ -52,3 +50,7 @@ Resolve this todo (delete the file) once an iteration completes cleanly in prod.
 ### 2026-07-27 — board audit reconciliation
 
 - Reclassified from human UAT: commenting on a real PR and inspecting production Temporal/Kubernetes state are privileged operator actions.
+
+### 2026-07-30 — resolved by PR-bot removal
+
+- The entire pr-babysit feature (workflow, activities, webhook trigger, `PR_BABYSIT_ENABLED`) was removed from `packages/temporal` and `packages/homelab` in the "remove PR review/summary/reaction-listener/babysit bot" change. There is nothing left to live-test, so this TODO is moot. Marked `complete` and archived.

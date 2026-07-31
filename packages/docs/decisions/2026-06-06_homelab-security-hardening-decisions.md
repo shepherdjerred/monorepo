@@ -22,8 +22,15 @@ A read-only, owner-authorized pen test of the homelab (k8s `torvalds`, ArgoCD, G
 
 ## PR-1 (landed)
 
-- PR webhook + reaction-listener gated to owner (`packages/temporal/src/event-bridge/github-webhook.ts`, `src/lib/pr-review/reaction-listener-helpers.ts`).
-- Verifier subprocess env secret-scrubbed (`src/activities/pr-review/verify-runner.ts`).
+> **Superseded (2026-07-30):** The PR review/summary/reaction-listener/babysit bot
+> was removed entirely, so the reaction-listener owner-gate and the verifier
+> subprocess secret-scrubbing below no longer exist in the tree. The GitHub webhook
+> itself survives (merge-conflict check + PR-closed build cancel) and keeps its
+> `X-Hub-Signature-256` HMAC verification. The mcp-gateway and Buildkite items below
+> are unaffected.
+
+- PR webhook + reaction-listener gated to owner (`packages/temporal/src/event-bridge/github-webhook.ts`, `src/lib/pr-review/reaction-listener-helpers.ts`). _(reaction-listener removed 2026-07-30)_
+- Verifier subprocess env secret-scrubbed (`src/activities/pr-review/verify-runner.ts`). _(removed 2026-07-30)_
 - mcp-gateway client auth via `mcpProxy.options.authTokens` + a render-config init container (`packages/homelab/src/cdk8s/src/resources/mcp-gateway/`). Deploy needs two manual steps: add 1P field `MCP_PROXY_AUTH_TOKEN` to the mcp-gateway credentials item, and add the `Authorization` header to the live (out-of-repo) Claude/Cursor mcp-gateway client config.
 - Deleted dead `.buildkite/scripts/code-review*.sh`.
 
