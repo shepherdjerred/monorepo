@@ -2,8 +2,14 @@ const RETRY_DELAYS_MS = [1000, 2000, 4000] as const;
 const REQUEST_TIMEOUT_MS = 20_000;
 const RETRYABLE_HTTP_STATUSES = new Set([408, 429, 500, 502, 503, 504]);
 const RETRYABLE_ERROR_CODES = new Set([
+  // Bun's native fetch transport codes for dropped/closed sockets, mirroring
+  // TRANSIENT_ERROR_CODES in scripts/lib/transient.ts. Bun reports a reset peer
+  // as `ConnectionResetByPeer` (not `ConnectionReset`) and a socket that closes
+  // mid-transfer or fails to open as `ConnectionClosed` / `FailedToOpenSocket`.
+  "ConnectionClosed",
   "ConnectionRefused",
   "ConnectionReset",
+  "ConnectionResetByPeer",
   "DNS",
   "ECONNREFUSED",
   "ECONNRESET",
@@ -12,6 +18,7 @@ const RETRYABLE_ERROR_CODES = new Set([
   "ENETUNREACH",
   "ENOTFOUND",
   "ETIMEDOUT",
+  "FailedToOpenSocket",
   "SocketClosed",
   "Timeout",
   "UND_ERR_CONNECT_TIMEOUT",
@@ -20,9 +27,11 @@ const RETRYABLE_ERROR_CODES = new Set([
 ]);
 const RETRYABLE_ERROR_NAMES = new Set(["AbortError", "TimeoutError"]);
 const RETRYABLE_MESSAGE_FRAGMENTS = [
+  "connection closed",
   "connection refused",
   "connection reset",
   "dns lookup",
+  "failed to open socket",
   "getaddrinfo",
   "name resolution",
   "socket closed",

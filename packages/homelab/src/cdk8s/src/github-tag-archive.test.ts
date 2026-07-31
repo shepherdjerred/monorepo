@@ -48,7 +48,10 @@ describe("githubTagArchiveUrl", () => {
 
 describe("isRetryableGithubArchiveError", () => {
   it.each([
+    "ConnectionClosed",
     "ConnectionRefused",
+    "ConnectionResetByPeer",
+    "FailedToOpenSocket",
     "ECONNREFUSED",
     "ECONNRESET",
     "EAI_AGAIN",
@@ -126,6 +129,21 @@ describe("fetchGithubTagArchive", () => {
     expect(new TextDecoder().decode(bytes)).toBe("archive");
     expect(delays).toEqual([1000]);
   });
+
+  it.each(["ConnectionClosed", "FailedToOpenSocket"])(
+    "retries Bun's native closed-socket failure %s",
+    async (code) => {
+      const delays: number[] = [];
+      const bytes = await fetchGithubTagArchive(
+        "owner/repo",
+        "v1",
+        optionsFor([errorWithCode(code), new Response("archive")], delays),
+      );
+
+      expect(new TextDecoder().decode(bytes)).toBe("archive");
+      expect(delays).toEqual([1000]);
+    },
+  );
 
   it("fails permanent HTTP responses immediately", async () => {
     const delays: number[] = [];

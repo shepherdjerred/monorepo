@@ -231,7 +231,7 @@ apk add --no-cache curl tar patch
 STAGE=$(mktemp -d)
 ARCHIVE="$(mktemp)"
 curl -fSL --connect-timeout 15 --max-time 30 --retry 3 \
-  --retry-connrefused --retry-delay 2 --retry-max-time 90 \
+  --retry-all-errors --retry-delay 2 --retry-max-time 90 \
   "${archiveUrl}" \
   -o "$ARCHIVE"
 echo "$EXPECTED_SHA256  $ARCHIVE" | sha256sum -c -
@@ -278,7 +278,7 @@ apk add --no-cache curl tar
 STAGE=$(mktemp -d)
 ARCHIVE="$(mktemp)"
 curl -fSL --connect-timeout 15 --max-time 30 --retry 3 \
-  --retry-connrefused --retry-delay 2 --retry-max-time 90 \
+  --retry-all-errors --retry-delay 2 --retry-max-time 90 \
   "${archiveUrl}" \
   -o "$ARCHIVE"
 echo "$EXPECTED_SHA256  $ARCHIVE" | sha256sum -c -

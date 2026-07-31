@@ -29,7 +29,7 @@ describe("buildHaCustomComponentInstallScript", () => {
         "curl -fSL --connect-timeout 15 --max-time 30 --retry 3",
       );
       expect(script).toContain(
-        "--retry-connrefused --retry-delay 2 --retry-max-time 90",
+        "--retry-all-errors --retry-delay 2 --retry-max-time 90",
       );
       expect(script).not.toContain("github.com/" + repo + "/archive/");
 
