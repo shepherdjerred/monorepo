@@ -1,5 +1,6 @@
 import {
-  AGENT_TASK_OUTPUT_JSON_SCHEMA,
+  AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE,
+  AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX,
   reportOnlyPrompt,
   type AgentTaskInput,
 } from "#shared/agent-task.ts";
@@ -18,7 +19,10 @@ export type AgentTaskCommand = {
 };
 
 async function writeOutputSchema(path: string): Promise<void> {
-  await Bun.write(path, JSON.stringify(AGENT_TASK_OUTPUT_JSON_SCHEMA, null, 2));
+  await Bun.write(
+    path,
+    JSON.stringify(AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX, null, 2),
+  );
 }
 
 // `--json-schema` MUST be the inline schema JSON, never a file path: claude
@@ -48,7 +52,7 @@ function claudeCommand(
       "stream-json",
       "--verbose",
       "--json-schema",
-      JSON.stringify(AGENT_TASK_OUTPUT_JSON_SCHEMA),
+      JSON.stringify(AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE),
       "--allowed-tools",
       CLAUDE_ALLOWED_TOOLS,
       "--permission-mode",

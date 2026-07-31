@@ -14,13 +14,11 @@ import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { buildAgentTaskCommand } from "#activities/agent-task-command.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import { runTrackedAgentSubprocess } from "#shared/agent-subprocess.ts";
-import {
-  parseClaudeResultMessage,
-  summarizeClaudeStreamLine,
-} from "#shared/claude-result.ts";
+import { summarizeClaudeStreamLine } from "#shared/claude-result.ts";
 import {
   AgentTaskInputSchema,
   parseAgentTaskResultPayload,
+  parseClaudeAgentTaskResult,
   type AgentTaskInput,
   type AgentTaskProvider,
   type AgentTaskResultPayload,
@@ -423,9 +421,7 @@ async function runAgent(
       let payload: AgentTaskResultPayload;
       try {
         if (provider === "claude") {
-          payload = parseAgentTaskResultPayload(
-            parseClaudeResultMessage(result.stdout).structured_output,
-          );
+          payload = parseClaudeAgentTaskResult(result.stdout);
         } else {
           if (command.outputPath === undefined) {
             throw new Error(
@@ -434,6 +430,7 @@ async function runAgent(
           }
           payload = parseAgentTaskResultPayload(
             await Bun.file(command.outputPath).text(),
+            provider,
           );
         }
       } catch (error: unknown) {
