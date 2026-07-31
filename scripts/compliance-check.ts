@@ -65,69 +65,6 @@ const nativeTypeScriptPathAssignment =
   "PATH=node_modules/@typescript/native/bin:$PATH";
 const nativeTypeScriptCommand = `${nativeTypeScriptPathAssignment} tsc`;
 const nativeTypeScriptVersion = "npm:typescript@7.0.2";
-const bunGlobalFlagsBeforeX = new Set([
-  "-b",
-  "-i",
-  "--bun",
-  "--cpu-prof",
-  "--cpu-prof-md",
-  "--experimental-http2-fetch",
-  "--experimental-http3-fetch",
-  "--expose-gc",
-  "--heap-prof",
-  "--heap-prof-md",
-  "--hot",
-  "--no-addons",
-  "--no-clear-screen",
-  "--no-deprecation",
-  "--no-env-file",
-  "--no-install",
-  "--no-orphans",
-  "--prefer-latest",
-  "--prefer-offline",
-  "--redis-preconnect",
-  "--silent",
-  "--smol",
-  "--sql-preconnect",
-  "--throw-deprecation",
-  "--use-bundled-ca",
-  "--use-openssl-ca",
-  "--use-system-ca",
-  "--watch",
-]);
-const bunGlobalValueOptionsBeforeX = new Set([
-  "-c",
-  "-r",
-  "--conditions",
-  "--config",
-  "--console-depth",
-  "--cpu-prof-dir",
-  "--cpu-prof-interval",
-  "--cpu-prof-name",
-  "--cron-period",
-  "--cron-title",
-  "--cwd",
-  "--dns-result-order",
-  "--elide-lines",
-  "--env-file",
-  "--fetch-preconnect",
-  "--heap-prof-dir",
-  "--heap-prof-name",
-  "--import",
-  "--install",
-  "--inspect",
-  "--inspect-brk",
-  "--inspect-wait",
-  "--max-http-header-size",
-  "--port",
-  "--preload",
-  "--require",
-  "--shell",
-  "--unhandled-rejections",
-  "--user-agent",
-]);
-const bunxFlags = new Set(["--bun", "--no-install", "--silent", "--verbose"]);
-
 function tokenizeShellCommands(script: string): string[][] {
   const commands: string[][] = [];
   let tokens: string[] = [];
@@ -190,16 +127,6 @@ function tokenizeShellCommands(script: string): string[][] {
   return commands;
 }
 
-function isBunGlobalOptionBeforeX(token: string): boolean {
-  if (bunGlobalFlagsBeforeX.has(token)) return true;
-  const equalsIndex = token.indexOf("=");
-  return (
-    equalsIndex > 0 &&
-    bunGlobalValueOptionsBeforeX.has(token.slice(0, equalsIndex)) &&
-    token.slice(equalsIndex + 1).length > 0
-  );
-}
-
 function isShellEnvironmentAssignment(token: string): boolean {
   const equalsIndex = token.indexOf("=");
   return equalsIndex > 0 && /^[a-z_]\w*$/i.test(token.slice(0, equalsIndex));
@@ -235,15 +162,13 @@ function findBunxExecutable(
   while (index < tokens.length) {
     const token = tokens[index];
     if (token === undefined) return undefined;
-    if (bunxFlags.has(token)) {
-      index += 1;
-      continue;
-    }
+    // `-p`/`--package <name>` consumes the following token as its value.
     if (token === "-p" || token === "--package") {
       index += 2;
       continue;
     }
-    if (token.startsWith("--package=") && token.length > "--package=".length) {
+    // Skip any other flag (including future ones and `--opt=value` forms).
+    if (token.startsWith("-")) {
       index += 1;
       continue;
     }
@@ -267,19 +192,12 @@ export function invokesAmbiguousTypeScriptCompiler(
     }
     if (executable !== "bun") return false;
 
+    // Skip Bun's global flags (any leading `-`-prefixed token, including
+    // future ones like `--if-present`) to reach the `x`/`run` subcommand. A
+    // value option in space form (`--cwd .`) stops the scan on its value,
+    // which is not a subcommand, so such commands are treated as non-matches.
     let index = executableIndex + 1;
-    while (index < tokens.length) {
-      const token = tokens[index];
-      if (
-        token === undefined ||
-        token === "x" ||
-        token === "run" ||
-        !isBunGlobalOptionBeforeX(token)
-      ) {
-        break;
-      }
-      index += 1;
-    }
+    while (tokens[index]?.startsWith("-") === true) index += 1;
     const subcommand = tokens[index];
     if (subcommand !== "x" && subcommand !== "run") return false;
     if (findBunxExecutable(tokens, index + 1) !== "tsc") return false;
