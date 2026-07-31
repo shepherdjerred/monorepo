@@ -151,17 +151,24 @@ export const AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX: Record<string, unknown> = z
       .json_schema.schema,
   );
 
-// Claude Code CLI's `--json-schema` does NOT accept the OpenAI-strict/nullable
-// dialect above: given it, `claude -p` exits 0 but silently omits
-// `structured_output` from its result message entirely, rather than erroring
-// (root cause of the 2026-07-30 homelab-audit-daily outage — see
+// The LEADING (but unconfirmed) hypothesis for the 2026-07-30
+// homelab-audit-daily outage is that Claude Code CLI's `--json-schema` mishandles
+// the OpenAI-strict/nullable dialect above: given it, `claude -p` was observed to
+// exit 0 but silently omit `structured_output` from its result message entirely,
+// rather than erroring. This is correlation, not a proven root cause — local
+// repro of the pinned CLI omitted `structured_output` with BOTH schema dialects
+// (including the historically-working plain one), and the model and turn limit
+// also differed between the compared runs, so the schema dialect is not isolated
+// as the cause (see
 // packages/docs/todos/homelab-audit-agent-task-production-verification.md).
-// Claude needs a plain JSON Schema instead: optional fields simply absent
-// from `required`, no forced nullable unions. Generate it straight from the
-// canonical, already-plain-optional `AgentTaskResultPayloadSchema` (not the
-// wire schema), and strip the `$schema` key `z.toJSONSchema` injects by
-// default so the payload matches the pre-2026-07-28 hand-written schema this
-// restores. Do NOT merge this back into a single constant shared with Codex.
+// Regardless of the eventual root cause, Claude wants a plain JSON Schema:
+// optional fields simply absent from `required`, no forced nullable unions.
+// Generate it straight from the canonical, already-plain-optional
+// `AgentTaskResultPayloadSchema` (not the wire schema), and strip the `$schema`
+// key `z.toJSONSchema` injects by default so the payload matches the
+// pre-2026-07-28 hand-written schema this restores. Do NOT merge this back into a
+// single constant shared with Codex until the production run (or an independent
+// reproduction) confirms or refutes the hypothesis.
 const { $schema: _agentTaskClaudeSchemaMeta, ...agentTaskClaudeJsonSchema } =
   z.toJSONSchema(AgentTaskResultPayloadSchema);
 export const AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE: Record<string, unknown> = z
