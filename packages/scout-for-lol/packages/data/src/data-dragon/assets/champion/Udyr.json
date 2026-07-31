@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Udyr": {
       "id": "Udyr",
@@ -10,7 +10,7 @@
       "title": "the Spirit Walker",
       "image": {
         "full": "Udyr.png",
-        "sprite": "champion4.png",
+        "sprite": "champion6.png",
         "group": "champion",
         "x": 192,
         "y": 96,
@@ -289,10 +289,10 @@
           "rangeBurn": "600",
           "image": {
             "full": "UdyrQ.png",
-            "sprite": "spell14.png",
+            "sprite": "spell21.png",
             "group": "spell",
-            "x": 192,
-            "y": 144,
+            "x": 0,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -445,10 +445,10 @@
           "rangeBurn": "0",
           "image": {
             "full": "UdyrW.png",
-            "sprite": "spell14.png",
+            "sprite": "spell21.png",
             "group": "spell",
-            "x": 240,
-            "y": 144,
+            "x": 48,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -599,10 +599,10 @@
           "rangeBurn": "600",
           "image": {
             "full": "UdyrE.png",
-            "sprite": "spell14.png",
+            "sprite": "spell21.png",
             "group": "spell",
-            "x": 288,
-            "y": 144,
+            "x": 96,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -753,10 +753,10 @@
           "rangeBurn": "370",
           "image": {
             "full": "UdyrR.png",
-            "sprite": "spell14.png",
+            "sprite": "spell21.png",
             "group": "spell",
-            "x": 336,
-            "y": 144,
+            "x": 144,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -768,7 +768,7 @@
         "description": "Udyr has four basic Abilities that swap between Stances and can Recast an Ability to renew it with Ultimate benefits. Additionally, after using an Ability, Udyr's next two Attacks gain Attack Speed.",
         "image": {
           "full": "Udyr_P.png",
-          "sprite": "passive4.png",
+          "sprite": "passive6.png",
           "group": "passive",
           "x": 192,
           "y": 96,

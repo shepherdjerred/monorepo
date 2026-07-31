@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Seraphine": {
       "id": "Seraphine",
@@ -10,7 +10,7 @@
       "title": "the Starry-Eyed Songstress",
       "image": {
         "full": "Seraphine.png",
-        "sprite": "champion3.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 384,
         "y": 96,
@@ -703,10 +703,10 @@
           "rangeBurn": "900",
           "image": {
             "full": "SeraphineQ.png",
-            "sprite": "spell12.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 0,
-            "y": 48,
+            "x": 288,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -846,10 +846,10 @@
           "rangeBurn": "800",
           "image": {
             "full": "SeraphineW.png",
-            "sprite": "spell12.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 48,
-            "y": 48,
+            "x": 336,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -989,10 +989,10 @@
           "rangeBurn": "1300",
           "image": {
             "full": "SeraphineE.png",
-            "sprite": "spell12.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 96,
-            "y": 48,
+            "x": 384,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -1106,10 +1106,10 @@
           "rangeBurn": "25000",
           "image": {
             "full": "SeraphineR.png",
-            "sprite": "spell12.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 144,
-            "y": 48,
+            "x": 432,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -1121,7 +1121,7 @@
         "description": "Every third basic spell will cast twice from Seraphine. Additionally, casting spells near allies grants her bonus magic damage and range on her next basic attack.",
         "image": {
           "full": "Seraphine_Passive.png",
-          "sprite": "passive3.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 384,
           "y": 96,

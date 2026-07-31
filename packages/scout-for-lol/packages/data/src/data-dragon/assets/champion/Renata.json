@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Renata": {
       "id": "Renata",
@@ -10,7 +10,7 @@
       "title": "the Chem-Baroness",
       "image": {
         "full": "Renata.png",
-        "sprite": "champion3.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 432,
         "y": 48,
@@ -405,10 +405,10 @@
           "rangeBurn": "900",
           "image": {
             "full": "RenataQ.png",
-            "sprite": "spell11.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 192,
-            "y": 48,
+            "x": 0,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -548,10 +548,10 @@
           "rangeBurn": "800",
           "image": {
             "full": "RenataW.png",
-            "sprite": "spell11.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 240,
-            "y": 48,
+            "x": 48,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -693,10 +693,10 @@
           "rangeBurn": "800",
           "image": {
             "full": "RenataE.png",
-            "sprite": "spell11.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 288,
-            "y": 48,
+            "x": 96,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -808,10 +808,10 @@
           "rangeBurn": "2000",
           "image": {
             "full": "RenataR.png",
-            "sprite": "spell11.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 336,
-            "y": 48,
+            "x": 144,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -823,7 +823,7 @@
         "description": "Renata's Attacks deal bonus damage and mark enemies. Renata's allies can damage marked enemies to deal bonus damage.",
         "image": {
           "full": "Renata_P.png",
-          "sprite": "passive3.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 432,
           "y": 48,

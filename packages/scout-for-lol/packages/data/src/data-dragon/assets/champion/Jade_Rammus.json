@@ -1,0 +1,772 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Rammus": {
+      "id": "Jade_Rammus",
+      "key": "60033",
+      "name": "Rammus",
+      "title": "The Armordillo",
+      "image": {
+        "full": "Jade_Rammus.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 432,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60033000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60033001",
+          "num": 1,
+          "name": "King Rammus",
+          "chromas": false
+        },
+        {
+          "id": "60033002",
+          "num": 2,
+          "name": "Chrome Rammus",
+          "chromas": false
+        },
+        {
+          "id": "60033006",
+          "num": 6,
+          "name": "Full Metal Rammus",
+          "chromas": false
+        },
+        {
+          "id": "60033017",
+          "num": 17,
+          "name": "Astronaut Rammus",
+          "chromas": false
+        },
+        {
+          "id": "60033018",
+          "num": 18,
+          "name": "Astronaut Rammus (Ruby)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "60033019",
+          "num": 19,
+          "name": "Astronaut Rammus (Citrine)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "60033020",
+          "num": 20,
+          "name": "Astronaut Rammus (Catseye)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "60033021",
+          "num": 21,
+          "name": "Astronaut Rammus (Turquoise)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "60033022",
+          "num": 22,
+          "name": "Astronaut Rammus (Sapphire)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "60033023",
+          "num": 23,
+          "name": "Astronaut Rammus (Emerald)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "60033024",
+          "num": 24,
+          "name": "Astronaut Rammus (Amethyst)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "60033025",
+          "num": 25,
+          "name": "Astronaut Rammus (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "60033026",
+          "num": 26,
+          "name": "Durian Defender Rammus",
+          "chromas": false
+        },
+        {
+          "id": "60033027",
+          "num": 27,
+          "name": "Durian Defender Rammus (Ruby)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60033028",
+          "num": 28,
+          "name": "Durian Defender Rammus (Citrine)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60033029",
+          "num": 29,
+          "name": "Durian Defender Rammus (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60033030",
+          "num": 30,
+          "name": "Durian Defender Rammus (Rose Quartz)",
+          "chromas": true,
+          "parentSkin": 26
+        },
+        {
+          "id": "60033031",
+          "num": 31,
+          "name": "Durian Defender Rammus (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60033032",
+          "num": 32,
+          "name": "Durian Defender Rammus (Obsidian)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60033033",
+          "num": 33,
+          "name": "Durian Defender Rammus (Jasper)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60033034",
+          "num": 34,
+          "name": "Durian Defender Rammus (Pearl)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60033035",
+          "num": 35,
+          "name": "Baron Rammus",
+          "chromas": false
+        }
+      ],
+      "lore": "- Tremors (R) is a repeating AoE around him<br>- All other abilities are ok",
+      "blurb": "- Tremors (R) is a repeating AoE around him<br>- All other abilities are ok",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Tank"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 4,
+        "defense": 10,
+        "magic": 5,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 506,
+        "hpperlevel": 86,
+        "mp": 288,
+        "mpperlevel": 33,
+        "movespeed": 335,
+        "armor": 28.8,
+        "armorperlevel": 3.8,
+        "spellblock": 31.25,
+        "spellblockperlevel": 1.25,
+        "attackrange": 125,
+        "hpregen": 7.55,
+        "hpregenperlevel": 0.55,
+        "mpregen": 7.5,
+        "mpregenperlevel": 0.5,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 53.5,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 2.215,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "Jade_RammusQ",
+          "name": "Powerball",
+          "description": "Rammus accelerates in a ball towards his enemies, dealing damage and slowing targets affected by the impact.",
+          "tooltip": "Rammus accelerates in a ball over 7 seconds towards his enemies, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to nearby enemies on impact and <status>Slowing</status> them by {{ slowpercent*-100 }}% for 3 seconds.<br /><br /><recast>Recast</recast> to remove this effect.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Slow",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ aoedamage }} -> {{ aoedamageNL }}",
+              "{{ slowpercent*-100.000000 }}% -> {{ slowpercentnl*-100.000000 }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "cooldownBurn": "10",
+          "cost": [
+            70,
+            80,
+            90,
+            100,
+            110
+          ],
+          "costBurn": "70/80/90/100/110",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1000,
+              1000,
+              1000,
+              1000,
+              1000
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "1000"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
+          "rangeBurn": "300",
+          "image": {
+            "full": "Jade_RammusQ.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 0,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_RammusW",
+          "name": "Defensive Ball Curl",
+          "description": "Rammus goes into a defensive formation, vastly increasing his armor and magic resistance, while returning damage to attacks.",
+          "tooltip": "Rammus goes into a defensive formation for 6 seconds, increasing his <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> by {{ armour }} and returning <magicDamage>{{ totaldamage }} magic damage</magicDamage> to attackers.<br /><br /><recast>Recast</recast> to remove this effect.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Return Damage",
+              "Armor Bonus",
+              "Magic Resist Bonus"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ armour }} -> {{ armourNL }}",
+              "{{ armour }} -> {{ armourNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            14,
+            14,
+            14,
+            14,
+            14
+          ],
+          "cooldownBurn": "14",
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
+          "rangeBurn": "300",
+          "image": {
+            "full": "Jade_RammusW.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 48,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_RammusE",
+          "name": "Puncturing Taunt",
+          "description": "Rammus taunts an enemy champion or monster into a reckless assault against Rammus' hard shell, reducing Armor temporarily.",
+          "tooltip": "Rammus <status>Taunts</status> the enemy champion or monster into a reckless assault, reducing their Armor by {{ armourreduction*-1 }} and forcing them to attack Rammus for {{ duration }} second(s).</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Duration",
+              "Mana Cost",
+              "Armor Reduction"
+            ],
+            "effect": [
+              "{{ duration }} -> {{ durationNL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ armourreduction*-1.000000 }} -> {{ armourreductionnl*-1.000000 }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
+          "cooldownBurn": "12",
+          "cost": [
+            50,
+            60,
+            70,
+            80,
+            90
+          ],
+          "costBurn": "50/60/70/80/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            325,
+            325,
+            325,
+            325,
+            325
+          ],
+          "rangeBurn": "325",
+          "image": {
+            "full": "Jade_RammusE.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 96,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_RammusR",
+          "name": "Tremors",
+          "description": "Rammus creates waves of destruction pulsing through the ground, causing damage to units and structures near him.",
+          "tooltip": "Rammus creates tremors beneath him, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> every second to nearby units and structures for 8 seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            60,
+            60,
+            60
+          ],
+          "cooldownBurn": "60",
+          "cost": [
+            120,
+            120,
+            120
+          ],
+          "costBurn": "120",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            25000,
+            25000,
+            25000
+          ],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "Jade_RammusR.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 144,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Spiked Shell",
+        "description": "Rammus gains additional damage as his shell becomes reinforced, converting 25% of his armor into Attack Damage.",
+        "image": {
+          "full": "Armordillo_ScavengeArmor.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 432,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Ashe": {
       "id": "Ashe",
@@ -698,14 +698,14 @@
           "id": "AsheQ",
           "name": "Ranger's Focus",
           "description": "Ashe builds up Focus by attacking. At maximum Focus, Ashe can cast Ranger's Focus to consume all stacks of Focus, temporarily increasing her Attack Speed and transforming her basic attack into a powerful flurry attack for the duration.",
-          "tooltip": "<spellPassive>Passive: </spellPassive>Ashe's Attacks grant a stack for {{ e1 }} seconds. At {{ e2 }} stacks, she may activate this Ability.<br /><br /><spellPassive>Active:</spellPassive> Ashe gains <attackSpeed>{{ e4 }}% Attack Speed</attackSpeed> and her Attacks deal <physicalDamage>{{ empowereddamage }} damage</physicalDamage> instead for {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive: </spellPassive>Ashe's Attacks grant a stack for {{ stackduration }} seconds. At {{ maxstacks }} stacks, she may activate this Ability.<br /><br /><spellPassive>Active:</spellPassive> Ashe gains <attackSpeed>{{ bonusas }}% Attack Speed</attackSpeed> and her Attacks deal <physicalDamage>{{ empowereddamage }} damage</physicalDamage> instead for {{ buffduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Attack Speed",
               "Flurry Attack Damage ratio"
             ],
             "effect": [
-              "{{ e4 }}% -> {{ e4NL }}%",
+              "{{ bonusas }}% -> {{ bonusasNL }}%",
               "{{ damageperstrike*100.000000 }}% -> {{ damageperstrikenl*100.000000 }}%"
             ]
           },
@@ -828,8 +828,8 @@
             "full": "AsheQ.png",
             "sprite": "spell1.png",
             "group": "spell",
-            "x": 384,
-            "y": 48,
+            "x": 192,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -973,8 +973,8 @@
             "full": "Volley.png",
             "sprite": "spell1.png",
             "group": "spell",
-            "x": 432,
-            "y": 48,
+            "x": 240,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -1112,8 +1112,8 @@
             "full": "AsheSpiritOfTheHawk.png",
             "sprite": "spell1.png",
             "group": "spell",
-            "x": 0,
-            "y": 96,
+            "x": 288,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -1227,8 +1227,8 @@
             "full": "EnchantedCrystalArrow.png",
             "sprite": "spell1.png",
             "group": "spell",
-            "x": 48,
-            "y": 96,
+            "x": 336,
+            "y": 144,
             "w": 48,
             "h": 48
           },

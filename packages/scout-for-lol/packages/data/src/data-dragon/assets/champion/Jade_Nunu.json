@@ -1,0 +1,783 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Nunu": {
+      "id": "Jade_Nunu",
+      "key": "60020",
+      "name": "Nunu & Willump",
+      "title": "The Yeti Rider",
+      "image": {
+        "full": "Jade_Nunu.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 288,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60020000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60020003",
+          "num": 3,
+          "name": "Grungy Nunu & Willump",
+          "chromas": false
+        },
+        {
+          "id": "60020004",
+          "num": 4,
+          "name": "Nunu & Willump Bot",
+          "chromas": false
+        },
+        {
+          "id": "60020026",
+          "num": 26,
+          "name": "Nunu & Beelump",
+          "chromas": false
+        },
+        {
+          "id": "60020027",
+          "num": 27,
+          "name": "Nunu & Beelump (Ruby)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60020028",
+          "num": 28,
+          "name": "Nunu & Beelump (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60020029",
+          "num": 29,
+          "name": "Nunu & Beelump (Sapphire)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60020030",
+          "num": 30,
+          "name": "Nunu & Beelump (Emerald)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60020031",
+          "num": 31,
+          "name": "Nunu & Beelump (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60020032",
+          "num": 32,
+          "name": "Nunu & Beelump (Pearl)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60020033",
+          "num": 33,
+          "name": "Nunu & Beelump (Obsidian)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60020034",
+          "num": 34,
+          "name": "Nunu & Beelump (Rainbow)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60020044",
+          "num": 44,
+          "name": "Fright Night Nunu & Willump",
+          "chromas": false
+        },
+        {
+          "id": "60020045",
+          "num": 45,
+          "name": "Fright Night Nunu & Willump (Ruby)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60020046",
+          "num": 46,
+          "name": "Fright Night Nunu & Willump (Catseye)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60020047",
+          "num": 47,
+          "name": "Fright Night Nunu & Willump (Emerald)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60020048",
+          "num": 48,
+          "name": "Fright Night Nunu & Willump (Sapphire)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60020049",
+          "num": 49,
+          "name": "Fright Night Nunu & Willump (Obsidian)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60020050",
+          "num": 50,
+          "name": "Fright Night Nunu & Willump (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60020051",
+          "num": 51,
+          "name": "Fright Night Nunu & Willump (Citrine)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60020052",
+          "num": 52,
+          "name": "Fright Night Nunu & Willump (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60020053",
+          "num": 53,
+          "name": "Fright Night Nunu & Willump (Ghoulish)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60020301",
+          "num": 301,
+          "name": "Classic Nunu & Willump",
+          "chromas": false
+        },
+        {
+          "id": "60020302",
+          "num": 302,
+          "name": "Classic Nunu & Willump (Sasquatch)",
+          "chromas": false,
+          "parentSkin": 301
+        }
+      ],
+      "lore": "- Blood Boil (W) grants attack and movement speed<br>- Ice Blast (E) a single point and click snowball<br>- Consume (Q) can't target champions but gain buffs based on whats eaten<br>- Visionary (P) every 5 basic attacks the next spell costs no mana - Nunu & Willump get an extra line as they are 2 characters",
+      "blurb": "- Blood Boil (W) grants attack and movement speed<br>- Ice Blast (E) a single point and click snowball<br>- Consume (Q) can't target champions but gain buffs based on whats eaten<br>- Visionary (P) every 5 basic attacks the next spell costs no mana -...",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Tank",
+        "Mage"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 4,
+        "defense": 6,
+        "magic": 7,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 533,
+        "hpperlevel": 96,
+        "mp": 255,
+        "mpperlevel": 42,
+        "movespeed": 350,
+        "armor": 24,
+        "armorperlevel": 3.5,
+        "spellblock": 31.25,
+        "spellblockperlevel": 1.25,
+        "attackrange": 125,
+        "hpregen": 7.85,
+        "hpregenperlevel": 0.8,
+        "mpregen": 7.1,
+        "mpregenperlevel": 0.5,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 54.51,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 2.25,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "Jade_NunuQ",
+          "name": "Consume",
+          "description": "Nunu commands the yeti to take a bite out of a target minion or monster, dealing heavy damage to it and healing himself.",
+          "tooltip": "Commands the yeti to bite out of a minion or monster, dealing <trueDamage>{{ basedamage }} true damage</trueDamage> to the target and <healing>healing</healing> himself for {{ totalhealing }}.<br /><br />Nunu gains bonuses for {{ consumeduration }} seconds based on what he consumed.<br /><br /><attention>Wolves</attention> or <attention>Reptiles: </attention>Your attacks and spells deal an additional <magicDamage>1% of your maximum health as magic damage</magicDamage>.<br /><attention>Golems:</attention> 10% increased Size and <scaleHealth>Maximum Health</scaleHealth>.<br /><attention>Wraiths:</attention> Killing a unit grants <speed>15% Movement Speed</speed> for 3 seconds.</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Healing",
+              "Cooldown",
+              "Consumed Buff Duration"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ basehealing }} -> {{ basehealingNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ consumeduration }} -> {{ consumedurationNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            17,
+            15,
+            13,
+            11,
+            9
+          ],
+          "cooldownBurn": "17/15/13/11/9",
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            125,
+            125,
+            125,
+            125,
+            125
+          ],
+          "rangeBurn": "125",
+          "image": {
+            "full": "Jade_NunuQ.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 384,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_NunuW",
+          "name": "Blood Boil",
+          "description": "Nunu invigorates himself and an allied unit by heating their blood, increasing their Movement and Attack Speeds.",
+          "tooltip": "The heat of Nunu and a target ally's blood rises, increasing <speed>Movement Speed by {{ movespeed*100 }}%</speed> and <attackSpeed>Attack Speed by {{ attackspeed*100 }}%</attackSpeed> for 12 seconds. Nunu may target themself.</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Attack Speed",
+              "Move Speed"
+            ],
+            "effect": [
+              "{{ attackspeed*100.000000 }}% -> {{ attackspeednl*100.000000 }}%",
+              "{{ movespeed*100.000000 }}% -> {{ movespeednl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            15,
+            15,
+            15,
+            15,
+            15
+          ],
+          "cooldownBurn": "15",
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
+          "rangeBurn": "700",
+          "image": {
+            "full": "Jade_NunuW.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 432,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_NunuE",
+          "name": "Ice Blast",
+          "description": "Nunu launches a ball of ice at an enemy unit, dealing damage and temporarily slowing their Movement and Attack Speeds.",
+          "tooltip": "Nunu launches a ball of ice at an enemy unit, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slowing</status> their Movement Speed by {{ slowamount*-100 }}% and Attack Speed by 25% for 3 seconds.</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Mana Cost",
+              "Movement Slow"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ slowamount*-100.000000 }}% -> {{ slowamountnl*-100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
+          "cooldownBurn": "6",
+          "cost": [
+            75,
+            85,
+            95,
+            105,
+            115
+          ],
+          "costBurn": "75/85/95/105/115",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            550,
+            550,
+            550,
+            550,
+            550
+          ],
+          "rangeBurn": "550",
+          "image": {
+            "full": "Jade_NunuE.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 0,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_NunuR",
+          "name": "Absolute Zero",
+          "description": "Nunu begins to sap the area of heat, slowing all nearby enemies. When the spell ends, he deals massive damage to all enemies caught in the area.",
+          "tooltip": "Nunu saps the area of heat, channeling up to 3 seconds, enemies within the zone are <status>Slowed</status> by 50% and their <attackSpeed>Attack Speed</attackSpeed> reduced by 25%.<br /><br />Enemies caught in the area when the channel ends receive up to <magicDamage>{{ totaldamage }} magic damage</magicDamage>, depending on how long the spell was channeled.</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            110,
+            100,
+            90
+          ],
+          "cooldownBurn": "110/100/90",
+          "cost": [
+            100,
+            100,
+            100
+          ],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            650,
+            650,
+            650
+          ],
+          "rangeBurn": "650",
+          "image": {
+            "full": "Jade_NunuR.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 48,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Visionary",
+        "description": "Nunu can cast a spell for free after 5 attacks.",
+        "image": {
+          "full": "Jade_NunuPassive.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 288,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

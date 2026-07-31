@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Malphite": {
       "id": "Malphite",
@@ -10,7 +10,7 @@
       "title": "Shard of the Monolith",
       "image": {
         "full": "Malphite.png",
-        "sprite": "champion2.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 384,
         "y": 48,
@@ -451,7 +451,7 @@
           "id": "SeismicShard",
           "name": "Seismic Shard",
           "description": "Malphite sends a shard of the earth through the ground at his foe, dealing damage upon impact and stealing Move Speed for 3 seconds.",
-          "tooltip": "Malphite launches a shard of earth at an enemy, dealing <magicDamage>{{ qdamagecalc }} magic damage</magicDamage> and <status>Slowing</status> them by {{ e2 }}% for {{ slowduration }} seconds. Malphite also steals the amount <status>Slowed</status>, gaining it as <speed>Move Speed</speed> for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Malphite launches a shard of earth at an enemy, dealing <magicDamage>{{ qdamagecalc }} magic damage</magicDamage> and <status>Slowing</status> them by {{ speedsteal }}% for {{ slowduration }} seconds. Malphite also steals the amount <status>Slowed</status>, gaining it as <speed>Move Speed</speed> for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "@AbilityResourceName@ Cost",
@@ -461,7 +461,7 @@
             "effect": [
               "{{ cost }} -> {{ costNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ e2 }}% -> {{ e2NL }}%"
+              "{{ speedsteal }}% -> {{ speedstealNL }}%"
             ]
           },
           "maxrank": 5,
@@ -581,10 +581,10 @@
           "rangeBurn": "625",
           "image": {
             "full": "SeismicShard.png",
-            "sprite": "spell8.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 0,
-            "y": 48,
+            "x": 288,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -728,10 +728,10 @@
           "rangeBurn": "400",
           "image": {
             "full": "Obduracy.png",
-            "sprite": "spell8.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 48,
-            "y": 48,
+            "x": 336,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -871,10 +871,10 @@
           "rangeBurn": "400",
           "image": {
             "full": "Landslide.png",
-            "sprite": "spell8.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 96,
-            "y": 48,
+            "x": 384,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -892,7 +892,7 @@
             ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ e2 }} -> {{ e2NL }}"
+              "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 3,
@@ -986,10 +986,10 @@
           "rangeBurn": "1000",
           "image": {
             "full": "UFSlash.png",
-            "sprite": "spell8.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 144,
-            "y": 48,
+            "x": 432,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -1001,7 +1001,7 @@
         "description": "Malphite is shielded by a layer of rock which absorbs damage up to 10% of his maximum Health. If Malphite has not been hit for a few seconds, this effect recharges.",
         "image": {
           "full": "Malphite_GraniteShield.png",
-          "sprite": "passive2.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 384,
           "y": 48,

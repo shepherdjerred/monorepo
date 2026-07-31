@@ -1,0 +1,755 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Gangplank": {
+      "id": "Jade_Gangplank",
+      "key": "60041",
+      "name": "Gangplank",
+      "title": "The Saltwater Scourge",
+      "image": {
+        "full": "Jade_Gangplank.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 144,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60041000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60041001",
+          "num": 1,
+          "name": "Spooky Gangplank",
+          "chromas": false
+        },
+        {
+          "id": "60041005",
+          "num": 5,
+          "name": "Special Forces Gangplank",
+          "chromas": false
+        },
+        {
+          "id": "60041007",
+          "num": 7,
+          "name": "Captain Gangplank",
+          "chromas": false
+        },
+        {
+          "id": "60041008",
+          "num": 8,
+          "name": "Dreadnova Gangplank",
+          "chromas": false
+        },
+        {
+          "id": "60041009",
+          "num": 9,
+          "name": "Dreadnova Gangplank (Ruby)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "60041010",
+          "num": 10,
+          "name": "Dreadnova Gangplank (Pearl)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "60041011",
+          "num": 11,
+          "name": "Dreadnova Gangplank (Sapphire)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "60041012",
+          "num": 12,
+          "name": "Dreadnova Gangplank (Tanzanite)",
+          "chromas": true,
+          "parentSkin": 8
+        },
+        {
+          "id": "60041013",
+          "num": 13,
+          "name": "Dreadnova Gangplank (Obsidian)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "60041014",
+          "num": 14,
+          "name": "Pool Party Gangplank",
+          "chromas": false
+        },
+        {
+          "id": "60041015",
+          "num": 15,
+          "name": "Pool Party Gangplank (Obsidian)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60041016",
+          "num": 16,
+          "name": "Pool Party Gangplank (Amethyst)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60041017",
+          "num": 17,
+          "name": "Pool Party Gangplank (Ruby)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60041018",
+          "num": 18,
+          "name": "Pool Party Gangplank (Citrine)",
+          "chromas": true,
+          "parentSkin": 14
+        },
+        {
+          "id": "60041019",
+          "num": 19,
+          "name": "Pool Party Gangplank (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60041020",
+          "num": 20,
+          "name": "Pool Party Gangplank (Pearl)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60041032",
+          "num": 32,
+          "name": "Dreadnova Gangplank (Rogue)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "60041301",
+          "num": 301,
+          "name": "Classic 2009 Gangplank",
+          "chromas": false
+        },
+        {
+          "id": "60041303",
+          "num": 303,
+          "name": "Classic 2009 Gangplank (Minuteman)",
+          "chromas": false,
+          "parentSkin": 301
+        }
+      ],
+      "lore": "- Cannon Barrage (R) has random cannonballs instead of consistent AOE damage<br>- Raise Morale (E) grants move speed and Attack damage both passively and upon activation<br>- Parrrley (Q) grants gold (no more silver serpents)",
+      "blurb": "- Cannon Barrage (R) has random cannonballs instead of consistent AOE damage<br>- Raise Morale (E) grants move speed and Attack damage both passively and upon activation<br>- Parrrley (Q) grants gold (no more silver serpents)",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Fighter"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 7,
+        "defense": 6,
+        "magic": 4,
+        "difficulty": 9
+      },
+      "stats": {
+        "hp": 576,
+        "hpperlevel": 81,
+        "mp": 255,
+        "mpperlevel": 40,
+        "movespeed": 345,
+        "armor": 23.8,
+        "armorperlevel": 3.3,
+        "spellblock": 31.25,
+        "spellblockperlevel": 1.25,
+        "attackrange": 125,
+        "hpregen": 5,
+        "hpregenperlevel": 0.75,
+        "mpregen": 7.2,
+        "mpregenperlevel": 0.7,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 57,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 2.75,
+        "attackspeed": 0.651
+      },
+      "spells": [
+        {
+          "id": "Jade_GangplankQ",
+          "name": "Parrrley",
+          "description": "Gangplank takes aim and shoots an enemy unit with his pistol. If Parrrley deals a killing blow, he gains extra gold and half the mana cost is refunded.",
+          "tooltip": "Gangplank shoots a target unit for <physicalDamage>{{ shotdamage }} physical damage</physicalDamage>. If <spellName>Parrrley</spellName> deals a killing blow, Gangplank gains {{ goldgain }} extra gold and half the mana cost is refunded.<br /><br /><spellName>Parrrley</spellName> can crit and applies on hit effects as if a melee basic attack.<br /><br /><gold>Total Gold Plundered: {{ f2 }} gold</gold>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Extra Gold",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ spelldamage }} -> {{ spelldamageNL }}",
+              "{{ goldgain }} -> {{ goldgainNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            5,
+            5,
+            5,
+            5,
+            5
+          ],
+          "cooldownBurn": "5",
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              10,
+              40,
+              70,
+              100,
+              130
+            ],
+            [
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              500,
+              500,
+              500,
+              500,
+              500
+            ],
+            [
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "10/40/70/100/130",
+            "3/4/5/6/7",
+            "0",
+            "500",
+            "4/5/6/7/8",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            625,
+            625,
+            625,
+            625,
+            625
+          ],
+          "rangeBurn": "625",
+          "image": {
+            "full": "Jade_GangplankQ.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 288,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_GangplankW",
+          "name": "Remove Scurvy",
+          "description": "Consumes a large quantity of citrus fruit which clears any crowd control effects on him and heals him.",
+          "tooltip": "Consumes a large quantity of citrus fruit which clears any crowd control effects on him and <healing>heals</healing> him for {{ totalheal }} health.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Healing",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ baseheal }} -> {{ basehealNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            22,
+            21,
+            20,
+            19,
+            18
+          ],
+          "cooldownBurn": "22/21/20/19/18",
+          "cost": [
+            65,
+            65,
+            65,
+            65,
+            65
+          ],
+          "costBurn": "65",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              45,
+              70,
+              95,
+              120,
+              145
+            ],
+            [
+              13,
+              13,
+              13,
+              13,
+              13
+            ],
+            [
+              0.25,
+              0.25,
+              0.25,
+              0.25,
+              0.25
+            ],
+            [
+              200,
+              200,
+              200,
+              200,
+              200
+            ],
+            [
+              30,
+              40,
+              50,
+              60,
+              70
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "45/70/95/120/145",
+            "13",
+            "0.25",
+            "200",
+            "30/40/50/60/70",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
+          "rangeBurn": "20",
+          "image": {
+            "full": "Jade_GangplankW.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 336,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_GangplankE",
+          "name": "Raise Morale",
+          "description": "Gangplank fires a shot into the air, increasing nearby allied champions' attack damage and movement speed.",
+          "tooltip": "<spellPassive>Passive: </spellPassive>Gangplank gains <physicalDamage>{{ passivead }} Attack Damage</physicalDamage> and <speed>{{ passivems*100 }}% Movement Speed</speed>.<br /><br /><spellActive>Active: </spellActive>Gangplank fires his pistol into the air, disabling his passive boost and gaining <physicalDamage>{{ activead }} Attack Damage</physicalDamage> and <speed>{{ activems*100 }}% Movement Speed</speed> for {{ duration }} seconds. Nearby allied champions' gain (half of the bonuses) <physicalDamage>{{ allyactivead }} Attack Damage</physicalDamage> and <speed>{{ allyactivems*100 }}% Movement Speed</speed> for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Active Attack Damage",
+              "Active Movement Speed",
+              "Passive Attack Damage",
+              "Passive Movement Speed",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ activead }} -> {{ activeadNL }}",
+              "{{ activems*100.000000 }}% -> {{ activemsnl*100.000000 }}%",
+              "{{ passivead }} -> {{ passiveadNL }}",
+              "{{ passivems*100.000000 }}% -> {{ passivemsnl*100.000000 }}%",
+              "{{ basecost }} -> {{ basecostNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
+          "cooldownBurn": "20",
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              3,
+              3,
+              4,
+              4,
+              5
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              75,
+              105,
+              135,
+              165,
+              195
+            ],
+            [
+              40,
+              50,
+              60,
+              70,
+              80
+            ],
+            [
+              25,
+              25,
+              25,
+              25,
+              25
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              10,
+              10,
+              10,
+              10,
+              10
+            ],
+            [
+              100,
+              100,
+              100,
+              100,
+              100
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              40,
+              40,
+              40,
+              40,
+              40
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "3/3/4/4/5",
+            "2",
+            "75/105/135/165/195",
+            "40/50/60/70/80",
+            "25",
+            "2",
+            "10",
+            "100",
+            "0.5",
+            "40"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1200,
+            1200,
+            1200,
+            1200,
+            1200
+          ],
+          "rangeBurn": "1200",
+          "image": {
+            "full": "Jade_GangplankE.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 384,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_GangplankR",
+          "name": "Cannon Barrage",
+          "description": "Gangplank signals his ship to fire upon an area for 7 seconds, slowing enemies and dealing damage in random locations within the area.",
+          "tooltip": "Signals Gangplank's ship to fire upon an area for {{ duration }} seconds, <status>Slowing</status> enemies in the area by {{ slow*100 }}% for the duration. Cannonballs rain upon the area, each causing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            120,
+            115,
+            110
+          ],
+          "cooldownBurn": "120/115/110",
+          "cost": [
+            100,
+            100,
+            100
+          ],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1.5,
+              0.5,
+              0.5
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              300,
+              300,
+              300
+            ],
+            [
+              75,
+              75,
+              75
+            ],
+            [
+              1,
+              1,
+              1
+            ],
+            [
+              40,
+              40,
+              40
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "1.5/0.5/0.5",
+            "0",
+            "300",
+            "75",
+            "1",
+            "40"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            20000,
+            20000,
+            20000
+          ],
+          "rangeBurn": "20000",
+          "image": {
+            "full": "Jade_GangplankR.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 432,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Grog-Soaked Blade",
+        "description": "Gangplank's attacks apply a poison that deals magic damage per second, increasing with level.",
+        "image": {
+          "full": "Jade_Gangplank_Passive.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 144,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

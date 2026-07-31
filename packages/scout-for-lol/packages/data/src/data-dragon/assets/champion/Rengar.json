@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Rengar": {
       "id": "Rengar",
@@ -10,7 +10,7 @@
       "title": "the Pridestalker",
       "image": {
         "full": "Rengar.png",
-        "sprite": "champion3.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 48,
         "y": 96,
@@ -600,10 +600,10 @@
           "rangeBurn": "450",
           "image": {
             "full": "RengarQ.png",
-            "sprite": "spell11.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 96,
-            "y": 96,
+            "x": 384,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -741,10 +741,10 @@
           "rangeBurn": "450",
           "image": {
             "full": "RengarW.png",
-            "sprite": "spell11.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 144,
-            "y": 96,
+            "x": 432,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -882,10 +882,10 @@
           "rangeBurn": "1000",
           "image": {
             "full": "RengarE.png",
-            "sprite": "spell11.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 192,
-            "y": 96,
+            "x": 0,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1003,10 +1003,10 @@
           "rangeBurn": "2500/3000/3500",
           "image": {
             "full": "RengarR.png",
-            "sprite": "spell11.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 240,
-            "y": 96,
+            "x": 48,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1018,7 +1018,7 @@
         "description": "While in Brush, Rengar leaps at his target with his basic attack.<br><br>Rengar generates Ferocity whenever he casts an ability. At Max Ferocity, his next ability is empowered.<br><br>Killing enemy champions awards trophies on Rengar's <font color='#BBFFFF'>Bonetooth Necklace</font>, granting bonus attack damage.",
         "image": {
           "full": "Rengar_P.png",
-          "sprite": "passive3.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 48,
           "y": 96,

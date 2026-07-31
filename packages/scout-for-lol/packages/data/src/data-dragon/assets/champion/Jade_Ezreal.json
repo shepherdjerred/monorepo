@@ -1,0 +1,813 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Ezreal": {
+      "id": "Jade_Ezreal",
+      "key": "60081",
+      "name": "Ezreal",
+      "title": "The Prodigal Explorer",
+      "image": {
+        "full": "Jade_Ezreal.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 48,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60081000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60081003",
+          "num": 3,
+          "name": "Frosted Ezreal",
+          "chromas": false
+        },
+        {
+          "id": "60081005",
+          "num": 5,
+          "name": "Pulsefire Ezreal",
+          "chromas": false
+        },
+        {
+          "id": "60081043",
+          "num": 43,
+          "name": "HEARTSTEEL Ezreal",
+          "chromas": true
+        },
+        {
+          "id": "60081044",
+          "num": 44,
+          "name": "Heavenscale Ezreal",
+          "chromas": false
+        },
+        {
+          "id": "60081045",
+          "num": 45,
+          "name": "HEARTSTEEL Ezreal (Ruby)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60081046",
+          "num": 46,
+          "name": "HEARTSTEEL Ezreal (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60081047",
+          "num": 47,
+          "name": "HEARTSTEEL Ezreal (Sapphire)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60081048",
+          "num": 48,
+          "name": "HEARTSTEEL Ezreal (Emerald)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60081049",
+          "num": 49,
+          "name": "HEARTSTEEL Ezreal (Catseye)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60081050",
+          "num": 50,
+          "name": "HEARTSTEEL Ezreal (Pearl)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60081051",
+          "num": 51,
+          "name": "HEARTSTEEL Ezreal (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60081052",
+          "num": 52,
+          "name": "HEARTSTEEL Ezreal (Citrine)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60081053",
+          "num": 53,
+          "name": "HEARTSTEEL Ezreal (Rockstar)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60081054",
+          "num": 54,
+          "name": "Prestige Heavenscale Ezreal",
+          "chromas": false
+        },
+        {
+          "id": "60081055",
+          "num": 55,
+          "name": "Heavenscale Ezreal (Ruby)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60081056",
+          "num": 56,
+          "name": "Heavenscale Ezreal (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60081057",
+          "num": 57,
+          "name": "Heavenscale Ezreal (Catseye)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60081058",
+          "num": 58,
+          "name": "Heavenscale Ezreal (Sapphire)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60081059",
+          "num": 59,
+          "name": "Heavenscale Ezreal (Emerald)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60081060",
+          "num": 60,
+          "name": "Heavenscale Ezreal (Amethyst)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60081061",
+          "num": 61,
+          "name": "Heavenscale Ezreal (Auspicious)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60081062",
+          "num": 62,
+          "name": "Heavenscale Ezreal (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60081063",
+          "num": 63,
+          "name": "Heavenscale Ezreal (Lustrous)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60081064",
+          "num": 64,
+          "name": "Heavenscale Ezreal (Obsidian)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "60081074",
+          "num": 74,
+          "name": "Frosted Ezreal (Paragon)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "60081301",
+          "num": 301,
+          "name": "Classic Ezreal",
+          "chromas": false
+        },
+        {
+          "id": "60081302",
+          "num": 302,
+          "name": "Classic Ezreal (Nottingham)",
+          "chromas": false,
+          "parentSkin": 301
+        },
+        {
+          "id": "60081303",
+          "num": 303,
+          "name": "Classic Ezreal (Frosted)",
+          "chromas": false,
+          "parentSkin": 301
+        }
+      ],
+      "lore": "- Essence Flux (W) passes through all units dealing damage to enemies and granting allies attack speed<br>- Trueshot Barrage (R) deals less damage per enemy hit",
+      "blurb": "- Essence Flux (W) passes through all units dealing damage to enemies and granting allies attack speed<br>- Trueshot Barrage (R) deals less damage per enemy hit",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Marksman",
+        "Mage"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 7,
+        "defense": 2,
+        "magic": 6,
+        "difficulty": 7
+      },
+      "stats": {
+        "hp": 430,
+        "hpperlevel": 80,
+        "mp": 280,
+        "mpperlevel": 45,
+        "movespeed": 330,
+        "armor": 19.5,
+        "armorperlevel": 3.5,
+        "spellblock": 30,
+        "spellblockperlevel": 0,
+        "attackrange": 550,
+        "hpregen": 6.05,
+        "hpregenperlevel": 0.55,
+        "mpregen": 7.65,
+        "mpregenperlevel": 0.65,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 49.6,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 3.22,
+        "attackspeed": 0.658
+      },
+      "spells": [
+        {
+          "id": "Jade_EzrealQ",
+          "name": "Mystic Shot",
+          "description": "Ezreal fires a damaging bolt of energy which reduces all of his cooldowns slightly if it strikes an enemy unit.",
+          "tooltip": "Ezreal fires a bolt of energy, dealing <physicalDamage>{{ damage }} physical damage</physicalDamage> (applies on-hit effects). <br /><br />Ezreal's cooldowns are reduced by 1 second if <spellName>Mystic Shot</spellName> hits a target.<br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            6,
+            5.5,
+            5,
+            4.5,
+            4
+          ],
+          "cooldownBurn": "6/5.5/5/4.5/4",
+          "cost": [
+            30,
+            35,
+            40,
+            45,
+            50
+          ],
+          "costBurn": "30/35/40/45/50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1150,
+            1150,
+            1150,
+            1150,
+            1150
+          ],
+          "rangeBurn": "1150",
+          "image": {
+            "full": "Jade_EzrealQ.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 384,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_EzrealW",
+          "name": "Essence Flux",
+          "description": "Ezreal fires a fluctuating wave of energy, decreasing the Attack Speed and dealing magic damage to enemy champions, while healing and increasing the Attack Speed of allied champions.",
+          "tooltip": "Ezreal fires a wave of energy that damages all enemy champions it passes through for <magicDamage>{{ damage }} magic damage</magicDamage> and reducing their <attackSpeed>Attack Speed</attackSpeed> by {{ attackspeed }}% for 5 seconds. <br /><br />Allied champions hit by the wave restore <healing>{{ totalheal }} Health</healing> and have their <attackSpeed>Attack Speed</attackSpeed> increased by {{ attackspeed }}% for 5 seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Attack Speed",
+              "Mana Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ attackspeed }}% -> {{ attackspeedNL }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "cooldownBurn": "10",
+          "cost": [
+            80,
+            90,
+            100,
+            110,
+            120
+          ],
+          "costBurn": "80/90/100/110/120",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1050,
+            1050,
+            1050,
+            1050,
+            1050
+          ],
+          "rangeBurn": "1050",
+          "image": {
+            "full": "Jade_EzrealW.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 432,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_EzrealE",
+          "name": "Arcane Shift",
+          "description": "Ezreal teleports to a target nearby location and fires a homing bolt which strikes the nearest enemy unit.",
+          "tooltip": "Ezreal teleports to a target nearby location and fires a homing bolt at the nearest enemy unit, dealing <magicDamage>{{ damage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            17,
+            15,
+            13,
+            11,
+            9
+          ],
+          "cooldownBurn": "17/15/13/11/9",
+          "cost": [
+            90,
+            90,
+            90,
+            90,
+            90
+          ],
+          "costBurn": "90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            475,
+            475,
+            475,
+            475,
+            475
+          ],
+          "rangeBurn": "475",
+          "image": {
+            "full": "Jade_EzrealE.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 0,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_EzrealR",
+          "name": "Trueshot Barrage",
+          "description": "Ezreal channels for 1 second to fire a powerful barrage of energy missiles which do massive damage to each unit they pass through (deals 10% less damage to each unit it passes through).",
+          "tooltip": "Ezreal channels for 1 second to fire a barrage of missiles dealing <magicDamage>{{ damage }} magic damage</magicDamage> to each unit it passes through. However, it deals {{ damagereductionperhit*100 }}% less damage for each unit it hits (minimum {{ minimumdamagepercent*100 }}%){{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            100,
+            100,
+            100
+          ],
+          "cooldownBurn": "100",
+          "cost": [
+            150,
+            150,
+            150
+          ],
+          "costBurn": "150",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            25000,
+            25000,
+            25000
+          ],
+          "rangeBurn": "25000",
+          "image": {
+            "full": "Jade_EzrealR.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 48,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Rising Spell Force",
+        "description": "Ezreal gains increasing Attack Speed each time he successfully hits a spell, stacking up to 5 times.",
+        "image": {
+          "full": "Jade_Ezreal_RisingSpellForce.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 48,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

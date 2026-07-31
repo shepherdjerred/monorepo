@@ -1,0 +1,786 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Blitzcrank": {
+      "id": "Jade_Blitzcrank",
+      "key": "60053",
+      "name": "Blitzcrank",
+      "title": "The Great Steam Golem",
+      "image": {
+        "full": "Jade_Blitzcrank.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 240,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60053000",
+          "num": 0,
+          "name": "default",
+          "chromas": true
+        },
+        {
+          "id": "60053001",
+          "num": 1,
+          "name": "Rusty Blitzcrank",
+          "chromas": false
+        },
+        {
+          "id": "60053005",
+          "num": 5,
+          "name": "Definitely Not Blitzcrank",
+          "chromas": false
+        },
+        {
+          "id": "60053006",
+          "num": 6,
+          "name": "iBlitzcrank",
+          "chromas": false
+        },
+        {
+          "id": "60053007",
+          "num": 7,
+          "name": "Riot Blitzcrank",
+          "chromas": false
+        },
+        {
+          "id": "60053008",
+          "num": 8,
+          "name": "Blitzcrank Steel Molten",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
+          "id": "60053009",
+          "num": 9,
+          "name": "Blitzcrank Steel Cobalt",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
+          "id": "60053010",
+          "num": 10,
+          "name": "Blitzcrank Steel Gunmetal",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
+          "id": "60053029",
+          "num": 29,
+          "name": "Space Groove Blitz & Crank",
+          "chromas": false
+        },
+        {
+          "id": "60053030",
+          "num": 30,
+          "name": "Space Groove Blitz & Crank (Ruby)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "60053031",
+          "num": 31,
+          "name": "Space Groove Blitz & Crank (Catseye)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "60053032",
+          "num": 32,
+          "name": "Space Groove Blitz & Crank (Amethyst)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "60053033",
+          "num": 33,
+          "name": "Space Groove Blitz & Crank (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "60053034",
+          "num": 34,
+          "name": "Space Groove Blitz & Crank (Pearl)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "60053035",
+          "num": 35,
+          "name": "Space Groove Blitz & Crank (Disco)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "60053056",
+          "num": 56,
+          "name": "Beezcrank",
+          "chromas": false
+        },
+        {
+          "id": "60053057",
+          "num": 57,
+          "name": "Beezcrank (Ruby)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "60053058",
+          "num": 58,
+          "name": "Beezcrank (Sapphire)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "60053059",
+          "num": 59,
+          "name": "Beezcrank (Emerald)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "60053060",
+          "num": 60,
+          "name": "Beezcrank (Pearl)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "60053061",
+          "num": 61,
+          "name": "Beezcrank (Obsidian)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "60053062",
+          "num": 62,
+          "name": "Beezcrank (Amethyst)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "60053063",
+          "num": 63,
+          "name": "Beezcrank (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "60053064",
+          "num": 64,
+          "name": "Beezcrank (Rainbow)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "60053075",
+          "num": 75,
+          "name": "Rustier Blitzcrank",
+          "chromas": false
+        },
+        {
+          "id": "60053076",
+          "num": 76,
+          "name": "Rustiest Blitzcrank",
+          "chromas": false
+        }
+      ],
+      "lore": "- Static Field (R) passive zaps nearby enemies",
+      "blurb": "- Static Field (R) passive zaps nearby enemies",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Tank",
+        "Support"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 4,
+        "defense": 8,
+        "magic": 5,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 518,
+        "hpperlevel": 95,
+        "mp": 240,
+        "mpperlevel": 40,
+        "movespeed": 325,
+        "armor": 22,
+        "armorperlevel": 3.5,
+        "spellblock": 31.25,
+        "spellblockperlevel": 1.25,
+        "attackrange": 125,
+        "hpregen": 8,
+        "hpregenperlevel": 0.75,
+        "mpregen": 7.1,
+        "mpregenperlevel": 0.5,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 59.16,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 1.13,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "Jade_BlitzcrankRocketGrab",
+          "name": "Rocket Grab",
+          "description": "Blitzcrank fires their right hand to grab an opponent on its path, dealing damage and dragging it back to them.",
+          "tooltip": "Blitzcrank fires their right hand, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>, <status>Stuns</status> the target and <status>Pulling</status> them to themself.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            20,
+            19,
+            18,
+            17,
+            16
+          ],
+          "cooldownBurn": "20/19/18/17/16",
+          "cost": [
+            120,
+            120,
+            120,
+            120,
+            120
+          ],
+          "costBurn": "120",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              90,
+              140,
+              190,
+              240,
+              290
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "90/140/190/240/290",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1079,
+            1079,
+            1079,
+            1079,
+            1079
+          ],
+          "rangeBurn": "1079",
+          "image": {
+            "full": "Jade_BlitzcrankRocketGrab.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 192,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_BlitzcrankOverdrive",
+          "name": "Overdrive",
+          "description": "Blitzcrank supercharges themself to get dramatically increased movement and attack speed.",
+          "tooltip": "Blitzcrank supercharges themself to increase <speed>Movement Speed</speed> by {{ movespeedmod*100 }}% and <attackSpeed>Attack Speed</attackSpeed> by {{ attackspeedmod*100 }}% for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Move Speed",
+              "Attack Speed"
+            ],
+            "effect": [
+              "{{ movespeedmod*100.000000 }}% -> {{ movespeedmodnl*100.000000 }}%",
+              "{{ attackspeedmod*100.000000 }}% -> {{ attackspeedmodnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            15,
+            15,
+            15,
+            15,
+            15
+          ],
+          "cooldownBurn": "15",
+          "cost": [
+            75,
+            75,
+            75,
+            75,
+            75
+          ],
+          "costBurn": "75",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "rangeBurn": "1",
+          "image": {
+            "full": "Jade_BlitzcrankOverdrive.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 240,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_BlitzcrankPowerFist",
+          "name": "Power Fist",
+          "description": "Blitzcrank charges up their fist to make their next attack deal double damage and pop their target up in the air.",
+          "tooltip": "Blitzcrank charges up their fist to make their next attack deal <physicalDamage>{{ totaldamage }} Physical Damage</physicalDamage> and their target is <status>Knocked Up</status> for {{ ccduration }} second.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            9,
+            8,
+            7,
+            6,
+            5
+          ],
+          "cooldownBurn": "9/8/7/6/5",
+          "cost": [
+            25,
+            25,
+            25,
+            25,
+            25
+          ],
+          "costBurn": "25",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
+          "rangeBurn": "300",
+          "image": {
+            "full": "Jade_BlitzcrankPowerFist.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 288,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_BlitzcrankStaticField",
+          "name": "Static Field",
+          "description": "Passively causes lightning bolts to damage a nearby enemy. Additionally, Blitzcrank can activate this ability to damage nearby enemies and silence them for 0.5 seconds, but doing so removes the passive lightning until Static Field becomes available again.",
+          "tooltip": "<spellPassive>Passive: </spellPassive>Lightning arcs off of Blitzcrank to hit a random nearby enemy for <magicDamage>{{ passivedamage }} magic damage</magicDamage> every 2.5 seconds.<br /><br /><spellActive>Active: </spellActive>Deals <magicDamage>{{ activedamage }} magic damage</magicDamage> and <status>Silences</status> surrounding enemy units for 0.5 seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Lightning Damage",
+              "Active Base Damage"
+            ],
+            "effect": [
+              "{{ passivebasedamage }} -> {{ passivebasedamageNL }}",
+              "{{ activebasedamage }} -> {{ activebasedamageNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            30,
+            30,
+            30
+          ],
+          "cooldownBurn": "30",
+          "cost": [
+            150,
+            150,
+            150
+          ],
+          "costBurn": "150",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            600,
+            600,
+            600
+          ],
+          "rangeBurn": "600",
+          "image": {
+            "full": "Jade_BlitzcrankStaticField.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 336,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Mana Barrier",
+        "description": "When Blitzcrank life is brought below 20% health they activate Mana Barrier. This creates a mana shield equal to 50% of their mana for 10 seconds. Mana Barrier can only occur once every 90 seconds.",
+        "image": {
+          "full": "Jade_Blitzcrank_ManaBarrier.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 240,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

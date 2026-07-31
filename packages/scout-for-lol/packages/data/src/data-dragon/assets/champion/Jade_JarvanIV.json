@@ -1,0 +1,786 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_JarvanIV": {
+      "id": "Jade_JarvanIV",
+      "key": "60059",
+      "name": "Jarvan IV",
+      "title": "The Exemplar of Demacia",
+      "image": {
+        "full": "Jade_JarvanIV.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 384,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60059000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60059001",
+          "num": 1,
+          "name": "Commando Jarvan IV",
+          "chromas": false
+        },
+        {
+          "id": "60059005",
+          "num": 5,
+          "name": "Warring Kingdoms Jarvan IV",
+          "chromas": false
+        },
+        {
+          "id": "60059006",
+          "num": 6,
+          "name": "Fnatic Jarvan IV",
+          "chromas": false
+        },
+        {
+          "id": "60059010",
+          "num": 10,
+          "name": "Warring Kingdoms Jarvan IV (Golden)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "60059011",
+          "num": 11,
+          "name": "Pool Party Jarvan IV",
+          "chromas": true
+        },
+        {
+          "id": "60059013",
+          "num": 13,
+          "name": "Pool Party Jarvan IV (Ruby)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "60059014",
+          "num": 14,
+          "name": "Pool Party Jarvan IV (Emerald)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "60059015",
+          "num": 15,
+          "name": "Pool Party Jarvan IV (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "60059016",
+          "num": 16,
+          "name": "Pool Party Jarvan IV (Amethyst)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "60059017",
+          "num": 17,
+          "name": "Pool Party Jarvan IV (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "60059018",
+          "num": 18,
+          "name": "Pool Party Jarvan IV (Pearl)",
+          "chromas": true,
+          "parentSkin": 11
+        },
+        {
+          "id": "60059019",
+          "num": 19,
+          "name": "Pool Party Jarvan IV (Obsidian)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "60059020",
+          "num": 20,
+          "name": "Pool Party Jarvan IV (Peridot)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "60059035",
+          "num": 35,
+          "name": "Nightbringer Jarvan IV",
+          "chromas": false
+        },
+        {
+          "id": "60059036",
+          "num": 36,
+          "name": "Nightbringer Jarvan IV (Ruby)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "60059037",
+          "num": 37,
+          "name": "Nightbringer Jarvan IV (Citrine)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "60059038",
+          "num": 38,
+          "name": "Nightbringer Jarvan IV (Amethyst)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "60059039",
+          "num": 39,
+          "name": "Nightbringer Jarvan IV (Sapphire)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "60059040",
+          "num": 40,
+          "name": "Nightbringer Jarvan IV (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "60059041",
+          "num": 41,
+          "name": "Nightbringer Jarvan IV (Emerald)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "60059042",
+          "num": 42,
+          "name": "Nightbringer Jarvan IV (Obsidian)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "60059043",
+          "num": 43,
+          "name": "Nightbringer Jarvan IV (Pearl)",
+          "chromas": false,
+          "parentSkin": 35
+        }
+      ],
+      "lore": "- Cataclysm (R) is single target<br>- Demacian Standard (E) passive grants armor",
+      "blurb": "- Cataclysm (R) is single target<br>- Demacian Standard (E) passive grants armor",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 6,
+        "defense": 8,
+        "magic": 3,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 510,
+        "hpperlevel": 90,
+        "mp": 275,
+        "mpperlevel": 40,
+        "movespeed": 340,
+        "armor": 21.6,
+        "armorperlevel": 3.6,
+        "spellblock": 31.25,
+        "spellblockperlevel": 1.25,
+        "attackrange": 175,
+        "hpregen": 7.7,
+        "hpregenperlevel": 0.7,
+        "mpregen": 6.45,
+        "mpregenperlevel": 0.45,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 53.4,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 2.5,
+        "attackspeed": 0.658
+      },
+      "spells": [
+        {
+          "id": "Jade_JarvanIVDragonStrike",
+          "name": "Dragon Strike",
+          "description": "Jarvan IV extends his lance, dealing physical damage and lowering the Armor of all enemies in its path. Additionally, this will pull Jarvan to his Demacian Standard, knocking up enemies in his path.",
+          "tooltip": "Extends Jarvan IV's lance dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and lowering the Armor of all enemies hit by {{ armorshredpercent }}% for 3 seconds.<br /><br />If the lance contacts <spellName>Demacian Standard</spellName> it will pull Jarvan IV to its location, <status>Knocking Up</status> enemies in his path.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Armor Reduction",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ e2 }}% -> {{ e2NL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
+          "cooldownBurn": "10/9/8/7/6",
+          "cost": [
+            45,
+            50,
+            55,
+            60,
+            65
+          ],
+          "costBurn": "45/50/55/60/65",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              80,
+              120,
+              160,
+              200,
+              240
+            ],
+            [
+              10,
+              14,
+              18,
+              22,
+              26
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "80/120/160/200/240",
+            "10/14/18/22/26",
+            "3",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            770,
+            770,
+            770,
+            770,
+            770
+          ],
+          "rangeBurn": "770",
+          "image": {
+            "full": "Jade_JarvanIVDragonStrike.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 288,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_JarvanIVGoldenAegis",
+          "name": "Golden Aegis",
+          "description": "Jarvan IV calls upon the ancient kings of Demacia to shield him from harm and slow surrounding enemies.",
+          "tooltip": "Temporarily gains a <shield>shield</shield> that absorbs up to {{ shieldamount }} (+{{ shieldbonus }} damage for each nearby enemy champion) damage for 5 seconds, and <status>Slows</status> surrounding enemies by {{ slowamount }}% for 2 seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Shield Amount",
+              "Bonus Shield",
+              "Slow",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ shieldamount }} -> {{ shieldamountNL }}",
+              "{{ shieldbonus }} -> {{ shieldbonusNL }}",
+              "{{ slowamount }}% -> {{ slowamountNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            20,
+            18,
+            16,
+            14,
+            12
+          ],
+          "cooldownBurn": "20/18/16/14/12",
+          "cost": [
+            45,
+            50,
+            55,
+            60,
+            65
+          ],
+          "costBurn": "45/50/55/60/65",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              60,
+              80,
+              100,
+              120,
+              140
+            ],
+            [
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            [
+              10,
+              20,
+              30,
+              40,
+              50
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0.013,
+              0.013,
+              0.013,
+              0.013,
+              0.013
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "60/80/100/120/140",
+            "15/20/25/30/35",
+            "10/20/30/40/50",
+            "4",
+            "2",
+            "0.01",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            500,
+            500,
+            500,
+            500,
+            500
+          ],
+          "rangeBurn": "500",
+          "image": {
+            "full": "Jade_JarvanIVGoldenAegis.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 336,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_JarvanIVDemacianStandard",
+          "name": "Demacian Standard",
+          "description": "Jarvan IV carries the pride of Demacia, passively granting him bonus Attack Speed and Armor. Activating Demacian Standard allows Jarvan IV to place a Demacian flag that deals magic damage on impact and grants Attack Speed to nearby allied champions.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Gains <attackSpeed>{{ passiveattackspeed*100 }}% Attack Speed</attackSpeed> and <scaleArmor>{{ passivearmor }} Armor</scaleArmor>.<br /><br /><spellActive>Active:</spellActive> Throws a <spellName>Demacian Standard</spellName> to a nearby area dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemies. The <spellName>Standard</spellName> lasts for {{ e4 }} seconds and grants surrounding allied champions <attackSpeed>{{ passiveattackspeed*100 }}% Attack Speed</attackSpeed>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Passive Attack Speed",
+              "Active Attack Speed",
+              "Passive Armor"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ passiveattackspeed*100.000000 }}% -> {{ passiveattackspeednl*100.000000 }}%",
+              "{{ passiveattackspeed*100.000000 }}% -> {{ passiveattackspeednl*100.000000 }}%",
+              "{{ passivearmor }} -> {{ passivearmorNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            13,
+            13,
+            13,
+            13,
+            13
+          ],
+          "cooldownBurn": "13",
+          "cost": [
+            55,
+            55,
+            55,
+            55,
+            55
+          ],
+          "costBurn": "55",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              10,
+              13,
+              16,
+              19,
+              22
+            ],
+            [
+              60,
+              105,
+              150,
+              195,
+              240
+            ],
+            [
+              0.2,
+              0.225,
+              0.25,
+              0.275,
+              0.3
+            ],
+            [
+              8,
+              8,
+              8,
+              8,
+              8
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "10/13/16/19/22",
+            "60/105/150/195/240",
+            "0.2/0.225/0.25/0.275/0.3",
+            "8",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            860,
+            860,
+            860,
+            860,
+            860
+          ],
+          "rangeBurn": "860",
+          "image": {
+            "full": "Jade_JarvanIVDemacianStandard.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 384,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_JarvanIVCataclysm",
+          "name": "Cataclysm",
+          "description": "Jarvan IV heroically leaps into battle at a target with such force that he terraforms the surrounding area to create an arena around them.",
+          "tooltip": "Heroically leaps to an enemy Champion dealing <physicalDamage>{{ damagecalc }} physical damage</physicalDamage> and creating an arena of impassable terrain around them for 3.5 seconds.<br /><br /><recast>Recast</recast> again to collapse the terrain.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            120,
+            105,
+            90
+          ],
+          "cooldownBurn": "120/105/90",
+          "cost": [
+            100,
+            125,
+            150
+          ],
+          "costBurn": "100/125/150",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            650,
+            650,
+            650
+          ],
+          "rangeBurn": "650",
+          "image": {
+            "full": "Jade_JarvanIVCataclysm.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 432,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Martial Cadence",
+        "description": "Jarvan's first basic attack on an enemy deals bonus physical damage based on their current Health. This effect cannot occur again on the same enemy for a few seconds.",
+        "image": {
+          "full": "Jade_JarvanIVP.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 384,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

@@ -1,0 +1,826 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Tryndamere": {
+      "id": "Jade_Tryndamere",
+      "key": "60023",
+      "name": "Tryndamere",
+      "title": "The Barbarian King",
+      "image": {
+        "full": "Jade_Tryndamere.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 48,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60023000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60023002",
+          "num": 2,
+          "name": "King Tryndamere",
+          "chromas": false
+        },
+        {
+          "id": "60023004",
+          "num": 4,
+          "name": "Demonblade Tryndamere",
+          "chromas": false
+        },
+        {
+          "id": "60023010",
+          "num": 10,
+          "name": "Blood Moon Tryndamere",
+          "chromas": false
+        },
+        {
+          "id": "60023011",
+          "num": 11,
+          "name": "Blood Moon Tryndamere (Sapphire)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "60023012",
+          "num": 12,
+          "name": "Blood Moon Tryndamere (Amethyst)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "60023013",
+          "num": 13,
+          "name": "Blood Moon Tryndamere (Emerald)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "60023014",
+          "num": 14,
+          "name": "Blood Moon Tryndamere (Citrine)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "60023015",
+          "num": 15,
+          "name": "Blood Moon Tryndamere (Obsidian)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "60023016",
+          "num": 16,
+          "name": "Blood Moon Tryndamere (Pearl)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "60023017",
+          "num": 17,
+          "name": "Blood Moon Tryndamere (Ruby)",
+          "chromas": true,
+          "parentSkin": 10
+        },
+        {
+          "id": "60023018",
+          "num": 18,
+          "name": "Nightbringer Tryndamere",
+          "chromas": false
+        },
+        {
+          "id": "60023019",
+          "num": 19,
+          "name": "Nightbringer Tryndamere (Ruby)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "60023020",
+          "num": 20,
+          "name": "Nightbringer Tryndamere (Catseye)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "60023021",
+          "num": 21,
+          "name": "Nightbringer Tryndamere (Sapphire)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "60023022",
+          "num": 22,
+          "name": "Nightbringer Tryndamere (Emerald)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "60023023",
+          "num": 23,
+          "name": "Nightbringer Tryndamere (Amethyst)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "60023024",
+          "num": 24,
+          "name": "Nightbringer Tryndamere (Turquoise)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "60023025",
+          "num": 25,
+          "name": "Nightbringer Tryndamere (Obsidian)",
+          "chromas": true,
+          "parentSkin": 18
+        },
+        {
+          "id": "60023026",
+          "num": 26,
+          "name": "Nightbringer Tryndamere (Deathbringer)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "60023027",
+          "num": 27,
+          "name": "Victorious Tryndamere",
+          "chromas": false
+        },
+        {
+          "id": "60023028",
+          "num": 28,
+          "name": "Victorious Tryndamere (Bronze)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60023029",
+          "num": 29,
+          "name": "Victorious Tryndamere (Silver)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60023030",
+          "num": 30,
+          "name": "Victorious Tryndamere (Gold)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60023031",
+          "num": 31,
+          "name": "Victorious Tryndamere (Platinum)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60023032",
+          "num": 32,
+          "name": "Victorious Tryndamere (Emerald)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60023033",
+          "num": 33,
+          "name": "Victorious Tryndamere (Diamond)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60023034",
+          "num": 34,
+          "name": "Victorious Tryndamere (Master)",
+          "chromas": true,
+          "parentSkin": 27
+        },
+        {
+          "id": "60023035",
+          "num": 35,
+          "name": "Victorious Tryndamere (Grandmaster)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60023036",
+          "num": 36,
+          "name": "Victorious Tryndamere (Challenger)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60023046",
+          "num": 46,
+          "name": "Nightbringer Tryndamere (Paragon)",
+          "chromas": false,
+          "parentSkin": 18
+        }
+      ],
+      "lore": "- We were too scared of his rage to change him",
+      "blurb": "- We were too scared of his rage to change him",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
+      "partype": "Fury",
+      "info": {
+        "attack": 10,
+        "defense": 5,
+        "magic": 2,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 559,
+        "hpperlevel": 95,
+        "mp": 8,
+        "mpperlevel": 0,
+        "movespeed": 345,
+        "armor": 22,
+        "armorperlevel": 3.1,
+        "spellblock": 31.25,
+        "spellblockperlevel": 1.25,
+        "attackrange": 125,
+        "hpregen": 10,
+        "hpregenperlevel": 0.9,
+        "mpregen": 0,
+        "mpregenperlevel": 0,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 60,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 2.9,
+        "attackspeed": 0.67
+      },
+      "spells": [
+        {
+          "id": "Jade_TryndamereQ",
+          "name": "Bloodlust",
+          "description": "Tryndamere thrives on the thrills of combat, gaining Fury that increasing his Attack and Critical Strike Damage as he kills enemies and deals critical strikes. He can cast Bloodlust to consume his Fury and heal himself.",
+          "tooltip": "<spellPassive>Passive</spellPassive>: Tryndamere thirsts for blood, gaining <keywordMajor>Fury</keywordMajor> every time he kills an enemy or deals a critical strike, giving him <physicalDamage>{{ adperstack }} Attack Damage</physicalDamage> and {{ critdamageperstack*100 }}% Critical Strike Damage per <keywordMajor>Fury</keywordMajor>.<br /><br /><spellActive>Active</spellActive>: Tryndamere consumes his <keywordMajor>Fury</keywordMajor>, restoring <healing>{{ initialheal }}, plus {{ healperfury }} Health</healing> per <keywordMajor>Fury</keywordMajor> consumed. (Max heal: <healing>{{ maxhealtooltip }}</healing>){{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Critical Strike Damage",
+              "Heal Per Fury"
+            ],
+            "effect": [
+              "{{ critdamageperstack*100.000000 }}% -> {{ critdamageperstacknl*100.000000 }}%",
+              "{{ healperfury }} -> {{ healperfuryNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
+          "cooldownBurn": "12/11/10/9/8",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
+          "rangeBurn": "400",
+          "image": {
+            "full": "Jade_TryndamereQ.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 384,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_TryndamereW",
+          "name": "Mocking Shout",
+          "description": "Tryndamere mocks nearby champions for their cowardice, reducing their Attack Damage. Enemies with their backs turned to Tryndamere also have their Movement Speed reduced.",
+          "tooltip": "Tryndamere mocks nearby champions for their cowardice, reducing their <physicalDamage>Attack Damage</physicalDamage> by {{ adreduction*-1 }} for {{ debuffduration }} seconds. Enemies with their backs turned are also <status>Slowed</status> by {{ slowpotency*-100 }}%.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Physical Damage Reduction",
+              "Slow"
+            ],
+            "effect": [
+              "{{ adreduction*-1.000000 }} -> {{ adreductionnl*-1.000000 }}",
+              "{{ slowpotency*-100.000000 }}% -> {{ slowpotencynl*-100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            14,
+            14,
+            14,
+            14,
+            14
+          ],
+          "cooldownBurn": "14",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " Health",
+          "maxammo": "-1",
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
+          "rangeBurn": "800",
+          "image": {
+            "full": "Jade_TryndamereW.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 432,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ basehealthcost }} Health"
+        },
+        {
+          "id": "Jade_TryndamereE",
+          "name": "Spinning Slash",
+          "description": "Tryndamere slices toward a target unit, dealing damage to enemies in his path.",
+          "tooltip": "Tryndamere spins through his enemies, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemies in his path.<br /><br /><spellName>Spinning Slash's</spellName> cooldown is reduced by 2 seconds whenever Tryndamere critically strikes.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Health Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ basehealthcost }} -> {{ basehealthcostNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
+          "cooldownBurn": "8",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " Health",
+          "maxammo": "-1",
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
+          "rangeBurn": "650",
+          "image": {
+            "full": "Jade_TryndamereE.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 0,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ basehealthcost }} Health"
+        },
+        {
+          "id": "Jade_TryndamereUndyingRage",
+          "name": "Undying Rage",
+          "description": "Tryndamere's lust for battle becomes so strong that he is unable to die, no matter how wounded he becomes.",
+          "tooltip": "Tryndamere's lust for battle becomes so strong that he becomes immune to death for {{ duration }} seconds and gains {{ furygained }} <keywordMajor>Fury</keywordMajor>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Fury Gained",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ furygained }} -> {{ furygainedNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            110,
+            100,
+            90
+          ],
+          "cooldownBurn": "110/100/90",
+          "cost": [
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            400,
+            400,
+            400
+          ],
+          "rangeBurn": "400",
+          "image": {
+            "full": "Jade_TryndamereUndyingRage.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 48,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Battle Fury",
+        "description": "Tryndamere gains bonus critical strike chance, increased by his missing Health.",
+        "image": {
+          "full": "Jade_Tryndamere_Passive.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 48,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

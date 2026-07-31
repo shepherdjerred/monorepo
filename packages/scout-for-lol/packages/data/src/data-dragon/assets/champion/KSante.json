@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "KSante": {
       "id": "KSante",
@@ -10,7 +10,7 @@
       "title": "the Pride of Nazumah",
       "image": {
         "full": "KSante.png",
-        "sprite": "champion2.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 384,
         "y": 0,
@@ -317,10 +317,10 @@
           "rangeBurn": "450",
           "image": {
             "full": "KSanteQ.png",
-            "sprite": "spell7.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 0,
-            "y": 48,
+            "x": 288,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -460,10 +460,10 @@
           "rangeBurn": "600",
           "image": {
             "full": "KSanteW.png",
-            "sprite": "spell7.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 48,
-            "y": 48,
+            "x": 336,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -603,10 +603,10 @@
           "rangeBurn": "525",
           "image": {
             "full": "KSanteE.png",
-            "sprite": "spell7.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 96,
-            "y": 48,
+            "x": 384,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -722,10 +722,10 @@
           "rangeBurn": "250",
           "image": {
             "full": "KSanteR.png",
-            "sprite": "spell7.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 144,
-            "y": 48,
+            "x": 432,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -737,7 +737,7 @@
         "description": "K'Sante's Abilities mark targets to take more damage on his next Attack.<br><br>When All Out, K'Sante deals more damage with all Attacks and Abilities.",
         "image": {
           "full": "Icons_KSante_P.png",
-          "sprite": "passive2.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 384,
           "y": 0,

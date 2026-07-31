@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Braum": {
       "id": "Braum",
@@ -618,8 +618,8 @@
             "full": "BraumQ.png",
             "sprite": "spell2.png",
             "group": "spell",
-            "x": 0,
-            "y": 48,
+            "x": 288,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -759,8 +759,8 @@
             "full": "BraumW.png",
             "sprite": "spell2.png",
             "group": "spell",
-            "x": 48,
-            "y": 48,
+            "x": 336,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -904,8 +904,8 @@
             "full": "BraumE.png",
             "sprite": "spell2.png",
             "group": "spell",
-            "x": 96,
-            "y": 48,
+            "x": 384,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -1023,8 +1023,8 @@
             "full": "BraumRWrapper.png",
             "sprite": "spell2.png",
             "group": "spell",
-            "x": 144,
-            "y": 48,
+            "x": 432,
+            "y": 96,
             "w": 48,
             "h": 48
           },

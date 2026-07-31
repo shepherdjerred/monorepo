@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Gnar": {
       "id": "Gnar",
@@ -502,8 +502,8 @@
             "full": "GnarQ.png",
             "sprite": "spell4.png",
             "group": "spell",
-            "x": 192,
-            "y": 48,
+            "x": 0,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -645,8 +645,8 @@
             "full": "GnarW.png",
             "sprite": "spell4.png",
             "group": "spell",
-            "x": 240,
-            "y": 48,
+            "x": 48,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -790,8 +790,8 @@
             "full": "GnarE.png",
             "sprite": "spell4.png",
             "group": "spell",
-            "x": 288,
-            "y": 48,
+            "x": 96,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -909,8 +909,8 @@
             "full": "GnarR.png",
             "sprite": "spell4.png",
             "group": "spell",
-            "x": 336,
-            "y": 48,
+            "x": 144,
+            "y": 144,
             "w": 48,
             "h": 48
           },

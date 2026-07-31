@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Teemo": {
       "id": "Teemo",
@@ -10,7 +10,7 @@
       "title": "the Swift Scout",
       "image": {
         "full": "Teemo.png",
-        "sprite": "champion4.png",
+        "sprite": "champion6.png",
         "group": "champion",
         "x": 336,
         "y": 48,
@@ -622,10 +622,10 @@
           "rangeBurn": "680",
           "image": {
             "full": "TeemoQ.png",
-            "sprite": "spell14.png",
+            "sprite": "spell20.png",
             "group": "spell",
-            "x": 288,
-            "y": 0,
+            "x": 96,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -763,10 +763,10 @@
           "rangeBurn": "20",
           "image": {
             "full": "TeemoW.png",
-            "sprite": "spell14.png",
+            "sprite": "spell20.png",
             "group": "spell",
-            "x": 336,
-            "y": 0,
+            "x": 144,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -904,10 +904,10 @@
           "rangeBurn": "680",
           "image": {
             "full": "TeemoE.png",
-            "sprite": "spell14.png",
+            "sprite": "spell20.png",
             "group": "spell",
-            "x": 384,
-            "y": 0,
+            "x": 192,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -1027,10 +1027,10 @@
           "rangeBurn": "600/750/900",
           "image": {
             "full": "TeemoR.png",
-            "sprite": "spell14.png",
+            "sprite": "spell20.png",
             "group": "spell",
-            "x": 432,
-            "y": 0,
+            "x": 240,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -1042,7 +1042,7 @@
         "description": "If Teemo stands still and takes no actions for a short duration, he becomes Invisible indefinitely. If he's in brush, Teemo can enter and maintain his Invisibility while moving. After leaving Invisibility, Teemo gains the Element of Surprise, increasing his Attack Speed for a few seconds.",
         "image": {
           "full": "TeemoPassive.png",
-          "sprite": "passive4.png",
+          "sprite": "passive6.png",
           "group": "passive",
           "x": 336,
           "y": 48,

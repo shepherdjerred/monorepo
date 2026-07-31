@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Khazix": {
       "id": "Khazix",
@@ -10,7 +10,7 @@
       "title": "the Voidreaver",
       "image": {
         "full": "Khazix.png",
-        "sprite": "champion2.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 192,
         "y": 0,
@@ -590,10 +590,10 @@
           "rangeBurn": "325",
           "image": {
             "full": "KhazixQ.png",
-            "sprite": "spell6.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 192,
-            "y": 144,
+            "x": 0,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -733,10 +733,10 @@
           "rangeBurn": "1000",
           "image": {
             "full": "KhazixW.png",
-            "sprite": "spell6.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 240,
-            "y": 144,
+            "x": 48,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -874,10 +874,10 @@
           "rangeBurn": "700",
           "image": {
             "full": "KhazixE.png",
-            "sprite": "spell6.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 288,
-            "y": 144,
+            "x": 96,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -989,10 +989,10 @@
           "rangeBurn": "25000",
           "image": {
             "full": "KhazixR.png",
-            "sprite": "spell6.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 336,
-            "y": 144,
+            "x": 144,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1004,7 +1004,7 @@
         "description": "Nearby enemies that are <font color='#FFF673'>Isolated</font> from their allies are marked. Kha'Zix's abilities have interactions with <font color='#FFF673'>Isolated</font> targets.<br><br>When Kha'Zix is not visible to the enemy team, he gains Unseen Threat, causing his next basic attack against an enemy champion to deal bonus magic damage and slow them for a few seconds.",
         "image": {
           "full": "Khazix_P.png",
-          "sprite": "passive2.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 192,
           "y": 0,

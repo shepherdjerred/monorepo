@@ -1,0 +1,759 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Nasus": {
+      "id": "Jade_Nasus",
+      "key": "60075",
+      "name": "Nasus",
+      "title": "The Curator of the Sands",
+      "image": {
+        "full": "Jade_Nasus.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 192,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60075000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60075002",
+          "num": 2,
+          "name": "Pharaoh Nasus",
+          "chromas": false
+        },
+        {
+          "id": "60075004",
+          "num": 4,
+          "name": "Riot K-9 Nasus",
+          "chromas": false
+        },
+        {
+          "id": "60075005",
+          "num": 5,
+          "name": "Infernal Nasus",
+          "chromas": false
+        },
+        {
+          "id": "60075011",
+          "num": 11,
+          "name": "Lunar Guardian Nasus",
+          "chromas": false
+        },
+        {
+          "id": "60075012",
+          "num": 12,
+          "name": "Lunar Guardian Nasus (Ruby)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "60075013",
+          "num": 13,
+          "name": "Lunar Guardian Nasus (Meteorite)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "60075014",
+          "num": 14,
+          "name": "Lunar Guardian Nasus (Pearl)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "60075015",
+          "num": 15,
+          "name": "Lunar Guardian Nasus (Turquoise)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "60075025",
+          "num": 25,
+          "name": "Space Groove Nasus",
+          "chromas": false
+        },
+        {
+          "id": "60075026",
+          "num": 26,
+          "name": "Space Groove Nasus (Ruby)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60075027",
+          "num": 27,
+          "name": "Space Groove Nasus (Catseye)",
+          "chromas": true,
+          "parentSkin": 25
+        },
+        {
+          "id": "60075028",
+          "num": 28,
+          "name": "Space Groove Nasus (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60075029",
+          "num": 29,
+          "name": "Space Groove Nasus (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60075030",
+          "num": 30,
+          "name": "Space Groove Nasus (Amethyst)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60075031",
+          "num": 31,
+          "name": "Space Groove Nasus (Emerald)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60075032",
+          "num": 32,
+          "name": "Space Groove Nasus (Obsidian)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60075033",
+          "num": 33,
+          "name": "Space Groove Nasus (Pearl)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60075034",
+          "num": 34,
+          "name": "Space Groove Nasus (Disco)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60075301",
+          "num": 301,
+          "name": "Classic Nasus",
+          "chromas": false
+        },
+        {
+          "id": "60075302",
+          "num": 302,
+          "name": "Classic Nasus (Galactic)",
+          "chromas": false,
+          "parentSkin": 301
+        }
+      ],
+      "lore": "- Fury of the Sands (R) magic damage temporarily converts a percentage into Attack Damage",
+      "blurb": "- Fury of the Sands (R) magic damage temporarily converts a percentage into Attack Damage",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 7,
+        "defense": 5,
+        "magic": 6,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 500,
+        "hpperlevel": 90,
+        "mp": 245,
+        "mpperlevel": 45,
+        "movespeed": 350,
+        "armor": 22.5,
+        "armorperlevel": 3.5,
+        "spellblock": 31.25,
+        "spellblockperlevel": 1.25,
+        "attackrange": 125,
+        "hpregen": 8.4,
+        "hpregenperlevel": 0.9,
+        "mpregen": 7.1,
+        "mpregenperlevel": 0.5,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 56.8,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 3.48,
+        "attackspeed": 0.638
+      },
+      "spells": [
+        {
+          "id": "Jade_NasusQ",
+          "name": "Siphoning Strike",
+          "description": "Nasus strikes his foe, dealing damage and increasing the power of his future Siphoning Strikes if he slays his target.",
+          "tooltip": "Nasus's next Attack deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. Killing an enemy with this Attack permanently increases its damage by {{ basicstacks }}, increased to {{ bigstacks }} against champions, large minions and large monsters.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Base Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ bonusdamage }} -> {{ bonusdamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            8,
+            7,
+            6,
+            5,
+            4
+          ],
+          "cooldownBurn": "8/7/6/5/4",
+          "cost": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
+          "costBurn": "20",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
+          "rangeBurn": "255",
+          "image": {
+            "full": "Jade_NasusQ.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 0,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_NasusW",
+          "name": "Wither",
+          "description": "Nasus ages his target, decelerating their Movement and Attack Speeds over time.",
+          "tooltip": "Nasus ages target champion over {{ duration }} seconds, initially <status>Slowing</status> their Movement Speed by {{ slowbase }}% increasing to {{ maxslowtooltiponly }}% and Attack Speed by {{ attackspeedbasetotal }}% increasing to {{ attackspeedmaxtotal }}%  over the duration.</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Max Slow",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ maxslowtooltiponly }}% -> {{ maxslowtooltiponlyNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            15,
+            14,
+            13,
+            12,
+            11
+          ],
+          "cooldownBurn": "15/14/13/12/11",
+          "cost": [
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "costBurn": "80",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
+          "rangeBurn": "700",
+          "image": {
+            "full": "Jade_NasusW.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 48,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_NasusE",
+          "name": "Spirit Fire",
+          "description": "Nasus unleashes a spirit flame at a location, dealing damage and reducing the Armor of enemies who stand on it.",
+          "tooltip": "Nasus unleashes a spirit flame at a target location, dealing an initial <magicDamage>{{ initialdamage }} magic damage</magicDamage>.<br /><br />For the next {{ duration }} seconds, enemies in the area have their <status>Armor reduced</status> by {{ totalarmorshred }} and are dealt an additional <magicDamage>{{ tickdotdamage }} magic damage</magicDamage> each second.</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Initial Damage",
+              "Damage Per Second",
+              "Armor Reduction",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ initialdamages }} -> {{ initialdamagesNL }}",
+              "{{ tickdamage }} -> {{ tickdamageNL }}",
+              "{{ totalarmorshred }}% -> {{ totalarmorshredNL }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
+          "cooldownBurn": "12",
+          "cost": [
+            70,
+            85,
+            100,
+            115,
+            130
+          ],
+          "costBurn": "70/85/100/115/130",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
+          "rangeBurn": "650",
+          "image": {
+            "full": "Jade_NasusE.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 96,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_NasusR",
+          "name": "Fury of the Sands",
+          "description": "Nasus unleashes a mighty sandstorm that batters nearby enemies. While the storm rages, he gains increased Health, Attack Range, cast ranges, and drains nearby enemies' max Health converting into bonus damage for the duration.",
+          "tooltip": "Nasus becomes empowered in the sandstorm for 15 seconds, increasing his <scaleHealth>Maximum Health by {{ bonushealth }}</scaleHealth>, Attack Range by {{ attackrangeincrease }}, and Cast Ranges by 100.<br /><br />While the storm rages, he deals <magicDamage>{{ damagecalc }} of enemy Maxiumum Health magic damage</magicDamage> ({{ maxdamagecap }} damage max per second) and converts 5% into bonus <physicalDamage>Attack Damage</physicalDamage>.</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Bonus Health",
+              "Max Health %"
+            ],
+            "effect": [
+              "{{ bonushealth }} -> {{ bonushealthNL }}",
+              "{{ aoedamagepercent*100.000000 }}% -> {{ aoedamagepercentnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            120,
+            120,
+            120
+          ],
+          "cooldownBurn": "120",
+          "cost": [
+            100,
+            100,
+            100
+          ],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            400,
+            400,
+            400
+          ],
+          "rangeBurn": "400",
+          "image": {
+            "full": "Jade_NasusR.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 144,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Soul Eater",
+        "description": "Nasus drains his foe's spiritual energy, giving him bonus Lifesteal.",
+        "image": {
+          "full": "Jade_Nasus_Passive.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 192,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

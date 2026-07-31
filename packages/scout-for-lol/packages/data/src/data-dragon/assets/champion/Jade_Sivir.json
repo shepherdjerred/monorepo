@@ -1,0 +1,785 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Sivir": {
+      "id": "Jade_Sivir",
+      "key": "60015",
+      "name": "Sivir",
+      "title": "The Battle Mistress",
+      "image": {
+        "full": "Jade_Sivir.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 192,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60015000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60015004",
+          "num": 4,
+          "name": "Bandit Sivir",
+          "chromas": false
+        },
+        {
+          "id": "60015005",
+          "num": 5,
+          "name": "PAX Sivir",
+          "chromas": false
+        },
+        {
+          "id": "60015009",
+          "num": 9,
+          "name": "Neo PAX Sivir",
+          "chromas": false
+        },
+        {
+          "id": "60015010",
+          "num": 10,
+          "name": "Pizza Delivery Sivir",
+          "chromas": false
+        },
+        {
+          "id": "60015011",
+          "num": 11,
+          "name": "Pizza Delivery Sivir (Catseye)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "60015012",
+          "num": 12,
+          "name": "Pizza Delivery Sivir (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "60015013",
+          "num": 13,
+          "name": "Pizza Delivery Sivir (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "60015014",
+          "num": 14,
+          "name": "Pizza Delivery Sivir (Amethyst)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "60015015",
+          "num": 15,
+          "name": "Pizza Delivery Sivir (Obsidian)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "60015034",
+          "num": 34,
+          "name": "Cafe Cuties Sivir",
+          "chromas": true
+        },
+        {
+          "id": "60015035",
+          "num": 35,
+          "name": "Cafe Cuties Sivir (Ruby)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "60015036",
+          "num": 36,
+          "name": "Cafe Cuties Sivir (Catseye)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "60015037",
+          "num": 37,
+          "name": "Cafe Cuties Sivir (Turquoise)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "60015038",
+          "num": 38,
+          "name": "Cafe Cuties Sivir (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "60015039",
+          "num": 39,
+          "name": "Cafe Cuties Sivir (Emerald)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "60015040",
+          "num": 40,
+          "name": "Cafe Cuties Sivir (Sapphire)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "60015041",
+          "num": 41,
+          "name": "Cafe Cuties Sivir (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "60015042",
+          "num": 42,
+          "name": "Cafe Cuties Sivir (Obsidian)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "60015043",
+          "num": 43,
+          "name": "Solar Eclipse Sivir",
+          "chromas": false
+        },
+        {
+          "id": "60015044",
+          "num": 44,
+          "name": "Solar Eclipse Sivir (Ruby)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60015045",
+          "num": 45,
+          "name": "Solar Eclipse Sivir (Catseye)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60015046",
+          "num": 46,
+          "name": "Solar Eclipse Sivir (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60015047",
+          "num": 47,
+          "name": "Solar Eclipse Sivir (Pearl)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60015048",
+          "num": 48,
+          "name": "Solar Eclipse Sivir (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "60015049",
+          "num": 49,
+          "name": "Solar Eclipse Sivir (Obsidian)",
+          "chromas": false,
+          "parentSkin": 43
+        }
+      ],
+      "lore": "- Ricochet (W) toggles bouncing randomly attacks <br>- Spell Shield (E) gain mana instead of health when triggered",
+      "blurb": "- Ricochet (W) toggles bouncing randomly attacks <br>- Spell Shield (E) gain mana instead of health when triggered",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Marksman"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 9,
+        "defense": 3,
+        "magic": 1,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 460,
+        "hpperlevel": 82,
+        "mp": 246,
+        "mpperlevel": 43,
+        "movespeed": 335,
+        "armor": 20,
+        "armorperlevel": 3.25,
+        "spellblock": 30,
+        "spellblockperlevel": 0,
+        "attackrange": 425,
+        "hpregen": 4.8,
+        "hpregenperlevel": 0.55,
+        "mpregen": 7,
+        "mpregenperlevel": 0.5,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 52,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 3.28,
+        "attackspeed": 0.679
+      },
+      "spells": [
+        {
+          "id": "Jade_SivirQ",
+          "name": "Boomerang Blade",
+          "description": "Sivir hurls her crossblade like a boomerang, dealing damage each way.",
+          "tooltip": "Sivir hurls her crossblade like a boomerang, which deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first unit and {{ falloffratio*100 }}% reduced damage to each subsequent target down to a minimum of {{ falloffminimum*100 }}%.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Mana Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
+          "cooldownBurn": "9",
+          "cost": [
+            80,
+            90,
+            100,
+            110,
+            120
+          ],
+          "costBurn": "80/90/100/110/120",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1200,
+            1200,
+            1200,
+            1200,
+            1200
+          ],
+          "rangeBurn": "1200",
+          "image": {
+            "full": "Jade_SivirQ.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 0,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_SivirW",
+          "name": "Ricochet",
+          "description": "Sivir's next basic attack will bounce between targets, dealing reduced damage with each successive hit.",
+          "tooltip": "Sivir's basic attack will bounce to <attention>{{ maxbounces }}</attention> additional targets, dealing {{ falloffratio*100 }}% less damage with each bounce.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Max Bounces"
+            ],
+            "effect": [
+              "{{ maxbounces }} -> {{ maxbouncesNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            0.5,
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "cooldownBurn": "0.5",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
+          "rangeBurn": "20",
+          "image": {
+            "full": "Jade_SivirW.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 48,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_SivirE",
+          "name": "Spell Shield",
+          "description": "Sivir creates a magical barrier on herself that blocks a single enemy ability. She regains Mana if an ability is successfully blocked.",
+          "tooltip": "Sivir creates a spell shield for {{ duration }} seconds that blocks the next incoming enemy ability. If an ability is blocked by the shield, Sivir regains <scaleMana>{{ manareturn }} Mana</scaleMana>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            22,
+            19,
+            16,
+            13,
+            10
+          ],
+          "cooldownBurn": "22/19/16/13/10",
+          "cost": [
+            75,
+            75,
+            75,
+            75,
+            75
+          ],
+          "costBurn": "75",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
+          "rangeBurn": "20",
+          "image": {
+            "full": "Jade_SivirE.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 96,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_SivirR",
+          "name": "On The Hunt",
+          "description": "Sivir leads her allies into battle granting them increased Movement and Attack Speeds for a period of time.",
+          "tooltip": "Sivir's battle prowess emanates for {{ ultduration }} seconds, increasing her <attackSpeed>Attack Speed by {{ huntattackspeed*100 }}%</attackSpeed> and <speed>Movement Speed by {{ ms*100 }}%</speed>. Nearby allies gain {{ alliedeffectiveness*100 }}% of Sivir's benefits for the duration.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Attack Speed %",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ huntattackspeed*100.000000 }}% -> {{ huntattackspeednl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            100,
+            90,
+            80
+          ],
+          "cooldownBurn": "100/90/80",
+          "cost": [
+            100,
+            100,
+            100
+          ],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1000,
+            1000,
+            1000
+          ],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "Jade_SivirR.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 144,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Fleet of Foot",
+        "description": "Sivir gains a short burst of Movement Speed when she attacks an enemy champion.",
+        "image": {
+          "full": "Jade_Sivir_Passive.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 192,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

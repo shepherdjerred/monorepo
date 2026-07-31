@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Ahri": {
       "id": "Ahri",
@@ -841,8 +841,8 @@
             "full": "AhriQ.png",
             "sprite": "spell0.png",
             "group": "spell",
-            "x": 96,
-            "y": 96,
+            "x": 384,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -982,8 +982,8 @@
             "full": "AhriW.png",
             "sprite": "spell0.png",
             "group": "spell",
-            "x": 144,
-            "y": 96,
+            "x": 432,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -1121,10 +1121,10 @@
           "rangeBurn": "975",
           "image": {
             "full": "AhriE.png",
-            "sprite": "spell0.png",
+            "sprite": "spell1.png",
             "group": "spell",
-            "x": 192,
-            "y": 96,
+            "x": 0,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1236,10 +1236,10 @@
           "rangeBurn": "450",
           "image": {
             "full": "AhriR.png",
-            "sprite": "spell0.png",
+            "sprite": "spell1.png",
             "group": "spell",
-            "x": 240,
-            "y": 96,
+            "x": 48,
+            "y": 0,
             "w": 48,
             "h": 48
           },

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Poppy": {
       "id": "Poppy",
@@ -10,7 +10,7 @@
       "title": "Keeper of the Hammer",
       "image": {
         "full": "Poppy.png",
-        "sprite": "champion3.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 48,
         "y": 48,
@@ -545,10 +545,10 @@
           "rangeBurn": "430",
           "image": {
             "full": "PoppyQ.png",
-            "sprite": "spell10.png",
+            "sprite": "spell16.png",
             "group": "spell",
-            "x": 96,
-            "y": 96,
+            "x": 384,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -686,10 +686,10 @@
           "rangeBurn": "400",
           "image": {
             "full": "PoppyW.png",
-            "sprite": "spell10.png",
+            "sprite": "spell16.png",
             "group": "spell",
-            "x": 144,
-            "y": 96,
+            "x": 432,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -831,10 +831,10 @@
           "rangeBurn": "475",
           "image": {
             "full": "PoppyE.png",
-            "sprite": "spell10.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 192,
-            "y": 96,
+            "x": 0,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -946,10 +946,10 @@
           "rangeBurn": "500",
           "image": {
             "full": "PoppyR.png",
-            "sprite": "spell10.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 240,
-            "y": 96,
+            "x": 48,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -961,7 +961,7 @@
         "description": "Poppy throws her buckler that bounces off the target. Poppy can pick it up to gain a temporary shield.",
         "image": {
           "full": "Poppy_Passive.png",
-          "sprite": "passive3.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 48,
           "y": 48,
