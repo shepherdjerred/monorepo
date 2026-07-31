@@ -381,10 +381,36 @@ describe the original approach; these supersede them:
   ages out 24h after the last, and survives single-replica worker restarts.
 - **Fix 1 — schedule timeout raised to 4h.** Both Data Dragon schedules'
   `workflowExecutionTimeout` was raised 3h → 4h so the full ~194m retry budget
-  completes and the final attempt records its outcome before the deadline. A
-  residual gap — a final attempt killed by OOM / heartbeat-timeout terminates
-  outside the JS catch, so `outcome="failed"` is not recorded — is a known open
-  item under review, not yet resolved here.
+  completes and the final attempt records its outcome before the deadline.
+- **Fix 1 (follow-up) — terminal failures now recorded at workflow scope
+  (RESOLVED).** The residual gap noted earlier — a final attempt killed by OOM /
+  heartbeat-timeout / worker death terminates outside the JS catch, so
+  `outcome="failed"` went unrecorded — is fixed. `runScoutDataDragonUpdate`
+  (`workflows/data-dragon.ts`) now wraps `updateDataDragon` in a try/catch and,
+  on the terminal `ActivityFailure` Temporal surfaces once retries exhaust
+  (however the attempt died), invokes a new `recordDataDragonFailure` activity.
+  `resolveTerminalFailureReason` (`data-dragon-util.ts`) walks the failure
+  `.cause` chain so the granular reason label (git-push-failed / pr-create-failed
+  / …) and the `ScoutDataDragonPrAutomationFailed` reason filter keep working; a
+  message-less kill falls through to `"exception"`. The in-activity per-attempt
+  failed-record was removed to avoid double-counting, and the workflow command is
+  guarded by `patched("data-dragon-workflow-record-terminal-failure")` for
+  deterministic replay of in-flight histories.
+- **Fix 2 (follow-up) — auto-merge alert queries the `_s`-suffixed series.**
+  The recency gauge has unit "s" and the worker's Prometheus exporter runs with
+  `unitSuffix: true`, so Prometheus exports
+  `scout_data_dragon_auto_merge_last_failure_timestamp_s` (same convention as
+  `scout_data_dragon_duration_s_bucket`). The alert PromQL was querying the bare
+  name and matched no series, so `ScoutDataDragonAutoMergeFailed` never fired; it
+  now queries the `_s` series.
+- **Fix 3 (follow-up) — dedup retry now completes auto-merge.** When an attempt
+  died between `gh pr create` and `gh pr merge --auto`, the retry's dedup guard
+  returned skipped and left the PR stuck with no auto-merge and no alert.
+  `findOpenDataDragonPrUrl` (renamed from `hasOpenDataDragonPr`) now returns the
+  matched PR's URL, and the dedup branch re-issues `gh pr merge --auto`
+  idempotently via the shared `ensurePrAutoMerge` helper — so the PR gets
+  auto-merge or records `recordAutoMergeFailure` — before treating the skip as
+  complete.
 
 ### Remaining
 
@@ -393,12 +419,15 @@ describe the original approach; these supersede them:
 
 ### Caveats
 
-- `hasOpenDataDragonPr` itself (the I/O activity: GitHub App token mint +
-  `gh pr list` shell-out) is not directly unit-tested — consistent with this
-  file's existing convention (`getDataDragonVersionState` isn't either). Its
-  interesting logic (exact-title matching against GitHub's fuzzy search
-  results) is fully covered via the extracted pure `hasMatchingPrTitle`/
-  `dataDragonPrTitle` helpers instead.
+- `findOpenDataDragonPrUrl` itself (the I/O helper: `gh pr list` shell-out) is
+  not directly unit-tested — consistent with this file's existing convention
+  (`getDataDragonVersionState` isn't either). Its interesting logic (exact-title
+  matching against GitHub's fuzzy search results, and recovering the matched PR's
+  URL) is fully covered via the extracted pure `findDataDragonPr`/
+  `dataDragonPrTitle` helpers instead. The `ensurePrAutoMerge` retry-completion
+  path and the workflow-scope terminal-failure catch are likewise exercised only
+  through their pure helpers plus a `TestWorkflowEnvironment` workflow test
+  (`workflows/data-dragon.test.ts`), not a live `gh` round-trip.
 - No live Temporal/GitHub end-to-end run was performed — verification ceiling
   is unit tests + the bot-clone rehearsal script + a full code read. The next
   real Data Dragon version bump (or a manual schedule trigger) is the first
