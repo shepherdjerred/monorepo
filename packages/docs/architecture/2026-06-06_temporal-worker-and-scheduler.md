@@ -7,7 +7,7 @@ board: false
 
 # Temporal Worker & Agent-Task Scheduler
 
-A single Bun process that runs the monorepo's Temporal worker fleet — durable scheduled jobs (replacing K8s CronJobs), Home Assistant automations, the PR review/summary bot, and a generic report-only "agent task" scheduler with an authenticated HTTP API.
+A single Bun process that runs the monorepo's Temporal worker fleet — durable scheduled jobs (replacing K8s CronJobs), Home Assistant automations, a GitHub webhook for merge-conflict checks + PR-closed build cancellation, and a generic report-only "agent task" scheduler with an authenticated HTTP API.
 
 ## Purpose & role
 
@@ -17,23 +17,23 @@ A single Bun process that runs the monorepo's Temporal worker fleet — durable 
 
 `main()` in `packages/temporal/src/worker.ts` connects to the Temporal server (`TEMPORAL_ADDRESS`, default `temporal-server.temporal.svc.cluster.local:7233`, namespace `default`) and creates **four workers**, all sharing the same workflow bundle (`workflows/index.ts`) and the same activity surface (`activities/index.ts`), one per task queue (`packages/temporal/src/shared/task-queues.ts`):
 
-| Task queue (`TASK_QUEUES`) | Value        | Why isolated                                                                                                                              |
-| -------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `DEFAULT`                  | `default`    | HA automations, cron jobs, fast workflows                                                                                                 |
-| `PR_REVIEW`                | `pr-review`  | slow multi-specialist LLM activities; `maxConcurrentActivityTaskExecutions` from `PR_REVIEW_WORKER_MAX_CONCURRENT_ACTIVITIES` (default 1) |
-| `PR_SUMMARY`               | `pr-summary` | cheap Haiku summary, isolated so a stuck specialist can't block it                                                                        |
-| `AGENT_TASK`               | `agent-task` | long-running Claude/Codex report-only subprocesses                                                                                        |
+| Task queue (`TASK_QUEUES`) | Value             | Why isolated                                                   |
+| -------------------------- | ----------------- | -------------------------------------------------------------- |
+| `DEFAULT`                  | `default`         | HA automations, cron jobs, fast workflows                      |
+| `AGENT_TASK`               | `agent-task`      | long-running Claude/Codex report-only subprocesses             |
+| `GLITTER_CORPUS`           | `glitter-corpus`  | rate-limited Discord corpus capture (one activity at a time)   |
+| `GLITTER_CONTEXT`          | `glitter-context` | weekly Sol context generation, isolated from the capture queue |
 
 Workflows are registered the Temporal way: every workflow is a wrapper function exported from the single entrypoint `packages/temporal/src/workflows/index.ts` (delegating to per-file impls to satisfy a no-re-export lint rule); `Worker.create({ workflowsPath })` webpacks that file. `bundle.test.ts` runs the same webpack pass as a smoke test. Activities are aggregated in `packages/temporal/src/activities/index.ts` and passed to every worker.
 
-Boot sequence after workers are created: install Temporal SDK runtime + Prometheus metrics bridge, init Sentry (`@sentry/bun`) and OTel tracing, start the app metrics server, then `registerSchedules(client)` → `startPrReactionListener(client)` → `startHttpServers(client)` → `startEventBridgeSupervisor(client)`, finally `Promise.all` of all four `worker.run()`s. Shutdown is SIGTERM/SIGINT-guarded against double-drain.
+Boot sequence after workers are created: install Temporal SDK runtime + Prometheus metrics bridge, init Sentry (`@sentry/bun`) and OTel tracing, start the app metrics server, then `registerSchedules(client)` → `startHttpServers(client)` → `startEventBridgeSupervisor(client)`, finally `Promise.all` of all four `worker.run()`s. Shutdown is SIGTERM/SIGINT-guarded against double-drain.
 
 ## Major workflow families
 
 - **Agent tasks** — `agentTaskWorkflow` (`packages/temporal/src/workflows/agent-task.ts`) on `AGENT_TASK`. The generic report-only runner; see below.
 - **Homelab audit** — `homelab-audit-daily` (cron `30 6 * * *` PT) runs **through** `agentTaskWorkflow` with a baked-in `HOMELAB_AUDIT_AGENT_TASK` input (`register-schedules.ts`), not a bespoke workflow. The legacy `runHomelabAuditWorkflow` (`workflows/homelab-audit.ts`) remains as a rollback path. Activity: `Bun.spawn` `claude -p`, 10 s heartbeats, stderr redaction, Postal email.
-- **PR review / summary bot** — `prReviewPipeline` (`PR_REVIEW`, multi-specialist consensus + empirical verification, `workflows/pr-review/index.ts`) and `prSummaryPipeline` (`PR_SUMMARY`, Anthropic-SDK Haiku 4.5, `workflows/pr-summary/index.ts`). Started from the webhook (see event-bridge). **Note: the PR bot is gated off via `PR_BOT_ENABLED=false` as of 2026-06-06** — the webhook still acks 200 but starts no workflow and posts no comment. The historical saturation follow-up is archived at `packages/docs/archive/superseded/pr-review-agent-rate-limit-saturation.md`; re-enablement requires a fresh production-readiness review.
-- **PR reaction listener** — long-running `prReactionListener` workflow, started idempotently at boot via `startPrReactionListener` (`event-bridge/start-pr-reaction-listener.ts`); self-recycles via continue-as-new ~every 24 h.
+- **GitHub webhook (merge-conflict + PR-closed)** — the whole in-repo PR review / summary / reaction-listener / babysit bot was **removed** (it was gated off in production). What remains of `event-bridge/github-webhook.ts` starts `checkPrMergeConflictsWorkflow` on `push`-to-main + `pull_request` events (posts the `ci/merge-conflict` status) and `cancelBuildkiteBuildsWorkflow` on `pull_request` `closed`. No LLM, no comment posting.
+- **Durable review-signal collector** — `observeReviewSignalsWorkflow` (`review-signals-collect`, cron every 6 h, `DEFAULT`) records the CI review gate's provider-neutral signals as `review_*` metrics + S3 NDJSON. Independent of the removed bot.
 - **Home Assistant** — `goodMorningWakeUp`/`goodMorningGetUp`, `runVacuumIfNotHome` (×3 cron times), plus event-driven `welcomeHome`/`leavingHome`/`reconcileLock` (presence debounce model documented in `packages/temporal/CLAUDE.md`).
 - **Scout / LoL** — `runScoutDataDragonVersionCheck`, `runScoutDataDragonWeeklyRefresh`, `runScoutSeasonRefreshWorkflow` (claude `-p` → PR on drift).
 - **Maintenance / misc** — `runZfsMaintenanceWorkflow`, `runVeleroOrphanAuditWorkflow` (emits orphan-snapshot Prom metrics), `runBugsinkHousekeepingWorkflow`, `runDnsAudit`, `generateDependencySummary`, `fetchSkillCappedManifest`, `syncGolinks`, `cancelBuildkiteBuildsWorkflow` (triggered on PR close).
@@ -63,12 +63,12 @@ The generic agent-task system lets operators (and agents) schedule **report-only
 `startEventBridge` / `startHttpServers` (`packages/temporal/src/event-bridge/index.ts`):
 
 - **HA events** — connects to Home Assistant via `@shepherdjerred/home-assistant`, subscribes to `ios.action_fired` and `state_changed`, routed by `triggers.ts` (presence transitions → `signalWithStart("reconcileLock")`). Supervised with exponential-backoff reconnect in `worker.ts`; `HA_URL`/`HA_TOKEN` required.
-- **GitHub webhook** — `startGithubWebhook` (`packages/temporal/src/event-bridge/github-webhook.ts`), Hono server on port `9466` (`GITHUB_WEBHOOK_PORT`), **only started when `GITHUB_WEBHOOK_SECRET` is set**. Verifies `X-Hub-Signature-256` HMAC, parses the `pull_request` event (Zod), and for relevant actions (`opened`/`synchronize`/`reopened`/`ready_for_review`) starts the review + summary pipelines in parallel (`REJECT_DUPLICATE` per commit sha). Skips drafts, bot authors, and closed PRs (closed → `cancelBuildkiteBuildsWorkflow`). **`PR_BOT_ENABLED` is the master kill switch** read per-request (default `true`; currently `false`) — when off, the webhook acks 200 but starts no workflow and posts no status.
+- **GitHub webhook** — `startGithubWebhook` (`packages/temporal/src/event-bridge/github-webhook.ts`), Hono server on port `9466` (`GITHUB_WEBHOOK_PORT`), **only started when `GITHUB_WEBHOOK_SECRET` is set**. Verifies `X-Hub-Signature-256` HMAC, then: `push`-to-main and `pull_request` (`opened`/`synchronize`/`reopened`/`edited`) → `checkPrMergeConflictsWorkflow` (posts `ci/merge-conflict`); `pull_request` `closed` → `cancelBuildkiteBuildsWorkflow`. The PR review/summary/reaction-listener/babysit bot that formerly also ran here was removed — no LLM, no comment posting.
 - **Agent-task API** — always started alongside (`9467`).
 
 ## Observability & DB
 
-- **Metrics** — two Prometheus surfaces. (1) The Temporal SDK's built-in bridge on `:9464` (`TEMPORAL_METRICS_ADDRESS`), prefix `temporal_worker_`. (2) An application registry (`packages/temporal/src/observability/metrics.ts`) served at `/metrics` on `:9465` (`APP_METRICS_PORT`) — counters/gauges/histograms for the PR bot (`pr_webhook_*`, `pr_summary_*`, `pr_review_*`, `ai_provider_*`), homelab audit, agent tasks (`agent_task_*`), scout refresh, velero orphans (`velero_orphan_local_snapshots_total`, …), plus `temporal_workflow_outcome_total` to distinguish "executed" from "skipped" for check-and-skip workflows. Default labels include `component=temporal-worker`.
+- **Metrics** — two Prometheus surfaces. (1) The Temporal SDK's built-in bridge on `:9464` (`TEMPORAL_METRICS_ADDRESS`), prefix `temporal_worker_`. (2) An application registry (`packages/temporal/src/observability/metrics.ts`) served at `/metrics` on `:9465` (`APP_METRICS_PORT`) — counters/gauges/histograms for the GitHub webhook + merge-conflict check (`pr_webhook_*`, `pr_merge_conflict_check_*`), the review-signal collector (`review_*`), homelab audit, agent tasks (`agent_task_*`), scout refresh, velero orphans (`velero_orphan_local_snapshots_total`, …), plus `temporal_workflow_outcome_total` to distinguish "executed" from "skipped" for check-and-skip workflows. Default labels include `component=temporal-worker`.
 - **Tracing** — OTel → Tempo via `observability/tracing.ts`, gated by `TELEMETRY_ENABLED`/`OTLP_ENDPOINT`. Sentry (`@sentry/bun`) handles errors with `skipOpenTelemetrySetup: true` so it doesn't collide with the OTel SDK.
-- **Logging** — structured single-line JSON via `jsonLog` helpers; filter by `component` (`temporal-worker`, `pr-webhook`/`pr-agent`/`pr-summary`, `agent-task-api`, `ha-presence`, etc.).
+- **Logging** — structured single-line JSON via `jsonLog` helpers; filter by `component` (`temporal-worker`, `pr-webhook`, `agent-task-api`, `ha-presence`, etc.).
 - **DB** — the worker owns no relational database of its own. Workflows persist to S3/SeaweedFS or external APIs. (The Temporal server's own Postgres is provisioned separately in `packages/homelab`.)

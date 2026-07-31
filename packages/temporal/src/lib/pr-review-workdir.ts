@@ -1,8 +1,10 @@
 /**
- * Ephemeral workspace management for the pr-review-bot bootstrap activity.
+ * Ephemeral workspace management for agent-task activities that need a
+ * checkout on disk (the name is legacy — this originally served the
+ * removed PR-review bot; it is now used by the generic agent-task flow).
  *
- * The retrieval (Phase 5) and AST block-diff (Phase 6) layers both need
- * the PR head source on disk. This module owns:
+ * Any activity that needs the PR/repo head source on disk uses this. This
+ * module owns:
  *
  *   1. Creating a temp directory at /tmp/pr-review-workdir/<workflowId>/.
  *   2. Cloning the PR head into that directory using `git clone --depth 1

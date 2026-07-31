@@ -101,11 +101,10 @@ processor registered in `src/observability/tracing.ts` uploads prompt/response
 bodies to S3 (`llm-archive` bucket) and forwards a slim span to Tempo.
 
 - **SDK calls** — wrap with `traceAnthropic` / `traceOpenAi` from
-  `@shepherdjerred/llm-observability` (pr-summary, pr-review specialists +
-  correctness, deps-summary do this).
+  `@shepherdjerred/llm-observability` (deps-summary does this).
 - **`claude -p` subprocesses** — call `traceClaudeCli` with the captured
-  stdout after exit (agent-task, pr-babysit iteration, homelab-audit,
-  scout-season-refresh). Spans carry `gen_ai.system="claude_code_cli"`, which
+  stdout after exit (agent-task, homelab-audit, scout-season-refresh). Spans
+  carry `gen_ai.system="claude_code_cli"`, which
   distinguishes subscription-billed CLI runs from API-billed `anthropic`, plus
   `llm.cost_usd` from the result message.
 - **`codex exec` subprocesses** — pump stdout NDJSON (`--json`) into the shared
@@ -144,8 +143,7 @@ Workflow:
 - `REVIEW_SIGNAL_ARCHIVE_BUCKET` — S3/SeaweedFS bucket the review-signal collector writes NDJSON archives to (`review-signals/<temporal-run-id>.ndjson` — the object is keyed by the Temporal workflow run id, with no wall-clock component, so an activity retry overwrites idempotently rather than forking a second object; each NDJSON event carries its own `ts`). Optional — defaults to the existing `llm-archive` bucket (namespaced by the key prefix), so no new bucket/env is needed to start collecting
 - `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`, `GITHUB_APP_PRIVATE_KEY` — GitHub App credentials used to mint short-lived installation tokens for GitHub automation so GitHub attributes those actions to the app bot.
 - `OPENAI_API_KEY` — OpenAI API key
-- `CLAUDE_CODE_OAUTH_TOKEN` — Claude Code subscription token. Auth for every `claude -p` activity (currently pr-agent + homelab-audit).
-- `ANTHROPIC_API_KEY` — direct Anthropic API key. Used by the SDK-native `runPrSummaryPipeline` activity (Phase 7 of the SOTA PR review bot plan). The Anthropic TypeScript SDK only accepts the direct API key, so this is required for the SDK summary path. Shadow-mode caveat: with both `CLAUDE_CODE_OAUTH_TOKEN` and `ANTHROPIC_API_KEY` set, the legacy `claude -p` CLI prefers the API key and bills direct credits instead of the subscription — accepted for the ~2-week shadow window; Phase 13 retires the CLI path and the conflict goes away.
+- `CLAUDE_CODE_OAUTH_TOKEN` — Claude Code subscription token. Auth for every `claude -p` activity (homelab-audit, generic agent-task, scout-season-refresh). These activities defensively strip any `ANTHROPIC_API_KEY` from the subprocess env so work bills against the subscription, not direct-API credits; the temporal worker does not wire `ANTHROPIC_API_KEY`.
 - `POSTAL_HOST`, `POSTAL_API_KEY` — Postal email service
 - `RECIPIENT_EMAIL`, `SENDER_EMAIL` — Email addresses for dependency summary and homelab audit
 - `AGENT_TASK_API_TOKEN` — required bearer token for the authenticated `/agent-tasks` scheduling API on port 9467
@@ -160,7 +158,7 @@ Workflow:
 - `SENTRY_DSN`, `ENVIRONMENT` — Sentry/Bugsink error tracking (init no-ops when DSN unset)
 - `APP_METRICS_PORT` — port for the application Prometheus registry (default `9465`); separate from the SDK metrics on `:9464`
 - `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, `GIT_COMMITTER_EMAIL` — bot identity for any activity that runs `git commit`
-- `GITHUB_WEBHOOK_SECRET` — HMAC secret used to verify `X-Hub-Signature-256` on incoming PR webhooks. **Required** when the webhook server is enabled; the server only starts when this is set.
+- `GITHUB_WEBHOOK_SECRET` — HMAC secret used to verify `X-Hub-Signature-256` on incoming GitHub webhooks (the merge-conflict check + PR-closed build-cancel ingress). **Required** when the webhook server is enabled; the server only starts when this is set.
 - `GITHUB_WEBHOOK_PORT` — port for the GitHub webhook receiver (default `9466`).
 - `XCODE_CLOUD_WEBHOOK_TOKEN` — unguessable token embedded in the Xcode Cloud webhook URL path (`/hook/<token>`). Xcode Cloud webhooks carry no signature/auth header, so the URL path IS the credential. **Required** to start the receiver; when unset the server is skipped.
 - `XCODE_CLOUD_WEBHOOK_PORT` — port for the Xcode Cloud webhook receiver (default `9468`).
@@ -171,11 +169,11 @@ Workflow:
 
 `homelab-audit-daily` (cron `30 6 * * *` PT) now runs through the generic `agentTaskWorkflow` on the `agent-task` queue. It checks out `shepherdjerred/monorepo`, asks Claude to follow `packages/docs/guides/2026-04-04_homelab-audit-runbook.md`, renders markdown to HTML, and sends a Postal email with tag `agent-task`. The previous bespoke `runHomelabAuditWorkflow` remains in-tree as a rollback path until the generic workflow is proven in production.
 
-The activity (`src/activities/homelab-audit.ts`) mirrors the `pr-agent` lifecycle (Bun.spawn `claude -p`, 10 s heartbeats, stderr line pump with token redaction, parsed `--output-format json` result, Sentry capture on failure, Prom metrics).
+The activity (`src/activities/homelab-audit.ts`) follows the shared `claude -p` subprocess lifecycle (Bun.spawn `claude -p`, 10 s heartbeats, stderr line pump with token redaction, parsed `--output-format json` result, Sentry capture on failure, Prom metrics) — the same pattern as the generic agent-task activity.
 
 ## Generic agent tasks
 
-`agentTaskWorkflow` supports explicit one-off and cron-based report-only Claude/Codex tasks. It runs on `TASK_QUEUES.AGENT_TASK` so long LLM subprocesses do not block HA, PR review, or PR summary work.
+`agentTaskWorkflow` supports explicit one-off and cron-based report-only Claude/Codex tasks. It runs on `TASK_QUEUES.AGENT_TASK` so long LLM subprocesses do not block HA or event-cron work.
 
 Create/update a task from a doc block locally as an operator:
 
@@ -241,7 +239,7 @@ The **`scripts/rehearse-bot-clone.ts`** rehearsal script drives these same helpe
 
 ## Review threads (CI gate)
 
-The Buildkite pipeline has a **blocking** review gate on PR builds (`scripts/wait-for-review.ts`, `.buildkite/pipeline.yml`, step key `review-gate`): every non-outdated review thread from the active provider must be resolved before the aggregate `buildkite/monorepo/pr` required status can go green. The gate is **provider-neutral** — the active reviewer (Greptile, Codex, …) is chosen by `REVIEW_PROVIDER` (default `codex`), and all provider-specific knowledge lives in `@shepherdjerred/code-review`. The thread-evaluation model below applies both to that gate and to any bot (e.g. pr-babysit) that reasons about review threads — separate from the in-package PR review bot below.
+The Buildkite pipeline has a **blocking** review gate on PR builds (`scripts/wait-for-review.ts`, `.buildkite/pipeline.yml`, step key `review-gate`): every non-outdated review thread from the active provider must be resolved before the aggregate `buildkite/monorepo/pr` required status can go green. The gate is **provider-neutral** — the active reviewer (Greptile, Codex, …) is chosen by `REVIEW_PROVIDER` (default `codex`), and all provider-specific knowledge lives in `@shepherdjerred/code-review`. This CI gate is wholly separate from the GitHub webhook server (`## GitHub webhook` below), which handles only the merge-conflict check and PR-closed build cancellation.
 
 - **Gate on review threads, not the provider's own status.** A thread blocks iff authored by the active provider (`isProviderAuthor`, which strips the REST `[bot]` suffix so GraphQL `greptile-apps` / `chatgpt-codex-connector` and their `[bot]` REST forms compare equal) AND `!isResolved` AND `!isOutdated` AND its severity is at/above the threshold. Providers auto-resolve/outdate their own threads as referenced lines change.
 - **Completion detection is provider-specific** (`CompletionStrategy` in the package). Greptile posts a check-run on every reviewed commit (`.greptile/config.json` `statusCheck:true`) — used only as the "reviewed this head?" marker (it goes green even with comments unresolved, verified on PR #1026, so it's useless as a "comments addressed" gate). Codex posts **no** check-run: it has reviewed the head once its latest PR review's `commit_id === head`, and on a clean no-findings PR it leaves only a 👍 reaction (the `thumbsup-reaction` clean signal).
@@ -262,32 +260,28 @@ Two non-obvious bits the cog blocks + activity handle, learned the hard way (PR 
 - **codex must ignore `AGENTS.md`.** `codex exec` runs in the repo root and, left alone, obeys the repo agent docs ("every session must produce a session log") and dumps `**Done**/**Remaining**/**Caveats**` meta into the summary. The cog blocks pass `-c project_doc_max_bytes=0` so codex returns a plain project summary. Without it, ~8/21 generated summaries came out contaminated.
 - **cog output isn't prettier-clean.** Its raw markdown (e.g. a missing blank line after `]]]-->`) doesn't match the repo's prettier formatting, so an unformatted auto-PR would churn the committed bytes. The activity runs `bun install --frozen-lockfile` + `bunx prettier --write` on the regenerated files before opening the PR. In steady state cog un-formats and prettier re-formats back to the committed bytes, netting no diff. (markdownlint only checks the root `README.md`; `archive/**`, `practice/**`, and `**/_summary.md` are ignored — and clean single-paragraph summaries don't trip MD032.)
 
-## PR review / summary bot
+## GitHub webhook (merge-conflict check + PR-closed build cancel)
 
-Per webhook delivery, the Hono server in `src/event-bridge/github-webhook.ts` starts four workflows in parallel:
+The whole in-repo PR review / summary / reaction-listener / babysit bot was
+removed (it was gated off in production and carrying ~120 files of dead weight).
+What remains of `src/event-bridge/github-webhook.ts` is the ingress for two
+still-active, non-LLM features:
 
-| Workflow                   | Queue        | Activity                                           | Comment marker            |
-| -------------------------- | ------------ | -------------------------------------------------- | ------------------------- |
-| `prReview` (legacy)        | `DEFAULT`    | `runPrAgent` (claude -p)                           | _none — posts a review_   |
-| `prSummary` (legacy)       | `DEFAULT`    | `runPrAgent` (claude -p)                           | `<!-- pr-summary -->`     |
-| `prReviewPipeline` (SOTA)  | `PR_REVIEW`  | multi-specialist consensus + verify                | per Phase 1 design        |
-| `prSummaryPipeline` (SOTA) | `PR_SUMMARY` | `runPrSummaryPipeline` (Anthropic SDK + Haiku 4.5) | `<!-- pr-summary-sdk -->` |
+| Event                                               | Started workflow                | Purpose                                       |
+| --------------------------------------------------- | ------------------------------- | --------------------------------------------- |
+| `push` to `refs/heads/main`                         | `checkPrMergeConflictsWorkflow` | backfill `ci/merge-conflict` on every open PR |
+| `pull_request` (opened/synchronize/reopened/edited) | `checkPrMergeConflictsWorkflow` | per-PR `ci/merge-conflict` status             |
+| `pull_request` `closed`                             | `cancelBuildkiteBuildsWorkflow` | cancel still-running Buildkite builds         |
 
-The two summary paths use **distinct** markers so both comments live on every non-draft PR during shadow mode — reviewers and the eval grader compare quality side-by-side. Phase 13 retires the legacy `claude -p` workflows; at that point the SDK summary takes over the canonical `<!-- pr-summary -->` marker if useful.
+The Hono server verifies `X-Hub-Signature-256` (`GITHUB_WEBHOOK_SECRET`),
+listens on `GITHUB_WEBHOOK_PORT` (9466), and is exposed as `pr-bot.sjer.red`
+via a Cloudflare tunnel; the tofu webhook subscribes only `push` + `pull_request`.
+Component log value: `pr-webhook`. Metrics: `pr_webhook_*` (received / skipped /
+signature-failures) plus `pr_merge_conflict_check_*`.
 
-The `runPrAgent` activity (`src/activities/pr-agent.ts`) launches `claude -p --mcp-config <tempfile> --allowed-tools mcp__github__* --model <m> --max-turns <n>`. The MCP config points at `/usr/local/bin/github-mcp-server` (baked into the worker image's `Dockerfile`). Tokens are passed via env, never written into the MCP config file. stderr is streamed line-by-line through `jsonLog` with token redaction. Heartbeats fire every 10s during the subprocess lifetime.
-
-The `runPrSummaryPipeline` activity (`src/activities/pr-review/summary.ts`) talks to the Anthropic SDK directly. Streams Haiku 4.5 via `messages.stream(...).finalMessage()`. Prompt caching pinned to the last system block (agent instructions hierarchy). Cost target ≤$0.10/summary. See `scripts/replay-pr-summary.ts --pr <#>` for the verification harness.
-
-**Component log values** (use these in `component:` and LogQL filters):
-
-- `pr-webhook` — webhook server
-- `pr-agent` — `claude -p` subprocess wrapper (legacy)
-- `pr-summary` — SDK-native Haiku summary activity
-
-**Shadow-mode auth caveat** — the worker pod has both `CLAUDE_CODE_OAUTH_TOKEN` (subscription, used by `claude -p`) and `ANTHROPIC_API_KEY` (used by the SDK summary). When both are set, the legacy CLI prefers the API key and bills direct-API credits instead of the subscription. We accept this for the ~2-week shadow window (Phase 12 of the SOTA plan); Phase 13 retires the CLI path and the conflict goes away.
-
-**Models** — the SOTA review pipeline's specialists use `claude-opus-5` (correctness, security, perf) and `claude-sonnet-5` (convention, deps); SDK summary uses `claude-haiku-4-5` via the official SDK with streaming. The legacy `prReview`/`prSummary` `claude -p` workflows referenced above are retired (see `pr-pipeline-starts.ts`) — `startPrWorkflows` only starts the two SOTA pipelines.
+Not to be confused with the **CI review gate** (`## Review threads (CI gate)`
+above) — that is Codex/Greptile via `@shepherdjerred/code-review`, wholly separate
+from this webhook.
 
 ## HA presence (welcomeHome / leavingHome / reconcileLock) — debounce model
 

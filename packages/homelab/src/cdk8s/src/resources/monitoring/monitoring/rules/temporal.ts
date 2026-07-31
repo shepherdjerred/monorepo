@@ -316,10 +316,6 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           // Dragon broken silently from 2026-05-02 to 2026-05-08. Existing
           // TemporalWorkflowActivityFailing requires >5 failures in 30m,
           // which a once-daily schedule can never hit.
-          //
-          // PR workflows (prReview, prSummary) excluded because they
-          // legitimately fail per-PR (lint errors, agent timeouts, etc.) and
-          // would otherwise drown out the signal.
           alert: "TemporalScheduledWorkflowFailingDaily",
           annotations: {
             summary: escapePrometheusTemplate(
@@ -329,15 +325,14 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
               "{{ $labels.workflowType }} has had {{ $value }} activity failures across the last 48h. A daily schedule that fails twice in a row is broken — check the Temporal UI and worker logs.",
             ),
           },
-          // Workflows excluded: PR review/summary fail per-PR legitimately;
-          // HA-presence + iOS-action workflows are event-triggered (their
-          // schedules are user actions, not crons), so a "2 in 48h" rate
-          // doesn't indicate a broken schedule.
+          // Workflows excluded: HA-presence + iOS-action workflows are
+          // event-triggered (their schedules are user actions, not crons), so
+          // a "2 in 48h" rate doesn't indicate a broken schedule.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             [
               "increase(activity_task_fail{",
               'namespace="default",',
-              `workflowType!~"${["prReview", "prSummary", "welcomeHome", "leavingHome", "goodNight"].join("|")}"`,
+              `workflowType!~"${["welcomeHome", "leavingHome", "goodNight"].join("|")}"`,
               "}[48h]) >= 2",
             ].join(""),
           ),
@@ -440,30 +435,17 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
       ],
     },
     {
-      name: "pr-bot",
+      // The GitHub webhook server survives the PR-bot removal: it is the
+      // ingress for the merge-conflict check (push + pull_request) and the
+      // PR-closed Buildkite build cancellation. A spike in signature
+      // rejections means the webhook secret is wrong or someone is probing
+      // the public URL with bad payloads.
+      name: "github-webhook",
       rules: [
-        {
-          alert: "TemporalAiProviderIssueActive",
-          annotations: {
-            summary: escapePrometheusTemplate(
-              "Temporal AI provider {{ $labels.provider }} {{ $labels.kind }} issue active",
-            ),
-            description: escapePrometheusTemplate(
-              "Temporal has an active AI provider issue from {{ $labels.source }} (provider={{ $labels.provider }}, kind={{ $labels.kind }}). Check provider billing/rate limits and PR review worker logs.",
-            ),
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'max by (app, provider, kind, source) (ai_provider_issue_active{app="temporal"}) == 1',
-          ),
-          for: "10m",
-          labels: {
-            severity: "warning",
-          },
-        },
         {
           alert: "PrWebhookSignatureFailures",
           annotations: {
-            summary: "GitHub PR webhook is rejecting signatures",
+            summary: "GitHub webhook is rejecting signatures",
             description: escapePrometheusTemplate(
               "{{ $value }} GitHub webhook deliveries failed X-Hub-Signature-256 verification in the last 30 minutes. Either the webhook secret is wrong or someone is hitting the public URL with bad payloads.",
             ),
@@ -472,42 +454,6 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             "increase(pr_webhook_signature_failures_total[30m]) > 5",
           ),
           for: "10m",
-          labels: {
-            severity: "warning",
-          },
-        },
-        {
-          alert: "PrAgentFailureRate",
-          annotations: {
-            summary: escapePrometheusTemplate(
-              "PR-agent claude subprocess failing ({{ $labels.kind }})",
-            ),
-            description: escapePrometheusTemplate(
-              "The pr-agent {{ $labels.kind }} subprocess has had {{ $value }} non-zero exits in the last 1h. Check Loki (component=pr-agent) and the Temporal UI for the failing workflow.",
-            ),
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(pr_agent_subprocess_exit_total{exit_code!="0"}[1h]) > 3',
-          ),
-          for: "15m",
-          labels: {
-            severity: "warning",
-          },
-        },
-        {
-          alert: "PrWorkflowActivitiesFailing",
-          annotations: {
-            summary: escapePrometheusTemplate(
-              "PR workflow {{ $labels.workflowType }} activities failing",
-            ),
-            description: escapePrometheusTemplate(
-              "Workflow {{ $labels.workflowType }} has had {{ $value }} activity failures in the last 1h. Check Bugsink and the Temporal UI.",
-            ),
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(activity_task_fail{namespace="default",workflowType=~"prReview|prSummary"}[1h]) > 2',
-          ),
-          for: "15m",
           labels: {
             severity: "warning",
           },

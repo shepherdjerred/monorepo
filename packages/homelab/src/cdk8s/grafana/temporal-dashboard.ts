@@ -150,9 +150,9 @@ export function createTemporalDashboard() {
         h: 8,
       }),
       // -----------------------------------------------------------------
-      // PR Review Bot row (y >= 48) — driven by metrics emitted by
-      // packages/temporal/src/event-bridge/github-webhook.ts and
-      // packages/temporal/src/activities/pr-agent.ts.
+      // GitHub webhook row (y >= 48) — the merge-conflict check + PR-closed
+      // Buildkite build-cancellation ingress. Metrics emitted by
+      // packages/temporal/src/event-bridge/github-webhook.ts.
       // -----------------------------------------------------------------
       statPanel({
         id: 200,
@@ -182,22 +182,10 @@ export function createTemporalDashboard() {
         id: 202,
         title: "Skipped (24h)",
         description:
-          "Webhook deliveries that passed signature verification but were skipped (drafts, bot authors, irrelevant actions).",
+          "Webhook deliveries that passed signature verification but were skipped (non-pull_request events, non-main pushes, unparseable payloads).",
         expr: "sum(increase(pr_webhook_skipped_total[24h]))",
         legend: "skipped",
         x: 12,
-        y: 48,
-        w: 6,
-        h: 4,
-      }),
-      statPanel({
-        id: 203,
-        title: "Agent Failures (24h)",
-        description:
-          "Subprocess exits with non-zero code from the pr-agent claude wrapper.",
-        expr: 'sum(increase(pr_agent_subprocess_exit_total{exit_code!="0"}[24h])) or on() vector(0)',
-        legend: "fails",
-        x: 18,
         y: 48,
         w: 6,
         h: 4,
@@ -221,7 +209,7 @@ export function createTemporalDashboard() {
         id: 205,
         title: "Skipped Reasons",
         description:
-          "Why incoming PRs are skipped (draft, bot-author, action:<x>).",
+          "Why webhook deliveries are skipped (non-pull-request-event, push:non-main-ref, schema-parse-failed).",
         targets: [
           {
             expr: "sum by (reason) (increase(pr_webhook_skipped_total[1h])) or on() vector(0)",
@@ -230,43 +218,6 @@ export function createTemporalDashboard() {
         ],
         x: 12,
         y: 52,
-        w: 12,
-        h: 8,
-      }),
-      timeseriesPanel({
-        id: 206,
-        title: "PR Agent Duration p50 / p95",
-        description:
-          "claude -p subprocess wall-clock duration distribution by kind (review/summary), last 7d.",
-        targets: [
-          {
-            expr: "histogram_quantile(0.5, sum by (le, kind) (rate(pr_agent_subprocess_duration_seconds_bucket[7d]))) or on() vector(0)",
-            legend: "{{kind}} p50",
-          },
-          {
-            expr: "histogram_quantile(0.95, sum by (le, kind) (rate(pr_agent_subprocess_duration_seconds_bucket[7d]))) or on() vector(0)",
-            legend: "{{kind}} p95",
-          },
-        ],
-        x: 0,
-        y: 60,
-        w: 12,
-        h: 8,
-        unit: "s",
-      }),
-      timeseriesPanel({
-        id: 207,
-        title: "PR Agent Tokens by Direction",
-        description:
-          "Token consumption of pr-agent invocations, split by direction (input/output/cache_read/cache_create).",
-        targets: [
-          {
-            expr: "sum by (kind, direction) (rate(pr_agent_tokens_total[1d])) or on() vector(0)",
-            legend: "{{kind}} {{direction}}",
-          },
-        ],
-        x: 12,
-        y: 60,
         w: 12,
         h: 8,
       }),
