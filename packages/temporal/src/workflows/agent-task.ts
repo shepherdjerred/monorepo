@@ -43,6 +43,13 @@ const emailActivities = proxyActivities<AgentTaskActivities>({
   retry: RETRY,
 });
 
+// Deferral of a future `runAt` is owned by the scheduler via the Temporal
+// server's `startDelay` (see `startOrScheduleAgentTask`), which strips `runAt`
+// from the args this workflow receives — so in normal operation this is a no-op
+// that returns immediately. It stays as a defensive fallback for a direct
+// invocation that still carries a (small) `runAt`. Do NOT rely on this to defer
+// a far-future task: an in-workflow sleep runs against the run timeout and would
+// be terminated mid-wait — that was the original bug.
 async function waitUntilRunAt(runAt: string | undefined): Promise<void> {
   if (runAt === undefined) {
     return;

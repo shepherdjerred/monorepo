@@ -99,6 +99,54 @@ function buildCheckAndSkipOutcomeRules(): PrometheusRule[] {
   return [...perWorkflow, fallback];
 }
 
+// agentTaskWorkflow times out via its run timeout, which terminates the
+// workflow WITHOUT running workflow code — so it can't self-report and none of
+// the activity_task_fail rules ever fire for it. The agent-task-timeout-watch
+// schedule scans visibility hourly and publishes the 24h count on the
+// temporal_agent_task_timeouts_24h gauge. Steady state is 0 after the
+// future-runAt startDelay fix (a one-off with runAt days out used to die at the
+// 2h execution timeout before the agent ever ran).
+function buildAgentTaskTimeoutRules(): PrometheusRule[] {
+  return [
+    {
+      // >0 means agent tasks are timing out again — a regression or an agent
+      // genuinely exceeding its run budget.
+      alert: "TemporalAgentTaskTimingOut",
+      annotations: {
+        summary: "Temporal agent tasks are timing out",
+        description: escapePrometheusTemplate(
+          "{{ $value }} agentTaskWorkflow run(s) closed as TimedOut in the last 24h. A report-only agent task should run to completion — investigate in the Temporal UI (a future-dated runAt no longer defers via an in-workflow sleep; check the startDelay path in agent-task-scheduler.ts, or whether the agent exceeded its run budget).",
+        ),
+      },
+      expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+        "max(temporal_agent_task_timeouts_24h) > 0",
+      ),
+      for: "10m",
+      labels: {
+        severity: "warning",
+      },
+    },
+    {
+      // The gauge is set to -1 when the visibility scan itself fails, so a broken
+      // scan is distinguishable from a clean "no timeouts" (0). Alert separately,
+      // since a failed scan otherwise reads as healthy.
+      alert: "TemporalAgentTaskTimeoutScanFailed",
+      annotations: {
+        summary: "Temporal agent-task timeout scan is failing",
+        description:
+          "The agent-task-timeout-watch schedule could not list workflows to count agent-task timeouts (gauge = -1). The regression guardrail is blind until this recovers — check the Temporal worker logs and server visibility.",
+      },
+      expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+        "min(temporal_agent_task_timeouts_24h) < 0",
+      ),
+      for: "30m",
+      labels: {
+        severity: "warning",
+      },
+    },
+  ];
+}
+
 export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
     {
@@ -341,6 +389,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             severity: "warning",
           },
         },
+        ...buildAgentTaskTimeoutRules(),
       ],
     },
     {
