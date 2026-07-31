@@ -85,8 +85,16 @@ describe("Scout Data Dragon failure rules", () => {
     // Recency gauge + age-out window, so the alert fires on the first failure
     // AND clears 24h later — a bare counter can't do both (increase() misses the
     // first born-at-1 failure; max_over_time(counter) never ages out).
+    //
+    // The `_s` suffix is required: the gauge has unit "s" and the worker's
+    // exporter runs with unitSuffix:true, so the exported series is
+    // `..._timestamp_s`. Querying the bare name matched nothing and the alert
+    // never fired — this asserts the suffixed name so the regression can't recur.
     expect(expression).toContain(
-      "scout_data_dragon_auto_merge_last_failure_timestamp",
+      "scout_data_dragon_auto_merge_last_failure_timestamp_s",
+    );
+    expect(expression).not.toContain(
+      "scout_data_dragon_auto_merge_last_failure_timestamp[",
     );
     expect(expression).toContain("time() -");
     expect(expression).toContain("60 * 60 * 24");
@@ -94,7 +102,7 @@ describe("Scout Data Dragon failure rules", () => {
     // single-replica worker restart doesn't stale the series and wrongly clear
     // the alert.
     expect(expression).toContain(
-      "max_over_time(scout_data_dragon_auto_merge_last_failure_timestamp[24h])",
+      "max_over_time(scout_data_dragon_auto_merge_last_failure_timestamp_s[24h])",
     );
     expect(expression).not.toContain("increase(");
   });
