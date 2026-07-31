@@ -7,7 +7,7 @@
     "lint": "bunx --no-install eslint --cache . && bun lint-buildkite.ts",
     "test": "bun test . ../.buildkite/scripts && bash ../.buildkite/scripts/upload-pipeline.test.sh && bash ../.buildkite/scripts/toolchain.test.sh",
     "test:coverage": "bun test --config bunfig.coverage.toml --coverage generate-anki.test.ts check-env-var-names.test.ts check-merge-conflicts.test.ts compliance-check.test.ts new-package.test.ts prettier-staged.test.ts pyright-check.test.ts shellcheck.test.ts lib/json.test.ts ../.buildkite/scripts/annotate-build-summary.test.ts ../.buildkite/scripts/bake-images.test.ts ../.buildkite/scripts/bake-retry.test.ts ../.buildkite/scripts/build-ci-image.test.ts ../.buildkite/scripts/buildkit-env.test.ts ../.buildkite/scripts/ci-changed.test.ts ../.buildkite/scripts/prepare-ci-changed-base.test.ts ../.buildkite/scripts/update-ci-image-pin.test.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "bun node_modules/@typescript/native/bin/tsc --noEmit"
   },
   "dependencies": {
     "@openai/codex": "0.146.0",
@@ -17,6 +17,7 @@
   "devDependencies": {
     "@shepherdjerred/eslint-config": "workspace:*",
     "@types/bun": "^1.3.12",
+    "@typescript/native": "npm:typescript@7.0.2",
     "eslint": "^10.7.0",
     "jiti": "^2.7.0",
     "ts-morph": "^28.0.0",

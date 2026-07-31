@@ -24,7 +24,12 @@ describe("new-package", () => {
 
   test("creates strict quality configuration", () => {
     const files = packageFiles(validatePackageName("example-package"));
-    expect(files["package.json"]).toContain('"typecheck": "tsc --noEmit"');
+    expect(files["package.json"]).toContain(
+      '"typecheck": "bun node_modules/@typescript/native/bin/tsc --noEmit"',
+    );
+    expect(files["package.json"]).toContain(
+      '"@typescript/native": "npm:typescript@7.0.2"',
+    );
     expect(files["eslint.config.ts"]).toContain("recommended");
     expect(files["src/index.test.ts"]).toContain("bun:test");
   });

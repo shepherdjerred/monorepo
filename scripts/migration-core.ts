@@ -50,12 +50,13 @@ export function packageFiles(name: string): Readonly<Record<string, string>> {
         scripts: {
           build: "bun build src/index.ts --outdir dist",
           test: "bun test",
-          typecheck: "tsc --noEmit",
+          typecheck: "bun node_modules/@typescript/native/bin/tsc --noEmit",
           lint: "eslint .",
         },
         devDependencies: {
           "@shepherdjerred/eslint-config": "workspace:*",
           "@types/bun": "^1.3.14",
+          "@typescript/native": "npm:typescript@7.0.2",
           eslint: "^10.7.0",
           typescript: "^6.0.3",
         },
