@@ -119,6 +119,8 @@ describe("invokesAmbiguousTypeScriptCompiler", () => {
     "bun --preload=./setup.ts x --no-install tsc --noEmit",
     "bun --conditions=development --smol x tsc --noEmit",
     "bun x --package typescript tsc --noEmit",
+    "bun run tsc --noEmit",
+    "bun run --silent tsc --noEmit",
     "NODE_OPTIONS=--max-old-space-size=4096 tsc --noEmit",
     "CI=1 NODE_OPTIONS=--max-old-space-size=4096 tsc --noEmit",
     "PATH=node_modules/@typescript/native/bin:$PATH PATH=/usr/bin tsc --noEmit",
@@ -134,7 +136,6 @@ describe("invokesAmbiguousTypeScriptCompiler", () => {
     "CI=1 PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "PATH=/usr/bin PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     'COMPILER="tsc --noEmit" eslint .',
-    "bun run tsc --noEmit",
     "bun test tsc",
     "bun x eslint tsc",
     "bunx eslint tsc",
@@ -144,6 +145,24 @@ describe("invokesAmbiguousTypeScriptCompiler", () => {
     "mybun x tsc --noEmit",
   ])("ignores %s", (command) => {
     expect(invokesAmbiguousTypeScriptCompiler(command)).toBe(false);
+  });
+
+  test("ignores bun run tsc when a tsc script is declared", () => {
+    expect(
+      invokesAmbiguousTypeScriptCompiler(
+        "bun run tsc --noEmit",
+        new Set(["tsc"]),
+      ),
+    ).toBe(false);
+  });
+
+  test("flags bun run tsc when no tsc script is declared", () => {
+    expect(
+      invokesAmbiguousTypeScriptCompiler(
+        "bun run tsc --noEmit",
+        new Set(["typecheck"]),
+      ),
+    ).toBe(true);
   });
 });
 

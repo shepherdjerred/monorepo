@@ -252,7 +252,10 @@ function findBunxExecutable(
   return undefined;
 }
 
-export function invokesAmbiguousTypeScriptCompiler(script: string): boolean {
+export function invokesAmbiguousTypeScriptCompiler(
+  script: string,
+  declaredScriptNames: ReadonlySet<string> = new Set<string>(),
+): boolean {
   return tokenizeShellCommands(script).some((tokens) => {
     const executableIndex = findShellExecutableIndex(tokens);
     const executable = tokens[executableIndex];
@@ -270,14 +273,19 @@ export function invokesAmbiguousTypeScriptCompiler(script: string): boolean {
       if (
         token === undefined ||
         token === "x" ||
+        token === "run" ||
         !isBunGlobalOptionBeforeX(token)
       ) {
         break;
       }
       index += 1;
     }
-    if (tokens[index] !== "x") return false;
-    return findBunxExecutable(tokens, index + 1) === "tsc";
+    const subcommand = tokens[index];
+    if (subcommand !== "x" && subcommand !== "run") return false;
+    if (findBunxExecutable(tokens, index + 1) !== "tsc") return false;
+    // `bun run tsc` runs a declared script named "tsc" when one exists
+    // (checked on its own); otherwise Bun resolves the `tsc` binary.
+    return subcommand === "x" || !declaredScriptNames.has("tsc");
   });
 }
 
@@ -287,11 +295,12 @@ function collectTypeScriptToolchainErrors(
 ): string[] {
   const errors: string[] = [];
   const scripts = packageJson.scripts ?? {};
+  const declaredScriptNames = new Set(Object.keys(scripts));
   const usesNativeCompiler = Object.values(scripts).some((command) =>
     command.includes(nativeTypeScriptCommand),
   );
   const usesAmbiguousCompiler = Object.values(scripts).some((command) =>
-    invokesAmbiguousTypeScriptCompiler(command),
+    invokesAmbiguousTypeScriptCompiler(command, declaredScriptNames),
   );
   const nativeTypeScriptDependency =
     packageJson.devDependencies?.["@typescript/native"];
@@ -313,7 +322,7 @@ function collectTypeScriptToolchainErrors(
     );
   }
   for (const [name, command] of Object.entries(scripts)) {
-    if (invokesAmbiguousTypeScriptCompiler(command)) {
+    if (invokesAmbiguousTypeScriptCompiler(command, declaredScriptNames)) {
       errors.push(
         `${directory} script ${name} invokes ambiguous tsc instead of ${nativeTypeScriptCommand}`,
       );
