@@ -23,7 +23,55 @@ import {
 import { reactionBoundToHead } from "./head-pushed-at.ts";
 import { isProviderAuthor } from "./identity.ts";
 import type { CompletionSignal } from "./signal.ts";
-import type { ReviewProvider, ReviewState, ReviewThread } from "./types.ts";
+import type {
+  PullRequestAuthor,
+  ReviewProvider,
+  ReviewState,
+  ReviewThread,
+} from "./types.ts";
+
+// ---------------------------------------------------------------------------
+// Pull-request author
+// ---------------------------------------------------------------------------
+
+export function parsePullRequestAuthor(payload: unknown): PullRequestAuthor {
+  const pullRequest = asRecord(payload);
+  if (pullRequest === null) {
+    throw new TypeError("GitHub pull-request response was not an object");
+  }
+  const user = recordField(pullRequest, "user");
+  if (user === null) {
+    throw new TypeError(
+      'GitHub pull-request response did not include an object field "user"',
+    );
+  }
+  const login = stringField(user, "login");
+  if (login === null || login === "") {
+    throw new TypeError(
+      'GitHub pull-request response did not include a non-empty string field "user.login"',
+    );
+  }
+  const type = stringField(user, "type");
+  if (type === null || type === "") {
+    throw new TypeError(
+      'GitHub pull-request response did not include a non-empty string field "user.type"',
+    );
+  }
+  return { login, type };
+}
+
+export async function fetchPullRequestAuthor(input: {
+  repo: string;
+  number: number;
+  token: string;
+}): Promise<PullRequestAuthor> {
+  const { owner, name } = splitRepo(input.repo);
+  const url =
+    `${GITHUB_API_URL}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(name)}` +
+    `/pulls/${String(input.number)}`;
+  const { payload } = await getJsonWithLink(url, input.token);
+  return parsePullRequestAuthor(payload);
+}
 
 // ---------------------------------------------------------------------------
 // Review threads (provider-agnostic; priority parsed via the active provider)

@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { evaluateGate, isBlocking } from "./gate.ts";
+import {
+  evaluateGate,
+  isBlocking,
+  reviewGateSkipReasonForAuthor,
+} from "./gate.ts";
 import { codexProvider } from "./providers/codex.ts";
 import { greptileProvider } from "./providers/greptile.ts";
 import type { ReviewThread } from "./types.ts";
@@ -16,6 +20,68 @@ function thread(overrides: Partial<ReviewThread>): ReviewThread {
     ...overrides,
   };
 }
+
+describe("reviewGateSkipReasonForAuthor", () => {
+  test("skips a GitHub Bot author when Codex cannot review it", () => {
+    expect(
+      reviewGateSkipReasonForAuthor({
+        author: {
+          login: "long-summer-intern[bot]",
+          type: "Bot",
+        },
+        provider: codexProvider,
+      }),
+    ).toBe("bot-author");
+  });
+
+  test("does not skip the same GitHub Bot author when Greptile can review it", () => {
+    expect(
+      reviewGateSkipReasonForAuthor({
+        author: {
+          login: "long-summer-intern[bot]",
+          type: "Bot",
+        },
+        provider: greptileProvider,
+      }),
+    ).toBeNull();
+  });
+
+  test("does not skip a human author for Codex", () => {
+    expect(
+      reviewGateSkipReasonForAuthor({
+        author: {
+          login: "shepherdjerred",
+          type: "User",
+        },
+        provider: codexProvider,
+      }),
+    ).toBeNull();
+  });
+
+  test("fails closed for a new GitHub account type", () => {
+    expect(
+      reviewGateSkipReasonForAuthor({
+        author: {
+          login: "future-service",
+          type: "ServiceAccount",
+        },
+        provider: codexProvider,
+      }),
+    ).toBeNull();
+  });
+
+  test("does not infer bot status from the login", () => {
+    expect(
+      reviewGateSkipReasonForAuthor({
+        author: {
+          login: "lookalike[bot]",
+          type: "User",
+        },
+        provider: codexProvider,
+      }),
+    ).toBeNull();
+  });
+});
 
 describe("isBlocking", () => {
   test("blocks an unresolved, non-outdated provider thread within threshold", () => {
