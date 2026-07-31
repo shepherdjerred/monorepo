@@ -281,8 +281,9 @@ export async function fetchHeadPushedAt(input: {
       ? null
       : await fetchRefUpdateTime({
           // The head branch lives in the HEAD repository — the base repo for a
-          // same-repo PR (this repo's git-spice flow), or the fork for a fork
-          // PR. Never fall back to the base repo when the head repo is unknown
+          // same-repo PR (native stack, legacy git-spice, or stateless bot), or
+          // the fork for a fork PR. Never fall back to the base repo when the
+          // head repo is unknown
           // (a deleted fork): a same-named branch there could carry an
           // unrelated activity whose `after` coincides with this SHA and
           // falsely bind the reaction. Unknown head repo → leave unbound.
