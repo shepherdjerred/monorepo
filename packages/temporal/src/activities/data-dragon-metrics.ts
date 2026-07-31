@@ -19,6 +19,7 @@ function metrics(): {
   changedFiles: ReturnType<typeof metricMeter.createGauge>;
   versionInfo: ReturnType<typeof metricMeter.createGauge>;
   autoMergeFailures: ReturnType<typeof metricMeter.createCounter>;
+  autoMergeLastFailure: ReturnType<typeof metricMeter.createGauge>;
 } {
   return {
     runs: metricMeter.createCounter(
@@ -53,6 +54,12 @@ function metrics(): {
       "scout_data_dragon_auto_merge_failures",
       "1",
       "Scout Data Dragon PR auto-merge setup failures",
+    ),
+    autoMergeLastFailure: metricMeter.createGauge(
+      "scout_data_dragon_auto_merge_last_failure_timestamp",
+      "int",
+      "s",
+      "Unix time (seconds) of the last Scout Data Dragon PR auto-merge setup failure",
     ),
   };
 }
@@ -92,5 +99,14 @@ export function recordRun(input: DataDragonRunMetrics): void {
  * is exactly what happened to PR #1856).
  */
 export function recordAutoMergeFailure(mode: DataDragonUpdateMode): void {
-  metrics().autoMergeFailures.add(1, { mode });
+  const meter = metrics();
+  // Cumulative count for dashboards / rate() panels.
+  meter.autoMergeFailures.add(1, { mode });
+  // Recency gauge that the ScoutDataDragonAutoMergeFailed alert reads. A
+  // monotonic counter can't both catch the first failure (born at 1, so
+  // increase()==0) and age out after 24h (max_over_time stays positive until
+  // the worker restarts). A last-failure timestamp does both: it appears on the
+  // first failure and the alert's `time() - <ts> < 24h` naturally clears 24h
+  // after the most recent failure.
+  meter.autoMergeLastFailure.set(Math.floor(Date.now() / 1000), { mode });
 }
