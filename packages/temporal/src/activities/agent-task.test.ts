@@ -116,6 +116,33 @@ const baseInput: AgentTaskInput = {
   },
 };
 
+const claudeInput: AgentTaskInput = {
+  title: "Claude metric placement test",
+  prompt: "Return a short report.",
+  provider: "claude",
+  mode: "report-only",
+  allowSelfCancel: false,
+  repo: {
+    fullName: "shepherdjerred/monorepo",
+    ref: "main",
+  },
+};
+
+function claudeResultMessageCommand(
+  resultMessage: Record<string, unknown>,
+): (input: AgentTaskInput, workdir: string) => Promise<AgentTaskCommand> {
+  return async (_input: AgentTaskInput, _workdir: string) => ({
+    args: [
+      "bun",
+      "--eval",
+      `console.log(${JSON.stringify(JSON.stringify(resultMessage))});`,
+    ],
+    model: "test-model",
+    outputPath: undefined,
+    prompt: "Return a short report.",
+  });
+}
+
 describe("agentTaskActivities", () => {
   beforeAll(async () => {
     Bun.env["GITHUB_APP_ID"] = "12345";
@@ -142,6 +169,50 @@ describe("agentTaskActivities", () => {
     expect(exposition).toMatch(
       /agent_task_runs_total\{[^}]*provider="codex"[^}]*outcome="success"/,
     );
+  });
+
+  it("records a successful run after Claude structured_output parses", async () => {
+    const claudeActivities = createAgentTaskActivities(
+      claudeResultMessageCommand({
+        type: "result",
+        is_error: false,
+        structured_output: { markdown: "claude task complete" },
+      }),
+    );
+    const workdir = await mkdtemp(path.join(os.tmpdir(), "agent-task-test-"));
+
+    const result = await claudeActivities.runAgentTask({
+      input: claudeInput,
+      workdir,
+    });
+
+    expect(result.markdown).toBe("claude task complete");
+    const exposition = await register.metrics();
+    expect(exposition).toMatch(
+      /agent_task_runs_total\{[^}]*provider="claude"[^}]*outcome="success"/,
+    );
+  });
+
+  it("throws a distinct error when claude reports is_error=true", async () => {
+    const claudeActivities = createAgentTaskActivities(
+      claudeResultMessageCommand({
+        type: "result",
+        is_error: true,
+        result: "hit max turns",
+      }),
+    );
+    const workdir = await mkdtemp(path.join(os.tmpdir(), "agent-task-test-"));
+
+    let caught: unknown;
+    try {
+      await claudeActivities.runAgentTask({ input: claudeInput, workdir });
+    } catch (error: unknown) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(Error);
+    const message = caught instanceof Error ? caught.message : "";
+    expect(message).toMatch(/is_error=true/);
+    expect(message).not.toMatch(/no structured output/);
   });
 
   it("redacts a distinct Codex API key", async () => {
