@@ -168,6 +168,11 @@ Mirror the established visibility-query-gauge pattern (`detectOrphanSchedules` /
 - Visibility retention bounds "all-time" — 3 timed-out is the retained set; older affected runs may
   have aged out but their doc blocks are archived/stale and out of scope.
 
+## Remaining
+
+- [ ] **Real-server e2e (pre-merge, plan step 4):** port-forward `localhost:7233`, submit a task with `runAt ≈ now+5m` via `schedule-agent-task.ts --json`; confirm it sits buffered then Completes (not TimedOut). Blocked: Temporal frontend is cluster-internal only — run in-cluster after the worker deploys.
+- [ ] **Part 2 backfill (post-deploy):** re-run pvc re-audit, buildkite-reporting-verify (reconstruct payload from run `019faca5-…` history), npm-token (08-13), ha-utility (2027-01-05). Skip stale torvalds-memory. Only after the worker image deploys.
+
 ## Session Log — 2026-07-30
 
 ### Done
