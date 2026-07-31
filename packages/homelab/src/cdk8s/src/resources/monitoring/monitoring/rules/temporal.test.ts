@@ -80,14 +80,18 @@ describe("Temporal workflow outcome rules", () => {
 });
 
 describe("Scout Data Dragon failure rules", () => {
-  test("ScoutDataDragonAutoMergeFailed alerts on the dedicated auto-merge-failure counter", () => {
+  test("ScoutDataDragonAutoMergeFailed alerts on the last-failure recency gauge", () => {
     const expression = findFailureRule("ScoutDataDragonAutoMergeFailed");
-    expect(expression).toContain("scout_data_dragon_auto_merge_failures");
-    // Must use max_over_time, not increase: the counter is absent until its
-    // first failure (born at value 1), and increase() over an all-1 range is 0,
-    // so increase() would miss the very first stuck PR the alert exists for.
-    expect(expression).toContain("max_over_time");
+    // Recency gauge + age-out window, so the alert fires on the first failure
+    // AND clears 24h later. A bare counter can't do both: increase() misses the
+    // first born-at-1 failure, and max_over_time() never ages out.
+    expect(expression).toContain(
+      "scout_data_dragon_auto_merge_last_failure_timestamp",
+    );
+    expect(expression).toContain("time() -");
+    expect(expression).toContain("60 * 60 * 24");
     expect(expression).not.toContain("increase(");
+    expect(expression).not.toContain("max_over_time");
   });
 
   test("ScoutDataDragonPrAutomationFailed no longer references the unreachable pr-merge-failed reason", () => {

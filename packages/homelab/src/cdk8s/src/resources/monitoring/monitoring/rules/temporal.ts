@@ -196,12 +196,15 @@ const SCOUT_DATA_DRAGON_FAILURE_RULES: PrometheusRule[] = [
         "The Scout Data Dragon updater recorded a PR auto-merge setup failure in the last 24 hours. The PR needs a manual merge — check open chore/scout-data-dragon-* PRs.",
       ),
     },
-    // max_over_time, not increase: this rare counter is absent until its
-    // first failure (born at 1), and increase() over an all-1 range is 0
-    // — so increase() would miss the very first stuck PR. Matches the
-    // sibling failure alerts above.
+    // Recency gauge (seconds since the last auto-merge failure), not a counter
+    // query. A monotonic counter can't satisfy both requirements at once:
+    // increase(counter[24h]) misses the very first failure (the series is born
+    // at 1, so the increase is 0), while max_over_time(counter[24h]) never ages
+    // out (a flat positive counter stays positive until the worker restarts).
+    // `time() - <last-failure-ts>` fires on the first failure and clears 24h
+    // after the most recent one, independent of worker restarts.
     expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-      "max_over_time(scout_data_dragon_auto_merge_failures[24h]) > 0",
+      "time() - scout_data_dragon_auto_merge_last_failure_timestamp < 60 * 60 * 24",
     ),
     for: "15m",
     labels: {
