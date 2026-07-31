@@ -219,22 +219,16 @@ resource "aws_s3_bucket" "scout_prod" {
   bucket = "scout-prod"
 }
 
-# Private licensed font objects used only by Scout's server-side League Classic
-# renderer. The binaries are uploaded out-of-band from the owner's licensed
-# macOS installation and are deliberately absent from Git and public images.
-# The bucket is created before this declaration reaches main so PR verification
-# can exercise the exact licensed fonts. Adopt it on the first main apply rather
-# than attempting to create an already-existing bucket.
-import {
-  to = aws_s3_bucket.scout_classic_fonts
-  id = "scout-classic-fonts"
-}
-
-resource "aws_s3_bucket" "scout_classic_fonts" {
-  bucket = "scout-classic-fonts"
+# The Scout League Classic renderer now ships Gill Sans committed in the repo
+# under the owner's universal redistribution license, so the private
+# `scout-classic-fonts` bucket is no longer needed. Stop managing it here
+# without destroying the physical bucket; an operator decommissions the bucket
+# and its objects out-of-band. No-op if the resource was never in state.
+removed {
+  from = aws_s3_bucket.scout_classic_fonts
 
   lifecycle {
-    prevent_destroy = true
+    destroy = false
   }
 }
 

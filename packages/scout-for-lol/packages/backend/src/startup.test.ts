@@ -2,16 +2,13 @@ import { describe, expect, mock, test } from "bun:test";
 import { runBackendStartup } from "./startup.ts";
 
 describe("backend startup", () => {
-  test("validates champion assets and private fonts before serving", async () => {
+  test("validates champion assets before serving", async () => {
     const calls: string[] = [];
     const shutdownHttpServer = mock(() => Promise.resolve());
 
     const runtime = await runBackendStartup({
       validateChampionAssets: async () => {
         calls.push("champion-assets");
-      },
-      ensureClassicFontsConfigured: async () => {
-        calls.push("classic-fonts");
       },
       startHttpServer: async () => {
         calls.push("http-server");
@@ -22,17 +19,12 @@ describe("backend startup", () => {
       },
     });
 
-    expect(calls).toEqual([
-      "champion-assets",
-      "classic-fonts",
-      "http-server",
-      "discord",
-    ]);
+    expect(calls).toEqual(["champion-assets", "http-server", "discord"]);
     expect(runtime.shutdownHttpServer).toBe(shutdownHttpServer);
   });
 
-  test("propagates private-font failure before health or Discord start", async () => {
-    const fontFailure = new Error("private font checksum mismatch");
+  test("propagates asset-validation failure before health or Discord start", async () => {
+    const assetFailure = new Error("champion asset missing");
     const startHttpServer = mock(async () => ({
       shutdownHttpServer: () => Promise.resolve(),
     }));
@@ -40,14 +32,13 @@ describe("backend startup", () => {
 
     await expect(
       runBackendStartup({
-        validateChampionAssets: () => Promise.resolve(),
-        ensureClassicFontsConfigured: async () => {
-          throw fontFailure;
+        validateChampionAssets: async () => {
+          throw assetFailure;
         },
         startHttpServer,
         startDiscord,
       }),
-    ).rejects.toBe(fontFailure);
+    ).rejects.toBe(assetFailure);
 
     expect(startHttpServer).not.toHaveBeenCalled();
     expect(startDiscord).not.toHaveBeenCalled();

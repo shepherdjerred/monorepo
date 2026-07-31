@@ -43,7 +43,6 @@ import {
   reportsFailedTotal,
   scoutItemCacheMissTotal,
 } from "#src/metrics/index.ts";
-import { ensureClassicFontsConfigured } from "#src/league/classic-fonts.ts";
 import { buildClassicMatch } from "./match-report-classic.ts";
 
 const logger = createLogger("postmatch-match-report-generator");
@@ -101,7 +100,6 @@ async function createMatchImage(
   if (matchToRender.queueType === "arena") {
     svgData = await arenaMatchToSvg(matchToRender);
   } else if (matchToRender.queueType === "classic") {
-    await ensureClassicFontsConfigured();
     svgData = await classicMatchToSvg(matchToRender);
   } else {
     svgData = await matchToSvg(matchToRender, {

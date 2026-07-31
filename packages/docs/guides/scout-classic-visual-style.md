@@ -66,22 +66,19 @@ The scale is **selected** for legibility in Discord's image viewer:
 
 ### Licensing Boundary
 
-QTFrizQuad Regular and Bold are committed with the Qualitype license. Gill Sans
-is the user's licensed macOS copy. The TTC is split into Regular and Bold TTFs
-because Satori does not accept TrueType Collection containers.
+Both families are committed under
+`packages/scout-for-lol/packages/report/src/assets/fonts/`:
 
-Gill Sans binaries must never be committed, included in a public container, or
-uploaded to a public artifact host. The extracted files live in the private,
-deletion-protected `scout-classic-fonts` bucket under `v1/`. Runtime code
-verifies these SHA-256 values before registering them with Satori:
+- **QTFrizQuad** Regular and Bold — Qualitype license (`QTFrizQuad/COPYING-QUALITYPE`).
+- **Gill Sans** Regular and Bold — redistributed under the repository owner's
+  **universal redistribution license** (`GillSans/LICENSE.md`). The TTC is split
+  into Regular and Bold TTFs because Satori does not accept TrueType Collection
+  containers.
 
-- Regular:
-  `6c767e994917b48147d92176db6297b1f34aa8bf620faab0e51d048907cfce5b`
-- Bold:
-  `34c5ba9cbcd05eec10b64b159b1aca6195ec3606cb21a44dad6795eb146217f0`
-
-Local rendering uses explicit `SCOUT_CLASSIC_GILL_SANS_REGULAR_PATH` and
-`SCOUT_CLASSIC_GILL_SANS_BOLD_PATH` values. There is no system-font fallback.
+Both are loaded directly from disk by `bunClassicFonts()`
+(`report/src/assets/classic-fonts.ts`), exactly like the marketing site's
+Beaufort/Spiegel fonts — no runtime download, no checksum manifest, and no
+environment variables. Rendering works identically in local dev, CI, and prod.
 
 ## Color
 
@@ -172,3 +169,28 @@ controls.
   relationships informed selected Scout tokens.
 - Gill Sans redistribution is not authorized. Only checksum-verified private
   runtime loading is permitted.
+
+## Session Log — 2026-07-30
+
+### Done
+
+- Superseded the private-font apparatus: the owner holds a **universal
+  redistribution license** for Gill Sans, so both Gill Sans and QTFrizQuad are
+  now committed under `report/src/assets/fonts/` and loaded directly by
+  `bunClassicFonts()`.
+- Removed the SeaweedFS download + SHA-256 checksum path, the
+  `classic-fonts.json` manifest, the `SCOUT_CLASSIC_GILL_SANS_*` env fallback,
+  the backend `ensureClassicFontsConfigured` startup step, the standalone
+  `scout-classic-visuals` Buildkite lane, and the `scout-classic-fonts` tofu
+  bucket resource. Updated the Licensing Boundary section above.
+
+### Remaining
+
+- Operator: decommission the now-unmanaged `scout-classic-fonts` SeaweedFS
+  bucket and its objects.
+
+### Caveats
+
+- **Supersedes the 2026-07-29 caveat above:** Gill Sans redistribution **is**
+  authorized under the owner's universal license; the private-only loading
+  requirement no longer applies.
