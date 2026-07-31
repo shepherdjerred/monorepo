@@ -36,7 +36,7 @@ const MAX_COUNT = 1000;
 const SCAN_FAILED = -1;
 
 export type ObserveAgentTaskTimeoutsResult = {
-  /** Number of timed-out agent tasks in the lookback window, or -1 if the scan failed. */
+  /** Number of timed-out agent tasks in the lookback window (always >= 0 — a failed scan throws so Temporal retries). */
   timeouts: number;
 };
 
@@ -62,12 +62,16 @@ export async function runObserveAgentTaskTimeouts(): Promise<ObserveAgentTaskTim
     Context.current().heartbeat();
     return { timeouts: count };
   } catch (error: unknown) {
-    // Non-fatal: record an explicit "scan failed" sentinel (alert on < 0) so a
-    // broken scan is distinguishable from a clean "no timeouts" result, then
-    // surface the error to Sentry.
+    // Record an explicit "scan failed" sentinel (alert on < 0) so a broken scan
+    // is distinguishable from a clean "no timeouts" result, surface the error to
+    // Sentry, then RETHROW so the activity fails and Temporal's retry policy
+    // (maximumAttempts: 3) can recover from a transient visibility-query blip.
+    // Only a scan that fails every attempt leaves the gauge at -1 for the < 0
+    // alert — a single connection/query hiccup self-heals on retry instead of
+    // firing the 30-minute alert.
     agentTaskTimeouts24h.set(SCAN_FAILED);
     Sentry.captureException(error);
-    return { timeouts: SCAN_FAILED };
+    throw error;
   }
 }
 
