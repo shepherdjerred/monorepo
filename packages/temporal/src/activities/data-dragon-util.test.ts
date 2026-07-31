@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   collectErrorMessages,
   dataDragonPrTitle,
-  hasMatchingPrTitle,
+  findDataDragonPr,
   isFinalAttempt,
   resolveTerminalFailureReason,
 } from "./data-dragon-util.ts";
@@ -25,24 +25,28 @@ describe("isFinalAttempt", () => {
   });
 });
 
-describe("hasMatchingPrTitle", () => {
-  test("matches an exact title for the target version", () => {
+describe("findDataDragonPr", () => {
+  test("returns the exact-title match for the target version", () => {
+    const match = { title: dataDragonPrTitle("16.15.1"), url: "https://pr/1" };
     expect(
-      hasMatchingPrTitle(
-        [dataDragonPrTitle("16.15.1"), "chore: something unrelated"],
+      findDataDragonPr(
+        [match, { title: "chore: something unrelated", url: "https://pr/2" }],
         "16.15.1",
       ),
-    ).toBe(true);
+    ).toBe(match);
   });
 
-  test("does not match a PR for a different version", () => {
-    expect(hasMatchingPrTitle([dataDragonPrTitle("16.15.0")], "16.15.1")).toBe(
-      false,
-    );
+  test("returns undefined for a PR targeting a different version", () => {
+    expect(
+      findDataDragonPr(
+        [{ title: dataDragonPrTitle("16.15.0"), url: "https://pr/1" }],
+        "16.15.1",
+      ),
+    ).toBeUndefined();
   });
 
-  test("does not match on an empty PR list", () => {
-    expect(hasMatchingPrTitle([], "16.15.1")).toBe(false);
+  test("returns undefined on an empty PR list", () => {
+    expect(findDataDragonPr([], "16.15.1")).toBeUndefined();
   });
 });
 

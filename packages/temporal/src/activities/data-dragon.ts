@@ -24,7 +24,7 @@ import {
   installScoutWorkspace,
 } from "./bot-clone.ts";
 import { recordAutoMergeFailure, recordRun } from "./data-dragon-metrics.ts";
-import { hasOpenDataDragonPr } from "./data-dragon-pr.ts";
+import { findOpenDataDragonPrUrl } from "./data-dragon-pr.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import {
   branchName,
@@ -154,6 +154,39 @@ async function changedFiles(repoDir: string): Promise<GitStatusEntry[]> {
     .filter((entry) => entry !== undefined);
 }
 
+/**
+ * Enables auto-merge on an already-open Data Dragon PR, idempotently. Shared by
+ * the create path and the dedup/retry path: `gh pr merge --auto` is safe to
+ * re-issue on a PR that already has auto-merge enabled, so a retry whose prior
+ * attempt died between `gh pr create` and `gh pr merge --auto` can finish the
+ * setup here instead of leaving the PR stuck. On failure it records the
+ * dedicated auto-merge-failure signal (so `ScoutDataDragonAutoMergeFailed`
+ * fires) and logs, but does NOT throw — a PR exists either way, and the failure
+ * is surfaced through its own alert rather than by failing the run. `--repo`
+ * plus the full PR URL resolves the PR via the API, so the working directory
+ * is irrelevant (the dedup path has no clone) — hence the fixed `/tmp` cwd.
+ */
+async function ensurePrAutoMerge(
+  prUrl: string,
+  githubToken: string,
+  mode: DataDragonUpdateMode,
+  logContext: Record<string, unknown>,
+): Promise<void> {
+  try {
+    await runCommand(
+      ["gh", "pr", "merge", "--repo", REPO_SLUG, "--auto", "--merge", prUrl],
+      { cwd: "/tmp", env: { GH_TOKEN: githubToken }, redactOutput: true },
+    );
+  } catch (error: unknown) {
+    recordAutoMergeFailure(mode);
+    jsonLog("warning", "Data Dragon PR auto-merge setup failed", {
+      ...logContext,
+      prUrl,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
 export type DataDragonActivities = typeof dataDragonActivities;
 
 export const dataDragonActivities = {
@@ -253,9 +286,21 @@ export const dataDragonActivities = {
       // open PR, and skips instead of opening a duplicate under a fresh
       // UUID-suffixed branch. It also short-circuits a prior scheduled run's
       // still-open PR, and does so before the expensive clone/install/refresh.
-      if (
-        await hasOpenDataDragonPr(REPO_SLUG, input.latestVersion, githubToken)
-      ) {
+      const existingPrUrl = await findOpenDataDragonPrUrl(
+        REPO_SLUG,
+        input.latestVersion,
+        githubToken,
+      );
+      if (existingPrUrl !== undefined) {
+        // The prior attempt may have died between `gh pr create` and `gh pr
+        // merge --auto`, leaving this PR open with auto-merge never enabled.
+        // Finish the setup idempotently so the retry doesn't leave the PR
+        // stuck (and so an auto-merge failure surfaces via its own alert)
+        // before treating the dedup skip as complete.
+        await ensurePrAutoMerge(existingPrUrl, githubToken, input.mode, {
+          ...input,
+          reason: "pr-already-open",
+        });
         const durationSeconds = (Date.now() - start) / 1000;
         recordRun({
           mode: input.mode,
@@ -267,6 +312,7 @@ export const dataDragonActivities = {
         });
         jsonLog("info", "Data Dragon update skipped; PR already open", {
           ...input,
+          prUrl: existingPrUrl,
           durationSeconds,
         });
         return {
@@ -274,7 +320,7 @@ export const dataDragonActivities = {
           changedFiles: [],
           branchName: undefined,
           commitHash: undefined,
-          prUrl: undefined,
+          prUrl: existingPrUrl,
           outcome: "skipped",
           reason: "pr-already-open",
         };
@@ -466,29 +512,10 @@ export const dataDragonActivities = {
         ],
         { cwd: repoDir, env: { GH_TOKEN: githubToken }, redactOutput: true },
       );
-      try {
-        await runCommand(
-          [
-            "gh",
-            "pr",
-            "merge",
-            "--repo",
-            REPO_SLUG,
-            "--auto",
-            "--merge",
-            prUrl,
-          ],
-          { cwd: repoDir, env: { GH_TOKEN: githubToken }, redactOutput: true },
-        );
-      } catch (error: unknown) {
-        recordAutoMergeFailure(input.mode);
-        jsonLog("warning", "Data Dragon PR auto-merge setup failed", {
-          ...input,
-          branch,
-          prUrl,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
+      await ensurePrAutoMerge(prUrl, githubToken, input.mode, {
+        ...input,
+        branch,
+      });
 
       recordRun({
         mode: input.mode,

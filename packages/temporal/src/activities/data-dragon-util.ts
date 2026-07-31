@@ -26,8 +26,8 @@ export function branchName(version: string, id: string): string {
 
 /**
  * The exact PR title used both when opening a new Data Dragon PR and when
- * checking for an already-open one (`hasOpenDataDragonPr` in data-dragon.ts).
- * A single source keeps the two paths from drifting apart — the dedup check
+ * checking for an already-open one (`findOpenDataDragonPrUrl` in
+ * data-dragon-pr.ts). A single source keeps the two paths from drifting apart — the dedup check
  * only works because it compares against literally the same string a PR
  * would be created with.
  */
@@ -36,17 +36,19 @@ export function dataDragonPrTitle(version: string): string {
 }
 
 /**
- * Whether an already-open PR (by title) targets this exact Data Dragon
- * version. GitHub's `--search` is fuzzy (its tokenizer doesn't treat a
- * version string's dots specially), so callers should search broadly on the
- * server side and use this for an exact client-side check.
+ * The already-open PR (by exact title) that targets this Data Dragon version,
+ * or `undefined` if none matches. GitHub's `--search` is fuzzy (its tokenizer
+ * doesn't treat a version string's dots specially), so callers should search
+ * broadly on the server side and use this for an exact client-side match.
+ * Returns the matched PR (not just a boolean) so the caller can recover its
+ * URL to finish auto-merge on the retry path.
  */
-export function hasMatchingPrTitle(
-  openPrTitles: string[],
+export function findDataDragonPr<T extends { title: string }>(
+  openPrs: readonly T[],
   version: string,
-): boolean {
+): T | undefined {
   const title = dataDragonPrTitle(version);
-  return openPrTitles.includes(title);
+  return openPrs.find((pr) => pr.title === title);
 }
 
 export function failureReason(error: unknown): string {
