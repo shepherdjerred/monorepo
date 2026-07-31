@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { fetchGithubTagArchive } from "./github-tag-archive.ts";
 import { HA_CUSTOM_COMPONENTS } from "./resources/home/ha-custom-components.ts";
 
 /**
@@ -57,16 +58,7 @@ async function applyPatchesDryRun(
 describeFn("HA custom-component tarball integrity", () => {
   for (const spec of HA_CUSTOM_COMPONENTS) {
     it(`${spec.repo}: recorded SHA-256 (${spec.sha256ConstName}) matches the actual GitHub release tarball`, async () => {
-      const url = `https://github.com/${spec.repo}/archive/refs/tags/${spec.version}.tar.gz`;
-
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(
-          `[${spec.repo}] Failed to fetch ${url}: ${String(response.status)} ${response.statusText}`,
-        );
-      }
-
-      const bytes = new Uint8Array(await response.arrayBuffer());
+      const bytes = await fetchGithubTagArchive(spec.repo, spec.version);
       const actual = createHash("sha256").update(bytes).digest("hex");
 
       expect(actual).toBe(spec.sha256);
