@@ -352,7 +352,39 @@ worst-case added delay (~10s across 3 attempts) is well under the 60s
 packages/homelab/src/cdk8s && bun run build && bun run test` (277 pass, 0
   fail); `bunx turbo run check:rehearsal --filter=@shepherdjerred/temporal`
   (passed). `bunx prettier --write` applied to reformat the new/edited files.
-- No deviations from the approved plan — all four fixes landed as designed.
+- The four fixes landed, but the PR review cycle (PR #1862) revised the design
+  of several of them; see **Post-review revisions** below. The plan body and the
+  Fix 1–4 bullets above describe the ORIGINAL approved approach and are kept for
+  history — follow the revisions section, not the plan body, for shipped behavior.
+
+### Post-review revisions (PR #1862)
+
+Codex review drove design corrections. The plan body and the Done bullets above
+describe the original approach; these supersede them:
+
+- **Fix 3 — dedup boundary is activity-local, NOT a workflow activity.** The
+  original plan wired a `hasOpenDataDragonPr` _workflow activity_ ahead of
+  `updateDataDragon`. That is retry-unsafe (Temporal retries the _activity_, so a
+  retry after a prior attempt already ran `gh pr create` would still open a
+  duplicate) and it adds a workflow command that breaks deterministic replay of
+  in-flight runs. Shipped instead: `hasOpenDataDragonPr` is a plain module helper
+  (`packages/temporal/src/activities/data-dragon-pr.ts`) called INSIDE the retried
+  `updateDataDragon` activity, before it creates a PR. The workflow command
+  sequence stays `getState → updateDataDragon`, so no `patched()` gate is needed.
+  **Do not move this check back into the workflow.**
+- **Fix 2 — auto-merge alert uses a recency gauge, not a counter query.** The
+  original `increase(scout_data_dragon_auto_merge_failures[24h]) > 0` misses the
+  first failure (the counter is born at 1, so `increase` is 0), and
+  `max_over_time(counter)` never ages out. Shipped instead: emit a
+  `scout_data_dragon_auto_merge_last_failure_timestamp` gauge and alert on
+  `time() - max_over_time(<gauge>[24h]) < 24h`, which fires on the first failure,
+  ages out 24h after the last, and survives single-replica worker restarts.
+- **Fix 1 — schedule timeout raised to 4h.** Both Data Dragon schedules'
+  `workflowExecutionTimeout` was raised 3h → 4h so the full ~194m retry budget
+  completes and the final attempt records its outcome before the deadline. A
+  residual gap — a final attempt killed by OOM / heartbeat-timeout terminates
+  outside the JS catch, so `outcome="failed"` is not recorded — is a known open
+  item under review, not yet resolved here.
 
 ### Remaining
 
