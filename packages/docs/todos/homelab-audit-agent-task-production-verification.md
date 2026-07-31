@@ -12,11 +12,13 @@ origin: packages/docs/archive/superseded/agent-task-workflow-broken.md
 
 The historical timeout and JSON-schema invocation defects had code fixes, but
 the underlying `structured_output` failure **regressed** on 2026-07-28
-(`b4dd81cc9`, "fix(ci): restore observability acceptance reporting #1785")
-and was root-caused and re-fixed on 2026-07-30 (this doc's update). The
-remaining question is whether `homelab-audit-daily` now runs cleanly on the
-deployed generic `agentTaskWorkflow` path with the split Claude/Codex schema
-constants.
+(`b4dd81cc9`, "fix(ci): restore observability acceptance reporting #1785").
+On 2026-07-30 a fix was applied based on the leading (but **unconfirmed**)
+hypothesis for that regression — see the caveat below for why local
+reproduction could not prove it. The remaining question is whether
+`homelab-audit-daily` now runs cleanly on the deployed generic
+`agentTaskWorkflow` path with the split Claude/Codex schema constants, which is
+also what will confirm or refute the hypothesis.
 
 ## What happened (2026-07-30 investigation)
 
@@ -30,14 +32,15 @@ constants.
   - 2026-07-30: the exact error `agent produced no structured output
 (expected --json-schema structured_output / --output-schema file)` at
     `packages/temporal/src/shared/agent-task.ts:173`.
-- Root cause identified for the 07-30 error: commit `b4dd81cc9` (2026-07-28)
-  changed the single shared `AGENT_TASK_OUTPUT_JSON_SCHEMA` constant from a
-  hand-written plain JSON Schema to one generated via OpenAI's
-  `zodResponseFormat()` (strict mode: every field required, optional fields
-  nullable) — fed to **both** Claude's `--json-schema` and Codex's
-  `--output-schema`. Codex needs strict mode (that was the PR's real, correct
-  motivation); Claude's `--json-schema` appears to silently drop
-  `structured_output` entirely when given the strict/nullable dialect.
+- Leading hypothesis for the 07-30 error (from code archaeology, **not**
+  empirically confirmed): commit `b4dd81cc9` (2026-07-28) changed the single
+  shared `AGENT_TASK_OUTPUT_JSON_SCHEMA` constant from a hand-written plain
+  JSON Schema to one generated via OpenAI's `zodResponseFormat()` (strict mode:
+  every field required, optional fields nullable) — fed to **both** Claude's
+  `--json-schema` and Codex's `--output-schema`. Codex needs strict mode (that
+  was the PR's real, correct motivation); the hypothesis is that Claude's
+  `--json-schema` silently drops `structured_output` entirely when given the
+  strict/nullable dialect. This is unproven — see the caveat below.
 - Fix: split into `AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE` (plain, generated via
   `z.toJSONSchema(AgentTaskResultPayloadSchema)`) and
   `AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX` (strict, unchanged), plus an
@@ -79,11 +82,16 @@ constants.
 - Created as the sole current production-health criterion for the scheduled
   audit workflow.
 
-### 2026-07-30 — regression found, root-caused, and fixed
+### 2026-07-30 — regression found, hypothesized fix applied
 
 - Live Temporal cluster + git history investigation found the exact failure
-  had regressed on 2026-07-28 (schema-dialect change), not merely "not yet
-  proven fixed" as this doc previously implied. Root-caused and fixed via the
-  Claude/Codex schema split (see PR). Local empirical verification of the
-  fix was inconclusive (see caveat above) — status kept at `in-progress`
-  pending the real production cron run rather than marked complete.
+  had regressed on 2026-07-28 (correlated with the schema-dialect change), not
+  merely "not yet proven fixed" as this doc previously implied. A fix was
+  applied via the Claude/Codex schema split (see PR) on the leading hypothesis
+  that the strict/nullable dialect breaks Claude's `--json-schema`. Local
+  empirical verification of the fix was inconclusive (see caveat above), and
+  the schema, model, and turn limit all differed between the compared runs, so
+  the schema dialect is not isolated as the cause — status kept at
+  `in-progress` pending the real production cron run rather than marked
+  complete. Treat the schema-dialect explanation as unconfirmed until that run
+  (or an independent reproduction) confirms it.
