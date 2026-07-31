@@ -55,7 +55,7 @@ records the pinned baseline, the patches, and the update procedure. Our changes:
 
 [`scripts/build-wasm.ts`](./scripts/build-wasm.ts) compiles
 the core into `packages/backend/assets/n64wasm/` using the pinned
-`emscripten/emsdk:2.0.34` image.
+`emscripten/emsdk:6.0.5` image.
 
 > **Do not define `window`.** The emscripten glue must detect
 > `ENVIRONMENT_IS_NODE` only; if it also detects a web environment its FS path
@@ -101,7 +101,8 @@ bun run e2e:scenario 2p --watch            # log state transitions (menu → sta
 bun run e2e:scenario 1p --names Me,Bot     # override the burned-in names
 
 # Lower-level scripts:
-bun run e2e:input:check       # baseline vs START, asserts the frame changes (frame-hash)
+bun run e2e:input:check ~/syncthing/Sync/roms/mariokart64.z64
+                               # baseline vs START, asserts the frame changes
 bun run e2e:race "" 6000 start-mash  # stream raw RDRAM globals (validate the address map)
 ```
 
@@ -168,3 +169,22 @@ Two things are provisioned out-of-band (by design):
 ## Disclaimer
 
 A fan project, unaffiliated with Nintendo, Mario Kart, or Twitch Plays Pokémon.
+
+## Session Log — 2026-07-29
+
+### Done
+
+- Updated the documented Emscripten build image from 2.0.34 to 6.0.5.
+- Clarified that the input assertion requires an explicit ROM path.
+- Verified the real patched build, ROM-free Worker host, and canonical-ROM input
+  path with Emscripten 6.0.5.
+
+### Remaining
+
+- Land the Emscripten 6.0.5 dependency PR after Buildkite and the dependency
+  stability gate pass.
+
+### Caveats
+
+- The generated WASM assets and canonical ROM remain local-only and are not
+  committed.

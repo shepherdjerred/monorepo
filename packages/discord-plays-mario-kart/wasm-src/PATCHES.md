@@ -135,7 +135,7 @@ on demand when you want a specific upstream fix.
 ## Build
 
 `scripts/build-wasm.ts` stages pristine `code/`, applies `patches/`, and runs
-`make` inside `emscripten/emsdk` (pinned 2.0.7), emitting `n64wasm.js` +
+`make` inside `emscripten/emsdk` (pinned 6.0.5), emitting `n64wasm.js` +
 `n64wasm.wasm` and copying them (plus the MEMFS assets `shader_vert.hlsl`,
 `shader_frag.hlsl`, `overlay.png`, `res/arial.ttf`) into the backend's
 `assets/n64wasm/`. The CI image build (Dagger, `.dagger/src/image.ts`) does the
@@ -146,3 +146,23 @@ same in its emscripten stage.
 Do **not** define `globalThis.window` — emscripten must run as
 `ENVIRONMENT_IS_NODE` only, or the dual WEB+NODE path null-traps `fseek`. The GL
 calls go to a stub (no real GPU); the frame is read via `neilGetVideoBuffer`.
+
+## Session Log — 2026-07-29
+
+### Done
+
+- Updated the documented and executable Emscripten build baseline to 6.0.5.
+- Applied the complete patch series and compiled the frozen upstream source with
+  the pinned 6.0.5 container.
+- Passed the generated-runtime Worker smoke and canonical-ROM controller-input
+  assertion.
+
+### Remaining
+
+- Land the Emscripten 6.0.5 dependency PR after Buildkite and the dependency
+  stability gate pass.
+
+### Caveats
+
+- Compiler warnings from the frozen upstream source remain warnings; the build
+  completed successfully without weakening diagnostics.
