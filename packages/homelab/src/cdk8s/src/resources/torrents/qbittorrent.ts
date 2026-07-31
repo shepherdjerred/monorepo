@@ -187,6 +187,21 @@ export function createQBitTorrentDeployment(
     shelfbridgeRelayConfig,
   );
 
+  // Pod-template annotation so a relay-config change triggers a rollout. The
+  // HAProxy config is mounted via subPath (below), which K8s never hot-reloads,
+  // and HAProxy has no in-place reload here — so without this, editing
+  // SHELFBRIDGE_RELAY_CONFIG (e.g. the pinned ShelfBridge backend address)
+  // updates only the fixed-name ConfigMap while the running pod keeps serving
+  // the stale config until an unrelated restart, leaving webseeds broken behind
+  // a Synced ArgoCD application. Deterministic over the config string, so an
+  // unchanged config yields the same hash (no spurious rollout or ArgoCD drift).
+  const relayConfigHasher = new Bun.CryptoHasher("sha256");
+  relayConfigHasher.update(SHELFBRIDGE_RELAY_CONFIG);
+  deployment.podMetadata.addAnnotation(
+    "shelfbridge-relay-config-hash",
+    relayConfigHasher.digest("hex").slice(0, 12),
+  );
+
   // Runs as root so it can write to a fresh, root-owned PVC during disaster
   // recovery. Seeding (the cp) is conditional — seed-if-absent so a live conf
   // is never clobbered — but the ownership repair (chown -R) runs every
