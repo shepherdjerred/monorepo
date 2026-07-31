@@ -118,6 +118,9 @@ export function createPostalDeployment(
     // SMTP server hostname (for outbound mail identification)
     POSTAL_SMTP_HOSTNAME: EnvValue.fromValue("postal.tailnet-1a49.ts.net"),
 
+    // Postal checks the sending domain's SPF record for this relay provider.
+    DNS_SPF_INCLUDE: EnvValue.fromValue("spf.messagingengine.com"),
+
     // Return path domain for bounce handling
     // This fixes Gmail delivery issues caused by default "postal.example.com" placeholder
     DNS_RETURN_PATH_DOMAIN: EnvValue.fromValue("rp.sjer.red"),
