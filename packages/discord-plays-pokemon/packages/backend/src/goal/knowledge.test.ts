@@ -310,6 +310,106 @@ describe("knowledge passage matching", () => {
         .map((result) => result.id),
     ).toEqual(["world:complete", "world:partial"]);
   });
+
+  test("ranks complete term coverage above an exact-title metadata bonus", () => {
+    const base = new KnowledgeBase([
+      {
+        id: "world:alpha-title",
+        domain: "world",
+        title: "Alpha",
+        aliases: [],
+        tags: [],
+        body: "Alpha beta are adjacent.",
+        sources: [testSource],
+      },
+      {
+        id: "world:complete",
+        domain: "world",
+        title: "Complete evidence",
+        aliases: [],
+        tags: [],
+        body: `Alpha ${"intervening details ".repeat(40)}beta ${"more intervening details ".repeat(40)}gamma.`,
+        sources: [testSource],
+      },
+    ]);
+
+    expect(
+      base
+        .search("alpha beta gamma", { domain: "world", limit: 2 })
+        .map((result) => result.id),
+    ).toEqual(["world:complete", "world:alpha-title"]);
+  });
+
+  test("ranks complete term coverage above repeated occurrence frequency", () => {
+    const base = new KnowledgeBase([
+      {
+        id: "world:repeated",
+        domain: "world",
+        title: "Repeated partial evidence",
+        aliases: [],
+        tags: [],
+        body: "Alpha beta. ".repeat(10),
+        sources: [testSource],
+      },
+      {
+        id: "world:complete",
+        domain: "world",
+        title: "Complete evidence",
+        aliases: [],
+        tags: [],
+        body: `Alpha ${"intervening details ".repeat(40)}beta ${"more intervening details ".repeat(40)}gamma.`,
+        sources: [testSource],
+      },
+    ]);
+
+    expect(
+      base
+        .search("alpha beta gamma", { domain: "world", limit: 2 })
+        .map((result) => result.id),
+    ).toEqual(["world:complete", "world:repeated"]);
+  });
+
+  test("keeps the later matched term visible when the window is wide", () => {
+    const base = new KnowledgeBase([
+      {
+        id: "world:wide-window",
+        domain: "world",
+        title: "Wide window",
+        aliases: [],
+        tags: [],
+        body: `Alpha begins the passage. ${"filler ".repeat(220)}The gamma marker appears near the end.`,
+        sources: [testSource],
+      },
+    ]);
+
+    const result = base
+      .search("alpha gamma", { domain: "world", limit: 1 })
+      .at(0);
+
+    expect(result?.id).toBe("world:wide-window");
+    expect(result?.excerpt).toContain("gamma marker");
+  });
+
+  test("prefers the closest passage when clamped proximity ties", () => {
+    const base = new KnowledgeBase([
+      {
+        id: "world:tied-spans",
+        domain: "world",
+        title: "Tied spans",
+        aliases: [],
+        tags: [],
+        body: `Alpha ${"detail ".repeat(160)}beta far apart.\n\nAlpha ${"detail ".repeat(110)}beta closestmarker here.`,
+        sources: [testSource],
+      },
+    ]);
+
+    const result = base
+      .search("alpha beta", { domain: "world", limit: 1 })
+      .at(0);
+
+    expect(result?.id).toBe("world:tied-spans");
+    expect(result?.excerpt).toContain("closestmarker");
+  });
 });
 
 describe("committed knowledge corpus", () => {

@@ -108,7 +108,9 @@ type AcquisitionEvidence = Readonly<{
 
 type PassageEvidence = Readonly<{
   score: number;
-  position: number;
+  span: number;
+  start: number;
+  end: number;
 }>;
 
 type TermOccurrence = Readonly<{
@@ -119,8 +121,11 @@ type TermOccurrence = Readonly<{
 type MatchingWindow = Readonly<{
   coverage: number;
   span: number;
-  position: number;
+  start: number;
+  end: number;
 }>;
+
+type ExcerptAnchor = Readonly<{ start: number; end: number }>;
 
 function normalize(value: string): string {
   return value
@@ -171,7 +176,8 @@ function matchingWindow(
   let coveredTerms = 0;
   let leftIndex = 0;
   let bestSpan = Number.POSITIVE_INFINITY;
-  let bestPosition = 0;
+  let bestStart = 0;
+  let bestEnd = 0;
 
   for (const right of termOccurrences) {
     const rightCount = counts.get(right.term) ?? 0;
@@ -188,7 +194,8 @@ function matchingWindow(
       const span = right.position - left.position;
       if (span < bestSpan) {
         bestSpan = span;
-        bestPosition = left.position;
+        bestStart = left.position;
+        bestEnd = right.position + right.term.length;
       }
       const leftCount = counts.get(left.term);
       if (leftCount === undefined) {
@@ -204,7 +211,7 @@ function matchingWindow(
     }
   }
 
-  return { coverage, span: bestSpan, position: bestPosition };
+  return { coverage, span: bestSpan, start: bestStart, end: bestEnd };
 }
 
 function occurrences(haystack: string, needle: string): number {
@@ -301,11 +308,45 @@ function passageEvidence(
               Math.max(0, 1 - window.span / PROXIMITY_MAX_SPAN),
           );
     const score = window.coverage * COVERAGE_TERM_SCORE + proximityScore;
-    if (best === undefined || score > best.score) {
-      best = { score, position: position + window.position };
+    // Break score ties with the raw span so the closest passage wins even when
+    // both spans exceed PROXIMITY_MAX_SPAN and share a clamped proximity of 0.
+    const isBetter =
+      best === undefined ||
+      score > best.score ||
+      (score === best.score && window.span < best.span);
+    if (isBetter) {
+      best = {
+        score,
+        span: window.span,
+        start: position + window.start,
+        end: position + window.end,
+      };
     }
   }
   return best;
+}
+
+// Distinct query terms the record covers anywhere in its searchable text. This
+// is the primary ranking key: answering more of the query outranks answering
+// less, before any additive relevance, proximity, occurrence, or metadata bonus.
+// Coverage uses the same whole-word-plus-component tokenization as
+// `matchingWindow`, so `route101` covers both `route` and `101` while `cut`
+// inside `shortcut` does not count.
+function recordCoverage(
+  record: KnowledgeRecord,
+  queryTerms: readonly string[],
+): number {
+  const queryTermSet = new Set(queryTerms);
+  const covered = new Set<string>();
+  const searchable = `${record.title} ${record.aliases.join(" ")} ${record.tags.join(" ")} ${record.body}`;
+  for (const match of searchable.matchAll(/[\p{L}\p{N}]+/gu)) {
+    const token = normalize(match[0]);
+    if (queryTermSet.has(token)) covered.add(token);
+    for (const component of token.matchAll(/\p{L}+|\p{N}+/gu)) {
+      if (queryTermSet.has(component[0])) covered.add(component[0]);
+    }
+  }
+  return covered.size;
 }
 
 function scoreRecord(
@@ -331,14 +372,27 @@ function scoreRecord(
   return relevanceScore + evidenceScore;
 }
 
+const EXCERPT_PAD_CHARS = 200;
+
+// Bias the excerpt toward leading context, but when the matching window is too
+// wide to keep its right edge inside the fixed-width slice, shift right so the
+// later matched term stays visible instead of being dropped.
+function excerptStart(range: ExcerptAnchor): number {
+  let start = range.start - EXCERPT_PAD_CHARS;
+  if (range.end + EXCERPT_PAD_CHARS > start + SEARCH_EXCERPT_CHARS) {
+    start = range.end + EXCERPT_PAD_CHARS - SEARCH_EXCERPT_CHARS;
+  }
+  return Math.max(0, start);
+}
+
 function excerpt(
   body: string,
   queryTerms: readonly string[],
-  preferredPosition?: number,
+  anchor?: ExcerptAnchor,
 ): string {
-  const first =
-    preferredPosition ?? matchingWindow(body, queryTerms)?.position ?? 0;
-  const start = Math.max(0, first - 200);
+  const window = anchor ?? matchingWindow(body, queryTerms);
+  const range: ExcerptAnchor = window ?? { start: 0, end: 0 };
+  const start = excerptStart(range);
   const sliced = body.slice(start, start + SEARCH_EXCERPT_CHARS);
   return `${start > 0 ? "…" : ""}${sliced}${start + sliced.length < body.length ? "…" : ""}`;
 }
@@ -376,10 +430,16 @@ export class KnowledgeBase {
           ? acquisitionEvidence(record, queryTerms)
           : undefined;
         const passage = passageEvidence(record, queryTerms);
-        const preferredEvidence = acquisition ?? passage;
+        const anchor: ExcerptAnchor | undefined =
+          acquisition === undefined
+            ? passage === undefined
+              ? undefined
+              : { start: passage.start, end: passage.end }
+            : { start: acquisition.position, end: acquisition.position };
         return {
           record,
-          preferredEvidence,
+          anchor,
+          coverage: recordCoverage(record, queryTerms),
           score: scoreRecord(
             record,
             queryTerms,
@@ -389,16 +449,19 @@ export class KnowledgeBase {
       })
       .filter((candidate) => candidate.score > 0)
       .sort(
+        // Coverage before the additive score so complete query-term coverage
+        // always outranks a partial match's proximity/occurrence/metadata bonus.
         (left, right) =>
+          right.coverage - left.coverage ||
           right.score - left.score ||
           left.record.title.localeCompare(right.record.title),
       )
       .slice(0, options.limit)
-      .map(({ record, score, preferredEvidence }) => ({
+      .map(({ record, score, anchor }) => ({
         id: record.id,
         domain: record.domain,
         title: record.title,
-        excerpt: excerpt(record.body, queryTerms, preferredEvidence?.position),
+        excerpt: excerpt(record.body, queryTerms, anchor),
         sources: record.sources,
         score,
       }));
