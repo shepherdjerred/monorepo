@@ -40,16 +40,27 @@ export function hasTrimmedLine(
   return block?.split("\n").some((line) => line.trim() === expected) ?? false;
 }
 
-// Assert exactly one bare `bun install --frozen-lockfile` exists and that it
-// belongs to the verify step's block, so no other lane can restore a full root
-// install.
+// Assert every install uses the shared-lock wrapper and exactly one unfiltered
+// invocation belongs to verify, so no lane can bypass cache collection
+// coordination or restore a full root install.
 export function assertUnfilteredInstallBelongsToVerify(
   lines: string[],
   stepStarts: number[],
 ): void {
+  const directBunInstalls = lines
+    .map((line, index) => ({ line: line.trim(), index }))
+    .filter((entry) => /\bbun install(?:\s|$)/.test(entry.line));
+  if (directBunInstalls.length > 0) {
+    fail(
+      `all installs must use .buildkite/scripts/bun-install.sh; found ${directBunInstalls.length.toString()} direct invocation(s)`,
+    );
+  }
   const unfilteredInstalls = lines
     .map((line, index) => ({ line: line.trim(), index }))
-    .filter((entry) => entry.line === "bun install --frozen-lockfile");
+    .filter(
+      (entry) =>
+        entry.line === ".buildkite/scripts/bun-install.sh --frozen-lockfile",
+    );
   if (unfilteredInstalls.length !== 1) {
     fail(
       `expected one unfiltered root install, found ${unfilteredInstalls.length.toString()}`,

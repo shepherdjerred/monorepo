@@ -5,6 +5,7 @@ import path from "node:path";
 
 import {
   assertPackageTokens,
+  assertUnfilteredInstallBelongsToVerify,
   FORBIDDEN_DOCKER_IN_DOCKER_PATTERNS,
 } from "./validate-pipeline-lib.ts";
 
@@ -161,6 +162,34 @@ describe("CI package tool dependency guard", () => {
           `[validate-pipeline] CI package ${manifestPath} has invalid scripts.typecheck command "bunx --no-install tsc --noEmit"; expected ${nativeTypeScriptCommands.join(" or ")}`,
         );
       },
+    );
+  });
+});
+
+describe("Bun install cache-lock guard", () => {
+  test("accepts the one unfiltered wrapper invocation in verify", () => {
+    const lines = [
+      "  - label: verify",
+      "    key: verify",
+      "    command: |",
+      "      .buildkite/scripts/bun-install.sh --frozen-lockfile",
+    ];
+
+    expect(() =>
+      assertUnfilteredInstallBelongsToVerify(lines, [0]),
+    ).not.toThrow();
+  });
+
+  test("rejects direct Bun installs that bypass the shared cache lock", () => {
+    const lines = [
+      "  - label: verify",
+      "    key: verify",
+      "    command: |",
+      "      bun install --frozen-lockfile",
+    ];
+
+    expect(() => assertUnfilteredInstallBelongsToVerify(lines, [0])).toThrow(
+      "all installs must use .buildkite/scripts/bun-install.sh",
     );
   });
 });

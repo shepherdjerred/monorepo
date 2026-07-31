@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
 import { rm } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 
 import { setupGitAuth } from "../../scripts/lib/github-auth.ts";
 import { run, runAllowExit, tmpBase } from "../../scripts/lib/run.ts";
@@ -29,6 +30,9 @@ import {
 const MONOREPO_REPO = "shepherdjerred/monorepo";
 const MONOREPO_WRITE_URL = `https://github.com/${MONOREPO_REPO}.git`;
 const COMMIT_PATTERN = /^[\da-f]{40}$/;
+const BUN_INSTALL_WRAPPER = fileURLToPath(
+  new URL("bun-install.sh", import.meta.url),
+);
 
 async function readStateFile(path: string): Promise<CiImagePinState> {
   return parseCiImagePinState(await Bun.file(path).json());
@@ -206,7 +210,7 @@ async function preparePlaywrightPromotion(
     await Bun.write(versionPath, `${version}\n`);
   }
   if (packageChanged) {
-    await run(["bun", "install", "--lockfile-only"], {
+    await run([BUN_INSTALL_WRAPPER, "--lockfile-only"], {
       cwd: cloneDir,
       env: { ...env, PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1" },
     });

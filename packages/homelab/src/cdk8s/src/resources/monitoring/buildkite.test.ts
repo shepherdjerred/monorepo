@@ -5,6 +5,10 @@ import {
   BUILDKITE_CONTROLLER_METRICS_INTERVAL,
   createBuildkiteMonitoring,
 } from "./buildkite.ts";
+import {
+  BUILDKITE_BUN_CACHE_GC_CRONJOB,
+  BUILDKITE_BUN_CACHE_PVC,
+} from "./monitoring/rules/buildkite.ts";
 
 const MetadataSchema = z
   .object({
@@ -125,5 +129,77 @@ describe("Buildkite monitoring manifests", () => {
       "5m",
       "30s",
     ]);
+
+    const alertGroup = prometheusRule.spec.groups.find(
+      (group) => group.name === "buildkite-ci-io-alerts",
+    );
+    if (alertGroup === undefined) {
+      throw new Error("Missing Buildkite alert group");
+    }
+    const alerts = alertGroup.rules.flatMap((rule) => {
+      const alert = rule["alert"];
+      return typeof alert === "string" ? [rule] : [];
+    });
+    const bunCacheWarning = alerts.find(
+      (rule) => rule["alert"] === "BuildkiteBunCacheUsageHigh",
+    );
+    const bunCacheCritical = alerts.find(
+      (rule) => rule["alert"] === "BuildkiteBunCacheUsageCritical",
+    );
+    const collectorStale = alerts.find(
+      (rule) => rule["alert"] === "BuildkiteBunCacheCollectorStale",
+    );
+
+    expect(bunCacheWarning).toMatchObject({
+      for: "10m",
+      labels: {
+        severity: "warning",
+        category: "ci",
+        namespace: "buildkite",
+      },
+    });
+    expect(String(bunCacheWarning?.["expr"])).toContain(
+      `persistentvolumeclaim="${BUILDKITE_BUN_CACHE_PVC}"`,
+    );
+    expect(String(bunCacheWarning?.["expr"])).toContain("> 0.75");
+    expect(String(bunCacheWarning?.["expr"])).toContain(
+      "zfs_dataset_used_bytes",
+    );
+    expect(String(bunCacheWarning?.["expr"])).toContain(
+      "kube_persistentvolumeclaim_info",
+    );
+
+    expect(bunCacheCritical).toMatchObject({
+      for: "5m",
+      labels: {
+        severity: "critical",
+        category: "ci",
+        namespace: "buildkite",
+      },
+    });
+    expect(String(bunCacheCritical?.["expr"])).toContain("> 0.9");
+
+    expect(collectorStale).toMatchObject({
+      for: "1m",
+      labels: {
+        severity: "warning",
+        category: "ci",
+        namespace: "buildkite",
+      },
+    });
+    expect(String(collectorStale?.["expr"])).toContain(
+      `cronjob="${BUILDKITE_BUN_CACHE_GC_CRONJOB}"`,
+    );
+    expect(String(collectorStale?.["expr"])).toContain(
+      "kube_cronjob_status_last_successful_time",
+    );
+    expect(String(collectorStale?.["expr"])).toContain("kube_cronjob_created");
+    expect(String(collectorStale?.["expr"])).toContain("> 1200");
+    // A deleted/never-created CronJob leaves both counter series absent, so the
+    // time()-based branches evaluate to empty vectors. The explicit absent()
+    // branch keeps the alert firing when the collector itself is missing.
+    expect(String(collectorStale?.["expr"])).toContain(
+      `absent(\n  kube_cronjob_created{\n    namespace="buildkite",\n    cronjob="${BUILDKITE_BUN_CACHE_GC_CRONJOB}"\n  }\n)`,
+    );
   });
 });

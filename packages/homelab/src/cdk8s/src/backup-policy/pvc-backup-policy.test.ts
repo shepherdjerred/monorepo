@@ -13,7 +13,10 @@ import {
   PVC_BACKUP_POLICY,
   pvcBackupPolicyKey,
 } from "./pvc-backup-policy.ts";
-import { createPvcBackupAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/pvc-backup-admission.ts";
+import {
+  createPvcBackupAdmissionPolicies,
+  PVC_BACKUP_ADMISSION_SYNC_WAVE,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/pvc-backup-admission.ts";
 
 const ManifestSchema = z.object({
   kind: z.string(),
@@ -21,6 +24,7 @@ const ManifestSchema = z.object({
     name: z.string(),
     namespace: z.string().optional(),
     labels: z.record(z.string(), z.string()).optional(),
+    annotations: z.record(z.string(), z.string()).optional(),
   }),
 });
 
@@ -131,6 +135,22 @@ describe("PVC backup policy", () => {
     expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(1);
     expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(1);
   }, 20_000);
+
+  it("syncs admission policy updates before PVC changes", () => {
+    const app = new App();
+    const chart = new Chart(app, "pvc-backup-admission");
+    createPvcBackupAdmissionPolicies(chart);
+    const admissionObjects = parseAllDocuments(app.synthYaml())
+      .map((document) => ManifestSchema.parse(document.toJS()))
+      .filter((manifest) => manifest.kind.includes("AdmissionPolicy"));
+
+    expect(admissionObjects).toHaveLength(6);
+    for (const manifest of admissionObjects) {
+      expect(manifest.metadata.annotations).toEqual({
+        "argocd.argoproj.io/sync-wave": PVC_BACKUP_ADMISSION_SYNC_WAVE,
+      });
+    }
+  });
 
   it("checks deletion timestamp presence without reading an absent field", () => {
     const app = new App();

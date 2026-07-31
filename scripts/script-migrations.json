@@ -93,6 +93,11 @@
       ]
     },
     {
+      "source": ".buildkite/scripts/bun-install.sh",
+      "disposition": "retain",
+      "reason": "Must acquire a Linux flock file descriptor before invoking Bun"
+    },
+    {
       "source": ".buildkite/scripts/ci-changed.sh",
       "disposition": "port",
       "reason": "Large lane selector benefits from typed data and fixtures",
@@ -366,6 +371,11 @@
         "packages/homelab/scripts/velero-backups.test.ts",
         "packages/homelab/scripts/migration-smoke.test.ts"
       ]
+    },
+    {
+      "source": "packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite-bun-cache-gc.sh",
+      "disposition": "retain",
+      "reason": "ConfigMap-mounted maintenance entrypoint coordinates Linux filesystem utilities under flock"
     },
     {
       "source": "packages/homelab/src/cdk8s/src/resources/configs/qbittorrent/check-config-drift.sh",

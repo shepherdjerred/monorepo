@@ -212,6 +212,12 @@ common:
           limit: 2
 
 env:
+  # New pipelines use a coordinated subdirectory. Once the matching agent-stack
+  # change removes its legacy PodSpec-level cache override, older branch
+  # pipelines fall back to per-pod ephemeral caching instead of writing to the
+  # shared cache without taking its lock.
+  BUN_INSTALL_CACHE_DIR: /buildkite/bun-cache/data
+  BUN_CACHE_LOCK_FILE: /buildkite/bun-cache-control/.gc.lock
   TURBO_SCM_BASE: "origin/main"
   TURBO_TELEMETRY_DISABLED: "1"
   # Remote cache (ducktors/turborepo-remote-cache, R2-backed). CI pods run
@@ -269,7 +275,7 @@ steps:
     command: |
       . .buildkite/scripts/toolchain.sh
       bun --no-install .buildkite/scripts/validate-pipeline.ts
-      bun install --frozen-lockfile
+      .buildkite/scripts/bun-install.sh --frozen-lockfile
       # CI is the cross-machine cache producer/consumer. Developer shells use
       # local-only caching by default to avoid large transfers on weak Wi-Fi.
       export TURBO_CACHE="local:rw,remote:rw"
@@ -325,7 +331,7 @@ steps:
         - "scripts/lib/run.ts"
     cancel_on_build_failing: true
     command: |
-      bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo'
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo'
       bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --concurrency=2
     retry: *retry
     plugins:
@@ -362,7 +368,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       if [ "$(buildkite-agent meta-data get ci-lane-run-playwright --default true)" != true ]; then exit 0; fi
-      bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo'
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo'
       bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --concurrency=2
     artifact_paths:
       - "packages/sjer.red/dist/**/*"
@@ -503,7 +509,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile --filter '@shepherdjerred/llm-observability'
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/llm-observability'
       bun --no-install run --cwd packages/llm-observability test:e2e:ci
     retry: *retry
     plugins:
@@ -561,7 +567,7 @@ steps:
     command: |
       if ! bun --no-install .buildkite/scripts/ci-changed.ts docker-e2e; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile --filter '@shepherdjerred/llm-observability'
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/llm-observability'
       bun --no-install run --cwd packages/llm-observability test:e2e:ci
     retry: *retry
     plugins:
@@ -850,7 +856,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       bun --no-install scripts/wait-for-review.ts
     retry: *retry
     plugins:
@@ -929,7 +935,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter homelab --filter '@homelab/cdk8s'
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter homelab --filter '@homelab/cdk8s'
       # Merge-base for section gating; unresolvable → empty → ci-changed.ts
       # fails open and every section runs (extra work, never lost coverage).
       if ! CI_CHANGED_BASE=$(git merge-base origin/main HEAD); then
@@ -1187,7 +1193,7 @@ steps:
         filters+=(--filter glitter)
       fi
       if [ "$${#filters[@]}" -gt 0 ]; then
-        bun install --frozen-lockfile "$${filters[@]}"
+        .buildkite/scripts/bun-install.sh --frozen-lockfile "$${filters[@]}"
       fi
       # Site syncs push to SeaweedFS S3 — same credential mapping as the
       # tofu steps (the secret exposes SEAWEEDFS_*, the AWS CLI wants AWS_*).
@@ -1249,7 +1255,7 @@ steps:
         filters+=(--filter astro-opengraph-images --filter webring --filter '@shepherdjerred/helm-types')
       fi
       if $$cooklang_changed; then filters+=(--filter cooklang-for-obsidian); fi
-      bun install --frozen-lockfile "$${filters[@]}"
+      .buildkite/scripts/bun-install.sh --frozen-lockfile "$${filters[@]}"
       if $$npm_changed; then
         bun --no-install run --cwd packages/astro-opengraph-images publish:npm
         bun --no-install run --cwd packages/webring publish:npm
@@ -1289,7 +1295,7 @@ steps:
         exit 0
       fi
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile --filter homelab --filter '@homelab/cdk8s' --production
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --filter '@homelab/cdk8s' --production
       export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
       bun --no-install packages/homelab/scripts/argocd.ts suspend-auto-sync apps --timeout 300
       export HOMELAB_IMAGE_DIGESTS_JSON="$$image_digests"
@@ -1369,7 +1375,7 @@ steps:
       if [ "$$image_digests" != "{}" ]; then release_requested=true; fi
       if ! $$release_requested; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile --filter homelab --filter '@homelab/cdk8s' --production
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --filter '@homelab/cdk8s' --production
       # The CI secret uses the argocd CLI's canonical ARGOCD_AUTH_TOKEN name;
       # argocd.ts reads ARGOCD_TOKEN (build 5648).
       export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
@@ -1406,7 +1412,7 @@ steps:
       fi
       if [ -z "$$scout_candidate" ] && ! $$scout_source_changed; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile \
+      .buildkite/scripts/bun-install.sh --frozen-lockfile \
         --filter '@shepherdjerred/root-scripts' \
         --filter '@scout-for-lol/frontend' \
         --filter '@scout-for-lol/app' \
@@ -1449,7 +1455,7 @@ steps:
       scout_state=$$(buildkite-agent meta-data get scout-release-state --default "")
       if [ -z "$$scout_state" ]; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       printf '%s' "$$GH_TOKEN" | docker login ghcr.io -u shepherdjerred --password-stdin
       bun --no-install scripts/scout-site-release.ts tag-release --state "$$scout_state"
@@ -1477,7 +1483,7 @@ steps:
     command: |
       if ! bun --no-install .buildkite/scripts/ci-changed.ts scout-reconcile; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       prod_pin=$$(bun --no-install scripts/scout-site-release.ts resolve-prod-pin)
       bun --no-install scripts/scout-site-release.ts reconcile-prod-pin --prod-pin "$$prod_pin"
@@ -1503,7 +1509,7 @@ steps:
         if ! bun --no-install .buildkite/scripts/ci-changed.ts argocd; then exit 0; fi
       fi
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile --filter '@homelab/cdk8s' --filter homelab --production
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@homelab/cdk8s' --filter homelab --production
       # Same ARGOCD_AUTH_TOKEN → ARGOCD_TOKEN mapping as the sync step.
       export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
       bun --no-install packages/homelab/scripts/argocd.ts wait-deletion apps --group networking.cfargotunnel.com --version v1alpha1 --kind TunnelBinding --namespace seaweedfs --timeout 120
@@ -1535,7 +1541,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --production
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --production
       bun --no-install scripts/release.ts
     # Safe to retry: release-please upserts its PR and skips already-cut
     # releases; a GitHub GraphQL 500 (build 5809) exits 34 via transient.ts.
@@ -1562,7 +1568,7 @@ steps:
     concurrency_group: monorepo/version-commit-back
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       bun --no-install scripts/update-versions.ts --commit-back --candidates "$$(buildkite-agent meta-data get pin-candidates)"
     # Safe to retry: the bump branch is force-updated and the PR lookup is
     # find-or-create; transient gh/git failures exit 34 via transient.ts.

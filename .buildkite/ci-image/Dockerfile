@@ -74,8 +74,10 @@ RUN bun add -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" && claude --ve
 # every lockfile change; CI pods now share a persistent node-local cache
 # volume instead (buildkite-bun-cache PVC, mounted by the agent-stack
 # pod-spec-patch in packages/homelab/src/cdk8s/src/resources/argo-applications/
-# buildkite.ts, with BUN_INSTALL_CACHE_DIR pointing at the mount). The shared
-# cache stays warm across builds without living in the image; if it's absent,
-# bun degrades gracefully to network fetches.
+# buildkite.ts). The static pipeline points BUN_INSTALL_CACHE_DIR at the
+# mount's data subdirectory. Every install holds a shared lock while the
+# threshold-based collector takes the exclusive lock before clearing the
+# cache. The shared cache stays warm across builds without living in the image;
+# if it's absent, Bun degrades gracefully to network fetches.
 
 CMD ["bash"]

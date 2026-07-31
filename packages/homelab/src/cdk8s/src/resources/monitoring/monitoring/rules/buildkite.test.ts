@@ -208,10 +208,12 @@ describe("Buildkite CI I/O informational alerts", () => {
     expect(rule.labels?.["severity"]).toBe("info");
   });
 
-  it("routes every new alert as non-paging informational telemetry", () => {
-    const alerts = groups.flatMap((group) =>
-      rulesForGroup(group).filter((rule) => rule.alert !== undefined),
-    );
+  it("keeps the CI I/O alerts as non-paging informational telemetry", () => {
+    const alerts = [
+      alertRule("BuildkiteCIIOTelemetryMissing"),
+      alertRule("BuildkiteCIPodLifetimeWritesSeen24hBudgetExceeded"),
+      alertRule("BuildkiteControllerMetricsMissing"),
+    ];
     expect(alerts).toHaveLength(3);
     expect(alerts.every((rule) => rule.labels?.["severity"] === "info")).toBe(
       true,
