@@ -321,9 +321,10 @@ and on ()
         {
           alert: "BuildkiteBunCacheCollectorStale",
           annotations: {
-            summary: "Buildkite Bun cache collector has not succeeded",
+            summary:
+              "Buildkite Bun cache collector is missing or has not succeeded",
             description:
-              "The five-minute Buildkite Bun cache collector has not completed successfully in the last 20 minutes.",
+              "The five-minute Buildkite Bun cache collector is missing (its CronJob was deleted or never created) or has not completed successfully in the last 20 minutes.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(`(
   time() - kube_cronjob_status_last_successful_time{
@@ -339,6 +340,13 @@ or
   } > 1200
   unless on (namespace, cronjob)
   kube_cronjob_status_last_successful_time{
+    namespace="buildkite",
+    cronjob="${BUILDKITE_BUN_CACHE_GC_CRONJOB}"
+  }
+)
+or
+absent(
+  kube_cronjob_created{
     namespace="buildkite",
     cronjob="${BUILDKITE_BUN_CACHE_GC_CRONJOB}"
   }

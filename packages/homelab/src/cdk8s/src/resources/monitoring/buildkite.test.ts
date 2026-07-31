@@ -195,5 +195,11 @@ describe("Buildkite monitoring manifests", () => {
     );
     expect(String(collectorStale?.["expr"])).toContain("kube_cronjob_created");
     expect(String(collectorStale?.["expr"])).toContain("> 1200");
+    // A deleted/never-created CronJob leaves both counter series absent, so the
+    // time()-based branches evaluate to empty vectors. The explicit absent()
+    // branch keeps the alert firing when the collector itself is missing.
+    expect(String(collectorStale?.["expr"])).toContain(
+      `absent(\n  kube_cronjob_created{\n    namespace="buildkite",\n    cronjob="${BUILDKITE_BUN_CACHE_GC_CRONJOB}"\n  }\n)`,
+    );
   });
 });
