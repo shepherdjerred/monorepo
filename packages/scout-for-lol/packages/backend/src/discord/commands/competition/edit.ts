@@ -128,12 +128,12 @@ async function parseEditArguments(
     const baseArgs = EditCommandArgsBaseSchema.parse(baseArgsInput);
 
     // Parse dates if provided
-    const datesResult = parseDatesArgs(
+    const datesResult = parseDatesArgs({
       startDateStr,
       endDateStr,
       seasonStr,
       isDraft,
-    );
+    });
     if (!datesResult.success) {
       throw new Error(datesResult.error);
     }

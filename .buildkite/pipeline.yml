@@ -371,6 +371,7 @@ steps:
         - "packages/sjer.red/**"
         - "packages/astro-opengraph-images/**"
         - "packages/webring/**"
+        - "packages/docs/**"
         - "packages/eslint-config/**"
         # Main's playwright lane also gates on the deploy consumers of its
         # artifact — mirror them (lane↔if_changed coverage test).
@@ -379,8 +380,8 @@ steps:
         - "scripts/lib/run.ts"
     cancel_on_build_failing: true
     command: |
-      bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/monorepo'
-      bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --concurrency=2
+      bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo'
+      bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --concurrency=2
     retry: *retry
     plugins:
       - kubernetes:
@@ -416,11 +417,13 @@ steps:
     cancel_on_build_failing: true
     command: |
       if [ "$(buildkite-agent meta-data get ci-lane-run-playwright --default true)" != true ]; then exit 0; fi
-      bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/monorepo'
-      bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --concurrency=2
+      bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo'
+      bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --concurrency=2
     artifact_paths:
       - "packages/sjer.red/dist/**/*"
       - "packages/sjer.red/dist/*"
+      - "packages/docs/wiki/dist/**/*"
+      - "packages/docs/wiki/dist/*"
     retry: *retry
     plugins:
       - kubernetes:
@@ -970,6 +973,7 @@ steps:
         - "packages/llm-models/**"
         - "packages/cooklang-rich-preview/**"
         - "packages/stocks-sjer-red/**"
+        - "packages/docs/**"
         - "packages/better-skill-capped/**"
         - "packages/glitter/**"
         - "packages/glitter-context/**"
@@ -1012,7 +1016,7 @@ steps:
       fi
       # Print-only rehearsals (seconds each): sites catalog, the versioned
       # scout release path, helm chart push, and release-please.
-      for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red better-skill-capped glitter; do
+      for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red wiki better-skill-capped glitter; do
         bun --no-install scripts/deploy-site.ts "$$site" --dry-run
       done
       scout_backend=$$(bun --no-install scripts/scout-site-release.ts resolve-backend-digest)
@@ -1172,7 +1176,10 @@ steps:
   - label: ":rocket: deploy sites"
     key: sites
     if: build.branch == pipeline.default_branch
-    depends_on: [verify, playwright-e2e-main, resume-build-main]
+    # Static-site buckets are owned by the SeaweedFS tofu stack. Waiting for
+    # tofu-apply is a no-op when infra is unchanged, and guarantees a new
+    # bucket exists before its first deployment sync.
+    depends_on: [verify, playwright-e2e-main, resume-build-main, tofu-apply]
     cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/site-deploys
@@ -1186,7 +1193,7 @@ steps:
         # result is discarded (all of them are unaffected by construction);
         # only the recorded decision matters here.
         for site_lane in site-sjer-red site-resume site-webring site-cooklang \
-          site-stocks site-better-skill-capped site-glitter; do
+          site-stocks site-wiki site-better-skill-capped site-glitter; do
           if bun --no-install .buildkite/scripts/ci-changed.ts "$$site_lane"; then :; fi
         done
         exit 0
@@ -1198,6 +1205,7 @@ steps:
       site_webring=false
       site_cooklang=false
       site_stocks=false
+      site_wiki=false
       site_better_skill_capped=false
       site_glitter=false
       if bun --no-install .buildkite/scripts/ci-changed.ts site-sjer-red; then
@@ -1215,6 +1223,10 @@ steps:
       if bun --no-install .buildkite/scripts/ci-changed.ts site-stocks; then
         site_stocks=true
         filters+=(--filter stocks-sjer-red)
+      fi
+      if bun --no-install .buildkite/scripts/ci-changed.ts site-wiki; then
+        site_wiki=true
+        filters+=(--filter '@shepherdjerred/docs-wiki')
       fi
       if bun --no-install .buildkite/scripts/ci-changed.ts site-better-skill-capped; then
         site_better_skill_capped=true
@@ -1245,6 +1257,11 @@ steps:
       if $$site_webring; then bun --no-install scripts/deploy-site.ts webring; fi
       if $$site_cooklang; then bun --no-install scripts/deploy-site.ts cooklang-rich-preview; fi
       if $$site_stocks; then bun --no-install scripts/deploy-site.ts stocks-sjer-red; fi
+      if $$site_wiki; then
+        buildkite-agent artifact download "packages/docs/wiki/dist/**/*" . --step playwright-e2e-main
+        buildkite-agent artifact download "packages/docs/wiki/dist/*" . --step playwright-e2e-main
+        bun --no-install scripts/deploy-site.ts wiki --prebuilt
+      fi
       if $$site_better_skill_capped; then bun --no-install scripts/deploy-site.ts better-skill-capped; fi
       if $$site_glitter; then bun --no-install scripts/deploy-site.ts glitter; fi
     retry: *retry
@@ -1516,8 +1533,7 @@ steps:
       bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       prod_pin=$$(bun --no-install scripts/scout-site-release.ts resolve-prod-pin)
-      prod_state=$$(bun --no-install scripts/scout-site-release.ts resolve-prod-state --prod-pin "$$prod_pin")
-      bun --no-install scripts/scout-site-release.ts reconcile-prod --state "$$prod_state"
+      bun --no-install scripts/scout-site-release.ts reconcile-prod-pin --prod-pin "$$prod_pin"
     retry: *retry
     plugins:
       - kubernetes:

@@ -2,12 +2,12 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import path from "node:path";
 import type { Config } from "#src/config/schema.ts";
 import { DISCORD_MESSAGE_LIMIT } from "./discord-message.ts";
-import {
-  GoalManager,
-  type GoalDiscordMessage,
-  type GoalProcess,
-  type GoalProcessSpawner,
-} from "./goal-manager.ts";
+import { GoalManager } from "./goal-manager.ts";
+import type {
+  GoalDiscordMessage,
+  GoalProcess,
+  GoalProcessSpawner,
+} from "./goal-types.ts";
 
 async function createRuntimeDirectory(): Promise<string> {
   const directory = path.join(
@@ -315,6 +315,42 @@ describe("GoalManager final report", () => {
     }
   });
 
+  test("prepares pokemonctl in an explicitly isolated helper directory", async () => {
+    const runtimeDirectory = await createRuntimeDirectory();
+    const helperDirectory = path.join(runtimeDirectory, "benchmark-helper");
+    const process = makeProcess();
+    let spawnedPath: string | undefined;
+    const manager = new GoalManager({
+      config: {
+        ...makeGoalConfig(runtimeDirectory),
+        helper_dir: helperDirectory,
+      },
+      controlToken: "token",
+      spawner: (_args, options) => {
+        spawnedPath = options.env["PATH"];
+        return process;
+      },
+      sendMessage: noopSendMessage,
+    });
+
+    const started = await manager.startGoal({
+      goal: "Reach Petalburg",
+      requesterId: "user-a",
+      channelId: "channel",
+    });
+    expect(started.kind).toBe("started");
+    expect(
+      await Bun.file(path.join(helperDirectory, "pokemonctl")).exists(),
+    ).toBe(true);
+    expect(
+      await Bun.file(
+        path.join(runtimeDirectory, ".pokemon-goal-bin", "pokemonctl"),
+      ).exists(),
+    ).toBe(false);
+    expect(spawnedPath?.split(":")[0]).toBe(helperDirectory);
+    await manager.shutdown();
+  });
+
   test("truncates an oversized final report to Discord's limit", async () => {
     const runtimeDirectory = await createRuntimeDirectory();
     const process = makeProcess();
@@ -451,7 +487,13 @@ async function runAndComplete(
   nextProcess().finish(0);
   // observeProcess writes history+state after process exit; poll briefly.
   for (let attempt = 0; attempt < 200; attempt += 1) {
-    if (manager.getHistory(20).some((entry) => entry.goal === goal)) return;
+    if (
+      manager.getHistory(20).some((entry) => entry.goal === goal) &&
+      manager.getStatus() === undefined
+    ) {
+      await Bun.sleep(1);
+      return;
+    }
     await Bun.sleep(1);
   }
   throw new Error(`Goal ${goal} never landed in history`);

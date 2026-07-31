@@ -6,13 +6,14 @@ import type { CurrentMessage } from "#shared/glitter-corpus.ts";
 
 const QUARTERLY_REFRESH_MS = 90 * 24 * 60 * 60 * 1000;
 const MIN_NEW_MESSAGES = 20;
-const MIN_SAFE_MESSAGES = 20;
-const MAX_STYLE_MESSAGES = 200;
+const MIN_SAFE_MESSAGES = 30;
+export const DIRECT_RECENT_STYLE_MESSAGES = 500;
 
 export type StyleRefreshCandidate = {
   person: Person;
   messages: CurrentMessage[];
   safeMessages: CurrentMessage[];
+  directRecentMessages: CurrentMessage[];
   newMessageCount: number;
   totalMessageCount: number;
 };
@@ -88,9 +89,9 @@ export function selectStyleRefreshCandidates(input: {
     const newMessageCount = messages.filter((message) =>
       isNewerSnowflake(message.messageId, previousMessageId),
     ).length;
-    const safeMessages = messages
-      .filter((message) => isSafeStyleSample(message))
-      .slice(-MAX_STYLE_MESSAGES);
+    const safeMessages = messages.filter((message) =>
+      isSafeStyleSample(message),
+    );
     if (
       safeMessages.length >= MIN_SAFE_MESSAGES &&
       shouldRefreshStyleCard({
@@ -103,6 +104,7 @@ export function selectStyleRefreshCandidates(input: {
         person,
         messages,
         safeMessages,
+        directRecentMessages: safeMessages.slice(-DIRECT_RECENT_STYLE_MESSAGES),
         newMessageCount,
         totalMessageCount: messages.length,
       });

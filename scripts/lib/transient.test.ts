@@ -11,6 +11,12 @@ describe("isTransientError", () => {
     "HTTP 502 Bad Gateway",
     "503 Service Unavailable",
     "Gateway Timeout",
+    // Helm's upstream error spelling from argocd-helm-render.test.ts.
+    "504 Gateway Time-out",
+    "npm token introspection failed (page 1): HTTP 504 Gateway Timeout",
+    "npm token introspection failed (page 1): HTTP 507 Insufficient Storage",
+    "Unable to connect. Is the computer able to access the url?",
+    "Failed to open socket",
     "read tcp: connection reset by peer",
     "getaddrinfo EAI_AGAIN api.github.com",
     "fetch failed: ECONNRESET",
@@ -42,6 +48,8 @@ describe("isTransientError", () => {
     "version commit-back PR number is empty",
     "Command failed (exit 1): tofu apply",
     "lockfile had changes, but lockfile is frozen",
+    // Source locations in an Error stack are not HTTP status codes.
+    "logical readiness failure\n    at reconcile (argocd.ts:515:11)",
   ])("not transient: %s", (message) => {
     expect(isTransientError(new Error(message))).toBe(false);
   });
@@ -50,5 +58,20 @@ describe("isTransientError", () => {
     expect(isTransientError("ECONNREFUSED")).toBe(true);
     expect(isTransientError("plain failure")).toBe(false);
     expect(isTransientError(null)).toBe(false);
+  });
+
+  test("recognizes Bun transport codes through the cause chain", () => {
+    expect(
+      isTransientError({
+        code: "FetchFailed",
+        cause: { code: "ConnectionRefused" },
+      }),
+    ).toBe(true);
+    expect(
+      isTransientError({
+        message: "request rejected",
+        cause: { code: "ValidationFailed" },
+      }),
+    ).toBe(false);
   });
 });

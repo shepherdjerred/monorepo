@@ -1,11 +1,17 @@
 ---
 id: log-2026-07-26-glitter-discord-sot-handoff
 type: log
-status: in-progress
+status: complete
 board: false
 ---
 
 # Glitter Discord Source of Truth Handoff
+
+> Historical handoff completed on 2026-07-29. The implementation, seed,
+> backfill, recovery verification, and daily schedule are now live. Current
+> production status and the remaining OpenAI quota-gated weekly acceptance are
+> tracked in
+> `packages/docs/plans/2026-07-27_glitter-corpus-live-rollout.md`.
 
 ## Executive summary
 
@@ -176,7 +182,7 @@ Important files:
 - `packages/temporal/src/workflows/glitter-corpus.ts`
 - `packages/temporal/src/shared/glitter-corpus.ts`
 - `packages/docs/guides/2026-07-26_glitter-discord-corpus-operations.md`
-- `packages/docs/plans/2026-07-26_glitter-discord-source-of-truth.md`
+- `packages/docs/archive/completed/2026-07-26_glitter-discord-source-of-truth.md`
 
 ## PR 2: shared context and weekly refresh
 
@@ -471,3 +477,21 @@ After the six fields above are populated:
 - The trusted seed covers only its included export. Discord is still required
   for all other approved public channels, public threads, and future messages.
 - Messages deleted before any successful observation remain unattainable.
+
+## Session Log — 2026-07-29
+
+### Done
+
+- Closed this historical handoff after the implementation, production seed,
+  full backfill, recovery verification, and daily schedule shipped.
+- Updated the completed source-plan reference to its archived location.
+
+### Remaining
+
+- Follow the active rollout plan for the OpenAI quota-gated weekly-refresh
+  acceptance.
+
+### Caveats
+
+- The commit IDs, worktrees, credentials, R2 design, and checklists above are a
+  historical snapshot from 2026-07-26, not current operating instructions.

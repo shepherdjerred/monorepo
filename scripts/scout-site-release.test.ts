@@ -8,6 +8,7 @@ import {
   writeScoutReleaseState,
 } from "./scout-site-release.ts";
 import {
+  parseLegacyScoutReleaseManifest,
   parseScoutReleaseState,
   retagScoutReleaseState,
   resolveBackendDigest,
@@ -42,6 +43,31 @@ test("strict Scout release state binds version to build number", () => {
   ).toThrow("does not match");
   expect(() =>
     parseScoutReleaseState(stateJson({ unexpected: true })),
+  ).toThrow();
+});
+
+test("legacy Scout release manifests remain strict during prod migration", () => {
+  expect(
+    parseLegacyScoutReleaseManifest(
+      JSON.stringify({
+        version: "2.0.0-6673",
+        gitSha: "24e5a5ebe4302e6dc99efc1c3706e7541d9b33dc",
+        builtAt: "2026-07-28T06:48:43.491Z",
+      }),
+    ),
+  ).toEqual({
+    version: "2.0.0-6673",
+    gitSha: "24e5a5ebe4302e6dc99efc1c3706e7541d9b33dc",
+    builtAt: "2026-07-28T06:48:43.491Z",
+  });
+  expect(() =>
+    parseLegacyScoutReleaseManifest(
+      JSON.stringify({
+        version: "2.0.0-6673",
+        gitSha: "24e5a5ebe4302e6dc99efc1c3706e7541d9b33dc",
+        builtAt: "not-a-timestamp",
+      }),
+    ),
   ).toThrow();
 });
 
@@ -156,6 +182,22 @@ test("pipeline selects Scout for a source change or exact beta candidate", async
   expect(pipeline.slice(tagStart, prodEnd)).not.toContain(
     "cancel_on_build_failing",
   );
+  expect(pipeline.slice(prodStart, prodEnd)).toContain(
+    'reconcile-prod-pin --prod-pin "$$prod_pin"',
+  );
+});
+
+test("production pin dry runs return before remote release lookup", async () => {
+  const source = await Bun.file(
+    new URL("scout-site-release.ts", import.meta.url),
+  ).text();
+  const reconcileStart = source.indexOf("async function reconcileProdPin");
+  const usageStart = source.indexOf("function usage", reconcileStart);
+  const reconcile = source.slice(reconcileStart, usageStart);
+  const dryRun = reconcile.indexOf("if (dryRun)");
+  const remoteLookup = reconcile.indexOf("await readScoutStateByVersion");
+  expect(dryRun).toBeGreaterThan(0);
+  expect(remoteLookup).toBeGreaterThan(dryRun);
 });
 
 test("tag creation verifies both immutable archive byte sets first", async () => {

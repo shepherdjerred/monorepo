@@ -221,9 +221,10 @@ export const dataDragonActivities = {
         "1",
       ]);
 
-      // Builds the llm-models `file:` producer before the workspace install —
-      // without it the updater's snapshot-refresh `bun test` dies with
-      // `Cannot find module '@shepherdjerred/llm-models'`.
+      // Installs the root workspace once without hooks, then builds the shared
+      // producers Scout imports. Without the llm-models build, the updater's
+      // snapshot-refresh `bun test` dies with `Cannot find module
+      // '@shepherdjerred/llm-models'`.
       await installScoutWorkspace(repoDir);
       await runCommand(
         ["bun", "run", "update-data-dragon", input.latestVersion],
@@ -238,7 +239,7 @@ export const dataDragonActivities = {
           //
           // BUN_INSTALL_CACHE_DIR is set here (not just by
           // installScoutWorkspace above) because update-data-dragon.ts's own
-          // snapshot-refresh step shells out to a SECOND `bun install
+          // snapshot-refresh step shells out to a SECOND root `bun install
           // --force` internally via Bun's `$` — which inherits this
           // process's env — so this one override reaches that nested call
           // too, keeping it isolated from the pod-wide shared cache.

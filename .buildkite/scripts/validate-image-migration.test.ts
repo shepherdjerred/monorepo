@@ -3,7 +3,10 @@ import { describe, expect, test } from "bun:test";
 import {
   applicationSmokePort,
   assertDeterministicBinderyIdentity,
+  assertWikiManifestInDockerContext,
+  assertWorkspaceInstallContexts,
   assertUniqueSmokePorts,
+  explicitWorkspaceManifests,
   explicitSmokePort,
   hclNamedBlock,
   httpSmokePort,
@@ -82,6 +85,74 @@ describe("deterministic Bindery identity", () => {
       ),
     ).toThrow(
       "bindery Dockerfile must not declare dynamic VERSION, COMMIT, or BUILD_DATE arguments",
+    );
+  });
+});
+
+describe("Docker workspace manifest contexts", () => {
+  const explicitManifests = explicitWorkspaceManifests([
+    "packages/birmel",
+    "packages/discord-plays-pokemon/packages/backend",
+    "packages/docs/wiki",
+    "packages/homelab/src/cdk8s",
+    "scripts",
+  ]);
+
+  test("derives only manifests outside the common workspace globs", () => {
+    expect(explicitManifests).toEqual([
+      "packages/docs/wiki/package.json",
+      "packages/homelab/src/cdk8s/package.json",
+      "scripts/package.json",
+    ]);
+  });
+
+  test("accepts every frozen install context when all manifests are copied", () => {
+    const manifests = explicitManifests.join(" ");
+    const dockerfile = `
+FROM base AS deps
+COPY --parents package.json ${manifests} ./
+RUN bun install --frozen-lockfile --filter app
+FROM base AS prod-deps
+COPY --parents package.json ${manifests} ./
+RUN bun install --frozen-lockfile --production --filter app
+`;
+
+    expect(() => {
+      assertWorkspaceInstallContexts(dockerfile, "app", explicitManifests);
+    }).not.toThrow();
+  });
+
+  test("reports every manifest missing from a specific install stage", () => {
+    const dockerfile = `
+FROM base AS deps
+COPY --parents package.json packages/docs/wiki/package.json ./
+RUN bun install --frozen-lockfile --filter app
+`;
+
+    expect(() => {
+      assertWorkspaceInstallContexts(dockerfile, "app", explicitManifests);
+    }).toThrow(
+      [
+        "app deps frozen install is missing workspace manifests:",
+        "- packages/homelab/src/cdk8s/package.json",
+        "- scripts/package.json",
+      ].join("\n"),
+    );
+  });
+
+  test("requires a narrow wiki manifest exception in the Docker context", () => {
+    expect(() => {
+      assertWikiManifestInDockerContext(`
+packages/docs/*
+!packages/docs/wiki
+packages/docs/wiki/*
+!packages/docs/wiki/package.json
+`);
+    }).not.toThrow();
+    expect(() => {
+      assertWikiManifestInDockerContext("packages/docs");
+    }).toThrow(
+      ".dockerignore is missing wiki workspace manifest context rule packages/docs/*",
     );
   });
 });

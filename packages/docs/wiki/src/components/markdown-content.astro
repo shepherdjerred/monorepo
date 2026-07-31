@@ -1,0 +1,13 @@
+---
+import "@astrojs/starlight/style/markdown.css";
+
+const { sourceKind } = Astro.locals.starlightRoute.entry.data;
+const isWorkingMaterial = sourceKind === "working";
+---
+
+<div
+  class:list={["sl-markdown-content", { "working-content": isWorkingMaterial }]}
+  data-pagefind-weight={isWorkingMaterial ? "0.25" : undefined}
+>
+  <slot />
+</div>

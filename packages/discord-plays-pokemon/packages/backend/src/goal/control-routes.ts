@@ -6,7 +6,7 @@ import { encodePng } from "#src/emulator/png.ts";
 import { parseCommandInput } from "#src/game/command/command-input.ts";
 import { parseChord } from "#src/game/command/chord.ts";
 import { isValid, type ChordLimits } from "#src/discord/chord-validator.ts";
-import { execute } from "#src/discord/chord-executor.ts";
+import { effectiveChordDelay, execute } from "#src/discord/chord-executor.ts";
 import { readGameSnapshot } from "#src/game/events/snapshot.ts";
 import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
 import { formatGameStateForPrompt } from "./game-state-summary.ts";
@@ -16,11 +16,11 @@ import {
   truncateForToolLog,
   truncateStateForToolLog,
 } from "./goal-tool-log.ts";
-import {
-  movementOutcome,
-  spatialPositionFromSnapshot,
-} from "./movement-outcome.ts";
 import type { GoalControlContext, Routed } from "./control-context.ts";
+import {
+  mapResponse,
+  routeSemanticRequest,
+} from "./semantic-control-routes.ts";
 
 const PressRequestSchema = z.strictObject({
   command: z.string().min(1),
@@ -30,6 +30,10 @@ const PressRequestSchema = z.strictObject({
 
 const ChordRequestSchema = z.strictObject({
   value: z.string().min(1),
+});
+
+const ObserveQuerySchema = z.strictObject({
+  screenshot: z.literal("true").optional(),
 });
 
 const ProgressRequestSchema = z.strictObject({
@@ -82,15 +86,6 @@ function screenshotDirectory(config: Config["game"]["goal"]): string {
   return path.isAbsolute(config.screenshot_dir)
     ? config.screenshot_dir
     : path.resolve(config.runtime_directory, config.screenshot_dir);
-}
-
-function readLiveSpatial(context: GoalControlContext) {
-  return spatialPositionFromSnapshot(
-    readSpatialSnapshot(
-      context.emulator.memoryReader(),
-      context.emulator.gameSymbols(),
-    ),
-  );
 }
 
 async function parseJsonBody(request: Request): Promise<unknown> {
@@ -244,14 +239,51 @@ function formatGrep(matches: readonly GrepMatch[], query: string): string {
 async function screenshotResponse(
   context: GoalControlContext,
 ): Promise<{ response: Response; logBody: unknown }> {
+  const body = await captureScreenshot(context);
+  return { response: jsonResponse(body), logBody: body };
+}
+
+async function captureScreenshot(
+  context: GoalControlContext,
+): Promise<{ path: string; frame: number }> {
   const png = encodePng(context.emulator.renderFrame(), 3);
   const filePath = path.join(
     screenshotDirectory(context.config.game.goal),
     `pokemon-${String(context.emulator.frame)}-${String(Date.now())}.png`,
   );
   await Bun.write(filePath, png, { createPath: true });
-  const body = { path: filePath, frame: context.emulator.frame };
-  return { response: jsonResponse(body), logBody: body };
+  return { path: filePath, frame: context.emulator.frame };
+}
+
+async function observeResponse(
+  context: GoalControlContext,
+  request: Request,
+): Promise<{ response: Response; requestMeta: unknown; logBody: unknown }> {
+  const params = queryParams(request);
+  const parsed = ObserveQuerySchema.safeParse(params);
+  if (!parsed.success) {
+    return {
+      response: jsonResponse({ error: "invalid observe query" }, 400),
+      requestMeta: params,
+      logBody: { error: "invalid observe query" },
+    };
+  }
+  const observation = context.controller.observe();
+  const screenshot =
+    parsed.data.screenshot === "true"
+      ? await captureScreenshot(context)
+      : undefined;
+  const body = {
+    ...observation,
+    ...(screenshot === undefined ? {} : { screenshot }),
+  };
+  return {
+    response: jsonResponse(body),
+    requestMeta: {
+      screenshot: parsed.data.screenshot === "true",
+    },
+    logBody: truncateStateForToolLog(JSON.stringify(body)),
+  };
 }
 
 async function pressResponse(
@@ -297,14 +329,17 @@ async function pressResponse(
           ...context.timing,
           holdFrames: framesFromMs(parsed.holdMs),
         };
-  const before = readLiveSpatial(context);
-  await enqueueCommand(context.emulator, nextCommand, nextTiming);
-  const after = readLiveSpatial(context);
-  const body = {
-    ok: true,
-    frame: context.emulator.frame,
-    ...movementOutcome(before, after),
-  };
+  const body =
+    parsed.holdMs === undefined && nextCommand.modifier === undefined
+      ? await context.controller.tap(nextCommand.command, quantity)
+      : await context.controller.perform("press:raw", async () => {
+          await enqueueCommand(
+            context.emulator,
+            nextCommand,
+            nextTiming,
+            "goal",
+          );
+        });
   return { response: jsonResponse(body), requestMeta, logBody: body };
 }
 
@@ -325,16 +360,23 @@ async function chordResponse(
       logBody: { error: "invalid chord" },
     };
   }
-  const before = readLiveSpatial(context);
-  await execute(chord, async (commandInput) => {
-    await enqueueCommand(context.emulator, commandInput, context.timing);
+  const body = await context.controller.perform("chord:raw", async () => {
+    await execute(
+      chord,
+      async (commandInput) => {
+        await enqueueCommand(
+          context.emulator,
+          commandInput,
+          context.timing,
+          "goal",
+        );
+      },
+      effectiveChordDelay(
+        context.config.game.commands.chord.delay,
+        context.config.game.commands.delay_between_actions_in_milliseconds,
+      ),
+    );
   });
-  const after = readLiveSpatial(context);
-  const body = {
-    ok: true,
-    frame: context.emulator.frame,
-    ...movementOutcome(before, after),
-  };
   return { response: jsonResponse(body), requestMeta, logBody: body };
 }
 
@@ -356,6 +398,9 @@ export async function routeRequest(
   context: GoalControlContext,
   request: Request,
 ): Promise<Routed> {
+  const semantic = await routeSemanticRequest(context, request);
+  if (semantic !== undefined) return semantic;
+
   const url = new URL(request.url);
   switch (`${request.method} ${url.pathname}`) {
     case "GET /status":
@@ -373,6 +418,10 @@ export async function routeRequest(
         logBody: truncateStateForToolLog(result.logBody),
       };
     }
+    case "GET /observe":
+      return await observeResponse(context, request);
+    case "GET /map":
+      return mapResponse(context, request);
     case "GET /history": {
       const result = historyResponse(context, request);
       return {

@@ -1,6 +1,7 @@
 import type { GameSymbols } from "#src/emulator/symbols.ts";
 import { createMemoryReader } from "#src/emulator/memory.ts";
 import { readGameSnapshot } from "./snapshot.ts";
+import { SAVE_BLOCK_1_FLAGS_OFFSET } from "#src/game/save-block-layout.ts";
 import { speciesName } from "./generated/species.ts";
 import type { GameSnapshot } from "./types.ts";
 
@@ -63,6 +64,8 @@ function readGen3SaveBlocks(bytes: Uint8Array): SaveBlocks {
 // SaveBlock1 field offsets (include/global.h).
 const SB1_PARTY_COUNT = 0x2_34;
 const SB1_PLAYER_PARTY = 0x2_38;
+const SAVED_SB1_FLAGS = 0x12_70;
+const SAVED_FLAGS_SIZE = 0x1_2c;
 
 // Symbol addresses for the synthetic memory (arbitrary, non-overlapping).
 const SYMBOLS: GameSymbols = {
@@ -86,7 +89,15 @@ function snapshotFromSave(bytes: Uint8Array): GameSnapshot | null {
 
   view.setUint32(SYMBOLS.gSaveBlock1Ptr, SB1_ADDR, true);
   view.setUint32(SYMBOLS.gSaveBlock2Ptr, SB2_ADDR, true);
-  u8.set(saveBlock1, SB1_ADDR);
+  // These fixtures use the retail GBA serialization layout. The pinned wasm32
+  // ABI places SaveBlock1.flags earlier because its ObjectEvent layout is
+  // smaller, so normalize that field to the live in-memory layout.
+  const runtimeSaveBlock1 = Uint8Array.from(saveBlock1);
+  runtimeSaveBlock1.set(
+    saveBlock1.subarray(SAVED_SB1_FLAGS, SAVED_SB1_FLAGS + SAVED_FLAGS_SIZE),
+    SAVE_BLOCK_1_FLAGS_OFFSET,
+  );
+  u8.set(runtimeSaveBlock1, SB1_ADDR);
   u8.set(saveBlock2, SB2_ADDR);
   view.setUint8(SYMBOLS.gPlayerPartyCount, saveBlock1[SB1_PARTY_COUNT] ?? 0);
   u8.set(

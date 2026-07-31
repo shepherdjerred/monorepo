@@ -99,7 +99,27 @@ if (import.meta.main) {
     upstream.commit,
   ]);
   const makefile = await Bun.file(`${workDirectory}/Makefile`).text();
-  if (!makefile.includes("export=gSaveBlock2Ptr")) {
+  const hasExtraExports = makefile.includes("export=gSaveBlock2Ptr");
+  const observationSource = Bun.file(`${workDirectory}/src/wasm_observation.c`);
+  const observationSourceText = (await observationSource.exists())
+    ? await observationSource.text()
+    : "";
+  const hasObservationBridge =
+    observationSourceText.includes("WasmReadObservation") &&
+    observationSourceText.includes("WasmReadMapTile");
+  const hasCheckpointExport = makefile.includes("export=WasmCheckpointSave");
+  const hasCheckpointBridge =
+    observationSourceText.includes("WasmCheckpointSave");
+  if (
+    hasExtraExports !== hasObservationBridge ||
+    hasCheckpointExport !== hasCheckpointBridge ||
+    hasExtraExports !== hasCheckpointExport
+  ) {
+    throw new Error(
+      `Cached wasm source at ${workDirectory} has an incomplete patch series; use a fresh WORKDIR`,
+    );
+  }
+  if (!hasExtraExports) {
     for (const patch of new Bun.Glob("*.patch").scanSync({
       cwd: `${root}/wasm-src/patches`,
       absolute: true,

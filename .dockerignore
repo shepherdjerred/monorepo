@@ -13,7 +13,10 @@ node_modules
 **/*.log
 .claude
 sandbox
-packages/docs
+packages/docs/*
+!packages/docs/wiki
+packages/docs/wiki/*
+!packages/docs/wiki/package.json
 # Heavy assets no image needs: test snapshots (multi-MiB SVG/PNG fixtures) and
 # the personal-site blog media (videos/images). Keeps them out of the build
 # context AND out of scoped runtime source COPYs (e.g. scout's report package).

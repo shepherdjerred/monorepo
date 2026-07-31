@@ -1361,22 +1361,23 @@ async function main(): Promise<void> {
 }
 
 async function updateSnapshots(): Promise<void> {
-  const rootDir = `${import.meta.dir}/../../..`;
+  const scoutRoot = `${import.meta.dir}/../../..`;
+  const repoRoot = `${import.meta.dir}/../../../../..`;
 
-  // Refresh the workspace install so Bun's isolated `node_modules/.bun/`
-  // copy of @scout-for-lol/data picks up the freshly-downloaded assets.
-  // Without this, snapshot tests resolve `@scout-for-lol/data` through a
-  // content-hashed snapshot taken at install time and miss any rune/icon
-  // Riot has renamed since then (e.g. PhaseRush.png →
+  // Refresh the one root workspace install so Bun's isolated
+  // `node_modules/.bun/` snapshot picks up the freshly-downloaded assets.
+  // Package-local installs cannot resolve the repo's workspace dependencies.
+  // Without this refresh, snapshot tests miss any rune/icon Riot has renamed
+  // since the previous install (e.g. PhaseRush.png →
   // StormraidersSurgeRuneIcon2.png in DDragon 16.9.1).
   console.log("\n🔄 Refreshing workspace install for new assets...");
-  await $`cd ${rootDir} && bun install --force`.quiet();
+  await $`cd ${repoRoot} && bun install --force`.quiet();
 
   // Snapshots that depend on Data Dragon data
   const snapshotTests = [
     // Report package snapshots
     {
-      cwd: `${rootDir}/packages/report`,
+      cwd: `${scoutRoot}/packages/report`,
       tests: [
         "src/dataDragon/__snapshots__/summoner.test.ts",
         "src/dataDragon/__snapshots__/version.test.ts",
@@ -1387,7 +1388,7 @@ async function updateSnapshots(): Promise<void> {
     },
     // Backend package snapshots
     {
-      cwd: `${rootDir}/packages/backend`,
+      cwd: `${scoutRoot}/packages/backend`,
       tests: ["src/league/model/__tests__/arena.realdata.integration.test.ts"],
     },
   ];

@@ -10,10 +10,14 @@ import {
   type CodexJsonlParser,
 } from "@shepherdjerred/llm-observability/codex-jsonl";
 import { prepareRuntimeTools, buildEnvironment } from "./goal-runtime-env.ts";
-import { buildCodexArgs, type PromptContext } from "./codex-command.ts";
+import {
+  buildCodexArgs,
+  buildTracePrompt,
+  type PromptContext,
+} from "./codex-command.ts";
 import { attachCodexTrace, type CodexTrace } from "./codex-trace.ts";
 import { streamToLog } from "./goal-process-helpers.ts";
-import type { GoalProcess, GoalProcessSpawner } from "./goal-manager.ts";
+import type { GoalProcess, GoalProcessSpawner } from "./goal-types.ts";
 
 export type SpawnGoalCodexInput = {
   config: Config["game"]["goal"];
@@ -40,10 +44,15 @@ export async function spawnGoalCodex(
   const screenshotDirectory = path.isAbsolute(input.config.screenshot_dir)
     ? input.config.screenshot_dir
     : path.resolve(runtimeDirectory, input.config.screenshot_dir);
+  const configuredHelperDirectory =
+    input.config.helper_dir ?? ".pokemon-goal-bin";
+  const helperDirectory = path.isAbsolute(configuredHelperDirectory)
+    ? configuredHelperDirectory
+    : path.resolve(runtimeDirectory, configuredHelperDirectory);
   await Bun.write(path.join(screenshotDirectory, ".keep"), "", {
     createPath: true,
   });
-  const helperDirectory = await prepareRuntimeTools(runtimeDirectory);
+  await prepareRuntimeTools(helperDirectory);
   const outputPath = path.join(
     screenshotDirectory,
     `${input.goalId}-final.txt`,
@@ -67,6 +76,7 @@ export async function spawnGoalCodex(
       controlHost: input.config.control_host,
       controlPort: input.config.control_port,
       controlToken: input.controlToken,
+      goalId: input.goalId,
     }),
   });
   const jsonl = createCodexJsonlParser({
@@ -77,14 +87,15 @@ export async function spawnGoalCodex(
       logger.info(message);
     },
   });
-  // Full Codex prompt (last arg) archived on the root span for blackbox review.
+  // Archive both model-visible roles for blackbox review. The final command
+  // argument alone contains only the untrusted user-role message.
   const trace = attachCodexTrace(jsonl, {
     goalId: input.goalId,
     goal: input.goal,
     model: input.config.model,
     requestedBy: input.requestedBy,
     gameStateSummary: input.promptContext.gameStateSummary,
-    initialPrompt: args.at(-1) ?? "",
+    initialPrompt: buildTracePrompt(input.goal, input.promptContext),
   });
   // Drain stdout fully before reading jsonl.total() in observeProcess.
   const stdoutPump = pumpCodexStdout(process.stdout, jsonl);

@@ -1,14 +1,28 @@
 #!/usr/bin/env bun
 
+import { verifyPokemonctlCapabilities } from "./goal-capabilities.ts";
+import {
+  formatPokemonctlActionOutput,
+  formatPokemonctlObservationOutput,
+} from "./pokemonctl-output.ts";
+
 type RequestBody = Record<string, unknown>;
 
 function usage(): string {
   return [
     "Usage:",
+    "  pokemonctl observe [--screenshot] [--full]  # compact by default; --full includes detailed state",
+    "  pokemonctl tap <button> [--repeat n] [--full]",
+    "  pokemonctl move <north|south|west|east> [--tiles n] [--full]",
+    "  pokemonctl map show [--radius n]",
+    "  pokemonctl navigate --x n --y n [--max-steps n] [--radius n] [--full]  # current map only",
+    "  pokemonctl interact [north|south|west|east|ahead] [--full]",
+    "  pokemonctl advance [--full]  # one scripted-dialog step",
+    "  pokemonctl wait --until <ready|stable|phase-change> [--timeout-ms n] [--full]",
     "  pokemonctl screenshot",
-    "  pokemonctl press <button> [--quantity n] [--hold-ms n]",
-    '  pokemonctl chord "<commands>"',
-    "  pokemonctl wait --seconds n",
+    "  pokemonctl press <button> [--quantity n] [--hold-ms n] [--full]",
+    '  pokemonctl chord "<commands>" [--full]',
+    "  pokemonctl wait --seconds n  # compatibility delay",
     "  pokemonctl status",
     "  pokemonctl state",
     "  pokemonctl history [--limit n]",
@@ -47,6 +61,20 @@ function readNumberFlag(args: string[], name: string): number | undefined {
   return value;
 }
 
+function readIntegerFlag(args: string[], name: string): number | undefined {
+  const index = args.indexOf(name);
+  if (index === -1) return undefined;
+  const raw = args.at(index + 1);
+  if (raw === undefined) {
+    throw new Error(`${name} requires a value`);
+  }
+  const value = Number(raw);
+  if (!Number.isInteger(value)) {
+    throw new TypeError(`${name} must be an integer`);
+  }
+  return value;
+}
+
 async function request(
   method: "GET" | "POST",
   route: string,
@@ -54,10 +82,12 @@ async function request(
 ): Promise<string> {
   const baseUrl = readRequiredEnv("POKEMONCTL_URL");
   const token = readRequiredEnv("POKEMONCTL_TOKEN");
+  const goalId = readRequiredEnv("POKEMONCTL_GOAL_ID");
   const response = await fetch(new URL(route, baseUrl), {
     method,
     headers: {
       authorization: `Bearer ${token}`,
+      "x-pokemon-goal-id": goalId,
       ...(body === undefined ? {} : { "content-type": "application/json" }),
     },
     body: body === undefined ? undefined : JSON.stringify(body),
@@ -97,6 +127,10 @@ function printJsonText(value: string): void {
   process.stdout.write(`${value}\n`);
 }
 
+function printActionText(value: string, args: string[]): void {
+  printJsonText(formatPokemonctlActionOutput(value, args.includes("--full")));
+}
+
 async function handlePress(args: string[]): Promise<void> {
   const button = args.at(0);
   if (button === undefined) {
@@ -104,13 +138,121 @@ async function handlePress(args: string[]): Promise<void> {
   }
   const quantity = readNumberFlag(args, "--quantity");
   const holdMs = readNumberFlag(args, "--hold-ms");
-  printJsonText(
+  printActionText(
     await request("POST", "/press", {
       command: button,
       ...(quantity === undefined ? {} : { quantity }),
       ...(holdMs === undefined ? {} : { holdMs }),
     }),
+    args,
   );
+}
+
+async function handleObserve(args: string[]): Promise<void> {
+  const params = new URLSearchParams();
+  if (args.includes("--screenshot")) params.set("screenshot", "true");
+  const query = params.size === 0 ? "" : `?${params.toString()}`;
+  printJsonText(
+    formatPokemonctlObservationOutput(
+      await request("GET", `/observe${query}`),
+      args.includes("--full"),
+    ),
+  );
+}
+
+async function handleTap(args: string[]): Promise<void> {
+  const button = args.at(0);
+  if (button === undefined) {
+    throw new Error("tap requires a button");
+  }
+  const repeat = readNumberFlag(args, "--repeat") ?? 1;
+  printActionText(
+    await request("POST", "/tap", { command: button, repeat }),
+    args,
+  );
+}
+
+function normalizeDirection(value: string): string {
+  switch (value.toLowerCase()) {
+    case "north":
+    case "up":
+    case "u":
+      return "north";
+    case "south":
+    case "down":
+    case "d":
+      return "south";
+    case "west":
+    case "left":
+    case "l":
+      return "west";
+    case "east":
+    case "right":
+    case "r":
+      return "east";
+    default:
+      throw new Error(`invalid direction: ${value}`);
+  }
+}
+
+async function handleMove(args: string[]): Promise<void> {
+  const rawDirection = args.at(0);
+  if (rawDirection === undefined) {
+    throw new Error("move requires a direction");
+  }
+  const direction = normalizeDirection(rawDirection);
+  const tiles = readNumberFlag(args, "--tiles") ?? 1;
+  printActionText(await request("POST", "/move", { direction, tiles }), args);
+}
+
+async function handleMap(args: string[]): Promise<void> {
+  if (args.at(0) !== "show") {
+    throw new Error("map requires the show subcommand");
+  }
+  const radius = readNumberFlag(args, "--radius") ?? 8;
+  const params = new URLSearchParams({ radius: String(radius) });
+  printJsonText(await request("GET", `/map?${params.toString()}`));
+}
+
+async function handleNavigate(args: string[]): Promise<void> {
+  const x = readIntegerFlag(args, "--x");
+  const y = readIntegerFlag(args, "--y");
+  if (x === undefined || y === undefined) {
+    throw new Error("navigate requires --x and --y integer coordinates");
+  }
+  const maxSteps = readNumberFlag(args, "--max-steps") ?? 64;
+  const searchRadius = readNumberFlag(args, "--radius") ?? 12;
+  printActionText(
+    await request("POST", "/navigate", {
+      x,
+      y,
+      maxSteps,
+      searchRadius,
+    }),
+    args,
+  );
+}
+
+async function handleInteract(args: string[]): Promise<void> {
+  const rawDirection = args.find((value) => !value.startsWith("--"));
+  const direction =
+    rawDirection === undefined || rawDirection === "ahead"
+      ? undefined
+      : normalizeDirection(rawDirection);
+  printActionText(
+    await request("POST", "/interact", {
+      ...(direction === undefined ? {} : { direction }),
+    }),
+    args,
+  );
+}
+
+async function handleAdvance(args: string[]): Promise<void> {
+  const unexpected = args.find((value) => value !== "--full");
+  if (unexpected !== undefined) {
+    throw new Error(`advance does not accept arguments: ${unexpected}`);
+  }
+  printActionText(await request("POST", "/advance", {}), args);
 }
 
 async function handleChord(args: string[]): Promise<void> {
@@ -118,16 +260,27 @@ async function handleChord(args: string[]): Promise<void> {
   if (value === undefined) {
     throw new Error("chord requires a command string");
   }
-  printJsonText(await request("POST", "/chord", { value }));
+  printActionText(await request("POST", "/chord", { value }), args);
 }
 
 async function handleWait(args: string[]): Promise<void> {
   const seconds = readNumberFlag(args, "--seconds");
-  if (seconds === undefined) {
-    throw new Error("wait requires --seconds");
+  if (seconds !== undefined) {
+    await Bun.sleep(seconds * 1000);
+    printJson({ ok: true, waitedSeconds: seconds });
+    return;
   }
-  await Bun.sleep(seconds * 1000);
-  printJson({ ok: true, waitedSeconds: seconds });
+  const untilIndex = args.indexOf("--until");
+  const until = args.at(untilIndex + 1);
+  if (
+    untilIndex === -1 ||
+    (until !== "ready" && until !== "stable" && until !== "phase-change")
+  ) {
+    throw new Error("wait requires --until ready, stable, or phase-change");
+  }
+  const timeoutMs = readNumberFlag(args, "--timeout-ms") ?? 10_000;
+  const maxFrames = Math.max(1, Math.round(timeoutMs / (1000 / 59.7275)));
+  printActionText(await request("POST", "/wait", { until, maxFrames }), args);
 }
 
 async function handleHistory(args: string[]): Promise<void> {
@@ -192,6 +345,13 @@ async function handleWrite(args: string[]): Promise<void> {
 }
 
 const HANDLERS = new Map<string, (args: string[]) => Promise<void>>([
+  ["observe", handleObserve],
+  ["tap", handleTap],
+  ["move", handleMove],
+  ["map", handleMap],
+  ["navigate", handleNavigate],
+  ["interact", handleInteract],
+  ["advance", handleAdvance],
   [
     "screenshot",
     async () => {
@@ -220,6 +380,7 @@ const HANDLERS = new Map<string, (args: string[]) => Promise<void>>([
   ["grep", handleGrep],
   ["write", handleWrite],
 ]);
+verifyPokemonctlCapabilities(new Set(HANDLERS.keys()));
 
 async function main(): Promise<void> {
   const command = Bun.argv.at(2);

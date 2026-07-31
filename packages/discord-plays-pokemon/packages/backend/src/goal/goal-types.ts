@@ -24,3 +24,45 @@ export type GoalState = {
   finalReport?: string;
   exitCode?: number;
 };
+
+export type GoalProcess = {
+  pid?: number;
+  stdout: ReadableStream<Uint8Array> | null;
+  stderr: ReadableStream<Uint8Array> | null;
+  exited: Promise<number>;
+  kill: (signal?: NodeJS.Signals | number) => void;
+};
+
+export type GoalProcessSpawner = (
+  args: string[],
+  options: {
+    cwd: string;
+    env: Record<string, string>;
+  },
+) => GoalProcess;
+
+export type GoalDiscordMessage = {
+  channelId: string;
+  content: string;
+  allowedUserIds?: string[];
+};
+
+export type GoalMessageSender = (message: GoalDiscordMessage) => Promise<void>;
+
+export type StartGoalInput = {
+  goal: string;
+  requesterId: string;
+  channelId: string;
+};
+
+export type StartGoalResult =
+  | {
+      kind: "started";
+      content: string;
+      ephemeral: false;
+    }
+  | {
+      kind: "locked" | "disabled" | "invalid" | "missing_credential" | "busy";
+      content: string;
+      ephemeral: true;
+    };

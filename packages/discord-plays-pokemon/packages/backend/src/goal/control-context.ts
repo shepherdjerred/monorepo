@@ -2,6 +2,7 @@ import type { Config } from "#src/config/schema.ts";
 import type { Emulator } from "#src/emulator/emulator.ts";
 import type { CommandTiming } from "#src/emulator/command-sink.ts";
 import type { GoalManager } from "./goal-manager.ts";
+import type { GameController } from "./game-controller.ts";
 
 export type GoalControlServerOptions = {
   emulator: Emulator;
@@ -18,6 +19,7 @@ export type FsSessionState = {
 
 export type GoalControlContext = GoalControlServerOptions & {
   timing: CommandTiming;
+  controller: GameController;
   fs: FsSessionState;
 };
 

@@ -61,6 +61,53 @@ sleep 20
   });
 }
 
+function createBuildkiteBunCacheVolumes(chart: Chart): void {
+  // Shared Bun download cache for step pods. Replaces the ~1 GiB
+  // bun-cache-warm layer that was baked into ci-base (and re-pushed/re-pulled
+  // on every lockfile change): the cache now persists across builds on the CI
+  // node instead of living in the image. Bun's download cache is
+  // content-addressed and safe for concurrent installs (verified with
+  // concurrent cold-cache installs sharing one BUN_INSTALL_CACHE_DIR); this is
+  // the download cache, NOT the isolated-linker global store (whose parallel
+  // CI hazard — oven-sh/bun#12917 — is why bunfig's globalStore stays off).
+  // Disposable derived data, like the caches above — excluded from backups.
+  new KubePersistentVolumeClaim(chart, "buildkite-bun-cache-pvc", {
+    metadata: {
+      name: "buildkite-bun-cache",
+      namespace: "buildkite",
+      labels: {
+        "velero.io/backup": "disabled",
+        "velero.io/exclude-from-backup": "true",
+      },
+    },
+    spec: {
+      accessModes: ["ReadWriteMany"],
+      storageClassName: NVME_STORAGE_CLASS_LZ4,
+      resources: { requests: { storage: Quantity.fromString("60Gi") } },
+    },
+  });
+
+  // Coordination for Bun cache installs and collection must remain writable
+  // when the data PVC is full. Keep the flock inode on this separate,
+  // disposable control volume so cleanup can still acquire an exclusive lock
+  // under the exact failure mode it is designed to recover.
+  new KubePersistentVolumeClaim(chart, "buildkite-bun-cache-control-pvc", {
+    metadata: {
+      name: "buildkite-bun-cache-control",
+      namespace: "buildkite",
+      labels: {
+        "velero.io/backup": "disabled",
+        "velero.io/exclude-from-backup": "true",
+      },
+    },
+    spec: {
+      accessModes: ["ReadWriteMany"],
+      storageClassName: NVME_STORAGE_CLASS_LZ4,
+      resources: { requests: { storage: Quantity.fromString("1Gi") } },
+    },
+  });
+}
+
 export function createBuildkiteApp(chart: Chart) {
   createBuildkiteNamespace(chart);
 
@@ -207,30 +254,7 @@ overrides:
     },
   });
 
-  // Shared bun download cache for step pods. Replaces the ~1 GiB
-  // bun-cache-warm layer that was baked into ci-base (and re-pushed/re-pulled
-  // on every lockfile change): the cache now persists across builds on the CI
-  // node instead of living in the image. Bun's download cache is
-  // content-addressed and safe for concurrent installs (verified with
-  // concurrent cold-cache installs sharing one BUN_INSTALL_CACHE_DIR); this is
-  // the download cache, NOT the isolated-linker global store (whose parallel
-  // CI hazard — oven-sh/bun#12917 — is why bunfig's globalStore stays off).
-  // Disposable derived data, like the caches above — excluded from backups.
-  new KubePersistentVolumeClaim(chart, "buildkite-bun-cache-pvc", {
-    metadata: {
-      name: "buildkite-bun-cache",
-      namespace: "buildkite",
-      labels: {
-        "velero.io/backup": "disabled",
-        "velero.io/exclude-from-backup": "true",
-      },
-    },
-    spec: {
-      accessModes: ["ReadWriteMany"],
-      storageClassName: NVME_STORAGE_CLASS_LZ4,
-      resources: { requests: { storage: Quantity.fromString("30Gi") } },
-    },
-  });
+  createBuildkiteBunCacheVolumes(chart);
 
   // uv's artifact cache is safe for concurrent readers and writers, unlike a
   // virtual environment. Persist only downloads/build artifacts and let every
@@ -473,15 +497,21 @@ overrides:
                 tolerations: [CI_NODE_TOLERATION],
                 serviceAccountName: "buildkite-agent-stack-k8s-controller",
                 automountServiceAccountToken: true,
-                // Shared Bun and uv download caches. Volume + mount + env are
-                // patched here so EVERY step pod gets them without touching each
-                // pipeline.yml pod anchor;
+                // Shared Bun and uv download caches plus Bun cache control.
+                // Volume + mount + env are patched here so EVERY step pod gets
+                // them without touching each pipeline.yml pod anchor;
                 // strategic merge matches the step container by name
                 // (container-0) and merges env/volumeMounts by key.
                 volumes: [
                   {
                     name: "buildkite-bun-cache",
                     persistentVolumeClaim: { claimName: "buildkite-bun-cache" },
+                  },
+                  {
+                    name: "buildkite-bun-cache-control",
+                    persistentVolumeClaim: {
+                      claimName: "buildkite-bun-cache-control",
+                    },
                   },
                   {
                     name: "buildkite-uv-cache",
@@ -505,6 +535,10 @@ overrides:
                       {
                         name: "buildkite-bun-cache",
                         mountPath: "/buildkite/bun-cache",
+                      },
+                      {
+                        name: "buildkite-bun-cache-control",
+                        mountPath: "/buildkite/bun-cache-control",
                       },
                       {
                         name: "buildkite-uv-cache",

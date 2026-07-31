@@ -91,6 +91,7 @@ FROM base AS deps
 COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
+  packages/docs/wiki/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
   packages/scout-for-lol/packages/desktop/src-tauri/package.json \
@@ -121,11 +122,23 @@ RUN cd packages/discord-stream-lifecycle && bun run build \
 ENV VITE_SENTRY_RELEASE=dev
 RUN cd packages/discord-plays-pokemon/packages/frontend && bun run build
 
+# ── wasm-abi-test: prove the patched engine bridge against the real artifact ─
+# The source test may skip on a plain checkout because the generated binary is
+# intentionally gitignored. This stage makes the artifact present and is the
+# source for the runtime COPY below, so an image build cannot bypass the ABI
+# regression test.
+FROM build AS wasm-abi-test
+COPY --from=wasm-builder /src/build/wasm/pokeemerald.wasm \
+  /app/packages/discord-plays-pokemon/packages/backend/assets/pokeemerald.wasm
+RUN bun test \
+  /app/packages/discord-plays-pokemon/packages/backend/src/emulator/emulator-symbols.integration.test.ts
+
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
 FROM base AS prod-deps
 COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
+  packages/docs/wiki/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
   packages/scout-for-lol/packages/desktop/src-tauri/package.json \
@@ -154,7 +167,7 @@ WORKDIR /app
 # world-readable bin on PATH. Kept ABOVE the app layers: it needs only bun +
 # network, and a source edit must not re-download it.
 ENV BUN_INSTALL=/usr/local
-RUN bun add -g @openai/codex@0.139.0 && codex --version
+RUN bun add -g @openai/codex@0.145.0 && codex --version
 
 # Production node_modules + workspace manifests. The isolated-linker tree uses
 # relative symlinks (store at node_modules/.bun), so copying the whole install
@@ -167,7 +180,9 @@ COPY --from=prod-deps /app/ /app/
 # below.
 COPY --parents \
   tsconfig.base.json \
+  packages/discord-plays-pokemon/AGENTS.md \
   packages/discord-plays-pokemon/config.example.toml \
+  packages/discord-plays-pokemon/.agents \
   packages/discord-plays-pokemon/packages/backend \
   packages/discord-plays-pokemon/packages/common \
   packages/discord-plays-core \
@@ -177,6 +192,12 @@ COPY --parents \
   packages/llm-observability \
   ./
 
+# Keep the deployed Codex instruction surface identical to the benchmark
+# runtime overlay and fail the image build if either input is omitted.
+RUN test -s packages/discord-plays-pokemon/AGENTS.md \
+  && test -d packages/discord-plays-pokemon/.agents/skills \
+  && test -n "$(find packages/discord-plays-pokemon/.agents/skills -mindepth 2 -maxdepth 2 -type f -name SKILL.md -print -quit)"
+
 # Built artifacts from the build stage.
 COPY --from=build /app/packages/discord-stream-lifecycle/dist packages/discord-stream-lifecycle/dist
 COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
@@ -184,13 +205,16 @@ COPY --from=build /app/packages/discord-plays-pokemon/packages/frontend/dist pac
 
 # Make the goal-mode control CLI available to operators and spawned Codex loops.
 RUN install -D -m 0755 \
-    packages/discord-plays-pokemon/packages/backend/src/goal/pokemonctl.ts \
+    packages/discord-plays-pokemon/packages/backend/src/goal/pokemonctl-entrypoint.sh \
     /usr/local/bin/pokemonctl \
+  && install -D -m 0644 \
+    packages/discord-plays-pokemon/packages/backend/src/goal/pokemonctl-output.ts \
+    /usr/local/bin/pokemonctl-output.ts \
   && pokemonctl --help
 
 # Stage the from-source wasm where the emulator expects it (relative to the
 # inner-monorepo root the app runs from).
-COPY --from=wasm-builder /src/build/wasm/pokeemerald.wasm \
+COPY --from=wasm-abi-test /app/packages/discord-plays-pokemon/packages/backend/assets/pokeemerald.wasm \
   /app/packages/discord-plays-pokemon/packages/backend/assets/pokeemerald.wasm
 
 # Version/revision metadata as build args so CI can bake the real build number +

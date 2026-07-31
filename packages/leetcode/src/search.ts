@@ -2,6 +2,7 @@ import { Database } from "bun:sqlite";
 import { SearchDb } from "./lib/search-db.ts";
 import { EmbeddingClient } from "./lib/embeddings.ts";
 import { SQLITE_PATH } from "./lib/config.ts";
+import { shutdownEmbeddingProcess } from "./lib/search-lifecycle.ts";
 
 type SearchMode = "semantic" | "keyword" | "hybrid";
 
@@ -215,7 +216,7 @@ async function main() {
   enrichResults(sourceDb, results);
   displayResults(results, query, mode);
 
-  if (embedder) embedder.shutdown();
+  await shutdownEmbeddingProcess(embedder);
   searchDb.close();
   sourceDb.close();
   process.exit(0);

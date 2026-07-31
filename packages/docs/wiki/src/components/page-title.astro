@@ -1,0 +1,7 @@
+---
+import DefaultPageTitle from "@astrojs/starlight/components/PageTitle.astro";
+
+const { sourceKind } = Astro.locals.starlightRoute.entry.data;
+---
+
+{sourceKind === "working" ? null : <DefaultPageTitle />}

@@ -2,7 +2,7 @@ import { Context } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
 import { z } from "zod/v4";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
-import { rootInstallWithoutHooks, installScoutWorkspace } from "./bot-clone.ts";
+import { installScoutWorkspace } from "./bot-clone.ts";
 import {
   changedFilesInPaths,
   closeSeasonRefreshPr,
@@ -179,7 +179,6 @@ export const scoutQueueWindowsActivities = {
         "1",
       ]);
 
-      await rootInstallWithoutHooks(repoDir);
       await installScoutWorkspace(repoDir);
 
       const region = resolveS3Region();

@@ -3,10 +3,16 @@ export {
   friendGroupHistory,
   getPerson,
   getStyleCard,
+  getStylePromptContext,
   listStyleCardNames,
   relationshipContextText,
+  styleCardToPromptContext,
 } from "@shepherdjerred/glitter-context";
-export type { StyleCard } from "@shepherdjerred/glitter-context/schema";
+export type {
+  StyleCard,
+  StylePromptContext,
+} from "@shepherdjerred/glitter-context/schema";
+export { serializeStyleCardForScoutPrompt } from "./review/style-card-prompt.ts";
 export * from "./seasons.ts";
 export * from "./review/art-styles.ts";
 export { ART_STYLES } from "./review/art-styles-list.ts";

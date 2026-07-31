@@ -7,7 +7,285 @@ index 829e603..2ed7f2c 100644
  		--export=AgbMain --export=WasmRunFrame \
  		--export=gSaveBlock1Ptr --export=gPlayerAvatar --export=gObjectEvents --export=VarGet \
 -		--export=gSoundInfo --export=gWasmPcmL --export=gWasmPcmR \
-+		--export=gSoundInfo --export=gWasmPcmL --export=gWasmPcmR --export=gSaveBlock2Ptr --export=gPlayerParty --export=gPlayerPartyCount --export=gBattleResults \
++		--export=gSoundInfo --export=gWasmPcmL --export=gWasmPcmR --export=gSaveBlock2Ptr --export=gPlayerParty --export=gPlayerPartyCount --export=gBattleResults --export=WasmReadObservation --export=WasmReadMapTile --export=WasmCheckpointSave \
  		-o $@ $(filter %.o,$^)
  
  # m4a sound tables / voicegroups / samples (data/sound_data.s) -> wasm object.
+diff --git a/src/wasm_observation.c b/src/wasm_observation.c
+new file mode 100644
+index 000000000..84f0d7839
+--- /dev/null
++++ b/src/wasm_observation.c
+@@ -0,0 +1,272 @@
++#include "global.h"
++#include "battle.h"
++#include "battle_anim.h"
++#include "battle_controllers.h"
++#include "battle_pyramid.h"
++#include "event_object_movement.h"
++#include "field_message_box.h"
++#include "fieldmap.h"
++#include "field_screen_effect.h"
++#include "main.h"
++#include "new_game.h"
++#include "overworld.h"
++#include "palette.h"
++#include "save.h"
++#include "script.h"
++#include "text.h"
++
++#define WASM_OBSERVATION_VERSION 2
++
++enum WasmObservationPhase
++{
++    WASM_PHASE_UNAVAILABLE,
++    WASM_PHASE_OVERWORLD,
++    WASM_PHASE_SCRIPTED,
++    WASM_PHASE_BATTLE,
++    WASM_PHASE_OTHER,
++};
++
++enum WasmObservationReadiness
++{
++    WASM_OBSERVATION_VALID = 1 << 0,
++    WASM_INPUT_READY = 1 << 1,
++    WASM_PLAYER_STABLE = 1 << 2,
++};
++
++struct __attribute__((packed)) WasmBattleParticipant
++{
++    u8 battler;
++    u8 side;
++    u8 position;
++    u8 active;
++    u16 species;
++    u16 hp;
++    u16 maxHp;
++    u16 partyIndex;
++    u32 status1;
++};
++
++STATIC_ASSERT(sizeof(struct WasmBattleParticipant) == 16, WasmBattleParticipantMustBe16Bytes);
++
++struct __attribute__((packed)) WasmObservationV1
++{
++    u16 version;
++    u16 size;
++    u32 frame;
++    u8 phase;
++    u8 readiness;
++    u8 mapGroup;
++    u8 mapNum;
++    s16 x;
++    s16 y;
++    u8 facing;
++    u8 avatarFlags;
++    u8 runningState;
++    u8 tileTransitionState;
++    u8 currentMetatileBehavior;
++    u8 collisionNorth;
++    u8 collisionSouth;
++    u8 collisionWest;
++    u8 collisionEast;
++    u8 controlsLocked;
++    u8 scriptActive;
++    u8 paletteFading;
++    u8 inBattle;
++    u8 objectEventActive;
++    u8 battleMenu;
++    u8 battlersCount;
++    u32 battleTypeFlags;
++    u32 battleControllerExecFlags;
++    u8 inputBattler;
++    u8 opponentBattler;
++    u8 activeBattler;
++    u8 actionCursor;
++    u8 moveCursor;
++    u8 dialogFlags;
++    struct WasmBattleParticipant battlers[MAX_BATTLERS_COUNT];
++    u16 currentMove;
++    u16 chosenMove;
++    u8 trailingReserved[2];
++};
++
++STATIC_ASSERT(sizeof(struct WasmObservationV1) == 116, WasmObservationV1MustBe116Bytes);
++
++static struct WasmObservationV1 sWasmObservation;
++
++static u8 GetCollisionInDirectionForObservation(struct ObjectEvent *objectEvent, u8 direction)
++{
++    s16 x = objectEvent->currentCoords.x;
++    s16 y = objectEvent->currentCoords.y;
++
++    MoveCoords(direction, &x, &y);
++    return GetCollisionAtCoords(objectEvent, x, y, direction);
++}
++
++const struct WasmObservationV1 *WasmReadObservation(void)
++{
++    struct ObjectEvent *player;
++    struct WasmBattleParticipant *participant;
++    bool8 controlsLocked = ArePlayerFieldControlsLocked();
++    bool8 scriptActive = ScriptContext_IsEnabled();
++    bool8 paletteFading = gPaletteFade.active != 0;
++    bool8 playerStable = IsPlayerStandingStill();
++    bool8 isOverworld = gMain.callback2 == CB2_Overworld;
++    bool8 observationValid = FALSE;
++    bool8 dialogVisible = IsFieldMessageBoxVisible();
++    bool8 dialogInputReady = dialogVisible
++        && (IsTextPrinterWaitingForInput(0) || WasmIsScriptWaitingForButtonPress());
++    u8 battler;
++
++    sWasmObservation.version = WASM_OBSERVATION_VERSION;
++    sWasmObservation.size = sizeof(sWasmObservation);
++    sWasmObservation.frame = gMain.vblankCounter1;
++    sWasmObservation.phase = WASM_PHASE_OTHER;
++    sWasmObservation.readiness = 0;
++    sWasmObservation.mapGroup = 0;
++    sWasmObservation.mapNum = 0;
++    sWasmObservation.x = 0;
++    sWasmObservation.y = 0;
++    sWasmObservation.facing = DIR_NONE;
++    sWasmObservation.avatarFlags = gPlayerAvatar.flags;
++    sWasmObservation.runningState = gPlayerAvatar.runningState;
++    sWasmObservation.tileTransitionState = gPlayerAvatar.tileTransitionState;
++    sWasmObservation.currentMetatileBehavior = 0;
++    sWasmObservation.collisionNorth = 0;
++    sWasmObservation.collisionSouth = 0;
++    sWasmObservation.collisionWest = 0;
++    sWasmObservation.collisionEast = 0;
++    sWasmObservation.controlsLocked = controlsLocked;
++    sWasmObservation.scriptActive = scriptActive;
++    sWasmObservation.paletteFading = paletteFading;
++    sWasmObservation.inBattle = gMain.inBattle;
++    sWasmObservation.objectEventActive = 0;
++    sWasmObservation.battleMenu = WASM_BATTLE_MENU_NONE;
++    sWasmObservation.battlersCount = gBattlersCount;
++    sWasmObservation.battleTypeFlags = gBattleTypeFlags;
++    sWasmObservation.battleControllerExecFlags = gBattleControllerExecFlags;
++    sWasmObservation.inputBattler = MAX_BATTLERS_COUNT;
++    sWasmObservation.opponentBattler = MAX_BATTLERS_COUNT;
++    sWasmObservation.activeBattler = gActiveBattler;
++    sWasmObservation.actionCursor = 0;
++    sWasmObservation.moveCursor = 0;
++    sWasmObservation.dialogFlags = dialogVisible | (dialogInputReady << 1);
++    for (battler = 0; battler < MAX_BATTLERS_COUNT; battler++)
++    {
++        participant = &sWasmObservation.battlers[battler];
++        participant->battler = battler;
++        participant->side = 0xFF;
++        participant->position = 0xFF;
++        participant->active = FALSE;
++        participant->species = SPECIES_NONE;
++        participant->hp = 0;
++        participant->maxHp = 0;
++        participant->partyIndex = 0;
++        participant->status1 = 0;
++    }
++    sWasmObservation.currentMove = gCurrentMove;
++    sWasmObservation.chosenMove = gChosenMove;
++    sWasmObservation.trailingReserved[0] = 0;
++    sWasmObservation.trailingReserved[1] = 0;
++
++    if (gMain.inBattle)
++        sWasmObservation.phase = WASM_PHASE_BATTLE;
++    else if (isOverworld && (controlsLocked || scriptActive))
++        sWasmObservation.phase = WASM_PHASE_SCRIPTED;
++    else if (isOverworld)
++        sWasmObservation.phase = WASM_PHASE_OVERWORLD;
++
++    if (gMain.inBattle)
++    {
++        for (battler = 0; battler < gBattlersCount && battler < MAX_BATTLERS_COUNT; battler++)
++        {
++            participant = &sWasmObservation.battlers[battler];
++            participant->side = GetBattlerSide(battler);
++            participant->position = gBattlerPositions[battler];
++            participant->active = (gAbsentBattlerFlags & (1u << battler)) == 0;
++            participant->species = gBattleMons[battler].species;
++            participant->hp = gBattleMons[battler].hp;
++            participant->maxHp = gBattleMons[battler].maxHP;
++            participant->partyIndex = gBattlerPartyIndexes[battler];
++            participant->status1 = gBattleMons[battler].status1;
++            if (GetBattlerSide(battler) == B_SIDE_PLAYER && participant->active)
++            {
++                u8 menu = WasmGetPlayerInputMenuState(battler);
++                if (sWasmObservation.inputBattler == MAX_BATTLERS_COUNT
++                 && menu != WASM_BATTLE_MENU_NONE)
++                {
++                    sWasmObservation.inputBattler = battler;
++                    sWasmObservation.battleMenu = menu;
++                }
++            }
++            else if (GetBattlerSide(battler) == B_SIDE_OPPONENT && sWasmObservation.opponentBattler == MAX_BATTLERS_COUNT)
++                sWasmObservation.opponentBattler = battler;
++        }
++        if (sWasmObservation.inputBattler < MAX_BATTLERS_COUNT)
++        {
++            battler = sWasmObservation.inputBattler;
++            sWasmObservation.actionCursor = gActionSelectionCursor[battler];
++            sWasmObservation.moveCursor = gMoveSelectionCursor[battler];
++        }
++    }
++
++    if (isOverworld && gPlayerAvatar.objectEventId < OBJECT_EVENTS_COUNT)
++    {
++        player = &gObjectEvents[gPlayerAvatar.objectEventId];
++        if (player->active && player->isPlayer && gSaveBlock1Ptr != NULL)
++        {
++            observationValid = TRUE;
++            sWasmObservation.mapGroup = gSaveBlock1Ptr->location.mapGroup;
++            sWasmObservation.mapNum = gSaveBlock1Ptr->location.mapNum;
++            sWasmObservation.x = player->currentCoords.x;
++            sWasmObservation.y = player->currentCoords.y;
++            sWasmObservation.facing = player->facingDirection;
++            sWasmObservation.currentMetatileBehavior = player->currentMetatileBehavior;
++            sWasmObservation.collisionNorth = GetCollisionInDirectionForObservation(player, DIR_NORTH);
++            sWasmObservation.collisionSouth = GetCollisionInDirectionForObservation(player, DIR_SOUTH);
++            sWasmObservation.collisionWest = GetCollisionInDirectionForObservation(player, DIR_WEST);
++            sWasmObservation.collisionEast = GetCollisionInDirectionForObservation(player, DIR_EAST);
++            sWasmObservation.objectEventActive = TRUE;
++        }
++    }
++
++    if (observationValid)
++        sWasmObservation.readiness |= WASM_OBSERVATION_VALID;
++    if (playerStable)
++        sWasmObservation.readiness |= WASM_PLAYER_STABLE;
++    if ((observationValid && playerStable && isOverworld && !controlsLocked && !scriptActive && !paletteFading)
++     || dialogInputReady
++     || (gMain.inBattle && sWasmObservation.battleMenu != WASM_BATTLE_MENU_NONE))
++        sWasmObservation.readiness |= WASM_INPUT_READY;
++
++    return &sWasmObservation;
++}
++
++u32 WasmReadMapTile(s32 x, s32 y)
++{
++    if (gMain.callback2 != CB2_Overworld || gMapHeader.mapLayout == NULL || gSaveBlock1Ptr == NULL)
++        return 0;
++
++    return (1u << 31)
++         | (MapGridGetMetatileBehaviorAt(x, y) & 0xFF)
++         | ((u32)MapGridGetCollisionAt(x, y) << 8)
++         | ((u32)MapGridGetElevationAt(x, y) << 16);
++}
++
++u8 WasmCheckpointSave(void)
++{
++    u8 status;
++
++    if (gMain.callback2 != CB2_Overworld && !gMain.inBattle)
++        return SAVE_STATUS_ERROR;
++    if (gMain.callback2 == CB2_Overworld)
++        SaveMapView();
++    PausePyramidChallenge();
++    if (gDifferentSaveFile)
++    {
++        status = TrySavingData(SAVE_OVERWRITE_DIFFERENT_FILE);
++        if (status == SAVE_STATUS_OK)
++            gDifferentSaveFile = FALSE;
++        return status;
++    }
++    return TrySavingData(SAVE_NORMAL);
++}

@@ -14,6 +14,7 @@ import {
   CANONICAL_DIGEST_PATTERN,
   inputRecordMatchesState,
   parseScoutReleaseState,
+  SCOUT_VERSION_PATTERN,
   siteReleaseIdentity,
   type ScoutReleaseState,
 } from "./scout-release-state.ts";
@@ -107,6 +108,7 @@ export function immutablePutCommand(key: string, file: string): string[] {
     "*",
     "--endpoint-url",
     SEAWEEDFS_ENDPOINT,
+    "--no-cli-pager",
   ];
 }
 
@@ -200,6 +202,16 @@ export async function readScoutStateByInput(
     throw new Error("Scout release input index points to a different identity");
   }
   return state;
+}
+
+export async function readScoutStateByVersion(
+  version: string,
+): Promise<ScoutReleaseState | null> {
+  if (!SCOUT_VERSION_PATTERN.test(version)) {
+    throw new Error("Scout release version is not canonical");
+  }
+  const content = await readOptionalObject(`versions/${version}.json`);
+  return content === null ? null : parseScoutReleaseState(content);
 }
 
 export async function assertScoutArchived(

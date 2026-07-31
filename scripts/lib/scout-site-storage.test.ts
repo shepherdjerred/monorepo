@@ -52,6 +52,7 @@ test("immutable record writes use an atomic create-if-absent precondition", () =
   const command = immutablePutCommand("inputs/example.json", "/tmp/state.json");
   expect(command).toContain("--if-none-match");
   expect(command[command.indexOf("--if-none-match") + 1]).toBe("*");
+  expect(command).toContain("--no-cli-pager");
   expect(command).toContain("inputs/example.json");
   expect(isS3PreconditionFailure("PreconditionFailed")).toBe(true);
   expect(isS3PreconditionFailure("status 412")).toBe(true);

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Monorepo Docs"
+  short_description: "Author AI working docs and Jerred’s human-first wiki"
+  default_prompt: "Use $monorepo-docs to place and author documentation for this monorepo."

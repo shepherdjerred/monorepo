@@ -115,6 +115,15 @@ export function createSeaweedfsApp(chart: Chart) {
       enabled: true,
       replicas: 1,
       garbageThreshold: 0.3, // GC when 30% of volume is garbage
+      // Grow volumes to 30 GiB before rolling to a new one (SeaweedFS's own
+      // upstream default). The chart defaults this to 1000 MB, which capped every
+      // volume at 1 GiB and forced ~1 volume *slot* per GiB of data — 360 tiny
+      // volumes for only 88 GiB — so the slot count (maxVolumes below) became
+      // pinned to disk size and the store twice hit "No writable volumes" (HTTP
+      // 500 on every PutObject needing a fresh volume), reding all static-site CI
+      // deploys. Bigger volumes decouple the slot count from disk: the same data
+      // now needs a few dozen slots, governed by actual bytes, not slot count.
+      volumeSizeLimitMB: 30_000,
       resources: {
         requests: {
           cpu: "25m",
@@ -145,15 +154,16 @@ export function createSeaweedfsApp(chart: Chart) {
           type: "persistentVolumeClaim",
           size: Size.gibibytes(384).asString(),
           storageClass: NVME_STORAGE_CLASS,
-          // Explicit volume-count cap. Auto-detect (0) landed on 297 for the
-          // 256Gi PVC and the store filled all 297 slots — even though ~91Gi of
-          // disk was still free — so the master could no longer grow a volume and
-          // every PutObject that needed a fresh volume returned HTTP 500
-          // ("No writable volumes"), which broke all static-site CI deploys.
-          // 360 slots are comfortably backed by the 384Gi PVC (volumes cap at
-          // 1Gi each, so 360Gi worst-case < 384Gi). scout-prod/beta hold ~167 of
-          // these slots; trimming that data is the durable follow-up.
-          maxVolumes: 360,
+          // Volume-slot cap. With master.volumeSizeLimitMB at 30 GiB, 88 GiB of
+          // data packs into a few dozen volumes, so this is generous headroom, not
+          // a disk-coupled limit — the real governor is now bytes on the 384 GiB
+          // PVC, and disk fill is caught by the PVCStorageHigh alert (>90%). The
+          // pre-existing ~360 one-GiB volumes stay allocated but become writable
+          // up to 30 GiB, so they absorb new data instead of spawning fresh slots;
+          // the count stops climbing and slowly consolidates. Slot exhaustion (the
+          // failure mode that reded CI twice) is now alerted via the seaweedfs
+          // PrometheusRule (SeaweedFSVolumeCreationFailing).
+          maxVolumes: 500,
         },
       ],
       // Configure the PVC for volume data

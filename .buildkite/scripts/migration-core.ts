@@ -197,6 +197,7 @@ export const summaryLanes = [
   "site-webring",
   "site-cooklang",
   "site-stocks",
+  "site-wiki",
   "site-better-skill-capped",
   "site-glitter",
   "site-scout",
@@ -257,6 +258,7 @@ const sitePaths = {
     "packages/stocks-sjer-red",
     ...deployScripts,
   ],
+  "site-wiki": [...workspacePaths, "packages/docs", ...deployScripts],
   "site-better-skill-capped": [
     ...workspacePaths,
     "packages/better-skill-capped",
@@ -293,6 +295,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "packages/astro-opengraph-images",
     "packages/webring",
     "packages/eslint-config",
+    "packages/docs",
     ...deployScripts,
   ],
   resume: ["packages/resume", ...deployScripts],

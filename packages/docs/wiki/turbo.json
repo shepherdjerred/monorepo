@@ -1,0 +1,33 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/docs/**/*.md",
+        "!$TURBO_ROOT$/packages/docs/wiki/dist/**"
+      ],
+      "outputs": ["dist/**"]
+    },
+    "typecheck": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/docs/**/*.md",
+        "!$TURBO_ROOT$/packages/docs/wiki/dist/**"
+      ]
+    },
+    "test": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/docs/**/*.md",
+        "!$TURBO_ROOT$/packages/docs/wiki/dist/**"
+      ]
+    },
+    "test:e2e": {
+      "dependsOn": ["build", "^build"],
+      "cache": false,
+      "passThroughEnv": ["PLAYWRIGHT_BROWSERS_PATH"]
+    }
+  }
+}

@@ -54,6 +54,10 @@ resource "aws_s3_bucket" "stocks_sjer_red" {
   bucket = "stocks-sjer-red"
 }
 
+resource "aws_s3_bucket" "wiki_sjer_red" {
+  bucket = "wiki-sjer-red"
+}
+
 resource "aws_s3_bucket" "glitter_boys_ppl" {
   bucket = "glitter-boys-ppl"
 }
@@ -104,6 +108,7 @@ locals {
     "sjer-red"            = ["_astro/"]
     "cook"                = ["_astro/"]
     "stocks-sjer-red"     = ["_astro/"]
+    "wiki-sjer-red"       = ["_astro/"]
     "better-skill-capped" = ["assets/"]
   }
 }
@@ -118,6 +123,7 @@ resource "terraform_data" "static_site_asset_lifecycle" {
     aws_s3_bucket.sjer_red,
     aws_s3_bucket.cook,
     aws_s3_bucket.stocks_sjer_red,
+    aws_s3_bucket.wiki_sjer_red,
     aws_s3_bucket.better_skill_capped,
   ]
 

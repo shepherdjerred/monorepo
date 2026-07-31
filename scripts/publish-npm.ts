@@ -24,6 +24,7 @@
 
 import { run, requireEnv } from "./lib/run.ts";
 import { asRecord } from "./lib/json.ts";
+import { runMain } from "./lib/transient.ts";
 
 // ---------------------------------------------------------------------------
 // npm token 2FA-bypass preflight (ported faithfully from publishNpmHelper)
@@ -292,4 +293,4 @@ async function main(): Promise<void> {
   console.log(`--- published ${pkgName} --tag ${tag}`);
 }
 
-await main();
+await runMain(main);

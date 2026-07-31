@@ -2,7 +2,7 @@ import type { CommandInput } from "#src/game/command/command-input.ts";
 import { isBurst, isHold, isHoldB } from "#src/game/command/command-input.ts";
 import { commandToButtonMask } from "./buttons.ts";
 import { BUTTON, FRAME_MS } from "./constants.ts";
-import type { Emulator } from "./emulator.ts";
+import type { Emulator, InputSource } from "./emulator.ts";
 
 export function framesFromMs(ms: number): number {
   return Math.max(1, Math.round(ms / FRAME_MS));
@@ -25,6 +25,7 @@ export async function enqueueCommand(
   emulator: Emulator,
   command: CommandInput,
   timing: CommandTiming,
+  source: InputSource = "interactive",
 ): Promise<void> {
   const mask = commandToButtonMask(command.command);
 
@@ -33,11 +34,17 @@ export async function enqueueCommand(
       mask | BUTTON.b,
       timing.holdFrames * command.quantity,
       0,
+      source,
     );
     return;
   }
   if (command.modifier && isHold(command.modifier)) {
-    await emulator.queuePress(mask, timing.holdFrames * command.quantity, 0);
+    await emulator.queuePress(
+      mask,
+      timing.holdFrames * command.quantity,
+      0,
+      source,
+    );
     return;
   }
   if (command.modifier && isBurst(command.modifier)) {
@@ -47,6 +54,7 @@ export async function enqueueCommand(
         mask,
         timing.burstHoldFrames,
         timing.burstGapFrames,
+        source,
       );
     }
     return;
@@ -55,6 +63,11 @@ export async function enqueueCommand(
   // Normal tap(s): release between repeats so each press registers as a
   // distinct edge rather than one continuous hold.
   for (let i = 0; i < command.quantity; i++) {
-    await emulator.queuePress(mask, timing.pressFrames, timing.pressFrames);
+    await emulator.queuePress(
+      mask,
+      timing.pressFrames,
+      timing.pressFrames,
+      source,
+    );
   }
 }

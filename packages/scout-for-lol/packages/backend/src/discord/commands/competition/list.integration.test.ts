@@ -18,6 +18,7 @@ import {
   createTestDatabase,
   deleteIfExists,
 } from "#src/testing/test-database.ts";
+import { getSeasonFilterTimes } from "#src/testing/season-filter-times.ts";
 
 // Create a test database for integration tests
 const { prisma } = createTestDatabase("competition-list-test");
@@ -233,21 +234,23 @@ describe("Competition List Query", () => {
   });
 
   test("activeOnly includes season-based competitions whose season is still active", async () => {
-    const duringSeason = new Date("2026-07-01T00:00:00-07:00");
+    const seasonId = "2026_SEASON_2_ACT_2";
+    const { activeAt } = await getSeasonFilterTimes(prisma, seasonId);
+
     await createCompetition(
       prisma,
       createTestCompetitionInput(serverId, ownerId1, channelId, {
         title: "Season Comp",
         dates: {
           type: "SEASON",
-          seasonId: "2026_SEASON_2_ACT_2",
+          seasonId,
         },
       }),
     );
 
     const activeComps = await getCompetitionsByServer(prisma, serverId, {
       activeOnly: true,
-      now: duringSeason,
+      now: activeAt,
     });
     expect(activeComps).toHaveLength(1);
     expect(activeComps[0]?.title).toBe("Season Comp");

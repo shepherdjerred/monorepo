@@ -90,11 +90,7 @@ function validateReleaseSteps({
     ],
     [
       "scout-prod-reconcile",
-      [
-        "resolve-prod-pin",
-        "resolve-prod-state --prod-pin",
-        "reconcile-prod --state",
-      ],
+      ["resolve-prod-pin", "reconcile-prod-pin --prod-pin"],
     ],
   ] satisfies readonly (readonly [string, readonly string[]])[]) {
     const block = stepBlocks.get(step);

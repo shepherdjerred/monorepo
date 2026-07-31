@@ -13,10 +13,8 @@ import {
 } from "#src/emulator/command-sink.ts";
 import { encodePng } from "#src/emulator/png.ts";
 import { GameStreamer } from "#src/stream/game-streamer.ts";
-import {
-  GoalManager,
-  type GoalDiscordMessage,
-} from "#src/goal/goal-manager.ts";
+import { GoalManager } from "#src/goal/goal-manager.ts";
+import type { GoalDiscordMessage } from "#src/goal/goal-types.ts";
 import {
   startGoalControlServer,
   type GoalControlServer,
@@ -142,6 +140,7 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
           readGameSnapshot(emulator.memoryReader(), emulator.gameSymbols()),
         spatialSnapshotProvider: () =>
           readSpatialSnapshot(emulator.memoryReader(), emulator.gameSymbols()),
+        acquireInputLease: () => emulator.acquireInputLease("goal"),
       });
       await goalManager.initialize();
       goalControlServer = startGoalControlServer({

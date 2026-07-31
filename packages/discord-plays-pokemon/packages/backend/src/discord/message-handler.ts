@@ -1,14 +1,29 @@
 import type { Client, Message } from "discord.js";
 import { Events, ChannelType } from "discord.js";
 import { parseChord, type Chord } from "#src/game/command/chord.ts";
-import { execute } from "./chord-executor.ts";
+import { effectiveChordDelay, execute } from "./chord-executor.ts";
 import { isValid } from "./chord-validator.ts";
 import type { CommandInput } from "#src/game/command/command-input.ts";
 import type { PokemonGameDriver } from "#src/lifecycle/pokemon-driver.ts";
 import { logger } from "#src/logger.ts";
 import { getConfig } from "#src/config/index.ts";
+import { InputLeaseConflictError } from "#src/emulator/emulator.ts";
 
 export let lastCommand = new Date();
+
+export async function executeInteractiveChord(
+  chord: Chord,
+  fn: (commandInput: CommandInput) => Promise<void>,
+  delayBetweenActionsMs: number,
+): Promise<boolean> {
+  try {
+    await execute(chord, fn, delayBetweenActionsMs);
+    return true;
+  } catch (error) {
+    if (error instanceof InputLeaseConflictError) return false;
+    throw error;
+  }
+}
 
 export function handleMessages(
   client: Client,
@@ -91,7 +106,20 @@ async function handleMessage(
     maxQuantityPerAction: commands.max_quantity_per_action,
   };
   if (isValid(chord, chatLimits)) {
-    await execute(chord, fn);
+    const accepted = await executeInteractiveChord(
+      chord,
+      fn,
+      effectiveChordDelay(
+        commands.chord.delay,
+        commands.delay_between_actions_in_milliseconds,
+      ),
+    );
+    if (!accepted) {
+      await event.reply(
+        "Goal mode currently owns game input. Try again after the goal finishes.",
+      );
+      return;
+    }
     await event.react(`👍`);
     lastCommand = new Date();
   } else {

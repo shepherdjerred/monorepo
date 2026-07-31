@@ -18,6 +18,7 @@ import {
   createTestDatabase,
   deleteIfExists,
 } from "#src/testing/test-database.ts";
+import { getSeasonFilterTimes } from "#src/testing/season-filter-times.ts";
 
 // Create a test database
 const { prisma } = createTestDatabase("competition-queries-test");
@@ -274,7 +275,9 @@ describe("getCompetitionsByServer", () => {
   });
 
   test("activeOnly excludes season-based comp tied to an ended season", async () => {
-    // 2025_SEASON_3_ACT_2 ended 2026-01-07; today is 2026-05-11
+    const seasonId = "2026_SEASON_2_ACT_2";
+    const { inactiveAt } = await getSeasonFilterTimes(prisma, seasonId);
+
     await createCompetition(prisma, {
       serverId: testGuildId("123456789012345678"),
       ownerId: testAccountId("987654321098765432"),
@@ -283,21 +286,23 @@ describe("getCompetitionsByServer", () => {
       description: "Test",
       visibility: "OPEN",
       maxParticipants: 50,
-      dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_2" },
+      dates: { type: "SEASON", seasonId },
       criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
     });
 
     const activeOnly = await getCompetitionsByServer(
       prisma,
       testGuildId("123456789012345678"),
-      { activeOnly: true },
+      { activeOnly: true, now: inactiveAt },
     );
 
     expect(activeOnly).toHaveLength(0);
   });
 
   test("activeOnly includes season-based comp tied to a future-ending season", async () => {
-    const duringSeason = new Date("2026-07-01T00:00:00-07:00");
+    const seasonId = "2026_SEASON_2_ACT_2";
+    const { activeAt } = await getSeasonFilterTimes(prisma, seasonId);
+
     await createCompetition(prisma, {
       serverId: testGuildId("123456789012345678"),
       ownerId: testAccountId("987654321098765432"),
@@ -306,14 +311,14 @@ describe("getCompetitionsByServer", () => {
       description: "Test",
       visibility: "OPEN",
       maxParticipants: 50,
-      dates: { type: "SEASON", seasonId: "2026_SEASON_2_ACT_2" },
+      dates: { type: "SEASON", seasonId },
       criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
     });
 
     const activeOnly = await getCompetitionsByServer(
       prisma,
       testGuildId("123456789012345678"),
-      { activeOnly: true, now: duringSeason },
+      { activeOnly: true, now: activeAt },
     );
 
     expect(activeOnly).toHaveLength(1);
@@ -321,7 +326,9 @@ describe("getCompetitionsByServer", () => {
   });
 
   test("activeOnly excludes comp with endProcessedAt set even if season is still active", async () => {
-    const duringSeason = new Date("2026-07-01T00:00:00-07:00");
+    const seasonId = "2026_SEASON_2_ACT_2";
+    const { activeAt } = await getSeasonFilterTimes(prisma, seasonId);
+
     const comp = await createCompetition(prisma, {
       serverId: testGuildId("123456789012345678"),
       ownerId: testAccountId("987654321098765432"),
@@ -330,7 +337,7 @@ describe("getCompetitionsByServer", () => {
       description: "Test",
       visibility: "OPEN",
       maxParticipants: 50,
-      dates: { type: "SEASON", seasonId: "2026_SEASON_2_ACT_2" },
+      dates: { type: "SEASON", seasonId },
       criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
     });
 
@@ -344,7 +351,7 @@ describe("getCompetitionsByServer", () => {
     const activeOnly = await getCompetitionsByServer(
       prisma,
       testGuildId("123456789012345678"),
-      { activeOnly: true, now: duringSeason },
+      { activeOnly: true, now: activeAt },
     );
 
     expect(activeOnly).toHaveLength(0);
@@ -471,6 +478,9 @@ describe("getActiveCompetitions", () => {
   });
 
   test("excludes season-based comp tied to an ended season", async () => {
+    const seasonId = "2026_SEASON_2_ACT_2";
+    const { inactiveAt } = await getSeasonFilterTimes(prisma, seasonId);
+
     await createCompetition(prisma, {
       serverId: testGuildId("123456789012345678"),
       ownerId: testAccountId("987654321098765432"),
@@ -479,16 +489,18 @@ describe("getActiveCompetitions", () => {
       description: "Test",
       visibility: "OPEN",
       maxParticipants: 50,
-      dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
+      dates: { type: "SEASON", seasonId },
       criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
     });
 
-    const active = await getActiveCompetitions(prisma);
+    const active = await getActiveCompetitions(prisma, inactiveAt);
     expect(active).toHaveLength(0);
   });
 
   test("includes season-based comp tied to a future-ending season", async () => {
-    const duringSeason = new Date("2026-07-01T00:00:00-07:00");
+    const seasonId = "2026_SEASON_2_ACT_2";
+    const { activeAt } = await getSeasonFilterTimes(prisma, seasonId);
+
     await createCompetition(prisma, {
       serverId: testGuildId("123456789012345678"),
       ownerId: testAccountId("987654321098765432"),
@@ -497,11 +509,11 @@ describe("getActiveCompetitions", () => {
       description: "Test",
       visibility: "OPEN",
       maxParticipants: 50,
-      dates: { type: "SEASON", seasonId: "2026_SEASON_2_ACT_2" },
+      dates: { type: "SEASON", seasonId },
       criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
     });
 
-    const active = await getActiveCompetitions(prisma, duringSeason);
+    const active = await getActiveCompetitions(prisma, activeAt);
     expect(active).toHaveLength(1);
     expect(active[0]?.title).toBe("Active-Season Cron Comp");
   });

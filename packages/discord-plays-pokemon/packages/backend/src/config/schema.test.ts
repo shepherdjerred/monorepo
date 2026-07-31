@@ -110,6 +110,18 @@ describe("ConfigSchema goal config", () => {
     expect(parsed.game.goal.reasoning_effort).toBe("high");
   });
 
+  test("accepts an isolated goal helper directory", () => {
+    const config = validConfigWithoutGoal();
+    const parsed = ConfigSchema.parse({
+      ...config,
+      game: {
+        ...config.game,
+        goal: { helper_dir: "/tmp/pokemon-benchmark-helper" },
+      },
+    });
+    expect(parsed.game.goal.helper_dir).toBe("/tmp/pokemon-benchmark-helper");
+  });
+
   test("rejects unknown reasoning_effort", () => {
     const config = validConfigWithoutGoal();
     const result = ConfigSchema.safeParse({

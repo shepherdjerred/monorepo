@@ -14,6 +14,7 @@ import { getStaticSitesRuleGroups } from "./rules/static-sites.ts";
 import { getServiceProbeRuleGroups } from "./rules/service-probes.ts";
 import { getR2StorageRuleGroups } from "./rules/r2-storage.ts";
 import { getBugsinkRuleGroups } from "./rules/bugsink.ts";
+import { getSeaweedfsRuleGroups } from "./rules/seaweedfs.ts";
 import { getPostalRuleGroups } from "./rules/postal.ts";
 import { getScoutRuleGroups } from "./rules/scout.ts";
 import { getTasknotesRuleGroups } from "./rules/tasknotes.ts";
@@ -197,6 +198,18 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
     spec: {
       groups: getBugsinkRuleGroups(),
+    },
+  });
+
+  // Create SeaweedFS rules (volume-slot exhaustion + volume PVC disk)
+  new PrometheusRule(chart, "prometheus-seaweedfs-rules", {
+    metadata: {
+      name: "prometheus-seaweedfs-rules",
+      namespace: "seaweedfs",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getSeaweedfsRuleGroups(),
     },
   });
 

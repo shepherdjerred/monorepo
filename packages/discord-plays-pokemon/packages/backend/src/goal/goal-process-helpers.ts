@@ -3,7 +3,7 @@
 // line cap.
 
 import { logger } from "#src/logger.ts";
-import type { GoalProcessSpawner } from "./goal-manager.ts";
+import type { GoalProcess, GoalProcessSpawner } from "./goal-types.ts";
 
 export const defaultSpawner: GoalProcessSpawner = (args, options) => {
   return Bun.spawn(args, {
@@ -13,6 +13,26 @@ export const defaultSpawner: GoalProcessSpawner = (args, options) => {
     stderr: "pipe",
   });
 };
+
+export async function settleGoalProcess(
+  resources: {
+    process: GoalProcess;
+    stdoutPump: Promise<void>;
+    releaseInputLease: () => void;
+  },
+  terminate: boolean,
+  beforeRelease: () => Promise<void> = () => Promise.resolve(),
+): Promise<number> {
+  if (terminate) resources.process.kill("SIGTERM");
+  try {
+    const exitCode = await resources.process.exited;
+    await resources.stdoutPump;
+    return exitCode;
+  } finally {
+    await beforeRelease();
+    resources.releaseInputLease();
+  }
+}
 
 export async function streamToLog(
   stream: ReadableStream<Uint8Array> | null,
