@@ -85,11 +85,11 @@ resource "github_repository_webhook" "pr_bot" {
   }
 
   active = true
-  # issue_comment drives the PR babysitter's comment trigger (e.g.
-  # "@temporal-worker help me get this green"). The worker ignores it unless
-  # PR_BABYSIT_ENABLED=true (default off), so subscribing is safe ahead of
-  # enabling — early deliveries 200-ack and no-op.
-  events = ["pull_request", "push", "issue_comment"]
+  # `push` drives the main-branch merge-conflict backfill and `pull_request`
+  # drives the per-PR merge-conflict check + PR-closed Buildkite build
+  # cancellation. (The former `issue_comment` subscription drove the removed
+  # PR babysitter and is no longer needed.)
+  events = ["pull_request", "push"]
 
   lifecycle {
     # GITHUB_WEBHOOK_SECRET lives in 1Password and is synced to the worker

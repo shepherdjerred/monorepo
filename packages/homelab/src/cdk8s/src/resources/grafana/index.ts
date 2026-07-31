@@ -10,7 +10,6 @@ import { exportBuildkiteDashboardJson } from "@shepherdjerred/homelab/cdk8s/graf
 import { exportBuildkitdDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/buildkitd-dashboard.ts";
 import { exportZfsDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/zfs-dashboard.ts";
 import { exportTemporalDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/temporal-dashboard.ts";
-import { exportPrReviewBotDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/pr-review-bot-dashboard.ts";
 import { exportStreambotDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/streambot-dashboard.ts";
 import { exportStaticSiteProbesDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/static-site-probes-dashboard.ts";
 import { exportDiscordPlaysDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/discord-plays-dashboard.ts";
@@ -133,13 +132,6 @@ const STATIC_SITE_PROBES_DASHBOARD: DashboardConfig = {
   exportFn: exportStaticSiteProbesDashboardJson,
 };
 
-const PR_REVIEW_BOT_DASHBOARD: DashboardConfig = {
-  id: "pr-review-bot-dashboard-configmap",
-  name: "pr-review-bot-dashboard",
-  jsonFilename: "pr-review-bot.json",
-  exportFn: exportPrReviewBotDashboardJson,
-};
-
 const STREAMBOT_DASHBOARD: DashboardConfig = {
   id: "streambot-dashboard-configmap",
   name: "streambot-dashboard",
@@ -160,7 +152,6 @@ const ALL_DASHBOARDS: DashboardConfig[] = [
   BUILDKITE_DASHBOARD,
   DISCORD_PLAYS_DASHBOARD,
   GITCKUP_DASHBOARD,
-  PR_REVIEW_BOT_DASHBOARD,
   SCOUT_DASHBOARD,
   SMARTCTL_DASHBOARD,
   STATIC_SITE_PROBES_DASHBOARD,
