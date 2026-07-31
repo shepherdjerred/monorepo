@@ -29,9 +29,6 @@ import { runCommand } from "./data-dragon-shell.ts";
 import {
   branchName,
   dataDragonPrTitle,
-  failureReason,
-  isFinalAttempt,
-  UPDATE_DATA_DRAGON_MAX_ATTEMPTS,
   validateVersion,
 } from "./data-dragon-util.ts";
 
@@ -196,6 +193,34 @@ export const dataDragonActivities = {
       latestVersion: input.latestVersion,
     });
     jsonLog("info", "Skipped Data Dragon update", input);
+  },
+
+  // Records the terminal outcome="failed" metric (and therefore the paging
+  // alert) for an update that exhausted its retries. This is invoked from the
+  // WORKFLOW's catch, not updateDataDragon's own catch: an attempt killed by
+  // OOM / heartbeat timeout / worker death never runs activity code, so
+  // recording the failed metric inside updateDataDragon would silently miss
+  // exactly the outages the alert exists to catch. Temporal surfaces the
+  // retries-exhausted failure to the workflow regardless of how the final
+  // attempt died, so the workflow is the reliable recording point. The caller
+  // extracts `reason` from the failure's cause chain
+  // (resolveTerminalFailureReason) so the ScoutDataDragonPrAutomationFailed
+  // reason filter keeps working.
+  async recordDataDragonFailure(
+    input: DataDragonVersionState & {
+      mode: DataDragonUpdateMode;
+      reason: string;
+    },
+  ): Promise<void> {
+    await Promise.resolve();
+    recordRun({
+      mode: input.mode,
+      outcome: "failed",
+      reason: input.reason,
+      currentVersion: input.currentVersion,
+      latestVersion: input.latestVersion,
+    });
+    jsonLog("error", "Data Dragon update failed (terminal)", input);
   },
 
   async updateDataDragon(
@@ -496,29 +521,17 @@ export const dataDragonActivities = {
     } catch (error) {
       const durationSeconds = (Date.now() - start) / 1000;
       const attempt = Context.current().info.attempt;
-      const finalAttempt = isFinalAttempt(
-        attempt,
-        UPDATE_DATA_DRAGON_MAX_ATTEMPTS,
-      );
-      // Only the final attempt's failure feeds the outcome="failed" metric
-      // (and therefore the paging alert) — an earlier attempt Temporal is
-      // about to retry must not page just because it will self-heal
-      // (PagerDuty #6948: attempt 1 failed on a transient npm registry
-      // blip, attempt 2 succeeded 3 minutes before the page fired).
-      if (finalAttempt) {
-        recordRun({
-          mode: input.mode,
-          outcome: "failed",
-          reason: failureReason(error),
-          currentVersion: input.currentVersion,
-          latestVersion: input.latestVersion,
-          durationSeconds,
-        });
-      }
-      jsonLog("error", "Data Dragon update failed", {
+      // The terminal outcome="failed" metric (and the paging alert) is recorded
+      // by the WORKFLOW's catch via recordDataDragonFailure, not here: an
+      // attempt killed by OOM / heartbeat timeout / worker death never reaches
+      // this catch, so recording the failed metric here would silently miss
+      // exactly those outages — while a per-attempt record would also
+      // double-count across the retries the workflow already collapses into one
+      // terminal failure (PagerDuty #6948: a transient attempt-1 blip must not
+      // page when attempt 2 self-heals). This block only logs the attempt.
+      jsonLog("error", "Data Dragon update attempt failed", {
         ...input,
         attempt,
-        finalAttempt,
         durationSeconds,
         error: error instanceof Error ? error.message : String(error),
       });

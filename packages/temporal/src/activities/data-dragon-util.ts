@@ -87,3 +87,36 @@ export function failureReason(error: unknown): string {
   }
   return "exception";
 }
+
+/**
+ * Concatenates the `message` of an error and every error in its `.cause`
+ * chain. A failed activity surfaces to the workflow as a Temporal
+ * `ActivityFailure` whose `.cause` is the original `ApplicationFailure` (both
+ * are `Error` subclasses), so the granular message `failureReason`
+ * pattern-matches on (e.g. `gh pr create`, `git push`, `update-data-dragon`)
+ * lives one or more levels down the chain, not on the top-level failure.
+ */
+export function collectErrorMessages(error: unknown): string {
+  const messages: string[] = [];
+  const seen = new Set<unknown>();
+  let current: unknown = error;
+  while (current instanceof Error && !seen.has(current)) {
+    seen.add(current);
+    messages.push(current.message);
+    current = current.cause;
+  }
+  return messages.join(" | ");
+}
+
+/**
+ * Resolves the granular `failureReason` for a terminal activity failure as
+ * observed at the workflow level. It walks the Temporal failure `.cause` chain
+ * first (see {@link collectErrorMessages}) so the reason label — and the
+ * `ScoutDataDragonPrAutomationFailed` alert's reason filter — keeps working.
+ * An attempt that died without running its own catch (OOM / heartbeat timeout /
+ * worker kill) carries no granular command message, so it falls through to
+ * `"exception"`, which is the correct generic signal for those outages.
+ */
+export function resolveTerminalFailureReason(error: unknown): string {
+  return failureReason(collectErrorMessages(error));
+}
