@@ -21,19 +21,24 @@ flowchart LR
 
 ## What runs
 
-- **Repo upkeep, PR-creating** — regenerate an artifact, open a PR only on
-  drift: cdk8s CRD imports, README project tables, the LLM pricing catalog,
-  pokeemerald data tables, Scout's Data Dragon assets / season dates /
+Each category has a deep-dive page; the
+[workflow inventory](/temporal/workflows/) maps every schedule to one.
+
+- **[Repo upkeep](/temporal/workflows/repo-upkeep/), PR-creating** —
+  regenerate an artifact, open a PR only on drift: cdk8s CRD imports, README
+  project tables, the LLM pricing catalog, pokeemerald data tables, plus
+  [Scout's](/temporal/workflows/scout/) Data Dragon assets / season dates /
   showcase images / queue windows.
-- **Homelab maintenance** — ZFS scrub, Bugsink housekeeping, S3 image GC,
-  Velero orphan-snapshot audit, DNS audit, golink sync, review-signal
-  collection.
+- **[Homelab maintenance](/temporal/workflows/homelab-maintenance/)** — ZFS
+  scrub, Bugsink housekeeping, S3 image GC, Velero orphan-snapshot audit,
+  DNS audit, golink sync, review-signal collection.
 - **Scheduled reports** — weekly dependency summary and the daily homelab
   audit (a report-only [agent task](/temporal/agent-tasks/)).
-- **Glitter corpus** — daily Discord capture and a weekly context refresh, on
-  their own rate-limited queues.
-- **Home automation** — vacuum-if-nobody-home three times a day and the
-  weekday/weekend good-morning sequence.
+- **[Glitter corpus](/temporal/workflows/glitter/)** — daily Discord capture
+  and a weekly context refresh, on their own rate-limited queues.
+- **[Home automation](/temporal/workflows/home-automation/)** —
+  vacuum-if-nobody-home three times a day and the weekday/weekend
+  good-morning sequence.
 
 ## Mechanics worth knowing
 

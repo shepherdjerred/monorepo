@@ -15,7 +15,8 @@ public HTTP surface is a Cloudflare Tunnel to a dedicated port on the worker.
 
 ## GitHub PR workflows
 
-One GitHub webhook fans out to independent workflows per event:
+One GitHub webhook fans out to independent workflows per event
+([deep dive](/temporal/workflows/pr-bots/)):
 
 - **Merge-conflict check** — posts the `ci/merge-conflict` commit status.
   This is a _required_ check in the repo's rulesets, so the worker being down
@@ -29,7 +30,8 @@ it was removed in favor of the CI review gate
 ## Home Assistant bridge
 
 The worker subscribes to Home Assistant events over websocket and starts
-workflows on `ios.action_fired` and presence transitions. Presence-driven
+workflows on `ios.action_fired` and presence transitions (deep dive:
+[home automation workflows](/temporal/workflows/home-automation/)). Presence-driven
 automation (welcome-home, leaving-home, door-lock reconciliation) is debounced
 through a singleton workflow with a 90-second cooldown, so a person flapping
 at the edge of a zone cannot rapid-fire the lock. Time-of-day routines
