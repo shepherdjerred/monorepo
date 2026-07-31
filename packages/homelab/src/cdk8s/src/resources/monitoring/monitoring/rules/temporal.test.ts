@@ -1,6 +1,24 @@
 import { describe, expect, test } from "bun:test";
 import { getTemporalRuleGroups } from "./temporal.ts";
 
+function findFailureRule(alertName: string): string {
+  const failureGroup = getTemporalRuleGroups().find(
+    (group) => group.name === "temporal-workflow-failures",
+  );
+  if (failureGroup?.rules === undefined) {
+    throw new Error("Missing temporal-workflow-failures rule group");
+  }
+  const rule = failureGroup.rules.find((r) => r.alert === alertName);
+  if (rule === undefined) {
+    throw new Error(`Missing ${alertName} rule`);
+  }
+  const expression = rule.expr.value;
+  if (typeof expression !== "string") {
+    throw new TypeError(`Expected ${alertName} rule expression to be a string`);
+  }
+  return expression;
+}
+
 describe("Temporal workflow outcome rules", () => {
   test("excludes intentional warm-morning preheat skips", () => {
     const outcomeGroup = getTemporalRuleGroups().find(
@@ -62,29 +80,14 @@ describe("Temporal workflow outcome rules", () => {
 });
 
 describe("Scout Data Dragon failure rules", () => {
-  function findFailureRule(alertName: string) {
-    const failureGroup = getTemporalRuleGroups().find(
-      (group) => group.name === "temporal-workflow-failures",
-    );
-    if (failureGroup?.rules === undefined) {
-      throw new Error("Missing temporal-workflow-failures rule group");
-    }
-    const rule = failureGroup.rules.find((r) => r.alert === alertName);
-    if (rule === undefined) {
-      throw new Error(`Missing ${alertName} rule`);
-    }
-    const expression = rule.expr.value;
-    if (typeof expression !== "string") {
-      throw new TypeError(
-        `Expected ${alertName} rule expression to be a string`,
-      );
-    }
-    return expression;
-  }
-
   test("ScoutDataDragonAutoMergeFailed alerts on the dedicated auto-merge-failure counter", () => {
     const expression = findFailureRule("ScoutDataDragonAutoMergeFailed");
     expect(expression).toContain("scout_data_dragon_auto_merge_failures");
+    // Must use max_over_time, not increase: the counter is absent until its
+    // first failure (born at value 1), and increase() over an all-1 range is 0,
+    // so increase() would miss the very first stuck PR the alert exists for.
+    expect(expression).toContain("max_over_time");
+    expect(expression).not.toContain("increase(");
   });
 
   test("ScoutDataDragonPrAutomationFailed no longer references the unreachable pr-merge-failed reason", () => {
