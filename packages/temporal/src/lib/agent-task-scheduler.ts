@@ -30,6 +30,30 @@ function workflowArgsForSchedule(
   });
 }
 
+// A future `runAt` is deferred by the Temporal server via `startDelay`, NOT by
+// an in-workflow `sleep`. The workflow therefore starts at `runAt` and never
+// sleeps, so `runAt` is stripped from the args it receives (mirrors
+// `workflowArgsForSchedule`). Deferring server-side means the run-timeout clock
+// only starts once the agent actually begins — a far-future task can no longer
+// be killed mid-wait (the bug this replaces: a 2h execution timeout terminated
+// the sleeping workflow days before `runAt`).
+function workflowArgsForOneOff(input: AgentTaskInput): AgentTaskInput {
+  return AgentTaskInputSchema.parse({
+    ...input,
+    runAt: undefined,
+  });
+}
+
+// Non-workflow (client/activity) context — `Date.now()` is allowed here.
+// Returns undefined for a past/immediate `runAt` so the workflow starts now.
+function startDelayFor(runAt: string | undefined): Duration | undefined {
+  if (runAt === undefined) {
+    return undefined;
+  }
+  const delayMs = Date.parse(runAt) - Date.now();
+  return delayMs > 0 ? delayMs : undefined;
+}
+
 export async function startOrScheduleAgentTask(
   client: Client,
   rawInput: AgentTaskInput,
@@ -54,7 +78,7 @@ export async function startOrScheduleAgentTask(
           workflowType: "agentTaskWorkflow",
           args,
           taskQueue: TASK_QUEUES.AGENT_TASK,
-          workflowExecutionTimeout: DEFAULT_WORKFLOW_TIMEOUT,
+          workflowRunTimeout: DEFAULT_WORKFLOW_TIMEOUT,
         },
         policies: {
           overlap: ScheduleOverlapPolicy.SKIP,
@@ -75,7 +99,7 @@ export async function startOrScheduleAgentTask(
           workflowType: "agentTaskWorkflow",
           args,
           taskQueue: TASK_QUEUES.AGENT_TASK,
-          workflowExecutionTimeout: DEFAULT_WORKFLOW_TIMEOUT,
+          workflowRunTimeout: DEFAULT_WORKFLOW_TIMEOUT,
         },
         policies: {
           overlap: ScheduleOverlapPolicy.SKIP,
@@ -96,13 +120,26 @@ export async function startOrScheduleAgentTask(
     return { kind: "schedule", scheduleId };
   }
 
+  // Id is derived from the original input (incl. `runAt`) so idempotency is
+  // unchanged; the workflow itself receives args with `runAt` stripped.
   const workflowId = await agentTaskWorkflowId(input);
+  // `startDelay` is only included when there is a future delay: under
+  // exactOptionalPropertyTypes an explicit `startDelay: undefined` is a type
+  // error (and would also differ semantically from omitting it).
+  const startDelay = startDelayFor(input.runAt);
   const handle = await client.workflow.start("agentTaskWorkflow", {
-    args: [input],
+    args: [workflowArgsForOneOff(input)],
     taskQueue: TASK_QUEUES.AGENT_TASK,
     workflowId,
-    workflowExecutionTimeout: DEFAULT_WORKFLOW_TIMEOUT,
-    workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
+    ...(startDelay === undefined ? {} : { startDelay }),
+    // `workflowRunTimeout` (per-run) rather than `workflowExecutionTimeout`: the
+    // 2h bound applies to the actual run once it starts, never to the buffered
+    // `startDelay`, so a future-dated task cannot time out before it runs.
+    workflowRunTimeout: DEFAULT_WORKFLOW_TIMEOUT,
+    // Allow a previously failed/timed-out run of the same id to be retried by
+    // resubmission, while still rejecting duplicate concurrent or already-
+    // succeeded runs.
+    workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE_FAILED_ONLY,
     workflowIdConflictPolicy: WorkflowIdConflictPolicy.FAIL,
   });
 

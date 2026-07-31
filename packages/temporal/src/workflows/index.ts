@@ -63,6 +63,8 @@ import type {
   ObserveReviewSignalsInput,
   ObserveReviewSignalsResult,
 } from "#activities/observe-review-signals.ts";
+import { observeAgentTaskTimeoutsWorkflow as _observeAgentTaskTimeoutsWorkflow } from "./observe-agent-task-timeouts.ts";
+import type { ObserveAgentTaskTimeoutsResult } from "#activities/observe-agent-task-timeouts.ts";
 import type {
   CancelBuildkiteBuildsInput,
   CheckPrMergeConflictsInput,
@@ -253,6 +255,10 @@ export async function observeReviewSignalsWorkflow(
   input: ObserveReviewSignalsInput = {},
 ): Promise<ObserveReviewSignalsResult> {
   return _observeReviewSignalsWorkflow(input);
+}
+
+export async function observeAgentTaskTimeoutsWorkflow(): Promise<ObserveAgentTaskTimeoutsResult> {
+  return _observeAgentTaskTimeoutsWorkflow();
 }
 
 export async function runGlitterCorpusInventory(): Promise<InventoryResult> {
