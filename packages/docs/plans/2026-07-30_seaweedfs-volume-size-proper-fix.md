@@ -3,8 +3,8 @@ id: seaweedfs-volume-size-proper-fix
 type: plan
 status: in-progress
 board: true
-verification: pending
-disposition: proposed
+verification: agent
+disposition: active
 ---
 
 # SeaweedFS volume-count exhaustion — proper fix (bigger volumes + alert)
@@ -14,8 +14,8 @@ disposition: proposed
 Main CI has gone red **twice** on the same root cause: the SeaweedFS volume server
 runs out of **volume slots** and returns HTTP 500 `No writable volumes` on every
 `PutObject` that needs a fresh volume, failing the `deploy sites` step (the
-`aws s3 sync` of static sites — most recently the new `wiki-sjer-red` bucket from
-#1784).
+`aws s3 sync` of static sites — most recently the new `wiki-sjer-red` bucket added
+in PR #1784).
 
 The real defect: `master.volumeSizeLimitMB` was unset, so it fell back to the
 **helm chart default of 1000 MB (1 GiB)**. Every volume was capped at 1 GiB, so
@@ -95,6 +95,15 @@ kubectl exec -n seaweedfs seaweedfs-master-0 -- \
 - `seaweedfs-lifecycle-provider-migration` todo already tracks the S3 lifecycle
   provider migration.
 
+## Remaining
+
+- [ ] Land the doc-lint follow-up so a main build passes `verify` (PR #1866 merged
+      the fix but its plan doc failed `verify` on markdownlint + frontmatter, so
+      `argo sync` never ran and `maxVolumes: 500` was not applied).
+- [ ] Confirm the `seaweedfs` Argo app synced and `SeaweedFS_volumeServer_max_volumes = 500` / `Free > 0`.
+- [ ] Retry the main `deploy sites` job and confirm the wiki bucket uploads succeed → main green.
+- [ ] Mark this plan `status: complete` and move it to `archive/completed/`.
+
 ## Session Log — 2026-07-30
 
 ### Done
@@ -110,11 +119,6 @@ volumes` (slot ceiling 360/360). Confirmed root cause = `volumeSizeLimitMB`
 - Verified both alert metrics are scraped into Prometheus and correctly labeled.
 - `bun run build` renders the changes; `typecheck`/`lint`/`test` green for
   `homelab`/`@homelab/cdk8s`.
-
-### Remaining
-
-- Merge PR → sync `seaweedfs` Argo app → verify `max_volumes = 500` / `Free > 0`
-  → retry the main `deploy sites` job to turn main green.
 
 ### Caveats
 
