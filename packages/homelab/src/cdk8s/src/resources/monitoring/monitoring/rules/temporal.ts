@@ -201,10 +201,15 @@ const SCOUT_DATA_DRAGON_FAILURE_RULES: PrometheusRule[] = [
     // increase(counter[24h]) misses the very first failure (the series is born
     // at 1, so the increase is 0), while max_over_time(counter[24h]) never ages
     // out (a flat positive counter stays positive until the worker restarts).
-    // `time() - <last-failure-ts>` fires on the first failure and clears 24h
-    // after the most recent one, independent of worker restarts.
+    // The timestamp gauge is read through a 24h max_over_time range, NOT as a
+    // bare instant vector: the worker is single-replica, so a restart makes the
+    // in-process gauge's instant series stale and `time() - <bare gauge>` would
+    // return no series and wrongly resolve the alert. max_over_time keeps the
+    // last failure's timestamp visible for the full 24h even across a restart,
+    // so the alert fires on the first failure and clears 24h after the most
+    // recent one regardless of worker recreation.
     expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-      "time() - scout_data_dragon_auto_merge_last_failure_timestamp < 60 * 60 * 24",
+      "time() - max_over_time(scout_data_dragon_auto_merge_last_failure_timestamp[24h]) < 60 * 60 * 24",
     ),
     for: "15m",
     labels: {

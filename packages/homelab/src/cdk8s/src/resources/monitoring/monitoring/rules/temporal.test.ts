@@ -83,15 +83,20 @@ describe("Scout Data Dragon failure rules", () => {
   test("ScoutDataDragonAutoMergeFailed alerts on the last-failure recency gauge", () => {
     const expression = findFailureRule("ScoutDataDragonAutoMergeFailed");
     // Recency gauge + age-out window, so the alert fires on the first failure
-    // AND clears 24h later. A bare counter can't do both: increase() misses the
-    // first born-at-1 failure, and max_over_time() never ages out.
+    // AND clears 24h later — a bare counter can't do both (increase() misses the
+    // first born-at-1 failure; max_over_time(counter) never ages out).
     expect(expression).toContain(
       "scout_data_dragon_auto_merge_last_failure_timestamp",
     );
     expect(expression).toContain("time() -");
     expect(expression).toContain("60 * 60 * 24");
+    // Read through a 24h max_over_time range, not a bare instant vector, so a
+    // single-replica worker restart doesn't stale the series and wrongly clear
+    // the alert.
+    expect(expression).toContain(
+      "max_over_time(scout_data_dragon_auto_merge_last_failure_timestamp[24h])",
+    );
     expect(expression).not.toContain("increase(");
-    expect(expression).not.toContain("max_over_time");
   });
 
   test("ScoutDataDragonPrAutomationFailed no longer references the unreachable pr-merge-failed reason", () => {
