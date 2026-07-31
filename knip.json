@@ -336,7 +336,6 @@
     "@typescript-eslint/utils",
     "@vitejs/plugin-react",
     "@vitejs/plugin-react-swc",
-    "@vscode/tree-sitter-wasm",
     "autoprefixer",
     "bulma",
     "cron-parser",
@@ -440,23 +439,6 @@
       "exports"
     ],
     "packages/tasknotes-server/src/sentry.ts": ["exports"],
-    "packages/temporal/src/activities/pr-review/ingest-dismissals.ts": [
-      "exports"
-    ],
-    "packages/temporal/src/activities/pr-review/specialists.ts": ["exports"],
-    "packages/temporal/src/activities/pr-review/specialists/convention.ts": [
-      "exports"
-    ],
-    "packages/temporal/src/activities/pr-review/specialists/deps.ts": [
-      "exports"
-    ],
-    "packages/temporal/src/activities/pr-review/specialists/perf.ts": [
-      "exports"
-    ],
-    "packages/temporal/src/activities/pr-review/specialists/security.ts": [
-      "exports"
-    ],
-    "packages/temporal/src/observability/pr-review-metrics.ts": ["exports"],
     "packages/temporal/src/observability/tracing.ts": ["exports"],
     "packages/temporal/src/workflows/ha/util.ts": ["exports"]
   },

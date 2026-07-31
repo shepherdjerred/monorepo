@@ -32,7 +32,11 @@ change rips out the whole thing in one PR (#1863), leaving zero dangling referen
 `activities/pr-babysit`, `workflows/pr-review`, `workflows/pr-summary`,
 `workflows/pr-reaction-listener`, `workflows/pr-babysit`, `shared/pr-review`,
 `shared/pr-babysit`, `lib/pr-review`) + `observability/pr-review-metrics.*`,
-`lib/pr-summary-comment.*`, `lib/diff-slicing.*` (orphaned), the event-bridge
+`lib/pr-summary-comment.*`, `lib/diff-slicing.*` (orphaned), the orphaned
+PR-review AST-analysis stack (`lib/block-diff.*`, `lib/symbol-index.*`,
+`lib/symbol-retrieval.*` + tests — the only consumer was the deleted
+`bootstrap-enrich.ts`) plus its now-exclusive `web-tree-sitter` +
+`@vscode/tree-sitter-wasm` dependencies, the event-bridge
 `start-pr-reaction-listener` / `pr-pipeline-starts` / `pr-draft-skipped-status` /
 `babysit-*`, and the `replay-pr-*` / `run-pr-babysit-local` scripts. Rewrote
 `github-webhook.ts` to keep only push/pull_request→merge-conflict and
@@ -49,9 +53,16 @@ the `pr-bot` Prometheus rule group + `prReview|prSummary` exclusion, and the
 **Kept** the webhook Service/tunnel/DNS/secret + port 9466, `pr_webhook_*` metrics,
 and re-homed `PrWebhookSignatureFailures` into a new `github-webhook` rule group.
 
+**Root config** — pruned the now-stale root `knip.json` exclusions that referenced
+the deleted files: the seven `pr-review` `ignoreIssues` entries and the
+`@vscode/tree-sitter-wasm` `ignoreDependencies` entry. Regenerated `bun.lock` after
+dropping the two tree-sitter deps.
+
 **Docs** — rewrote the temporal AGENTS.md PR section, updated the LIVE
 temporal-worker architecture doc, added a superseding note to the security-hardening
-decision, archived the pr-babysit plan + two babysit todos as complete.
+decision, archived the pr-babysit plan + two babysit todos as complete. Updated the
+`lib/pr-review-workdir.ts` header comment (a survivor) to drop its dangling reference
+to the removed retrieval/block-diff layers.
 
 ## Verification
 
@@ -60,7 +71,8 @@ decision, archived the pr-babysit plan + two babysit todos as complete.
 - `@homelab/cdk8s` typecheck + build (synth) + `dashboard-query-health.test.ts` — green.
 - `tofu -chdir=github validate` — valid.
 - `bun run check-todos` — 1039 docs OK.
-- Remaining before merge: full `bun run verify` (or let Buildkite run it), `knip` on temporal.
+- `bunx turbo run typecheck test lint knip --filter=@shepherdjerred/temporal` after the analysis-stack removal — green (knip reports no dangling files/deps).
+- Remaining before merge: full `bun run verify` (or let Buildkite run it).
 
 ## Remaining
 
