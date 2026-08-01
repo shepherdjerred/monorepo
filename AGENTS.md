@@ -88,7 +88,7 @@ Buildkite step). They apply repo-wide; per-package `AGENTS.md` files add more.
 - **Process invariants.** `TODO(todo:<id>)` markers need a matching
   `packages/docs/todos/<id>.md`; `temporal-agent-task` blocks must match the schema;
   prefer Bun-runtime APIs; ensure Prisma teardown in tests; follow the K8s/cdk8s
-  and worktree/git-spice conventions.
+  and worktree/stack-owner conventions.
 - **Severity discipline.** Only flag genuine issues (P0–P2); skip nits and anything
   a linter would catch. A clean diff should get a clean review.
 
@@ -294,10 +294,20 @@ provider-neutral procedure in `scripts/prompts/refine-release-please.md`.
   CI source of truth; use Buildkite tooling or the relevant PR/status surface.
 - If a PR or push flow fails, report the exact layer: local git ref permission,
   GitHub auth, sandboxed network access, or remote rejection.
-- Feature PRs are created and updated with **git-spice** (`git-spice branch/stack
-submit`), as stacks — not `gh pr create`. See the `git-spice-helper` skill. `gh`
-  stays for PR reviews/comments/merge/queries and for automated single-PR bot flows
-  (Temporal, release automation), whose clones have no local git-spice stack state.
+- **Stack ownership is sticky.** Before a branch/PR mutation, determine which
+  tool already owns the work:
+  - Existing git-spice branches/stacks stay on git-spice. Load
+    `git-spice-helper` and use `git-spice` for every branch, restack, submit,
+    sync, and cleanup operation on that work.
+  - All other new human/agent feature work uses GitHub's native stacked PRs.
+    Load `gh-stack`, initialize the worktree branch with
+    `gh stack init --base main <branch>`, and use `gh stack` for the stack's
+    full lifecycle. A single PR is a one-layer native stack.
+  - Never register or operate the same branch/stack with both tools.
+  - Stateless automated single-PR flows (Temporal refresh jobs, release
+    automation, and other fresh-clone bots) may continue using plain `gh`;
+    they do not maintain a local stack lifecycle. Fork PRs also stay plain
+    `gh` because native GitHub stacks are same-repository only.
 
 ## Development Setup
 
@@ -347,7 +357,14 @@ the verification machinery itself. There is no `pre-push` hook.
 
 **Before your first edit on any non-trivial change, create a `git worktree` — don't edit in the main checkout.** "Non-trivial" = anything you'll open a PR for, anything touching more than one file, or any multi-step task. Only stay in the main checkout for a single-file, single-commit fix you won't PR (a typo, a one-line config tweak). **When unsure, make the worktree.** Each worktree gives a branch its own isolated working directory, so parallel work and concurrent agents never collide.
 
-**A worktree holds a _stack_, and every feature PR is created and managed with git-spice (`gs`) — load the `git-spice-helper` skill before any branch/PR op.** A single PR is a stack of one (unchanged from the old flow). When a change splits into dependent pieces, stack them in the same worktree with `git-spice branch create`, move between them with `git-spice up`/`down`, and open the PRs with `git-spice stack submit`. Restack, move, and sync with native `gs` commands — never a hand-rolled `git rebase` or a bare `gh pr create` for feature work. (In scripts and the agent Bash tool, `gs` is Ghostscript, not git-spice — call `git-spice` explicitly; see the skill.)
+**A worktree holds one stack, owned by one stacking tool.** New work uses
+GitHub's native stack flow: load `gh-stack`, adopt the worktree branch with
+`gh stack init --base main <branch>`, and use `gh stack` for branch creation,
+submission, rebasing, syncing, navigation, and merging. Existing work already
+managed by git-spice stays on git-spice: load `git-spice-helper` and use
+`git-spice` for that stack's entire lifecycle. Never mix the tools within one
+stack, and never hand-roll a stack rebase or open a feature PR with bare
+`gh pr create`.
 
 ```bash
 # Create an isolated worktree on a new branch off main
@@ -355,10 +372,16 @@ git worktree add .claude/worktrees/<feature-slug> -b feature/<slug> origin/main
 
 cd .claude/worktrees/<feature-slug>
 
+# New work only: adopt the worktree branch as a one-layer native GitHub stack.
+# Existing git-spice work skips this and continues with git-spice instead.
+gh stack init --base main feature/<slug>
+
 # REQUIRED before any build/test in the new worktree — installs the toolchain,
 # does the one workspace-wide install, and runs codegen. Without generate, builds
 # fail with cryptic missing-module / missing-generated-file errors.
-mise install && bun install --frozen-lockfile && bunx turbo run generate
+mise install
+bun install --frozen-lockfile
+bunx turbo run generate
 bunx lefthook install   # arm hooks in this worktree
 ```
 
@@ -369,7 +392,18 @@ symlinks, so there is no shared-artifact copy step to get wrong (the old
 generate`, though — it's what produces the Prisma clients and other generated
 files a build needs.
 
-After PR merge: run `git-spice repo sync` to delete merged branches and retarget the rest of the stack, then `git worktree remove .claude/worktrees/<feature-slug>` and `git branch -d feature/<slug>` from the main checkout. Run `git worktree prune` to clean up stale entries.
+When a native stack grows, add layers from its top with
+`gh stack add <branch>`. Publish draft PRs non-interactively with
+`gh stack submit --auto` and inspect state with `gh stack view --json`. For an
+existing git-spice stack, use the equivalent `git-spice` commands from the
+legacy skill instead.
+
+After PR merge, follow the owning stack skill for sync and branch cleanup, then
+run `git worktree remove .claude/worktrees/<feature-slug>` and
+`git branch -d feature/<slug>` from the main checkout. Run
+`git worktree prune` to clean up stale entries. Do not run
+`git-spice repo sync` against native-stack work, and do not adopt legacy
+git-spice branches into `gh stack` as an implicit migration.
 
 See the `worktree-workflow` skill for the full workflow. `claude -w <slug>` creates and enters a worktree at launch; for Codex, create the worktree first and start it with `codex -C <dir>`.
 

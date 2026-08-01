@@ -24,7 +24,7 @@ export type PRResult = {
 
 /**
  * Create a PR with the given changes
- * Uses gh CLI for authentication and PR creation
+ * Uses plain gh as a stateless, single-PR bot flow; it does not own a stack
  */
 export async function createPullRequest(
   opts: CreatePROptions,
@@ -63,7 +63,7 @@ export async function createPullRequest(
     const authedUrl = injectToken(remoteUrl, auth.accessToken);
     await runGitCommand(repoPath, ["push", authedUrl, branchName]);
 
-    // Create PR using gh CLI
+    // Create one stateless PR using gh CLI; this editor does not own a stack.
     const prUrl = await createPRWithGh({
       workingDir: repoPath,
       title,

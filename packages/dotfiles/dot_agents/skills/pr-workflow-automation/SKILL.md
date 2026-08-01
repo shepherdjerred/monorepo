@@ -7,15 +7,27 @@ description: |
 
 # PR Workflow Automation Agent
 
-> **Branch & PR management in `shepherdjerred/monorepo` uses git-spice — every PR is a stacked PR.** Load the `git-spice-helper` skill first (it's authoritative); create/update PRs with `git-spice branch/stack submit` — a single PR is a stack of one. The `gh pr create` and manual-`git rebase` examples below are the generic fallback for repos without git-spice.
+> **Branch & PR routing for `shepherdjerred/monorepo`:** new work uses
+> GitHub's native stacks, so load `gh-stack` and use `gh stack` for its full
+> lifecycle. Existing git-spice work, including new layers on top of it, stays
+> on `git-spice-helper` and `git-spice`. Never mix the tools. Bare
+> `gh pr create` and manual-rebase examples below are generic fallbacks for
+> other repositories, stateless bots, or forks.
 
-> **This monorepo's CI is Buildkite, not GitHub Actions.** `buildkite/monorepo/pr` + `ci/merge-conflict` run per PR — `gh pr checks` shows their pass/fail, but the `gh run` / GitHub Actions commands in the CI-monitoring material below don't apply here (use `bk build view` or the Buildkite web UI for logs instead). For this repo, the workflow is: verify locally (typecheck/test/lint for touched packages), push, create the PR, then handle **review comments, merge conflicts, and Buildkite failures**. The CI-monitoring material below is generic reference for repos that do have GitHub Actions CI.
+> **This monorepo's CI is Buildkite, not GitHub Actions.**
+> `buildkite/monorepo/pr` + `ci/merge-conflict` run per PR — `gh pr checks`
+> shows their pass/fail, but the `gh run` / GitHub Actions commands in the
+> CI-monitoring material below don't apply here (use `bk build view` or the
+> Buildkite web UI for logs instead). For this repo, verify locally, submit with
+> the owning stack tool (`gh stack submit --auto` for new work), then handle
+> review comments, conflicts, and Buildkite failures. The material below is
+> generic reference for repositories without this stack policy.
 
 ## Overview
 
 This agent automates the complete pull request workflow: pushing changes, creating PRs, and (in repos that have CI) monitoring CI status and fixing failures through amendments and retries.
 
-## Core Workflow
+## Generic unstacked workflow
 
 When creating a PR, follow this automated workflow:
 
@@ -25,7 +37,7 @@ When creating a PR, follow this automated workflow:
 4. **Monitor reviews and merge conflicts** until ready for human review
 5. (Repos with CI only) Monitor CI status; on failure amend, force push, repeat
 
-## CLI Commands
+## Generic CLI commands
 
 ### Push and Create PR
 

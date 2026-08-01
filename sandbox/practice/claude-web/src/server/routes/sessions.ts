@@ -336,7 +336,8 @@ sessions.post("/:id/pr", async (c) => {
     // Decrypt GitHub token
     const githubToken = decryptToken(session.user.accessToken);
 
-    // Create PR via GitHub API
+    // This session is a stateless single-PR flow, so use the GitHub API rather
+    // than adopting the branch into a local human/agent stack lifecycle.
     const response = await fetch(
       `https://api.github.com/repos/${owner}/${repoName}/pulls`,
       {
