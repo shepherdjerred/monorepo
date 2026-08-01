@@ -79,7 +79,7 @@ describeWasm("emulator game symbols (real wasm)", () => {
     expect(() => readGameSnapshot(reader, symbols)).not.toThrow();
     expect(() => readSpatialSnapshot(reader, symbols)).not.toThrow();
     const bootObservation = emulator.engineObservation();
-    expect(bootObservation.version).toBe(4);
+    expect(bootObservation.version).toBe(5);
     expect(bootObservation.size).toBe(144);
     expect(() => emulator.engineMapTile(0, 0)).not.toThrow();
     expect(emulator.engineMapTopology()).toBeNull();
