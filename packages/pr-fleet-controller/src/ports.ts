@@ -14,6 +14,12 @@ export type CommandRequest = {
   cwd: string;
   timeoutMs: number;
   signal?: AbortSignal;
+  /**
+   * Environment for the subprocess. Defaults to the controller's own
+   * environment; model-driven worker commands pass a credential-scrubbed
+   * environment so tool output cannot exfiltrate host secrets.
+   */
+  env?: Record<string, string | undefined>;
 };
 
 export type CommandResult = {
@@ -27,6 +33,7 @@ export type FleetEnvironment = {
   refreshEvidence: (pr: PrIdentity) => Promise<ReadinessEvidence>;
   findWorktree: (branches: string[]) => Promise<string | null>;
   provisionWorktree: (pr: PrIdentity, stackId: string) => Promise<string>;
+  assignWorktreeBranch: (worktree: string, branch: string) => Promise<void>;
   runLocalCommand: (request: CommandRequest) => Promise<CommandResult>;
   startRestack: (pr: PrState) => Promise<CommandResult>;
   continueRestack: (pr: PrState, paths: string[]) => Promise<CommandResult>;

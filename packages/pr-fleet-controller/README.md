@@ -28,6 +28,11 @@ bun run pr:fleet \
 The invocation deliberately uses one model throughout. It does not silently
 route individual workers to another model or provider.
 
+Readiness is gated on a hosted code-review provider (Codex by default). Select
+a different registered provider with `--review-provider <id>`; completion is
+detected as a review-at-head or a head-bound clean-review reaction, reusing the
+canonical `@shepherdjerred/code-review` gate logic.
+
 Interactive input:
 
 - `/status` prints the deterministic fleet snapshot.
@@ -65,10 +70,13 @@ Each worker receives:
 - explicit-path staging, hooks, commit, git-spice publication, and one
   SHA-marked hosted review request.
 
-Validation commands run through `sandbox-exec` with network denied and writes
-restricted to the assigned worktree and macOS temporary directories.
-Publication, worktree creation, current-head verification, review-request
-deduplication, and timers remain deterministic controller operations.
+Validation commands run through `sandbox-exec` with network denied, writes
+restricted to the assigned worktree and macOS temporary directories, reads of
+well-known host credential stores (`~/.aws`, `~/.ssh`, `~/.config/gh`, …)
+denied, and a credential-scrubbed environment so tool output cannot exfiltrate
+host secrets. Only read-only script and task forms are accepted. Publication,
+worktree creation, current-head verification, review-request deduplication, and
+timers remain deterministic controller operations.
 
 The controller never merges, closes, or approves a pull request.
 

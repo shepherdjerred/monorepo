@@ -88,6 +88,22 @@ export class GitOperations {
     if (validated.length === 0) {
       throw new Error("publishFix requires at least one explicit path");
     }
+    // A reused worktree may already carry staged changes (e.g. a prior
+    // continueRestack staged conflict resolutions before a failed continuation).
+    // A plain `git commit` would sweep those into this commit despite the
+    // explicit-path API, publishing unrelated or incomplete work. Refuse unless
+    // the index is empty so the commit contains only the paths staged below.
+    const stagedOutput = await this.#mustRun(
+      "git",
+      ["diff", "--cached", "--name-only"],
+      worktree,
+    );
+    const preStaged = stagedOutput.trim();
+    if (preStaged.length > 0) {
+      throw new Error(
+        `Worktree has unexpected staged changes before publish: ${preStaged.replaceAll("\n", ", ")}`,
+      );
+    }
     await this.#mustRun("git", ["add", "--", ...validated], worktree);
     await this.#mustRun(
       "bunx",

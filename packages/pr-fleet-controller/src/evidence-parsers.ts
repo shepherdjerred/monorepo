@@ -1,5 +1,9 @@
 import { z } from "zod";
 import {
+  isProviderAuthor,
+  type ReviewProvider,
+} from "@shepherdjerred/code-review";
+import {
   CheckEvidenceSchema,
   PrIdentitySchema,
   type PrIdentity,
@@ -52,17 +56,6 @@ const ReviewPageSchema = z.object({
             }),
           ),
         }),
-        reviews: z.object({
-          nodes: z.array(
-            z.object({
-              id: z.string(),
-              body: z.string(),
-              submittedAt: z.string().nullable(),
-              author: z.object({ login: z.string() }).nullable(),
-              commit: z.object({ oid: z.string() }).nullable(),
-            }),
-          ),
-        }),
       }),
     }),
   }),
@@ -89,7 +82,6 @@ const BuildkiteBuildSchema = z.object({
 
 const HeadSchema = z.object({ headRefOid: z.string() });
 const SOFT_FAILURE_PATTERN = /trivy|knip/i;
-const REVIEW_SEVERITY_PATTERN = /\b(P[0-3])\b/i;
 
 export function parseJson(text: string): unknown {
   return Bun.JSONC.parse(text);
@@ -153,55 +145,53 @@ export function splitRepo(repo: string): { owner: string; name: string } {
   return { owner: repo.slice(0, separator), name: repo.slice(separator + 1) };
 }
 
-export function severityFromBody(
-  body: string,
-): "P0" | "P1" | "P2" | "P3" | "unknown" {
-  const match = REVIEW_SEVERITY_PATTERN.exec(body);
-  const severity = match?.[1]?.toUpperCase();
-  if (
-    severity === "P0" ||
-    severity === "P1" ||
-    severity === "P2" ||
-    severity === "P3"
-  ) {
-    return severity;
-  }
-  return "unknown";
-}
-
-type AutomatedReviewInput = {
+/** One review thread's first comment, as fetched from the reviewThreads query. */
+export type RawReviewThread = {
   id: string;
   author: string;
   body: string;
-  commit: string | null;
-  headSha: string;
+  resolved: boolean;
+  outdated: boolean;
 };
 
-export function automatedReviewFinding(
-  input: AutomatedReviewInput,
-): ReviewFinding | null {
-  const { id, author, body, commit, headSha } = input;
-  const automated = /codex|greptile/i.test(author);
-  const clean = /no findings|no issues|looks good/i.test(body);
-  if (!automated || body.trim().length === 0 || clean) {
-    return null;
-  }
-  return {
-    id,
-    author,
-    body,
-    severity: severityFromBody(body),
-    resolved: false,
-    outdated: commit !== headSha,
-  };
+function reviewSeverity(level: number): ReviewFinding["severity"] {
+  if (level === 0) return "P0";
+  if (level === 1) return "P1";
+  if (level === 2) return "P2";
+  if (level === 3) return "P3";
+  return "unknown";
 }
 
-export function isCurrentHostedReview(
-  author: string,
-  commit: string | null,
-  headSha: string,
-): boolean {
-  return author.toLowerCase().includes("codex") && commit === headSha;
+/**
+ * Convert raw review threads into blocking-eligible findings, applying the same
+ * policy the canonical review gate enforces: only threads authored by the
+ * configured provider (exact identity, not a substring) whose body carries a
+ * parsed severity badge become findings. Human discussion threads and unbadged
+ * bot comments are ignored so they can never dispatch a repair worker.
+ */
+export function reviewFindingsFromThreads(
+  threads: RawReviewThread[],
+  provider: ReviewProvider,
+): ReviewFinding[] {
+  const findings: ReviewFinding[] = [];
+  for (const thread of threads) {
+    if (!isProviderAuthor(provider, thread.author)) {
+      continue;
+    }
+    const priority = provider.parseSeverity(thread.body);
+    if (priority === null) {
+      continue;
+    }
+    findings.push({
+      id: thread.id,
+      author: thread.author,
+      body: thread.body,
+      severity: reviewSeverity(priority),
+      resolved: thread.resolved,
+      outdated: thread.outdated,
+    });
+  }
+  return findings;
 }
 
 export function fingerprint(values: string[]): string | null {

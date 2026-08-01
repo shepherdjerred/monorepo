@@ -26,11 +26,15 @@ export function classify(
   if (evidence.conflict) {
     return "conflict";
   }
+  // Findings are already provider- and severity-filtered upstream
+  // (reviewFindingsFromThreads). A thread with no parsed severity badge never
+  // blocks — matching the canonical review gate, where an unbadged bot comment
+  // or a human discussion thread is not a blocking finding.
   const blockingReview = evidence.reviewFindings.some(
     (finding) =>
       !finding.resolved &&
       !finding.outdated &&
-      ["P0", "P1", "P2", "P3", "unknown"].includes(finding.severity),
+      ["P0", "P1", "P2", "P3"].includes(finding.severity),
   );
   const hardFailure = evidence.checks.some(
     (check) =>
@@ -55,7 +59,7 @@ export function classify(
     : "green";
 }
 
-export function statusFor(classification: Classification): PrState["status"] {
+function statusFor(classification: Classification): PrState["status"] {
   const statuses: Partial<Record<Classification, PrState["status"]>> = {
     green: "green",
     pending: "waiting-ci",

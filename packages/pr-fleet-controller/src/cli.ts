@@ -5,6 +5,7 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import type { MastraModelConfig } from "@mastra/core/llm";
+import { resolveProvider } from "@shepherdjerred/code-review";
 import { MastraMaster, MastraWorkerRunner } from "./agents.ts";
 import { FleetController } from "./controller.ts";
 import { CommandFleetEnvironment } from "./environment.ts";
@@ -22,6 +23,7 @@ Options:
   --max-workers <1..5>      Worker limit (default: 5)
   --base-url <url>          Required for openai-compatible/<model>
   --api-key-env <name>      API-key environment variable for a compatible endpoint
+  --review-provider <id>    Hosted review provider to gate on (default: codex)
   --help                    Show this help
 
 Interactive commands:
@@ -129,6 +131,7 @@ async function main(): Promise<void> {
       "max-workers": { type: "string", default: "5" },
       "base-url": { type: "string" },
       "api-key-env": { type: "string" },
+      "review-provider": { type: "string" },
       help: { type: "boolean", default: false },
     },
     strict: true,
@@ -159,12 +162,14 @@ async function main(): Promise<void> {
     parsed.values["base-url"],
     parsed.values["api-key-env"],
   );
+  const reviewProvider = resolveProvider(parsed.values["review-provider"]);
   const observer = new TerminalObserver();
   const store = new FleetStore(config.maxWorkers);
   const environment = new CommandFleetEnvironment(
     config.repo,
     config.checkout,
     config.worktreeRoot,
+    reviewProvider,
   );
   const workerRunner = new MastraWorkerRunner(model, store, environment);
   const controller = new FleetController({

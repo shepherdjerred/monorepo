@@ -1,32 +1,49 @@
 import { describe, expect, test } from "bun:test";
+import { codexProvider } from "@shepherdjerred/code-review";
 import {
-  automatedReviewFinding,
   parseBuildkiteBuild,
-  severityFromBody,
+  reviewFindingsFromThreads,
 } from "@shepherdjerred/pr-fleet-controller/src/evidence-parsers.ts";
 import { WorkerResultSchema } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
 
 describe("external evidence parsing", () => {
-  test("keeps automated unknown-severity findings blocking", () => {
-    const finding = automatedReviewFinding({
-      id: "review",
-      author: "greptile-apps",
-      body: "This changes retry behavior.",
-      commit: "old",
-      headSha: "new",
-    });
-    expect(finding?.severity).toBe("unknown");
-    expect(finding?.outdated).toBe(true);
-    expect(
-      automatedReviewFinding({
-        id: "clean",
-        author: "codex",
-        body: "No findings.",
-        commit: "new",
-        headSha: "new",
-      }),
-    ).toBeNull();
-    expect(severityFromBody("[P2] Broken invariant")).toBe("P2");
+  test("keeps only badged provider threads as blocking findings", () => {
+    const findings = reviewFindingsFromThreads(
+      [
+        {
+          id: "provider-badged",
+          author: "chatgpt-codex-connector[bot]",
+          body: "![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat) Broken invariant",
+          resolved: false,
+          outdated: false,
+        },
+        {
+          id: "provider-unbadged",
+          author: "chatgpt-codex-connector",
+          body: "This changes retry behavior, but has no severity badge.",
+          resolved: false,
+          outdated: false,
+        },
+        {
+          id: "human-thread",
+          author: "some-maintainer",
+          body: "![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat) discussion",
+          resolved: false,
+          outdated: false,
+        },
+        {
+          id: "impersonator",
+          author: "chatgpt-codex-connector-evil",
+          body: "![P0 Badge](https://img.shields.io/badge/P0-red?style=flat) spoofed",
+          resolved: false,
+          outdated: false,
+        },
+      ],
+      codexProvider,
+    );
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.id).toBe("provider-badged");
+    expect(findings[0]?.severity).toBe("P2");
   });
 
   test("validates Buildkite job metadata without loose casts", () => {

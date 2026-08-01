@@ -18,7 +18,7 @@ describe("readiness classification", () => {
     );
   });
 
-  test("blocks unknown current automated findings but ignores soft failures", () => {
+  test("blocks badged current findings but ignores unbadged and soft failures", () => {
     const pr = identity(2);
     expect(
       classify(
@@ -27,9 +27,9 @@ describe("readiness classification", () => {
           reviewFindings: [
             {
               id: "finding",
-              author: "codex",
-              body: "This may break callers",
-              severity: "unknown",
+              author: "chatgpt-codex-connector",
+              body: "![P2 Badge] This may break callers",
+              severity: "P2",
               resolved: false,
               outdated: false,
             },
@@ -38,6 +38,24 @@ describe("readiness classification", () => {
         false,
       ),
     ).toBe("actionable-red");
+    expect(
+      classify(
+        pr,
+        evidence(pr, {
+          reviewFindings: [
+            {
+              id: "unbadged",
+              author: "chatgpt-codex-connector",
+              body: "This may break callers, but has no severity badge",
+              severity: "unknown",
+              resolved: false,
+              outdated: false,
+            },
+          ],
+        }),
+        false,
+      ),
+    ).toBe("green");
     expect(
       classify(
         pr,

@@ -1,16 +1,18 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
+import type { ReviewProvider } from "@shepherdjerred/code-review";
+import { resolveReviewState } from "@shepherdjerred/code-review/github";
+import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
 import {
-  automatedReviewFinding,
   fingerprint,
-  isCurrentHostedReview,
   parseBuildkiteBuild,
   parseBuildkiteCommit,
   parseChecks,
   parsePrList,
   parseReviewPage,
-  severityFromBody,
+  reviewFindingsFromThreads,
   splitRepo,
+  type RawReviewThread,
 } from "./evidence-parsers.ts";
 import { GitOperations } from "./git-operations.ts";
 import type {
@@ -29,12 +31,19 @@ export class CommandFleetEnvironment implements FleetEnvironment {
   readonly #repo: string;
   readonly #checkout: string;
   readonly #worktreeRoot: string;
+  readonly #provider: ReviewProvider;
   readonly #gitOperations: GitOperations;
 
-  constructor(repo: string, checkout: string, worktreeRoot: string) {
+  constructor(
+    repo: string,
+    checkout: string,
+    worktreeRoot: string,
+    provider: ReviewProvider,
+  ) {
     this.#repo = repo;
     this.#checkout = checkout;
     this.#worktreeRoot = worktreeRoot;
+    this.#provider = provider;
     this.#gitOperations = new GitOperations({
       repo,
       run: async (request) => this.runLocalCommand(request),
@@ -48,7 +57,7 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       cwd: request.cwd,
       stdout: "pipe" as const,
       stderr: "pipe" as const,
-      env: Bun.env,
+      env: request.env ?? Bun.env,
     };
     const subprocess =
       request.signal === undefined
@@ -129,13 +138,9 @@ export class CommandFleetEnvironment implements FleetEnvironment {
     return parseChecks(result.stdout);
   }
 
-  async #reviews(pr: PrIdentity): Promise<{
-    findings: ReviewFinding[];
-    hostedReviewComplete: boolean;
-  }> {
+  async #reviewThreads(pr: PrIdentity): Promise<RawReviewThread[]> {
     const { owner, name } = splitRepo(this.#repo);
-    const findings: ReviewFinding[] = [];
-    let hostedReviewComplete = false;
+    const threads: RawReviewThread[] = [];
     let cursor: string | null = null;
     let hasNextPage = true;
 
@@ -144,9 +149,8 @@ export class CommandFleetEnvironment implements FleetEnvironment {
         pullRequest(number:$number){
           reviewThreads(first:100,after:$cursor){
             pageInfo{hasNextPage endCursor}
-            nodes{id isResolved isOutdated comments(first:100){nodes{body author{login}}}}
+            nodes{id isResolved isOutdated comments(first:1){nodes{body author{login}}}}
           }
-          reviews(last:100){nodes{id body submittedAt author{login} commit{oid}}}
         }
       }
     }`;
@@ -170,33 +174,13 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       const page = parseReviewPage(await this.#mustRun("gh", args));
       for (const thread of page.reviewThreads.nodes) {
         const comment = thread.comments.nodes[0];
-        const body = comment?.body ?? "";
-        findings.push({
+        threads.push({
           id: thread.id,
           author: comment?.author?.login ?? "unknown",
-          body,
-          severity: severityFromBody(body),
+          body: comment?.body ?? "",
           resolved: thread.isResolved,
           outdated: thread.isOutdated,
         });
-      }
-      for (const review of page.reviews.nodes) {
-        const author = review.author?.login ?? "unknown";
-        const finding = automatedReviewFinding({
-          id: review.id,
-          author,
-          body: review.body,
-          commit: review.commit?.oid ?? null,
-          headSha: pr.headSha,
-        });
-        if (finding !== null) {
-          findings.push(finding);
-        }
-        if (
-          isCurrentHostedReview(author, review.commit?.oid ?? null, pr.headSha)
-        ) {
-          hostedReviewComplete = true;
-        }
       }
       hasNextPage = page.reviewThreads.pageInfo.hasNextPage;
       cursor = page.reviewThreads.pageInfo.endCursor;
@@ -206,7 +190,39 @@ export class CommandFleetEnvironment implements FleetEnvironment {
         );
       }
     }
-    return { findings, hostedReviewComplete };
+    return threads;
+  }
+
+  async #reviews(pr: PrIdentity): Promise<{
+    findings: ReviewFinding[];
+    hostedReviewComplete: boolean;
+  }> {
+    const threads = await this.#reviewThreads(pr);
+    const findings = reviewFindingsFromThreads(threads, this.#provider);
+
+    // Completion is resolved with the canonical provider strategy: a
+    // review-at-head OR a head-bound 👍 clean-review reaction. Codex leaves NO
+    // review object on a clean PR — only a 👍 — so keying `hostedReviewComplete`
+    // off review objects alone would leave every cleanly-reviewed PR pending
+    // forever. Binding the commit-less reaction to the current head requires the
+    // head-push time.
+    const tokenOutput = await this.#mustRun("gh", ["auth", "token"]);
+    const token = tokenOutput.trim();
+    const headPushedAt = await fetchHeadPushedAt({
+      repo: this.#repo,
+      sha: pr.headSha,
+      prNumber: pr.number,
+      token,
+    });
+    const reviewState = await resolveReviewState({
+      provider: this.#provider,
+      repo: this.#repo,
+      head: pr.headSha,
+      prNumber: pr.number,
+      token,
+      headPushedAt,
+    });
+    return { findings, hostedReviewComplete: reviewState.state === "reviewed" };
   }
 
   async #conflict(pr: PrIdentity): Promise<boolean> {
@@ -405,6 +421,19 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       }
     }
     return null;
+  }
+
+  async assignWorktreeBranch(worktree: string, branch: string): Promise<void> {
+    const headOutput = await this.#mustRun(
+      "git",
+      ["rev-parse", "--abbrev-ref", "HEAD"],
+      worktree,
+    );
+    const current = headOutput.trim();
+    if (current === branch) {
+      return;
+    }
+    await this.#mustRun("git", ["checkout", branch], worktree);
   }
 
   async provisionWorktree(pr: PrIdentity, stackId: string): Promise<string> {

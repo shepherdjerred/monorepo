@@ -20,6 +20,7 @@
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.17",
     "@mastra/core": "^1.55.0",
+    "@shepherdjerred/code-review": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {

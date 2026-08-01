@@ -45,6 +45,10 @@ class FakeEnvironment implements FleetEnvironment {
     return Promise.resolve("/tmp/pr-fleet-fake");
   }
 
+  assignWorktreeBranch(): Promise<void> {
+    return Promise.resolve();
+  }
+
   runLocalCommand(_request: CommandRequest) {
     return Promise.resolve({ exitCode: 0, stdout: "", stderr: "" });
   }

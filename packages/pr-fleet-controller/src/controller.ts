@@ -5,15 +5,14 @@ import type {
   WorkerRunner,
 } from "./ports.ts";
 import {
-  classify,
+  buildPrState,
   computeStackIds,
   currentTimestamp,
-  statusFor,
+  mapBounded,
   type RefreshedPr,
 } from "./fleet-logic.ts";
 import {
   FleetTickReportSchema,
-  type Classification,
   type FleetControllerConfig,
   type FleetSnapshot,
   type FleetTickReport,
@@ -24,125 +23,6 @@ import {
 import { FleetStore } from "./state.ts";
 import type { MasterControllerTools } from "./master-tools.ts";
 import { createFleetTickWorkflow } from "./workflow.ts";
-
-async function mapBounded<T, U>(
-  values: T[],
-  concurrency: number,
-  operation: (value: T) => Promise<U>,
-): Promise<U[]> {
-  const results: U[] = [];
-  let cursor = 0;
-  async function worker(): Promise<void> {
-    while (cursor < values.length) {
-      const index = cursor;
-      cursor += 1;
-      const value = values[index];
-      if (value !== undefined) {
-        results[index] = await operation(value);
-      }
-    }
-  }
-  await Promise.all(
-    Array.from({ length: Math.min(concurrency, values.length) }, worker),
-  );
-  return results;
-}
-
-function buildPrState(
-  item: RefreshedPr,
-  previous: PrState | undefined,
-  pausedReason: string | undefined,
-  model: string,
-): { state: PrState; change: string | null } {
-  const classification = classify(
-    item.identity,
-    item.evidence,
-    pausedReason !== undefined,
-  );
-  const changedHead =
-    previous !== undefined &&
-    previous.identity.headSha !== item.identity.headSha;
-  const changedClassification =
-    previous !== undefined && previous.classification !== classification;
-  const madeProgress = changedHead || changedClassification;
-  const timestamp = currentTimestamp();
-  const prNumber = String(item.identity.number);
-  const retained = retainedPrState(previous, madeProgress, timestamp);
-  const state: PrState = {
-    identity: item.identity,
-    logicalOwner: `pr-${prNumber}`,
-    ...retained,
-    model,
-    status: statusFor(classification),
-    classification,
-    stackId: item.stackId,
-    evidence: item.evidence,
-    escalation: pausedReason ?? retained.escalation,
-  };
-  return { state, change: describeStateChange(previous, item, classification) };
-}
-
-function retainedPrState(
-  previous: PrState | undefined,
-  madeProgress: boolean,
-  timestamp: string,
-): Pick<
-  PrState,
-  | "runtimeAgent"
-  | "agentGeneration"
-  | "worktree"
-  | "setupComplete"
-  | "lastAgentReportAt"
-  | "lastProgressAt"
-  | "noProgressTicks"
-  | "prodSentAt"
-  | "escalation"
-  | "priority"
-> {
-  if (previous === undefined) {
-    return {
-      runtimeAgent: null,
-      agentGeneration: 0,
-      worktree: null,
-      setupComplete: false,
-      lastAgentReportAt: null,
-      lastProgressAt: timestamp,
-      noProgressTicks: 0,
-      prodSentAt: null,
-      escalation: null,
-      priority: 0,
-    };
-  }
-  return {
-    runtimeAgent: previous.runtimeAgent,
-    agentGeneration: previous.agentGeneration,
-    worktree: previous.worktree,
-    setupComplete: previous.setupComplete,
-    lastAgentReportAt: previous.lastAgentReportAt,
-    lastProgressAt: madeProgress ? timestamp : previous.lastProgressAt,
-    noProgressTicks: madeProgress ? 0 : previous.noProgressTicks + 1,
-    prodSentAt: previous.prodSentAt,
-    escalation: previous.escalation,
-    priority: previous.priority,
-  };
-}
-
-function describeStateChange(
-  previous: PrState | undefined,
-  item: RefreshedPr,
-  classification: Classification,
-): string | null {
-  const prNumber = String(item.identity.number);
-  if (previous === undefined) {
-    return `discovered PR #${prNumber}`;
-  }
-  if (previous.identity.headSha !== item.identity.headSha) {
-    return `PR #${prNumber} head changed to ${item.identity.headSha}`;
-  }
-  return previous.classification === classification
-    ? null
-    : `PR #${prNumber} ${previous.classification} -> ${classification}`;
-}
 
 export class FleetController implements MasterControllerTools {
   readonly #config: FleetControllerConfig;
@@ -288,8 +168,27 @@ export class FleetController implements MasterControllerTools {
           left.identity.number - right.identity.number,
       );
 
+    const busyStacks = new Set<string>();
+    for (const active of this.store.activeWorkers.keys()) {
+      const state = this.store.prs.get(active);
+      if (state !== undefined) {
+        busyStacks.add(state.stackId);
+      }
+    }
+
     for (const candidate of candidates) {
       if (this.store.activeWorkers.size >= this.store.workerLimit) {
+        this.store.prs.set(candidate.identity.number, {
+          ...candidate,
+          classification: "queued",
+          status: "queued",
+        });
+        continue;
+      }
+      if (busyStacks.has(candidate.stackId)) {
+        // Only one worker per stack may hold the shared worktree/branch at a
+        // time. A sibling PR waits until the active same-stack worker finishes
+        // rather than racing it on the same checkout.
         this.store.prs.set(candidate.identity.number, {
           ...candidate,
           classification: "queued",
@@ -307,6 +206,13 @@ export class FleetController implements MasterControllerTools {
             candidate.identity,
             candidate.stackId,
           ));
+        // Ensure the shared stack worktree is checked out on THIS candidate's
+        // branch before assigning it. A reused sibling worktree is on another
+        // branch, and any commit there would publish onto the wrong PR.
+        await this.#environment.assignWorktreeBranch(
+          worktree,
+          candidate.identity.headRefName,
+        );
         const generation = candidate.agentGeneration + 1;
         const prNumber = String(candidate.identity.number);
         const assigned: PrState = {
@@ -329,6 +235,7 @@ export class FleetController implements MasterControllerTools {
           candidate.identity.number,
           abortController,
         );
+        busyStacks.add(candidate.stackId);
         changes.push(`started ${assigned.runtimeAgent ?? "worker"}`);
         void this.#observeWorker(candidate.identity.number, promise);
       } catch (error) {
@@ -346,25 +253,61 @@ export class FleetController implements MasterControllerTools {
     promise: Promise<WorkerResult>,
   ): Promise<void> {
     try {
-      this.#handleWorkerResult(await promise);
+      const result = await promise;
+      // The `pr` field is model-generated and only validated as a positive
+      // integer. Bind the result to the PR this worker was dispatched for; a
+      // result claiming a different PR must not mutate that PR or leave this one
+      // stuck in activeWorkers.
+      if (result.pr !== prNumber) {
+        this.#handleWorkerFailure(
+          prNumber,
+          new Error(
+            `worker returned a result for PR #${String(result.pr)} instead of #${String(prNumber)}`,
+          ),
+        );
+        return;
+      }
+      this.#handleWorkerResult(prNumber, result);
     } catch (error) {
       this.#handleWorkerFailure(prNumber, error);
     }
   }
 
-  #handleWorkerResult(result: WorkerResult): void {
-    const previous = this.store.prs.get(result.pr);
-    this.store.activeWorkers.delete(result.pr);
-    this.store.workerControllers.delete(result.pr);
-    this.store.releaseLeases(result.pr);
+  #handleWorkerResult(prNumber: number, result: WorkerResult): void {
+    const previous = this.store.prs.get(prNumber);
+    this.store.activeWorkers.delete(prNumber);
+    this.store.workerControllers.delete(prNumber);
+    this.store.releaseLeases(prNumber);
     if (previous === undefined) {
+      return;
+    }
+    const needsLease =
+      result.state === "needs-setup-lease" ||
+      result.state === "needs-heavy-lease" ||
+      result.state === "needs-write-lease";
+    if (needsLease) {
+      // A required lease was unavailable — another same-stack worker holds it.
+      // Queue this PR and wait for that worker to release the lease rather than
+      // immediately redispatching a fresh paid model cycle, which would spin and
+      // exhaust provider quota. The lease-owner's worker-complete tick (or the
+      // heartbeat) re-dispatches it once the lease frees.
+      this.store.prs.set(prNumber, {
+        ...previous,
+        runtimeAgent: null,
+        status: "queued",
+        classification: "queued",
+        lastAgentReportAt: currentTimestamp(),
+      });
+      this.#observer.onChange(
+        `worker for PR #${String(prNumber)} deferred: ${result.state} — awaiting lease`,
+      );
       return;
     }
     const paused = result.state === "escalation" || result.state === "blocked";
     if (paused) {
-      this.store.pausedReasons.set(result.pr, result.blockers.join("; "));
+      this.store.pausedReasons.set(prNumber, result.blockers.join("; "));
     }
-    this.store.prs.set(result.pr, {
+    this.store.prs.set(prNumber, {
       ...previous,
       runtimeAgent: null,
       status: paused
@@ -379,7 +322,7 @@ export class FleetController implements MasterControllerTools {
       escalation: paused ? result.blockers.join("; ") : null,
     });
     this.#observer.onChange(
-      `worker for PR #${String(result.pr)}: ${result.state} — ${result.lastAction}`,
+      `worker for PR #${String(prNumber)}: ${result.state} — ${result.lastAction}`,
     );
     void this.#runTickSafely("worker-complete", "worker-complete tick");
   }
@@ -390,7 +333,13 @@ export class FleetController implements MasterControllerTools {
     this.store.releaseLeases(prNumber);
     const message = error instanceof Error ? error.message : String(error);
     const state = this.store.prs.get(prNumber);
-    if (this.store.stopping || state?.status === "closed") {
+    if (
+      this.store.stopping ||
+      state?.status === "closed" ||
+      this.store.pausedReasons.has(prNumber)
+    ) {
+      // Already stopping, closed, or deliberately paused (which aborts the
+      // worker). Don't overwrite the intended pause reason with the abort error.
       this.#observer.onChange(
         `worker for PR #${String(prNumber)} stopped: ${message}`,
       );
@@ -438,8 +387,17 @@ export class FleetController implements MasterControllerTools {
       throw new Error(`Unknown PR #${String(prNumber)}`);
     }
     this.store.pausedReasons.set(prNumber, reason);
+    // Stop any in-flight worker for this PR: aborting its controller halts the
+    // model turn, and releasing its leases + clearing activeWorkers prevents the
+    // aborted worker from publishing after the PR is reported paused, and frees
+    // the stack so resume can dispatch cleanly.
+    this.store.workerControllers.get(prNumber)?.abort();
+    this.store.workerControllers.delete(prNumber);
+    this.store.activeWorkers.delete(prNumber);
+    this.store.releaseLeases(prNumber);
     this.store.prs.set(prNumber, {
       ...state,
+      runtimeAgent: null,
       classification: "paused",
       status: "paused",
       escalation: reason,

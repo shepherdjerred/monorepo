@@ -53,6 +53,54 @@ const ALLOWED_FIRST_ARGUMENTS = new Map<string, Set<string>>([
   ["swift", new Set(["build", "test"])],
   ["tofu", new Set(["fmt", "plan", "validate"])],
 ]);
+// `bun run <target>` executes arbitrary package scripts, so allow only known
+// read-only script names. A wildcard here lets `bun run prettier:fix` or
+// `bun run markdownlint:fix` mutate the shared stack worktree behind the
+// explicit-path publication API (the `--fix` guard does not catch `:fix`
+// script names).
+const READONLY_BUN_SCRIPTS = new Set([
+  "typecheck",
+  "test",
+  "lint",
+  "build",
+  "check",
+  "verify",
+]);
+// A turbo task name that mutates the tree (e.g. a `lint:fix` / `format` task)
+// is not a read-only validation, even with a package filter.
+const MUTATING_TASK = /fix|format|write|snapshot|update/i;
+
+function validateBunRun(args: string[]): void {
+  if (args[0] !== "run") {
+    return;
+  }
+  const script = args[1];
+  if (script === undefined || !READONLY_BUN_SCRIPTS.has(script)) {
+    throw new Error(
+      `bun run target is not an allowed read-only script: ${script ?? "(none)"}`,
+    );
+  }
+  if (script === "verify" && !args.includes("--affected")) {
+    throw new Error("Repository-wide verification is not allowed");
+  }
+}
+
+function validateBunxTurbo(args: string[]): void {
+  if (args[0] !== "turbo" || args[1] !== "run") {
+    return;
+  }
+  if (!args.some((argument) => argument.startsWith("--filter="))) {
+    throw new Error("Turbo commands require an explicit package filter");
+  }
+  const mutatingTask = args
+    .slice(2)
+    .find(
+      (argument) => !argument.startsWith("-") && MUTATING_TASK.test(argument),
+    );
+  if (mutatingTask !== undefined) {
+    throw new Error(`Turbo task is not read-only: ${mutatingTask}`);
+  }
+}
 
 export function validateWorkerCommand(
   executable: string,
@@ -76,27 +124,51 @@ export function validateWorkerCommand(
   ) {
     throw new Error(`Command form is not allowed for ${executable}`);
   }
-  if (
-    executable === "bun" &&
-    args[0] === "run" &&
-    args[1] === "verify" &&
-    !args.includes("--affected")
-  ) {
-    throw new Error("Repository-wide verification is not allowed");
+  if (executable === "bun") {
+    validateBunRun(args);
   }
-  if (
-    executable === "bunx" &&
-    args[0] === "turbo" &&
-    args[1] === "run" &&
-    !args.some((argument) => argument.startsWith("--filter="))
-  ) {
-    throw new Error("Turbo commands require an explicit package filter");
+  if (executable === "bunx") {
+    validateBunxTurbo(args);
   }
 }
+
+// Well-known host credential stores. `run_local_command` arguments are
+// model-controlled and its stdout is returned to the remote model, so an
+// otherwise-allowed read (`rg PRIVATE_KEY ~/.aws`, `mise exec -- cat
+// ~/.ssh/id_rsa`) would exfiltrate secrets. Reads of these paths are denied in
+// the sandbox even though general host reads (needed for the toolchain) stay
+// allowed.
+const SENSITIVE_HOME_PATHS = [
+  ".aws",
+  ".ssh",
+  ".gnupg",
+  ".config/gh",
+  ".config/op",
+  ".config/gcloud",
+  ".kube",
+  ".docker",
+  ".npmrc",
+  ".netrc",
+  ".git-credentials",
+  ".config/git/credentials",
+];
+
+// Environment variables whose names look credential-bearing. They are stripped
+// from a worker command's environment so a subprocess cannot echo them back
+// through tool output (subprocesses inherit the parent environment).
+const SECRET_ENV_PATTERN =
+  /token|secret|key|password|passwd|credential|cookie|session|auth|npm_|aws_|gh_|github_|openai|anthropic|azure/i;
 
 function sandboxProfile(worktree: string): string {
   if (worktree.includes('"')) {
     throw new Error("Worktree path cannot contain a double quote");
+  }
+  const home = Bun.env["HOME"];
+  const denies: string[] = [];
+  if (home !== undefined && home.length > 0 && !home.includes('"')) {
+    for (const subpath of SENSITIVE_HOME_PATHS) {
+      denies.push(`(deny file-read* (subpath "${home}/${subpath}"))`);
+    }
   }
   return `(version 1)
 (deny default)
@@ -106,7 +178,19 @@ function sandboxProfile(worktree: string): string {
 (allow file-write* (subpath "${worktree}"))
 (allow file-write* (subpath "/private/tmp"))
 (allow file-write* (subpath "/private/var/folders"))
+${denies.join("\n")}
 (deny network*)`;
+}
+
+function sanitizedEnvironment(): Record<string, string | undefined> {
+  const result: Record<string, string | undefined> = {};
+  for (const [key, value] of Object.entries(Bun.env)) {
+    if (SECRET_ENV_PATTERN.test(key)) {
+      continue;
+    }
+    result[key] = value;
+  }
+  return result;
 }
 
 export function createWorkerTools(
@@ -395,6 +479,7 @@ export function createWorkerTools(
             cwd: worktree,
             timeoutMs,
             signal,
+            env: sanitizedEnvironment(),
           });
           return {
             exitCode: result.exitCode,
