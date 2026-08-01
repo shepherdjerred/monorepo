@@ -39,8 +39,8 @@ without making additional OpenAI calls.
       design in `packages/docs/plans/2026-07-29_glitter-style-card-v2.md`,
       which fixes both by construction. PR #1834 stays open only as a
       descriptive-baseline source and is closed as superseded, never merged.
-- [ ] Drive V2 implementation PR #1846 through Buildkite and review to merge,
-      then run the pinned V2 dry runs and promote the cached real run.
+- [x] Merged V2 implementation PR #1846 (`56f28ee7`).
+- [ ] Run the pinned V2 dry runs and promote the cached real run.
 - [ ] When the V2 data PR (all 13 cards) is open and pre-merge agent work is
       complete, set this TODO to `status: awaiting-human` and
       `verification: human`.
@@ -216,7 +216,6 @@ without making additional OpenAI calls.
 
 ### Remaining
 
-- Drive V2 implementation PR #1846 through Buildkite and review to merge.
 - Run the pinned V2 dry runs, promote the cached real run, open the V2 data
   PR, complete its subjective human review, merge it, and close PR #1834 as
   superseded.
@@ -225,6 +224,10 @@ without making additional OpenAI calls.
 
 ### Caveats
 
+- V2 implementation PR #1846 (`56f28ee7`) was already merged before this
+  document existed; the initial version of this session's Remaining section
+  incorrectly listed "drive PR #1846 to merge" as remaining work, since fixed
+  (Codex P2 finding on PR #1836).
 - This session made no production, schedule, or generated-content changes; it
   only corrected the workflow documents to match the already-approved V2
   design and the schedule's existing operator-only unpause contract.

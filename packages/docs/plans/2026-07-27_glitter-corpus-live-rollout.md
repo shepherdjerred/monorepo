@@ -66,8 +66,11 @@ unpause itself is not agent-verifiable).
       field-level patch retention over the complete corpus). PR #1834 stays
       open only as the source of three stronger descriptive baselines; it is
       never corrected or merged.
-- [ ] Drive V2 implementation PR #1846 through Buildkite and review to merge,
-      then run the pinned V2 dry runs and promote the cached real run, per
+- [x] Merged V2 implementation PR #1846
+      (`56f28ee7`, "feat(glitter-context): generate V2 thick evidence
+      contexts") through Buildkite and review, per
+      `2026-07-29_glitter-style-card-v2.md`.
+- [ ] Run the pinned V2 dry runs and promote the cached real run, per
       `2026-07-29_glitter-style-card-v2.md`.
 - [ ] When the V2 data PR (all 13 cards) is open and pre-merge agent work is
       complete, set this plan to `status: awaiting-human` and
@@ -105,9 +108,10 @@ unpause itself is not agent-verifiable).
 - [x] Run one real weekly refresh, inspect its sole PR, and complete pre-merge
       package-level smoke tests for the shared package, Birmel, Scout, and
       Glitter consumers.
-- [ ] Merge V2 implementation PR #1846, run the pinned V2 dry runs, and open
-      the V2 data PR; complete current-head CI and subjective generated-content
-      review before merging it, then close PR #1834 as superseded.
+- [x] Merged V2 implementation PR #1846.
+- [ ] Run the pinned V2 dry runs and open the V2 data PR; complete current-head
+      CI and subjective generated-content review before merging it, then close
+      PR #1834 as superseded.
 - [ ] Run merged-main and production consumer smoke checks after the V2 data
       PR merges.
 - [ ] Hand off to the operator-owned
@@ -142,8 +146,8 @@ unpause itself is not agent-verifiable).
       design (`2026-07-29_glitter-style-card-v2.md`), which fixes both by
       construction. PR #1834 stays open only as a descriptive-baseline source
       and is closed as superseded, never merged.
-- [ ] Merge V2 implementation PR #1846, run the pinned V2 dry runs, and open
-      the V2 data PR (all 13 cards).
+- [x] Merged V2 implementation PR #1846.
+- [ ] Run the pinned V2 dry runs and open the V2 data PR (all 13 cards).
 - [ ] Complete the V2 data PR's current-head CI, then transition this plan to
       `awaiting-human` / `verification: human` with the observable
       generated-content review scenario.
@@ -1051,7 +1055,6 @@ unpause itself is not agent-verifiable).
 
 ### Remaining
 
-- Drive V2 implementation PR #1846 through Buildkite and review to merge.
 - Run the pinned V2 dry runs, promote the cached real run, open the V2 data
   PR, complete its subjective human review, merge it, and close PR #1834 as
   superseded.
@@ -1063,3 +1066,7 @@ unpause itself is not agent-verifiable).
 - This session made no production, schedule, or generated-content changes; it
   only corrected the workflow documents to match the already-approved V2
   design and the schedule's existing operator-only unpause contract.
+- V2 implementation PR #1846 (`56f28ee7`) was already merged before this
+  document existed; the initial version of this session's Remaining section
+  incorrectly listed "drive PR #1846 to merge" as remaining work, since fixed
+  (Codex P2 finding on PR #1836).
