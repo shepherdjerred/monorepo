@@ -168,6 +168,14 @@ function mapConnectionDirectionFromRaw(
 function mapWarpActivationFromRaw(raw: number): EngineMapWarpActivation {
   switch (raw) {
     case 0:
+      // NOTE (accepted best-effort limit): the C warp classifier in
+      // wasm-src/patches/0001-extra-exports.patch deliberately covers only the
+      // common step and single-arrow directional warps. Emerald's deep
+      // directional warp behaviors (MetatileBehavior_IsDeep{South,North,West,East}Warp)
+      // are intentionally omitted, so they arrive as raw 0 and classify as
+      // "unsupported" here. Modeling deep directional warps is out of scope for
+      // this navigation helper; callers treat "unsupported" as a non-traversable
+      // exit rather than guessing a direction.
       return "unsupported";
     case 1:
       return "step";
