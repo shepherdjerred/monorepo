@@ -94,6 +94,11 @@
       "steps": [{ "runner": "bun" }]
     },
     {
+      "package": "@shepherdjerred/docs-wiki",
+      "directory": "packages/docs/wiki",
+      "steps": [{ "runner": "bun", "args": ["src"] }]
+    },
+    {
       "package": "@shepherdjerred/dotfiles-scripts",
       "directory": "packages/dotfiles",
       "steps": [{ "runner": "bun", "args": ["scripts"] }]
@@ -131,12 +136,18 @@
       "steps": [{ "runner": "bun" }]
     },
     {
+      "package": "@shepherdjerred/leetcode",
+      "directory": "packages/leetcode",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
       "package": "homelab",
       "directory": "packages/homelab",
       "steps": [
         {
           "runner": "bun",
           "args": [
+            "scripts/argocd-manifest-overrides.test.ts",
             "scripts/helm-release-core.test.ts",
             "scripts/helm-set-version.test.ts",
             "scripts/lint-helm.test.ts",
@@ -368,11 +379,6 @@
       "package": "@shepherdjerred/cooklang-rich-preview",
       "directory": "packages/cooklang-rich-preview",
       "reason": "Static marketing site; no test files exist."
-    },
-    {
-      "package": "@shepherdjerred/leetcode",
-      "directory": "packages/leetcode",
-      "reason": "Data and scraping utility; no test files exist."
     },
     {
       "package": "@shepherdjerred/release-tools",

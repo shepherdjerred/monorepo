@@ -315,6 +315,7 @@ describe("CI reporting manifest", () => {
       {
         runner: "bun",
         args: [
+          "scripts/argocd-manifest-overrides.test.ts",
           "scripts/helm-release-core.test.ts",
           "scripts/helm-set-version.test.ts",
           "scripts/lint-helm.test.ts",
@@ -358,11 +359,28 @@ describe("CI reporting manifest", () => {
         expect(declaredDirectories.has(directory)).toBeTrue();
       }
       if (declaredDirectories.has(directory)) {
+        const manifestEntry = manifest.workspaces.find(
+          (entry) => entry.directory === directory,
+        );
+        if (manifestEntry === undefined) {
+          throw new Error(`Missing manifest entry for ${directory}`);
+        }
         const relativeRunner = path.relative(
           directory,
           "scripts/run-ci-test.ts",
         );
-        expect(scripts["test:ci"]).toBe(`bun ${relativeRunner}`);
+        // Cargo/command-only workspaces cannot call the Bun runner directly from
+        // test:ci, so they indirect through a test:report script that invokes the
+        // runner; workspaces with a Bun step call the runner straight from test:ci.
+        const hasBunStep = manifestEntry.steps.some(
+          (step) => step.runner !== "cargo" && step.runner !== "command",
+        );
+        if (hasBunStep) {
+          expect(scripts["test:ci"]).toBe(`bun ${relativeRunner}`);
+        } else {
+          expect(scripts["test:report"]).toBe(`bun ${relativeRunner}`);
+          expect(scripts["test:ci"]).toBe("bun run test:report");
+        }
       }
       if (noTestDirectories.has(directory)) {
         expect(
