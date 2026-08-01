@@ -9,7 +9,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "lint": "astro check",
-    "typecheck": "astro check && bunx tsc --noEmit",
+    "typecheck": "astro check && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "deploy": "bun ../../scripts/deploy-site.ts cook"
   },
   "dependencies": {
@@ -23,6 +23,7 @@
     "@astrojs/check": "^0.9.8",
     "@shepherdjerred/eslint-config": "workspace:*",
     "jiti": "^2.7.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "@typescript/native": "npm:typescript@7.0.2"
   }
 }

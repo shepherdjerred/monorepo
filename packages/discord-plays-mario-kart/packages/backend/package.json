@@ -8,8 +8,8 @@
     "#generated/*": "./generated/*"
   },
   "scripts": {
-    "typecheck": "bunx tsc --noEmit",
-    "watch": "bunx tsc --watch",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "watch": "PATH=node_modules/@typescript/native/bin:$PATH tsc --watch",
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
     "lint": "bun run lint:check",
@@ -76,6 +76,7 @@
     "socket.io-client": "^4.8.1",
     "tslib": "^2.8.1",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.65.0"
+    "typescript-eslint": "^8.65.0",
+    "@typescript/native": "npm:typescript@7.0.2"
   }
 }

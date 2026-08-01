@@ -3,11 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc --noEmit",
+    "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "test": "bun test scripts",
     "test:coverage": "bun test --config ../../scripts/bunfig.coverage.toml --coverage scripts/build-wasm.test.ts scripts/vendor-n64wasm.test.ts",
     "lint": "eslint --config eslint.config.ts scripts",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "build:wasm": "bun scripts/build-wasm.ts",
     "vendor:wasm": "bun scripts/vendor-n64wasm.ts"
   },
@@ -17,6 +17,7 @@
     "eslint": "^10.7.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "@typescript/native": "npm:typescript@7.0.2"
   }
 }

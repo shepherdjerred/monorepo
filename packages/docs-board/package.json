@@ -8,7 +8,7 @@
     "dev": "bun run src/dev.ts",
     "launch": "bun run build && bun run src/server/index.ts --open",
     "start": "bun run src/server/index.ts",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "test": "bun test",
     "lint": "bunx eslint . --max-warnings=0",
     "check-docs": "bun run src/cli/check-docs.ts",
@@ -61,6 +61,7 @@
     "shadcn": "^4.14.1",
     "tailwindcss": "^4.2.4",
     "typescript": "^6.0.3",
-    "vite": "^8.0.11"
+    "vite": "^8.0.11",
+    "@typescript/native": "npm:typescript@7.0.2"
   }
 }

@@ -46,7 +46,7 @@
     "test:headed": "echo 'Playwright tests disabled'",
     "test:report": "echo 'Playwright tests disabled'",
     "test:install": "echo 'Playwright tests disabled'",
-    "typecheck": "astro check && bunx tsc --noEmit",
+    "typecheck": "astro check && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "deploy": "bun ../../../../scripts/deploy-site.ts scout-frontend",
     "deploy:beta": "bun ../../../../scripts/deploy-site.ts scout-frontend-beta"
   },
@@ -58,7 +58,8 @@
     "@types/react-dom": "^19.1.9",
     "bun-types": "latest",
     "eslint": "^10.3.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "@typescript/native": "npm:typescript@7.0.2"
   },
   "description": "Web frontend for Scout for League of Legends",
   "keywords": [
