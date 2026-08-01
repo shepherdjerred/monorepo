@@ -65,6 +65,12 @@ export async function buildWorldRecords(
           `Region: ${id}`,
           `Parent map: ${map}`,
           `Terrain/features: ${features.join(", ") || "none recorded"}`,
+          // NOTE (accepted best-effort limit): `region.exits` is Archipelago's
+          // randomizer logic graph, so it can include synthetic randomizer-only
+          // nodes (e.g. REGION_POKEDEX, REGION_SKY) that are not vanilla warp
+          // connections. Reconciling these against vanilla warp topology is out
+          // of scope for this knowledge-graph corpus; they are surfaced verbatim
+          // as connectivity hints rather than labeled per-node as non-vanilla.
           `Connected regions: ${compactList(region.exits) || "none"}`,
           `Warps: ${compactList(region.warps) || "none"}`,
           ...archipelagoRandomizerMetadataLines(
