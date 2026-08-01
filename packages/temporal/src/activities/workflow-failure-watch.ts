@@ -1,6 +1,7 @@
 import { Context } from "@temporalio/activity";
 import * as Sentry from "@sentry/bun";
 import { WorkflowFailedError } from "@temporalio/client";
+import { ApplicationFailure, TemporalFailure } from "@temporalio/common";
 import { createTemporalClient } from "#client";
 import {
   type AlertmanagerAlert,
@@ -108,6 +109,41 @@ export function buildVisibilityQuery(since: Date): string {
 }
 
 /**
+ * Walks the Temporal failure chain to its innermost `TemporalFailure`. When a
+ * workflow fails because a proxied activity threw, `WorkflowFailedError.cause`
+ * is an `ActivityFailure` whose message is only a generic "Activity task
+ * failed"; the specific `ApplicationFailure` that actually explains the failure
+ * is nested at `.cause.cause` (see `workflows/glitter-context-refresh.test.ts`).
+ * Descending to the deepest TemporalFailure yields the real type/message/stack
+ * the Temporal UI shows, for every workflow — not just those that fail inline.
+ */
+function innermostTemporalFailure(failure: TemporalFailure): TemporalFailure {
+  let current = failure;
+  while (current.cause instanceof TemporalFailure) {
+    current = current.cause;
+  }
+  return current;
+}
+
+/**
+ * The failure "type" the Temporal UI shows. For an `ApplicationFailure` that is
+ * its custom `type` (e.g. `BilledGenerationFinalizationError`), not the generic
+ * class name `ApplicationFailure`; every other TemporalFailure subclass uses its
+ * class name (`TimeoutFailure`, `ActivityFailure`, ...).
+ */
+function failureTypeName(failure: TemporalFailure): string {
+  if (
+    failure instanceof ApplicationFailure &&
+    failure.type !== undefined &&
+    failure.type !== null &&
+    failure.type !== ""
+  ) {
+    return failure.type;
+  }
+  return failure.name;
+}
+
+/**
  * Extracts the structured failure from a closed Failed/TimedOut execution.
  * `handle.result()` on an already-closed execution rejects immediately (no
  * blocking) with `WorkflowFailedError`, whose `.cause` is the TemporalFailure
@@ -131,11 +167,20 @@ async function fetchFailureDetail(
     );
   } catch (error) {
     if (error instanceof WorkflowFailedError) {
-      const cause = error.cause;
+      const outerCause = error.cause;
+      if (outerCause instanceof TemporalFailure) {
+        const cause = innermostTemporalFailure(outerCause);
+        return {
+          failureType: failureTypeName(cause),
+          message: cause.message === "" ? error.message : cause.message,
+          stack: cause.stack,
+        };
+      }
+      // No TemporalFailure cause (unusual) — fall back to the outer error.
       return {
-        failureType: cause?.name ?? "UnknownFailure",
-        message: cause?.message ?? error.message,
-        stack: cause?.stack,
+        failureType: outerCause?.name ?? "UnknownFailure",
+        message: outerCause?.message ?? error.message,
+        stack: outerCause?.stack,
       };
     }
     throw error;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { ApplicationFailure, WorkflowFailedError } from "@temporalio/client";
-import { RetryState } from "@temporalio/common";
+import { ActivityFailure, RetryState } from "@temporalio/common";
 import type { AlertmanagerAlert, AlertPoster } from "#lib/alertmanager.ts";
 import {
   buildVisibilityQuery,
@@ -59,6 +59,33 @@ function rejectWithApplicationFailure(message: string): () => Promise<unknown> {
       new WorkflowFailedError(
         "workflow execution failed",
         ApplicationFailure.nonRetryable(message, "TestFailure"),
+        RetryState.NON_RETRYABLE_FAILURE,
+      ),
+    );
+}
+
+/**
+ * A workflow that failed because a proxied activity threw: the outer cause is
+ * an ActivityFailure carrying a generic message, with the real ApplicationFailure
+ * nested at `.cause.cause`. Mirrors the shape asserted in
+ * workflows/glitter-context-refresh.test.ts.
+ */
+function rejectWithActivityWrappedFailure(
+  innerType: string,
+  innerMessage: string,
+): () => Promise<unknown> {
+  return () =>
+    Promise.reject(
+      new WorkflowFailedError(
+        "workflow execution failed",
+        new ActivityFailure(
+          "Activity task failed",
+          "someActivity",
+          "act-1",
+          RetryState.NON_RETRYABLE_FAILURE,
+          "worker-1",
+          ApplicationFailure.nonRetryable(innerMessage, innerType),
+        ),
         RetryState.NON_RETRYABLE_FAILURE,
       ),
     );
@@ -124,6 +151,46 @@ describe("pollWorkflowFailuresOnce", () => {
     expect(calls[0]?.alerts.length).toBe(2);
     const workflowIds = calls[0]?.alerts.map((a) => a.labels["workflowId"]);
     expect(workflowIds).toEqual(["wf-1", "wf-2"]);
+  });
+
+  it("surfaces the innermost cause when an activity failure wraps the real error", async () => {
+    const client = fakeClient(
+      [
+        {
+          workflowId: "wf-1",
+          runId: "run-1",
+          type: "runGlitterContextRefresh",
+          taskQueue: "default",
+          closeTime: new Date("2026-07-30T17:50:00.000Z"),
+          status: { name: "FAILED" },
+        },
+      ],
+      {
+        "wf-1/run-1": rejectWithActivityWrappedFailure(
+          "BilledGenerationFinalizationError",
+          "cost ceiling exceeded",
+        ),
+      },
+    );
+    const { poster, calls } = capturingPoster();
+
+    const result = await pollWorkflowFailuresOnce(client, poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      ttlMs: TTL_MS,
+    });
+
+    expect(result).toEqual({ scanned: 1, alerted: 1, errored: 0 });
+    const alert = calls[0]?.alerts[0];
+    // The inner ApplicationFailure — not the outer "Activity task failed".
+    expect(alert?.annotations["summary"]).toContain(
+      "BilledGenerationFinalizationError",
+    );
+    expect(alert?.annotations["summary"]).toContain("cost ceiling exceeded");
+    expect(alert?.annotations["description"]).toContain(
+      "failureType BilledGenerationFinalizationError",
+    );
+    expect(alert?.annotations["summary"]).not.toContain("Activity task failed");
   });
 
   it("skips executions missing FAILED/TIMED_OUT status or closeTime", async () => {
