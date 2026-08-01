@@ -4,14 +4,20 @@ import {
   dataDragonPrTitle,
   findDataDragonPr,
   isDataDragonBranch,
+  isDataDragonPrAuthor,
   isFinalAttempt,
   type OpenPrCandidate,
   resolveTerminalFailureReason,
 } from "./data-dragon-util.ts";
 
+// The GitHub App slug the updater runs as; `gh pr list --json author` renders
+// its bot login as `app/<slug>`.
+const APP_SLUG = "long-summer-intern";
+
 // A well-formed PR the bot itself opened for the given version: exact title,
-// base main, same-repo head, generated branch shape. Tests override one field
-// at a time to prove each authentication check rejects a spoof.
+// base main, same-repo head, generated branch shape, authored by the app bot.
+// Tests override one field at a time to prove each authentication check
+// rejects a spoof.
 function botPr(
   version: string,
   overrides: Partial<OpenPrCandidate> = {},
@@ -22,6 +28,7 @@ function botPr(
     baseRefName: "main",
     headRefName: `chore/scout-data-dragon-${version}-6d94e121`,
     isCrossRepository: false,
+    author: { is_bot: true, login: `app/${APP_SLUG}` },
     ...overrides,
   };
 }
@@ -72,6 +79,40 @@ describe("isDataDragonBranch", () => {
   });
 });
 
+describe("isDataDragonPrAuthor", () => {
+  test("accepts the app bot in gh's app/<slug> form", () => {
+    expect(
+      isDataDragonPrAuthor(
+        { is_bot: true, login: `app/${APP_SLUG}` },
+        APP_SLUG,
+      ),
+    ).toBe(true);
+  });
+
+  test("accepts the app bot in the <slug>[bot] form", () => {
+    expect(
+      isDataDragonPrAuthor(
+        { is_bot: true, login: `${APP_SLUG}[bot]` },
+        APP_SLUG,
+      ),
+    ).toBe(true);
+  });
+
+  test("rejects a human collaborator whose login happens to match the slug", () => {
+    // is_bot is set by GitHub, not the PR opener — a collaborator can't fake
+    // it, so even a login collision is rejected.
+    expect(
+      isDataDragonPrAuthor({ is_bot: false, login: APP_SLUG }, APP_SLUG),
+    ).toBe(false);
+  });
+
+  test("rejects a different bot", () => {
+    expect(
+      isDataDragonPrAuthor({ is_bot: true, login: "app/renovate" }, APP_SLUG),
+    ).toBe(false);
+  });
+});
+
 describe("findDataDragonPr", () => {
   test("returns the bot's authenticated PR for the target version", () => {
     const match = botPr("16.15.1");
@@ -79,12 +120,15 @@ describe("findDataDragonPr", () => {
       findDataDragonPr(
         [botPr("16.15.1", { title: "chore: something unrelated" }), match],
         "16.15.1",
+        APP_SLUG,
       ),
     ).toBe(match);
   });
 
   test("returns undefined for a PR targeting a different version", () => {
-    expect(findDataDragonPr([botPr("16.15.0")], "16.15.1")).toBeUndefined();
+    expect(
+      findDataDragonPr([botPr("16.15.0")], "16.15.1", APP_SLUG),
+    ).toBeUndefined();
   });
 
   test("rejects a same-title PR from a fork (isCrossRepository)", () => {
@@ -94,13 +138,18 @@ describe("findDataDragonPr", () => {
       findDataDragonPr(
         [botPr("16.15.1", { isCrossRepository: true })],
         "16.15.1",
+        APP_SLUG,
       ),
     ).toBeUndefined();
   });
 
   test("rejects a same-title PR against a different base", () => {
     expect(
-      findDataDragonPr([botPr("16.15.1", { baseRefName: "beta" })], "16.15.1"),
+      findDataDragonPr(
+        [botPr("16.15.1", { baseRefName: "beta" })],
+        "16.15.1",
+        APP_SLUG,
+      ),
     ).toBeUndefined();
   });
 
@@ -109,12 +158,37 @@ describe("findDataDragonPr", () => {
       findDataDragonPr(
         [botPr("16.15.1", { headRefName: "attacker/pwn" })],
         "16.15.1",
+        APP_SLUG,
+      ),
+    ).toBeUndefined();
+  });
+
+  test("rejects a collaborator's look-alike PR authored by a human", () => {
+    // A repository collaborator with push access can craft a same-repo branch
+    // of the generated shape with the exact title and base — every field
+    // except the author matches. The bot-identity check stops the updater from
+    // auto-merging it.
+    expect(
+      findDataDragonPr(
+        [botPr("16.15.1", { author: { is_bot: false, login: "mallory" } })],
+        "16.15.1",
+        APP_SLUG,
+      ),
+    ).toBeUndefined();
+  });
+
+  test("rejects an otherwise-perfect PR authored by a different bot", () => {
+    expect(
+      findDataDragonPr(
+        [botPr("16.15.1", { author: { is_bot: true, login: "app/renovate" } })],
+        "16.15.1",
+        APP_SLUG,
       ),
     ).toBeUndefined();
   });
 
   test("returns undefined on an empty PR list", () => {
-    expect(findDataDragonPr([], "16.15.1")).toBeUndefined();
+    expect(findDataDragonPr([], "16.15.1", APP_SLUG)).toBeUndefined();
   });
 });
 

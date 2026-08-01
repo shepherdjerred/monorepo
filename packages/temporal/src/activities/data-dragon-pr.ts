@@ -1,4 +1,5 @@
 import { z } from "zod/v4";
+import { resolveGitHubAppSlug } from "#lib/github-app-token.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import { findDataDragonPr } from "./data-dragon-util.ts";
 
@@ -16,8 +17,11 @@ import { findDataDragonPr } from "./data-dragon-util.ts";
  * and `gh pr merge --auto` would otherwise leave the PR stuck with auto-merge
  * never enabled. The match is AUTHENTICATED as this updater's own PR (see
  * `findDataDragonPr`): we request the `baseRefName` / `headRefName` /
- * `isCrossRepository` fields so a same-title PR from a fork or another base is
- * rejected rather than auto-merged as if it were the bot's.
+ * `isCrossRepository` / `author` fields so a same-title PR from a fork, another
+ * base, or a repository collaborator's look-alike branch is rejected rather
+ * than auto-merged as if it were the bot's. The author is matched against the
+ * GitHub App's own slug, resolved live from the numeric `GITHUB_APP_ID`
+ * (`resolveGitHubAppSlug`) rather than a hard-coded login.
  *
  * A plain function (not a Temporal activity) so `updateDataDragon` can call it
  * INSIDE its own retried body — the only place the dedup check is retry-safe.
@@ -27,6 +31,7 @@ export async function findOpenDataDragonPrUrl(
   latestVersion: string,
   token: string,
 ): Promise<string | undefined> {
+  const appSlug = await resolveGitHubAppSlug();
   const output = await runCommand(
     [
       "gh",
@@ -39,7 +44,7 @@ export async function findOpenDataDragonPrUrl(
       "--search",
       `${latestVersion} in:title`,
       "--json",
-      "title,url,baseRefName,headRefName,isCrossRepository",
+      "title,url,baseRefName,headRefName,isCrossRepository,author",
     ],
     { cwd: "/tmp", env: { GH_TOKEN: token } },
   );
@@ -51,8 +56,9 @@ export async function findOpenDataDragonPrUrl(
         baseRefName: z.string(),
         headRefName: z.string(),
         isCrossRepository: z.boolean(),
+        author: z.object({ is_bot: z.boolean(), login: z.string() }),
       }),
     )
     .parse(JSON.parse(output));
-  return findDataDragonPr(prs, latestVersion)?.url;
+  return findDataDragonPr(prs, latestVersion, appSlug)?.url;
 }

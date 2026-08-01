@@ -4,6 +4,7 @@ import {
   createGitHubAppInstallationToken,
   createGitHubAppJwt,
   normalizePrivateKey,
+  resolveGitHubAppSlug,
   type FetchLike,
   type GitHubAppEnv,
 } from "./github-app-token.ts";
@@ -246,5 +247,56 @@ describe("github-app-token", () => {
 
     expect(attempt).toBe(2);
     expect(delays).toEqual([5000]);
+  });
+});
+
+describe("resolveGitHubAppSlug", () => {
+  it("resolves the app slug from GET /app with a JWT", async () => {
+    const pem = await testPrivateKeyPem();
+    const calls: FetchCall[] = [];
+    const fetchFn: FetchLike = async (input, init) => {
+      calls.push({ input, init });
+      return Response.json({ id: 12_345, slug: "long-summer-intern" });
+    };
+
+    const slug = await resolveGitHubAppSlug({
+      env: makeEnv(pem),
+      fetch: fetchFn,
+      now: () => 1_800_000_000_000,
+    });
+
+    expect(slug).toBe("long-summer-intern");
+    expect(calls).toHaveLength(1);
+    const call = calls[0];
+    if (call === undefined) {
+      throw new Error("expected one fetch call");
+    }
+    expect(call.input).toBe("https://api.github.com/app");
+    expect(call.init.method).toBe("GET");
+    const headers = new Headers(call.init.headers);
+    expect(headers.get("Authorization")?.startsWith("Bearer ")).toBe(true);
+    expect(headers.get("Accept")).toBe("application/vnd.github+json");
+  });
+
+  it("rejects an app identity response without a slug", async () => {
+    const pem = await testPrivateKeyPem();
+    await expect(
+      resolveGitHubAppSlug({
+        env: makeEnv(pem),
+        fetch: async () => Response.json({ id: 12_345 }),
+        now: () => 1_800_000_000_000,
+      }),
+    ).rejects.toThrow("did not include a slug");
+  });
+
+  it("throws when GET /app fails", async () => {
+    const pem = await testPrivateKeyPem();
+    await expect(
+      resolveGitHubAppSlug({
+        env: makeEnv(pem),
+        fetch: async () => new Response("nope", { status: 403 }),
+        now: () => 1_800_000_000_000,
+      }),
+    ).rejects.toThrow("GitHub App identity request failed with 403");
   });
 });

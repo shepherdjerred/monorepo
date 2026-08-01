@@ -62,6 +62,17 @@ export function dataDragonPrTitle(version: string): string {
 }
 
 /**
+ * The `author` object `gh pr list --json author` returns. `is_bot` is set by
+ * GitHub, not by the PR opener, so it — not the login — is the spoof-proof part
+ * of the identity. For a GitHub App's bot actor gh renders the login as
+ * `app/<slug>`; the REST / GraphQL form is `<slug>[bot]`.
+ */
+export type OpenPrAuthor = {
+  is_bot: boolean;
+  login: string;
+};
+
+/**
  * The fields needed to authenticate a candidate open PR as one THIS updater
  * opened. `gh pr list --json` exposes all of them.
  */
@@ -71,7 +82,41 @@ export type OpenPrCandidate = {
   baseRefName: string;
   headRefName: string;
   isCrossRepository: boolean;
+  author: OpenPrAuthor;
 };
+
+/**
+ * Reduces the two forms GitHub uses to render a GitHub App's bot actor down to
+ * the bare app slug: `gh pr list --json author` yields `app/<slug>`, while the
+ * REST / GraphQL author login is `<slug>[bot]`. Both normalize to `<slug>`.
+ */
+function appSlugFromAuthorLogin(login: string): string {
+  const withoutPrefix = login.startsWith("app/")
+    ? login.slice("app/".length)
+    : login;
+  const suffix = "[bot]";
+  return withoutPrefix.endsWith(suffix)
+    ? withoutPrefix.slice(0, -suffix.length)
+    : withoutPrefix;
+}
+
+/**
+ * Whether `author` is THIS updater's own GitHub App bot. `is_bot` is set by
+ * GitHub and cannot be faked by whoever opened the PR, so it is the
+ * spoof-proof anchor: a repository collaborator who hand-crafts a same-repo
+ * branch of the generated shape with the exact title and base is a `User`
+ * (`is_bot: false`) and is rejected here even though every other field matches.
+ * The login is then pinned to the app's own slug — resolved live from the
+ * stable numeric `GITHUB_APP_ID` (`resolveGitHubAppSlug`), never a hard-coded
+ * login string that a rename would silently break — so a *different* bot can't
+ * match either.
+ */
+export function isDataDragonPrAuthor(
+  author: OpenPrAuthor,
+  appSlug: string,
+): boolean {
+  return author.is_bot && appSlugFromAuthorLogin(author.login) === appSlug;
+}
 
 /**
  * The already-open PR that this updater itself opened for `version`, or
@@ -88,11 +133,17 @@ export type OpenPrCandidate = {
  *   - base branch is the one the updater targets (`DATA_DRAGON_BASE_BRANCH`);
  *   - the PR is same-repo, not from a fork (`!isCrossRepository`) — a fork PR
  *     can spoof the title/branch name but not the head repository;
- *   - the head branch matches the generated shape (`isDataDragonBranch`).
+ *   - the head branch matches the generated shape (`isDataDragonBranch`);
+ *   - the author is this updater's own GitHub App bot (`isDataDragonPrAuthor`)
+ *     — a repository collaborator with push access can craft a same-repo
+ *     branch of the generated shape with the exact title and base, so the
+ *     bot-identity check (keyed to the app slug for `appSlug`) is what stops
+ *     the updater from auto-merging a human's look-alike PR.
  */
 export function findDataDragonPr<T extends OpenPrCandidate>(
   openPrs: readonly T[],
   version: string,
+  appSlug: string,
 ): T | undefined {
   const title = dataDragonPrTitle(version);
   return openPrs.find(
@@ -100,7 +151,8 @@ export function findDataDragonPr<T extends OpenPrCandidate>(
       pr.title === title &&
       pr.baseRefName === DATA_DRAGON_BASE_BRANCH &&
       !pr.isCrossRepository &&
-      isDataDragonBranch(pr.headRefName, version),
+      isDataDragonBranch(pr.headRefName, version) &&
+      isDataDragonPrAuthor(pr.author, appSlug),
   );
 }
 
