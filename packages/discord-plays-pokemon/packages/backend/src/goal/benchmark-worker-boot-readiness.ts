@@ -130,7 +130,7 @@ export async function bootBenchmarkSave(
             },
     });
     bootCandidate = assessment.candidate;
-    if (assessment.ready && snapshot !== null) return snapshot;
+    if (snapshot !== null && assessment.ready) return snapshot;
     if (Date.now() >= deadline) {
       throw new Error(
         `emulator did not boot and continue within ${String(timeoutSeconds)} seconds`,
