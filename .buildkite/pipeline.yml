@@ -327,7 +327,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile --filter '@scout-for-lol/report' --production
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@scout-for-lol/report' --production
       bun --no-install run --cwd packages/glitter-context build:runtime
       bun --no-install run --cwd packages/llm-models build:runtime
       font_dir=$$(mktemp -d)

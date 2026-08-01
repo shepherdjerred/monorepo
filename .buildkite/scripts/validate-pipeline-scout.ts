@@ -6,7 +6,7 @@ import {
 } from "./validate-pipeline-lib.ts";
 
 const CLASSIC_VISUAL_INSTALL =
-  "bun install --frozen-lockfile --filter '@scout-for-lol/report' --production";
+  ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@scout-for-lol/report' --production";
 
 export async function validateScoutPipelineContracts(
   stepBlocks: ReadonlyMap<string, string>,
