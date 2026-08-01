@@ -271,7 +271,7 @@ export function cargoTestJUnit(
       }
       return [{ name: match[1], status: match[2] }];
     });
-  if (testCases.length === 0 && exitCode === 0) {
+  if (exitCode === 0 && testCases.length === 0) {
     throw new Error("cargo test succeeded without reporting any test cases");
   }
   const hasReportedFailure = testCases.some(

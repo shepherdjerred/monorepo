@@ -87,6 +87,7 @@ for (const [index, step] of workspace.steps.entries()) {
   const startedAt = performance.now();
   const command = commandForStep(step, reportPath);
   let exitCode: number;
+  let reportingError: Error | undefined;
   if (step.runner === "cargo") {
     const child = Bun.spawn(command, {
       cwd: process.cwd(),
@@ -105,15 +106,25 @@ for (const [index, step] of workspace.steps.entries()) {
       Bun.write(Bun.stderr, stderr),
     ]);
     exitCode = cargoExitCode;
-    await Bun.write(
-      reportPath,
-      cargoTestJUnit(
-        { stdout, stderr },
-        name,
-        (performance.now() - startedAt) / 1000,
-        exitCode,
-      ),
-    );
+    // Synthesizing and writing Cargo's report happens outside the
+    // completeJUnitReport try/catch, so a write failure here (e.g. a full
+    // report filesystem) must not crash the wrapper with its own status and
+    // mask Cargo's exit code. Capture it as a reporting error like the
+    // finalization path does.
+    try {
+      await Bun.write(
+        reportPath,
+        cargoTestJUnit(
+          { stdout, stderr },
+          name,
+          (performance.now() - startedAt) / 1000,
+          exitCode,
+        ),
+      );
+    } catch (error) {
+      reportingError =
+        error instanceof Error ? error : new Error(String(error));
+    }
   } else {
     const child = Bun.spawn(command, {
       cwd: process.cwd(),
@@ -126,27 +137,32 @@ for (const [index, step] of workspace.steps.entries()) {
   }
   const durationSeconds = (performance.now() - startedAt) / 1000;
 
-  const completed = await completeJUnitReport({
-    runner: step.runner,
-    reportPath,
-    workspace: workspace.package,
-    name,
-    durationSeconds,
-    exitCode,
-  });
+  // Only finalize (read back + namespace) when the raw report was written;
+  // if the Cargo write already failed there is nothing to finalize.
+  if (reportingError === undefined) {
+    const completed = await completeJUnitReport({
+      runner: step.runner,
+      reportPath,
+      workspace: workspace.package,
+      name,
+      durationSeconds,
+      exitCode,
+    });
+    reportingError = completed.reportingError;
+  }
 
-  if (completed.exitCode !== 0) {
-    if (completed.reportingError !== undefined) {
+  if (exitCode !== 0) {
+    if (reportingError !== undefined) {
       console.error(
         "%s test process exited with status %d, and its JUnit report could not be finalized:",
         workspace.package,
-        completed.exitCode,
-        completed.reportingError,
+        exitCode,
+        reportingError,
       );
     }
-    process.exit(completed.exitCode);
+    process.exit(exitCode);
   }
-  if (completed.reportingError !== undefined) {
-    throw completed.reportingError;
+  if (reportingError !== undefined) {
+    throw reportingError;
   }
 }
