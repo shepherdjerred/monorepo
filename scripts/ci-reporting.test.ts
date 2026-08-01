@@ -3,6 +3,7 @@ import path from "node:path";
 import { z } from "zod";
 import {
   applyDefaultEnvironment,
+  assertExcludedSuitesAreUncovered,
   cargoTestJUnit,
   completeJUnitReport,
   namespaceJUnit,
@@ -112,6 +113,52 @@ describe("CI reporting boundaries", () => {
         separateTests: [{ ...validManifest.separateTests[0], typo: true }],
       }).success,
     ).toBeFalse();
+  });
+
+  test("committed manifest never runs a suite it documents as excluded", async () => {
+    const manifest = TestManifestSchema.parse(
+      await Bun.file(
+        path.join(repositoryRoot, "scripts", "ci-test-manifest.json"),
+      ).json(),
+    );
+    expect(() => {
+      assertExcludedSuitesAreUncovered(manifest);
+    }).not.toThrow();
+
+    for (const workspace of manifest.workspaces) {
+      for (const excluded of workspace.excludedSuites ?? []) {
+        const suitePath = path.join(
+          repositoryRoot,
+          workspace.directory,
+          excluded.path,
+        );
+        // A documented exclusion must reference a real suite file so it cannot
+        // rot into a stale claim once the underlying test is renamed or removed.
+        expect(await Bun.file(suitePath).exists()).toBeTrue();
+      }
+    }
+  });
+
+  test("rejects an excluded suite that a reporting step still runs", () => {
+    const manifest = TestManifestSchema.parse({
+      $schema: "./ci-test-manifest.schema.json",
+      version: 1,
+      workspaces: [
+        {
+          package: "package",
+          directory: "packages/package",
+          steps: [{ runner: "bun", args: ["src", "contract-tests"] }],
+          excludedSuites: [
+            { path: "contract-tests", reason: "runs in a dedicated lane" },
+          ],
+        },
+      ],
+      testlessWorkspaces: [],
+      separateTests: [],
+    });
+    expect(() => {
+      assertExcludedSuitesAreUncovered(manifest);
+    }).toThrow(/excluded suite but a reporting step already runs it/);
   });
 });
 

@@ -200,6 +200,12 @@
             "test/e2e/run-smoke.test.ts"
           ]
         }
+      ],
+      "excludedSuites": [
+        {
+          "path": "test/e2e/openai-archive.e2e.test.ts",
+          "reason": "Service-backed observability E2E; requires the Tempo and MinIO containers provided only by the dedicated docker-e2e lanes. Full reporting is deliberately test-only and does not stand up service containers."
+        }
       ]
     },
     {
@@ -278,7 +284,13 @@
     {
       "package": "tasks-for-obsidian",
       "directory": "packages/tasks-for-obsidian",
-      "steps": [{ "runner": "bun", "args": ["src", "scripts"] }]
+      "steps": [{ "runner": "bun", "args": ["src", "scripts"] }],
+      "excludedSuites": [
+        {
+          "path": "contract-tests/contract.test.ts",
+          "reason": "The client/server wire-contract suite (test:contract) spawns a sibling tasknotes-server process over a temporary vault and runs as its own dedicated verify step. Full reporting is deliberately test-only and does not orchestrate spawned service dependencies."
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/temporal",

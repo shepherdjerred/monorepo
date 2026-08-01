@@ -58,6 +58,22 @@ export const TestManifestSchema = z
             .optional(),
           defaultEnv: z.record(z.string(), z.string()).optional(),
           steps: z.array(StepSchema).min(1),
+          // Suites this reporting workspace deliberately does NOT run, each with
+          // a rationale. Full reporting is test-only: suites needing service
+          // containers or spawned sibling processes run in their dedicated
+          // lanes, not here. Recorded so the scope=full claim is honest and so
+          // assertExcludedSuitesAreUncovered can prove a step never runs them.
+          excludedSuites: z
+            .array(
+              z
+                .object({
+                  path: z.string().min(1),
+                  reason: z.string().min(1),
+                })
+                .strict(),
+            )
+            .min(1)
+            .optional(),
         })
         .strict(),
     ),
@@ -143,6 +159,47 @@ export function reportedWorkspacesForReports(
 
 export function testStepReportName(step: TestStep, index: number): string {
   return step.name ?? `${step.runner}-${(index + 1).toString()}`;
+}
+
+function stepTargetPaths(step: TestStep): readonly string[] {
+  switch (step.runner) {
+    case "bun":
+      return step.args ?? [];
+    case "vitest":
+    case "go":
+    case "cargo":
+      return step.args;
+    case "command":
+      return step.command;
+  }
+}
+
+// Assert that every suite a workspace lists as deliberately excluded from full
+// reporting is genuinely not run by any of that workspace's reporting steps. A
+// suite added to the steps later can then never silently contradict its
+// documented exclusion (or vice versa): the two must stay mutually exclusive.
+export function assertExcludedSuitesAreUncovered(manifest: TestManifest): void {
+  for (const workspace of manifest.workspaces) {
+    if (workspace.excludedSuites === undefined) {
+      continue;
+    }
+    const targetPaths = workspace.steps.flatMap((step) => [
+      ...stepTargetPaths(step),
+    ]);
+    for (const excluded of workspace.excludedSuites) {
+      const runByStep = targetPaths.some(
+        (target) =>
+          target === excluded.path ||
+          target.startsWith(`${excluded.path}/`) ||
+          excluded.path.startsWith(`${target}/`),
+      );
+      if (runByStep) {
+        throw new Error(
+          `${workspace.package} lists ${excluded.path} as an excluded suite but a reporting step already runs it`,
+        );
+      }
+    }
+  }
 }
 
 const XmlValueSchema = z.json();
