@@ -24,7 +24,10 @@ import {
   installScoutWorkspace,
 } from "./bot-clone.ts";
 import { recordAutoMergeFailure, recordRun } from "./data-dragon-metrics.ts";
-import { findOpenDataDragonPrUrl } from "./data-dragon-pr.ts";
+import {
+  createDataDragonPr,
+  findOpenDataDragonPrUrl,
+} from "./data-dragon-pr.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import {
   branchName,
@@ -261,8 +264,10 @@ export const dataDragonActivities = {
   ): Promise<DataDragonUpdateResult> {
     validateVersion(input.latestVersion);
     const start = Date.now();
-    const id = crypto.randomUUID();
-    const tempDir = `/tmp/scout-data-dragon-${id}`;
+    // Per-attempt unique clone dir (concurrent retry attempts must not share a
+    // working tree); the PR branch itself is deterministic per version, see
+    // branchName.
+    const tempDir = `/tmp/scout-data-dragon-${crypto.randomUUID()}`;
     const repoDir = `${tempDir}/monorepo`;
 
     // Heartbeat every 10s while the long subprocesses (bun install, bun run
@@ -455,7 +460,7 @@ export const dataDragonActivities = {
         nonSuppressibleExamples: nonSuppressibleChanges.slice(0, 20),
       });
 
-      const branch = branchName(input.latestVersion, id);
+      const branch = branchName(input.latestVersion);
       const title = dataDragonPrTitle(input.latestVersion);
       const body = [
         "Automated Scout Data Dragon refresh from Temporal.",
@@ -494,24 +499,20 @@ export const dataDragonActivities = {
           redactOutput: true,
         },
       );
-      const prUrl = await runCommand(
-        [
-          "gh",
-          "pr",
-          "create",
-          "--repo",
-          REPO_SLUG,
-          "--base",
-          MAIN_BRANCH,
-          "--head",
-          branch,
-          "--title",
-          title,
-          "--body",
-          body,
-        ],
-        { cwd: repoDir, env: { GH_TOKEN: githubToken }, redactOutput: true },
-      );
+      // `recovered` means a concurrent retry attempt already opened this
+      // version's PR on the same deterministic branch — GitHub refused our
+      // duplicate create for that head, so we finish auto-merge on the existing
+      // PR rather than double-creating. See createDataDragonPr.
+      const { url: prUrl, recovered } = await createDataDragonPr({
+        repoSlug: REPO_SLUG,
+        repoDir,
+        branch,
+        base: MAIN_BRANCH,
+        title,
+        body,
+        version: input.latestVersion,
+        token: githubToken,
+      });
       await ensurePrAutoMerge(prUrl, githubToken, input.mode, {
         ...input,
         branch,
@@ -519,22 +520,28 @@ export const dataDragonActivities = {
 
       recordRun({
         mode: input.mode,
-        outcome: "success",
-        reason: "pr-created",
+        outcome: recovered ? "skipped" : "success",
+        reason: recovered ? "pr-already-open" : "pr-created",
         currentVersion: input.currentVersion,
         latestVersion: input.latestVersion,
         changedFiles: files.length,
         durationSeconds,
-        prCreated: true,
+        prCreated: !recovered,
       });
-      jsonLog("info", "Data Dragon update PR created", {
-        ...input,
-        branch,
-        prUrl,
-        commitHash,
-        changedFiles: files.length,
-        durationSeconds,
-      });
+      jsonLog(
+        "info",
+        recovered
+          ? "Data Dragon PR already open; recovered at create"
+          : "Data Dragon update PR created",
+        {
+          ...input,
+          branch,
+          prUrl,
+          commitHash,
+          changedFiles: files.length,
+          durationSeconds,
+        },
+      );
 
       return {
         ...input,
@@ -542,8 +549,8 @@ export const dataDragonActivities = {
         branchName: branch,
         commitHash,
         prUrl,
-        outcome: "success",
-        reason: "pr-created",
+        outcome: recovered ? "skipped" : "success",
+        reason: recovered ? "pr-already-open" : "pr-created",
       };
     } catch (error) {
       const durationSeconds = (Date.now() - start) / 1000;

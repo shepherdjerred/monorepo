@@ -26,28 +26,39 @@ export function isFinalAttempt(attempt: number, maxAttempts: number): boolean {
 const DATA_DRAGON_BASE_BRANCH = "main";
 const DATA_DRAGON_BRANCH_PREFIX = "chore/scout-data-dragon-";
 
-export function branchName(version: string, id: string): string {
-  return `${DATA_DRAGON_BRANCH_PREFIX}${version}-${id.slice(0, 8)}`;
+/**
+ * The single branch this updater pushes for `version` —
+ * `chore/scout-data-dragon-<version>`. It is DETERMINISTIC (no random suffix)
+ * so two concurrent activity attempts (the entry dedup check can't be atomic
+ * across the minutes-long clone/install/update window) collide on the same
+ * branch at push/create time instead of each opening a fresh randomly-suffixed
+ * duplicate PR — the #1827/#1856 bug reopened by the retry window.
+ */
+export function branchName(version: string): string {
+  return `${DATA_DRAGON_BRANCH_PREFIX}${version}`;
 }
 
 /**
- * Whether `headRefName` is a branch this updater itself generated for
- * `version` — the exact `branchName` shape,
- * `chore/scout-data-dragon-<version>-<8 hex>`. The 8-hex suffix is a UUID
- * slice, so a PR left by a prior run (a different UUID) still matches by shape.
- * Used to authenticate a dedup-matched PR as ours rather than an arbitrary
- * same-title PR. Version is compared literally (its dots are not treated as
- * regex), so only the suffix is pattern-matched.
+ * Whether `headRefName` is a branch this updater generated for `version`. Used
+ * to authenticate a dedup-matched PR as ours rather than an arbitrary same-title
+ * PR. Accepts the current deterministic `chore/scout-data-dragon-<version>`
+ * shape (see `branchName`) and, so a still-open PR from a prior run isn't missed
+ * during the rollout, the legacy `chore/scout-data-dragon-<version>-<8 hex>`
+ * shape. Version is compared literally (its dots are not treated as regex).
  */
 export function isDataDragonBranch(
   headRefName: string,
   version: string,
 ): boolean {
-  const expectedPrefix = `${DATA_DRAGON_BRANCH_PREFIX}${version}-`;
-  if (!headRefName.startsWith(expectedPrefix)) {
+  const deterministic = `${DATA_DRAGON_BRANCH_PREFIX}${version}`;
+  if (headRefName === deterministic) {
+    return true;
+  }
+  const legacyPrefix = `${deterministic}-`;
+  if (!headRefName.startsWith(legacyPrefix)) {
     return false;
   }
-  return /^[0-9a-f]{8}$/.test(headRefName.slice(expectedPrefix.length));
+  return /^[0-9a-f]{8}$/.test(headRefName.slice(legacyPrefix.length));
 }
 
 /**

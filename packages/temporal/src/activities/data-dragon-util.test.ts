@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  branchName,
   collectErrorMessages,
   dataDragonPrTitle,
   findDataDragonPr,
@@ -51,11 +52,31 @@ describe("isFinalAttempt", () => {
   });
 });
 
+describe("branchName", () => {
+  test("is deterministic per version (no random suffix)", () => {
+    expect(branchName("16.15.1")).toBe("chore/scout-data-dragon-16.15.1");
+    expect(branchName("16.15.1")).toBe(branchName("16.15.1"));
+  });
+});
+
 describe("isDataDragonBranch", () => {
-  test("matches the generated branch shape for the version", () => {
+  test("matches the current deterministic per-version branch", () => {
+    expect(isDataDragonBranch(branchName("16.15.1"), "16.15.1")).toBe(true);
+    expect(
+      isDataDragonBranch("chore/scout-data-dragon-16.15.1", "16.15.1"),
+    ).toBe(true);
+  });
+
+  test("matches the legacy random-suffixed branch shape", () => {
     expect(
       isDataDragonBranch("chore/scout-data-dragon-16.15.1-6d94e121", "16.15.1"),
     ).toBe(true);
+  });
+
+  test("does not match a different version's deterministic branch", () => {
+    expect(
+      isDataDragonBranch("chore/scout-data-dragon-16.15.10", "16.15.1"),
+    ).toBe(false);
   });
 
   test("rejects a wrong-version branch", () => {
