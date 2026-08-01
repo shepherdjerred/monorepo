@@ -706,7 +706,11 @@ function normalizeCatalogName(value: string): string {
 }
 
 export function itemName(id: number): string {
-  return ITEM_NAMES[id] ?? `#${String(id)}`;
+  const name = ITEM_NAMES[id];
+  if (name === undefined) {
+    throw new RangeError(`unknown item ID: ${String(id)}`);
+  }
+  return name;
 }
 
 export function resolveItemId(name: string): number | undefined {

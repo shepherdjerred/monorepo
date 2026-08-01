@@ -729,7 +729,11 @@ function normalizeCatalogName(value: string): string {
 }
 
 export function moveName(id: number): string {
-  return MOVE_NAMES[id] ?? `#${String(id)}`;
+  const name = MOVE_NAMES[id];
+  if (name === undefined) {
+    throw new RangeError(`unknown move ID: ${String(id)}`);
+  }
+  return name;
 }
 
 export function resolveMoveId(name: string): number | undefined {

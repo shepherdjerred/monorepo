@@ -258,6 +258,7 @@ describe("battle data catalog rendering", () => {
       lookupName: "MOVE_IDS_BY_NORMALIZED_NAME",
       displayNameFunction: "moveName",
       resolverFunction: "resolveMoveId",
+      entityLabel: "move",
       names: ["-", "POUND"],
       idsByNormalizedName: { pound: 1 },
     });
@@ -269,6 +270,10 @@ describe("battle data catalog rendering", () => {
     expect(output).toContain(
       "export function resolveMoveId(name: string): number | undefined",
     );
+    // Unknown catalog IDs must fail loudly rather than be formatted as `#<id>`,
+    // matching the adjacent moveTarget/itemBattleUse throwers.
+    expect(output).toContain("throw new RangeError(`unknown move ID:");
+    expect(output).not.toContain("#${String(id)}");
   });
 
   test("renders move-target and battle-item lookup APIs", () => {

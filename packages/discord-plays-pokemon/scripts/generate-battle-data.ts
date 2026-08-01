@@ -26,6 +26,7 @@ type RenderCatalogOptions = {
   lookupName: string;
   displayNameFunction: string;
   resolverFunction: string;
+  entityLabel: string;
   names: string[];
   idsByNormalizedName: Record<string, number>;
 };
@@ -351,7 +352,11 @@ function normalizeCatalogName(value: string): string {
 }
 
 export function ${options.displayNameFunction}(id: number): string {
-  return ${options.namesExport}[id] ?? \`#\${String(id)}\`;
+  const name = ${options.namesExport}[id];
+  if (name === undefined) {
+    throw new RangeError(\`unknown ${options.entityLabel} ID: \${String(id)}\`);
+  }
+  return name;
 }
 
 export function ${options.resolverFunction}(name: string): number | undefined {
@@ -464,6 +469,7 @@ export async function generateBattleData(): Promise<void> {
         lookupName: "MOVE_IDS_BY_NORMALIZED_NAME",
         displayNameFunction: "moveName",
         resolverFunction: "resolveMoveId",
+        entityLabel: "move",
         names: moves.names,
         idsByNormalizedName: moves.idsByNormalizedName,
       })}${renderMoveTargets(moveTargets)}`,
@@ -478,6 +484,7 @@ export async function generateBattleData(): Promise<void> {
         lookupName: "ITEM_IDS_BY_NORMALIZED_NAME",
         displayNameFunction: "itemName",
         resolverFunction: "resolveItemId",
+        entityLabel: "item",
         names: items.names,
         idsByNormalizedName: items.idsByNormalizedName,
       })}${renderItemBattleUses(itemBattleUses)}`,
