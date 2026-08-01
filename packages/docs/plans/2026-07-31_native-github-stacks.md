@@ -15,18 +15,22 @@ already managed by git-spice.
 
 ## Decisions
 
-| Area                    | Decision                                                                           |
-| ----------------------- | ---------------------------------------------------------------------------------- |
-| New feature work        | Use `gh stack`, including a one-layer stack for one PR.                            |
-| Existing git-spice work | Keep using git-spice for the stack's full lifecycle.                               |
-| Tool boundary           | Never register or operate one stack with both tools.                               |
-| Automated PR creators   | Keep stateless, self-contained single-PR bots on plain `gh`.                       |
-| Provisioning            | Messaging only; the `gh stack` extension and official skill are already installed. |
-| Historical records      | Preserve completed work and handoffs that identify their actual git-spice owner.   |
+| Area                    | Decision                                                                                                                                                                                                                                           |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| New feature work        | Use `gh stack`, including a one-layer stack for one PR.                                                                                                                                                                                            |
+| Existing git-spice work | Keep using git-spice for the stack's full lifecycle.                                                                                                                                                                                               |
+| Tool boundary           | Never register or operate one stack with both tools.                                                                                                                                                                                               |
+| Automated PR creators   | Keep stateless, self-contained single-PR bots on plain `gh`.                                                                                                                                                                                       |
+| Provisioning            | Track the `gh stack` extension and official `gh-stack` skill in the dotfiles so a fresh install can follow the mandate: a `run_once` chezmoi script installs the `github/gh-stack` extension and the skill is vendored under `dot_agents/skills/`. |
+| Historical records      | Preserve completed work and handoffs that identify their actual git-spice owner.                                                                                                                                                                   |
 
 ## Implementation
 
 - Update root and nested agent instructions with the sticky ownership rule.
+- Provision the mandated tooling in the tracked dotfiles so a fresh install can
+  follow it: a `run_once` chezmoi script installs the `github/gh-stack`
+  extension, and the official `gh-stack` skill is vendored under
+  `dot_agents/skills/` alongside the legacy `git-spice-helper` skill.
 - Update the main-checkout reminder with the native initialization command and
   the existing-git-spice exception.
 - Reframe the repository's branching, PR-health, and worktree skills so native
