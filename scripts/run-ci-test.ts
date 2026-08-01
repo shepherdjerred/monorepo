@@ -230,8 +230,8 @@ for (const [index, step] of workspace.steps.entries()) {
   const coveragePath = expectedCoveragePath(step, rawCoverageDirectory);
   if (
     coveragePath !== undefined &&
-    !(await Bun.file(coveragePath).exists()) &&
     fallbackCoveragePath !== undefined &&
+    !(await Bun.file(coveragePath).exists()) &&
     (await Bun.file(fallbackCoveragePath).exists())
   ) {
     await Bun.write(coveragePath, Bun.file(fallbackCoveragePath));
