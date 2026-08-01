@@ -11,7 +11,7 @@ durable workflow.
 ```mermaid
 flowchart LR
   accTitle: Temporal worker system map
-  accDescr: Cron schedules, GitHub webhooks, Home Assistant events, the agent-task API, and the Xcode Cloud webhook all feed one worker process, which produces monorepo PRs, GitHub statuses and comments, emailed reports, Home Assistant service calls, and Prometheus metrics.
+  accDescr: Cron schedules, GitHub webhooks, Home Assistant events, the agent-task API, and the Xcode Cloud webhook all feed one worker process, which produces monorepo PRs, GitHub commit statuses, emailed reports, Home Assistant service calls, and Prometheus metrics.
 
   S[Cron schedules] --> W[Worker process]
   G[GitHub PR webhooks] --> W
@@ -19,7 +19,7 @@ flowchart LR
   A[Agent-task API] --> W
   X[Xcode Cloud webhook] --> W
   W --> P[Monorepo PRs]
-  W --> C[GitHub statuses + comments]
+  W --> C[GitHub commit statuses]
   W --> E[Emailed reports]
   W --> HA[Home Assistant actions]
   W --> M[Prometheus metrics]
@@ -31,12 +31,11 @@ flowchart LR
   runtime: it consumes workspace libraries, clones the monorepo to open PRs,
   and receives webhooks. The rest of the repo talks to it only through its
   surfaces.
-- **One process, seven queues.** A single deployment (1 replica, `Recreate`)
-  runs one worker per task queue — `default`, `pr-review`, `pr-summary`,
-  `agent-task`, `pr-babysit`, `glitter-corpus`, `glitter-context` — all sharing
-  one workflow bundle. Queues exist to isolate concurrency: long agent
-  subprocesses and rate-limited Discord jobs cannot starve fast home-automation
-  workflows.
+- **One process, four queues.** A single deployment (1 replica, `Recreate`)
+  runs one worker per task queue — `default`, `agent-task`, `glitter-corpus`,
+  `glitter-context` — all sharing one workflow bundle. Queues exist to
+  isolate concurrency: long agent subprocesses and rate-limited Discord jobs
+  cannot starve fast home-automation workflows.
 - **Runs on the homelab.** The `temporal` namespace holds the Temporal server
   (own Postgres), the worker, and a Tailscale-gated instance of the Temporal
   Web UI — the place to inspect runs and pause schedules. All of it is deployed
