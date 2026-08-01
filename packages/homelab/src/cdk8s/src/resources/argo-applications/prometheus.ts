@@ -21,8 +21,32 @@ import { createR2ExporterMonitoring } from "@shepherdjerred/homelab/cdk8s/src/re
 import { createKubernetesEventExporter } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/kubernetes-event-exporter.ts";
 import { escapeHelmGoTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
 import { BLACKBOX_MODULES } from "@shepherdjerred/homelab/cdk8s/src/misc/blackbox-modules.ts";
+import type { KubeprometheusstackHelmValuesAlertmanagerConfigRouteRoutesElement } from "@shepherdjerred/homelab/cdk8s/generated/helm/kube-prometheus-stack.types";
+
+// The generated nested-route element type only models `receiver`/`matchers`,
+// but Alertmanager child routes also accept `group_by` (the parent route type
+// has it). Intersect it in so the per-execution grouping route below is typed
+// honestly without a cast or a hand-edit to the generated types.
+type AlertmanagerChildRoute =
+  KubeprometheusstackHelmValuesAlertmanagerConfigRouteRoutesElement & {
+    group_by: string[];
+  };
 
 export async function createPrometheusApp(chart: Chart) {
+  // Temporal workflow-failure alerts (from the temporal-failure-watch schedule
+  // in packages/temporal) all share alertname "TemporalWorkflowFailed" and carry
+  // no `namespace` label, so under the parent route's group_by [namespace,
+  // alertname] every failed execution would collapse into ONE PagerDuty
+  // notification group / dedup key: a second concurrent failure would append to
+  // the first incident and its distinct error would drop out of
+  // CommonAnnotations. Group by the per-execution identity labels so each failed
+  // workflow execution pages as its own incident. Must precede the severity
+  // catch-all route (these alerts are severity=warning).
+  const temporalWorkflowFailureRoute: AlertmanagerChildRoute = {
+    receiver: "pagerduty",
+    matchers: ['alertname = "TemporalWorkflowFailed"'],
+    group_by: ["alertname", "workflowId", "runId"],
+  };
   createIngress(chart, "alertmanager-ingress", {
     namespace: "prometheus",
     service: "prometheus-kube-prometheus-alertmanager",
@@ -323,6 +347,10 @@ export async function createPrometheusApp(chart: Chart) {
                 'namespace = "buildkite"',
               ],
             },
+            // Per-execution PagerDuty grouping for Temporal workflow failures —
+            // see temporalWorkflowFailureRoute's definition above. Precedes the
+            // severity catch-all (these alerts are severity=warning).
+            temporalWorkflowFailureRoute,
             {
               // Route critical and warning alerts to PagerDuty
               receiver: "pagerduty",
