@@ -139,6 +139,15 @@ def generate_summary(content, prompt, summary_path):
         out_path = pathlib.Path(tmpdir) / "summary.json"
         schema_path.write_text(json.dumps(schema))
 
+        # ACCEPTED-RISK NOTE (owner decision, mirrors envForProvider in
+        # packages/temporal/src/activities/agent-task-env.ts): forward the full
+        # worker env. This summary run has no OS sandbox (danger-full-access, see
+        # below) and the source text it summarizes is swept verbatim into the
+        # prompt, so an injected/mistaken command runs with this env. The tradeoff
+        # is accepted: this path only summarizes LOCAL files and opens no PR (the
+        # outer readme-refresh workflow does), and steady-state runs make no codex
+        # call at all (committed _summary.md cache), so it fires only for a
+        # brand-new package. Revisit if the threat model changes.
         env = dict(os.environ)
         if env.get("OPENAI_API_KEY") and not env.get("CODEX_API_KEY"):
             env["CODEX_API_KEY"] = env["OPENAI_API_KEY"]
@@ -154,8 +163,14 @@ def generate_summary(content, prompt, summary_path):
                 "project_doc_max_bytes=0",
                 "--model",
                 MODEL,
+                # Any --sandbox value other than danger-full-access makes codex
+                # shell out to bwrap to build a Linux namespace, which the
+                # unprivileged worker pod refuses. We drop the OS sandbox; the
+                # boundary is the ephemeral pod + this path only summarizing local
+                # files (see the accepted-risk note above). See
+                # agent-task-command.ts's codexCommand() for the same fix.
                 "--sandbox",
-                "read-only",
+                "danger-full-access",
                 "--output-schema",
                 str(schema_path),
                 "-o",

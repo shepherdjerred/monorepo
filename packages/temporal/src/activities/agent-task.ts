@@ -12,6 +12,10 @@ import { getTraceContext, withSpan } from "#observability/tracing.ts";
 import { provisionWorkdir } from "#lib/pr-review-workdir.ts";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { buildAgentTaskCommand } from "#activities/agent-task-command.ts";
+import {
+  agentTaskSecretTokens,
+  envForProvider,
+} from "#activities/agent-task-env.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import { runTrackedAgentSubprocess } from "#shared/agent-subprocess.ts";
 import { summarizeClaudeStreamLine } from "#shared/claude-result.ts";
@@ -146,63 +150,6 @@ function workflowId(): string {
   } catch {
     return `agent-task-local-${crypto.randomUUID()}`;
   }
-}
-
-export function agentTaskSecretTokens(
-  githubAppToken: string | undefined,
-  env: Readonly<Record<string, string | undefined>> = Bun.env,
-): readonly (string | undefined)[] {
-  return [
-    env["CLAUDE_CODE_OAUTH_TOKEN"],
-    env["ANTHROPIC_API_KEY"],
-    env["CODEX_API_KEY"],
-    env["OPENAI_API_KEY"],
-    env["GITHUB_PERSONAL_ACCESS_TOKEN"],
-    env["GITHUB_APP_PRIVATE_KEY"],
-    githubAppToken,
-    env["POSTAL_API_KEY"],
-    env["PAGERDUTY_TOKEN"],
-    env["BUGSINK_TOKEN"],
-    env["GRAFANA_API_KEY"],
-    env["ARGOCD_AUTH_TOKEN"],
-    env["CLOUDFLARE_API_TOKEN"],
-  ];
-}
-
-export function envForProvider(
-  provider: AgentTaskProvider,
-  githubAppToken: string,
-  sourceEnv: Readonly<Record<string, string | undefined>> = Bun.env,
-): Record<string, string> {
-  const env: Record<string, string> = {};
-  for (const [key, value] of Object.entries(sourceEnv)) {
-    if (typeof value !== "string") {
-      continue;
-    }
-    if (provider === "claude" && key === "ANTHROPIC_API_KEY") {
-      continue;
-    }
-    if (
-      key === "GH_TOKEN" ||
-      key === "GITHUB_PERSONAL_ACCESS_TOKEN" ||
-      key.startsWith("GITHUB_APP_")
-    ) {
-      continue;
-    }
-    env[key] = value;
-  }
-  env["GH_TOKEN"] = githubAppToken;
-  // Codex CLI reads CODEX_API_KEY, not OPENAI_API_KEY (verified 0.139 in-pod:
-  // OPENAI-only → 401 Missing bearer; CODEX_API_KEY → turn.completed).
-  if (
-    provider === "codex" &&
-    (env["CODEX_API_KEY"] === undefined || env["CODEX_API_KEY"] === "") &&
-    env["OPENAI_API_KEY"] !== undefined &&
-    env["OPENAI_API_KEY"] !== ""
-  ) {
-    env["CODEX_API_KEY"] = env["OPENAI_API_KEY"];
-  }
-  return env;
 }
 
 function splitRepo(fullName: string): { owner: string; repo: string } {
