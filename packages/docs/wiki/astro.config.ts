@@ -55,6 +55,15 @@ export default defineConfig({
           ],
           label: "Wiki",
         },
+        {
+          items: [
+            {
+              label: "qBittorrent VPN webseed relay",
+              link: "/homelab/qbittorrent-vpn-webseed-relay/",
+            },
+          ],
+          label: "Homelab",
+        },
       ],
       social: [
         {

@@ -266,6 +266,9 @@ const versions = {
   "library/alpine":
     "latest@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
+  "library/haproxy":
+    "3.4.2-alpine@sha256:0878b11eb64c433be1b0f578a584b8aca12f6caaa64c8f239b8b556c0dd5eeeb",
+  // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "mccloud/bazarr-openai-whisperbridge":
     "latest@sha256:10212b643245b97d0369d1be3448cc35e61f7df78b4861cf7df90608e9c803d3",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker

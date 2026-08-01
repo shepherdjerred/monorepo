@@ -1,4 +1,5 @@
 import {
+  Capability,
   ConfigMap,
   Cpu,
   Deployment,
@@ -6,6 +7,8 @@ import {
   EnvValue,
   type PersistentVolumeClaim,
   Probe,
+  Protocol,
+  SeccompProfileType,
   Secret,
   Service,
   Volume,
@@ -25,6 +28,7 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
+  SHELFBRIDGE_PORT,
   SHELFBRIDGE_SERVICE_HOSTNAME,
   SHELFBRIDGE_SERVICE_IP,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/shelfbridge.ts";
@@ -32,6 +36,39 @@ import {
 const CURRENT_FILENAME = fileURLToPath(import.meta.url);
 const CURRENT_DIRNAME = path.dirname(CURRENT_FILENAME);
 const KUBERNETES_SERVICE_CIDR = "10.96.0.0/12";
+const WIREGUARD_IPV4_ADDRESS = "10.154.174.240";
+const WIREGUARD_IPV6_ADDRESS = "fd7d:76ee:e68f:a993:af57:e79c:b39d:9dde";
+const SHELFBRIDGE_RELAY_HEALTH_PORT = 8404;
+const HAPROXY_UID = 99;
+const HAPROXY_GID = 99;
+
+const SHELFBRIDGE_RELAY_CONFIG = `global
+  log stdout format raw local0
+  maxconn 32
+
+defaults
+  log global
+  mode tcp
+  option tcplog
+  timeout connect 5s
+  timeout client 1h
+  timeout server 1h
+
+frontend shelfbridge_webseed
+  bind :${String(SHELFBRIDGE_PORT)}
+  default_backend shelfbridge_backend
+
+backend shelfbridge_backend
+  option tcp-check
+  server shelfbridge ${SHELFBRIDGE_SERVICE_IP}:${String(SHELFBRIDGE_PORT)} check inter 5s fall 3 rise 2
+
+frontend relay_health
+  mode http
+  option httplog
+  bind :${String(SHELFBRIDGE_RELAY_HEALTH_PORT)}
+  monitor-uri /health
+  monitor fail if { nbsrv(shelfbridge_backend) lt 1 }
+`;
 
 export function createQBitTorrentDeployment(
   chart: Chart,
@@ -57,11 +94,15 @@ export function createQBitTorrentDeployment(
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
     // Gluetun replaces the pod's Kubernetes resolver to keep public DNS inside
-    // the VPN. Resolve only ShelfBridge locally instead of enabling
-    // DNS_KEEP_NAMESERVER, which would send every lookup through cluster DNS.
+    // the VPN. Inside this pod, resolve ShelfBridge to the WireGuard address
+    // where the fixed-destination relay listens. qBittorrent therefore reaches
+    // the relay through its mandatory wg0 device binding, while Bindery and
+    // other pods continue resolving the same hostname to ShelfBridge's Service.
+    // Do not enable DNS_KEEP_NAMESERVER: it would send every public lookup
+    // through cluster DNS outside the VPN.
     hostAliases: [
       {
-        ip: SHELFBRIDGE_SERVICE_IP,
+        ip: WIREGUARD_IPV4_ADDRESS,
         hostnames: [SHELFBRIDGE_SERVICE_HOSTNAME],
       },
     ],
@@ -121,6 +162,44 @@ export function createQBitTorrentDeployment(
     chart,
     "qbittorrent-config-volume",
     qbittorrentConfig,
+  );
+
+  // qBittorrent must remain hard-bound to wg0, but Kubernetes Service traffic
+  // routes through eth0. This fixed-destination relay bridges only that one
+  // webseed path: qBittorrent connects to the pod's WireGuard IP, then HAProxy
+  // uses the normal pod route to ShelfBridge's pinned ClusterIP. The relay has
+  // no Service or Ingress and cannot proxy arbitrary destinations.
+  const shelfbridgeRelayConfig = new ConfigMap(
+    chart,
+    "qbittorrent-shelfbridge-relay-config",
+    {
+      metadata: {
+        name: "qbittorrent-shelfbridge-relay-config",
+      },
+      data: {
+        "haproxy.cfg": SHELFBRIDGE_RELAY_CONFIG,
+      },
+    },
+  );
+  const shelfbridgeRelayConfigVolume = Volume.fromConfigMap(
+    chart,
+    "qbittorrent-shelfbridge-relay-config-volume",
+    shelfbridgeRelayConfig,
+  );
+
+  // Pod-template annotation so a relay-config change triggers a rollout. The
+  // HAProxy config is mounted via subPath (below), which K8s never hot-reloads,
+  // and HAProxy has no in-place reload here — so without this, editing
+  // SHELFBRIDGE_RELAY_CONFIG (e.g. the pinned ShelfBridge backend address)
+  // updates only the fixed-name ConfigMap while the running pod keeps serving
+  // the stale config until an unrelated restart, leaving webseeds broken behind
+  // a Synced ArgoCD application. Deterministic over the config string, so an
+  // unchanged config yields the same hash (no spurious rollout or ArgoCD drift).
+  const relayConfigHasher = new Bun.CryptoHasher("sha256");
+  relayConfigHasher.update(SHELFBRIDGE_RELAY_CONFIG);
+  deployment.podMetadata.addAnnotation(
+    "shelfbridge-relay-config-hash",
+    relayConfigHasher.digest("hex").slice(0, 12),
   );
 
   // Runs as root so it can write to a fresh, root-owned PVC during disaster
@@ -211,15 +290,80 @@ export function createQBitTorrentDeployment(
           key: "PRESHARED_KEY",
         }),
         WIREGUARD_ADDRESSES: EnvValue.fromValue(
-          "10.154.174.240/32,fd7d:76ee:e68f:a993:af57:e79c:b39d:9dde/128",
+          `${WIREGUARD_IPV4_ADDRESS}/32,${WIREGUARD_IPV6_ADDRESS}/128`,
         ),
         FIREWALL_VPN_INPUT_PORTS: EnvValue.fromValue("17826"),
-        // ShelfBridge webseeds use its ClusterIP. This service range does not
-        // overlap AirVPN's 10.154.174.240/32 WireGuard address.
+        // The relay's fixed ShelfBridge backend uses the ClusterIP route. This
+        // service range does not overlap the AirVPN WireGuard address.
         FIREWALL_OUTBOUND_SUBNETS: EnvValue.fromValue(KUBERNETES_SERVICE_CIDR),
       },
     }),
   );
+
+  deployment.addContainer(
+    withCommonProps({
+      name: "shelfbridge-relay",
+      image: `docker.io/library/haproxy:${versions["library/haproxy"]}`,
+      ports: [
+        {
+          number: SHELFBRIDGE_PORT,
+          name: "webseed-relay",
+          protocol: Protocol.TCP,
+        },
+        {
+          number: SHELFBRIDGE_RELAY_HEALTH_PORT,
+          name: "relay-health",
+          protocol: Protocol.TCP,
+        },
+      ],
+      volumeMounts: [
+        {
+          path: "/usr/local/etc/haproxy/haproxy.cfg",
+          volume: shelfbridgeRelayConfigVolume,
+          subPath: "haproxy.cfg",
+        },
+      ],
+      securityContext: {
+        user: HAPROXY_UID,
+        group: HAPROXY_GID,
+        ensureNonRoot: true,
+        readOnlyRootFilesystem: true,
+        allowPrivilegeEscalation: false,
+        capabilities: { drop: [Capability.ALL] },
+        seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
+      },
+      resources: {
+        cpu: {
+          request: Cpu.millis(10),
+          limit: Cpu.millis(100),
+        },
+        memory: {
+          request: Size.mebibytes(32),
+          limit: Size.mebibytes(64),
+        },
+      },
+      // Keep pod lifecycle tied to the local HAProxy listener, not the remote
+      // ShelfBridge backend. `/health` below deliberately reports backend
+      // availability for diagnosis, but a ShelfBridge outage must not remove
+      // the otherwise healthy qBittorrent WebUI and metrics endpoints.
+      startup: Probe.fromTcpSocket({
+        port: SHELFBRIDGE_RELAY_HEALTH_PORT,
+        periodSeconds: Duration.seconds(5),
+        failureThreshold: 30,
+      }),
+      liveness: Probe.fromTcpSocket({
+        port: SHELFBRIDGE_RELAY_HEALTH_PORT,
+        periodSeconds: Duration.seconds(30),
+        failureThreshold: 3,
+      }),
+      readiness: Probe.fromTcpSocket({
+        port: SHELFBRIDGE_RELAY_HEALTH_PORT,
+        periodSeconds: Duration.seconds(10),
+        failureThreshold: 3,
+      }),
+    }),
+  );
+
   deployment.addContainer(
     withCommonLinuxServerProps({
       name: "qbittorrent",
@@ -240,6 +384,16 @@ export function createQBitTorrentDeployment(
         port: 8080,
         periodSeconds: Duration.seconds(10),
         failureThreshold: 90,
+      }),
+      // Unlike ShelfBridge availability, qBittorrent's own WebUI listener is
+      // part of this pod's service contract. Stop routing WebUI traffic when
+      // that local listener is unavailable after startup. The metrics Service
+      // publishes unready addresses separately so the healthy exporter can
+      // still expose qbittorrent_up=0.
+      readiness: Probe.fromTcpSocket({
+        port: 8080,
+        periodSeconds: Duration.seconds(10),
+        failureThreshold: 3,
       }),
       resources: {
         memory: {
@@ -344,6 +498,11 @@ export function createQBitTorrentDeployment(
 
   new Service(chart, "qbittorrent-metrics-service", {
     selector: deployment,
+    // qBittorrent readiness is pod-wide, but Prometheus must retain the
+    // exporter endpoint when the WebUI is down so qbittorrent_up=0 remains
+    // observable. The WebUI Service intentionally keeps the default readiness
+    // gating behavior.
+    publishNotReadyAddresses: true,
     metadata: {
       labels: {
         app: "qbittorrent",
