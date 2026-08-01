@@ -110,7 +110,7 @@ export async function svgToPng(
 
   // Automatically crop to bounding box to remove transparent background
   const bbox = resvg.getBBox();
-  if (options.crop !== false && bbox) {
+  if (bbox && options.crop !== false) {
     resvg.cropByBBox(bbox);
   }
 

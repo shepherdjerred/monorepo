@@ -93,7 +93,7 @@ function readCause(value: unknown): unknown {
 export function isRetryableGithubArchiveError(error: unknown): boolean {
   let current: unknown = error;
 
-  for (let depth = 0; depth < 5 && current !== undefined; depth += 1) {
+  for (let depth = 0; current !== undefined && depth < 5; depth += 1) {
     const code = readStringProperty(current, "code");
     if (code !== null && RETRYABLE_ERROR_CODES.has(code)) {
       return true;

@@ -59,7 +59,7 @@ export function MultiSelectSection<T extends string>({
   );
   const chips = [...current, ...available];
 
-  if (chips.length === 0 && !onCreate) return null;
+  if (!onCreate && chips.length === 0) return null;
 
   const handleCreate = (): void => {
     const value = draft.trim();

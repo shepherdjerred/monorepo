@@ -2,10 +2,10 @@ const CSRF_TOKEN = Bun.env["CSRF_TOKEN"];
 const LEETCODE_SESSION = Bun.env["LEETCODE_SESSION"];
 
 if (
-  CSRF_TOKEN == null ||
   CSRF_TOKEN === "" ||
-  LEETCODE_SESSION == null ||
-  LEETCODE_SESSION === ""
+  LEETCODE_SESSION === "" ||
+  CSRF_TOKEN == null ||
+  LEETCODE_SESSION == null
 ) {
   console.error("Missing CSRF_TOKEN or LEETCODE_SESSION in .env");
   process.exit(1);

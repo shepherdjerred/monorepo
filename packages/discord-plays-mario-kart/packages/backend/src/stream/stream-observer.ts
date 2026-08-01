@@ -159,7 +159,7 @@ export function createStreamObserver(
             const warnDue =
               lastSlowWarnAt === undefined ||
               wallMs - lastSlowWarnAt >= SLOW_WARN_INTERVAL_MS;
-            if (slowSamples >= SLOW_SAMPLES_BEFORE_WARN && warnDue) {
+            if (warnDue && slowSamples >= SLOW_SAMPLES_BEFORE_WARN) {
               lastSlowWarnAt = wallMs;
               logger.warn("ffmpeg encode running below realtime", {
                 speedRatio: ratio,

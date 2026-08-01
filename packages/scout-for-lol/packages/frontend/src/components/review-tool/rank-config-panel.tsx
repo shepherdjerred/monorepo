@@ -321,7 +321,7 @@ export function RankConfigPanel({ config, onChange }: RankConfigPanelProps) {
 
   const handlePresetClick = (preset: Preset) => {
     const parsed = PresetSchema.safeParse(preset);
-    if (!parsed.success || preset === "custom") {
+    if (preset === "custom" || !parsed.success) {
       return;
     }
     const { before, after } = applyPreset(preset, config.rankBefore);

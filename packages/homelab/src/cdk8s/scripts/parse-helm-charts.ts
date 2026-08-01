@@ -58,7 +58,7 @@ function parseChartEntry(
 
   const repoUrl = /registryUrl=(\S+)/.exec(commentLine)?.[1];
   const version = extractVersion(keyLine, lineAfter);
-  if (repoUrl == null || repoUrl === "" || version == null) {
+  if (repoUrl === "" || repoUrl == null || version == null) {
     return null;
   }
 
@@ -66,7 +66,7 @@ function parseChartEntry(
     // OCI: the chart artifact path is the renovate packageName, served from the
     // registryUrl (strip the https:// renovate requires on the comment).
     const packageName = /packageName=(\S+)/.exec(commentLine)?.[1];
-    if (packageName == null || packageName === "") {
+    if (packageName === "" || packageName == null) {
       return null;
     }
     return {
@@ -100,7 +100,7 @@ export async function parseChartInfoFromVersions(
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const nextLine = lines[i + 1];
-    if (line == null || nextLine == null || nextLine === "") {
+    if (nextLine === "" || line == null || nextLine == null) {
       continue;
     }
     const chart = parseChartEntry(line, nextLine, lines[i + 2] ?? "");

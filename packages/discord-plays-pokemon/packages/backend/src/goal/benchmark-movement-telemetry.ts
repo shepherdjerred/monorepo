@@ -183,8 +183,8 @@ function structuredMovementDecision(
   if (
     action === "interact" ||
     action === "advance" ||
-    action.startsWith("wait:") ||
-    action === "chord:raw"
+    action === "chord:raw" ||
+    action.startsWith("wait:")
   ) {
     return false;
   }
@@ -210,10 +210,10 @@ function isDirectionalMovementCommand(command: string): boolean {
     if (subcommand === "navigate") return true;
     const argument = match[2]?.toLowerCase();
     if (
+      argument !== undefined &&
       (subcommand === "move" ||
         subcommand === "tap" ||
         subcommand === "press") &&
-      argument !== undefined &&
       DIRECTIONAL_ARGUMENTS.has(argument)
     ) {
       return true;
@@ -268,7 +268,7 @@ function legacyLocations(output: string): MovementPosition[] {
     const coordinates = /^(-?\d+),\s*(-?\d+)\)/u.exec(
       line.slice(markerIndex + marker.length),
     );
-    if (map.length === 0 || coordinates === null) continue;
+    if (coordinates === null || map.length === 0) continue;
     const x = coordinates[1];
     const y = coordinates[2];
     if (x === undefined || y === undefined) continue;

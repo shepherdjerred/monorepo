@@ -72,7 +72,7 @@ export function idempotencyMiddleware(
       const isJson =
         response.headers.get("content-type")?.includes("application/json") ===
         true;
-      if (response.status < 200 || response.status >= 300 || !isJson) return;
+      if (!isJson || response.status < 200 || response.status >= 300) return;
 
       // Reconstruct the response BEFORE persisting: the mutation already
       // executed, so the client must receive its success even if the

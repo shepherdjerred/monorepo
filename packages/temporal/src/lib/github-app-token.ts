@@ -252,8 +252,8 @@ export async function createGitHubAppInstallationToken(
       `GitHub App installation token request failed with ${String(response.status)} ${response.statusText}: ${body}`,
     );
     if (
-      !RETRYABLE_TOKEN_STATUSES.has(response.status) ||
-      attempt === TOKEN_MAX_ATTEMPTS
+      attempt === TOKEN_MAX_ATTEMPTS ||
+      !RETRYABLE_TOKEN_STATUSES.has(response.status)
     ) {
       throw lastError;
     }

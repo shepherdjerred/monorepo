@@ -146,10 +146,10 @@ export function useTasks() {
         !task.completeInstances.includes(date);
       const result = await ctx.toggleStatus(id);
       if (
-        result.ok &&
         task !== undefined &&
         date !== undefined &&
         completing &&
+        result.ok &&
         options?.suppressUndo !== true
       ) {
         const next = nextOccurrenceAfter(task, date);

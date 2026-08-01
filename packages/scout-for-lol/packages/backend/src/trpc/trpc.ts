@@ -19,7 +19,7 @@ import configuration from "#src/configuration.ts";
  * walk it rather than reading `error.cause` directly.
  */
 function findMissingPermission(error: unknown, depth = 0): Permission | null {
-  if (depth > 6 || error === null || typeof error !== "object") return null;
+  if (error === null || typeof error !== "object" || depth > 6) return null;
   const parsed = PermissionDeniedCauseSchema.safeParse(error);
   if (parsed.success) return parsed.data.missingPermission;
   if ("cause" in error) return findMissingPermission(error.cause, depth + 1);
@@ -141,9 +141,9 @@ const hasWebSessionWithCsrf = middleware(async ({ ctx, next }) => {
   if (
     csrfToken === null ||
     csrfHeader === null ||
+    csrfToken !== csrfHeader ||
     csrfToken.length === 0 ||
-    csrfHeader.length === 0 ||
-    csrfToken !== csrfHeader
+    csrfHeader.length === 0
   ) {
     throw new TRPCError({
       code: "FORBIDDEN",

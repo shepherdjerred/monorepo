@@ -148,7 +148,7 @@ function coverageFor(
   if (measurements.length === 0) {
     return "missing";
   }
-  if (sampleCount < 2 || !hasPostFinishParentSample) {
+  if (!hasPostFinishParentSample || sampleCount < 2) {
     return "lower-bound";
   }
   return "complete";
@@ -347,7 +347,8 @@ export function buildWindowIoReport(
   let unmatchedWriteBytes = 0;
   for (const measurement of podMeasurements) {
     const context = contexts.get(measurement.jobUuid);
-    if (context?.job.started_at === null || context === undefined) {
+    const startedAt = context?.job.started_at;
+    if (startedAt === undefined || startedAt === null) {
       unmatchedWriteBytes += measurement.writeBytes;
       issues.push(
         issue(

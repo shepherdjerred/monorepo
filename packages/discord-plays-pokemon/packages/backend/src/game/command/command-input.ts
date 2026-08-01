@@ -77,7 +77,7 @@ export function parseCommandInput(input: string): CommandInput | undefined {
     }
   }
 
-  if (split.length === 0 && parsedCommand !== undefined) {
+  if (parsedCommand !== undefined && split.length === 0) {
     return {
       command: parsedCommand,
       quantity,

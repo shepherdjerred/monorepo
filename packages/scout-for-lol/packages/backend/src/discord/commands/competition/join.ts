@@ -165,8 +165,8 @@ You previously left this competition and cannot rejoin.`,
 
   // If INVITE_ONLY, user must have an invitation
   if (
-    competition.visibility === "INVITE_ONLY" &&
-    participantStatus !== "INVITED"
+    participantStatus !== "INVITED" &&
+    competition.visibility === "INVITE_ONLY"
   ) {
     await replyWithError(
       interaction,

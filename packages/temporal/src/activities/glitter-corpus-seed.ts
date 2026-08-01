@@ -68,7 +68,7 @@ function integerField(
   defaultValue?: number,
 ): number {
   const raw = row[field];
-  if ((raw === undefined || raw === "") && defaultValue !== undefined) {
+  if (defaultValue !== undefined && (raw === undefined || raw === "")) {
     return defaultValue;
   }
   if (raw === undefined || raw === "") {
@@ -90,7 +90,7 @@ function booleanField(
   defaultValue?: boolean,
 ): boolean {
   const raw = row[field];
-  if ((raw === undefined || raw === "") && defaultValue !== undefined) {
+  if (defaultValue !== undefined && (raw === undefined || raw === "")) {
     return defaultValue;
   }
   if (raw === "true") {

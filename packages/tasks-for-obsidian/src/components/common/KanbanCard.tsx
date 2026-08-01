@@ -70,7 +70,7 @@ export const KanbanCard = React.memo(function KanbanCardComponent({
         </Pressable>
       </ContextMenu.Trigger>
       <ContextMenu.Content>
-        {moveTargets && moveTargets.length > 0 && onMoveTo ? (
+        {moveTargets && onMoveTo && moveTargets.length > 0 ? (
           <ContextMenu.Sub>
             <ContextMenu.SubTrigger key="move">
               <ContextMenu.ItemTitle>Move to...</ContextMenu.ItemTitle>

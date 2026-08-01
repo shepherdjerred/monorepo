@@ -152,7 +152,7 @@ export function branchDeletionFlag(
   includeClosedPullRequests: boolean,
 ): "-d" | "-D" {
   return pullRequest.state === "MERGED" ||
-    (pullRequest.state === "CLOSED" && includeClosedPullRequests)
+    (includeClosedPullRequests && pullRequest.state === "CLOSED")
     ? "-D"
     : "-d";
 }

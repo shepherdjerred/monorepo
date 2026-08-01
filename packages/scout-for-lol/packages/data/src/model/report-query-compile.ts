@@ -165,8 +165,8 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
         : ReportOrderBySchema.parse(ast.orderBy.metric.value);
   if (
     orderBy !== "label" &&
-    !outputKeys.includes(orderBy) &&
-    orderBy !== "games"
+    orderBy !== "games" &&
+    !outputKeys.includes(orderBy)
   ) {
     throw new Error(`ORDER BY target "${orderBy}" is not a SELECT output.`);
   }

@@ -186,26 +186,26 @@ export function typesAreCompatible(
   if (schemaTypes.length > 1) {
     for (const st of schemaTypes) {
       // Handle quoted strings in unions (like "default")
-      if (st.startsWith('"') && st.endsWith('"') && inferredType === "string") {
+      if (inferredType === "string" && st.startsWith('"') && st.endsWith('"')) {
         return true;
       }
       if (st === inferredType) {
         return true;
       }
       // Arrays
-      if (st.endsWith("[]") && inferredType === "array") {
+      if (inferredType === "array" && st.endsWith("[]")) {
         return true;
       }
     }
   }
 
   // Handle array types
-  if (schemaType.endsWith("[]") && inferredType === "array") {
+  if (inferredType === "array" && schemaType.endsWith("[]")) {
     return true;
   }
 
   // Handle specific string literals - if schema expects specific strings and value is a string
-  if (schemaType.includes('"') && inferredType === "string") {
+  if (inferredType === "string" && schemaType.includes('"')) {
     return true;
   }
 
@@ -272,10 +272,10 @@ function mergeDescriptions(
   schemaDescription: string | undefined,
   yamlComment: string | undefined,
 ): string | undefined {
-  if (yamlComment == null || yamlComment === "") {
+  if (yamlComment === "" || yamlComment == null) {
     return schemaDescription;
   }
-  return schemaDescription != null && schemaDescription !== ""
+  return schemaDescription !== "" && schemaDescription != null
     ? `${yamlComment}\n\n${schemaDescription}`
     : yamlComment;
 }
@@ -300,12 +300,12 @@ function convertWithSchema(
   const schemaType = jsonSchemaToTypeScript(schema);
 
   if (
-    inferredType != null &&
     inferredType !== "" &&
+    inferredType != null &&
     !typesAreCompatible(inferredType, schemaType)
   ) {
     const propName =
-      propertyName != null && propertyName !== "" ? `'${propertyName}': ` : "";
+      propertyName !== "" && propertyName != null ? `'${propertyName}': ` : "";
     console.warn(
       `  ⚠️  Type mismatch for ${propName}Schema says '${schemaType}' but value suggests '${inferredType}' (value: ${String(value).slice(0, 50)})`,
     );
@@ -412,7 +412,7 @@ function inferUniformArrayType(
 ): TypeProperty {
   const elementType = [...elementTypes][0];
   const elementProp = elementTypeProps[0];
-  if (elementType == null || elementType === "" || !elementProp) {
+  if (elementType === "" || !elementProp || elementType == null) {
     return { type: "unknown[]", optional: true };
   }
 

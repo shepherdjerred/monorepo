@@ -45,7 +45,7 @@ export function isSimpleYAMLValue(line: string): boolean {
  * Exported for testing purposes
  */
 export function isSectionHeader(line: string, nextLine?: string): boolean {
-  if (nextLine == null || nextLine === "") {
+  if (nextLine === "" || nextLine == null) {
     return false;
   }
 
@@ -119,7 +119,7 @@ export function looksLikeProse(line: string, wordCount: number): boolean {
   const hasURL = line.includes("http://") || line.includes("https://");
   const startsWithCapital = /^[A-Z]/.test(line);
   const hasEndPunctuation = /[.!?:]$/.test(line);
-  const notYamlKey = !(isYAMLKey(line) && !hasURL && !/^ref:/i.test(line));
+  const notYamlKey = !(!hasURL && isYAMLKey(line) && !/^ref:/i.test(line));
   const reasonableLength = line.length > 10;
   const hasMultipleWords = wordCount >= 3;
   const startsWithArticle = /^(?:This|The|A|An)\s/i.test(line);
@@ -257,10 +257,10 @@ export function parseBitnamiParams(comment: string): {
     if (paramMatch) {
       const [, paramKey, description] = paramMatch;
       if (
-        paramKey != null &&
         paramKey !== "" &&
-        description != null &&
-        description !== ""
+        description !== "" &&
+        paramKey != null &&
+        description != null
       ) {
         params.set(paramKey, description);
       }
@@ -343,7 +343,7 @@ export function parseYAMLCommentsWithMetadata(
         comment = comment ? `${comment}\n${inlineComment}` : inlineComment;
       }
       // First item inherits map comment if it has none
-      if (context.index === 0 && !comment && context.mapComment) {
+      if (!comment && context.index === 0 && context.mapComment) {
         comment = context.mapComment;
       }
       if (comment) {

@@ -55,7 +55,7 @@ function isViolation(entry: EolEntry): string | null {
   // Index always stores LF for text files in git, so `i/lf` is correct for
   // both eol=lf AND eol=crlf paths. The relevant violations are CRLF or
   // mixed in the index, which mean the blob itself contains CR bytes.
-  if (entry.index === "crlf" && !wantsCrlf) {
+  if (!wantsCrlf && entry.index === "crlf") {
     return `index has CRLF but attributes want LF (attr=${entry.attr})`;
   }
   if (entry.index === "mixed") {

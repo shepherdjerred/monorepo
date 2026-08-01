@@ -84,7 +84,7 @@ async function main(): Promise<void> {
   const expected = EXPECTED_FAILURE.some((p) => lower.includes(p));
   // Pass if: the pipeline succeeded (grep matched → exit 0) OR the boot hit the
   // 124 timeout after a clean start, OR the expected auth error is in the output.
-  if (run.code === 0 || expected) {
+  if (expected || run.code === 0) {
     console.log(
       "Smoke test passed: integration suite + tools OK, and boot hit the expected auth failure.",
     );

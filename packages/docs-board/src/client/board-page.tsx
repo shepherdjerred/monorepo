@@ -311,8 +311,8 @@ export function BoardPage(): React.JSX.Element {
       (candidate) => candidate.id === String(event.active.id),
     );
     if (
-      !status.success ||
       document === undefined ||
+      !status.success ||
       document.status === status.data
     )
       return;

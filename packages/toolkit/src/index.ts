@@ -97,10 +97,10 @@ async function main(): Promise<void> {
   const subcommand = args[1];
 
   if (
-    command == null ||
-    command.length === 0 ||
     command === "--help" ||
-    command === "-h"
+    command === "-h" ||
+    command == null ||
+    command.length === 0
   ) {
     printUsage();
     process.exit(0);

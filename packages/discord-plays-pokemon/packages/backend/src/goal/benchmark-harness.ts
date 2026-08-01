@@ -74,7 +74,7 @@ export function parseBenchmarkArgs(
     if (field === undefined) {
       throw new Error(`unknown argument: ${argument}`);
     }
-    if (raw[field] !== undefined && field !== "implementationRoot") {
+    if (field !== "implementationRoot" && raw[field] !== undefined) {
       throw new Error(`duplicate argument: ${flag}`);
     }
     if (

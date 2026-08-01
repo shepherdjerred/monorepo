@@ -95,10 +95,10 @@ function generateInterfaceCode(iface: TypeScriptInterface): string {
         const defaultStr = formatDefaultValue(prop.default);
         const hasDescription =
           prop.description != null && prop.description !== "";
-        if (defaultStr != null && defaultStr !== "" && hasDescription) {
+        if (defaultStr !== "" && hasDescription && defaultStr != null) {
           code += `   *\n`;
         }
-        if (defaultStr != null && defaultStr !== "") {
+        if (defaultStr !== "" && defaultStr != null) {
           code += `   * @default ${defaultStr}\n`;
         }
       }

@@ -258,7 +258,7 @@ async function handleRemove(
   position: number | undefined,
 ): Promise<PlaylistToolResult> {
   const playlistName = ensureName(name);
-  if (playlistName == null || position === undefined) {
+  if (position === undefined || playlistName == null) {
     return {
       success: false,
       message: "playlistName and position are required",
@@ -284,9 +284,9 @@ async function handleMove(
 ): Promise<PlaylistToolResult> {
   const playlistName = ensureName(name);
   if (
-    playlistName == null ||
     position === undefined ||
-    targetPosition === undefined
+    targetPosition === undefined ||
+    playlistName == null
   ) {
     return {
       success: false,

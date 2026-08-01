@@ -177,7 +177,7 @@ export async function reconcileLegacyScoutProd(
       endpoint: SEAWEEDFS_ENDPOINT,
       env: SEAWEEDFS_AWS_ENV,
     });
-    if (markerContent?.trim() === version && mismatch === undefined) {
+    if (mismatch === undefined && markerContent?.trim() === version) {
       return;
     }
     await s3SyncStaticSite({

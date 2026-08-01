@@ -299,7 +299,7 @@ export async function opggSearch(
 ): Promise<OpggSuggestion[]> {
   const trimmed = query.trim();
   const opggRegion = REGION_TO_OPGG[region];
-  if (trimmed.length < 2 || opggRegion === undefined) return [];
+  if (opggRegion === undefined || trimmed.length < 2) return [];
 
   const outcome = await runSearch(cachedActionId, opggRegion, trimmed);
   if (outcome.kind === "stale") {

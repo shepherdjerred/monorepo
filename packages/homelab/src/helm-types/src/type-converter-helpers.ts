@@ -24,10 +24,10 @@ export function mergeDescriptions(
   schemaDescription: string | undefined,
   yamlComment: string | undefined,
 ): string | undefined {
-  if (yamlComment == null || yamlComment === "") {
+  if (yamlComment === "" || yamlComment == null) {
     return schemaDescription;
   }
-  return schemaDescription != null && schemaDescription !== ""
+  return schemaDescription !== "" && schemaDescription != null
     ? `${yamlComment}\n\n${schemaDescription}`
     : yamlComment;
 }

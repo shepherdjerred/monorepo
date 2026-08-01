@@ -155,7 +155,7 @@ async function checkPermissionsForCreate(
 
     const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
 
-    if (args.addAllMembers === true && !isAdmin) {
+    if (!isAdmin && args.addAllMembers === true) {
       logger.warn(
         `⚠️  Non-admin ${username} attempted to use add-all-members option`,
       );

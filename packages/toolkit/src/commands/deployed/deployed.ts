@@ -267,7 +267,7 @@ function clusterDetail(args: {
 }): string[] {
   const { git, verdict, argo, pods, digestMatch } = args;
   const { pin, writingIsBump, commitInImage } = git;
-  if (pin == null || !writingIsBump) {
+  if (!writingIsBump || pin == null) {
     return [];
   }
   const out: string[] = [];
@@ -287,7 +287,7 @@ function clusterDetail(args: {
     out.push(
       `deployed image ${pin.tag} is live & healthy (pod ${matched?.namespace ?? ""}/${matched?.pod ?? ""}) but predates this commit.`,
     );
-  } else if (pods.length > 0 && commitInImage) {
+  } else if (commitInImage && pods.length > 0) {
     const running = pods
       .map((p) => p.digest?.replace(/^sha256:/, "").slice(0, 10) ?? "?")
       .join(", ");

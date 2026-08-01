@@ -183,10 +183,10 @@ export async function checkScriptMigrations(): Promise<void> {
     const sourceExists = await Bun.file(
       path.resolve(REPOSITORY_ROOT, entry.source),
     ).exists();
-    if (entry.disposition === "retain" && !sourceExists) {
+    if (!sourceExists && entry.disposition === "retain") {
       errors.push(`retained shell script is missing: ${entry.source}`);
     }
-    if (entry.disposition === "port" && !sourceExists) {
+    if (!sourceExists && entry.disposition === "port") {
       errors.push(...(await validateCompletedPort(entry)));
     }
   }

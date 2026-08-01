@@ -85,11 +85,11 @@ export async function handleCreate(
 ): Promise<ChannelResult> {
   const { client, guildId, name, type, parentId, topic } = options;
   if (
+    !type ||
     guildId == null ||
     guildId.length === 0 ||
     name == null ||
-    name.length === 0 ||
-    !type
+    name.length === 0
   ) {
     return {
       success: false,
