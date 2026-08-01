@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.5.0...helm-types-v1.5.1) (2026-08-01)
+
+
+### Bug Fixes
+
+* **deps:** update eslint-plugin-unicorn to v72 ([#1837](https://github.com/shepherdjerred/monorepo/issues/1837)) ([60998f5](https://github.com/shepherdjerred/monorepo/commit/60998f50c3a5bc4d5a2a72a3e568f621d1ecb2f5))
+
 ## [1.5.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.4.0...helm-types-v1.5.0) (2026-07-26)
 
 Small correctness and API-surface changes; no runtime dependency changes.
