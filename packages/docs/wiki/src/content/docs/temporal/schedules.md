@@ -1,6 +1,6 @@
 ---
 title: Scheduled automations
-description: Roughly thirty cron schedules live in code, reconcile at every worker boot, and split into deterministic PR-creating jobs and report-only agent runs.
+description: Roughly thirty cron schedules live in code, reconcile at every worker boot, and split into PR-creating jobs (mostly deterministic) and report-only agent runs.
 ---
 
 All recurring automation is a single `SCHEDULES` array in
@@ -53,8 +53,13 @@ flowchart LR
 
 ## Two automation patterns
 
-Mutating automations are **deterministic workflows**: no LLM in the loop,
-a GitHub App token, regenerate → diff → PR. Judgment-heavy checks are
-**report-only agent tasks** that can only email their findings. The split is
-deliberate — an agent never gets write access to the repo or the cluster from
-a schedule. Details: [Agent tasks](/temporal/agent-tasks/).
+Mutating automations always land their change as a **reviewable PR**:
+regenerate an artifact — or, for a couple of schedules, ask an LLM to derive
+the change — then diff and open a PR under a GitHub App token, with a human
+approving before anything merges. Most are fully deterministic, but the split
+is not strictly LLM-free: `scout-season-refresh` runs Claude to derive season
+changes, and `readme-refresh` can call Codex for a new package's summary, each
+before opening its PR. Judgment-heavy checks are instead **report-only agent
+tasks** that can only email their findings. The real boundary is the PR, not
+the model — a schedule never mutates the repo or cluster in place. Details:
+[Agent tasks](/temporal/agent-tasks/).

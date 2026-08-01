@@ -1,13 +1,14 @@
 ---
 title: Agent tasks
-description: A report-only runner for scheduled Claude/Codex checks — three entry surfaces, one dispatcher, and mutation ruled out by construction.
+description: A report-only runner for scheduled Claude/Codex checks — three entry surfaces, one dispatcher, and mutation held off by policy rather than a sandbox.
 ---
 
 Agent tasks are scheduled LLM runs (Claude or Codex) that inspect current
-state and email a Markdown report. They are **report-only by construction**:
-the mode field is a single-value enum, so a mutating agent task is not
-representable — the schema, not policy, rules it out. Anything that must
-change the repo is a deterministic
+state and email a Markdown report. They are **report-only by policy, not by
+sandbox**: the run still gets `Bash` and a write-capable GitHub token, so what
+keeps a task from mutating the repo is the hard read-only prompt, an ephemeral
+non-root pod, and a throwaway per-run clone — not a schema that makes mutation
+unrepresentable. Anything that must change the repo is a deterministic
 [scheduled workflow](/temporal/schedules/) instead.
 
 ```mermaid
@@ -40,8 +41,10 @@ flowchart TD
 
 All three feed one dispatcher: a `cron` input upserts a Temporal schedule
 (stamped with a memo so orphan detection ignores it), a `runAt` input starts a
-one-off workflow whose ID is a content hash — resubmitting the same task is a
-no-op rather than a duplicate.
+one-off workflow whose ID is a content hash. Resubmitting is not a silent
+no-op: an active or already-succeeded task ID is rejected — the HTTP API
+returns 500 — while a failed or timed-out one starts a fresh run
+(`ALLOW_DUPLICATE_FAILED_ONLY` with conflict policy `FAIL`).
 
 ## Guardrails
 
@@ -49,7 +52,10 @@ no-op rather than a duplicate.
   90 minutes at most and must heartbeat.
 - A task may request **one** follow-up task, and may pause — never delete —
   its own cron, and only when the original task set `allowSelfCancel`.
-- Reports are emailed via Postal; nothing is written anywhere else.
+- Reports are emailed via Postal — the only human-facing output, but not the
+  only copy: with telemetry enabled (the homelab default) each run's prompt and
+  response are recorded as `gen_ai.*` spans whose bodies are archived to the
+  SeaweedFS/S3 LLM-observability store before the slim span is exported.
 
 The daily homelab audit is the flagship consumer: a scheduled agent task with
 a bounded read-only prompt over cluster, DNS, backup, and alert state.
