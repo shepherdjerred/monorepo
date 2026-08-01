@@ -390,6 +390,28 @@ describe("knowledge passage matching", () => {
     expect(result?.excerpt).toContain("gamma marker");
   });
 
+  test("keeps both edges of a window that fits inside the excerpt", () => {
+    const base = new KnowledgeBase([
+      {
+        id: "world:fitting-window",
+        domain: "world",
+        title: "Fitting window",
+        aliases: [],
+        tags: [],
+        body: `${"lead ".repeat(60)}Slateport ${"word ".repeat(210)} pokedex tail.`,
+        sources: [testSource],
+      },
+    ]);
+
+    const result = base
+      .search("slateport pokedex", { domain: "world", limit: 1 })
+      .at(0);
+
+    expect(result?.id).toBe("world:fitting-window");
+    expect(result?.excerpt).toContain("Slateport");
+    expect(result?.excerpt).toContain("pokedex");
+  });
+
   test("prefers the closest passage when clamped proximity ties", () => {
     const base = new KnowledgeBase([
       {

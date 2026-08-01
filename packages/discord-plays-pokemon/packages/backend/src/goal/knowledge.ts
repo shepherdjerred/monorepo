@@ -100,6 +100,7 @@ const HM_ACQUISITION_EVIDENCE_SCORE = 200;
 const PROXIMITY_MAX_SCORE = 30;
 const COVERAGE_TERM_SCORE = PROXIMITY_MAX_SCORE + 1;
 const PROXIMITY_MAX_SPAN = 600;
+const EXCERPT_PAD_CHARS = 200;
 
 type AcquisitionEvidence = Readonly<{
   score: number;
@@ -326,6 +327,16 @@ function passageEvidence(
   return best;
 }
 
+// NOTE: This ranking is a best-effort retrieval heuristic for agent
+// game-knowledge lookups, not an exact ranker. It orders by distinct query-term
+// coverage first, then a single additive relevance/proximity/occurrence/metadata
+// score. Ordering and excerpt selection are NOT guaranteed optimal on
+// pathological synthetic inputs — e.g. passage spans over PROXIMITY_MAX_SPAN that
+// clamp proximity to 0, equal-coverage ties where a title/metadata bonus
+// outweighs a tighter passage, or matching windows wider than
+// SEARCH_EXCERPT_CHARS. These are accepted tradeoffs for this use case; see the
+// PR #1848 review threads for the rationale.
+//
 // Distinct query terms the record covers anywhere in its searchable text. This
 // is the primary ranking key: answering more of the query outranks answering
 // less, before any additive relevance, proximity, occurrence, or metadata bonus.
@@ -372,16 +383,19 @@ function scoreRecord(
   return relevanceScore + evidenceScore;
 }
 
-const EXCERPT_PAD_CHARS = 200;
-
-// Bias the excerpt toward leading context, but when the matching window is too
-// wide to keep its right edge inside the fixed-width slice, shift right so the
-// later matched term stays visible instead of being dropped.
+// Bias the excerpt toward leading context. When the matching window fits within
+// SEARCH_EXCERPT_CHARS, keep both of its edges visible (trimming leading padding
+// as needed) rather than reserving trailing padding that would push the left
+// edge out. Only a window wider than the slice drops an edge — then keep the
+// later matched term, with trailing padding, since the earlier one cannot fit.
 function excerptStart(range: ExcerptAnchor): number {
-  let start = range.start - EXCERPT_PAD_CHARS;
-  if (range.end + EXCERPT_PAD_CHARS > start + SEARCH_EXCERPT_CHARS) {
-    start = range.end + EXCERPT_PAD_CHARS - SEARCH_EXCERPT_CHARS;
-  }
+  const start =
+    range.end - range.start <= SEARCH_EXCERPT_CHARS
+      ? Math.max(
+          range.start - EXCERPT_PAD_CHARS,
+          range.end - SEARCH_EXCERPT_CHARS,
+        )
+      : range.end + EXCERPT_PAD_CHARS - SEARCH_EXCERPT_CHARS;
   return Math.max(0, start);
 }
 
