@@ -138,27 +138,58 @@ function isEnvCommand(token: string): boolean {
 
 // `env`'s own options that consume the following token as their value.
 const envValueOptions = new Set(["-u", "--unset", "-C", "--chdir"]);
+const envSplitStringPrefix = "--split-string=";
 
-function skipEnvOptions(tokens: string[], startIndex: number): number {
-  let index = startIndex;
-  while (tokens[index]?.startsWith("-") === true) {
-    index += envValueOptions.has(tokens[index] ?? "") ? 2 : 1;
+function splitShellWords(value: string): string[] {
+  return tokenizeShellCommands(value).flat();
+}
+
+// Unwrap an `env` command wrapper (`env VAR=v tsc`, `/usr/bin/env tsc`,
+// `env -S 'tsc --noEmit'`) into the real command tokens, preserving leading
+// `VAR=value` assignments (needed for native `PATH=` detection). `-S` /
+// `--split-string` splits its value into command words. Recurses so the real
+// executable (which may be `tsc`, `bunx`, or `bun x`/`bun run`) is classified
+// normally afterward.
+function unwrapEnvWrapper(tokens: string[]): string[] {
+  let index = 0;
+  while (isShellEnvironmentAssignment(tokens[index] ?? "")) index += 1;
+  const assignments = tokens.slice(0, index);
+  const command = tokens[index];
+  if (command === undefined || !isEnvCommand(command)) return tokens;
+  index += 1;
+  while (index < tokens.length) {
+    const option = tokens[index];
+    if (option === undefined) break;
+    if (option === "-S" || option === "--split-string") {
+      const words = splitShellWords(tokens[index + 1] ?? "");
+      return [
+        ...assignments,
+        ...unwrapEnvWrapper([...words, ...tokens.slice(index + 2)]),
+      ];
+    }
+    if (option.startsWith(envSplitStringPrefix)) {
+      const words = splitShellWords(option.slice(envSplitStringPrefix.length));
+      return [
+        ...assignments,
+        ...unwrapEnvWrapper([...words, ...tokens.slice(index + 1)]),
+      ];
+    }
+    if (envValueOptions.has(option)) {
+      index += 2;
+      continue;
+    }
+    if (option.startsWith("-")) {
+      index += 1;
+      continue;
+    }
+    break;
   }
-  return index;
+  return [...assignments, ...unwrapEnvWrapper(tokens.slice(index))];
 }
 
 function findShellExecutableIndex(tokens: string[]): number {
   let index = 0;
-  for (;;) {
-    // Skip leading `VAR=value` environment assignments.
-    while (isShellEnvironmentAssignment(tokens[index] ?? "")) index += 1;
-    // Unwrap an `env` command wrapper (`env VAR=v tsc`, `/usr/bin/env tsc`):
-    // skip it and its options, then re-scan for the real executable, which
-    // may itself be `tsc`, `bunx`, or `bun x`/`bun run`.
-    const token = tokens[index];
-    if (token === undefined || !isEnvCommand(token)) break;
-    index = skipEnvOptions(tokens, index + 1);
-  }
+  while (isShellEnvironmentAssignment(tokens[index] ?? "")) index += 1;
   return index;
 }
 
@@ -201,7 +232,8 @@ export function invokesAmbiguousTypeScriptCompiler(
   script: string,
   declaredScriptNames: ReadonlySet<string> = new Set<string>(),
 ): boolean {
-  return tokenizeShellCommands(script).some((tokens) => {
+  return tokenizeShellCommands(script).some((rawTokens) => {
+    const tokens = unwrapEnvWrapper(rawTokens);
     const executableIndex = findShellExecutableIndex(tokens);
     const executable = tokens[executableIndex];
     if (executable === "tsc") {
