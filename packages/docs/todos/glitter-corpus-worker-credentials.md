@@ -34,28 +34,29 @@ without making additional OpenAI calls.
 - [x] Run the real refresh with the same pin, inspect its sole PR, and complete
       pre-merge package-level smoke tests for the shared package, Birmel, Scout,
       and Glitter consumers.
-- [ ] Correct #1834's coverage metadata so verified-corpus message counts remain
-      distinct from the bounded 200-message model evidence sample; regenerate and
-      re-review affected cards if the correction changes generated content.
-- [ ] Decide and record whether Glitter style cards are recent-behavior snapshots
-      or cumulative personas. If recent snapshots are selected, explicitly record
-      the bounded recent-window contract. If cumulative personas are selected,
-      implement time-stratified sampling and/or field-level merge behavior that
-      retains uncontradicted observations, regenerate the proposal, and re-review
-      Jerred, Virmel, Brian, Danny, Edward, Hirza, Irfan, and Ryan before
-      acceptance.
-- [ ] Complete #1834's current-head Buildkite after the metadata correction and
-      any persona-contract implementation work.
-- [ ] When pre-merge agent work is complete, set this TODO to
-      `status: awaiting-human` and `verification: human`.
-- [ ] Add a `## Human Verification` scenario: review the generated style cards
-      for accurate, socially acceptable personas and explicitly accept or reject
-      the proposal.
+- [x] Superseded: retired the V1 coverage-metadata correction and
+      recent-window/cumulative-persona decision in favor of the approved V2
+      design in `packages/docs/plans/2026-07-29_glitter-style-card-v2.md`,
+      which fixes both by construction. PR #1834 stays open only as a
+      descriptive-baseline source and is closed as superseded, never merged.
+- [ ] Drive V2 implementation PR #1846 through Buildkite and review to merge,
+      then run the pinned V2 dry runs and promote the cached real run.
+- [ ] When the V2 data PR (all 13 cards) is open and pre-merge agent work is
+      complete, set this TODO to `status: awaiting-human` and
+      `verification: human`.
+- [ ] Add a `## Human Verification` scenario: review the generated V2 style
+      cards for accurate, socially acceptable personas and explicitly accept
+      or reject the proposal.
 - [ ] After human acceptance, return this TODO to `status: in-progress` with
-      `verification: agent`, merge #1834, and run merged-main and production
-      consumer smoke checks.
-- [ ] Unpause `glitter-context-refresh-weekly` only after those acceptance
-      gates pass, then complete and archive this TODO and the live rollout plan.
+      `verification: agent`, merge the V2 data PR, close PR #1834 as
+      superseded, and run merged-main and production consumer smoke checks.
+- [ ] Hand off to the operator-owned
+      `glitter-context-refresh-schedule-unpause` TODO for the weekly-schedule
+      unpause — `packages/temporal/src/schedules/register-schedules.test.ts:281-287`
+      asserts the schedule only unpauses via an explicit operator action, so
+      this document does not perform or agent-verify that step. After the
+      operator unpauses it, complete and archive this TODO and the live
+      rollout plan.
 
 ## Comment Log
 
@@ -197,3 +198,33 @@ without making additional OpenAI calls.
 - The current implementation behaves as a bounded recent-window rewrite despite
   earlier preservation language, so cumulative-persona acceptance requires the
   implementation and re-review work above.
+
+## Session Log — 2026-07-31 (V2 pivot and operator-gate split)
+
+### Done
+
+- Retired the V1 coverage-metadata correction and persona-contract decision
+  gates in `## Remaining` in favor of the approved V2 design in
+  `packages/docs/plans/2026-07-29_glitter-style-card-v2.md`, which already
+  fixes both by construction and requires closing PR #1834 as superseded
+  rather than correcting and merging it (Codex P2 review finding on PR #1836,
+  mirrored from the live rollout plan).
+- Split the weekly-schedule unpause into the new operator-owned TODO
+  `packages/docs/todos/glitter-context-refresh-schedule-unpause.md`, because
+  `packages/temporal/src/schedules/register-schedules.test.ts:281-287` asserts
+  the schedule only unpauses via an explicit operator action.
+
+### Remaining
+
+- Drive V2 implementation PR #1846 through Buildkite and review to merge.
+- Run the pinned V2 dry runs, promote the cached real run, open the V2 data
+  PR, complete its subjective human review, merge it, and close PR #1834 as
+  superseded.
+- After merged-main and production consumer smoke checks pass, hand off to
+  `glitter-context-refresh-schedule-unpause` for the operator-gated unpause.
+
+### Caveats
+
+- This session made no production, schedule, or generated-content changes; it
+  only corrected the workflow documents to match the already-approved V2
+  design and the schedule's existing operator-only unpause contract.

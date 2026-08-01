@@ -23,10 +23,20 @@ was topped up, the pinned rehearsal completed the four missing style cards
 while reusing the nine immutable SeaweedFS artifacts. Two dry runs returned the
 same proposal checksum, and the real run reused the same proposal without any
 additional OpenAI calls. It opened human-review PR
-[#1834](https://github.com/shepherdjerred/monorepo/pull/1834). Keep only
-`glitter-context-refresh-weekly` paused until that generated content is
-accepted and merged, hosted CI and downstream smoke checks pass, and the
-schedule is deliberately unpaused.
+[#1834](https://github.com/shepherdjerred/monorepo/pull/1834).
+
+PR #1834's content is V1: a bounded recent-window rewrite with the coverage-
+metadata defect recorded below. Rather than correcting and merging it, the
+approved design in
+`packages/docs/plans/2026-07-29_glitter-style-card-v2.md` fixes both issues by
+construction (explicit coverage metadata, field-level patch retention across
+the complete corpus). That plan's contract is: keep PR #1834 open only as the
+source of three stronger descriptive baselines until its V2 replacement data
+PR exists, then close #1834 as superseded. Keep
+`glitter-context-refresh-weekly` paused until the V2 data PR is accepted and
+merged, hosted CI and downstream smoke checks pass, and an operator
+deliberately unpauses the schedule (see the operator-gated TODO below — the
+unpause itself is not agent-verifiable).
 
 ## Implementation
 
@@ -49,29 +59,33 @@ schedule is deliberately unpaused.
 - [x] Run the real refresh, inspect its sole PR, and complete pre-merge
       package-level smoke tests for the shared package, Birmel, Scout, and
       Glitter consumers.
-- [ ] Correct generated-context PR #1834's coverage metadata so verified-corpus
-      message counts are explicitly distinct from the bounded 200-message model
-      evidence sample; regenerate and re-review affected cards if that correction
-      changes generated content.
-- [ ] Decide and record whether Glitter style cards are recent-behavior snapshots
-      or cumulative personas. If recent snapshots are selected, explicitly record
-      the bounded recent-window contract. If cumulative personas are selected,
-      implement time-stratified sampling and/or field-level merge behavior that
-      retains uncontradicted observations, regenerate the proposal, and re-review
-      Jerred, Virmel, Brian, Danny, Edward, Hirza, Irfan, and Ryan before
-      acceptance.
-- [ ] Complete #1834's current-head Buildkite after the metadata correction and
-      any persona-contract implementation work.
-- [ ] When pre-merge agent work is complete, set this plan to
-      `status: awaiting-human` and `verification: human`.
+- [x] Superseded: retired the V1 coverage-metadata correction and
+      recent-window/cumulative-persona decision in favor of the approved V2
+      design in `packages/docs/plans/2026-07-29_glitter-style-card-v2.md`,
+      which fixes both by construction (explicit coverage metadata,
+      field-level patch retention over the complete corpus). PR #1834 stays
+      open only as the source of three stronger descriptive baselines; it is
+      never corrected or merged.
+- [ ] Drive V2 implementation PR #1846 through Buildkite and review to merge,
+      then run the pinned V2 dry runs and promote the cached real run, per
+      `2026-07-29_glitter-style-card-v2.md`.
+- [ ] When the V2 data PR (all 13 cards) is open and pre-merge agent work is
+      complete, set this plan to `status: awaiting-human` and
+      `verification: human`.
 - [ ] Add a `## Human Verification` scenario that asks the reviewer to inspect
-      the generated style cards for accurate, socially acceptable personas and
-      explicitly accept or reject the proposal.
+      the generated V2 style cards for accurate, socially acceptable personas
+      and explicitly accept or reject the proposal.
 - [ ] After human acceptance, return this plan to `status: in-progress` with
-      `verification: agent`, merge #1834, and run merged-main and production
-      consumer smoke checks before allowing the weekly schedule to be unpaused.
-- [ ] Deliberately unpause `glitter-context-refresh-weekly`, verify its next
-      action and observability, then archive this plan and its related TODOs.
+      `verification: agent`, merge the V2 data PR, close PR #1834 as
+      superseded, and run merged-main and production consumer smoke checks.
+- [ ] Once those deterministic post-merge checks are green, hand off to the
+      operator-owned unpause TODO
+      (`packages/docs/todos/glitter-context-refresh-schedule-unpause.md`) —
+      `packages/temporal/src/schedules/register-schedules.test.ts:281-287`
+      asserts the schedule only unpauses via an explicit operator action, so
+      this plan does not perform or agent-verify the unpause itself. After the
+      operator unpauses it, verify its next action and observability, then
+      archive this plan and its related TODOs.
 
 ## Live Rollout
 
@@ -91,12 +105,15 @@ schedule is deliberately unpaused.
 - [x] Run one real weekly refresh, inspect its sole PR, and complete pre-merge
       package-level smoke tests for the shared package, Birmel, Scout, and
       Glitter consumers.
-- [ ] Correct #1834's coverage metadata, decide and satisfy the persona contract,
-      then complete current-head CI and subjective generated-content review
-      before merging it.
-- [ ] Run merged-main and production consumer smoke checks after #1834 merges.
-- [ ] Deliberately unpause `glitter-context-refresh-weekly`, confirm its
-      next-run time, and verify clean corpus/context observability.
+- [ ] Merge V2 implementation PR #1846, run the pinned V2 dry runs, and open
+      the V2 data PR; complete current-head CI and subjective generated-content
+      review before merging it, then close PR #1834 as superseded.
+- [ ] Run merged-main and production consumer smoke checks after the V2 data
+      PR merges.
+- [ ] Hand off to the operator-owned
+      `glitter-context-refresh-schedule-unpause` TODO to unpause
+      `glitter-context-refresh-weekly`; after the operator unpauses it, confirm
+      its next-run time and verify clean corpus/context observability.
 
 ## Verification
 
@@ -120,21 +137,23 @@ schedule is deliberately unpaused.
 - [x] Approve inventory and complete the production canary.
 - [x] Complete the full backfill and recovery verification.
 - [x] Accept the daily workflow and unpause its schedule.
-- [ ] Correct #1834's coverage metadata to distinguish verified-corpus message
-      counts from the bounded 200-message model evidence sample.
-- [ ] Decide and record the style-card persona contract before acceptance. A
-      recent-snapshot decision must explicitly record the bounded recent-window
-      behavior. A cumulative-persona decision must block acceptance until
-      time-stratified sampling and/or field-level merge behavior is implemented,
-      the proposal is regenerated, and Jerred, Virmel, Brian, Danny, Edward,
-      Hirza, Irfan, and Ryan are re-reviewed.
-- [ ] Complete #1834's current-head CI after the selected persona-contract work,
-      then transition this plan to `awaiting-human` / `verification: human` with
-      the observable generated-content review scenario.
-- [ ] Complete the subjective human review before merging PR #1834.
-- [ ] Return this plan to `in-progress` / `verification: agent`, merge #1834,
-      and complete merged-main and production consumer smoke checks.
-- [ ] Unpause and accept the weekly workflow.
+- [x] Superseded: retired the V1 coverage-metadata correction and
+      recent-window/cumulative-persona decision in favor of the approved V2
+      design (`2026-07-29_glitter-style-card-v2.md`), which fixes both by
+      construction. PR #1834 stays open only as a descriptive-baseline source
+      and is closed as superseded, never merged.
+- [ ] Merge V2 implementation PR #1846, run the pinned V2 dry runs, and open
+      the V2 data PR (all 13 cards).
+- [ ] Complete the V2 data PR's current-head CI, then transition this plan to
+      `awaiting-human` / `verification: human` with the observable
+      generated-content review scenario.
+- [ ] Complete the subjective human review before merging the V2 data PR.
+- [ ] Return this plan to `in-progress` / `verification: agent`, merge the V2
+      data PR, close PR #1834 as superseded, and complete merged-main and
+      production consumer smoke checks.
+- [ ] Hand off to the operator-owned
+      `glitter-context-refresh-schedule-unpause` TODO for the weekly-workflow
+      unpause and acceptance.
 - [ ] Complete and archive this plan and the related TODOs.
 
 ## Assumptions
@@ -1009,3 +1028,38 @@ schedule is deliberately unpaused.
 - The current implementation behaves as a bounded recent-window rewrite despite
   earlier preservation language, so cumulative-persona acceptance requires the
   implementation and re-review work above.
+
+## Session Log — 2026-07-31 (V2 pivot and operator-gate split)
+
+### Done
+
+- Retired the V1 coverage-metadata correction and persona-contract decision
+  gates in the top-level `## Implementation`, `## Live Rollout`, and
+  `## Remaining` checklists in favor of the approved V2 design in
+  `packages/docs/plans/2026-07-29_glitter-style-card-v2.md`, which already
+  fixes both by construction and requires closing PR #1834 as superseded
+  rather than correcting and merging it (Codex P2 review finding on PR #1836).
+- Split the weekly-schedule unpause out of agent-verified acceptance into a
+  new operator-owned TODO,
+  `packages/docs/todos/glitter-context-refresh-schedule-unpause.md`, because
+  `packages/temporal/src/schedules/register-schedules.test.ts:281-287` asserts
+  the schedule only unpauses via an explicit operator action (Codex P2 review
+  finding on PR #1836).
+- Applied the same corrections to the mirrored TODO,
+  `packages/docs/todos/glitter-corpus-worker-credentials.md`, so the two
+  documents stay consistent.
+
+### Remaining
+
+- Drive V2 implementation PR #1846 through Buildkite and review to merge.
+- Run the pinned V2 dry runs, promote the cached real run, open the V2 data
+  PR, complete its subjective human review, merge it, and close PR #1834 as
+  superseded.
+- After merged-main and production consumer smoke checks pass, hand off to
+  `glitter-context-refresh-schedule-unpause` for the operator-gated unpause.
+
+### Caveats
+
+- This session made no production, schedule, or generated-content changes; it
+  only corrected the workflow documents to match the already-approved V2
+  design and the schedule's existing operator-only unpause contract.
