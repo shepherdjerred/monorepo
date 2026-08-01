@@ -6,6 +6,8 @@ export function validateReportingPipeline(pipeline: string): void {
     "key: playwright-reporting",
     ".ci-reports/junit/sjer.red/playwright.xml",
     "complete reporting run did not emit the sjer.red Playwright JUnit report",
+    ".ci-reports/junit/shepherdjerred__docs-wiki/playwright.xml",
+    "complete reporting run did not emit the docs-wiki Playwright JUnit report",
     ".ci-reports/junit/scout-for-lol__desktop-rust/cargo-1.xml",
     "complete reporting run did not emit the desktop Rust JUnit report",
     "run script-coverage",

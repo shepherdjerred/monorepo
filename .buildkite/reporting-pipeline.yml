@@ -17,10 +17,14 @@ steps:
     key: playwright-reporting
     timeout_in_minutes: 30
     command: |
-      bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
-      bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --concurrency=2
+      bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
+      bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --concurrency=2
       if [ ! -s .ci-reports/junit/sjer.red/playwright.xml ]; then
         echo "complete reporting run did not emit the sjer.red Playwright JUnit report" >&2
+        exit 1
+      fi
+      if [ ! -s .ci-reports/junit/shepherdjerred__docs-wiki/playwright.xml ]; then
+        echo "complete reporting run did not emit the docs-wiki Playwright JUnit report" >&2
         exit 1
       fi
       bun --no-install scripts/write-ci-report-index.ts
