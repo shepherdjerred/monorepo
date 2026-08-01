@@ -4,10 +4,13 @@
 // assigned worktree plus known toolchain paths (not a deny-list of guessed
 // credential locations), and credential-bearing env vars must be stripped.
 
-// System roots the toolchain must read (compilers, shared libraries, CA certs,
-// Homebrew under /opt). On macOS /etc, /tmp, and /var resolve under /private,
-// which is already covered. Everything else is denied by default, making this
-// an allowlist rather than an enumeration of every credential location.
+// System roots the toolchain must read (compilers, shared libraries, Homebrew
+// under /opt, device nodes). `/private/etc` (the target of the /etc symlink)
+// covers CA certs and host config. Deliberately NOT the whole `/private`: that
+// hierarchy also holds same-user temp and application-cache data under
+// /private/tmp and /private/var/folders, whose contents would be exfiltrated
+// through tool output — the process's own TMPDIR is granted separately below.
+// Everything else is denied by default (an allowlist, not a credential denylist).
 const READABLE_SYSTEM_ROOTS = [
   "/usr",
   "/bin",
@@ -15,8 +18,8 @@ const READABLE_SYSTEM_ROOTS = [
   "/opt",
   "/Library",
   "/System",
-  "/private",
   "/dev",
+  "/private/etc",
 ];
 
 // Toolchain caches/installs under $HOME that validation commands legitimately
@@ -61,6 +64,13 @@ export function sandboxProfile(worktree: string): string {
     for (const subpath of READABLE_HOME_SUBPATHS) {
       reads.push(`(allow file-read* (subpath "${home}/${subpath}"))`);
     }
+  }
+  // The process's OWN temp dir (usually under /private/var/folders) — tools
+  // write and read intermediate files there. Scoped to TMPDIR only, so other
+  // apps' cache data under /private/var/folders stays unreadable.
+  const tmpdir = Bun.env["TMPDIR"];
+  if (tmpdir !== undefined && tmpdir.length > 0 && !tmpdir.includes('"')) {
+    reads.push(`(allow file-read* (subpath "${tmpdir}"))`);
   }
   return `(version 1)
 (deny default)

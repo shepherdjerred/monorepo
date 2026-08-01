@@ -140,10 +140,19 @@ export class FleetController implements MasterControllerTools {
         this.#config.model,
       );
       this.store.prs.set(item.identity.number, reconciled.state);
+      const headChanged =
+        previous !== undefined &&
+        previous.identity.headSha !== reconciled.state.identity.headSha;
       if (
-        reconciled.state.classification === "green" &&
+        (headChanged || reconciled.state.classification === "green") &&
         this.store.activeWorkers.has(item.identity.number)
       ) {
+        // The active worker holds a now-stale PrState and checkout: the PR went
+        // green, or an external push moved its head under the worker (its
+        // worktree was synced to the old SHA at dispatch). Cancel it
+        // deliberately so settlement doesn't pause it — a green PR is done, and
+        // a moved-head PR re-dispatches against the refreshed SHA next tick.
+        this.store.cancelledWorkers.add(item.identity.number);
         this.store.workerControllers.get(item.identity.number)?.abort();
       }
       if (reconciled.change !== null) {
@@ -281,6 +290,7 @@ export class FleetController implements MasterControllerTools {
     const previous = this.store.prs.get(prNumber);
     this.store.activeWorkers.delete(prNumber);
     this.store.workerControllers.delete(prNumber);
+    this.store.cancelledWorkers.delete(prNumber);
     this.store.releaseLeases(prNumber);
     if (previous === undefined) {
       return;
@@ -335,6 +345,16 @@ export class FleetController implements MasterControllerTools {
     this.store.activeWorkers.delete(prNumber);
     this.store.workerControllers.delete(prNumber);
     this.store.releaseLeases(prNumber);
+    if (this.store.cancelledWorkers.delete(prNumber)) {
+      // Deliberate cancel (PR went green or its head advanced) — not a failure.
+      // Do not pause; re-run a tick so a moved-head PR re-dispatches against its
+      // refreshed SHA (a green PR simply won't be a dispatch candidate).
+      this.#observer.onChange(
+        `worker for PR #${String(prNumber)} cancelled (stale head or resolved)`,
+      );
+      void this.#runTickSafely("worker-complete", "worker-complete tick");
+      return;
+    }
     const message = error instanceof Error ? error.message : String(error);
     const state = this.store.prs.get(prNumber);
     if (

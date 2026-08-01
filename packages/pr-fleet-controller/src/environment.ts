@@ -1,4 +1,7 @@
-import type { ReviewProvider } from "@shepherdjerred/code-review";
+import {
+  reviewGateSkipReasonForAuthor,
+  type ReviewProvider,
+} from "@shepherdjerred/code-review";
 import { resolveReviewState } from "@shepherdjerred/code-review/github";
 import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
 import {
@@ -206,6 +209,21 @@ export class CommandFleetEnvironment implements FleetEnvironment {
   }> {
     const threads = await this.#reviewThreads(pr);
     const findings = reviewFindingsFromThreads(threads, this.#provider);
+
+    // Honor the provider's bot-author skip policy, exactly as the canonical
+    // Buildkite gate does. A provider like Codex declares
+    // botAuthoredPullRequestPolicy: "skip" and emits NO completion signal for
+    // bot-authored PRs (Renovate, release automation), so resolving review
+    // state would leave those PRs pending forever. When the skip applies, treat
+    // hosted review as complete.
+    if (
+      reviewGateSkipReasonForAuthor({
+        author: { login: pr.author, type: pr.authorType },
+        provider: this.#provider,
+      }) !== null
+    ) {
+      return { findings, hostedReviewComplete: true };
+    }
 
     // Completion is resolved with the canonical provider strategy: a
     // review-at-head OR a head-bound 👍 clean-review reaction. Codex leaves NO

@@ -29,6 +29,9 @@ export const PrIdentitySchema = z.object({
   url: z.url(),
   draft: z.boolean(),
   author: z.string(),
+  // GitHub author association type. "Bot" lets the review-gate skip policy
+  // apply (some providers cannot emit a completion signal for bot authors).
+  authorType: z.enum(["Bot", "User"]).default("User"),
   labels: z.array(z.string()),
   headRefName: z.string().min(1),
   headSha: z.string().regex(/^[0-9a-f]{40}$/),

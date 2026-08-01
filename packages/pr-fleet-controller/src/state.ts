@@ -16,6 +16,10 @@ export class FleetStore {
   readonly prs = new Map<number, PrState>();
   readonly activeWorkers = new Map<number, Promise<WorkerResult>>();
   readonly workerControllers = new Map<number, AbortController>();
+  // Workers aborted deliberately (their PR went green, or its head advanced
+  // under them) rather than by failure. Settlement must NOT pause these — a
+  // green PR is done and a moved-head PR re-dispatches against the new SHA.
+  readonly cancelledWorkers = new Set<number>();
   readonly workerGuidance = new Map<number, string[]>();
   // Worktree path -> the head SHA it was set up at. Setup (dependency install +
   // codegen) is only current for that head; a shared stack worktree that later
