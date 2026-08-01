@@ -58,4 +58,13 @@ describe("worker command policy", () => {
       validateWorkerCommand("bunx", ["turbo", "run", "test"]),
     ).toThrow();
   });
+
+  test("rejects mise exec, which can run an arbitrary nested program", () => {
+    expect(() =>
+      validateWorkerCommand("mise", ["exec", "--", "sed", "-i", "s/a/b/", "x"]),
+    ).toThrow();
+    expect(() =>
+      validateWorkerCommand("mise", ["exec", "--command", "rm -rf ."]),
+    ).toThrow();
+  });
 });

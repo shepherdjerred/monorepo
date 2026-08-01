@@ -148,6 +148,24 @@ class MutableEnvironment implements FleetEnvironment {
   }
 }
 
+class ControllableRunner implements WorkerRunner {
+  readonly #rejects: ((error: Error) => void)[] = [];
+  run(_pr: PrState, _signal: AbortSignal): Promise<WorkerResult> {
+    return new Promise((_resolve, reject) => {
+      // Only settles when the test triggers it — so the abort issued during a
+      // tick does not immediately settle the worker, letting the test observe
+      // state between abort and settlement.
+      this.#rejects.push(reject);
+    });
+  }
+  settle(): void {
+    const rejects = this.#rejects.splice(0);
+    for (const reject of rejects) {
+      reject(new Error("aborted"));
+    }
+  }
+}
+
 async function flushMicrotasks(): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 5));
 }
@@ -258,5 +276,60 @@ test("aborts a worker whose assigned head changes and does not pause it", async 
   expect(runner.aborts).toBe(1);
   expect(store.prs.get(1)?.classification).not.toBe("paused");
   expect(store.pausedReasons.has(1)).toBe(false);
+  await controller.stop();
+});
+
+test("keeps a closed PR's leases until its worker settles", async () => {
+  const failedCheck = {
+    name: "verify",
+    state: "FAILURE",
+    bucket: "fail",
+    link: null,
+    softFail: false,
+  };
+  const pr = identity(1);
+  const environment = new MutableEnvironment(
+    [pr],
+    new Map([[1, evidence(pr, { checks: [failedCheck] })]]),
+  );
+  const runner = new ControllableRunner();
+  const store = new FleetStore(1);
+  const controller = new FleetController({
+    config: {
+      model: "openai/gpt-5",
+      repo: "shepherdjerred/monorepo",
+      checkout: "/tmp/repo",
+      worktreeRoot: "/tmp/worktrees",
+      maxWorkers: 1,
+    },
+    environment,
+    workerRunner: runner,
+    observer: new RecordingObserver(),
+    store,
+  });
+
+  await controller.tick("startup");
+  const dispatched = store.prs.get(1);
+  expect(dispatched).toBeDefined();
+  if (dispatched === undefined) throw new Error("unreachable");
+  // The worker holds the stack-write lease when the PR is closed out from under
+  // it (mid-publish).
+  expect(store.requestLease(dispatched, "stack-write")).toBe(true);
+
+  // The PR is closed/merged externally.
+  environment.prs = [];
+  environment.evidenceByPr = new Map();
+  await controller.tick("user");
+
+  // Lease is NOT released while the aborted worker is still settling — a new
+  // worker must not be able to grab stack-write mid-publish.
+  expect(store.stackWriteOwners.get(dispatched.stackId)).toBe(1);
+  expect(store.activeWorkers.has(1)).toBe(true);
+
+  // Once the worker actually settles, its leases are released.
+  runner.settle();
+  await flushMicrotasks();
+  expect(store.stackWriteOwners.has(dispatched.stackId)).toBe(false);
+  expect(store.activeWorkers.has(1)).toBe(false);
   await controller.stop();
 });

@@ -28,6 +28,15 @@ describe("validation sandbox profile", () => {
     }
   });
 
+  test("scopes home caches to specific tool directories, not whole caches", () => {
+    // ~/.cache and ~/Library/Caches hold arbitrary application caches; only the
+    // specific toolchain cache directories are readable.
+    expect(profile).not.toContain('/.cache"))');
+    expect(profile).not.toContain('/Library/Caches"))');
+    expect(profile).toContain('/.cache/mise"))');
+    expect(profile).toContain('/.cache/go-build"))');
+  });
+
   test("rejects a worktree path that could break out of the profile string", () => {
     expect(() => sandboxProfile('/tmp/"; (allow default)')).toThrow();
   });

@@ -100,9 +100,20 @@ export class FleetController implements MasterControllerTools {
           status: "closed",
           runtimeAgent: null,
         });
-        this.store.releaseLeases(number);
-        this.store.workerControllers.get(number)?.abort();
-        this.store.workerControllers.delete(number);
+        if (this.store.activeWorkers.has(number)) {
+          // A worker is still running setup/restack/publish for this now-closed
+          // PR. Abort it but DON'T release its leases yet: doing so lets the
+          // same tick dispatch another worker that acquires setup/heavy/write
+          // authority while the cancelled subprocess is still touching deps,
+          // Git state, or remote branches. Cancel deliberately and let
+          // settlement release the leases once the worker actually stops (the
+          // pause path relies on the same invariant).
+          this.store.cancelledWorkers.add(number);
+          this.store.workerControllers.get(number)?.abort();
+        } else {
+          this.store.releaseLeases(number);
+          this.store.workerControllers.delete(number);
+        }
         changes.push(`PR #${String(number)} closed or merged`);
       }
     }
@@ -168,6 +179,7 @@ export class FleetController implements MasterControllerTools {
     const candidates = [...this.store.prs.values()]
       .filter(
         (pr) =>
+          pr.status !== "closed" &&
           ["actionable-red", "conflict"].includes(pr.classification) &&
           !this.store.activeWorkers.has(pr.identity.number),
       )

@@ -207,9 +207,19 @@ export class CommandFleetEnvironment implements FleetEnvironment {
     findings: ReviewFinding[];
     hostedReviewComplete: boolean;
   }> {
+    // Observe completion FIRST, then fetch review threads — the same order as
+    // the canonical gate (scripts/wait-for-review.ts). If a provider finishes
+    // between the two calls, pairing a "reviewed" completion with a pre-review
+    // (findings-free) thread snapshot would let a green CI run classify the PR
+    // green despite newly-created unresolved findings. Fetching threads last
+    // keeps the findings snapshot at least as fresh as the completion signal.
+    const hostedReviewComplete = await this.#hostedReviewComplete(pr);
     const threads = await this.#reviewThreads(pr);
     const findings = reviewFindingsFromThreads(threads, this.#provider);
+    return { findings, hostedReviewComplete };
+  }
 
+  async #hostedReviewComplete(pr: PrIdentity): Promise<boolean> {
     // Honor the provider's bot-author skip policy, exactly as the canonical
     // Buildkite gate does. A provider like Codex declares
     // botAuthoredPullRequestPolicy: "skip" and emits NO completion signal for
@@ -222,14 +232,14 @@ export class CommandFleetEnvironment implements FleetEnvironment {
         provider: this.#provider,
       }) !== null
     ) {
-      return { findings, hostedReviewComplete: true };
+      return true;
     }
 
     // Completion is resolved with the canonical provider strategy: a
     // review-at-head OR a head-bound 👍 clean-review reaction. Codex leaves NO
-    // review object on a clean PR — only a 👍 — so keying `hostedReviewComplete`
-    // off review objects alone would leave every cleanly-reviewed PR pending
-    // forever. Binding the commit-less reaction to the current head requires the
+    // review object on a clean PR — only a 👍 — so keying completion off review
+    // objects alone would leave every cleanly-reviewed PR pending forever.
+    // Binding the commit-less reaction to the current head requires the
     // head-push time.
     const tokenOutput = await this.#mustRun("gh", ["auth", "token"]);
     const token = tokenOutput.trim();
@@ -247,7 +257,7 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       token,
       headPushedAt,
     });
-    return { findings, hostedReviewComplete: reviewState.state === "reviewed" };
+    return reviewState.state === "reviewed";
   }
 
   async #conflict(pr: PrIdentity): Promise<boolean> {

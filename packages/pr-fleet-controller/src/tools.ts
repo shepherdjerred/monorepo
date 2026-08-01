@@ -30,13 +30,17 @@ async function containedPath(
   return absolute;
 }
 
+// `mise` is deliberately absent: `mise exec -- <cmd>` / `mise exec --command`
+// runs an arbitrary program, defeating the executable and read-only-argument
+// allowlists (e.g. `mise exec -- sed -i …` mutates the shared worktree without
+// a stack-write lease). Validation tools resolve through mise-managed PATH
+// shims and are invoked directly instead.
 const ALLOWED_EXECUTABLES = new Set([
   "bun",
   "bunx",
   "cargo",
   "go",
   "helm",
-  "mise",
   "rg",
   "swift",
   "tofu",
@@ -49,7 +53,6 @@ const ALLOWED_FIRST_ARGUMENTS = new Map<string, Set<string>>([
   ["cargo", new Set(["check", "clippy", "fmt", "test"])],
   ["go", new Set(["test", "vet"])],
   ["helm", new Set(["lint", "template"])],
-  ["mise", new Set(["exec"])],
   ["rg", new Set()],
   ["swift", new Set(["build", "test"])],
   ["tofu", new Set(["fmt", "plan", "validate"])],

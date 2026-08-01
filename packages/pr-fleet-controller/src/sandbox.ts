@@ -23,20 +23,24 @@ const READABLE_SYSTEM_ROOTS = [
 ];
 
 // Toolchain caches/installs under $HOME that validation commands legitimately
-// read (mise-managed runtimes, the Bun/Cargo/npm/Go stores). Home is otherwise
-// NOT readable, so credential stores like ~/.aws, ~/.ssh, ~/.config/gh, and a
+// read (mise-managed runtimes, the Bun/Cargo/npm/Go stores). Scoped to the
+// SPECIFIC tool directories — NOT the whole ~/.cache or ~/Library/Caches, which
+// hold arbitrary application caches a model-controlled `rg` could read and echo
+// back. Home is otherwise NOT readable, so ~/.aws, ~/.ssh, ~/.config/gh, and a
 // stray ~/.env outside the worktree stay denied.
 const READABLE_HOME_SUBPATHS = [
-  ".local",
-  ".cache",
+  ".local/share/mise",
+  ".local/state/mise",
   ".bun",
   ".cargo",
   ".rustup",
   ".mise",
   ".config/mise",
+  ".cache/mise",
   ".npm",
   "go",
-  "Library/Caches",
+  ".cache/go-build",
+  "Library/Caches/go-build",
 ];
 
 // Environment variables whose names look credential-bearing. They are stripped
