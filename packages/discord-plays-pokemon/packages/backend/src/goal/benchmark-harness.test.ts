@@ -1071,6 +1071,21 @@ describe("benchmark runtime overlay", () => {
           ),
         ).text(),
       ).toBe("process.stdout.write('old pokemonctl\\n');\n");
+      // This fake target omits benchmark-worker-boot-readiness.ts, standing in for a
+      // comparison checkout made before the helper existed. The overlay must still
+      // supply the runner-owned copy so the streamed worker's import resolves.
+      expect(
+        await Bun.file(
+          path.join(
+            runtimeDirectory,
+            "packages/backend/src/goal/benchmark-worker-boot-readiness.ts",
+          ),
+        ).text(),
+      ).toBe(
+        await Bun.file(
+          path.resolve(import.meta.dir, "benchmark-worker-boot-readiness.ts"),
+        ).text(),
+      );
       expect(
         await Bun.file(path.join(runtimeDirectory, "package.json")).exists(),
       ).toBe(false);
