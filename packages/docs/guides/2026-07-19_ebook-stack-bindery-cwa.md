@@ -48,14 +48,26 @@ none. It is registered directly in Bindery (not via Prowlarr app sync — the
 devopsarr/prowlarr tofu provider has no generic Torznab resource; see the
 plan's Phase C pivot).
 
-| Component   | Image                                             | Tailscale host | Port | Namespace |
-| ----------- | ------------------------------------------------- | -------------- | ---- | --------- |
-| Bindery     | `ghcr.io/shepherdjerred/bindery` (self-built)     | `bindery`      | 8787 | `media`   |
-| CWA         | `docker.io/crocodilestick/calibre-web-automated`  | `cwa`          | 8083 | `media`   |
-| ShelfBridge | `ghcr.io/shepherdjerred/shelfbridge` (self-built) | —              | 8787 | `media`   |
-| Prowlarr    | existing                                          | `prowlarr`     | 9696 | `media`   |
-| qBittorrent | existing                                          | `qbittorrent`  | 8080 | `media`   |
-| Postal SMTP | existing                                          | —              | 25   | `postal`  |
+qBittorrent remains hard-bound to `wg0`. Inside only the qBittorrent pod, an
+`/etc/hosts` entry resolves the ShelfBridge hostname to the WireGuard address,
+where a fixed-destination HAProxy sidecar listens. The relay then uses the
+pod's normal `eth0` route to ShelfBridge's pinned ClusterIP:
+
+```text
+qBittorrent --wg0--> WireGuard IP:8787 --HAProxy/eth0--> ShelfBridge:8787
+```
+
+The relay has no Service or Ingress and cannot select an arbitrary backend.
+
+| Component         | Image                                             | Tailscale host | Port      | Namespace |
+| ----------------- | ------------------------------------------------- | -------------- | --------- | --------- |
+| Bindery           | `ghcr.io/shepherdjerred/bindery` (self-built)     | `bindery`      | 8787      | `media`   |
+| CWA               | `docker.io/crocodilestick/calibre-web-automated`  | `cwa`          | 8083      | `media`   |
+| ShelfBridge       | `ghcr.io/shepherdjerred/shelfbridge` (self-built) | —              | 8787      | `media`   |
+| ShelfBridge relay | `docker.io/library/haproxy`                       | —              | 8787/8404 | qBit pod  |
+| Prowlarr          | existing                                          | `prowlarr`     | 9696      | `media`   |
+| qBittorrent       | existing                                          | `qbittorrent`  | 8080      | `media`   |
+| Postal SMTP       | existing                                          | —              | 25        | `postal`  |
 
 Versions are pinned with digests in
 `packages/homelab/src/cdk8s/src/versions.ts`.
@@ -96,9 +108,11 @@ ebooks-hdd-pvc/
   ingest/    → Bindery /ingest (RW External dest) · CWA /cwa-book-ingest (RW)
 ```
 
-**Critical:** Bindery must use **External** (or copy-to-external) import into
-`/ingest`. CWA is the sole writer of Calibre `metadata.db` under `library/`.
-Bindery’s library mount is **read-only** so a UI misconfig cannot corrupt it.
+**Critical:** Bindery must use `import.mode=external` with
+`import.drop_folder=/ingest`. CWA is the sole writer of Calibre `metadata.db`
+under `library/`. Bindery’s library mount is **read-only** so a UI misconfig
+cannot corrupt it. The legacy `calibre.drop_folder_path` setting does not
+control the current external-import pipeline.
 
 UID/GID **1000** matches linuxserver qBit/CWA.
 
@@ -126,6 +140,7 @@ Port `25`, no TLS (cluster-internal), same pattern as Bugsink/Plausible.
 | `packages/homelab/src/cdk8s/src/resources/torrents/bindery.ts`            | Bindery Deployment            |
 | `packages/homelab/src/cdk8s/src/resources/media/calibre-web-automated.ts` | CWA Deployment                |
 | `packages/homelab/src/cdk8s/src/resources/torrents/shelfbridge.ts`        | ShelfBridge Deployment + 1PW  |
+| `packages/homelab/src/cdk8s/src/resources/torrents/qbittorrent.ts`        | qBit + VPN webseed relay      |
 | `packages/homelab/images/bindery/Dockerfile`                              | Patched Bindery image build   |
 | `packages/homelab/images/bindery/0001-gb-author-synthetic.patch`          | Chinese Google Books fix      |
 | `packages/homelab/images/shelfbridge/Dockerfile`                          | Self-built image (pinned ref) |
@@ -159,8 +174,10 @@ Do this once after Argo syncs `media` + `postal`.
        should return a `<caps>` document
 4. **Library / import**
    - Library root: `/books` (read-only scan of CWA library)
-   - Import mode: **External** (or equivalent handoff)
-   - External path: **`/ingest`**
+   - `import.mode`: **`external`**
+   - `import.drop_folder`: **`/ingest`**
+   - `import.drop_layout`: **`flat`** (default)
+   - `import.drop_link_mode`: **`copy`** (default; preserves the torrent)
 5. **Quality** — prefer **EPUB** (Send-to-Kindle converts server-side).
 6. Optional: language filter include Chinese / multi-language as needed.
 7. Optional: disable telemetry in Settings if desired
@@ -225,7 +242,8 @@ Do this once after Argo syncs `media` + `postal`.
 | Symptom                        | Check                                                                |
 | ------------------------------ | -------------------------------------------------------------------- |
 | Bindery can’t see downloads    | Path mapping vs qBit; both use `/downloads` on `qbittorrent-hdd-pvc` |
-| Ingest empty                   | Bindery External path must be `/ingest`; import mode External        |
+| Ingest empty                   | Set `import.mode=external` and `import.drop_folder=/ingest`          |
+| External item never reconciles | Check for CWA transliteration; do not duplicate-import the file      |
 | CWA never emails               | Postal creds; netpol (pod `app=cwa`); Amazon approved sender         |
 | Amazon rejects EPUB            | EPUB Fixer on; try reprocess; check size limits                      |
 | Permission denied on books PVC | Init chown 1000; both apps UID 1000                                  |
@@ -240,21 +258,45 @@ Do this once after Argo syncs `media` + `postal`.
 qBittorrent runs in gluetun's netns. ShelfBridge torrents normally report zero
 peer seeds because their payload comes from the HTTP webseed, not BitTorrent
 peers. The deployment permits the Kubernetes Service CIDR through Gluetun and
-maps `media-shelfbridge-service` to ShelfBridge's pinned ClusterIP without
-moving public DNS outside the VPN.
+keeps qBittorrent device-bound to `wg0`.
 
-For a stalled ShelfBridge torrent, verify the URL from the qBittorrent pod:
+The hostname is split-horizon:
+
+- Bindery and normal cluster consumers resolve
+  `media-shelfbridge-service` to ShelfBridge's Service.
+- The qBittorrent pod maps it to its WireGuard address, where the HAProxy
+  sidecar forwards only to ShelfBridge's pinned ClusterIP.
+
+This preserves the application-level VPN binding without moving public DNS
+outside the tunnel.
+
+For a stalled ShelfBridge torrent, prove qBittorrent can traverse the relay and
+reach the backend while bound to `wg0`:
 
 ```bash
 kubectl exec -n media deploy/media-qbittorrent -c qbittorrent -- \
-  curl --fail --show-error http://media-shelfbridge-service:8787/health
+  curl --interface wg0 --fail --show-error \
+    http://media-shelfbridge-service:8787/health
 ```
 
-`Could not resolve host` or a timeout means the live Deployment is missing the
-host alias or `FIREWALL_OUTBOUND_SUBNETS=10.96.0.0/12`. HTTP 200 with an old
-torrent still stalled usually means its in-memory ShelfBridge grab ID exceeded
-the one-hour `DOWNLOAD_TTL`; the `/file/...` webseed returns 404. Remove that
-stalled torrent and grab the result again so ShelfBridge issues a fresh ID.
+If this fails, inspect the relay backend state and logs:
+
+```bash
+kubectl logs -n media deploy/media-qbittorrent -c shelfbridge-relay
+```
+
+- Resolution to anything other than the configured WireGuard address means the
+  pod host alias is wrong.
+- A relay backend-down event means ShelfBridge's pinned ClusterIP changed,
+  ShelfBridge is unhealthy, or Gluetun lost
+  `FIREWALL_OUTBOUND_SUBNETS=10.96.0.0/12`.
+- HTTP 200 from `/health` but HTTP 404 from an old `/file/...` URL means the
+  ShelfBridge grab exceeded the one-hour `DOWNLOAD_TTL`. Remove that torrent
+  without deleting data and grab the result again so ShelfBridge issues a fresh
+  ID.
+- Never change qBittorrent to `Any interface`; both
+  `Session\Interface=wg0` and `Session\InterfaceName=wg0` are intentional
+  leak-prevention controls.
 
 ## Out of scope (v1)
 
@@ -272,3 +314,37 @@ stalled torrent and grab the result again so ShelfBridge issues a fresh ID.
   [`logs/2026-07-19_shelfbridge-ebook-stack.md`](../logs/2026-07-19_shelfbridge-ebook-stack.md)
 - Research notes (local): `~/.claude-extra/research/hands-off-ebook-arr-kindle-2026.{md,pdf}`
 - Subtitle \*arr guide (separate): [`2026-06-27_arr-stack-subtitle-strategy.md`](2026-06-27_arr-stack-subtitle-strategy.md)
+
+## Session Log — 2026-07-29
+
+### Done
+
+- Documented the fixed-destination WireGuard-to-ShelfBridge relay and its
+  split-horizon hostname.
+- Updated stalled-webseed troubleshooting to test the real `wg0`-bound path and
+  distinguish relay/backend failures from expired ShelfBridge grabs.
+- Corrected the Bindery external-handoff keys to `import.mode=external` and
+  `import.drop_folder=/ingest`; `calibre.drop_folder_path` is obsolete for this
+  workflow.
+- Verified the live handoff copied the completed EPUB to `/ingest`, CWA imported
+  it into the Calibre library, and the ingest folder returned to empty.
+- Verified CWA's scheduled auto-send job executed successfully for the imported
+  EPUB.
+
+### Remaining
+
+- Verify the durable relay after PR #1841 merges and ArgoCD returns to Synced.
+
+### Caveats
+
+- qBittorrent must remain bound to `wg0`; the relay exists specifically to
+  avoid weakening that control.
+- Expired duplicate webseed refresh remains a separate follow-up.
+- The current live relay is an explicitly authorized temporary override and
+  leaves the `media` ArgoCD application OutOfSync until the PR ships.
+- CWA imported the book successfully, but Bindery could not match CWA's
+  transliterated filesystem path; this is tracked separately in
+  [`bindery-cwa-transliterated-library-reconcile`](../todos/bindery-cwa-transliterated-library-reconcile.md).
+- CWA logged a non-blocking KOReader checksum warning because its
+  `book_format_checksums` table is absent; Calibre import and Kindle delivery
+  still succeeded.
