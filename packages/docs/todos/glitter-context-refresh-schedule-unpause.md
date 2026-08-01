@@ -58,3 +58,27 @@ acts) rather than being duplicated in this blocked TODO.
   schedule/observability verification back to the agent-owned parent plan so
   routine checks don't sit behind the operator boundary (Codex P2 finding on
   PR #1836).
+
+## Session Log — 2026-07-31
+
+### Done
+
+- Filed this TODO, split out of
+  `packages/docs/plans/2026-07-27_glitter-corpus-live-rollout.md` and
+  `packages/docs/todos/glitter-corpus-worker-credentials.md`, to isolate the
+  privileged schedule-unpause mutation behind an explicit operator boundary.
+- Trimmed scope to the unpause toggle only; the deterministic pre-unpause gate
+  confirmation and post-unpause schedule/observability verification stay with
+  the agent-owned parent plan.
+
+### Remaining
+
+- Operator: unpause `glitter-context-refresh-weekly` once the parent plan's
+  pre-unpause gates are green (see `## Remaining` above).
+- Agent: mark this TODO complete once the unpause is confirmed live.
+
+### Caveats
+
+- This item is intentionally `disposition: blocked` / `verification: operator`
+  — do not perform the unpause from an agent session; it requires explicit
+  operator authorization in the Temporal Web UI.

@@ -88,9 +88,13 @@ weekly production schedule.
 - [x] Update Temporal rehearsals and operator documentation.
 - [x] Run focused builds, typechecks, tests, lint, docs checks, and affected
       verification; publish a draft implementation PR through git-spice.
-- [ ] Merge and deploy the implementation, run the pinned $50 dry run twice,
-      promote the cached run, review and merge all 13 V2 cards, smoke-test
-      Birmel and Scout, close PR #1834, and resume the weekly schedule.
+- [x] Merged and deployed the implementation: PR #1846 (`56f28ee7`,
+      "feat(glitter-context): generate V2 thick evidence contexts") through
+      Buildkite and review, per
+      `2026-07-27_glitter-corpus-live-rollout.md`.
+- [ ] Run the pinned $50 dry run twice, promote the cached run, review and
+      merge all 13 V2 cards, smoke-test Birmel and Scout, close PR #1834, and
+      resume the weekly schedule.
 
 ## Verification
 
