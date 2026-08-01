@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { setupGitAuth } from "../../scripts/lib/github-auth.ts";
 import { run, runAllowExit, tmpBase } from "../../scripts/lib/run.ts";
 import { runMain } from "../../scripts/lib/transient.ts";
+import { imageRuntimeFingerprint } from "./application-image-runtime.ts";
 import {
   ciImageDefinition,
   ciImageSourceFingerprint,
@@ -13,6 +14,7 @@ import {
 } from "./build-ci-image-core.ts";
 import {
   ciImagePromotionFiles,
+  classifyCiImageRuntimePromotion,
   isCurrentSourceCandidate,
   newestPinState,
   parseCiImageCandidate,
@@ -236,6 +238,15 @@ async function sourceFingerprintAtRevision(
   return `sha256:${fingerprint}`;
 }
 
+async function runtimeFingerprint(
+  image: string,
+  env: Record<string, string>,
+): Promise<string | undefined> {
+  return imageRuntimeFingerprint(image, async (command) => {
+    return runAllowExit([...command], { env, capture: true });
+  });
+}
+
 async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
   const candidate = parseCiImageCandidate(await Bun.file(candidatePath).json());
   const definition = ciImageDefinition(candidate.image);
@@ -314,6 +325,26 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
       selectedBeforeCandidate?.digest === selected.digest
         ? selectedBeforeCandidate
         : selected;
+
+    const runtimeOutcome = await classifyCiImageRuntimePromotion(
+      {
+        repository: definition.repository,
+        pinnedDigest: mainState.digest,
+        candidateDigest: promoted.digest,
+      },
+      async (image) => runtimeFingerprint(image, auth.env),
+    );
+    if (runtimeOutcome === "content-unchanged") {
+      console.log(
+        `${definition.name} candidate runtime content is unchanged; skipping pin promotion`,
+      );
+      return;
+    }
+    if (runtimeOutcome === "pin-unresolvable-bumped") {
+      console.warn(
+        `${definition.name} current pin could not be fingerprinted; promoting the verified candidate`,
+      );
+    }
 
     await run(
       [

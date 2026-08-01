@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   ciImagePromotionFiles,
+  classifyCiImageRuntimePromotion,
   isCurrentSourceCandidate,
   newestPinState,
   parseCiImageCandidate,
@@ -207,6 +208,67 @@ describe("CI image pin arbitration", () => {
     );
     expect(serializedState(current)).toBe(
       `${JSON.stringify(current, null, 2)}\n`,
+    );
+  });
+});
+
+describe("CI image runtime promotion", () => {
+  const repository = "ghcr.io/shepherdjerred/ci-base";
+  const pinnedDigest = digest("a");
+  const candidateDigest = digest("b");
+
+  test("skips a distinct manifest with identical runtime content", async () => {
+    const inspected: string[] = [];
+    const outcome = await classifyCiImageRuntimePromotion(
+      { repository, pinnedDigest, candidateDigest },
+      async (image) => {
+        inspected.push(image);
+        return "same-runtime-content";
+      },
+    );
+
+    expect(outcome).toBe("content-unchanged");
+    expect(inspected).toEqual([
+      `${repository}@${candidateDigest}`,
+      `${repository}@${pinnedDigest}`,
+    ]);
+  });
+
+  test("promotes when the runtime identity changes", async () => {
+    const outcome = await classifyCiImageRuntimePromotion(
+      { repository, pinnedDigest, candidateDigest },
+      async (image) =>
+        image === `${repository}@${candidateDigest}`
+          ? "candidate-runtime-content"
+          : "pinned-runtime-content",
+    );
+
+    expect(outcome).toBe("bumped");
+  });
+
+  test("promotes a verified candidate when the existing pin is unavailable", async () => {
+    const outcome = await classifyCiImageRuntimePromotion(
+      { repository, pinnedDigest, candidateDigest },
+      async (image) => {
+        if (image === `${repository}@${candidateDigest}`) {
+          return "candidate-runtime-content";
+        }
+        return;
+      },
+    );
+
+    expect(outcome).toBe("pin-unresolvable-bumped");
+  });
+
+  test("fails when the candidate cannot be fingerprinted", async () => {
+    const unavailableFingerprints = new Map<string, string>();
+    await expect(
+      classifyCiImageRuntimePromotion(
+        { repository, pinnedDigest, candidateDigest },
+        async () => unavailableFingerprints.get("candidate"),
+      ),
+    ).rejects.toThrow(
+      `Could not fingerprint CI image candidate ${repository}@${candidateDigest}`,
     );
   });
 });
