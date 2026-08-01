@@ -78,6 +78,18 @@ export type SkipStrategy = {
   reasons: readonly { readonly match: string; readonly reason: string }[];
 };
 
+/**
+ * How to explicitly ask a provider to (re-)review the current head, or `null`
+ * when the provider reviews automatically and needs no trigger comment.
+ *
+ * `buildComment` receives an idempotency `marker` that the caller must include
+ * verbatim in the posted comment body; a caller suppresses a duplicate request
+ * for the same head by checking whether that marker already appears on the PR.
+ */
+export type ReviewRequestStrategy = {
+  buildComment: (marker: string) => string;
+};
+
 /** A registered code-review provider. */
 export type ReviewProvider = {
   /** Stable id used in config/metrics/logs, e.g. `"greptile"`, `"codex"`. */
@@ -104,4 +116,11 @@ export type ReviewProvider = {
   completion: CompletionStrategy;
   /** How the provider signals a deliberate skip, or null if it has none. */
   detectSkip: SkipStrategy | null;
+  /**
+   * How to explicitly request a head review, or `null` when the provider
+   * reviews automatically. Consumers that trigger reviews (e.g. the PR-fleet
+   * controller after publishing a fix) must use this rather than hard-coding a
+   * single provider's mention, so requesting the wrong bot cannot happen.
+   */
+  requestReview: ReviewRequestStrategy | null;
 };

@@ -1,5 +1,3 @@
-import { mkdir } from "node:fs/promises";
-import path from "node:path";
 import type { ReviewProvider } from "@shepherdjerred/code-review";
 import { resolveReviewState } from "@shepherdjerred/code-review/github";
 import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
@@ -26,13 +24,14 @@ import type {
   ReadinessEvidence,
   ReviewFinding,
 } from "./schemas.ts";
+import { WorktreeManager } from "./worktree.ts";
 
 export class CommandFleetEnvironment implements FleetEnvironment {
   readonly #repo: string;
   readonly #checkout: string;
-  readonly #worktreeRoot: string;
   readonly #provider: ReviewProvider;
   readonly #gitOperations: GitOperations;
+  readonly #worktreeManager: WorktreeManager;
 
   constructor(
     repo: string,
@@ -42,13 +41,20 @@ export class CommandFleetEnvironment implements FleetEnvironment {
   ) {
     this.#repo = repo;
     this.#checkout = checkout;
-    this.#worktreeRoot = worktreeRoot;
     this.#provider = provider;
-    this.#gitOperations = new GitOperations({
-      repo,
-      run: async (request) => this.runLocalCommand(request),
-      mustRun: async (executable, args, cwd, timeoutMs) =>
-        this.#mustRun(executable, args, cwd, timeoutMs),
+    const run = (request: CommandRequest) => this.runLocalCommand(request);
+    const mustRun = (
+      executable: string,
+      args: string[],
+      cwd?: string,
+      options?: { timeoutMs?: number; signal?: AbortSignal | undefined },
+    ) => this.#mustRun(executable, args, cwd, options);
+    this.#gitOperations = new GitOperations({ repo, provider, run, mustRun });
+    this.#worktreeManager = new WorktreeManager({
+      checkout,
+      worktreeRoot,
+      run,
+      mustRun,
     });
   }
 
@@ -85,13 +91,14 @@ export class CommandFleetEnvironment implements FleetEnvironment {
     executable: string,
     args: string[],
     cwd = this.#checkout,
-    timeoutMs = 120_000,
+    options: { timeoutMs?: number; signal?: AbortSignal | undefined } = {},
   ): Promise<string> {
     const result = await this.runLocalCommand({
       executable,
       args,
       cwd,
-      timeoutMs,
+      timeoutMs: options.timeoutMs ?? 120_000,
+      signal: options.signal,
     });
     if (result.exitCode !== 0) {
       throw new Error(
@@ -402,91 +409,43 @@ export class CommandFleetEnvironment implements FleetEnvironment {
     };
   }
 
-  async findWorktree(branches: string[]): Promise<string | null> {
-    const output = await this.#mustRun("git", [
-      "worktree",
-      "list",
-      "--porcelain",
-    ]);
-    let currentPath: string | null = null;
-    for (const line of output.split("\n")) {
-      if (line.startsWith("worktree ")) {
-        currentPath = line.slice("worktree ".length);
-      }
-      if (line.startsWith("branch refs/heads/")) {
-        const branch = line.slice("branch refs/heads/".length);
-        if (currentPath !== null && branches.includes(branch)) {
-          return currentPath;
-        }
-      }
-    }
-    return null;
+  findWorktree(branches: string[]): Promise<string | null> {
+    return this.#worktreeManager.findWorktree(branches);
   }
 
-  async assignWorktreeBranch(worktree: string, branch: string): Promise<void> {
-    const headOutput = await this.#mustRun(
-      "git",
-      ["rev-parse", "--abbrev-ref", "HEAD"],
-      worktree,
-    );
-    const current = headOutput.trim();
-    if (current === branch) {
-      return;
-    }
-    await this.#mustRun("git", ["checkout", branch], worktree);
+  assignWorktreeBranch(worktree: string, pr: PrIdentity): Promise<void> {
+    return this.#worktreeManager.assignWorktreeBranch(worktree, pr);
   }
 
-  async provisionWorktree(pr: PrIdentity, stackId: string): Promise<string> {
-    if (pr.crossRepository) {
-      throw new Error(
-        `PR #${String(pr.number)} is cross-repository and needs an existing authorized worktree`,
-      );
-    }
-    await mkdir(this.#worktreeRoot, { recursive: true });
-    const worktreePath = path.join(this.#worktreeRoot, `stack-${stackId}`);
-    const existing = await this.findWorktree([pr.headRefName]);
-    if (existing !== null) {
-      return existing;
-    }
-    const branchExists = await this.runLocalCommand({
-      executable: "git",
-      args: ["show-ref", "--verify", "--quiet", `refs/heads/${pr.headRefName}`],
-      cwd: this.#checkout,
-      timeoutMs: 30_000,
-    });
-    if (branchExists.exitCode !== 0) {
-      await this.#mustRun("git", [
-        "fetch",
-        "origin",
-        `refs/heads/${pr.headRefName}:refs/heads/${pr.headRefName}`,
-      ]);
-    }
-    await this.#mustRun("git", [
-      "worktree",
-      "add",
-      worktreePath,
-      pr.headRefName,
-    ]);
-    return worktreePath;
+  provisionWorktree(pr: PrIdentity, stackId: string): Promise<string> {
+    return this.#worktreeManager.provisionWorktree(pr, stackId);
   }
 
-  async startRestack(pr: PrState): Promise<CommandResult> {
-    return this.#gitOperations.startRestack(pr);
+  startRestack(pr: PrState, signal?: AbortSignal): Promise<CommandResult> {
+    return this.#gitOperations.startRestack(pr, signal);
   }
 
-  async continueRestack(pr: PrState, paths: string[]): Promise<CommandResult> {
-    return this.#gitOperations.continueRestack(pr, paths);
+  continueRestack(
+    pr: PrState,
+    paths: string[],
+    signal?: AbortSignal,
+  ): Promise<CommandResult> {
+    return this.#gitOperations.continueRestack(pr, paths, signal);
   }
 
-  async publishFix(
+  publishFix(
     pr: PrState,
     paths: string[],
     message: string,
+    signal?: AbortSignal,
   ): Promise<{ headSha: string }> {
-    return this.#gitOperations.publishFix(pr, paths, message);
+    return this.#gitOperations.publishFix(pr, paths, message, signal);
   }
 
-  async publishRestack(pr: PrState): Promise<{ headSha: string }> {
-    return this.#gitOperations.publishRestack(pr);
+  publishRestack(
+    pr: PrState,
+    signal?: AbortSignal,
+  ): Promise<{ headSha: string }> {
+    return this.#gitOperations.publishRestack(pr, signal);
   }
 }

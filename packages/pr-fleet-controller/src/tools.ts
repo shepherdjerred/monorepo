@@ -3,6 +3,7 @@ import path from "node:path";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import type { FleetEnvironment } from "./ports.ts";
+import { sandboxProfile, sanitizedEnvironment } from "./sandbox.ts";
 import { LeaseKindSchema, PrStateSchema, type PrState } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
 
@@ -130,67 +131,6 @@ export function validateWorkerCommand(
   if (executable === "bunx") {
     validateBunxTurbo(args);
   }
-}
-
-// Well-known host credential stores. `run_local_command` arguments are
-// model-controlled and its stdout is returned to the remote model, so an
-// otherwise-allowed read (`rg PRIVATE_KEY ~/.aws`, `mise exec -- cat
-// ~/.ssh/id_rsa`) would exfiltrate secrets. Reads of these paths are denied in
-// the sandbox even though general host reads (needed for the toolchain) stay
-// allowed.
-const SENSITIVE_HOME_PATHS = [
-  ".aws",
-  ".ssh",
-  ".gnupg",
-  ".config/gh",
-  ".config/op",
-  ".config/gcloud",
-  ".kube",
-  ".docker",
-  ".npmrc",
-  ".netrc",
-  ".git-credentials",
-  ".config/git/credentials",
-];
-
-// Environment variables whose names look credential-bearing. They are stripped
-// from a worker command's environment so a subprocess cannot echo them back
-// through tool output (subprocesses inherit the parent environment).
-const SECRET_ENV_PATTERN =
-  /token|secret|key|password|passwd|credential|cookie|session|auth|npm_|aws_|gh_|github_|openai|anthropic|azure/i;
-
-function sandboxProfile(worktree: string): string {
-  if (worktree.includes('"')) {
-    throw new Error("Worktree path cannot contain a double quote");
-  }
-  const home = Bun.env["HOME"];
-  const denies: string[] = [];
-  if (home !== undefined && home.length > 0 && !home.includes('"')) {
-    for (const subpath of SENSITIVE_HOME_PATHS) {
-      denies.push(`(deny file-read* (subpath "${home}/${subpath}"))`);
-    }
-  }
-  return `(version 1)
-(deny default)
-(allow process*)
-(allow sysctl-read)
-(allow file-read*)
-(allow file-write* (subpath "${worktree}"))
-(allow file-write* (subpath "/private/tmp"))
-(allow file-write* (subpath "/private/var/folders"))
-${denies.join("\n")}
-(deny network*)`;
-}
-
-function sanitizedEnvironment(): Record<string, string | undefined> {
-  const result: Record<string, string | undefined> = {};
-  for (const [key, value] of Object.entries(Bun.env)) {
-    if (SECRET_ENV_PATTERN.test(key)) {
-      continue;
-    }
-    result[key] = value;
-  }
-  return result;
 }
 
 export function createWorkerTools(
@@ -342,7 +282,12 @@ export function createWorkerTools(
       inputSchema: z.object({}),
       outputSchema: z.object({ commands: z.array(z.string()) }),
       execute: async () => {
-        if (store.setupWorktrees.has(worktree)) {
+        // Setup validity is tied to the checked-out head: a shared worktree that
+        // moved to a sibling branch, or a PR with a new head, may have different
+        // dependencies/generated artifacts. Only skip when setup already ran for
+        // exactly this head.
+        const headSha = pr.identity.headSha;
+        if (store.setupWorktrees.get(worktree) === headSha) {
           return { commands: ["already complete"] };
         }
         if (!store.requestLease(pr, "setup")) {
@@ -375,9 +320,14 @@ export function createWorkerTools(
             }
             completed.push([command.executable, ...command.args].join(" "));
           }
-          store.setupWorktrees.add(worktree);
+          store.setupWorktrees.set(worktree, headSha);
+          // Mark setup complete only for PRs sharing this worktree AT this head;
+          // a sibling on a different head still needs its own setup pass.
           for (const [number, state] of store.prs) {
-            if (state.worktree === worktree) {
+            if (
+              state.worktree === worktree &&
+              state.identity.headSha === headSha
+            ) {
               store.prs.set(number, { ...state, setupComplete: true });
             }
           }
@@ -401,7 +351,7 @@ export function createWorkerTools(
         if (!store.requestLease(pr, "stack-write")) {
           throw new Error("Stack write lease is not available");
         }
-        const result = await environment.startRestack(pr);
+        const result = await environment.startRestack(pr, signal);
         const output = `${result.stdout}\n${result.stderr}`.trim();
         if (result.exitCode !== 0 && !/conflict/i.test(output)) {
           store.releaseLease(pr.identity.number, "stack-write", pr.stackId);
@@ -425,7 +375,7 @@ export function createWorkerTools(
         if (store.stackWriteOwners.get(pr.stackId) !== pr.identity.number) {
           throw new Error("Worker does not hold the stack write lease");
         }
-        const result = await environment.continueRestack(pr, paths);
+        const result = await environment.continueRestack(pr, paths, signal);
         const output = `${result.stdout}\n${result.stderr}`.trim();
         if (result.exitCode !== 0 && !/conflict/i.test(output)) {
           throw new Error(`git-spice rebase continue failed: ${output}`);
@@ -444,7 +394,7 @@ export function createWorkerTools(
           throw new Error("Worker does not hold the stack write lease");
         }
         try {
-          return await environment.publishRestack(pr);
+          return await environment.publishRestack(pr, signal);
         } finally {
           store.releaseLease(pr.identity.number, "stack-write", pr.stackId);
         }
@@ -466,8 +416,10 @@ export function createWorkerTools(
       }),
       execute: async ({ executable, args, timeoutMs }) => {
         validateWorkerCommand(executable, args);
-        if (!store.setupWorktrees.has(worktree)) {
-          throw new Error("Worktree setup must complete before validation");
+        if (store.setupWorktrees.get(worktree) !== pr.identity.headSha) {
+          throw new Error(
+            "Worktree setup must complete for the current head before validation",
+          );
         }
         if (!store.requestLease(pr, "heavy")) {
           throw new Error("Heavy lease is not available");
@@ -505,7 +457,7 @@ export function createWorkerTools(
           throw new Error("Stack write lease is not available");
         }
         try {
-          return await environment.publishFix(pr, paths, message);
+          return await environment.publishFix(pr, paths, message, signal);
         } finally {
           store.releaseLease(pr.identity.number, "stack-write", pr.stackId);
         }

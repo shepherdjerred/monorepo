@@ -17,7 +17,12 @@ export class FleetStore {
   readonly activeWorkers = new Map<number, Promise<WorkerResult>>();
   readonly workerControllers = new Map<number, AbortController>();
   readonly workerGuidance = new Map<number, string[]>();
-  readonly setupWorktrees = new Set<string>();
+  // Worktree path -> the head SHA it was set up at. Setup (dependency install +
+  // codegen) is only current for that head; a shared stack worktree that later
+  // moves to a sibling branch, or a PR that gets a new head changing
+  // deps/schemas, must re-run setup. Keying on the SHA (not just presence)
+  // prevents validating against stale dependencies/generated artifacts.
+  readonly setupWorktrees = new Map<string, string>();
   readonly pausedReasons = new Map<number, string>();
   readonly stackWriteOwners = new Map<string, number>();
   setupOwner: number | null = null;

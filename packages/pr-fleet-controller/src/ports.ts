@@ -13,7 +13,7 @@ export type CommandRequest = {
   args: string[];
   cwd: string;
   timeoutMs: number;
-  signal?: AbortSignal;
+  signal?: AbortSignal | undefined;
   /**
    * Environment for the subprocess. Defaults to the controller's own
    * environment; model-driven worker commands pass a credential-scrubbed
@@ -33,16 +33,24 @@ export type FleetEnvironment = {
   refreshEvidence: (pr: PrIdentity) => Promise<ReadinessEvidence>;
   findWorktree: (branches: string[]) => Promise<string | null>;
   provisionWorktree: (pr: PrIdentity, stackId: string) => Promise<string>;
-  assignWorktreeBranch: (worktree: string, branch: string) => Promise<void>;
+  assignWorktreeBranch: (worktree: string, pr: PrIdentity) => Promise<void>;
   runLocalCommand: (request: CommandRequest) => Promise<CommandResult>;
-  startRestack: (pr: PrState) => Promise<CommandResult>;
-  continueRestack: (pr: PrState, paths: string[]) => Promise<CommandResult>;
+  startRestack: (pr: PrState, signal?: AbortSignal) => Promise<CommandResult>;
+  continueRestack: (
+    pr: PrState,
+    paths: string[],
+    signal?: AbortSignal,
+  ) => Promise<CommandResult>;
   publishFix: (
     pr: PrState,
     paths: string[],
     message: string,
+    signal?: AbortSignal,
   ) => Promise<{ headSha: string }>;
-  publishRestack: (pr: PrState) => Promise<{ headSha: string }>;
+  publishRestack: (
+    pr: PrState,
+    signal?: AbortSignal,
+  ) => Promise<{ headSha: string }>;
 };
 
 export type WorkerRunner = {

@@ -206,20 +206,24 @@ export class FleetController implements MasterControllerTools {
             candidate.identity,
             candidate.stackId,
           ));
-        // Ensure the shared stack worktree is checked out on THIS candidate's
-        // branch before assigning it. A reused sibling worktree is on another
-        // branch, and any commit there would publish onto the wrong PR.
+        // Ensure the shared stack worktree is clean and synced to THIS
+        // candidate's PR head before assigning it. A reused sibling worktree is
+        // on another branch (any commit there would publish onto the wrong PR),
+        // and its local ref may be stale relative to the current PR head.
         await this.#environment.assignWorktreeBranch(
           worktree,
-          candidate.identity.headRefName,
+          candidate.identity,
         );
         const generation = candidate.agentGeneration + 1;
         const prNumber = String(candidate.identity.number);
         const assigned: PrState = {
           ...candidate,
           worktree,
+          // Setup is only current when it ran for this exact head; a reused
+          // worktree at a different head must re-run it.
           setupComplete:
-            candidate.setupComplete || this.store.setupWorktrees.has(worktree),
+            this.store.setupWorktrees.get(worktree) ===
+            candidate.identity.headSha,
           agentGeneration: generation,
           runtimeAgent: `pr-${prNumber}-g${String(generation)}`,
           status: "diagnosing",
@@ -387,14 +391,25 @@ export class FleetController implements MasterControllerTools {
       throw new Error(`Unknown PR #${String(prNumber)}`);
     }
     this.store.pausedReasons.set(prNumber, reason);
-    // Stop any in-flight worker for this PR: aborting its controller halts the
-    // model turn, and releasing its leases + clearing activeWorkers prevents the
-    // aborted worker from publishing after the PR is reported paused, and frees
-    // the stack so resume can dispatch cleanly.
-    this.store.workerControllers.get(prNumber)?.abort();
-    this.store.workerControllers.delete(prNumber);
-    this.store.activeWorkers.delete(prNumber);
-    this.store.releaseLeases(prNumber);
+    // Stop any in-flight worker for this PR. Aborting its controller halts the
+    // model turn AND cancels its publication subprocesses (git-operations
+    // threads this signal into every commit/submit), so an in-flight publish is
+    // actually stopped rather than finishing after the PR is reported paused.
+    //
+    // When a worker is still active we must NOT release its leases here: the
+    // publication is being cancelled but has not necessarily stopped yet, and
+    // releasing the stack-write lease now would let a sibling stack worker grab
+    // the shared worktree mid-publish. Leave lease/activeWorkers cleanup to the
+    // worker's settlement path (#handleWorkerFailure), which runs only after the
+    // aborted worker (and its subprocess) has actually settled.
+    if (this.store.activeWorkers.has(prNumber)) {
+      this.store.workerControllers.get(prNumber)?.abort();
+    } else {
+      // No in-flight worker will settle, so release directly.
+      this.store.workerControllers.get(prNumber)?.abort();
+      this.store.workerControllers.delete(prNumber);
+      this.store.releaseLeases(prNumber);
+    }
     this.store.prs.set(prNumber, {
       ...state,
       runtimeAgent: null,
