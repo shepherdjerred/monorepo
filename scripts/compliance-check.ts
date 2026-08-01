@@ -132,12 +132,32 @@ function isShellEnvironmentAssignment(token: string): boolean {
   return equalsIndex > 0 && /^[a-z_]\w*$/i.test(token.slice(0, equalsIndex));
 }
 
+function isEnvCommand(token: string): boolean {
+  return token === "env" || token.endsWith("/env");
+}
+
+// `env`'s own options that consume the following token as their value.
+const envValueOptions = new Set(["-u", "--unset", "-C", "--chdir"]);
+
+function skipEnvOptions(tokens: string[], startIndex: number): number {
+  let index = startIndex;
+  while (tokens[index]?.startsWith("-") === true) {
+    index += envValueOptions.has(tokens[index] ?? "") ? 2 : 1;
+  }
+  return index;
+}
+
 function findShellExecutableIndex(tokens: string[]): number {
   let index = 0;
-  while (index < tokens.length) {
+  for (;;) {
+    // Skip leading `VAR=value` environment assignments.
+    while (isShellEnvironmentAssignment(tokens[index] ?? "")) index += 1;
+    // Unwrap an `env` command wrapper (`env VAR=v tsc`, `/usr/bin/env tsc`):
+    // skip it and its options, then re-scan for the real executable, which
+    // may itself be `tsc`, `bunx`, or `bun x`/`bun run`.
     const token = tokens[index];
-    if (token === undefined || !isShellEnvironmentAssignment(token)) break;
-    index += 1;
+    if (token === undefined || !isEnvCommand(token)) break;
+    index = skipEnvOptions(tokens, index + 1);
   }
   return index;
 }
