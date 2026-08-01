@@ -5,11 +5,8 @@ import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { register } from "#observability/metrics.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
 import type { AgentTaskCommand } from "./agent-task-command.ts";
-import {
-  agentTaskSecretTokens,
-  createAgentTaskActivities,
-  envForProvider,
-} from "./agent-task.ts";
+import { createAgentTaskActivities } from "./agent-task.ts";
+import { agentTaskSecretTokens, envForProvider } from "./agent-task-env.ts";
 
 const originalFetch = globalThis.fetch;
 const originalGitHubAppId = Bun.env["GITHUB_APP_ID"];
@@ -243,20 +240,61 @@ describe("agentTaskActivities", () => {
     ).toBe("codex-key");
   });
 
-  it("keeps Claude OAuth isolation and sanitizes GitHub credentials", async () => {
+  it("forwards ONLY allowlisted keys for Claude and drops every other secret", async () => {
     const environment = envForProvider("claude", "installation-token", {
+      // Allowlisted: the runtime vars + Claude's own model key.
+      PATH: "/usr/bin",
+      HOME: "/home/worker",
+      CLAUDE_CODE_OAUTH_TOKEN: "oauth-token",
+      // NOT allowlisted for Claude — must all be dropped.
       ANTHROPIC_API_KEY: "anthropic-key",
       OPENAI_API_KEY: "openai-key",
       GH_TOKEN: "personal-token",
       GITHUB_PERSONAL_ACCESS_TOKEN: "personal-token",
       GITHUB_APP_PRIVATE_KEY: "private-key",
-      SAFE_VALUE: "safe",
+      POSTAL_API_KEY: "postal-secret",
+      GRAFANA_API_KEY: "grafana-secret",
+      ARGOCD_AUTH_TOKEN: "argocd-secret",
+      CLOUDFLARE_API_TOKEN: "cloudflare-secret",
+      SAFE_VALUE: "not-forwarded",
     });
 
     expect(environment).toEqual({
-      OPENAI_API_KEY: "openai-key",
-      SAFE_VALUE: "safe",
+      PATH: "/usr/bin",
+      HOME: "/home/worker",
+      CLAUDE_CODE_OAUTH_TOKEN: "oauth-token",
+      // The GitHub App installation token is injected explicitly, never
+      // inherited from the worker env.
       GH_TOKEN: "installation-token",
     });
+  });
+
+  it("withholds infra secrets and the other provider's key from Codex", async () => {
+    const sentinelSecrets = {
+      POSTAL_API_KEY: "postal-secret",
+      PAGERDUTY_TOKEN: "pagerduty-secret",
+      BUGSINK_TOKEN: "bugsink-secret",
+      GRAFANA_API_KEY: "grafana-secret",
+      ARGOCD_AUTH_TOKEN: "argocd-secret",
+      CLOUDFLARE_API_TOKEN: "cloudflare-secret",
+      GITHUB_APP_PRIVATE_KEY: "private-key",
+      CLAUDE_CODE_OAUTH_TOKEN: "other-provider-key",
+    };
+    const environment = envForProvider("codex", "installation-token", {
+      PATH: "/usr/bin",
+      HOME: "/home/worker",
+      CODEX_API_KEY: "codex-key",
+      ...sentinelSecrets,
+    });
+
+    expect(environment).toEqual({
+      PATH: "/usr/bin",
+      HOME: "/home/worker",
+      CODEX_API_KEY: "codex-key",
+      GH_TOKEN: "installation-token",
+    });
+    for (const secret of Object.values(sentinelSecrets)) {
+      expect(Object.values(environment)).not.toContain(secret);
+    }
   });
 });

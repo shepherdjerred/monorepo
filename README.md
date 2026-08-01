@@ -139,7 +139,24 @@ def generate_summary(content, prompt, summary_path):
         out_path = pathlib.Path(tmpdir) / "summary.json"
         schema_path.write_text(json.dumps(schema))
 
-        env = dict(os.environ)
+        # Minimal env ALLOWLIST, mirroring envForProvider in
+        # packages/temporal/src/activities/agent-task.ts. This summary run has
+        # no OS sandbox (danger-full-access, see below), and the source text it
+        # summarizes is swept verbatim into the prompt, so an injected/mistaken
+        # command could run arbitrary shell. Forward only what `bunx @openai/codex`
+        # needs to execute (runtime vars + the Codex model key) — NOT the
+        # worker's other operational secrets (Postal/PagerDuty/Bugsink/Grafana/
+        # ArgoCD/Cloudflare/GitHub tokens) — so that command has nothing to
+        # exfiltrate or misuse. No GitHub token is forwarded: this path only
+        # summarizes local files; the outer readme-refresh workflow opens the PR.
+        _CODEX_ENV_ALLOWLIST = (
+            "PATH", "HOME", "LANG", "LC_ALL", "LC_CTYPE", "TZ", "TMPDIR",
+            "XDG_CONFIG_HOME", "XDG_CACHE_HOME", "XDG_DATA_HOME", "CODEX_HOME",
+            "SSL_CERT_FILE", "SSL_CERT_DIR", "NODE_EXTRA_CA_CERTS",
+            "BUN_INSTALL", "BUN_INSTALL_CACHE_DIR",
+            "CODEX_API_KEY", "OPENAI_API_KEY",
+        )
+        env = {k: os.environ[k] for k in _CODEX_ENV_ALLOWLIST if k in os.environ}
         if env.get("OPENAI_API_KEY") and not env.get("CODEX_API_KEY"):
             env["CODEX_API_KEY"] = env["OPENAI_API_KEY"]
 
@@ -154,11 +171,12 @@ def generate_summary(content, prompt, summary_path):
                 "project_doc_max_bytes=0",
                 "--model",
                 MODEL,
-                # The worker pod is already the isolation boundary (ephemeral,
-                # non-root, throwaway clone) — any --sandbox value other than
-                # danger-full-access makes codex shell out to bwrap to build a
-                # Linux namespace, which an unprivileged container refuses.
-                # See agent-task-command.ts's codexCommand() for the same fix.
+                # Any --sandbox value other than danger-full-access makes codex
+                # shell out to bwrap to build a Linux namespace, which the
+                # unprivileged worker pod refuses. We drop the OS sandbox and
+                # bound the blast radius via the minimal env allowlist above
+                # instead. See agent-task-command.ts's codexCommand() for the
+                # same fix.
                 "--sandbox",
                 "danger-full-access",
                 "--output-schema",
