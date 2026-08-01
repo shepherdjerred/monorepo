@@ -375,7 +375,7 @@ async function activateSelectedExit(options: {
   let stopReason: ExitNavigationStopReason = "activation-no-effect";
   if (mapChanged || reachedWarpLanding) {
     stopReason = "exit-traversed";
-  } else if (after.phase !== "overworld" || reachedWarpTrigger) {
+  } else if (reachedWarpTrigger || after.phase !== "overworld") {
     stopReason = "exit-triggered";
   } else if (activation.stopReason === "settle-timeout") {
     stopReason = "settle-timeout";

@@ -222,8 +222,8 @@ export class GameBattleControl {
   ): NonNullable<GameObservationV2["battle"]> {
     const battle = observation.battle;
     if (
-      observation.phase !== "battle" ||
       battle === null ||
+      observation.phase !== "battle" ||
       !observation.readiness.inputReady ||
       !menus.includes(battle.menu)
     ) {

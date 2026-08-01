@@ -118,8 +118,8 @@ async function handleTarget(
   const kind = args.at(1);
   const rawTarget = args.at(2);
   if (
-    (kind !== "battler" && kind !== "party-slot") ||
-    rawTarget === undefined
+    rawTarget === undefined ||
+    (kind !== "battler" && kind !== "party-slot")
   ) {
     throw new Error("battle target requires battler <n> or party-slot <n>");
   }
