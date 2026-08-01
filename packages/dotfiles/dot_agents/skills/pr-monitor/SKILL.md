@@ -24,8 +24,6 @@ Automates the complete PR workflow: create PR, monitor reviews/conflicts, fix is
 
 > **CI in this monorepo.** Buildkite runs `buildkite/monorepo/pr` + `ci/merge-conflict` per PR — `gh pr checks` shows them, but use `bk build view` / the Buildkite web UI for logs (`toolkit pr logs` targets GitHub Actions run IDs and won't resolve a Buildkite build). Also run the touched packages' typecheck/test/lint locally before and during monitoring — CI catches the rest, but local verification is faster to iterate on.
 
-> **Review gate.** The blocking `review-gate` step (inside `buildkite/monorepo/pr`) waits on the active code-review provider — Codex by default, selected by `REVIEW_PROVIDER` — to review the PR head and on its review threads to be resolved. If it sits at `reviewing`, re-trigger with `@codex review`; probe what the provider did with `GH_TOKEN=$(gh auth token) bun scripts/probe-review-signal.ts <pr>`. Details: `buildkite-helper` skill → "Review gate" and `packages/temporal/CLAUDE.md`.
-
 ## Workflow
 
 When invoked:

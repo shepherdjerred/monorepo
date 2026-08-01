@@ -1,25 +1,41 @@
 ---
 name: modern-cli-tools
 description: |
-  Reference for modern Unix command alternatives (fd, rg, eza, bat, sd, zoxide, dust, duf, procs, btop) installed on this machine.
-  Use ONLY when the user explicitly mentions these tools by name, asks about faster/modern alternatives to standard Unix commands, or asks you to use one. Do NOT load just because you are about to run find/grep/ls/cat/sed — standard tools are the default.
+  Modern Unix command alternatives - faster, more user-friendly tools for everyday tasks
+  When Claude is about to use legacy tools (find, grep, ls, cat, sed, du, df, ps) OR when user mentions fd, rg, eza, bat, or asks about faster alternatives
 ---
 
-# Modern CLI Tools Reference
+# Modern CLI Tools Agent
 
-## Opt-in policy
+## What's New in 2025
 
-These tools are installed and on `PATH`, and you may use them **when the user
-asks for them** (by name, or by asking for a faster/modern alternative). When
-the user hasn't asked, default to the standard Unix tools (`find`, `grep`,
-`ls`, `cat`, `sed`, `du`, `df`, `ps`) — they behave identically everywhere and
-their output formats are the most predictable.
+- **eza Replaces exa**: Original exa is unmaintained (@ogham unreachable), use **eza** fork instead
+- **eza v0.23.0+** (July 2025): Hyperlink support, custom themes, enhanced Git integration
+- **ripgrep Performance**: SIMD optimizations (Teddy algorithm), 23x-fastest on benchmarks
+- **fd Speed**: 23x faster than `find -iregex`, parallel directory traversal (~855ms vs 11-20s)
+- **bat Integrations**: Git sidebar (+ for additions, ~ for modifications), fzf/ripgrep/man integration
+- **Universal Adoption**: Modern tools now the de facto standard for Rust/Go development workflows
 
-This document is a usage reference for when you *are* using the modern tools:
-their flags, output formats, and gotchas differ from the traditional
-equivalents, so check the relevant section rather than guessing.
+## Overview
 
-**Note**: Always use **eza**, not exa. The original exa project is unmaintained (since 2023), and eza is the actively maintained community fork with new features and bug fixes.
+This agent teaches modern alternatives to traditional Unix commands that are faster, more user-friendly, and feature-rich. These tools are written in Rust and other modern languages, providing significant performance improvements and better default behaviors.
+
+**Important Note**: Always use **eza**, not exa. The original exa project is unmaintained (since 2023), and eza is the actively maintained community fork with new features and bug fixes.
+
+## For Claude: Tool Selection Guidelines
+
+**When performing file operations, ALWAYS prefer modern tools:**
+
+- ❌ `find` → ✅ `fd` - Faster, simpler syntax, respects .gitignore
+- ❌ `grep -r` → ✅ `rg` - 10-100x faster, better defaults
+- ❌ `ls -la` → ✅ `eza -la` - Better formatting, git integration
+- ❌ `cat file` → ✅ `bat file` - Syntax highlighting, line numbers
+- ❌ `sed` → ✅ `sd` - Simpler syntax, safer
+- ❌ `du -sh` → ✅ `dust` - Visual tree, faster
+- ❌ `df -h` → ✅ `duf` - Better formatting
+- ❌ `ps aux` → ✅ `procs` - Modern output, better filtering
+
+**Before using legacy tools, check if modern alternatives are available.**
 
 ## Tool Comparison
 
