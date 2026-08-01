@@ -170,7 +170,7 @@ function unwrapEnvWrapper(tokens: string[]): string[] {
     // Attached short form: `env -S'tsc --noEmit'` tokenizes into the single
     // token `-Stsc --noEmit` (GNU getopt lets a short option's value ride in the
     // same argument). Everything after `-S` is the split-string value.
-    if (option.startsWith("-S") && option !== "-S") {
+    if (option !== "-S" && option.startsWith("-S")) {
       const words = splitShellWords(option.slice(2));
       return [
         ...assignments,
@@ -285,8 +285,8 @@ function collectTypeScriptToolchainErrors(
   const nativeTypeScriptDependency =
     packageJson.devDependencies?.["@typescript/native"];
   if (
-    (usesNativeCompiler || usesAmbiguousCompiler) &&
-    nativeTypeScriptDependency !== nativeTypeScriptVersion
+    nativeTypeScriptDependency !== nativeTypeScriptVersion &&
+    (usesNativeCompiler || usesAmbiguousCompiler)
   ) {
     errors.push(
       `${directory} must declare @typescript/native as ${nativeTypeScriptVersion}`,
