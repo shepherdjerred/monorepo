@@ -1,5 +1,8 @@
 # git-spice command reference
 
+> Existing git-spice work only. Newly rooted monorepo work uses `gh-stack`;
+> never initialize or mix git-spice into a native GitHub stack.
+
 Canonical binary: **`git-spice`**. The `gs …` column is the interactive fish
 abbreviation — it does **not** work in scripts/CI/agent Bash (there `gs` =
 Ghostscript), so use `git-spice` in those contexts. Shorthand form is

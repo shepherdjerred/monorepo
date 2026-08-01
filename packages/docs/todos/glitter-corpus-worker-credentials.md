@@ -1,10 +1,10 @@
 ---
 id: glitter-corpus-worker-credentials
 type: todo
-status: planned
+status: in-progress
 board: true
-verification: operator
-disposition: blocked
+verification: agent
+disposition: active
 origin: packages/docs/logs/2026-07-26_pr-1700-glitter-shared-context.md
 source_marker: false
 ---
@@ -16,29 +16,47 @@ the deployed Temporal worker, and covered by the committed non-secret vault
 snapshot. The trusted seed, full backfill, daily capture, recovery verification,
 and observability gates all pass. `glitter-corpus-daily` is active in production.
 
-The remaining credential boundary is the Temporal worker's existing
-`OPENAI_API_KEY`. The fixed-time, snapshot-pinned production dry run reached the
-generation activity, but both configured attempts failed closed on OpenAI HTTP
-429 `insufficient_quota`. The worker credential is intentionally distinct from
-the Birmel and Pokémon credentials.
+The Temporal worker's OpenAI project was topped up without changing its
+credential. The pinned production rehearsal then reused nine existing
+SeaweedFS generation artifacts and generated only the four missing style cards.
+Two dry runs returned the same proposal checksum, and the real run opened
+human-review PR [#1834](https://github.com/shepherdjerred/monorepo/pull/1834)
+without making additional OpenAI calls.
 
 ## Remaining
 
-- [ ] In the OpenAI dashboard, identify the project that owns
-      `OPENAI_API_KEY` from 1Password item
-      `mjgnqqh37jxyzseqrddde2jgaq` and restore its usable quota or billing
-      balance. If support is needed, provide request ID
-      `req_3b7c0ed562be4905ae4c68e65f2e71ba`. Alternatively, explicitly authorize
-      a different production OpenAI credential for this workflow.
-- [ ] Rerun the fixed-time dry run twice against snapshot
+- [x] Restore usable quota for the project that owns the Temporal worker's
+      existing `OPENAI_API_KEY`.
+- [x] Rerun the fixed-time dry run twice against snapshot
       `dbb59f00-3f6b-4cab-a87c-6d8a65e21d62` at SHA-256
       `e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9`
       and require complete output equality.
-- [ ] Run the real refresh with the same pin, inspect its sole PR or no-diff
-      result, and smoke-test the shared package, Birmel, Scout, and Glitter
-      consumers.
-- [ ] Unpause `glitter-context-refresh-weekly` only after those acceptance
-      gates pass, then complete and archive this TODO and the live rollout plan.
+- [x] Run the real refresh with the same pin, inspect its sole PR, and complete
+      pre-merge package-level smoke tests for the shared package, Birmel, Scout,
+      and Glitter consumers.
+- [x] Superseded: retired the V1 coverage-metadata correction and
+      recent-window/cumulative-persona decision in favor of the approved V2
+      design in `packages/docs/plans/2026-07-29_glitter-style-card-v2.md`,
+      which fixes both by construction. PR #1834 stays open only as a
+      descriptive-baseline source and is closed as superseded, never merged.
+- [x] Merged V2 implementation PR #1846 (`56f28ee7`).
+- [ ] Run the pinned V2 dry runs and promote the cached real run.
+- [ ] When the V2 data PR (all 13 cards) is open and pre-merge agent work is
+      complete, set this TODO to `status: awaiting-human` and
+      `verification: human`.
+- [ ] Add a `## Human Verification` scenario: review the generated V2 style
+      cards for accurate, socially acceptable personas and explicitly accept
+      or reject the proposal.
+- [ ] After human acceptance, return this TODO to `status: in-progress` with
+      `verification: agent`, merge the V2 data PR, close PR #1834 as
+      superseded, and run merged-main and production consumer smoke checks.
+- [ ] Hand off to the operator-owned
+      `glitter-context-refresh-schedule-unpause` TODO for the weekly-schedule
+      unpause — `packages/temporal/src/schedules/register-schedules.test.ts:281-287`
+      asserts the schedule only unpauses via an explicit operator action, so
+      this document does not perform or agent-verify that step. After the
+      operator unpauses it, complete and archive this TODO and the live
+      rollout plan.
 
 ## Comment Log
 
@@ -63,3 +81,153 @@ the Birmel and Pokémon credentials.
   `OPENAI_API_KEY`. The API returned no project or organization header, and a
   metadata-only 1Password lookup timed out; the operator must identify that
   key's owning project in the OpenAI dashboard and restore quota there.
+- 2026-07-29 — The operator topped up the existing OpenAI project. The next
+  pinned dry run reused nine generation artifacts, generated the four missing
+  cards, and completed with proposal SHA-256
+  `9f558af01bf18f2082499c61cd400b44b27bb1e0f93e878978c1cf785e582538`.
+  A second dry run returned the same result with zero OpenAI calls. The real
+  run reused the same proposal with zero OpenAI calls and opened PR #1834.
+
+## Session Log — 2026-07-29 (quota restoration and cached acceptance)
+
+### Done
+
+- Verified the cache-enabled production worker and recovery-verified pinned
+  corpus snapshot.
+- Completed the first dry run by reusing nine immutable generation artifacts
+  and generating only the four missing style cards.
+- Completed a second byte-identical dry run and the real refresh with zero
+  additional OpenAI calls; all three returned proposal SHA-256
+  `9f558af01bf18f2082499c61cd400b44b27bb1e0f93e878978c1cf785e582538`.
+- Opened generated-context PR #1834 and passed focused build, typecheck, test,
+  and lint for Glitter context, Birmel, Scout data, and the Glitter app.
+
+### Remaining
+
+- Complete human review and current-head Buildkite #7145 for PR #1834.
+- Merge PR #1834, run merged-main and production consumer smoke checks, then
+  deliberately unpause `glitter-context-refresh-weekly`.
+- Complete and archive this TODO and the live rollout plan.
+
+### Caveats
+
+- The weekly schedule remains deliberately paused.
+- PR #1834 requires subjective human review and is never auto-merged.
+- The generated-context proposal is cached; review, CI, and real-run retries do
+  not require another OpenAI generation.
+- Current-head Buildkite #7145 is scheduled but cannot start while the
+  dedicated CI node `liskov` is offline; Kubernetes last received its heartbeat
+  at 11:04 PDT and deliberately does not fall back to the production node.
+
+## Session Log — 2026-07-29 (acceptance-gate correction)
+
+### Done
+
+- Distinguished completed pre-merge package smoke tests from the required
+  merged-main and production consumer smoke checks.
+- Added the uncompleted metadata correction that must keep verified-corpus
+  coverage distinct from the bounded 200-message model evidence sample.
+- Recorded the staged transition from pre-merge agent verification to human
+  acceptance, followed by post-merge agent verification.
+
+### Remaining
+
+- Correct #1834's metadata and complete current-head CI, then transition this
+  TODO to `awaiting-human` / `verification: human` for subjective review.
+- After acceptance, return the TODO to agent verification, merge #1834, and run
+  merged-main and production consumer smoke checks before schedule unpause.
+
+### Caveats
+
+- PR #1834's Buildkite #7145 failed during bootstrap pipeline upload with a
+  `stack_error`; no repository verification job ran.
+- The weekly schedule remains paused, and this document does not treat the
+  generated content or any remaining acceptance gate as complete.
+
+## Session Log — 2026-07-29 (human-review ordering correction)
+
+### Done
+
+- Removed the circular requirement for merged-main and production smoke checks
+  before the generated-content review that must precede merge.
+- Aligned this TODO with the rollout plan's pre-merge agent, human acceptance,
+  and post-merge agent phases.
+
+### Remaining
+
+- Correct #1834's coverage metadata and complete its current-head CI.
+- Move this TODO to `awaiting-human` / `verification: human`, complete the
+  observable generated-content review, then return it to agent verification for
+  merge and post-merge smoke checks.
+
+### Caveats
+
+- The existing pre-merge package smoke evidence remains complete.
+- PR #1834, merged-main checks, production consumer smokes, weekly-schedule
+  unpause, and final acceptance all remain incomplete.
+
+## Session Log — 2026-07-29 (persona-contract gate)
+
+### Done
+
+- Added the missing pre-acceptance decision gate for recent-behavior snapshots
+  versus cumulative personas.
+- Documented the required conditional work before human acceptance: record the
+  bounded recent-window contract when snapshots are intended, or implement
+  cumulative sampling/merge behavior, regenerate, and re-review all eight cards
+  when cumulative personas are intended.
+
+### Remaining
+
+- Choose and record the Glitter style-card persona contract.
+- If cumulative personas are selected, implement time-stratified sampling and/or
+  field-level merge behavior that retains uncontradicted observations, regenerate
+  the proposal, and re-review Jerred, Virmel, Brian, Danny, Edward, Hirza, Irfan,
+  and Ryan before acceptance.
+- Correct the corpus metadata and complete PR #1834's current-head Buildkite run.
+- Transition this TODO and the rollout plan to human verification, then complete
+  the eight-card subjective review before merge.
+- After acceptance, return the workflow to agent execution, merge PR #1834, run
+  the merged-main and production consumer smokes, and only then unpause Glitter
+  and complete/archive the records.
+
+### Caveats
+
+- No persona-contract decision has been made; the generated cards remain pending
+  acceptance.
+- The current implementation behaves as a bounded recent-window rewrite despite
+  earlier preservation language, so cumulative-persona acceptance requires the
+  implementation and re-review work above.
+
+## Session Log — 2026-07-31 (V2 pivot and operator-gate split)
+
+### Done
+
+- Retired the V1 coverage-metadata correction and persona-contract decision
+  gates in `## Remaining` in favor of the approved V2 design in
+  `packages/docs/plans/2026-07-29_glitter-style-card-v2.md`, which already
+  fixes both by construction and requires closing PR #1834 as superseded
+  rather than correcting and merging it (Codex P2 review finding on PR #1836,
+  mirrored from the live rollout plan).
+- Split the weekly-schedule unpause into the new operator-owned TODO
+  `packages/docs/todos/glitter-context-refresh-schedule-unpause.md`, because
+  `packages/temporal/src/schedules/register-schedules.test.ts:281-287` asserts
+  the schedule only unpauses via an explicit operator action.
+
+### Remaining
+
+- Run the pinned V2 dry runs, promote the cached real run, open the V2 data
+  PR, complete its subjective human review, merge it, and close PR #1834 as
+  superseded.
+- After merged-main and production consumer smoke checks pass, hand off to
+  `glitter-context-refresh-schedule-unpause` for the operator-gated unpause.
+
+### Caveats
+
+- V2 implementation PR #1846 (`56f28ee7`) was already merged before this
+  document existed; the initial version of this session's Remaining section
+  incorrectly listed "drive PR #1846 to merge" as remaining work, since fixed
+  (Codex P2 finding on PR #1836).
+- This session made no production, schedule, or generated-content changes; it
+  only corrected the workflow documents to match the already-approved V2
+  design and the schedule's existing operator-only unpause contract.

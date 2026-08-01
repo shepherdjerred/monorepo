@@ -7,6 +7,13 @@ description: |
 
 # GitHub CLI Helper Agent
 
+> **Branch & PR routing for `shepherdjerred/monorepo`:** use this skill for
+> GitHub queries, reviews, comments, and other forge operations. New
+> human/agent feature branches and PRs use the `gh-stack` skill; existing
+> git-spice work stays on `git-spice-helper`. Bare `gh pr create` examples below
+> are for other repositories, forks, or stateless single-PR automation. Never
+> use them to bypass the monorepo stack owner.
+
 ## Overview
 
 Complete GitHub operations via `gh` CLI and GitHub API. This skill replaces GitHub MCP server functionality, providing CLI/API equivalents for all operations.

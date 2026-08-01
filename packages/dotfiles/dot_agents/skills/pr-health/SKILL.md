@@ -9,7 +9,10 @@ allowed-tools:
 
 # PR Health Skill
 
-> **Branch & PR management in `shepherdjerred/monorepo` uses git-spice — every PR is a stacked PR.** Load the `git-spice-helper` skill first for creating/updating/restacking PRs; this skill just reports health. A single PR is a stack of one.
+> **This skill reports health; it does not choose or replace the stack owner.**
+> New monorepo work uses `gh-stack`. Existing git-spice work stays on
+> `git-spice-helper`. Load the owning skill before creating, updating, rebasing,
+> syncing, or merging the PR, and never mix the tools.
 
 Check the health of a pull request including merge conflicts, CI status, and approval status.
 
@@ -72,9 +75,9 @@ The health command outputs a structured report:
 - Conflicting file: src/lib/parser.ts
 
 To investigate:
-\`\`\`bash
-git fetch origin main && git merge origin/main
-\`\`\`
+- Native stack: load `gh-stack`, then run `gh stack sync`.
+- Existing git-spice stack: load `git-spice-helper` and use its restack flow.
+- Generic unstacked repository: fetch and merge/rebase the PR's base.
 
 ### CI Status: FAILED
 - Job "test" - FAILED
@@ -106,7 +109,9 @@ toolkit pr logs 12345678 --failed-only
 Create a PR first or specify a PR number:
 
 ```bash
-gh pr create
+gh stack submit --auto # new monorepo work
+# Existing git-spice work: use git-spice branch/stack submit.
+# Plain gh pr create is only for stateless bots, forks, or other repositories.
 # or
 toolkit pr health 123
 ```

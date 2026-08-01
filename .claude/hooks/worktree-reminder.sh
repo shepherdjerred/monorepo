@@ -47,10 +47,15 @@ Before your first edit on a non-trivial change, create a worktree:
   git worktree add .claude/worktrees/<slug> -b feature/<slug> origin/main
   cd .claude/worktrees/<slug>
   mise trust -y --all
+  gh stack init --base main feature/<slug>
 
-The worktree holds a git-spice *stack* — every feature PR is a stacked PR. Manage
-branches and PRs with git-spice (`gs`) and load the `git-spice-helper` skill before
-any branch/PR op. (In scripts, `gs` is Ghostscript — call `git-spice`.)
+New work uses a native GitHub stack, including a one-PR stack. Load the `gh-stack`
+skill before branch/PR operations; agents must use `gh stack submit --auto` and
+`gh stack view --json` to stay non-interactive.
+
+If the work extends a branch or stack already managed by git-spice, skip
+`gh stack init`, load `git-spice-helper`, and keep using `git-spice` for that
+stack's full lifecycle. Never mix git-spice and `gh stack` in one stack.
 
 Only stay in main for a single-file, single-commit fix you will not put in a PR.
 EOF

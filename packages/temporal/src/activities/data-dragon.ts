@@ -23,11 +23,15 @@ import {
   disarmGitHooks,
   installScoutWorkspace,
 } from "./bot-clone.ts";
-import { recordRun } from "./data-dragon-metrics.ts";
+import { recordAutoMergeFailure, recordRun } from "./data-dragon-metrics.ts";
+import {
+  createDataDragonPr,
+  findOpenDataDragonPrUrl,
+} from "./data-dragon-pr.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import {
   branchName,
-  failureReason,
+  dataDragonPrTitle,
   validateVersion,
 } from "./data-dragon-util.ts";
 
@@ -74,7 +78,7 @@ export type DataDragonUpdateResult = DataDragonUpdateInput & {
   commitHash: string | undefined;
   prUrl: string | undefined;
   outcome: "success" | "skipped";
-  reason: "pr-created" | "no-diff" | "image-only-diff";
+  reason: "pr-created" | "no-diff" | "image-only-diff" | "pr-already-open";
   emailSent?: boolean;
   emailMessageId?: string;
 };
@@ -144,6 +148,39 @@ async function changedFiles(repoDir: string): Promise<GitStatusEntry[]> {
   return changes;
 }
 
+/**
+ * Enables auto-merge on an already-open Data Dragon PR, idempotently. Shared by
+ * the create path and the dedup/retry path: `gh pr merge --auto` is safe to
+ * re-issue on a PR that already has auto-merge enabled, so a retry whose prior
+ * attempt died between `gh pr create` and `gh pr merge --auto` can finish the
+ * setup here instead of leaving the PR stuck. On failure it records the
+ * dedicated auto-merge-failure signal (so `ScoutDataDragonAutoMergeFailed`
+ * fires) and logs, but does NOT throw — a PR exists either way, and the failure
+ * is surfaced through its own alert rather than by failing the run. `--repo`
+ * plus the full PR URL resolves the PR via the API, so the working directory
+ * is irrelevant (the dedup path has no clone) — hence the fixed `/tmp` cwd.
+ */
+async function ensurePrAutoMerge(
+  prUrl: string,
+  githubToken: string,
+  mode: DataDragonUpdateMode,
+  logContext: Record<string, unknown>,
+): Promise<void> {
+  try {
+    await runCommand(
+      ["gh", "pr", "merge", "--repo", REPO_SLUG, "--auto", "--merge", prUrl],
+      { cwd: "/tmp", env: { GH_TOKEN: githubToken }, redactOutput: true },
+    );
+  } catch (error: unknown) {
+    recordAutoMergeFailure(mode);
+    jsonLog("warning", "Data Dragon PR auto-merge setup failed", {
+      ...logContext,
+      prUrl,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
 export type DataDragonActivities = typeof dataDragonActivities;
 
 export const dataDragonActivities = {
@@ -169,17 +206,48 @@ export const dataDragonActivities = {
   },
 
   async recordDataDragonSkipped(
-    input: DataDragonVersionState & { mode: DataDragonUpdateMode },
+    input: DataDragonVersionState & {
+      mode: DataDragonUpdateMode;
+      reason: string;
+    },
   ): Promise<void> {
     await Promise.resolve();
     recordRun({
       mode: input.mode,
       outcome: "skipped",
-      reason: "version-current",
+      reason: input.reason,
       currentVersion: input.currentVersion,
       latestVersion: input.latestVersion,
     });
-    jsonLog("info", "Skipped Data Dragon update; version is current", input);
+    jsonLog("info", "Skipped Data Dragon update", input);
+  },
+
+  // Records the terminal outcome="failed" metric (and therefore the paging
+  // alert) for an update that exhausted its retries. This is invoked from the
+  // WORKFLOW's catch, not updateDataDragon's own catch: an attempt killed by
+  // OOM / heartbeat timeout / worker death never runs activity code, so
+  // recording the failed metric inside updateDataDragon would silently miss
+  // exactly the outages the alert exists to catch. Temporal surfaces the
+  // retries-exhausted failure to the workflow regardless of how the final
+  // attempt died, so the workflow is the reliable recording point. The caller
+  // extracts `reason` from the failure's cause chain
+  // (resolveTerminalFailureReason) so the ScoutDataDragonPrAutomationFailed
+  // reason filter keeps working.
+  async recordDataDragonFailure(
+    input: DataDragonVersionState & {
+      mode: DataDragonUpdateMode;
+      reason: string;
+    },
+  ): Promise<void> {
+    await Promise.resolve();
+    recordRun({
+      mode: input.mode,
+      outcome: "failed",
+      reason: input.reason,
+      currentVersion: input.currentVersion,
+      latestVersion: input.latestVersion,
+    });
+    jsonLog("error", "Data Dragon update failed (terminal)", input);
   },
 
   async updateDataDragon(
@@ -187,8 +255,10 @@ export const dataDragonActivities = {
   ): Promise<DataDragonUpdateResult> {
     validateVersion(input.latestVersion);
     const start = Date.now();
-    const id = crypto.randomUUID();
-    const tempDir = `/tmp/scout-data-dragon-${id}`;
+    // Per-attempt unique clone dir (concurrent retry attempts must not share a
+    // working tree); the PR branch itself is deterministic per version, see
+    // branchName.
+    const tempDir = `/tmp/scout-data-dragon-${crypto.randomUUID()}`;
     const repoDir = `${tempDir}/monorepo`;
 
     // Heartbeat every 10s while the long subprocesses (bun install, bun run
@@ -204,6 +274,54 @@ export const dataDragonActivities = {
     try {
       const tokenResult = await createGitHubAppInstallationToken();
       const githubToken = tokenResult.token;
+
+      // Retry-safe dedup guard (#1827/#1856). Temporal retries the *activity*,
+      // not the workflow, so this must live here — not in the workflow — to
+      // cover the case where a prior attempt ran `gh pr create` then the worker
+      // died before the activity returned: the retry re-enters here, sees the
+      // open PR, and skips instead of opening a duplicate under a fresh
+      // UUID-suffixed branch. It also short-circuits a prior scheduled run's
+      // still-open PR, and does so before the expensive clone/install/refresh.
+      const existingPrUrl = await findOpenDataDragonPrUrl(
+        REPO_SLUG,
+        input.latestVersion,
+        githubToken,
+      );
+      if (existingPrUrl !== undefined) {
+        // The prior attempt may have died between `gh pr create` and `gh pr
+        // merge --auto`, leaving this PR open with auto-merge never enabled.
+        // Finish the setup idempotently so the retry doesn't leave the PR
+        // stuck (and so an auto-merge failure surfaces via its own alert)
+        // before treating the dedup skip as complete.
+        await ensurePrAutoMerge(existingPrUrl, githubToken, input.mode, {
+          ...input,
+          reason: "pr-already-open",
+        });
+        const durationSeconds = (Date.now() - start) / 1000;
+        recordRun({
+          mode: input.mode,
+          outcome: "skipped",
+          reason: "pr-already-open",
+          currentVersion: input.currentVersion,
+          latestVersion: input.latestVersion,
+          durationSeconds,
+        });
+        jsonLog("info", "Data Dragon update skipped; PR already open", {
+          ...input,
+          prUrl: existingPrUrl,
+          durationSeconds,
+        });
+        return {
+          ...input,
+          changedFiles: [],
+          branchName: undefined,
+          commitHash: undefined,
+          prUrl: existingPrUrl,
+          outcome: "skipped",
+          reason: "pr-already-open",
+        };
+      }
+
       jsonLog("info", "Starting Data Dragon update", input);
       await runCommand(["mkdir", "-p", tempDir], { cwd: "/tmp" });
       const askpass = await writeGitAskpass(tempDir);
@@ -333,8 +451,8 @@ export const dataDragonActivities = {
         nonSuppressibleExamples: nonSuppressibleChanges.slice(0, 20),
       });
 
-      const branch = branchName(input.latestVersion, id);
-      const title = `chore: update Scout Data Dragon to ${input.latestVersion}`;
+      const branch = branchName(input.latestVersion);
+      const title = dataDragonPrTitle(input.latestVersion);
       const body = [
         "Automated Scout Data Dragon refresh from Temporal.",
         "",
@@ -372,65 +490,51 @@ export const dataDragonActivities = {
           redactOutput: true,
         },
       );
-      const prUrl = await runCommand(
-        [
-          "gh",
-          "pr",
-          "create",
-          "--repo",
-          REPO_SLUG,
-          "--base",
-          MAIN_BRANCH,
-          "--head",
-          branch,
-          "--title",
-          title,
-          "--body",
-          body,
-        ],
-        { cwd: repoDir, env: { GH_TOKEN: githubToken }, redactOutput: true },
-      );
-      try {
-        await runCommand(
-          [
-            "gh",
-            "pr",
-            "merge",
-            "--repo",
-            REPO_SLUG,
-            "--auto",
-            "--merge",
-            prUrl,
-          ],
-          { cwd: repoDir, env: { GH_TOKEN: githubToken }, redactOutput: true },
-        );
-      } catch (error: unknown) {
-        jsonLog("warning", "Data Dragon PR auto-merge setup failed", {
-          ...input,
-          branch,
-          prUrl,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
+      // This activity owns a stateless, single-PR bot flow in a fresh clone.
+      // Plain gh also preserves the auto-merge behavior unavailable to stacks.
+      // `recovered` means a concurrent retry attempt already opened this
+      // version's PR on the same deterministic branch — GitHub refused our
+      // duplicate create for that head, so we finish auto-merge on the existing
+      // PR rather than double-creating. See createDataDragonPr.
+      const { url: prUrl, recovered } = await createDataDragonPr({
+        repoSlug: REPO_SLUG,
+        repoDir,
+        branch,
+        base: MAIN_BRANCH,
+        title,
+        body,
+        version: input.latestVersion,
+        token: githubToken,
+      });
+      await ensurePrAutoMerge(prUrl, githubToken, input.mode, {
+        ...input,
+        branch,
+      });
 
       recordRun({
         mode: input.mode,
-        outcome: "success",
-        reason: "pr-created",
+        outcome: recovered ? "skipped" : "success",
+        reason: recovered ? "pr-already-open" : "pr-created",
         currentVersion: input.currentVersion,
         latestVersion: input.latestVersion,
         changedFiles: files.length,
         durationSeconds,
-        prCreated: true,
+        prCreated: !recovered,
       });
-      jsonLog("info", "Data Dragon update PR created", {
-        ...input,
-        branch,
-        prUrl,
-        commitHash,
-        changedFiles: files.length,
-        durationSeconds,
-      });
+      jsonLog(
+        "info",
+        recovered
+          ? "Data Dragon PR already open; recovered at create"
+          : "Data Dragon update PR created",
+        {
+          ...input,
+          branch,
+          prUrl,
+          commitHash,
+          changedFiles: files.length,
+          durationSeconds,
+        },
+      );
 
       return {
         ...input,
@@ -438,21 +542,23 @@ export const dataDragonActivities = {
         branchName: branch,
         commitHash,
         prUrl,
-        outcome: "success",
-        reason: "pr-created",
+        outcome: recovered ? "skipped" : "success",
+        reason: recovered ? "pr-already-open" : "pr-created",
       };
     } catch (error) {
       const durationSeconds = (Date.now() - start) / 1000;
-      recordRun({
-        mode: input.mode,
-        outcome: "failed",
-        reason: failureReason(error),
-        currentVersion: input.currentVersion,
-        latestVersion: input.latestVersion,
-        durationSeconds,
-      });
-      jsonLog("error", "Data Dragon update failed", {
+      const attempt = Context.current().info.attempt;
+      // The terminal outcome="failed" metric (and the paging alert) is recorded
+      // by the WORKFLOW's catch via recordDataDragonFailure, not here: an
+      // attempt killed by OOM / heartbeat timeout / worker death never reaches
+      // this catch, so recording the failed metric here would silently miss
+      // exactly those outages — while a per-attempt record would also
+      // double-count across the retries the workflow already collapses into one
+      // terminal failure (PagerDuty #6948: a transient attempt-1 blip must not
+      // page when attempt 2 self-heals). This block only logs the attempt.
+      jsonLog("error", "Data Dragon update attempt failed", {
         ...input,
+        attempt,
         durationSeconds,
         error: error instanceof Error ? error.message : String(error),
       });

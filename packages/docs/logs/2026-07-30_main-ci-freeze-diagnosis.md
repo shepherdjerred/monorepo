@@ -22,7 +22,7 @@ The apparent inactivity comes from two intentional pipeline behaviours:
 
 The two preceding hard failures were repaired by later commits: build #7332
 failed publishing wiki assets after SeaweedFS returned S3 `InternalError`; build
-#7349 failed the docs checks because a new plan had invalid frontmatter and a
+Buildkite #7349 failed the docs checks because a new plan had invalid frontmatter and a
 malformed heading. Builds #7353 and #7357 then passed. Both CI nodes are Ready,
 the Buildkite controller is Available, and no main build is queued or running.
 

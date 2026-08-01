@@ -183,7 +183,12 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 6 * * 0-5",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "3 hours",
+    // Must exceed updateDataDragon's full retry budget so the final attempt's
+    // catch always records the outcome="failed" metric before the workflow is
+    // terminated. Budget: 2 attempts × 90m startToClose + 5m retry gap + the
+    // getState precheck ≈ 194m; a shorter timeout could terminate attempt 2
+    // mid-run outside the catch, dropping the failure sample the alert needs.
+    workflowExecutionTimeout: "4 hours",
     memo: "Check LoL Data Dragon version and update Scout assets when needed",
   },
   {
@@ -193,7 +198,10 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 6 * * 6",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "3 hours",
+    // See scout-data-dragon-version-check above: sized to exceed
+    // updateDataDragon's full ~194m retry budget so a terminal failure is
+    // always recorded before the workflow times out.
+    workflowExecutionTimeout: "4 hours",
     memo: "Weekly Scout Data Dragon refresh even when version is unchanged",
   },
   {

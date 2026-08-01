@@ -1,5 +1,10 @@
 # Pull Request Operations
 
+> This is generic GitHub CLI reference. In `shepherdjerred/monorepo`, new
+> human/agent feature PRs use `gh-stack`; existing git-spice work stays on
+> `git-spice-helper`. Bare `gh pr create` applies only to other repositories,
+> forks, or documented stateless automation.
+
 ## List Pull Requests
 
 ```bash

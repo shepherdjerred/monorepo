@@ -5,11 +5,8 @@ import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { register } from "#observability/metrics.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
 import type { AgentTaskCommand } from "./agent-task-command.ts";
-import {
-  agentTaskSecretTokens,
-  createAgentTaskActivities,
-  envForProvider,
-} from "./agent-task.ts";
+import { createAgentTaskActivities } from "./agent-task.ts";
+import { agentTaskSecretTokens, envForProvider } from "./agent-task-env.ts";
 
 const originalFetch = globalThis.fetch;
 const originalGitHubAppId = Bun.env["GITHUB_APP_ID"];
@@ -243,20 +240,76 @@ describe("agentTaskActivities", () => {
     ).toBe("codex-key");
   });
 
-  it("keeps Claude OAuth isolation and sanitizes GitHub credentials", async () => {
+  it("forwards the full worker env for Claude, minus ANTHROPIC_API_KEY and inherited GitHub creds", async () => {
     const environment = envForProvider("claude", "installation-token", {
+      PATH: "/usr/bin",
+      HOME: "/home/worker",
+      CLAUDE_CODE_OAUTH_TOKEN: "oauth-token",
+      // Operational secrets the homelab audit needs — must be FORWARDED so its
+      // live Grafana/PagerDuty/ArgoCD/Bugsink/Cloudflare checks work.
+      POSTAL_API_KEY: "postal-secret",
+      GRAFANA_API_KEY: "grafana-secret",
+      ARGOCD_AUTH_TOKEN: "argocd-secret",
+      CLOUDFLARE_API_TOKEN: "cloudflare-secret",
+      SAFE_VALUE: "forwarded",
+      // Stripped: Claude bills the subscription, not the direct API.
       ANTHROPIC_API_KEY: "anthropic-key",
-      OPENAI_API_KEY: "openai-key",
+      // Stripped: never inherit the worker's GitHub creds; GH_TOKEN is re-minted.
       GH_TOKEN: "personal-token",
       GITHUB_PERSONAL_ACCESS_TOKEN: "personal-token",
       GITHUB_APP_PRIVATE_KEY: "private-key",
-      SAFE_VALUE: "safe",
     });
 
     expect(environment).toEqual({
-      OPENAI_API_KEY: "openai-key",
-      SAFE_VALUE: "safe",
+      PATH: "/usr/bin",
+      HOME: "/home/worker",
+      CLAUDE_CODE_OAUTH_TOKEN: "oauth-token",
+      POSTAL_API_KEY: "postal-secret",
+      GRAFANA_API_KEY: "grafana-secret",
+      ARGOCD_AUTH_TOKEN: "argocd-secret",
+      CLOUDFLARE_API_TOKEN: "cloudflare-secret",
+      SAFE_VALUE: "forwarded",
+      // The GitHub App installation token is injected explicitly, replacing any
+      // inherited GitHub credential.
       GH_TOKEN: "installation-token",
     });
+    expect(environment).not.toHaveProperty("ANTHROPIC_API_KEY");
+    expect(environment).not.toHaveProperty("GITHUB_PERSONAL_ACCESS_TOKEN");
+    expect(environment).not.toHaveProperty("GITHUB_APP_PRIVATE_KEY");
+  });
+
+  it("forwards the full worker env for Codex, replacing only inherited GitHub creds", async () => {
+    const forwarded = {
+      POSTAL_API_KEY: "postal-secret",
+      PAGERDUTY_TOKEN: "pagerduty-secret",
+      BUGSINK_TOKEN: "bugsink-secret",
+      GRAFANA_API_KEY: "grafana-secret",
+      ARGOCD_AUTH_TOKEN: "argocd-secret",
+      CLOUDFLARE_API_TOKEN: "cloudflare-secret",
+      // Codex keeps ANTHROPIC_API_KEY (only Claude strips it) and the other
+      // provider's key — the full env is forwarded.
+      ANTHROPIC_API_KEY: "anthropic-key",
+      CLAUDE_CODE_OAUTH_TOKEN: "other-provider-key",
+    };
+    const environment = envForProvider("codex", "installation-token", {
+      PATH: "/usr/bin",
+      HOME: "/home/worker",
+      CODEX_API_KEY: "codex-key",
+      ...forwarded,
+      // Stripped: never inherit the worker's GitHub creds.
+      GH_TOKEN: "personal-token",
+      GITHUB_PERSONAL_ACCESS_TOKEN: "personal-token",
+      GITHUB_APP_PRIVATE_KEY: "private-key",
+    });
+
+    expect(environment).toEqual({
+      PATH: "/usr/bin",
+      HOME: "/home/worker",
+      CODEX_API_KEY: "codex-key",
+      ...forwarded,
+      GH_TOKEN: "installation-token",
+    });
+    expect(environment).not.toHaveProperty("GITHUB_PERSONAL_ACCESS_TOKEN");
+    expect(environment).not.toHaveProperty("GITHUB_APP_PRIVATE_KEY");
   });
 });
