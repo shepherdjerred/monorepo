@@ -20,8 +20,34 @@ export function isFinalAttempt(attempt: number, maxAttempts: number): boolean {
   return attempt >= maxAttempts;
 }
 
+// The base branch every Data Dragon PR targets, and the prefix of every branch
+// the updater generates. Single-sourced here so the create path (branchName)
+// and the dedup authentication (findDataDragonPr) can't drift apart.
+const DATA_DRAGON_BASE_BRANCH = "main";
+const DATA_DRAGON_BRANCH_PREFIX = "chore/scout-data-dragon-";
+
 export function branchName(version: string, id: string): string {
-  return `chore/scout-data-dragon-${version}-${id.slice(0, 8)}`;
+  return `${DATA_DRAGON_BRANCH_PREFIX}${version}-${id.slice(0, 8)}`;
+}
+
+/**
+ * Whether `headRefName` is a branch this updater itself generated for
+ * `version` — the exact `branchName` shape,
+ * `chore/scout-data-dragon-<version>-<8 hex>`. The 8-hex suffix is a UUID
+ * slice, so a PR left by a prior run (a different UUID) still matches by shape.
+ * Used to authenticate a dedup-matched PR as ours rather than an arbitrary
+ * same-title PR. Version is compared literally (its dots are not treated as
+ * regex), so only the suffix is pattern-matched.
+ */
+export function isDataDragonBranch(
+  headRefName: string,
+  version: string,
+): boolean {
+  const expectedPrefix = `${DATA_DRAGON_BRANCH_PREFIX}${version}-`;
+  if (!headRefName.startsWith(expectedPrefix)) {
+    return false;
+  }
+  return /^[0-9a-f]{8}$/.test(headRefName.slice(expectedPrefix.length));
 }
 
 /**
@@ -36,19 +62,46 @@ export function dataDragonPrTitle(version: string): string {
 }
 
 /**
- * The already-open PR (by exact title) that targets this Data Dragon version,
- * or `undefined` if none matches. GitHub's `--search` is fuzzy (its tokenizer
- * doesn't treat a version string's dots specially), so callers should search
- * broadly on the server side and use this for an exact client-side match.
- * Returns the matched PR (not just a boolean) so the caller can recover its
- * URL to finish auto-merge on the retry path.
+ * The fields needed to authenticate a candidate open PR as one THIS updater
+ * opened. `gh pr list --json` exposes all of them.
  */
-export function findDataDragonPr<T extends { title: string }>(
+export type OpenPrCandidate = {
+  title: string;
+  url: string;
+  baseRefName: string;
+  headRefName: string;
+  isCrossRepository: boolean;
+};
+
+/**
+ * The already-open PR that this updater itself opened for `version`, or
+ * `undefined` if none matches. Returns the matched PR (not just a boolean) so
+ * the caller can recover its URL to finish auto-merge on the retry path.
+ *
+ * A genuine match is AUTHENTICATED, not title-only: the caller enables
+ * auto-merge on the returned URL and suppresses the real update as
+ * `pr-already-open`, so an arbitrary same-title PR — e.g. one a contributor
+ * opens from a fork or against a different base — must never be accepted, or
+ * the bot would auto-merge someone else's PR. All of these must hold:
+ *   - exact generated title (`dataDragonPrTitle`) — GitHub's `--search` is
+ *     fuzzy about version dots, so this is the exact client-side check;
+ *   - base branch is the one the updater targets (`DATA_DRAGON_BASE_BRANCH`);
+ *   - the PR is same-repo, not from a fork (`!isCrossRepository`) — a fork PR
+ *     can spoof the title/branch name but not the head repository;
+ *   - the head branch matches the generated shape (`isDataDragonBranch`).
+ */
+export function findDataDragonPr<T extends OpenPrCandidate>(
   openPrs: readonly T[],
   version: string,
 ): T | undefined {
   const title = dataDragonPrTitle(version);
-  return openPrs.find((pr) => pr.title === title);
+  return openPrs.find(
+    (pr) =>
+      pr.title === title &&
+      pr.baseRefName === DATA_DRAGON_BASE_BRANCH &&
+      !pr.isCrossRepository &&
+      isDataDragonBranch(pr.headRefName, version),
+  );
 }
 
 export function failureReason(error: unknown): string {

@@ -3,9 +3,28 @@ import {
   collectErrorMessages,
   dataDragonPrTitle,
   findDataDragonPr,
+  isDataDragonBranch,
   isFinalAttempt,
+  type OpenPrCandidate,
   resolveTerminalFailureReason,
 } from "./data-dragon-util.ts";
+
+// A well-formed PR the bot itself opened for the given version: exact title,
+// base main, same-repo head, generated branch shape. Tests override one field
+// at a time to prove each authentication check rejects a spoof.
+function botPr(
+  version: string,
+  overrides: Partial<OpenPrCandidate> = {},
+): OpenPrCandidate {
+  return {
+    title: dataDragonPrTitle(version),
+    url: "https://github.com/shepherdjerred/monorepo/pull/1",
+    baseRefName: "main",
+    headRefName: `chore/scout-data-dragon-${version}-6d94e121`,
+    isCrossRepository: false,
+    ...overrides,
+  };
+}
 
 describe("isFinalAttempt", () => {
   test("returns false before the final attempt", () => {
@@ -25,21 +44,70 @@ describe("isFinalAttempt", () => {
   });
 });
 
+describe("isDataDragonBranch", () => {
+  test("matches the generated branch shape for the version", () => {
+    expect(
+      isDataDragonBranch("chore/scout-data-dragon-16.15.1-6d94e121", "16.15.1"),
+    ).toBe(true);
+  });
+
+  test("rejects a wrong-version branch", () => {
+    expect(
+      isDataDragonBranch("chore/scout-data-dragon-16.15.0-6d94e121", "16.15.1"),
+    ).toBe(false);
+  });
+
+  test("rejects a non-hex / wrong-length suffix", () => {
+    expect(
+      isDataDragonBranch("chore/scout-data-dragon-16.15.1-zzzzzzzz", "16.15.1"),
+    ).toBe(false);
+    expect(
+      isDataDragonBranch("chore/scout-data-dragon-16.15.1-6d94e1", "16.15.1"),
+    ).toBe(false);
+  });
+
+  test("rejects an unrelated branch name", () => {
+    expect(isDataDragonBranch("main", "16.15.1")).toBe(false);
+    expect(isDataDragonBranch("feature/whatever", "16.15.1")).toBe(false);
+  });
+});
+
 describe("findDataDragonPr", () => {
-  test("returns the exact-title match for the target version", () => {
-    const match = { title: dataDragonPrTitle("16.15.1"), url: "https://pr/1" };
+  test("returns the bot's authenticated PR for the target version", () => {
+    const match = botPr("16.15.1");
     expect(
       findDataDragonPr(
-        [match, { title: "chore: something unrelated", url: "https://pr/2" }],
+        [botPr("16.15.1", { title: "chore: something unrelated" }), match],
         "16.15.1",
       ),
     ).toBe(match);
   });
 
   test("returns undefined for a PR targeting a different version", () => {
+    expect(findDataDragonPr([botPr("16.15.0")], "16.15.1")).toBeUndefined();
+  });
+
+  test("rejects a same-title PR from a fork (isCrossRepository)", () => {
+    // The spoof: a contributor opens a same-title PR from their fork. The head
+    // repository can't be faked, so isCrossRepository authenticates it out.
     expect(
       findDataDragonPr(
-        [{ title: dataDragonPrTitle("16.15.0"), url: "https://pr/1" }],
+        [botPr("16.15.1", { isCrossRepository: true })],
+        "16.15.1",
+      ),
+    ).toBeUndefined();
+  });
+
+  test("rejects a same-title PR against a different base", () => {
+    expect(
+      findDataDragonPr([botPr("16.15.1", { baseRefName: "beta" })], "16.15.1"),
+    ).toBeUndefined();
+  });
+
+  test("rejects a same-title PR whose head branch isn't the generated shape", () => {
+    expect(
+      findDataDragonPr(
+        [botPr("16.15.1", { headRefName: "attacker/pwn" })],
         "16.15.1",
       ),
     ).toBeUndefined();
