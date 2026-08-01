@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Hwei": {
       "id": "Hwei",
@@ -358,10 +358,10 @@
           "rangeBurn": "0",
           "image": {
             "full": "HweiQ.png",
-            "sprite": "spell4.png",
+            "sprite": "spell5.png",
             "group": "spell",
-            "x": 384,
-            "y": 144,
+            "x": 192,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -509,10 +509,10 @@
           "rangeBurn": "0",
           "image": {
             "full": "HweiW.png",
-            "sprite": "spell4.png",
+            "sprite": "spell5.png",
             "group": "spell",
-            "x": 432,
-            "y": 144,
+            "x": 240,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -664,8 +664,8 @@
             "full": "HweiE.png",
             "sprite": "spell5.png",
             "group": "spell",
-            "x": 0,
-            "y": 0,
+            "x": 288,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -781,8 +781,8 @@
             "full": "HweiR.png",
             "sprite": "spell5.png",
             "group": "spell",
-            "x": 48,
-            "y": 0,
+            "x": 336,
+            "y": 48,
             "w": 48,
             "h": 48
           },

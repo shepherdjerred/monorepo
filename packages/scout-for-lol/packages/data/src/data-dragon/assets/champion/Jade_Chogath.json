@@ -1,0 +1,747 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Chogath": {
+      "id": "Jade_Chogath",
+      "key": "60031",
+      "name": "Cho'Gath",
+      "title": "The Terror of the Void",
+      "image": {
+        "full": "Jade_Chogath.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 336,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60031000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60031004",
+          "num": 4,
+          "name": "Jurassic Cho'Gath",
+          "chromas": false
+        },
+        {
+          "id": "60031005",
+          "num": 5,
+          "name": "Battlecast Prime Cho'Gath",
+          "chromas": false
+        },
+        {
+          "id": "60031006",
+          "num": 6,
+          "name": "Prehistoric Cho'Gath",
+          "chromas": false
+        },
+        {
+          "id": "60031007",
+          "num": 7,
+          "name": "Dark Star Cho'Gath",
+          "chromas": false
+        },
+        {
+          "id": "60031008",
+          "num": 8,
+          "name": "Battlecast Prime Cho'Gath (Ruby)",
+          "chromas": true,
+          "parentSkin": 5
+        },
+        {
+          "id": "60031009",
+          "num": 9,
+          "name": "Battlecast Prime Cho'Gath (Catseye)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "60031010",
+          "num": 10,
+          "name": "Battlecast Prime Cho'Gath (Sapphire)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "60031011",
+          "num": 11,
+          "name": "Battlecast Prime Cho'Gath (Pearl)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "60031012",
+          "num": 12,
+          "name": "Battlecast Prime Cho'Gath (Obsidian)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "60031013",
+          "num": 13,
+          "name": "Battlecast Prime Cho'Gath (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "60031032",
+          "num": 32,
+          "name": "Toy Terror Cho'Gath",
+          "chromas": false
+        },
+        {
+          "id": "60031033",
+          "num": 33,
+          "name": "Toy Terror Cho'Gath (Ruby)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "60031034",
+          "num": 34,
+          "name": "Toy Terror Cho'Gath (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "60031035",
+          "num": 35,
+          "name": "Toy Terror Cho'Gath (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "60031036",
+          "num": 36,
+          "name": "Toy Terror Cho'Gath (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "60031037",
+          "num": 37,
+          "name": "Toy Terror Cho'Gath (Peridot)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "60031038",
+          "num": 38,
+          "name": "Toy Terror Cho'Gath (Catseye)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "60031039",
+          "num": 39,
+          "name": "Toy Terror Cho'Gath (Obsidian)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "60031040",
+          "num": 40,
+          "name": "Toy Terror Cho'Gath (Pearl)",
+          "chromas": false,
+          "parentSkin": 32
+        }
+      ],
+      "lore": "- Feast (R) stacks max 6 times, is lost on kill but can be stacked on anything<br>- Vorpal Spikes (E) toggles the spikes that go through players",
+      "blurb": "- Feast (R) stacks max 6 times, is lost on kill but can be stacked on anything<br>- Vorpal Spikes (E) toggles the spikes that go through players",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Tank",
+        "Mage"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 3,
+        "defense": 7,
+        "magic": 7,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 520,
+        "hpperlevel": 80,
+        "mp": 245,
+        "mpperlevel": 40,
+        "movespeed": 345,
+        "armor": 26.5,
+        "armorperlevel": 3.5,
+        "spellblock": 31.25,
+        "spellblockperlevel": 1.25,
+        "attackrange": 125,
+        "hpregen": 8.35,
+        "hpregenperlevel": 0.85,
+        "mpregen": 6.9,
+        "mpregenperlevel": 0.45,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 58.3,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 1.44,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "Jade_ChogathQ",
+          "name": "Rupture",
+          "description": "Ruptures the ground at target location, popping enemy units into the air, dealing damage and slowing them.",
+          "tooltip": "Cho'Gath ruptures the ground, <status>Knocking Up</status> enemies for {{ knockupduration }} second, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>, and <status>Slowing</status> them by {{ slowamountpercentage }}% for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
+          "cooldownBurn": "9",
+          "cost": [
+            90,
+            90,
+            90,
+            90,
+            90
+          ],
+          "costBurn": "90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              60,
+              60,
+              60,
+              60,
+              60
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              0.625,
+              0.625,
+              0.625,
+              0.625,
+              0.625
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "60",
+            "1.5",
+            "0.63",
+            "1",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            950,
+            950,
+            950,
+            950,
+            950
+          ],
+          "rangeBurn": "950",
+          "image": {
+            "full": "Jade_ChogathQ.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 96,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_ChogathW",
+          "name": "Feral Scream",
+          "description": "Cho'Gath unleashes a terrible scream at enemies in a cone, dealing magic damage and Silencing enemies for a few seconds.",
+          "tooltip": "Cho'Gath roars, <status>Silencing</status> enemies for {{ silenceduration }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Silence Duration",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ silenceduration }} -> {{ silencedurationNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            13,
+            13,
+            13,
+            13,
+            13
+          ],
+          "cooldownBurn": "13",
+          "cost": [
+            70,
+            80,
+            90,
+            100,
+            110
+          ],
+          "costBurn": "70/80/90/100/110",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              80,
+              130,
+              180,
+              230,
+              280
+            ],
+            [
+              1.6,
+              1.7,
+              1.8,
+              1.9,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "80/130/180/230/280",
+            "1.6/1.7/1.8/1.9/2",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
+          "rangeBurn": "300",
+          "image": {
+            "full": "Jade_ChogathW.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 144,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_ChogathE",
+          "name": "Vorpal Spikes",
+          "description": "Cho'Gath's attacks passively release deadly spikes, dealing damage to all enemy units in front of him.",
+          "tooltip": " <toggle>Toggle:</toggle> Cho'gath's attacks launch spikes that deal <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            0.5,
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "cooldownBurn": "0.5",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "rangeBurn": "40",
+          "image": {
+            "full": "Jade_ChogathE.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 192,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "Jade_ChogathR",
+          "name": "Feast",
+          "description": "Devours an enemy unit, dealing a high amount of true damage. If the target is killed, Cho'Gath grows, gaining maximum health (maximum 6 stacks). Cho'Gath loses half of his stacks upon death.",
+          "tooltip": "Cho'Gath ravenously feeds on an enemy, dealing <trueDamage>{{ rdamage }} true damage</trueDamage> to champions or <trueDamage>{{ rmonsterdamage }}</trueDamage> to minions or jungle monsters. If this kills the target, Cho'Gath gains a stack, which causes him to grow in size and gain <healing>{{ rhealthperstack }} max Health</healing> (maximum 6 stacks). Loses half of his stacks on death. {{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Champion Damage",
+              "Health per Stack"
+            ],
+            "effect": [
+              "{{ rbasedamage }} -> {{ rbasedamageNL }}",
+              "{{ rhealthperstack }} -> {{ rhealthperstackNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            60,
+            60,
+            60
+          ],
+          "cooldownBurn": "60",
+          "cost": [
+            100,
+            100,
+            100
+          ],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            175,
+            175,
+            175
+          ],
+          "rangeBurn": "175",
+          "image": {
+            "full": "Jade_ChogathR.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 240,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Carnivore",
+        "description": "Whenever Cho'Gath kills a unit, he recovers health and mana. The values restored increase with Cho'Gath's level.",
+        "image": {
+          "full": "GreenTerror_TailSpike.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 336,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

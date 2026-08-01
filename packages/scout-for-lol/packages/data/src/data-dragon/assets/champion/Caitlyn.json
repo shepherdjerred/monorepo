@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Caitlyn": {
       "id": "Caitlyn",
@@ -621,8 +621,8 @@
             "full": "CaitlynQ.png",
             "sprite": "spell2.png",
             "group": "spell",
-            "x": 384,
-            "y": 48,
+            "x": 192,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -710,11 +710,11 @@
               0
             ],
             [
-              30,
-              30,
-              30,
-              30,
-              30
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
               0,
@@ -746,7 +746,7 @@
             "0",
             "0",
             "0",
-            "30",
+            "0",
             "0",
             "0",
             "0"
@@ -766,8 +766,8 @@
             "full": "CaitlynW.png",
             "sprite": "spell2.png",
             "group": "spell",
-            "x": 432,
-            "y": 48,
+            "x": 240,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -777,14 +777,14 @@
           "id": "CaitlynE",
           "name": "90 Caliber Net",
           "description": "Caitlyn fires a heavy net to slow her target. The recoil knocks Caitlyn back.",
-          "tooltip": "Caitlyn fires a net, pushing her backwards. The net <status>Slows</status> the first target hit by {{ e3 }}% for {{ e2 }} second and deals <magicDamage>{{ netdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Caitlyn fires a net, pushing her backwards. The net <status>Slows</status> the first target hit by {{ slowamount }}% for {{ slowduration }} second and deals <magicDamage>{{ netdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
               "Cooldown"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
+              "{{ damage }} -> {{ damageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -809,11 +809,11 @@
           "effect": [
             null,
             [
-              80,
-              130,
-              180,
-              230,
-              280
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
               1,
@@ -881,7 +881,7 @@
           ],
           "effectBurn": [
             null,
-            "80/130/180/230/280",
+            "0",
             "1",
             "50",
             "0",
@@ -907,8 +907,8 @@
             "full": "CaitlynE.png",
             "sprite": "spell2.png",
             "group": "spell",
-            "x": 0,
-            "y": 96,
+            "x": 288,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -1020,8 +1020,8 @@
             "full": "CaitlynR.png",
             "sprite": "spell2.png",
             "group": "spell",
-            "x": 48,
-            "y": 96,
+            "x": 336,
+            "y": 144,
             "w": 48,
             "h": 48
           },

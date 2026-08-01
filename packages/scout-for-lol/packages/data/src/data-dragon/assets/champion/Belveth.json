@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Belveth": {
       "id": "Belveth",
@@ -233,13 +233,13 @@
         "difficulty": 10
       },
       "stats": {
-        "hp": 610,
-        "hpperlevel": 105,
-        "mp": 60,
+        "hp": 580,
+        "hpperlevel": 110,
+        "mp": 45,
         "mpperlevel": 0,
         "movespeed": 340,
-        "armor": 32,
-        "armorperlevel": 4.7,
+        "armor": 28,
+        "armorperlevel": 5,
         "spellblock": 32,
         "spellblockperlevel": 2.05,
         "attackrange": 150,
@@ -249,10 +249,10 @@
         "mpregenperlevel": 0,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 60,
+        "attackdamage": 55,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 0,
-        "attackspeed": 0.85
+        "attackspeed": 0.67
       },
       "spells": [
         {
@@ -264,25 +264,23 @@
             "label": [
               "Damage",
               "Cooldown Per Direction",
-              "Monster Damage",
-              "Minion Damage"
+              "Cooldown"
             ],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ persidecooldown }} -> {{ persidecooldownNL }}",
-              "{{ monstermod }} -> {{ monstermodNL }}",
-              "{{ minonmod*100.000000 }}% -> {{ minonmodnl*100.000000 }}%"
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            1,
-            1,
-            1,
-            1,
+            4,
+            3.25,
+            2.5,
+            1.75,
             1
           ],
-          "cooldownBurn": "1",
+          "cooldownBurn": "4/3.25/2.5/1.75/1",
           "cost": [
             0,
             0,
@@ -391,10 +389,10 @@
           "rangeBurn": "450",
           "image": {
             "full": "BelvethQ.png",
-            "sprite": "spell1.png",
+            "sprite": "spell2.png",
             "group": "spell",
-            "x": 384,
-            "y": 144,
+            "x": 192,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -408,12 +406,12 @@
           "leveltip": {
             "label": [
               "Damage",
-              "Slow Duration",
+              "Knockup Duration",
               "Cooldown"
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ slowduration }} -> {{ slowdurationNL }}",
+              "{{ duration }} -> {{ durationNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -534,10 +532,10 @@
           "rangeBurn": "715",
           "image": {
             "full": "BelvethW.png",
-            "sprite": "spell1.png",
+            "sprite": "spell2.png",
             "group": "spell",
-            "x": 432,
-            "y": 144,
+            "x": 240,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -552,23 +550,25 @@
             "label": [
               "Damage",
               "Damage Reduction",
+              "Life Steal",
               "Cooldown"
             ],
             "effect": [
               "{{ damageperhit }} -> {{ damageperhitNL }}",
               "{{ drpercent*100.000000 }}% -> {{ drpercentnl*100.000000 }}%",
+              "{{ bonuslifesteal*100.000000 }}% -> {{ bonuslifestealnl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            20,
-            19,
+            24,
+            21,
             18,
-            17,
-            16
+            15,
+            12
           ],
-          "cooldownBurn": "20/19/18/17/16",
+          "cooldownBurn": "24/21/18/15/12",
           "cost": [
             0,
             0,
@@ -679,8 +679,8 @@
             "full": "BelvethE.png",
             "sprite": "spell2.png",
             "group": "spell",
-            "x": 0,
-            "y": 0,
+            "x": 288,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -689,23 +689,23 @@
         {
           "id": "BelvethR",
           "name": "Endless Banquet",
-          "description": "Bel'Veth consumes Void coral remnants, transforming into her true form and increasing her max health, attack range, attack speed, and out-of-combat move speed. Consuming the Void coral remnants of a Void epic monster will grant her a longer ultimate duration, as well as the power to summon Void remora.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Every second Attack against the same target deals an additional <trueDamage>{{ finalonhitdamage }} true damage</trueDamage>, stacking infinitely. Takedowns against champions and epic monsters leave behind a piece of Void Coral.<br /><br /><spellActive>Active:</spellActive> Consuming Void Coral grants <keywordMajor>{{ passivestacksondevour }} Lavender</keywordMajor> stack and activates Bel'Veth's true form for {{ steroidduration }} seconds. Void Coral from Void epic monsters increases the duration to {{ voidduration }} seconds and causes minions that die nearby to become Void Remora. While casting, Bel'Veth <status>Slows</status> nearby enemies before exploding, dealing <trueDamage>{{ totalexplosiondamage }} + {{ missinghealthdamage*100 }}% missing-Health true damage</trueDamage>.<br /><br />In her true form, Bel'Veth gains <healing>{{ maxhealthondevour }} max Health</healing>, <speed>{{ oocms }} Move Speed</speed> out of combat, {{ bonusaarange }} Attack range, <attackSpeed>{{ totalasmod*100 }}% Total Attack Speed</attackSpeed>, and <spellName>Void Surge</spellName> can pass through walls.<br /><br /><br />{{ spellmodifierdescriptionappend }}",
+          "description": "Bel'Veth consumes Void coral remnants, transforming into her true form and increasing her max health, attack range, and attack speed. Consuming the Void coral remnants of a Void epic monster will grant her the power to summon Void remora.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Attacks deal an additional <trueDamage>{{ finalonhitdamage }} true damage</trueDamage>, stacking infinitely. Takedowns against champions and epic monsters leave behind a piece of Void Coral.<br /><br /><spellActive>Active:</spellActive> Bel'Veth consumes a Void Coral, gaining <keywordMajor>{{ passivestacksondevour }} Lavender</keywordMajor> stack and activating her true form. Void Coral from void epic monsters causes minions that die nearby to become Void Remora. While casting, Bel'Veth <status>Slows</status> nearby enemies before exploding, dealing <trueDamage>{{ totalexplosiondamage }} + {{ missinghealthdamage*100 }}% missing-Health true damage</trueDamage>.<br /><br />In her true form, Bel'Veth gains <healing>{{ maxhealthondevour }} max Health</healing>, {{ bonusaarange }} Attack range, <attackSpeed>{{ totalasmod*100 }}% Total Attack Speed</attackSpeed>, and <spellName>Void Surge</spellName> can pass through walls.<br /><br /><rules>True form lasts {{ steroidduration }} seconds, increased to {{ steroiddurationupgrade }} seconds at <keywordMajor>{{ stackthresholdforupgrade }} Lavender</keywordMajor> stacks. At <keywordMajor>{{ stackthresholdforpermanent }} Lavender</keywordMajor> stacks, true form lasts until death.</rules><br /><br /><br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "On-Hit Damage",
               "Explosion Damage",
               "Bonus Health",
-              "Move Speed",
               "Attack Speed",
+              "Range",
               "Void Remora Health"
             ],
             "effect": [
               "{{ onhitdamage }} -> {{ onhitdamageNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ basemaxhealth }} -> {{ basemaxhealthNL }}",
-              "{{ oocms }} -> {{ oocmsNL }}",
               "{{ totalasmod*100.000000 }}% -> {{ totalasmodnl*100.000000 }}%",
+              "{{ bonusaarange }} -> {{ bonusaarangeNL }}",
               "{{ voidlinghpscale*100.000000 }}% -> {{ voidlinghpscalenl*100.000000 }}%"
             ]
           },
@@ -802,8 +802,8 @@
             "full": "BelvethR.png",
             "sprite": "spell2.png",
             "group": "spell",
-            "x": 48,
-            "y": 0,
+            "x": 336,
+            "y": 48,
             "w": 48,
             "h": 48
           },

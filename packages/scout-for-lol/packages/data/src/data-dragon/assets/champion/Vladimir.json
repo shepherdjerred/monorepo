@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Vladimir": {
       "id": "Vladimir",
@@ -10,7 +10,7 @@
       "title": "the Crimson Reaper",
       "image": {
         "full": "Vladimir.png",
-        "sprite": "champion5.png",
+        "sprite": "champion7.png",
         "group": "champion",
         "x": 192,
         "y": 0,
@@ -590,10 +590,10 @@
           "rangeBurn": "600",
           "image": {
             "full": "VladimirQ.png",
-            "sprite": "spell15.png",
+            "sprite": "spell22.png",
             "group": "spell",
-            "x": 192,
-            "y": 144,
+            "x": 0,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -731,10 +731,10 @@
           "rangeBurn": "350",
           "image": {
             "full": "VladimirSanguinePool.png",
-            "sprite": "spell15.png",
+            "sprite": "spell22.png",
             "group": "spell",
-            "x": 240,
-            "y": 144,
+            "x": 48,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -876,10 +876,10 @@
           "rangeBurn": "600",
           "image": {
             "full": "VladimirE.png",
-            "sprite": "spell15.png",
+            "sprite": "spell22.png",
             "group": "spell",
-            "x": 288,
-            "y": 144,
+            "x": 96,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -989,10 +989,10 @@
           "rangeBurn": "625",
           "image": {
             "full": "VladimirHemoplague.png",
-            "sprite": "spell15.png",
+            "sprite": "spell22.png",
             "group": "spell",
-            "x": 336,
-            "y": 144,
+            "x": 144,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1004,7 +1004,7 @@
         "description": "Every 30 points of bonus Health gives Vladimir 1 Ability Power and every 1 point of Ability Power gives Vladimir 1.6 bonus Health (does not stack with itself).",
         "image": {
           "full": "VladimirP.png",
-          "sprite": "passive5.png",
+          "sprite": "passive7.png",
           "group": "passive",
           "x": 192,
           "y": 0,

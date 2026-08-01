@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Ornn": {
       "id": "Ornn",
@@ -10,7 +10,7 @@
       "title": "The Fire below the Mountain",
       "image": {
         "full": "Ornn.png",
-        "sprite": "champion3.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 432,
         "y": 0,
@@ -455,10 +455,10 @@
           "rangeBurn": "800",
           "image": {
             "full": "OrnnQ.png",
-            "sprite": "spell10.png",
+            "sprite": "spell16.png",
             "group": "spell",
-            "x": 192,
-            "y": 48,
+            "x": 0,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -602,10 +602,10 @@
           "rangeBurn": "25000",
           "image": {
             "full": "OrnnW.png",
-            "sprite": "spell10.png",
+            "sprite": "spell16.png",
             "group": "spell",
-            "x": 240,
-            "y": 48,
+            "x": 48,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -745,10 +745,10 @@
           "rangeBurn": "450",
           "image": {
             "full": "OrnnE.png",
-            "sprite": "spell10.png",
+            "sprite": "spell16.png",
             "group": "spell",
-            "x": 288,
-            "y": 48,
+            "x": 96,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -862,10 +862,10 @@
           "rangeBurn": "2500",
           "image": {
             "full": "OrnnR.png",
-            "sprite": "spell10.png",
+            "sprite": "spell16.png",
             "group": "spell",
-            "x": 336,
-            "y": 48,
+            "x": 144,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -877,7 +877,7 @@
         "description": "Ornn gains an additional bonus Armor and Magic Resist from all sources.<br><br>Ornn can spend gold to forge non-consumable items anywhere.<br><br>Additionally, he can create masterwork items for himself and for his allies.",
         "image": {
           "full": "OrnnP.png",
-          "sprite": "passive3.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 432,
           "y": 0,

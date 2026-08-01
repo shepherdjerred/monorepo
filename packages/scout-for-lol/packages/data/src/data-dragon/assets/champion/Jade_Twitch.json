@@ -1,0 +1,908 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Twitch": {
+      "id": "Jade_Twitch",
+      "key": "60029",
+      "name": "Twitch",
+      "title": "The Plague Rat",
+      "image": {
+        "full": "Jade_Twitch.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 144,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60029000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60029003",
+          "num": 3,
+          "name": "Medieval Twitch",
+          "chromas": false
+        },
+        {
+          "id": "60029004",
+          "num": 4,
+          "name": "Crime City Twitch",
+          "chromas": false
+        },
+        {
+          "id": "60029018",
+          "num": 18,
+          "name": "Medieval Twitch",
+          "chromas": true,
+          "parentSkin": 3
+        },
+        {
+          "id": "60029019",
+          "num": 19,
+          "name": "Medieval Twitch",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "60029020",
+          "num": 20,
+          "name": "Medieval Twitch",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "60029021",
+          "num": 21,
+          "name": "Medieval Twitch (Sapphire)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "60029022",
+          "num": 22,
+          "name": "Medieval Twitch",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "60029023",
+          "num": 23,
+          "name": "Medieval Twitch (Amethyst)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "60029024",
+          "num": 24,
+          "name": "Medieval Twitch (Obsidian)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "60029025",
+          "num": 25,
+          "name": "Medieval Twitch",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "60029026",
+          "num": 26,
+          "name": "Medieval Twitch",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "60029027",
+          "num": 27,
+          "name": "Twitch Shadowfoot",
+          "chromas": false
+        },
+        {
+          "id": "60029028",
+          "num": 28,
+          "name": "Twitch Shadowfoot (Ruby)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60029029",
+          "num": 29,
+          "name": "Twitch Shadowfoot (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60029030",
+          "num": 30,
+          "name": "Twitch Shadowfoot (Citrine)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60029031",
+          "num": 31,
+          "name": "Twitch Shadowfoot (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60029032",
+          "num": 32,
+          "name": "Twitch Shadowfoot (Obsidian)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60029033",
+          "num": 33,
+          "name": "Twitch Shadowfoot (Emerald)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60029034",
+          "num": 34,
+          "name": "Twitch Shadowfoot (Amethyst)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60029035",
+          "num": 35,
+          "name": "Twitch Shadowfoot (Pearl)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60029036",
+          "num": 36,
+          "name": "Dragonslayer Twitch",
+          "chromas": false
+        },
+        {
+          "id": "60029037",
+          "num": 37,
+          "name": "Dragonslayer Twitch (Ruby)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "60029038",
+          "num": 38,
+          "name": "Dragonslayer Twitch (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "60029039",
+          "num": 39,
+          "name": "Dragonslayer Twitch (Sapphire)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "60029040",
+          "num": 40,
+          "name": "Dragonslayer Twitch (Citrine)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "60029041",
+          "num": 41,
+          "name": "Dragonslayer Twitch (Emerald)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "60029042",
+          "num": 42,
+          "name": "Dragonslayer Twitch (Obsidian)",
+          "chromas": true,
+          "parentSkin": 36
+        },
+        {
+          "id": "60029043",
+          "num": 43,
+          "name": "Dragonslayer Twitch (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "60029044",
+          "num": 44,
+          "name": "Dragonslayer Twitch (Pearl)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "60029045",
+          "num": 45,
+          "name": "High Noon Twitch",
+          "chromas": false
+        },
+        {
+          "id": "60029046",
+          "num": 46,
+          "name": "High Noon Twitch (Ruby)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "60029047",
+          "num": 47,
+          "name": "High Noon Twitch (Citrine)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "60029048",
+          "num": 48,
+          "name": "High Noon Twitch (Turquoise)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "60029049",
+          "num": 49,
+          "name": "High Noon Twitch (Sapphire)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "60029050",
+          "num": 50,
+          "name": "High Noon Twitch (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "60029051",
+          "num": 51,
+          "name": "High Noon Twitch (Rose Quartz)",
+          "chromas": true,
+          "parentSkin": 45
+        },
+        {
+          "id": "60029052",
+          "num": 52,
+          "name": "High Noon Twitch (Obsidian)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "60029053",
+          "num": 53,
+          "name": "High Noon Twitch (Pearl)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "60029054",
+          "num": 54,
+          "name": "High Noon Twitch (Nomad)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "60029301",
+          "num": 301,
+          "name": "Classic Twitch",
+          "chromas": false
+        },
+        {
+          "id": "60029302",
+          "num": 302,
+          "name": "Classic Twitch (Kingpin)",
+          "chromas": false,
+          "parentSkin": 301
+        }
+      ],
+      "lore": "- Deliberating Poison (W) is an AoE spell around him<br>- Ambush (Q) can last up to 50 seconds<br>- Expunge (E) removes poison stacks on enemies",
+      "blurb": "- Deliberating Poison (W) is an AoE spell around him<br>- Ambush (Q) can last up to 50 seconds<br>- Expunge (E) removes poison stacks on enemies",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Marksman",
+        "Assassin"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 9,
+        "defense": 2,
+        "magic": 3,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 470,
+        "hpperlevel": 81,
+        "mp": 260,
+        "mpperlevel": 40,
+        "movespeed": 330,
+        "armor": 21,
+        "armorperlevel": 3,
+        "spellblock": 30,
+        "spellblockperlevel": 0,
+        "attackrange": 550,
+        "hpregen": 5.6,
+        "hpregenperlevel": 0.6,
+        "mpregen": 6.95,
+        "mpregenperlevel": 0.45,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 52,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 3.38,
+        "attackspeed": 0.679
+      },
+      "spells": [
+        {
+          "id": "Jade_TwitchQ",
+          "name": "Ambush",
+          "description": "Twitch turns Invisible for several seconds, gaining Move Speed. He then gains Attack Speed after coming out of Invisibility.",
+          "tooltip": "After {{ maxfadetime }} seconds of not taking damage or after {{ maxdelaytime }} seconds, Twitch turns <keywordStealth>Invisible</keywordStealth> for {{ stealthduration }} seconds, gaining <speed>{{ movespeedmod*100 }}% Move Speed</speed>.<br /><br />Twitch gains <attackSpeed>{{ attackspeedmod*100 }}% Attack Speed</attackSpeed> for {{ attackspeedduration }} seconds after coming out of <keywordStealth>Invisibility</keywordStealth>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Invisibility Duration",
+              "Attack Speed"
+            ],
+            "effect": [
+              "{{ stealthduration }} -> {{ stealthdurationNL }}",
+              "{{ attackspeedmod*100.000000 }}% -> {{ attackspeedmodnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            16,
+            16,
+            16,
+            16,
+            16
+          ],
+          "cooldownBurn": "16",
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
+          "rangeBurn": "20",
+          "image": {
+            "full": "Jade_TwitchQ.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 288,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_TwitchW",
+          "name": "Venom Cask",
+          "description": "Twitch hurls a cask of venom that explodes, inflicting Deadly Venom and slowing enemies in the area.",
+          "tooltip": "Twitch hurls an exploding cask of venom, inflicting {{ stacksadded }} stacks of <keywordMajor>Deadly Venom</keywordMajor> and <status>Slowing</status> enemies by {{ baseslowamount }}% for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Move Speed Slow",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ baseslowamount }}% -> {{ baseslowamountNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            13,
+            12,
+            11,
+            10,
+            9
+          ],
+          "cooldownBurn": "13/12/11/10/9",
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            950,
+            950,
+            950,
+            950,
+            950
+          ],
+          "rangeBurn": "950",
+          "image": {
+            "full": "Jade_TwitchW.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 336,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_TwitchE",
+          "name": "Expunge",
+          "description": "All nearby enemies secrete Twitch's toxic venoms from their bodies, dealing damage for each stack.",
+          "tooltip": "Twitch deals <physicalDamage>{{ basedamage }} physical damage</physicalDamage> plus <physicalDamage>{{ totalstackdamage }}</physicalDamage> per stack of <keywordMajor>Deadly Venom</keywordMajor> to all marked nearby enemies.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Damage per Stack",
+              "@AbilityResourceName@ Cost",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ basephysicaldamageperstack }} -> {{ basephysicaldamageperstackNL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
+          "cooldownBurn": "12/11/10/9/8",
+          "cost": [
+            50,
+            60,
+            70,
+            80,
+            90
+          ],
+          "costBurn": "50/60/70/80/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1200,
+            1200,
+            1200,
+            1200,
+            1200
+          ],
+          "rangeBurn": "1200",
+          "image": {
+            "full": "Jade_TwitchE.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 384,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_TwitchR",
+          "name": "Spray and Pray",
+          "description": "Twitch closes his eyes and fires his crossbow, rapidly spraying powerful piercing bolts ahead of him.",
+          "tooltip": "For {{ duration }} seconds Twitch gains {{ bonusrange }} Attack Range, <physicalDamage>{{ bonusad }} Attack Damage</physicalDamage> and his basic attacks become piercing bolts that deal {{ falloffdamage*100 }}% less damage to subsequent targets down to a minimum of {{ minimumfalloffdamage*100 }}%.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Attack Damage",
+              "@AbilityResourceName@ Cost",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ bonusad }} -> {{ bonusadNL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            120,
+            110,
+            100
+          ],
+          "cooldownBurn": "120/110/100",
+          "cost": [
+            100,
+            125,
+            150
+          ],
+          "costBurn": "100/125/150",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1200,
+            1200,
+            1200
+          ],
+          "rangeBurn": "1200",
+          "image": {
+            "full": "Jade_TwitchR.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 432,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Deadly Venom",
+        "description": "Twitch's basic attacks infect the target, dealing magic damage each second.",
+        "image": {
+          "full": "Jade_Twitch_Passive.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 144,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

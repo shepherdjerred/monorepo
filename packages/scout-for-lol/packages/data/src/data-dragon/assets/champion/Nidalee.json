@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Nidalee": {
       "id": "Nidalee",
@@ -10,7 +10,7 @@
       "title": "the Bestial Huntress",
       "image": {
         "full": "Nidalee.png",
-        "sprite": "champion3.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 144,
         "y": 0,
@@ -651,10 +651,10 @@
           "rangeBurn": "1500",
           "image": {
             "full": "JavelinToss.png",
-            "sprite": "spell9.png",
+            "sprite": "spell16.png",
             "group": "spell",
-            "x": 0,
-            "y": 144,
+            "x": 288,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -794,10 +794,10 @@
           "rangeBurn": "900",
           "image": {
             "full": "Bushwhack.png",
-            "sprite": "spell9.png",
+            "sprite": "spell16.png",
             "group": "spell",
-            "x": 48,
-            "y": 144,
+            "x": 336,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -937,10 +937,10 @@
           "rangeBurn": "900",
           "image": {
             "full": "PrimalSurge.png",
-            "sprite": "spell9.png",
+            "sprite": "spell16.png",
             "group": "spell",
-            "x": 96,
-            "y": 144,
+            "x": 384,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1071,10 +1071,10 @@
           "rangeBurn": "20",
           "image": {
             "full": "AspectOfTheCougar.png",
-            "sprite": "spell9.png",
+            "sprite": "spell16.png",
             "group": "spell",
-            "x": 144,
-            "y": 144,
+            "x": 432,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1086,7 +1086,7 @@
         "description": "Moving through brush increases Nidalee's Move Speed by 10% for 2 seconds, increased to 30% toward visible enemy champions within 1400 range.<br><br>Hitting champions or monsters with Javelin Toss or Bushwhack triggers a <font color='#FFF673'>Hunt</font>, granting <font color='#ee91d7'>True Sight</font> of them for 4 seconds. During this time, Nidalee gains 10% Move Speed (increased to 30% toward the <font color='#FFF673'>Hunted</font> target) and her Takedown and Pounce are enhanced against them.",
         "image": {
           "full": "Nidalee_Passive.png",
-          "sprite": "passive3.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 144,
           "y": 0,

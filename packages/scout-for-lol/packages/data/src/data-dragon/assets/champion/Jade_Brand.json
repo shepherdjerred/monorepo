@@ -1,0 +1,786 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Brand": {
+      "id": "Jade_Brand",
+      "key": "60063",
+      "name": "Brand",
+      "title": "The Burning Vengeance",
+      "image": {
+        "full": "Jade_Brand.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 288,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60063000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60063003",
+          "num": 3,
+          "name": "Cryocore Brand",
+          "chromas": false
+        },
+        {
+          "id": "60063004",
+          "num": 4,
+          "name": "Zombie Brand",
+          "chromas": false
+        },
+        {
+          "id": "60063021",
+          "num": 21,
+          "name": "Debonair Brand",
+          "chromas": false
+        },
+        {
+          "id": "60063022",
+          "num": 22,
+          "name": "Prestige Debonair Brand",
+          "chromas": true
+        },
+        {
+          "id": "60063024",
+          "num": 24,
+          "name": "Debonair Brand (Ruby)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "60063025",
+          "num": 25,
+          "name": "Debonair Brand (Catseye)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "60063026",
+          "num": 26,
+          "name": "Debonair Brand (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "60063027",
+          "num": 27,
+          "name": "Debonair Brand (Emerald)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "60063028",
+          "num": 28,
+          "name": "Debonair Brand (Amethyst)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "60063029",
+          "num": 29,
+          "name": "Debonair Brand (Sapphire)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "60063030",
+          "num": 30,
+          "name": "Debonair Brand (Obsidian)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "60063031",
+          "num": 31,
+          "name": "Debonair Brand (Turquoise)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "60063032",
+          "num": 32,
+          "name": "Debonair Brand (Cerulean Club)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "60063042",
+          "num": 42,
+          "name": "Empyrean Brand",
+          "chromas": false
+        },
+        {
+          "id": "60063043",
+          "num": 43,
+          "name": "Empyrean Brand (Ruby)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "60063044",
+          "num": 44,
+          "name": "Empyrean Brand (Catseye)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "60063045",
+          "num": 45,
+          "name": "Empyrean Brand (Sapphire)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "60063046",
+          "num": 46,
+          "name": "Empyrean Brand (Emerald)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "60063047",
+          "num": 47,
+          "name": "Empyrean Brand (Turquoise)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "60063048",
+          "num": 48,
+          "name": "Empyrean Brand (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "60063049",
+          "num": 49,
+          "name": "Empyrean Brand (Tanzanite)",
+          "chromas": true,
+          "parentSkin": 42
+        },
+        {
+          "id": "60063050",
+          "num": 50,
+          "name": "Empyrean Brand (Pearl)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "60063051",
+          "num": 51,
+          "name": "Empyrean Brand (Neon Facade)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "60063052",
+          "num": 52,
+          "name": "Zombie Brand (Doom)",
+          "chromas": false,
+          "parentSkin": 4
+        }
+      ],
+      "lore": "- Ablaze (P) explosions do not occur",
+      "blurb": "- Ablaze (P) explosions do not occur",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Mage",
+        "Support"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 2,
+        "defense": 2,
+        "magic": 9,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 456,
+        "hpperlevel": 76,
+        "mp": 295,
+        "mpperlevel": 45,
+        "movespeed": 340,
+        "armor": 19.5,
+        "armorperlevel": 3.5,
+        "spellblock": 30,
+        "spellblockperlevel": 0,
+        "attackrange": 550,
+        "hpregen": 5.05,
+        "hpregenperlevel": 0.55,
+        "mpregen": 7.6,
+        "mpregenperlevel": 0.6,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 55,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 1.36,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "Jade_BrandQ",
+          "name": "Sear",
+          "description": "Brand launches a ball of fire forward that deals magic damage. If the target is ablaze, Sear will stun the target.",
+          "tooltip": "Brand launches a ball of fire forward that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br /><spellPassive>Blaze:</spellPassive> If the target is <keywordMajor>Ablaze</keywordMajor>, <spellName>Sear</spellName> will <status>Stun</status> the target for 2 seconds.</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            8,
+            7.5,
+            7,
+            6.5,
+            6
+          ],
+          "cooldownBurn": "8/7.5/7/6.5/6",
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              70,
+              100,
+              130,
+              160,
+              190
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "70/100/130/160/190",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1050,
+            1050,
+            1050,
+            1050,
+            1050
+          ],
+          "rangeBurn": "1050",
+          "image": {
+            "full": "Jade_BrandQ.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 384,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_BrandW",
+          "name": "Pillar of Flame",
+          "description": "After a short delay, Brand creates a pillar of flame at a target area, dealing magic damage to enemy units with the area. Units that are ablaze take additional damage",
+          "tooltip": "After a short delay, Brand creates a pillar of flame at a target area, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemy units within the area.<br /><br /><spellPassive>Blaze:</spellPassive> <spellName>Pillar of Flame</spellName> deals <magicDamage>{{ empowereddamage }} magic damage</magicDamage> to units that are <keywordMajor>Ablaze</keywordMajor> instead.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "cooldownBurn": "10",
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
+          "costBurn": "70/75/80/85/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              20,
+              40,
+              60,
+              80,
+              100
+            ],
+            [
+              0.25,
+              0.25,
+              0.25,
+              0.25,
+              0.25
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "20/40/60/80/100",
+            "0.25",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
+          "rangeBurn": "900",
+          "image": {
+            "full": "Jade_BrandW.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 432,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_BrandE",
+          "name": "Conflagration",
+          "description": "Brand conjures a powerful blast at his target, dealing magic damage to them. If the target is ablaze, Conflagration spreads to nearby enemies.",
+          "tooltip": "Brand conjures a powerful blast at his target, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. <br /><br /><spellPassive>Blaze:</spellPassive> If the target is <keywordMajor>Ablaze</keywordMajor>, <spellName>Conflagration</spellName> spreads to nearby enemies.</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
+          "cooldownBurn": "12/11/10/9/8",
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
+          "costBurn": "70/75/80/85/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              375,
+              375,
+              375,
+              375,
+              375
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "375",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            625,
+            625,
+            625,
+            625,
+            625
+          ],
+          "rangeBurn": "625",
+          "image": {
+            "full": "Jade_BrandE.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 0,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_BrandR",
+          "name": "Pyroclasm",
+          "description": "Brand unleashes a devastating torrent of fire, dealing magic damage each time it bounces. If a target is ablaze, Pyroclasm will priotize champions for the next bounce.",
+          "tooltip": "Brand unleashes a devastating torrent of fire, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> each time it bounces up to {{ bounces }} bounces.<br /><br /><spellPassive>Blaze:</spellPassive> If a target is <keywordMajor>Ablaze</keywordMajor>, <spellName>Pyroclasm</spellName> will prioritize champions for the next bounce.</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage per Bounce",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            105,
+            90,
+            75
+          ],
+          "cooldownBurn": "105/90/75",
+          "cost": [
+            100,
+            100,
+            100
+          ],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            750,
+            750,
+            750
+          ],
+          "rangeBurn": "750",
+          "image": {
+            "full": "Jade_BrandR.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 48,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Blaze",
+        "description": "Brand's spells light his targets ablaze, dealing 8% of their maximum Health in magic damage over 4 seconds.",
+        "image": {
+          "full": "Jade_BrandP.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 288,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

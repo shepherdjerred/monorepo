@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Locke": {
       "id": "Locke",
@@ -10,7 +10,7 @@
       "title": "the Ashen Exorcist",
       "image": {
         "full": "Locke.png",
-        "sprite": "champion2.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 192,
         "y": 48,
@@ -103,7 +103,7 @@
         "difficulty": 5
       },
       "stats": {
-        "hp": 655,
+        "hp": 620,
         "hpperlevel": 109,
         "mp": 280,
         "mpperlevel": 70,
@@ -259,10 +259,10 @@
           "rangeBurn": "950",
           "image": {
             "full": "LockeQ.png",
-            "sprite": "spell7.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 192,
-            "y": 144,
+            "x": 0,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -277,13 +277,11 @@
             "label": [
               "Cooldown",
               "Damage Restored",
-              "Move Speed",
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamagerestoreamount }} -> {{ basedamagerestoreamountNL }}",
-              "{{ basemovespeed*100.000000 }}% -> {{ basemovespeednl*100.000000 }}%",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
@@ -404,10 +402,10 @@
           "rangeBurn": "250",
           "image": {
             "full": "LockeW.png",
-            "sprite": "spell7.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 240,
-            "y": 144,
+            "x": 48,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -547,10 +545,10 @@
           "rangeBurn": "425",
           "image": {
             "full": "LockeE.png",
-            "sprite": "spell7.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 288,
-            "y": 144,
+            "x": 96,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -664,10 +662,10 @@
           "rangeBurn": "1000",
           "image": {
             "full": "LockeR.png",
-            "sprite": "spell7.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 336,
-            "y": 144,
+            "x": 144,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -679,7 +677,7 @@
         "description": "Locke's attacks deal additional magic damage On-Hit, increased based on enemy missing Health.",
         "image": {
           "full": "Locke_Passive.png",
-          "sprite": "passive2.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 192,
           "y": 48,

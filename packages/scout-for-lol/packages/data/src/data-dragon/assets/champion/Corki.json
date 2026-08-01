@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Corki": {
       "id": "Corki",
@@ -501,10 +501,10 @@
           "rangeBurn": "825",
           "image": {
             "full": "PhosphorusBomb.png",
-            "sprite": "spell2.png",
+            "sprite": "spell3.png",
             "group": "spell",
-            "x": 192,
-            "y": 144,
+            "x": 0,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -644,10 +644,10 @@
           "rangeBurn": "600",
           "image": {
             "full": "CarpetBomb.png",
-            "sprite": "spell2.png",
+            "sprite": "spell3.png",
             "group": "spell",
-            "x": 240,
-            "y": 144,
+            "x": 48,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -787,10 +787,10 @@
           "rangeBurn": "600",
           "image": {
             "full": "GGun.png",
-            "sprite": "spell2.png",
+            "sprite": "spell3.png",
             "group": "spell",
-            "x": 288,
-            "y": 144,
+            "x": 96,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -900,10 +900,10 @@
           "rangeBurn": "1225",
           "image": {
             "full": "MissileBarrage.png",
-            "sprite": "spell2.png",
+            "sprite": "spell3.png",
             "group": "spell",
-            "x": 336,
-            "y": 144,
+            "x": 144,
+            "y": 48,
             "w": 48,
             "h": 48
           },

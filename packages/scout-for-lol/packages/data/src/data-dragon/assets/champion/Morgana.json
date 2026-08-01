@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Morgana": {
       "id": "Morgana",
@@ -10,7 +10,7 @@
       "title": "the Fallen",
       "image": {
         "full": "Morgana.png",
-        "sprite": "champion2.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 336,
         "y": 96,
@@ -755,10 +755,10 @@
           "rangeBurn": "1250",
           "image": {
             "full": "MorganaQ.png",
-            "sprite": "spell9.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 288,
-            "y": 0,
+            "x": 96,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -896,10 +896,10 @@
           "rangeBurn": "900",
           "image": {
             "full": "MorganaW.png",
-            "sprite": "spell9.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 336,
-            "y": 0,
+            "x": 144,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -1037,10 +1037,10 @@
           "rangeBurn": "800",
           "image": {
             "full": "MorganaE.png",
-            "sprite": "spell9.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 384,
-            "y": 0,
+            "x": 192,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -1156,10 +1156,10 @@
           "rangeBurn": "625",
           "image": {
             "full": "MorganaR.png",
-            "sprite": "spell9.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 432,
-            "y": 0,
+            "x": 240,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -1171,7 +1171,7 @@
         "description": "Morgana drains spirit from her enemies, healing as she deals damage to champions, large minions, and medium and larger jungler monsters.",
         "image": {
           "full": "FallenAngel_Empathize.png",
-          "sprite": "passive2.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 336,
           "y": 96,

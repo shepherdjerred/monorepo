@@ -1,137 +1,164 @@
 {
-  "patch": "26.14",
-  "title": "League of Legends Patch 26.14 Notes",
-  "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-14-notes",
-  "date": "2026 07 19",
-  "overview": "Patch 26.14 is a broad balance pass timed to T1's championship celebration: a handful of mid-lane mages and enchanters get tuned, a few bruisers and marksmen shift, and the jungle sees a Blue Buff and Azir rework-adjacent quality-of-life change alongside a big buff-bar UI cleanup.",
+  "patch": "26.15",
+  "title": "League of Legends Patch 26.15 Notes",
+  "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-15-notes",
+  "date": "2026 08 01",
+  "overview": "Patch 26.15 kicks off Ranked Season 3 with a ground-up Bel'Veth rework, nerfs to Locke, Naafiri, Riven, and Sylas, and cheaper crit/lethality items. It also launches the League Classic game mode and delivers sweeping augment and balance-modifier overhauls in ARAM: Mayhem and Arena.",
   "themes": [
-    "Mid-lane mage tuning",
-    "Enchanter nerfs",
-    "Jungle QoL",
-    "Item nerfs"
+    "Bel'Veth rework",
+    "Ranked Season 3",
+    "Arena/ARAM augment overhaul",
+    "Crit and lethality item buffs"
   ],
   "summary": [
-    "Seraphine, Senna, and Nami enchanters get reshuffled — two nerfed, one buffed.",
-    "Corki, Mordekaiser, and Azir get buffed while Garen, Jayce, and Locke take nerfs.",
-    "Blue Buff now scales ability haste with level, and the buff bar was heavily decluttered.",
-    "Hextech Rocketbelt, Immortal Path, and Protoplasm Harness all got weaker."
+    "Bel'Veth is functionally a new champion — Q, W, E, and R all rebuilt, with W now pure AP and Q gated by a long per-lane cooldown.",
+    "Locke, Naafiri, Riven, and Sylas all take nerfs to their damage and scaling.",
+    "Yun Tal Wildarrows is cheaper with more attack speed, and Bastionbreaker dropped 200g while hitting harder.",
+    "Jack of All Trades gives less adaptive force at both stat breakpoints."
+  ],
+  "changelogHighlights": [
+    "New game mode: League Classic — 60 champions playing their 2010s-era kits.",
+    "Ranked Season 3 began July 29; Aegis of Valor no longer reduces LP loss and now grants double LP on wins.",
+    "Arena and ARAM: Mayhem augment pools changed — Arena removes Slow and Steady and adds a level-2 Ok Boomerang, while ARAM adds Chain Reaction and makes Pat on the Back multi-pickable.",
+    "Bel'Veth has been reworked from the ground up."
   ],
   "champions": [
     {
       "direction": "adjustment",
-      "magnitude": "moderate",
-      "summary": "Soldiers now proc on-hit runes at full value and R shoves jungle camps.",
-      "details": "W soldiers apply Scorch, Liandry's, Blackfire Torch, and Hextech Alternator at 100% instead of 50%, Conqueror gets 2 stacks, and R now knocks back jungle monsters — so your poke does real damage and you can wall off objectives.",
-      "name": "Azir"
-    },
-    {
-      "direction": "buff",
-      "magnitude": "minor",
-      "summary": "More AD growth and faster rocket recharge from autos.",
-      "details": "Base AD growth 2 → 2.5 and R rocket recharge from attacks improved to 2-6s from 2-4s, meaning more Big One rockets up over the course of a game.",
-      "name": "Corki"
-    },
-    {
-      "direction": "buff",
-      "magnitude": "moderate",
-      "summary": "Stronger E damage and a bigger stat steal on the ult.",
-      "details": "E scales to 60/80/100/120/140 (+45% AP) and Realm of Death steals 13% of stats instead of 10%, so every 1v1 death realm swings harder in your favor.",
-      "name": "Mordekaiser"
-    },
-    {
-      "direction": "buff",
-      "magnitude": "moderate",
-      "summary": "E now hits noticeably harder at higher ranks.",
-      "details": "Tidecaller's Blessing damage per hit rises to 20/35/50/65/80 from 20/30/40/50/60, adding real trade damage to your empowered auto-attacks.",
-      "name": "Nami"
-    },
-    {
-      "direction": "buff",
-      "magnitude": "minor",
-      "summary": "Higher base AD growth.",
-      "details": "Base AD growth 2.5 → 3, giving her steadier scaling auto damage through the game.",
-      "name": "Yunara"
+      "magnitude": "major",
+      "summary": "Complete kit rework across base stats and all five abilities.",
+      "details": "Her base attack speed dropped from 0.85 to 0.67 (with a 100% attack damage modifier), Void Surge now has a 4-second-down-to-1-second per-direction cooldown at a flat 850 speed and no longer gets a minion damage modifier, Above And Below became a pure 150% AP scaling ability, Royal Maelstrom's damage reduction and lifesteal now scale by rank, and Endless Banquet applies its passive on every attack with much stronger heal scaling — if you played her on autopilot this patch, your muscle memory is actively costing you games.",
+      "name": "Bel'Veth"
     },
     {
       "direction": "nerf",
       "magnitude": "moderate",
-      "summary": "Demacian Justice deals less flat true damage.",
-      "details": "R base true damage drops to 125/200/275 from 150/250/350 (missing-health scaling unchanged), so your execute needs the enemy lower before it kills.",
-      "name": "Garen"
-    },
-    {
-      "direction": "nerf",
-      "magnitude": "moderate",
-      "summary": "Less passive move speed and a weaker hammer-form ult.",
-      "details": "Hextech Capacitor move speed 40 → 30 and Mercury Hammer R armor/MR down to 5/12/19/26, making him squishier and slipperier in melee form.",
-      "name": "Jayce"
-    },
-    {
-      "direction": "nerf",
-      "magnitude": "moderate",
-      "summary": "Q and W damage and uptime cut across the board.",
-      "details": "Q recast window 5s → 4s with lower base and mark damage, and W grey-health cap reduced to 40/70/100/130/160, so his poke-and-sustain pattern is meaningfully weaker.",
+      "summary": "Lower health plus big cuts to Q damage and W move speed and grey health.",
+      "details": "Base health fell 655 to 620, Ritual Nails lost 10 damage per nail (30 on a full three-nail hit), and Soul Ignition is locked to a flat 40% move speed with reduced grey health scaling, so his snowball and escape pressure are both noticeably weaker in skirmishes.",
       "name": "Locke"
     },
     {
       "direction": "nerf",
       "magnitude": "moderate",
-      "summary": "Lower crit modifier and weaker Q utility scaling.",
-      "details": "Passive crit damage modifier 85% → 80% and Q's AP slow ratio (7% per 100 AP) and heal ratio (35%) both drop, taming her scaling as an AP-leaning support carry.",
-      "name": "Senna"
+      "summary": "The Call of the Pack damage cut and moved to bonus AD scaling.",
+      "details": "Her ultimate's base damage dropped from 150/225/300 to 125/200/275 and both the base and per-packmate ratios now scale off bonus AD instead of total AD, so early-ult all-ins and lane skirmishes hit meaningfully softer before you finish items.",
+      "name": "Naafiri"
+    },
+    {
+      "direction": "nerf",
+      "magnitude": "moderate",
+      "summary": "Blade of the Exile and Wind Slash both scale worse with bonus AD.",
+      "details": "Her ultimate's bonus AD ratio fell from 25% to 20% and Wind Slash scales 55%-165% instead of 60%-180%, which directly shaves damage off the execute you rely on to close out duels.",
+      "name": "Riven"
     },
     {
       "direction": "nerf",
       "magnitude": "minor",
-      "summary": "Q poke scales less with AP.",
-      "details": "High Note AP ratio 50% → 40%, cutting into her lane poke and mid/late damage output.",
-      "name": "Seraphine"
+      "summary": "Chain Lash first-lash damage and AP ratio reduced.",
+      "details": "First lash now deals 40/60/80/100/120 (+40% AP) instead of up to 140 (+45% AP), weakening his poke-heavy laning phase where the first hit does most of his early trading work.",
+      "name": "Sylas"
+    },
+    {
+      "direction": "adjustment",
+      "magnitude": "minor",
+      "summary": "Death's Grasp cooldown lowered but Realm of Death steals fewer stats.",
+      "details": "E is 2 seconds shorter on cooldown at every rank while his ultimate now steals 10% of stats instead of 13%, so he pulls more often in teamfights but wins 1v1 death realms by a smaller margin.",
+      "name": "Mordekaiser"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "minor",
+      "summary": "Caustic Wounds passive damage increased at max level and per stack.",
+      "details": "Second Skin now scales to 30 base (from 24) and 8 per stack (from 6), giving her a bit more chip damage in extended fights where she stacks plasma repeatedly.",
+      "name": "Kai'Sa"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "minor",
+      "summary": "Bramble Smash hits monsters harder and scales better with AP.",
+      "details": "Q's monster damage modifier went up by 10 at every rank and its AP ratio rose from 40% to 50%, speeding up jungle clear and improving his scaling as a damage-oriented tank.",
+      "name": "Maokai"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "minor",
+      "summary": "More armor growth and a shorter Elastic Slingshot cooldown.",
+      "details": "Armor growth rose 4.7 to 5.2 and E is 1 second shorter at every rank, meaning more frequent engage attempts and better durability as the game goes long.",
+      "name": "Zac"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "minor",
+      "summary": "Thundering Smash cooldown reduced at early ranks.",
+      "details": "Q drops from 14 seconds to 12 at rank 1, letting him chase and re-engage more often in the early skirmishes that define his tempo.",
+      "name": "Volibear"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "minor",
+      "summary": "Base move speed increased from 330 to 335.",
+      "details": "A small mobility bump that makes his headbutt-pulverize combo slightly easier to land in lane and roams marginally faster.",
+      "name": "Alistar"
     }
   ],
   "items": [
     {
-      "direction": "adjustment",
+      "direction": "buff",
       "magnitude": "moderate",
-      "summary": "Rebuilt with more health, less AP, and a longer dash cooldown.",
-      "details": "Now builds from Hextech Alternator + Kindlegem + Ruby Crystal, with AP dropped to 60, health up to 350, and active cooldown lengthened to 50s — tankier but a weaker burst dash.",
-      "name": "Hextech Rocketbelt"
+      "summary": "100g cheaper with 5% more attack speed.",
+      "details": "Now 750g at 45% attack speed, making it a stronger and faster crit component — if you're an ADC still skipping it, that's a build-order problem.",
+      "name": "Yun Tal Wildarrows"
     },
     {
-      "direction": "nerf",
-      "magnitude": "minor",
-      "summary": "Less bonus damage above half HP and less healing below it.",
-      "details": "Above-50% damage bonus 5% → 4% and below-50% healing/shielding/regen bonus 15% → 12%, softening its bruiser sustain.",
-      "name": "Immortal Path"
+      "direction": "buff",
+      "magnitude": "moderate",
+      "summary": "200g cheaper and Shaped Charge deals 20 more true damage.",
+      "details": "Costs 3000g with Shaped Charge at 50 (+150% lethality) true damage, making it a much better-value lethality pickup for divers and bruisers going through frontline HP.",
+      "name": "Bastionbreaker"
     },
     {
-      "direction": "nerf",
+      "direction": "buff",
       "magnitude": "minor",
-      "summary": "Pricier with a lower health/healing floor.",
-      "details": "Cost 2500 → 2600 and both bonus health and healing now start at 100 instead of 200, making early purchases less efficient.",
-      "name": "Protoplasm Harness"
+      "summary": "Shadow on-hit now scales with AD and AP.",
+      "details": "The 30 magic damage on-hit now adds 10% bonus AD and 10% AP, so it keeps paying off deeper into the game on on-hit carries instead of falling off.",
+      "name": "Terminus"
     }
   ],
   "systems": [
     {
-      "direction": "buff",
-      "magnitude": "moderate",
-      "summary": "Blue Buff now grants scaling ability haste.",
-      "details": "Blue Buff ability haste scales to 10/15/20 at levels 1/6/11 instead of a flat 10, giving AP junglers and mid laners more spell uptime as the game goes on.",
-      "area": "Jungle"
-    },
-    {
-      "direction": "adjustment",
-      "magnitude": "moderate",
-      "summary": "Major buff-bar cleanup and clearer remake votes.",
-      "details": "Redundant and ultra-short buffs are hidden, item buffs moved into the inventory display, and remake votes now start automatically with chat explaining who triggered them — so you can actually read your status bar in a fight.",
-      "area": "UI"
-    },
-    {
-      "direction": "adjustment",
+      "direction": "nerf",
       "magnitude": "minor",
-      "summary": "Caitlyn Headshot no longer misfires in brush.",
-      "details": "A fix stops Caitlyn's Headshot from misfiring in brush, restoring her intended lane trading pattern.",
-      "area": "Bug Fixes"
+      "summary": "Jack of All Trades grants less adaptive force at both breakpoints.",
+      "details": "The 5- and 10-stat rewards fell from 10/25 to 8/20 adaptive force, slightly weakening the greedy stat-stacking builds that lean on it.",
+      "area": "Runes"
+    },
+    {
+      "direction": "adjustment",
+      "magnitude": "moderate",
+      "summary": "Ranked Season 3 began July 29 with reworked Aegis of Valor and apex duo limits.",
+      "details": "Aegis of Valor no longer softens LP losses and instead grants double LP on wins with no minimum mastery score, while Master can only duo with nearby ranks and GM/Challenger (or GM/Challenger MMR) players can't duo at all — so losses hurt full price now.",
+      "area": "Ranked"
+    },
+    {
+      "direction": "new",
+      "magnitude": "major",
+      "summary": "League Classic launches with 60 champions on their 2010s-era kits.",
+      "details": "A throwback mode built around old-school gameplay and graphics that emphasizes strategy over mechanics, with a restricted 60-champion roster.",
+      "area": "Game modes"
+    },
+    {
+      "direction": "adjustment",
+      "magnitude": "major",
+      "summary": "Damage modifiers now cover item and Augment damage, plus a wide augment rebalance.",
+      "details": "Champion damage-dealt modifiers apply to spell, attack, item, and Augment damage instead of only spells and attacks, dozens of champions were normalized toward 100%, and augments shifted heavily — Titan's Resolve and Earthwake got stronger, Critical Missile and Drop Bear's stun got cut, Chain Reaction is new, and Pat on the Back can now be taken by multiple players.",
+      "area": "ARAM: Mayhem"
+    },
+    {
+      "direction": "adjustment",
+      "magnitude": "major",
+      "summary": "Augment level caps cut to 2, crit converts 1:1 to adaptive force, and many champions retuned.",
+      "details": "Demonic Clasp, Critical Rhythm, Laser Eyes, Spellwake, Earthwake, and Tap Dancer now cap at level 2 with rebalanced values, Slow and Steady was removed, Ok Boomerang gained a second boomerang at level 2, crit-to-adaptive-force conversion improved from 0.68:1 to 1:1, and Thresh, Twisted Fate, Warwick, Nocturne, and Kai'Sa got sizeable buffs while Seraphine's Q was cut.",
+      "area": "Arena"
     }
   ]
 }

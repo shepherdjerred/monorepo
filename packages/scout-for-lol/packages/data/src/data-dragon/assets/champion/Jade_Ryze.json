@@ -1,0 +1,795 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Ryze": {
+      "id": "Jade_Ryze",
+      "key": "60013",
+      "name": "Ryze",
+      "title": "The Rogue Mage",
+      "image": {
+        "full": "Jade_Ryze.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 0,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60013000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60013001",
+          "num": 1,
+          "name": "Young Ryze",
+          "chromas": false
+        },
+        {
+          "id": "60013004",
+          "num": 4,
+          "name": "Triumphant Ryze",
+          "chromas": false
+        },
+        {
+          "id": "60013006",
+          "num": 6,
+          "name": "Zombie Ryze",
+          "chromas": false
+        },
+        {
+          "id": "60013007",
+          "num": 7,
+          "name": "Dark Crystal Ryze",
+          "chromas": false
+        },
+        {
+          "id": "60013009",
+          "num": 9,
+          "name": "Ryze Whitebeard",
+          "chromas": false
+        },
+        {
+          "id": "60013020",
+          "num": 20,
+          "name": "Arcana Ryze",
+          "chromas": false
+        },
+        {
+          "id": "60013021",
+          "num": 21,
+          "name": "Arcana Ryze (Ruby)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "60013022",
+          "num": 22,
+          "name": "Arcana Ryze (Catseye)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "60013023",
+          "num": 23,
+          "name": "Arcana Ryze (Amethyst)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "60013024",
+          "num": 24,
+          "name": "Arcana Ryze (Turquoise)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "60013025",
+          "num": 25,
+          "name": "Arcana Ryze (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "60013026",
+          "num": 26,
+          "name": "Arcana Ryze (Emerald)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "60013027",
+          "num": 27,
+          "name": "Arcana Ryze (Obsidian)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "60013028",
+          "num": 28,
+          "name": "Arcana Ryze (Pearl)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "60013029",
+          "num": 29,
+          "name": "Blood Moon Ryze",
+          "chromas": false
+        },
+        {
+          "id": "60013031",
+          "num": 31,
+          "name": "Blood Moon Ryze (Ruby)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "60013032",
+          "num": 32,
+          "name": "Blood Moon Ryze (Emerald)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "60013033",
+          "num": 33,
+          "name": "Blood Moon Ryze (Sapphire)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "60013034",
+          "num": 34,
+          "name": "Blood Moon Ryze (Catseye)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "60013035",
+          "num": 35,
+          "name": "Blood Moon Ryze (Rose Quartz)",
+          "chromas": true,
+          "parentSkin": 29
+        },
+        {
+          "id": "60013036",
+          "num": 36,
+          "name": "Blood Moon Ryze (Turquoise)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "60013037",
+          "num": 37,
+          "name": "Blood Moon Ryze (Obsidian)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "60013038",
+          "num": 38,
+          "name": "Blood Moon Ryze (Pearl)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "60013301",
+          "num": 301,
+          "name": "Classic Ryze",
+          "chromas": false
+        },
+        {
+          "id": "60013302",
+          "num": 302,
+          "name": "Classic Ryze (Tribal)",
+          "chromas": false,
+          "parentSkin": 301
+        }
+      ],
+      "lore": "- The Abilities are completely different (for the 5th time)",
+      "blurb": "- The Abilities are completely different (for the 5th time)",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Mage"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 2,
+        "defense": 2,
+        "magic": 10,
+        "difficulty": 7
+      },
+      "stats": {
+        "hp": 446,
+        "hpperlevel": 86,
+        "mp": 305,
+        "mpperlevel": 55,
+        "movespeed": 335,
+        "armor": 18.9,
+        "armorperlevel": 3.9,
+        "spellblock": 30,
+        "spellblockperlevel": 0,
+        "attackrange": 550,
+        "hpregen": 4.9,
+        "hpregenperlevel": 0.55,
+        "mpregen": 7.6,
+        "mpregenperlevel": 0.6,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 55,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 2.112,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "Jade_RyzeQ",
+          "name": "Overload",
+          "description": "<spellPassive>Passive</spellPassive>: Ryze permanently gains Cooldown Reduction.<br><br><spellActive>Active</spellActive>: Ryze unleashes an orb of energy, dealing <magicDamage>magic damage</magicDamage> to his target.",
+          "tooltip": "<spellPassive>Passive</spellPassive>: Ryze permanently gains {{ passivecooldown*100 }}% Cooldown Reduction.<br /><br /><spellActive>Active</spellActive>: Ryze unleashes an orb of energy, dealing <magicDamage>{{ damagecalc }} magic damage</magicDamage> to his target.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown Reduction"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ passivecooldown*100.000000 }}% -> {{ passivecooldownnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            3.5,
+            3.5,
+            3.5,
+            3.5,
+            3.5
+          ],
+          "cooldownBurn": "3.5",
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
+          "rangeBurn": "600",
+          "image": {
+            "full": "Jade_RyzeQ.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 192,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_RyzeW",
+          "name": "Rune Prison",
+          "description": "Ryze magically imprisons an enemy, <status>rooting</status> them and dealing <magicDamage>magic damage</magicDamage>.",
+          "tooltip": "Ryze magically imprisons an enemy, <status>rooting</status> them for {{ ccduration }} seconds and dealing <magicDamage>{{ damagecalc }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Root Duration",
+              "Mana Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ ccduration }} -> {{ ccdurationNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            14,
+            14,
+            14,
+            14,
+            14
+          ],
+          "cooldownBurn": "14",
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
+          "costBurn": "60/70/80/90/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            615,
+            615,
+            615,
+            615,
+            615
+          ],
+          "rangeBurn": "615",
+          "image": {
+            "full": "Jade_RyzeW.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 240,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_RyzeE",
+          "name": "Spell Flux",
+          "description": "Ryze fires a chaotic bolt of magic that can bounce between enemies, dealing <magicDamage>magic damage</magicDamage> and reducing their <scaleMR>Magic Resist</scaleMR>.",
+          "tooltip": "Ryze fires a chaotic bolt of magic that can bounce between enemies or himself up to {{ maximumhits }} times, dealing <magicDamage>{{ damagecalc }} magic damage</magicDamage> to enemies and reducing their <scaleMR>Magic Resist</scaleMR> by {{ resistshred }}.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Magic Resist Shred",
+              "Mana Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ resistshred }} -> {{ resistshredNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            14,
+            14,
+            14,
+            14,
+            14
+          ],
+          "cooldownBurn": "14",
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
+          "costBurn": "60/70/80/90/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            615,
+            615,
+            615,
+            615,
+            615
+          ],
+          "rangeBurn": "615",
+          "image": {
+            "full": "Jade_RyzeE.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 288,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_RyzeR",
+          "name": "Desperate Power",
+          "description": "Ryze temporary harnesses his full powers, gaining <magicDamage>area of effect damage</magicDamage> on all abilities, <healing>Spell Vamp</healing>, and <speed>Move Speed</speed> for a short time.",
+          "tooltip": "Ryze temporary harnesses his full powers, gaining <magicDamage>{{ areadamagemod*100 }}% area of effect damage</magicDamage> on all abilities, <healing>{{ spellvamp*100 }}% Spell Vamp</healing>, and <speed>{{ movementspeed }} Move Speed</speed> for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Spell Vamp",
+              "Move Speed",
+              "Duration",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ spellvamp*100.000000 }}% -> {{ spellvampnl*100.000000 }}%",
+              "{{ movementspeed }} -> {{ movementspeedNL }}",
+              "{{ duration }} -> {{ durationNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            70,
+            60,
+            50
+          ],
+          "cooldownBurn": "70/60/50",
+          "cost": [
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [
+            3000,
+            3000,
+            3000
+          ],
+          "rangeBurn": "3000",
+          "image": {
+            "full": "Jade_RyzeR.png",
+            "sprite": "spell9.png",
+            "group": "spell",
+            "x": 336,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        }
+      ],
+      "passive": {
+        "name": "Arcane Mastery",
+        "description": "Ryze's abilities reduce the cooldown of all other abilities.",
+        "image": {
+          "full": "Jade_Ryze_P.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 0,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

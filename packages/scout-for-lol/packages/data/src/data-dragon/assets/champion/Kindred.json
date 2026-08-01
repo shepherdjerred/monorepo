@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Kindred": {
       "id": "Kindred",
@@ -10,7 +10,7 @@
       "title": "The Eternal Hunters",
       "image": {
         "full": "Kindred.png",
-        "sprite": "champion2.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 240,
         "y": 0,
@@ -366,15 +366,15 @@
           "id": "KindredQ",
           "name": "Dance of Arrows",
           "description": "Kindred tumbles and shoots up to three arrows at nearby targets.",
-          "tooltip": "Kindred vaults, firing an arrow at up to 3 enemies, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and gaining <attackSpeed>{{ totalqattackspeed }} Attack Speed</attackSpeed> for {{ e8 }} seconds.<br /><br />While inside of <spellName>Wolf's Frenzy</spellName>, this Ability's Cooldown is reduced to {{ e4 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Kindred vaults, firing an arrow at up to 3 enemies, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and gaining <attackSpeed>{{ totalqattackspeed }} Attack Speed</attackSpeed> for {{ baseasduration }} seconds.<br /><br />While inside of <spellName>Wolf's Frenzy</spellName>, this Ability's Cooldown is reduced to {{ cdnewvalue }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
               "Cooldown in Wolf's Frenzy"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
-              "{{ e4 }} -> {{ e4NL }}"
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cdnewvalue }} -> {{ cdnewvalueNL }}"
             ]
           },
           "maxrank": 5,
@@ -494,10 +494,10 @@
           "rangeBurn": "340",
           "image": {
             "full": "KindredQ.png",
-            "sprite": "spell6.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 384,
-            "y": 144,
+            "x": 192,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -514,7 +514,7 @@
               "Cooldown"
             ],
             "effect": [
-              "{{ e5 }} -> {{ e5NL }}",
+              "{{ clonedamageflat }} -> {{ clonedamageflatNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -635,10 +635,10 @@
           "rangeBurn": "560",
           "image": {
             "full": "KindredW.png",
-            "sprite": "spell6.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 432,
-            "y": 144,
+            "x": 240,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -776,10 +776,10 @@
           "rangeBurn": "500",
           "image": {
             "full": "KindredEWrapper.png",
-            "sprite": "spell7.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 0,
-            "y": 0,
+            "x": 288,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -789,14 +789,14 @@
           "id": "KindredR",
           "name": "Lamb's Respite",
           "description": "Lamb grants all living things inside a zone a respite from death. Until the effect ends, nothing can die. At the end, units are healed.",
-          "tooltip": "Kindred blesses the ground for {{ e2 }} seconds, allowing no unit, ally, enemy, or neutral to die while inside. Upon reaching 10% Health, units can't be damaged or healed while still inside the zone.<br /><br />When the blessing ends, all units inside heal for <healing>{{ e1 }} Health</healing>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Kindred blesses the ground for {{ buffduration }} seconds, allowing no unit, ally, enemy, or neutral to die while inside. Upon reaching 10% Health, units can't be damaged or healed while still inside the zone.<br /><br />When the blessing ends, all units inside heal for <healing>{{ healflat }} Health</healing>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Healing",
               "Cooldown"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
+              "{{ healflat }} -> {{ healflatNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -891,10 +891,10 @@
           "rangeBurn": "500",
           "image": {
             "full": "KindredR.png",
-            "sprite": "spell7.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 48,
-            "y": 0,
+            "x": 336,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -906,7 +906,7 @@
         "description": "Kindred can mark targets to Hunt. Successfully completing a Hunt permanently empowers Kindred's basic abilities. Every 4 hunts completed also increases Kindred's basic attack range.",
         "image": {
           "full": "Kindred_Passive.png",
-          "sprite": "passive2.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 240,
           "y": 0,

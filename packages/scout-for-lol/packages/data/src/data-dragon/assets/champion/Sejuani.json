@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Sejuani": {
       "id": "Sejuani",
@@ -10,7 +10,7 @@
       "title": "Fury of the North",
       "image": {
         "full": "Sejuani.png",
-        "sprite": "champion3.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 288,
         "y": 96,
@@ -453,7 +453,7 @@
           "id": "SejuaniQ",
           "name": "Arctic Assault",
           "description": "Sejuani charges forward, knocking enemies into the air. The charge stops after hitting an enemy champion.",
-          "tooltip": "Sejuani charges, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> to enemies and <status>Knocking</status> them <status>Up</status> for {{ e4 }} seconds. The charge ends after hitting an enemy champion.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Sejuani charges, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> to enemies and <status>Knocking</status> them <status>Up</status> for {{ knockupdurationtooltiponly }} seconds. The charge ends after hitting an enemy champion.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -583,10 +583,10 @@
           "rangeBurn": "650",
           "image": {
             "full": "SejuaniQ.png",
-            "sprite": "spell12.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 96,
-            "y": 0,
+            "x": 384,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -726,10 +726,10 @@
           "rangeBurn": "600",
           "image": {
             "full": "SejuaniW.png",
-            "sprite": "spell12.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 144,
-            "y": 0,
+            "x": 432,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -739,7 +739,7 @@
           "id": "SejuaniE",
           "name": "Permafrost",
           "description": "Sejuani freezes and stuns an enemy champion that has maximum Frost stacks.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Nearby melee allied champions' Attacks apply a stack to champions and jungle monsters.<br /><br /><spellPassive>Active:</spellPassive> Sejuani deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to target enemy with 4 stacks and <status>Stuns</status> them for {{ e1 }} second. {{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Nearby melee allied champions' Attacks apply a stack to champions and jungle monsters.<br /><br /><spellPassive>Active:</spellPassive> Sejuani deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to target enemy with 4 stacks and <status>Stuns</status> them for {{ ccduration }} second. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage"
@@ -865,10 +865,10 @@
           "rangeBurn": "560",
           "image": {
             "full": "SejuaniE.png",
-            "sprite": "spell12.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 192,
-            "y": 0,
+            "x": 0,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -878,7 +878,7 @@
           "id": "SejuaniR",
           "name": "Glacial Prison",
           "description": "Sejuani throws her bola that freezes and stuns the first champion hit and creates an ice storm that slows other enemies.",
-          "tooltip": "Sejuani throws her True Ice bola, <status>Stunning</status> and revealing the first enemy champion hit for {{ e2 }} second and dealing <magicDamage>{{ minordamagetooltip }} magic damage</magicDamage>.<br /><br />If the bola travels at least 25% of its range, it <status>Stuns</status> and reveals for {{ e6 }} seconds instead. It then also creates an ice storm that <status>Slows</status> surrounding enemies by {{ e4 }}% for {{ e3 }} seconds. All affected enemies take <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Sejuani throws her True Ice bola, <status>Stunning</status> and revealing the first enemy champion hit for {{ basestunduration }} second and dealing <magicDamage>{{ minordamagetooltip }} magic damage</magicDamage>.<br /><br />If the bola travels at least 25% of its range, it <status>Stuns</status> and reveals for {{ empoweredstunduration }} seconds instead. It then also creates an ice storm that <status>Slows</status> surrounding enemies by {{ explosionslowamount }}% for {{ zoneduration }} seconds. All affected enemies take <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Minimum Damage",
@@ -886,8 +886,8 @@
               "Cooldown"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
-              "{{ e7 }} -> {{ e7NL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ empoweredbasedamage }} -> {{ empoweredbasedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -982,10 +982,10 @@
           "rangeBurn": "1300",
           "image": {
             "full": "SejuaniR.png",
-            "sprite": "spell12.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 240,
-            "y": 0,
+            "x": 48,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -997,7 +997,7 @@
         "description": "After being out of combat, Sejuani gains Frost Armor which grants Armor and Magic Resist and immunity to slows. Frost Armor persists for a short time after Sejuani takes damage.  Sejuani can damage a stunned enemy to shatter it, dealing massive magic damage.",
         "image": {
           "full": "Sejuani_passive.png",
-          "sprite": "passive3.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 288,
           "y": 96,

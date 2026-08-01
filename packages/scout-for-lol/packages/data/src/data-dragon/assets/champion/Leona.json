@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Leona": {
       "id": "Leona",
@@ -10,7 +10,7 @@
       "title": "the Radiant Dawn",
       "image": {
         "full": "Leona.png",
-        "sprite": "champion2.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 48,
         "y": 48,
@@ -546,14 +546,14 @@
           "id": "LeonaShieldOfDaybreak",
           "name": "Shield of Daybreak",
           "description": "Leona uses her shield to perform her next basic attack, dealing bonus magic damage and stunning the target.",
-          "tooltip": "Leona's next Attack <status>Stuns</status> for {{ e1 }} seconds and deals an additional <magicDamage>{{ totaldamagetooltip }}</magicDamage> magic damage.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Leona's next Attack <status>Stuns</status> for {{ stunduration }} seconds and deals an additional <magicDamage>{{ totaldamagetooltip }}</magicDamage> magic damage.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ e2 }} -> {{ e2NL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
@@ -674,10 +674,10 @@
           "rangeBurn": "100",
           "image": {
             "full": "LeonaShieldOfDaybreak.png",
-            "sprite": "spell7.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 96,
-            "y": 96,
+            "x": 384,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -687,7 +687,7 @@
           "id": "LeonaSolarBarrier",
           "name": "Eclipse",
           "description": "Leona raises her shield to gain Damage Reduction, Armor, and Magic Resist. When the duration first ends, if there are nearby enemies, she will deal magic damage to them and prolong the duration of the effect.",
-          "tooltip": "Leona raises her shield, reducing incoming damage by {{ flatdamagereduction }} and gaining <scaleArmor>{{ bonusarmortooltip }} Armor</scaleArmor> and <scaleMR>{{ bonusmrtooltip }} Magic Resist</scaleMR> for {{ e3 }} seconds. Afterwards, her shield detonates, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> to nearby enemies. If she hits at least one, she retains the <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> bonuses for an additional {{ e3 }} seconds.<br />{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Leona raises her shield, reducing incoming damage by {{ flatdamagereduction }} and gaining <scaleArmor>{{ bonusarmortooltip }} Armor</scaleArmor> and <scaleMR>{{ bonusmrtooltip }} Magic Resist</scaleMR> for {{ armormrduration }} seconds. Afterwards, her shield detonates, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> to nearby enemies. If she hits at least one, she retains the <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> bonuses for an additional {{ armormrduration }} seconds.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -696,8 +696,8 @@
               "Cooldown"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
-              "{{ e4 }} -> {{ e4NL }}",
+              "{{ explosionbasedamage }} -> {{ explosionbasedamageNL }}",
+              "{{ armorbasebonus }} -> {{ armorbasebonusNL }}",
               "{{ flatdamagereduction }} -> {{ flatdamagereductionNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
@@ -819,10 +819,10 @@
           "rangeBurn": "450",
           "image": {
             "full": "LeonaSolarBarrier.png",
-            "sprite": "spell7.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 144,
-            "y": 96,
+            "x": 432,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -832,7 +832,7 @@
           "id": "LeonaZenithBlade",
           "name": "Zenith Blade",
           "description": "Leona projects a solar image of her sword, dealing magic damage to all enemies in a line. When the image fades, the last enemy champion struck will be briefly immobilized and Leona will dash to them.",
-          "tooltip": "Leona thrusts with a sword of light, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>. The last champion struck will be <status>Rooted</status> for {{ e2 }} seconds and Leona will dash to them.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Leona thrusts with a sword of light, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>. The last champion struck will be <status>Rooted</status> for {{ rootduration }} seconds and Leona will dash to them.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -840,7 +840,7 @@
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
@@ -962,10 +962,10 @@
           "rangeBurn": "875",
           "image": {
             "full": "LeonaZenithBlade.png",
-            "sprite": "spell7.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 192,
-            "y": 96,
+            "x": 0,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1077,10 +1077,10 @@
           "rangeBurn": "1200",
           "image": {
             "full": "LeonaSolarFlare.png",
-            "sprite": "spell7.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 240,
-            "y": 96,
+            "x": 48,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1092,7 +1092,7 @@
         "description": "Damaging spells afflict enemies with Sunlight for 1.5 seconds. When allied Champions deal damage to those targets, they consume the Sunlight to deal additional magic damage.",
         "image": {
           "full": "LeonaSunlight.png",
-          "sprite": "passive2.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 48,
           "y": 48,

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Malzahar": {
       "id": "Malzahar",
@@ -10,7 +10,7 @@
       "title": "the Prophet of the Void",
       "image": {
         "full": "Malzahar.png",
-        "sprite": "champion2.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 432,
         "y": 48,
@@ -590,10 +590,10 @@
           "rangeBurn": "900",
           "image": {
             "full": "MalzaharQ.png",
-            "sprite": "spell8.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 192,
-            "y": 48,
+            "x": 0,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -733,10 +733,10 @@
           "rangeBurn": "150",
           "image": {
             "full": "MalzaharW.png",
-            "sprite": "spell8.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 240,
-            "y": 48,
+            "x": 48,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -876,10 +876,10 @@
           "rangeBurn": "650",
           "image": {
             "full": "MalzaharE.png",
-            "sprite": "spell8.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 288,
-            "y": 48,
+            "x": 96,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -993,10 +993,10 @@
           "rangeBurn": "700",
           "image": {
             "full": "MalzaharR.png",
-            "sprite": "spell8.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 336,
-            "y": 48,
+            "x": 144,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -1008,7 +1008,7 @@
         "description": "When he hasn't recently taken damage or been crowd controlled, Malzahar gains massive damage reduction and crowd control immunity, lingering for a short period after taking damage.",
         "image": {
           "full": "Malzahar_Passive.png",
-          "sprite": "passive2.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 432,
           "y": 48,

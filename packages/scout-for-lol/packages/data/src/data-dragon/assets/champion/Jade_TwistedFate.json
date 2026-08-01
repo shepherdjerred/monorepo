@@ -1,0 +1,807 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_TwistedFate": {
+      "id": "Jade_TwistedFate",
+      "key": "60004",
+      "name": "Twisted Fate",
+      "title": "The Card Master",
+      "image": {
+        "full": "Jade_TwistedFate.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 96,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60004000",
+          "num": 0,
+          "name": "default",
+          "chromas": true
+        },
+        {
+          "id": "60004001",
+          "num": 1,
+          "name": "PAX Twisted Fate",
+          "chromas": false
+        },
+        {
+          "id": "60004004",
+          "num": 4,
+          "name": "Tango Twisted Fate",
+          "chromas": false
+        },
+        {
+          "id": "60004011",
+          "num": 11,
+          "name": "Pulsefire Twisted Fate",
+          "chromas": false
+        },
+        {
+          "id": "60004012",
+          "num": 12,
+          "name": "Pulsefire Twisted Fate (Chrono)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "60004025",
+          "num": 25,
+          "name": "Crime City Nightmare Twisted Fate",
+          "chromas": false
+        },
+        {
+          "id": "60004026",
+          "num": 26,
+          "name": "Crime City Nightmare Twisted Fate (Ruby)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60004027",
+          "num": 27,
+          "name": "Crime City Nightmare Twisted Fate (Emerald)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60004028",
+          "num": 28,
+          "name": "Crime City Nightmare Twisted Fate (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60004029",
+          "num": 29,
+          "name": "Crime City Nightmare Twisted Fate (Sapphire)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60004030",
+          "num": 30,
+          "name": "Crime City Nightmare Twisted Fate (Catseye)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60004031",
+          "num": 31,
+          "name": "Crime City Nightmare Twisted Fate (Amethyst)",
+          "chromas": true,
+          "parentSkin": 25
+        },
+        {
+          "id": "60004032",
+          "num": 32,
+          "name": "Crime City Nightmare Twisted Fate (Pearl)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60004033",
+          "num": 33,
+          "name": "Crime City Nightmare Twisted Fate (Obsidian)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60004034",
+          "num": 34,
+          "name": "Crime City Nightmare Twisted Fate (Underground)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "60004035",
+          "num": 35,
+          "name": "",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
+          "id": "60004036",
+          "num": 36,
+          "name": "Space Groove Twisted Fate",
+          "chromas": false
+        },
+        {
+          "id": "60004037",
+          "num": 37,
+          "name": "Space Groove Twisted Fate (Ruby)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "60004038",
+          "num": 38,
+          "name": "Space Groove Twisted Fate (Emerald)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "60004039",
+          "num": 39,
+          "name": "Space Groove Twisted Fate (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "60004040",
+          "num": 40,
+          "name": "Space Groove Twisted Fate (Catseye)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "60004041",
+          "num": 41,
+          "name": "Space Groove Twisted Fate (Turquoise)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "60004042",
+          "num": 42,
+          "name": "Space Groove Twisted Fate (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "60004043",
+          "num": 43,
+          "name": "Space Groove Twisted Fate (Obsidian)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "60004044",
+          "num": 44,
+          "name": "Space Groove Twisted Fate (Rainbow)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "60004301",
+          "num": 301,
+          "name": "Classic Twisted Fate",
+          "chromas": true
+        },
+        {
+          "id": "60004302",
+          "num": 302,
+          "name": "Classic Twisted Fate (Jack of Hearts)",
+          "chromas": false,
+          "parentSkin": 301
+        }
+      ],
+      "lore": "- Gate (E) is a global teleport<br>- Destiny (R) is a global slow and reveal<br>- Loaded Dice (P) grants all allies and himself gold on kill",
+      "blurb": "- Gate (E) is a global teleport<br>- Destiny (R) is a global slow and reveal<br>- Loaded Dice (P) grants all allies and himself gold on kill",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Mage",
+        "Marksman"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 6,
+        "defense": 2,
+        "magic": 6,
+        "difficulty": 9
+      },
+      "stats": {
+        "hp": 466,
+        "hpperlevel": 82,
+        "mp": 240,
+        "mpperlevel": 38,
+        "movespeed": 330,
+        "armor": 18.4,
+        "armorperlevel": 3.15,
+        "spellblock": 30,
+        "spellblockperlevel": 0,
+        "attackrange": 525,
+        "hpregen": 5.1,
+        "hpregenperlevel": 0.6,
+        "mpregen": 7,
+        "mpregenperlevel": 0.5,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 49.71,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 3.22,
+        "attackspeed": 0.651
+      },
+      "spells": [
+        {
+          "id": "Jade_TwistedFateWildCards",
+          "name": "Wild Cards",
+          "description": "Twisted Fate throws three cards, dealing damage to each enemy unit they pass through.",
+          "tooltip": "Throws three cards that deal <magicDamage>{{ totaldamage }} magic damage</magicDamage> to each enemy unit they pass through.</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
+          "cooldownBurn": "6",
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
+          "costBurn": "60/70/80/90/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            10000,
+            10000,
+            10000,
+            10000,
+            10000
+          ],
+          "rangeBurn": "10000",
+          "image": {
+            "full": "Jade_TwistedFateWildCards.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 96,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_TwistedFatePickACard",
+          "name": "Pick A Card",
+          "description": "Twisted Fate chooses a magic card from his deck, and uses that for his next attack, causing bonus effects.",
+          "tooltip": "Twisted Fate begins shuffling his deck, allowing him to <recast>Recast</recast> to lock in one of three cards and enhance his next Attack.<br /><br /><span class=\"color0000FF\">Blue Card</span> deals <magicDamage>{{ bluedamage }} magic damage</magicDamage> and restores <scaleMana>{{ manarestore }} Mana</scaleMana>.<br /><br /><span class=\"colorFF0000\">Red Card</span> deals <magicDamage>{{ reddamage }} magic damage</magicDamage> to units around the target and <status>Slows</status> by {{ slow }}% for 2.5 seconds.<br /><br /><span class=\"colorFFD700\">Gold Card</span> deals <magicDamage>{{ golddamage }} magic damage</magicDamage> and <status>Stuns</status> for {{ stun }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Blue Card Damage",
+              "Blue Card Mana Restore",
+              "Red Card Damage",
+              "Red Card Slow %",
+              "Gold Card Damage",
+              "Gold Card Stun Duration",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ bluebase }} -> {{ bluebaseNL }}",
+              "{{ manarestore }} -> {{ manarestoreNL }}",
+              "{{ redbase }} -> {{ redbaseNL }}",
+              "{{ slow }}% -> {{ slowNL }}%",
+              "{{ goldbase }} -> {{ goldbaseNL }}",
+              "{{ stun }} -> {{ stunNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
+          "cooldownBurn": "6",
+          "cost": [
+            40,
+            55,
+            70,
+            85,
+            100
+          ],
+          "costBurn": "40/55/70/85/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              40,
+              60,
+              80,
+              100,
+              120
+            ],
+            [
+              30,
+              35,
+              40,
+              45,
+              50
+            ],
+            [
+              1,
+              1.25,
+              1.5,
+              1.75,
+              2
+            ],
+            [
+              30,
+              45,
+              60,
+              75,
+              90
+            ],
+            [
+              15,
+              22.5,
+              30,
+              37.5,
+              45
+            ],
+            [
+              70,
+              90,
+              110,
+              130,
+              150
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "40/60/80/100/120",
+            "30/35/40/45/50",
+            "1/1.25/1.5/1.75/2",
+            "30/45/60/75/90",
+            "15/22.5/30/37.5/45",
+            "70/90/110/130/150",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            200,
+            200,
+            200,
+            200,
+            200
+          ],
+          "rangeBurn": "200",
+          "image": {
+            "full": "Jade_TwistedFatePickACard.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 144,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_TwistedFateE",
+          "name": "Gate",
+          "description": "After channeling, Twisted Fate Teleports to any target location.",
+          "tooltip": "After channeling for {{ channelduration }} seconds, Twisted Fate Teleports to any target location.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            120,
+            105,
+            90,
+            75,
+            60
+          ],
+          "cooldownBurn": "120/105/90/75/60",
+          "cost": [
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
+          "costBurn": "80",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              6,
+              8,
+              10,
+              50,
+              40
+            ],
+            [
+              130,
+              110,
+              90,
+              45,
+              30
+            ],
+            [
+              100,
+              125,
+              150,
+              0,
+              0
+            ],
+            [
+              5500,
+              5500,
+              5500,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "6/8/10/50/40",
+            "130/110/90/45/30",
+            "100/125/150/0/0",
+            "5500/5500/5500/0/0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            20000,
+            20000,
+            20000,
+            20000,
+            20000
+          ],
+          "rangeBurn": "20000",
+          "image": {
+            "full": "Jade_TwistedFateE.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 192,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_TwistedFateDestiny",
+          "name": "Destiny",
+          "description": "Twisted Fate predicts the fortunes of his foes, revealing and slowing all enemy champions. Gate's channel time is also reduced during this duration.",
+          "tooltip": "Twisted Fate <keywordStealth>Reveals</keywordStealth> all enemy champions and <status>Slows</status> by {{ slowamount*100 }}% for {{ debuffduration }} seconds. While active the channel time for <spellName>Gate</spellName> is reduced to {{ reducedchanneltime }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Duration",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ debuffduration }} -> {{ debuffdurationNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            130,
+            110,
+            90
+          ],
+          "cooldownBurn": "130/110/90",
+          "cost": [
+            150,
+            150,
+            150
+          ],
+          "costBurn": "150",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              6,
+              8,
+              10
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              5500,
+              5500,
+              5500
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "6/8/10",
+            "0",
+            "0",
+            "5500",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            20000,
+            20000,
+            20000
+          ],
+          "rangeBurn": "20000",
+          "image": {
+            "full": "Jade_TwistedFateDestiny.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 240,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Loaded Dice",
+        "description": "Twisted Fate and his allies receive an additional 2 gold per kill.",
+        "image": {
+          "full": "Cardmaster_SealFate.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 96,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

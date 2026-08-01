@@ -12,6 +12,27 @@ export function renderChangelogToHtml(content: ReactNode): string {
 
 export const changelog: ChangelogEntry[] = [
   buildChangelogEntry({
+    date: "2026 08 01",
+    banner: "Updated for League patch 26.15",
+    sections: [
+      {
+        title: "Game Data",
+        color: "indigo",
+        items: [
+          "Champion, item, summoner spell, and rune data refreshed for League patch 26.15",
+          "New game mode: League Classic — 60 champions playing their 2010s-era kits.",
+          "Ranked Season 3 began July 29; Aegis of Valor no longer reduces LP loss and now grants double LP on wins.",
+          "Arena and ARAM: Mayhem augment pools changed — Arena removes Slow and Steady and adds a level-2 Ok Boomerang, while ARAM adds Chain Reaction and makes Pat on the Back multi-pickable.",
+          "Bel'Veth has been reworked from the ground up.",
+        ],
+      },
+    ],
+    link: {
+      label: "Read Riot's full Patch 26.15 notes",
+      href: "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-15-notes",
+    },
+  }),
+  buildChangelogEntry({
     date: "2026 07 25",
     banner: "Ranked report redesign and delegated dashboard roles",
     sections: [

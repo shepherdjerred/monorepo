@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Zac": {
       "id": "Zac",
@@ -10,7 +10,7 @@
       "title": "the Secret Weapon",
       "image": {
         "full": "Zac.png",
-        "sprite": "champion5.png",
+        "sprite": "champion7.png",
         "group": "champion",
         "x": 288,
         "y": 48,
@@ -335,7 +335,7 @@
         "mpperlevel": 0,
         "movespeed": 340,
         "armor": 33,
-        "armorperlevel": 4.7,
+        "armorperlevel": 5.2,
         "spellblock": 32,
         "spellblockperlevel": 2.05,
         "attackrange": 175,
@@ -483,10 +483,10 @@
           "rangeBurn": "800",
           "image": {
             "full": "ZacQ.png",
-            "sprite": "spell17.png",
+            "sprite": "spell23.png",
             "group": "spell",
-            "x": 96,
-            "y": 0,
+            "x": 384,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -624,10 +624,10 @@
           "rangeBurn": "350",
           "image": {
             "full": "ZacW.png",
-            "sprite": "spell17.png",
+            "sprite": "spell23.png",
             "group": "spell",
-            "x": 144,
-            "y": 0,
+            "x": 432,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -652,13 +652,13 @@
           },
           "maxrank": 5,
           "cooldown": [
-            22,
-            19,
-            16,
-            13,
-            10
+            21,
+            18,
+            15,
+            12,
+            9
           ],
-          "cooldownBurn": "22/19/16/13/10",
+          "cooldownBurn": "21/18/15/12/9",
           "cost": [
             0,
             0,
@@ -767,10 +767,10 @@
           "rangeBurn": "300",
           "image": {
             "full": "ZacE.png",
-            "sprite": "spell17.png",
+            "sprite": "spell23.png",
             "group": "spell",
-            "x": 192,
-            "y": 0,
+            "x": 0,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -882,10 +882,10 @@
           "rangeBurn": "300",
           "image": {
             "full": "ZacR.png",
-            "sprite": "spell17.png",
+            "sprite": "spell23.png",
             "group": "spell",
-            "x": 240,
-            "y": 0,
+            "x": 48,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -897,7 +897,7 @@
         "description": "Each time Zac hits an enemy with an ability, he sheds a chunk of himself that can be reabsorbed to restore Health. Upon taking fatal damage, Zac splits into 4 bloblets that attempt to recombine. If any bloblets remain, he will revive with an amount of Health depending on the Health of the surviving bloblets. Each bloblet has a percentage of Zac's maximum Health, Armor and Magic Resistance. This ability has a 5 minute cooldown.",
         "image": {
           "full": "ZacPassive.png",
-          "sprite": "passive5.png",
+          "sprite": "passive7.png",
           "group": "passive",
           "x": 288,
           "y": 48,
