@@ -93,12 +93,13 @@ async function codexCommand(
       // Codex's OS-level sandbox needs bwrap to create a Linux namespace, which
       // the unprivileged, non-root worker pod refuses ("No permissions to
       // create a new namespace"), so any --sandbox value other than
-      // danger-full-access hard-fails before the first command runs. We drop
-      // the OS sandbox and instead bound the blast radius at the environment:
-      // envForProvider (agent-task-env.ts) forwards ONLY runtime vars + Codex's own
-      // model key + a short-lived GitHub App token — not the worker's other
-      // operational secrets — so a prompt-injected/mistaken command has little
-      // to exfiltrate or misuse. See README.md's cog block for the same fix.
+      // danger-full-access hard-fails before the first command runs. We drop the
+      // OS sandbox; the isolation boundary is the ephemeral non-root pod, the
+      // throwaway per-run clone, and report-only mode (the prompt forbids
+      // mutation). The full worker env IS forwarded to the subprocess
+      // (envForProvider, agent-task-env.ts) — an accepted risk documented there,
+      // required so the report-only homelab audit keeps its read-only creds. See
+      // README.md's cog block for the same sandbox fix.
       "--sandbox",
       "danger-full-access",
       "--config",

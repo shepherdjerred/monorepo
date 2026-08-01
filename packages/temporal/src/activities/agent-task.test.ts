@@ -240,61 +240,76 @@ describe("agentTaskActivities", () => {
     ).toBe("codex-key");
   });
 
-  it("forwards ONLY allowlisted keys for Claude and drops every other secret", async () => {
+  it("forwards the full worker env for Claude, minus ANTHROPIC_API_KEY and inherited GitHub creds", async () => {
     const environment = envForProvider("claude", "installation-token", {
-      // Allowlisted: the runtime vars + Claude's own model key.
       PATH: "/usr/bin",
       HOME: "/home/worker",
       CLAUDE_CODE_OAUTH_TOKEN: "oauth-token",
-      // NOT allowlisted for Claude — must all be dropped.
-      ANTHROPIC_API_KEY: "anthropic-key",
-      OPENAI_API_KEY: "openai-key",
-      GH_TOKEN: "personal-token",
-      GITHUB_PERSONAL_ACCESS_TOKEN: "personal-token",
-      GITHUB_APP_PRIVATE_KEY: "private-key",
+      // Operational secrets the homelab audit needs — must be FORWARDED so its
+      // live Grafana/PagerDuty/ArgoCD/Bugsink/Cloudflare checks work.
       POSTAL_API_KEY: "postal-secret",
       GRAFANA_API_KEY: "grafana-secret",
       ARGOCD_AUTH_TOKEN: "argocd-secret",
       CLOUDFLARE_API_TOKEN: "cloudflare-secret",
-      SAFE_VALUE: "not-forwarded",
+      SAFE_VALUE: "forwarded",
+      // Stripped: Claude bills the subscription, not the direct API.
+      ANTHROPIC_API_KEY: "anthropic-key",
+      // Stripped: never inherit the worker's GitHub creds; GH_TOKEN is re-minted.
+      GH_TOKEN: "personal-token",
+      GITHUB_PERSONAL_ACCESS_TOKEN: "personal-token",
+      GITHUB_APP_PRIVATE_KEY: "private-key",
     });
 
     expect(environment).toEqual({
       PATH: "/usr/bin",
       HOME: "/home/worker",
       CLAUDE_CODE_OAUTH_TOKEN: "oauth-token",
-      // The GitHub App installation token is injected explicitly, never
-      // inherited from the worker env.
+      POSTAL_API_KEY: "postal-secret",
+      GRAFANA_API_KEY: "grafana-secret",
+      ARGOCD_AUTH_TOKEN: "argocd-secret",
+      CLOUDFLARE_API_TOKEN: "cloudflare-secret",
+      SAFE_VALUE: "forwarded",
+      // The GitHub App installation token is injected explicitly, replacing any
+      // inherited GitHub credential.
       GH_TOKEN: "installation-token",
     });
+    expect(environment).not.toHaveProperty("ANTHROPIC_API_KEY");
+    expect(environment).not.toHaveProperty("GITHUB_PERSONAL_ACCESS_TOKEN");
+    expect(environment).not.toHaveProperty("GITHUB_APP_PRIVATE_KEY");
   });
 
-  it("withholds infra secrets and the other provider's key from Codex", async () => {
-    const sentinelSecrets = {
+  it("forwards the full worker env for Codex, replacing only inherited GitHub creds", async () => {
+    const forwarded = {
       POSTAL_API_KEY: "postal-secret",
       PAGERDUTY_TOKEN: "pagerduty-secret",
       BUGSINK_TOKEN: "bugsink-secret",
       GRAFANA_API_KEY: "grafana-secret",
       ARGOCD_AUTH_TOKEN: "argocd-secret",
       CLOUDFLARE_API_TOKEN: "cloudflare-secret",
-      GITHUB_APP_PRIVATE_KEY: "private-key",
+      // Codex keeps ANTHROPIC_API_KEY (only Claude strips it) and the other
+      // provider's key — the full env is forwarded.
+      ANTHROPIC_API_KEY: "anthropic-key",
       CLAUDE_CODE_OAUTH_TOKEN: "other-provider-key",
     };
     const environment = envForProvider("codex", "installation-token", {
       PATH: "/usr/bin",
       HOME: "/home/worker",
       CODEX_API_KEY: "codex-key",
-      ...sentinelSecrets,
+      ...forwarded,
+      // Stripped: never inherit the worker's GitHub creds.
+      GH_TOKEN: "personal-token",
+      GITHUB_PERSONAL_ACCESS_TOKEN: "personal-token",
+      GITHUB_APP_PRIVATE_KEY: "private-key",
     });
 
     expect(environment).toEqual({
       PATH: "/usr/bin",
       HOME: "/home/worker",
       CODEX_API_KEY: "codex-key",
+      ...forwarded,
       GH_TOKEN: "installation-token",
     });
-    for (const secret of Object.values(sentinelSecrets)) {
-      expect(Object.values(environment)).not.toContain(secret);
-    }
+    expect(environment).not.toHaveProperty("GITHUB_PERSONAL_ACCESS_TOKEN");
+    expect(environment).not.toHaveProperty("GITHUB_APP_PRIVATE_KEY");
   });
 });
