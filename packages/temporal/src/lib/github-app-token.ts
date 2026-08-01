@@ -263,6 +263,52 @@ export async function createGitHubAppInstallationToken(
   throw lastError ?? new Error("GitHub App installation token request failed");
 }
 
+function parseAppSlugResponse(value: unknown): string {
+  const response = requireRecord(value);
+  const slug = response["slug"];
+  if (typeof slug !== "string" || slug.trim() === "") {
+    throw new Error("GitHub App identity response did not include a slug");
+  }
+  return slug.trim();
+}
+
+/**
+ * The URL-friendly slug of the authenticated GitHub App (`GET /app`), e.g.
+ * `long-summer-intern`. The request is signed with a JWT minted from the
+ * numeric `GITHUB_APP_ID` + private key, so the slug it returns is the app's
+ * own current slug — the stable identity a caller pins a PR author against
+ * without hard-coding a login that an app rename would silently break.
+ */
+export async function resolveGitHubAppSlug(
+  deps: GitHubAppTokenDeps = {},
+): Promise<string> {
+  const env = deps.env ?? processEnv();
+  const fetchFn = deps.fetch ?? fetch;
+  const now = deps.now ?? (() => Date.now());
+  const appId = requireNumericEnv(env, "GITHUB_APP_ID");
+  const privateKey = requiredEnv(env, "GITHUB_APP_PRIVATE_KEY");
+  const apiBaseUrl = (env.GITHUB_API_URL ?? DEFAULT_GITHUB_API_URL).replace(
+    /\/+$/,
+    "",
+  );
+  const jwt = await createGitHubAppJwt({ appId, privateKey, now });
+  const response = await fetchFn(`${apiBaseUrl}/app`, {
+    method: "GET",
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${jwt}`,
+      "X-GitHub-Api-Version": GITHUB_API_VERSION,
+    },
+  });
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(
+      `GitHub App identity request failed with ${String(response.status)} ${response.statusText}: ${body}`,
+    );
+  }
+  return parseAppSlugResponse(await response.json());
+}
+
 async function main(): Promise<void> {
   try {
     const result = await createGitHubAppInstallationToken();

@@ -147,6 +147,99 @@ function buildAgentTaskTimeoutRules(): PrometheusRule[] {
   ];
 }
 
+// Scout Data Dragon updater failure alerts. Extracted from
+// getTemporalRuleGroups (which is at the max-lines limit) and spread back into
+// the temporal-workflow-failures group below.
+const SCOUT_DATA_DRAGON_FAILURE_RULES: PrometheusRule[] = [
+  {
+    alert: "ScoutDataDragonUpdateFailed",
+    annotations: {
+      summary: "Scout Data Dragon Temporal update failed",
+      description: escapePrometheusTemplate(
+        "The Scout Data Dragon updater failed {{ $value }} time(s) in the last 24 hours. Check the Temporal UI and worker logs for failure reason {{ $labels.reason }}.",
+      ),
+    },
+    expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+      'max_over_time(scout_data_dragon_runs{outcome="failed"}[24h]) > 0',
+    ),
+    for: "15m",
+    labels: {
+      severity: "warning",
+    },
+  },
+  {
+    // "pr-merge-failed" was dropped from this regex: `gh pr merge
+    // --auto` failures are caught locally in the activity and never
+    // reach the outer catch that produces this reason label, so that
+    // value could never be produced here. ScoutDataDragonAutoMergeFailed
+    // below covers that signal via its own dedicated counter.
+    alert: "ScoutDataDragonPrAutomationFailed",
+    annotations: {
+      summary: "Scout Data Dragon PR automation failed",
+      description: escapePrometheusTemplate(
+        "The Scout Data Dragon updater failed while pushing or creating a PR. Failure reason: {{ $labels.reason }}.",
+      ),
+    },
+    expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+      'max_over_time(scout_data_dragon_runs{outcome="failed",reason=~"git-push-failed|pr-create-failed"}[24h]) > 0',
+    ),
+    for: "15m",
+    labels: {
+      severity: "warning",
+    },
+  },
+  {
+    alert: "ScoutDataDragonAutoMergeFailed",
+    annotations: {
+      summary: "Scout Data Dragon PR auto-merge setup failed",
+      description: escapePrometheusTemplate(
+        "The Scout Data Dragon updater recorded a PR auto-merge setup failure in the last 24 hours. The PR needs a manual merge — check open chore/scout-data-dragon-* PRs.",
+      ),
+    },
+    // Recency gauge (seconds since the last auto-merge failure), not a counter
+    // query. A monotonic counter can't satisfy both requirements at once:
+    // increase(counter[24h]) misses the very first failure (the series is born
+    // at 1, so the increase is 0), while max_over_time(counter[24h]) never ages
+    // out (a flat positive counter stays positive until the worker restarts).
+    // The timestamp gauge is read through a 24h max_over_time range, NOT as a
+    // bare instant vector: the worker is single-replica, so a restart makes the
+    // in-process gauge's instant series stale and `time() - <bare gauge>` would
+    // return no series and wrongly resolve the alert. max_over_time keeps the
+    // last failure's timestamp visible for the full 24h even across a restart,
+    // so the alert fires on the first failure and clears 24h after the most
+    // recent one regardless of worker recreation.
+    //
+    // The series name carries an `_s` suffix: the gauge is created with unit
+    // "s" (data-dragon-metrics.ts) and the worker's Temporal Prometheus
+    // exporter runs with `unitSuffix: true` (worker.ts), which appends the unit
+    // to the exported metric name. Same convention as the histogram queried in
+    // temporal-dashboard.ts as `scout_data_dragon_duration_s_bucket`. Querying
+    // the bare (unsuffixed) name matches no series, so the alert never fires.
+    expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+      "time() - max_over_time(scout_data_dragon_auto_merge_last_failure_timestamp_s[24h]) < 60 * 60 * 24",
+    ),
+    for: "15m",
+    labels: {
+      severity: "warning",
+    },
+  },
+  {
+    alert: "ScoutDataDragonUpdaterNotRunning",
+    annotations: {
+      summary: "Scout Data Dragon updater has not run",
+      description:
+        "The Scout Data Dragon Temporal schedule has not recorded any run, skip, or failure in the last 36 hours.",
+    },
+    expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+      "absent_over_time(scout_data_dragon_runs[36h])",
+    ),
+    for: "30m",
+    labels: {
+      severity: "warning",
+    },
+  },
+];
+
 export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
     {
@@ -218,53 +311,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             severity: "warning",
           },
         },
-        {
-          alert: "ScoutDataDragonUpdateFailed",
-          annotations: {
-            summary: "Scout Data Dragon Temporal update failed",
-            description: escapePrometheusTemplate(
-              "The Scout Data Dragon updater failed {{ $value }} time(s) in the last 24 hours. Check the Temporal UI and worker logs for failure reason {{ $labels.reason }}.",
-            ),
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'max_over_time(scout_data_dragon_runs{outcome="failed"}[24h]) > 0',
-          ),
-          for: "15m",
-          labels: {
-            severity: "warning",
-          },
-        },
-        {
-          alert: "ScoutDataDragonPrAutomationFailed",
-          annotations: {
-            summary: "Scout Data Dragon PR automation failed",
-            description: escapePrometheusTemplate(
-              "The Scout Data Dragon updater failed while pushing, creating, or auto-merging a PR. Failure reason: {{ $labels.reason }}.",
-            ),
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'max_over_time(scout_data_dragon_runs{outcome="failed",reason=~"git-push-failed|pr-create-failed|pr-merge-failed"}[24h]) > 0',
-          ),
-          for: "15m",
-          labels: {
-            severity: "warning",
-          },
-        },
-        {
-          alert: "ScoutDataDragonUpdaterNotRunning",
-          annotations: {
-            summary: "Scout Data Dragon updater has not run",
-            description:
-              "The Scout Data Dragon Temporal schedule has not recorded any run, skip, or failure in the last 36 hours.",
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "absent_over_time(scout_data_dragon_runs[36h])",
-          ),
-          for: "30m",
-          labels: {
-            severity: "warning",
-          },
-        },
+        ...SCOUT_DATA_DRAGON_FAILURE_RULES,
         {
           alert: "TemporalWorkerMetricsDown",
           annotations: {
