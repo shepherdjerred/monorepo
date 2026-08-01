@@ -54,8 +54,8 @@ async function regularFiles(directory: string): Promise<string[]> {
     onlyFiles: true,
   })) {
     if (
-      relativePath.endsWith(".tgz") ||
-      relativePath === "templates/.gitkeep"
+      relativePath === "templates/.gitkeep" ||
+      relativePath.endsWith(".tgz")
     ) {
       continue;
     }
@@ -273,7 +273,7 @@ export function planCharts(
   );
   const coordinated = entries.map(
     (entry): ChartPlanEntry =>
-      entry.name === "apps" && leafChanged
+      leafChanged && entry.name === "apps"
         ? { ...entry, action: "publish" }
         : entry,
   );

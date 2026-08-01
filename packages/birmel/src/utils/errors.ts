@@ -43,7 +43,7 @@ export function parseJsonStringArray(text: string): string[] {
  */
 export function parseJsonNumberRecord(text: string): Record<string, number> {
   const parsed: unknown = JSON.parse(text);
-  if (parsed != null && typeof parsed === "object" && !Array.isArray(parsed)) {
+  if (typeof parsed === "object" && parsed != null && !Array.isArray(parsed)) {
     const result: Record<string, number> = {};
     for (const [key, value] of Object.entries(parsed)) {
       if (typeof value === "number") {
@@ -60,7 +60,7 @@ export function parseJsonNumberRecord(text: string): Record<string, number> {
  */
 export function parseJsonRecord(text: string): Record<string, unknown> {
   const parsed: unknown = JSON.parse(text);
-  if (parsed != null && typeof parsed === "object" && !Array.isArray(parsed)) {
+  if (typeof parsed === "object" && parsed != null && !Array.isArray(parsed)) {
     // Object.entries/fromEntries rebuilds the object with the correct type
     return Object.fromEntries(Object.entries(parsed));
   }

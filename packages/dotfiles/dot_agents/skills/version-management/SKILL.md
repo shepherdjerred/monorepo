@@ -206,7 +206,7 @@ the Renovate PR** — the "Prod images" packageRule pins them to
   site pin**: `scout-prod-reconcile` derives the prod site version from the
   pin's tag portion, so one pin moves both halves in lockstep (the tRPC-skew
   guarantee lives in the tag mint, not in paired pins).
-- **starlight-karma-bot:** `bake-images.ts` pushes a `2.0.0-<build>` tag
+- **starlight-karma-bot:** `bake-images.sh` pushes a `2.0.0-<build>` tag
   whenever a content change records a digest.
 
 Rollback = `git revert` the promotion merge, or hand-edit the pin to any

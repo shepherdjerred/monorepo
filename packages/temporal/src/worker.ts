@@ -9,7 +9,6 @@ import {
   startHttpServers,
   type EventBridgeHandle,
 } from "./event-bridge/index.ts";
-import { startPrReactionListener } from "./event-bridge/start-pr-reaction-listener.ts";
 import { initializeTracing, shutdownTracing } from "./observability/tracing.ts";
 import {
   haEventBridgeConnected,
@@ -17,7 +16,6 @@ import {
   startMetricsServer,
   stopMetricsServer,
 } from "./observability/metrics.ts";
-import { readPositiveIntegerEnv } from "./shared/env.ts";
 import { createStructuredLogger } from "./observability/logging.ts";
 import { restoreGlitterCorpusSnapshotMetrics } from "./activities/glitter-corpus-snapshot.ts";
 import { WORKFLOW_TASK_POLLER_BEHAVIOR } from "./shared/worker-options.ts";
@@ -232,37 +230,6 @@ async function main(): Promise<void> {
 
   jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.DEFAULT });
 
-  const prReviewMaxConcurrentActivities = readPositiveIntegerEnv({
-    name: "PR_REVIEW_WORKER_MAX_CONCURRENT_ACTIVITIES",
-    defaultValue: 1,
-  });
-
-  // Second worker on the pr-review task queue. Same workflow bundle and
-  // activity surface, but isolated from the DEFAULT queue so the
-  // long-running multi-specialist LLM activities can't head-of-line block
-  // HA / cron workflows. See packages/docs/plans/2026-05-10_sota-pr-review-bot.md.
-  const prReviewWorker = await Worker.create({
-    ...commonWorkerOptions,
-    taskQueue: TASK_QUEUES.PR_REVIEW,
-    maxConcurrentActivityTaskExecutions: prReviewMaxConcurrentActivities,
-  });
-
-  jsonLog("info", "Worker created", {
-    taskQueue: TASK_QUEUES.PR_REVIEW,
-    maxConcurrentActivityTaskExecutions: prReviewMaxConcurrentActivities,
-  });
-
-  // Third worker on the pr-summary task queue. Isolated from PR_REVIEW so a
-  // stuck specialist activity (e.g. specialist runner waiting on Anthropic
-  // 5xx) can't block the cheap, fast Haiku summary — operators still see
-  // "what changed in this PR?" even when the deep review is degraded.
-  const prSummaryWorker = await Worker.create({
-    ...commonWorkerOptions,
-    taskQueue: TASK_QUEUES.PR_SUMMARY,
-  });
-
-  jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.PR_SUMMARY });
-
   // Dedicated queue for delayed/recurring report-only Claude/Codex tasks.
   // These can run for tens of minutes and must not head-of-line block HA,
   // schedule registration, PR summaries, or PR review specialist traffic.
@@ -272,26 +239,6 @@ async function main(): Promise<void> {
   });
 
   jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.AGENT_TASK });
-
-  // Dedicated queue for the per-PR babysitter loops. Long-lived workflows + long
-  // mutating `claude -p` subprocesses, isolated from every other queue. The
-  // small activity-concurrency cap bounds simultaneous agent subprocesses +
-  // workdir disk. The feature is dormant unless PR_BABYSIT_ENABLED=true gates
-  // the ingress (this worker just registers the workflow + activities).
-  const prBabysitMaxConcurrentActivities = readPositiveIntegerEnv({
-    name: "PR_BABYSIT_WORKER_MAX_CONCURRENT_ACTIVITIES",
-    defaultValue: 2,
-  });
-  const prBabysitWorker = await Worker.create({
-    ...commonWorkerOptions,
-    taskQueue: TASK_QUEUES.PR_BABYSIT,
-    maxConcurrentActivityTaskExecutions: prBabysitMaxConcurrentActivities,
-  });
-
-  jsonLog("info", "Worker created", {
-    taskQueue: TASK_QUEUES.PR_BABYSIT,
-    maxConcurrentActivityTaskExecutions: prBabysitMaxConcurrentActivities,
-  });
 
   // Activity concurrency stays 1 (serial long work). Workflow-task concurrency
   // must be ≥2 when sticky cache is on — Core rejects max_cached_workflows>0
@@ -327,13 +274,6 @@ async function main(): Promise<void> {
   await registerSchedules(client);
   jsonLog("info", "Schedules registered");
 
-  // Phase 9: idempotently start the long-running pr-review reaction
-  // listener. It self-recycles via continue-as-new every ~24h to keep
-  // history bounded; this call is a no-op when the workflow is already
-  // running.
-  await startPrReactionListener(client);
-  jsonLog("info", "pr-review reaction listener boot attempted");
-
   const httpServers = startHttpServers(client);
   const eventBridge = startEventBridgeSupervisor(client);
 
@@ -364,36 +304,12 @@ async function main(): Promise<void> {
         state: workerState,
       });
     }
-    const prReviewState = prReviewWorker.getState();
-    if (prReviewState === "RUNNING") {
-      prReviewWorker.shutdown();
-    } else {
-      jsonLog("info", "pr-review worker not RUNNING, skipping shutdown()", {
-        state: prReviewState,
-      });
-    }
-    const prSummaryState = prSummaryWorker.getState();
-    if (prSummaryState === "RUNNING") {
-      prSummaryWorker.shutdown();
-    } else {
-      jsonLog("info", "pr-summary worker not RUNNING, skipping shutdown()", {
-        state: prSummaryState,
-      });
-    }
     const agentTaskState = agentTaskWorker.getState();
     if (agentTaskState === "RUNNING") {
       agentTaskWorker.shutdown();
     } else {
       jsonLog("info", "agent-task worker not RUNNING, skipping shutdown()", {
         state: agentTaskState,
-      });
-    }
-    const prBabysitState = prBabysitWorker.getState();
-    if (prBabysitState === "RUNNING") {
-      prBabysitWorker.shutdown();
-    } else {
-      jsonLog("info", "pr-babysit worker not RUNNING, skipping shutdown()", {
-        state: prBabysitState,
       });
     }
     const glitterCorpusState = glitterCorpusWorker.getState();
@@ -429,10 +345,7 @@ async function main(): Promise<void> {
 
   const workerRuns = [
     worker.run(),
-    prReviewWorker.run(),
-    prSummaryWorker.run(),
     agentTaskWorker.run(),
-    prBabysitWorker.run(),
     glitterCorpusWorker.run(),
     glitterContextWorker.run(),
   ];

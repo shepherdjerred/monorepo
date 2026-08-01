@@ -24,7 +24,7 @@ const versions = {
   // not managed by renovate — built from packages/streambot; CI's version commit-back fills the
   // real tag@digest after the first image push. Seed digest is a placeholder until then.
   "shepherdjerred/streambot":
-    "2.0.0-7353@sha256:c25a2604f21849420b941158aa4a1579a74bd65e763f12afc7b48ef8401f5f5f",
+    "2.0.0-7414@sha256:3b62dbc413d0b408119373469f6815b173eba2759404250a8b01aa91d147082c",
   // not managed by renovate — built from upstream redlib's glibc Dockerfile.ubuntu
   // at REDLIB_SOURCE_REF (pinned in the since-removed CI pipeline). The published image is
   // musl/Alpine, which Reddit blocks during OAuth (redlib-org/redlib#551 —
@@ -150,7 +150,7 @@ const versions = {
   openebs: "4.5.1",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
-    "2.0.0-7353@sha256:4efb247fd4f1e1cbdc56d1f0cd84587111553fff36d8ab8f61eb59e1beb6bb75",
+    "2.0.0-7414@sha256:8b61711cfab1ef10e42d646ddcb53a312b93dd06e2b7e118abb444e0f785075f",
   // Prod promotion = merging the Renovate PR for this pin. Each 2.0.0-<n>
   // tag is minted by the scout-tag-release CI step only after site version
   // <n> is archived, pointing at the backend digest beta serves it against —
@@ -163,20 +163,20 @@ const versions = {
     "2.0.0-7074@sha256:f5e6add31cb08c1919c667dff6216318aca82d2918758f6bc742552a2ff3e024",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
-    "2.0.0-7353@sha256:b2d30a4b0a67d1c513ebfbfacd6fe890dfa080b4500be5da4b3e829e6773e8bb",
+    "2.0.0-7414@sha256:3a490f3c0d21b75196a1683d87425950b8ecc7c3d8648faaf01b2a4b282fc6c4",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/starlight-karma-bot
   "shepherdjerred/starlight-karma-bot/prod":
     "2.0.0-6673@sha256:4e0aaa2bc818f4e98c67462bfe95c722ea470a266b6c95f6861b7dc6a5da240f",
   // not managed by renovate
   "shepherdjerred/birmel":
-    "2.0.0-7353@sha256:4eb98642bbc4f57a556021858c89220cfdfa565ec35ddd1f35dc1d18bb371d8d",
+    "2.0.0-7414@sha256:40f9bae47c1aba6291498a8ebe736402c67e72994fd08f11b984aac8f7aa9e86",
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
-    "2.0.0-7353@sha256:1baebc0d41d32c8498223aec766d941575af5a9dd71059a0b33b811a676a6822",
+    "2.0.0-7414@sha256:1ed235b863de23f8fabe4cb4b281489c3a02dee2c19b680cbfc7380890c67c16",
   // not managed by renovate — placeholder digest; CI version-commit-back fills
   // the real digest after the first successful image push.
   "shepherdjerred/discord-plays-mario-kart":
-    "2.0.0-7353@sha256:a9035f7816fd62b3d85f24e036c18c70a6ecaa1486097c4b18584edd8239287e",
+    "2.0.0-7414@sha256:74918489d3c0c3a819db2118748ca9de9d8268b5f6f124279087dac0c3a8ef4d",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "freshrss/freshrss":
     "1.29.1@sha256:ab6b363102ccdbc39f6a62db926f567c61a5289bf25ba460f1c34423d8cc1a4d",
@@ -301,7 +301,7 @@ const versions = {
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
-    "2.0.0-7353@sha256:163d58c2ae05d93849bba9706e7c3d063ee115173b77363a0cb80d2881cbd8b3",
+    "2.0.0-7414@sha256:d45e6301439d7a1aa30ba177b556f9e003b112177b1763c6a6982ef5a1efe2d0",
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
@@ -322,11 +322,11 @@ const versions = {
   // Custom temporal-worker image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/temporal-worker":
-    "2.0.0-7353@sha256:2ce208cc30eeed9d2326b9b58a542b70a5c55fc71b7c7508744fe704dae590e9",
+    "2.0.0-7414@sha256:54b76b3df8007474e9af0ec4c3972d2cd9bd31fc1c5c2336ec27279b73fc6b11",
   // Custom TRMNL dashboard image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/trmnl-dashboard":
-    "2.0.0-7353@sha256:16b2b247cd29e37645d659a6a29ac11037e82c591183146a858346f90635fd40",
+    "2.0.0-7414@sha256:5bd60b765e5e20590ee065993d09fb82d5f4dc8ab15113d10b93854668a84b86",
 };
 
 applyCurrentBuildImageOverrides(versions);
@@ -346,7 +346,7 @@ applyCurrentBuildImageOverrides(versions);
  *
  * To regenerate after a version bump:
  *   VERSION=$(bun -e 'import v from "./src/versions.ts"; console.log(v["fuatakgun/eufy_security"])')
- *   curl -fSL "https://github.com/fuatakgun/eufy_security/archive/refs/tags/$VERSION.tar.gz" | sha256sum
+ *   curl -fSL "https://codeload.github.com/fuatakgun/eufy_security/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const EUFY_TARBALL_SHA256 =
   "b744aac0ce03a8a75de5100c672957504173c20cbe2ac0fc4d09d5bc75c59411";
@@ -357,7 +357,7 @@ export const EUFY_TARBALL_SHA256 =
  *
  * To regenerate after a version bump:
  *   VERSION=$(bun -e 'import v from "./src/versions.ts"; console.log(v["basnijholt/adaptive-lighting"])')
- *   curl -fSL "https://github.com/basnijholt/adaptive-lighting/archive/refs/tags/$VERSION.tar.gz" | sha256sum
+ *   curl -fSL "https://codeload.github.com/basnijholt/adaptive-lighting/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const ADAPTIVE_LIGHTING_TARBALL_SHA256 =
   "9c390346e022651778aaed613946a5275a503966274dfa399b966e0eb90f7ca4";
@@ -368,7 +368,7 @@ export const ADAPTIVE_LIGHTING_TARBALL_SHA256 =
  *
  * To regenerate after a version bump:
  *   VERSION=$(bun -e 'import v from "./src/versions.ts"; console.log(v["JeffSteinbok/hass-dreo"])')
- *   curl -fSL "https://github.com/JeffSteinbok/hass-dreo/archive/refs/tags/$VERSION.tar.gz" | sha256sum
+ *   curl -fSL "https://codeload.github.com/JeffSteinbok/hass-dreo/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const DREO_TARBALL_SHA256 =
   "76e5a6b7d9f638597a50b6b6135acf714fd7fe424ea68c021079dd99326d0631";
@@ -379,7 +379,7 @@ export const DREO_TARBALL_SHA256 =
  *
  * To regenerate after a version bump:
  *   VERSION=$(bun -e 'import v from "./src/versions.ts"; console.log(v["magico13/ha-emporia-vue"])')
- *   curl -fSL "https://github.com/magico13/ha-emporia-vue/archive/refs/tags/$VERSION.tar.gz" | sha256sum
+ *   curl -fSL "https://codeload.github.com/magico13/ha-emporia-vue/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const EMPORIA_VUE_TARBALL_SHA256 =
   "29595c369bedcf86577aedc73398325120be1b6bdcd154a61e75c3bda77d2d2d";
@@ -390,7 +390,7 @@ export const EMPORIA_VUE_TARBALL_SHA256 =
  *
  * To regenerate after a version bump:
  *   VERSION=$(bun -e 'import v from "./src/versions.ts"; console.log(v["dlarrick/hass-kumo"])')
- *   curl -fSL "https://github.com/dlarrick/hass-kumo/archive/refs/tags/$VERSION.tar.gz" | sha256sum
+ *   curl -fSL "https://codeload.github.com/dlarrick/hass-kumo/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const KUMO_TARBALL_SHA256 =
   "34b88547e0809b7849ba1fc1a3f149777a1a44a1d97bc56fed734224fdfbef0b";
@@ -405,7 +405,7 @@ export const KUMO_TARBALL_SHA256 =
  *
  * To regenerate after a version bump:
  *   VERSION=$(bun -e 'import v from "./src/versions.ts"; console.log(v["kgelinas/Mysa_HA"])')
- *   curl -fSL "https://github.com/kgelinas/Mysa_HA/archive/refs/tags/$VERSION.tar.gz" | sha256sum
+ *   curl -fSL "https://codeload.github.com/kgelinas/Mysa_HA/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const MYSA_TARBALL_SHA256 =
   "9d8120570bec8f1befedac4b20d67d1fb726da8fdf249305e21fae0213d1a0d9";
@@ -416,7 +416,7 @@ export const MYSA_TARBALL_SHA256 =
  *
  * To regenerate after a version bump:
  *   VERSION=$(bun -e 'import v from "./src/versions.ts"; console.log(v["jjjonesjr33/petlibro"])')
- *   curl -fSL "https://github.com/jjjonesjr33/petlibro/archive/refs/tags/$VERSION.tar.gz" | sha256sum
+ *   curl -fSL "https://codeload.github.com/jjjonesjr33/petlibro/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const PETLIBRO_TARBALL_SHA256 =
   "42203f0fc8ea7a9fa80877633b36ed0cfd4ef4f86f904a994d35b121e44c607f";
@@ -427,7 +427,7 @@ export const PETLIBRO_TARBALL_SHA256 =
  *
  * To regenerate after a version bump:
  *   VERSION=$(bun -e 'import v from "./src/versions.ts"; console.log(v["AlexxIT/SonoffLAN"])')
- *   curl -fSL "https://github.com/AlexxIT/SonoffLAN/archive/refs/tags/$VERSION.tar.gz" | sha256sum
+ *   curl -fSL "https://codeload.github.com/AlexxIT/SonoffLAN/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const SONOFF_TARBALL_SHA256 =
   "ce8fde8033260a191f498f71e37ac91ccef83f2388c1552d0d671c1fa718d0dc";
@@ -440,7 +440,7 @@ export const SONOFF_TARBALL_SHA256 =
  *
  * To regenerate after a version bump:
  *   VERSION=$(bun -e 'import v from "./src/versions.ts"; console.log(v["elax46/custom-brand-icons"])')
- *   curl -fSL "https://github.com/elax46/custom-brand-icons/archive/refs/tags/$VERSION.tar.gz" | sha256sum
+ *   curl -fSL "https://codeload.github.com/elax46/custom-brand-icons/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const CUSTOM_BRAND_ICONS_TARBALL_SHA256 =
   "3f1d70118cb1fa4d4ebbccaedf8c168a8a7e34ea1cfed5c18b01e7fb1c01d6de";

@@ -348,22 +348,22 @@ function matchComparisonClause(
     value.tokenType === NumberLiteral ? Number(value.image) : undefined;
   if (
     fieldName === "champion_id" &&
-    operator.tokenType === Equals &&
-    numeric !== undefined
+    numeric !== undefined &&
+    operator.tokenType === Equals
   ) {
     return { kind: "champion_id", value: numeric, span };
   }
   if (
     fieldName === "games" &&
-    operator.tokenType === GreaterEqual &&
-    numeric !== undefined
+    numeric !== undefined &&
+    operator.tokenType === GreaterEqual
   ) {
     return { kind: "min_games", value: numeric, span };
   }
   if (
     fieldName === "competition_id" &&
-    operator.tokenType === Equals &&
-    numeric !== undefined
+    numeric !== undefined &&
+    operator.tokenType === Equals
   ) {
     return { kind: "competition_id", value: numeric, span };
   }

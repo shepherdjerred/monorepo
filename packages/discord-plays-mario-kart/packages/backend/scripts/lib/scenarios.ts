@@ -39,7 +39,7 @@ function pressesToSchedule(presses: Press[], seats: number): FrameSchedule {
       let buttons: ButtonState = { ...EMPTY_BUTTONS };
       for (const press of presses) {
         if (frame < press.from || frame > press.to) continue;
-        if (press.seats === "p1" && seat !== 0) continue;
+        if (seat !== 0 && press.seats === "p1") continue;
         buttons = { ...buttons, ...press.keys };
       }
       inputs.push({ buttons, analogX: 0, analogY: 0 });

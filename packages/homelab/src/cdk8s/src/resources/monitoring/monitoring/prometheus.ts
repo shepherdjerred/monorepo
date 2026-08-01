@@ -22,7 +22,6 @@ import { getClusterHygieneRuleGroups } from "./rules/cluster-hygiene.ts";
 import { getEtcdCustomRuleGroups } from "./rules/etcd-custom.ts";
 import { getZfsMaintenanceRuleGroups } from "./rules/zfs-maintenance.ts";
 import { getTemporalRuleGroups } from "./rules/temporal.ts";
-import { getPrReviewBotRuleGroups } from "./rules/pr-review-bot.ts";
 import { getStreambotRuleGroups } from "./rules/streambot.ts";
 import { createBuildkiteMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkite.ts";
 import { createBuildkitdMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkitd.ts";
@@ -294,18 +293,6 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
     spec: {
       groups: getTemporalRuleGroups(),
-    },
-  });
-
-  // Create pr-review-bot rules (SOTA PR review pipeline; Phase 8)
-  new PrometheusRule(chart, "prometheus-pr-review-bot-rules", {
-    metadata: {
-      name: "prometheus-pr-review-bot-rules",
-      namespace: "temporal",
-      labels: { release: "prometheus" },
-    },
-    spec: {
-      groups: getPrReviewBotRuleGroups(),
     },
   });
 

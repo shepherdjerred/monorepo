@@ -112,7 +112,7 @@ const ConfigMapSchema = z
   })
   .loose();
 
-const CachePruneCronJobSchema = z
+const UvCachePruneCronJobSchema = z
   .object({
     kind: z.literal("CronJob"),
     metadata: z.object({
@@ -138,6 +138,66 @@ const CachePruneCronJobSchema = z
   })
   .loose();
 
+const BunCacheGcCronJobSchema = z
+  .object({
+    kind: z.literal("CronJob"),
+    metadata: z.object({
+      name: z.literal("buildkite-bun-cache-gc"),
+    }),
+    spec: z.object({
+      schedule: z.string(),
+      timeZone: z.string(),
+      concurrencyPolicy: z.string(),
+      jobTemplate: z.object({
+        spec: z.object({
+          activeDeadlineSeconds: z.number().int(),
+          template: z.object({
+            spec: z.object({
+              containers: z.array(
+                z
+                  .object({
+                    name: z.string(),
+                    image: z.string(),
+                    imagePullPolicy: z.string().optional(),
+                    command: z.array(z.string()),
+                    env: z.array(
+                      z.object({
+                        name: z.string(),
+                        value: z.string(),
+                      }),
+                    ),
+                    volumeMounts: z.array(
+                      z
+                        .object({
+                          name: z.string(),
+                          mountPath: z.string(),
+                        })
+                        .loose(),
+                    ),
+                  })
+                  .loose(),
+              ),
+              volumes: z.array(z.object({ name: z.string() }).loose()),
+            }),
+          }),
+        }),
+      }),
+    }),
+  })
+  .loose();
+
+const BunCacheGcConfigMapSchema = z
+  .object({
+    kind: z.literal("ConfigMap"),
+    metadata: z.object({
+      name: z.literal("buildkite-bun-cache-gc"),
+    }),
+    data: z.object({
+      "bun-cache-gc.sh": z.string(),
+    }),
+  })
+  .loose();
+
 function synthBuildkiteResources() {
   const chart = Testing.chart();
   createBuildkiteApp(chart);
@@ -149,7 +209,13 @@ function synthBuildkiteResources() {
     (manifest) => ConfigMapSchema.safeParse(manifest).success,
   );
   const cachePruneCronJob = resources.find(
-    (manifest) => CachePruneCronJobSchema.safeParse(manifest).success,
+    (manifest) => UvCachePruneCronJobSchema.safeParse(manifest).success,
+  );
+  const bunCacheGcCronJob = resources.find(
+    (manifest) => BunCacheGcCronJobSchema.safeParse(manifest).success,
+  );
+  const bunCacheGcConfigMap = resources.find(
+    (manifest) => BunCacheGcConfigMapSchema.safeParse(manifest).success,
   );
   const persistentVolumeClaims = resources.flatMap((manifest) => {
     const result = PersistentVolumeClaimSchema.safeParse(manifest);
@@ -158,8 +224,10 @@ function synthBuildkiteResources() {
   return {
     application: ApplicationSchema.parse(application),
     hooks: ConfigMapSchema.parse(hooks),
-    cachePruneCronJob: CachePruneCronJobSchema.parse(cachePruneCronJob),
+    cachePruneCronJob: UvCachePruneCronJobSchema.parse(cachePruneCronJob),
     persistentVolumeClaims,
+    bunCacheGcCronJob: BunCacheGcCronJobSchema.parse(bunCacheGcCronJob),
+    bunCacheGcConfigMap: BunCacheGcConfigMapSchema.parse(bunCacheGcConfigMap),
   };
 }
 
@@ -230,10 +298,12 @@ describe("Buildkite application", () => {
       name: "buildkite-bun-cache-control",
       mountPath: "/buildkite/bun-cache-control",
     });
-    expect(commandContainer?.env).toContainEqual({
-      name: "BUN_INSTALL_CACHE_DIR",
-      value: "/buildkite/bun-cache",
-    });
+    expect(commandContainer?.env).toEqual([
+      {
+        name: "UV_CACHE_DIR",
+        value: "/buildkite/uv-cache",
+      },
+    ]);
   });
 
   it("retains the agent for terminal cAdvisor scrapes after job finish", () => {
@@ -275,6 +345,92 @@ describe("Buildkite application", () => {
     );
     expect(container?.image).toMatch(
       /^ghcr\.io\/shepherdjerred\/ci-base@sha256:[\da-f]{64}$/,
+    );
+  });
+
+  it("bounds the Bun cache without racing active installs", async () => {
+    const { application, bunCacheGcConfigMap, bunCacheGcCronJob } =
+      synthBuildkiteResources();
+    const digestContents = await Bun.file(
+      new URL("ci-base.DIGEST", import.meta.url),
+    ).text();
+    const digest = digestContents.trim();
+    const container =
+      bunCacheGcCronJob.spec.jobTemplate.spec.template.spec.containers.find(
+        (candidate) => candidate.name === "bun-cache-gc",
+      );
+    const stepContainer = application.spec.source.helm.valuesObject.config[
+      "pod-spec-patch"
+    ].containers.find((candidate) => candidate.name === "container-0");
+
+    expect(bunCacheGcCronJob.spec).toMatchObject({
+      schedule: "*/5 * * * *",
+      timeZone: "America/Los_Angeles",
+      concurrencyPolicy: "Forbid",
+      jobTemplate: {
+        spec: {
+          activeDeadlineSeconds: 900,
+        },
+      },
+    });
+    expect(container).toEqual(
+      expect.objectContaining({
+        image: `ghcr.io/shepherdjerred/ci-base@${digest}`,
+        imagePullPolicy: "IfNotPresent",
+        command: ["bash", "/buildkite/maintenance/bun-cache-gc.sh"],
+        env: [
+          {
+            name: "BUN_INSTALL_CACHE_DIR",
+            value: "/buildkite/bun-cache/data",
+          },
+          {
+            name: "BUN_CACHE_LOCK_FILE",
+            value: "/buildkite/bun-cache-control/.gc.lock",
+          },
+          {
+            name: "BUN_CACHE_GC_THRESHOLD_PERCENT",
+            value: "60",
+          },
+        ],
+      }),
+    );
+    expect(container?.volumeMounts).toContainEqual({
+      name: "bun-cache",
+      mountPath: "/buildkite/bun-cache",
+    });
+    expect(container?.volumeMounts).toContainEqual({
+      name: "bun-cache-control",
+      mountPath: "/buildkite/bun-cache-control",
+    });
+    expect(
+      bunCacheGcCronJob.spec.jobTemplate.spec.template.spec.volumes,
+    ).toContainEqual(
+      expect.objectContaining({
+        name: "bun-cache",
+        persistentVolumeClaim: { claimName: "buildkite-bun-cache" },
+      }),
+    );
+    expect(
+      bunCacheGcCronJob.spec.jobTemplate.spec.template.spec.volumes,
+    ).toContainEqual(
+      expect.objectContaining({
+        name: "bun-cache-control",
+        persistentVolumeClaim: {
+          claimName: "buildkite-bun-cache-control",
+        },
+      }),
+    );
+    expect(stepContainer?.env).toEqual([
+      {
+        name: "UV_CACHE_DIR",
+        value: "/buildkite/uv-cache",
+      },
+    ]);
+    expect(bunCacheGcConfigMap.data["bun-cache-gc.sh"]).toContain(
+      "flock --exclusive 9",
+    );
+    expect(bunCacheGcConfigMap.data["bun-cache-gc.sh"]).toContain(
+      'find "$CACHE_DIR" -mindepth 1 -depth -delete',
     );
   });
 });

@@ -77,7 +77,7 @@ function countEnabledStages(
   if (stages.imageDescription.enabled) {
     count++;
   }
-  if (stages.imageGeneration.enabled && hasGemini) {
+  if (hasGemini && stages.imageGeneration.enabled) {
     count++;
   }
   return count;

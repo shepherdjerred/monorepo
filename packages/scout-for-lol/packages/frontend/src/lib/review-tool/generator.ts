@@ -251,7 +251,7 @@ function buildEnabledStagesList(
   if (stages.imageDescription.enabled) {
     enabledStages.push("image-description");
   }
-  if (stages.imageGeneration.enabled && hasGeminiClient) {
+  if (hasGeminiClient && stages.imageGeneration.enabled) {
     enabledStages.push("image-generation");
   }
   return enabledStages;

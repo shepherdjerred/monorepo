@@ -20,7 +20,7 @@ const logger = loggers.scheduler.child("agent-jobs");
 
 const toolResultStatus = {
   isSuccess(value: unknown): boolean {
-    if (value == null || typeof value !== "object") {
+    if (typeof value !== "object" || value == null) {
       return true;
     }
     if (!("success" in value)) {
@@ -78,7 +78,7 @@ async function executeToolPayload(job: AgentJob): Promise<unknown> {
   const { allTools } =
     await import("@shepherdjerred/birmel/agent-tools/tools/index.ts");
   const tool = allTools[job.toolId];
-  if (tool == null || typeof tool !== "object" || !("execute" in tool)) {
+  if (typeof tool !== "object" || tool == null || !("execute" in tool)) {
     throw new Error(`Tool not found or not executable: ${job.toolId}`);
   }
   const execute = tool.execute;
@@ -192,7 +192,7 @@ async function markJobFailure(
         from: finishedAt,
       });
   const nextStatus =
-    nextRunAt == null && !shouldRetry
+    !shouldRetry && nextRunAt == null
       ? "failed"
       : shouldRetry
         ? "retrying"

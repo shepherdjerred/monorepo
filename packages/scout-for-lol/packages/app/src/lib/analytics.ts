@@ -152,7 +152,7 @@ function installStub(): void {
  * already initialized. Call once at startup, before the first render.
  */
 export function initAnalytics(): void {
-  if (config.domain === undefined || initialized) return;
+  if (initialized || config.domain === undefined) return;
   if (typeof document === "undefined") return;
   initialized = true;
   installStub();

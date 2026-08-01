@@ -15,6 +15,7 @@ apple-hig-helper/
 │   ├── ...
 │   └── .visited.json        # List of downloaded URLs
 ├── markdown/                # Processed Markdown files (174 MD files, 2.6 MB)
+├── scrape.sh                # Script to download/update HIG data
 └── process-to-markdown.py   # Script to convert HTML to Markdown
 ```
 
@@ -47,6 +48,24 @@ Contains 174 HTML files downloaded from Apple's official HIG website:
 
 Each topic is in its own subdirectory with an `index.html` file.
 
+## Scraper Script
+
+**File**: `scrape.sh`
+
+Wrapper script that runs the Python scraper to download/update HIG documentation.
+
+**Usage**:
+
+```bash
+# From the skill directory
+./scrape.sh
+
+# Or from repository root
+./packages/claude-plugin/agents/apple-hig-helper/scrape.sh
+```
+
+**Note**: The actual Python scraper is at `/workspace/scripts/scrape-apple-hig.py`
+
 ## Using the Skill
 
 The skill activates when users ask about:
@@ -63,6 +82,30 @@ The skill activates when users ask about:
 - "Show me iOS design guidelines"
 - "Accessibility best practices from HIG"
 - "List all available HIG topics"
+
+## Updating Data
+
+To refresh the HIG documentation:
+
+1. Run the scraper:
+
+   ```bash
+   cd /workspace
+   ./packages/claude-plugin/agents/apple-hig-helper/scrape.sh
+   ```
+
+2. Or use the Python script directly:
+   ```bash
+   cd /workspace
+   uv run scripts/scrape-apple-hig.py
+   ```
+
+The scraper will:
+
+- Resume from previous downloads (tracks progress in `.visited.json`)
+- Respect rate limits (1 second between requests)
+- Save all pages to the `data/` directory
+- Take approximately 90 minutes for a full download
 
 ## Converting to Markdown
 

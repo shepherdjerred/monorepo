@@ -3,7 +3,6 @@ import { createAiProviderDashboard } from "./ai-provider-dashboard.ts";
 import { createBuildkiteDashboard } from "./buildkite-dashboard.ts";
 import { createBuildkitdDashboard } from "./buildkitd-dashboard.ts";
 import { createDiscordPlaysDashboard } from "./discord-plays-dashboard.ts";
-import { createPrReviewBotDashboard } from "./pr-review-bot-dashboard.ts";
 import { createScoutDashboard } from "./scout-dashboard.ts";
 import { createTasknotesDashboard } from "./tasknotes-dashboard.ts";
 import { createTemporalDashboard } from "./temporal-dashboard.ts";
@@ -15,7 +14,6 @@ const dashboardJson = [
   createBuildkiteDashboard(),
   createBuildkitdDashboard(),
   createDiscordPlaysDashboard(),
-  createPrReviewBotDashboard(),
   createScoutDashboard(),
   createTasknotesDashboard(),
   createTemporalDashboard(),

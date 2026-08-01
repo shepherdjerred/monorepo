@@ -1,16 +1,12 @@
 import { Hono, type Context } from "hono";
 import { verify } from "@octokit/webhooks-methods";
-import * as Sentry from "@sentry/bun";
 import type { Client } from "@temporalio/client";
-import { PrAgentInputSchema, type PrAgentInput } from "#shared/schemas.ts";
 import {
   handleClosedPr,
   startCancelBuildkiteBuilds,
   type CancelStartFn,
 } from "./pr-closed.ts";
-import { COMPONENT, jsonLog } from "./webhook-log.ts";
-import { postWebhookStatus } from "./pr-draft-skipped-status.ts";
-import { startPrWorkflows } from "./pr-pipeline-starts.ts";
+import { jsonLog } from "./webhook-log.ts";
 import {
   prWebhookReceivedTotal,
   prWebhookSignatureFailuresTotal,
@@ -20,19 +16,12 @@ import {
   CONFLICT_CHECK_ACTIONS,
   PullRequestEventSchema,
   PushEventSchema,
-  RELEVANT_ACTIONS,
-  disallowedAuthorReason,
 } from "./github-webhook-schema.ts";
 import {
   captureConflictCheckStartError,
   startCheckPrMergeConflictsForMain,
   startCheckPrMergeConflictsForPr,
 } from "./conflict-check-starts.ts";
-import { createBabysitRoute, type BabysitRouteFn } from "./babysit-starts.ts";
-import {
-  handleIssueCommentEvent,
-  noopBabysitRoute,
-} from "./babysit-webhook.ts";
 
 const DEFAULT_PORT = 9466;
 
@@ -41,8 +30,6 @@ export type WebhookHandle = {
   close: () => Promise<void>;
 };
 
-type StartFn = (input: PrAgentInput) => Promise<void>;
-type StatusFn = (input: PrAgentInput, state: "draft_skipped") => Promise<void>;
 export type ConflictCheckMainStartFn = (args: {
   owner: string;
   repo: string;
@@ -58,58 +45,6 @@ export type ConflictCheckPrStartFn = (args: {
 const noopCancel: CancelStartFn = () => Promise.resolve();
 const noopConflictMain: ConflictCheckMainStartFn = () => Promise.resolve();
 const noopConflictPr: ConflictCheckPrStartFn = () => Promise.resolve();
-
-// Master kill switch for the PR bot (review + summary). Defaults enabled; set
-// PR_BOT_ENABLED=false to make the webhook ack deliveries (200) without posting
-// any comment or starting any workflow. Read at request time so the flag can be
-// toggled via env without a code change. See the temporal worker deployment in
-// packages/homelab/src/cdk8s/src/resources/temporal/worker.ts.
-function isPrBotEnabled(): boolean {
-  return (Bun.env["PR_BOT_ENABLED"] ?? "true").toLowerCase() === "true";
-}
-
-type DraftSkipContext = {
-  deliveryId: string;
-  action: string;
-};
-
-async function handleDraftSkip(
-  c: Context,
-  baseInput: PrAgentInput,
-  postStatus: StatusFn,
-  ctx: DraftSkipContext,
-): Promise<Response> {
-  const { deliveryId, action } = ctx;
-  prWebhookSkippedTotal.inc({ reason: "draft" });
-  jsonLog("info", "Skipping draft PR", {
-    prNumber: baseInput.prNumber,
-    action,
-  });
-  try {
-    await postStatus(baseInput, "draft_skipped");
-  } catch (error: unknown) {
-    Sentry.withScope((scope) => {
-      scope.setTag("component", COMPONENT);
-      scope.setContext("webhook", {
-        deliveryId,
-        action,
-        owner: baseInput.owner,
-        repo: baseInput.repo,
-        prNumber: baseInput.prNumber,
-        skipReason: "draft",
-      });
-      Sentry.captureException(error);
-    });
-    jsonLog("error", "Failed to post draft skipped status", {
-      deliveryId,
-      action,
-      prNumber: baseInput.prNumber,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return c.text("draft status failed\n", 500);
-  }
-  return c.text("skipped: draft\n");
-}
 
 /**
  * Verify the `X-Hub-Signature-256` HMAC. Returns a `Response` to return on
@@ -221,10 +156,8 @@ async function handlePushEvent(args: PushHandlerArgs): Promise<Response> {
 }
 
 /**
- * Merge-conflict check — runs on opened/synchronize/reopened/edited regardless
- * of draft state, author, or PR_BOT_ENABLED (the kill switch lives on the
- * activity itself). Failure logs to Sentry but does NOT poison the
- * review/summary pipeline.
+ * Merge-conflict check — runs on opened/synchronize/reopened/edited. Failure
+ * logs to Sentry but does NOT fail the webhook delivery.
  */
 async function maybeStartConflictCheckPr(
   startConflictCheckPr: ConflictCheckPrStartFn,
@@ -267,28 +200,28 @@ async function maybeStartConflictCheckPr(
  * cap. Production wires every hook; tests opt in to the ones they need.
  */
 export type WebhookHooks = {
-  postStatus?: StatusFn;
   startCancel?: CancelStartFn;
   startConflictCheckMain?: ConflictCheckMainStartFn;
   startConflictCheckPr?: ConflictCheckPrStartFn;
-  babysitRoute?: BabysitRouteFn;
 };
 
 /**
  * Pure handler — kept separate from Bun.serve so tests can drive it
  * directly without binding a real port.
+ *
+ * Scope: the GitHub webhook server is the ingress for the merge-conflict
+ * check (`push` to main + per-PR `pull_request` actions) and for cancelling
+ * still-running Buildkite builds when a PR is `closed`. It no longer starts
+ * any PR review/summary/babysit workflow.
  */
 export function buildWebhookApp(
   secret: string,
-  startWorkflows: StartFn,
   hooks: WebhookHooks = {},
 ): Hono {
-  const postStatus = hooks.postStatus ?? postWebhookStatus;
   const startCancel = hooks.startCancel ?? noopCancel;
   const startConflictCheckMain =
     hooks.startConflictCheckMain ?? noopConflictMain;
   const startConflictCheckPr = hooks.startConflictCheckPr ?? noopConflictPr;
-  const babysitRoute = hooks.babysitRoute ?? noopBabysitRoute;
   const app = new Hono();
 
   app.get("/healthz", (c) => c.text("ok\n"));
@@ -312,17 +245,6 @@ export function buildWebhookApp(
         signature,
         deliveryId,
         startConflictCheckMain,
-      });
-    }
-
-    if (event === "issue_comment") {
-      return handleIssueCommentEvent({
-        c,
-        secret,
-        payload,
-        signature,
-        deliveryId,
-        babysitRoute,
       });
     }
 
@@ -359,12 +281,13 @@ export function buildWebhookApp(
 
     // PR closed (merged or plain close): stop any still-active Buildkite builds
     // for the head branch. Delegated to handleClosedPr — it does not skip draft
-    // or bot PRs (Renovate branches churn the most CI). Runs before the
-    // review/summary RELEVANT_ACTIONS gate.
+    // or bot PRs (Renovate branches churn the most CI).
     if (action === "closed") {
       return handleClosedPr(parsed, deliveryId, startCancel);
     }
 
+    // Per-PR merge-conflict check on opened/synchronize/reopened/edited. A
+    // no-op for other actions (see CONFLICT_CHECK_ACTIONS).
     await maybeStartConflictCheckPr(startConflictCheckPr, {
       owner: parsed.repository.owner.login,
       repo: parsed.repository.name,
@@ -375,81 +298,7 @@ export function buildWebhookApp(
       deliveryId,
     });
 
-    if (!RELEVANT_ACTIONS.has(action)) {
-      prWebhookSkippedTotal.inc({ reason: `action:${action}` });
-      jsonLog("info", "Ignoring action", {
-        action,
-        prNumber: parsed.pull_request.number,
-      });
-      return c.text("ignored\n");
-    }
-
-    const baseInput: PrAgentInput = PrAgentInputSchema.parse({
-      kind: "review",
-      owner: parsed.repository.owner.login,
-      repo: parsed.repository.name,
-      prNumber: parsed.pull_request.number,
-      commitSha: parsed.pull_request.head.sha,
-      baseRef: parsed.pull_request.base.ref,
-      headRef: parsed.pull_request.head.ref,
-      prTitle: parsed.pull_request.title,
-      prAuthor: parsed.pull_request.user.login,
-    });
-
-    if (!isPrBotEnabled()) {
-      prWebhookSkippedTotal.inc({ reason: "pr-bot-disabled" });
-      jsonLog("info", "PR bot disabled; skipping status + workflows", {
-        prNumber: baseInput.prNumber,
-        action,
-      });
-      return c.text("skipped: pr-bot disabled\n");
-    }
-
-    if (parsed.pull_request.draft === true && action !== "ready_for_review") {
-      return handleDraftSkip(c, baseInput, postStatus, { deliveryId, action });
-    }
-
-    const authorSkip = disallowedAuthorReason(parsed.pull_request.user);
-    if (authorSkip !== null) {
-      prWebhookSkippedTotal.inc({ reason: authorSkip });
-      jsonLog("info", "Skipping PR by author policy", {
-        prNumber: parsed.pull_request.number,
-        author: parsed.pull_request.user.login,
-        reason: authorSkip,
-      });
-      return c.text(`skipped: ${authorSkip}\n`);
-    }
-
-    try {
-      await startWorkflows(baseInput);
-    } catch (error: unknown) {
-      Sentry.withScope((scope) => {
-        scope.setTag("component", COMPONENT);
-        scope.setContext("webhook", {
-          deliveryId,
-          action,
-          owner: baseInput.owner,
-          repo: baseInput.repo,
-          prNumber: baseInput.prNumber,
-        });
-        Sentry.captureException(error);
-      });
-      jsonLog("error", "Failed to start PR workflows", {
-        deliveryId,
-        action,
-        prNumber: baseInput.prNumber,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      return c.text("workflow start failed\n", 500);
-    }
-
-    jsonLog("info", "Started PR workflows", {
-      deliveryId,
-      action,
-      prNumber: baseInput.prNumber,
-      commitSha: baseInput.commitSha,
-    });
-    return c.text("started\n");
+    return c.text("ok\n");
   });
 
   return app;
@@ -466,19 +315,13 @@ export function startGithubWebhook(client: Client): WebhookHandle {
     10,
   );
 
-  const app = buildWebhookApp(
-    secret,
-    (input) => startPrWorkflows(client, input),
-    {
-      postStatus: postWebhookStatus,
-      startCancel: (input) => startCancelBuildkiteBuilds(client, input),
-      startConflictCheckMain: (args) =>
-        startCheckPrMergeConflictsForMain(client, args),
-      startConflictCheckPr: (args) =>
-        startCheckPrMergeConflictsForPr(client, args),
-      babysitRoute: createBabysitRoute(client),
-    },
-  );
+  const app = buildWebhookApp(secret, {
+    startCancel: (input) => startCancelBuildkiteBuilds(client, input),
+    startConflictCheckMain: (args) =>
+      startCheckPrMergeConflictsForMain(client, args),
+    startConflictCheckPr: (args) =>
+      startCheckPrMergeConflictsForPr(client, args),
+  });
 
   const server = Bun.serve({
     port,

@@ -29,6 +29,12 @@ export type GateDecision =
   | { state: "passed"; message: string }
   | { state: "failed"; message: string };
 
+/** GitHub's validated author identity for a pull request. */
+export type PullRequestAuthor = {
+  login: string;
+  type: string;
+};
+
 /**
  * A PR review thread, normalised from the GitHub GraphQL `reviewThreads`
  * connection. `priority` is the numeric severity level (0..3, lower = more
@@ -78,6 +84,13 @@ export type ReviewProvider = {
   id: string;
   /** Human-facing name for gate messages, e.g. `"Greptile"`, `"Codex"`. */
   displayName: string;
+  /**
+   * Whether bot-authored pull requests need this provider's normal review.
+   * `skip` is an explicit provider capability for reviewers that cannot emit
+   * a completion signal for GitHub bot authors; providers default closed by
+   * having to declare `review`.
+   */
+  botAuthoredPullRequestPolicy: "review" | "skip";
   /**
    * The complete GitHub login(s) this provider posts as (the GraphQL bare slug,
    * e.g. `greptile-apps` / `chatgpt-codex-connector`). Matched EXACTLY

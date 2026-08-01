@@ -146,7 +146,7 @@ export function RankedSquareReport({ match }: { match: CompletedMatch }) {
   const losses = match.players.length - wins;
 
   const lpDelta =
-    hero.rankBeforeMatch && rankAfter
+    rankAfter && hero.rankBeforeMatch
       ? leaguePointsDelta(hero.rankBeforeMatch, rankAfter)
       : undefined;
 

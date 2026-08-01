@@ -280,7 +280,7 @@ function tryOpenOrReopen(input: OpenInput): UnitChange | undefined {
     parseUtcDate(firstSeen) - parseUtcDate(priorEnd) <=
       REOPEN_MAX_GAP_DAYS * DAY_MS;
 
-  if (lastWindow !== undefined && priorEnd != null && gapWithinReopen) {
+  if (lastWindow !== undefined && gapWithinReopen) {
     const lastStart = lastWindow.start;
     const nextWindows = windows.map((window, index) =>
       index === windows.length - 1
@@ -361,7 +361,7 @@ function tryClose(
     .at(-1);
 
   const closeEnd =
-    earlierTotal >= CLOSE_MIN_VOLUME_BASELINE && lastSeen !== undefined
+    lastSeen !== undefined && earlierTotal >= CLOSE_MIN_VOLUME_BASELINE
       ? lastSeen
       : undefined;
 

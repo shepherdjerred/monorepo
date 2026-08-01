@@ -259,8 +259,8 @@ async function reconcileProdPin(
   const [version, digest, ...extra] = prodPin.split("@");
   if (
     version === undefined ||
-    !SCOUT_VERSION_PATTERN.test(version) ||
     digest === undefined ||
+    !SCOUT_VERSION_PATTERN.test(version) ||
     !CANONICAL_DIGEST_PATTERN.test(digest) ||
     extra.length > 0
   ) {

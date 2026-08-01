@@ -172,10 +172,10 @@ export function actionOutcome(
     status = "applied";
     stopReason = "settle-timeout";
   } else if (
-    didMove > 0 ||
     didFaceChange ||
     didStateChange ||
-    didVisualChange
+    didVisualChange ||
+    didMove > 0
   ) {
     status = "applied";
     stopReason = "completed";

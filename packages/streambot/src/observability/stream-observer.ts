@@ -121,7 +121,7 @@ export function createStreamObserver(
       if (lastProgressWallMs === undefined) return;
       const ageSeconds = (now() - lastProgressWallMs) / 1000;
       ffmpegProgressAgeSeconds.set(ageSeconds);
-      if (ageSeconds >= STALL_AFTER_SECONDS && !stallFired) {
+      if (!stallFired && ageSeconds >= STALL_AFTER_SECONDS) {
         stallFired = true;
         log.warn("ffmpeg progress stalled", {
           ageSeconds,

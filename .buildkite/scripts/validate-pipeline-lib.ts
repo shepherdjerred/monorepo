@@ -40,16 +40,27 @@ export function hasTrimmedLine(
   return block?.split("\n").some((line) => line.trim() === expected) ?? false;
 }
 
-// Assert exactly one bare `bun install --frozen-lockfile` exists and that it
-// belongs to the verify step's block, so no other lane can restore a full root
-// install.
+// Assert every install uses the shared-lock wrapper and exactly one unfiltered
+// invocation belongs to verify, so no lane can bypass cache collection
+// coordination or restore a full root install.
 export function assertUnfilteredInstallBelongsToVerify(
   lines: string[],
   stepStarts: number[],
 ): void {
+  const directBunInstalls = lines
+    .map((line, index) => ({ line: line.trim(), index }))
+    .filter((entry) => /\bbun install(?:\s|$)/.test(entry.line));
+  if (directBunInstalls.length > 0) {
+    fail(
+      `all installs must use .buildkite/scripts/bun-install.sh; found ${directBunInstalls.length.toString()} direct invocation(s)`,
+    );
+  }
   const unfilteredInstalls = lines
     .map((line, index) => ({ line: line.trim(), index }))
-    .filter((entry) => entry.line === "bun install --frozen-lockfile");
+    .filter(
+      (entry) =>
+        entry.line === ".buildkite/scripts/bun-install.sh --frozen-lockfile",
+    );
   if (unfilteredInstalls.length !== 1) {
     fail(
       `expected one unfiltered root install, found ${unfilteredInstalls.length.toString()}`,
@@ -163,17 +174,49 @@ export async function assertNoNestedBunRuntime(
   }
 }
 
+function packageTypecheckCommand(manifest: string, path: string): string {
+  const parsed: unknown = JSON.parse(manifest);
+  if (typeof parsed !== "object" || parsed === null || !("scripts" in parsed)) {
+    fail(`CI package ${path} is missing scripts.typecheck`);
+  }
+  const scripts: unknown = parsed.scripts;
+  if (
+    typeof scripts !== "object" ||
+    scripts === null ||
+    !("typecheck" in scripts) ||
+    typeof scripts.typecheck !== "string"
+  ) {
+    fail(`CI package ${path} is missing scripts.typecheck`);
+  }
+  return scripts.typecheck;
+}
+
 // Assert each CI package manifest still declares its explicit tool
-// dependencies, so a dependency-minimized lane cannot fall back to auto-install.
+// dependencies and, during command migrations, uses one exact allowed
+// scripts.typecheck command. A dependency-minimized lane must never fall back
+// to auto-install.
 export async function assertPackageTokens(
-  specs: readonly (readonly [string, readonly string[]])[],
+  specs: readonly (readonly [
+    path: string,
+    required: readonly string[],
+    allowedTypecheckCommands?: readonly string[],
+  ])[],
 ): Promise<void> {
-  for (const [path, required] of specs) {
+  for (const [path, required, allowedTypecheckCommands] of specs) {
     const manifest = await Bun.file(path).text();
     for (const token of required) {
       if (!manifest.includes(token)) {
         fail(`CI package ${path} is missing explicit tool dependency ${token}`);
       }
+    }
+    if (allowedTypecheckCommands !== undefined) {
+      const command = packageTypecheckCommand(manifest, path);
+      if (allowedTypecheckCommands.includes(command)) {
+        continue;
+      }
+      fail(
+        `CI package ${path} has invalid scripts.typecheck command ${JSON.stringify(command)}; expected ${allowedTypecheckCommands.join(" or ")}`,
+      );
     }
   }
 }

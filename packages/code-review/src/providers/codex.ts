@@ -19,6 +19,7 @@ import type { ReviewProvider } from "../types.ts";
 export const codexProvider: ReviewProvider = {
   id: "codex",
   displayName: "Codex",
+  botAuthoredPullRequestPolicy: "skip",
   authorLogins: ["chatgpt-codex-connector"],
   parseSeverity: parseCodexSeverity,
   completion: { kind: "review-at-head", cleanSignal: "thumbsup-reaction" },

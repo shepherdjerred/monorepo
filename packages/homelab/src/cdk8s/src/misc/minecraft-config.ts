@@ -152,7 +152,7 @@ export function getMinecraftPluginNames(serverName: ServerName): Set<string> {
     if (key.startsWith("plugins__")) {
       const parts = key.split("__");
       const pluginName = parts[1];
-      if (pluginName != null && pluginName !== "") {
+      if (pluginName !== "" && pluginName != null) {
         pluginNames.add(pluginName);
       }
     }
@@ -284,7 +284,7 @@ export function getMinecraftExtraVolumes(
       for (const key of pluginKeys) {
         const parts = key.split("__");
         const pluginName = parts[1];
-        if (pluginName != null && pluginName !== "") {
+        if (pluginName !== "" && pluginName != null) {
           const existing = pluginGroups.get(pluginName) ?? [];
           existing.push(key);
           pluginGroups.set(pluginName, existing);
@@ -384,7 +384,7 @@ export function getMinecraftPluginConfigInitContainer(
     for (const key of pluginKeys) {
       const parts = key.split("__");
       const pluginName = parts[1];
-      if (pluginName != null && pluginName !== "") {
+      if (pluginName !== "" && pluginName != null) {
         pluginNames.add(pluginName);
       }
     }

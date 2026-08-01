@@ -168,8 +168,8 @@ export function annotationStyle(report: CiIoReport): string {
     return "error";
   }
   if (
-    report.candidate.summary.lowerBoundJobCount > 0 ||
-    gateStatus === "inconclusive"
+    gateStatus === "inconclusive" ||
+    report.candidate.summary.lowerBoundJobCount > 0
   ) {
     return "warning";
   }

@@ -213,7 +213,7 @@ async function main(): Promise<void> {
     emit(`\nNot cross-checked:\n  ${notChecked.join("\n  ")}`);
   }
 
-  if (drifted.length > 0 && !check) {
+  if (!check && drifted.length > 0) {
     // Patch only the drifted numeric fields into the raw JSON structure so that
     // key ordering and other non-numeric fields are preserved exactly as-is.
     for (const [id, entry] of Object.entries(catalog)) {

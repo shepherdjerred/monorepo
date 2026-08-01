@@ -17,17 +17,17 @@
     "url": "https://github.com/shepherdjerred/monorepo/issues"
   },
   "type": "module",
-  "version": "1.17.3",
+  "version": "1.17.4",
   "imports": {
     "#src/*": "./src/*"
   },
   "scripts": {
     "lint": "eslint src generate-readme.ts generate-readme-core.ts generate-readme*.test.ts --cache",
-    "build": "tsc",
-    "watch": "tsc -w",
+    "build": "bun node_modules/@typescript/native/bin/tsc",
+    "watch": "bun node_modules/@typescript/native/bin/tsc -w",
     "test": "vitest src && bun test generate-readme*.test.ts",
     "test:coverage": "bun test --config ../../scripts/bunfig.coverage.toml --coverage generate-readme.test.ts",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
+    "typecheck": "bun node_modules/@typescript/native/bin/tsc --noEmit && bun node_modules/@typescript/native/bin/tsc --noEmit -p tsconfig.scripts.json",
     "publish:npm": "bun ../../scripts/publish-npm.ts ."
   },
   "main": "dist/index.js",
@@ -75,6 +75,7 @@
     "@types/jsdom": "^28.0.1",
     "@types/node": "^26.1.1",
     "@types/react": "^19.2.17",
+    "@typescript/native": "npm:typescript@7.0.2",
     "astro": "^7.1.5",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",

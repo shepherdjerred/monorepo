@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.4](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.17.3...astro-opengraph-images-v1.17.4) (2026-07-31)
+
+
+### Bug Fixes
+
+* **deps:** pilot TypeScript 7 native compiler ([#1842](https://github.com/shepherdjerred/monorepo/issues/1842)) ([9516987](https://github.com/shepherdjerred/monorepo/commit/9516987e989ebfe1c92c81dd286d7dd1668ce698))
+
 ## [1.17.3](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.17.2...astro-opengraph-images-v1.17.3) (2026-07-27)
 
 No library behavior changes. The shipped code is identical to 1.17.2; this release exists only because of repo-level housekeeping that release-please picked up.

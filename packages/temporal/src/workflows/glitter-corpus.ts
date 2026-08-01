@@ -308,8 +308,8 @@ export async function runGlitterCorpusChannelOverlap(
       BigInt(cursor) <= BigInt(input.baselineNewestMessageId);
     if (
       oldestTimestamp !== undefined &&
-      oldestTimestamp <= input.overlapCutoff &&
-      crossedBaselineBoundary
+      crossedBaselineBoundary &&
+      oldestTimestamp <= input.overlapCutoff
     ) {
       return await completeOverlap(input, pageManifestKeys, "cutoff-reached");
     }

@@ -82,6 +82,21 @@ const ApplicationSchema = z.object({
   }),
 });
 
+const PostgresOperatorConfigurationSchema = z.object({
+  kind: z.literal("OperatorConfiguration"),
+  metadata: z.object({
+    name: z.literal("postgres-operator"),
+  }),
+  configuration: z.object({
+    enable_maintenance_windows: z.literal(true),
+    logical_backup: z.object({
+      logical_backup_successful_jobs_history_limit: z.literal(3),
+      logical_backup_failed_jobs_history_limit: z.literal(3),
+      logical_backup_ttl_seconds_after_finished: z.literal(86_400),
+    }),
+  }),
+});
+
 type HelmSource = z.infer<typeof HelmSourceSchema>;
 
 type ExternalChart = {
@@ -378,6 +393,41 @@ describeFn("ArgoCD Helm Render - External Charts", () => {
         `Charts with empty template output: ${emptyOutputs.join(", ")}`,
       );
     }
+  });
+
+  it("renders the PostgreSQL operator v2 defaults in OperatorConfiguration", () => {
+    const outcome = outcomes.find(
+      ({ chart }) => chart.appName === "postgres-operator",
+    );
+    if (!outcome) {
+      throw new Error("Postgres Operator chart was not discovered");
+    }
+    if (outcome.result.exitCode !== 0) {
+      expect(outcome.result.transient).toBe(true);
+      return;
+    }
+
+    const configuration = parseAllDocuments(outcome.result.stdout)
+      .map((document) =>
+        PostgresOperatorConfigurationSchema.safeParse(document.toJSON()),
+      )
+      .find((result) => result.success);
+    if (!configuration?.success) {
+      throw new Error(
+        "Postgres Operator chart did not render its OperatorConfiguration",
+      );
+    }
+
+    expect(configuration.data.configuration).toEqual(
+      expect.objectContaining({
+        enable_maintenance_windows: true,
+        logical_backup: expect.objectContaining({
+          logical_backup_successful_jobs_history_limit: 3,
+          logical_backup_failed_jobs_history_limit: 3,
+          logical_backup_ttl_seconds_after_finished: 86_400,
+        }),
+      }),
+    );
   });
 });
 

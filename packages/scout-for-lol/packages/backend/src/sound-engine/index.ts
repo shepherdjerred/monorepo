@@ -156,7 +156,7 @@ function conditionMatches(
         c.field === "killer" ? context.killerIsLocal : context.victimIsLocal;
 
       // Check if local player matches
-      if (c.includeLocalPlayer === true && isLocal) {
+      if (isLocal && c.includeLocalPlayer === true) {
         return true;
       }
 

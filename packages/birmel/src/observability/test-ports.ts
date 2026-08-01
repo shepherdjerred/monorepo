@@ -11,7 +11,7 @@ export async function getAvailableLocalPort(): Promise<number> {
           reject(error);
           return;
         }
-        if (address == null || typeof address === "string") {
+        if (typeof address === "string" || address == null) {
           reject(new Error("Could not allocate a local port"));
           return;
         }

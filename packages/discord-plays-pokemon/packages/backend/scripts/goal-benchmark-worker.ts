@@ -230,10 +230,10 @@ async function waitForPersistedSave(
     const save = Bun.file(savePath);
     const tmpExists = await Bun.file(`${savePath}.tmp`).exists();
     if (
+      !tmpExists &&
       (await save.exists()) &&
       save.size === 128 * 1024 &&
-      save.lastModified >= minimumModifiedAt &&
-      !tmpExists
+      save.lastModified >= minimumModifiedAt
     ) {
       return {
         bytes: await save.bytes(),

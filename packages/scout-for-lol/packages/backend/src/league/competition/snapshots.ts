@@ -88,7 +88,7 @@ export async function createSnapshot(
   // Special handling for MOST_RANK_CLIMB competitions:
   // If creating a START snapshot and player is unranked, skip creating the snapshot.
   // We'll create their START snapshot later when they first become ranked.
-  if (criteria.type === "MOST_RANK_CLIMB" && snapshotType === "START") {
+  if (snapshotType === "START" && criteria.type === "MOST_RANK_CLIMB") {
     const queue = criteria.queue;
     const hasRank =
       rankData && (queue === "SOLO" ? rankData.solo : rankData.flex);

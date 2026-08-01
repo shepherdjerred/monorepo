@@ -147,8 +147,10 @@ async function main(): Promise<void> {
   const workDir = await mkdtemp(path.join(tmpdir(), "schedule-rehearsal-"));
   const repoCopy = path.join(workDir, "monorepo");
   const shimDir = path.join(workDir, "shim");
+  const bunCacheDir = path.join(workDir, "bun-cache");
   const trackedFilesManifest = path.join(workDir, "tracked-files.txt");
   await mkdir(repoCopy, { recursive: true });
+  await mkdir(bunCacheDir, { recursive: true });
 
   try {
     await writeTrackedFilesManifest(trackedFilesManifest);
@@ -162,6 +164,19 @@ async function main(): Promise<void> {
         : `${cogShim}:${Bun.env["PATH"] ?? ""}`;
 
     console.error("[check:rehearsal] running rehearse-bot-clone.ts");
+    // Point every install the rehearsal performs (its scratch-clone plain
+    // `bun install`, plus any nested install) at a scratch-local Bun cache. In
+    // CI the pipeline sets BUN_INSTALL_CACHE_DIR to the shared PVC
+    // (/buildkite/bun-cache/data), but the rehearsal's installs bypass
+    // bun-install.sh and never take the collector's shared lock — writing to the
+    // shared cache would let the five-minute collector delete entries
+    // mid-install. This scratch cache lives under workDir and is removed with it.
+    const rehearsalEnv: Record<string, string> = {
+      BUN_INSTALL_CACHE_DIR: bunCacheDir,
+    };
+    if (pathEnv !== undefined) {
+      rehearsalEnv["PATH"] = pathEnv;
+    }
     await run(
       [
         "bun",
@@ -172,7 +187,7 @@ async function main(): Promise<void> {
       ],
       {
         cwd: REPO_ROOT,
-        env: pathEnv === undefined ? {} : { PATH: pathEnv },
+        env: rehearsalEnv,
       },
     );
     console.error("[check:rehearsal] rehearsal passed");

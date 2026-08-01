@@ -1,5 +1,6 @@
 import { zodResponseFormat } from "openai/helpers/zod.mjs";
 import { z } from "zod/v4";
+import { parseClaudeResultMessage } from "./claude-result.ts";
 
 export const AgentTaskProviderSchema = z.enum(["claude", "codex"]);
 export const AgentTaskModeSchema = z.enum(["report-only"]);
@@ -139,13 +140,44 @@ export type AgentTaskStartResult =
       scheduleId: string;
     };
 
-export const AGENT_TASK_OUTPUT_JSON_SCHEMA: Record<string, unknown> = z
+// Codex's `--output-schema` is OpenAI's own CLI and requires OpenAI
+// Structured-Outputs "strict mode": every field in `required`, optional
+// fields modeled as nullable rather than absent. `AgentTaskWireResultPayloadSchema`
+// (below) exists to produce exactly that dialect for Codex only.
+export const AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX: Record<string, unknown> = z
   .record(z.string(), z.unknown())
   .parse(
     zodResponseFormat(AgentTaskWireResultPayloadSchema, "agent_task_result")
       .json_schema.schema,
   );
 
+// The LEADING (but unconfirmed) hypothesis for the 2026-07-30
+// homelab-audit-daily outage is that Claude Code CLI's `--json-schema` mishandles
+// the OpenAI-strict/nullable dialect above: given it, `claude -p` was observed to
+// exit 0 but silently omit `structured_output` from its result message entirely,
+// rather than erroring. This is correlation, not a proven root cause — local
+// repro of the pinned CLI omitted `structured_output` with BOTH schema dialects
+// (including the historically-working plain one), and the model and turn limit
+// also differed between the compared runs, so the schema dialect is not isolated
+// as the cause (see
+// packages/docs/todos/homelab-audit-agent-task-production-verification.md).
+// Regardless of the eventual root cause, Claude wants a plain JSON Schema:
+// optional fields simply absent from `required`, no forced nullable unions.
+// Generate it straight from the canonical, already-plain-optional
+// `AgentTaskResultPayloadSchema` (not the wire schema), and strip the `$schema`
+// key `z.toJSONSchema` injects by default so the payload matches the
+// pre-2026-07-28 hand-written schema this restores. Do NOT merge this back into a
+// single constant shared with Codex until the production run (or an independent
+// reproduction) confirms or refutes the hypothesis.
+const { $schema: _agentTaskClaudeSchemaMeta, ...agentTaskClaudeJsonSchema } =
+  z.toJSONSchema(AgentTaskResultPayloadSchema);
+export const AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE: Record<string, unknown> = z
+  .record(z.string(), z.unknown())
+  .parse(agentTaskClaudeJsonSchema);
+
+// Codex-only: converts the OpenAI-strict/nullable wire shape into the
+// canonical plain-optional shape. Claude's output already parses directly
+// against AgentTaskResultPayloadSchema (see parseAgentTaskResultPayload).
 function normalizeAgentTaskFollowUp(
   followUp: AgentTaskWireResultPayload["followUp"],
 ): AgentTaskFollowUp | undefined {
@@ -168,6 +200,7 @@ function normalizeAgentTaskFollowUp(
 
 export function parseAgentTaskResultPayload(
   raw: unknown,
+  provider: AgentTaskProvider,
 ): AgentTaskResultPayload {
   if (raw === undefined || raw === "") {
     throw new Error(
@@ -176,6 +209,11 @@ export function parseAgentTaskResultPayload(
   }
   try {
     const decoded: unknown = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (provider === "claude") {
+      // Claude's output already matches the canonical plain-optional shape
+      // (AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE) — no wire/normalize step.
+      return AgentTaskResultPayloadSchema.parse(decoded);
+    }
     const wire = AgentTaskWireResultPayloadSchema.parse(decoded);
     const followUp = normalizeAgentTaskFollowUp(wire.followUp);
     return AgentTaskResultPayloadSchema.parse({
@@ -192,6 +230,22 @@ export function parseAgentTaskResultPayload(
       { cause: error },
     );
   }
+}
+
+// Parses a claude -p subprocess's raw stdout into the canonical payload,
+// surfacing a distinct is_error=true diagnostic (e.g. --max-turns exhaustion)
+// instead of letting it collapse into the generic "no structured output"
+// message thrown by parseAgentTaskResultPayload.
+export function parseClaudeAgentTaskResult(
+  stdout: string,
+): AgentTaskResultPayload {
+  const resultMessage = parseClaudeResultMessage(stdout);
+  if (resultMessage.is_error === true) {
+    throw new Error(
+      `claude -p reported is_error=true for agent task: ${resultMessage.result ?? "(no result text)"}`,
+    );
+  }
+  return parseAgentTaskResultPayload(resultMessage.structured_output, "claude");
 }
 
 function sortJson(value: unknown): unknown {

@@ -92,7 +92,7 @@ function parseCliArgs(args: string[]): CliArgs {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (arg == null || arg === "") {
+    if (arg === "" || arg == null) {
       continue;
     }
 
@@ -104,7 +104,7 @@ function parseCliArgs(args: string[]): CliArgs {
     const key = FLAG_MAP[arg];
     if (key != null) {
       const value = args[i + 1];
-      if (value != null && value !== "") {
+      if (value !== "" && value != null) {
         result[key] = value;
         i += 1;
       }

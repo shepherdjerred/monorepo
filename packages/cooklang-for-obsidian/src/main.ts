@@ -52,7 +52,7 @@ export default class CooklangPlugin extends Plugin {
 
   async loadSettings(): Promise<void> {
     const data: unknown = (await this.loadData()) as unknown;
-    if (data != null && typeof data === "object") {
+    if (typeof data === "object" && data != null) {
       this.settings = { ...DEFAULT_SETTINGS, ...data };
     }
   }

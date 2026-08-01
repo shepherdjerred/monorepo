@@ -128,7 +128,7 @@ function tryUncommentLine(
   }
 
   const [, indent, keyValue] = commentedKeyMatch;
-  if (keyValue == null || keyValue === "" || indent == null || indent === "") {
+  if (keyValue === "" || indent === "" || keyValue == null || indent == null) {
     return {
       uncommented: null,
       newConsecutive: state.consecutiveCommentedKeys,

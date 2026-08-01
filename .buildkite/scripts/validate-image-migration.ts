@@ -54,8 +54,8 @@ export function assertWorkspaceInstallContexts(
     }
     const copyStartLine = lines[copyStart];
     if (
-      copyStart < 0 ||
       copyStartLine === undefined ||
+      copyStart < 0 ||
       !/^COPY --parents\b/u.test(copyStartLine)
     ) {
       fail(`${image} ${stage} frozen install has no manifest COPY context`);

@@ -56,6 +56,19 @@ const lines = pipeline.split("\n");
 
 fixedCorpusMode(Bun.env);
 
+const bunCacheEnvironment = [
+  "env:",
+  "  # New pipelines use a coordinated subdirectory. Once the matching agent-stack",
+  "  # change removes its legacy PodSpec-level cache override, older branch",
+  "  # pipelines fall back to per-pod ephemeral caching instead of writing to the",
+  "  # shared cache without taking its lock.",
+  "  BUN_INSTALL_CACHE_DIR: /buildkite/bun-cache/data",
+  "  BUN_CACHE_LOCK_FILE: /buildkite/bun-cache-control/.gc.lock",
+].join("\n");
+if (!pipeline.includes(bunCacheEnvironment)) {
+  fail("pipeline must configure the coordinated Bun cache data and lock paths");
+}
+
 const checkoutContainerDefinition = [
   "  - checkout_container: &checkout_container",
   "      name: checkout",
@@ -164,7 +177,7 @@ requireIncludes(
 for (const key of ["playwright-e2e-pr", "playwright-e2e-main"]) {
   const block = stepBlocks.get(key);
   const install =
-    "bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo'";
+    ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo'";
   if (!hasTrimmedLine(block, install)) {
     fail(`Playwright lane ${key} is missing exact filtered install ${install}`);
   }
@@ -220,7 +233,7 @@ for (const [key, lane, candidate] of [
 // stay internally gated on their ci-changed lanes.
 const prDryrun = stepBlocks.get("pr-dryrun");
 const prDryrunInstall =
-  "bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter homelab --filter '@homelab/cdk8s'";
+  ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter homelab --filter '@homelab/cdk8s'";
 if (!hasTrimmedLine(prDryrun, prDryrunInstall)) {
   fail(`pr-dryrun is missing exact filtered install ${prDryrunInstall}`);
 }
@@ -451,8 +464,9 @@ assertUnfilteredInstallBelongsToVerify(lines, stepStarts);
 // Buildkite step starts from a fresh pod, so an otherwise dependency-free
 // `bun script.ts` can silently turn into a full root install. Require every
 // runtime invocation to disable auto-install explicitly; intentional installs
-// remain visible as `bun install`. bunx must also use --no-install so a missing
-// filtered dependency fails instead of populating Bun's global cache.
+// remain visible through the shared-lock wrapper. bunx must also use
+// --no-install so a missing filtered dependency fails instead of populating
+// Bun's global cache.
 const bakeImages = await Bun.file(".buildkite/scripts/bake-images.ts").text();
 assertNoImplicitBunRuntime([
   { path: PIPELINE_PATH, source: pipeline },
@@ -479,11 +493,15 @@ await assertPackageTokens([
     "packages/homelab/src/cdk8s/package.json",
     [
       '"typescript":',
+      '"@typescript/native": "npm:typescript@7.0.2"',
       '"prettier":',
       '"bunx --no-install eslint',
-      '"bunx --no-install tsc',
       '"generate-helm-types": "bun --no-install run',
       '"format:generated-helm": "prettier --no-config"',
+    ],
+    [
+      "bun node_modules/@typescript/native/bin/tsc --noEmit",
+      "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     ],
   ],
   ["packages/sjer.red/package.json", ['"bun x --no-install playwright test']],

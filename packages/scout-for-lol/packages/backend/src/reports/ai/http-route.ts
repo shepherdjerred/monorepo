@@ -262,9 +262,9 @@ function assertWebCsrf(webSession: NonNullable<Context["webSession"]>): void {
   if (
     csrfToken === null ||
     csrfHeader === null ||
+    csrfToken !== csrfHeader ||
     csrfToken.length === 0 ||
-    csrfHeader.length === 0 ||
-    csrfToken !== csrfHeader
+    csrfHeader.length === 0
   ) {
     throw new TRPCError({
       code: "FORBIDDEN",

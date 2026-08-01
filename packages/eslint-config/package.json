@@ -26,10 +26,10 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc --outDir ./dist",
+    "build": "bun node_modules/@typescript/native/bin/tsc --outDir ./dist",
     "lint": "bunx eslint --cache .",
     "test": "bun test",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bun node_modules/@typescript/native/bin/tsc --noEmit",
     "prepublishOnly": "bun run build"
   },
   "dependencies": {
@@ -49,16 +49,17 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-native": "^5.0.0",
     "eslint-plugin-regexp": "^3.0.0",
-    "eslint-plugin-unicorn": "^69.0.0",
+    "eslint-plugin-unicorn": "^72.0.0",
     "jiti": "^2.7.0",
     "typescript-eslint": "^8.65.0"
   },
   "peerDependencies": {
-    "eslint": "^10.3.0",
+    "eslint": "^10.4.0",
     "typescript": "^6.0.3"
   },
   "devDependencies": {
     "@typescript-eslint/rule-tester": "^8.59.0",
-    "@types/node": "^26.1.1"
+    "@types/node": "^26.1.1",
+    "@typescript/native": "npm:typescript@7.0.2"
   }
 }

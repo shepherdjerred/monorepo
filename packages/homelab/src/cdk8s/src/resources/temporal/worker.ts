@@ -443,51 +443,22 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "GITHUB_APP_PRIVATE_KEY",
         }),
-        // GitHub webhook ingest (pr-review / pr-summary). GitHub API, clone,
-        // push, and comment operations mint short-lived installation tokens
-        // from the app credentials above. CLAUDE_CODE_OAUTH_TOKEN is the auth
-        // used by the claude CLI itself.
+        // GitHub webhook ingest for the merge-conflict check (push +
+        // pull_request) and PR-closed Buildkite build cancellation (closed).
+        // GitHub API, clone, and commit-status operations mint short-lived
+        // installation tokens from the app credentials above.
         GITHUB_WEBHOOK_SECRET: EnvValue.fromSecretValue({
           secret,
           key: "GITHUB_WEBHOOK_SECRET",
         }),
-        // Anthropic: OAuth → legacy `claude -p`, API key → SDK pr-summary.
-        // Sole auth for both legacy `claude -p` and the new SDK-based bot.
-        // The new bot reads this via `new Anthropic({ authToken: ... })` so
-        // all work bills against the Claude Code subscription. The
-        // ANTHROPIC_API_KEY env var was removed once the SDK switched to
-        // OAuth — keep that flag out so a leaked key can't accidentally
-        // start charging direct-API billing.
+        // Claude Code subscription OAuth token — sole auth for every `claude -p`
+        // subprocess (homelab-audit, generic agent-task, scout-season-refresh).
+        // All work bills against the subscription; ANTHROPIC_API_KEY is
+        // deliberately absent so a leaked key can't start direct-API billing.
         CLAUDE_CODE_OAUTH_TOKEN: EnvValue.fromSecretValue({
           secret,
           key: "CLAUDE_CODE_OAUTH_TOKEN",
         }),
-        // Master kill switch for the whole PR bot (review + summary). While "false"
-        // the GitHub webhook acks deliveries but posts no comments and starts no
-        // workflows. Disabled because every specialist pass was failing with HTTP 429
-        // rate_limit_error (swallowed, so the bot posted "0 findings" on every PR).
-        // Flip to "true" to re-enable. See packages/temporal/src/event-bridge/github-webhook.ts `isPrBotEnabled`.
-        PR_BOT_ENABLED: EnvValue.fromValue("false"),
-        // Kill switch for the new pr-review pipeline's live posting. Set
-        // "true" once the bot is dogfooded — every non-draft PR will then
-        // receive a `<!-- pr-review-finding ... -->` comment. Flip back to
-        // "false" to suppress posts while still running the full pipeline
-        // for log inspection. The post activity reads this directly at
-        // runtime — see packages/temporal/src/activities/pr-review/post.ts
-        // `isPostEnabled`.
-        PR_REVIEW_POST_ENABLED: EnvValue.fromValue("true"),
-        PR_REVIEW_WORKER_MAX_CONCURRENT_ACTIVITIES: EnvValue.fromValue("1"),
-        // PR babysitter — the mutating "get this PR green" bot. Independent
-        // kill switch. ENABLED: an `@temporal-worker help me get this green`
-        // comment from the owner now starts a babysitter workflow (owner-only
-        // authz + per-PR concurrency + budget still gate it). Flip back to
-        // "false" to make the issue_comment webhook ack-and-ignore without
-        // starting any workflow. See
-        // packages/temporal/src/event-bridge/babysit-webhook.ts `isPrBabysitEnabled`.
-        PR_BABYSIT_ENABLED: EnvValue.fromValue("true"),
-        PR_BABYSIT_BOT_HANDLE: EnvValue.fromValue("@temporal-worker"),
-        PR_BABYSIT_BOT_LOGIN: EnvValue.fromValue("long-summer-intern[bot]"),
-        PR_BABYSIT_WORKER_MAX_CONCURRENT_ACTIVITIES: EnvValue.fromValue("2"),
         GITHUB_WEBHOOK_PORT: EnvValue.fromValue("9466"),
         AGENT_TASK_API_PORT: EnvValue.fromValue("9467"),
         AGENT_TASK_API_TOKEN: EnvValue.fromSecretValue({
@@ -510,24 +481,6 @@ export function createTemporalWorkerDeployment(
         ALERTMANAGER_URL: EnvValue.fromValue(
           "http://prometheus-kube-prometheus-alertmanager.prometheus:9093",
         ),
-        // pr-review-bot dismissed-comments KV (Phase 9). Single Redis
-        // instance is deployed inside the temporal chart via the shared
-        // Redis cdk8s construct; service name is `temporal-redis-master`
-        // per Bitnami standalone naming. Port 6379, no auth — intra-
-        // namespace ClusterIP locked down by netpol to temporal-worker
-        // only. The bot fail-closes if Redis is unreachable (skips
-        // dedupe, posts all findings) so REDIS_URL pointing at a dead
-        // service degrades gracefully rather than failing the workflow.
-        REDIS_URL: EnvValue.fromValue(
-          "redis://temporal-redis-master.temporal.svc.cluster.local:6379",
-        ),
-        // Comma-separated list of `owner/repo` pairs the pr-review
-        // reaction-listener workflow polls every 15 min for
-        // thumbs-down reactions + resolved-without-followup signals
-        // (Phase 9). Empty / unset → listener is a no-op. Hard-coded
-        // here rather than from 1P because the value is non-sensitive
-        // and rotates with repo lineage rather than credentials.
-        PR_REVIEW_LISTENER_REPOS: EnvValue.fromValue("shepherdjerred/monorepo"),
         // Bugsink (Sentry-compatible) error tracking. Read by initSentry()
         // in worker.ts. Required — the 1P item carries SENTRY_DSN.
         SENTRY_DSN: EnvValue.fromSecretValue({

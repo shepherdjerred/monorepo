@@ -159,7 +159,7 @@ export class GoalMemory {
     }
     const current = await this.readMemory();
     let archivedPath: string | undefined;
-    if (current.length > 0 && current !== trimmed) {
+    if (current !== trimmed && current.length > 0) {
       archivedPath = await this.archiveMemory(current);
     }
     const target = this.memoryPath();

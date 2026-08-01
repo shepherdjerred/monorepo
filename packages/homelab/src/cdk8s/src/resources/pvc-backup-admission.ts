@@ -20,6 +20,19 @@ const POLICY_KEY_EXPRESSION =
   "object.metadata.namespace + '/' + object.metadata.name";
 const INCLUDED_EXPRESSION = `${toCelList(INCLUDED_PVC_KEYS)}.exists(key, key == variables.policyKey)`;
 const EXCLUDED_EXPRESSION = `${toCelList(EXCLUDED_PVC_KEYS)}.exists(key, key == variables.policyKey)`;
+export const PVC_BACKUP_ADMISSION_SYNC_WAVE = "-1";
+
+function admissionPolicyMetadata(name: string): {
+  name: string;
+  annotations: Record<string, string>;
+} {
+  return {
+    name,
+    annotations: {
+      "argocd.argoproj.io/sync-wave": PVC_BACKUP_ADMISSION_SYNC_WAVE,
+    },
+  };
+}
 
 const PVC_MATCH_CONSTRAINTS = {
   matchPolicy: "Equivalent",
@@ -45,9 +58,7 @@ function createMutationPolicy(
   new ApiObject(chart, `pvc-backup-${disposition}-mutation-policy`, {
     apiVersion: "admissionregistration.k8s.io/v1",
     kind: "MutatingAdmissionPolicy",
-    metadata: {
-      name: policyName,
-    },
+    metadata: admissionPolicyMetadata(policyName),
     spec: {
       failurePolicy: "Fail",
       reinvocationPolicy: "IfNeeded",
@@ -80,9 +91,7 @@ function createMutationPolicy(
   new ApiObject(chart, `pvc-backup-${disposition}-mutation-binding`, {
     apiVersion: "admissionregistration.k8s.io/v1",
     kind: "MutatingAdmissionPolicyBinding",
-    metadata: {
-      name: policyName,
-    },
+    metadata: admissionPolicyMetadata(policyName),
     spec: {
       policyName,
     },
@@ -97,9 +106,7 @@ export function createPvcBackupAdmissionPolicies(chart: Chart): void {
   new ApiObject(chart, "pvc-backup-validation-policy", {
     apiVersion: "admissionregistration.k8s.io/v1",
     kind: "ValidatingAdmissionPolicy",
-    metadata: {
-      name: policyName,
-    },
+    metadata: admissionPolicyMetadata(policyName),
     spec: {
       failurePolicy: "Fail",
       matchConstraints: PVC_MATCH_CONSTRAINTS,
@@ -154,9 +161,7 @@ export function createPvcBackupAdmissionPolicies(chart: Chart): void {
   new ApiObject(chart, "pvc-backup-validation-binding", {
     apiVersion: "admissionregistration.k8s.io/v1",
     kind: "ValidatingAdmissionPolicyBinding",
-    metadata: {
-      name: policyName,
-    },
+    metadata: admissionPolicyMetadata(policyName),
     spec: {
       policyName,
       validationActions: ["Deny"],

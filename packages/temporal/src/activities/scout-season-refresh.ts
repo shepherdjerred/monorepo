@@ -142,7 +142,7 @@ function logSentinelDisagreement(
       sentinelText: sentinelText.slice(0, 200),
     });
   }
-  if (filesChanged > 0 && noDrift) {
+  if (noDrift && filesChanged > 0) {
     jsonLog("warning", "Sentinel reported NO_DRIFT but files changed");
   }
 }

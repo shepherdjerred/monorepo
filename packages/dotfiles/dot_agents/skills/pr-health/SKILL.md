@@ -15,8 +15,6 @@ Check the health of a pull request including merge conflicts, CI status, and app
 
 > **Note:** this monorepo's CI runs on Buildkite (`buildkite/monorepo/pr` + `ci/merge-conflict`) per PR in the stack — the CI section reports those checks. `toolkit pr logs` targets GitHub Actions run IDs, so use Buildkite tooling (`bk build view`) or the Buildkite web UI for logs on this repo; the `toolkit pr logs` commands below still apply to other repos.
 
-> **Review gate:** a red `buildkite/monorepo/pr` is often the blocking **code-review gate** (`review-gate` step) waiting on the active provider (Codex by default, via `REVIEW_PROVIDER`) to review the head and on its threads to be resolved. Re-trigger with `@codex review`, and probe what the provider did with `GH_TOKEN=$(gh auth token) bun scripts/probe-review-signal.ts <pr>`. See the `buildkite-helper` skill → "Review gate" and `packages/temporal/CLAUDE.md`.
-
 ## Commands
 
 ### Check PR Health

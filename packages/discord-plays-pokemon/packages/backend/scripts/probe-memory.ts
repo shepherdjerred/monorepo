@@ -98,7 +98,7 @@ Bun.serve({
         headers: { "content-type": "image/png" },
       });
     }
-    if (route === "press" && request.method === "POST" && arg !== undefined) {
+    if (route === "press" && arg !== undefined && request.method === "POST") {
       const name = arg.toLowerCase();
       const mask = BUTTON_BY_NAME.get(name);
       if (mask === undefined) {

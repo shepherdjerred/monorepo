@@ -50,7 +50,7 @@ export async function handleCreatePoll(options: {
     duration,
     allowMultiselect,
   } = options;
-  if (question == null || question.length === 0 || !answers) {
+  if (!answers || question == null || question.length === 0) {
     return {
       success: false,
       message: "question and answers are required for create",

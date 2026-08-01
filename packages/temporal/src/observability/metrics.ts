@@ -20,7 +20,9 @@ register.setDefaultLabels({ component: "temporal-worker" });
 collectDefaultMetrics({ register, prefix: "temporal_worker_app_" });
 
 // ---------------------------------------------------------------------------
-// PR review / summary bot metrics
+// GitHub webhook metrics (merge-conflict check + PR-closed build cancel). The
+// webhook server is the ingress for those two features; the PR review /
+// summary / babysit bots that formerly shared it have been removed.
 // ---------------------------------------------------------------------------
 
 export const prWebhookReceivedTotal = new Counter({
@@ -32,69 +34,14 @@ export const prWebhookReceivedTotal = new Counter({
 
 export const prWebhookSkippedTotal = new Counter({
   name: "pr_webhook_skipped_total",
-  help: "GitHub webhook deliveries skipped without starting workflows, by reason (draft, bot-author, action:<x>, etc.)",
+  help: "GitHub webhook deliveries skipped without starting a workflow, by reason (non-pull-request-event, push:non-main-ref, schema-parse-failed, etc.)",
   labelNames: ["reason"] as const,
-  registers: [register],
-});
-
-export const prBabysitCommandsTotal = new Counter({
-  name: "pr_babysit_commands_total",
-  help: "Babysitter comment commands by parsed command (start|stop|status|guidance|none) and outcome (accepted|unauthorized|disabled|no_workflow|ignored|error)",
-  labelNames: ["command", "outcome"] as const,
   registers: [register],
 });
 
 export const prWebhookSignatureFailuresTotal = new Counter({
   name: "pr_webhook_signature_failures_total",
   help: "GitHub webhook deliveries rejected for missing or invalid X-Hub-Signature-256",
-  registers: [register],
-});
-
-// ---------------------------------------------------------------------------
-// PR summary (SDK-native, Haiku) — Phase 7 of the SOTA PR review bot plan
-// ---------------------------------------------------------------------------
-
-export const prSummaryDurationSeconds = new Histogram({
-  name: "pr_summary_duration_seconds",
-  help: "Wall-clock duration of SDK-native PR summary activity runs",
-  labelNames: ["model", "action"] as const,
-  buckets: [5, 10, 20, 30, 45, 60, 90, 120, 180],
-  registers: [register],
-});
-
-export const prSummaryCostUsd = new Histogram({
-  name: "pr_summary_cost_usd",
-  help: "Estimated USD cost per PR summary, derived from token usage + Haiku pricing",
-  labelNames: ["model"] as const,
-  buckets: [0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.2, 0.5],
-  registers: [register],
-});
-
-export const prSummaryTokensTotal = new Counter({
-  name: "pr_summary_tokens_total",
-  help: "Tokens consumed by the SDK-native PR summary activity, by model and direction (input/output/cache_create/cache_read)",
-  labelNames: ["model", "direction"] as const,
-  registers: [register],
-});
-
-export const prSummaryCommentsTotal = new Counter({
-  name: "pr_summary_comments_total",
-  help: "PR summary comments posted by the bot, by action (created | updated)",
-  labelNames: ["action"] as const,
-  registers: [register],
-});
-
-export const aiProviderErrorsTotal = new Counter({
-  name: "ai_provider_errors_total",
-  help: "AI provider-side operational errors by app, provider, kind, and source",
-  labelNames: ["app", "provider", "kind", "source"] as const,
-  registers: [register],
-});
-
-export const aiProviderIssueActive = new Gauge({
-  name: "ai_provider_issue_active",
-  help: "Whether an AI provider operational issue is currently active for this app/source",
-  labelNames: ["app", "provider", "kind", "source"] as const,
   registers: [register],
 });
 
@@ -179,7 +126,8 @@ export const agentTaskEmailSentTotal = new Counter({
 
 // ---------------------------------------------------------------------------
 // Agent subprocess wall-clock observability (shared across every agent
-// subprocess activity, e.g. agent-task / homelab-audit / pr-babysit). The
+// subprocess activity, e.g. agent-task / homelab-audit / scout-season-refresh).
+// The
 // point of these two metrics is to make a hang distinguishable from a
 // long-but-progressing run on the dashboard:
 //
@@ -314,35 +262,6 @@ export const zfsDatasetSnapshotCount = new Gauge({
 });
 
 // ---------------------------------------------------------------------------
-// pr-review metrics (Phase 1+ of the SOTA PR review bot — see
-// packages/docs/plans/2026-05-10_sota-pr-review-bot.md). Eval's Grafana
-// dashboard (Phase 8) targets the `pr_review_*` namespace; do not bake the
-// word "pipeline" into the names.
-//
-// `pr_review_posted_total` is the post-activity outcome counter (one tick
-// per *posted* comment, label distinguishes fresh-create vs edit-in-place).
-// Eval owns the workflow-lifecycle counter `pr_review_count_total{repo,
-// status=posted|skipped|failed}` in their Task 8 PR — that one ticks once
-// per run regardless of post outcome (including kill-switch suppressions
-// and pre-post failures). Different semantics, different labels, different
-// name.
-// ---------------------------------------------------------------------------
-
-export const prReviewPostedTotal = new Counter({
-  name: "pr_review_posted_total",
-  help: "pr-review post-activity comments posted to GitHub, by edit-vs-create outcome",
-  labelNames: ["owner", "repo", "outcome"] as const,
-  registers: [register],
-});
-
-export const prReviewFindingsPerPr = new Histogram({
-  name: "pr_review_findings_per_pr",
-  help: "Findings posted per PR by the pr-review pipeline",
-  buckets: [0, 1, 2, 3, 5, 10, 20, 50],
-  registers: [register],
-});
-
-// ---------------------------------------------------------------------------
 // Workflow outcome metric — distinguishes "did the work" from "skipped
 // intentionally" for check-and-skip workflows (vacuum, goodMorning*) where
 // Temporal status alone (`Completed`) cannot tell the two apart.
@@ -352,43 +271,6 @@ export const workflowOutcomeTotal = new Counter({
   name: "temporal_workflow_outcome_total",
   help: "Outcomes of check-and-skip workflows: executed (body ran) vs skipped (gate short-circuited)",
   labelNames: ["workflow", "outcome", "reason"] as const,
-  registers: [register],
-});
-
-// Phase 3 latency telemetry per specialist call. Companions the
-// `pr_review_cost_usd{model, specialist}` histogram in
-// `./pr-review-metrics.ts` so a single dashboard row can plot
-// (cost, latency) per specialist.
-export const prReviewSpecialistLatencySeconds = new Histogram({
-  name: "pr_review_specialist_latency_seconds",
-  help: "Per-specialist-call wall-clock latency in seconds, by model and specialist",
-  labelNames: ["model", "specialist"] as const,
-  buckets: [1, 5, 10, 30, 60, 120, 300, 600],
-  registers: [register],
-});
-
-// Phase 3 consensus drop-rate counter: every raw finding is either kept or
-// dropped, exactly once. `(dropped / (kept+dropped))` is the consensus drop
-// rate and a load-bearing alert signal — if it falls to zero, voting has
-// silently degenerated to passthrough. Pairs with the per-run gauge
-// `pr_review_consensus_drop_rate` in `./pr-review-metrics.ts`.
-export const prReviewConsensusFindingsTotal = new Counter({
-  name: "pr_review_consensus_findings_total",
-  help: "Findings entering the consensus stage, by post-consensus outcome (kept | dropped)",
-  labelNames: ["outcome"] as const,
-  registers: [register],
-});
-
-// Phase 4 verification outcome counter: each finding entering the verify
-// stage records exactly one observation. `outcome ∈ {verified, unverified,
-// contradicted}` — the `contradicted` count divided by the total is the
-// `pr_review_verification_drop_rate` gauge in `./pr-review-metrics.ts`.
-// Labeled by `verifier` (typecheck/eslint/grep/test/none) so dashboards
-// can attribute drop rate to the verifier that fired.
-export const prReviewVerifyFindingsTotal = new Counter({
-  name: "pr_review_verify_findings_total",
-  help: "Findings entering the verify stage, by verifier kind and post-verification outcome (verified | unverified | contradicted)",
-  labelNames: ["verifier", "outcome"] as const,
   registers: [register],
 });
 

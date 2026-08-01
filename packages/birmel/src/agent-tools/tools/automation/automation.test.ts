@@ -41,7 +41,7 @@ async function executeTool(
   tool: unknown,
   input: Record<string, unknown>,
 ): Promise<ToolResult> {
-  if (tool == null || typeof tool !== "object" || !("execute" in tool)) {
+  if (typeof tool !== "object" || tool == null || !("execute" in tool)) {
     throw new TypeError("Tool has no execute function");
   }
   const execute: unknown = tool.execute;

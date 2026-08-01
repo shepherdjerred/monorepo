@@ -81,7 +81,7 @@ export async function handleCreateRule(
     enabled,
     reason,
   } = options;
-  if (name == null || name.length === 0 || !triggerType) {
+  if (!triggerType || name == null || name.length === 0) {
     return {
       success: false,
       message: "name and triggerType are required for creating a rule",

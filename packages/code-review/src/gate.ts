@@ -11,10 +11,23 @@ import { isProviderAuthor } from "./identity.ts";
 import { severityLabel } from "./severity.ts";
 import type {
   GateDecision,
+  PullRequestAuthor,
   ReviewProvider,
   ReviewState,
   ReviewThread,
 } from "./types.ts";
+
+/** Return a skip only when the provider explicitly cannot review bot PRs. */
+export function reviewGateSkipReasonForAuthor(input: {
+  author: PullRequestAuthor;
+  provider: ReviewProvider;
+}): "bot-author" | null {
+  if (input.provider.botAuthoredPullRequestPolicy === "review") {
+    return null;
+  }
+
+  return input.author.type === "Bot" ? "bot-author" : null;
+}
 
 /**
  * A thread blocks the gate iff it is authored by the active provider, still

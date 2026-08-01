@@ -35,7 +35,7 @@ export function parseE2EConfigUrl(url: string): E2EConfig | null {
   const params = new URLSearchParams(url.slice(separatorIndex + 1));
   const apiUrl = params.get("apiUrl");
   const token = params.get("token");
-  if (apiUrl === null || apiUrl.length === 0 || token === null) return null;
+  if (apiUrl === null || token === null || apiUrl.length === 0) return null;
   return { apiUrl, token, tipsOff: params.get("tips") === "off" };
 }
 

@@ -297,4 +297,15 @@ describe("Playwright candidate promotion", () => {
       ".buildkite/ci-image/STATE.json",
     ]);
   });
+
+  test("coordinates its nested lockfile install with cache collection", async () => {
+    const source = await Bun.file(
+      new URL("update-ci-image-pin.ts", import.meta.url),
+    ).text();
+
+    expect(source).toContain(
+      'await run([BUN_INSTALL_WRAPPER, "--lockfile-only"]',
+    );
+    expect(source).not.toContain('await run(["bun", "install"');
+  });
 });
