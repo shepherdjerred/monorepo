@@ -167,6 +167,16 @@ function unwrapEnvWrapper(tokens: string[]): string[] {
         ...unwrapEnvWrapper([...words, ...tokens.slice(index + 2)]),
       ];
     }
+    // Attached short form: `env -S'tsc --noEmit'` tokenizes into the single
+    // token `-Stsc --noEmit` (GNU getopt lets a short option's value ride in the
+    // same argument). Everything after `-S` is the split-string value.
+    if (option.startsWith("-S") && option !== "-S") {
+      const words = splitShellWords(option.slice(2));
+      return [
+        ...assignments,
+        ...unwrapEnvWrapper([...words, ...tokens.slice(index + 1)]),
+      ];
+    }
     if (option.startsWith(envSplitStringPrefix)) {
       const words = splitShellWords(option.slice(envSplitStringPrefix.length));
       return [
