@@ -1,10 +1,11 @@
-import { BUTTON } from "#src/emulator/constants.ts";
-import type { Emulator } from "#src/emulator/emulator.ts";
 import type { EnginePhase } from "#src/emulator/engine-observation.ts";
-import { readGameSnapshot } from "#src/game/events/snapshot.ts";
-import type { GameSnapshot } from "#src/game/events/types.ts";
-import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
-import { readGameObservation } from "./game-observation.ts";
+
+// Pure, unit-tested boot-readiness assessment for the goal benchmark. The
+// streamed benchmark worker (scripts/goal-benchmark-worker.ts) inlines an
+// identical copy of assessBenchmarkBootReadiness because it runs against
+// arbitrary target checkouts and cannot import this runner-owned harness helper;
+// keep the two in sync. This module holds the version covered by
+// benchmark-telemetry.test.ts.
 
 export type BenchmarkBootPosition = Readonly<{
   frame: number;
@@ -86,60 +87,4 @@ function samePosition(
     left.x === right.x &&
     left.y === right.y
   );
-}
-
-export function liveBenchmarkSnapshot(emulator: Emulator): GameSnapshot | null {
-  return readGameSnapshot(emulator.memoryReader(), emulator.gameSymbols());
-}
-
-export function liveBenchmarkSpatial(
-  emulator: Emulator,
-): ReturnType<typeof readSpatialSnapshot> {
-  return readSpatialSnapshot(emulator.memoryReader(), emulator.gameSymbols());
-}
-
-export async function bootBenchmarkSave(
-  emulator: Emulator,
-  timeoutSeconds: number,
-): Promise<GameSnapshot> {
-  const deadline = Date.now() + timeoutSeconds * 1000;
-  let nextContinuePress = Date.now() + 500;
-  let bootCandidate: BenchmarkBootPosition | null = null;
-  for (;;) {
-    const snapshot = liveBenchmarkSnapshot(emulator);
-    const spatial = liveBenchmarkSpatial(emulator);
-    const observation = readGameObservation(emulator);
-    const assessment = assessBenchmarkBootReadiness(bootCandidate, {
-      frame: observation.frame,
-      phase: observation.phase,
-      contextKind: observation.context.kind,
-      observationValid: observation.readiness.observationValid,
-      inputReady: observation.readiness.inputReady,
-      playerStable: observation.readiness.playerStable,
-      gameAvailable: observation.game !== null,
-      snapshotAvailable: snapshot !== null,
-      spatialAvailable: spatial !== null,
-      world:
-        observation.world === null
-          ? null
-          : {
-              mapGroup: observation.world.mapGroup,
-              mapNum: observation.world.mapNum,
-              x: observation.world.x,
-              y: observation.world.y,
-            },
-    });
-    bootCandidate = assessment.candidate;
-    if (snapshot !== null && assessment.ready) return snapshot;
-    if (Date.now() >= deadline) {
-      throw new Error(
-        `emulator did not boot and continue within ${String(timeoutSeconds)} seconds`,
-      );
-    }
-    if (bootCandidate === null && Date.now() >= nextContinuePress) {
-      await emulator.queuePress(BUTTON.a, 3, 3);
-      nextContinuePress = Date.now() + 750;
-    }
-    await Bun.sleep(100);
-  }
 }

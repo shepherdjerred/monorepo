@@ -13,15 +13,6 @@ const REQUIRED_RUNTIME_PATHS = [
 const OPTIONAL_RUNTIME_PATHS = OPTIONAL_CODEX_INSTRUCTION_PATHS;
 const POKEMONCTL_RELATIVE_PATH = "packages/backend/src/goal/pokemonctl.ts";
 
-// The streamed benchmark worker imports #src/goal/benchmark-worker-boot-readiness.ts,
-// which resolves against this overlaid target tree. Comparison targets that predate
-// that harness helper would otherwise fail module resolution before any gameplay is
-// measured, so the runner-owned copy is supplied unconditionally (see
-// injectRunnerOwnedWorkerHelper). This module lives beside that helper, so its own
-// directory is the runner-owned source.
-const WORKER_HELPER_BASENAME = "benchmark-worker-boot-readiness.ts";
-const WORKER_HELPER_RELATIVE_PATH = `packages/backend/src/goal/${WORKER_HELPER_BASENAME}`;
-
 function pathIsInside(parent: string, candidate: string): boolean {
   const relative = path.relative(path.resolve(parent), path.resolve(candidate));
   return (
@@ -126,21 +117,5 @@ export async function prepareBenchmarkRuntimeOverlay(
       false,
     );
   }
-  await injectRunnerOwnedWorkerHelper(runtimeDirectory);
   return runtimeDirectory;
-}
-
-// Overwrite the target's copy of the worker-safe boot-readiness helper with the
-// runner-owned version so the streamed worker's single benchmark import resolves on
-// every comparison target, including checkouts made before the helper existed. The
-// gameplay readers the helper calls still resolve to the overlaid target tree, so this
-// keeps measurement scaffolding runner-consistent without altering what is measured.
-async function injectRunnerOwnedWorkerHelper(
-  runtimeDirectory: string,
-): Promise<void> {
-  await cp(
-    path.join(import.meta.dir, WORKER_HELPER_BASENAME),
-    path.join(runtimeDirectory, WORKER_HELPER_RELATIVE_PATH),
-    { dereference: true, force: true },
-  );
 }

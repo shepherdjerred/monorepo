@@ -67,5 +67,22 @@ const config = [
       "no-restricted-imports": "off",
     },
   },
+  {
+    // The goal benchmark worker is streamed as text and executed with its
+    // working directory set to an arbitrary target checkout, so it cannot
+    // import harness-owned helpers (they would module-not-found on comparison
+    // checkouts made before the helper existed). It therefore inlines its
+    // boot-readiness glue — kept in sync with
+    // src/goal/benchmark-worker-boot-readiness.ts, which holds the unit-tested
+    // copy — which pushes this single self-contained file past the shared
+    // 500-line module cap.
+    files: ["scripts/goal-benchmark-worker.ts"],
+    rules: {
+      "max-lines": [
+        "error",
+        { max: 700, skipBlankLines: false, skipComments: true },
+      ],
+    },
+  },
 ];
 export default config;
