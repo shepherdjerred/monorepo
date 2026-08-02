@@ -11,6 +11,7 @@ type SeedCase = {
   styleKey: string;
   outputText: string;
   previousOutputText?: string;
+  rated?: boolean;
 };
 
 function addGeneratedCase(store: EvalStore, datasetId: string, seed: SeedCase) {
@@ -31,7 +32,7 @@ function addGeneratedCase(store: EvalStore, datasetId: string, seed: SeedCase) {
       renderedPrompts: artifact.context.renderedPrompts,
     });
   }
-  store.recordGeneration({
+  const latestGeneration = store.recordGeneration({
     caseId: evalCase.id,
     durationMs: 120,
     inputTokens: 60,
@@ -41,6 +42,17 @@ function addGeneratedCase(store: EvalStore, datasetId: string, seed: SeedCase) {
     promptRevision: `${seed.matchId}-latest`,
     renderedPrompts: artifact.context.renderedPrompts,
   });
+  if (seed.rated === true) {
+    store.upsertHumanRating({
+      generationId: latestGeneration.id,
+      rating: {
+        anchoredness: 3,
+        entertainment: 3,
+        styleRecognizability: 2,
+        note: "Seeded rating so batch freshness is available.",
+      },
+    });
+  }
 }
 
 function seedDataset(
@@ -158,6 +170,7 @@ export function seedEndToEndStore(store: EvalStore): void {
         performanceSlice: "great",
         styleKey: "aaron",
         outputText: "Mobile Player put the entire match behind one shield.",
+        rated: true,
       },
     ],
   });
