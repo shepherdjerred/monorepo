@@ -70,10 +70,13 @@ read-only` with an output schema file. The two providers accept different
 - **Env scoping**: the subprocess gets a fresh GitHub installation token as
   `GH_TOKEN`; the GitHub App credentials are stripped, and for Claude the
   Anthropic API key is dropped so the run bills the subscription.
-- **Idempotent one-offs**: the workflow ID is the task title plus a content
-  hash of the normalized input — submitting the same task twice no-ops at
-  the server. Future-dated tasks defer via Temporal's `startDelay`, so the
-  wait doesn't consume the run's execution timeout.
+- **One-off submission is conflict-checked**: the workflow ID is the task
+  title plus a content hash of the normalized input, submitted with
+  `ALLOW_DUPLICATE_FAILED_ONLY` and conflict policy `FAIL` — so resubmitting an
+  active or already-succeeded task is rejected (the API returns 500), while a
+  failed or timed-out one starts a fresh run. Future-dated tasks defer via
+  Temporal's `startDelay`, so the wait doesn't consume the run's execution
+  timeout.
 - **Cost is traced even on failure**: the LLM span (with token cost) is
   emitted before the exit-code check, so a failed run that spent tokens
   still shows up in observability.

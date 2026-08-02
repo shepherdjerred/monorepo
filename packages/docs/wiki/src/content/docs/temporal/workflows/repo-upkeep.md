@@ -1,13 +1,16 @@
 ---
 title: Repo upkeep workflows
-description: Six scheduled jobs that keep generated artifacts fresh — one shared clone-regenerate-PR pattern, six thin variations.
+description: Six scheduled jobs — four share one clone-regenerate-PR pattern for committed artifacts; two are outliers (an S3 mirror and a summary email).
 ---
 
-Six scheduled workflows keep committed, generated artifacts in sync with
-sources the repo cannot see from CI: live cluster state, upstream pins,
-external catalogs. Five are pure functions of their inputs; only
-[deps-summary](#dependency-summary-email) calls an LLM, and it only writes an
-email.
+Six scheduled workflows run here, but they don't all do the same job. Four
+keep committed, generated artifacts in sync with sources the repo cannot see
+from CI — live cluster state, upstream pins, external catalogs — opening a PR
+on drift via the shared clone-regenerate-PR pattern below. The other two are
+outliers: `fetcher` only overwrites an S3 manifest (no commit, no PR), and
+`deps-summary` only emails a summary. Most are pure functions of their inputs;
+`deps-summary` always calls an LLM to summarize, and `readme-refresh` calls
+one only when a new package needs its first summary.
 
 ## The shared pattern
 

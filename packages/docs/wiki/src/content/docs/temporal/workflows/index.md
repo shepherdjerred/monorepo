@@ -3,7 +3,8 @@ title: Workflow inventory
 description: Every workflow in the Temporal fleet — trigger, brain, and output — with links to each deep dive.
 ---
 
-Every workflow the [Temporal worker](/temporal/) runs, grouped the way the
+Every workflow the [Temporal worker](/temporal/) runs — scheduled,
+event-driven, operator-started, or spawned as a child — grouped the way the
 deep-dive pages are. "Brain" says what makes decisions: **deterministic**
 code, an **LLM** call, or an **agent** subprocess with tools.
 
@@ -31,10 +32,18 @@ code, an **LLM** call, or an **agent** subprocess with tools.
 
 ## Glitter — [deep dive](/temporal/workflows/glitter/)
 
-| Workflow        | Trigger     | Brain             | Output              |
-| --------------- | ----------- | ----------------- | ------------------- |
-| corpus capture  | daily 04:15 | deterministic     | immutable S3 corpus |
-| context-refresh | Mon 11:00   | LLM (cost-capped) | PR                  |
+| Workflow                  | Trigger                      | Brain             | Output               |
+| ------------------------- | ---------------------------- | ----------------- | -------------------- |
+| corpus capture            | daily 04:15                  | deterministic     | immutable S3 corpus  |
+| context-refresh           | Mon 11:00                    | LLM (cost-capped) | PR                   |
+| corpus inventory          | operator (`glitter:operate`) | deterministic     | channel-scope object |
+| corpus backfill           | operator (`glitter:operate`) | deterministic     | immutable S3 corpus  |
+| channel backfill (canary) | operator (`glitter:operate`) | deterministic     | immutable S3 corpus  |
+| channel overlap           | child of daily capture       | deterministic     | drift re-backfill    |
+
+Only the first two are scheduled; the inventory, backfill, and canary runs are
+operator-started via `bun run glitter:operate`, and channel overlap is spawned
+as a child of the daily capture.
 
 ## Homelab maintenance — [deep dive](/temporal/workflows/homelab-maintenance/)
 

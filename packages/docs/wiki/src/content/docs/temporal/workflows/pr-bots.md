@@ -4,8 +4,11 @@ description: The webhook-driven PR workflows — the required merge-conflict sta
 ---
 
 One HMAC-verified GitHub webhook receiver (`pr-bot.sjer.red`, subscribed to
-`pull_request` and `push`) fans events out to independent workflows keyed by
-PR and commit, so redelivered webhooks no-op.
+`pull_request` and `push`) fans events out to independent workflows. What a
+redelivered webhook does depends on the target's workflow-ID policy: the
+merge-conflict check is keyed per PR (or a singleton for `main`) and
+_supersedes_ an in-flight run, while Buildkite cancel is keyed by commit and
+no-ops a duplicate — safe either way, but not uniformly a no-op.
 
 ## Merge-conflict check (`checkPrMergeConflictsWorkflow`)
 
@@ -28,10 +31,13 @@ error.
 
 Every 6 hours: snapshots what the external code-review provider did across
 the ~30 most recently updated PRs — using the same `@shepherdjerred/code-review`
-state model the CI review-gate runs, so the dataset and the gate can never
-disagree about definitions. Emits Prometheus metrics and archives NDJSON to
-S3 keyed by the Temporal run ID, so a retried run overwrites itself instead
-of forking the dataset.
+state model the CI review-gate runs, so the two agree on provider parsing and,
+at the default threshold, on what blocks. The collector fixes its blocking
+priority at P3, though, while the gate's is configurable
+(`REVIEW_MAX_BLOCKING_PRIORITY`), so a non-default gate setting can make the
+archived dataset and a live gate decision diverge. Emits Prometheus metrics
+and archives NDJSON to S3 keyed by the Temporal run ID, so a retried run
+overwrites itself instead of forking the dataset.
 
 ## The removed PR-bot fleet
 
