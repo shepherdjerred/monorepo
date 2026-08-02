@@ -87,6 +87,20 @@ controller` and `@shepherdjerred/code-review`; `markdownlint` = 0;
   in `packages/pr-fleet-controller/package.json` (matching siblings); updated
   `bun.lock`. `bun run compliance-check` now exits 0 and the frozen dry-run is
   clean (commit `3e3b2149f`).
+- Round 6 (owner-authorized): fixed the 5 new Codex P1s that round 5's fixes
+  surfaced. (1) `sanitizedEnvironment`/`setupEnvironment` take an
+  `extraSecretNames` list; the operator's configured `--api-key-env` name is
+  threaded from `cli.ts` → `MastraWorkerRunner` → `createWorkerTools` and always
+  scrubbed, closing the custom-key leak. (2) Setup write scope narrowed to
+  `SETUP_WRITABLE_HOME_SUBPATHS` (bun module cache + mise cache/state only) —
+  toolchain bin/install dirs (`~/.bun/bin`, `~/.cargo/bin`, mise installs) are
+  now write-denied (verified under `sandbox-exec`), closing the toolchain-binary
+  persistence vector while setup still runs green. (3) `findWorktree` is scoped to
+  `#worktreeRoot` so the fleet never `reset --hard`s the operator's own checkout
+  of the branch. (4) `command-policy` rejects `rg --pre`/`--pre-glob` (nested
+  command exec bypass). (5) `#submitBranch` fails fast on `crossRepository`
+  instead of pushing to the base repo. Tests added/updated across
+  `sandbox`, `worktree`, `state-and-policy`, and `git-operations` (41 tests pass).
 
 ### Remaining
 

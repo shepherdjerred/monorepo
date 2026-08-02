@@ -1,5 +1,10 @@
-import { describe, expect, test } from "bun:test";
-import { sandboxProfile } from "@shepherdjerred/pr-fleet-controller/src/sandbox.ts";
+import { afterEach, describe, expect, test } from "bun:test";
+import {
+  sandboxProfile,
+  sanitizedEnvironment,
+  setupEnvironment,
+  setupSandboxProfile,
+} from "@shepherdjerred/pr-fleet-controller/src/sandbox.ts";
 
 describe("validation sandbox profile", () => {
   const worktree = "/tmp/pr-fleet-worktree";
@@ -39,5 +44,60 @@ describe("validation sandbox profile", () => {
 
   test("rejects a worktree path that could break out of the profile string", () => {
     expect(() => sandboxProfile('/tmp/"; (allow default)')).toThrow();
+  });
+});
+
+describe("credential env scrubbing", () => {
+  afterEach(() => {
+    delete Bun.env["LLM_ACCESS"];
+    delete Bun.env["OPENAI_API_KEY"];
+  });
+
+  test("strips a configured api-key-env name the heuristic does not match", () => {
+    Bun.env["LLM_ACCESS"] = "sk-secret";
+    Bun.env["OPENAI_API_KEY"] = "sk-heuristic";
+
+    // Without the configured name, the arbitrarily-named key survives (proving
+    // the heuristic misses it), while the conventional name is always stripped.
+    const heuristicOnly = sanitizedEnvironment();
+    expect(heuristicOnly["LLM_ACCESS"]).toBe("sk-secret");
+    expect(heuristicOnly["OPENAI_API_KEY"]).toBeUndefined();
+
+    // Passing the configured name removes it from validation and setup envs.
+    expect(sanitizedEnvironment(["LLM_ACCESS"])["LLM_ACCESS"]).toBeUndefined();
+    const setup = setupEnvironment(["LLM_ACCESS"]);
+    expect(setup["LLM_ACCESS"]).toBeUndefined();
+    expect(setup["GIT_CONFIG_GLOBAL"]).toBe("/dev/null");
+  });
+});
+
+describe("setup sandbox write scope", () => {
+  const worktree = "/tmp/pr-fleet/stack-1";
+  const profile = setupSandboxProfile(worktree, {
+    gitCommonDir: "/tmp/checkout/.git",
+    gitDir: "/tmp/checkout/.git/worktrees/stack-1",
+    checkoutRoot: "/tmp/checkout",
+  });
+  const home = Bun.env["HOME"] ?? "";
+
+  test("allows the bun module cache but denies toolchain binary/install dirs", () => {
+    expect(profile).toContain(
+      `(allow file-write* (subpath "${home}/.bun/install/cache"))`,
+    );
+    // The persistence vectors — toolchain bin/install dirs — are NOT writable.
+    expect(profile).not.toContain(
+      `(allow file-write* (subpath "${home}/.bun"))`,
+    );
+    expect(profile).not.toContain(
+      `(allow file-write* (subpath "${home}/.cargo"))`,
+    );
+    expect(profile).not.toContain(
+      `(allow file-write* (subpath "${home}/.local/share/mise"))`,
+    );
+  });
+
+  test("still permits network and denies the operator's credential stores", () => {
+    expect(profile).toContain("(allow network*)");
+    expect(profile).toContain(`(deny file-read* (subpath "${home}"))`);
   });
 });

@@ -43,6 +43,28 @@ const READABLE_HOME_SUBPATHS = [
   "Library/Caches/go-build",
 ];
 
+// The ONLY $HOME subpaths setup commands may WRITE to. Deliberately narrower
+// than the readable toolchain set: setup reads every toolchain store (so `mise`
+// and `bun` can resolve already-installed runtimes and modules) but may only
+// write to CACHE/state dirs, never to a toolchain's binary/install directory
+// (`~/.bun/bin`, `~/.cargo/bin`, `~/.local/share/mise/installs/*/bin`, …). That
+// closes a persistence vector: a malicious PR lifecycle/generation script could
+// otherwise replace a toolchain binary the operator later runs OUTSIDE the
+// sandbox with normal credentials.
+//
+// `bun install --frozen-lockfile` writes only its module cache; `mise trust`
+// writes its trust state; `mise` reads (not writes) already-installed runtimes.
+// `mise install` for a NOT-yet-installed pinned runtime would need to write the
+// install dir and thus fails fast here — an acceptable, documented trade-off:
+// the fleet runs on the operator's machine where the pinned toolchain is already
+// present, and adding a new global runtime is an operator action, not something
+// a PR's setup should perform unattended.
+const SETUP_WRITABLE_HOME_SUBPATHS = [
+  ".bun/install/cache",
+  ".cache/mise",
+  ".local/state/mise",
+];
+
 // Environment variables whose names look credential-bearing. They are stripped
 // from a worker command's environment so a subprocess cannot echo them back
 // through tool output (subprocesses inherit the parent environment).
@@ -218,7 +240,7 @@ export function setupSandboxProfile(
     '(allow file-write* (subpath "/dev"))',
   ];
   if (homeUsable) {
-    for (const subpath of READABLE_HOME_SUBPATHS) {
+    for (const subpath of SETUP_WRITABLE_HOME_SUBPATHS) {
       writes.push(`(allow file-write* (subpath "${home}/${subpath}"))`);
     }
   }
@@ -240,10 +262,19 @@ ${reads.join("\n")}
 ${writes.join("\n")}`;
 }
 
-export function sanitizedEnvironment(): Record<string, string | undefined> {
+// Strip credential-bearing env vars from a subprocess environment. The name
+// heuristic catches conventional credential vars, but a controller can be
+// configured with an arbitrarily-named key var (`--api-key-env LLM_ACCESS`);
+// that configured name is passed via `extraSecretNames` so it is ALWAYS removed
+// even when it does not match the heuristic — otherwise the model credential
+// would leak into validation and setup subprocess environments.
+export function sanitizedEnvironment(
+  extraSecretNames: readonly string[] = [],
+): Record<string, string | undefined> {
+  const explicit = new Set(extraSecretNames);
   const result: Record<string, string | undefined> = {};
   for (const [key, value] of Object.entries(Bun.env)) {
-    if (SECRET_ENV_PATTERN.test(key)) {
+    if (SECRET_ENV_PATTERN.test(key) || explicit.has(key)) {
       continue;
     }
     result[key] = value;
@@ -257,8 +288,10 @@ export function sanitizedEnvironment(): Record<string, string | undefined> {
 // needs no user identity; pointing the global/system config at /dev/null stops
 // git from chasing machine-specific config `include`s under the sandbox-denied
 // $HOME.
-export function setupEnvironment(): Record<string, string | undefined> {
-  const environment = sanitizedEnvironment();
+export function setupEnvironment(
+  extraSecretNames: readonly string[] = [],
+): Record<string, string | undefined> {
+  const environment = sanitizedEnvironment(extraSecretNames);
   environment["GIT_CONFIG_GLOBAL"] = "/dev/null";
   environment["GIT_CONFIG_SYSTEM"] = "/dev/null";
   return environment;

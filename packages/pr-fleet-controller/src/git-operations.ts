@@ -51,11 +51,11 @@ export class GitOperations {
     return validated;
   }
 
-  // Determine which stack tool owns a PR's branch so restacks and submissions
-  // are routed through it (never blindly through git-spice).
+  // Determine which same-repository stack tool owns a PR's branch so restacks
+  // and submissions are routed through it (never blindly through git-spice).
+  // Fork (cross-repository) PRs are rejected earlier by the callers, so this only
+  // distinguishes git-spice from native/unstacked branches:
   //
-  // - Fork PRs (cross-repository) can never be git-spice/gh-stack managed —
-  //   those tools are same-repository only — so they publish through plain gh.
   // - git-spice records every tracked branch as a file `branches/<name>` in its
   //   `refs/spice/data` state ref; a present entry means git-spice owns it.
   // - Otherwise the branch belongs to GitHub's native stack tooling (or is an
@@ -65,9 +65,6 @@ export class GitOperations {
     worktree: string,
     signal?: AbortSignal,
   ): Promise<"git-spice" | "native"> {
-    if (pr.identity.crossRepository) {
-      return "native";
-    }
     const tracked = await this.#run({
       executable: "git",
       args: [
@@ -199,6 +196,16 @@ export class GitOperations {
     signal?: AbortSignal,
   ): Promise<{ headSha: string }> {
     const worktree = this.#worktree(pr);
+    if (pr.identity.crossRepository) {
+      // Fork PRs are never provisioned a worktree (`provisionWorktree` throws for
+      // cross-repository PRs), so this path is unreachable-by-construction. Fail
+      // fast rather than push to `origin` — which is the BASE repository here, not
+      // the contributor's fork — and silently create/overwrite a base-repo branch
+      // that does not update the PR head.
+      throw new Error(
+        `Cannot publish PR #${String(pr.identity.number)}: cross-repository (fork) PRs are not supported by the controller`,
+      );
+    }
     const owner = await this.#stackOwner(pr, worktree, signal);
     if (owner === "git-spice") {
       await this.#mustRun(
@@ -208,11 +215,11 @@ export class GitOperations {
         { timeoutMs: 600_000, signal },
       );
     } else {
-      // Native gh-stack, unstacked single PR, or maintainer-modifiable fork: the
-      // PR already exists (the controller never opens PRs), so publish the
-      // repaired head by force-pushing the branch to its existing remote head.
-      // This is the plain-gh publication path; it is safe for a gh-stack branch
-      // because updating a branch's commits does not change the stack's parent
+      // Native gh-stack or unstacked single PR: the PR already exists (the
+      // controller never opens PRs), so publish the repaired head by
+      // force-pushing the branch to its existing remote head. This is the
+      // plain-gh publication path; it is safe for a gh-stack branch because
+      // updating a branch's commits does not change the stack's parent
       // relationships (only re-parenting would, which the controller never does).
       await this.#mustRun(
         "git",

@@ -89,6 +89,21 @@ function validateTofu(args: string[]): void {
   }
 }
 
+// `rg --pre=COMMAND` (and its `--pre-glob` companion) spawn an arbitrary
+// preprocessor program for each input path — e.g. `rg --pre=/bin/rm pat path`
+// deletes `path`. That is the same nested-command bypass as the removed
+// `mise exec`, so reject the preprocessor flags in every form (`--pre X`,
+// `--pre=X`, `--pre-glob …`) to keep ripgrep a read-only search.
+const RG_PREPROCESSOR_FLAG = /^--pre(?:-glob)?(?:=.*)?$/;
+function validateRg(args: string[]): void {
+  const preprocessor = args.find((argument) =>
+    RG_PREPROCESSOR_FLAG.test(argument),
+  );
+  if (preprocessor !== undefined) {
+    throw new Error(`rg preprocessor flags are not allowed: ${preprocessor}`);
+  }
+}
+
 function validateBunxTurbo(args: string[]): void {
   if (args[0] !== "turbo" || args[1] !== "run") {
     return;
@@ -139,5 +154,8 @@ export function validateWorkerCommand(
   }
   if (executable === "tofu") {
     validateTofu(args);
+  }
+  if (executable === "rg") {
+    validateRg(args);
   }
 }

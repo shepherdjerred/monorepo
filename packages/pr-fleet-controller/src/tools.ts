@@ -81,8 +81,14 @@ export function createWorkerTools(
   pr: PrState,
   store: FleetStore,
   environment: FleetEnvironment,
-  signal: AbortSignal,
+  options: {
+    signal: AbortSignal;
+    // Additional env-var names to scrub from validation/setup subprocesses
+    // beyond the credential heuristic — the operator's `--api-key-env` name.
+    extraSecretNames?: readonly string[];
+  },
 ) {
+  const { signal, extraSecretNames = [] } = options;
   if (pr.worktree === null) {
     throw new Error(
       `PR #${String(pr.identity.number)} has no assigned worktree`,
@@ -260,7 +266,7 @@ export function createWorkerTools(
             signal,
           );
           const profile = setupSandboxProfile(worktree, directories);
-          const commandEnvironment = setupEnvironment();
+          const commandEnvironment = setupEnvironment(extraSecretNames);
           for (const command of commands) {
             const result = await environment.runLocalCommand({
               executable: "sandbox-exec",
@@ -388,7 +394,7 @@ export function createWorkerTools(
             cwd: worktree,
             timeoutMs,
             signal,
-            env: sanitizedEnvironment(),
+            env: sanitizedEnvironment(extraSecretNames),
           });
           return {
             exitCode: result.exitCode,

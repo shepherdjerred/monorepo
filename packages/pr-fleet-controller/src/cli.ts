@@ -157,10 +157,11 @@ async function main(): Promise<void> {
       path.join(checkout, ".claude", "worktrees", "pr-fleet"),
     maxWorkers: Number(parsed.values["max-workers"]),
   });
+  const apiKeyEnvironment = parsed.values["api-key-env"];
   const model = resolveModel(
     config.model,
     parsed.values["base-url"],
-    parsed.values["api-key-env"],
+    apiKeyEnvironment,
   );
   const reviewProvider = resolveProvider(parsed.values["review-provider"]);
   const observer = new TerminalObserver();
@@ -171,7 +172,16 @@ async function main(): Promise<void> {
     config.worktreeRoot,
     reviewProvider,
   );
-  const workerRunner = new MastraWorkerRunner(model, store, environment);
+  // The configured model key-env var (if any) is scrubbed from every worker
+  // validation/setup subprocess in addition to the credential-name heuristic.
+  const extraSecretNames =
+    apiKeyEnvironment === undefined ? [] : [apiKeyEnvironment];
+  const workerRunner = new MastraWorkerRunner(
+    model,
+    store,
+    environment,
+    extraSecretNames,
+  );
   const controller = new FleetController({
     config,
     environment,

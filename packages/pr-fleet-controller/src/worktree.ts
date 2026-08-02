@@ -33,6 +33,19 @@ export class WorktreeManager {
     this.#mustRun = dependencies.mustRun;
   }
 
+  // Only a worktree UNDER `#worktreeRoot` is a fleet-managed worktree. The
+  // operator may have the same PR branch checked out in their own normal
+  // worktree elsewhere; returning that would let `assignWorktreeBranch`
+  // `reset --hard` the operator's real edits. Restrict the search to
+  // fleet-owned paths so only disposable fleet worktrees are ever reused.
+  #isFleetWorktree(worktreePath: string): boolean {
+    const relative = path.relative(this.#worktreeRoot, worktreePath);
+    return (
+      relative === "" ||
+      (!relative.startsWith("..") && !path.isAbsolute(relative))
+    );
+  }
+
   async findWorktree(branches: string[]): Promise<string | null> {
     const output = await this.#mustRun("git", [
       "worktree",
@@ -46,7 +59,11 @@ export class WorktreeManager {
       }
       if (line.startsWith("branch refs/heads/")) {
         const branch = line.slice("branch refs/heads/".length);
-        if (currentPath !== null && branches.includes(branch)) {
+        if (
+          currentPath !== null &&
+          branches.includes(branch) &&
+          this.#isFleetWorktree(currentPath)
+        ) {
           return currentPath;
         }
       }

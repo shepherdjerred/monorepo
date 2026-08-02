@@ -28,15 +28,20 @@ export class MastraWorkerRunner implements WorkerRunner {
   readonly #model: MastraModelConfig;
   readonly #store: FleetStore;
   readonly #environment: FleetEnvironment;
+  readonly #extraSecretNames: readonly string[];
 
   constructor(
     model: MastraModelConfig,
     store: FleetStore,
     environment: FleetEnvironment,
+    // The operator's configured `--api-key-env` var name (if any), scrubbed from
+    // every validation/setup subprocess in addition to the credential heuristic.
+    extraSecretNames: readonly string[] = [],
   ) {
     this.#model = model;
     this.#store = store;
     this.#environment = environment;
+    this.#extraSecretNames = extraSecretNames;
   }
 
   async run(pr: PrState, signal: AbortSignal): Promise<WorkerResult> {
@@ -48,7 +53,10 @@ export class MastraWorkerRunner implements WorkerRunner {
       name: `PR ${prNumber} worker`,
       instructions: WORKER_INSTRUCTIONS,
       model: this.#model,
-      tools: createWorkerTools(pr, this.#store, this.#environment, signal),
+      tools: createWorkerTools(pr, this.#store, this.#environment, {
+        signal,
+        extraSecretNames: this.#extraSecretNames,
+      }),
     });
     const prompt = `Work one cycle on PR #${prNumber}.
 Current state: ${JSON.stringify(pr)}

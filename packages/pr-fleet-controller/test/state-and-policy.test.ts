@@ -68,6 +68,21 @@ describe("worker command policy", () => {
     ).toThrow();
   });
 
+  test("rejects ripgrep preprocessor flags, which run an arbitrary nested program", () => {
+    // `rg --pre=COMMAND` spawns COMMAND per input path — the same bypass class.
+    expect(() =>
+      validateWorkerCommand("rg", ["--pre=/bin/rm", "pattern", "."]),
+    ).toThrow();
+    expect(() =>
+      validateWorkerCommand("rg", ["--pre", "/bin/rm", "pattern", "."]),
+    ).toThrow();
+    expect(() =>
+      validateWorkerCommand("rg", ["--pre-glob=*.pdf", "pattern", "."]),
+    ).toThrow();
+    // A plain search stays allowed.
+    expect(() => validateWorkerCommand("rg", ["pattern", "src"])).not.toThrow();
+  });
+
   test("requires check mode for the in-place formatters", () => {
     // `cargo fmt` / `tofu fmt` rewrite tracked files by default, which would
     // mutate the shared worktree outside the explicit publication paths.

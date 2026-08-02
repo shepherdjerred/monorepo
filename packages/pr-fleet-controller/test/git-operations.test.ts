@@ -80,12 +80,15 @@ describe("stack ownership routing", () => {
     expect(fake.mustCalls.some((call) => call[0] === "git-spice")).toBe(false);
   });
 
-  test("treats a fork PR as native even if the branch name is git-spice-tracked", async () => {
+  test("fails fast on a fork PR instead of pushing to the base repository", async () => {
     const fake = fakeGit(0);
-    await operations(fake).publishRestack(makePr(true));
+    await expect(operations(fake).publishRestack(makePr(true))).rejects.toThrow(
+      /cross-repository/,
+    );
+    // Never pushes (origin is the base repo, not the fork) and never runs git-spice.
     expect(
       fake.mustCalls.some((call) => call[0] === "git" && call.includes("push")),
-    ).toBe(true);
+    ).toBe(false);
     expect(fake.mustCalls.some((call) => call[0] === "git-spice")).toBe(false);
   });
 

@@ -96,3 +96,50 @@ describe("worktree reassignment preserves unpushed work", () => {
     expect(script.resets).toEqual([pr.headSha]);
   });
 });
+
+const okRun = (): Promise<CommandResult> =>
+  Promise.resolve({ exitCode: 0, stdout: "", stderr: "" });
+
+function managerWith(porcelain: string): WorktreeManager {
+  const mustRun = (executable: string, args: string[]): Promise<string> => {
+    if (executable === "git" && args[0] === "worktree" && args[1] === "list") {
+      return Promise.resolve(porcelain);
+    }
+    return Promise.resolve("");
+  };
+  return new WorktreeManager({
+    checkout: "/tmp/checkout",
+    worktreeRoot: "/tmp/pr-fleet",
+    run: okRun,
+    mustRun,
+  });
+}
+
+describe("findWorktree is scoped to fleet-owned worktrees", () => {
+  test("returns the fleet worktree, not the operator's own checkout of the branch", async () => {
+    const porcelain = [
+      // The operator's own checkout is listed first and must be skipped.
+      "worktree /home/user/monorepo",
+      `HEAD ${"a".repeat(40)}`,
+      "branch refs/heads/feature/x",
+      "",
+      "worktree /tmp/pr-fleet/stack-7",
+      `HEAD ${"b".repeat(40)}`,
+      "branch refs/heads/feature/x",
+      "",
+    ].join("\n");
+    expect(await managerWith(porcelain).findWorktree(["feature/x"])).toBe(
+      "/tmp/pr-fleet/stack-7",
+    );
+  });
+
+  test("returns null when only a non-fleet worktree has the branch", async () => {
+    const porcelain = [
+      "worktree /home/user/monorepo",
+      `HEAD ${"a".repeat(40)}`,
+      "branch refs/heads/feature/x",
+      "",
+    ].join("\n");
+    expect(await managerWith(porcelain).findWorktree(["feature/x"])).toBeNull();
+  });
+});
