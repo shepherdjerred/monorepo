@@ -252,6 +252,11 @@
       "steps": [{ "runner": "bun" }]
     },
     {
+      "package": "@scout-for-lol/evals",
+      "directory": "packages/scout-for-lol/packages/evals",
+      "steps": [{ "runner": "bun", "args": ["src"] }]
+    },
+    {
       "package": "@scout-for-lol/frontend",
       "directory": "packages/scout-for-lol/packages/frontend",
       "steps": [{ "runner": "bun" }]

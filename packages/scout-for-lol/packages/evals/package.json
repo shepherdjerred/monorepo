@@ -15,6 +15,7 @@
     "sync-beta": "bun run src/scripts/sync-beta-corpus.ts",
     "typecheck": "bun x --no-install tsc --noEmit",
     "test": "bun test src",
+    "test:ci": "bun ../../../../scripts/run-ci-test.ts",
     "test:e2e": "bun run build && bun x --no-install playwright test",
     "lint": "bun x --no-install eslint . --max-warnings=0"
   },
