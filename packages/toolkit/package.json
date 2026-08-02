@@ -20,7 +20,7 @@
     "test:unit": "bun test test/lib test/bugsink test/s3 test/deployed test/screenshot scripts",
     "install:local": "bun scripts/install.ts",
     "test:integration": "bun test test-integration",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "eslint ."
   },
   "devDependencies": {
@@ -28,7 +28,8 @@
     "@types/bun": "latest",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "@typescript/native": "npm:typescript@7.0.2"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1001.0",

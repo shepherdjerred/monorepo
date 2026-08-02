@@ -19,8 +19,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc --noEmit",
+    "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc -p tsconfig.build.json",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "test": "bun test"
   },
   "dependencies": {
@@ -40,6 +40,7 @@
     "@types/node": "^26.1.1",
     "discord.js-selfbot-v13": "^3.7.1",
     "ffmpeg-static": "^5.3.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "@typescript/native": "npm:typescript@7.0.2"
   }
 }

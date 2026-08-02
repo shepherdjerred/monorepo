@@ -20,12 +20,12 @@
   "version": "1.7.2",
   "scripts": {
     "lint": "eslint src --cache",
-    "build": "tsc",
-    "watch": "tsc -w",
+    "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc",
+    "watch": "PATH=node_modules/@typescript/native/bin:$PATH tsc -w",
     "test": "bun run typedoc && bun test src/",
     "test:update": "bun test src/ --update-snapshots",
     "typedoc": "typedoc src/index.ts",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "deploy": "bun ../../scripts/deploy-site.ts webring",
     "publish:npm": "bun ../../scripts/publish-npm.ts ."
   },
@@ -60,7 +60,8 @@
     "typedoc-plugin-extras": "^4.0.1",
     "typedoc-plugin-zod": "^1.4.3",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.5",
+    "@typescript/native": "npm:typescript@7.0.2"
   },
   "files": [
     "dist",

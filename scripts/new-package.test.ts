@@ -25,7 +25,7 @@ describe("new-package", () => {
   test("creates strict quality configuration", () => {
     const files = packageFiles(validatePackageName("example-package"));
     expect(files["package.json"]).toContain(
-      '"typecheck": "bun node_modules/@typescript/native/bin/tsc --noEmit"',
+      '"typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit"',
     );
     expect(files["package.json"]).toContain(
       '"@typescript/native": "npm:typescript@7.0.2"',

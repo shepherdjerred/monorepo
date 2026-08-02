@@ -22,7 +22,7 @@
     "lint": "bunx eslint src",
     "format": "bunx prettier --check src",
     "format:write": "bunx prettier --write src",
-    "typecheck": "bunx tsc --noEmit",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/scout-for-lol:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t scout-for-lol:dev -f Dockerfile ../../../..",
     "smoke": "bun scripts/smoke.ts",
     "generate": "bun run db:generate",
@@ -93,7 +93,8 @@
     "bun-types": "latest",
     "glob": "^13.0.0",
     "ts-morph": "^28.0.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "@typescript/native": "npm:typescript@7.0.2"
   },
   "description": "Backend service for Scout for League of Legends Discord bot",
   "keywords": [

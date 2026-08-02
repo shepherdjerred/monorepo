@@ -10,7 +10,7 @@
     "start": "bun run src/index.ts",
     "health": "bun run src/health.ts",
     "test": "bun test",
-    "typecheck": "bunx tsc --noEmit",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "bunx eslint --cache .",
     "format": "bunx prettier --check .",
     "prettier": "bunx prettier --write .",
@@ -45,6 +45,7 @@
     "bun-types": "latest",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "@typescript/native": "npm:typescript@7.0.2"
   }
 }

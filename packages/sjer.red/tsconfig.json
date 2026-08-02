@@ -2,14 +2,13 @@
   "extends": "astro/tsconfigs/strictest",
   "compilerOptions": {
     "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
     "paths": {
-      "@src/*": ["src/*"],
-      "@components/*": ["src/components/*"],
-      "@layouts/*": ["src/layouts/*"],
-      "@assets/*": ["assets/*"],
-      "@styles/*": ["src/styles/*"],
-      "@images/*": ["src/images/*"],
+      "@src/*": ["./src/*"],
+      "@components/*": ["./src/components/*"],
+      "@layouts/*": ["./src/layouts/*"],
+      "@assets/*": ["./assets/*"],
+      "@styles/*": ["./src/styles/*"],
+      "@images/*": ["./src/images/*"],
       "zod": ["./node_modules/.bun/zod@3.25.76/node_modules/zod"]
     }
   },

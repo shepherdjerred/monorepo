@@ -7,7 +7,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "bun test",
-    "typecheck": "bunx tsc --noEmit",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "bunx eslint src"
   },
   "imports": {
@@ -46,6 +46,7 @@
     "@vitejs/plugin-react": "^6.0.0",
     "tailwindcss": "^4.1.11",
     "typescript": "^6.0.0",
-    "vite": "^8.0.0"
+    "vite": "^8.0.0",
+    "@typescript/native": "npm:typescript@7.0.2"
   }
 }
