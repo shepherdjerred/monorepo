@@ -172,7 +172,7 @@ function createFakeBuild(
     if (captured.includes("reset")) {
       staleTrackedPatches = false;
     }
-    if (captured.includes("checkout") && staleTrackedPatches) {
+    if (staleTrackedPatches && captured.includes("checkout")) {
       return 1;
     }
     if (captured.includes("tools")) {
