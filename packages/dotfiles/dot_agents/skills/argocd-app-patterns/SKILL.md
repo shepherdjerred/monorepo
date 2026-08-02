@@ -139,6 +139,56 @@ syncPolicy: {
 }
 ```
 
+### Mutually-exclusive field changes (probe handler swaps) can wedge a sync
+
+ArgoCD's default apply is a **client-side strategic-merge patch (SMP)**. SMP
+_merges_ the desired manifest onto the live object — it does not remove a field
+that is absent from the desired manifest but present live. That silently breaks
+when you change a field whose siblings are **mutually exclusive**, most commonly
+a **probe handler type** (`httpGet` ↔ `tcpSocket` ↔ `exec`, or `grpc`):
+
+- Live object has `livenessProbe.httpGet`; you change the source to
+  `Probe.fromTcpSocket(...)`.
+- SMP adds `tcpSocket` but leaves the old `httpGet` → the object now has two
+  handlers, and the apiserver rejects the patch:
+  `Forbidden: may not specify more than 1 handler type`.
+- The app is stuck `OutOfSync`/`SyncFailed` even though the **synthesized
+  manifest is already correct** — no code change can heal it. (This wedged the
+  `media` app in 2026-08; the `shelfbridge-relay` sidecar's probes were switched
+  from `httpGet` to `tcpSocket` while the `httpGet` object was already live. See
+  `packages/docs/logs/2026-08-01_main-ci-red-diagnosis.md`.)
+
+**Remediate (one time):** force a full replace so the orphaned field is dropped.
+**Scope the replace to the one resource** with `--resource` — an app-level
+`--replace` also `kubectl replace`s every bound PVC in the app, which harmlessly
+fails on immutable fields (`spec is immutable after creation`) but leaves the sync
+**operation in a `Failed` state** (verified 2026-08-02 on `media`; the PVCs were
+untouched, but the whole sync reported failure).
+
+```bash
+argocd app sync <app> --replace --resource apps:Deployment:<name>   # replaces only that Deployment
+# fallback (selfHeal:false → must resync): kubectl -n <ns> delete deploy <name> && argocd app sync <app>
+```
+
+After the replace, run a normal `argocd app sync <app>` (no `--replace`) to confirm
+the app returns to `Synced`/`Healthy` under the default strategy — that is exactly
+what the CI reconcile script (`packages/homelab/scripts/argocd.ts sync`) does, and
+it does **not** pass `--replace`, so it cannot heal the wedge itself.
+
+**Prevent recurrence (only for a resource that changes handlers often):** a
+**per-resource** annotation on that one manifest —
+
+```typescript
+metadata: {
+  annotations: { "argocd.argoproj.io/sync-options": "Replace=true" },
+}
+```
+
+Scope it to the single resource, not the whole app: an app-level `Replace=true`
+(or `ServerSideApply=true`) also full-replaces bound PVCs and other immutable
+resources in the chart, which fails on immutable fields (see
+`packages/docs/logs/2026-06-12_argocd-sync-failures.md`).
+
 ## Namespace with Pod Security
 
 ```typescript
