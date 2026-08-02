@@ -41,6 +41,27 @@ export function loadFrozenPersonality(
   if (styleCard === undefined) {
     throw new Error(`Missing style card for ${spec.styleKey}`);
   }
+  // Freezing behaviors replaces the personality's canonical randomBehaviors, so
+  // every frozen behavior must be a unique prompt from THIS personality. A typo,
+  // duplicate, or behavior copied from the other style would otherwise be scored
+  // under the wrong treatment and silently contaminate calibration.
+  const canonicalBehaviors = new Set(
+    (metadata.randomBehaviors ?? []).map((behavior) => behavior.prompt),
+  );
+  const seenBehaviors = new Set<string>();
+  for (const behavior of spec.selectedBehaviors) {
+    if (!canonicalBehaviors.has(behavior)) {
+      throw new Error(
+        `Frozen behavior is not a ${spec.styleKey} personality behavior: ${behavior}`,
+      );
+    }
+    if (seenBehaviors.has(behavior)) {
+      throw new Error(
+        `Frozen behavior is duplicated for ${spec.styleKey}: ${behavior}`,
+      );
+    }
+    seenBehaviors.add(behavior);
+  }
   return {
     filename: spec.styleKey,
     instructions: source.instructions.trim(),
