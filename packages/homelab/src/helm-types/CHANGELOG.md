@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.5.0...helm-types-v1.6.0) (2026-08-02)
+
+
+### Features
+
+* **ci:** add test reporting foundation ([#1782](https://github.com/shepherdjerred/monorepo/issues/1782)) ([09a6ed1](https://github.com/shepherdjerred/monorepo/commit/09a6ed1566aec6cbe9e3f951586ab7ec9961e368))
+
+
+### Bug Fixes
+
+* **deps:** roll out TypeScript 7 native compiler ([#1843](https://github.com/shepherdjerred/monorepo/issues/1843)) ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48))
+* **deps:** update eslint-plugin-unicorn to v72 ([#1837](https://github.com/shepherdjerred/monorepo/issues/1837)) ([60998f5](https://github.com/shepherdjerred/monorepo/commit/60998f50c3a5bc4d5a2a72a3e568f621d1ecb2f5))
+
 ## [1.5.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.4.0...helm-types-v1.5.0) (2026-07-26)
 
 Small correctness and API-surface changes; no runtime dependency changes.
