@@ -11,10 +11,13 @@ source_marker: false
 
 # PR Fleet Controller — setup-sandbox and dispatch hardening
 
-Three blocking Codex P1s from the #1855 review (rounds 6-7) were deferred by an
-explicit owner **land-with-todos** decision: the underlying issue is a
-design-level tension, not a quick correctness fix, so #1855 lands with the five
-already-fixed P1s and these three tracked here for a follow-up.
+Six blocking Codex P1s from the #1855 review (rounds 6-7) were deferred by an
+explicit owner **land-with-todos** decision covering the full controller-
+hardening scope: the underlying issues are design-level / robustness follow-ups,
+not blockers for landing, so #1855 lands with the five already-fixed P1s and
+these six tracked here. The first three are the nested-worktree sandbox tension
+(see Root Cause); the last three are additional controller/CLI robustness
+findings (heartbeat re-arm, EOF shutdown, native-stack restack).
 
 ## Root Cause
 
@@ -68,6 +71,29 @@ the sandbox work) that was surfaced in the same review.
       reads under `checkoutRoot`, or eliminate the checkout re-open by resolving
       the root-cause worktree-layout tension above.
       (`packages/pr-fleet-controller/src/sandbox.ts` setup read list)
+- [ ] **[priority — real correctness]** `controller.ts` heartbeat is not
+      re-armed after a transient refresh failure — when a scheduled heartbeat
+      hits any rejection from `listOpenPrs` or evidence refresh, `#heartbeat` is
+      already cleared and `tick()` exits before `#armHeartbeat`; the catch only
+      logs. With no worker completing, no later tick is scheduled, so a single
+      GitHub/Buildkite outage silently stalls the fleet indefinitely. Schedule
+      the next heartbeat from the failure path (`#runTickSafely`/the tick catch).
+      (`packages/pr-fleet-controller/src/controller.ts` ~L409)
+- [ ] **[priority — real correctness]** `cli.ts` does not `stop()` on stdin EOF
+      — when stdin reaches EOF (Ctrl-D, or a supervising pipe closing) instead of
+      `/stop`/SIGINT, the readline loop ends and `main()` returns without calling
+      `stop()`. The heartbeat timer, workers, and master requests stay alive, so
+      the process keeps repairing and publishing after its operator surface has
+      disappeared. Invoke and await `stop()` in a `finally` covering the terminal
+      loop. (`packages/pr-fleet-controller/src/cli.ts` ~L258)
+- [ ] **[capability gap]** `git-operations.ts` cannot restack a native-stack
+      branch — a native (gh-stack) PR with a merge conflict is classified to the
+      conflict-worker path, but `startRestack` rejects it (`owner !== "git-spice"`)
+      and the worker has no other rebase op, so the fleet can only pause it and
+      can never drive a conflicted native-stack PR green. Route this path through
+      the owning tool (`gh stack rebase` / `--continue`). Requires live
+      native-stack PRs to validate end-to-end.
+      (`packages/pr-fleet-controller/src/git-operations.ts` ~L93)
 
 ## Comment Log
 
@@ -78,3 +104,10 @@ the sandbox work) that was surfaced in the same review.
   nested-worktree design tension (see Root Cause) and finding 1 is a pre-existing
   concurrency bug. Disposition `deferred`: not blocked on an operator, but
   intentionally not done in the landing PR.
+- 2026-08-02 — Owner extended the land-with-todos decision to cover the full
+  controller-hardening scope after a later review round surfaced three more P1s
+  (heartbeat re-arm, EOF shutdown, native-stack restack). Added them to
+  `## Remaining` above rather than grind another fix round on #1855. The two
+  `[priority — real correctness]` items (heartbeat, EOF) are small, testable
+  fixes worth doing first; the `[capability gap]` item (native-stack restack)
+  needs `gh stack` routing and live native-stack PRs to validate.
