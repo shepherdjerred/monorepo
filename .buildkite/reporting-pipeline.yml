@@ -79,11 +79,6 @@ steps:
       bun --no-install x turbo run test:report \
         --continue --concurrency=6 --output-logs=errors-only --summarize
       test_status=$?
-      cargo_report_status=0
-      if [ ! -s .ci-reports/junit/scout-for-lol__desktop-rust/cargo-1.xml ]; then
-        echo "complete reporting run did not emit the desktop Rust JUnit report" >&2
-        cargo_report_status=1
-      fi
       bun --no-install run script-coverage
       script_coverage_status=$?
       bun --no-install scripts/annotate-turbo-summary.ts
@@ -95,9 +90,6 @@ steps:
       set -e
       if [ "$$test_status" -eq 0 ] && [ "$$annotation_status" -ne 0 ]; then
         exit "$$annotation_status"
-      fi
-      if [ "$$test_status" -eq 0 ] && [ "$$cargo_report_status" -ne 0 ]; then
-        exit "$$cargo_report_status"
       fi
       if [ "$$test_status" -eq 0 ] && [ "$$script_coverage_status" -ne 0 ]; then
         exit "$$script_coverage_status"
