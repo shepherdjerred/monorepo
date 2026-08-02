@@ -107,6 +107,12 @@ controller` and `@shepherdjerred/code-review`; `markdownlint` = 0;
 - CI (Buildkite) result for the pushed head is not yet observed (one cycle, no
   polling per the task). Re-run `probe-review-signal.ts 1855` to confirm whether
   Codex converged to zero unresolved findings.
+- Round 7 (owner land-with-todos): Codex raised 3 further P1s (controller.ts
+  dispatch race; setup writes shared `.git`; setup reads whole checkout). The
+  owner chose to LAND #1855 and defer these as tracked todos —
+  `packages/docs/todos/pr-fleet-controller-sandbox-hardening.md` (root-cause
+  analysis + 3 unchecked tasks). The three review threads were resolved as
+  owner-authorized deferrals pointing at that todo.
 
 ### Caveats
 
