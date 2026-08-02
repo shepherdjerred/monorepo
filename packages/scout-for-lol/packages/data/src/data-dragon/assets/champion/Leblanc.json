@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Leblanc": {
       "id": "Leblanc",
@@ -10,7 +10,7 @@
       "title": "the Deceiver",
       "image": {
         "full": "Leblanc.png",
-        "sprite": "champion2.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 432,
         "y": 0,
@@ -610,10 +610,10 @@
           "rangeBurn": "700",
           "image": {
             "full": "LeblancQ.png",
-            "sprite": "spell7.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 192,
-            "y": 48,
+            "x": 0,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -753,10 +753,10 @@
           "rangeBurn": "600",
           "image": {
             "full": "LeblancW.png",
-            "sprite": "spell7.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 240,
-            "y": 48,
+            "x": 48,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -896,10 +896,10 @@
           "rangeBurn": "925",
           "image": {
             "full": "LeblancE.png",
-            "sprite": "spell7.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 288,
-            "y": 48,
+            "x": 96,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -1015,10 +1015,10 @@
           "rangeBurn": "25000",
           "image": {
             "full": "LeblancR.png",
-            "sprite": "spell7.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 336,
-            "y": 48,
+            "x": 144,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -1030,7 +1030,7 @@
         "description": "When LeBlanc drops below 40% Health, she becomes invisible for 1 second and creates a Mirror Image that deals no damage and lasts for up to 8 seconds.",
         "image": {
           "full": "LeblancP.png",
-          "sprite": "passive2.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 432,
           "y": 0,

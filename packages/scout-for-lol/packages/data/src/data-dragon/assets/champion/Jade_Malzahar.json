@@ -1,0 +1,717 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Malzahar": {
+      "id": "Jade_Malzahar",
+      "key": "60090",
+      "name": "Malzahar",
+      "title": "The Prophet of the Void",
+      "image": {
+        "full": "Jade_Malzahar.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 0,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60090000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60090002",
+          "num": 2,
+          "name": "Shadow Prince Malzahar",
+          "chromas": false
+        },
+        {
+          "id": "60090004",
+          "num": 4,
+          "name": "Overlord Malzahar",
+          "chromas": false
+        },
+        {
+          "id": "60090006",
+          "num": 6,
+          "name": "Battle Boss Malzahar",
+          "chromas": false
+        },
+        {
+          "id": "60090007",
+          "num": 7,
+          "name": "Hextech Malzahar",
+          "chromas": false
+        },
+        {
+          "id": "60090018",
+          "num": 18,
+          "name": "Beezahar",
+          "chromas": false
+        },
+        {
+          "id": "60090019",
+          "num": 19,
+          "name": "Beezahar (Ruby)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "60090020",
+          "num": 20,
+          "name": "Beezahar (Emerald)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "60090021",
+          "num": 21,
+          "name": "Beezahar (Sapphire)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "60090022",
+          "num": 22,
+          "name": "Beezahar (Amethyst)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "60090023",
+          "num": 23,
+          "name": "Beezahar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "60090024",
+          "num": 24,
+          "name": "Beezahar (Obsidian)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "60090025",
+          "num": 25,
+          "name": "Beezahar (Sandstone)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "60090026",
+          "num": 26,
+          "name": "Beezahar (Rainbow)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "60090027",
+          "num": 27,
+          "name": "Beezahar (Citrine)",
+          "chromas": false,
+          "parentSkin": 18
+        }
+      ],
+      "lore": "- Null Zone (W) is an AoE area for a short time<br>- Summon Voidling (P) creates a voidling after a number of casts<br>- Nether Grasp (R) does not have the null zone around the target",
+      "blurb": "- Null Zone (W) is an AoE area for a short time<br>- Summon Voidling (P) creates a voidling after a number of casts<br>- Nether Grasp (R) does not have the null zone around the target",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Mage"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 2,
+        "defense": 2,
+        "magic": 9,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 460,
+        "hpperlevel": 80,
+        "mp": 295,
+        "mpperlevel": 45,
+        "movespeed": 340,
+        "armor": 19.5,
+        "armorperlevel": 3.5,
+        "spellblock": 30,
+        "spellblockperlevel": 0,
+        "attackrange": 550,
+        "hpregen": 5.05,
+        "hpregenperlevel": 0.55,
+        "mpregen": 7.6,
+        "mpregenperlevel": 0.6,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 54.66,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 1.36,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "Jade_MalzaharQ",
+          "name": "Call of the Void",
+          "description": "Malzahar opens up two portals to the Void. After a short delay, they fire projectiles that deal Magic Damage and silence enemy champions.",
+          "tooltip": "Malzahar opens up two portals to the Void. After a short delay, they fire projectiles that deal <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>silence</status> enemies for {{ silenceduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Silence Duration",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ silenceduration }} -> {{ silencedurationNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
+          "cooldownBurn": "9",
+          "cost": [
+            80,
+            85,
+            90,
+            95,
+            100
+          ],
+          "costBurn": "80/85/90/95/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
+          "rangeBurn": "900",
+          "image": {
+            "full": "Jade_MalzaharQ.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 192,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_MalzaharW",
+          "name": "Null Zone",
+          "description": "Malzahar creates a zone of negative energy that damages nearby enemies each second.",
+          "tooltip": "Malzahar creates a zone of negative energy for {{ zoneduration }} seconds, which damages nearby enemies for <magicDamage>{{ totaldamage }} max Health magic damage</magicDamage> each second.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Max Health %",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            14,
+            14,
+            14,
+            14,
+            14
+          ],
+          "cooldownBurn": "14",
+          "cost": [
+            90,
+            95,
+            100,
+            105,
+            110
+          ],
+          "costBurn": "90/95/100/105/110",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "0",
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
+          "rangeBurn": "800",
+          "image": {
+            "full": "Jade_MalzaharW.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 240,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_MalzaharE",
+          "name": "Malefic Visions",
+          "description": "Malzahar infects his target's mind, dealing damage over time. If the target dies during this time, the visions pass to a nearby enemy and Malzahar gains mana.",
+          "tooltip": "Malzahar infects his target's mind, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> over {{ duration }} seconds. If the target dies during this time, the visions pass to a nearby enemy and Malzahar gains <scaleMana>{{ manarestore }} Mana</scaleMana>.<br /><br />Malzahar's Voidlings are attracted to affected units.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            15,
+            13,
+            11,
+            9,
+            7
+          ],
+          "cooldownBurn": "15/13/11/9/7",
+          "cost": [
+            60,
+            75,
+            90,
+            105,
+            120
+          ],
+          "costBurn": "60/75/90/105/120",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
+          "rangeBurn": "650",
+          "image": {
+            "full": "Jade_MalzaharE.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 288,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_MalzaharR",
+          "name": "Nether Grasp",
+          "description": "Malzahar channels the essence of the Void to suppress target champion while dealing magic damage over time.",
+          "tooltip": "Malzahar channels the essence of the Void to <status>suppress</status> target champion, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> over {{ suppressduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Nether Grasp Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ beamdamage }} -> {{ beamdamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
+          "cooldownBurn": "120/100/80",
+          "cost": [
+            150,
+            150,
+            150
+          ],
+          "costBurn": "150",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            700,
+            700,
+            700
+          ],
+          "rangeBurn": "700",
+          "image": {
+            "full": "Jade_MalzaharR.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 336,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Summon Voidling",
+        "description": "Every few spells, Malzahar summons an uncontrollable Voidling to engage his enemies. Voidlings grow over time, gaining armor, damage, and attack speed.",
+        "image": {
+          "full": "Jade_Malzahar_Passive.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 0,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

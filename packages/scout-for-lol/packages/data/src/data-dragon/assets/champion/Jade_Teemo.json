@@ -1,0 +1,850 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Teemo": {
+      "id": "Jade_Teemo",
+      "key": "60017",
+      "name": "Teemo",
+      "title": "The Swift Scout",
+      "image": {
+        "full": "Jade_Teemo.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 432,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60017000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60017004",
+          "num": 4,
+          "name": "Astronaut Teemo",
+          "chromas": false
+        },
+        {
+          "id": "60017005",
+          "num": 5,
+          "name": "Cottontail Teemo",
+          "chromas": false
+        },
+        {
+          "id": "60017008",
+          "num": 8,
+          "name": "Omega Squad Teemo",
+          "chromas": false
+        },
+        {
+          "id": "60017009",
+          "num": 9,
+          "name": "Cottontail Teemo (Aquamarine)",
+          "chromas": true,
+          "parentSkin": 5
+        },
+        {
+          "id": "60017010",
+          "num": 10,
+          "name": "Cottontail Teemo (Rose Quartz)",
+          "chromas": true,
+          "parentSkin": 5
+        },
+        {
+          "id": "60017011",
+          "num": 11,
+          "name": "Cottontail Teemo (Speckled)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "60017012",
+          "num": 12,
+          "name": "Cottontail Teemo (Turquoise)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "60017013",
+          "num": 13,
+          "name": "Cottontail Teemo (Amethyst)",
+          "chromas": true,
+          "parentSkin": 5
+        },
+        {
+          "id": "60017014",
+          "num": 14,
+          "name": "Little Devil Teemo",
+          "chromas": false
+        },
+        {
+          "id": "60017015",
+          "num": 15,
+          "name": "Omega Squad Teemo (Pearl)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "60017016",
+          "num": 16,
+          "name": "Omega Squad Teemo (Sandstone)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "60017017",
+          "num": 17,
+          "name": "Omega Squad Teemo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "60017018",
+          "num": 18,
+          "name": "Beemo",
+          "chromas": false
+        },
+        {
+          "id": "60017019",
+          "num": 19,
+          "name": "Beemo (Ruby)",
+          "chromas": true,
+          "parentSkin": 18
+        },
+        {
+          "id": "60017020",
+          "num": 20,
+          "name": "Beemo (Peridot)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "60017021",
+          "num": 21,
+          "name": "Beemo (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "60017022",
+          "num": 22,
+          "name": "Beemo (Amethyst)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "60017023",
+          "num": 23,
+          "name": "Beemo (Rose Quartz)",
+          "chromas": true,
+          "parentSkin": 18
+        },
+        {
+          "id": "60017024",
+          "num": 24,
+          "name": "Beemo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "60017025",
+          "num": 25,
+          "name": "Spirit Blossom Teemo",
+          "chromas": false
+        },
+        {
+          "id": "60017026",
+          "num": 26,
+          "name": "Astronaut Teemo (Chrono)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "60017027",
+          "num": 27,
+          "name": "Prestige Spirit Blossom Teemo",
+          "chromas": false
+        },
+        {
+          "id": "60017028",
+          "num": 28,
+          "name": "Little Devil Teemo (Catseye)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60017029",
+          "num": 29,
+          "name": "Little Devil Teemo (Ruby)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60017030",
+          "num": 30,
+          "name": "Little Devil Teemo (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60017031",
+          "num": 31,
+          "name": "Little Devil Teemo (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60017032",
+          "num": 32,
+          "name": "Little Devil Teemo (Emerald)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60017033",
+          "num": 33,
+          "name": "Little Devil Teemo (Amethyst)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60017034",
+          "num": 34,
+          "name": "Little Devil Teemo (Pearl)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60017035",
+          "num": 35,
+          "name": "Little Devil Teemo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60017036",
+          "num": 36,
+          "name": "Little Devil Teemo (Turquoise)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "60017301",
+          "num": 301,
+          "name": "Classic Teemo",
+          "chromas": false
+        },
+        {
+          "id": "60017302",
+          "num": 302,
+          "name": "Classic Teemo (Recon)",
+          "chromas": false,
+          "parentSkin": 301
+        }
+      ],
+      "lore": "- Noxious Trap's (R) don't bounce",
+      "blurb": "- Noxious Trap's (R) don't bounce",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Marksman",
+        "Mage"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 5,
+        "defense": 3,
+        "magic": 7,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 460,
+        "hpperlevel": 82,
+        "mp": 240,
+        "mpperlevel": 40,
+        "movespeed": 330,
+        "armor": 21.75,
+        "armorperlevel": 3.75,
+        "spellblock": 30,
+        "spellblockperlevel": 0,
+        "attackrange": 500,
+        "hpregen": 5.3,
+        "hpregenperlevel": 0.65,
+        "mpregen": 6.9,
+        "mpregenperlevel": 0.45,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 47.5,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 3.38,
+        "attackspeed": 0.69
+      },
+      "spells": [
+        {
+          "id": "Jade_TeemoQ",
+          "name": "Blinding Dart",
+          "description": "Obscures an enemy's vision with a powerful venom, dealing damage to the target unit and blinding it for the duration.",
+          "tooltip": "Deals <magicDamage>{{ calculateddamage }} magic damage</magicDamage> and <status>Blinds</status> the target for {{ blindduration }} seconds. </mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Base Damage",
+              "Duration",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ blindduration }} -> {{ blinddurationNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
+          "cooldownBurn": "8",
+          "cost": [
+            70,
+            80,
+            90,
+            100,
+            110
+          ],
+          "costBurn": "70/80/90/100/110",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            680,
+            680,
+            680,
+            680,
+            680
+          ],
+          "rangeBurn": "680",
+          "image": {
+            "full": "Jade_TeemoQ.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 0,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_TeemoW",
+          "name": "Move Quick",
+          "description": "Teemo scampers around, passively increasing his movement speed until he is struck by an enemy champion or turret.  Teemo can sprint to gain bonus movement speed that isn't stopped by being struck for a short time.",
+          "tooltip": "<spellPassive>Passive: </spellPassive>Teemo's <speed>Movement Speed</speed> is increased by {{ passivemovespeedbonus*100 }}% unless he has been damaged by an enemy champion or turret in the last 5 seconds.<br /><br /><spellActive>Active: </spellActive>Teemo sprints, gaining <speed>{{ activemovespeedbonus*100 }}% Movement Speed</speed> for 3 seconds. This bonus is not lost when struck.</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Passive Movement Speed",
+              "Active Movement Speed"
+            ],
+            "effect": [
+              "{{ passivemovespeedbonus*100.000000 }}% -> {{ passivemovespeedbonusnl*100.000000 }}%",
+              "{{ activemovespeedbonus*100.000000 }}% -> {{ activemovespeedbonusnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            17,
+            17,
+            17,
+            17,
+            17
+          ],
+          "cooldownBurn": "17",
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "rangeBurn": "0",
+          "image": {
+            "full": "Jade_TeemoW.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 48,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_TeemoE",
+          "name": "Toxic Shot",
+          "description": "Each of Teemo's attacks will poison the target, dealing damage on impact and each second after for 4 seconds.",
+          "tooltip": "Teemo's basic attacks poison their target, dealing <magicDamage>{{ impactcalculateddamage }} magic damage</magicDamage> upon impact and <magicDamage>{{ tickcalculateddamage }} magic damage</magicDamage> each second for 4 seconds.</mainText>{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Impact Damage",
+              "Damage Per Second"
+            ],
+            "effect": [
+              "{{ impactbasedamage }} -> {{ impactbasedamageNL }}",
+              "{{ tickbasedamage }} -> {{ tickbasedamageNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "cooldownBurn": "0",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            680,
+            680,
+            680,
+            680,
+            680
+          ],
+          "rangeBurn": "680",
+          "image": {
+            "full": "Jade_TeemoE.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 96,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_TeemoR",
+          "name": "Noxious Trap",
+          "description": "Teemo places an explosive poisonous trap using one of the mushrooms stored in his pack.  If an enemy steps on the trap it will release a poisonous cloud, slowing enemies and damaging them over time.",
+          "tooltip": "Uses a stored mushroom to place a trap that detonates if an enemy steps on it, spreading poison to nearby enemies that <status>Slows</status> by {{ slowamount }}%  and deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> over 4 seconds.<br /><br />This Ability has 3 charges ({{ ammorechargetime }} second refresh).<br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Slow",
+              "Mana Cost",
+              "Ammo Recharge"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowamount }}% -> {{ slowamountNL }}%",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            1,
+            1,
+            1
+          ],
+          "cooldownBurn": "1",
+          "cost": [
+            75,
+            100,
+            125
+          ],
+          "costBurn": "75/100/125",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "0",
+          "range": [
+            230,
+            230,
+            230
+          ],
+          "rangeBurn": "230",
+          "image": {
+            "full": "Jade_TeemoR.png",
+            "sprite": "spell10.png",
+            "group": "spell",
+            "x": 144,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Camouflage",
+        "description": "If Teemo stands still and takes no actions for a short duration, he becomes Invisible indefinitely. After leaving Invisibility, Teemo gains the Element of Surprise, increasing his Attack Speed for a few seconds.",
+        "image": {
+          "full": "Jade_TeemoPassive.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 432,
+          "y": 0,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

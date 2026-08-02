@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Viego": {
       "id": "Viego",
@@ -10,7 +10,7 @@
       "title": "The Ruined King",
       "image": {
         "full": "Viego.png",
-        "sprite": "champion5.png",
+        "sprite": "champion7.png",
         "group": "champion",
         "x": 96,
         "y": 0,
@@ -486,10 +486,10 @@
           "rangeBurn": "600",
           "image": {
             "full": "ViegoQ.png",
-            "sprite": "spell15.png",
+            "sprite": "spell22.png",
             "group": "spell",
-            "x": 288,
-            "y": 96,
+            "x": 96,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -625,10 +625,10 @@
           "rangeBurn": "400",
           "image": {
             "full": "ViegoW.png",
-            "sprite": "spell15.png",
+            "sprite": "spell22.png",
             "group": "spell",
-            "x": 336,
-            "y": 96,
+            "x": 144,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -768,10 +768,10 @@
           "rangeBurn": "750",
           "image": {
             "full": "ViegoE.png",
-            "sprite": "spell15.png",
+            "sprite": "spell22.png",
             "group": "spell",
-            "x": 384,
-            "y": 96,
+            "x": 192,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -883,10 +883,10 @@
           "rangeBurn": "500",
           "image": {
             "full": "ViegoR.png",
-            "sprite": "spell15.png",
+            "sprite": "spell22.png",
             "group": "spell",
-            "x": 432,
-            "y": 96,
+            "x": 240,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -898,7 +898,7 @@
         "description": "Enemies who fall before Viego become wraiths. By attacking a wraith, Viego temporarily seizes control of the dead enemy's body, healing for a percentage of his target's max health and gaining access to their basic abilities and items. He replaces their Ultimate with a free cast of his own.",
         "image": {
           "full": "Viego_Passive.png",
-          "sprite": "passive5.png",
+          "sprite": "passive7.png",
           "group": "passive",
           "x": 96,
           "y": 0,

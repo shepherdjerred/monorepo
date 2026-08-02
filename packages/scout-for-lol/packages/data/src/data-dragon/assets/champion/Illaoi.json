@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Illaoi": {
       "id": "Illaoi",
@@ -518,8 +518,8 @@
             "full": "IllaoiQ.png",
             "sprite": "spell5.png",
             "group": "spell",
-            "x": 96,
-            "y": 0,
+            "x": 384,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -659,8 +659,8 @@
             "full": "IllaoiW.png",
             "sprite": "spell5.png",
             "group": "spell",
-            "x": 144,
-            "y": 0,
+            "x": 432,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -802,8 +802,8 @@
             "full": "IllaoiE.png",
             "sprite": "spell5.png",
             "group": "spell",
-            "x": 192,
-            "y": 0,
+            "x": 0,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -917,8 +917,8 @@
             "full": "IllaoiR.png",
             "sprite": "spell5.png",
             "group": "spell",
-            "x": 240,
-            "y": 0,
+            "x": 48,
+            "y": 96,
             "w": 48,
             "h": 48
           },

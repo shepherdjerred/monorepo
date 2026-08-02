@@ -12,6 +12,25 @@ export function renderChangelogToHtml(content: ReactNode): string {
 
 export const changelog: ChangelogEntry[] = [
   buildChangelogEntry({
+    date: "2026 08 02",
+    banner: "Updated for League patch 26.15",
+    sections: [
+      {
+        title: "Game Data",
+        color: "indigo",
+        items: [
+          "Champion, item, summoner spell, and rune data refreshed for League patch 26.15",
+          "League Classic launched — a permanent mode with 60 champions on their classic kits and old items like Heart of Gold.",
+          "Arena adds the Ok Boomerang augment and removes Slow and Steady, with several augments capped at level 2.",
+        ],
+      },
+    ],
+    link: {
+      label: "Read Riot's full Patch 26.15 notes",
+      href: "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-15-notes",
+    },
+  }),
+  buildChangelogEntry({
     date: "2026 07 25",
     banner: "Ranked report redesign and delegated dashboard roles",
     sections: [

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Karma": {
       "id": "Karma",
@@ -10,7 +10,7 @@
       "title": "the Enlightened One",
       "image": {
         "full": "Karma.png",
-        "sprite": "champion1.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 336,
         "y": 96,
@@ -715,10 +715,10 @@
           "rangeBurn": "950",
           "image": {
             "full": "KarmaQ.png",
-            "sprite": "spell6.png",
+            "sprite": "spell12.png",
             "group": "spell",
-            "x": 288,
-            "y": 0,
+            "x": 96,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -858,10 +858,10 @@
           "rangeBurn": "675",
           "image": {
             "full": "KarmaSpiritBind.png",
-            "sprite": "spell6.png",
+            "sprite": "spell12.png",
             "group": "spell",
-            "x": 336,
-            "y": 0,
+            "x": 144,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -1001,10 +1001,10 @@
           "rangeBurn": "800",
           "image": {
             "full": "KarmaSolKimShield.png",
-            "sprite": "spell6.png",
+            "sprite": "spell12.png",
             "group": "spell",
-            "x": 384,
-            "y": 0,
+            "x": 192,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -1135,10 +1135,10 @@
           "rangeBurn": "1100",
           "image": {
             "full": "KarmaMantra.png",
-            "sprite": "spell6.png",
+            "sprite": "spell12.png",
             "group": "spell",
-            "x": 432,
-            "y": 0,
+            "x": 240,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -1150,7 +1150,7 @@
         "description": "Karma's damaging abilities will reduce the cooldown of Mantra.",
         "image": {
           "full": "Karma_Passive.png",
-          "sprite": "passive1.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 336,
           "y": 96,

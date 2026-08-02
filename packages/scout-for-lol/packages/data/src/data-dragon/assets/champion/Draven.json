@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Draven": {
       "id": "Draven",
@@ -729,8 +729,8 @@
             "full": "DravenSpinning.png",
             "sprite": "spell3.png",
             "group": "spell",
-            "x": 288,
-            "y": 0,
+            "x": 96,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -740,7 +740,7 @@
           "id": "DravenFury",
           "name": "Blood Rush",
           "description": "Draven gains increased Move Speed and Attack Speed. The Move Speed bonus decreases rapidly over its duration. Catching a Spinning Axe will refresh the cooldown of Blood Rush.",
-          "tooltip": "Draven becomes Ghosted, gains <speed>{{ e2 }}% Move Speed</speed> decaying over {{ e3 }} seconds and <attackSpeed>{{ e4 }}% Attack Speed</attackSpeed> for {{ e5 }} seconds.<br /><br />When Draven catches a <keywordMajor>Spinning Axe</keywordMajor>, this Ability's Cooldown is refreshed.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Draven becomes Ghosted, gains <speed>{{ temp_msmod }}% Move Speed</speed> decaying over {{ temp_msduration }} seconds and <attackSpeed>{{ temp_as }}% Attack Speed</attackSpeed> for {{ temp_asduration }} seconds.<br /><br />When Draven catches a <keywordMajor>Spinning Axe</keywordMajor>, this Ability's Cooldown is refreshed.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Move Speed",
@@ -872,8 +872,8 @@
             "full": "DravenFury.png",
             "sprite": "spell3.png",
             "group": "spell",
-            "x": 336,
-            "y": 0,
+            "x": 144,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -883,7 +883,7 @@
           "id": "DravenDoubleShot",
           "name": "Stand Aside",
           "description": "Draven throws his axes, dealing physical damage to targets hit and knocking them aside. Targets hit are slowed.",
-          "tooltip": "Draven chucks a sideways axe that deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>, <status>Knocks Back</status>, and <status>Slows</status> by {{ e2 }}% for {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Draven chucks a sideways axe that deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>, <status>Knocks Back</status>, and <status>Slows</status> by {{ slowamount }}% for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -891,8 +891,8 @@
               "Cooldown"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
-              "{{ e2 }}% -> {{ e2NL }}%",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowamount }}% -> {{ slowamountNL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -1015,8 +1015,8 @@
             "full": "DravenDoubleShot.png",
             "sprite": "spell3.png",
             "group": "spell",
-            "x": 384,
-            "y": 0,
+            "x": 192,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -1132,8 +1132,8 @@
             "full": "DravenRCast.png",
             "sprite": "spell3.png",
             "group": "spell",
-            "x": 432,
-            "y": 0,
+            "x": 240,
+            "y": 96,
             "w": 48,
             "h": 48
           },

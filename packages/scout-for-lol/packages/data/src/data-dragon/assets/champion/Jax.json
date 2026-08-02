@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Jax": {
       "id": "Jax",
@@ -10,7 +10,7 @@
       "title": "Grandmaster at Arms",
       "image": {
         "full": "Jax.png",
-        "sprite": "champion1.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 48,
         "y": 96,
@@ -294,6 +294,19 @@
           "name": "PROJECT: Jax (Sandstone)",
           "chromas": false,
           "parentSkin": 33
+        },
+        {
+          "id": "24042",
+          "num": 42,
+          "name": "Prestige Magma Chamber Jax",
+          "chromas": true
+        },
+        {
+          "id": "24043",
+          "num": 43,
+          "name": "Prestige Magma Chamber Jax (Vivid)",
+          "chromas": false,
+          "parentSkin": 42
         }
       ],
       "lore": "Unmatched in both his skill with unique armaments and his biting sarcasm, Jax is the last known weapons master of Icathia. After his homeland was laid low by its own hubris in unleashing the Void, Jax and his kind vowed to protect what little remained. As magic now rises in the world, this slumbering threat stirs once more, and Jax roams Valoran, wielding the last light of Icathia and testing all warriors he meets to see if any are strong enough to stand beside him...",
@@ -471,10 +484,10 @@
           "rangeBurn": "700",
           "image": {
             "full": "JaxQ.png",
-            "sprite": "spell5.png",
+            "sprite": "spell11.png",
             "group": "spell",
-            "x": 96,
-            "y": 96,
+            "x": 384,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -612,10 +625,10 @@
           "rangeBurn": "300",
           "image": {
             "full": "JaxW.png",
-            "sprite": "spell5.png",
+            "sprite": "spell11.png",
             "group": "spell",
-            "x": 144,
-            "y": 96,
+            "x": 432,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -755,10 +768,10 @@
           "rangeBurn": "300",
           "image": {
             "full": "JaxE.png",
-            "sprite": "spell5.png",
+            "sprite": "spell12.png",
             "group": "spell",
-            "x": 192,
-            "y": 96,
+            "x": 0,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -880,10 +893,10 @@
           "rangeBurn": "260",
           "image": {
             "full": "JaxR.png",
-            "sprite": "spell5.png",
+            "sprite": "spell12.png",
             "group": "spell",
-            "x": 240,
-            "y": 96,
+            "x": 48,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -895,7 +908,7 @@
         "description": "Jax's consecutive basic attacks continuously increase his Attack Speed.",
         "image": {
           "full": "Armsmaster_MasterOfArms.png",
-          "sprite": "passive1.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 48,
           "y": 96,

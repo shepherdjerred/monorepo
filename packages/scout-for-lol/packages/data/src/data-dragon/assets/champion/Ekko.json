@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Ekko": {
       "id": "Ekko",
@@ -469,7 +469,7 @@
           "id": "EkkoQ",
           "name": "Timewinder",
           "description": "Ekko throws a temporal grenade that expands into a time-distortion field upon hitting an enemy champion, slowing and damaging anyone caught inside. After a delay, the grenade rewinds back to Ekko, dealing damage on its return.",
-          "tooltip": "Ekko throws a device dealing <magicDamage>{{ initialdamage }} magic damage</magicDamage>. On hitting a champion or reaching the end of its range, it expands into a field that <status>Slows</status> enemies inside by {{ e2 }}%. After it expands, Ekko recalls it, dealing <magicDamage>{{ recalldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Ekko throws a device dealing <magicDamage>{{ initialdamage }} magic damage</magicDamage>. On hitting a champion or reaching the end of its range, it expands into a field that <status>Slows</status> enemies inside by {{ slowpercent*-100 }}%. After it expands, Ekko recalls it, dealing <magicDamage>{{ recalldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown",
@@ -482,7 +482,7 @@
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}",
               "{{ outgoingdamage }} -> {{ outgoingdamageNL }}",
-              "{{ effect2amount*-100.000000 }}% -> {{ effect2amountnl*-100.000000 }}%",
+              "{{ slowpercent*-100.000000 }}% -> {{ slowpercentnl*-100.000000 }}%",
               "{{ returndamage }} -> {{ returndamageNL }}"
             ]
           },
@@ -514,11 +514,11 @@
               130
             ],
             [
-              40,
-              45,
-              50,
-              55,
-              60
+              -0.4,
+              -0.45,
+              -0.5,
+              -0.55,
+              -0.6
             ],
             [
               40,
@@ -580,7 +580,7 @@
           "effectBurn": [
             null,
             "70/85/100/115/130",
-            "40/45/50/55/60",
+            "-0.4/-0.45/-0.5/-0.55/-0.6",
             "40/65/90/115/140",
             "100",
             "0",
@@ -605,8 +605,8 @@
             "full": "EkkoQ.png",
             "sprite": "spell3.png",
             "group": "spell",
-            "x": 192,
-            "y": 48,
+            "x": 0,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -616,7 +616,7 @@
           "id": "EkkoW",
           "name": "Parallel Convergence",
           "description": "Ekko's basic attacks deal bonus magic damage to low health enemies. He can cast Parallel Convergence to split the timeline, creating an anomaly after a few seconds that slows enemies caught inside. If Ekko enters the anomaly, he gains shielding and stuns enemies by suspending them in time.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Ekko's Attacks against enemies below 30% Health deal <magicDamage>{{ missinghealthpercent }} missing Health magic damage</magicDamage>.<br /><br /><spellActive>Active:</spellActive> Ekko launches a chronosphere lasting 1.5 seconds after a delay that <status>Slows</status> enemies inside by {{ e0 }}%. If Ekko enters the sphere, he detonates it, <status>Stunning</status> for {{ e2 }} seconds and gaining <shield>{{ totalshield }} Shield</shield>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Ekko's Attacks against enemies below {{ belowhealththreshold*100 }}% Health deal <magicDamage>{{ missinghealthpercent }} missing Health magic damage</magicDamage>.<br /><br /><spellActive>Active:</spellActive> Ekko launches a chronosphere lasting {{ slowzoneduration }} seconds after a delay that <status>Slows</status> enemies inside by {{ slowpercent }}%. If Ekko enters the sphere, he detonates it, <status>Stunning</status> for {{ stunduration }} seconds and gaining <shield>{{ totalshield }} Shield</shield>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Shield Amount",
@@ -624,7 +624,7 @@
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ e4 }} -> {{ e4NL }}",
+              "{{ shieldbase }} -> {{ shieldbaseNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
@@ -748,8 +748,8 @@
             "full": "EkkoW.png",
             "sprite": "spell3.png",
             "group": "spell",
-            "x": 240,
-            "y": 48,
+            "x": 48,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -767,7 +767,7 @@
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
@@ -891,8 +891,8 @@
             "full": "EkkoE.png",
             "sprite": "spell3.png",
             "group": "spell",
-            "x": 288,
-            "y": 48,
+            "x": 96,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -1008,8 +1008,8 @@
             "full": "EkkoR.png",
             "sprite": "spell3.png",
             "group": "spell",
-            "x": 336,
-            "y": 48,
+            "x": 144,
+            "y": 144,
             "w": 48,
             "h": 48
           },

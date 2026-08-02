@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Yuumi": {
       "id": "Yuumi",
@@ -10,7 +10,7 @@
       "title": "the Magical Cat",
       "image": {
         "full": "Yuumi.png",
-        "sprite": "champion5.png",
+        "sprite": "champion7.png",
         "group": "champion",
         "x": 192,
         "y": 48,
@@ -750,10 +750,10 @@
           "rangeBurn": "25000",
           "image": {
             "full": "YuumiQ.png",
-            "sprite": "spell16.png",
+            "sprite": "spell23.png",
             "group": "spell",
-            "x": 192,
-            "y": 144,
+            "x": 0,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -891,10 +891,10 @@
           "rangeBurn": "25000",
           "image": {
             "full": "YuumiW.png",
-            "sprite": "spell16.png",
+            "sprite": "spell23.png",
             "group": "spell",
-            "x": 240,
-            "y": 144,
+            "x": 48,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1036,10 +1036,10 @@
           "rangeBurn": "25000",
           "image": {
             "full": "YuumiE.png",
-            "sprite": "spell16.png",
+            "sprite": "spell23.png",
             "group": "spell",
-            "x": 288,
-            "y": 144,
+            "x": 96,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1153,10 +1153,10 @@
           "rangeBurn": "1100",
           "image": {
             "full": "YuumiR.png",
-            "sprite": "spell16.png",
+            "sprite": "spell23.png",
             "group": "spell",
-            "x": 336,
-            "y": 144,
+            "x": 144,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1168,7 +1168,7 @@
         "description": "Periodically, when Yuumi strikes a champion with an attack or ability, she restores health to herself and the next ally she Attaches to.<br><br>While Attached, Yuumi generates a special bond with her allies. The ally with the strongest bond enhances Yuumi's abilities while she is Attached to them.",
         "image": {
           "full": "YuumiP2.png",
-          "sprite": "passive5.png",
+          "sprite": "passive7.png",
           "group": "passive",
           "x": 192,
           "y": 48,

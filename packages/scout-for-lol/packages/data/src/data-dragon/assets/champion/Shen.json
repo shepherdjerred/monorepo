@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Shen": {
       "id": "Shen",
@@ -10,7 +10,7 @@
       "title": "the Eye of Twilight",
       "image": {
         "full": "Shen.png",
-        "sprite": "champion4.png",
+        "sprite": "champion6.png",
         "group": "champion",
         "x": 48,
         "y": 0,
@@ -622,10 +622,10 @@
           "rangeBurn": "400",
           "image": {
             "full": "ShenQ.png",
-            "sprite": "spell12.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 96,
-            "y": 96,
+            "x": 384,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -761,10 +761,10 @@
           "rangeBurn": "400",
           "image": {
             "full": "ShenW.png",
-            "sprite": "spell12.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 144,
-            "y": 96,
+            "x": 432,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -902,10 +902,10 @@
           "rangeBurn": "600",
           "image": {
             "full": "ShenE.png",
-            "sprite": "spell12.png",
+            "sprite": "spell19.png",
             "group": "spell",
-            "x": 192,
-            "y": 96,
+            "x": 0,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1019,10 +1019,10 @@
           "rangeBurn": "35000",
           "image": {
             "full": "ShenR.png",
-            "sprite": "spell12.png",
+            "sprite": "spell19.png",
             "group": "spell",
-            "x": 240,
-            "y": 96,
+            "x": 48,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1034,7 +1034,7 @@
         "description": "After casting a spell, Shen gets a shield. Affecting other champions reduces the cooldown of this effect.",
         "image": {
           "full": "Shen_Passive.png",
-          "sprite": "passive4.png",
+          "sprite": "passive6.png",
           "group": "passive",
           "x": 48,
           "y": 0,
