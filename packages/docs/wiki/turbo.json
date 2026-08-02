@@ -24,6 +24,13 @@
         "!$TURBO_ROOT$/packages/docs/wiki/dist/**"
       ]
     },
+    "test:ci": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/docs/**/*.md",
+        "!$TURBO_ROOT$/packages/docs/wiki/dist/**"
+      ]
+    },
     "test:e2e": {
       "dependsOn": ["build", "^build"],
       "cache": false,
