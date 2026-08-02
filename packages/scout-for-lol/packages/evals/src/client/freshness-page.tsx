@@ -24,7 +24,7 @@ export function FreshnessPage(): React.JSX.Element {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const input =
-    datasetResult.success && styleKey !== undefined
+    styleKey !== undefined && datasetResult.success
       ? { datasetId: datasetResult.data, styleKey }
       : skipToken;
   const batchQuery = useTanstackQuery(
@@ -37,7 +37,7 @@ export function FreshnessPage(): React.JSX.Element {
   const mutation = useMutation(
     trpc.freshness.rate.mutationOptions({
       onSuccess: () => {
-        if (!datasetResult.success || styleKey === undefined) return;
+        if (styleKey === undefined || !datasetResult.success) return;
         void queryClient.invalidateQueries({
           queryKey: trpc.freshness.detail.queryKey({
             datasetId: datasetResult.data,
@@ -49,7 +49,7 @@ export function FreshnessPage(): React.JSX.Element {
     }),
   );
 
-  if (!datasetResult.success || styleKey === undefined) {
+  if (styleKey === undefined || !datasetResult.success) {
     return (
       <main className="mx-auto max-w-5xl p-8">Invalid freshness URL.</main>
     );

@@ -103,7 +103,7 @@ export function DatasetPage(): React.JSX.Element {
       </main>
     );
   }
-  if (datasetsQuery.data !== undefined && dataset === undefined) {
+  if (dataset === undefined && datasetsQuery.data !== undefined) {
     return <main className="mx-auto max-w-5xl p-8">Dataset not found.</main>;
   }
   if (dataset === undefined || casesQuery.data === undefined) {

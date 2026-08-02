@@ -99,7 +99,7 @@ export async function listCandidateMatchKeys(
       response.IsTruncated === true
         ? response.NextContinuationToken
         : undefined;
-    if (response.IsTruncated === true && continuationToken === undefined) {
+    if (continuationToken === undefined && response.IsTruncated === true) {
       throw new Error(
         "S3 truncated candidate listing without a continuation token",
       );

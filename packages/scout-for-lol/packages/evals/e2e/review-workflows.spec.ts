@@ -353,8 +353,8 @@ test("keeps score controls ahead of evidence on a narrow viewport", async ({
   expect(scoreBox.y).toBeGreaterThan(reviewBox.y);
   expect(contextBox.y).toBeGreaterThan(scoreBox.y);
   const caseWidths = await page.evaluate(() => ({
-    client: document.documentElement.clientWidth,
-    scroll: document.documentElement.scrollWidth,
+    client: globalThis.document.documentElement.clientWidth,
+    scroll: globalThis.document.documentElement.scrollWidth,
   }));
   expect(caseWidths.scroll).toBe(caseWidths.client);
 
@@ -373,8 +373,8 @@ test("keeps score controls ahead of evidence on a narrow viewport", async ({
   }
   expect(firstReviewBox.y).toBeGreaterThan(freshnessScoreBox.y);
   const freshnessWidths = await page.evaluate(() => ({
-    client: document.documentElement.clientWidth,
-    scroll: document.documentElement.scrollWidth,
+    client: globalThis.document.documentElement.clientWidth,
+    scroll: globalThis.document.documentElement.scrollWidth,
   }));
   expect(freshnessWidths.scroll).toBe(freshnessWidths.client);
 });
