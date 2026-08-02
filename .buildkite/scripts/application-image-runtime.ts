@@ -33,7 +33,30 @@ function canonicalJson(value: unknown): string {
     .join(",")}}`;
 }
 
-function normalizedRuntimeConfig(value: unknown): Record<string, unknown> {
+/**
+ * Environment entries that carry a disposable build identity for application
+ * images. The application bake injects `VERSION=<build number>` and
+ * `GIT_SHA=<commit>` on every push, so including them in the runtime
+ * fingerprint would make every commit look like a content change. CI images do
+ * not bake these identities — any `VERSION=`/`GIT_SHA=` entry in a CI image is
+ * meaningful runtime configuration — so CI callers pass a different prefix set
+ * (see `CI_IMAGE_IGNORED_ENV_PREFIXES`).
+ */
+export const APPLICATION_IGNORED_ENV_PREFIXES: readonly string[] = [
+  "GIT_SHA=",
+  "VERSION=",
+];
+
+/**
+ * CI images carry no disposable build identity in their runtime environment,
+ * so every `Env` entry is meaningful configuration and none are stripped.
+ */
+export const CI_IMAGE_IGNORED_ENV_PREFIXES: readonly string[] = [];
+
+function normalizedRuntimeConfig(
+  value: unknown,
+  ignoredEnvPrefixes: readonly string[],
+): Record<string, unknown> {
   const config = asRecord(value);
   if (config === null) {
     throw new TypeError("image runtime config must be an object");
@@ -44,7 +67,7 @@ function normalizedRuntimeConfig(value: unknown): Record<string, unknown> {
       const environment = parseStringArray(field, "image runtime environment");
       normalized[key] = environment.filter(
         (entry) =>
-          !entry.startsWith("GIT_SHA=") && !entry.startsWith("VERSION="),
+          !ignoredEnvPrefixes.some((prefix) => entry.startsWith(prefix)),
       );
     } else {
       normalized[key] = field;
@@ -53,7 +76,10 @@ function normalizedRuntimeConfig(value: unknown): Record<string, unknown> {
   return normalized;
 }
 
-export function runtimeFingerprintFromImage(value: unknown): string {
+export function runtimeFingerprintFromImage(
+  value: unknown,
+  ignoredEnvPrefixes: readonly string[] = APPLICATION_IGNORED_ENV_PREFIXES,
+): string {
   const image = asRecord(value);
   if (image === null) throw new TypeError("image metadata must be an object");
   const architecture = image["architecture"];
@@ -77,7 +103,7 @@ export function runtimeFingerprintFromImage(value: unknown): string {
     architecture,
     os,
     rootfs: { type: rootfsType, diff_ids: diffIds },
-    config: normalizedRuntimeConfig(image["config"]),
+    config: normalizedRuntimeConfig(image["config"], ignoredEnvPrefixes),
   };
   const variant = image["variant"];
   if (typeof variant === "string") fingerprintInput["variant"] = variant;
@@ -103,6 +129,7 @@ export function runtimeFingerprintFromImage(value: unknown): string {
 export async function imageRuntimeFingerprint(
   image: string,
   executor: ImageCommandExecutor,
+  ignoredEnvPrefixes: readonly string[] = APPLICATION_IGNORED_ENV_PREFIXES,
 ): Promise<string | undefined> {
   const result = await executor([
     "docker",
@@ -114,7 +141,10 @@ export async function imageRuntimeFingerprint(
     "{{json .Image}}",
   ]);
   if (result.exitCode !== 0) return undefined;
-  return runtimeFingerprintFromImage(JSON.parse(result.stdout));
+  return runtimeFingerprintFromImage(
+    JSON.parse(result.stdout),
+    ignoredEnvPrefixes,
+  );
 }
 
 export async function classifyRuntimeChange(

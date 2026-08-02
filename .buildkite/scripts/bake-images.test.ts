@@ -12,6 +12,7 @@ import {
   writeFallbackReport,
 } from "./bake-images.ts";
 import {
+  CI_IMAGE_IGNORED_ENV_PREFIXES,
   imageRuntimeFingerprint,
   runExactCandidateSmoke,
   runtimeFingerprintFromImage,
@@ -389,6 +390,30 @@ test("fingerprints rootfs and runtime OCI config without build identity", async 
   expect(() => runtimeFingerprintFromImage({})).toThrow(
     "architecture, os, and rootfs",
   );
+});
+
+test("keeps build-identity env for CI images while dropping it for application images", () => {
+  const base = {
+    architecture: "amd64",
+    os: "linux",
+    rootfs: { type: "layers", diff_ids: ["sha256:one"] },
+    config: {
+      Env: ["PATH=/usr/bin", "VERSION=1", "GIT_SHA=old"],
+    },
+  };
+  const bumped = {
+    ...base,
+    config: { Env: ["PATH=/usr/bin", "VERSION=2", "GIT_SHA=new"] },
+  };
+  // Application default treats VERSION=/GIT_SHA= as disposable build identity.
+  expect(runtimeFingerprintFromImage(bumped)).toBe(
+    runtimeFingerprintFromImage(base),
+  );
+  // CI images carry no disposable identity, so those entries are meaningful
+  // configuration and must change the fingerprint.
+  expect(
+    runtimeFingerprintFromImage(bumped, CI_IMAGE_IGNORED_ENV_PREFIXES),
+  ).not.toBe(runtimeFingerprintFromImage(base, CI_IMAGE_IGNORED_ENV_PREFIXES));
 });
 
 test("creates the remote BuildKit builder only when missing", async () => {

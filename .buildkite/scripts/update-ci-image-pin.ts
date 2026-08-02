@@ -6,7 +6,10 @@ import { fileURLToPath } from "node:url";
 import { setupGitAuth } from "../../scripts/lib/github-auth.ts";
 import { run, runAllowExit, tmpBase } from "../../scripts/lib/run.ts";
 import { runMain } from "../../scripts/lib/transient.ts";
-import { imageRuntimeFingerprint } from "./application-image-runtime.ts";
+import {
+  CI_IMAGE_IGNORED_ENV_PREFIXES,
+  imageRuntimeFingerprint,
+} from "./application-image-runtime.ts";
 import {
   ciImageDefinition,
   ciImageSourceFingerprint,
@@ -176,6 +179,62 @@ async function openOrUpdatePullRequest(options: {
   );
 }
 
+/**
+ * Neutralize a still-open pin promotion before skipping a build. When the
+ * latest candidate restores runtime content to the current pin, any open
+ * promotion PR on the pending branch is stale: it proposes an older or
+ * superseded digest and, with auto-merge already enabled, would otherwise
+ * merge it despite this build deciding no promotion is warranted. Closing the
+ * PR cancels its auto-merge; deleting its branch leaves the next promotion a
+ * clean slate.
+ */
+async function retireStalePromotion(options: {
+  readonly cloneDir: string;
+  readonly definition: CiImageDefinition;
+  readonly env: Record<string, string>;
+}): Promise<void> {
+  const { cloneDir, definition, env } = options;
+  const listed = await run(
+    [
+      "gh",
+      "pr",
+      "list",
+      "--repo",
+      MONOREPO_REPO,
+      "--head",
+      definition.branch,
+      "--state",
+      "open",
+      "--json",
+      "number",
+      "-q",
+      ".[0].number // empty",
+    ],
+    { env, capture: true },
+  );
+  const prNumber = listed.stdout.trim();
+  if (!/^\d+$/.test(prNumber)) {
+    return;
+  }
+  await run(
+    [
+      "gh",
+      "pr",
+      "close",
+      "--repo",
+      MONOREPO_REPO,
+      prNumber,
+      "--comment",
+      `Superseded: the latest ${definition.name} build restored runtime content to the current pin, so this pending promotion is stale.`,
+    ],
+    { env },
+  );
+  await run(
+    ["git", "-C", cloneDir, "push", "origin", "--delete", definition.branch],
+    { env },
+  );
+}
+
 async function preparePlaywrightPromotion(
   cloneDir: string,
   definition: CiImageDefinition,
@@ -242,9 +301,13 @@ async function runtimeFingerprint(
   image: string,
   env: Record<string, string>,
 ): Promise<string | undefined> {
-  return imageRuntimeFingerprint(image, async (command) => {
-    return runAllowExit([...command], { env, capture: true });
-  });
+  return imageRuntimeFingerprint(
+    image,
+    async (command) => {
+      return runAllowExit([...command], { env, capture: true });
+    },
+    CI_IMAGE_IGNORED_ENV_PREFIXES,
+  );
 }
 
 async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
@@ -338,6 +401,13 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
       console.log(
         `${definition.name} candidate runtime content is unchanged; skipping pin promotion`,
       );
+      if (pending !== undefined) {
+        await retireStalePromotion({
+          cloneDir,
+          definition,
+          env: auth.env,
+        });
+      }
       return;
     }
     if (runtimeOutcome === "pin-unresolvable-bumped") {

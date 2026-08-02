@@ -370,4 +370,27 @@ describe("Playwright candidate promotion", () => {
     );
     expect(source).not.toContain('await run(["bun", "install"');
   });
+
+  test("retires a stale pending promotion when runtime content is unchanged", async () => {
+    const source = await Bun.file(
+      new URL("update-ci-image-pin.ts", import.meta.url),
+    ).text();
+
+    // A skipped promotion must neutralize any still-open pin PR so its
+    // already-enabled auto-merge cannot land a superseded digest.
+    const skipIndex = source.indexOf("skipping pin promotion");
+    const retireIndex = source.indexOf("await retireStalePromotion(");
+    expect(skipIndex).toBeGreaterThan(-1);
+    expect(retireIndex).toBeGreaterThan(skipIndex);
+
+    // The retirement helper closes the stale PR and deletes its branch.
+    const helperStart = source.indexOf("async function retireStalePromotion(");
+    expect(helperStart).toBeGreaterThan(-1);
+    const helperBody = source.slice(
+      helperStart,
+      source.indexOf("\n}\n", helperStart),
+    );
+    expect(helperBody).toContain('"close"');
+    expect(helperBody).toContain('"--delete"');
+  });
 });
