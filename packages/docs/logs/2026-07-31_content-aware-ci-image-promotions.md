@@ -80,3 +80,49 @@ Addressed the two Codex review findings that were failing the
 - The `promote` orchestrator remains integration-style (real `git`/`gh`); its
   new retire path is covered by a source-structure assertion, consistent with
   the existing lockfile-ordering test in the same file.
+
+## Session Log — 2026-08-02
+
+Codex's re-review of the 2026-08-01 fix raised one new **P1** ("Preserve
+inspect failures for transient handling") — a hole in the runtime-fingerprint
+path this PR relies on. Fixed it; the older P2 was already resolved.
+
+### Done
+
+- **P1 — preserve transient inspect failures** (`application-image-runtime.ts`,
+  `scripts/lib/transient.ts`): `imageRuntimeFingerprint` no longer collapses
+  every `imagetools inspect` failure to `undefined`. It now classifies a
+  non-zero result with `bakeFailureIsTransient`; a transient registry/BuildKit
+  failure throws a new `TransientError` that preserves the stderr diagnostics,
+  and `runMain` maps that to `EXIT_TRANSIENT` (34) so Buildkite retries the job.
+  Only a genuine, non-transient "not found" still returns `undefined` — the
+  legitimate pin-unresolvable signal. This fixes both the candidate path (was an
+  unretryable bare exit 1 without diagnostics) and the pinned path (a transient
+  blip was misclassified as `pin-unresolvable-bumped`, changing the promotion
+  outcome).
+- Added `TransientError` to `scripts/lib/transient.ts` and taught
+  `isTransientError` to recognize it by brand, so buildx-transient signatures
+  that the general `TRANSIENT_ERROR_PATTERN` does not list (e.g. `blob unknown`,
+  `context deadline exceeded`) still retry.
+- Added regression tests: `imageRuntimeFingerprint` throws `TransientError` on a
+  transient inspect failure and returns `undefined` on a genuine not-found
+  (`bake-images.test.ts`); `isTransientError` honors the `TransientError` brand
+  (`transient.test.ts`).
+- Rebased the branch onto current `origin/main`.
+- Verified: focused Bun tests (all pass), `.buildkite` typecheck, root-scripts
+  `typecheck`/`test`/`lint`, buildkite lint, `bun run compliance-check` (all
+  packages compliant), Prettier, markdownlint, frozen-lockfile dry-run — all
+  clean.
+
+### Remaining
+
+- A fresh Codex re-review runs on the new head; the gate goes green once it
+  re-reviews the transient-handling fix and finds no new blocking findings.
+
+### Caveats
+
+- The application-image lane (`bake-images.ts`) has no `runMain` wrapper, so a
+  transient inspect failure there now surfaces as a loud hard failure rather
+  than a silent wrong promotion — a strict correctness improvement, though it is
+  not auto-retried in that lane (out of scope for this finding, which targets
+  the CI pin path that does use `runMain`).

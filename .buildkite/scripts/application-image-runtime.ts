@@ -1,5 +1,7 @@
 import { asRecord } from "../../scripts/lib/json.ts";
+import { TransientError } from "../../scripts/lib/transient.ts";
 import {
+  bakeFailureIsTransient,
   retryTransientBuildx,
   type BuildxCommandResult,
 } from "./bake-retry.ts";
@@ -140,11 +142,27 @@ export async function imageRuntimeFingerprint(
     "--format",
     "{{json .Image}}",
   ]);
-  if (result.exitCode !== 0) return undefined;
-  return runtimeFingerprintFromImage(
-    JSON.parse(result.stdout),
-    ignoredEnvPrefixes,
-  );
+  if (result.exitCode === 0) {
+    return runtimeFingerprintFromImage(
+      JSON.parse(result.stdout),
+      ignoredEnvPrefixes,
+    );
+  }
+  // A transient registry/BuildKit failure must NOT collapse to `undefined`:
+  // that would rethrow a candidate failure without diagnostics (an unretryable
+  // exit 1) and misclassify a pinned-image failure as `pin-unresolvable-bumped`,
+  // changing the promotion outcome on a temporary blip. Preserve the diagnostics
+  // as a TransientError so `runMain` exits EXIT_TRANSIENT and Buildkite retries
+  // the job. Only a genuine, non-transient "not found" yields `undefined` — the
+  // legitimate signal that a pin or candidate is truly unresolvable.
+  if (bakeFailureIsTransient(`${result.stdout}\n${result.stderr}`)) {
+    throw new TransientError(
+      `Transient failure inspecting ${image}: ${
+        result.stderr.trim() || result.stdout.trim()
+      }`,
+    );
+  }
+  return undefined;
 }
 
 export async function classifyRuntimeChange(

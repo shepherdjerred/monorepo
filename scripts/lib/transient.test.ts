@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { isTransientError } from "./transient.ts";
+import { isTransientError, TransientError } from "./transient.ts";
 
 describe("isTransientError", () => {
   test.each([
@@ -58,6 +58,18 @@ describe("isTransientError", () => {
     expect(isTransientError("ECONNREFUSED")).toBe(true);
     expect(isTransientError("plain failure")).toBe(false);
     expect(isTransientError(null)).toBe(false);
+  });
+
+  test("recognizes an explicit TransientError regardless of message", () => {
+    // The caller already classified this as transient (e.g. a BuildKit
+    // signature like `context deadline exceeded` that the general pattern does
+    // not list); the brand must make runMain retry it.
+    expect(
+      isTransientError(new TransientError("context deadline exceeded")),
+    ).toBe(true);
+    expect(isTransientError(new TransientError("no pattern match here"))).toBe(
+      true,
+    );
   });
 
   test("recognizes Bun transport codes through the cause chain", () => {

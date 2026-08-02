@@ -18,6 +18,7 @@ import {
   runtimeFingerprintFromImage,
 } from "./application-image-runtime.ts";
 import type { BuildxCommandResult } from "./bake-retry.ts";
+import { TransientError } from "../../scripts/lib/transient.ts";
 import {
   caddyfileEntitlementArguments,
   expandTargets,
@@ -63,6 +64,18 @@ async function invalidManifestExecutor(): Promise<BuildxCommandResult> {
 
 async function failingExecutor(): Promise<BuildxCommandResult> {
   return commandResult(1);
+}
+
+async function transientInspectExecutor(): Promise<BuildxCommandResult> {
+  return commandResult(
+    1,
+    "",
+    "error: failed to do request: connection reset by peer",
+  );
+}
+
+async function notFoundInspectExecutor(): Promise<BuildxCommandResult> {
+  return commandResult(1, "", "ghcr.io/example: manifest unknown: not found");
 }
 
 async function imageExecutor(): Promise<BuildxCommandResult> {
@@ -414,6 +427,21 @@ test("keeps build-identity env for CI images while dropping it for application i
   expect(
     runtimeFingerprintFromImage(bumped, CI_IMAGE_IGNORED_ENV_PREFIXES),
   ).not.toBe(runtimeFingerprintFromImage(base, CI_IMAGE_IGNORED_ENV_PREFIXES));
+});
+
+test("surfaces a transient inspect failure instead of collapsing it to undefined", async () => {
+  const image = `ghcr.io/example@sha256:${"a".repeat(64)}`;
+  // A transient registry/BuildKit failure must be preserved as a retryable
+  // TransientError, not silently misclassified as an unresolvable image.
+  await expect(
+    imageRuntimeFingerprint(image, transientInspectExecutor),
+  ).rejects.toBeInstanceOf(TransientError);
+
+  // A genuine, non-transient "not found" remains `undefined` — the legitimate
+  // pin-unresolvable signal.
+  expect(
+    await imageRuntimeFingerprint(image, notFoundInspectExecutor),
+  ).toBeUndefined();
 });
 
 test("creates the remote BuildKit builder only when missing", async () => {

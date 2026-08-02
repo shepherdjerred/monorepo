@@ -18,6 +18,20 @@
 /** Exit code the pipeline's retry anchor treats as "transient, retry me". */
 export const EXIT_TRANSIENT = 34;
 
+/**
+ * A failure the caller has already classified as transient — for example a
+ * BuildKit/registry transport failure that `bakeFailureIsTransient` matched but
+ * whose text may not match {@link TRANSIENT_ERROR_PATTERN} (e.g. `blob unknown`,
+ * `context deadline exceeded`). `runMain` maps this to {@link EXIT_TRANSIENT} so
+ * Buildkite auto-retries the job, independent of the message text.
+ */
+export class TransientError extends Error {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = "TransientError";
+  }
+}
+
 export const TRANSIENT_ERROR_PATTERN =
   // Explicit HTTP 5xx status signatures. A bare 5xx number is deliberately
   // excluded because Error.stack contains source line numbers, which must not
@@ -59,6 +73,9 @@ function hasTransientErrorCode(error: unknown): boolean {
 }
 
 export function isTransientError(error: unknown): boolean {
+  if (error instanceof TransientError) {
+    return true;
+  }
   const text =
     error instanceof Error
       ? `${error.message}\n${error.stack ?? ""}`
