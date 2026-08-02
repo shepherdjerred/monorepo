@@ -4,18 +4,20 @@ Headless Pokémon Emerald (pokeemerald-wasm, ottohg fork with the C m4a audio en
 
 The tracing/metrics wiring, loopback audio transport, Go-Live streamer base class, web server, and bot entrypoint are shared with discord-plays-mario-kart in **`@shepherdjerred/discord-plays-core`** (`packages/discord-plays-core`, source-only, subpath imports) — see its `AGENTS.md`. This backend supplies the Pokémon-specific pieces: the emulator, `PokemonGameDriver`, the goal system, `copyMs` + game-event/notification metrics, the socket dispatch, and the llm-observability span-processor wrap passed to `bootGameBot`.
 
-## Generated data (species/map tables)
+## Generated data (species, map, and battle tables)
 
 `packages/backend/src/game/events/generated/species.ts` and
-`packages/backend/src/game/spatial/generated/map-names.ts` are committed
-generator output — never hand-edit. `scripts/generate-species-data.ts` and
-`scripts/generate-map-names.ts` fetch from `ottohg/pokeemerald-wasm` at the
-`commit` pin in `wasm-src/upstream.json` (single source of truth, read via
+`packages/backend/src/game/spatial/generated/map-names.ts`, plus the move and
+item catalogs under `packages/backend/src/game/battle/generated/`, are
+committed generator output — never hand-edit.
+`scripts/generate-{species-data,map-names,battle-data}.ts` fetch from
+`ottohg/pokeemerald-wasm` at the `commit` pin in
+`wasm-src/upstream.json` (single source of truth, read via
 `scripts/lib/pokeemerald-pin.ts`; Renovate advances the pin plus the
 Dockerfile's `ENV` copy). Freshness:
 
-- `build-wasm.ts` re-runs both generators after every wasm build, so a manual
-  wasm refresh can't leave the tables stale.
+- `build-wasm.ts` re-runs all three generators after every wasm build, so a
+  manual wasm refresh cannot leave the tables stale.
 - The `dpp-pokeemerald-data-daily` Temporal schedule (04:30 PT,
   `packages/temporal/src/activities/dpp-pokeemerald-data-refresh.ts`)
   regenerates against the current pin and opens a PR on drift — the follow-up
@@ -140,9 +142,17 @@ The notifier polls emulator memory (~2×/s) for faints/badges/evolutions/catches
   command may interleave while the lease is held. Terminal paths must claim an
   active goal synchronously before awaiting so timeout, replacement, shutdown,
   and process exit cannot release twice.
-- `pokemonctl navigate` is a bounded current-map movement helper, not a story
-  solver. It must re-read collision and nearby objects, replan when a tile is
-  blocked, and stop on map/phase/readiness changes.
+- `pokemonctl map exits` exposes stable IDs for the engine's authoritative
+  current-map connections and warps. `pokemonctl navigate --exit <id>` may
+  traverse only the caller-selected exit and must stop on its first trigger or
+  map/phase/readiness change; it must never choose or chain a route.
+- Coordinate `pokemonctl navigate` is a bounded current-map movement helper,
+  not a story solver. It must re-read collision and nearby objects, replan when
+  a tile is blocked, and stop on map/phase/readiness changes.
+- Named `pokemonctl battle` actions execute an explicit caller choice for move,
+  run, item, switch, or target and settle at the next engine-reported decision.
+  They must reject unavailable choices before input and must never choose
+  battle strategy.
 - The wasm exports **every C global as a `WebAssembly.Global`** (name section present) — resolve addresses by symbol via `instance.exports.<name>.value`, never hard-code. Key symbols: `gSaveBlock1Ptr`, `gSaveBlock2Ptr`, `gPlayerParty`, `gPlayerPartyCount`, `gBattleResults`.
 - The **data segment lives in LOW linear memory (~0x5e_0000–0x63_0000), NOT at GBA EWRAM 0x02000000.** Only hardware-mapped regions (REG 0x04.., VRAM 0x06.., FLASH 0x0e..) are at GBA addresses — pointer-validity checks must allow low addresses.
 - `gSaveBlock1Ptr`/`gSaveBlock2Ptr` are pointers the game **relocates periodically** (anti-cheat) — dereference fresh every poll, never cache the target.
@@ -152,3 +162,25 @@ The notifier polls emulator memory (~2×/s) for faints/badges/evolutions/catches
 ## ESLint / test-file config (`packages/backend`)
 
 Test files (`*.test.ts`) are **excluded from tsconfig** (tsc with `types:["bun"]` can't see bun's test globals) — leave the exclude; un-excluding breaks tsc on `describe`/`test`/`expect`. Consequence: every test file must be listed in `eslint.config.ts` under `projectService.allowDefaultProject`. typescript-eslint caps that at 8 files; raise it with `maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING` (set to 20) — a key that required widening the shared `projectService` type in `packages/eslint-config/src/configs/base.ts` (consumed from the gitignored `dist`, so `bun run build` eslint-config after editing). Put large generated source in a `generated/` dir to dodge `max-lines` (base.ts ignores `**/generated/**`).
+
+## Session Log — 2026-07-29
+
+### Done
+
+- Added decision-complete compact observations, authoritative current-map exit
+  discovery and selected-exit navigation, exact-name battle controls, and
+  pinned generated move/item catalogs.
+- Added focused decoder, controller, CLI, and catalog coverage.
+
+### Remaining
+
+- Publish and verify the semantic-control stack layer, then add the
+  early-prerequisite prompt and passage-ranking layer.
+- Run the rebuilt real-WASM ABI gate when the local Docker daemon is available,
+  and require current-head Buildkite before final handoff.
+
+### Caveats
+
+- Selected-exit navigation and named battle actions are mechanical helpers;
+  route choice and battle strategy remain model decisions.
+- Repeat paid model measurements remain explicitly deferred.

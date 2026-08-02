@@ -128,6 +128,22 @@ class InteractionPort implements GameControlPort {
       passable: true,
     };
   }
+
+  readMapTopology(): null {
+    return null;
+  }
+
+  canUseBattleItemOnPartyMon(): boolean {
+    return true;
+  }
+
+  canUseBattleItemOnBattler(): boolean {
+    return true;
+  }
+
+  canRunFromBattle(): boolean {
+    return true;
+  }
 }
 
 const INVALID_INITIAL_STATES: readonly Readonly<{

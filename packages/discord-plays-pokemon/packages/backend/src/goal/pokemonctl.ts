@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
 import { verifyPokemonctlCapabilities } from "./goal-capabilities.ts";
+import { handlePokemonctlBattle } from "./pokemonctl-battle.ts";
 import {
   formatPokemonctlActionOutput,
   formatPokemonctlObservationOutput,
@@ -15,7 +16,14 @@ function usage(): string {
     "  pokemonctl tap <button> [--repeat n] [--full]",
     "  pokemonctl move <north|south|west|east> [--tiles n] [--full]",
     "  pokemonctl map show [--radius n]",
+    "  pokemonctl map exits",
     "  pokemonctl navigate --x n --y n [--max-steps n] [--radius n] [--full]  # current map only",
+    "  pokemonctl navigate --exit <connection:n|warp:n> [--max-steps n] [--full]",
+    "  pokemonctl battle move <1|2|3|4|exact-name> [--target-battler n] [--full]",
+    "  pokemonctl battle run [--full]",
+    "  pokemonctl battle item <id|exact-name> [--party-slot n] [--full]",
+    "  pokemonctl battle switch <party-slot> [--full]",
+    "  pokemonctl battle target <battler|party-slot> <n> [--full]",
     "  pokemonctl interact [north|south|west|east|ahead] [--full]",
     "  pokemonctl advance [--full]  # one scripted-dialog step",
     "  pokemonctl wait --until <ready|stable|phase-change> [--timeout-ms n] [--full]",
@@ -104,8 +112,6 @@ async function request(
   return text.length > 0 ? text : "null";
 }
 
-// Body text for `write`. Prefer a single quoted argument (newlines preserved);
-// fall back to stdin so long markdown can be heredoc-piped.
 async function readContentArg(parts: string[]): Promise<string> {
   const joined = parts.join(" ").trim();
   if (joined.length > 0) {
@@ -208,8 +214,17 @@ async function handleMove(args: string[]): Promise<void> {
 }
 
 async function handleMap(args: string[]): Promise<void> {
-  if (args.at(0) !== "show") {
-    throw new Error("map requires the show subcommand");
+  const operation = args.at(0);
+  if (operation === "exits") {
+    const unexpected = args.at(1);
+    if (unexpected !== undefined) {
+      throw new Error(`map exits does not accept arguments: ${unexpected}`);
+    }
+    printJsonText(await request("GET", "/map/exits"));
+    return;
+  }
+  if (operation !== "show") {
+    throw new Error("map requires the show or exits subcommand");
   }
   const radius = readNumberFlag(args, "--radius") ?? 8;
   const params = new URLSearchParams({ radius: String(radius) });
@@ -219,10 +234,30 @@ async function handleMap(args: string[]): Promise<void> {
 async function handleNavigate(args: string[]): Promise<void> {
   const x = readIntegerFlag(args, "--x");
   const y = readIntegerFlag(args, "--y");
-  if (x === undefined || y === undefined) {
-    throw new Error("navigate requires --x and --y integer coordinates");
-  }
+  const exitId = readStringFlag(args, "--exit");
   const maxSteps = readNumberFlag(args, "--max-steps") ?? 64;
+  if (exitId !== undefined) {
+    if (x !== undefined || y !== undefined || args.includes("--radius")) {
+      throw new Error(
+        "navigate --exit cannot be combined with --x, --y, or --radius",
+      );
+    }
+    if (!/^(?:connection|warp):(?:0|[1-9]\d*)$/u.test(exitId)) {
+      throw new Error(
+        "--exit must be a stable id from map exits (connection:n or warp:n)",
+      );
+    }
+    printActionText(
+      await request("POST", "/navigate", { exitId, maxSteps }),
+      args,
+    );
+    return;
+  }
+  if (x === undefined || y === undefined) {
+    throw new Error(
+      "navigate requires either --exit or both --x and --y integer coordinates",
+    );
+  }
   const searchRadius = readNumberFlag(args, "--radius") ?? 12;
   printActionText(
     await request("POST", "/navigate", {
@@ -231,6 +266,17 @@ async function handleNavigate(args: string[]): Promise<void> {
       maxSteps,
       searchRadius,
     }),
+    args,
+  );
+}
+
+async function handleBattle(args: string[]): Promise<void> {
+  await handlePokemonctlBattle(
+    {
+      request,
+      printActionText,
+      readIntegerFlag,
+    },
     args,
   );
 }
@@ -344,8 +390,6 @@ async function handleKnowledge(args: string[]): Promise<void> {
   throw new Error("knowledge requires search or get");
 }
 
-// ── Scoped memory filesystem (LIST / READ / GREP / WRITE). ────────────────────
-
 async function handleList(args: string[]): Promise<void> {
   const target = args.at(0);
   const route =
@@ -396,6 +440,7 @@ const HANDLERS = new Map<string, (args: string[]) => Promise<void>>([
   ["move", handleMove],
   ["map", handleMap],
   ["navigate", handleNavigate],
+  ["battle", handleBattle],
   ["interact", handleInteract],
   ["advance", handleAdvance],
   [

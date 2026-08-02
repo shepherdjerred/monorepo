@@ -1,0 +1,479 @@
+import type {
+  BattleMenu,
+  EngineMapTile,
+} from "#src/emulator/engine-observation.ts";
+import type { CommandInput } from "#src/game/command/command-input.ts";
+import type { Command } from "#src/game/command/command.ts";
+import type { InventoryPocket } from "#src/game/game-save-details.ts";
+import {
+  actionOutcome,
+  meaningfulStateSignature,
+  visualChangeRatio,
+  type ActionOutcomeV1,
+} from "./game-action-outcome.ts";
+import {
+  isForcedReplacementPartyDecision,
+  requireBattleItemSelection,
+  requireBattleMoveSelection,
+  requireBattleRun,
+  requireForcedReplacementPartySlot,
+  requirePendingMoveTarget,
+  requireSwitchablePartySlot,
+} from "./game-battle-control-rules.ts";
+import type { GameObservationV2 } from "./game-observation.ts";
+
+export type BattleMoveSelection = Readonly<{
+  slot?: number;
+  moveId?: number;
+  targetBattler?: number;
+}>;
+
+type BattleControlPort = Readonly<{
+  observe: () => GameObservationV2;
+  renderFrame: () => Uint8Array;
+  press: (command: CommandInput) => Promise<void>;
+  waitFrames: (frames: number) => Promise<void>;
+  readMapTile: (x: number, y: number) => EngineMapTile | null;
+  canRunFromBattle: (battler: number) => boolean;
+  canUseBattleItemOnBattler: (itemId: number, battler: number) => boolean;
+  canUseBattleItemOnPartyMon: (itemId: number, partySlot: number) => boolean;
+}>;
+
+type ControlSnapshot = Readonly<{
+  observation: GameObservationV2;
+  frame: Uint8Array;
+}>;
+
+type BattleState = NonNullable<GameObservationV2["battle"]>;
+
+const STEP_FRAMES = 2;
+const MAX_FRAMES = 360;
+// Emerald's clockwise target-navigation ring.
+const TARGET_POSITION_ORDER: readonly number[] = [0, 2, 3, 1];
+const UNSUPPORTED_BATTLE_TYPE_MASK =
+  (1 << 1) |
+  (1 << 5) |
+  (1 << 6) |
+  (1 << 7) |
+  (1 << 8) |
+  (1 << 9) |
+  (1 << 11) |
+  (1 << 17) |
+  (1 << 18) |
+  (1 << 21) |
+  (1 << 22) |
+  (1 << 24) |
+  (1 << 25) |
+  (1 << 26) |
+  (1 << 27) |
+  (1 << 31);
+
+export class GameBattleControl {
+  constructor(private readonly port: BattleControlPort) {}
+
+  async move(selection: BattleMoveSelection): Promise<ActionOutcomeV1> {
+    const before = this.capture();
+    const battle = this.requireDecision(before.observation, ["action", "move"]);
+    const decision = requireBattleMoveSelection(battle, selection);
+
+    if (decision.kind === "forced-struggle") {
+      if (battle.menu !== "action") {
+        throw new Error(
+          "forced Struggle requires an input-ready action decision",
+        );
+      }
+      let timedOut = await this.selectGridCursor("action", 0);
+      timedOut ||= await this.pressAndAwait("a", nextActionOrBattleEnd);
+      return this.outcome("battle:move:struggle", before, timedOut);
+    }
+
+    const matchingMove = decision.move;
+
+    let timedOut = false;
+    if (battle.menu === "action") {
+      timedOut ||= await this.selectGridCursor("action", 0);
+      timedOut ||= await this.pressAndAwait("a", (observation) => {
+        return observation.battle?.menu === "move";
+      });
+    }
+    timedOut ||= await this.selectGridCursor("move", matchingMove.slot - 1);
+    timedOut ||= await this.pressAndAwait("a", (observation) => {
+      return (
+        observation.battle?.menu === "target" ||
+        nextActionOrBattleEnd(observation)
+      );
+    });
+
+    const selectedMoveObservation = this.port.observe();
+    if (
+      selection.targetBattler !== undefined &&
+      selectedMoveObservation.battle?.menu !== "target"
+    ) {
+      throw new Error(
+        "engine did not expose the validated target as a selectable choice",
+      );
+    }
+    if (selectedMoveObservation.battle?.menu === "target") {
+      if (selection.targetBattler === undefined) {
+        return this.outcome(
+          `battle:move:${String(matchingMove.slot)}`,
+          before,
+          false,
+        );
+      }
+      timedOut ||= await this.selectTarget(selection.targetBattler);
+      timedOut ||= await this.pressAndAwait("a", nextActionOrBattleEnd);
+    }
+    return this.outcome(
+      `battle:move:${String(matchingMove.slot)}`,
+      before,
+      timedOut,
+    );
+  }
+
+  async run(): Promise<ActionOutcomeV1> {
+    const before = this.capture();
+    const battle = this.requireDecision(before.observation, ["action"]);
+    requireBattleRun(battle, (battler) => this.port.canRunFromBattle(battler));
+    let timedOut = await this.selectGridCursor("action", 3);
+    timedOut ||= await this.pressAndAwait("a", nextActionOrBattleEnd);
+    return this.outcome("battle:run", before, timedOut);
+  }
+
+  async switch(partySlot: number): Promise<ActionOutcomeV1> {
+    const before = this.capture();
+    const battle = this.requireDecision(before.observation, [
+      "action",
+      "party",
+    ]);
+    const forcedReplacement = battle.menu === "party";
+    if (forcedReplacement) {
+      requireForcedReplacementPartySlot(before.observation, battle, partySlot);
+    } else {
+      requireSwitchablePartySlot(before.observation, battle, partySlot);
+    }
+    let timedOut = false;
+    if (!forcedReplacement) {
+      timedOut ||= await this.selectGridCursor("action", 2);
+      timedOut ||= await this.pressAndAwait("a", partyInputReady);
+    }
+    timedOut ||= await this.selectPartySlot(partySlot);
+    timedOut ||= await this.pressAndAwait("a", partySelectionMenuReady);
+    timedOut ||= await this.pressAndAwait("a", nextActionOrBattleEnd);
+    return this.outcome(`battle:switch:${String(partySlot)}`, before, timedOut);
+  }
+
+  async item(itemId: number, partySlot?: number): Promise<ActionOutcomeV1> {
+    const before = this.capture();
+    const battle = this.requireDecision(before.observation, ["action"]);
+    const { inventoryItem, pocket } = requireBattleItemSelection(
+      before.observation,
+      battle,
+      itemId,
+      {
+        partySlot,
+        canUseOnBattler: (candidateItemId, battler) =>
+          this.port.canUseBattleItemOnBattler(candidateItemId, battler),
+        canUseOnPartyMon: (candidateItemId, candidatePartySlot) =>
+          this.port.canUseBattleItemOnPartyMon(
+            candidateItemId,
+            candidatePartySlot,
+          ),
+      },
+    );
+
+    let timedOut = await this.selectGridCursor("action", 1);
+    timedOut ||= await this.pressAndAwait(
+      "a",
+      (observation) => observation.battle?.bag?.state === "list",
+    );
+    timedOut ||= await this.selectBagPocket(pocket);
+    timedOut ||= await this.selectBagItem(itemId, inventoryItem.pocket);
+    timedOut ||= await this.pressAndAwait("a", itemSelectionAdvanced);
+    if (this.port.observe().battle?.bag?.state === "use-confirm") {
+      timedOut ||= await this.pressAndAwait("a", itemUseAdvanced);
+    }
+    if (
+      partySlot !== undefined &&
+      this.port.observe().battle?.party?.inputReady === true
+    ) {
+      timedOut ||= await this.selectPartySlot(partySlot);
+      timedOut ||= await this.pressAndAwait("a", nextActionOrBattleEnd);
+    }
+    return this.outcome(`battle:item:${String(itemId)}`, before, timedOut);
+  }
+
+  async target(targetBattler: number): Promise<ActionOutcomeV1> {
+    const before = this.capture();
+    const battle = this.requireDecision(before.observation, ["target"]);
+    requirePendingMoveTarget(battle, targetBattler);
+    let timedOut = await this.selectTarget(targetBattler);
+    timedOut ||= await this.pressAndAwait("a", nextActionOrBattleEnd);
+    return this.outcome(
+      `battle:target:${String(targetBattler)}`,
+      before,
+      timedOut,
+    );
+  }
+
+  private requireDecision(
+    observation: GameObservationV2,
+    menus: readonly BattleMenu[],
+  ): NonNullable<GameObservationV2["battle"]> {
+    const battle = observation.battle;
+    if (
+      battle === null ||
+      observation.phase !== "battle" ||
+      !observation.readiness.inputReady ||
+      !menus.includes(battle.menu)
+    ) {
+      throw new Error(
+        `battle action requires an input-ready ${menus.join(" or ")} decision`,
+      );
+    }
+    if ((battle.typeFlags & UNSUPPORTED_BATTLE_TYPE_MASK) !== 0) {
+      throw new Error(
+        `battle type is not supported by semantic actions: ${String(battle.typeFlags)}`,
+      );
+    }
+    return battle;
+  }
+
+  private async pressAndAwait(
+    command: Command,
+    predicate: (observation: GameObservationV2) => boolean,
+  ): Promise<boolean> {
+    const beforeSignature = meaningfulStateSignature(this.port.observe());
+    await this.port.press({ command, quantity: 1 });
+    let elapsed = 0;
+    let current = this.port.observe();
+    while (elapsed < MAX_FRAMES) {
+      if (
+        predicate(current) &&
+        (meaningfulStateSignature(current) !== beforeSignature || elapsed >= 30)
+      ) {
+        return false;
+      }
+      await this.port.waitFrames(STEP_FRAMES);
+      elapsed += STEP_FRAMES;
+      current = this.port.observe();
+    }
+    return true;
+  }
+
+  private async selectGridCursor(
+    menu: Extract<BattleMenu, "action" | "move">,
+    target: number,
+  ): Promise<boolean> {
+    if (!Number.isInteger(target) || target < 0 || target > 3) {
+      throw new RangeError("battle grid cursor target must be 0 through 3");
+    }
+    const readCursor = (observation: GameObservationV2): number | null => {
+      const battle = observation.battle;
+      return battle?.menu === menu
+        ? menu === "action"
+          ? battle.actionCursor
+          : battle.moveCursor
+        : null;
+    };
+    let timedOut = false;
+    let current = readCursor(this.port.observe());
+    if (current === null) {
+      throw new Error(`battle ${menu} menu is not input ready`);
+    }
+    if ((current & 2) !== (target & 2)) {
+      const expectedCursor = current ^ 2;
+      timedOut ||= await this.pressAndAwait(
+        (target & 2) === 0 ? "up" : "down",
+        (observation) => readCursor(observation) === expectedCursor,
+      );
+      current = readCursor(this.port.observe());
+    }
+    if (current !== null && (current & 1) !== (target & 1)) {
+      timedOut ||= await this.pressAndAwait(
+        (target & 1) === 0 ? "left" : "right",
+        (observation) => readCursor(observation) === target,
+      );
+    }
+    return timedOut || readCursor(this.port.observe()) !== target;
+  }
+
+  private async selectTarget(targetBattler: number): Promise<boolean> {
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const battle = this.port.observe().battle;
+      if (battle?.menu !== "target") return true;
+      if (battle.targetBattler === targetBattler) return false;
+      const previousTarget = battle.targetBattler;
+      const timedOut = await this.pressAndAwait(
+        targetNavigationCommand(battle, targetBattler),
+        (observation) =>
+          observation.battle?.menu === "target" &&
+          observation.battle.targetBattler !== previousTarget,
+      );
+      if (timedOut) return true;
+    }
+    return this.port.observe().battle?.targetBattler !== targetBattler;
+  }
+
+  private async selectPartySlot(partySlot: number): Promise<boolean> {
+    const target = partySlot - 1;
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const party = this.port.observe().battle?.party;
+      if (party?.inputReady !== true) return true;
+      if (party.slot === target) return false;
+      const previousSlot = party.slot;
+      const timedOut = await this.pressAndAwait(
+        "down",
+        (observation) =>
+          observation.battle?.party?.inputReady === true &&
+          observation.battle.party.slot !== previousSlot,
+      );
+      if (timedOut) return true;
+    }
+    return this.port.observe().battle?.party?.slot !== target;
+  }
+
+  private async selectBagPocket(targetPocket: number): Promise<boolean> {
+    const bag = this.port.observe().battle?.bag;
+    if (bag?.state !== "list") return true;
+    const forward = (targetPocket - bag.pocket + 5) % 5;
+    const backward = (bag.pocket - targetPocket + 5) % 5;
+    const command: Command = forward <= backward ? "right" : "left";
+    for (let index = 0; index < Math.min(forward, backward); index += 1) {
+      const previousPocket = this.port.observe().battle?.bag?.pocket;
+      const timedOut = await this.pressAndAwait(
+        command,
+        (observation) =>
+          observation.battle?.bag?.state === "list" &&
+          observation.battle.bag.pocket !== previousPocket,
+      );
+      if (timedOut) return true;
+    }
+    return this.port.observe().battle?.bag?.pocket !== targetPocket;
+  }
+
+  private async selectBagItem(
+    itemId: number,
+    pocket: InventoryPocket,
+  ): Promise<boolean> {
+    const pocketItems =
+      this.port
+        .observe()
+        .game?.inventory.filter((item) => item.pocket === pocket) ?? [];
+    const targetPosition = pocketItems.findIndex(
+      (item) => item.itemId === itemId,
+    );
+    if (targetPosition === -1) return true;
+    for (let attempt = 0; attempt <= pocketItems.length; attempt += 1) {
+      const bag = this.port.observe().battle?.bag;
+      if (bag?.state !== "list") return true;
+      if (bag.itemId === itemId) return false;
+      if (bag.position === targetPosition) return true;
+      const previousPosition = bag.position;
+      const timedOut = await this.pressAndAwait(
+        bag.position < targetPosition ? "down" : "up",
+        (observation) =>
+          observation.battle?.bag?.state === "list" &&
+          observation.battle.bag.position !== previousPosition,
+      );
+      if (timedOut) return true;
+    }
+    return this.port.observe().battle?.bag?.itemId !== itemId;
+  }
+
+  private capture(): ControlSnapshot {
+    return {
+      observation: this.port.observe(),
+      frame: this.port.renderFrame(),
+    };
+  }
+
+  private outcome(
+    action: string,
+    before: ControlSnapshot,
+    timedOut: boolean,
+  ): ActionOutcomeV1 {
+    const after = this.port.observe();
+    const base = actionOutcome(action, before.observation, after, {
+      inputApplied: true,
+      settleTimedOut: timedOut,
+      visualChangeRatio: visualChangeRatio(
+        before.frame,
+        this.port.renderFrame(),
+      ),
+    });
+    return timedOut
+      ? base
+      : { ...base, status: "applied", stopReason: "completed" };
+  }
+}
+
+function targetNavigationCommand(
+  battle: BattleState,
+  targetBattler: number,
+): Command {
+  const current = battle.battlers.find(
+    (battler) => battler.battler === battle.targetBattler && battler.active,
+  );
+  if (current === undefined) {
+    throw new Error("target menu cursor does not identify an active battler");
+  }
+  const target = battle.battlers.find(
+    (battler) => battler.battler === targetBattler && battler.active,
+  );
+  if (target === undefined) {
+    throw new Error("requested target battler is not active");
+  }
+  const currentIndex = TARGET_POSITION_ORDER.indexOf(current.position);
+  const targetIndex = TARGET_POSITION_ORDER.indexOf(target.position);
+  if (currentIndex === -1 || targetIndex === -1) {
+    throw new RangeError("battle target has an unknown field position");
+  }
+  const forward =
+    (targetIndex - currentIndex + TARGET_POSITION_ORDER.length) %
+    TARGET_POSITION_ORDER.length;
+  const backward =
+    (currentIndex - targetIndex + TARGET_POSITION_ORDER.length) %
+    TARGET_POSITION_ORDER.length;
+  const forwardIsShortest = forward <= backward;
+  const sameSide = current.side === target.side;
+  if (sameSide) return forwardIsShortest ? "right" : "left";
+  return forwardIsShortest ? "down" : "up";
+}
+
+function nextActionOrBattleEnd(observation: GameObservationV2): boolean {
+  return (
+    observation.phase !== "battle" ||
+    observation.battle?.menu === "action" ||
+    isForcedReplacementPartyDecision(observation.battle)
+  );
+}
+
+function partyInputReady(observation: GameObservationV2): boolean {
+  return observation.battle?.party?.inputReady === true;
+}
+
+function partySelectionMenuReady(observation: GameObservationV2): boolean {
+  return (
+    observation.phase !== "battle" ||
+    (observation.battle?.menu === "party" &&
+      observation.battle.party?.inputReady === false)
+  );
+}
+
+function itemSelectionAdvanced(observation: GameObservationV2): boolean {
+  return (
+    observation.phase !== "battle" ||
+    observation.battle?.bag?.state === "use-confirm" ||
+    observation.battle?.party?.inputReady === true ||
+    observation.battle?.menu === "action"
+  );
+}
+
+function itemUseAdvanced(observation: GameObservationV2): boolean {
+  return (
+    observation.phase !== "battle" ||
+    observation.battle?.party?.inputReady === true ||
+    observation.battle?.menu === "action"
+  );
+}

@@ -7,6 +7,21 @@ const WorldSchema = z.looseObject({
   x: z.number().int(),
   y: z.number().int(),
   facing: z.string(),
+  movementMode: z.string(),
+  onTileBehavior: z.string(),
+});
+
+const BattlerSchema = z.looseObject({
+  battler: z.number().int(),
+  side: z.string(),
+  position: z.number().int(),
+  active: z.boolean(),
+  speciesId: z.number().int(),
+  species: z.string(),
+  hp: z.number().int(),
+  maxHp: z.number().int(),
+  partyIndex: z.number().int(),
+  status: z.number().int(),
 });
 
 const BattleSchema = z.looseObject({
@@ -18,8 +33,79 @@ const BattleSchema = z.looseObject({
   menu: z.string(),
   actionCursor: z.number().int(),
   moveCursor: z.number().int(),
+  targetBattler: z.number().int().nullable(),
   currentMove: z.number().int(),
   chosenMove: z.number().int(),
+  switchAllowed: z.boolean(),
+  moves: z.array(
+    z.looseObject({
+      slot: z.number().int(),
+      moveId: z.number().int(),
+      move: z.string(),
+      currentPp: z.number().int(),
+      maxPp: z.number().int(),
+      usable: z.boolean(),
+    }),
+  ),
+  bag: z
+    .looseObject({
+      state: z.string(),
+      pocket: z.number().int(),
+      position: z.number().int(),
+      itemId: z.number().int(),
+      item: z.string(),
+    })
+    .nullable(),
+  party: z
+    .looseObject({
+      inputReady: z.boolean(),
+      slot: z.number().int(),
+      layout: z.number().int(),
+      action: z.number().int(),
+    })
+    .nullable(),
+  battlers: z.array(BattlerSchema),
+});
+
+const GameSchema = z.looseObject({
+  money: z.number().int(),
+  registeredItemId: z.number().int(),
+  inventory: z.array(
+    z.looseObject({
+      itemId: z.number().int(),
+      item: z.string(),
+      quantity: z.number().int(),
+      pocket: z.string(),
+    }),
+  ),
+  progression: z.looseObject({
+    hasPokemon: z.boolean(),
+    hasPokedex: z.boolean(),
+    hasPokenav: z.boolean(),
+    runningShoes: z.boolean(),
+    isChampion: z.boolean(),
+    receivedPokedexFromBirch: z.boolean(),
+  }),
+  party: z.array(
+    z.looseObject({
+      speciesId: z.number().int(),
+      species: z.string(),
+      nickname: z.string(),
+      level: z.number().int(),
+      hp: z.number().int(),
+      maxHp: z.number().int(),
+      isEgg: z.boolean(),
+    }),
+  ),
+  badges: z.array(z.string()),
+  pokedexOwned: z.number().int().nonnegative(),
+  lastCatch: z
+    .looseObject({
+      speciesId: z.number().int(),
+      species: z.string(),
+      shiny: z.boolean(),
+    })
+    .nullable(),
 });
 
 const ScreenshotSchema = z.strictObject({
@@ -40,6 +126,7 @@ const ObservationSchema = z.looseObject({
   readiness: z.looseObject({ inputReady: z.boolean() }),
   world: WorldSchema.nullable(),
   battle: BattleSchema.nullable(),
+  game: GameSchema.nullable(),
   screenshot: ScreenshotSchema.optional(),
 });
 
@@ -73,13 +160,40 @@ const SemanticOutcomeSchema = z.looseObject({
       y: z.number().int(),
     })
     .optional(),
+  exitId: z.string().optional(),
   before: ObservationSchema,
   after: ObservationSchema,
 });
 
 type ParsedObservation = z.infer<typeof ObservationSchema>;
 
-export function compactPokemonctlObservation(observation: ParsedObservation) {
+function compactBattleDecision(
+  battle: NonNullable<ParsedObservation["battle"]>,
+): Record<string, unknown> {
+  return {
+    typeFlags: battle.typeFlags,
+    controllerExecFlags: battle.controllerExecFlags,
+    battlersCount: battle.battlersCount,
+    inputBattler: battle.inputBattler,
+    activeBattler: battle.activeBattler,
+    menu: battle.menu,
+    actionCursor: battle.actionCursor,
+    moveCursor: battle.moveCursor,
+    targetBattler: battle.targetBattler,
+    currentMove: battle.currentMove,
+    chosenMove: battle.chosenMove,
+    switchAllowed: battle.switchAllowed,
+    moves: battle.moves,
+    bag: battle.bag,
+    party: battle.party,
+  };
+}
+
+function compactBattleDecisionOrNull(battle: ParsedObservation["battle"]) {
+  return battle === null ? null : compactBattleDecision(battle);
+}
+
+function compactPokemonctlObservationCore(observation: ParsedObservation) {
   const world = observation.world;
   return {
     schemaVersion: observation.schemaVersion,
@@ -96,24 +210,64 @@ export function compactPokemonctlObservation(observation: ParsedObservation) {
     x: world?.x ?? null,
     y: world?.y ?? null,
     facing: world?.facing ?? null,
+    battle: compactBattleDecisionOrNull(observation.battle),
+    ...(observation.screenshot === undefined
+      ? {}
+      : { screenshot: observation.screenshot }),
+  };
+}
+
+export function compactPokemonctlObservation(observation: ParsedObservation) {
+  const core = compactPokemonctlObservationCore(observation);
+  return {
+    ...core,
+    movementMode: observation.world?.movementMode ?? null,
+    onTileBehavior: observation.world?.onTileBehavior ?? null,
     battle:
       observation.battle === null
         ? null
         : {
-            typeFlags: observation.battle.typeFlags,
-            controllerExecFlags: observation.battle.controllerExecFlags,
-            battlersCount: observation.battle.battlersCount,
-            inputBattler: observation.battle.inputBattler,
-            activeBattler: observation.battle.activeBattler,
-            menu: observation.battle.menu,
-            actionCursor: observation.battle.actionCursor,
-            moveCursor: observation.battle.moveCursor,
-            currentMove: observation.battle.currentMove,
-            chosenMove: observation.battle.chosenMove,
+            ...compactBattleDecision(observation.battle),
+            battlers: observation.battle.battlers,
           },
-    ...(observation.screenshot === undefined
-      ? {}
-      : { screenshot: observation.screenshot }),
+    game: observation.game,
+  };
+}
+
+function compactPosition(observation: ParsedObservation) {
+  return observation.world === null
+    ? null
+    : {
+        mapGroup: observation.world.mapGroup,
+        mapNum: observation.world.mapNum,
+        x: observation.world.x,
+        y: observation.world.y,
+        facing: observation.world.facing,
+      };
+}
+
+function changedValue<T>(before: T, after: T): { before: T; after: T } | null {
+  return JSON.stringify(before) === JSON.stringify(after)
+    ? null
+    : { before, after };
+}
+
+function compactActionDelta(
+  before: ParsedObservation,
+  after: ParsedObservation,
+) {
+  return {
+    phase: changedValue(before.phase, after.phase),
+    context: changedValue(before.context.kind, after.context.kind),
+    inputReady: changedValue(
+      before.readiness.inputReady,
+      after.readiness.inputReady,
+    ),
+    position: changedValue(compactPosition(before), compactPosition(after)),
+    battleDecision: changedValue(
+      compactBattleDecisionOrNull(before.battle),
+      compactBattleDecisionOrNull(after.battle),
+    ),
   };
 }
 
@@ -178,7 +332,9 @@ export function formatPokemonctlActionOutput(
         }),
     ...(outcome.map === undefined ? {} : { map: outcome.map }),
     ...(outcome.target === undefined ? {} : { target: outcome.target }),
-    before: compactPokemonctlObservation(outcome.before),
+    ...(outcome.exitId === undefined ? {} : { exitId: outcome.exitId }),
+    delta: compactActionDelta(outcome.before, outcome.after),
+    before: compactPokemonctlObservationCore(outcome.before),
     after: compactPokemonctlObservation(outcome.after),
   });
 }

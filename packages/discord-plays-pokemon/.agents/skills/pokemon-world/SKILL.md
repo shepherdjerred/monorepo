@@ -1,30 +1,72 @@
 ---
 name: pokemon-world
-description: Search Pokémon Emerald maps, regions, connections, warps, terrain, and encounter-capable areas. Use when an objective involves locating a place, choosing a route, understanding where a warp leads, or planning travel.
+description: Inspect and traverse live Pokémon Emerald maps with pokemonctl, and search static regions, connections, warps, terrain, and encounter areas. Use when an objective involves locating a place, choosing or crossing one map exit, or planning travel.
 ---
 
 # Pokémon World
 
-Query world knowledge only when the current objective needs geographic facts.
-
 ## Workflow
 
-1. Observe the current map before querying.
-2. Search with the most specific place, landmark, or connection known:
+1. Run `pokemonctl observe` and treat its map and coordinates as current truth.
+2. List the engine-authored exits for that map:
 
    ```sh
-   pokemonctl knowledge search "Route 101 Littleroot Oldale" --domain world --limit 5
+   pokemonctl map exits
    ```
 
-3. Fetch a promising record when its excerpt is insufficient:
+3. Choose exactly one returned stable `id`. Check `traversableByNavigate`; do
+   not invent a destination when it is `null` or dynamic.
+4. Traverse only that selected exit:
 
    ```sh
-   pokemonctl knowledge get "world:region_route101/main"
+   pokemonctl navigate --exit "connection:0" --max-steps 64
+   pokemonctl navigate --exit "warp:2" --max-steps 64
    ```
 
-4. Treat the result as game knowledge, not current emulator state. Re-observe before acting.
+5. Inspect the settled `after` state and `stopReason`, then list exits again
+   after any map change. Exit IDs are scoped to the current map.
+
+For bounded movement to a coordinate on the same map, use:
+
+```sh
+pokemonctl map show --radius 8
+pokemonctl navigate --x 14 --y 9 --max-steps 64
+```
+
+Query world knowledge only when the route choice needs static geography. Search
+with the most specific place, landmark, or connection known:
+
+```sh
+pokemonctl knowledge search "Route 101 Littleroot Oldale" --domain world --limit 5
+```
+
+Fetch a promising record when its excerpt is insufficient:
+
+```sh
+pokemonctl knowledge get "world:region_route101/main"
+```
+
+Treat the result as game knowledge, not current emulator state. Re-observe
+before acting.
 
 World records describe topology and static features. Archipelago check and
 logic identifiers are labeled as randomizer metadata, not vanilla rewards or
 events. The records do not prove that a conditional obstacle is currently
-passable and they are not a quest solver.
+passable and they are not a quest solver. `navigate --exit` executes one
+caller-selected transition; it never chooses or chains a route.
+
+## Session Log — 2026-07-29
+
+### Done
+
+- Documented live exit discovery, stable exit IDs, selected-exit traversal, and
+  same-map coordinate navigation.
+
+### Remaining
+
+- None.
+
+### Caveats
+
+- Exit IDs are valid only for the observed map, and semantic navigation never
+  chooses or chains a route.

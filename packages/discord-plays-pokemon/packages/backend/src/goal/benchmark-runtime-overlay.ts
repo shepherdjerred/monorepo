@@ -6,6 +6,8 @@ export const OPTIONAL_CODEX_INSTRUCTION_PATHS = [".agents"] as const;
 
 const REQUIRED_RUNTIME_PATHS = [
   ...REQUIRED_CODEX_INSTRUCTION_PATHS,
+  "packages/backend/package.json",
+  "packages/backend/src/game/battle/generated",
   "packages/backend/src/goal",
   "packages/backend/node_modules/zod",
 ] as const;

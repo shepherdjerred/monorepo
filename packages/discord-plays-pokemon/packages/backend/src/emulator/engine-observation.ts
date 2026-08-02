@@ -1,5 +1,5 @@
-export const ENGINE_OBSERVATION_VERSION = 2;
-export const ENGINE_OBSERVATION_SIZE = 116;
+export const ENGINE_OBSERVATION_VERSION = 5;
+export const ENGINE_OBSERVATION_SIZE = 144;
 
 export type CardinalDirection = "north" | "south" | "west" | "east";
 export type EngineFacing = CardinalDirection | "unknown";
@@ -34,9 +34,29 @@ export type EngineMapTile = Readonly<{
   passable: boolean;
 }>;
 
-export type EngineObservationV2 = Readonly<{
-  version: 2;
-  size: 116;
+export function bindEngineMapTileExport(
+  exports: Bun.WebAssembly.Exports,
+): (x: number, y: number) => number {
+  const value = exports["WasmReadMapTile"];
+  if (typeof value !== "function") {
+    throw new TypeError(
+      "wasm module is missing required function export: WasmReadMapTile",
+    );
+  }
+  return (x, y) => {
+    const result: unknown = Reflect.apply(value, undefined, [x, y]);
+    if (typeof result !== "number" || !Number.isInteger(result)) {
+      throw new TypeError(
+        "wasm export WasmReadMapTile did not return an integer",
+      );
+    }
+    return result;
+  };
+}
+
+export type EngineObservationV5 = Readonly<{
+  version: 5;
+  size: 144;
   frame: number;
   phase: EnginePhase;
   readiness: Readonly<{
@@ -54,6 +74,7 @@ export type EngineObservationV2 = Readonly<{
     mapNum: number;
     x: number;
     y: number;
+    elevation: number;
     facing: EngineFacing;
     avatarFlags: number;
     movementMode: string;
@@ -71,8 +92,29 @@ export type EngineObservationV2 = Readonly<{
     menu: BattleMenu;
     actionCursor: number;
     moveCursor: number;
+    targetBattler: number | null;
     currentMove: number;
     chosenMove: number;
+    switchAllowed: boolean;
+    moves: readonly Readonly<{
+      slot: number;
+      moveId: number;
+      currentPp: number;
+      maxPp: number;
+      usable: boolean;
+    }>[];
+    bag: Readonly<{
+      state: "list" | "use-confirm";
+      pocket: number;
+      position: number;
+      itemId: number;
+    }> | null;
+    party: Readonly<{
+      inputReady: boolean;
+      slot: number;
+      layout: number;
+      action: number;
+    }> | null;
     battlers: readonly Readonly<{
       battler: number;
       side: "player" | "opponent";
@@ -170,6 +212,19 @@ function battleSideFromRaw(raw: number): "player" | "opponent" {
   }
 }
 
+function battleBagStateFromRaw(raw: number): "list" | "use-confirm" | null {
+  switch (raw) {
+    case 0:
+      return null;
+    case 1:
+      return "list";
+    case 2:
+      return "use-confirm";
+    default:
+      throw new RangeError(`unknown battle bag state: ${String(raw)}`);
+  }
+}
+
 export function decodeEngineMapTile(
   x: number,
   y: number,
@@ -190,7 +245,7 @@ export function decodeEngineMapTile(
 
 export function decodeEngineObservation(
   bytes: Uint8Array,
-): EngineObservationV2 {
+): EngineObservationV5 {
   if (bytes.byteLength < ENGINE_OBSERVATION_SIZE) {
     throw new RangeError(
       `engine observation is too short: ${String(bytes.byteLength)} bytes`,
@@ -217,6 +272,7 @@ export function decodeEngineObservation(
         mapNum: view.getUint8(11),
         x: view.getInt16(12, true),
         y: view.getInt16(14, true),
+        elevation: view.getUint8(29),
         facing: facingFromRaw(view.getUint8(16)),
         avatarFlags,
         movementMode: movementModeFromFlags(avatarFlags),
@@ -236,6 +292,24 @@ export function decodeEngineObservation(
   if (inBattle && battlersCount > 4) {
     throw new RangeError(`invalid battler count: ${String(battlersCount)}`);
   }
+  const moveCount = view.getUint8(115);
+  if (inBattle && moveCount > 4) {
+    throw new RangeError(`invalid battle move count: ${String(moveCount)}`);
+  }
+  const bagState = battleBagStateFromRaw(view.getUint8(132));
+  const partyInputReady = view.getUint8(138);
+  if (partyInputReady !== 0 && partyInputReady !== 1) {
+    throw new RangeError(
+      `invalid battle party readiness: ${String(partyInputReady)}`,
+    );
+  }
+  const switchAllowed = view.getUint8(143);
+  if (switchAllowed !== 0 && switchAllowed !== 1) {
+    throw new RangeError(
+      `invalid battle switch eligibility: ${String(switchAllowed)}`,
+    );
+  }
+  const moveLimitations = view.getUint8(142);
   const battle = inBattle
     ? {
         typeFlags: view.getUint32(32, true),
@@ -247,8 +321,39 @@ export function decodeEngineObservation(
         menu: battleMenuFromRaw(view.getUint8(30)),
         actionCursor: view.getUint8(43),
         moveCursor: view.getUint8(44),
+        targetBattler:
+          view.getUint8(114) < battlersCount ? view.getUint8(114) : null,
         currentMove: view.getUint16(110, true),
         chosenMove: view.getUint16(112, true),
+        switchAllowed: switchAllowed === 1,
+        moves: Array.from({ length: moveCount }, (_, slot) => {
+          const offset = 116 + slot * 4;
+          return {
+            slot: slot + 1,
+            moveId: view.getUint16(offset, true),
+            currentPp: view.getUint8(offset + 2),
+            maxPp: view.getUint8(offset + 3),
+            usable: (moveLimitations & (1 << slot)) === 0,
+          };
+        }),
+        bag:
+          bagState === null
+            ? null
+            : {
+                state: bagState,
+                pocket: view.getUint8(133),
+                position: view.getUint16(134, true),
+                itemId: view.getUint16(136, true),
+              },
+        party:
+          view.getUint8(30) === 4
+            ? {
+                inputReady: partyInputReady === 1,
+                slot: view.getUint8(139),
+                layout: view.getUint8(140),
+                action: view.getUint8(141),
+              }
+            : null,
         battlers: Array.from({ length: battlersCount }, (_, battler) => {
           const offset = 46 + battler * 16;
           return {

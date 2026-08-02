@@ -14,6 +14,7 @@ import type { FsEntry, GrepMatch } from "./goal-memory.ts";
 import { truncateStateForToolLog } from "./goal-tool-log.ts";
 import type { GoalControlContext, Routed } from "./control-context.ts";
 import {
+  mapExitsResponse,
   mapResponse,
   routeSemanticRequest,
 } from "./semantic-control-routes.ts";
@@ -392,6 +393,8 @@ export async function routeRequest(
       return await observeResponse(context, request);
     case "GET /map":
       return mapResponse(context, request);
+    case "GET /map/exits":
+      return mapExitsResponse(context);
     case "POST /screenshot":
       return await screenshotResponse(context);
     case "POST /press":

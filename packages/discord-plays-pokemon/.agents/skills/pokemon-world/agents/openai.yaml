@@ -1,4 +1,4 @@
 interface:
   display_name: "Pokemon World"
-  short_description: "Search Emerald maps, regions, connections, warps, and terrain"
-  default_prompt: "Use $pokemon-world when planning travel or locating a place in Pokemon Emerald."
+  short_description: "Inspect and traverse Emerald maps and exits"
+  default_prompt: "Use $pokemon-world to inspect the current map and traverse one selected exit."

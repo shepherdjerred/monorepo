@@ -13,9 +13,36 @@ const battle = {
   menu: "move",
   actionCursor: 0,
   moveCursor: 2,
+  targetBattler: 1,
   currentMove: 33,
   chosenMove: 0,
-  battlers: [{ battler: 2, species: "Mudkip" }],
+  switchAllowed: true,
+  moves: [
+    {
+      slot: 1,
+      moveId: 33,
+      move: "TACKLE",
+      currentPp: 35,
+      maxPp: 35,
+      usable: true,
+    },
+  ],
+  bag: null,
+  party: null,
+  battlers: [
+    {
+      battler: 2,
+      side: "player",
+      position: 0,
+      active: true,
+      speciesId: 283,
+      species: "Mudkip",
+      hp: 18,
+      maxHp: 20,
+      partyIndex: 0,
+      status: 0,
+    },
+  ],
 };
 
 const world = {
@@ -25,6 +52,8 @@ const world = {
   x: 8,
   y: 11,
   facing: "north",
+  movementMode: "on foot",
+  onTileBehavior: "tall grass",
   collision: { north: { code: 0, passable: true } },
   nearby: [{ kind: "npc", dx: 1, dy: 0 }],
 };
@@ -57,9 +86,32 @@ function observation(frame: number) {
     battle,
     game: {
       money: 3000,
-      inventory: [{ itemId: 4, quantity: 5 }],
-      party: [{ species: "Mudkip" }],
-      progression: { hasPokedex: true },
+      registeredItemId: 0,
+      inventory: [
+        { itemId: 4, item: "POKé BALL", quantity: 5, pocket: "poke-balls" },
+      ],
+      party: [
+        {
+          speciesId: 283,
+          species: "Mudkip",
+          nickname: "Mudkip",
+          level: 5,
+          hp: 18,
+          maxHp: 20,
+          isEgg: false,
+        },
+      ],
+      progression: {
+        hasPokemon: true,
+        hasPokedex: true,
+        hasPokenav: false,
+        runningShoes: false,
+        isChampion: false,
+        receivedPokedexFromBirch: true,
+      },
+      badges: [],
+      pokedexOwned: 1,
+      lastCatch: null,
     },
   };
 }
@@ -78,16 +130,36 @@ test("observe output is compact by default and preserves full diagnostics", () =
   expect(compact.context).toBe("battle");
   expect(compact.inputReady).toBe(true);
   expect(compact.map).toBe("Route 103");
+  expect(compact.movementMode).toBe("on foot");
+  expect(compact.onTileBehavior).toBe("tall grass");
   expect(compact.battle.inputBattler).toBe(2);
   expect(compact.battle.moveCursor).toBe(2);
+  expect(compact.battle.battlers).toEqual(battle.battlers);
+  expect(compact.game.inventory).toEqual([
+    {
+      itemId: 4,
+      item: "POKé BALL",
+      quantity: 5,
+      pocket: "poke-balls",
+    },
+  ]);
+  expect(compact.game.party[0]).toEqual({
+    speciesId: 283,
+    species: "Mudkip",
+    nickname: "Mudkip",
+    level: 5,
+    hp: 18,
+    maxHp: 20,
+    isEgg: false,
+  });
+  expect(compact.game.progression.receivedPokedexFromBirch).toBe(true);
+  expect(compact.game.pokedexOwned).toBe(1);
   expect(compact.screenshot).toEqual({
     path: "/tmp/pokemon.png",
     frame: 20,
   });
   expect(compact.readiness).toBeUndefined();
   expect(compact.world).toBeUndefined();
-  expect(compact.game).toBeUndefined();
-  expect(compact.battle.battlers).toBeUndefined();
   expect(compactText.length).toBeLessThan(responseText.length);
   expect(formatPokemonctlObservationOutput(responseText, true)).toBe(
     responseText,
@@ -133,6 +205,44 @@ test("keeps semantic verification evidence compact by default", () => {
   expect(compact.before.map).toBe("Route 103");
   expect(compact.before.battle.actionCursor).toBe(0);
   expect(compact.after.battle.actionCursor).toBe(1);
+  expect(compact.after.battle.battlers).toEqual(battle.battlers);
+  expect(compact.after.game.inventory).toHaveLength(1);
+  expect(compact.delta.battleDecision).toEqual({
+    before: {
+      typeFlags: 1,
+      controllerExecFlags: 4,
+      battlersCount: 4,
+      inputBattler: 2,
+      activeBattler: 2,
+      menu: "move",
+      actionCursor: 0,
+      moveCursor: 2,
+      targetBattler: 1,
+      currentMove: 33,
+      chosenMove: 0,
+      switchAllowed: true,
+      moves: battle.moves,
+      bag: null,
+      party: null,
+    },
+    after: {
+      typeFlags: 1,
+      controllerExecFlags: 2,
+      battlersCount: 4,
+      inputBattler: 2,
+      activeBattler: 2,
+      menu: "move",
+      actionCursor: 1,
+      moveCursor: 2,
+      targetBattler: 1,
+      currentMove: 33,
+      chosenMove: 0,
+      switchAllowed: true,
+      moves: battle.moves,
+      bag: null,
+      party: null,
+    },
+  });
   expect(compact.before.world).toBeUndefined();
   expect(compact.before.game).toBeUndefined();
   expect(compactText.length).toBeLessThan(responseText.length);

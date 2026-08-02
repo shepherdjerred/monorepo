@@ -9,6 +9,8 @@ import type {
 import { BADGES } from "#src/game/events/data/badges.ts";
 import { speciesName } from "#src/game/events/generated/species.ts";
 import { readGameSnapshot } from "#src/game/events/snapshot.ts";
+import { itemName } from "#src/game/battle/generated/item-names.ts";
+import { moveName } from "#src/game/battle/generated/move-names.ts";
 import { mapName } from "#src/game/spatial/generated/map-names.ts";
 import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
 import {
@@ -54,8 +56,31 @@ export type GameObservationV2 = Readonly<{
     menu: BattleMenu;
     actionCursor: number;
     moveCursor: number;
+    targetBattler: number | null;
     currentMove: number;
     chosenMove: number;
+    switchAllowed: boolean;
+    moves: readonly Readonly<{
+      slot: number;
+      moveId: number;
+      move: string;
+      currentPp: number;
+      maxPp: number;
+      usable: boolean;
+    }>[];
+    bag: Readonly<{
+      state: "list" | "use-confirm";
+      pocket: number;
+      position: number;
+      itemId: number;
+      item: string;
+    }> | null;
+    party: Readonly<{
+      inputReady: boolean;
+      slot: number;
+      layout: number;
+      action: number;
+    }> | null;
     battlers: readonly Readonly<{
       battler: number;
       side: "player" | "opponent";
@@ -75,6 +100,7 @@ export type GameObservationV2 = Readonly<{
     mapNum: number;
     x: number;
     y: number;
+    elevation: number;
     facing: EngineFacing;
     movementMode: string;
     runningState: number;
@@ -95,6 +121,7 @@ export type GameObservationV2 = Readonly<{
     registeredItemId: number;
     inventory: readonly Readonly<{
       itemId: number;
+      item: string;
       quantity: number;
       pocket: InventoryPocket;
     }>[];
@@ -173,6 +200,7 @@ export function readGameObservation(emulator: Emulator): GameObservationV2 {
           mapNum: engineWorld.mapNum,
           x: engineWorld.x,
           y: engineWorld.y,
+          elevation: engineWorld.elevation,
           facing: engineWorld.facing,
           movementMode: engineWorld.movementMode,
           runningState: engineWorld.runningState,
@@ -220,6 +248,17 @@ export function readGameObservation(emulator: Emulator): GameObservationV2 {
         ? null
         : {
             ...engine.battle,
+            moves: engine.battle.moves.map((move) => ({
+              ...move,
+              move: moveName(move.moveId),
+            })),
+            bag:
+              engine.battle.bag === null
+                ? null
+                : {
+                    ...engine.battle.bag,
+                    item: itemName(engine.battle.bag.itemId),
+                  },
             battlers: engine.battle.battlers.map((battler) => ({
               ...battler,
               species: speciesName(battler.speciesId),
@@ -232,7 +271,10 @@ export function readGameObservation(emulator: Emulator): GameObservationV2 {
         : {
             money: details.money,
             registeredItemId: details.registeredItemId,
-            inventory: details.inventory,
+            inventory: details.inventory.map((item) => ({
+              ...item,
+              item: itemName(item.itemId),
+            })),
             progression: details.progression,
             party: snapshot.party.map((mon) => ({
               speciesId: mon.species,
