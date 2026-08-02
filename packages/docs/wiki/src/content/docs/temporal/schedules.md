@@ -1,6 +1,6 @@
 ---
 title: Scheduled automations
-description: Roughly thirty cron schedules live in code, reconcile at every worker boot, and split into PR-creating jobs (mostly deterministic) and report-only agent runs.
+description: Roughly thirty cron schedules live in code, reconcile at every worker boot, and span repo-artifact PR jobs, live-maintenance jobs, and report-only agent runs.
 ---
 
 All recurring automation is a single `SCHEDULES` array in
@@ -51,15 +51,23 @@ flowchart LR
   any server-side schedule that code no longer defines, so drift alerts
   instead of lingering.
 
-## Two automation patterns
+## Automation patterns
 
-Mutating automations always land their change as a **reviewable PR**:
-regenerate an artifact — or, for a couple of schedules, ask an LLM to derive
-the change — then diff and open a PR under a GitHub App token, with a human
-approving before anything merges. Most are fully deterministic, but the split
-is not strictly LLM-free: `scout-season-refresh` runs Claude to derive season
-changes, and `readme-refresh` can call Codex for a new package's summary, each
-before opening its PR. Judgment-heavy checks are instead **report-only agent
-tasks** that can only email their findings. The real boundary is the PR, not
-the model — a schedule never mutates the repo or cluster in place. Details:
-[Agent tasks](/temporal/agent-tasks/).
+Schedules fall into three groups by what they touch:
+
+- **Repo-artifact jobs** regenerate a committed artifact and open a PR on
+  drift under a GitHub App token. Most await human review, but a few
+  additive-only lanes (Scout's Data Dragon refresh, queue-windows)
+  `gh pr merge --auto` and land on green checks with no approving review
+  required. Most are deterministic, though the split is not strictly LLM-free:
+  `scout-season-refresh` runs Claude to derive season changes and
+  `readme-refresh` can call Codex for a new package's summary before opening
+  its PR.
+- **Live-maintenance jobs** act directly on running systems, not the repo: ZFS
+  scrub/trim, Bugsink event pruning, S3 image GC, and the Home Assistant
+  routines all mutate live state in place, with no PR in the loop.
+- **Report-only agent tasks** can only email their findings — they never write
+  the repo or the cluster. Details: [Agent tasks](/temporal/agent-tasks/).
+
+So the PR is the review boundary only for repo-artifact jobs; maintenance and
+home-automation schedules are trusted to change live systems directly.
