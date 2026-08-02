@@ -15,6 +15,7 @@
     "build": "bun build src/cli.ts --target bun --outdir dist",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "test": "bun test",
+    "test:ci": "bun ../../scripts/run-ci-test.ts",
     "lint": "bunx eslint --cache ."
   },
   "dependencies": {
