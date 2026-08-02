@@ -16,7 +16,7 @@ import {
   glitterContextRefreshPeople,
   glitterContextRefreshRelationshipProposals,
   glitterContextRefreshRunsTotal,
-} from "#observability/metrics.ts";
+} from "#observability/metrics-glitter.ts";
 import { rootInstallWithoutHooks } from "./bot-clone.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import {

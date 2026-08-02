@@ -25,6 +25,7 @@ import { observeAgentTaskTimeoutsActivities } from "./observe-agent-task-timeout
 import { glitterCorpusActivities } from "./glitter-corpus.ts";
 import { glitterContextRefreshActivities } from "./glitter-context-refresh.ts";
 import { weatherActivities } from "./weather.ts";
+import { workflowFailureWatchActivities } from "./workflow-failure-watch.ts";
 
 export const activities = {
   ...fetcherActivities,
@@ -54,4 +55,5 @@ export const activities = {
   ...glitterCorpusActivities,
   ...glitterContextRefreshActivities,
   ...weatherActivities,
+  ...workflowFailureWatchActivities,
 };

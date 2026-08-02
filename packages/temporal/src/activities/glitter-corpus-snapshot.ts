@@ -8,7 +8,7 @@ import {
   glitterCorpusLastSnapshotTimestampSeconds,
   glitterCorpusSnapshotMetricsConfigured,
   glitterCorpusSnapshotMessages,
-} from "#observability/metrics.ts";
+} from "#observability/metrics-glitter.ts";
 import {
   DailyBaselineSchema,
   FinalizeSnapshotInputSchema,

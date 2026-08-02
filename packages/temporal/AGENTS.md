@@ -18,7 +18,8 @@ src/
   workflows/             # Temporal workflow definitions (deterministic, no I/O)
   activities/            # Temporal activity implementations (actual work: API calls, DB, etc.)
   schedules/
-    register-schedules.ts  # Creates/updates all Temporal schedules on worker startup
+    register-schedules.ts    # Registration logic: upsert/delete/pause reconciliation on worker startup
+    schedule-definitions.ts  # The declarative SCHEDULES array (split out — register-schedules.ts sits at the max-lines cap)
 ```
 
 ## Key Concepts
@@ -27,9 +28,14 @@ src/
 - **Activities** do the real work (HTTP calls, DB queries, file I/O). They run outside the sandbox.
 - **Schedules** replace K8s CronJobs — managed by Temporal, visible in the UI.
 
-## Schedules (`src/schedules/register-schedules.ts`)
+## Schedules (`src/schedules/register-schedules.ts`, `src/schedules/schedule-definitions.ts`)
 
-`registerSchedules()` upserts every entry in the `SCHEDULES` array on each worker startup
+The declarative `SCHEDULES` array plus its supporting types/data (`ScheduleDefinition`,
+`CATCHUP_TIGHT`/`CATCHUP_RELAXED`) live in `schedule-definitions.ts` — split out of
+`register-schedules.ts`, which sits at the repo's max-lines cap (the same pattern as
+`src/observability/metrics-glitter.ts` for `metrics.ts`). Import `SCHEDULES` from
+`#schedules/schedule-definitions.ts`, not from `register-schedules.ts` (no re-export —
+`custom-rules/no-re-exports`). `registerSchedules()` upserts every entry in the `SCHEDULES` array on each worker startup
 (create-or-update), deletes the explicit `DELETED_SCHEDULE_IDS` allow-list, and reconciles
 pause state. The **declaration** of a schedule (its existence, cron, workflow, args, policy)
 is source-controlled here; its **on/off pause state** is runtime/dynamic (see below).
@@ -163,13 +169,25 @@ Workflow:
 - `XCODE_CLOUD_WEBHOOK_TOKEN` — unguessable token embedded in the Xcode Cloud webhook URL path (`/hook/<token>`). Xcode Cloud webhooks carry no signature/auth header, so the URL path IS the credential. **Required** to start the receiver; when unset the server is skipped.
 - `XCODE_CLOUD_WEBHOOK_PORT` — port for the Xcode Cloud webhook receiver (default `9468`).
 - `XCODE_CLOUD_ALERT_TTL_SECONDS` — safety auto-resolve window for a fired build-failure alert if no later `SUCCEEDED` clears it (default `21600` = 6h).
-- `ALERTMANAGER_URL` — in-cluster Alertmanager base URL the Xcode Cloud receiver POSTs alerts to (`http://prometheus-kube-prometheus-alertmanager.prometheus:9093`). **Required** when the receiver is enabled.
+- `ALERTMANAGER_URL` — in-cluster Alertmanager base URL (`http://prometheus-kube-prometheus-alertmanager.prometheus:9093`). **Required** by two features: the Xcode Cloud webhook receiver (when enabled) and the `temporal-failure-watch` schedule (see below) — both POST to `/api/v2/alerts` via `src/lib/alertmanager.ts`.
+- `TEMPORAL_FAILURE_ALERT_TTL_SECONDS` — how long a `TemporalWorkflowFailed` alert stays firing in Alertmanager before auto-resolving if the watcher stops re-observing it (default `21600` = 6h, same rationale as `XCODE_CLOUD_ALERT_TTL_SECONDS`).
 
 ## Homelab audit (daily)
 
 `homelab-audit-daily` (cron `30 6 * * *` PT) now runs through the generic `agentTaskWorkflow` on the `agent-task` queue. It checks out `shepherdjerred/monorepo`, asks Claude to follow `packages/docs/guides/2026-04-04_homelab-audit-runbook.md`, renders markdown to HTML, and sends a Postal email with tag `agent-task`. The previous bespoke `runHomelabAuditWorkflow` remains in-tree as a rollback path until the generic workflow is proven in production.
 
 The activity (`src/activities/homelab-audit.ts`) follows the shared `claude -p` subprocess lifecycle (Bun.spawn `claude -p`, 10 s heartbeats, stderr line pump with token redaction, parsed `--output-format json` result, Sentry capture on failure, Prom metrics) — the same pattern as the generic agent-task activity.
+
+## Temporal workflow failure → PagerDuty alerts
+
+`temporal-failure-watch` (cron `*/5 * * * *`, `pollWorkflowFailuresWorkflow` on `TASK_QUEUES.DEFAULT`) pages PagerDuty with the specific error for **every** Temporal workflow execution that fails or times out — not just the workflows/thresholds covered by the hand-maintained Prometheus rules in `packages/homelab/.../monitoring/rules/temporal.ts`. The activity (`src/activities/workflow-failure-watch.ts`) is stateless (no persisted checkpoint, matching `review-signals-collect`):
+
+1. Queries the Temporal visibility API for `ExecutionStatus IN ("Failed", "TimedOut")` closed in the last 15 minutes (3x the 5-minute cron, so a missed tick can't create a gap — safe to overlap because Alertmanager dedups alerts by label set).
+2. For each match, calls `getHandle(workflowId, runId).result()` — since the execution is already closed, this rejects immediately with `WorkflowFailedError`, whose `.cause` carries the same failure type/message/stack the Temporal UI shows.
+3. Builds one `AlertmanagerAlert` per execution via the pure `buildWorkflowFailureAlert` helper (`src/shared/workflow-failure-alert.ts`) — labels `{alertname: "TemporalWorkflowFailed", workflowType, taskQueue, workflowId, runId}` for identity/dedup, plus a summary/description with the actual error and a direct link to the failed run in the Temporal UI (`temporalUiExecutionUrl`).
+4. Posts the batch via `createAlertmanagerPoster` (`src/lib/alertmanager.ts`, shared with the Xcode Cloud webhook), which routes through the existing Alertmanager `pagerduty` receiver — no new PagerDuty integration/routing key needed.
+
+No exclusion list — every workflow type pages on any failure, including per-PR bots (`prReview`/`prSummary`) that the older threshold-based rules deliberately exclude. Revisit with an exclusion list if that proves too noisy. See `packages/docs/plans/2026-07-30_temporal-workflow-failure-pagerduty-alerts.md` for the full design rationale.
 
 ## Generic agent tasks
 

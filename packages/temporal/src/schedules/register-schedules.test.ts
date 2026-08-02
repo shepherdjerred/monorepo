@@ -4,9 +4,9 @@ import { DataDragonWorkflowInputSchema } from "#activities/data-dragon.ts";
 import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent-task.ts";
 import {
   DELETED_SCHEDULE_IDS,
-  SCHEDULES,
   buildSchedulePolicies,
 } from "./register-schedules.ts";
+import { SCHEDULES } from "./schedule-definitions.ts";
 import { isOrphanSchedule } from "./orphan-detection.ts";
 import { buildScheduleState } from "./schedule-state.ts";
 
@@ -103,6 +103,10 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "observeAgentTaskTimeoutsWorkflow",
   "runGlitterCorpusDaily",
   "runGlitterContextRefresh",
+  // Awaits a single pollWorkflowFailures activity (visibility list + per-
+  // execution result() calls + one Alertmanager POST). No workflow-level
+  // sleeps; the activity carries its own startToCloseTimeout + retry budget.
+  "pollWorkflowFailuresWorkflow",
 ]);
 
 const SLACK_MS = 5 * ONE_MINUTE;

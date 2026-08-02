@@ -2,9 +2,9 @@ import { describe, expect, it } from "bun:test";
 import {
   type AlertPoster,
   type AlertmanagerAlert,
-  buildXcodeCloudWebhookApp,
   createAlertmanagerPoster,
-} from "./xcode-cloud-webhook.ts";
+} from "#lib/alertmanager.ts";
+import { buildXcodeCloudWebhookApp } from "./xcode-cloud-webhook.ts";
 import {
   XcodeCloudPayloadSchema,
   classifyBuild,

@@ -18,7 +18,7 @@ import {
   glitterCorpusInventoryScopeChanges,
   glitterCorpusMessagesObservedTotal,
   glitterCorpusPagesTotal,
-} from "#observability/metrics.ts";
+} from "#observability/metrics-glitter.ts";
 import {
   ApplyOverlapInputSchema,
   CapturePageInputSchema,

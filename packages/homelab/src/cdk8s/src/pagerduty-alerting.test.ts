@@ -477,6 +477,7 @@ type RouteNode = {
   receiver?: string;
   matchers?: string[];
   continue?: boolean;
+  group_by?: string[];
   routes?: RouteNode[];
 };
 const RouteNodeSchema: z.ZodType<RouteNode> = z.lazy(() =>
@@ -484,6 +485,7 @@ const RouteNodeSchema: z.ZodType<RouteNode> = z.lazy(() =>
     receiver: z.string().optional(),
     matchers: z.array(z.string()).optional(),
     continue: z.boolean().optional(),
+    group_by: z.array(z.string()).optional(),
     routes: z.array(RouteNodeSchema).optional(),
   }),
 );
@@ -600,9 +602,32 @@ describe("Xcode Cloud alert routing guard", () => {
 
   it("has an explicit critical|warning → pagerduty route (structural guard)", () => {
     const pdRoute = (route.routes ?? []).find(
-      (r) => r.receiver === "pagerduty",
+      (r) =>
+        r.receiver === "pagerduty" &&
+        (r.matchers ?? []).includes('severity =~ "critical|warning"'),
     );
     expect(pdRoute?.matchers).toContain('severity =~ "critical|warning"');
+  });
+
+  it("pages each Temporal workflow failure as its own group (workflowId/runId)", () => {
+    const temporalRoute = (route.routes ?? []).find((r) =>
+      (r.matchers ?? []).includes('alertname = "TemporalWorkflowFailed"'),
+    );
+    expect(temporalRoute?.receiver).toBe("pagerduty");
+    // Distinct executions must not collapse into one PagerDuty dedup group.
+    expect(temporalRoute?.group_by).toEqual([
+      "alertname",
+      "workflowId",
+      "runId",
+    ]);
+    // Warning-severity TemporalWorkflowFailed alerts must resolve to pagerduty,
+    // and via this specific route (it precedes the severity catch-all).
+    expect(
+      resolveReceiver(route, {
+        alertname: "TemporalWorkflowFailed",
+        severity: "warning",
+      }),
+    ).toBe("pagerduty");
   });
 });
 
