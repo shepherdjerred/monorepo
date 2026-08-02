@@ -1,12 +1,15 @@
 ---
 title: Homelab maintenance workflows
-description: Five nightly janitors plus a continuous workflow-failure pager — ZFS scrubs, error-DB housekeeping, backup-orphan detection, DNS audits, golink sync, and PagerDuty alerts — each with narrowly scoped access.
+description: Five nightly janitors plus a continuous workflow-failure pager — ZFS scrubs, error-DB housekeeping, backup-orphan detection, DNS audits, golink sync, and PagerDuty alerts — each with namespace-scoped RBAC.
 ---
 
 Six workflows keep the cluster healthy — five nightly janitors plus a
-continuous workflow-failure pager. The common thread is **least privilege**:
-each `kubectl exec` job has its own namespace-scoped Role granting exec into
-exactly one workload, and the one workflow that touches backups is
+continuous workflow-failure pager. Access is **namespace-scoped**: each
+`kubectl exec` job gets its own `Role` (not a `ClusterRole`), bound only in the
+single namespace it works in — `prometheus`, `bugsink`, or `openebs` — so its
+blast radius stops at that namespace boundary. The Role grants `pods/exec` on
+any pod in that namespace rather than a single named workload, so the guarantee
+is per-namespace, not per-pod. The one workflow that touches backups is
 detection-only by explicit decision.
 
 ## ZFS maintenance (`zfs-maintenance`)

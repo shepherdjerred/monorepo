@@ -69,9 +69,16 @@ WebFetch`, on claude-opus-5. **Codex tasks** run `codex exec` with
   Codex's own sandbox needs, so (as with Claude) report-only is enforced by the
   prompt, not the filesystem. The two providers accept different schema
   dialects, so each gets its own output schema.
-- **Env scoping**: the subprocess gets a fresh GitHub installation token as
-  `GH_TOKEN`; the GitHub App credentials are stripped, and for Claude the
-  Anthropic API key is dropped so the run bills the subscription.
+- **Env exposure is an accepted boundary**: the subprocess inherits the
+  **full worker environment**. It gets a fresh GitHub installation token as
+  `GH_TOKEN` (the raw GitHub App key is stripped, and for Claude the Anthropic
+  API key is dropped so the run bills the subscription), but the worker's other
+  operational secrets — Grafana, PagerDuty, ArgoCD, Bugsink, Cloudflare, Postal
+  — and the mounted service-account token stay readable. This is deliberate: the
+  daily homelab audit needs them to run its live read-only checks. So a
+  deviating or prompt-injected run's blast radius is those credentials, and the
+  barrier is again policy (the report-only prompt) plus the ephemeral non-root
+  pod and throwaway clone — not a scoped environment.
 - **One-off submission is conflict-checked**: the workflow ID is the task
   title plus a content hash of the normalized input, submitted with
   `ALLOW_DUPLICATE_FAILED_ONLY` and conflict policy `FAIL` — so resubmitting an
