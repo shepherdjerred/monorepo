@@ -35,6 +35,11 @@ export function validatePlaywrightLanes(
       "bun x --no-install turbo run build lint test test:e2e",
       `Playwright lane ${key} is missing its exact test closure`,
     );
+    requireIncludes(
+      block,
+      "bun --no-install scripts/namespace-playwright-reports.ts",
+      `Playwright lane ${key} does not namespace its Playwright JUnit report before upload`,
+    );
     for (const forbidden of [
       "playwright install",
       "bun.zip",
