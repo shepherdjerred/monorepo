@@ -78,6 +78,14 @@ async function notFoundInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(1, "", "ghcr.io/example: manifest unknown: not found");
 }
 
+async function rateLimitedInspectExecutor(): Promise<BuildxCommandResult> {
+  return commandResult(1, "", "429 Too Many Requests");
+}
+
+async function unclassifiedInspectExecutor(): Promise<BuildxCommandResult> {
+  return commandResult(1, "", "unauthorized: authentication required");
+}
+
 async function imageExecutor(): Promise<BuildxCommandResult> {
   return commandResult(
     0,
@@ -397,9 +405,11 @@ test("fingerprints rootfs and runtime OCI config without build identity", async 
   expect(await imageRuntimeFingerprint("example:tag", imageExecutor)).toMatch(
     /^[a-f\d]{64}$/,
   );
-  expect(
-    await imageRuntimeFingerprint("example:tag", failingExecutor),
-  ).toBeUndefined();
+  // A bare, unclassified inspect failure (no recognized signature) must fail
+  // loud rather than masquerade as an unresolvable image.
+  await expect(
+    imageRuntimeFingerprint("example:tag", failingExecutor),
+  ).rejects.toThrow("Unclassified failure inspecting example:tag");
   expect(() => runtimeFingerprintFromImage({})).toThrow(
     "architecture, os, and rootfs",
   );
@@ -429,7 +439,7 @@ test("keeps build-identity env for CI images while dropping it for application i
   ).not.toBe(runtimeFingerprintFromImage(base, CI_IMAGE_IGNORED_ENV_PREFIXES));
 });
 
-test("surfaces a transient inspect failure instead of collapsing it to undefined", async () => {
+test("classifies inspect failures as transient, missing, or unclassified", async () => {
   const image = `ghcr.io/example@sha256:${"a".repeat(64)}`;
   // A transient registry/BuildKit failure must be preserved as a retryable
   // TransientError, not silently misclassified as an unresolvable image.
@@ -437,11 +447,29 @@ test("surfaces a transient inspect failure instead of collapsing it to undefined
     imageRuntimeFingerprint(image, transientInspectExecutor),
   ).rejects.toBeInstanceOf(TransientError);
 
+  // Registry rate limiting (429 / TOOMANYREQUESTS) is transient too.
+  await expect(
+    imageRuntimeFingerprint(image, rateLimitedInspectExecutor),
+  ).rejects.toBeInstanceOf(TransientError);
+
   // A genuine, non-transient "not found" remains `undefined` — the legitimate
   // pin-unresolvable signal.
   expect(
     await imageRuntimeFingerprint(image, notFoundInspectExecutor),
   ).toBeUndefined();
+
+  // Any other unclassified failure fails loud as a plain Error (not a
+  // TransientError, not `undefined`), so it never promotes against an
+  // unreadable pin.
+  let caught: unknown;
+  try {
+    await imageRuntimeFingerprint(image, unclassifiedInspectExecutor);
+  } catch (error) {
+    caught = error;
+  }
+  expect(caught).toBeInstanceOf(Error);
+  expect(caught).not.toBeInstanceOf(TransientError);
+  expect(String(caught)).toContain("Unclassified failure inspecting");
 });
 
 test("creates the remote BuildKit builder only when missing", async () => {

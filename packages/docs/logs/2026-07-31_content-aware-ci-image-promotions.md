@@ -169,3 +169,23 @@ GitHub PR-lifecycle helpers (`openOrUpdatePullRequest`, `retireStalePromotion`,
 `MONOREPO_REPO`) moved to a new `update-ci-image-pin-github.ts` module; the
 orchestrator imports them. That module is not in the `scripts` coverage graph
 (nothing imports `update-ci-image-pin.ts`), so coverage is unaffected.
+
+### Re-review P2 — fail loud on unclassified inspect errors
+
+Codex flagged that `imageRuntimeFingerprint`'s catch-all `return undefined`
+mapped _every_ non-transient inspect failure to the pin-unresolvable signal,
+including registry rate limiting (`429`/`TOOMANYREQUESTS`) that
+`bakeFailureIsTransient` did not recognize — so a rate-limited pinned-digest
+inspect would open a promotion PR instead of retrying (AGENTS.md L83-L87,
+"fail loudly / no defensive fallbacks").
+
+Fix: added `Too Many Requests`/`toomanyrequests` to the transient pattern in
+`bake-retry.ts` (rate limits now retry), and split the fallback in
+`application-image-runtime.ts` — `undefined` is returned **only** for an
+explicitly recognized missing-image response (`IMAGE_ABSENT_PATTERN`:
+`not found` / `manifest unknown` / `name unknown`); any other unclassified
+failure now throws a plain `Error` (`Unclassified failure inspecting …`) so it
+fails loud instead of silently promoting against an unreadable pin. Tests cover
+all four outcomes (transient, rate-limit, missing → undefined, unclassified →
+throw), plus the rate-limit case in `bake-retry.test.ts`. Coverage stays at
+95.71% functions / 95.31% lines.

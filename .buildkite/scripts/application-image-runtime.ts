@@ -15,6 +15,11 @@ export type ImageCommandExecutor = (
 
 const applicationImageTargets = new Set(APPLICATION_IMAGE_TARGETS);
 
+// Registry/BuildKit diagnostics that explicitly mean "this manifest does not
+// exist" — the only inspect failure that legitimately maps to an unresolvable
+// image. Anything else non-transient is treated as an unclassified error.
+const IMAGE_ABSENT_PATTERN = /not found|manifest[ _]unknown|name[ _]unknown/i;
+
 function canonicalJson(value: unknown): string {
   if (value === null) return "null";
   if (typeof value === "string") return JSON.stringify(value);
@@ -148,21 +153,27 @@ export async function imageRuntimeFingerprint(
       ignoredEnvPrefixes,
     );
   }
-  // A transient registry/BuildKit failure must NOT collapse to `undefined`:
-  // that would rethrow a candidate failure without diagnostics (an unretryable
-  // exit 1) and misclassify a pinned-image failure as `pin-unresolvable-bumped`,
-  // changing the promotion outcome on a temporary blip. Preserve the diagnostics
-  // as a TransientError so `runMain` exits EXIT_TRANSIENT and Buildkite retries
-  // the job. Only a genuine, non-transient "not found" yields `undefined` — the
-  // legitimate signal that a pin or candidate is truly unresolvable.
-  if (bakeFailureIsTransient(`${result.stdout}\n${result.stderr}`)) {
+  const diagnostics = `${result.stdout}\n${result.stderr}`;
+  const detail = result.stderr.trim() || result.stdout.trim();
+  // A transient registry/BuildKit failure (timeout, rate limit, TLS, 5xx, …)
+  // must NOT collapse to `undefined`: that would rethrow a candidate failure
+  // without diagnostics (an unretryable exit 1) and misclassify a pinned-image
+  // failure as `pin-unresolvable-bumped`, changing the promotion outcome on a
+  // temporary blip. Preserve the diagnostics as a TransientError so `runMain`
+  // exits EXIT_TRANSIENT and Buildkite retries the job.
+  if (bakeFailureIsTransient(diagnostics)) {
     throw new TransientError(
-      `Transient failure inspecting ${image}: ${
-        result.stderr.trim() || result.stdout.trim()
-      }`,
+      `Transient failure inspecting ${image}: ${detail}`,
     );
   }
-  return undefined;
+  // Only an explicitly recognized missing-image response yields `undefined` —
+  // the legitimate signal that a pin or candidate is truly unresolvable. Every
+  // other unclassified failure (auth, quota, malformed response) must fail loud
+  // rather than silently promote a candidate against a pin we could not read.
+  if (IMAGE_ABSENT_PATTERN.test(diagnostics)) {
+    return undefined;
+  }
+  throw new Error(`Unclassified failure inspecting ${image}: ${detail}`);
 }
 
 export async function classifyRuntimeChange(
