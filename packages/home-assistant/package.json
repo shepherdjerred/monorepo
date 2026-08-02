@@ -20,7 +20,8 @@
   "scripts": {
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "bunx eslint --cache .",
-    "test": "bun test"
+    "test": "bun test",
+    "test:ci": "bun ../../scripts/run-ci-test.ts"
   },
   "dependencies": {
     "zod": "^4.4.3"

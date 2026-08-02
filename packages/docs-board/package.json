@@ -12,7 +12,8 @@
     "test": "bun test",
     "lint": "bunx eslint . --max-warnings=0",
     "check-docs": "bun run src/cli/check-docs.ts",
-    "migrate-docs": "bun run src/cli/migrate-docs.ts"
+    "migrate-docs": "bun run src/cli/migrate-docs.ts",
+    "test:ci": "bun ../../scripts/run-ci-test.ts"
   },
   "imports": {
     "#components/*": "./src/components/*.tsx",

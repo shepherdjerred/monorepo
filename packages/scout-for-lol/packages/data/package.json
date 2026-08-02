@@ -12,7 +12,7 @@
     "test": "bun test",
     "test:watch": "bun test --watch",
     "test:coverage": "bun test --coverage",
-    "test:ci": "bun test --bail --coverage --reporter=junit --reporter-outfile=./junit.xml",
+    "test:ci": "bun ../../../../scripts/run-ci-test.ts",
     "lint": "bunx eslint src",
     "format": "bunx prettier --check src",
     "format:write": "bunx prettier --write src",

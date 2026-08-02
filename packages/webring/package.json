@@ -27,7 +27,8 @@
     "typedoc": "typedoc src/index.ts",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "deploy": "bun ../../scripts/deploy-site.ts webring",
-    "publish:npm": "bun ../../scripts/publish-npm.ts ."
+    "publish:npm": "bun ../../scripts/publish-npm.ts .",
+    "test:ci": "bun ../../scripts/run-ci-test.ts"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

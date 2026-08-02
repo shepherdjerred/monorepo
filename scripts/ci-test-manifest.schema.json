@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sjer.red/schemas/ci-test-manifest.schema.json",
+  "title": "Monorepo CI test reporting manifest",
+  "type": "object",
+  "required": [
+    "$schema",
+    "version",
+    "workspaces",
+    "testlessWorkspaces",
+    "separateTests"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "const": "./ci-test-manifest.schema.json" },
+    "version": { "const": 1 },
+    "workspaces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["package", "directory", "steps"],
+        "properties": {
+          "package": { "type": "string", "minLength": 1 },
+          "directory": { "type": "string", "minLength": 1 },
+          "defaultEnv": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["runner"],
+                  "properties": {
+                    "runner": { "const": "bun" },
+                    "name": { "type": "string", "minLength": 1 },
+                    "bunArgs": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "args": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["runner", "args"],
+                  "properties": {
+                    "runner": { "const": "vitest" },
+                    "name": { "type": "string", "minLength": 1 },
+                    "args": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["runner", "args"],
+                  "properties": {
+                    "runner": { "const": "go" },
+                    "name": { "type": "string", "minLength": 1 },
+                    "args": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["runner", "args"],
+                  "properties": {
+                    "runner": { "const": "cargo" },
+                    "name": { "type": "string", "minLength": 1 },
+                    "args": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["runner", "name", "command"],
+                  "properties": {
+                    "runner": { "const": "command" },
+                    "name": { "type": "string", "minLength": 1 },
+                    "command": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": { "type": "string" }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "testlessWorkspaces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["package", "directory", "reason"],
+        "properties": {
+          "package": { "type": "string", "minLength": 1 },
+          "directory": { "type": "string", "minLength": 1 },
+          "reason": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "separateTests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["package", "directory", "reason"],
+        "properties": {
+          "package": { "type": "string", "minLength": 1 },
+          "directory": { "type": "string", "minLength": 1 },
+          "reason": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

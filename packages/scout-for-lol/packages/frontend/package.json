@@ -42,10 +42,7 @@
     "lint": "astro check && eslint src",
     "preview": "astro preview",
     "test": "bun test",
-    "test:ui": "echo 'Playwright tests disabled'",
-    "test:headed": "echo 'Playwright tests disabled'",
-    "test:report": "echo 'Playwright tests disabled'",
-    "test:install": "echo 'Playwright tests disabled'",
+    "test:ci": "bun ../../../../scripts/run-ci-test.ts",
     "typecheck": "astro check && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "deploy": "bun ../../../../scripts/deploy-site.ts scout-frontend",
     "deploy:beta": "bun ../../../../scripts/deploy-site.ts scout-frontend-beta"

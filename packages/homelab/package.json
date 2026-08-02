@@ -38,6 +38,7 @@
     "smoke": "bun scripts/smoke-images.ts",
     "helm:push": "bun scripts/helm-push.ts",
     "tofu:stack": "bun scripts/tofu-stack.ts",
-    "argocd": "bun scripts/argocd.ts"
+    "argocd": "bun scripts/argocd.ts",
+    "test:ci": "bun ../../scripts/run-ci-test.ts"
   }
 }

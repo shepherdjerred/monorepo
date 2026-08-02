@@ -75,6 +75,7 @@ logs/
 
 # Test coverage output
 coverage/
+/.ci-reports/
 
 # Monarch hardcoded order data (contains personal purchase history)
 packages/monarch/src/lib/costco/costco-orders.json

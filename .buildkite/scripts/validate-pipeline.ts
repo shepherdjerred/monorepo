@@ -31,6 +31,7 @@ import {
 import { validateCaddySmokeContracts } from "./validate-pipeline-caddy.ts";
 import { validateImageMigrationContracts } from "./validate-image-migration.ts";
 import { validateReleasePipelineContracts } from "./validate-pipeline-release.ts";
+import { validatePlaywrightLanes } from "./validate-pipeline-playwright.ts";
 import { fixedCorpusMode, lanePaths, summarySteps } from "./migration-core.ts";
 
 const PIPELINE_PATH = ".buildkite/pipeline.yml";
@@ -172,39 +173,7 @@ requireIncludes(
   "sites must wait for tofu-apply to provision static-site buckets",
 );
 
-for (const key of ["playwright-e2e-pr", "playwright-e2e-main"]) {
-  const block = stepBlocks.get(key);
-  const install =
-    ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo'";
-  if (!hasTrimmedLine(block, install)) {
-    fail(`Playwright lane ${key} is missing exact filtered install ${install}`);
-  }
-  requireIncludes(
-    block,
-    'image: "${CI_PLAYWRIGHT_IMAGE}"',
-    `Playwright lane ${key} does not consume the committed candidate pin`,
-  );
-  requireIncludes(
-    block,
-    "imagePullPolicy: IfNotPresent",
-    `Playwright lane ${key} does not use the immutable image pull policy`,
-  );
-  requireIncludes(
-    block,
-    "bun x --no-install turbo run build lint test test:e2e",
-    `Playwright lane ${key} is missing its exact test closure`,
-  );
-  for (const forbidden of [
-    "playwright install",
-    "bun.zip",
-    "apt-get",
-    "mcr.microsoft.com/playwright",
-  ]) {
-    if (block?.includes(forbidden) === true) {
-      fail(`Playwright lane ${key} restored runtime bootstrap ${forbidden}`);
-    }
-  }
-}
+validatePlaywrightLanes(stepBlocks);
 
 for (const [key, lane, candidate] of [
   ["ci-base-refresh", "ci-base", "ci-base-candidate.json"],
@@ -224,6 +193,19 @@ for (const [key, lane, candidate] of [
     );
   }
 }
+for (const [key, expected] of [
+  ["playwright-e2e-pr", "missing-error: 1"],
+  ["playwright-e2e-main", "missing-error: 0"],
+] satisfies readonly (readonly [string, string])[]) {
+  if (!stepBlocks.get(key)?.includes(expected)) {
+    fail(`${key} must configure the test collector with ${expected}`);
+  }
+}
+requireIncludes(
+  stepBlocks.get("playwright-e2e-main"),
+  "if [ ! -s .ci-reports/junit/sjer.red/playwright.xml ]; then",
+  "playwright-e2e-main must fail when an executed run emits no JUnit report",
+);
 
 // The merged PR dry-run lane owns the helm-types drift gate, the tofu plans,
 // and the print-only deploy rehearsals. Its install must stay the exact
