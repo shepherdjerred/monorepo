@@ -34,10 +34,6 @@ export {
   type ItemMissEvent,
 } from "./dataDragon/image-cache.ts";
 export {
-  classicFontManifest,
-  configureClassicGillSansFonts,
-} from "./assets/classic-fonts.ts";
-export {
   getChampionInfo,
   extractRunes,
   participantToChampion,

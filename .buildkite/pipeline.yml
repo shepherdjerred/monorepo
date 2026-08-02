@@ -300,61 +300,6 @@ steps:
             labels:
               ci.sjer.red/step-key: verify
 
-  # Licensed Gill Sans remains in private SeaweedFS storage. This lane proves
-  # the exact checksum-pinned files can produce every Classic report state;
-  # only PNG outputs are retained because the generated SVG paths encode font
-  # outlines.
-  - label: ":frame_with_picture: Scout Classic visual verification"
-    key: scout-classic-visuals
-    if: (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
-    depends_on: verify
-    if_changed:
-      include:
-        - ".buildkite/pipeline.yml"
-        - ".buildkite/scripts/ci-changed.ts"
-        - ".buildkite/scripts/migration-core.ts"
-        - ".buildkite/scripts/prepare-ci-changed-base.ts"
-        - ".buildkite/scripts/upload-pipeline.sh"
-        - "bun.lock"
-        - "bunfig.toml"
-        - "package.json"
-        - "patches/**"
-        - "turbo.json"
-        - "packages/glitter-context/**"
-        - "packages/llm-models/**"
-        - "packages/scout-for-lol/packages/data/**"
-        - "packages/scout-for-lol/packages/report/**"
-    cancel_on_build_failing: true
-    command: |
-      . .buildkite/scripts/toolchain.sh
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@scout-for-lol/report' --production
-      bun --no-install run --cwd packages/glitter-context build:runtime
-      bun --no-install run --cwd packages/llm-models build:runtime
-      font_dir=$$(mktemp -d)
-      trap 'rm -rf "$$font_dir"' EXIT
-      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
-      aws s3 cp s3://scout-classic-fonts/v1/GillSans-Regular.ttf "$$font_dir/GillSans-Regular.ttf" --endpoint-url https://seaweedfs-s3.tailnet-1a49.ts.net
-      aws s3 cp s3://scout-classic-fonts/v1/GillSans-Bold.ttf "$$font_dir/GillSans-Bold.ttf" --endpoint-url https://seaweedfs-s3.tailnet-1a49.ts.net
-      font_manifest=packages/scout-for-lol/packages/report/src/assets/fonts/classic-fonts.json
-      regular_sha=$$(jq -er '.gillSans.regular.sha256' "$$font_manifest")
-      bold_sha=$$(jq -er '.gillSans.bold.sha256' "$$font_manifest")
-      printf '%s  %s\n' \
-        "$$regular_sha" "$$font_dir/GillSans-Regular.ttf" \
-        "$$bold_sha" "$$font_dir/GillSans-Bold.ttf" \
-        | sha256sum --check
-      export SCOUT_CLASSIC_GILL_SANS_REGULAR_PATH="$$font_dir/GillSans-Regular.ttf"
-      export SCOUT_CLASSIC_GILL_SANS_BOLD_PATH="$$font_dir/GillSans-Bold.ttf"
-      bun --no-install run --cwd packages/scout-for-lol/packages/report verify:classic-visuals
-    artifact_paths:
-      - "packages/scout-for-lol/packages/report/artifacts/classic/*.png"
-    retry: *retry
-    plugins:
-      - kubernetes:
-          <<: *pod_kubernetes
-          metadata:
-            labels:
-              ci.sjer.red/step-key: scout-classic-visuals
-
   # PR change filters include the global CI/toolchain closure. A selector
   # mistake can therefore only run extra work; it cannot hide changes to the
   # machinery that decides or executes a lane.

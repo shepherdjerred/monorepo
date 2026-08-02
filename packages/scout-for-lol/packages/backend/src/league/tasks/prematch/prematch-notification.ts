@@ -23,7 +23,6 @@ import {
   UnsupportedLoadingScreenQueueError,
   buildLoadingScreenData,
 } from "#src/league/tasks/prematch/loading-screen-builder.ts";
-import { ensureClassicFontsConfigured } from "#src/league/classic-fonts.ts";
 import {
   loadingScreenToImage,
   loadingScreenToSvg,
@@ -199,10 +198,6 @@ export async function sendPrematchNotification(
       trackedPuuidSet,
       region,
     );
-    if (loadingScreenData.layout === "classic") {
-      await ensureClassicFontsConfigured();
-    }
-
     const [image, svg] = await Promise.all([
       loadingScreenToImage(loadingScreenData),
       loadingScreenToSvg(loadingScreenData),
