@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.3](https://github.com/shepherdjerred/monorepo/compare/webring-v1.7.2...webring-v1.7.3) (2026-08-02)
+
+
+### Bug Fixes
+
+* **deps:** roll out TypeScript 7 native compiler ([#1843](https://github.com/shepherdjerred/monorepo/issues/1843)) ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48))
+
 ## [1.7.2](https://github.com/shepherdjerred/monorepo/compare/webring-v1.7.1...webring-v1.7.2) (2026-07-29)
 
 No public API changes. Preview truncation is now self-contained and no longer depends on `truncate-html`'s legacy dependency chain.
