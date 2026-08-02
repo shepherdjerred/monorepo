@@ -41,6 +41,35 @@ tested artifact can enter the runtime image. This is deliberately mandatory:
 unit tests using constructed snapshots are not sufficient evidence that the C
 layout and TypeScript decoder still agree.
 
+## Goal agent knowledge
+
+Goal Mode gives Codex a compact operating policy and loads game facts only
+when needed. The `pokemonctl knowledge search` and `knowledge get` commands
+query a committed, validated Pokémon Emerald corpus:
+
+- Archipelago's Emerald region graph for maps, connections, warps, and terrain;
+  randomizer check and logic identifiers remain explicitly labeled as
+  non-vanilla metadata.
+- PokeAPI's Generation III data for species, Emerald level-up moves, battle
+  moves, and generation-wide item identifiers. Known FireRed/LeafGreen-only
+  key items are excluded, but remaining catalog membership does not prove
+  Emerald availability. Unversioned catalog prices and species capture rates
+  are intentionally omitted.
+- The exact pinned pokeemerald-wasm source for narrow Emerald mechanics that
+  PokeAPI does not version, including Shedinja's empty-party-slot requirement
+  and Wurmple's hidden-personality Silcoon/Cascoon branch.
+- Bulbapedia's complete 22-part Emerald walkthrough, stored separately under
+  `knowledge/cc-by-nc-sa-2.5/` and attributed under CC BY-NC-SA 2.5.
+
+All source revisions are pinned in `knowledge/sources.json`, and each record
+exposes a non-empty `sources` array with every contributing revision and
+license. Composite species evolution facts therefore cite both PokeAPI and
+pokeemerald-wasm. Regenerate the checked-in data with
+`bun run generate:knowledge`. Five focused skills under
+`.agents/skills/pokemon-*` teach the agent when to search each domain without
+putting the encyclopedia in every prompt. Knowledge is advisory; live
+`pokemonctl observe` state and action outcomes remain authoritative.
+
 ## Deployment
 
 Runs on the homelab Kubernetes cluster via ArgoCD

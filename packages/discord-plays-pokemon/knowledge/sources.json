@@ -1,0 +1,140 @@
+{
+  "$schema": "./sources.schema.json",
+  "pokeemeraldWasm": {
+    "manifest": "../wasm-src/upstream.json",
+    "license": "No license declared"
+  },
+  "archipelago": {
+    "repository": "https://github.com/ArchipelagoMW/Archipelago",
+    "commit": "72dbfcc1d367df4dd03681052e845b4e9f5a93af",
+    "license": "MIT",
+    "worldPath": "worlds/pokemon_emerald"
+  },
+  "pokeapi": {
+    "repository": "https://github.com/PokeAPI/pokeapi",
+    "commit": "dbef1b8570119d49b06943bc8ba6f0288d5872d5",
+    "license": "BSD-3-Clause",
+    "csvPath": "data/v2/csv",
+    "versionId": 9,
+    "versionGroupId": 6,
+    "generationId": 3
+  },
+  "bulbapedia": {
+    "api": "https://bulbapedia.bulbagarden.net/w/api.php",
+    "license": "CC BY-NC-SA 2.5",
+    "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/2.5/",
+    "attribution": "Bulbapedia contributors",
+    "pages": [
+      {
+        "title": "Walkthrough:Pokémon Emerald",
+        "revision": 4512784,
+        "timestamp": "2026-03-19T15:26:23Z"
+      },
+      {
+        "title": "Walkthrough:Pokémon Emerald/Part 1",
+        "revision": 4446357,
+        "timestamp": "2025-12-15T17:53:04Z"
+      },
+      {
+        "title": "Walkthrough:Pokémon Emerald/Part 2",
+        "revision": 4550348,
+        "timestamp": "2026-05-12T01:20:05Z"
+      },
+      {
+        "title": "Walkthrough:Pokémon Emerald/Part 3",
+        "revision": 4446364,
+        "timestamp": "2025-12-15T18:05:17Z"
+      },
+      {
+        "title": "Walkthrough:Pokémon Emerald/Part 4",
+        "revision": 4446367,
+        "timestamp": "2025-12-15T18:11:55Z"
+      },
+      {
+        "title": "Walkthrough:Pokémon Emerald/Part 5",
+        "revision": 4446411,
+        "timestamp": "2025-12-15T18:19:59Z"
+      },
+      {
+        "title": "Walkthrough:Pokémon Emerald/Part 6",
+        "revision": 4446412,
+        "timestamp": "2025-12-15T18:24:59Z"
+      },
+      {
+        "title": "Walkthrough:Pokémon Emerald/Part 7",
+        "revision": 4446414,
+        "timestamp": "2025-12-15T18:41:59Z"
+      },
+      {
+        "title": "Walkthrough:Pokémon Emerald/Part 8",
+        "revision": 4446415,
+        "timestamp": "2025-12-15T18:46:00Z"
+      },
+      {
+        "title": "Walkthrough:Pokémon Emerald/Part 9",
+        "revision": 4246258,
+        "timestamp": "2025-02-23T10:13:17Z"
+      },
+      {
+        "title": "Walkthrough:Pokémon Emerald/Part 10",
+        "revision": 4446417,
+        "timestamp": "2025-12-15T18:54:29Z"
+      },
+      {
+        "title": "Walkthrough:Pokémon Emerald/Part 11",
+        "revision": 4446553,
+        "timestamp": "2025-12-16T00:59:52Z"
+      },
+      {
+        "title": "Walkthrough:Pokémon Emerald/Part 12",
+        "revision": 4446554,
+        "timestamp": "2025-12-16T01:03:04Z"
+      },
+      {
+        "title": "Walkthrough:Pokémon Emerald/Part 13",
+        "revision": 4446555,
+        "timestamp": "2025-12-16T01:09:27Z"
+      },
+      {
+        "title": "Walkthrough:Pokémon Emerald/Part 14",
+        "revision": 4446559,
+        "timestamp": "2025-12-16T01:16:41Z"
+      },
+      {
+        "title": "Walkthrough:Pokémon Emerald/Part 15",
+        "revision": 4446563,
+        "timestamp": "2025-12-16T01:19:05Z"
+      },
+      {
+        "title": "Walkthrough:Pokémon Emerald/Part 16",
+        "revision": 4246286,
+        "timestamp": "2025-02-23T10:19:25Z"
+      },
+      {
+        "title": "Walkthrough:Pokémon Emerald/Part 17",
+        "revision": 4446564,
+        "timestamp": "2025-12-16T01:26:11Z"
+      },
+      {
+        "title": "Walkthrough:Pokémon Emerald/Part 18",
+        "revision": 4446578,
+        "timestamp": "2025-12-16T01:32:33Z"
+      },
+      {
+        "title": "Walkthrough:Pokémon Emerald/Part 19",
+        "revision": 4446586,
+        "timestamp": "2025-12-16T01:39:21Z"
+      },
+      {
+        "title": "Walkthrough:Pokémon Emerald/Part 20",
+        "revision": 4446587,
+        "timestamp": "2025-12-16T01:45:56Z"
+      },
+      {
+        "title": "Walkthrough:Pokémon Emerald/Part 21",
+        "revision": 4446603,
+        "timestamp": "2025-12-16T01:59:11Z"
+      }
+    ]
+  }
+}

@@ -85,6 +85,45 @@ failed the game evaluator; `2` means an invalid provider measurement, harness
 error, invalid argument, or preflight failure. `summary.json.successRate`
 excludes invalid runs from its denominator.
 
+## Goal agent knowledge corpus
+
+`knowledge/generated/records.json` and
+`knowledge/cc-by-nc-sa-2.5/walkthrough.json` are committed generator output.
+Never hand-edit them. `scripts/generate-knowledge.ts` validates
+`knowledge/sources.json`, fetches only pinned upstream revisions, validates the
+normalized records, and sorts them deterministically. Bulbapedia requests use
+the exact revision IDs from the manifest rather than the pages' current
+revisions.
+
+- Archipelago supplies the MIT-licensed Emerald region graph. Its randomizer
+  check and logic identifiers are labeled as non-vanilla metadata.
+- PokeAPI supplies BSD-3-Clause Generation III species, move, and item data.
+  Item membership is generation-wide and does not prove Emerald availability.
+  Version-group filtering does not historicalize PokeAPI's unversioned base
+  experience, capture-rate, or minimum-happiness columns; omit those numbers
+  from generated records while preserving supported nonnumeric conditions.
+- The pinned pokeemerald-wasm source supplies narrow, validated
+  Emerald-specific mechanics such as Shedinja's empty-party-slot requirement
+  and Wurmple's hidden-personality Silcoon/Cascoon branch.
+  Its repository declares no license; record that accurately and summarize
+  behavior without copying source text. Knowledge records have a required
+  non-empty `sources` array so composite facts expose every contributing
+  revision and license; generic species records that contain these composite
+  evolution facts cite both PokeAPI and pokeemerald-wasm.
+- Bulbapedia supplies the separately stored full walkthrough under CC
+  BY-NC-SA 2.5; preserve `knowledge/cc-by-nc-sa-2.5/NOTICE.md` and per-record
+  attribution.
+- Runtime access is bounded through `pokemonctl knowledge search` and
+  `pokemonctl knowledge get`; do not embed the corpus in the base prompt.
+- Acquisition-intent searches must prefer the passage that says where an item
+  or HM is received over passages that merely repeat its later uses.
+- `.agents/skills/pokemon-{world,progression,species,items,battle}` are focused
+  discovery instructions, not copies of the underlying facts.
+
+After updating a source pin, run `bun run generate:knowledge`, then verify the
+scripts and backend packages. The Temporal data refresh also regenerates this
+corpus and treats any drift as a reviewable change.
+
 ## Reading live game state from the wasm
 
 The notifier polls emulator memory (~2×/s) for faints/badges/evolutions/catches. Read-side modules: `packages/backend/src/emulator/{memory,symbols}.ts`, `src/game/events/`; debug with `packages/backend/scripts/probe-memory.ts`.

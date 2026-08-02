@@ -47,6 +47,7 @@ const config = [
         "src/goal/goal-input-lease.test.ts",
         "src/goal/goal-memory.test.ts",
         "src/goal/history-summary.test.ts",
+        "src/goal/knowledge.test.ts",
         "src/goal/pokemonctl-output.test.ts",
         "src/goal/pricing.test.ts",
         "src/observability/metrics.test.ts",

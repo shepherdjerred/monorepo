@@ -113,14 +113,14 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowType: "runPokeemeraldDataRefresh",
     args: [],
     // 04:30 PT — between scout-image-gc (04:00) and fetcher/golink (05:00).
-    // Steady state is no-diff; the job exists to open the regen PR the
-    // morning after a Renovate OTTOHG_SHA bump merges (hosted Renovate
-    // cannot run the generators inside its own PR).
+    // Steady state is no-diff; the job opens a regen PR after a pinned
+    // pokeemerald or knowledge source advances (hosted Renovate cannot run
+    // the generators inside its own PR).
     cronExpression: "30 4 * * *",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
-    memo: "Daily pokeemerald data-table refresh — regenerates the committed species/map tables from the wasm source pin, opens a PR on drift",
+    memo: "Daily pokeemerald data refresh — regenerates committed species/map tables and the pinned knowledge corpus, opens a PR on drift",
   },
   {
     id: "homelab-audit-daily",

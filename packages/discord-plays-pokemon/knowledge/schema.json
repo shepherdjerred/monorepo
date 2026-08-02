@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://discord-plays-pokemon.com/schemas/knowledge-records.json",
+  "title": "Discord Plays Pokemon knowledge records",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "domain", "title", "aliases", "tags", "body", "sources"],
+    "properties": {
+      "id": { "type": "string", "minLength": 1 },
+      "domain": {
+        "enum": ["world", "progression", "species", "items", "battle"]
+      },
+      "title": { "type": "string", "minLength": 1 },
+      "aliases": { "type": "array", "items": { "type": "string" } },
+      "tags": { "type": "array", "items": { "type": "string" } },
+      "body": { "type": "string", "minLength": 1 },
+      "sources": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "url", "license", "revision"],
+          "properties": {
+            "id": {
+              "enum": [
+                "pokeemerald-wasm",
+                "archipelago",
+                "pokeapi",
+                "bulbapedia"
+              ]
+            },
+            "url": { "type": "string", "format": "uri" },
+            "license": { "type": "string", "minLength": 1 },
+            "revision": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    }
+  }
+}

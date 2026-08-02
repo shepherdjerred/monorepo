@@ -69,29 +69,271 @@ system against a copied live save and the exact goal `get me a pokeman`.
 
 - [x] Implement and verify the observation/control foundation.
 - [x] Implement and verify the compact prompt and benchmark harness.
-- [ ] Implement and verify the knowledge corpus, retrieval, and skills.
+- [x] Implement and verify the knowledge corpus, retrieval, and skills.
 - [ ] Complete repeated local evaluation and iterate on failures.
-- [ ] Publish the review-ready stack and record CI/live verification.
+- [x] Publish the restacked #1803/#1805 heads and record replacement CI/review.
 
 ## Comment Log
 
 - 2026-07-28: Approved for implementation. Controls and prompt are the
   critical path; skills are explicitly secondary.
+- 2026-07-28: The untouched-agent baseline completed with zero successful
+  catches in three runs (33m42s, 312 tool calls, 32.4M input tokens, estimated
+  cost $5.07). The candidate evaluator now requires exact catch-species
+  correlation through event, live party/Pokedex state, and persisted save
+  evidence.
+- 2026-07-28: Integration review found and corrected start/shutdown and
+  process/lease races, plus a production-shape movement telemetry mismatch.
+  `/goal` is restricted to the active session starter; full isolated runner
+  architecture remains tracked in
+  `packages/docs/todos/pokemon-goal-runner-isolation.md`.
+- 2026-07-28: Candidate evaluation exposed incorrect wasm32 SaveBlock offsets,
+  action outcomes that ignored battle cursor and visible dialog changes,
+  oversized semantic responses, limited active-object visibility, and provider
+  failures counted as game failures. Those defects are fixed and covered by
+  focused tests.
+- 2026-07-28: A manual general-control run beat May, received the Pokedex and
+  five Poke Balls, and visibly caught a Poochyena. That run exposed a separate
+  teardown defect: the host copied stale flash because Emerald had not
+  serialized live RAM. The new engine checkpoint uses Emerald's canonical save
+  path, ordered atomic host writes, and an independent reboot test that proves
+  a live movement delta plus party and Pokedex state survive.
+- 2026-07-28: The candidate three-run model comparison is not a valid
+  measurement yet. Run 1 reached Route 103 but did not catch within 28m40s;
+  runs 2 and 3 stopped immediately on Codex quota. Provider failures are now
+  classified as invalid evidence and stop the series rather than lowering the
+  game success rate.
+- 2026-07-28: Automated stack review found and corrected two base-control
+  races, four benchmark evidence defects, and two knowledge-integrity defects.
+  Input ownership now lasts through child-process exit; moving-object blocks
+  are rebuilt per observation; benchmark checkouts no longer depend on
+  runner-only target files; artifact directories are reserved atomically;
+  unexplained process exits remain harness errors; observation screenshots are
+  counted; search filters generic words and weights repeated body evidence;
+  and unresolved PokeAPI joins fail generation.
+- 2026-07-28: Follow-up knowledge review found five more corpus defects. The
+  source JSON Schema now accepts and requires its own `$schema`; unversioned
+  modern item prices are omitted; Emerald uses Deoxys Speed Forme; mythical
+  species are labeled distinctly; and species records include both forward
+  and backward Emerald-era evolution methods and conditions.
+- 2026-07-28: Final lifecycle review found that accepted control requests
+  could outlive their goal, starts could overlap timeout teardown, Discord
+  could acknowledge lease-rejected input, startup errors could be
+  misclassified as provider failures, and the benchmark worker could return
+  before history persistence. Goal-scoped control gates now drain before lease
+  release, teardown rejects new starts, lease conflicts are typed and reported
+  to the user, only explicit provider startup failures are classified, and
+  each run uses an isolated helper directory and waits for its history record.
+- 2026-07-28: Final corpus review found two more unversioned PokeAPI fields.
+  Current base-experience values are now omitted instead of being presented as
+  Emerald data, and friendship evolutions retain the version-supported
+  high-friendship condition without presenting the current numeric threshold
+  as historical data.
+- 2026-07-28: Final control review found three misleading observation paths.
+  Observation ABI v2 now selects the battler whose actual local-player handler
+  is awaiting action, move, target, or yes/no input, so AI/link partners and a
+  completed first battler cannot masquerade as readiness. Dialog visibility and
+  input readiness are separate engine facts backed by text-printer and script
+  wait state, so `advance` refuses cutscenes, auto-scroll, and text that is still
+  printing. `observe` is compact by default while `observe --full` preserves the
+  canonical diagnostic payload.
+- 2026-07-28: The final benchmark review rejected full-party source saves so a
+  catch always has independent party-identity evidence, restricted movement
+  telemetry to directional field actions, and added a discoverable operator
+  runbook plus dynamic benchmark skill. The first replacement image build also
+  found that the installed standalone CLI omitted its formatter module; the
+  runtime image now installs both files and passes the complete in-image smoke.
+- 2026-07-28: Replacement review hardened the semantic contract again. The
+  base prompt now teaches semantic controls first and reserves raw input for
+  recovery, `interact` requires a stable ready overworld before and after
+  turning, and external Bag/Party selectors provide authoritative battle-input
+  readiness.
+- 2026-07-28: The benchmark now runs historical targets through a runner-owned
+  runtime overlay rather than adding new fields to their configuration. Its
+  success oracle independently parses the raw 128 KiB flash image, validates
+  every sector signature, ID, counter, checksum, and layout, handles the exact
+  Emerald counter rollover, and requires both runner and target provenance to
+  be clean.
+- 2026-07-28: Final knowledge correction removed the remaining unversioned
+  PokeAPI capture-rate field and added the empty-party requirement for
+  Shedinja from the pinned pokeemerald source. The corpus now reproduces 1,760
+  permissive and 39 CC BY-NC-SA records.
+- 2026-07-28: The current-head review gate surfaced five control/CLI threads
+  and two cross-layer integrity threads. Three pointed at code already fixed
+  but still-unresolved discussions; the remaining changes ensure every
+  attempted navigation step consumes the caller's bound, movement stays in the
+  authoritative overworld, a direction press that moves the player ends
+  `interact` before A, the advertised `advance` command runs through the real
+  CLI, benchmark output cannot be placed in or symlinked into its target
+  checkout, and generic Nincada/Shedinja records preserve the pinned level-20
+  and empty-party rule.
+- 2026-07-28: The next review cycle found that MediaWiki TextExtracts could
+  return current prose even when revision metadata was pinned. Walkthrough
+  generation now parses rendered content with `oldid=<revision>`, rejects
+  revision/title drift, and deterministically extracts article prose from the
+  coupled response. It reproduced 41 licensed records covering all 22 pinned
+  revisions while preserving the HM03 search regression.
+- 2026-07-28: The Docker ABI review also found that checkpoint/reboot coverage
+  still depended on an operator save and skipped in the mandatory image gate.
+  The test now creates deterministic blank flash, drives the real new-game
+  flow, moves, checkpoints, and verifies spatial, party, Pokedex, and decoded
+  save equality through an independently initialized emulator. The local and
+  Docker executions both pass two tests with zero skips.
+- 2026-07-28: The following current-head reviews each found one remaining
+  cross-layer defect. Title-screen SaveBlock1 ciphertext is now withheld until
+  SaveBlock2 has an EOS-terminated initialized player name, while a legitimate
+  zero encryption key still decodes. Benchmark overlays and production images
+  now carry and verify the same `AGENTS.md` and `.agents` instruction surface.
+  Knowledge records now require non-empty structured `sources`; generic
+  Nincada and Shedinja records attribute both PokeAPI and the pinned
+  pokeemerald mechanic without losing the empty-party requirement.
+- 2026-07-28: Replacement Buildkite security scanning found
+  CVE-2026-56852 in `golang.org/x/text` v0.37.0. The base stack layer now uses
+  v0.39.0 and its compatible `golang.org/x/*` dependency set. Go tests, vet,
+  golangci-lint, and the exact repository Trivy HIGH/CRITICAL scan all pass
+  locally with zero findings.
+- 2026-07-28: The replacement benchmark review found two invalid-measurement
+  paths. An unexplained nonzero Codex exit now becomes a harness error before
+  evaluation while retaining its exit code in the artifact. The runner now
+  resolves both target and runner Git top-level directories, then rejects
+  symlink-resolved output and runtime-overlay paths inside either worktree
+  before reserving them.
+- 2026-07-28: The next exact-head review found two end-of-run consistency
+  defects. Catch eligibility now ends at the emulator frame captured with the
+  final live snapshot, so the last post-exit watcher poll counts without
+  admitting later contamination. Path-like Codex binary arguments are
+  normalized against the operator's original working directory before the
+  worker switches to its runtime overlay; bare PATH commands remain unchanged.
 
 ## Session Log — 2026-07-28
 
 ### Done
 
-- Captured the approved implementation plan and source/licensing decisions.
+- Implemented authoritative wasm32 save decoding, broader active-object
+  observations, battle/visual action evidence, bounded navigation controls, a
+  compact semantic CLI, prompt loop, provider-failure classification, and
+  strict benchmark evidence. The final evaluator independently validates raw
+  flash signatures, sector identity, save counters, checksums, layout, and
+  catch persistence without importing the target emulator.
+- Implemented a general engine checkpoint and ordered atomic flash
+  persistence. A rebuilt real WASM passed an independent checkpoint/reboot
+  integration test against a copied live save.
+- Verified the combined backend (319 tests, zero failures or skips), all 30
+  knowledge/build script tests, package typecheck/lint, the exhaustive
+  root `bun run verify` graph (217/217 tasks), and a clean Docker `smoke` build
+  that rebuilt the patched WASM, passed both mandatory real-emulator ABI and
+  independent checkpoint/reboot tests, and passed the in-image application
+  check. The resulting local smoke image
+  manifest is
+  `sha256:3790bb0257f910e89812995845a78fa650b9621484f239761be91ba7be84ece5`.
+- Completed a manual general-control playthrough through the first rival,
+  Pokedex/Poke Ball acquisition, and a visible Poochyena catch.
+- Published the three-PR git-spice stack as #1802, #1803, and #1805 and attached
+  the rendered catch evidence to #1802. The first current-head Buildkite run
+  exposed a cross-PR test dependency and router complexity regression; the
+  test now lives with the compact CLI implementation in #1803, while #1802
+  owns the shared semantic router. The exact test, lint, and Knip gates pass
+  locally after that correction. Goal-process teardown tests now synchronize
+  on the kill request instead of guessing that asynchronous work completes
+  within 5 ms; the lifecycle suite passed 100/100 repeated cases.
+- Addressed all eight initial actionable Codex review findings and five
+  follow-up corpus findings across the stack with focused regression tests.
+  The pinned knowledge generator completed against all four source revisions
+  and reproduced 1,759 permissive plus 39 CC BY-NC-SA records.
+- Addressed the final seven control and benchmark lifecycle findings. Control
+  requests now carry and enforce goal identity, terminal paths drain accepted
+  requests before releasing input, teardown is exclusive, Discord reports
+  lease denial without a false acknowledgement, benchmark helpers are
+  per-run, history persistence is awaited, and unknown startup exceptions
+  remain harness failures.
+- Removed unversioned base-experience values from species records and
+  normalized every Emerald friendship evolution to a nonnumeric
+  high-friendship condition. The pinned generator reproduced 1,759 permissive
+  and 39 CC BY-NC-SA records, and all 19 generator/corpus tests pass.
+- Replaced heuristic double-battle and dialog readiness with authoritative
+  engine hooks, bumped the packed observation ABI and public observation schema
+  to v2, and unified compact/full CLI formatting across observations and action
+  outcomes. The rebuilt 13.4 MiB WASM passes the mandatory Docker ABI boot test.
+- Hardened the benchmark source-save preflight around a complete active
+  14-sector slot and a required empty party position, removed menu/battle
+  controls from movement-loop telemetry, documented the operator workflow in
+  `AGENTS.md`, and added the dynamically loaded `pokemon-goal-benchmark` skill.
+- Fixed the runtime image to install the semantic CLI formatter beside
+  `pokemonctl`; the exact previously failing Docker `smoke` target now passes.
+- Addressed the latest nine actionable review findings: semantic-first prompt
+  guidance, stable-overworld interaction guards, authoritative Bag/Party input
+  states, historical-target runtime overlays, an independent persisted-save
+  oracle, strict flash integrity and rollover handling, clean runner
+  provenance, removal of unversioned capture rates, and the pinned Shedinja
+  empty-party condition.
+- Addressed the replacement review cycle: navigation attempts are strictly
+  bounded even when movement fails, movement aborts outside the overworld,
+  interaction never follows an accidental step with A, `pokemonctl advance` is
+  registered and integration-tested, benchmark output containment resolves
+  symlink aliases before artifact creation, and generic species retrieval
+  carries the pinned Shedinja creation requirements.
+- Closed the final two review defects: Bulbapedia prose is fetched and
+  validated from the exact pinned revision rather than pairing old metadata
+  with current text, and the mandatory Docker ABI gate now proves checkpoint
+  persistence through a deterministic new game and independent reboot without
+  requiring `POKEMON_LIVE_SAVE_PATH`.
+- Closed the next three current-head review defects: encrypted save details
+  fail closed until SaveBlock2 is initialized without rejecting zero-key new
+  games; benchmark and deployed Codex instruction/skill surfaces have an
+  enforced Docker parity test; and the language-neutral knowledge schema,
+  generator, runtime, and 1,803 records preserve every contributing source
+  structurally.
+- Closed the replacement Buildkite security failure by upgrading
+  `golang.org/x/text` from v0.37.0 to v0.39.0 in the base PR. The provider's
+  tests, vet, and golangci-lint pass, and the CI-equivalent Trivy scan reports
+  zero HIGH/CRITICAL vulnerabilities across all five detected dependency
+  manifests.
+- Closed the final two benchmark review findings. Unclassified nonzero Codex
+  exits cannot reach the catch evaluator, their harness-error artifacts retain
+  the actual exit code, and target/runner Git-root containment protects both
+  benchmark output and runtime overlays, including symlink aliases.
+- Closed the next two exact-head benchmark findings. Catch-event correlation
+  uses an emulator-frame upper bound coupled to final evidence capture, and a
+  relative path-like Codex binary resolves identically during preflight and
+  worker execution.
+- Closed the next three knowledge review findings. Acquisition-intent ranking
+  now puts the HM04 award passage first for `how to get strength`; Wurmple's
+  hidden personality-value branch is represented with pinned PokeAPI and
+  pokeemerald provenance; and move-history reconstruction selects each field's
+  Emerald-era value independently, including Vine Whip at 35 power and Giga
+  Drain at 60.
+- Closed the following Unicode retrieval finding. NFKD search normalization
+  removes combining marks before punctuation folding, so `Pokéblock Case`
+  remains a single semantic token and ranks the actual case record rather than
+  the unrelated Block move.
+- Closed the late navigation review finding. A failed step remains learned for
+  normal planning, but `no-route` gets one bounded revalidation against current
+  NPC occupancy and authoritative static collision, allowing a transiently
+  occupied corridor tile to recover while all retries still consume
+  `maxSteps`.
+- Reconciled the stack after #1802 merged, closed the transient duplicate
+  #1833, and restacked #1803/#1805 onto `main`. Replacement Buildkite #7140
+  and #7141 passed every authoritative lane on the exact rewritten heads;
+  fresh Codex reviews found no major issues, every current and outdated
+  GraphQL thread is resolved, and GitHub reports both PRs clean and mergeable.
 
 ### Remaining
 
-- Execute, verify, publish, and measure the implementation.
+- Rerun three clean-copy candidate trials when Codex quota is available. Do
+  not compare the current provider-invalid artifacts to the valid 0/3
+  baseline.
+- Run a production goal only after three consecutive local successes.
 
 ### Caveats
 
 - No generalized runtime goal verifier or deterministic story solver will be
   introduced.
+- The visual manual catch occurred exactly at the 30-minute timeout before the
+  post-catch script updated the party/catch-event watcher, so it proves control
+  capability but is not counted as a strict benchmark success.
+- The valid baseline is 0/3 catches in 33m42s with 312 tool calls and 32.4M
+  input tokens (estimated $5.07). Candidate performance remains unmeasured
+  until provider capacity returns.
 
 ## Session Log — 2026-07-29
 
@@ -112,16 +354,109 @@ system against a copied live save and the exact goal `get me a pokeman`.
   retained a 41-second hard wall cap.
 - Added regressions for source-path replacement, the empty post-process signal
   grace, either-bound grace expiry, and pending-evidence hard-cap behavior.
-- Verified all 313 backend tests, the 61 focused benchmark tests, backend
-  typecheck, backend lint, and formatting.
+- Added reward acquisition vocabulary and evidence-position excerpts so
+  `how to get fly` ranks the HM02 reward passage first and shows the
+  acquisition text.
+- Added an Emerald-specific HM06 acquisition record from the pinned
+  `MauvilleCity_House1` gift event. The exact query
+  `where to get HM06 Rock Smash` now ranks that record first and identifies the
+  Rock Smash Dude's house in Mauville City.
+- Made every nested source-manifest object closed in the language-neutral JSON
+  Schema and added draft-2020 validation regressions for typos inside a source
+  object and a Bulbapedia page pin.
+- Restricted acquisition-evidence bonuses to explicit acquisition language so
+  an ordinary location query such as `where is Route 101` ranks the Route 101
+  world record rather than unrelated randomizer reward metadata, while
+  `where to get HM06 Rock Smash` retains acquisition intent through `get`.
+- Verified all 313 middle-layer and 319 composed-top backend tests, the 61
+  focused benchmark tests, all 30 knowledge/build script tests, backend and
+  scripts typecheck/lint, and formatting.
+- Completed hosted verification on the then-current code-bearing stack heads:
+  Buildkite #7123 for #1802, #7130 for #1803, and #7132 for #1805 passed all
+  authoritative lanes. Fresh exact-head Codex results were clean, every
+  GraphQL review thread was resolved, GitHub reported each PR clean and
+  mergeable, and direct merge-tree checks passed for the stacked PRs.
+- Replaced PokeAPI's historical Hidden Power sentinel (`Normal`, power 1,
+  physical) with the pinned Emerald mechanics: an IV-derived 16-type range,
+  power 30-70, and a physical/special category derived from the resulting
+  Generation III type.
+- Filtered battle moves through the pinned PokeAPI Generation III type-index
+  table after historical reconstruction. This removed all 18 side-game
+  Shadow-type moves without a fragile name list while retaining the legitimate
+  Ghost-type Shadow Ball and Shadow Punch records.
+- Regenerated 1,744 permissive plus 41 CC BY-NC-SA records and verified all 33
+  knowledge/build script tests, all 319 backend tests, and both packages'
+  typecheck and lint tasks.
+- Reconciled the stack after #1802 merged, closed the transient duplicate
+  #1833, and restacked the surviving PRs onto `main`. Buildkite #7140 passed
+  for exact #1803 head `2014afba23`, and #7141 passed for exact #1805 head
+  `69477a3d91`; both fresh Codex reviews were clean, all review threads are
+  resolved, and both PRs are clean and mergeable.
 
 ### Remaining
 
-- Publish the rewritten prompt/evaluation and knowledge stack heads.
-- Re-run Buildkite and the fresh Codex review on the rewritten PR heads.
-- Complete the repeated clean-copy model evaluation and production trial.
+- Run two more consecutive clean-copy candidate trials from the same immutable
+  source save. The first valid candidate trial succeeded, but one run does not
+  establish repeatability.
+- Fix benchmark boot preflight so it requires a continued, input-ready game
+  rather than accepting a title/attract-state snapshot with loaded save data.
+- Parse every JSON line from chained `pokemonctl` command output so movement,
+  movement-stop, repeated-position-loop, and ignored-input telemetry is
+  trustworthy.
+- Reduce navigation and context cost: the successful run needed 287 tool calls
+  and 35.5M input tokens, frequently requested `observe --full`, guessed map
+  targets, and crossed encounter grass repeatedly.
+- Run a production goal only after three consecutive local successes.
 
 ### Caveats
 
-- This repair validates the harness timing behavior with deterministic tests;
-  a clean-copy real-model benchmark remains the final acceptance measurement.
+- Candidate commit `0665aa9991fd68c9cc62c0608acd5e1bbcac84f0`
+  completed one strict clean-copy catch benchmark successfully in 25m14s:
+  Wurmple species `290` was correlated across the post-start catch event,
+  post-event state, final live state, and persisted save.
+- The successful run used 287 tool calls, 29 screenshots, eight knowledge
+  queries, 35.5M input tokens (98.5% cached), and an estimated $4.31. The
+  movement telemetry fields are invalid for this run because their parser
+  missed chained JSON outputs.
+
+## Session Log — 2026-07-29 (catch benchmark)
+
+### Done
+
+- Copied the live Kubernetes Emerald flash without mutating the PVC and
+  verified its exact 131,072-byte size and SHA-256
+  `34672c1bf24ff9ddb8b13bb942c1fdae670afad881eb01e928e9ee07b48e73a2`.
+- Ran the full candidate at exact commit
+  `0665aa9991fd68c9cc62c0608acd5e1bbcac84f0` with candidate WASM SHA-256
+  `2444d913c9a22d18e4aa8fe4881d52c5dbc717e76df44e77a5eb4d03f5b326bb`,
+  exact goal `get me a pokeman`, `gpt-5.6-luna`, and medium reasoning.
+- Observed the agent leave Birch's lab, train Torchic, recover from an
+  incorrect prerequisite hypothesis, win the Route 103 rival battle, return
+  for the Pokédex and five Poké Balls, and catch Wurmple.
+- Passed the independent strict evaluator with catch-event, post-event,
+  live-party/Pokédex, persisted-save, exact-species, save-ordering, and
+  128-KiB save-integrity evidence.
+- Stopped the automatically started second trial after the user accepted the
+  qualitative behavior, avoiding an unrequested additional hour and model
+  cost.
+- Identified benchmark boot-state and chained-output telemetry defects, plus
+  high navigation/tool/context cost, as the next concrete improvement targets.
+
+### Remaining
+
+- Complete two more consecutive clean-copy successes before claiming reliable
+  candidate performance or running the production goal.
+- Fix and verify the boot-state and movement-telemetry defects.
+- Reduce unnecessary full observations, map-target guesses, and wild-encounter
+  overhead without introducing a deterministic quest solver.
+- Merge/deploy the prompt and knowledge PRs before production comparison; the
+  current Kubernetes image contains only the merged semantic-controls layer.
+
+### Caveats
+
+- The valid comparison is baseline `0/3` versus candidate `1/1`; this
+  demonstrates capability, not a statistically reliable success rate.
+- Candidate run artifacts are ephemeral under
+  `/tmp/pokemon-catch-measurement.pk4fVl/candidate-0665aa9/`.
+- The interrupted second run is not a valid model measurement and must not be
+  included in the success-rate denominator.

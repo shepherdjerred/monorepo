@@ -433,8 +433,8 @@ async function rehearseCogTargets(repoDir: string): Promise<void> {
 async function rehearsePokeemeraldDataEnvironment(
   repoDir: string,
 ): Promise<void> {
-  // dpp-pokeemerald-data-daily runs the two generators, which read the
-  // immutable pin from the language-neutral upstream manifest.
+  // dpp-pokeemerald-data-daily runs the data and knowledge generators, which
+  // read immutable pins from their language-neutral source manifests.
   // Assert the pin parses and every path the activity touches exists. The
   // network fetch itself is deliberately NOT rehearsed.
   console.error("[rehearsal] dpp-data: pin + generator + output paths");
@@ -457,6 +457,7 @@ async function rehearsePokeemeraldDataEnvironment(
   const requiredPaths = [
     `${dppRoot}/scripts/generate-species-data.ts`,
     `${dppRoot}/scripts/generate-map-names.ts`,
+    `${dppRoot}/scripts/generate-knowledge.ts`,
     `${dppRoot}/packages/backend/src/game/events/generated/species.ts`,
     `${dppRoot}/packages/backend/src/game/spatial/generated/map-names.ts`,
   ];
@@ -466,6 +467,17 @@ async function rehearsePokeemeraldDataEnvironment(
         `dpp-pokeemerald-data-daily path missing in the tree: ${path}`,
       );
     }
+  }
+  const knowledgeRoot = `${dppRoot}/knowledge`;
+  await runCommand(["test", "-d", knowledgeRoot], { cwd: repoDir });
+  const knowledgeFile = await runCommand(
+    ["find", knowledgeRoot, "-type", "f", "-print", "-quit"],
+    { cwd: repoDir },
+  );
+  if (knowledgeFile.length === 0) {
+    throw new Error(
+      "dpp-pokeemerald-data-daily knowledge corpus has no generated files",
+    );
   }
   console.error("[rehearsal] dpp-data: environment OK");
 }
