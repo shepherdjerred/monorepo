@@ -27,6 +27,7 @@ steps:
         echo "complete reporting run did not emit the docs-wiki Playwright JUnit report" >&2
         exit 1
       fi
+      bun --no-install scripts/namespace-playwright-reports.ts
       bun --no-install scripts/write-ci-report-index.ts
     artifact_paths:
       - ".ci-reports/**/*"
