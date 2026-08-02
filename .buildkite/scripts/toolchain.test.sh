@@ -39,19 +39,6 @@ if ! rg -wq 'util-linux' "$CI_IMAGE" ||
   exit 1
 fi
 
-for package in \
-  file \
-  wget \
-  libayatana-appindicator3-dev \
-  librsvg2-dev \
-  libwebkit2gtk-4.1-dev \
-  libxdo-dev; do
-  if ! rg -Fq "$package" "$CI_IMAGE"; then
-    echo "ci image is missing Tauri prerequisite package: $package" >&2
-    exit 1
-  fi
-done
-
 if rg -q 'apt-get|playwright install|bun x' "$CI_PLAYWRIGHT_IMAGE" ||
   ! rg -Fq 'Bun.file("/ms-playwright/.docker-info").json()' "$CI_PLAYWRIGHT_IMAGE" ||
   ! rg -Fq 'typeof info.driverVersion !== "string"' "$CI_PLAYWRIGHT_IMAGE" ||

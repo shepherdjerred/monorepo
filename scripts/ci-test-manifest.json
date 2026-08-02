@@ -235,11 +235,6 @@
       "steps": [{ "runner": "bun" }]
     },
     {
-      "package": "@scout-for-lol/desktop-rust",
-      "directory": "packages/scout-for-lol/packages/desktop/src-tauri",
-      "steps": [{ "runner": "cargo", "args": ["--locked", "--all-features"] }]
-    },
-    {
       "package": "@scout-for-lol/report",
       "directory": "packages/scout-for-lol/packages/report",
       "steps": [{ "runner": "bun" }]
@@ -369,6 +364,11 @@
       "package": "@scout-for-lol/desktop",
       "directory": "packages/scout-for-lol/packages/desktop",
       "reason": "Desktop tests have not been implemented."
+    },
+    {
+      "package": "@scout-for-lol/desktop-rust",
+      "directory": "packages/scout-for-lol/packages/desktop/src-tauri",
+      "reason": "Tauri crate cargo tests need GTK/glib system libraries (libwebkit2gtk) in the ci-base image; that image only rebuilds on main after verify, so a PR cannot both add the deps and consume them. Reporting is deferred until an image-only change lands the Tauri prerequisites on main."
     },
     {
       "package": "@scout-for-lol/ui",

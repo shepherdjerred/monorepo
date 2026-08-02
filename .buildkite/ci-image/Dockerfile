@@ -7,9 +7,8 @@
 FROM debian:bookworm-slim@sha256:7b140f374b289a7c2befc338f42ebe6441b7ea838a042bbd5acbfca6ec875818 AS base
 
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
-    ca-certificates curl file git minisign unzip wget xz-utils zstd python3 ripgrep rsync \
+    ca-certificates curl git minisign unzip xz-utils zstd python3 ripgrep rsync \
     build-essential pkg-config libssl-dev util-linux \
-    libayatana-appindicator3-dev librsvg2-dev libwebkit2gtk-4.1-dev libxdo-dev \
     && flock --version \
     && rm -rf /var/lib/apt/lists/*
 

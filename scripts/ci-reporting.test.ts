@@ -324,26 +324,21 @@ describe("CI reporting manifest", () => {
         ],
       },
     ]);
+    // The Tauri crate (@scout-for-lol/desktop-rust) is intentionally listed in
+    // testlessWorkspaces, not workspaces: its cargo tests require GTK/glib
+    // system libraries in the ci-base image, which only rebuilds on main after
+    // verify. Reporting for it is deferred until an image-only change lands
+    // those prerequisites on main.
     expect(
-      manifest.workspaces.find(
+      manifest.workspaces.some(
         (entry) => entry.package === "@scout-for-lol/desktop-rust",
-      )?.steps,
-    ).toEqual([{ runner: "cargo", args: ["--locked", "--all-features"] }]);
-    const desktopDirectory =
-      "packages/scout-for-lol/packages/desktop/src-tauri";
+      ),
+    ).toBeFalse();
     expect(
-      await Bun.file(
-        path.join(repositoryRoot, desktopDirectory, "Cargo.lock"),
-      ).exists(),
+      manifest.testlessWorkspaces.some(
+        (entry) => entry.package === "@scout-for-lol/desktop-rust",
+      ),
     ).toBeTrue();
-    expect(
-      await Bun.file(
-        path.join(
-          repositoryRoot,
-          "packages/scout-for-lol/packages/desktop/.gitignore",
-        ),
-      ).text(),
-    ).not.toContain("/src-tauri/Cargo.lock");
 
     for (const directory of workspaceDirectories) {
       const packageJsonPath = path.join(
