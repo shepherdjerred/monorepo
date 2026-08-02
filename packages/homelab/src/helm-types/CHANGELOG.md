@@ -2,11 +2,11 @@
 
 ## [1.5.1](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.5.0...helm-types-v1.5.1) (2026-08-02)
 
+No behavior changes. This package publishes `src/` alongside `dist/`, so the tarball's source text differs from 1.5.0 — but every edit is mechanical and semantics-preserving. Runtime dependencies, exports, the CLI surface, and generated output are unchanged.
 
-### Bug Fixes
-
-* **deps:** roll out TypeScript 7 native compiler ([#1843](https://github.com/shepherdjerred/monorepo/issues/1843)) ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48))
-* **deps:** update eslint-plugin-unicorn to v72 ([#1837](https://github.com/shepherdjerred/monorepo/issues/1837)) ([60998f5](https://github.com/shepherdjerred/monorepo/commit/60998f50c3a5bc4d5a2a72a3e568f621d1ecb2f5))
+- An `eslint-plugin-unicorn` v72 autofix reordered operands within existing `&&`/`||` chains across 13 source files (e.g. `x == null || x === ""` became `x === "" || x == null`). Every reordering is between side-effect-free comparisons, so each condition evaluates identically ([60998f5](https://github.com/shepherdjerred/monorepo/commit/60998f50c3a5bc4d5a2a72a3e568f621d1ecb2f5))
+- `chart-info-parser.ts` dropped a dead `argo-cd` special case that assigned `chartName` the same value the fallback already did; `chartName: versionKey` is now assigned directly ([52f25f2](https://github.com/shepherdjerred/monorepo/commit/52f25f27187ab711efed79c3770f8e2ca2045620))
+- Build tooling moved to the TypeScript 7 native compiler (`typecheck` script plus a `@typescript/native` devDependency); neither ships to consumers ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48))
 
 ## [1.5.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.4.0...helm-types-v1.5.0) (2026-07-26)
 

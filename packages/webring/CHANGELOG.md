@@ -7,10 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.7.3](https://github.com/shepherdjerred/monorepo/compare/webring-v1.7.2...webring-v1.7.3) (2026-08-02)
 
+No public API changes. The shipped code is identical to 1.7.2; this release exists only because of repo-level housekeeping that release-please picked up.
 
-### Bug Fixes
-
-* **deps:** roll out TypeScript 7 native compiler ([#1843](https://github.com/shepherdjerred/monorepo/issues/1843)) ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48))
+- Build tooling moved to the TypeScript 7 native compiler: the `build`/`watch`/`typecheck` scripts now put it on `PATH`, and `@typescript/native` was added as a devDependency ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48)). Neither ships to consumers; runtime dependencies are unchanged.
+- The only other edits were to the bundled Astro `example/` app, which is not part of the npm tarball ([52f25f2](https://github.com/shepherdjerred/monorepo/commit/52f25f27187ab711efed79c3770f8e2ca2045620)).
 
 ## [1.7.2](https://github.com/shepherdjerred/monorepo/compare/webring-v1.7.1...webring-v1.7.2) (2026-07-29)
 
