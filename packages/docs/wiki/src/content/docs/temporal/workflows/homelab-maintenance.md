@@ -1,12 +1,13 @@
 ---
 title: Homelab maintenance workflows
-description: Five nightly janitors — ZFS scrubs, error-DB housekeeping, backup-orphan detection, DNS audits, and golink sync — each with narrowly scoped access.
+description: Five nightly janitors plus a continuous workflow-failure pager — ZFS scrubs, error-DB housekeeping, backup-orphan detection, DNS audits, golink sync, and PagerDuty alerts — each with narrowly scoped access.
 ---
 
-Five workflows do the cluster's recurring janitorial work. The common thread
-is **least privilege**: each `kubectl exec` job has its own namespace-scoped
-Role granting exec into exactly one workload, and the one workflow that
-touches backups is detection-only by explicit decision.
+Six workflows keep the cluster healthy — five nightly janitors plus a
+continuous workflow-failure pager. The common thread is **least privilege**:
+each `kubectl exec` job has its own namespace-scoped Role granting exec into
+exactly one workload, and the one workflow that touches backups is
+detection-only by explicit decision.
 
 ## ZFS maintenance (`zfs-maintenance`)
 
@@ -45,6 +46,17 @@ server: create, update, and delete — but **only links owned by the worker's
 own tag identity**. Hand-curated links belong to human owners and are never
 touched. A 20-second per-request timeout makes a broken tailnet path fail
 fast instead of hanging the run (a lesson from an ACL outage).
+
+## Temporal failure watch (`temporal-failure-watch`)
+
+Every 5 minutes — the one non-nightly job here. Queries the Temporal
+visibility API for executions that **failed or timed out** in the last 15
+minutes and pages PagerDuty via Alertmanager, one alert per failed run
+(labelled by workflow type and run ID so Alertmanager dedups). It backstops
+the hand-maintained Prometheus rules: **every** workflow type pages on any
+failure, not just those with a bespoke threshold. Stateless — no persisted
+checkpoint, and the 15-minute lookback over a 5-minute cadence means a missed
+tick can't open a gap.
 
 Sources: [`src/activities/`](https://github.com/shepherdjerred/monorepo/tree/main/packages/temporal/src/activities)
 (one file per workflow); exec RBAC in

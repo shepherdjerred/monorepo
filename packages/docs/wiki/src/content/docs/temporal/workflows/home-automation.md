@@ -38,14 +38,17 @@ flowchart LR
 
 The deadbolt is the one **audible** side effect in the house, so it is owned
 by a single reconciler instead of edge-triggered lock/unlock workflows. Every
-presence transition signals one fixed workflow (`signalWithStart`, one
-instance ever). Each signal restarts a rolling 90-second quiet window; only
-when a full window passes with no new edge does it read **live** occupancy
-and lock state, and it actuates only when current ≠ desired (nobody home →
-locked). The predecessor design ran independent timers per edge and could
-audibly unlock-then-lock on a single flap; the singleton makes that
-structurally impossible, and deciding from settled live state means a stale
-edge can never drive a wrong actuation.
+presence transition does a `signalWithStart` on the fixed `reconcile-lock`
+workflow ID — starting a run if none is active, signalling the one already
+running otherwise (`ALLOW_DUPLICATE`, so once a run settles and returns the
+next edge starts a fresh run under the same ID; the invariant is one run at a
+time, not one instance forever). Each signal restarts a rolling 90-second
+quiet window; only when a full window passes with no new edge does it read
+**live** occupancy and lock state, and it actuates only when current ≠ desired
+(nobody home → locked). The predecessor design ran independent timers per edge
+and could audibly unlock-then-lock on a single flap; a single in-flight
+reconciler makes that impossible, and deciding from settled live state means a
+stale edge can never drive a wrong actuation.
 
 ## Good morning (three schedules)
 

@@ -34,11 +34,15 @@ The details are where the reliability lives:
 
 - **Short-lived GitHub App tokens** (9-minute JWT → installation token), so
   commits are attributed to the bot and no PAT exists to leak.
-- **`bun install --frozen-lockfile --ignore-scripts`** with a per-run cache.
-  `--ignore-scripts` is load-bearing: the root `prepare` script arms lefthook,
-  and hook-armed commits inside the worker pod failed silently for weeks
-  before this was found. A `disarmGitHooks` call right before commit defends
-  the same invariant from the other side.
+- **`bun install --frozen-lockfile --ignore-scripts`** with a per-run cache. A
+  bot clone is not a dev checkout, so it must never arm the dev pre-commit
+  suite — that can't pass inside the worker pod (no gitleaks binary, no
+  per-package toolchains). `--ignore-scripts` keeps the install
+  side-effect-free, and a `disarmGitHooks` call right before commit defends the
+  same invariant against hooks armed by any other subprocess. (This once bit
+  hard: a root `prepare` script used to arm lefthook on install; lefthook is
+  now armed manually via `bunx lefthook install`, so the flag is a safeguard,
+  not load-bearing.)
 - **Drift = `git status --porcelain` on exact generated paths**, after a
   prettier pass so formatting noise nets to no-diff. Steady state opens
   nothing.

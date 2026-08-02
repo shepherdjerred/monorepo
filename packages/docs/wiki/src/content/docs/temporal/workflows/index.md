@@ -47,13 +47,14 @@ as a child of the daily capture.
 
 ## Homelab maintenance — [deep dive](/temporal/workflows/homelab-maintenance/)
 
-| Workflow             | Trigger     | Brain         | Output           |
-| -------------------- | ----------- | ------------- | ---------------- |
-| zfs-maintenance      | Sun 03:00   | deterministic | scrub + autotrim |
-| bugsink-housekeeping | daily 03:00 | deterministic | DB cleanup       |
-| velero-orphan-audit  | daily 03:30 | deterministic | metrics only     |
-| dns-audit            | daily 06:00 | deterministic | logs             |
-| golink-sync          | daily 05:00 | deterministic | golink reconcile |
+| Workflow               | Trigger     | Brain         | Output           |
+| ---------------------- | ----------- | ------------- | ---------------- |
+| zfs-maintenance        | Sun 03:00   | deterministic | scrub + autotrim |
+| bugsink-housekeeping   | daily 03:00 | deterministic | DB cleanup       |
+| velero-orphan-audit    | daily 03:30 | deterministic | metrics only     |
+| dns-audit              | daily 06:00 | deterministic | logs             |
+| golink-sync            | daily 05:00 | deterministic | golink reconcile |
+| temporal-failure-watch | every 5 min | deterministic | PagerDuty page   |
 
 ## Home automation — [deep dive](/temporal/workflows/home-automation/)
 

@@ -64,9 +64,11 @@ a bounded read-only prompt over cluster, DNS, backup, and alert state.
 
 - **Claude tasks** run `claude -p` with a JSON schema forced on the output
   (`--json-schema`, inline), tools limited to `Bash, Read, Grep, Glob,
-WebFetch`, on claude-opus-5. **Codex tasks** run `codex exec --sandbox
-read-only` with an output schema file. The two providers accept different
-  schema dialects, so each gets its own.
+WebFetch`, on claude-opus-5. **Codex tasks** run `codex exec` with
+  `--sandbox danger-full-access` — the worker pod can't provide the namespace
+  Codex's own sandbox needs, so (as with Claude) report-only is enforced by the
+  prompt, not the filesystem. The two providers accept different schema
+  dialects, so each gets its own output schema.
 - **Env scoping**: the subprocess gets a fresh GitHub installation token as
   `GH_TOKEN`; the GitHub App credentials are stripped, and for Claude the
   Anthropic API key is dropped so the run bills the subscription.
