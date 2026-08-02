@@ -60,6 +60,9 @@ accumulating as hand-created UI state.
   runner and its three entry points.
 - [Event-driven surfaces](/temporal/events/) — GitHub PR bots, the Xcode Cloud
   webhook, and the Home Assistant event bridge.
+- [Workflow inventory](/temporal/workflows/) — every workflow with a deep
+  dive per family: repo upkeep, Scout, Glitter, homelab maintenance, home
+  automation, and the PR bots.
 
 Authoritative reference:
 [`packages/temporal/AGENTS.md`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/AGENTS.md).
