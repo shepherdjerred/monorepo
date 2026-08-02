@@ -1,10 +1,10 @@
 import path from "node:path";
+import type { CodexBenchmarkTelemetry } from "./benchmark-codex-telemetry.ts";
 import {
   deserializeSnapshot,
   type BenchmarkRunOutcome,
   type BenchmarkRunSummaryEntry,
   type BenchmarkWorkerResult,
-  type CodexBenchmarkTelemetry,
 } from "./benchmark-harness.ts";
 import {
   evaluateCatchBenchmark,
@@ -43,6 +43,9 @@ export function telemetryForArtifact(input: {
     ignoredInputs: input.raw.ignoredInputs,
     screenshots: input.raw.screenshots,
     knowledgeQueries: input.raw.knowledgeQueries,
+    compactObservations: input.raw.compactObservations,
+    fullObservations: input.raw.fullObservations,
+    toolOutputCharacters: input.raw.toolOutputCharacters,
     errors: input.raw.errors,
     inputTokens: input.raw.inputTokens,
     cachedInputTokens: input.raw.cachedInputTokens,
@@ -186,10 +189,42 @@ export function summaryEntry(input: {
       turns: input.telemetry.turns,
       toolCalls: input.telemetry.toolCalls,
       errors: input.telemetry.errors,
+      compactObservations: input.telemetry.compactObservations,
+      fullObservations: input.telemetry.fullObservations,
+      toolOutputCharacters: input.telemetry.toolOutputCharacters,
       inputTokens: input.telemetry.inputTokens,
       outputTokens: input.telemetry.outputTokens,
       reasoningOutputTokens: input.telemetry.reasoningOutputTokens,
       estimatedCostUsd: input.telemetry.estimatedCostUsd,
+    },
+  };
+}
+
+export function harnessSummaryEntry(input: {
+  run: number;
+  outcome: BenchmarkRunOutcome;
+  durationMs: number;
+  telemetry: CodexBenchmarkTelemetry;
+  providerFailure: BenchmarkProviderFailure | null;
+  estimatedCostUsd: number | null;
+}): BenchmarkRunSummaryEntry {
+  return {
+    run: input.run,
+    success: false,
+    outcome: input.outcome,
+    providerFailure: input.providerFailure,
+    durationMs: input.durationMs,
+    telemetry: {
+      turns: input.telemetry.turns,
+      toolCalls: input.telemetry.toolCalls,
+      errors: input.telemetry.errors + 1,
+      compactObservations: input.telemetry.compactObservations,
+      fullObservations: input.telemetry.fullObservations,
+      toolOutputCharacters: input.telemetry.toolOutputCharacters,
+      inputTokens: input.telemetry.inputTokens,
+      outputTokens: input.telemetry.outputTokens,
+      reasoningOutputTokens: input.telemetry.reasoningOutputTokens,
+      estimatedCostUsd: input.estimatedCostUsd,
     },
   };
 }

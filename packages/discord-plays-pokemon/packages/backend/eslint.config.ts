@@ -35,6 +35,7 @@ const config = [
         "src/goal/benchmark-evaluator.test.ts",
         "src/goal/benchmark-harness.test.ts",
         "src/goal/benchmark-save-oracle.test.ts",
+        "src/goal/benchmark-telemetry.test.ts",
         "src/goal/codex-jsonl.test.ts",
         "src/goal/codex-trace.test.ts",
         "src/goal/discord-message.test.ts",
@@ -57,13 +58,30 @@ const config = [
       ],
       // Test files are excluded from tsconfig (bun test globals aren't visible
       // to tsc), so they fall to the default project; raise the cap.
-      maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 50,
+      maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 60,
     },
   }),
   {
     files: ["src/config/index.ts"],
     rules: {
       "no-restricted-imports": "off",
+    },
+  },
+  {
+    // The goal benchmark worker is streamed as text and executed with its
+    // working directory set to an arbitrary target checkout, so it cannot
+    // import harness-owned helpers (they would module-not-found on comparison
+    // checkouts made before the helper existed). It therefore inlines its
+    // boot-readiness glue — kept in sync with
+    // src/goal/benchmark-worker-boot-readiness.ts, which holds the unit-tested
+    // copy — which pushes this single self-contained file past the shared
+    // 500-line module cap.
+    files: ["scripts/goal-benchmark-worker.ts"],
+    rules: {
+      "max-lines": [
+        "error",
+        { max: 700, skipBlankLines: false, skipComments: true },
+      ],
     },
   },
 ];

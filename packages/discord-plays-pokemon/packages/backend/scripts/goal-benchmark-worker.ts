@@ -3,6 +3,7 @@ import { z } from "zod";
 import { ConfigSchema } from "#src/config/schema.ts";
 import { BUTTON } from "#src/emulator/constants.ts";
 import { Emulator } from "#src/emulator/emulator.ts";
+import type { EnginePhase } from "#src/emulator/engine-observation.ts";
 import { readGameSnapshot } from "#src/game/events/snapshot.ts";
 import type { GameSnapshot } from "#src/game/events/types.ts";
 import { createGameEventWatcher } from "#src/game/events/watcher.ts";
@@ -13,9 +14,160 @@ import {
   type CatchEvidenceSettler,
   type CatchEventEvidence,
 } from "#src/goal/catch-evidence.ts";
+import { readGameObservation } from "#src/goal/game-observation.ts";
 import { GoalManager } from "#src/goal/goal-manager.ts";
 import type { GoalProcessSpawner } from "#src/goal/goal-types.ts";
 import { startGoalControlServer } from "#src/goal/control-server.ts";
+
+// The benchmark worker is streamed as text and executed with its working
+// directory set to the target implementation's backend root, so every subpath
+// specifier resolves against the target checkout, not this runner tree. The
+// boot-readiness glue below is therefore inlined here instead of importing the
+// runner-tree module benchmark-worker-boot-readiness.ts: a comparison target
+// committed before that harness helper existed would otherwise fail module
+// resolution before any gameplay is measured. The gameplay readers it calls
+// (readGameObservation / readGameSnapshot / readSpatialSnapshot) stay as
+// subpath imports because they are stable readers present in every comparison
+// target. Keep this block in sync with
+// src/goal/benchmark-worker-boot-readiness.ts, which holds the same
+// assessBenchmarkBootReadiness logic under unit test.
+type BenchmarkBootPosition = Readonly<{
+  frame: number;
+  mapGroup: number;
+  mapNum: number;
+  x: number;
+  y: number;
+}>;
+
+type BenchmarkBootSample = Readonly<{
+  frame: number;
+  phase: EnginePhase;
+  contextKind:
+    | "unavailable"
+    | "field"
+    | "script-or-dialog"
+    | "battle"
+    | "menu-or-transition";
+  observationValid: boolean;
+  inputReady: boolean;
+  playerStable: boolean;
+  gameAvailable: boolean;
+  snapshotAvailable: boolean;
+  spatialAvailable: boolean;
+  world: Readonly<{
+    mapGroup: number;
+    mapNum: number;
+    x: number;
+    y: number;
+  }> | null;
+}>;
+
+type BenchmarkBootAssessment = Readonly<{
+  ready: boolean;
+  candidate: BenchmarkBootPosition | null;
+}>;
+
+function samePosition(
+  left: BenchmarkBootPosition,
+  right: BenchmarkBootPosition,
+): boolean {
+  return (
+    left.mapGroup === right.mapGroup &&
+    left.mapNum === right.mapNum &&
+    left.x === right.x &&
+    left.y === right.y
+  );
+}
+
+function assessBenchmarkBootReadiness(
+  previous: BenchmarkBootPosition | null,
+  sample: BenchmarkBootSample,
+): BenchmarkBootAssessment {
+  if (
+    sample.phase !== "overworld" ||
+    sample.contextKind !== "field" ||
+    !sample.observationValid ||
+    !sample.inputReady ||
+    !sample.playerStable ||
+    !sample.gameAvailable ||
+    !sample.snapshotAvailable ||
+    !sample.spatialAvailable ||
+    sample.world === null
+  ) {
+    return { ready: false, candidate: null };
+  }
+
+  const candidate: BenchmarkBootPosition = {
+    frame: sample.frame,
+    mapGroup: sample.world.mapGroup,
+    mapNum: sample.world.mapNum,
+    x: sample.world.x,
+    y: sample.world.y,
+  };
+  return {
+    ready:
+      previous !== null &&
+      candidate.frame > previous.frame &&
+      samePosition(previous, candidate),
+    candidate,
+  };
+}
+
+function liveBenchmarkSnapshot(emulator: Emulator): GameSnapshot | null {
+  return readGameSnapshot(emulator.memoryReader(), emulator.gameSymbols());
+}
+
+function liveBenchmarkSpatial(
+  emulator: Emulator,
+): ReturnType<typeof readSpatialSnapshot> {
+  return readSpatialSnapshot(emulator.memoryReader(), emulator.gameSymbols());
+}
+
+async function bootBenchmarkSave(
+  emulator: Emulator,
+  timeoutSeconds: number,
+): Promise<GameSnapshot> {
+  const deadline = Date.now() + timeoutSeconds * 1000;
+  let nextContinuePress = Date.now() + 500;
+  let bootCandidate: BenchmarkBootPosition | null = null;
+  for (;;) {
+    const snapshot = liveBenchmarkSnapshot(emulator);
+    const spatial = liveBenchmarkSpatial(emulator);
+    const observation = readGameObservation(emulator);
+    const assessment = assessBenchmarkBootReadiness(bootCandidate, {
+      frame: observation.frame,
+      phase: observation.phase,
+      contextKind: observation.context.kind,
+      observationValid: observation.readiness.observationValid,
+      inputReady: observation.readiness.inputReady,
+      playerStable: observation.readiness.playerStable,
+      gameAvailable: observation.game !== null,
+      snapshotAvailable: snapshot !== null,
+      spatialAvailable: spatial !== null,
+      world:
+        observation.world === null
+          ? null
+          : {
+              mapGroup: observation.world.mapGroup,
+              mapNum: observation.world.mapNum,
+              x: observation.world.x,
+              y: observation.world.y,
+            },
+    });
+    bootCandidate = assessment.candidate;
+    if (snapshot !== null && assessment.ready) return snapshot;
+    if (Date.now() >= deadline) {
+      throw new Error(
+        `emulator did not boot and continue within ${String(timeoutSeconds)} seconds`,
+      );
+    }
+    if (bootCandidate === null && Date.now() >= nextContinuePress) {
+      await emulator.queuePress(BUTTON.a, 3, 3);
+      nextContinuePress = Date.now() + 750;
+    }
+    await Bun.sleep(100);
+  }
+}
 const WorkerConfigSchema = z.strictObject({
   schemaVersion: z.literal(1),
   runSavePath: z.string().min(1),
@@ -134,38 +286,6 @@ function createProcessCapture(runDirectory: string): ProcessCapture {
     },
   };
 }
-function liveSnapshot(emulator: Emulator): GameSnapshot | null {
-  return readGameSnapshot(emulator.memoryReader(), emulator.gameSymbols());
-}
-
-function liveSpatial(
-  emulator: Emulator,
-): ReturnType<typeof readSpatialSnapshot> {
-  return readSpatialSnapshot(emulator.memoryReader(), emulator.gameSymbols());
-}
-async function bootAndContinue(
-  emulator: Emulator,
-  timeoutSeconds: number,
-): Promise<GameSnapshot> {
-  const deadline = Date.now() + timeoutSeconds * 1000;
-  let nextContinuePress = Date.now() + 500;
-  for (;;) {
-    const snapshot = liveSnapshot(emulator);
-    if (snapshot !== null && liveSpatial(emulator) !== null) {
-      return snapshot;
-    }
-    if (Date.now() >= deadline) {
-      throw new Error(
-        `emulator did not boot and continue within ${String(timeoutSeconds)} seconds`,
-      );
-    }
-    if (Date.now() >= nextContinuePress) {
-      await emulator.queuePress(BUTTON.a, 3, 3);
-      nextContinuePress = Date.now() + 750;
-    }
-    await Bun.sleep(100);
-  }
-}
 async function waitForLiveSnapshot(
   emulator: Emulator,
   timeoutSeconds: number,
@@ -173,7 +293,7 @@ async function waitForLiveSnapshot(
   const deadline = Date.now() + timeoutSeconds * 1000;
   for (;;) {
     const capturedFrame = emulator.frame;
-    const snapshot = liveSnapshot(emulator);
+    const snapshot = liveBenchmarkSnapshot(emulator);
     if (snapshot !== null) return { snapshot, capturedFrame };
     if (Date.now() >= deadline) {
       throw new Error("live game snapshot remained unavailable");
@@ -258,7 +378,7 @@ async function snapshotPersistedSave(
   await verifier.init();
   verifier.start();
   try {
-    return await bootAndContinue(verifier, config.bootTimeoutSeconds);
+    return await bootBenchmarkSave(verifier, config.bootTimeoutSeconds);
   } finally {
     await verifier.stopAndFlush();
   }
@@ -375,7 +495,7 @@ async function main(): Promise<void> {
   try {
     await emulator.init();
     emulator.start();
-    initialSnapshot = await bootAndContinue(
+    initialSnapshot = await bootBenchmarkSave(
       emulator,
       config.bootTimeoutSeconds,
     );
@@ -399,7 +519,7 @@ async function main(): Promise<void> {
         catchEvidenceSettler.observe({
           frame,
           capturedAtMs,
-          snapshot: liveSnapshot(emulator),
+          snapshot: liveBenchmarkSnapshot(emulator),
           catches,
         });
       } catch (error) {
@@ -417,8 +537,8 @@ async function main(): Promise<void> {
       controlToken,
       sendMessage: () => Promise.resolve(),
       spawner: processCapture.spawner,
-      snapshotProvider: () => liveSnapshot(emulator),
-      spatialSnapshotProvider: () => liveSpatial(emulator),
+      snapshotProvider: () => liveBenchmarkSnapshot(emulator),
+      spatialSnapshotProvider: () => liveBenchmarkSpatial(emulator),
     });
     await manager.initialize();
     controlServer = startGoalControlServer({

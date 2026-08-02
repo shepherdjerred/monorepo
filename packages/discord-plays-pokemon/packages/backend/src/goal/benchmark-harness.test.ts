@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
 import {
+  cp,
   mkdir,
   mkdtemp,
   realpath,
@@ -10,11 +11,11 @@ import {
   symlink,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
+import { summarizeCodexJsonl } from "./benchmark-codex-telemetry.ts";
 import {
   DEFAULT_BENCHMARK_GOAL,
   buildBenchmarkSummary,
   parseBenchmarkArgs,
-  summarizeCodexJsonl,
   type BenchmarkRunOutcome,
   type BenchmarkRunSummaryEntry,
 } from "./benchmark-harness.ts";
@@ -150,6 +151,9 @@ function benchmarkEntry(
       turns: 1,
       toolCalls: 2,
       errors: 0,
+      compactObservations: 1,
+      fullObservations: 2,
+      toolOutputCharacters: 1000,
       inputTokens: 100,
       outputTokens: 20,
       reasoningOutputTokens: 10,
@@ -485,6 +489,9 @@ describe("summarizeCodexJsonl", () => {
       ignoredInputs: 0,
       screenshots: 2,
       knowledgeQueries: 1,
+      compactObservations: 1,
+      fullObservations: 0,
+      toolOutputCharacters: 22,
       inputTokens: 100,
       cachedInputTokens: 80,
       outputTokens: 20,
@@ -1065,6 +1072,17 @@ describe("benchmark runtime overlay", () => {
           ),
         ).text(),
       ).toBe("process.stdout.write('old pokemonctl\\n');\n");
+      // The overlay no longer injects any runner-owned worker helper: the
+      // streamed worker inlines its boot-readiness glue, so a pre-helper target
+      // is copied verbatim and never gains benchmark-worker-boot-readiness.ts.
+      expect(
+        await Bun.file(
+          path.join(
+            runtimeDirectory,
+            "packages/backend/src/goal/benchmark-worker-boot-readiness.ts",
+          ),
+        ).exists(),
+      ).toBe(false);
       expect(
         await Bun.file(path.join(runtimeDirectory, "package.json")).exists(),
       ).toBe(false);
@@ -1167,16 +1185,87 @@ test("harness-error lifecycle preserves the actual Codex exit code", () => {
   });
 });
 
-test("benchmark worker does not import runner-only benchmark helpers", async () => {
+test("benchmark worker inlines its boot-readiness glue instead of importing it", async () => {
   const worker = await Bun.file(
     path.resolve(import.meta.dir, "../../scripts/goal-benchmark-worker.ts"),
   ).text();
-  expect(worker).not.toContain("#src/goal/benchmark-");
+  const benchmarkImports = [
+    ...worker.matchAll(/from "(#src\/goal\/benchmark-[^"]+)"/gu),
+  ].map((match) => match[1]);
+  // The streamed worker must not import any benchmark-harness module from the
+  // target: those resolve against arbitrary comparison checkouts, which is what
+  // module-not-founded pre-helper targets before this fix.
+  expect(benchmarkImports).toEqual([]);
+  // It inlines the boot glue and still imports the stable gameplay readers those
+  // functions call (present in every comparison target).
+  expect(worker).toContain("async function bootBenchmarkSave(");
+  expect(worker).toContain("function assessBenchmarkBootReadiness(");
+  expect(worker).toContain('from "#src/goal/game-observation.ts"');
   expect(worker).toContain('started.kind === "missing_credential"');
   expect(worker).toContain(".some((entry) => entry.id === goalId)");
   expect(worker).not.toContain("helper_dir:");
   expect(worker).toContain("runtime_directory: config.runtimeDirectory");
 });
+
+test("streamed worker boots against a target predating the boot-readiness helper", async () => {
+  const backendRoot = path.resolve(import.meta.dir, "../..");
+  const workerSource = await Bun.file(
+    path.join(backendRoot, "scripts/goal-benchmark-worker.ts"),
+  ).text();
+  // Stand in for a comparison checkout made before the harness helper existed:
+  // a verbatim copy of the current backend source with
+  // benchmark-worker-boot-readiness.ts removed. Nesting the copy inside
+  // backendRoot lets the copied module graph resolve node_modules by walking up
+  // while "#src/*" resolves to this helper-free copy.
+  const target = await mkdtemp(path.join(backendRoot, ".pre-helper-target-"));
+  try {
+    await cp(path.join(backendRoot, "src"), path.join(target, "src"), {
+      recursive: true,
+    });
+    await rm(path.join(target, "src/goal/benchmark-worker-boot-readiness.ts"), {
+      force: true,
+    });
+    await Bun.write(
+      path.join(target, "package.json"),
+      `${JSON.stringify({
+        name: "pre-helper-target",
+        imports: { "#src/*": "./src/*" },
+      })}\n`,
+    );
+    expect(
+      await Bun.file(
+        path.join(target, "src/goal/benchmark-worker-boot-readiness.ts"),
+      ).exists(),
+    ).toBe(false);
+
+    const child = Bun.spawn(["bun", "run", "-"], {
+      cwd: target,
+      stdin: "pipe",
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    await child.stdin.write(workerSource);
+    await child.stdin.end();
+    const [stdout, stderr, exitCode] = await Promise.all([
+      new Response(child.stdout).text(),
+      new Response(child.stderr).text(),
+      child.exited,
+    ]);
+    const output = stdout + stderr;
+
+    // Resolving the whole worker graph against a helper-free checkout and
+    // reaching main()'s argument check (the worker logs the uncaught error to
+    // stdout) proves the boot-readiness glue is runner-owned (inlined), never
+    // resolved from the target. A retained import would instead surface a
+    // "Cannot find module ...benchmark-worker-boot-readiness" resolution error.
+    expect(output).not.toContain("benchmark-worker-boot-readiness");
+    expect(output).not.toContain("Cannot find");
+    expect(exitCode).not.toBe(0);
+    expect(output).toContain("benchmark worker requires --config");
+  } finally {
+    await rm(target, { recursive: true, force: true });
+  }
+}, 30_000);
 
 test("benchmark runner rejects an unidentifiable dirty implementation", async () => {
   const runner = await Bun.file(
@@ -1247,6 +1336,9 @@ describe("buildBenchmarkSummary", () => {
           turns: 2,
           toolCalls: 3,
           errors: 0,
+          compactObservations: 1,
+          fullObservations: 2,
+          toolOutputCharacters: 1000,
           inputTokens: 100,
           outputTokens: 20,
           reasoningOutputTokens: 10,
@@ -1263,6 +1355,9 @@ describe("buildBenchmarkSummary", () => {
           turns: 4,
           toolCalls: 5,
           errors: 1,
+          compactObservations: 3,
+          fullObservations: 4,
+          toolOutputCharacters: 2000,
           inputTokens: 200,
           outputTokens: 40,
           reasoningOutputTokens: 20,
@@ -1286,6 +1381,9 @@ describe("buildBenchmarkSummary", () => {
       turns: 6,
       toolCalls: 8,
       errors: 1,
+      compactObservations: 4,
+      fullObservations: 6,
+      toolOutputCharacters: 3000,
       inputTokens: 300,
       outputTokens: 60,
       reasoningOutputTokens: 30,

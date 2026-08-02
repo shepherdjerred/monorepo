@@ -1,11 +1,13 @@
 import path from "node:path";
 import { mkdir, rename } from "node:fs/promises";
 import {
-  BenchmarkWorkerResultSchema,
   summarizeCodexJsonl,
+  type CodexBenchmarkTelemetry,
+} from "./benchmark-codex-telemetry.ts";
+import {
+  BenchmarkWorkerResultSchema,
   type BenchmarkArgs,
   type BenchmarkRunSummaryEntry,
-  type CodexBenchmarkTelemetry,
 } from "./benchmark-harness.ts";
 import {
   BENCHMARK_PROVIDER_FAILURE_FILE,
@@ -24,6 +26,7 @@ import {
   evaluateWorkerCatch,
   harnessErrorLifecycle,
   harnessRunOutcome,
+  harnessSummaryEntry,
   readProviderStartupFailure,
   resultStatus,
   summaryEntry,
@@ -32,13 +35,11 @@ import {
 } from "./benchmark-result.ts";
 import { decodePersistedCatchState } from "./benchmark-save-oracle.ts";
 import { computeCost } from "./pricing.ts";
-
 export type BenchmarkImplementation = {
   packageRoot: string;
   backendRoot: string;
   gitRoot: string;
 };
-
 export type BenchmarkProvenanceInput = {
   inputSaveSha256: string;
   wasmSha256: string;
@@ -52,7 +53,6 @@ export type BenchmarkProvenanceInput = {
   codexVersion: string;
   bunVersion: string;
 };
-
 export async function sha256File(filePath: string): Promise<string> {
   const hasher = new Bun.CryptoHasher("sha256");
   for await (const chunk of Bun.file(filePath).stream()) {
@@ -60,7 +60,6 @@ export async function sha256File(filePath: string): Promise<string> {
   }
   return hasher.digest("hex");
 }
-
 export async function commandOutput(
   command: readonly string[],
   cwd: string,
@@ -83,7 +82,6 @@ export async function commandOutput(
   }
   return stdout.trim();
 }
-
 export async function requireCleanGitWorktree(
   cwd: string,
   label: string,
@@ -96,7 +94,6 @@ export async function requireCleanGitWorktree(
     throw new Error(`${label} must be clean:\n${status}`);
   }
 }
-
 export async function writeBenchmarkJson(
   filePath: string,
   value: unknown,
@@ -107,7 +104,6 @@ export async function writeBenchmarkJson(
   });
   await rename(tmpPath, filePath);
 }
-
 export async function reserveBenchmarkDirectory(
   directory: string,
   label: string,
@@ -480,21 +476,13 @@ export async function runBenchmarkOnce(
       }),
       error: message,
     });
-    return {
+    return harnessSummaryEntry({
       run,
-      success: false,
       outcome,
       providerFailure,
       durationMs,
-      telemetry: {
-        turns: telemetryInput.raw.turns,
-        toolCalls: telemetryInput.raw.toolCalls,
-        errors: telemetryInput.raw.errors + 1,
-        inputTokens: telemetryInput.raw.inputTokens,
-        outputTokens: telemetryInput.raw.outputTokens,
-        reasoningOutputTokens: telemetryInput.raw.reasoningOutputTokens,
-        estimatedCostUsd: cost,
-      },
-    };
+      telemetry: telemetryInput.raw,
+      estimatedCostUsd: cost,
+    });
   }
 }
