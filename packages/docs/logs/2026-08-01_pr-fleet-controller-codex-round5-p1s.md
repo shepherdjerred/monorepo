@@ -80,6 +80,13 @@ state-and-policy}.test.ts` (35 tests pass, up from 22).
 controller` and `@shepherdjerred/code-review`; `markdownlint` = 0;
   `bun install --frozen-lockfile --dry-run` clean (no `bun.lock` churn).
 - Empirically validated the setup sandbox profile end-to-end under `sandbox-exec`.
+- Follow-up: fixed a real CI verify failure the scoped filter missed — the new
+  package was never migrated by the #1843 TS7-native rollout, failing the root
+  `//:compliance-check`. Declared `@typescript/native` as `npm:typescript@7.0.2`
+  and switched `typecheck` to `PATH=node_modules/@typescript/native/bin:$PATH tsc`
+  in `packages/pr-fleet-controller/package.json` (matching siblings); updated
+  `bun.lock`. `bun run compliance-check` now exits 0 and the frozen dry-run is
+  clean (commit `3e3b2149f`).
 
 ### Remaining
 
