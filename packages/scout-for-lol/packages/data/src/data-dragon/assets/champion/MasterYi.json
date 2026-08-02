@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "MasterYi": {
       "id": "MasterYi",
@@ -10,7 +10,7 @@
       "title": "the Wuju Bladesman",
       "image": {
         "full": "MasterYi.png",
-        "sprite": "champion2.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 48,
         "y": 96,
@@ -812,10 +812,10 @@
           "rangeBurn": "600",
           "image": {
             "full": "AlphaStrike.png",
-            "sprite": "spell8.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 96,
-            "y": 96,
+            "x": 384,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -953,10 +953,10 @@
           "rangeBurn": "20",
           "image": {
             "full": "Meditate.png",
-            "sprite": "spell8.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 144,
-            "y": 96,
+            "x": 432,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -1092,10 +1092,10 @@
           "rangeBurn": "20",
           "image": {
             "full": "WujuStyle.png",
-            "sprite": "spell8.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 192,
-            "y": 96,
+            "x": 0,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1207,10 +1207,10 @@
           "rangeBurn": "1",
           "image": {
             "full": "Highlander.png",
-            "sprite": "spell8.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 240,
-            "y": 96,
+            "x": 48,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1222,7 +1222,7 @@
         "description": "Every few consecutive basic attack, Master Yi strikes twice.",
         "image": {
           "full": "MasterYi_Passive1.png",
-          "sprite": "passive2.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 48,
           "y": 96,

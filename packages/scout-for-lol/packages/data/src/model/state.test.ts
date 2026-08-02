@@ -28,6 +28,7 @@ describe("parseQueueType", () => {
     [1750, "arena"],
     [1900, "urf"],
     [2300, "brawl"],
+    [4310, "classic"],
     [2400, "aram mayhem"],
     [3200, "aram mayhem"],
     [3220, "aram mayhem"],
@@ -79,6 +80,19 @@ describe("Arena queue resolution", () => {
   });
 });
 
+describe("League Classic queue resolution", () => {
+  test("resolves queue 4310 and exact JADE mode as Classic", () => {
+    expect(parseQueueType(4310)).toBe("classic");
+    expect(resolveQueueTypeFromGame(4310, "JADE")).toBe("classic");
+    expect(resolveQueueTypeFromGame(0, "JADE", "CUSTOM_GAME")).toBe("classic");
+  });
+
+  test("does not confuse ARAM Mayhem KIWI_JADE with Classic", () => {
+    expect(parseQueueType(2450)).toBe("aram mayhem");
+    expect(resolveQueueTypeFromGame(2450, "KIWI_JADE")).toBe("aram mayhem");
+  });
+});
+
 describe("custom games with unmapped queue IDs", () => {
   // Regression: real custom Summoner's Rift game 5576694431 reported
   // gameQueueConfigId 3110 (absent from queues.json). Without the gameType
@@ -120,6 +134,7 @@ describe("queueTypeToDisplayString", () => {
     ["arurf", "ARURF"],
     ["urf", "URF"],
     ["arena", "arena"],
+    ["classic", "League Classic"],
     ["brawl", "brawl"],
     ["aram mayhem", "ARAM: Mayhem"],
     ["draft pick", "draft pick"],

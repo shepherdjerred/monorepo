@@ -17,6 +17,7 @@
   },
   "scripts": {
     "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc -p tsconfig.build.json && cp src/catalog.json dist/catalog.json",
+    "build:runtime": "bun --no-install build src/index.ts --outdir dist --target bun --external zod --external '*.json' && cp src/catalog.json dist/catalog.json",
     "sync": "bun run scripts/sync-from-upstreams.ts",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "bunx eslint --cache .",

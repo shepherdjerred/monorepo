@@ -1,0 +1,772 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Anivia": {
+      "id": "Jade_Anivia",
+      "key": "60034",
+      "name": "Anivia",
+      "title": "The Cryopheonix",
+      "image": {
+        "full": "Jade_Anivia.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 96,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60034000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60034002",
+          "num": 2,
+          "name": "Bird of Prey Anivia",
+          "chromas": false
+        },
+        {
+          "id": "60034005",
+          "num": 5,
+          "name": "Blackfrost Anivia",
+          "chromas": false
+        },
+        {
+          "id": "60034007",
+          "num": 7,
+          "name": "Festival Queen Anivia",
+          "chromas": false
+        },
+        {
+          "id": "60034027",
+          "num": 27,
+          "name": "Divine Phoenix Anivia",
+          "chromas": false
+        },
+        {
+          "id": "60034028",
+          "num": 28,
+          "name": "Divine Phoenix Anivia (Ruby)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60034029",
+          "num": 29,
+          "name": "Divine Phoenix Anivia (Emerald)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60034030",
+          "num": 30,
+          "name": "Divine Phoenix Anivia (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60034031",
+          "num": 31,
+          "name": "Divine Phoenix Anivia (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60034032",
+          "num": 32,
+          "name": "Divine Phoenix Anivia (Citrine)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60034033",
+          "num": 33,
+          "name": "Divine Phoenix Anivia (Amethyst)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60034034",
+          "num": 34,
+          "name": "Divine Phoenix Anivia (Obsidian)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60034035",
+          "num": 35,
+          "name": "Divine Phoenix Anivia (Pearl)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60034036",
+          "num": 36,
+          "name": "Divine Phoenix Anivia (Golden Tiger)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "60034046",
+          "num": 46,
+          "name": "Victorious Anivia",
+          "chromas": false
+        },
+        {
+          "id": "60034047",
+          "num": 47,
+          "name": "Victorious Anivia (Bronze)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "60034048",
+          "num": 48,
+          "name": "Victorious Anivia (Silver)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "60034049",
+          "num": 49,
+          "name": "Victorious Anivia (Gold)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "60034050",
+          "num": 50,
+          "name": "Victorious Anivia (Platinum)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "60034051",
+          "num": 51,
+          "name": "Victorious Anivia (Diamond)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "60034052",
+          "num": 52,
+          "name": "Victorious Anivia (Master)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "60034053",
+          "num": 53,
+          "name": "Victorious Anivia (Grandmaster)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "60034054",
+          "num": 54,
+          "name": "Victorious Anivia (Challenger)",
+          "chromas": false,
+          "parentSkin": 46
+        }
+      ],
+      "lore": "- Frostbite (E) doesn't have Chill passive<br>- Glacial Storm (R) slow also affects attack speed",
+      "blurb": "- Frostbite (E) doesn't have Chill passive<br>- Glacial Storm (R) slow also affects attack speed",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Mage",
+        "Support"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 1,
+        "defense": 4,
+        "magic": 10,
+        "difficulty": 10
+      },
+      "stats": {
+        "hp": 420,
+        "hpperlevel": 70,
+        "mp": 310,
+        "mpperlevel": 53,
+        "movespeed": 325,
+        "armor": 18.5,
+        "armorperlevel": 4,
+        "spellblock": 30,
+        "spellblockperlevel": 0,
+        "attackrange": 600,
+        "hpregen": 5.2,
+        "hpregenperlevel": 0.55,
+        "mpregen": 7.6,
+        "mpregenperlevel": 0.6,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 51.2,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 1.68,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "Jade_AniviaFlashFrost",
+          "name": "Flash Frost",
+          "description": "Anivia brings her wings together and summons a sphere of ice that flies towards her opponents, chilling and damaging anyone in its path. When the sphere explodes it does moderate damage in a radius, stunning anyone in the area.",
+          "tooltip": "A massive chunk of ice flies toward target location, dealing <magicDamage>{{ totalpassthroughdamage }} magic damage</magicDamage> and chilling targets, <status>Slowing</status> their Movement Speed by 20%. <br /><br />At the end of its range or if Anivia <recast>recasts</recast> the spell, the missile detonates, doing <magicDamage>{{ totalexplosiondamage }} magic damage</magicDamage> in a small area and <status>Stunning</status> units for {{ stunduration }} second.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ passthroughbasedamage }} -> {{ passthroughbasedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
+          "cooldownBurn": "12/11/10/9/8",
+          "cost": [
+            80,
+            100,
+            120,
+            140,
+            160
+          ],
+          "costBurn": "80/100/120/140/160",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1075,
+            1075,
+            1075,
+            1075,
+            1075
+          ],
+          "rangeBurn": "1075",
+          "image": {
+            "full": "Jade_AniviaFlashFrost.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 96,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_AniviaCrystallize",
+          "name": "Crystallize",
+          "description": "Anivia condenses the moisture in the air into an impassable wall of ice to block all movement. The wall only lasts a short duration before it melts.",
+          "tooltip": "Anivia summons an impassable wall of ice {{ wallwidth }} units wide, blocking all movement. The wall lasts for {{ wallduration }} seconds before it melts.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Width",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ e2 }} -> {{ e2NL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            25,
+            25,
+            25,
+            25,
+            25
+          ],
+          "cooldownBurn": "25",
+          "cost": [
+            70,
+            90,
+            110,
+            130,
+            150
+          ],
+          "costBurn": "70/90/110/130/150",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              400,
+              500,
+              600,
+              700,
+              800
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "5",
+            "400/500/600/700/800",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "Jade_AniviaCrystallize.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 144,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_AniviaFrostbite",
+          "name": "Frostbite",
+          "description": "With a flap of her wings, Anivia blasts a freezing gust of wind at her target, dealing a medium amount of damage. If the target has been slowed by an ice effect, the damage they take is doubled.",
+          "tooltip": "Anivia blasts her target with a freezing wind, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.  If the target is chilled, they take <magicDamage>{{ empowereddamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            5,
+            5,
+            5,
+            5,
+            5
+          ],
+          "cooldownBurn": "5",
+          "cost": [
+            50,
+            60,
+            70,
+            80,
+            90
+          ],
+          "costBurn": "50/60/70/80/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
+          "rangeBurn": "650",
+          "image": {
+            "full": "Jade_AniviaFrostbite.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 192,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_AniviaGlacialStorm",
+          "name": "Glacial Storm",
+          "description": "Anivia summons a driving rain of ice and hail to damage her enemies and slow their advance.",
+          "tooltip": "<toggle>Toggle: </toggle>Anivia calls forth a driving rain of ice and hail, dealing <magicDamage>{{ totaldamagepersecond }} magic damage</magicDamage> per second and chilling targets, <status>Slowing</status> their Attack and Movement Speed by {{ slowamount }}%.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage Per Second",
+              "Mana Cost Per Second"
+            ],
+            "effect": [
+              "{{ damagepersecond }} -> {{ damagepersecondNL }}",
+              "{{ manacostpersecond }} -> {{ manacostpersecondNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            6,
+            6,
+            6
+          ],
+          "cooldownBurn": "6",
+          "cost": [
+            75,
+            75,
+            75
+          ],
+          "costBurn": "75",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " Mana + {{ manacostpersecond }} Mana per second",
+          "maxammo": "-1",
+          "range": [
+            625,
+            625,
+            625
+          ],
+          "rangeBurn": "625",
+          "image": {
+            "full": "Jade_AniviaGlacialStorm.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 240,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} Mana + {{ manacostpersecond }} Mana per second"
+        }
+      ],
+      "passive": {
+        "name": "Rebirth",
+        "description": "Upon dying, Anivia will revert into an egg. If the egg can survive for six seconds, she is gloriously reborn.",
+        "image": {
+          "full": "Jade_Anivia_P.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 96,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

@@ -124,6 +124,9 @@ function BansRow({
 }
 
 export function GameHeader({ data }: { data: LoadingScreenData }) {
+  if (data.layout === "classic") {
+    return null;
+  }
   const shouldRenderBans = data.bans.length > 0;
 
   return (

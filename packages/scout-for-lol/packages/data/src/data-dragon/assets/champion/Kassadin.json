@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Kassadin": {
       "id": "Kassadin",
@@ -10,7 +10,7 @@
       "title": "the Void Walker",
       "image": {
         "full": "Kassadin.png",
-        "sprite": "champion1.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 432,
         "y": 96,
@@ -415,10 +415,10 @@
           "rangeBurn": "650",
           "image": {
             "full": "NullLance.png",
-            "sprite": "spell6.png",
+            "sprite": "spell12.png",
             "group": "spell",
-            "x": 192,
-            "y": 48,
+            "x": 0,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -558,10 +558,10 @@
           "rangeBurn": "1",
           "image": {
             "full": "NetherBlade.png",
-            "sprite": "spell6.png",
+            "sprite": "spell12.png",
             "group": "spell",
-            "x": 240,
-            "y": 48,
+            "x": 48,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -703,10 +703,10 @@
           "rangeBurn": "400",
           "image": {
             "full": "ForcePulse.png",
-            "sprite": "spell6.png",
+            "sprite": "spell12.png",
             "group": "spell",
-            "x": 288,
-            "y": 48,
+            "x": 96,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -820,10 +820,10 @@
           "rangeBurn": "500",
           "image": {
             "full": "RiftWalk.png",
-            "sprite": "spell6.png",
+            "sprite": "spell12.png",
             "group": "spell",
-            "x": 336,
-            "y": 48,
+            "x": 144,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -835,7 +835,7 @@
         "description": "Kassadin takes reduced magic damage and ignores unit collision.",
         "image": {
           "full": "Kassadin_Passive.png",
-          "sprite": "passive1.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 432,
           "y": 96,

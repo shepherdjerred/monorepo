@@ -1,9 +1,18 @@
 import type { DataDragonUpdateInput } from "./data-dragon.ts";
+import {
+  LANE_PRIOR_ARTIFACT_PATH,
+  LANE_PRIOR_EVAL_REPORT_PATH,
+} from "./data-dragon-lane-priors.ts";
 
 const SCOUT_ROOT = "packages/scout-for-lol";
 const DATA_PACKAGE_ROOT = `${SCOUT_ROOT}/packages/data`;
+const DATA_DRAGON_GENERATED_ROOT = `${DATA_PACKAGE_ROOT}/src/data-dragon`;
+const PATCH_NOTES_ARCHIVE_ROOT = `${DATA_PACKAGE_ROOT}/patch-notes-archive`;
+const BACKEND_SNAPSHOT_ROOT = `${SCOUT_ROOT}/packages/backend/src/league/model/__tests__/__snapshots__`;
+const REPORT_DATA_DRAGON_SNAPSHOT_ROOT = `${SCOUT_ROOT}/packages/report/src/dataDragon/__snapshots__`;
+const REPORT_HTML_ROOT = `${SCOUT_ROOT}/packages/report/src/html`;
+const CHANGELOG_PATH = `${SCOUT_ROOT}/packages/frontend/src/data/changelog.tsx`;
 const DATA_DRAGON_IMAGE_ASSETS_ROOT = `${DATA_PACKAGE_ROOT}/src/data-dragon/assets/img/`;
-const ARENA_VISUAL_SNAPSHOT_ROOT = `${SCOUT_ROOT}/packages/report/src/html/arena/__snapshots__/`;
 const RASTER_IMAGE_EXTENSIONS = new Set([
   ".gif",
   ".jpg",
@@ -15,6 +24,20 @@ const ARENA_VISUAL_SNAPSHOT_EXTENSIONS = new Set([".snap", ".svg"]);
 const IMAGE_ONLY_SKIP_EMAIL_SUBJECT =
   "Scout Data Dragon refresh skipped: image-only changes";
 const DATA_DRAGON_EMAIL_TAG = "scout-data-dragon";
+
+export const DATA_DRAGON_GENERATED_PATHS = [
+  DATA_DRAGON_GENERATED_ROOT,
+  PATCH_NOTES_ARCHIVE_ROOT,
+  BACKEND_SNAPSHOT_ROOT,
+  REPORT_DATA_DRAGON_SNAPSHOT_ROOT,
+  // Stage the report HTML root only after dataDragonDisallowedChangePaths has
+  // verified that every change beneath it is inside a __snapshots__ directory.
+  // This covers future report designs without permitting source edits.
+  REPORT_HTML_ROOT,
+  CHANGELOG_PATH,
+  LANE_PRIOR_ARTIFACT_PATH,
+  LANE_PRIOR_EVAL_REPORT_PATH,
+];
 
 export type GitChangeKind =
   | "added"
@@ -107,6 +130,48 @@ function fileExtension(path: string): string {
   return path.slice(dotIndex).toLowerCase();
 }
 
+function isWithinDirectory(path: string, directory: string): boolean {
+  return path === directory || path.startsWith(`${directory}/`);
+}
+
+function isReportHtmlSnapshotPath(path: string): boolean {
+  return (
+    isWithinDirectory(path, REPORT_HTML_ROOT) &&
+    path.includes("/__snapshots__/")
+  );
+}
+
+function isAllowedDataDragonGeneratedPath(path: string): boolean {
+  return (
+    isWithinDirectory(path, DATA_DRAGON_GENERATED_ROOT) ||
+    isWithinDirectory(path, PATCH_NOTES_ARCHIVE_ROOT) ||
+    isWithinDirectory(path, BACKEND_SNAPSHOT_ROOT) ||
+    isWithinDirectory(path, REPORT_DATA_DRAGON_SNAPSHOT_ROOT) ||
+    isReportHtmlSnapshotPath(path) ||
+    path === CHANGELOG_PATH ||
+    path === LANE_PRIOR_ARTIFACT_PATH ||
+    path === LANE_PRIOR_EVAL_REPORT_PATH
+  );
+}
+
+export function dataDragonDisallowedChangePaths(
+  changes: readonly GitStatusEntry[],
+): string[] {
+  const disallowedPaths = new Set<string>();
+  for (const change of changes) {
+    if (!isAllowedDataDragonGeneratedPath(change.path)) {
+      disallowedPaths.add(change.path);
+    }
+    if (
+      change.previousPath !== undefined &&
+      !isAllowedDataDragonGeneratedPath(change.previousPath)
+    ) {
+      disallowedPaths.add(change.previousPath);
+    }
+  }
+  return [...disallowedPaths].toSorted();
+}
+
 function isModifiedRasterImageAsset(change: GitStatusEntry): boolean {
   return (
     change.kind === "modified" &&
@@ -115,10 +180,10 @@ function isModifiedRasterImageAsset(change: GitStatusEntry): boolean {
   );
 }
 
-function isModifiedArenaVisualSnapshot(change: GitStatusEntry): boolean {
+function isModifiedReportVisualSnapshot(change: GitStatusEntry): boolean {
   return (
     change.kind === "modified" &&
-    change.path.startsWith(ARENA_VISUAL_SNAPSHOT_ROOT) &&
+    isReportHtmlSnapshotPath(change.path) &&
     ARENA_VISUAL_SNAPSHOT_EXTENSIONS.has(fileExtension(change.path))
   );
 }
@@ -127,7 +192,7 @@ export function isSuppressibleDataDragonPrChange(
   change: GitStatusEntry,
 ): boolean {
   return (
-    isModifiedRasterImageAsset(change) || isModifiedArenaVisualSnapshot(change)
+    isModifiedRasterImageAsset(change) || isModifiedReportVisualSnapshot(change)
   );
 }
 

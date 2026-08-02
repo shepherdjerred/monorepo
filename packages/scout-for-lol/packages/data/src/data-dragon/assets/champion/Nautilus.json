@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Nautilus": {
       "id": "Nautilus",
@@ -10,7 +10,7 @@
       "title": "the Titan of the Depths",
       "image": {
         "full": "Nautilus.png",
-        "sprite": "champion3.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 48,
         "y": 0,
@@ -505,10 +505,10 @@
           "rangeBurn": "1150",
           "image": {
             "full": "NautilusAnchorDrag.png",
-            "sprite": "spell9.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 96,
-            "y": 96,
+            "x": 384,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -648,10 +648,10 @@
           "rangeBurn": "350",
           "image": {
             "full": "NautilusPiercingGaze.png",
-            "sprite": "spell9.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 144,
-            "y": 96,
+            "x": 432,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -795,10 +795,10 @@
           "rangeBurn": "600",
           "image": {
             "full": "NautilusSplashZone.png",
-            "sprite": "spell9.png",
+            "sprite": "spell16.png",
             "group": "spell",
-            "x": 192,
-            "y": 96,
+            "x": 0,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -914,10 +914,10 @@
           "rangeBurn": "825",
           "image": {
             "full": "NautilusGrandLine.png",
-            "sprite": "spell9.png",
+            "sprite": "spell16.png",
             "group": "spell",
-            "x": 240,
-            "y": 96,
+            "x": 48,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -929,7 +929,7 @@
         "description": "Nautilus' first Attack against a target deals increased physical damage and roots them briefly.",
         "image": {
           "full": "Nautilus_StaggeringBlow.png",
-          "sprite": "passive3.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 48,
           "y": 0,

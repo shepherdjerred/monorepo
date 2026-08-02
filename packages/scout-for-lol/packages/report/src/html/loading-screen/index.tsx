@@ -2,6 +2,9 @@ import satori from "satori";
 import type { LoadingScreenData } from "@scout-for-lol/data";
 import { LoadingScreen } from "#src/html/loading-screen/loading-screen.tsx";
 import { bunBeaufortFonts, bunSpiegelFonts } from "#src/assets/index.ts";
+import { bunClassicFonts } from "#src/assets/classic-fonts.ts";
+import { ClassicLoadingScreen } from "#src/html/loading-screen/classic-layout.tsx";
+import { getClassicBackgroundBase64 } from "@scout-for-lol/data";
 import {
   preloadChampionLoadingImages,
   preloadChampionImages,
@@ -86,6 +89,9 @@ function getArenaCanvasDimensions(data: LoadingScreenData): CanvasDimensions {
 export function getLoadingScreenCanvasDimensions(
   data: LoadingScreenData,
 ): CanvasDimensions {
+  if (data.layout === "classic") {
+    return { width: 1920, height: 1280 };
+  }
   if (data.layout === "arena") {
     return getArenaCanvasDimensions(data);
   }
@@ -107,7 +113,7 @@ async function preloadLoadingScreenImages(
   );
 
   // Preload small champion square portraits for bans
-  if (data.bans.length > 0) {
+  if (data.layout !== "classic" && data.bans.length > 0) {
     const banChampionNames = data.bans.map((b) => b.championName);
     await preloadChampionImages(banChampionNames);
   }
@@ -118,9 +124,23 @@ export async function loadingScreenToSvg(
 ): Promise<string> {
   await preloadLoadingScreenImages(data);
 
-  const fonts = [...(await bunBeaufortFonts()), ...(await bunSpiegelFonts())];
   const { width, height } = getLoadingScreenCanvasDimensions(data);
+  if (data.layout === "classic") {
+    const [fonts, background] = await Promise.all([
+      bunClassicFonts(),
+      getClassicBackgroundBase64(),
+    ]);
+    return satori(
+      <ClassicLoadingScreen data={data} background={background} />,
+      {
+        width,
+        height,
+        fonts,
+      },
+    );
+  }
 
+  const fonts = [...(await bunBeaufortFonts()), ...(await bunSpiegelFonts())];
   const svg = await satori(<LoadingScreen data={data} />, {
     width,
     height,
@@ -133,6 +153,9 @@ export async function loadingScreenToImage(
   data: LoadingScreenData,
 ): Promise<Uint8Array> {
   const svg = await loadingScreenToSvg(data);
-  const png = await svgToPng(svg);
+  const png = await svgToPng(
+    svg,
+    data.layout === "classic" ? { crop: false } : {},
+  );
   return png;
 }

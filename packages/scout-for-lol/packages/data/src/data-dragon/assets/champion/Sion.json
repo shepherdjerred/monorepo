@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Sion": {
       "id": "Sion",
@@ -10,7 +10,7 @@
       "title": "The Undead Juggernaut",
       "image": {
         "full": "Sion.png",
-        "sprite": "champion4.png",
+        "sprite": "champion6.png",
         "group": "champion",
         "x": 192,
         "y": 0,
@@ -603,10 +603,10 @@
           "rangeBurn": "10000",
           "image": {
             "full": "SionQ.png",
-            "sprite": "spell12.png",
+            "sprite": "spell19.png",
             "group": "spell",
-            "x": 192,
-            "y": 144,
+            "x": 0,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -616,7 +616,7 @@
           "id": "SionW",
           "name": "Soul Furnace",
           "description": "Sion shields himself and can reactivate after 3 seconds to deal Magic Damage to enemies nearby. When Sion kills enemies, he passively gains maximum Health.",
-          "tooltip": "<spellPassive>Passive</spellPassive>: Sion gains <scaleHealth>{{ hpperkill }} max Health</scaleHealth> when he kills a unit, or <scaleHealth>{{ hpperchampkill }}</scaleHealth> for champion takedowns, large minions and large monsters.<br /><br /><spellActive>Active</spellActive>: Sion gains <shield>{{ totalshield }} Shield</shield> for 6 seconds. After {{ e7 }} seconds if the shield still holds, Sion can <recast>Recast</recast> to detonate the shield to deal <magicDamage>{{ totaldamage }} plus {{ e4 }}% max Health magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive</spellPassive>: Sion gains <scaleHealth>{{ hpperkill }} max Health</scaleHealth> when he kills a unit, or <scaleHealth>{{ hpperchampkill }}</scaleHealth> for champion takedowns, large minions and large monsters.<br /><br /><spellActive>Active</spellActive>: Sion gains <shield>{{ totalshield }} Shield</shield> for 6 seconds. After {{ detonaterecastcooldown }} seconds if the shield still holds, Sion can <recast>Recast</recast> to detonate the shield to deal <magicDamage>{{ totaldamage }} plus {{ maxhpdamageratio }}% max Health magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Shield Amount",
@@ -626,8 +626,8 @@
               "Cooldown"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
-              "{{ e2 }} -> {{ e2NL }}",
+              "{{ baseshield }} -> {{ baseshieldNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ shieldpercenthealthtooltip*100.000000 }}% -> {{ shieldpercenthealthtooltipnl*100.000000 }}%",
               "{{ cost }} -> {{ costNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
@@ -750,10 +750,10 @@
           "rangeBurn": "500",
           "image": {
             "full": "SionW.png",
-            "sprite": "spell12.png",
+            "sprite": "spell19.png",
             "group": "spell",
-            "x": 240,
-            "y": 144,
+            "x": 48,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -772,7 +772,7 @@
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowamount }}% -> {{ slowamountNL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
@@ -895,10 +895,10 @@
           "rangeBurn": "800",
           "image": {
             "full": "SionE.png",
-            "sprite": "spell12.png",
+            "sprite": "spell19.png",
             "group": "spell",
-            "x": 288,
-            "y": 144,
+            "x": 96,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1014,10 +1014,10 @@
           "rangeBurn": "7500",
           "image": {
             "full": "SionR.png",
-            "sprite": "spell12.png",
+            "sprite": "spell19.png",
             "group": "spell",
-            "x": 336,
-            "y": 144,
+            "x": 144,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1029,7 +1029,7 @@
         "description": "After being killed, Sion will temporarily reanimate with rapidly decaying Health. His attacks become very rapid, heal him, and deal bonus damage based on his target's maximum Health.",
         "image": {
           "full": "Sion_Passive1.png",
-          "sprite": "passive4.png",
+          "sprite": "passive6.png",
           "group": "passive",
           "x": 192,
           "y": 0,

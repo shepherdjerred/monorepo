@@ -41,7 +41,7 @@
     "format": "prettier --check .",
     "lint": "astro check && eslint src",
     "preview": "astro preview",
-    "test": "echo 'Playwright tests disabled'",
+    "test": "bun test",
     "test:ui": "echo 'Playwright tests disabled'",
     "test:headed": "echo 'Playwright tests disabled'",
     "test:report": "echo 'Playwright tests disabled'",

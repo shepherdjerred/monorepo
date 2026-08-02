@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Evelynn": {
       "id": "Evelynn",
@@ -511,7 +511,7 @@
           "leveltip": {
             "label": [
               "Lasher and Spike Damage",
-              "Bonus Damage:",
+              "Bonus Damage",
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
@@ -639,8 +639,8 @@
             "full": "EvelynnQ.png",
             "sprite": "spell3.png",
             "group": "spell",
-            "x": 96,
-            "y": 96,
+            "x": 384,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -788,8 +788,8 @@
             "full": "EvelynnW.png",
             "sprite": "spell3.png",
             "group": "spell",
-            "x": 144,
-            "y": 96,
+            "x": 432,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -931,10 +931,10 @@
           "rangeBurn": "210",
           "image": {
             "full": "EvelynnE.png",
-            "sprite": "spell3.png",
+            "sprite": "spell4.png",
             "group": "spell",
-            "x": 192,
-            "y": 96,
+            "x": 0,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1048,10 +1048,10 @@
           "rangeBurn": "25000",
           "image": {
             "full": "EvelynnR.png",
-            "sprite": "spell3.png",
+            "sprite": "spell4.png",
             "group": "spell",
-            "x": 240,
-            "y": 96,
+            "x": 48,
+            "y": 0,
             "w": 48,
             "h": 48
           },

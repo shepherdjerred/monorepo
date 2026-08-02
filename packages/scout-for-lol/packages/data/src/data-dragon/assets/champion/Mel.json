@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Mel": {
       "id": "Mel",
@@ -10,7 +10,7 @@
       "title": "the Soul's Reflection",
       "image": {
         "full": "Mel.png",
-        "sprite": "champion2.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 96,
         "y": 96,
@@ -282,10 +282,10 @@
           "rangeBurn": "950",
           "image": {
             "full": "MelQ.png",
-            "sprite": "spell8.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 288,
-            "y": 96,
+            "x": 96,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -427,10 +427,10 @@
           "rangeBurn": "250",
           "image": {
             "full": "MelW.png",
-            "sprite": "spell8.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 336,
-            "y": 96,
+            "x": 144,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -572,10 +572,10 @@
           "rangeBurn": "1000",
           "image": {
             "full": "MelE.png",
-            "sprite": "spell8.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 384,
-            "y": 96,
+            "x": 192,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -693,10 +693,10 @@
           "rangeBurn": "25000",
           "image": {
             "full": "MelR.png",
-            "sprite": "spell8.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 432,
-            "y": 96,
+            "x": 240,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -708,7 +708,7 @@
         "description": "Whenever Mel uses an ability, she gains three bonus projectiles (up to nine maximum) on her next attack.<br><br>When Mel deals damage through an ability or attack, she applies Overwhelm, which can stack infinitely. If the enemy is hit by Mel with enough Overwhelm damage, the stacks are consumed to execute the target.",
         "image": {
           "full": "Mel_Passive.png",
-          "sprite": "passive2.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 96,
           "y": 96,

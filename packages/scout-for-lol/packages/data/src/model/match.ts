@@ -18,7 +18,7 @@ export const MatchIdSchema = z.string().brand<"MatchId">();
 export type CompletedMatch = z.infer<typeof CompletedMatchSchema>;
 export const CompletedMatchSchema = z.strictObject({
   durationInSeconds: z.number().nonnegative(),
-  queueType: QueueTypeSchema.exclude(["arena"]).optional(),
+  queueType: QueueTypeSchema.exclude(["arena", "classic"]).optional(),
   /**
    * Data specific to all players we care about (e.g. all subscribed players in this match).
    * This was previously a single 'player' object, now an array for multi-player support.
@@ -49,6 +49,46 @@ export const CompletedMatchSchema = z.strictObject({
    */
   commentary: z.string().optional(),
 });
+
+export const ClassicChampionSchema = z.strictObject({
+  puuid: z.string().min(1),
+  riotIdGameName: z.string().min(1),
+  riotIdTagLine: z.string().min(1),
+  championId: z.number().int().positive(),
+  championName: z.string().min(1),
+  kills: z.number().int().nonnegative(),
+  deaths: z.number().int().nonnegative(),
+  assists: z.number().int().nonnegative(),
+  level: z.number().int().min(1),
+  items: z.array(z.number().int().nonnegative()).length(7),
+  spells: z.array(z.number().int().nonnegative()).length(2),
+  gold: z.number().int().nonnegative(),
+  creepScore: z.number().int().nonnegative(),
+});
+export type ClassicChampion = z.infer<typeof ClassicChampionSchema>;
+
+const ClassicRosterSchema = z.array(ClassicChampionSchema).min(1).max(5);
+
+export const ClassicMatchSchema = z.strictObject({
+  durationInSeconds: z.number().nonnegative(),
+  queueType: z.literal("classic"),
+  mapName: z.literal("Classic Rift"),
+  players: z
+    .array(
+      z.strictObject({
+        playerConfig: PlayerConfigEntrySchema,
+        outcome: z.enum(["Victory", "Defeat", "Surrender"]),
+        champion: ClassicChampionSchema,
+        team: TeamSchema,
+      }),
+    )
+    .min(1),
+  teams: z.strictObject({
+    red: ClassicRosterSchema,
+    blue: ClassicRosterSchema,
+  }),
+});
+export type ClassicMatch = z.infer<typeof ClassicMatchSchema>;
 
 export function getLaneOpponent(
   player: Champion,

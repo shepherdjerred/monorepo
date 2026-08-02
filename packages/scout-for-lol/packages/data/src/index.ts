@@ -124,6 +124,7 @@ export * from "./lane-priors/eval.ts";
 export { getExampleMatch, type AnyMatch } from "./example/example.ts";
 export * from "./data-dragon/version.ts";
 export * from "./data-dragon/summoner.ts";
+export * from "./data-dragon/classic.ts";
 export * from "./data-dragon/item.ts";
 export * from "./data-dragon/runes.ts";
 export { getChampionInfo, getChampionList } from "./data-dragon/champion.ts";
@@ -171,6 +172,7 @@ export {
   getChampionLoadingImageUrl,
   getChampionSplashImageBase64,
   getChampionSplashImageUrl,
+  getClassicBackgroundBase64,
   // Validation functions (async)
   validateChampionImage,
   validateItemImage,

@@ -1,0 +1,888 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_KogMaw": {
+      "id": "Jade_KogMaw",
+      "key": "60096",
+      "name": "Kog'Maw",
+      "title": "The Mouth of the Abyss",
+      "image": {
+        "full": "Jade_KogMaw.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 192,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60096000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60096003",
+          "num": 3,
+          "name": "Monarch Kog'Maw",
+          "chromas": false
+        },
+        {
+          "id": "60096009",
+          "num": 9,
+          "name": "Pug'Maw",
+          "chromas": false
+        },
+        {
+          "id": "60096011",
+          "num": 11,
+          "name": "Pug'Maw (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "60096012",
+          "num": 12,
+          "name": "Pug'Maw (Sandstone)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "60096013",
+          "num": 13,
+          "name": "Pug'Maw (Meteorite)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "60096014",
+          "num": 14,
+          "name": "Pug'Maw (Citrine)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "60096015",
+          "num": 15,
+          "name": "Pug'Maw (Speckled)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "60096016",
+          "num": 16,
+          "name": "Pug'Maw (Pearl)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "60096017",
+          "num": 17,
+          "name": "Pug'Maw (Obsidian)",
+          "chromas": true,
+          "parentSkin": 9
+        },
+        {
+          "id": "60096018",
+          "num": 18,
+          "name": "Pug'Maw (Granite)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "60096028",
+          "num": 28,
+          "name": "Bee'Maw",
+          "chromas": false
+        },
+        {
+          "id": "60096029",
+          "num": 29,
+          "name": "Bee'Maw (Ruby)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "60096030",
+          "num": 30,
+          "name": "Bee'Maw (Amethyst)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "60096031",
+          "num": 31,
+          "name": "Bee'Maw (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "60096032",
+          "num": 32,
+          "name": "Bee'Maw (Peridot)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "60096033",
+          "num": 33,
+          "name": "Bee'Maw (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "60096034",
+          "num": 34,
+          "name": "Bee'Maw (Sandstone)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "60096035",
+          "num": 35,
+          "name": "Bee'Maw (Obsidian)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "60096036",
+          "num": 36,
+          "name": "Bee'Maw (Rainbow)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "60096037",
+          "num": 37,
+          "name": "Zap'Maw",
+          "chromas": false
+        },
+        {
+          "id": "60096038",
+          "num": 38,
+          "name": "Zap'Maw (Ruby)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "60096039",
+          "num": 39,
+          "name": "Zap'Maw (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "60096040",
+          "num": 40,
+          "name": "Zap'Maw (Emerald)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "60096041",
+          "num": 41,
+          "name": "Zap'Maw (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "60096042",
+          "num": 42,
+          "name": "Zap'Maw (Amethyst)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "60096043",
+          "num": 43,
+          "name": "Zap'Maw (Turquoise)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "60096044",
+          "num": 44,
+          "name": "Zap'Maw (Pearl)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "60096045",
+          "num": 45,
+          "name": "Zap'Maw (Tanzanite)",
+          "chromas": true,
+          "parentSkin": 37
+        },
+        {
+          "id": "60096055",
+          "num": 55,
+          "name": "Victorious Kog'Maw",
+          "chromas": false
+        },
+        {
+          "id": "60096056",
+          "num": 56,
+          "name": "Victorious Kog'Maw (Bronze)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "60096057",
+          "num": 57,
+          "name": "Victorious Kog'Maw (Silver)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "60096058",
+          "num": 58,
+          "name": "Victorious Kog'Maw (Gold)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "60096059",
+          "num": 59,
+          "name": "Victorious Kog'Maw (Platinum)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "60096060",
+          "num": 60,
+          "name": "Victorious Kog'Maw (Emerald)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "60096061",
+          "num": 61,
+          "name": "Victorious Kog'Maw (Diamond)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "60096062",
+          "num": 62,
+          "name": "Victorious Kog'Maw (Master)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "60096063",
+          "num": 63,
+          "name": "Victorious Kog'Maw (Grandmaster)",
+          "chromas": true,
+          "parentSkin": 55
+        },
+        {
+          "id": "60096064",
+          "num": 64,
+          "name": "Victorious Kog'Maw (Challenger)",
+          "chromas": false,
+          "parentSkin": 55
+        }
+      ],
+      "lore": "- Caustic Spittle (Q) is point and click",
+      "blurb": "- Caustic Spittle (Q) is point and click",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Marksman",
+        "Mage"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 8,
+        "defense": 2,
+        "magic": 5,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 524,
+        "hpperlevel": 84,
+        "mp": 295,
+        "mpperlevel": 40,
+        "movespeed": 330,
+        "armor": 17.5,
+        "armorperlevel": 3.5,
+        "spellblock": 30,
+        "spellblockperlevel": 0,
+        "attackrange": 500,
+        "hpregen": 5.55,
+        "hpregenperlevel": 0.55,
+        "mpregen": 8.2,
+        "mpregenperlevel": 0.7,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 49,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 2.65,
+        "attackspeed": 0.665
+      },
+      "spells": [
+        {
+          "id": "Jade_KogMawQ",
+          "name": "Caustic Spittle",
+          "description": "Passive: Increases Kog'Maw's Attack Speed. <br><br>Active: Kog'Maw launches a corrosive projectile which deals magic damage and corrodes the target's Armor and Magic Resist for 4 seconds.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Kog'Maw gains <attackSpeed>{{ passiveattackspeed*100 }}% Attack Speed</attackSpeed>.<br /><br /><spellActive>Active:</spellActive> Kog'Maw vomits a corrosive projectile that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first enemy hit and shreds <scaleArmor>{{ armorshred }} Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for {{ debuffduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Attack Speed %",
+              "Armor and Magic Resist Reduction"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ passiveattackspeed*100.000000 }}% -> {{ passiveattackspeednl*100.000000 }}%",
+              "{{ armorshred }} -> {{ armorshredNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
+          "cooldownBurn": "8",
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              60,
+              110,
+              160,
+              210,
+              260
+            ],
+            [
+              10,
+              15,
+              20,
+              25,
+              30
+            ],
+            [
+              5,
+              10,
+              15,
+              20,
+              25
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "60/110/160/210/260",
+            "10/15/20/25/30",
+            "5/10/15/20/25",
+            "4",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            625,
+            625,
+            625,
+            625,
+            625
+          ],
+          "rangeBurn": "625",
+          "image": {
+            "full": "Jade_KogMawQ.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 0,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_KogMawW",
+          "name": "Bio-Arcane Barrage",
+          "description": "Kog'Maw's attacks gain range and deal a percent of the target's maximum health as magic damage.",
+          "tooltip": "Kog'Maw gains {{ range }} Attack Range and his Attacks deal an additional <magicDamage>{{ totalhealthdamage }} max Health magic damage</magicDamage> <OnHit>On-Hit</OnHit> for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Range",
+              "Maximum Health Damage"
+            ],
+            "effect": [
+              "{{ range }} -> {{ rangeNL }}",
+              "{{ maxhealthdamage }}% -> {{ maxhealthdamageNL }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            17,
+            17,
+            17,
+            17,
+            17
+          ],
+          "cooldownBurn": "17",
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            530,
+            530,
+            530,
+            530,
+            530
+          ],
+          "rangeBurn": "530",
+          "image": {
+            "full": "Jade_KogMawW.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 48,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_KogMawE",
+          "name": "Void Ooze",
+          "description": "Kog'Maw launches a peculiar ooze which damages all enemies it passes through and leaves a trail which slows enemies who stand on it.",
+          "tooltip": "Kog'Maw spits bile, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and leaves a trail of ooze for {{ trailduration }} seconds. Enemies in the ooze are <status>Slowed</status> by {{ slowamount*100 }}%.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Slow",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowamount*100.000000 }}% -> {{ slowamountnl*100.000000 }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
+          "cooldownBurn": "12",
+          "cost": [
+            80,
+            90,
+            100,
+            110,
+            120
+          ],
+          "costBurn": "80/90/100/110/120",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1200,
+            1200,
+            1200,
+            1200,
+            1200
+          ],
+          "rangeBurn": "1200",
+          "image": {
+            "full": "Jade_KogMawE.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 96,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_KogMawR",
+          "name": "Living Artillery",
+          "description": "Kog'Maw fires a living artillery shell at a great distance dealing damage and revealing targets.  Additionally, multiple Living Artilleries in a short period of time cause them to cost additional mana.",
+          "tooltip": "Kog'Maw shoots acid from a great distance that lands shortly after launch. Deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> , increased to <magicDamage>{{ championtotaldamage }} magic damage</magicDamage> to Champions and reveals enemies for {{ visiondebuffduration }} seconds.<br /><br />Subsequent artillery shots within {{ manacostduration }} seconds cost <scaleMana>{{ basecost }} additional Mana</scaleMana> (max: <scaleMana>{{ manacostcap }} Mana</scaleMana>).{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Range",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ castrange }} -> {{ castrangeNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            2,
+            1.5,
+            1
+          ],
+          "cooldownBurn": "2/1.5/1",
+          "cost": [
+            40,
+            40,
+            40
+          ],
+          "costBurn": "40",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1400,
+            1700,
+            2000
+          ],
+          "rangeBurn": "1400/1700/2000",
+          "image": {
+            "full": "Jade_KogMawR.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 144,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Icathian Surprise",
+        "description": "Upon dying, Kog'Maw starts a chain reaction in his body which causes him to detonate after 4 seconds; dealing magic damage to surrounding enemies.",
+        "image": {
+          "full": "Jade_KogMaw_IcathianSurprise.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 192,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

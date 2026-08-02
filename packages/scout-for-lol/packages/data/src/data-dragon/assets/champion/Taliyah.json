@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Taliyah": {
       "id": "Taliyah",
@@ -10,7 +10,7 @@
       "title": "the Stoneweaver",
       "image": {
         "full": "Taliyah.png",
-        "sprite": "champion4.png",
+        "sprite": "champion6.png",
         "group": "champion",
         "x": 192,
         "y": 48,
@@ -370,10 +370,10 @@
           "rangeBurn": "1000",
           "image": {
             "full": "TaliyahQ.png",
-            "sprite": "spell13.png",
+            "sprite": "spell20.png",
             "group": "spell",
-            "x": 192,
-            "y": 144,
+            "x": 0,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -511,10 +511,10 @@
           "rangeBurn": "900",
           "image": {
             "full": "TaliyahWVC.png",
-            "sprite": "spell13.png",
+            "sprite": "spell20.png",
             "group": "spell",
-            "x": 240,
-            "y": 144,
+            "x": 48,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -652,10 +652,10 @@
           "rangeBurn": "950",
           "image": {
             "full": "TaliyahE.png",
-            "sprite": "spell13.png",
+            "sprite": "spell20.png",
             "group": "spell",
-            "x": 288,
-            "y": 144,
+            "x": 96,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -767,10 +767,10 @@
           "rangeBurn": "2500/4500/6500",
           "image": {
             "full": "TaliyahR.png",
-            "sprite": "spell13.png",
+            "sprite": "spell20.png",
             "group": "spell",
-            "x": 336,
-            "y": 144,
+            "x": 144,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -782,7 +782,7 @@
         "description": "Taliyah gains Move Speed near walls.",
         "image": {
           "full": "Taliyah_Passive.png",
-          "sprite": "passive4.png",
+          "sprite": "passive6.png",
           "group": "passive",
           "x": 192,
           "y": 48,

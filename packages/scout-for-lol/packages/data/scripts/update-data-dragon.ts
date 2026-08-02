@@ -48,6 +48,9 @@ const MAX_LOADING_SCREEN_IMAGE_BYTES = 1 * BYTES_PER_MIB;
 // Splash art is higher-resolution than loading art (centered CDragon ~85 KB,
 // Data Dragon splash ~180 KB), so it gets a slightly larger ceiling.
 const MAX_SPLASH_IMAGE_BYTES = 2 * BYTES_PER_MIB;
+const CLASSIC_BACKGROUND_URL =
+  "https://raw.communitydragon.org/latest/game/assets/ux/loadingscreen/jade.png";
+const CLASSIC_BACKGROUND_PATH = `${IMG_DIR}/background/classic-jade.png`;
 
 /**
  * CommunityDragon *centered* splash art (≈1280×720) keyed by numeric champion
@@ -279,7 +282,21 @@ async function createDirectories(): Promise<void> {
   await ensureDir(`${IMG_DIR}/lane`);
   await ensureDir(`${IMG_DIR}/champion-loading`);
   await ensureDir(`${IMG_DIR}/champion-splash`);
+  await ensureDir(`${IMG_DIR}/background`);
   await ensureDir(`${ASSETS_DIR}/champion`);
+}
+
+async function downloadClassicBackground(): Promise<void> {
+  console.log(
+    `\nDownloading League Classic loading-screen background from ${CLASSIC_BACKGROUND_URL}...`,
+  );
+  await downloadImage(CLASSIC_BACKGROUND_URL, CLASSIC_BACKGROUND_PATH);
+  assertFileSizeAtMost(
+    CLASSIC_BACKGROUND_PATH,
+    MAX_SPLASH_IMAGE_BYTES,
+    "League Classic loading-screen background",
+  );
+  console.log("✓ Downloaded League Classic loading-screen background");
 }
 
 async function writeJsonAssets(
@@ -1206,6 +1223,11 @@ async function maybeAppendChangelogEntry(
 
 async function main(): Promise<void> {
   try {
+    if (process.argv.includes("--classic-assets-only")) {
+      await createDirectories();
+      await downloadClassicBackground();
+      return;
+    }
     // --snapshots-only skips version resolution + asset download and jumps
     // straight to the install-refresh + snapshot-test step, against
     // whatever Data Dragon assets are already committed in the tree. Used by
@@ -1236,6 +1258,7 @@ async function main(): Promise<void> {
 
     // Ensure directories exist
     await createDirectories();
+    await downloadClassicBackground();
 
     // Download and validate each asset
     const summoner = await downloadAsset(

@@ -4,15 +4,15 @@ import { z } from "zod/v4";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { resolvePostalAddresses, sendPostalEmail } from "#shared/postal.ts";
 import {
+  DATA_DRAGON_GENERATED_PATHS,
   buildImageOnlySkipEmailContent,
+  dataDragonDisallowedChangePaths,
   nonSuppressibleDataDragonPrChanges,
   parseGitStatusLine,
   shouldCreateDataDragonPr,
   type GitStatusEntry,
 } from "./data-dragon-diff.ts";
 import {
-  LANE_PRIOR_ARTIFACT_PATH,
-  LANE_PRIOR_EVAL_REPORT_PATH,
   LanePriorUpdateConfigSchema,
   lanePriorPrBodyLines,
   updateLanePriors,
@@ -44,22 +44,6 @@ const DATA_DRAGON_VERSIONS_URL =
   "https://ddragon.leagueoflegends.com/api/versions.json";
 const SCOUT_ROOT = "packages/scout-for-lol";
 const DATA_PACKAGE_ROOT = `${SCOUT_ROOT}/packages/data`;
-
-const GENERATED_PATHS = [
-  `${DATA_PACKAGE_ROOT}/src/data-dragon`,
-  // Structured patch changeset (assets/patch-notes.json) is under src/data-dragon
-  // above; the raw-notes provenance lives outside src, so stage it explicitly.
-  `${DATA_PACKAGE_ROOT}/patch-notes-archive`,
-  `${SCOUT_ROOT}/packages/backend/src/league/model/__tests__/__snapshots__`,
-  `${SCOUT_ROOT}/packages/report/src/dataDragon/__snapshots__`,
-  `${SCOUT_ROOT}/packages/report/src/html/arena/__snapshots__`,
-  // Auto-generated "What's New" entry on minor-version bumps (update-data-dragon.ts).
-  // A `git add` of an unchanged path is a no-op, so it only commits when the
-  // updater actually wrote an entry.
-  `${SCOUT_ROOT}/packages/frontend/src/data/changelog.tsx`,
-  LANE_PRIOR_ARTIFACT_PATH,
-  LANE_PRIOR_EVAL_REPORT_PATH,
-];
 
 const VersionFile = z.object({
   version: z.string().min(1),
@@ -147,14 +131,21 @@ async function writeGitAskpass(tempDir: string): Promise<string> {
 }
 
 async function changedFiles(repoDir: string): Promise<GitStatusEntry[]> {
-  const status = await runCommand(
-    ["git", "status", "--porcelain", "--", ...GENERATED_PATHS],
-    { cwd: repoDir, trimStdout: false },
-  );
-  return status
+  const status = await runCommand(["git", "status", "--porcelain"], {
+    cwd: repoDir,
+    trimStdout: false,
+  });
+  const changes = status
     .split("\n")
     .map((line) => parseGitStatusLine(line))
     .filter((entry) => entry !== undefined);
+  const disallowedPaths = dataDragonDisallowedChangePaths(changes);
+  if (disallowedPaths.length > 0) {
+    throw new Error(
+      `Data Dragon update changed disallowed paths: ${disallowedPaths.join(", ")}`,
+    );
+  }
+  return changes;
 }
 
 /**
@@ -480,7 +471,7 @@ export const dataDragonActivities = {
         cwd: repoDir,
       });
       await runCommand(["git", "checkout", "-B", branch], { cwd: repoDir });
-      await runCommand(["git", "add", "--", ...GENERATED_PATHS], {
+      await runCommand(["git", "add", "--", ...DATA_DRAGON_GENERATED_PATHS], {
         cwd: repoDir,
       });
       // Defense-in-depth, consistent with openSeasonRefreshPr: no agentic

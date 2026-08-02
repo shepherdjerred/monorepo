@@ -55,18 +55,11 @@ if (
 logger.info("📊 Initializing metrics system");
 import "@scout-for-lol/backend/metrics/index.ts";
 
-// Initialize HTTP server for health checks and metrics
-logger.info("🌐 Starting HTTP server for health checks and metrics");
-import { shutdownHttpServer } from "#src/http-server.ts";
-
-// Fail fast if Data Dragon champion assets are missing — deploy-time
-// failure beats notification-time 404 per 2026-04-20 resilience audit.
-logger.info("🖼️  Validating Data Dragon champion assets");
-import { validateChampionAssets } from "#src/league/data-dragon/validate-assets.ts";
-await validateChampionAssets();
-
-logger.info("🔌 Starting Discord bot initialization");
-import "@scout-for-lol/backend/discord/index.ts";
+// Fail before the HTTP health server or Discord bot starts if either the Data
+// Dragon assets or checksum-pinned private Classic fonts are unavailable.
+logger.info("🖼️  Validating startup assets before starting runtime services");
+import { startBackendRuntime } from "#src/startup.ts";
+const { shutdownHttpServer } = await startBackendRuntime();
 
 logger.info("🌱 Seeding Season table from SEASONS constant");
 import { prisma } from "#src/database/index.ts";
@@ -78,7 +71,7 @@ import { seedScheduledReportLastSuccessMetric } from "#src/reports/schedule-metr
 await seedScheduledReportLastSuccessMetric(prisma);
 
 logger.info("⏰ Starting cron job scheduler");
-import { startCronJobs } from "#src/league/cron.ts";
+const { startCronJobs } = await import("#src/league/cron.ts");
 void startCronJobs();
 
 // Incrementally seed the summoner-search index from existing data. Idempotent

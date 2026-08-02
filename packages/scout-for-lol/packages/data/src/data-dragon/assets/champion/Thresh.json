@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Thresh": {
       "id": "Thresh",
@@ -10,7 +10,7 @@
       "title": "the Chain Warden",
       "image": {
         "full": "Thresh.png",
-        "sprite": "champion4.png",
+        "sprite": "champion6.png",
         "group": "champion",
         "x": 384,
         "y": 48,
@@ -656,10 +656,10 @@
           "rangeBurn": "1075",
           "image": {
             "full": "ThreshQ.png",
-            "sprite": "spell14.png",
+            "sprite": "spell20.png",
             "group": "spell",
-            "x": 0,
-            "y": 48,
+            "x": 288,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -799,10 +799,10 @@
           "rangeBurn": "950",
           "image": {
             "full": "ThreshW.png",
-            "sprite": "spell14.png",
+            "sprite": "spell20.png",
             "group": "spell",
-            "x": 48,
-            "y": 48,
+            "x": 336,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -812,7 +812,7 @@
           "id": "ThreshE",
           "name": "Flay",
           "description": "Thresh's attacks wind up, dealing more damage the longer he waits between attacks. When activated, Thresh sweeps his chain, knocking all enemies hit in the direction of the blow.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Thresh's Attacks deal additional damage based on how long since he last Attacked. They deal between <magicDamage>{{ pattackdamagemin }}</magicDamage> and <magicDamage>{{ pattackdamagemax }} magic damage</magicDamage>.<br /><br /><spellActive>Active:</spellActive> Thresh whips his chains, <status>Pulling</status> or <status>Pushing</status> enemies in the direction of the swing. Enemies hit are also <status>Slowed</status> by {{ e2 }}% for {{ e4 }} second and take <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Thresh's Attacks deal additional damage based on how long since he last Attacked. They deal between <magicDamage>{{ pattackdamagemin }}</magicDamage> and <magicDamage>{{ pattackdamagemax }} magic damage</magicDamage>.<br /><br /><spellActive>Active:</spellActive> Thresh whips his chains, <status>Pulling</status> or <status>Pushing</status> enemies in the direction of the swing. Enemies hit are also <status>Slowed</status> by {{ activeslowpercentage }}% for {{ slowduration }} second and take <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Passive Damage",
@@ -823,8 +823,8 @@
             ],
             "effect": [
               "{{ passiveadratio }}% -> {{ passiveadratioNL }}%",
-              "{{ e1 }} -> {{ e1NL }}",
-              "{{ e2 }}% -> {{ e2NL }}%",
+              "{{ activebasedamage }} -> {{ activebasedamageNL }}",
+              "{{ activeslowpercentage }}% -> {{ activeslowpercentageNL }}%",
               "{{ cost }} -> {{ costNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
@@ -946,10 +946,10 @@
           "rangeBurn": "500",
           "image": {
             "full": "ThreshE.png",
-            "sprite": "spell14.png",
+            "sprite": "spell20.png",
             "group": "spell",
-            "x": 96,
-            "y": 48,
+            "x": 384,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -959,14 +959,14 @@
           "id": "ThreshRPenta",
           "name": "The Box",
           "description": "A prison of walls that slow and deal damage if broken.",
-          "tooltip": "Thresh creates a prison of spectral walls, <status>Slowing</status> champions by {{ e3 }}% for {{ e2 }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Walls break after one collision, and after one is broken, the rest deal no damage and <status>Slow</status> for half duration.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Thresh creates a prison of spectral walls, <status>Slowing</status> champions by {{ slowamount }}% for {{ slowduration }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Walls break after one collision, and after one is broken, the rest deal no damage and <status>Slow</status> for half duration.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
               "Cooldown"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
+              "{{ damage }} -> {{ damageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -1061,10 +1061,10 @@
           "rangeBurn": "450",
           "image": {
             "full": "ThreshRPenta.png",
-            "sprite": "spell14.png",
+            "sprite": "spell20.png",
             "group": "spell",
-            "x": 144,
-            "y": 48,
+            "x": 432,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -1076,7 +1076,7 @@
         "description": "Thresh can harvest the souls of enemies that die near him, permanently granting him Armor and Ability Power.",
         "image": {
           "full": "Thresh_Passive.png",
-          "sprite": "passive4.png",
+          "sprite": "passive6.png",
           "group": "passive",
           "x": 384,
           "y": 48,

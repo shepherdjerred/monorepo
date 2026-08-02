@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Vi": {
       "id": "Vi",
@@ -10,7 +10,7 @@
       "title": "the Piltover Enforcer",
       "image": {
         "full": "Vi.png",
-        "sprite": "champion5.png",
+        "sprite": "champion7.png",
         "group": "champion",
         "x": 48,
         "y": 0,
@@ -544,10 +544,10 @@
           "rangeBurn": "250",
           "image": {
             "full": "ViQ.png",
-            "sprite": "spell15.png",
+            "sprite": "spell21.png",
             "group": "spell",
-            "x": 96,
-            "y": 96,
+            "x": 384,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -685,10 +685,10 @@
           "rangeBurn": "750",
           "image": {
             "full": "ViW.png",
-            "sprite": "spell15.png",
+            "sprite": "spell21.png",
             "group": "spell",
-            "x": 144,
-            "y": 96,
+            "x": 432,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -828,10 +828,10 @@
           "rangeBurn": "400",
           "image": {
             "full": "ViE.png",
-            "sprite": "spell15.png",
+            "sprite": "spell22.png",
             "group": "spell",
-            "x": 192,
-            "y": 96,
+            "x": 0,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -943,10 +943,10 @@
           "rangeBurn": "800",
           "image": {
             "full": "ViR.png",
-            "sprite": "spell15.png",
+            "sprite": "spell22.png",
             "group": "spell",
-            "x": 240,
-            "y": 96,
+            "x": 48,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -958,7 +958,7 @@
         "description": "Vi charges a shield over time. The shield can be activated by hitting an enemy with an ability.",
         "image": {
           "full": "ViPassive.png",
-          "sprite": "passive5.png",
+          "sprite": "passive7.png",
           "group": "passive",
           "x": 48,
           "y": 0,

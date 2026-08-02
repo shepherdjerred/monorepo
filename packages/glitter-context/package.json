@@ -20,7 +20,8 @@
     }
   },
   "scripts": {
-    "build": "bun run scripts/generate.ts && bun build src/index.ts src/schema.ts --outdir dist --target browser --external zod && PATH=node_modules/@typescript/native/bin:$PATH tsc -p tsconfig.build.json",
+    "build": "bun --no-install run build:runtime && PATH=node_modules/@typescript/native/bin:$PATH tsc -p tsconfig.build.json",
+    "build:runtime": "bun --no-install run scripts/generate.ts && bun --no-install build src/index.ts src/schema.ts --outdir dist --target browser --external zod",
     "typecheck": "bun run scripts/generate.ts && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "bun run scripts/generate.ts && bunx eslint --cache .",
     "test": "bun run scripts/generate.ts && bun test test && uv run python/validate_context.py"

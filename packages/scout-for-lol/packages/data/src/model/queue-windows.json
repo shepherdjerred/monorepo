@@ -107,6 +107,14 @@
         "note": "launched with Trials of Twilight Act II and extended indefinitely after positive reception; still live as of July 2026"
       }
     ],
+    "classic": [
+      {
+        "start": "2026-07-29",
+        "end": null,
+        "source": "manual",
+        "note": "League Classic launch; no announced end date"
+      }
+    ],
     "easy doom bots": [
       {
         "start": "2025-08-27",

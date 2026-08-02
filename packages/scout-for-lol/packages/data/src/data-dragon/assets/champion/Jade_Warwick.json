@@ -1,0 +1,837 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Warwick": {
+      "id": "Jade_Warwick",
+      "key": "60019",
+      "name": "Warwick",
+      "title": "The Blood Hunter",
+      "image": {
+        "full": "Jade_Warwick.png",
+        "sprite": "champion3.png",
+        "group": "champion",
+        "x": 288,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60019000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60019002",
+          "num": 2,
+          "name": "Urf the Manatee",
+          "chromas": false
+        },
+        {
+          "id": "60019006",
+          "num": 6,
+          "name": "Firefang Warwick",
+          "chromas": false
+        },
+        {
+          "id": "60019009",
+          "num": 9,
+          "name": "Urfwick",
+          "chromas": false
+        },
+        {
+          "id": "60019010",
+          "num": 10,
+          "name": "Lunar Guardian Warwick",
+          "chromas": false
+        },
+        {
+          "id": "60019011",
+          "num": 11,
+          "name": "Lunar Guardian Warwick (Ruby)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "60019012",
+          "num": 12,
+          "name": "Lunar Guardian Warwick (Meteorite)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "60019013",
+          "num": 13,
+          "name": "Lunar Guardian Warwick (Pearl)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "60019014",
+          "num": 14,
+          "name": "Lunar Guardian Warwick (Turquoise)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "60019015",
+          "num": 15,
+          "name": "Lunar Guardian Warwick (Golden)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "60019016",
+          "num": 16,
+          "name": "PROJECT: Warwick",
+          "chromas": true
+        },
+        {
+          "id": "60019026",
+          "num": 26,
+          "name": "PROJECT: Warwick (Meteorite)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "60019027",
+          "num": 27,
+          "name": "PROJECT: Warwick (Obsidian)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "60019028",
+          "num": 28,
+          "name": "PROJECT: Warwick (Amethyst)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "60019029",
+          "num": 29,
+          "name": "PROJECT: Warwick (Turquoise)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "60019030",
+          "num": 30,
+          "name": "PROJECT: Warwick (Ruby)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "60019031",
+          "num": 31,
+          "name": "PROJECT: Warwick (Catseye)",
+          "chromas": true,
+          "parentSkin": 16
+        },
+        {
+          "id": "60019032",
+          "num": 32,
+          "name": "PROJECT: Warwick (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "60019033",
+          "num": 33,
+          "name": "PROJECT: Warwick (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "60019034",
+          "num": 34,
+          "name": "PROJECT: Warwick (Reckoning)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "60019035",
+          "num": 35,
+          "name": "Old God Warwick",
+          "chromas": false
+        },
+        {
+          "id": "60019036",
+          "num": 36,
+          "name": "Old God Warwick (Ruby)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "60019037",
+          "num": 37,
+          "name": "Old God Warwick (Citrine)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "60019038",
+          "num": 38,
+          "name": "Old God Warwick (Emerald)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "60019039",
+          "num": 39,
+          "name": "Old God Warwick (Sapphire)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "60019040",
+          "num": 40,
+          "name": "Old God Warwick (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "60019041",
+          "num": 41,
+          "name": "Old God Warwick (Obsidian)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "60019042",
+          "num": 42,
+          "name": "Old God Warwick (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "60019043",
+          "num": 43,
+          "name": "Old God Warwick (Pearl)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "60019044",
+          "num": 44,
+          "name": "Old God Warwick (Dark Ritual)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "60019301",
+          "num": 301,
+          "name": "Classic Warwick",
+          "chromas": false
+        },
+        {
+          "id": "60019302",
+          "num": 302,
+          "name": "Classic Warwick (Tundra Hunter)",
+          "chromas": false,
+          "parentSkin": 301
+        }
+      ],
+      "lore": "- The Abilities are completely different<br>- Infinite Duress (R) is a point and click suppress",
+      "blurb": "- The Abilities are completely different<br>- Infinite Duress (R) is a point and click suppress",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 9,
+        "defense": 5,
+        "magic": 3,
+        "difficulty": 3
+      },
+      "stats": {
+        "hp": 526,
+        "hpperlevel": 98,
+        "mp": 220,
+        "mpperlevel": 30,
+        "movespeed": 345,
+        "armor": 23.5,
+        "armorperlevel": 3.5,
+        "spellblock": 31.25,
+        "spellblockperlevel": 1.25,
+        "attackrange": 125,
+        "hpregen": 7.85,
+        "hpregenperlevel": 0.8,
+        "mpregen": 7.7,
+        "mpregenperlevel": 0.6,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 60.135,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 2.88,
+        "attackspeed": 0.679
+      },
+      "spells": [
+        {
+          "id": "Jade_WarwickQ",
+          "name": "Hungering Strike",
+          "description": "Takes a bite out of an enemy unit and heals Warwick.",
+          "tooltip": "Strikes an enemy for the greater value between <magicDamage>{{ totalflatdamage }}</magicDamage> and <magicDamage>{{ maxhealthdamage*100 }}% + {{ apdamage }}</magicDamage> of the target's maximum Health as <magicDamage>magic damage</magicDamage> (can only do flat damage to monsters), and <healing>heals</healing> Warwick for {{ healingratio*100 }}% of the damage dealt.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Max Health %",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ maxhealthdamage*100.000000 }}% -> {{ maxhealthdamagenl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
+          "cooldownBurn": "10/9/8/7/6",
+          "cost": [
+            70,
+            80,
+            90,
+            100,
+            110
+          ],
+          "costBurn": "70/80/90/100/110",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              100,
+              150,
+              200,
+              250,
+              300
+            ],
+            [
+              25,
+              37.5,
+              50,
+              62.5,
+              75
+            ],
+            [
+              150,
+              165,
+              180,
+              195,
+              210
+            ],
+            [
+              450,
+              450,
+              450,
+              450,
+              450
+            ],
+            [
+              200,
+              200,
+              200,
+              200,
+              200
+            ],
+            [
+              300,
+              300,
+              300,
+              300,
+              300
+            ],
+            [
+              425,
+              425,
+              425,
+              425,
+              425
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "100/150/200/250/300",
+            "25/37.5/50/62.5/75",
+            "150/165/180/195/210",
+            "450",
+            "200",
+            "300",
+            "425",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
+          "rangeBurn": "400",
+          "image": {
+            "full": "Jade_WarwickQ.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 384,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_WarwickW",
+          "name": "Hunter's Call",
+          "description": "Warwick lets out a howl, increasing all friendly champions' Attack Speed for a short time.",
+          "tooltip": "Warwick lets out a howl that inspires all allied champions, increasing Warwick's <attackSpeed>Attack Speed by {{ attackspeedmod*100 }}%</attackSpeed> and all friendly champions' <attackSpeed>Attack Speed by {{ allyattackspeedmod*100 }}%</attackSpeed> for {{ attackspeedduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Cooldown",
+              "Attack Speed"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ attackspeedmod*100.000000 }}% -> {{ attackspeedmodnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            24,
+            22,
+            20,
+            18,
+            16
+          ],
+          "cooldownBurn": "24/22/20/18/16",
+          "cost": [
+            35,
+            35,
+            35,
+            35,
+            35
+          ],
+          "costBurn": "35",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1250,
+            1250,
+            1250,
+            1250,
+            1250
+          ],
+          "rangeBurn": "1250",
+          "image": {
+            "full": "Jade_WarwickW.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 432,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_WarwickE",
+          "name": "Blood Scent",
+          "description": "Warwick passively senses weakened enemy champions around him.  The scent of blood sends him into a fury, causing him to move at incredible speeds.",
+          "tooltip": "<spellPassive>Passive: </spellPassive>Warwick senses enemy champions under 50% Health within {{ range }} distance of him; while he detects a low-health enemy, he gains <speed>{{ msbonus*100 }}% Movement Speed</speed>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Detection Distance",
+              "Move Speed"
+            ],
+            "effect": [
+              "{{ range }} -> {{ rangeNL }}",
+              "{{ msbonus*100.000000 }}% -> {{ msbonusnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "cooldownBurn": "0",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": "Passive",
+          "maxammo": "-1",
+          "range": [
+            1500,
+            2300,
+            3100,
+            3900,
+            4700
+          ],
+          "rangeBurn": "1500/2300/3100/3900/4700",
+          "image": {
+            "full": "Jade_WarwickE.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 0,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "Passive"
+        },
+        {
+          "id": "Jade_WarwickR",
+          "name": "Infinite Duress",
+          "description": "Warwick lunges at an enemy champion, suppressing his target and dealing magic damage for a few seconds.",
+          "tooltip": "Warwick lunges in front of an enemy champion and <status>Suppresses</status> them for {{ rduration }} seconds. During this time, Warwick attacks his victim {{ numberofhits }} times, dealing a total of <magicDamage>{{ totaldamage }} magic damage</magicDamage> (triggers on-hit effects {{ numberofhits }} times).<br /><br />Warwick gains {{ bonuslifesteal*100 }}% Life Steal for the duration.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ rbasedamage }} -> {{ rbasedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            90,
+            80,
+            70
+          ],
+          "cooldownBurn": "90/80/70",
+          "cost": [
+            100,
+            125,
+            150
+          ],
+          "costBurn": "100/125/150",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            650,
+            650,
+            650
+          ],
+          "rangeBurn": "650",
+          "image": {
+            "full": "Jade_WarwickR.png",
+            "sprite": "spell11.png",
+            "group": "spell",
+            "x": 48,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Eternal Thirst",
+        "description": "Each of Warwick's attacks will heal him. Each successive attack against the same target will steal more and more Health.",
+        "image": {
+          "full": "Jade_WarwickP.png",
+          "sprite": "passive3.png",
+          "group": "passive",
+          "x": 288,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

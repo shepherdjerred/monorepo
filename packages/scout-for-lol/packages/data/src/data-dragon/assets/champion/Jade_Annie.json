@@ -1,0 +1,758 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Annie": {
+      "id": "Jade_Annie",
+      "key": "60001",
+      "name": "Annie",
+      "title": "The Dark Child",
+      "image": {
+        "full": "Jade_Annie.png",
+        "sprite": "champion1.png",
+        "group": "champion",
+        "x": 144,
+        "y": 96,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60001000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60001001",
+          "num": 1,
+          "name": "Goth Annie",
+          "chromas": false
+        },
+        {
+          "id": "60001005",
+          "num": 5,
+          "name": "Frostfire Annie",
+          "chromas": false
+        },
+        {
+          "id": "60001008",
+          "num": 8,
+          "name": "Panda Annie",
+          "chromas": false
+        },
+        {
+          "id": "60001009",
+          "num": 9,
+          "name": "Sweetheart Annie",
+          "chromas": false
+        },
+        {
+          "id": "60001011",
+          "num": 11,
+          "name": "Super Galaxy Annie",
+          "chromas": false
+        },
+        {
+          "id": "60001012",
+          "num": 12,
+          "name": "Annie-Versary",
+          "chromas": false
+        },
+        {
+          "id": "60001022",
+          "num": 22,
+          "name": "Cafe Cuties Annie",
+          "chromas": false
+        },
+        {
+          "id": "60001023",
+          "num": 23,
+          "name": "Cafe Cuties Annie (Ruby)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "60001024",
+          "num": 24,
+          "name": "Cafe Cuties Annie (Catseye)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "60001025",
+          "num": 25,
+          "name": "Cafe Cuties Annie (Emerald)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "60001026",
+          "num": 26,
+          "name": "Cafe Cuties Annie (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "60001027",
+          "num": 27,
+          "name": "Cafe Cuties Annie (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "60001028",
+          "num": 28,
+          "name": "Cafe Cuties Annie (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "60001029",
+          "num": 29,
+          "name": "Cafe Cuties Annie (Pearl)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "60001030",
+          "num": 30,
+          "name": "Cafe Cuties Annie (Obsidian)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "60001060",
+          "num": 60,
+          "name": "Goth Annie Modern",
+          "chromas": false
+        },
+        {
+          "id": "60001301",
+          "num": 301,
+          "name": "Classic Annie",
+          "chromas": false
+        },
+        {
+          "id": "60001302",
+          "num": 302,
+          "name": "Classic Annie (Goth)",
+          "chromas": false,
+          "parentSkin": 301
+        },
+        {
+          "id": "60001303",
+          "num": 303,
+          "name": "Classic Annie (Founder's Goth)",
+          "chromas": false,
+          "parentSkin": 301
+        },
+        {
+          "id": "60001305",
+          "num": 305,
+          "name": "Classic Annie (Prom)",
+          "chromas": false,
+          "parentSkin": 301
+        }
+      ],
+      "lore": "- Tibbers (R) dies when Annie does<br>- Pyromania (P) Stacks reset on death<br>- Molten Shield (E) doesn't grant movement speed",
+      "blurb": "- Tibbers (R) dies when Annie does<br>- Pyromania (P) Stacks reset on death<br>- Molten Shield (E) doesn't grant movement speed",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Mage",
+        "Support"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 2,
+        "defense": 3,
+        "magic": 10,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 460,
+        "hpperlevel": 76,
+        "mp": 300,
+        "mpperlevel": 50,
+        "movespeed": 335,
+        "armor": 16.5,
+        "armorperlevel": 4,
+        "spellblock": 30,
+        "spellblockperlevel": 0,
+        "attackrange": 625,
+        "hpregen": 5.05,
+        "hpregenperlevel": 0.55,
+        "mpregen": 7.5,
+        "mpregenperlevel": 0.6,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 50.625,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 1.36,
+        "attackspeed": 0.579
+      },
+      "spells": [
+        {
+          "id": "Jade_AnnieQ",
+          "name": "Disintegrate",
+          "description": "Annie hurls a mana-infused fireball, dealing damage and refunding the mana cost if it destroys the target.",
+          "tooltip": "Annie hurls a ball of fire dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Mana cost is refunded if <spellName>Disintegrate</spellName> kills the target.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            4,
+            4,
+            4,
+            4,
+            4
+          ],
+          "cooldownBurn": "4",
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
+          "costBurn": "60/65/70/75/80",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            625,
+            625,
+            625,
+            625,
+            625
+          ],
+          "rangeBurn": "625",
+          "image": {
+            "full": "Jade_AnnieQ.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 288,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_AnnieW",
+          "name": "Incinerate",
+          "description": "Annie casts a blazing cone of fire, dealing damage to all enemies in the area.",
+          "tooltip": "Annie casts a cone of fire dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to all enemies in the area.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
+          "cooldownBurn": "8",
+          "cost": [
+            70,
+            80,
+            90,
+            100,
+            110
+          ],
+          "costBurn": "70/80/90/100/110",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
+          "rangeBurn": "600",
+          "image": {
+            "full": "Jade_AnnieW.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 336,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_AnnieE",
+          "name": "Molten Shield",
+          "description": "Increases Annie's Armor and Magic Resist and damages enemies who hit Annie with basic attacks.",
+          "tooltip": "Annie surrounds herself in a flame barrier, increasing her <scaleArmor>Armor </scaleArmor>and <scaleMR>Magic Resist by {{ resistances }}</scaleMR> for {{ shieldduration }} seconds. Enemies who attack Annie are dealt <magicDamage>{{ damagereturn }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Armor Bonus",
+              "Magic Resist Bonus"
+            ],
+            "effect": [
+              "{{ damagereflection }} -> {{ damagereflectionNL }}",
+              "{{ resistances }} -> {{ resistancesNL }}",
+              "{{ resistances }} -> {{ resistancesNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "cooldownBurn": "10",
+          "cost": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
+          "costBurn": "20",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
+          "rangeBurn": "800",
+          "image": {
+            "full": "Jade_AnnieE.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 384,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_AnnieR",
+          "name": "Summon: Tibbers",
+          "description": "Annie wills her bear Tibbers to life, dealing damage to units in the area. Tibbers can attack and also burns enemies that stand near him.",
+          "tooltip": "Tibbers appears in a burst of flame dealing <magicDamage>{{ initialburstdamage }} magic damage</magicDamage> to enemies in the target area.<br /><br />For the next {{ tibberslifetime }} seconds, Tibbers chases down enemies and deals <magicDamage>{{ tibbersauradamage }} magic damage</magicDamage> each second to nearby foes.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Tibbers Health",
+              "Tibbers Armor and Magic Resist",
+              "Tibbers Attack Damage"
+            ],
+            "effect": [
+              "{{ initialdamage }} -> {{ initialdamageNL }}",
+              "{{ health }} -> {{ healthNL }}",
+              "{{ tibberstotalresists }} -> {{ tibberstotalresistsNL }}",
+              "{{ tibbersaa }} -> {{ tibbersaaNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            120,
+            120,
+            120
+          ],
+          "cooldownBurn": "120",
+          "cost": [
+            100,
+            100,
+            100
+          ],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            600,
+            600,
+            600
+          ],
+          "rangeBurn": "600",
+          "image": {
+            "full": "Jade_AnnieR.png",
+            "sprite": "spell6.png",
+            "group": "spell",
+            "x": 432,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Pyromania",
+        "description": "After casting 4 spells, Annie's next offensive spell Stuns the target(s) for 1.75 seconds.",
+        "image": {
+          "full": "Jade_Annie_Passive.png",
+          "sprite": "passive1.png",
+          "group": "passive",
+          "x": 144,
+          "y": 96,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

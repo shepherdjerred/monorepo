@@ -1,0 +1,806 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Karthus": {
+      "id": "Jade_Karthus",
+      "key": "60030",
+      "name": "Karthus",
+      "title": "The Deathsinger",
+      "image": {
+        "full": "Jade_Karthus.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 0,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60030000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60030001",
+          "num": 1,
+          "name": "Phantom Karthus",
+          "chromas": false
+        },
+        {
+          "id": "60030003",
+          "num": 3,
+          "name": "Grim Reaper Karthus",
+          "chromas": false
+        },
+        {
+          "id": "60030004",
+          "num": 4,
+          "name": "Pentakill Karthus",
+          "chromas": true
+        },
+        {
+          "id": "60030006",
+          "num": 6,
+          "name": "Grim Reaper Karthus Plague Burn",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "60030007",
+          "num": 7,
+          "name": "Grim Reaper Karthus Plague Blight",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "60030008",
+          "num": 8,
+          "name": "Grim Reaper Karthus Plague Frostbite",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "60030009",
+          "num": 9,
+          "name": "Karthus Lightsbane",
+          "chromas": false
+        },
+        {
+          "id": "60030017",
+          "num": 17,
+          "name": "Pentakill III: Lost Chapter Karthus",
+          "chromas": false
+        },
+        {
+          "id": "60030018",
+          "num": 18,
+          "name": "Pentakill III: Lost Chapter Karthus (Ruby)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "60030019",
+          "num": 19,
+          "name": "Pentakill III: Lost Chapter Karthus (Catseye)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "60030020",
+          "num": 20,
+          "name": "Pentakill III: Lost Chapter Karthus (Emerald)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "60030021",
+          "num": 21,
+          "name": "Pentakill III: Lost Chapter Karthus (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "60030022",
+          "num": 22,
+          "name": "Pentakill III: Lost Chapter Karthus (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "60030023",
+          "num": 23,
+          "name": "Pentakill III: Lost Chapter Karthus (Sapphire)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "60030024",
+          "num": 24,
+          "name": "Pentakill III: Lost Chapter Karthus (Pearl)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "60030025",
+          "num": 25,
+          "name": "Pentakill III: Lost Chapter Karthus (Obsidian)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "60030026",
+          "num": 26,
+          "name": "Elderwood Karthus",
+          "chromas": true
+        },
+        {
+          "id": "60030027",
+          "num": 27,
+          "name": "Elderwood Karthus (Ruby)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60030028",
+          "num": 28,
+          "name": "Elderwood Karthus (Catseye)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60030029",
+          "num": 29,
+          "name": "Elderwood Karthus (Emerald)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60030030",
+          "num": 30,
+          "name": "Elderwood Karthus (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60030031",
+          "num": 31,
+          "name": "Elderwood Karthus (Sapphire)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60030032",
+          "num": 32,
+          "name": "Elderwood Karthus (Pearl)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60030033",
+          "num": 33,
+          "name": "Elderwood Karthus (Turquoise)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60030034",
+          "num": 34,
+          "name": "Elderwood Karthus (Obsidian)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "60030301",
+          "num": 301,
+          "name": "Classic Karthus",
+          "chromas": true
+        },
+        {
+          "id": "60030302",
+          "num": 302,
+          "name": "Classic Karthus (Phantom)",
+          "chromas": false,
+          "parentSkin": 301
+        }
+      ],
+      "lore": "- The dead never change",
+      "blurb": "- The dead never change",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Mage"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 2,
+        "defense": 2,
+        "magic": 10,
+        "difficulty": 7
+      },
+      "stats": {
+        "hp": 465,
+        "hpperlevel": 75,
+        "mp": 331,
+        "mpperlevel": 61,
+        "movespeed": 335,
+        "armor": 18.5,
+        "armorperlevel": 3.5,
+        "spellblock": 30,
+        "spellblockperlevel": 0,
+        "attackrange": 450,
+        "hpregen": 6.05,
+        "hpregenperlevel": 0.55,
+        "mpregen": 7.1,
+        "mpregenperlevel": 0.6,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 45.45,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 2.11,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "Jade_KarthusLayWaste",
+          "name": "Lay Waste",
+          "description": "Karthus unleashes a delayed blast at a location, dealing damage to nearby enemies.",
+          "tooltip": "Creates a delayed blast,  after 0.5 seconds, deals <magicDamage>{{ qdamage }} magic damage</magicDamage> to each nearby enemy, this deals double damage if it hits only a single unit.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "cooldownBurn": "1",
+          "cost": [
+            20,
+            26,
+            32,
+            38,
+            44
+          ],
+          "costBurn": "20/26/32/38/44",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              45,
+              65,
+              85,
+              105,
+              125
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "45/65/85/105/125",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "2",
+          "range": [
+            875,
+            875,
+            875,
+            875,
+            875
+          ],
+          "rangeBurn": "875",
+          "image": {
+            "full": "Jade_KarthusLayWaste.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 192,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_KarthusWallOfPain",
+          "name": "Wall of Pain",
+          "description": "Karthus creates a passable screen of leeching energy.  Any enemy units that walk through the screen have their Movement Speed and Magic Resist reduced for a period.",
+          "tooltip": "Creates a wall at target location that lasts for {{ duration }} seconds. Enemies that pass through the wall have their Magic Resist reduced by {{ magicreduction*-100 }}% and <status>Slowed</status> by {{ slow*-100 }}% for {{ duration }} seconds (their Movement Speed gradually recovers over the duration).{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Wall Width",
+              "Move Speed Slow"
+            ],
+            "effect": [
+              "{{ e2 }} -> {{ e2NL }}",
+              "{{ e3 }}% -> {{ e3NL }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            18,
+            18,
+            18,
+            18,
+            18
+          ],
+          "cooldownBurn": "18",
+          "cost": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              15,
+              15,
+              15,
+              15,
+              15
+            ],
+            [
+              800,
+              900,
+              1000,
+              1100,
+              1200
+            ],
+            [
+              40,
+              50,
+              60,
+              70,
+              80
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "15",
+            "800/900/1000/1100/1200",
+            "40/50/60/70/80",
+            "5",
+            "5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "Jade_KarthusWallOfPain.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 240,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_KarthusDefile",
+          "name": "Defile",
+          "description": "Karthus passively steals energy from his victims, gaining Mana on each kill.  Alternatively, Karthus can surround himself in the souls of his prey, dealing damage to nearby enemies, but quickly draining his own mana.",
+          "tooltip": "<toggle>Toggle Off: </toggle>When Karthus kills a unit, he restores <scaleMana>{{ manarestoreonkill }} Mana</scaleMana>.<br /><br /><toggle>Toggle On: </toggle>Deal <magicDamage>{{ totaldps }} magic damage</magicDamage> to nearby enemies each second.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage Per Second",
+              "@AbilityResourceName@ Cost",
+              "Mana Restore"
+            ],
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ manarestoreonkill }} -> {{ manarestoreonkillNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            0.5,
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "cooldownBurn": "0.5",
+          "cost": [
+            30,
+            42,
+            54,
+            66,
+            78
+          ],
+          "costBurn": "30/42/54/66/78",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              30,
+              50,
+              70,
+              90,
+              110
+            ],
+            [
+              10,
+              20,
+              30,
+              40,
+              50
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "30/50/70/90/110",
+            "10/20/30/40/50",
+            "0.5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " Mana per second",
+          "maxammo": "-1",
+          "range": [
+            550,
+            550,
+            550,
+            550,
+            550
+          ],
+          "rangeBurn": "550",
+          "image": {
+            "full": "Jade_KarthusDefile.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 288,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} Mana per second"
+        },
+        {
+          "id": "Jade_KarthusFallenOne",
+          "name": "Requiem",
+          "description": "After channeling for 3 seconds, Karthus deals damage to all enemy champions.",
+          "tooltip": "After channeling for 3 seconds, Karthus deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to all enemy champions.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            200,
+            180,
+            160
+          ],
+          "cooldownBurn": "200/180/160",
+          "cost": [
+            150,
+            175,
+            200
+          ],
+          "costBurn": "150/175/200",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            10000,
+            10000,
+            10000
+          ],
+          "rangeBurn": "10000",
+          "image": {
+            "full": "Jade_KarthusFallenOne.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 336,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Death Defied",
+        "description": "Upon dying, Karthus enters a spirit form that allows him to continue casting spells.",
+        "image": {
+          "full": "Jade_Karthus_Passive.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 0,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

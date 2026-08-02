@@ -3,6 +3,7 @@ import type {
   RawCurrentGameParticipant,
   LoadingScreenData,
   LoadingScreenParticipant,
+  ClassicLoadingScreenParticipant,
   NonStandardLoadingScreenParticipant,
   LoadingScreenBan,
   LoadingScreenLayout,
@@ -23,8 +24,11 @@ import {
   ArenaTeamIdSchema,
   GameIdSchema,
   inferStandardLanesWithCurrentPriors,
-  isArenaQueueOrMode,
   resolveQueueTypeFromGame,
+  resolveClassicChampionKey,
+  getModernChampionIdForClassic,
+  getModernSpellIdForClassic,
+  loadingScreenLayoutForQueueType,
 } from "@scout-for-lol/data/index.ts";
 import {
   getChampionDisplayName,
@@ -32,7 +36,6 @@ import {
 } from "#src/utils/champion.ts";
 import { getRankByPuuid } from "#src/league/model/rank.ts";
 import { createLogger } from "#src/logger.ts";
-import { match } from "ts-pattern";
 
 const logger = createLogger("prematch-loading-screen-builder");
 
@@ -47,6 +50,13 @@ export class RecoverableLoadingScreenDataError extends Error {
   }
 }
 
+export class UnsupportedLoadingScreenQueueError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "UnsupportedLoadingScreenQueueError";
+  }
+}
+
 type BuildParticipantContext = {
   trackedPuuids: ReadonlySet<string>;
   layout: LoadingScreenLayout;
@@ -54,72 +64,6 @@ type BuildParticipantContext = {
 
 type BaseBuiltParticipant = Omit<NonStandardLoadingScreenParticipant, "ranks">;
 type RankedBuiltParticipant = BaseBuiltParticipant & { ranks?: Ranks };
-
-/**
- * Determine the layout mode based on queue config ID.
- * Throws on unknown queue IDs — caller is responsible for ensuring
- * we only attempt to render known queue types.
- */
-function determineLayout(gameInfo: RawCurrentGameInfo): LoadingScreenLayout {
-  if (isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode)) {
-    return "arena";
-  }
-
-  return (
-    match(gameInfo.gameQueueConfigId)
-      .with(450, () => "aram" as const) // ARAM
-      .with(720, () => "aram" as const) // ARAM Clash
-      .with(2400, () => "aram" as const) // ARAM: Mayhem
-      .with(3200, () => "aram" as const) // ARAM: Mayhem MMR variant
-      .with(3270, () => "aram" as const) // ARAM: Mayhem
-      .with(0, () => "standard" as const) // Custom
-      .with(3100, () => "standard" as const) // Custom
-      .with(400, () => "standard" as const) // Draft Pick
-      .with(RANKED_SOLO_QUEUE_ID, () => "standard" as const) // Ranked Solo
-      .with(RANKED_FLEX_QUEUE_ID, () => "standard" as const) // Ranked Flex
-      .with(480, () => "standard" as const) // Swiftplay
-      .with(490, () => "standard" as const) // Quickplay
-      .with(700, () => "standard" as const) // Clash
-      .with(710, () => "standard" as const) // Ranked 5s (premade SR 5v5)
-      .with(900, () => "standard" as const) // ARURF
-      .with(1900, () => "standard" as const) // URF
-      .with(2300, () => "standard" as const) // Brawl
-      .with(3130, () => "standard" as const) // Easy Doom Bots
-      .with(4220, () => "standard" as const) // Normal Doom Bots
-      .with(4250, () => "standard" as const) // Hard Doom Bots
-      // Unknown queue ID (e.g. custom games, which carry ad-hoc queue IDs like
-      // 3110 that are absent from queues.json): fall back to the game mode + map
-      // to pick a layout, so custom games on standard maps still render.
-      .otherwise(() => layoutFromModeAndMap(gameInfo))
-  );
-}
-
-const ARAM_MAP_ID = 12;
-const SUMMONERS_RIFT_MAP_ID = 11;
-
-/**
- * Derive a layout from game mode and map for queue IDs that aren't enumerated
- * above. Custom games are structurally identical to their ranked/normal
- * counterparts (a custom Summoner's Rift draft is a 5v5; a custom ARAM is an
- * ARAM), so the mode/map is a reliable signal. Arena is already handled by the
- * `isArenaQueueOrMode` check at the top of `determineLayout`.
- */
-function layoutFromModeAndMap(
-  gameInfo: RawCurrentGameInfo,
-): LoadingScreenLayout {
-  if (gameInfo.gameMode === "ARAM" || gameInfo.mapId === ARAM_MAP_ID) {
-    return "aram";
-  }
-  if (
-    gameInfo.gameMode === "CLASSIC" ||
-    gameInfo.mapId === SUMMONERS_RIFT_MAP_ID
-  ) {
-    return "standard";
-  }
-  throw new Error(
-    `Unknown queue config ID ${gameInfo.gameQueueConfigId.toString()} — cannot determine loading screen layout (gameId=${gameInfo.gameId.toString()}, mapId=${gameInfo.mapId.toString()}, gameMode=${gameInfo.gameMode})`,
-  );
-}
 
 /**
  * Resolve team assignment for a participant.
@@ -189,6 +133,32 @@ function buildParticipant(
     // data loss — there is no usable identity to match on. See
     // packages/docs/decisions/2026-06-07_scout-arena-prematch-scrubbed-players.md
     isTrackedPlayer: puuid !== null && context.trackedPuuids.has(puuid),
+  };
+}
+
+function buildClassicParticipant(
+  participant: RawCurrentGameParticipant,
+  trackedPuuids: ReadonlySet<string>,
+): ClassicLoadingScreenParticipant {
+  const championName = resolveClassicChampionKey(participant.championId);
+  const puuid =
+    participant.puuid === null
+      ? null
+      : LeaguePuuidSchema.parse(participant.puuid);
+  const team = resolveTeam(participant, "classic");
+  if (team !== "blue" && team !== "red") {
+    throw new Error("Classic participant has a non-standard team");
+  }
+  return {
+    puuid,
+    summonerName: participant.riotId,
+    championId: LoadingScreenChampionIdSchema.parse(participant.championId),
+    championName,
+    championDisplayName: getChampionDisplayName(participant.championId),
+    team,
+    spell1Id: SummonerSpellIdSchema.parse(participant.spell1Id),
+    spell2Id: SummonerSpellIdSchema.parse(participant.spell2Id),
+    isTrackedPlayer: puuid !== null && trackedPuuids.has(puuid),
   };
 }
 
@@ -308,6 +278,65 @@ function inferStandardParticipants(
   return inferred;
 }
 
+const CLASSIC_LANE_ORDER = [
+  "top",
+  "jungle",
+  "middle",
+  "adc",
+  "support",
+] as const;
+
+function orderFullClassicTeam(
+  participants: ClassicLoadingScreenParticipant[],
+): ClassicLoadingScreenParticipant[] {
+  const inference = inferStandardLanesWithCurrentPriors(
+    participants.map((participant, index) => ({
+      participantKey: laneInferenceKey(index),
+      championId: LoadingScreenChampionIdSchema.parse(
+        getModernChampionIdForClassic(participant.championId),
+      ),
+      spell1Id: SummonerSpellIdSchema.parse(
+        getModernSpellIdForClassic(participant.spell1Id) ??
+          participant.spell1Id,
+      ),
+      spell2Id: SummonerSpellIdSchema.parse(
+        getModernSpellIdForClassic(participant.spell2Id) ??
+          participant.spell2Id,
+      ),
+    })),
+  );
+  const laneByIndex = new Map(
+    inference.assignments.map((assignment) => [
+      Number(assignment.participantKey.replace("participant:", "")),
+      assignment.lane,
+    ]),
+  );
+  return participants
+    .map((participant, index) => ({
+      participant,
+      lane: laneByIndex.get(index),
+    }))
+    .toSorted(
+      (left, right) =>
+        CLASSIC_LANE_ORDER.indexOf(left.lane ?? "support") -
+        CLASSIC_LANE_ORDER.indexOf(right.lane ?? "support"),
+    )
+    .map((entry) => entry.participant);
+}
+
+function orderClassicParticipants(
+  participants: ClassicLoadingScreenParticipant[],
+): ClassicLoadingScreenParticipant[] {
+  const blue = participants.filter(
+    (participant) => participant.team === "blue",
+  );
+  const red = participants.filter((participant) => participant.team === "red");
+  if (blue.length !== 5 || red.length !== 5) {
+    return participants;
+  }
+  return [...orderFullClassicTeam(blue), ...orderFullClassicTeam(red)];
+}
+
 /**
  * Resolve banned champions to loading screen ban objects.
  */
@@ -351,7 +380,7 @@ export async function buildLoadingScreenData(
     gameInfo.gameType,
   );
   if (queueType === undefined) {
-    throw new Error(
+    throw new UnsupportedLoadingScreenQueueError(
       `Unknown queue type for queue config ID ${gameInfo.gameQueueConfigId.toString()} (gameId=${gameInfo.gameId.toString()}, mapId=${gameInfo.mapId.toString()}, gameMode=${gameInfo.gameMode}, gameType=${gameInfo.gameType})`,
     );
   }
@@ -361,7 +390,7 @@ export async function buildLoadingScreenData(
     gameInfo.gameQueueConfigId === RANKED_SOLO_QUEUE_ID ||
     gameInfo.gameQueueConfigId === RANKED_FLEX_QUEUE_ID ||
     gameInfo.gameQueueConfigId === RANKED_5S_QUEUE_ID;
-  const layout = determineLayout(gameInfo);
+  const layout = loadingScreenLayoutForQueueType(queueType);
   let mapName: ReturnType<typeof mapIdToName>;
   try {
     mapName = mapIdToName(gameInfo.mapId);
@@ -370,6 +399,23 @@ export async function buildLoadingScreenData(
       `${error instanceof Error ? error.message : String(error)} (gameId=${gameInfo.gameId.toString()}, queueConfigId=${gameInfo.gameQueueConfigId.toString()}, gameMode=${gameInfo.gameMode})`,
       { cause: error },
     );
+  }
+
+  if (layout === "classic") {
+    const participants = orderClassicParticipants(
+      gameInfo.participants.map((participant) =>
+        buildClassicParticipant(participant, trackedPuuids),
+      ),
+    );
+    return LoadingScreenDataSchema.parse({
+      gameId: GameIdSchema.parse(gameInfo.gameId),
+      queueType: "classic",
+      queueDisplayName,
+      layout: "classic",
+      mapName,
+      participants,
+      gameStartTime: gameInfo.gameStartTime,
+    });
   }
 
   // Build base participant data (without ranks)

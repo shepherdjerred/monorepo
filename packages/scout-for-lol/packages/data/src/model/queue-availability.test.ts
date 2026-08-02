@@ -69,6 +69,18 @@ describe("isQueueCurrentlyAvailable", () => {
       isQueueCurrentlyAvailable("brawl", new Date("2025-01-01T00:00:00Z")),
     ).toBe(false);
   });
+
+  test("Classic starts on launch day and remains open-ended", () => {
+    expect(
+      isQueueCurrentlyAvailable("classic", new Date("2026-07-28T23:59:59Z")),
+    ).toBe(false);
+    expect(
+      isQueueCurrentlyAvailable("classic", new Date("2026-07-29T00:00:00Z")),
+    ).toBe(true);
+    expect(
+      isQueueCurrentlyAvailable("classic", new Date("2027-07-29T00:00:00Z")),
+    ).toBe(true);
+  });
 });
 
 describe("queueAvailabilityNote", () => {

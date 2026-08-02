@@ -1,0 +1,781 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Leona": {
+      "id": "Jade_Leona",
+      "key": "60089",
+      "name": "Leona",
+      "title": "The Radiant Dawn",
+      "image": {
+        "full": "Jade_Leona.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 288,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60089000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60089004",
+          "num": 4,
+          "name": "Pool Party Leona",
+          "chromas": false
+        },
+        {
+          "id": "60089005",
+          "num": 5,
+          "name": "Pool Party Leona Dawn Pink",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "60089006",
+          "num": 6,
+          "name": "Pool Party Leona Dawn Azure",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "60089007",
+          "num": 7,
+          "name": "Pool Party Leona Dawn Lemon",
+          "chromas": true,
+          "parentSkin": 4
+        },
+        {
+          "id": "60089009",
+          "num": 9,
+          "name": "Barbecue Leona",
+          "chromas": false
+        },
+        {
+          "id": "60089012",
+          "num": 12,
+          "name": "Mecha Kingdoms Leona",
+          "chromas": false
+        },
+        {
+          "id": "60089013",
+          "num": 13,
+          "name": "Mecha Kingdoms Leona (Peacekeeper)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "60089014",
+          "num": 14,
+          "name": "Mecha Kingdoms Leona (Obsidian)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "60089015",
+          "num": 15,
+          "name": "Mecha Kingdoms Leona (Pearl)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "60089016",
+          "num": 16,
+          "name": "Mecha Kingdoms Leona (Ruby)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "60089017",
+          "num": 17,
+          "name": "Mecha Kingdoms Leona (Turquoise)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "60089018",
+          "num": 18,
+          "name": "Mecha Kingdoms Leona (Sapphire)",
+          "chromas": true,
+          "parentSkin": 12
+        },
+        {
+          "id": "60089019",
+          "num": 19,
+          "name": "Mecha Kingdoms Leona (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "60089020",
+          "num": 20,
+          "name": "Mecha Kingdoms Leona (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "60089034",
+          "num": 34,
+          "name": "High Noon Leona",
+          "chromas": false
+        },
+        {
+          "id": "60089044",
+          "num": 44,
+          "name": "High Noon Leona (Ruby)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "60089045",
+          "num": 45,
+          "name": "High Noon Leona (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "60089046",
+          "num": 46,
+          "name": "High Noon Leona (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "60089047",
+          "num": 47,
+          "name": "High Noon Leona (Catseye)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "60089048",
+          "num": 48,
+          "name": "High Noon Leona (Nomad)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "60089049",
+          "num": 49,
+          "name": "High Noon Leona (Sapphire)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "60089050",
+          "num": 50,
+          "name": "Crystalis Motus Leona",
+          "chromas": false
+        },
+        {
+          "id": "60089051",
+          "num": 51,
+          "name": "Crystalis Motus Leona (Reclaimed)",
+          "chromas": false,
+          "parentSkin": 50
+        }
+      ],
+      "lore": "- In a human life, the sun never changes, neither does she",
+      "blurb": "- In a human life, the sun never changes, neither does she",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Tank",
+        "Support"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 4,
+        "defense": 8,
+        "magic": 3,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 517,
+        "hpperlevel": 87,
+        "mp": 275,
+        "mpperlevel": 40,
+        "movespeed": 335,
+        "armor": 25.1,
+        "armorperlevel": 3.1,
+        "spellblock": 31.25,
+        "spellblockperlevel": 1.25,
+        "attackrange": 125,
+        "hpregen": 9.85,
+        "hpregenperlevel": 0.85,
+        "mpregen": 7.7,
+        "mpregenperlevel": 0.7,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 58,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 2.9,
+        "attackspeed": 0.625
+      },
+      "spells": [
+        {
+          "id": "Jade_LeonaShieldOfDaybreak",
+          "name": "Shield of Daybreak",
+          "description": "Leona uses her shield to perform her next basic attack, dealing bonus magic damage and stunning the target.",
+          "tooltip": "The next basic attack deals an additional <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> and <status>Stuns</status> an enemy for 1.25 seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "@AbilityResourceName@ Cost",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            11,
+            10,
+            9,
+            8,
+            7
+          ],
+          "cooldownBurn": "11/10/9/8/7",
+          "cost": [
+            45,
+            50,
+            55,
+            60,
+            65
+          ],
+          "costBurn": "45/50/55/60/65",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              10,
+              35,
+              60,
+              85,
+              110
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "1",
+            "10/35/60/85/110",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "rangeBurn": "100",
+          "image": {
+            "full": "Jade_LeonaShieldOfDaybreak.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 384,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_LeonaSolarBarrier",
+          "name": "Eclipse",
+          "description": "Leona raises her shield to gain Armor and Magic Resistance.  When the duration first ends, if there are nearby enemies she will deal magic damage to them and prolong the duration of the effect.",
+          "tooltip": "Gains {{ bonusarmr }} bonus <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for 3 seconds. When the effect ends, nearby enemies struck take <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> and Leona retains her bonus <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for 3 seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Armor and Magic Resist"
+            ],
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}",
+              "{{ bonusarmr }} -> {{ bonusarmrNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            14,
+            14,
+            14,
+            14,
+            14
+          ],
+          "cooldownBurn": "14",
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              60,
+              110,
+              160,
+              210,
+              260
+            ],
+            [
+              30,
+              40,
+              50,
+              60,
+              70
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              30,
+              40,
+              50,
+              60,
+              70
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "60/110/160/210/260",
+            "30/40/50/60/70",
+            "3",
+            "30/40/50/60/70",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            450,
+            450,
+            450,
+            450,
+            450
+          ],
+          "rangeBurn": "450",
+          "image": {
+            "full": "Jade_LeonaSolarBarrier.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 432,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_LeonaZenithBlade",
+          "name": "Zenith Blade",
+          "description": "Leona projects a solar image of her sword, dealing magic damage to all enemies in a line. When the image fades, the last enemy champion struck will be briefly immobilized and Leona will dash to them.",
+          "tooltip": "Strikes all enemies in a line dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>. The last enemy Champion struck will be briefly <status>Rooted</status> and Leona will dash to them.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            13,
+            12,
+            11,
+            10,
+            9
+          ],
+          "cooldownBurn": "13/12/11/10/9",
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              60,
+              100,
+              140,
+              180,
+              220
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "60/100/140/180/220",
+            "0.5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            875,
+            875,
+            875,
+            875,
+            875
+          ],
+          "rangeBurn": "875",
+          "image": {
+            "full": "Jade_LeonaZenithBlade.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 0,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_LeonaSolarFlare",
+          "name": "Solar Flare",
+          "description": "Leona calls down a beam of solar energy, dealing damage to enemies in an area.  Enemies in the center of the area are stunned, while enemies on the outside are slowed.",
+          "tooltip": "Calls down a radiant beam of solar energy dealing <magicDamage>{{ explosioncalculateddamage }} magic damage</magicDamage> and <status>Slowing</status> enemies by {{ slowpercent }}% for {{ ccduration }} seconds. Enemies in the center of the flare are <status>Stunned</status>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ explosionbasedamage }} -> {{ explosionbasedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            90,
+            75,
+            60
+          ],
+          "cooldownBurn": "90/75/60",
+          "cost": [
+            100,
+            150,
+            200
+          ],
+          "costBurn": "100/150/200",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              100,
+              100,
+              100
+            ],
+            [
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "100",
+            "3",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1200,
+            1200,
+            1200
+          ],
+          "rangeBurn": "1200",
+          "image": {
+            "full": "Jade_LeonaSolarFlare.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 48,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Sunlight",
+        "description": "Damaging spells afflict enemies with Sunlight for 3.5 seconds. When allied Champions deal damage to those targets, they consume the Sunlight debuff to deal additional magic damage.",
+        "image": {
+          "full": "Jade_LeonaSunlight.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 288,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

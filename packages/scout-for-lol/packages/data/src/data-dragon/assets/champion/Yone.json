@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Yone": {
       "id": "Yone",
@@ -10,7 +10,7 @@
       "title": "the Unforgotten",
       "image": {
         "full": "Yone.png",
-        "sprite": "champion5.png",
+        "sprite": "champion7.png",
         "group": "champion",
         "x": 48,
         "y": 48,
@@ -707,10 +707,10 @@
           "rangeBurn": "450",
           "image": {
             "full": "YoneQ.png",
-            "sprite": "spell16.png",
+            "sprite": "spell22.png",
             "group": "spell",
-            "x": 96,
-            "y": 96,
+            "x": 384,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -848,10 +848,10 @@
           "rangeBurn": "700",
           "image": {
             "full": "YoneW.png",
-            "sprite": "spell16.png",
+            "sprite": "spell22.png",
             "group": "spell",
-            "x": 144,
-            "y": 96,
+            "x": 432,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -989,10 +989,10 @@
           "rangeBurn": "25000",
           "image": {
             "full": "YoneE.png",
-            "sprite": "spell16.png",
+            "sprite": "spell23.png",
             "group": "spell",
-            "x": 192,
-            "y": 96,
+            "x": 0,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1104,10 +1104,10 @@
           "rangeBurn": "1000",
           "image": {
             "full": "YoneR.png",
-            "sprite": "spell16.png",
+            "sprite": "spell23.png",
             "group": "spell",
-            "x": 240,
-            "y": 96,
+            "x": 48,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1119,7 +1119,7 @@
         "description": "Yone deals magic damage with every second Attack. In addition, his critical strike chance is increased.",
         "image": {
           "full": "YonePassive.png",
-          "sprite": "passive5.png",
+          "sprite": "passive7.png",
           "group": "passive",
           "x": 48,
           "y": 48,

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Sett": {
       "id": "Sett",
@@ -10,7 +10,7 @@
       "title": "the Boss",
       "image": {
         "full": "Sett.png",
-        "sprite": "champion3.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 432,
         "y": 96,
@@ -712,10 +712,10 @@
           "rangeBurn": "0",
           "image": {
             "full": "SettQ.png",
-            "sprite": "spell12.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 192,
-            "y": 48,
+            "x": 0,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -853,10 +853,10 @@
           "rangeBurn": "25000",
           "image": {
             "full": "SettW.png",
-            "sprite": "spell12.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 240,
-            "y": 48,
+            "x": 48,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -994,10 +994,10 @@
           "rangeBurn": "490",
           "image": {
             "full": "SettE.png",
-            "sprite": "spell12.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 288,
-            "y": 48,
+            "x": 96,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -1111,10 +1111,10 @@
           "rangeBurn": "400",
           "image": {
             "full": "SettR.png",
-            "sprite": "spell12.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 336,
-            "y": 48,
+            "x": 144,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -1126,7 +1126,7 @@
         "description": "Sett's basic attacks alternate between left and right punch. Right punch is slightly stronger and faster. Sett also hates losing, gaining additional health regeneration based off of his missing health.",
         "image": {
           "full": "Sett_P.png",
-          "sprite": "passive3.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 432,
           "y": 96,

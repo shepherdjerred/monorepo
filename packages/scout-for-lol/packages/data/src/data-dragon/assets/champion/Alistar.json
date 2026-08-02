@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Alistar": {
       "id": "Alistar",
@@ -323,6 +323,12 @@
           "name": "Elderwood Alistar (Obsidian)",
           "chromas": false,
           "parentSkin": 40
+        },
+        {
+          "id": "12049",
+          "num": 49,
+          "name": "Black Alistar Modern",
+          "chromas": false
         }
       ],
       "lore": "Always a mighty warrior with a fearsome reputation, Alistar seeks revenge for the death of his clan at the hands of the Noxian empire. Though he was enslaved and forced into the life of a gladiator, his unbreakable will was what kept him from truly becoming a beast. Now, free of the chains of his former masters, he fights in the name of the downtrodden and the disadvantaged, his rage as much a weapon as his horns, hooves and fists.",
@@ -353,7 +359,7 @@
         "hpperlevel": 120,
         "mp": 350,
         "mpperlevel": 40,
-        "movespeed": 330,
+        "movespeed": 335,
         "armor": 40,
         "armorperlevel": 4.7,
         "spellblock": 32,
@@ -505,10 +511,10 @@
           "rangeBurn": "365",
           "image": {
             "full": "Pulverize.png",
-            "sprite": "spell0.png",
+            "sprite": "spell1.png",
             "group": "spell",
-            "x": 192,
-            "y": 144,
+            "x": 0,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -648,10 +654,10 @@
           "rangeBurn": "650",
           "image": {
             "full": "Headbutt.png",
-            "sprite": "spell0.png",
+            "sprite": "spell1.png",
             "group": "spell",
-            "x": 240,
-            "y": 144,
+            "x": 48,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -791,10 +797,10 @@
           "rangeBurn": "350",
           "image": {
             "full": "AlistarE.png",
-            "sprite": "spell0.png",
+            "sprite": "spell1.png",
             "group": "spell",
-            "x": 288,
-            "y": 144,
+            "x": 96,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -906,10 +912,10 @@
           "rangeBurn": "1",
           "image": {
             "full": "FerociousHowl.png",
-            "sprite": "spell0.png",
+            "sprite": "spell1.png",
             "group": "spell",
-            "x": 336,
-            "y": 144,
+            "x": 144,
+            "y": 48,
             "w": 48,
             "h": 48
           },

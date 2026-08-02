@@ -1,11 +1,16 @@
 import { z } from "zod";
 import { RanksSchema } from "#src/model/rank.ts";
-import { QueueTypeSchema, queueTypeToDisplayString } from "#src/model/state.ts";
+import {
+  QueueTypeSchema,
+  queueTypeToDisplayString,
+  type QueueType,
+} from "#src/model/state.ts";
 import { TeamSchema } from "#src/model/team.ts";
 import { LeaguePuuidSchema } from "#src/model/league-account.ts";
 import { MapNameSchema } from "#src/model/map.ts";
 import { ArenaTeamIdSchema } from "#src/model/arena/arena.ts";
 import { LaneSchema } from "#src/model/lane.ts";
+import { match } from "ts-pattern";
 
 /**
  * Layout mode determines how participants are arranged visually.
@@ -14,7 +19,40 @@ import { LaneSchema } from "#src/model/lane.ts";
  * - "arena": Arena prematch focused on followed-player champion cards only
  */
 export type LoadingScreenLayout = z.infer<typeof LoadingScreenLayoutSchema>;
-export const LoadingScreenLayoutSchema = z.enum(["standard", "aram", "arena"]);
+export const LoadingScreenLayoutSchema = z.enum([
+  "standard",
+  "aram",
+  "arena",
+  "classic",
+]);
+
+export function loadingScreenLayoutForQueueType(
+  queueType: QueueType,
+): LoadingScreenLayout {
+  return match(queueType)
+    .returnType<LoadingScreenLayout>()
+    .with("aram", "aram clash", "aram mayhem", () => "aram")
+    .with("arena", () => "arena")
+    .with("classic", () => "classic")
+    .with(
+      "solo",
+      "flex",
+      "ranked 5s",
+      "clash",
+      "arurf",
+      "urf",
+      "quickplay",
+      "swiftplay",
+      "brawl",
+      "draft pick",
+      "easy doom bots",
+      "normal doom bots",
+      "hard doom bots",
+      "custom",
+      () => "standard",
+    )
+    .exhaustive();
+}
 
 /**
  * Branded type for Riot game IDs (from spectator API).
@@ -204,10 +242,54 @@ export type ArenaLoadingScreenData = z.infer<
   typeof ArenaLoadingScreenDataSchema
 >;
 
+export const ClassicLoadingScreenParticipantSchema = z.strictObject({
+  puuid: LeaguePuuidSchema.nullable(),
+  summonerName: z.string().min(1),
+  championId: LoadingScreenChampionIdSchema,
+  championName: z.string().min(1),
+  championDisplayName: z.string().min(1),
+  team: TeamSchema,
+  spell1Id: SummonerSpellIdSchema,
+  spell2Id: SummonerSpellIdSchema,
+  isTrackedPlayer: z.boolean(),
+});
+export type ClassicLoadingScreenParticipant = z.infer<
+  typeof ClassicLoadingScreenParticipantSchema
+>;
+
+export const ClassicLoadingScreenDataSchema = z
+  .strictObject({
+    gameId: GameIdSchema,
+    queueType: z.literal("classic"),
+    queueDisplayName: QueueDisplayNameSchema,
+    layout: z.literal("classic"),
+    mapName: z.literal("Classic Rift"),
+    participants: z.array(ClassicLoadingScreenParticipantSchema).min(2).max(10),
+    gameStartTime: z.number().int().nonnegative(),
+  })
+  .superRefine((data, context) => {
+    for (const team of ["blue", "red"] as const) {
+      const teamSize = data.participants.filter(
+        (participant) => participant.team === team,
+      ).length;
+      if (teamSize < 1 || teamSize > 5) {
+        context.addIssue({
+          code: "custom",
+          message: `Classic ${team} team must contain between 1 and 5 participants`,
+          path: ["participants"],
+        });
+      }
+    }
+  });
+export type ClassicLoadingScreenData = z.infer<
+  typeof ClassicLoadingScreenDataSchema
+>;
+
 export const LoadingScreenDataSchema = z.discriminatedUnion("layout", [
   StandardLoadingScreenDataSchema,
   AramLoadingScreenDataSchema,
   ArenaLoadingScreenDataSchema,
+  ClassicLoadingScreenDataSchema,
 ]);
 
 /**

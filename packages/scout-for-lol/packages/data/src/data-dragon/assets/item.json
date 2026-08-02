@@ -1101,11 +1101,11 @@
     },
     "3032": {
       "name": "Yun Tal Wildarrows",
-      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>40%</attention> Attack Speed<br><attention>0%</attention> Critical Strike Chance</stats><br><br><passive>Practice Makes Lethal</passive><br>On-Attack, gain Critical Strike Chance permanently up to 25%.<br><br><passive>Flurry</passive><br>On-Attacking an enemy champion, gain 30% Attack Speed for 6 seconds (30 second cooldown). <br>Attacks reduce this cooldown by 1 second, increased to 2 seconds for Critical Strikes.</mainText>",
+      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>45%</attention> Attack Speed<br><attention>0%</attention> Critical Strike Chance</stats><br><br><passive>Practice Makes Lethal</passive><br>On-Attack, gain Critical Strike Chance permanently up to 25%.<br><br><passive>Flurry</passive><br>On-Attacking an enemy champion, gain 30% Attack Speed for 6 seconds (30 second cooldown). <br>Attacks reduce this cooldown by 1 second, increased to 2 seconds for Critical Strikes.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatPhysicalDamageMod": 50,
-        "PercentAttackSpeedMod": 0.4
+        "PercentAttackSpeedMod": 0.45
       }
     },
     "3033": {
@@ -1562,7 +1562,7 @@
     },
     "3117": {
       "name": "Mobility Boots",
-      "description": "<mainText><stats></stats><br><br><attention>25</attention> Move Speed <br>When out of combat for at least 5 seconds, increase this item's effect to <attention>45</attention>.</mainText>",
+      "description": "",
       "plaintext": "Greatly enhances Move Speed when out of combat",
       "stats": {
         "FlatMovementSpeedMod": 45
@@ -1947,7 +1947,7 @@
     },
     "3302": {
       "name": "Terminus",
-      "description": "<mainText><stats><attention>30</attention> Attack Damage<br><attention>35%</attention> Attack Speed</stats><br><br><passive>Shadow</passive><br>Attacks deal <magicDamage>30 bonus magic damage</magicDamage> <OnHit>On-Hit</OnHit>.<br><br><passive>Juxtaposition</passive><br>Alternate between <keywordMajor>Light</keywordMajor> and <keywordMajor>Dark</keywordMajor> Attacks against champions: <li><keywordMajor>Light</keywordMajor> Attacks grant <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for 5s. <li><keywordMajor>Dark</keywordMajor> Attacks grant 10% <scaleArmor>Armor Penetration</scaleArmor> and <scaleMR>Magic Penetration</scaleMR> for 5s. </mainText>",
+      "description": "<mainText><stats><attention>30</attention> Attack Damage<br><attention>35%</attention> Attack Speed</stats><br><br><passive>Shadow</passive><br>Attacks deal <magicDamage> bonus magic damage</magicDamage> <OnHit>On-Hit</OnHit>.<br><br><passive>Juxtaposition</passive><br>Alternate between <keywordMajor>Light</keywordMajor> and <keywordMajor>Dark</keywordMajor> Attacks against champions: <li><keywordMajor>Light</keywordMajor> Attacks grant <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for 5s. <li><keywordMajor>Dark</keywordMajor> Attacks grant 10% <scaleArmor>Armor Penetration</scaleArmor> and <scaleMR>Magic Penetration</scaleMR> for 5s. </mainText>",
       "plaintext": "Kill minions periodically to heal and grant gold to a nearby ally",
       "stats": {
         "FlatPhysicalDamageMod": 30,
@@ -3521,7 +3521,7 @@
     },
     "222065": {
       "name": "Shurelya's Battlesong",
-      "description": "<mainText><stats><attention>55</attention> Ability Power<br><attention>15</attention> Ability Haste<br><attention>6%</attention> Move Speed<br><attention>150%</attention> Base Mana Regen</stats><br><br><active>Inspiring Speech</active><br>Grants nearby allies Move Speed for a few seconds.</mainText>",
+      "description": "<mainText><stats><attention>55</attention> Ability Power<br><attention>15</attention> Ability Haste<br><attention>6%</attention> Move Speed<br><attention>150%</attention> Base Mana Regen</stats><br><br>+0 Health Regen per 5s<br>+0 Mana Regen per 5s<br>-0% Cooldown Reduction<br><br><active>Inspiring Speech</active><br>Grants nearby allies Move Speed for a few seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 55,
@@ -3750,11 +3750,11 @@
     },
     "223032": {
       "name": "Yun Tal Wildarrows",
-      "description": "<mainText><stats><attention>45</attention> Attack Damage<br><attention>40%</attention> Attack Speed<br><attention>0%</attention> Critical Strike Chance</stats><br><br><passive>Practice Makes Lethal</passive><br>On-Attack, gain Critical Strike Chance permanently up to 25%.<br><br><passive>Flurry</passive><br>On-Attacking an enemy champion, gain 30% Attack Speed for 6 seconds (30 second cooldown). <br>Attacks reduce this cooldown by 1 second, increased to 2 seconds for Critical Strikes.</mainText>",
+      "description": "<mainText><stats><attention>45</attention> Attack Damage<br><attention>45%</attention> Attack Speed<br><attention>0%</attention> Critical Strike Chance</stats><br><br><passive>Practice Makes Lethal</passive><br>On-Attack, gain Critical Strike Chance permanently up to 25%.<br><br><passive>Flurry</passive><br>On-Attacking an enemy champion, gain 30% Attack Speed for 6 seconds (30 second cooldown). <br>Attacks reduce this cooldown by 1 second, increased to 2 seconds for Critical Strikes.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatPhysicalDamageMod": 45,
-        "PercentAttackSpeedMod": 0.4
+        "PercentAttackSpeedMod": 0.45
       }
     },
     "223033": {
@@ -4319,7 +4319,7 @@
     },
     "223302": {
       "name": "Terminus",
-      "description": "<mainText><stats><attention>30</attention> Attack Damage<br><attention>40%</attention> Attack Speed</stats><br><br><passive>Shadow</passive><br>Attacks deal <magicDamage>30 bonus magic damage</magicDamage> <OnHit>On-Hit</OnHit>.<br><br><passive>Juxtaposition</passive><br>Alternate between <keywordMajor>Light</keywordMajor> and <keywordMajor>Dark</keywordMajor> Attacks against champions: <li><keywordMajor>Light</keywordMajor> Attacks grant <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for 5s. <li><keywordMajor>Dark</keywordMajor> Attacks grant 8% <scaleArmor>Armor Penetration</scaleArmor> and <scaleMR>Magic Penetration</scaleMR> for 5s. </mainText>",
+      "description": "<mainText><stats><attention>30</attention> Attack Damage<br><attention>40%</attention> Attack Speed</stats><br><br><passive>Shadow</passive><br>Attacks deal <magicDamage> bonus magic damage</magicDamage> <OnHit>On-Hit</OnHit>.<br><br><passive>Juxtaposition</passive><br>Alternate between <keywordMajor>Light</keywordMajor> and <keywordMajor>Dark</keywordMajor> Attacks against champions: <li><keywordMajor>Light</keywordMajor> Attacks grant <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for 5s. <li><keywordMajor>Dark</keywordMajor> Attacks grant 8% <scaleArmor>Armor Penetration</scaleArmor> and <scaleMR>Magic Penetration</scaleMR> for 5s. </mainText>",
       "plaintext": "",
       "stats": {
         "FlatPhysicalDamageMod": 30,
@@ -5732,6 +5732,1358 @@
         "FlatCritChanceMod": 0.25,
         "FlatPhysicalDamageMod": 50
       }
+    },
+    "771001": {
+      "name": "Boots of Speed",
+      "description": "<mainText><stats></stats><br><br><danger>Limited to 1.</danger><br><br><jadeUnique>Enhanced Movement:</jadeUnique> <speed>25 Move Speed</speed></mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "771004": {
+      "name": "Faerie Charm",
+      "description": "<mainText><stats><attention>3</attention> Mana Regen per 5 seconds</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "771006": {
+      "name": "Rejuvenation Bead",
+      "description": "<mainText><stats><attention>5</attention> Health Regen per 5 seconds</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPRegenMod": 1
+      }
+    },
+    "771011": {
+      "name": "Giant's Belt",
+      "description": "<mainText><stats><attention>380</attention> Health</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 380
+      }
+    },
+    "771018": {
+      "name": "Cloak of Agility",
+      "description": "<mainText><stats><attention>15%</attention> Critical Strike Chance</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatCritChanceMod": 0.15
+      }
+    },
+    "771026": {
+      "name": "Blasting Wand",
+      "description": "<mainText><stats><attention>40</attention> Ability Power</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 40
+      }
+    },
+    "771027": {
+      "name": "Sapphire Crystal",
+      "description": "<mainText><stats><attention>200</attention> Mana</stats><br><br><flavorText>\"Some say that Sapphire was the original source of classical magic.\"</flavorText></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMPPoolMod": 200
+      }
+    },
+    "771028": {
+      "name": "Ruby Crystal",
+      "description": "<mainText><stats><attention>180</attention> Health</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 180
+      }
+    },
+    "771029": {
+      "name": "Cloth Armor",
+      "description": "<mainText><stats><attention>15</attention> Armor</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatArmorMod": 15
+      }
+    },
+    "771031": {
+      "name": "Chain Vest",
+      "description": "<mainText><stats><attention>40</attention> Armor</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatArmorMod": 40
+      }
+    },
+    "771033": {
+      "name": "Null-Magic Mantle",
+      "description": "<mainText><stats><attention>20</attention> Magic Resist</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 20
+      }
+    },
+    "771036": {
+      "name": "Long Sword",
+      "description": "<mainText><stats><attention>10</attention> Attack Damage</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatPhysicalDamageMod": 10
+      }
+    },
+    "771037": {
+      "name": "Pickaxe",
+      "description": "<mainText><stats><attention>25</attention> Attack Damage</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatPhysicalDamageMod": 25
+      }
+    },
+    "771038": {
+      "name": "B. F. Sword",
+      "description": "<mainText><stats><attention>45</attention> Attack Damage</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatPhysicalDamageMod": 45
+      }
+    },
+    "771039": {
+      "name": "Hunter's Machete",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Passive:</jadeUnique> Basic Attacks deal <magicDamage>10 magic damage</magicDamage> to monsters On-Hit.<br><jadeUnique>Butcher:</jadeUnique> Damage dealt to monsters increased by 10%.</mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "771042": {
+      "name": "Dagger",
+      "description": "<mainText><stats><attention>12%</attention> Attack Speed</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "PercentAttackSpeedMod": 0.12
+      }
+    },
+    "771043": {
+      "name": "Recurve Bow",
+      "description": "<mainText><stats><attention>30%</attention> Attack Speed</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "PercentAttackSpeedMod": 0.3
+      }
+    },
+    "771051": {
+      "name": "Brawler's Gloves",
+      "description": "<mainText><stats><attention>8%</attention> Critical Strike Chance</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatCritChanceMod": 0.08
+      }
+    },
+    "771052": {
+      "name": "Amplifying Tome",
+      "description": "<mainText><stats><attention>20</attention> Ability Power</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 20
+      }
+    },
+    "771053": {
+      "name": "Vampiric Scepter",
+      "description": "<mainText><stats><attention>10</attention> Attack Damage<br><attention>10%</attention> Life Steal</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatPhysicalDamageMod": 10,
+        "PercentLifeStealMod": 0.1
+      }
+    },
+    "771054": {
+      "name": "Doran's Shield",
+      "description": "<mainText><stats><attention>100</attention> Health<br><attention>10</attention> Health Regen per 5 seconds</stats><br><br><jadeUnique>Shieldwall:</jadeUnique> Blocks 8 damage from champion Basic Attacks.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 100,
+        "FlatHPRegenMod": 2
+      }
+    },
+    "771055": {
+      "name": "Doran's Blade",
+      "description": "<mainText><stats><attention>80</attention> Health<br><attention>10</attention> Attack Damage</stats><br><br><jadeUnique>Passive:</jadeUnique> Basic Attacks restore <healing>5 Health</healing> On-Hit.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 80,
+        "FlatPhysicalDamageMod": 10
+      }
+    },
+    "771056": {
+      "name": "Doran's Ring",
+      "description": "<mainText><stats><attention>60</attention> Health<br><attention>15</attention> Ability Power<br><attention>3</attention> Mana Regen per 5 seconds</stats><br><br><jadeUnique>Passive:</jadeUnique> Restores <scaleMana>4 Mana</scaleMana> upon killing a unit.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 60,
+        "FlatMagicDamageMod": 15
+      }
+    },
+    "771057": {
+      "name": "Negatron Cloak",
+      "description": "<mainText><stats><attention>40</attention> Magic Resist</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 40
+      }
+    },
+    "771058": {
+      "name": "Needlessly Large Rod",
+      "description": "<mainText><stats><attention>80</attention> Ability Power</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 80
+      }
+    },
+    "771080": {
+      "name": "Spirit Stone",
+      "description": "<mainText><stats><attention>14</attention> Health Regen per 5 seconds<br><attention>7</attention> Mana Regen per 5 seconds</stats><br><br><jadeUnique>Passive:</jadeUnique> Basic Attacks deal <magicDamage>10 magic damage</magicDamage> to monsters On-Hit.<br><jadeUnique>Butcher:</jadeUnique> Damage dealt to monsters increased by 20%.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPRegenMod": 2.8
+      }
+    },
+    "771500": {
+      "name": "Penetrating Bullets",
+      "description": "",
+      "plaintext": "",
+      "stats": {}
+    },
+    "772001": {
+      "name": "Recall",
+      "description": "",
+      "plaintext": "",
+      "stats": {}
+    },
+    "772003": {
+      "name": "Health Potion",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Click to Consume: </jadeUnique>Restores <healing>150 Health</healing> over 15 seconds.<br><br><jadeLimit>Limited to 5 at one time.</jadeLimit></mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "772004": {
+      "name": "Mana Potion",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Click to Consume:</jadeUnique> Restores <scaleMana>100 Mana</scaleMana> over 15 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "772009": {
+      "name": "Total Biscuit of Rejuvenation",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Click to Consume: </jadeUnique>Restores <healing>80 Health</healing> and <scaleMana>50 Mana</scaleMana> over 10 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "772037": {
+      "name": "Elixir of Fortitude",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Click to Consume:</jadeUnique> Grants <scaleHealth> Health</scaleHealth> and <physicalDamage>15 Attack Damage</physicalDamage> for 180 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "772038": {
+      "name": "Elixir of Agility",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Click to Consume:</jadeUnique> Grants <attackSpeed> Attack Speed</attackSpeed> and 15% Critical Strike Chance for 180 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "772039": {
+      "name": "Elixir of Brilliance",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Click to Consume:</jadeUnique> Grants <scaleAP> Ability Power</scaleAP> and 10% Cooldown Reduction for 180 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "772041": {
+      "name": "Crystalline Flask",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Replenishment: </jadeUnique>Holds 3 charges and refills upon visiting the shop.<br><br><jadeUnique>Active</jadeUnique><br>Consumes a charge to restore <healing>120 Health</healing> and <scaleMana>60 Mana</scaleMana> over 12 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "772042": {
+      "name": "Oracle's Elixir",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Click to Consume:</jadeUnique> Grants detection of nearby invisible units for up to 4 minutes. <jadeRules>Revealing a ward in this manner grants a portion of the gold reward for killing that unit.</jadeRules></mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "772043": {
+      "name": "Vision Ward",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Click to Consume:</jadeUnique> Places an invisible ward that reveals the surrounding area and invisible units in the area for 3 minutes.<jadeRules> Revealing a ward in this manner grants a portion of the gold reward when that unit is killed.</jadeRules></mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "772044": {
+      "name": "Sight Ward",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Click to Consume:</jadeUnique> Places an invisible ward that reveals the surrounding area for 3 minutes.</mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "772045": {
+      "name": "Ruby Sightstone",
+      "description": "<mainText><stats><attention>380</attention> Health</stats><br><br><jadeUnique>Ward Refresh:</jadeUnique> Holds 5 charges and refills upon visiting the shop.<br><br><jadeUnique>Active</jadeUnique><br>Consumes a charge to place an invisible ward that reveals the surrounding area for 3 minutes <jadeRules>(maximum 3 wards placed from this item at once).</jadeRules></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 380
+      }
+    },
+    "772049": {
+      "name": "Sightstone",
+      "description": "<mainText><stats><attention>180</attention> Health</stats><br><br><jadeUnique>Ward Refresh:</jadeUnique> Holds 3 charges and refills upon visiting the shop.<br><br><jadeUnique>Active</jadeUnique><br>Consumes a charge to place an invisible ward that reveals the surrounding area for 3 minutes <jadeRules>(maximum 2 wards placed from this item at once).</jadeRules></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 180
+      }
+    },
+    "772050": {
+      "name": "Explorer's Ward",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Click to Consume:</jadeUnique> Places an invisible ward that reveals the surrounding area for 3 minutes.</mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "772139": {
+      "name": "",
+      "description": "<mainText><stats><attention>30</attention> Health<br><attention>17.69</attention> Armor<br><attention>12.06</attention> Magic Resist<br><attention>22</attention> Ability Power</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 12.06,
+        "FlatHPPoolMod": 30,
+        "FlatMagicDamageMod": 22,
+        "FlatArmorMod": 17.69
+      }
+    },
+    "772140": {
+      "name": "",
+      "description": "<mainText><stats><attention>36</attention> Health<br><attention>12.69</attention> Armor<br><attention>12.06</attention> Magic Resist<br><attention>17%</attention> Attack Speed<br><attention>9.55</attention> Attack Damage</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 12.06,
+        "FlatHPPoolMod": 36,
+        "FlatArmorMod": 12.69,
+        "FlatPhysicalDamageMod": 9.55,
+        "PercentAttackSpeedMod": 0.17
+      }
+    },
+    "773001": {
+      "name": "Abyssal Scepter",
+      "description": "<mainText><stats><attention>70</attention> Ability Power<br><attention>45</attention> Magic Resist</stats><br><br><jadeUnique>Aura - Despair:</jadeUnique> Reduces the <scaleMR>Magic Resist</scaleMR> of nearby enemies by <scaleMR>20</scaleMR></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 45,
+        "FlatMagicDamageMod": 70
+      }
+    },
+    "773003": {
+      "name": "Archangel's Staff",
+      "description": "<mainText><stats><attention>250</attention> Mana<br><attention>60</attention> Ability Power<br><attention>10</attention> Mana Regen per 5 seconds</stats><br><br><jadeUnique>Insight:</jadeUnique> Grants <scaleAP>Ability Power</scaleAP> equal to <scaleMana>3% of maximum Mana</scaleMana>.<br><jadeUnique>Mana Charge:</jadeUnique> Grants <scaleMana>+8 maximum Mana</scaleMana> (max <scaleMana>750 Mana</scaleMana>) for each spell cast and Mana expenditure (occurs up to 2 times every 4 seconds).<br><jadeLimit>Transforms into <attention>Seraph's Embrace</attention> at <scaleMana>+750 Mana.</scaleMana></jadeLimit></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMPPoolMod": 250,
+        "FlatMagicDamageMod": 60
+      }
+    },
+    "773004": {
+      "name": "Manamune",
+      "description": "<mainText><stats><attention>250</attention> Mana<br><attention>20</attention> Attack Damage<br><attention>7</attention> Mana Regen per 5 seconds</stats><br><br><jadeUnique>Awe:</jadeUnique> Grants bonus <physicalDamage>Attack Damage</physicalDamage> equal to <scaleMana>2%</scaleMana> of maximum Mana.<br><jadeUnique>Mana Charge:</jadeUnique> Grants <scaleMana>4 maximum Mana</scaleMana> (max <scaleMana>750</scaleMana> Mana) for each Basic Attack, spell cast, and Mana expenditure (occurs up to 2 times every 8 seconds).<br><jadeLimit>Transforms into <attention>Muramana</attention> at <scaleMana>750 Mana</scaleMana>.</jadeLimit></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMPPoolMod": 250,
+        "FlatPhysicalDamageMod": 20
+      }
+    },
+    "773005": {
+      "name": "Atma's Impaler",
+      "description": "<mainText><stats><attention>45</attention> Armor<br><attention>15%</attention> Critical Strike Chance</stats><br><br><jadeUnique>Impact:</jadeUnique> Grants bonus <physicalDamage>Attack Damage</physicalDamage> equal to <physicalDamage>1.5%</physicalDamage> of <scaleHealth>Maximum Health</scaleHealth>.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatArmorMod": 45,
+        "FlatCritChanceMod": 0.15
+      }
+    },
+    "773006": {
+      "name": "Berserker's Greaves",
+      "description": "<mainText><stats><attention>20%</attention> Attack Speed</stats><br><br><jadeUnique>Enhanced Movement:</jadeUnique> <speed>45 Move Speed</speed></mainText>",
+      "plaintext": "",
+      "stats": {
+        "PercentAttackSpeedMod": 0.2
+      }
+    },
+    "773009": {
+      "name": "Boots of Swiftness",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Enhanced Movement:</jadeUnique> <speed>60</speed> Move Speed<br><jadeUnique>Slow Resist:</jadeUnique> Movement slowing effects are reduced by <speed>25%</speed>.</mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "773010": {
+      "name": "Catalyst the Protector",
+      "description": "<mainText><stats><attention>200</attention> Health<br><attention>300</attention> Mana</stats><br><br><jadeUnique>Contemplation:</jadeUnique> Upon leveling up, restores <healing>150 Health</healing> and <scaleMana>200 Mana</scaleMana> over 8 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMPPoolMod": 300,
+        "FlatHPPoolMod": 200
+      }
+    },
+    "773020": {
+      "name": "Sorcerer's Shoes",
+      "description": "<mainText><stats><attention>15</attention> Magic Penetration</stats><br><br><jadeUnique>Enhanced Movement:</jadeUnique> <speed>45 Move Speed</speed></mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "773022": {
+      "name": "Frozen Mallet",
+      "description": "<mainText><stats><attention>700</attention> Health<br><attention>30</attention> Attack Damage</stats><br><br><jadeUnique>Icy:</jadeUnique> Basic Attacks <status>Slow</status> the target's <speed>Move Speed</speed> for 1.5 seconds On-Hit (40% <status>Slow</status> for Melee Attacks, 30% <status>Slow</status> for Ranged Attacks).<br><br><flavorText>\"We brought it back just for you.\"</flavorText></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 700,
+        "FlatPhysicalDamageMod": 30
+      }
+    },
+    "773023": {
+      "name": "Twin Shadows",
+      "description": "<mainText><stats><attention>40</attention> Ability Power<br><attention>40</attention> Magic Resist<br><attention>6%</attention> Move Speed</stats><br><br><jadeUnique>Active</jadeUnique> 120s<br>Summons up to 2 invulnerable ghosts that seek out the two nearest enemy champions for 6 seconds. If a ghost reaches its target, it reveals the target and <status>Slows</status> their <speed>Move Speed</speed> by 40% for 2.5 seconds (120 second cooldown).</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 40,
+        "FlatMagicDamageMod": 40,
+        "PercentMovementSpeedMod": 0.06
+      }
+    },
+    "773024": {
+      "name": "Glacial Shroud",
+      "description": "<mainText><stats><attention>45</attention> Armor<br><attention>300</attention> Mana</stats><br><br><jadeUnique>Coolheaded: </jadeUnique>10% Cooldown Reduction</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMPPoolMod": 300,
+        "FlatArmorMod": 45
+      }
+    },
+    "773025": {
+      "name": "Iceborn Gauntlet",
+      "description": "<mainText><stats><attention>30</attention> Ability Power<br><attention>500</attention> Mana<br><attention>70</attention> Armor<br><attention>10%</attention> Cooldown Reduction</stats><br><br><jadeUnique>Spellblade of True Ice:</jadeUnique> After using an ability, the next Basic Attack (On-Hit) deals bonus <physicalDamage>physical damage equal to 125% of base Attack Damage</physicalDamage> to enemies near the target, and creates a field around the target for 2 seconds that <status>Slows</status> enemy <speed>Move Speed</speed> by 30% (2 second cooldown, half-sized field if ranged).</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMPPoolMod": 500,
+        "FlatMagicDamageMod": 30,
+        "FlatArmorMod": 70
+      }
+    },
+    "773026": {
+      "name": "Guardian Angel",
+      "description": "<mainText><stats><attention>50</attention> Armor<br><attention>40</attention> Magic Resist</stats><br><br><jadeUnique>Guardian's Intervention: </jadeUnique> Upon taking lethal damage, restores 30% of maximum <scaleHealth>Health</scaleHealth> and <scaleMana>Mana</scaleMana> after 4 seconds of stasis (5 minute cooldown).</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 40,
+        "FlatArmorMod": 50
+      }
+    },
+    "773027": {
+      "name": "Rod of Ages",
+      "description": "<mainText><stats><attention>450</attention> Health<br><attention>450</attention> Mana<br><attention>60</attention> Ability Power</stats><br><br><jadeUnique>Wisdom of Ages:</jadeUnique> Grants <scaleHealth>20 Health</scaleHealth>, <scaleMana>20 Mana</scaleMana>, and <scaleAP>2 Ability Power</scaleAP> per stack (max <scaleHealth>200 Health</scaleHealth>, <scaleMana>200 Mana</scaleMana>, and <scaleAP>20 Ability Power</scaleAP>). Grants 1 stack per minute (max 10 stacks).<br><jadeUnique>Contemplation:</jadeUnique> Upon leveling up, restores <healing>150 Health</healing> and <scaleMana>200 Mana</scaleMana> over 8 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMPPoolMod": 450,
+        "FlatHPPoolMod": 450,
+        "FlatMagicDamageMod": 60
+      }
+    },
+    "773028": {
+      "name": "Chalice of Harmony",
+      "description": "<mainText><stats><attention>25</attention> Magic Resist<br><attention>7</attention> Mana Regen per 5 seconds</stats><br><br><jadeUnique>Mana Font:</jadeUnique> Increases <scaleMana>Mana Regen</scaleMana> by 1% per 1% of missing <scaleMana>Mana</scaleMana>.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 25
+      }
+    },
+    "773031": {
+      "name": "Infinity Edge",
+      "description": "<mainText><stats><attention>70</attention> Attack Damage<br><attention>25%</attention> Critical Strike Chance</stats><br><br><jadeUnique>Infinite Precision:</jadeUnique> Critical strikes deal <physicalDamage>250% damage</physicalDamage> instead of 200%.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatCritChanceMod": 0.25,
+        "FlatPhysicalDamageMod": 70
+      }
+    },
+    "773035": {
+      "name": "Last Whisper",
+      "description": "<mainText><stats><attention>40</attention> Attack Damage</stats><br><br><jadeUnique>Piercing Volley:</jadeUnique> You ignore <armorPen>35%</armorPen> of your opponent's armor.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatPhysicalDamageMod": 40
+      }
+    },
+    "773037": {
+      "name": "Mana Manipulator",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Aura - Mana Warp:</jadeUnique> Grants nearby allied champions <scaleMana>5 Mana Regen</scaleMana> per 5 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "773040": {
+      "name": "Seraph's Embrace",
+      "description": "<mainText><stats><attention>1000</attention> Mana<br><attention>60</attention> Ability Power<br><attention>10</attention> Mana Regen per 5 seconds</stats><br><br><jadeUnique>Insight:</jadeUnique> Grants <scaleAP>Ability Power</scaleAP> equal to <scaleMana>3% of maximum Mana</scaleMana>.<br><jadeUnique>Active</jadeUnique> 120s<br>Consumes <scaleMana>20</scaleMana>% of current Mana to grant a <shield>Shield</shield> for 3 seconds that absorbs damage equal to <shield>150</shield> plus the amount of Mana consumed (120 second cooldown).<br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMPPoolMod": 1000,
+        "FlatMagicDamageMod": 60
+      }
+    },
+    "773041": {
+      "name": "Mejai's Soulstealer",
+      "description": "<mainText><stats><attention>20</attention> Ability Power</stats><br><br><jadeUnique>Soul Capture:</jadeUnique> Grants <scaleAP>8 Ability Power</scaleAP> per stack. Grants 2 stacks for a kill or 1 stack for an assist (max 20 stacks). A third of the stacks are lost upon death. At 20 stacks, grants 15% Cooldown Reduction.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 20
+      }
+    },
+    "773042": {
+      "name": "Muramana",
+      "description": "<mainText><stats><attention>20</attention> Attack Damage<br><attention>1000</attention> Mana<br><attention>7</attention> Mana Regen per 5 seconds</stats><br><br><jadeUnique>Awe:</jadeUnique> Grants bonus <physicalDamage>Attack Damage</physicalDamage> equal to <scaleMana>2% of maximum Mana.</scaleMana><br><jadeUnique>UNIQUE Toggle:</jadeUnique> Single target Spells and Attacks (On-Hit) consume <scaleMana>3%</scaleMana> of current Mana to deal bonus <physicalDamage>physical damage</physicalDamage> equal to twice the amount of <scaleMana>Mana</scaleMana> consumed.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMPPoolMod": 1000,
+        "FlatPhysicalDamageMod": 20
+      }
+    },
+    "773044": {
+      "name": "Phage",
+      "description": "<mainText><stats><attention>200</attention> Health<br><attention>20</attention> Attack Damage</stats><br><br><jadeUnique>Rage:</jadeUnique> Basic Attacks grant <speed>20 Move Speed</speed> for 2 seconds On-Hit.<br>Kills grant <speed>60 Move Speed</speed> for 2 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 200,
+        "FlatPhysicalDamageMod": 20
+      }
+    },
+    "773046": {
+      "name": "Phantom Dancer",
+      "description": "<mainText><stats><attention>50%</attention> Attack Speed<br><attention>30%</attention> Critical Strike Chance<br><attention>5%</attention> Move Speed</stats><br><br><jadeUnique>Ghostly Waltz:</jadeUnique> Champion can move through units.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatCritChanceMod": 0.3,
+        "PercentAttackSpeedMod": 0.5,
+        "PercentMovementSpeedMod": 0.05
+      }
+    },
+    "773047": {
+      "name": "Ninja Tabi",
+      "description": "<mainText><stats><attention>25</attention> Armor</stats><br><br><jadeUnique>Ninja Footwork:</jadeUnique> Blocks <scaleArmor>10%</scaleArmor> of the damage from Basic Attacks.<br><jadeUnique>Enhanced Movement:</jadeUnique> <speed>45 Move Speed</speed></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatArmorMod": 25
+      }
+    },
+    "773050": {
+      "name": "Stark's Fervor",
+      "description": "<mainText><stats><attention>250</attention> Health<br><attention>20%</attention> Cooldown Reduction</stats><br><br><jadeUnique>Aura - Triumph:</jadeUnique> Grants nearby allied champions <lifeSteal>10% Life Steal</lifeSteal> and <physicalDamage>20 Attack Damage</physicalDamage>.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 250
+      }
+    },
+    "773052": {
+      "name": "Emblem of Valor",
+      "description": "<mainText><stats><attention>20</attention> Armor</stats><br><br><jadeUnique>Aura - Valor:</jadeUnique> Grants nearby allied champions <healing>7 Health Regen</healing> per 5 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatArmorMod": 20
+      }
+    },
+    "773056": {
+      "name": "Ohmwrecker",
+      "description": "<mainText><stats><attention>350</attention> Health<br><attention>50</attention> Ability Power<br><attention>15</attention> Health Regen per 5 seconds<br><attention>15</attention> Mana Regen per 5 seconds</stats><br><br><jadeUnique>Active</jadeUnique> 120s<br>Prevents nearby enemy turrets from attacking for 2.5 seconds. This effect cannot be used against the same turret more than once every 7.5 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 350,
+        "FlatMagicDamageMod": 50,
+        "FlatHPRegenMod": 3
+      }
+    },
+    "773057": {
+      "name": "Sheen",
+      "description": "<mainText><stats><attention>200</attention> Mana<br><attention>25</attention> Ability Power</stats><br><br><jadeUnique>Spellblade:</jadeUnique> After using an ability, the next Basic Attack deals bonus <physicalDamage>physical damage</physicalDamage> equal to base <physicalDamage>Attack Damage</physicalDamage> On-Hit (2 second cooldown).</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMPPoolMod": 200,
+        "FlatMagicDamageMod": 25
+      }
+    },
+    "773060": {
+      "name": "Banner of Command",
+      "description": "<mainText><stats><attention>40</attention> Ability Power<br><attention>30</attention> Armor<br><attention>10%</attention> Cooldown Reduction</stats><br><br><jadeUnique>Aura - Leadership:</jadeUnique> Grants nearby allies <healing>10 Health Regen</healing> per 5 seconds. Nearby allied minions deal 15% increased damage.<br><jadeUnique>Active</jadeUnique> 180s<br>Empowers a nearby siege or super minion with an additional <healing> Health</healing>, <scaleArmor>40 Armor</scaleArmor>, <attackSpeed>50% Attack Speed</attackSpeed>, and 75 Attack Range and grants all gold the unit earns.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 40,
+        "FlatArmorMod": 30
+      }
+    },
+    "773063": {
+      "name": "Soul Shroud",
+      "description": "<mainText><stats><attention>520</attention> Health</stats><br><br><jadeUnique>Whispers of the Dead:</jadeUnique> Nearby allied Champions gain 10% Cooldown Reduction and <scaleMana>12 Mana Regen</scaleMana> per 5 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 520
+      }
+    },
+    "773064": {
+      "name": "Force of Nature",
+      "description": "<mainText><stats><attention>76</attention> Magic Resist<br><attention>8%</attention> Move Speed<br><attention>20</attention> Health Regen per 5 seconds</stats><br><br><jadeUnique>Steadfast</jadeUnique>: Regenerate an additional <scaleHealth> health</scaleHealth> per 5 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 76,
+        "FlatHPRegenMod": 4,
+        "PercentMovementSpeedMod": 0.08
+      }
+    },
+    "773065": {
+      "name": "Spirit Visage",
+      "description": "<mainText><stats><attention>400</attention> Health<br><attention>55</attention> Magic Resist<br><attention>4</attention> Health Regen per 5 seconds<br><attention>20%</attention> Cooldown Reduction</stats><br><br><jadeUnique>Lifeforce:</jadeUnique> Increases <healing>self-healing</healing>, <healing>Health Regen</healing>, <lifeSteal>Lifesteal</lifeSteal>, and <lifeSteal>Spell Vamp</lifeSteal> effects by 20%.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 55,
+        "FlatHPPoolMod": 400,
+        "FlatHPRegenMod": 0.8
+      }
+    },
+    "773067": {
+      "name": "Kindlegem",
+      "description": "<mainText><stats><attention>200</attention> Health</stats><br><br><jadeUnique>Kindlespark:</jadeUnique> 10% Cooldown Reduction</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 200
+      }
+    },
+    "773068": {
+      "name": "Sunfire Cape",
+      "description": "<mainText><stats><attention>450</attention> Health<br><attention>45</attention> Armor</stats><br><br><jadeUnique>Searing Heat:</jadeUnique> Deals <magicDamage>40 magic damage</magicDamage> per second to nearby enemies.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 450,
+        "FlatArmorMod": 45
+      }
+    },
+    "773069": {
+      "name": "Shurelya's Reverie",
+      "description": "<mainText><stats><attention>250</attention> Health<br><attention>10</attention> Health Regen per 5 seconds<br><attention>10</attention> Mana Regen per 5 seconds<br><attention>10%</attention> Cooldown Reduction</stats><br><br><jadeUnique>Active</jadeUnique> 60s<br>Grants nearby allies <speed>40% Move Speed</speed> for 3 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 250,
+        "FlatHPRegenMod": 2
+      }
+    },
+    "773070": {
+      "name": "Tear of the Goddess",
+      "description": "<mainText><stats><attention>250</attention> Mana<br><attention>7</attention> Mana Regen per 5 seconds</stats><br><br><jadeUnique>Mana Charge: </jadeUnique>Grants <scaleMana>4 maximum Mana</scaleMana> (max <scaleMana>750 Mana</scaleMana>) for each spell cast and Mana expenditure (occurs up to 2 times every 4 seconds).<br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMPPoolMod": 250
+      }
+    },
+    "773071": {
+      "name": "The Black Cleaver",
+      "description": "<mainText><stats><attention>200</attention> Health<br><attention>50</attention> Attack Damage<br><attention>10%</attention> Cooldown Reduction</stats><br><br><jadeUnique>Wicked Edge:</jadeUnique> <armorPen>10 Lethality</armorPen><br><jadeUnique>Cleaving Strike:</jadeUnique> Dealing <physicalDamage>physical damage</physicalDamage> to an enemy champion reduces their <scaleArmor>Armor by 5%</scaleArmor> for 4 seconds (stacks up to 5 times, up to 25%).</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 200,
+        "FlatPhysicalDamageMod": 50
+      }
+    },
+    "773072": {
+      "name": "The Bloodthirster",
+      "description": "<mainText><stats><attention>70</attention> Attack Damage<br><attention>12%</attention> Life Steal</stats><br><br><jadeUnique>Bloodthirst:</jadeUnique> Grants <physicalDamage>1 Attack Damage</physicalDamage> and <lifeSteal>0.2% Life Steal</lifeSteal> per stack (max <physicalDamage>30 Attack Damage</physicalDamage> and <lifeSteal>6% Life Steal</lifeSteal>). Grants 1 stack per unit kill (max 30 stacks). Half of the stacks are lost upon death.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatPhysicalDamageMod": 70,
+        "PercentLifeStealMod": 0.12
+      }
+    },
+    "773073": {
+      "name": "Stack of Sunfire Capes",
+      "description": "<mainText><stats><attention>450</attention> Health<br><attention>45</attention> Armor</stats><br><br><jadeUnique>Excessive Heat:</jadeUnique> Deals <magicDamage>40 magic damage</magicDamage> per second to nearby enemies.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 450,
+        "FlatArmorMod": 45
+      }
+    },
+    "773074": {
+      "name": "Ravenous Hydra",
+      "description": "<mainText><stats><attention>75</attention> Attack Damage<br><attention>12%</attention> Life Steal<br><attention>15</attention> Health Regen per 5 seconds</stats><br><br><jadeUnique>Insatiable Hunger:</jadeUnique> <lifeSteal>Life Steal</lifeSteal> applies to damage dealt by this item.<br><jadeUnique>Cleave:</jadeUnique> Basic Attacks deal 20% to 60% of total <physicalDamage>Attack Damage</physicalDamage> as bonus <physicalDamage>physical damage</physicalDamage> to enemies near the target On-Hit (enemies closest to the target take the most damage).<jadeUnique>Active</jadeUnique> 10s<br>Deals 60% to 100% of total <physicalDamage>Attack Damage</physicalDamage> as <physicalDamage>physical damage</physicalDamage> to nearby enemy units (closest enemies take the most damage).</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPRegenMod": 3,
+        "FlatPhysicalDamageMod": 75,
+        "PercentLifeStealMod": 0.12
+      }
+    },
+    "773075": {
+      "name": "Thornmail",
+      "description": "<mainText><stats><attention>100</attention> Armor</stats><br><br><jadeUnique>Enchanted Spikes:</jadeUnique> Upon being hit by a Basic Attack, returns 30% of the incoming damage (before being reduced by defenses) to the attacker as <magicDamage>magic damage</magicDamage>.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatArmorMod": 100
+      }
+    },
+    "773077": {
+      "name": "Tiamat",
+      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>15</attention> Health Regen per 5 seconds</stats><br><br><jadeUnique>Cleave:</jadeUnique> Basic Attacks deal 20% to 60% of total <physicalDamage>Attack Damage</physicalDamage> as bonus <physicalDamage>physical damage</physicalDamage> to enemies near the target On-Hit (enemies closest to the target take the most damage).<jadeUnique>Active</jadeUnique> 10s<br>Deals 60% to 100% of total Attack Damage as <physicalDamage>physical damage</physicalDamage> to nearby enemy units (closest enemies take the most damage).</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPRegenMod": 3,
+        "FlatPhysicalDamageMod": 40
+      }
+    },
+    "773078": {
+      "name": "Trinity Force",
+      "description": "<mainText><stats><attention>30</attention> Attack Damage<br><attention>30</attention> Ability Power<br><attention>30%</attention> Attack Speed<br><attention>10%</attention> Critical Strike Chance<br><attention>8%</attention> Move Speed<br><attention>250</attention> Health<br><attention>200</attention> Mana</stats><br><br><jadeUnique>Rage:</jadeUnique> Basic Attacks grant <speed>20 Move Speed</speed> for 2 seconds On-Hit. Kills grant <speed>60 Move Speed</speed> for 2 seconds.<br><jadeUnique>Spellblade of Tons of Damage:</jadeUnique> After using an ability, the next Basic Attack deals bonus <physicalDamage>physical damage</physicalDamage> equal to <physicalDamage>200% of base Attack Damage</physicalDamage> On-Hit (2 second cooldown).</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMPPoolMod": 200,
+        "FlatHPPoolMod": 250,
+        "FlatMagicDamageMod": 30,
+        "FlatCritChanceMod": 0.1,
+        "FlatPhysicalDamageMod": 30,
+        "PercentAttackSpeedMod": 0.3,
+        "PercentMovementSpeedMod": 0.08
+      }
+    },
+    "773082": {
+      "name": "Warden's Mail",
+      "description": "<mainText><stats><attention>50</attention> Armor</stats><br><br><jadeUnique>Cold Steel:</jadeUnique> When hit by Basic Attacks, reduces the attacker's <attackSpeed>Attack Speed</attackSpeed> by 15% for 1 second.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatArmorMod": 50
+      }
+    },
+    "773083": {
+      "name": "Warmog's Armor",
+      "description": "<mainText><stats><attention>920</attention> Health<br><attention>10</attention> Health Regen per 5 seconds</stats><br><br><jadeUnique>Passive:</jadeUnique> Permanently gain <scaleHealth>3.5 Health</scaleHealth> and <healing>0.1 Health Regen</healing> per 5 sec. per stack. 1 stack is gained per minion or monster kill and 10 stacks are gained per Takedown. Maximum bonuses: <scaleHealth> Health</scaleHealth> and <healing> Health Regen</healing> per 5 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 920,
+        "FlatHPRegenMod": 2
+      }
+    },
+    "773084": {
+      "name": "Innervating Locket",
+      "description": "<mainText><stats><attention>430</attention> Health<br><attention>450</attention> Mana</stats><br><br><jadeUnique>Innervation</jadeUnique>: Restore <healing>50 Health</healing> and <scaleMana>20 Mana</scaleMana> over 2 seconds to the lowest-Health nearby allied Champion whenever you use an Ability. <keywordMajor>Innervation</keywordMajor> has a 3 second cooldown.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMPPoolMod": 450,
+        "FlatHPPoolMod": 430
+      }
+    },
+    "773085": {
+      "name": "Runaan's Hurricane",
+      "description": "<mainText><stats><attention>70%</attention> Attack Speed</stats><br><br><jadeUnique>Hurricane Volley:</jadeUnique> When Attacking, bolts are fired at up to 2 enemies near the target, each dealing each dealing 10 (<physicalDamage>50% of Attack Damage</physicalDamage>) physical damage. These bolts apply on-hit effects.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "PercentAttackSpeedMod": 0.7
+      }
+    },
+    "773086": {
+      "name": "Zeal",
+      "description": "<mainText><stats><attention>18%</attention> Attack Speed<br><attention>10%</attention> Critical Strike Chance<br><attention>5%</attention> Move Speed</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatCritChanceMod": 0.1,
+        "PercentAttackSpeedMod": 0.18,
+        "PercentMovementSpeedMod": 0.05
+      }
+    },
+    "773087": {
+      "name": "Statikk Shiv",
+      "description": "<mainText><stats><attention>40%</attention> Attack Speed<br><attention>20%</attention> Critical Strike Chance<br><attention>6%</attention> Move Speed</stats><br><br><jadeUnique>Statikk Shank:</jadeUnique> Grants Static Charges upon moving or Attacking. At 100 Charges, Attacking expends all Charges to deal <magicDamage>100 bonus magic damage</magicDamage>  to up to 4 targets On-Hit (this damage can critically strike).</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatCritChanceMod": 0.2,
+        "PercentAttackSpeedMod": 0.4,
+        "PercentMovementSpeedMod": 0.06
+      }
+    },
+    "773089": {
+      "name": "Rabadon's Deathcap",
+      "description": "<mainText><stats><attention>120</attention> Ability Power</stats><br><br><jadeUnique>Magical Opus:</jadeUnique> Increases <scaleAP>Ability Power by 30%</scaleAP>.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 120
+      }
+    },
+    "773091": {
+      "name": "Wit's End",
+      "description": "<mainText><stats><attention>40%</attention> Attack Speed<br><attention>25</attention> Magic Resist</stats><br><br><jadeUnique>Feedback Loop:</jadeUnique> Basic Attacks deal <magicDamage>42 bonus magic damage</magicDamage> On-Hit and increase your<scaleMR> Magic Resist</scaleMR> by 5 for 5 seconds (stacks up to 4 times.)</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 25,
+        "PercentAttackSpeedMod": 0.4
+      }
+    },
+    "773092": {
+      "name": "Shard of True Ice",
+      "description": "<mainText><stats><attention>45</attention> Ability Power</stats><br><br><jadeUnique>Lucky Shadow:</jadeUnique> <gold>4 Gold</gold> per 10 seconds<br><jadeUnique>Mana Infusion:</jadeUnique> Grants nearby allied champions <scaleMana>5 Mana Regen</scaleMana> per 5 seconds.<jadeUnique>Active</jadeUnique> 60s<br>Surrounds an ally with a blizzard for 4 seconds that <status>Slows</status> nearby enemy <speed>Movement Speed</speed> by 30%.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 45
+      }
+    },
+    "773093": {
+      "name": "Avarice Blade",
+      "description": "<mainText><stats><attention>10%</attention> Critical Strike Chance</stats><br><br><jadeUnique>Avarice:</jadeUnique> <gold>3 Gold</gold> per 10 seconds<br><jadeUnique>Greed:</jadeUnique> Grants <gold>2 Gold</gold> upon killing a unit.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatCritChanceMod": 0.1
+      }
+    },
+    "773096": {
+      "name": "Philosopher's Stone",
+      "description": "<mainText><stats><attention>7</attention> Health Regen per 5 seconds<br><attention>9</attention> Mana Regen per 5 seconds</stats><br><br><jadeUnique>Transmute:</jadeUnique><gold> 5 Gold</gold> per 10 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPRegenMod": 1.4
+      }
+    },
+    "773098": {
+      "name": "Lucky Pick",
+      "description": "<mainText><stats><attention>25</attention> Ability Power</stats><br><br><jadeUnique>Lucky Shadow:</jadeUnique><gold> 4 Gold</gold> per 10 seconds</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 25
+      }
+    },
+    "773100": {
+      "name": "Lich Bane",
+      "description": "<mainText><stats><attention>80</attention> Ability Power<br><attention>250</attention> Mana<br><attention>5%</attention> Move Speed</stats><br><br><jadeUnique>Spellblade of The Arcane:</jadeUnique> After using an ability, the next Basic Attack deals <magicDamage> bonus magic damage</magicDamage> On-Hit (2 second cooldown).</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMPPoolMod": 250,
+        "FlatMagicDamageMod": 80,
+        "PercentMovementSpeedMod": 0.05
+      }
+    },
+    "773101": {
+      "name": "Stinger",
+      "description": "<mainText><stats><attention>40%</attention> Attack Speed</stats><br><br><jadeUnique>Light as a Feather: </jadeUnique>10% Cooldown Reduction</mainText>",
+      "plaintext": "",
+      "stats": {
+        "PercentAttackSpeedMod": 0.4
+      }
+    },
+    "773102": {
+      "name": "Banshee's Veil",
+      "description": "<mainText><stats><attention>450</attention> Health<br><attention>55</attention> Magic Resist</stats><br><br><jadeUnique>Intangibility:</jadeUnique> Grants a <shield>Spell Shield</shield> that blocks the next enemy ability. This <shield>Shield</shield> refreshes after no damage is taken from enemy champions for 25 seconds.<br><jadeUnique>Shadow Mending:</jadeUnique> Grants <healing>9 Health Regen</healing> per 5 for up to 10 seconds after taking damage from an enemy champion or when the <shield>Spell Shield</shield> breaks.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 55,
+        "FlatHPPoolMod": 450
+      }
+    },
+    "773105": {
+      "name": "Aegis of the Legion",
+      "description": "<mainText><stats><attention>250</attention> Health<br><attention>20</attention> Armor<br><attention>20</attention> Magic Resist</stats><br><br><jadeUnique>Aura - Legion:</jadeUnique> Grants nearby allies <scaleArmor>10 Armor</scaleArmor> and <scaleMR>15 Magic Resist</scaleMR>. This effect is increased by 50% on allied minions.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 20,
+        "FlatHPPoolMod": 250,
+        "FlatArmorMod": 20
+      }
+    },
+    "773106": {
+      "name": "Madred's Razors",
+      "description": "<mainText><stats><attention>25</attention> Armor</stats><br><br><jadeUnique>Passive:</jadeUnique> Basic Attacks have a 25% chance to deal <magicDamage>300 bonus magic damage</magicDamage> to minions and monsters On-Hit.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatArmorMod": 25
+      }
+    },
+    "773107": {
+      "name": "Runic Bulwark",
+      "description": "<mainText><stats><attention>300</attention> Health<br><attention>20</attention> Armor<br><attention>30</attention> Magic Resist</stats><br><br><jadeUnique>Aura - Legion:</jadeUnique> Grants nearby allies <scaleArmor>10 Armor</scaleArmor> and <scaleMR>25 Magic Resist</scaleMR>. This effect is increased by 50% on allied minions.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 30,
+        "FlatHPPoolMod": 300,
+        "FlatArmorMod": 20
+      }
+    },
+    "773108": {
+      "name": "Fiendish Codex",
+      "description": "<mainText><stats><attention>30</attention> Ability Power</stats><br><br><jadeUnique>Fiendish Recall:</jadeUnique> 10% Cooldown Reduction</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 30
+      }
+    },
+    "773109": {
+      "name": "Madred's Bloodrazor",
+      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>40%</attention> Attack Speed<br><attention>25</attention> Armor</stats><br><br><jadeUnique>Seeing Red</jadeUnique>: Attacks deal <healing>4% of the target's maximum Health</healing> as <magicDamage>bonus magic damage</magicDamage> on-hit.<br><br><rules>Deals a maximum of 120 bonus damage to monsters.</rules></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatArmorMod": 25,
+        "FlatPhysicalDamageMod": 40,
+        "PercentAttackSpeedMod": 0.4
+      }
+    },
+    "773110": {
+      "name": "Frozen Heart",
+      "description": "<mainText><stats><attention>95</attention> Armor<br><attention>400</attention> Mana<br><attention>20%</attention> Cooldown Reduction</stats><br><br><jadeUnique>Aura - Frostbite:</jadeUnique> Reduces the <attackSpeed>Attack Speed</attackSpeed> of nearby enemies by 20%.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMPPoolMod": 400,
+        "FlatArmorMod": 95
+      }
+    },
+    "773111": {
+      "name": "Mercury's Treads",
+      "description": "<mainText><stats><attention>25</attention> Magic Resist</stats><br><br><jadeUnique>Enhanced Movement:</jadeUnique> <speed>45 Move Speed</speed><br><jadeUnique>Tenacity:</jadeUnique> Reduces the duration of <status>Stuns, Slows, Taunts, Fears, Silences, Blinds,</status> and <status>Immobilizes</status> by <attention>35%</attention>.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 25
+      }
+    },
+    "773114": {
+      "name": "Malady",
+      "description": "<mainText><stats><attention>25</attention> Ability Power<br><attention>45%</attention> Attack Speed</stats><br><br><jadeUnique>Cursed Blade:</jadeUnique> Basic Attacks deal <magicDamage> bonus magic damage</magicDamage> On-Hit and remove <scaleMR>4 Magic Resist</scaleMR> from the target for 8 seconds (stacks up to 7 times).</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 25,
+        "PercentAttackSpeedMod": 0.45
+      }
+    },
+    "773115": {
+      "name": "Nashor's Tooth",
+      "description": "<mainText><stats><attention>65</attention> Ability Power<br><attention>50%</attention> Attack Speed</stats><br><br>20% Cooldown Reduction</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 65,
+        "PercentAttackSpeedMod": 0.5
+      }
+    },
+    "773116": {
+      "name": "Rylai's Crystal Scepter",
+      "description": "<mainText><stats><attention>500</attention> Health<br><attention>80</attention> Ability Power</stats><br><br><jadeUnique>Frost Crystal:</jadeUnique> Dealing spell damage <status>Slows</status> the target's <speed>Move Speed</speed> by 35% for 1.5 seconds (15% for multi-target and damage-over-time spells).</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 500,
+        "FlatMagicDamageMod": 80
+      }
+    },
+    "773117": {
+      "name": "Boots of Mobility",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Enhanced Movement:</jadeUnique> <speed>45 Move Speed</speed>. Increases to <speed>105 Move Speed</speed> when out of combat for 5 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "773123": {
+      "name": "Executioner's Calling",
+      "description": "<mainText><stats><attention>25</attention> Attack Damage<br><attention>20%</attention> Critical Strike Chance</stats><br><br><jadeUnique>Rending Strike:</jadeUnique> Basic Attacks inflict <status>Grievous Wounds</status> on enemy champions for 1.5 seconds On-Hit.<br><br><jadeRules>(<status>Grievous Wounds</status> reduces incoming healing and regeneration effects by 50%.)</jadeRules></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatCritChanceMod": 0.2,
+        "FlatPhysicalDamageMod": 25
+      }
+    },
+    "773124": {
+      "name": "Guinsoo's Rageblade",
+      "description": "<mainText><stats><attention>30</attention> Attack Damage<br><attention>40</attention> Ability Power</stats><br><br><jadeUnique>Growing Fury:</jadeUnique> Basic Attacks (on attack) and spell casts grant <attackSpeed>4% Attack Speed</attackSpeed> and <scaleAP>4 Ability Power</scaleAP> for 8 seconds (stacks up to 8 times).<br><jadeUnique>Enrage:</jadeUnique> Falling below 50% Health grants <attackSpeed>20% Attack Speed</attackSpeed>, <lifeSteal>10% Life Steal</lifeSteal>, and <lifeSteal>10% Spell Vamp</lifeSteal> until out of combat (30 second cooldown).</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 40,
+        "FlatPhysicalDamageMod": 30
+      }
+    },
+    "773128": {
+      "name": "Deathfire Grasp",
+      "description": "<mainText><stats><attention>120</attention> Ability Power</stats><br><br>10% Cooldown Reduction<jadeUnique>Active</jadeUnique> 60s<br>Deals 15% of target champion's maximum Health in <magicDamage>magic damage</magicDamage> and increases all subsequent <magicDamage>magic damage</magicDamage> taken by the target by 20% for 4 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 120
+      }
+    },
+    "773131": {
+      "name": "Sword of the Divine",
+      "description": "<mainText><stats></stats><br><br><attention>45%</attention> Attack Speed.<br><br><jadeUnique>Forsaken: </jadeUnique>This item does not grant any <attackSpeed>Attack Speed</attackSpeed> while on cooldown. Champion kills reduce the current cooldown by 50%.<jadeUnique>Active</jadeUnique> 60s<br>Grants <attackSpeed>100% Attack Speed</attackSpeed> and <scaleCrit>100% Critical Strike Chance</scaleCrit> for 3 seconds or 3 critical strikes.</mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "773132": {
+      "name": "Heart of Gold",
+      "description": "<mainText><stats><attention>200</attention> Health</stats><br><br><jadeUnique>Shelling Out:</jadeUnique><gold> 5 Gold</gold> per 10 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 200
+      }
+    },
+    "773134": {
+      "name": "The Brutalizer",
+      "description": "<mainText><stats><attention>25</attention> Attack Damage</stats><br><br><jadeUnique>Onslaught:</jadeUnique> 10% Cooldown Reduction<br><jadeUnique>Crushing Blow:</jadeUnique> <armorPen>10 Lethality</armorPen></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatPhysicalDamageMod": 25
+      }
+    },
+    "773135": {
+      "name": "Void Staff",
+      "description": "<mainText><stats><attention>70</attention> Ability Power</stats><br><br><jadeUnique>Touch of the Void:</jadeUnique> Magic damage ignores <status>35%</status> of the target's <scaleMR>Magic Resist</scaleMR>.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 70
+      }
+    },
+    "773136": {
+      "name": "Haunting Guise",
+      "description": "<mainText><stats><attention>25</attention> Ability Power<br><attention>200</attention> Health</stats><br><br><jadeUnique>Eyes of Pain:</jadeUnique> <status>15 Magic Penetration</status></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 200,
+        "FlatMagicDamageMod": 25
+      }
+    },
+    "773138": {
+      "name": "Leviathan",
+      "description": "<mainText><stats><attention>180</attention> Health</stats><br><br><jadeUnique>Juggernaut:</jadeUnique> Grants <scaleHealth>32 Health</scaleHealth> per stack. Grants 2 stacks for a kill or 1 stack for an assist (maximum 20 stacks). A third of the stacks are lost upon death. At 20 stacks, reduces all damage taken by 15%.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 180
+      }
+    },
+    "773139": {
+      "name": "Mercurial Scimitar",
+      "description": "<mainText><stats><attention>60</attention> Attack Damage<br><attention>45</attention> Magic Resist</stats><br><br><jadeUnique>Active</jadeUnique> 90s<br>Removes all debuffs, and if champion is melee, also grants <speed>50% bonus Move Speed</speed> for 1 second.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 45,
+        "FlatPhysicalDamageMod": 60
+      }
+    },
+    "773140": {
+      "name": "Quicksilver Sash",
+      "description": "<mainText><stats><attention>45</attention> Magic Resist</stats><br><br><jadeUnique>Active</jadeUnique> 90s<br>Removes all debuffs.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 45
+      }
+    },
+    "773141": {
+      "name": "Sword of the Occult",
+      "description": "<mainText><stats><attention>10</attention> Attack Damage</stats><br><br><jadeUnique>Demonic Pact:</jadeUnique> Grants <physicalDamage>5 Attack Damage</physicalDamage> per stack. Grants 2 stacks for a kill or 1 stack for an assist (max 20 stacks). A third of the stacks are lost upon death. At 20 stacks, grants <speed>15% bonus Move Speed</speed>.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatPhysicalDamageMod": 10
+      }
+    },
+    "773142": {
+      "name": "Youmuu's Ghostblade",
+      "description": "<mainText><stats><attention>30</attention> Attack Damage<br><attention>15%</attention> Critical Strike Chance<br><attention>10%</attention> Cooldown Reduction</stats><br><br><jadeUnique>Spirit Edge:</jadeUnique> <armorPen>20 Lethality</armorPen><jadeUnique>Active</jadeUnique> 45s<br>Grants <speed>20% Move Speed</speed> and <attackSpeed>40% Attack Speed</attackSpeed> (lasts 6 seconds for melee champions, 4 seconds for ranged champions).</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatCritChanceMod": 0.15,
+        "FlatPhysicalDamageMod": 30
+      }
+    },
+    "773143": {
+      "name": "Randuin's Omen",
+      "description": "<mainText><stats><attention>500</attention> Health<br><attention>70</attention> Armor</stats><br><br><jadeUnique>Cold Steel:</jadeUnique> When hit by Basic Attacks, reduces the attacker's <attackSpeed>Attack Speed by 15%</attackSpeed> and <speed>Move Speed by 10%</speed> for 1 seconds.<jadeUnique>Active</jadeUnique> 60s<br><status>Slows</status> nearby enemy units by 35% for  seconds.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 500,
+        "FlatArmorMod": 70
+      }
+    },
+    "773144": {
+      "name": "Bilgewater Cutlass",
+      "description": "<mainText><stats><attention>25</attention> Attack Damage<br><attention>12%</attention> Life Steal</stats><br><br><jadeUnique>Active</jadeUnique> 90s<br>Deals <magicDamage>100 magic damage</magicDamage> and <status>Slows</status> the target champion's <speed>Move Speed by 25%</speed> for 2 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatPhysicalDamageMod": 25,
+        "PercentLifeStealMod": 0.12
+      }
+    },
+    "773145": {
+      "name": "Hextech Revolver",
+      "description": "<mainText><stats><attention>40</attention> Ability Power</stats><br><br><jadeUnique>Hex Bullets: </jadeUnique><lifeSteal>12% Spell Vamp</lifeSteal></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 40
+      }
+    },
+    "773146": {
+      "name": "Hextech Gunblade",
+      "description": "<mainText><stats><attention>65</attention> Ability Power<br><attention>45</attention> Attack Damage<br><attention>12%</attention> Life Steal</stats><br><br><jadeUnique>Hex Cannon: </jadeUnique><lifeSteal>20% Spell Vamp</lifeSteal><br><jadeUnique>Reload:</jadeUnique> Basic Attacks (On-Hit) and single-target spells against champions reduce the cooldown of this item by 3 seconds.<jadeUnique>Active</jadeUnique> 60s<br>Deals <magicDamage> magic damage</magicDamage> and <status>Slows</status> the target champion's <speed>Move Speed by 40%</speed> for 2 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 65,
+        "FlatPhysicalDamageMod": 45,
+        "PercentLifeStealMod": 0.12
+      }
+    },
+    "773151": {
+      "name": "Liandry's Torment",
+      "description": "<mainText><stats><attention>50</attention> Ability Power<br><attention>300</attention> Health</stats><br><br><jadeUnique>Eyes of Pain:</jadeUnique> <status>15 Magic Penetration</status><br><jadeUnique>Mana Burn:</jadeUnique> Dealing spell damage applies a damage-over-time effect for 3 seconds that deals <magicDamage>bonus magic damage equal to 2% of the target's current Health per second</magicDamage>. This bonus damage is doubled against movement-impaired units and capped at <magicDamage>100 damage per second</magicDamage> vs. monsters.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 300,
+        "FlatMagicDamageMod": 50
+      }
+    },
+    "773152": {
+      "name": "Will of the Ancients",
+      "description": "<mainText><stats><attention>50</attention> Ability Power</stats><br><br><jadeUnique>Aura - Tradition:</jadeUnique> Grants nearby allied champions <scaleAP>30 Ability Power</scaleAP> and <lifeSteal>20% Spellvamp</lifeSteal>.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 50
+      }
+    },
+    "773153": {
+      "name": "Blade of The Ruined King",
+      "description": "<mainText><stats><attention>25</attention> Attack Damage<br><attention>40%</attention> Attack Speed<br><attention>15%</attention> Life Steal</stats><br><br><jadeUnique>Ruination:</jadeUnique> Basic Attacks deal <scaleHealth>5% of the target's current Health</scaleHealth> as bonus <physicalDamage>physical damage</physicalDamage> On-Hit. (Max 60 to Minions and Monsters)<jadeUnique>Active</jadeUnique> 90s<br>Deals <scaleHealth>15% max health</scaleHealth> to target champion (Min 100 Damage) and steals <speed>30%</speed> of their <speed>Move Speed</speed> for 3 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatPhysicalDamageMod": 25,
+        "PercentAttackSpeedMod": 0.4,
+        "PercentLifeStealMod": 0.15
+      }
+    },
+    "773154": {
+      "name": "Wriggle's Lantern",
+      "description": "<mainText><stats><attention>25</attention> Attack Damage<br><attention>25</attention> Armor<br><attention>15%</attention> Life Steal</stats><br><br><jadeUnique>Passive:</jadeUnique> Basic Attacks have a 25% chance to deal <magicDamage>500 bonus magic damage</magicDamage> to minions and monsters On-Hit.<br><br><jadeLimit>Transforms into <attention>Feral Flare</attention> after earning 30 large Monsters kills or Champion takedowns.</jadeLimit><jadeUnique>Active</jadeUnique> 180s<br>Places an invisible Sight Ward that reveals the surrounding area for 180 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatArmorMod": 25,
+        "FlatPhysicalDamageMod": 25,
+        "PercentLifeStealMod": 0.15
+      }
+    },
+    "773155": {
+      "name": "Hexdrinker",
+      "description": "<mainText><stats><attention>25</attention> Attack Damage<br><attention>25</attention> Magic Resist</stats><br><br><jadeUnique>Lifeline:</jadeUnique> Upon taking <magicDamage>magic damage</magicDamage> that would reduce Health below 30%, grants a <shield>Shield</shield> that absorbs <magicDamage>250 magic damage</magicDamage> for 5 seconds (90 second cooldown).</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 25,
+        "FlatPhysicalDamageMod": 25
+      }
+    },
+    "773156": {
+      "name": "Maw of Malmortius",
+      "description": "<mainText><stats><attention>60</attention> Attack Damage<br><attention>40</attention> Magic Resist</stats><br><br><jadeUnique>Feeding Frenzy:</jadeUnique> Grants <physicalDamage>1 Attack Damage</physicalDamage> for every 2% of missing <scaleHealth>Health</scaleHealth>, up to a maximum of <physicalDamage>35 Attack Damage</physicalDamage>.<br><jadeUnique>Lifeline:</jadeUnique> Upon taking <magicDamage>magic damage</magicDamage> that would reduce <scaleHealth>Health</scaleHealth> below 30%, grants a <shield>Shield</shield> that absorbs <magicDamage>400 magic damage</magicDamage> for 5 seconds (90 second cooldown).</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 40,
+        "FlatPhysicalDamageMod": 60
+      }
+    },
+    "773157": {
+      "name": "Zhonya's Hourglass",
+      "description": "<mainText><stats><attention>120</attention> Ability Power<br><attention>50</attention> Armor</stats><br><br><jadeUnique>Active</jadeUnique> 90s<br>Champion becomes <status>Invulnerable</status> and <status>Untargetable</status> for 2.5 seconds, but is unable to move, attack, cast spells, or use items during this time.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 120,
+        "FlatArmorMod": 50
+      }
+    },
+    "773158": {
+      "name": "Ionian Boots of Lucidity",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Light Step:</jadeUnique>15% Cooldown Reduction<br><jadeUnique>Enhanced Movement:</jadeUnique> <speed>45 Move Speed</speed><br><br><flavorText>\"This item is dedicated in honor of Ionia's victory over Noxus in the Rematch for the Southern Provinces on 10 December, 20 CLE.\"</flavorText></mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "773160": {
+      "name": "Feral Flare",
+      "description": "<mainText><stats><attention>25</attention> Attack Damage<br><attention>25</attention> Armor<br><attention>15%</attention> Life Steal</stats><br><br><jadeUnique>Feral Mark:</jadeUnique> Gain a Feral stack for each champion takedown scored and large monster killed. Basic Attacks deal <magicDamage>25 (+1 per Feral stack) bonus magic damage</magicDamage> on-hit. Minions and monsters have a 25% chance to take 425 more damage.<jadeUnique>Active</jadeUnique> 180s<br>Places an invisible Sight Ward that reveals the surrounding area for 180 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatArmorMod": 25,
+        "FlatPhysicalDamageMod": 25,
+        "PercentLifeStealMod": 0.15
+      }
+    },
+    "773165": {
+      "name": "Morellonomicon",
+      "description": "<mainText><stats><attention>75</attention> Ability Power<br><attention>12</attention> Mana Regen per 5 seconds<br><attention>20%</attention> Cooldown Reduction</stats><br><br><jadeUnique>Morello's Hatred:</jadeUnique> Dealing magic damage to enemy champions below <scaleHealth>40% Health</scaleHealth> inflicts <status>Grievous Wounds</status> for 4 seconds.<br><br><jadeRules>(<status>Grievous Wounds</status> reduces incoming healing and regeneration effects by 50%.)</jadeRules></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 75
+      }
+    },
+    "773172": {
+      "name": "Zephyr",
+      "description": "<mainText><stats><attention>25</attention> Attack Damage<br><attention>50%</attention> Attack Speed<br><attention>10%</attention> Move Speed<br><attention>10%</attention> Cooldown Reduction</stats><br><br><jadeUnique>Tenacity:</jadeUnique> Reduces the duration of <status>Stuns, Slows, Taunts, Fears, Silences, Blinds,</status> and <status>Immobilizes</status> by <attention>35%</attention>.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatPhysicalDamageMod": 25,
+        "PercentAttackSpeedMod": 0.5,
+        "PercentMovementSpeedMod": 0.1
+      }
+    },
+    "773173": {
+      "name": "Eleisa's Miracle",
+      "description": "<mainText><stats><attention>10</attention> Health Regen per 5 seconds<br><attention>15</attention> Mana Regen per 5 seconds</stats><br><br><jadeUnique>Aid:</jadeUnique> <spellName>Heal, Clairvoyance</spellName> and <spellName>Clarity</spellName> summoner spell cooldowns are reduced by 25%.<br><jadeUnique>Eleisa's Blessing:</jadeUnique> Upon gaining 3 levels with this item, all effects of this item become permanent, and this item is consumed.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPRegenMod": 2
+      }
+    },
+    "773174": {
+      "name": "Shushei's Mana Jug",
+      "description": "<mainText><stats><attention>60</attention> Ability Power<br><attention>40</attention> Magic Resist<br><attention>20%</attention> Cooldown Reduction<br><attention>15</attention> Mana Regen per 5 seconds</stats><br><br><jadeUnique>Rabble-Rousing:</jadeUnique> Restores <healing> Health</healing> and <scaleMana> Mana</scaleMana> on kill or assist.<br><jadeUnique>Mana Font:</jadeUnique> Increases <scaleMana>Mana Regen</scaleMana> by 1% for every 1% of missing Mana.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 40,
+        "FlatMagicDamageMod": 60
+      }
+    },
+    "773178": {
+      "name": "Ionic Spark",
+      "description": "<mainText><stats><attention>50%</attention> Attack Speed<br><attention>250</attention> Health</stats><br><br><jadeUnique>Ionic Charge:</jadeUnique> Every 4th Basic Attack unleases a chain of lightning, dealing <magicDamage>125 magic damage</magicDamage> to up to 4 targets in a 400 radius of each other. Targets cannot be hit twice by the same lightning.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 250,
+        "PercentAttackSpeedMod": 0.5
+      }
+    },
+    "773190": {
+      "name": "Locket of the Iron Solari",
+      "description": "<mainText><stats><attention>300</attention> Health<br><attention>35</attention> Armor</stats><br><br><jadeUnique>Solari Resilience:</jadeUnique> Grants nearby allied champions <healing>15 Health Regen</healing> per 5 seconds.<jadeUnique>Active</jadeUnique> 60s<br>Grants a <shield>Shield</shield> to nearby allies for 5 seconds that absorbs up to  damage.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 300,
+        "FlatArmorMod": 35
+      }
+    },
+    "773191": {
+      "name": "Seeker's Armguard",
+      "description": "<mainText><stats><attention>30</attention> Armor<br><attention>20</attention> Ability Power</stats><br><br><jadeUnique>Seeker's Insight:</jadeUnique> Killing a unit grants 0.5 bonus <scaleArmor>Armor</scaleArmor> and <scaleAP>Ability Power.</scaleAP> This bonus stacks up to 30 times.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 20,
+        "FlatArmorMod": 30
+      }
+    },
+    "773206": {
+      "name": "Spirit of the Spectral Wraith",
+      "description": "<mainText><stats><attention>40</attention> Ability Power<br><attention>10</attention> Mana Regen per 5 seconds<br><attention>10%</attention> Cooldown Reduction</stats><br><br><jadeUnique>Wraith Touch:</jadeUnique> <lifeSteal>20% Spell Vamp</lifeSteal><br><jadeUnique>Haunting Memories:</jadeUnique> Reduces the cooldown of <spellName>Smite</spellName> by 20%.<br><jadeUnique>Butcher:</jadeUnique> Damage dealt to monsters increased by 30%.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 40
+      }
+    },
+    "773207": {
+      "name": "Spirit of the Ancient Golem",
+      "description": "<mainText><stats><attention>500</attention> Health<br><attention>14</attention> Health Regen per 5 seconds<br><attention>7</attention> Mana Regen per 5 seconds<br><attention>10%</attention> Cooldown Reduction</stats><br><br><jadeUnique>Butcher:</jadeUnique> Damage dealt to monsters increased by 30%.<br><jadeUnique>Tenacity:</jadeUnique> Reduces the duration of <status>Stuns, Slows, Taunts, Fears, Silences, Blinds,</status> and <status>Immobilizes</status> by 35%.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 500,
+        "FlatHPRegenMod": 2.8
+      }
+    },
+    "773209": {
+      "name": "Spirit of the Elder Lizard",
+      "description": "<mainText><stats><attention>35</attention> Attack Damage<br><attention>14</attention> Health Regen per 5 seconds<br><attention>7</attention> Mana Regen per 5 seconds<br><attention>10%</attention> Cooldown Reduction</stats><br><br><jadeUnique>Butcher:</jadeUnique> Damage dealt to monsters increased by 30%.<br><jadeUnique>Touch of Flame:</jadeUnique> Basic Attacks and spells that do not inflict damage-over-time deal  bonus <trueDamage>true damage</trueDamage> over 3 seconds On-Hit.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPRegenMod": 2.8,
+        "FlatPhysicalDamageMod": 35
+      }
+    },
+    "773211": {
+      "name": "Spectre's Cowl",
+      "description": "<mainText><stats><attention>200</attention> Health<br><attention>45</attention> Magic Resist</stats><br><br><jadeUnique>Shadow Mending:</jadeUnique> Grants <healing>3 Health Regen</healing> per 5 seconds for up to 10 seconds after taking damage from an enemy champion.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 45,
+        "FlatHPPoolMod": 200
+      }
+    },
+    "773222": {
+      "name": "Mikael's Crucible",
+      "description": "<mainText><stats><attention>40</attention> Magic Resist<br><attention>7</attention> Health Regen per 5 seconds<br><attention>18</attention> Mana Regen per 5 seconds</stats><br><br><jadeUnique>Mana Font:</jadeUnique> Increases <scaleMana>Mana Regen</scaleMana> by 1% for every 1% of missing Mana.<jadeUnique>Active</jadeUnique> 180s<br>Removes all <status>Stuns, Slows, Taunts, Fears, Silences, Blinds,</status> and <status>Immobilizes</status> on an allied champion and <healing>Heals</healing> that champion for <healing>150</healing> (<scaleHealth>+10 of maximum Health</scaleHealth>).</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 40,
+        "FlatHPRegenMod": 1.4
+      }
+    },
+    "773340": {
+      "name": "Yellow Trinket",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Active</jadeUnique> s<br>Places an <keyword>Invisible</keyword> Stealth Ward that grants vision for 60 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "773348": {
+      "name": "Red Trinket",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Active</jadeUnique> s<br>Reveals enemy wards in the area for 8 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "773504": {
+      "name": "Ardent Censer",
+      "description": "<mainText><stats><attention>40</attention> Ability Power<br><attention>10%</attention> Cooldown Reduction<br><attention>10</attention> Mana Regen per 5 seconds</stats><br><br><jadeUnique>Dedication:</jadeUnique> <speed>8% Move Speed</speed><br><jadeUnique>Fervent Vapor:</jadeUnique> Your <healing>Heals</healing> and <shield>Shields</shield> on another unit grant them 25% attack speed for 6 seconds. This does not include regeneration effects or effects on yourself.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMagicDamageMod": 40
+      }
+    },
+    "773512": {
+      "name": "Zz'Rot Portal",
+      "description": "<mainText><stats><attention>50</attention> Armor<br><attention>50</attention> Magic Resist<br><attention>5</attention> Health Regen per 5 seconds</stats><br><br><jadeUnique>Point Runner:</jadeUnique> Grants <speed>+30% bonus Move Speed</speed> that builds up over 2 seconds when near turrets or void gates.<jadeUnique>Active</jadeUnique> 150s<br>Spawns a gate at the target location for 150 seconds (Can't be placed near turrets). Every 4 seconds the gate spawns a volatile <keywordMajor>Voidspawn</keywordMajor> that travels down the nearest lane. <br><br>After 4 seconds, a <keywordMajor>Voidspawn's</keywordMajor> health will rapidly decay to 0. The fourth <keywordMajor>Voidspawn</keywordMajor> and every <keywordMajor>Voidspawn</keywordMajor> thereafter will deal bonus damage equal to 50% of your resistances.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 50,
+        "FlatArmorMod": 50,
+        "FlatHPRegenMod": 1
+      }
+    },
+    "773513": {
+      "name": "Prototype Hex Core",
+      "description": "",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 10,
+        "FlatHPPoolMod": 140,
+        "FlatArmorMod": 10
+      }
+    },
+    "773514": {
+      "name": "Hex Core mk-1",
+      "description": "",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 10,
+        "FlatHPPoolMod": 140,
+        "FlatArmorMod": 10
+      }
+    },
+    "773515": {
+      "name": "Hex Core mk-2",
+      "description": "",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 10,
+        "FlatHPPoolMod": 140,
+        "FlatArmorMod": 10
+      }
+    },
+    "773516": {
+      "name": "Perfect Hex Core",
+      "description": "",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 10,
+        "FlatHPPoolMod": 140,
+        "FlatArmorMod": 10
+      }
+    },
+    "773517": {
+      "name": "Eggnog",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Click to Consume: </jadeUnique>Restores <healing>150 Health</healing> over 15 seconds.<br><br><jadeLimit>Limited to 5 at one time.</jadeLimit></mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "773518": {
+      "name": "Bag of Tea",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Click to Consume: </jadeUnique>Restores <healing>150 Health</healing> over 15 seconds.<br><br><jadeLimit>Limited to 5 at one time.</jadeLimit></mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "773519": {
+      "name": "Candy Corn",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Click to Consume: </jadeUnique>Restores <healing>150 Health</healing> over 15 seconds.<br><br><jadeLimit>Limited to 5 at one time.</jadeLimit></mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "773521": {
+      "name": "Health Potion",
+      "description": "<mainText><stats></stats><br><br><jadeUnique>Click to Consume: </jadeUnique>Restores <healing>150 Health</healing> over 15 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {}
     },
     "994403": {
       "name": "Golden Spatula",

@@ -21,7 +21,7 @@ import { getOutcome, participantToChampion } from "./s3-helpers.ts";
  * Get the base example match structure for a given queue type
  */
 function getBaseMatch(
-  queueType: QueueType | undefined,
+  queueType: Exclude<QueueType, "classic"> | undefined,
 ): CompletedMatch | ArenaMatch {
   switch (queueType) {
     case "arena":
@@ -106,6 +106,11 @@ export function convertRawMatchToInternalFormat(
     rawMatch.info.queueId,
     rawMatch.info.gameMode,
   );
+  if (queueType === "classic") {
+    throw new Error(
+      "League Classic matches are not supported by the review tool",
+    );
+  }
   const baseMatch = getBaseMatch(queueType);
   const reorderedParticipants = reorderParticipants(
     rawMatch.info.participants,

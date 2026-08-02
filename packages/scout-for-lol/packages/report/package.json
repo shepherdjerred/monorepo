@@ -10,6 +10,7 @@
     "./*": "./src/*"
   },
   "scripts": {
+    "verify:classic-visuals": "bun run scripts/verify-classic-visuals.ts",
     "test": "bun test",
     "test:watch": "bun test --watch",
     "test:coverage": "bun test --coverage",

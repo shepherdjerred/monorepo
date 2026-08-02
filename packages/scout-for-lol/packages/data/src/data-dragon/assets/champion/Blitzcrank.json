@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Blitzcrank": {
       "id": "Blitzcrank",
@@ -518,6 +518,18 @@
           "name": "Bubble Bash Blitzcrank (Rose Quartz)",
           "chromas": false,
           "parentSkin": 66
+        },
+        {
+          "id": "53075",
+          "num": 75,
+          "name": "Rustier Blitzcrank",
+          "chromas": false
+        },
+        {
+          "id": "53076",
+          "num": 76,
+          "name": "Rustiest Blitzcrank",
+          "chromas": false
         }
       ],
       "lore": "Blitzcrank is an enormous, near-indestructible automaton from Zaun, originally built to dispose of hazardous waste. However, he found this primary purpose too restricting, and modified his own form to better serve the fragile people of the Sump. Blitzcrank selflessly uses his strength and durability to protect others, extending a helpful metal fist or burst of energy to subdue any troublemakers.",
@@ -698,8 +710,8 @@
             "full": "RocketGrab.png",
             "sprite": "spell2.png",
             "group": "spell",
-            "x": 96,
-            "y": 0,
+            "x": 384,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -839,8 +851,8 @@
             "full": "Overdrive.png",
             "sprite": "spell2.png",
             "group": "spell",
-            "x": 144,
-            "y": 0,
+            "x": 432,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -978,8 +990,8 @@
             "full": "PowerFist.png",
             "sprite": "spell2.png",
             "group": "spell",
-            "x": 192,
-            "y": 0,
+            "x": 0,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -1097,8 +1109,8 @@
             "full": "StaticField.png",
             "sprite": "spell2.png",
             "group": "spell",
-            "x": 240,
-            "y": 0,
+            "x": 48,
+            "y": 96,
             "w": 48,
             "h": 48
           },

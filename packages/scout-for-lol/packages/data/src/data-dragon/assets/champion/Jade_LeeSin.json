@@ -1,0 +1,730 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_LeeSin": {
+      "id": "Jade_LeeSin",
+      "key": "60064",
+      "name": "Lee Sin",
+      "title": "The Blind Monk",
+      "image": {
+        "full": "Jade_LeeSin.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 240,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60064000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60064004",
+          "num": 4,
+          "name": "Muay Thai Lee Sin",
+          "chromas": false
+        },
+        {
+          "id": "60064011",
+          "num": 11,
+          "name": "God Fist Lee Sin",
+          "chromas": false
+        },
+        {
+          "id": "60064027",
+          "num": 27,
+          "name": "Nightbringer Lee Sin",
+          "chromas": false
+        },
+        {
+          "id": "60064028",
+          "num": 28,
+          "name": "Prestige Nightbringer Lee Sin",
+          "chromas": true
+        },
+        {
+          "id": "60064039",
+          "num": 39,
+          "name": "Prestige Nightbringer Lee Sin (2022)",
+          "chromas": false
+        },
+        {
+          "id": "60064040",
+          "num": 40,
+          "name": "Dragon Fist Lee Sin",
+          "chromas": false
+        },
+        {
+          "id": "60064060",
+          "num": 60,
+          "name": "Muay Thai Lee Sin (Ruby)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "60064061",
+          "num": 61,
+          "name": "Muay Thai Lee Sin (Catseye)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "60064062",
+          "num": 62,
+          "name": "Muay Thai Lee Sin (Emerald)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "60064063",
+          "num": 63,
+          "name": "Muay Thai Lee Sin (Turquoise)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "60064064",
+          "num": 64,
+          "name": "Muay Thai Lee Sin (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "60064065",
+          "num": 65,
+          "name": "Muay Thai Lee Sin (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "60064066",
+          "num": 66,
+          "name": "Muay Thai Lee Sin (Obsidian)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "60064067",
+          "num": 67,
+          "name": "Muay Thai Lee Sin (Pearl)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "60064301",
+          "num": 301,
+          "name": "Classic Lee Sin",
+          "chromas": false
+        },
+        {
+          "id": "60064302",
+          "num": 302,
+          "name": "Classic Lee Sin (Acolyte)",
+          "chromas": false,
+          "parentSkin": 301
+        }
+      ],
+      "lore": "- Nothing can upset his balance",
+      "blurb": "- Nothing can upset his balance",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
+      "partype": "Energy",
+      "info": {
+        "attack": 8,
+        "defense": 5,
+        "magic": 3,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 513,
+        "hpperlevel": 85,
+        "mp": 200,
+        "mpperlevel": 0,
+        "movespeed": 350,
+        "armor": 23.7,
+        "armorperlevel": 3.7,
+        "spellblock": 31.25,
+        "spellblockperlevel": 1.25,
+        "attackrange": 125,
+        "hpregen": 6.95,
+        "hpregenperlevel": 0.7,
+        "mpregen": 50,
+        "mpregenperlevel": 0,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 59,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 3,
+        "attackspeed": 0.651
+      },
+      "spells": [
+        {
+          "id": "Jade_LeeSinQOne",
+          "name": "Sonic Wave / Resonating Strike",
+          "description": "Sonic Wave: Lee Sin projects a discordant wave of sound to locate his enemies, dealing physical damage to the first enemy it encounters. If Sonic Wave hits, Lee Sin can cast Resonating Strike for the next 3 seconds.<br>Resonating Strike: Lee Sin dashes to the enemy hit by Sonic Wave, dealing physical damage plus 8% of their missing health.",
+          "tooltip": "<spellName>Sonic Wave: </spellName>Lee Sin projects a discordant wave of sound to locate his enemies, dealing <physicalDamage>{{ initialdamage }} physical damage</physicalDamage> to the first enemy it encounters. If <spellName>Sonic Wave</spellName> hits, Lee Sin can cast <spellName>Resonating Strike</spellName> for the next 3 seconds.<br /><br /><spellName>Resonating Strike: </spellName>Lee Sin dashes to the enemy hit by Sonic Wave, dealing <physicalDamage>{{ recastdamage }} physical damage</physicalDamage> plus 8% of their missing Health.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Sonic Wave Damage",
+              "Resonating Strike Minimum Base Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ q1basedamage }} -> {{ q1basedamageNL }}",
+              "{{ q2basedamage }} -> {{ q2basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            11,
+            10,
+            9,
+            8,
+            7
+          ],
+          "cooldownBurn": "11/10/9/8/7",
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1100,
+            1100,
+            1100,
+            1100,
+            1100
+          ],
+          "rangeBurn": "1100",
+          "image": {
+            "full": "Jade_LeeSinQOne.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 192,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_LeeSinWOne",
+          "name": "Safeguard / Iron Will",
+          "description": "Safeguard: Lee Sin rushes towards a target ally, shielding them both from damage. After using Safeguard, Lee Sin can cast Iron Will for the next 3 seconds.<br>Iron Will: Lee Sin's intense training allows him to thrive in battle. For 4 seconds, Lee Sin gains Life Steal, Spell Vamp, and Armor.",
+          "tooltip": "<spellName>Safeguard: </spellName>Lee Sin rushes towards a target ally, <shield>shielding</shield> them both for {{ shieldamount }} damage over the next 5 seconds. After using <spellName>Safeguard</spellName>, Lee Sin can cast <spellName>Iron Will</spellName> for the next 3 seconds.<br /><br /><spellName>Iron Will: </spellName>Lee Sin's intense training allows him to thrive in battle. For 5 seconds, Lee Sin gains {{ lifestealandspellvamp }}% Life Steal, Spell Vamp, and <scaleArmor>{{ armorbonus }} Armor</scaleArmor>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Safeguard Shield Absorption",
+              "Iron Will Lifesteal / Spell Vamp %",
+              "Iron Will Armor"
+            ],
+            "effect": [
+              "{{ shieldvalue }} -> {{ shieldvalueNL }}",
+              "{{ lifestealandspellvamp }}% -> {{ lifestealandspellvampNL }}%",
+              "{{ armorbonus }} -> {{ armorbonusNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
+          "cooldownBurn": "9",
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
+          "rangeBurn": "700",
+          "image": {
+            "full": "Jade_LeeSinWOne.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 240,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_LeeSinEOne",
+          "name": "Tempest / Cripple",
+          "description": "Tempest: Lee Sin smashes the ground sending out a shockwave that deals magic damage and reveals enemy units hit. If Tempest hits an enemy, Lee Sin can cast cripple for the next 3 seconds.<br>Cripple: Lee Sin cripples nearby enemies revealed by Tempest, reducing their Movement and Attack Speed for 4 seconds. Movement and Attack Speed recover gradually over the duration.",
+          "tooltip": "<spellName>Tempest: </spellName>Lee Sin smashes the ground, sending out a shockwave that deals <magicDamage>{{ initialdamage }} magic damage</magicDamage> and reveals enemy units hit for 4 seconds. If <spellName>Tempest</spellName> hits an enemy, Lee Sin can cast <spellName>Cripple</spellName> for the next 3 seconds.<br /><br /><spellName>Cripple: </spellName>Lee Sin cripples nearby enemies revealed by <spellName>Tempest</spellName> for 4 seconds, <status>Slowing</status> their <speed>Movement</speed> and <attackSpeed>Attack Speed</attackSpeed> by {{ slowamount }}%. <speed>Movement</speed> and <attackSpeed>Attack Speed</attackSpeed> recover gradually over the duration.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Tempest Damage",
+              "Cripple Movement and Attack Speed % reduction"
+            ],
+            "effect": [
+              "{{ e1damage }} -> {{ e1damageNL }}",
+              "{{ slowamount }}% -> {{ slowamountNL }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "cooldownBurn": "10",
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
+          "costBurn": "50",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            425,
+            425,
+            425,
+            425,
+            425
+          ],
+          "rangeBurn": "425",
+          "image": {
+            "full": "Jade_LeeSinEOne.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 288,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "Jade_LeeSinR",
+          "name": "Dragon's Rage",
+          "description": "Lee Sin performs a powerful roundhouse kick launching his target back, dealing physical damage to the target and any enemies they collide with. Enemies the target collides with are knocked into the air for a short duration. This technique was taught to him by Jesse Perring, although Lee Sin does not kick players off the map.",
+          "tooltip": "Lee Sin performs a powerful roundhouse kick <status>Knocking</status> an enemy champion back, dealing <physicalDamage>{{ damage }} physical damage</physicalDamage> to the target and any enemies they collide with. Enemies the target collides with are <status>Knocked</status> into the air for a short duration.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            90,
+            75,
+            60
+          ],
+          "cooldownBurn": "90/75/60",
+          "cost": [
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            375,
+            375,
+            375
+          ],
+          "rangeBurn": "375",
+          "image": {
+            "full": "Jade_LeeSinR.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 336,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Flurry",
+        "description": "After Lee Sin uses an ability, his next 2 basic attacks gain 40% Attack Speed and return 15 Energy each.",
+        "image": {
+          "full": "Jade_LeeSinPassive.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 240,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

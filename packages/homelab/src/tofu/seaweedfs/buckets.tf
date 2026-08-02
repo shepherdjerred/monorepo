@@ -219,6 +219,25 @@ resource "aws_s3_bucket" "scout_prod" {
   bucket = "scout-prod"
 }
 
+# Private licensed font objects used only by Scout's server-side League Classic
+# renderer. The binaries are uploaded out-of-band from the owner's licensed
+# macOS installation and are deliberately absent from Git and public images.
+# The bucket is created before this declaration reaches main so PR verification
+# can exercise the exact licensed fonts. Adopt it on the first main apply rather
+# than attempting to create an already-existing bucket.
+import {
+  to = aws_s3_bucket.scout_classic_fonts
+  id = "scout-classic-fonts"
+}
+
+resource "aws_s3_bucket" "scout_classic_fonts" {
+  bucket = "scout-classic-fonts"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 # LLM request/response archive — gzipped JSON envelopes per LLM call.
 # Written by packages/llm-observability's LlmArchiveSpanProcessor; one file per
 # call, key prefix `llm/<service>/<provider>/YYYY/MM/DD/<traceId>-<spanId>.json.gz`.

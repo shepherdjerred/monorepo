@@ -1,0 +1,778 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.15.1",
+  "data": {
+    "Jade_Katarina": {
+      "id": "Jade_Katarina",
+      "key": "60055",
+      "name": "Katarina",
+      "title": "The Sinister Blade",
+      "image": {
+        "full": "Jade_Katarina.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 96,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "60055000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "60055001",
+          "num": 1,
+          "name": "Mercenary Katarina",
+          "chromas": false
+        },
+        {
+          "id": "60055009",
+          "num": 9,
+          "name": "PROJECT: Katarina",
+          "chromas": false
+        },
+        {
+          "id": "60055029",
+          "num": 29,
+          "name": "Battle Queen Katarina",
+          "chromas": false
+        },
+        {
+          "id": "60055030",
+          "num": 30,
+          "name": "Battle Queen Katarina (Ruby)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "60055031",
+          "num": 31,
+          "name": "Battle Queen Katarina (Sapphire)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "60055032",
+          "num": 32,
+          "name": "Battle Queen Katarina (Emerald)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "60055033",
+          "num": 33,
+          "name": "Battle Queen Katarina (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "60055034",
+          "num": 34,
+          "name": "Battle Queen Katarina (Pearl)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "60055035",
+          "num": 35,
+          "name": "Battle Queen Katarina (Obsidian)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "60055036",
+          "num": 36,
+          "name": "Battle Queen Katarina (Coronation)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "60055047",
+          "num": 47,
+          "name": "Faerie Court Katarina",
+          "chromas": false
+        },
+        {
+          "id": "60055048",
+          "num": 48,
+          "name": "Prestige Faerie Court Katarina",
+          "chromas": false
+        },
+        {
+          "id": "60055049",
+          "num": 49,
+          "name": "Faerie Court Katarina (Ruby)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "60055050",
+          "num": 50,
+          "name": "Faerie Court Katarina (Citrine)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "60055051",
+          "num": 51,
+          "name": "Faerie Court Katarina (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "60055052",
+          "num": 52,
+          "name": "Faerie Court Katarina (Emerald)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "60055053",
+          "num": 53,
+          "name": "Faerie Court Katarina (Turquoise)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "60055054",
+          "num": 54,
+          "name": "Faerie Court Katarina (Obsidian)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "60055055",
+          "num": 55,
+          "name": "Faerie Court Katarina (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "60055056",
+          "num": 56,
+          "name": "Faerie Court Katarina (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "60055057",
+          "num": 57,
+          "name": "Faerie Court Katarina (Winsome)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "60055301",
+          "num": 301,
+          "name": "Classic Katarina",
+          "chromas": false
+        },
+        {
+          "id": "60055302",
+          "num": 302,
+          "name": "Classic Katarina (Mercenary)",
+          "chromas": false,
+          "parentSkin": 301
+        }
+      ],
+      "lore": "- Bouncing Blades (Q) deals damage and marks enemies, Katarina can consume the mark with spells or attacks to deal extra magic damage.<br>- Sinister Steel (W) does damage around Katarina and increases her movement speed if the ability hits a champion.<br>- Shunpo (E) deals damage and blinks to target; afterwards the ability provides damage reduction to Katarina.",
+      "blurb": "- Bouncing Blades (Q) deals damage and marks enemies, Katarina can consume the mark with spells or attacks to deal extra magic damage.<br>- Sinister Steel (W) does damage around Katarina and increases her movement speed if the ability hits a champion...",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Assassin",
+        "Mage"
+      ],
+      "partype": "None",
+      "info": {
+        "attack": 4,
+        "defense": 3,
+        "magic": 9,
+        "difficulty": 8
+      },
+      "stats": {
+        "hp": 505,
+        "hpperlevel": 80,
+        "mp": 0,
+        "mpperlevel": 0,
+        "movespeed": 345,
+        "armor": 24.5,
+        "armorperlevel": 3.5,
+        "spellblock": 31.25,
+        "spellblockperlevel": 1.25,
+        "attackrange": 125,
+        "hpregen": 7.5,
+        "hpregenperlevel": 0.55,
+        "mpregen": 0,
+        "mpregenperlevel": 0,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 56.2,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 2.74,
+        "attackspeed": 0.658
+      },
+      "spells": [
+        {
+          "id": "Jade_KatarinaQ",
+          "name": "Bouncing Blade",
+          "description": "Katarina throws a dagger that bounces from enemy to enemy, dealing magic damage.",
+          "tooltip": "Throws a dagger dealing <magicDamage>{{ totaldamage }}</magicDamage> magic damage. The dagger bounces to the {{ maxbounces }} closest enemies dealing 10% less damage with each bounce.<br /><br />Enemies hit are marked for {{ markduration }} seconds. Katarina's basic attacks or spells will consume the mark dealing <magicDamage>{{ totaldamagemark }}</magicDamage> additional magic damage.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Base Damage",
+              "Mark Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ procdamage }} -> {{ procdamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            10,
+            9.5,
+            9,
+            8.5,
+            8
+          ],
+          "cooldownBurn": "10/9.5/9/8.5/8",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "2",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [
+            675,
+            675,
+            675,
+            675,
+            675
+          ],
+          "rangeBurn": "675",
+          "image": {
+            "full": "Jade_KatarinaQ.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 96,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "Jade_KatarinaW",
+          "name": "Sinister Steel",
+          "description": "Katarina whirls her daggers around her, dealing magic damage to all enemies in the area. If she hits an enemy Champion, Katarina gains a burst of speed for a short duration.",
+          "tooltip": "Whirls daggers in a circle dealing {{ totaldamage }} magic damage. If she hits an enemy Champion, Katarina gains {{ haste*100 }}%  <speed>Movement Speed</speed> for {{ buffduration }} second.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Move Speed"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ haste*100.000000 }}% -> {{ hastenl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            4,
+            4,
+            4,
+            4,
+            4
+          ],
+          "cooldownBurn": "4",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1.25,
+              1.25,
+              1.25,
+              1.25,
+              1.25
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              50,
+              60,
+              70,
+              80,
+              90
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "1.25",
+            "0",
+            "50/60/70/80/90",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
+          "rangeBurn": "400",
+          "image": {
+            "full": "Jade_KatarinaW.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 144,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "Jade_KatarinaE",
+          "name": "Shunpo",
+          "description": "Katarina instantly moves to her target's location and takes reduced damage from enemies for a few seconds. If the target is an enemy, she deals damage.",
+          "tooltip": "Moves to a target's location. Deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> if the target is an enemy.<br /><br />After using Shunpo, Katarina takes {{ damagereduction }}% reduced damage for {{ damagereductionduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            12,
+            10.5,
+            9,
+            7.5,
+            6
+          ],
+          "cooldownBurn": "12/10.5/9/7.5/6",
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [
+            725,
+            725,
+            725,
+            725,
+            725
+          ],
+          "rangeBurn": "725",
+          "image": {
+            "full": "Jade_KatarinaE.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 192,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        },
+        {
+          "id": "Jade_KatarinaR",
+          "name": "Death Lotus",
+          "description": "Katarina becomes a flurry of blades, throwing daggers with unrivaled speed at up to three nearby Champions.",
+          "tooltip": "Becomes a flurry of blades, throwing daggers at the closest 3 enemy Champions dealing <magicDamage>{{ damagecalctooltiponly }} magic damage</magicDamage> over 2.5 seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ ttdamage }} -> {{ ttdamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            60,
+            52.5,
+            45
+          ],
+          "cooldownBurn": "60/52.5/45",
+          "cost": [
+            0,
+            0,
+            0
+          ],
+          "costBurn": "0",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": "No Cost",
+          "maxammo": "-1",
+          "range": [
+            550,
+            550,
+            550
+          ],
+          "rangeBurn": "550",
+          "image": {
+            "full": "Jade_KatarinaR.png",
+            "sprite": "spell8.png",
+            "group": "spell",
+            "x": 240,
+            "y": 0,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "No Cost"
+        }
+      ],
+      "passive": {
+        "name": "Voracity",
+        "description": "Champion kills or assists reduce Katarina's cooldowns by 15 seconds.",
+        "image": {
+          "full": "Jade_Katarina_Passive.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 96,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

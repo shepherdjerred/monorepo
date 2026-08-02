@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   buildImageOnlySkipEmailContent,
+  dataDragonDisallowedChangePaths,
   parseGitStatusLine,
   shouldCreateDataDragonPr,
   type GitStatusEntry,
@@ -37,6 +38,12 @@ const ARENA_SVG_SNAPSHOT =
   "packages/scout-for-lol/packages/report/src/html/arena/__snapshots__/1.svg";
 const ARENA_HASH_SNAPSHOT =
   "packages/scout-for-lol/packages/report/src/html/arena/__snapshots__/realdata.integration.test.ts.snap";
+const RANKED_BANNER_SVG_SNAPSHOT =
+  "packages/scout-for-lol/packages/report/src/html/ranked-banner/__snapshots__/banner_solo_victory.svg";
+const RANKED_SQUARE_HASH_SNAPSHOT =
+  "packages/scout-for-lol/packages/report/src/html/ranked-square/__snapshots__/square.integration.test.ts.snap";
+const REPORT_SOURCE_PATH =
+  "packages/scout-for-lol/packages/report/src/html/ranked-square/index.tsx";
 const DATA_JSON_PATH =
   "packages/scout-for-lol/packages/data/src/data-dragon/assets/champion/Fiddlesticks.json";
 const GENERATED_TS_PATH =
@@ -138,6 +145,22 @@ describe("shouldCreateDataDragonPr", () => {
     expect(shouldCreateDataDragonPr(changes)).toBe(false);
   });
 
+  test("skips modified existing images plus generated ranked visual snapshots", () => {
+    const changes = parseStatusLines([
+      ` M ${IMAGE_PATH}`,
+      ` M ${RANKED_BANNER_SVG_SNAPSHOT}`,
+      ` M ${RANKED_SQUARE_HASH_SNAPSHOT}`,
+    ]);
+
+    expect(shouldCreateDataDragonPr(changes)).toBe(false);
+  });
+
+  test("creates a PR for an added ranked visual snapshot", () => {
+    const changes = parseStatusLines([`A  ${RANKED_BANNER_SVG_SNAPSHOT}`]);
+
+    expect(shouldCreateDataDragonPr(changes)).toBe(true);
+  });
+
   test("creates a PR for added images", () => {
     const changes = parseStatusLines([`A  ${IMAGE_PATH}`]);
 
@@ -183,6 +206,38 @@ describe("shouldCreateDataDragonPr", () => {
     ]);
 
     expect(shouldCreateDataDragonPr(changes)).toBe(true);
+  });
+});
+
+describe("dataDragonDisallowedChangePaths", () => {
+  test("allows generated data and every report HTML snapshot directory", () => {
+    const changes = parseStatusLines([
+      ` M ${DATA_JSON_PATH}`,
+      ` M ${ARENA_SVG_SNAPSHOT}`,
+      ` M ${RANKED_BANNER_SVG_SNAPSHOT}`,
+      ` M ${RANKED_SQUARE_HASH_SNAPSHOT}`,
+    ]);
+
+    expect(dataDragonDisallowedChangePaths(changes)).toEqual([]);
+  });
+
+  test("rejects report source changes even though the staging root is broad", () => {
+    const changes = parseStatusLines([` M ${REPORT_SOURCE_PATH}`]);
+
+    expect(dataDragonDisallowedChangePaths(changes)).toEqual([
+      REPORT_SOURCE_PATH,
+    ]);
+  });
+
+  test("rejects both current and previous disallowed rename paths", () => {
+    const previousPath = "packages/temporal/src/old.ts";
+    const currentPath = "packages/temporal/src/new.ts";
+    const changes = parseStatusLines([`R  ${previousPath} -> ${currentPath}`]);
+
+    expect(dataDragonDisallowedChangePaths(changes)).toEqual([
+      currentPath,
+      previousPath,
+    ]);
   });
 });
 

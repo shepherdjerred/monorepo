@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.14.1",
+  "version": "16.15.1",
   "data": {
     "Ryze": {
       "id": "Ryze",
@@ -10,7 +10,7 @@
       "title": "the Rune Mage",
       "image": {
         "full": "Ryze.png",
-        "sprite": "champion3.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 192,
         "y": 96,
@@ -456,10 +456,10 @@
           "rangeBurn": "1000",
           "image": {
             "full": "RyzeQWrapper.png",
-            "sprite": "spell11.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 192,
-            "y": 144,
+            "x": 0,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -599,10 +599,10 @@
           "rangeBurn": "615",
           "image": {
             "full": "RyzeW.png",
-            "sprite": "spell11.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 240,
-            "y": 144,
+            "x": 48,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -742,10 +742,10 @@
           "rangeBurn": "615",
           "image": {
             "full": "RyzeE.png",
-            "sprite": "spell11.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 288,
-            "y": 144,
+            "x": 96,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -857,10 +857,10 @@
           "rangeBurn": "3000",
           "image": {
             "full": "RyzeR.png",
-            "sprite": "spell11.png",
+            "sprite": "spell18.png",
             "group": "spell",
-            "x": 336,
-            "y": 144,
+            "x": 144,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -872,7 +872,7 @@
         "description": "<mainText>Ryze's spells deal extra damage based on his Bonus Mana, and he gains a percentage increase to his maximum Mana based on his Ability Power.</mainText>",
         "image": {
           "full": "Ryze_P.png",
-          "sprite": "passive3.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 192,
           "y": 96,
