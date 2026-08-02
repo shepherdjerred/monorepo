@@ -226,3 +226,17 @@ Verified: full `bun run script-coverage` exits 0 (scripts 95.71% fn / 95.31%
 line), `.buildkite` typecheck, root-scripts test/lint, buildkite lint
 (`update-ci-image-pin.ts` at 468 lines, under the 500 `max-lines` cap),
 `compliance-check` clean, markdownlint 0, frozen-lockfile dry-run clean.
+
+### Re-review P2 — scope missing-image matching to manifest errors
+
+A follow-up on the unclassified-error fix: the bare `not found` alternative in
+`IMAGE_ABSENT_PATTERN` also matched unrelated failures like a missing credential
+helper (`docker-credential-desktop: executable file not found in $PATH`), which
+would map a pinned-inspect credential failure to `undefined` →
+`pin-unresolvable-bumped` instead of failing loud. Tightened the pattern so
+`not found` is recognized only when tied to a manifest/reference or the
+requested `@sha256:` digest (our pinned/candidate inspects always use digest
+refs); the definitive `manifest unknown` / `name unknown` registry codes still
+match unconditionally. Added tests for a digest-tied not-found and a
+`MANIFEST_UNKNOWN` (→ undefined) and the credential-helper false positive
+(→ fail loud). Coverage stays 95.71% fn / 95.32% line.

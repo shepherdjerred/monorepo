@@ -75,11 +75,27 @@ async function transientInspectExecutor(): Promise<BuildxCommandResult> {
 }
 
 async function notFoundInspectExecutor(): Promise<BuildxCommandResult> {
-  return commandResult(1, "", "ghcr.io/example: manifest unknown: not found");
+  return commandResult(
+    1,
+    "",
+    `ghcr.io/example@sha256:${"a".repeat(64)}: not found`,
+  );
+}
+
+async function manifestUnknownInspectExecutor(): Promise<BuildxCommandResult> {
+  return commandResult(1, "", "MANIFEST_UNKNOWN: manifest unknown");
 }
 
 async function rateLimitedInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(1, "", "429 Too Many Requests");
+}
+
+async function credentialErrorInspectExecutor(): Promise<BuildxCommandResult> {
+  return commandResult(
+    1,
+    "",
+    "error getting credentials: docker-credential-desktop: executable file not found in $PATH",
+  );
 }
 
 async function unclassifiedInspectExecutor(): Promise<BuildxCommandResult> {
@@ -452,11 +468,22 @@ test("classifies inspect failures as transient, missing, or unclassified", async
     imageRuntimeFingerprint(image, rateLimitedInspectExecutor),
   ).rejects.toBeInstanceOf(TransientError);
 
-  // A genuine, non-transient "not found" remains `undefined` — the legitimate
-  // pin-unresolvable signal.
+  // A genuine missing manifest — tied to the requested digest, or a registry
+  // MANIFEST_UNKNOWN code — remains `undefined` (the legitimate pin-unresolvable
+  // signal).
   expect(
     await imageRuntimeFingerprint(image, notFoundInspectExecutor),
   ).toBeUndefined();
+  expect(
+    await imageRuntimeFingerprint(image, manifestUnknownInspectExecutor),
+  ).toBeUndefined();
+
+  // A "not found" that is NOT tied to the manifest (e.g. a missing credential
+  // helper executable) is unclassified and must fail loud, not masquerade as an
+  // unresolvable pin.
+  await expect(
+    imageRuntimeFingerprint(image, credentialErrorInspectExecutor),
+  ).rejects.toThrow("Unclassified failure inspecting");
 
   // Any other unclassified failure fails loud as a plain Error (not a
   // TransientError, not `undefined`), so it never promotes against an

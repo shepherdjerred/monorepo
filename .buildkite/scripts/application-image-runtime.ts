@@ -15,10 +15,14 @@ export type ImageCommandExecutor = (
 
 const applicationImageTargets = new Set(APPLICATION_IMAGE_TARGETS);
 
-// Registry/BuildKit diagnostics that explicitly mean "this manifest does not
-// exist" — the only inspect failure that legitimately maps to an unresolvable
-// image. Anything else non-transient is treated as an unclassified error.
-const IMAGE_ABSENT_PATTERN = /not found|manifest[ _]unknown|name[ _]unknown/i;
+// Registry/BuildKit diagnostics that specifically mean the requested manifest
+// or repository does not exist — the only inspect failure that legitimately
+// maps to an unresolvable image. `not found` is matched only when tied to a
+// manifest/reference or the requested `@sha256:` digest, so unrelated failures
+// (e.g. a missing credential helper: "executable file not found in $PATH") stay
+// unclassified errors and fail loud. Anything else non-transient is unclassified.
+const IMAGE_ABSENT_PATTERN =
+  /manifest[ _]unknown|name[ _]unknown|(?:manifest|reference|@sha256:[\da-f]{64})[^\n]*not found/i;
 
 function canonicalJson(value: unknown): string {
   if (value === null) return "null";
