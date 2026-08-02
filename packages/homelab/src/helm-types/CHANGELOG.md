@@ -2,16 +2,11 @@
 
 ## [1.6.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.5.0...helm-types-v1.6.0) (2026-08-02)
 
+No behavior changes and no runtime dependency changes — generated output is identical to 1.5.0. This package ships `src/` in the tarball and points `types` at `src/index.ts`, so the source edits below are visible to consumers even though none of them change what the generator does.
 
-### Features
-
-* **ci:** add test reporting foundation ([#1782](https://github.com/shepherdjerred/monorepo/issues/1782)) ([09a6ed1](https://github.com/shepherdjerred/monorepo/commit/09a6ed1566aec6cbe9e3f951586ab7ec9961e368))
-
-
-### Bug Fixes
-
-* **deps:** roll out TypeScript 7 native compiler ([#1843](https://github.com/shepherdjerred/monorepo/issues/1843)) ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48))
-* **deps:** update eslint-plugin-unicorn to v72 ([#1837](https://github.com/shepherdjerred/monorepo/issues/1837)) ([60998f5](https://github.com/shepherdjerred/monorepo/commit/60998f50c3a5bc4d5a2a72a3e568f621d1ecb2f5))
+- Boolean conditions across the chart-info parser, YAML comment parsers, type inference, and code generation were reordered by an `eslint-plugin-unicorn` v72 autofix. Every reordered operand is a pure comparison on an already-bound value, so each condition still evaluates to the same result ([60998f5](https://github.com/shepherdjerred/monorepo/commit/60998f50c3a5bc4d5a2a72a3e568f621d1ecb2f5))
+- Dead `argo-cd` special case dropped from `parseChartInfoFromVersions`; both branches assigned `chartName` the same `versionKey` value, so emitted `ChartInfo` objects are unchanged ([52f25f2](https://github.com/shepherdjerred/monorepo/commit/52f25f27187ab711efed79c3770f8e2ca2045620))
+- Build output is unaffected by the TypeScript 7 rollout: `build` still runs `bun build`, and only the repo-internal `typecheck` script moved to the native compiler ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48))
 
 ## [1.5.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.4.0...helm-types-v1.5.0) (2026-07-26)
 

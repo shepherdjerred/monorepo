@@ -2,15 +2,9 @@
 
 ## [1.18.0](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.17.4...astro-opengraph-images-v1.18.0) (2026-08-02)
 
+No library behavior changes. The shipped code is identical to 1.17.4; this release exists only because of repo-level housekeeping that release-please picked up. `src/`, the runtime dependencies, and the README are untouched.
 
-### Features
-
-* **ci:** add test reporting foundation ([#1782](https://github.com/shepherdjerred/monorepo/issues/1782)) ([09a6ed1](https://github.com/shepherdjerred/monorepo/commit/09a6ed1566aec6cbe9e3f951586ab7ec9961e368))
-
-
-### Bug Fixes
-
-* **deps:** roll out TypeScript 7 native compiler ([#1843](https://github.com/shepherdjerred/monorepo/issues/1843)) ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48))
+- Internal build scripts now put the TypeScript 7 native compiler on `PATH` instead of invoking its binary by path, and a `test:ci` script was added. This package already built with that same compiler as of 1.17.4, so the emitted `dist/` is unchanged ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48), [09a6ed1](https://github.com/shepherdjerred/monorepo/commit/09a6ed1566aec6cbe9e3f951586ab7ec9961e368))
 
 ## [1.17.4](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.17.3...astro-opengraph-images-v1.17.4) (2026-07-31)
 

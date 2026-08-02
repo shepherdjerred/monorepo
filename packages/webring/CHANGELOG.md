@@ -7,15 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.8.0](https://github.com/shepherdjerred/monorepo/compare/webring-v1.7.2...webring-v1.8.0) (2026-08-02)
 
+No public API changes and no runtime dependency changes — `src/` is byte-identical to 1.7.2.
 
-### Features
-
-* **ci:** add test reporting foundation ([#1782](https://github.com/shepherdjerred/monorepo/issues/1782)) ([09a6ed1](https://github.com/shepherdjerred/monorepo/commit/09a6ed1566aec6cbe9e3f951586ab7ec9961e368))
-
-
-### Bug Fixes
-
-* **deps:** roll out TypeScript 7 native compiler ([#1843](https://github.com/shepherdjerred/monorepo/issues/1843)) ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48))
+- The published `dist/` (JavaScript and `.d.ts`) is now emitted by the TypeScript 7 native compiler (`@typescript/native`, npm `typescript@7.0.2`) instead of TypeScript 6. Sources are unchanged; only the compiler that produces the tarball's output changed ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48))
 
 ## [1.7.2](https://github.com/shepherdjerred/monorepo/compare/webring-v1.7.1...webring-v1.7.2) (2026-07-29)
 
