@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { buildPrState } from "@shepherdjerred/pr-fleet-controller/src/fleet-logic.ts";
 import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/state.ts";
-import { validateWorkerCommand } from "@shepherdjerred/pr-fleet-controller/src/tools.ts";
+import { validateWorkerCommand } from "@shepherdjerred/pr-fleet-controller/src/command-policy.ts";
 import { evidence, identity } from "./fixtures.ts";
 
 function state(number: number, stackId = `pr-${String(number)}`) {
@@ -66,5 +66,32 @@ describe("worker command policy", () => {
     expect(() =>
       validateWorkerCommand("mise", ["exec", "--command", "rm -rf ."]),
     ).toThrow();
+  });
+
+  test("requires check mode for the in-place formatters", () => {
+    // `cargo fmt` / `tofu fmt` rewrite tracked files by default, which would
+    // mutate the shared worktree outside the explicit publication paths.
+    expect(() => validateWorkerCommand("cargo", ["fmt"])).toThrow();
+    expect(() =>
+      validateWorkerCommand("cargo", [
+        "fmt",
+        "--manifest-path",
+        "packages/x/Cargo.toml",
+      ]),
+    ).toThrow();
+    expect(() =>
+      validateWorkerCommand("cargo", ["fmt", "--check"]),
+    ).not.toThrow();
+    // `cargo fmt -- --check` passes --check through to rustfmt; still read-only.
+    expect(() =>
+      validateWorkerCommand("cargo", ["fmt", "--", "--check"]),
+    ).not.toThrow();
+    expect(() => validateWorkerCommand("tofu", ["fmt"])).toThrow();
+    expect(() =>
+      validateWorkerCommand("tofu", ["fmt", "-check"]),
+    ).not.toThrow();
+    // Non-formatter subcommands are unaffected.
+    expect(() => validateWorkerCommand("cargo", ["check"])).not.toThrow();
+    expect(() => validateWorkerCommand("tofu", ["validate"])).not.toThrow();
   });
 });

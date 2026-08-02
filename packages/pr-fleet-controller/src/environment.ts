@@ -5,14 +5,15 @@ import {
 import { resolveReviewState } from "@shepherdjerred/code-review/github";
 import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
 import {
+  checksWithBuildkiteSoftFailure,
   fingerprint,
   parseBuildkiteBuild,
-  parseBuildkiteCommit,
   parseChecks,
   parsePrList,
   parseReviewPage,
   reviewFindingsFromThreads,
   splitRepo,
+  type RawCheck,
   type RawReviewThread,
 } from "./evidence-parsers.ts";
 import { GitOperations } from "./git-operations.ts";
@@ -22,6 +23,7 @@ import type {
   FleetEnvironment,
 } from "./ports.ts";
 import type {
+  CheckEvidence,
   PrIdentity,
   PrState,
   ReadinessEvidence,
@@ -303,15 +305,23 @@ export class CommandFleetEnvironment implements FleetEnvironment {
 
   async #buildkiteEvidence(
     pr: PrIdentity,
-    checks: ReadinessEvidence["checks"],
-  ): Promise<
-    Pick<ReadinessEvidence, "buildkiteCurrentHead" | "buildkiteFailure">
-  > {
-    const buildkite = checks.find(
+    rawChecks: RawCheck[],
+  ): Promise<{
+    checks: CheckEvidence[];
+    buildkiteCurrentHead: boolean;
+    buildkiteFailure: ReadinessEvidence["buildkiteFailure"];
+  }> {
+    const buildkite = rawChecks.find(
       (check) => check.link?.includes("buildkite.com/") === true,
     );
     if (buildkite?.link === null || buildkite?.link === undefined) {
-      return { buildkiteCurrentHead: false, buildkiteFailure: null };
+      // No Buildkite build to correlate against: nothing is soft-failed and
+      // there is no current-head Buildkite evidence.
+      return {
+        checks: checksWithBuildkiteSoftFailure(rawChecks, []),
+        buildkiteCurrentHead: false,
+        buildkiteFailure: null,
+      };
     }
     const url = new URL(buildkite.link);
     const parts = url.pathname.split("/").filter((part) => part.length > 0);
@@ -325,46 +335,36 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       pipeline === undefined ||
       buildNumber === undefined
     ) {
-      return { buildkiteCurrentHead: false, buildkiteFailure: null };
+      return {
+        checks: checksWithBuildkiteSoftFailure(rawChecks, []),
+        buildkiteCurrentHead: false,
+        buildkiteFailure: null,
+      };
     }
-    const hardFailure = checks.some(
-      (check) =>
-        !check.softFail &&
-        (check.bucket.toLowerCase() === "fail" ||
-          check.state.toLowerCase() === "failure"),
-    );
-    const args = [
-      "build",
-      "view",
-      buildNumber,
-      "--pipeline",
-      `${organization}/${pipeline}`,
-    ];
-    if (hardFailure) {
-      args.push("--job-states", "failed,broken");
-    } else {
-      args.push("--summary");
-    }
-    args.push("--json", "--no-input");
+    // Fetch the FULL build (every job) so each check's soft-failure status can
+    // be derived from the authoritative per-job `soft_failed` metadata rather
+    // than a check-name heuristic.
     const result = await this.runLocalCommand({
       executable: "bk",
-      args,
+      args: [
+        "build",
+        "view",
+        buildNumber,
+        "--pipeline",
+        `${organization}/${pipeline}`,
+        "--json",
+        "--no-input",
+      ],
       cwd: this.#checkout,
       timeoutMs: 120_000,
     });
     if (result.exitCode !== 0) {
       throw new Error(`Buildkite inspection failed: ${result.stderr.trim()}`);
     }
-    if (!hardFailure) {
-      return {
-        buildkiteCurrentHead:
-          parseBuildkiteCommit(result.stdout) === pr.headSha,
-        buildkiteFailure: null,
-      };
-    }
     const build = parseBuildkiteBuild(result.stdout);
+    const checks = checksWithBuildkiteSoftFailure(rawChecks, build.jobs);
     if (build.commit !== pr.headSha) {
-      return { buildkiteCurrentHead: false, buildkiteFailure: null };
+      return { checks, buildkiteCurrentHead: false, buildkiteFailure: null };
     }
     const failedJobs = build.jobs
       .filter(
@@ -380,7 +380,7 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       });
     const earliest = failedJobs[0];
     if (earliest === undefined) {
-      return { buildkiteCurrentHead: true, buildkiteFailure: null };
+      return { checks, buildkiteCurrentHead: true, buildkiteFailure: null };
     }
     const log = await this.#mustRun("bk", [
       "job",
@@ -394,6 +394,7 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       "--no-input",
     ]);
     return {
+      checks,
       buildkiteCurrentHead: true,
       buildkiteFailure: {
         jobId: earliest.id,
@@ -407,11 +408,17 @@ export class CommandFleetEnvironment implements FleetEnvironment {
   }
 
   async refreshEvidence(pr: PrIdentity): Promise<ReadinessEvidence> {
-    const [checks, reviews, conflict] = await Promise.all([
+    const [rawChecks, reviews, conflict] = await Promise.all([
       this.#checks(pr),
       this.#reviews(pr),
       this.#conflict(pr),
     ]);
+    // Resolve each check's soft-failure status against the Buildkite build's
+    // per-job metadata BEFORE computing hard failures, so a soft Semgrep/Trivy
+    // finding is not counted as blocking and a hard scanner failure is not
+    // ignored.
+    const { checks, buildkiteCurrentHead, buildkiteFailure } =
+      await this.#buildkiteEvidence(pr, rawChecks);
     const hardFailures = checks
       .filter(
         (check) =>
@@ -424,11 +431,11 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       .filter((finding) => !finding.resolved && !finding.outdated)
       .map((finding) => `${finding.severity}:${finding.body}`);
 
-    const buildkiteEvidence = await this.#buildkiteEvidence(pr, checks);
     return {
       headSha: pr.headSha,
       checks,
-      ...buildkiteEvidence,
+      buildkiteCurrentHead,
+      buildkiteFailure,
       conflict,
       reviewFindings: reviews.findings,
       hostedReviewComplete: reviews.hostedReviewComplete,

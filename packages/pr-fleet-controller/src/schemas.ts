@@ -162,6 +162,7 @@ export const FleetControllerConfigSchema = z.object({
 });
 
 export type PrIdentity = z.infer<typeof PrIdentitySchema>;
+export type CheckEvidence = z.infer<typeof CheckEvidenceSchema>;
 export type Classification = z.infer<typeof ClassificationSchema>;
 export type ReviewFinding = z.infer<typeof ReviewFindingSchema>;
 export type BuildkiteFailure = z.infer<typeof BuildkiteFailureSchema>;

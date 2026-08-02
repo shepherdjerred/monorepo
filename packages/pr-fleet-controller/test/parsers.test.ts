@@ -1,9 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import { codexProvider } from "@shepherdjerred/code-review";
 import {
+  checksWithBuildkiteSoftFailure,
   parseBuildkiteBuild,
   parsePrList,
   reviewFindingsFromThreads,
+  type RawCheck,
 } from "@shepherdjerred/pr-fleet-controller/src/evidence-parsers.ts";
 import { WorkerResultSchema } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
 
@@ -100,6 +102,78 @@ describe("external evidence parsing", () => {
     );
     expect(build.commit).toBe("abc");
     expect(build.jobs[0]?.name).toBe("verify");
+  });
+});
+
+describe("Buildkite soft-failure correlation", () => {
+  const build = "https://buildkite.com/sjerred/monorepo/builds/7557";
+  const checks: RawCheck[] = [
+    {
+      name: "buildkite/monorepo/pr",
+      state: "failure",
+      bucket: "fail",
+      link: build,
+    },
+    {
+      name: "buildkite/monorepo/pr/shield-trivy",
+      state: "failure",
+      bucket: "fail",
+      link: `${build}#trivy-job`,
+    },
+    {
+      name: "buildkite/monorepo/pr/mag-semgrep",
+      state: "failure",
+      bucket: "fail",
+      link: `${build}#semgrep-job`,
+    },
+  ];
+
+  function softFor(
+    name: string,
+    jobs: { id: string; soft_failed?: boolean }[],
+  ) {
+    const evidence = checksWithBuildkiteSoftFailure(checks, jobs);
+    const check = evidence.find((entry) => entry.name === name);
+    if (check === undefined) throw new Error(`missing check ${name}`);
+    return check.softFail;
+  }
+
+  test("derives softness from job metadata, not the check name", () => {
+    // A Trivy finding (exit 7) is soft; a hard Trivy scanner/infra failure is
+    // not — the name regex could not tell them apart.
+    expect(
+      softFor("buildkite/monorepo/pr/shield-trivy", [
+        { id: "trivy-job", soft_failed: true },
+      ]),
+    ).toBe(true);
+    expect(
+      softFor("buildkite/monorepo/pr/shield-trivy", [
+        { id: "trivy-job", soft_failed: false },
+      ]),
+    ).toBe(false);
+
+    // A normal Semgrep finding (exit 1) is soft and must NOT dispatch a repair
+    // worker, even though the old name regex never matched "semgrep".
+    expect(
+      softFor("buildkite/monorepo/pr/mag-semgrep", [
+        { id: "semgrep-job", soft_failed: true },
+      ]),
+    ).toBe(true);
+    expect(
+      softFor("buildkite/monorepo/pr/mag-semgrep", [
+        { id: "semgrep-job", soft_failed: false },
+      ]),
+    ).toBe(false);
+  });
+
+  test("treats the aggregate check and uncorrelated jobs as hard", () => {
+    // The aggregate check carries no job fragment; a missing job is never soft.
+    expect(softFor("buildkite/monorepo/pr", [])).toBe(false);
+    expect(
+      softFor("buildkite/monorepo/pr/shield-trivy", [
+        { id: "unrelated-job", soft_failed: true },
+      ]),
+    ).toBe(false);
   });
 });
 

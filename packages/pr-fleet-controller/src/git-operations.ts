@@ -51,11 +51,51 @@ export class GitOperations {
     return validated;
   }
 
+  // Determine which stack tool owns a PR's branch so restacks and submissions
+  // are routed through it (never blindly through git-spice).
+  //
+  // - Fork PRs (cross-repository) can never be git-spice/gh-stack managed —
+  //   those tools are same-repository only — so they publish through plain gh.
+  // - git-spice records every tracked branch as a file `branches/<name>` in its
+  //   `refs/spice/data` state ref; a present entry means git-spice owns it.
+  // - Otherwise the branch belongs to GitHub's native stack tooling (or is an
+  //   unstacked single PR), which git-spice must not be run against.
+  async #stackOwner(
+    pr: PrState,
+    worktree: string,
+    signal?: AbortSignal,
+  ): Promise<"git-spice" | "native"> {
+    if (pr.identity.crossRepository) {
+      return "native";
+    }
+    const tracked = await this.#run({
+      executable: "git",
+      args: [
+        "cat-file",
+        "-e",
+        `refs/spice/data:branches/${pr.identity.headRefName}`,
+      ],
+      cwd: worktree,
+      timeoutMs: 30_000,
+      signal,
+    });
+    return tracked.exitCode === 0 ? "git-spice" : "native";
+  }
+
   async startRestack(
     pr: PrState,
     signal?: AbortSignal,
   ): Promise<CommandResult> {
     const worktree = this.#worktree(pr);
+    const owner = await this.#stackOwner(pr, worktree, signal);
+    if (owner !== "git-spice") {
+      // The controller only implements git-spice's stack-aware restack. A native
+      // (gh-stack) or fork branch must be rebased by its owning tool; refuse
+      // rather than corrupt its stack state by running git-spice against it.
+      throw new Error(
+        `Cannot restack PR #${String(pr.identity.number)}: branch ${pr.identity.headRefName} is not git-spice-owned; its native/fork stack tool must perform the restack`,
+      );
+    }
     return this.#run({
       executable: "git-spice",
       args: [
@@ -159,12 +199,33 @@ export class GitOperations {
     signal?: AbortSignal,
   ): Promise<{ headSha: string }> {
     const worktree = this.#worktree(pr);
-    await this.#mustRun(
-      "git-spice",
-      ["branch", "submit", "--update-only"],
-      worktree,
-      { timeoutMs: 600_000, signal },
-    );
+    const owner = await this.#stackOwner(pr, worktree, signal);
+    if (owner === "git-spice") {
+      await this.#mustRun(
+        "git-spice",
+        ["branch", "submit", "--update-only"],
+        worktree,
+        { timeoutMs: 600_000, signal },
+      );
+    } else {
+      // Native gh-stack, unstacked single PR, or maintainer-modifiable fork: the
+      // PR already exists (the controller never opens PRs), so publish the
+      // repaired head by force-pushing the branch to its existing remote head.
+      // This is the plain-gh publication path; it is safe for a gh-stack branch
+      // because updating a branch's commits does not change the stack's parent
+      // relationships (only re-parenting would, which the controller never does).
+      await this.#mustRun(
+        "git",
+        [
+          "push",
+          "--force-with-lease",
+          "origin",
+          `HEAD:refs/heads/${pr.identity.headRefName}`,
+        ],
+        worktree,
+        { timeoutMs: 600_000, signal },
+      );
+    }
     const head = parseHeadSha(
       await this.#mustRun(
         "gh",

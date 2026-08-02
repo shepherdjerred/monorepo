@@ -87,6 +87,159 @@ ${reads.join("\n")}
 (deny network*)`;
 }
 
+function assertNoQuote(label: string, value: string): void {
+  if (value.includes('"')) {
+    throw new Error(`${label} cannot contain a double quote`);
+  }
+}
+
+// The directories `setup_worktree` needs to reason about. A linked worktree's
+// `.git` is a FILE pointing at `<checkout>/.git/worktrees/<name>`, with the
+// shared hook/config store under `<checkout>/.git`; and the fleet worktrees are
+// nested inside the checkout, which is what turbo resolves the workspace root
+// to. All three live outside the worktree tree, so the setup profile must name
+// them explicitly.
+export type SetupDirectories = {
+  gitCommonDir: string;
+  gitDir: string;
+  // The main checkout root that contains the fleet worktrees (nested under
+  // `<checkoutRoot>/.claude/worktrees/...`). Turbo resolves the workspace root
+  // to this outer checkout and reads/writes its cache (`<root>/.turbo`,
+  // `<root>/node_modules/.cache`) there.
+  checkoutRoot: string;
+};
+
+// System mach services a dependency install legitimately needs: DNS resolution
+// (mDNSResponder), name/user lookups (opendirectoryd libinfo), and the trust
+// evaluation used for TLS certificate validation (trustd). The keychain agents
+// (securityd/SecurityServer) are deliberately OMITTED so a PR script cannot pull
+// stored keychain secrets, and network is allowed regardless.
+const SETUP_MACH_SERVICES = [
+  "com.apple.mDNSResponder",
+  "com.apple.system.opendirectoryd.libinfo",
+  "com.apple.system.notification_center",
+  "com.apple.trustd",
+  "com.apple.trustd.agent",
+];
+
+// System locations that hold secrets but are NOT the operator's own credential
+// stores: the local-account password-hash database. Denied explicitly because
+// the setup profile otherwise allows broad system reads (see below); the
+// operator's GitHub/Buildkite/cloud/model credentials all live under $HOME,
+// which is denied wholesale.
+const SETUP_DENIED_SYSTEM_SUBPATHS = ["/private/var/db/dslocal"];
+
+// Read allowances for every ancestor DIRECTORY of the worktree, as `literal`
+// (this exact path) rather than `subpath` (this path and everything under it).
+// Because the worktree lives UNDER the denied $HOME, tools that resolve the cwd
+// or walk toward the repo root — `git` (path canonicalization), `turbo` and
+// `bunx` (`getcwd`/root discovery) — must stat and list each ancestor or fail
+// (`fatal: Invalid path '/Users/<user>'`, `CouldntReadCurrentDirectory`). A
+// `literal` allow re-exposes only the directory node itself (its entry names),
+// never the file CONTENTS beneath it: `~/.aws/credentials` and every other file
+// under $HOME stays governed by the wholesale `deny file-read* (subpath $HOME)`.
+function ancestorReads(worktree: string): string[] {
+  const parts = worktree.split("/").filter((part) => part.length > 0);
+  const reads: string[] = [];
+  let prefix = "";
+  // Exclude the worktree itself (it gets full file-read* subpath below).
+  for (const part of parts.slice(0, -1)) {
+    prefix += `/${part}`;
+    reads.push(`(allow file-read* (literal "${prefix}"))`);
+  }
+  return reads;
+}
+
+// Sandbox policy for `setup_worktree`, which runs PR-controlled dependency and
+// generation scripts (`mise install`, `bun install`, `turbo run generate`,
+// `lefthook install`). Unlike the validation profile — whose command stdout is
+// returned to the model, forcing a strict deny-by-default read allowlist —
+// setup output is NOT surfaced to the model; its threat is a PR script reading
+// the operator's credentials and exfiltrating them over the network it
+// legitimately needs. Every such credential lives in an environment variable
+// (removed by `setupEnvironment()`) or a file under $HOME (`~/.aws`, `~/.ssh`,
+// `~/.config/gh`, `~/.netrc`, dotfiles). So this profile reads broadly (the
+// system toolchain, DNS/TLS, Xcode-hosted `git` all just work) but DENIES all
+// of $HOME plus the local password-hash store, re-allowing only the toolchain
+// caches, the checkout/worktree, the worktree's git directories, and
+// metadata/listing of the worktree's ancestors. Writes are confined to the
+// worktree, the git directories (linked-worktree hook/index store), the turbo
+// caches at the checkout root, and the toolchain stores under $HOME.
+export function setupSandboxProfile(
+  worktree: string,
+  directories: SetupDirectories,
+): string {
+  assertNoQuote("Worktree path", worktree);
+  assertNoQuote("Git common dir", directories.gitCommonDir);
+  assertNoQuote("Git dir", directories.gitDir);
+  assertNoQuote("Checkout root", directories.checkoutRoot);
+  const home = Bun.env["HOME"];
+  const homeUsable =
+    home !== undefined && home.length > 0 && !home.includes('"');
+
+  // Broad reads, then carve out the operator's $HOME and the system password
+  // store, then re-allow the toolchain caches, the checkout/worktree, the git
+  // dirs, and the ancestor directory nodes. Last matching rule wins.
+  const reads = ["(allow file-read*)"];
+  for (const denied of SETUP_DENIED_SYSTEM_SUBPATHS) {
+    reads.push(`(deny file-read* (subpath "${denied}"))`);
+  }
+  if (homeUsable) {
+    reads.push(`(deny file-read* (subpath "${home}"))`);
+    for (const subpath of READABLE_HOME_SUBPATHS) {
+      reads.push(`(allow file-read* (subpath "${home}/${subpath}"))`);
+    }
+  }
+  // The main checkout (the repository) — turbo resolves the workspace root to it
+  // and reads the whole tree to hash inputs, run tasks, and check its cache.
+  // This is the code repository, not a credential store. The worktree and git
+  // dirs are re-allowed explicitly too, for the case where an operator points
+  // --worktree-root outside the checkout.
+  reads.push(`(allow file-read* (subpath "${directories.checkoutRoot}"))`);
+  reads.push(`(allow file-read* (subpath "${worktree}"))`);
+  reads.push(`(allow file-read* (subpath "${directories.gitCommonDir}"))`);
+  reads.push(`(allow file-read* (subpath "${directories.gitDir}"))`);
+  reads.push(...ancestorReads(worktree));
+
+  const writes = [
+    `(allow file-write* (subpath "${worktree}"))`,
+    `(allow file-write* (subpath "${directories.gitCommonDir}"))`,
+    `(allow file-write* (subpath "${directories.gitDir}"))`,
+    // Turbo's cache lives at the outer checkout root (the worktrees are nested
+    // inside it). Scoped to the cache dirs so a PR script cannot rewrite the
+    // operator's main-checkout source.
+    `(allow file-write* (subpath "${directories.checkoutRoot}/.turbo"))`,
+    `(allow file-write* (subpath "${directories.checkoutRoot}/node_modules/.cache"))`,
+    '(allow file-write* (subpath "/private/tmp"))',
+    '(allow file-write* (subpath "/private/var/folders"))',
+    // Device nodes: git, curl, and node all open /dev/null (and /dev/tty,
+    // /dev/random) for writing. These are not exfiltration targets for an
+    // unprivileged process.
+    '(allow file-write* (subpath "/dev"))',
+  ];
+  if (homeUsable) {
+    for (const subpath of READABLE_HOME_SUBPATHS) {
+      writes.push(`(allow file-write* (subpath "${home}/${subpath}"))`);
+    }
+  }
+  const tmpdir = Bun.env["TMPDIR"];
+  if (tmpdir !== undefined && tmpdir.length > 0 && !tmpdir.includes('"')) {
+    writes.push(`(allow file-write* (subpath "${tmpdir}"))`);
+  }
+  const machLookups = SETUP_MACH_SERVICES.map(
+    (service) => `(global-name "${service}")`,
+  ).join(" ");
+  return `(version 1)
+(deny default)
+(allow process*)
+(allow sysctl-read)
+(allow network*)
+(allow system-socket)
+(allow mach-lookup ${machLookups})
+${reads.join("\n")}
+${writes.join("\n")}`;
+}
+
 export function sanitizedEnvironment(): Record<string, string | undefined> {
   const result: Record<string, string | undefined> = {};
   for (const [key, value] of Object.entries(Bun.env)) {
@@ -96,4 +249,17 @@ export function sanitizedEnvironment(): Record<string, string | undefined> {
     result[key] = value;
   }
   return result;
+}
+
+// Environment for `setup_worktree` commands: credential env vars scrubbed, plus
+// the operator's global/system git config neutralized. Setup runs `git` (via
+// turbo's content hashing and `lefthook install`) but performs no commits, so it
+// needs no user identity; pointing the global/system config at /dev/null stops
+// git from chasing machine-specific config `include`s under the sandbox-denied
+// $HOME.
+export function setupEnvironment(): Record<string, string | undefined> {
+  const environment = sanitizedEnvironment();
+  environment["GIT_CONFIG_GLOBAL"] = "/dev/null";
+  environment["GIT_CONFIG_SYSTEM"] = "/dev/null";
+  return environment;
 }

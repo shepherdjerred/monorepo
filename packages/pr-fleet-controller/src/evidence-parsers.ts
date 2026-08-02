@@ -6,6 +6,7 @@ import {
 import {
   CheckEvidenceSchema,
   PrIdentitySchema,
+  type CheckEvidence,
   type PrIdentity,
   type ReviewFinding,
 } from "./schemas.ts";
@@ -61,11 +62,6 @@ const ReviewPageSchema = z.object({
   }),
 });
 
-const BuildkiteSummarySchema = z.object({
-  commit: z.string(),
-  state: z.string(),
-});
-
 const BuildkiteBuildSchema = z.object({
   commit: z.string(),
   jobs: z.array(
@@ -81,7 +77,14 @@ const BuildkiteBuildSchema = z.object({
 });
 
 const HeadSchema = z.object({ headRefOid: z.string() });
-const SOFT_FAILURE_PATTERN = /trivy|knip/i;
+
+/** A GitHub check run before its Buildkite soft-failure status is resolved. */
+export type RawCheck = {
+  name: string;
+  state: string;
+  bucket: string;
+  link: string | null;
+};
 
 export function parseJson(text: string): unknown {
   return Bun.JSONC.parse(text);
@@ -109,25 +112,61 @@ export function parsePrList(text: string): PrIdentity[] {
     );
 }
 
-export function parseChecks(text: string) {
+export function parseChecks(text: string): RawCheck[] {
   return z
     .array(GhCheckSchema)
     .parse(parseJson(text))
-    .map((check) =>
-      CheckEvidenceSchema.parse({
-        ...check,
-        link: check.link ?? null,
-        softFail: SOFT_FAILURE_PATTERN.test(check.name),
-      }),
-    );
+    .map((check) => ({
+      name: check.name,
+      state: check.state,
+      bucket: check.bucket,
+      link: check.link ?? null,
+    }));
+}
+
+// Extract the Buildkite job id from a per-step check's target URL
+// (`https://buildkite.com/<org>/<pipeline>/builds/<n>#<job-uuid>`). The
+// aggregate `buildkite/monorepo/pr` check and non-Buildkite checks carry no
+// fragment and return null.
+function buildkiteJobId(link: string | null): string | null {
+  if (link === null) {
+    return null;
+  }
+  const hashIndex = link.indexOf("#");
+  if (hashIndex === -1) {
+    return null;
+  }
+  const fragment = link.slice(hashIndex + 1);
+  return fragment.length > 0 ? fragment : null;
+}
+
+/**
+ * Resolve each check's soft-failure status from the AUTHORITATIVE Buildkite
+ * `soft_failed` job metadata (correlated by the job id embedded in the check's
+ * target URL), not by matching check NAMES. The pipeline encodes softness by
+ * exit status — Trivy findings are soft only for exit 7 while a scanner/runtime
+ * failure is hard, and Semgrep findings are soft for exit 1 — which a name match
+ * cannot capture: it would treat every Trivy failure (including a hard infra
+ * failure) as soft and every Semgrep finding as hard, producing an incorrect
+ * fleet readiness state. A check with no correlated Buildkite job (the aggregate
+ * check, `ci/merge-conflict`) is never soft.
+ */
+export function checksWithBuildkiteSoftFailure(
+  checks: RawCheck[],
+  jobs: { id: string; soft_failed?: boolean | undefined }[],
+): CheckEvidence[] {
+  const softByJobId = new Map(
+    jobs.map((job) => [job.id, job.soft_failed === true]),
+  );
+  return checks.map((check) => {
+    const jobId = buildkiteJobId(check.link);
+    const softFail = jobId !== null && softByJobId.get(jobId) === true;
+    return CheckEvidenceSchema.parse({ ...check, softFail });
+  });
 }
 
 export function parseReviewPage(text: string) {
   return ReviewPageSchema.parse(parseJson(text)).data.repository.pullRequest;
-}
-
-export function parseBuildkiteCommit(text: string): string {
-  return BuildkiteSummarySchema.parse(parseJson(text)).commit;
 }
 
 export function parseBuildkiteBuild(text: string) {

@@ -82,12 +82,17 @@ Additional user guidance: ${guidance.length === 0 ? "none" : guidance.join("\n")
   }
 }
 
+/** The minimal shape of a streamed master turn the drain loop consumes. */
+type MasterTurnStream = { textStream: AsyncIterable<string> };
+
 export class MastraMaster {
   readonly #agent: Agent;
   readonly #observer: FleetObserver;
   readonly #history: string[] = [];
   readonly #queue: string[] = [];
-  #active = false;
+  readonly #abort = new AbortController();
+  #drain: Promise<void> | null = null;
+  #stopped = false;
 
   constructor(
     model: MastraModelConfig,
@@ -105,17 +110,27 @@ export class MastraMaster {
   }
 
   send(message: string): void {
-    this.#queue.push(message);
-    if (this.#active) {
+    // After shutdown, drop steering rather than starting a fresh remote turn.
+    if (this.#stopped) {
       return;
     }
-    void this.#drain();
+    this.#queue.push(message);
+    this.#drain ??= this.#runDrain();
   }
 
-  async #drain(): Promise<void> {
-    this.#active = true;
+  // Stream one master turn's text. A protected seam so tests can drive the
+  // shutdown lifecycle without a live model; production threads the abort signal
+  // into the model call so a shutdown actually cancels the remote turn.
+  protected streamTurn(
+    prompt: string,
+    signal: AbortSignal,
+  ): Promise<MasterTurnStream> {
+    return this.#agent.stream(prompt, { maxSteps: 12, abortSignal: signal });
+  }
+
+  async #runDrain(): Promise<void> {
     try {
-      while (this.#queue.length > 0) {
+      while (this.#queue.length > 0 && !this.#abort.signal.aborted) {
         const queued = this.#queue.splice(0);
         const prompt = [
           "Conversation so far:",
@@ -123,7 +138,7 @@ export class MastraMaster {
           "New user messages:",
           ...queued.map((item) => `user: ${item}`),
         ].join("\n");
-        const output = await this.#agent.stream(prompt, { maxSteps: 12 });
+        const output = await this.streamTurn(prompt, this.#abort.signal);
         let response = "";
         for await (const text of output.textStream) {
           response += text;
@@ -135,13 +150,34 @@ export class MastraMaster {
         this.#history.push(`assistant: ${response}`);
       }
     } catch (error) {
-      this.#observer.onChange(
-        `master turn failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      // An abort during shutdown is expected, not a failure to report.
+      if (!this.#abort.signal.aborted) {
+        this.#observer.onChange(
+          `master turn failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
     } finally {
-      this.#active = false;
-      if (this.#queue.length > 0) {
-        void this.#drain();
+      this.#drain = null;
+      // A message enqueued during the final await starts a fresh drain — unless
+      // we are shutting down, in which case the queue is intentionally dropped.
+      if (this.#queue.length > 0 && !this.#abort.signal.aborted) {
+        this.#drain = this.#runDrain();
+      }
+    }
+  }
+
+  // Abort any in-flight master turn AND await its settlement, so the remote
+  // model turn cannot keep emitting output or invoking controller tools after
+  // shutdown has been reported, nor delay process exit. Idempotent.
+  async stop(): Promise<void> {
+    this.#stopped = true;
+    this.#abort.abort();
+    // #runDrain swallows its own errors, so awaiting it never rejects.
+    while (this.#drain !== null) {
+      const pending = this.#drain;
+      await pending;
+      if (this.#drain === pending) {
+        this.#drain = null;
       }
     }
   }

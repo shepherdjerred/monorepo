@@ -2,8 +2,15 @@ import { realpath } from "node:fs/promises";
 import path from "node:path";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
+import { validateWorkerCommand } from "./command-policy.ts";
 import type { FleetEnvironment } from "./ports.ts";
-import { sandboxProfile, sanitizedEnvironment } from "./sandbox.ts";
+import {
+  sandboxProfile,
+  sanitizedEnvironment,
+  setupEnvironment,
+  setupSandboxProfile,
+  type SetupDirectories,
+} from "./sandbox.ts";
 import { LeaseKindSchema, PrStateSchema, type PrState } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
 
@@ -30,110 +37,44 @@ async function containedPath(
   return absolute;
 }
 
-// `mise` is deliberately absent: `mise exec -- <cmd>` / `mise exec --command`
-// runs an arbitrary program, defeating the executable and read-only-argument
-// allowlists (e.g. `mise exec -- sed -i …` mutates the shared worktree without
-// a stack-write lease). Validation tools resolve through mise-managed PATH
-// shims and are invoked directly instead.
-const ALLOWED_EXECUTABLES = new Set([
-  "bun",
-  "bunx",
-  "cargo",
-  "go",
-  "helm",
-  "rg",
-  "swift",
-  "tofu",
-]);
-const FORBIDDEN_ARGUMENT =
-  /deploy|publish|release|apply|destroy|merge|close|approve|--fix|update-snapshot/i;
-const ALLOWED_FIRST_ARGUMENTS = new Map<string, Set<string>>([
-  ["bun", new Set(["run", "test"])],
-  ["bunx", new Set(["eslint", "turbo"])],
-  ["cargo", new Set(["check", "clippy", "fmt", "test"])],
-  ["go", new Set(["test", "vet"])],
-  ["helm", new Set(["lint", "template"])],
-  ["rg", new Set()],
-  ["swift", new Set(["build", "test"])],
-  ["tofu", new Set(["fmt", "plan", "validate"])],
-]);
-// `bun run <target>` executes arbitrary package scripts, so allow only known
-// read-only script names. A wildcard here lets `bun run prettier:fix` or
-// `bun run markdownlint:fix` mutate the shared stack worktree behind the
-// explicit-path publication API (the `--fix` guard does not catch `:fix`
-// script names).
-const READONLY_BUN_SCRIPTS = new Set([
-  "typecheck",
-  "test",
-  "lint",
-  "build",
-  "check",
-  "verify",
-]);
-// A turbo task name that mutates the tree (e.g. a `lint:fix` / `format` task)
-// is not a read-only validation, even with a package filter.
-const MUTATING_TASK = /fix|format|write|snapshot|update/i;
-
-function validateBunRun(args: string[]): void {
-  if (args[0] !== "run") {
-    return;
-  }
-  const script = args[1];
-  if (script === undefined || !READONLY_BUN_SCRIPTS.has(script)) {
+// Resolve the git directories and outer checkout root that the setup sandbox
+// profile needs. A linked worktree's git store lives outside the worktree tree,
+// and the fleet worktrees are nested inside the checkout that turbo treats as
+// the workspace root, so these must be discovered rather than assumed.
+async function resolveSetupDirectories(
+  worktree: string,
+  environment: FleetEnvironment,
+  signal: AbortSignal,
+): Promise<SetupDirectories> {
+  const result = await environment.runLocalCommand({
+    executable: "git",
+    args: [
+      "rev-parse",
+      "--path-format=absolute",
+      "--git-common-dir",
+      "--git-dir",
+    ],
+    cwd: worktree,
+    timeoutMs: 30_000,
+    signal,
+  });
+  if (result.exitCode !== 0) {
     throw new Error(
-      `bun run target is not an allowed read-only script: ${script ?? "(none)"}`,
+      `Failed to resolve git directories for setup: ${result.stderr.trim()}`,
     );
   }
-  if (script === "verify" && !args.includes("--affected")) {
-    throw new Error("Repository-wide verification is not allowed");
-  }
-}
-
-function validateBunxTurbo(args: string[]): void {
-  if (args[0] !== "turbo" || args[1] !== "run") {
-    return;
-  }
-  if (!args.some((argument) => argument.startsWith("--filter="))) {
-    throw new Error("Turbo commands require an explicit package filter");
-  }
-  const mutatingTask = args
-    .slice(2)
-    .find(
-      (argument) => !argument.startsWith("-") && MUTATING_TASK.test(argument),
-    );
-  if (mutatingTask !== undefined) {
-    throw new Error(`Turbo task is not read-only: ${mutatingTask}`);
-  }
-}
-
-export function validateWorkerCommand(
-  executable: string,
-  args: string[],
-): void {
-  if (!ALLOWED_EXECUTABLES.has(executable)) {
-    throw new Error(`Executable is not allowed: ${executable}`);
-  }
-  if (args.some((argument) => FORBIDDEN_ARGUMENT.test(argument))) {
-    throw new Error(
-      "Command requests an external mutation or publication action",
-    );
-  }
-  const allowedFirstArguments = ALLOWED_FIRST_ARGUMENTS.get(executable);
-  const firstArgument = args[0];
+  const [gitCommonDir, gitDir] = result.stdout.trim().split("\n");
   if (
-    allowedFirstArguments === undefined ||
-    (allowedFirstArguments.size > 0 &&
-      (firstArgument === undefined ||
-        !allowedFirstArguments.has(firstArgument)))
+    gitCommonDir === undefined ||
+    gitDir === undefined ||
+    gitCommonDir.length === 0 ||
+    gitDir.length === 0
   ) {
-    throw new Error(`Command form is not allowed for ${executable}`);
+    throw new Error(
+      `Unexpected git directory output during setup: ${result.stdout.trim()}`,
+    );
   }
-  if (executable === "bun") {
-    validateBunRun(args);
-  }
-  if (executable === "bunx") {
-    validateBunxTurbo(args);
-  }
+  return { gitCommonDir, gitDir, checkoutRoot: path.dirname(gitCommonDir) };
 }
 
 export function createWorkerTools(
@@ -309,12 +250,25 @@ export function createWorkerTools(
         ];
         const completed: string[] = [];
         try {
+          // These commands execute PR-controlled code (dependency lifecycle
+          // scripts, `turbo` generators, `.mise.toml`). Run each under the setup
+          // sandbox profile with scrubbed credentials so a malicious PR cannot
+          // read or exfiltrate the operator's credentials before validation.
+          const directories = await resolveSetupDirectories(
+            worktree,
+            environment,
+            signal,
+          );
+          const profile = setupSandboxProfile(worktree, directories);
+          const commandEnvironment = setupEnvironment();
           for (const command of commands) {
             const result = await environment.runLocalCommand({
-              ...command,
+              executable: "sandbox-exec",
+              args: ["-p", profile, command.executable, ...command.args],
               cwd: worktree,
               timeoutMs: 900_000,
               signal,
+              env: commandEnvironment,
             });
             if (result.exitCode !== 0) {
               throw new Error(

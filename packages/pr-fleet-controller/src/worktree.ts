@@ -104,11 +104,42 @@ export class WorktreeManager {
       );
     }
     if (!onBranch) {
+      // A freshly-checked-out sibling branch carries no in-progress local work
+      // of this PR; align it to the fetched head.
       await this.#mustRun("git", ["checkout", branch], worktree);
+      await this.#mustRun("git", ["reset", "--hard", fetchedHead], worktree);
+      return;
     }
-    // Hard-reset the branch to the PR head: aligns a stale local ref with the
-    // remote head and, for a same-branch reuse, discards this PR's own prior
-    // failed-attempt edits so the worker starts from a clean current commit.
+    // Reuse of THIS PR's own branch. A prior worker may have committed a fix
+    // locally whose publication (git-spice submit / push) then failed before it
+    // reached the remote — the remote PR head is therefore unchanged
+    // (== fetchedHead) while the local branch is one or more commits AHEAD.
+    // Hard-resetting to fetchedHead would silently delete that completed fix, so
+    // preserve local commits that sit on top of the fetched head (publication
+    // can then be retried) and discard only the uncommitted working-tree edits.
+    const localHeadOutput = await this.#mustRun(
+      "git",
+      ["rev-parse", "HEAD"],
+      worktree,
+    );
+    const localHead = localHeadOutput.trim();
+    if (localHead !== fetchedHead) {
+      const aheadOfRemote = await this.#run({
+        executable: "git",
+        args: ["merge-base", "--is-ancestor", fetchedHead, localHead],
+        cwd: worktree,
+        timeoutMs: 30_000,
+      });
+      if (aheadOfRemote.exitCode === 0) {
+        // fetchedHead is an ancestor of the local head: the local branch holds a
+        // completed-but-unpublished fix. Keep the commit(s); reset only clears
+        // the uncommitted working-tree edits.
+        await this.#mustRun("git", ["reset", "--hard", localHead], worktree);
+        return;
+      }
+    }
+    // Local ref is at, behind, or diverged from the confirmed PR head: align to
+    // the remote head, discarding prior failed-attempt working-tree edits.
     await this.#mustRun("git", ["reset", "--hard", fetchedHead], worktree);
   }
 

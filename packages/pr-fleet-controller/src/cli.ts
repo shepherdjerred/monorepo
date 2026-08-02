@@ -191,7 +191,10 @@ async function main(): Promise<void> {
       return;
     }
     stopping = true;
-    const snapshot = await controller.stop();
+    // Abort and await BOTH the controller workers and the master's in-flight
+    // model turn before reporting shutdown and closing the terminal, so no
+    // remote turn keeps emitting output or invoking tools after we have stopped.
+    const [snapshot] = await Promise.all([controller.stop(), master.stop()]);
     observer.onSnapshot(snapshot);
     terminal.close();
   };
