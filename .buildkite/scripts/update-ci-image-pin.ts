@@ -140,6 +140,37 @@ async function assertMainPinUnchanged(options: {
   }
 }
 
+/**
+ * The single exit for every "no promotion warranted" decision. Whatever check
+ * decided to skip (digest-equal, older-than-pin, or content-unchanged), this
+ * neutralizes any still-open auto-merge promotion PR so it cannot land an
+ * obsolete digest, then re-verifies that main's pin did not move underneath the
+ * decision. Routing all skips through here keeps the two guarantees in lockstep
+ * and prevents a new skip path from silently bypassing either one.
+ */
+async function finalizeSkippedPromotion(options: {
+  readonly cloneDir: string;
+  readonly definition: CiImageDefinition;
+  readonly pending:
+    | { readonly sha: string; readonly state: CiImagePinState }
+    | undefined;
+  readonly mainState: CiImagePinState;
+  readonly reason: string;
+  readonly env: Record<string, string>;
+}): Promise<void> {
+  const { cloneDir, definition, pending, mainState, reason, env } = options;
+  console.log(`${definition.name} ${reason}; skipping pin promotion`);
+  if (pending !== undefined) {
+    await retireStalePromotion({ cloneDir, definition, env });
+  }
+  await assertMainPinUnchanged({
+    cloneDir,
+    definition,
+    comparedAgainst: mainState,
+    env,
+  });
+}
+
 async function preparePlaywrightPromotion(
   cloneDir: string,
   definition: CiImageDefinition,
@@ -222,18 +253,22 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
   verifyDigestFile(await Bun.file(definition.digestFile).text(), currentState);
   const candidateState = stateFromCandidate(candidate);
   const localNewest = newestPinState([currentState, candidateState]);
-  if (localNewest.digest === currentState.digest) {
-    console.log(`${definition.name} candidate has no runtime digest change`);
-    return;
-  }
-  if (localNewest !== candidateState) {
-    console.log(`${definition.name} candidate is older than the committed pin`);
-    return;
-  }
+  const noDigestChange = localNewest.digest === currentState.digest;
+  const olderThanPin = !noDigestChange && localNewest !== candidateState;
+
   if (dryRun) {
-    console.log(
-      `DRYRUN: would promote ${definition.name} build ${candidate.buildNumber.toString()} at ${candidate.digest}`,
-    );
+    // Dry-run never clones or mutates remote state; report the decision only.
+    if (noDigestChange) {
+      console.log(`${definition.name} candidate has no runtime digest change`);
+    } else if (olderThanPin) {
+      console.log(
+        `${definition.name} candidate is older than the committed pin`,
+      );
+    } else {
+      console.log(
+        `DRYRUN: would promote ${definition.name} build ${candidate.buildNumber.toString()} at ${candidate.digest}`,
+      );
+    }
     return;
   }
 
@@ -257,6 +292,35 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
       await Bun.file(`${cloneDir}/${definition.digestFile}`).text(),
       mainState,
     );
+    const pending = await pendingState(cloneDir, definition);
+
+    // Every "no promotion" exit routes through finalizeSkippedPromotion so a
+    // stale auto-merge PR can never land after the build declined to promote,
+    // and a mid-run main pin move is always caught — no skip path can bypass
+    // either guarantee.
+    if (noDigestChange) {
+      await finalizeSkippedPromotion({
+        cloneDir,
+        definition,
+        pending,
+        mainState,
+        reason: "candidate has no runtime digest change",
+        env: auth.env,
+      });
+      return;
+    }
+    if (olderThanPin) {
+      await finalizeSkippedPromotion({
+        cloneDir,
+        definition,
+        pending,
+        mainState,
+        reason: "candidate is older than the committed pin",
+        env: auth.env,
+      });
+      return;
+    }
+
     const mainSourceFingerprint = await sourceFingerprintAtRevision(
       cloneDir,
       definition,
@@ -264,12 +328,14 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
       auth.env,
     );
     if (!isCurrentSourceCandidate(candidateState, mainSourceFingerprint)) {
+      // A superseded-source candidate establishes nothing about the current
+      // pin's currency, so it must not retire a possibly-legitimate pending
+      // promotion; leave any pending PR untouched.
       console.log(
         `${definition.name} candidate source is superseded by current main`,
       );
       return;
     }
-    const pending = await pendingState(cloneDir, definition);
     const currentPending =
       pending !== undefined &&
       isCurrentSourceCandidate(pending.state, mainSourceFingerprint)
@@ -303,20 +369,12 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
       async (image) => runtimeFingerprint(image, auth.env),
     );
     if (runtimeOutcome === "content-unchanged") {
-      console.log(
-        `${definition.name} candidate runtime content is unchanged; skipping pin promotion`,
-      );
-      if (pending !== undefined) {
-        await retireStalePromotion({
-          cloneDir,
-          definition,
-          env: auth.env,
-        });
-      }
-      await assertMainPinUnchanged({
+      await finalizeSkippedPromotion({
         cloneDir,
         definition,
-        comparedAgainst: mainState,
+        pending,
+        mainState,
+        reason: "candidate runtime content is unchanged",
         env: auth.env,
       });
       return;

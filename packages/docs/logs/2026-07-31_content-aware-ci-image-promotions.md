@@ -189,3 +189,40 @@ fails loud instead of silently promoting against an unreadable pin. Tests cover
 all four outcomes (transient, rate-limit, missing → undefined, unclassified →
 throw), plus the rate-limit case in `bake-retry.test.ts`. Coverage stays at
 95.71% functions / 95.31% lines.
+
+### Re-review P1 (retire-theme) — restructure instead of a 4th bolt-on
+
+The next re-review raised a third retire-theme P1: the exact-digest early return
+(candidate digest == current pin) returns _before_ cloning/reading `pending`, so
+retirement + the main-pin recheck never run and a stale auto-merge PR can still
+land. Rather than patch a third site, `promote()` was restructured so **every**
+no-promotion exit funnels through one `finalizeSkippedPromotion` helper (retire
+any stale PR, then `assertMainPinUnchanged`):
+
+- The clone + `pending` read moved above the digest-equality checks, and the
+  digest-equal, older-than-pin, and content-unchanged exits all call
+  `finalizeSkippedPromotion` with a distinct reason.
+- Dry-run is preserved exactly: it reports the decision and returns before any
+  clone or remote mutation (no retire).
+- Source-superseded is intentionally left as a plain return: a superseded-source
+  candidate establishes nothing about the current pin's currency, so retiring
+  there could wrongly close a still-legitimate pending promotion.
+
+This structurally prevents the next same-theme finding — no exit can bypass
+retirement or the recheck. `promote()` provably never calls
+`retireStalePromotion`/`assertMainPinUnchanged` inline anymore (asserted in
+tests); only the funnel does.
+
+### Re-review P2 (selectors) — register the new dependencies
+
+`ci-changed.ts` gates the `ci-base-refresh`/`ci-playwright-refresh` lanes on the
+selector lists in `migration-core.ts`, which omitted the newly-imported
+`application-image-runtime.ts`, `update-ci-image-pin-github.ts`, and
+`scripts/lib/transient-error.ts`. Added all three to both the `ci-base` and
+`ci-playwright` lists so a change to promotion runtime classification, PR
+lifecycle, or retry signaling actually exercises the refresh lanes.
+
+Verified: full `bun run script-coverage` exits 0 (scripts 95.71% fn / 95.31%
+line), `.buildkite` typecheck, root-scripts test/lint, buildkite lint
+(`update-ci-image-pin.ts` at 468 lines, under the 500 `max-lines` cap),
+`compliance-check` clean, markdownlint 0, frozen-lockfile dry-run clean.
