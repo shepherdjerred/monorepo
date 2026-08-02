@@ -384,13 +384,45 @@ describe("Playwright candidate promotion", () => {
     expect(retireIndex).toBeGreaterThan(skipIndex);
 
     // The retirement helper closes the stale PR and deletes its branch.
-    const helperStart = source.indexOf("async function retireStalePromotion(");
+    const github = await Bun.file(
+      new URL("update-ci-image-pin-github.ts", import.meta.url),
+    ).text();
+    const helperStart = github.indexOf(
+      "export async function retireStalePromotion(",
+    );
+    expect(helperStart).toBeGreaterThan(-1);
+    const helperBody = github.slice(
+      helperStart,
+      github.indexOf("\n}\n", helperStart),
+    );
+    expect(helperBody).toContain('"close"');
+    expect(helperBody).toContain('"--delete"');
+  });
+
+  test("re-verifies the main pin before accepting an unchanged skip", async () => {
+    const source = await Bun.file(
+      new URL("update-ci-image-pin.ts", import.meta.url),
+    ).text();
+
+    // The pending PR can auto-merge while we evaluate, moving the main pin; the
+    // skip must re-check origin/main after any retirement and before returning.
+    const skipIndex = source.indexOf("skipping pin promotion");
+    const assertIndex = source.indexOf("await assertMainPinUnchanged(");
+    const returnIndex = source.indexOf("\n      return;", skipIndex);
+    expect(skipIndex).toBeGreaterThan(-1);
+    expect(assertIndex).toBeGreaterThan(skipIndex);
+    expect(returnIndex).toBeGreaterThan(assertIndex);
+
+    // The guard re-fetches main and fails transiently when the pin moved.
+    const helperStart = source.indexOf(
+      "async function assertMainPinUnchanged(",
+    );
     expect(helperStart).toBeGreaterThan(-1);
     const helperBody = source.slice(
       helperStart,
       source.indexOf("\n}\n", helperStart),
     );
-    expect(helperBody).toContain('"close"');
-    expect(helperBody).toContain('"--delete"');
+    expect(helperBody).toContain('"fetch", "origin", "main"');
+    expect(helperBody).toContain("throw new TransientError(");
   });
 });

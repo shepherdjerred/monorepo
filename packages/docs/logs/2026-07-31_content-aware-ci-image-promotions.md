@@ -146,3 +146,26 @@ more, so it leaves the measured set and the aggregate returns to
 **95.71% functions / 95.30% lines** (`bun run script-coverage` exits 0 across
 all ten packages). Behaviour is unchanged — same class identity, same
 `isTransientError` brand recognition.
+
+### Re-review P1 — recheck main after retirement (TOCTOU)
+
+Codex's re-review raised a further **P1**: the auto-merge-enabled pending PR can
+merge into `main` after `mainState` was read but during/before
+`retireStalePromotion`, so the `content-unchanged` skip could accept a runtime
+comparison made against a now-obsolete pin and strand CI on the wrong config
+(the pin/state paths are absent from the `ci-base`/`ci-playwright` change
+selectors, so no later pin-only build corrects it).
+
+Fix (`update-ci-image-pin.ts`): after any retirement and before returning from
+the `content-unchanged` branch, `assertMainPinUnchanged` re-fetches `origin/main`
+and re-reads the pin state (`pinStateAtRevision`); if the digest moved from the
+`mainState` we compared against, it throws a `TransientError`. Because `promote`
+runs under `runMain`, that exits `EXIT_TRANSIENT` (34) and Buildkite retries the
+job, which re-clones with fresh `main` and re-compares the candidate against the
+current pin (the pending PR is gone by then, so the retry settles).
+
+To satisfy the `max-lines` (500) buildkite-lint rule after these additions, the
+GitHub PR-lifecycle helpers (`openOrUpdatePullRequest`, `retireStalePromotion`,
+`MONOREPO_REPO`) moved to a new `update-ci-image-pin-github.ts` module; the
+orchestrator imports them. That module is not in the `scripts` coverage graph
+(nothing imports `update-ci-image-pin.ts`), so coverage is unaffected.
