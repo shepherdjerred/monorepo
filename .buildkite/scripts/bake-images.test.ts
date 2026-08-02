@@ -18,7 +18,7 @@ import {
   runtimeFingerprintFromImage,
 } from "./application-image-runtime.ts";
 import type { BuildxCommandResult } from "./bake-retry.ts";
-import { TransientError } from "../../scripts/lib/transient.ts";
+import { TransientError } from "../../scripts/lib/transient-error.ts";
 import {
   caddyfileEntitlementArguments,
   expandTargets,

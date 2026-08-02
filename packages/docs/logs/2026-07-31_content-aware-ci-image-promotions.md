@@ -126,3 +126,23 @@ path this PR relies on. Fixed it; the older P2 was already resolved.
   than a silent wrong promotion — a strict correctness improvement, though it is
   not auto-retried in that lane (out of scope for this finding, which targets
   the CI pin path that does use `runMain`).
+
+### Coverage follow-up (root `//:script-coverage`)
+
+The 2026-08-02 transient fix imported `TransientError` from
+`scripts/lib/transient.ts` into `application-image-runtime.ts`, which pulled
+`transient.ts` into the `scripts` coverage-measured graph for the first time.
+Bun's line-coverage reporter mis-attributes that specific file as `0.00%` lines
+(reproduced on the pre-existing `origin/main` version too — it is not caused by
+the new class), which dropped the aggregate to 89.46% functions / 86.97% lines
+and failed the 90% gate.
+
+Fix: extracted `TransientError` into its own module
+`scripts/lib/transient-error.ts` (a class-only file Bun covers correctly at
+100%). `application-image-runtime.ts`, `bake-images.test.ts`, and
+`transient.test.ts` import the error from there; `transient.ts` imports it for
+its `instanceof` brand check. No coverage-graph file imports `transient.ts` any
+more, so it leaves the measured set and the aggregate returns to
+**95.71% functions / 95.30% lines** (`bun run script-coverage` exits 0 across
+all ten packages). Behaviour is unchanged — same class identity, same
+`isTransientError` brand recognition.

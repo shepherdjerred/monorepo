@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
-import { isTransientError, TransientError } from "./transient.ts";
+import { isTransientError } from "./transient.ts";
+import { TransientError } from "./transient-error.ts";
 
 describe("isTransientError", () => {
   test.each([

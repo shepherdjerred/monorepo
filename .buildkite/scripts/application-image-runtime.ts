@@ -1,5 +1,5 @@
 import { asRecord } from "../../scripts/lib/json.ts";
-import { TransientError } from "../../scripts/lib/transient.ts";
+import { TransientError } from "../../scripts/lib/transient-error.ts";
 import {
   bakeFailureIsTransient,
   retryTransientBuildx,
