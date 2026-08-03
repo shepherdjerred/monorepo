@@ -93,6 +93,18 @@ export const ConfigSchema = z.strictObject({
       // realtime consumer; disable individually when A/B-isolating a change.
       low_latency_mux: z.boolean().default(true),
       low_delay_audio: z.boolean().default(true),
+      // Ceiling advertised to viewers via the `playout-delay` RTP header
+      // extension. Chrome sizes its jitter buffer up to this value and, on a
+      // clean link, sits at the ceiling — press-to-glass measurement on
+      // 2026-08-03 found ~92 ms of client buffering against the fork's
+      // historical 100 ms cap, with zero packet loss. Lower means less input
+      // lag but less jitter absorbed before a visible freeze.
+      video_playout_delay_max_ms: z
+        .number()
+        .int()
+        .min(0)
+        .max(40_950)
+        .default(100),
     }),
   }),
   // Headless N64Wasm (parallel-n64 + angrylion software RDP) host.

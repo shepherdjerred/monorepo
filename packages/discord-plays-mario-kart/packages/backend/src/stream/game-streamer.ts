@@ -61,6 +61,8 @@ export type GameStreamerOptions = {
   // Fork realtime opt-ins: per-packet muxer flush + low-delay Opus.
   lowLatencyMux: boolean;
   lowDelayAudio: boolean;
+  // Jitter-buffer ceiling advertised to viewers (playout-delay RTP extension).
+  videoPlayoutDelayMaxMs: number;
   onEncoderStarted: () => void;
   onSessionEnded?: () => void | Promise<void>;
 };
@@ -264,10 +266,14 @@ export class GameStreamer extends GameStreamerBase {
   }
 
   protected override playOptions(): Partial<PlayStreamOptions> {
+    const base: Partial<PlayStreamOptions> = {
+      type: "go-live",
+      videoPlayoutDelayMaxMs: this.options.videoPlayoutDelayMaxMs,
+    };
     if (this.streamObserver) {
-      return { type: "go-live", observer: this.streamObserver };
+      return { ...base, observer: this.streamObserver };
     }
-    return { type: "go-live" };
+    return base;
   }
 
   private resetStreamMetrics(): void {

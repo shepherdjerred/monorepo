@@ -1124,6 +1124,19 @@ export type PlayStreamOptions = {
   streamPreview: boolean;
 
   /**
+   * Upper bound, in milliseconds, advertised to receivers through the
+   * `playout-delay` RTP header extension. Receivers pick their jitter-buffer
+   * target within [0, max]; on a clean link Chrome sits at the ceiling, so this
+   * effectively sets the client-side delay floor for an interactive stream.
+   *
+   * Defaults to 100ms (the long-standing value) so existing consumers keep
+   * their current behavior. Lower it only for genuinely low-jitter links —
+   * a real-time game stream on a good network — because the headroom you
+   * remove is what otherwise absorbs jitter without a visible freeze.
+   */
+  videoPlayoutDelayMaxMs: number | undefined;
+
+  /**
    * Optional observability seam. When supplied, per-frame send timing (frametime ratio) from the
    * video/audio send path is forwarded to the observer. No effect on behavior.
    */
@@ -1138,6 +1151,7 @@ const playStreamDefaultOptions = {
   frameRate: (video) => video.framerate_num / video.framerate_den,
   readrateInitialBurst: undefined,
   streamPreview: false,
+  videoPlayoutDelayMaxMs: undefined,
 } satisfies PlayStreamOptions;
 
 /**
@@ -1177,6 +1191,14 @@ export function mergePlayStreamOptions(
         : playStreamDefaultOptions.readrateInitialBurst,
 
     streamPreview: opts.streamPreview ?? playStreamDefaultOptions.streamPreview,
+
+    // 0 is meaningful here (ask the receiver not to buffer at all), so this
+    // cannot use the isFiniteNonZero guard the other numeric options use.
+    videoPlayoutDelayMaxMs:
+      typeof opts.videoPlayoutDelayMaxMs === "number" &&
+      Number.isFinite(opts.videoPlayoutDelayMaxMs)
+        ? opts.videoPlayoutDelayMaxMs
+        : playStreamDefaultOptions.videoPlayoutDelayMaxMs,
 
     ...(opts.observer !== undefined ? { observer: opts.observer } : {}),
   } satisfies PlayStreamOptions;
@@ -1237,7 +1259,7 @@ export async function attachPipeline(
     const videoCodec = videoCodecMap[video.codec];
     if (videoCodec === undefined)
       throw new Error(`Unsupported video codec ID: ${String(video.codec)}`);
-    conn.setPacketizer(videoCodec);
+    conn.setPacketizer(videoCodec, options.videoPlayoutDelayMaxMs);
     conn.mediaConnection.setSpeaking(true);
     const { width, height, frameRate } = options;
     conn.mediaConnection.setVideoAttributes(true, {
