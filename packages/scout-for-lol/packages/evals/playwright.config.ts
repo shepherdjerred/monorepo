@@ -20,8 +20,10 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   // On CI, emit a JUnit report so the eval browser scenarios appear in Test
   // Engine and the generated report index. The path is repo-root relative
-  // (this package is four levels below the root) and namespaced under
-  // `scout-evals` so scripts/namespace-playwright-reports.ts can pick it up.
+  // (this package is four levels below the root). The directory MUST be the
+  // sanitizeWorkspace() form of the package name (@scout-for-lol/evals ->
+  // scout-for-lol__evals) so scripts/namespace-playwright-reports.ts maps it to
+  // a known manifest workspace instead of throwing "unknown workspace".
   reporter: isCI
     ? [
         ["github"],
@@ -29,7 +31,7 @@ export default defineConfig({
           "junit",
           {
             outputFile:
-              "../../../../.ci-reports/junit/scout-evals/playwright.xml",
+              "../../../../.ci-reports/junit/scout-for-lol__evals/playwright.xml",
           },
         ],
       ]
