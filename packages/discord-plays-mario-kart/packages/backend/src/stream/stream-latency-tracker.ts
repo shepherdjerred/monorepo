@@ -26,6 +26,20 @@ export type StreamLatencyObservations = {
     kind: "video" | "audio",
     reason: "missing_source" | "missing_send" | "pts_mismatch",
   ) => void;
+  /**
+   * Depth of the unconsumed video-source FIFO after each record/consume.
+   * The decisive discriminator for the pairing-corruption investigation
+   * (packages/docs/todos/mk64-stream-latency-correlation-desync.md): a
+   * standing ~30 while the viewer's glass is realtime means phantom head
+   * entries; ~0-3 means honest pairing.
+   */
+  videoSourceDepth?: (depth: number) => void;
+  /**
+   * Wall-clock gap between consecutive RTP sends of the same kind. Observed
+   * for every send stat, including ones that fail correlation — it measures
+   * send cadence, not pairing.
+   */
+  sendInterval?: (kind: "video" | "audio", intervalMs: number) => void;
 };
 
 type AudioSpan = {
@@ -68,6 +82,8 @@ export class StreamLatencyTracker {
   private pendingVideoInputReceivedAtMs: number | undefined;
   private videoContentOffsetMs: number | undefined;
   private audioContentOffsetMs: number | undefined;
+  private lastVideoSendAtMs: number | undefined;
+  private lastAudioSendAtMs: number | undefined;
 
   constructor(
     observations: StreamLatencyObservations,
@@ -87,6 +103,7 @@ export class StreamLatencyTracker {
       availableAtMs: timing.availableAtMs,
       ...(inputReceivedAtMs === undefined ? {} : { inputReceivedAtMs }),
     });
+    this.observations.videoSourceDepth?.(this.videoSources.length);
   }
 
   recordDroppedVideoSource(timing: VideoSourceTiming | undefined): void {
@@ -121,6 +138,15 @@ export class StreamLatencyTracker {
   }
 
   onSendStats(stats: SendStats): void {
+    const observedAtMs = this.now();
+    const lastSendAtMs =
+      stats.kind === "video" ? this.lastVideoSendAtMs : this.lastAudioSendAtMs;
+    if (lastSendAtMs !== undefined) {
+      this.observations.sendInterval?.(stats.kind, observedAtMs - lastSendAtMs);
+    }
+    if (stats.kind === "video") this.lastVideoSendAtMs = observedAtMs;
+    else this.lastAudioSendAtMs = observedAtMs;
+
     const queue = stats.kind === "video" ? this.videoSends : this.audioSends;
     const pending = queue.shift();
     if (pending === undefined) {
@@ -133,7 +159,6 @@ export class StreamLatencyTracker {
     }
     const source = pending.source;
     if (source === undefined) return;
-    const observedAtMs = this.now();
     this.observations.observeSendComplete(
       stats.kind,
       observedAtMs - source.availableAtMs,
@@ -154,6 +179,7 @@ export class StreamLatencyTracker {
       this.observations.correlationFailure("video", "missing_source");
       return undefined;
     }
+    this.observations.videoSourceDepth?.(this.videoSources.length);
     this.observations.observePacketReady(
       "video",
       observedAtMs - source.availableAtMs,

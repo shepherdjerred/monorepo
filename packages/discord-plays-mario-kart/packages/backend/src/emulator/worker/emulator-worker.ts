@@ -11,6 +11,7 @@ import { N64Emulator } from "#src/emulator/n64-emulator.ts";
 import { readSnapshot } from "#src/emulator/mk64-memory.ts";
 import { MAX_AUDIO_IN_FLIGHT, MAX_FRAMES_IN_FLIGHT } from "./backpressure.ts";
 import { createBatchingMetricSink } from "./metric-bridge.ts";
+import { startEventLoopLagSampler } from "#src/observability/event-loop-lag.ts";
 import { parseMainMessage } from "./protocol.ts";
 import type { WorkerInitOpts, WorkerToMain } from "./protocol.ts";
 import { logger } from "#src/logger.ts";
@@ -80,6 +81,12 @@ async function handleInit(opts: WorkerInitOpts): Promise<void> {
   snapshotEveryNFrames = opts.snapshotEveryNFrames;
   batching = createBatchingMetricSink((batch) => {
     post({ kind: "metrics", batch });
+  });
+  // Worker-thread stall visibility: a blocked worker loop delays frames but
+  // was previously invisible below the 66ms tick-lateness floor.
+  const sinkForLag = batching;
+  startEventLoopLagSampler((lagMs) => {
+    sinkForLag.observeEventLoopLagMs(lagMs);
   });
   const emu = new N64Emulator({
     wasmDir: opts.wasmDir,

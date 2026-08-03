@@ -12,6 +12,8 @@ type Recorded = {
   inputSendComplete: number[];
   avOffsets: number[];
   failures: string[];
+  depths: number[];
+  sendIntervals: { kind: "video" | "audio"; intervalMs: number }[];
 };
 
 function makeHarness(startMs = 1000): {
@@ -27,6 +29,8 @@ function makeHarness(startMs = 1000): {
     inputSendComplete: [],
     avOffsets: [],
     failures: [],
+    depths: [],
+    sendIntervals: [],
   };
   const observations: StreamLatencyObservations = {
     observePacketReady: (kind, delayMs) => {
@@ -46,6 +50,12 @@ function makeHarness(startMs = 1000): {
     },
     correlationFailure: (kind, reason) => {
       recorded.failures.push(`${kind}:${reason}`);
+    },
+    videoSourceDepth: (depth) => {
+      recorded.depths.push(depth);
+    },
+    sendInterval: (kind, intervalMs) => {
+      recorded.sendIntervals.push({ kind, intervalMs });
     },
   };
   return {
@@ -164,5 +174,37 @@ describe("StreamLatencyTracker", () => {
       "audio:missing_send",
     ]);
     expect(recorded.sendComplete).toEqual([]);
+  });
+
+  it("reports the video-source FIFO depth on every record and consume", () => {
+    const { tracker, recorded } = makeHarness();
+    tracker.recordVideoSource({ contentTimeMs: 0, availableAtMs: 1000 });
+    tracker.recordVideoSource({ contentTimeMs: 33, availableAtMs: 1033 });
+    tracker.recordVideoSource({ contentTimeMs: 66, availableAtMs: 1066 });
+    tracker.onPacketReady({ kind: "video", ptsMs: 0, durationMs: 100 / 3 });
+    tracker.onPacketReady({ kind: "video", ptsMs: 33, durationMs: 100 / 3 });
+
+    // 1,2,3 while recording; 2,1 as the two packets consume their sources. A
+    // standing residue here (sources never consumed) is the phantom-head-entry
+    // signature the desync todo hunts.
+    expect(recorded.depths).toEqual([1, 2, 3, 2, 1]);
+  });
+
+  it("measures per-kind send intervals independently of pairing outcomes", () => {
+    const { tracker, recorded, advance } = makeHarness();
+    // No sources/packets recorded: every send fails correlation, but cadence
+    // must still be observed.
+    tracker.onSendStats(sendStats("video", 0));
+    advance(33);
+    tracker.onSendStats(sendStats("audio", 0));
+    advance(7);
+    tracker.onSendStats(sendStats("video", 33));
+    advance(160);
+    tracker.onSendStats(sendStats("video", 66));
+
+    expect(recorded.sendIntervals).toEqual([
+      { kind: "video", intervalMs: 40 },
+      { kind: "video", intervalMs: 160 },
+    ]);
   });
 });

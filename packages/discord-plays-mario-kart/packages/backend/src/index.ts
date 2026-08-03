@@ -7,10 +7,18 @@ import { handleRequest, type LeaderboardDeps } from "./webserver/dispatch.ts";
 import { logger } from "./logger.ts";
 import { getConfig } from "./config/index.ts";
 import { disconnectPrisma } from "./database/index.ts";
+import { startEventLoopLagSampler } from "./observability/event-loop-lag.ts";
+import { eventLoopLagMs } from "./observability/metrics.ts";
 import type { LeaderboardResponse } from "@discord-plays-mario-kart/common";
 
 /** When no session is active, expose a zero-seat manager so claims are rejected. */
 const NULL_SEAT_MANAGER = new SeatManager(0);
+
+// Main-thread stall visibility (overlay/stream/ffmpeg I/O all live here); the
+// emulator Worker samples its own loop through the metric bridge.
+startEventLoopLagSampler((lagMs) => {
+  eventLoopLagMs.observe({ thread: "main" }, lagMs);
+});
 
 const config = getConfig();
 

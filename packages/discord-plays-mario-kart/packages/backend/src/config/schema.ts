@@ -84,6 +84,15 @@ export const ConfigSchema = z.strictObject({
       // libx264 fallback); also enableable via the STREAM_HARDWARE_ACCELERATION env.
       hardware_acceleration: z.boolean().default(false),
       vaapi_device: z.string().min(1).default("/dev/dri/renderD128"),
+      // VAAPI `-async_depth`: encode-pipeline depth in frames. 1 (our default)
+      // trades pipelining for ~one frame-interval less latency; set 2 to A/B
+      // against ffmpeg's own default. VAAPI path only.
+      encoder_async_depth: z.number().int().min(1).max(64).default(1),
+      // Realtime latency opt-ins in the discord-video-stream fork: per-packet
+      // muxer flush and low-delay Opus (10 ms frames). On by default for this
+      // realtime consumer; disable individually when A/B-isolating a change.
+      low_latency_mux: z.boolean().default(true),
+      low_delay_audio: z.boolean().default(true),
     }),
   }),
   // Headless N64Wasm (parallel-n64 + angrylion software RDP) host.

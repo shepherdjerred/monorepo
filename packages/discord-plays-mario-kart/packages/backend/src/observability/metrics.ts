@@ -156,3 +156,25 @@ export const streamLatencyCorrelationFailuresTotal = new Counter({
   labelNames: ["kind", "reason"],
   registers: [registry],
 });
+
+export const streamTrackerVideoSourceDepth = new Gauge({
+  name: "stream_tracker_video_source_depth",
+  help: "Unconsumed raw-video source entries in the latency tracker's pairing FIFO. Sustained ~30 while the viewer's glass is realtime means phantom head entries are corrupting every pipeline histogram (packages/docs/todos/mk64-stream-latency-correlation-desync.md); ~0-3 means the pairing is honest. Delivered frames ≈ stream_frame_interval_ms_count − stream_frames_dropped_total; emitted packets = stream_packet_ready_delay_ms_count",
+  registers: [registry],
+});
+
+export const streamSendIntervalMs = new Histogram({
+  name: "stream_send_interval_ms",
+  help: "Wall-clock gap between consecutive RTP sends of the same kind, in ms. Fine buckets make 100-500ms send stalls visible; the coarse pipeline-latency buckets cannot resolve them",
+  buckets: [16, 25, 30, 33, 36, 40, 50, 66, 100, 150, 250, 500],
+  labelNames: ["kind"],
+  registers: [registry],
+});
+
+export const eventLoopLagMs = new Histogram({
+  name: "event_loop_lag_ms",
+  help: "Excess delay of a 20ms interval timer beyond its schedule, per thread, in ms; sustained >33 stalls the frame pipeline. Manual sampler — Bun's monitorEventLoopDelay does not detect synchronous blocks (verified 2026-08-03)",
+  buckets: [1, 2, 4, 8, 16, 33, 50, 100, 150, 250, 500],
+  labelNames: ["thread"],
+  registers: [registry],
+});

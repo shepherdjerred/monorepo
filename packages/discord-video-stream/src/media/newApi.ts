@@ -130,6 +130,26 @@ export type PrepareStreamOptions = {
   minimizeLatency: boolean;
 
   /**
+   * Flush the muxer's IO buffer after every packet (`-flush_packets 1` on the
+   * container output). Removes output-side buffering tails for realtime
+   * consumers. Off by default so VOD/throughput consumers keep ffmpeg's
+   * auto-flush behavior. Do NOT pair with `-max_interleave_delta 0` — that
+   * "low latency" folklore flag actually means *unbounded* interleave
+   * buffering (measured 2026-08-03; no steady-state win with continuous
+   * audio either).
+   */
+  lowLatencyMux: boolean;
+
+  /**
+   * Encode audio for realtime latency instead of the quality-first defaults:
+   * libopus `-application lowdelay -frame_duration 10` (defaults are
+   * `audio` / 20 ms). Trims ~10-16 ms from the audio pipeline and tightens
+   * the receiver's A/V-sync window, at slightly higher container overhead
+   * per second of audio. Off by default.
+   */
+  lowDelayAudio: boolean;
+
+  /**
    * Custom headers for HTTP requests
    */
   customHeaders: Record<string, string>;
@@ -537,6 +557,8 @@ export function prepareStream(
     hardwareAcceleratedDecoding: false,
     hardwarePipelineMode: "full",
     minimizeLatency: false,
+    lowLatencyMux: false,
+    lowDelayAudio: false,
     customHeaders: {
       "User-Agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.3",
@@ -614,6 +636,10 @@ export function prepareStream(
         opts.hardwarePipelineMode ?? defaultOptions.hardwarePipelineMode,
 
       minimizeLatency: opts.minimizeLatency ?? defaultOptions.minimizeLatency,
+
+      lowLatencyMux: opts.lowLatencyMux ?? defaultOptions.lowLatencyMux,
+
+      lowDelayAudio: opts.lowDelayAudio ?? defaultOptions.lowDelayAudio,
 
       customHeaders: {
         ...defaultOptions.customHeaders,
@@ -881,9 +907,13 @@ export function prepareStream(
       .outputOptionsList(hwPipeline ? [] : (encoderSettings.globalOptions ?? []));
   }
 
+  // Per-packet muxer flush for realtime consumers (see PrepareStreamOptions.lowLatencyMux).
+  if (mergedOptions.lowLatencyMux)
+    commandBuilder.addOutputOption(["-flush_packets", "1"]);
+
   // audio setup
   const { includeAudio, bitrateAudio, audioInput } = mergedOptions;
-  if (includeAudio)
+  if (includeAudio) {
     commandBuilder
       // With a separate audio input, map its first audio stream (a required mapping — the caller
       // promised a stream); otherwise take audio from the primary input if it has any (`?`).
@@ -899,6 +929,16 @@ export function prepareStream(
       .audioCodec("libopus")
       .audioBitrate(`${bitrateAudio}k`)
       .audioFilters("volume@internal_lib=1.0");
+    // Realtime Opus tuning (see PrepareStreamOptions.lowDelayAudio). libopus private options —
+    // they bind to the (only) audio stream, after -c:a above.
+    if (mergedOptions.lowDelayAudio)
+      commandBuilder.addOutputOption([
+        "-application",
+        "lowdelay",
+        "-frame_duration",
+        "10",
+      ]);
+  }
 
   // Add custom ffmpeg flags
   if (
