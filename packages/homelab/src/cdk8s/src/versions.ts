@@ -275,6 +275,12 @@ const versions = {
   "library/busybox":
     "latest@sha256:fd8d9aa63ba2f0982b5304e1ee8d3b90a210bc1ffb5314d980eb6962f1a9715d",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
+  // Alpine-based image bundling yq + busybox coreutils (sh/find/cmp/diff/cp);
+  // used by the Minecraft config-drift init container for semantic YAML/JSON
+  // comparison (see misc/minecraft-drift-check.ts).
+  "mikefarah/yq":
+    "latest@sha256:11a1f0b604b13dbbdc662260d8db6f644b22d8553122a25c1b5b2e8713ca6977",
+  // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "library/alpine":
     "latest@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
