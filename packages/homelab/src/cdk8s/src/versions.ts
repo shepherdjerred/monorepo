@@ -41,8 +41,12 @@ const versions = {
   "shepherdjerred/shelfbridge":
     "2.0.0-6673@sha256:87072a935d3f9967641e1e67c15a922d89aff4c06fb066a368c8e9e795d664b7",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
+  // java25 variant: Paper 26.1.2 (pinned below) requires Java 25+; the java21
+  // image crashes every server at startup ("Minecraft 26.1 and newer requires
+  // running the server with Java 25 or above"). Keep this Java major in sync
+  // with the paper pin.
   "itzg/minecraft-server":
-    "2026.7.2-java21@sha256:7f69fd6688e03495c8a8f5a46e8a8e82001b4465f4b55bdcd024c02c3624d8c8",
+    "2026.7.2-java25@sha256:6ec1110e4d9236d00ae9436a3e4a5929583e5b19cc94b756a7c603f7cf647a77",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=loose
   "plexinc/pms-docker":
     "1.43.3.10828-00f62d37d-amd64@sha256:f6748983db1054b571b57b4a40f07f53af6c4bfb9edd1fa455f5ebb6e16449bc",
