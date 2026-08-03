@@ -1,5 +1,5 @@
 ---
-id: 2026-08-02_syncthing-macbook-offline-diagnosis
+id: syncthing-macbook-offline-diagnosis
 type: log
 status: complete
 board: false
