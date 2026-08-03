@@ -71,6 +71,17 @@ sync`.
 init`/a "native GitHub stack." Updated both to the git-spice equivalent
   (`git-spice branch track <branch> --base main`, "git-spice stack layers") so
   an agent resuming either plan follows the now-current workflow.
+- Root `AGENTS.md:362` (worktree setup sequence): the fresh-worktree bash block
+  created `feature/<slug>` with raw Git but never registered it with
+  git-spice. Added `git-spice branch track feature/<slug> --base main` right
+  after entering the worktree so it's the tracked bottom of a one-layer stack
+  before any `branch create`/`branch submit`.
+- `packages/dotfiles/dot_agents/skills/pr-monitor/SKILL.md` — the numbered
+  `## Workflow` steps (not just the reference examples further down)
+  contradicted the skill's own git-spice-mandatory banner: step 1 said "Create
+  PR with `gh pr create`" and step 2B said "merge from main." Routed both
+  through git-spice (`git-spice branch submit`; `git-spice repo sync
+--restack` + `git-spice rebase continue` on conflict).
 
 ## Verified
 

@@ -29,8 +29,9 @@ Automates the complete PR workflow: create PR, monitor reviews/conflicts, fix is
 When invoked:
 
 1. **Create PR** (if not already created)
-   - Push current branch to remote
-   - Create PR with `gh pr create`
+   - Load `git-spice-helper` first — it's authoritative here.
+   - Create/update the PR with `git-spice branch submit` (a single PR is a
+     stack of one; use `git-spice stack submit` for a multi-branch stack).
 
 2. **Monitor Loop** (every 60 seconds)
    Check two things and resolve issues found:
@@ -43,7 +44,9 @@ When invoked:
 
    ### B. Merge Conflicts
    - Check if behind main with `git fetch origin main && git merge-base --is-ancestor origin/main HEAD`
-   - If behind, merge from main and resolve any conflicts that arise
+   - If behind, run `git-spice repo sync --restack` and resolve any conflicts
+     git-spice pauses on with `git-spice rebase continue` — never merge/rebase
+     the stack by hand
    - YOU are responsible for merge conflicts, not the user
 
 3. **Completion Check**

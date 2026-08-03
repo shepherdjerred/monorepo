@@ -367,6 +367,10 @@ git worktree add .claude/worktrees/<feature-slug> -b feature/<slug> origin/main
 
 cd .claude/worktrees/<feature-slug>
 
+# Register the branch with git-spice as the bottom of its stack (created with
+# raw Git above, so git-spice doesn't know about it yet without this).
+git-spice branch track feature/<slug> --base main
+
 # REQUIRED before any build/test in the new worktree — installs the toolchain,
 # does the one workspace-wide install, and runs codegen. Without generate, builds
 # fail with cryptic missing-module / missing-generated-file errors.
