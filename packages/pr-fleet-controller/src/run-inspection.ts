@@ -21,6 +21,12 @@ const BODY_FIELD_PATTERN =
   /^(?:body|change|content|error|escalation|lastAction|line|log|message|messages|output|patch|prompt|reason|response|stack|stderr|stdout|text)$/i;
 const BODY_ARRAY_FIELD_PATTERN =
   /^(?:args|blockers|changes|hardFailures|reviewFindings|validation)$/i;
+const RunTerminalPayloadSchema = RunSummarySchema.pick({
+  status: true,
+  finishedAt: true,
+  durationMs: true,
+  error: true,
+});
 
 export type RunBundle = {
   manifest: RunManifest;
@@ -304,6 +310,15 @@ function verifyBundleMetadata(
   if (lastEvent.kind !== expectedRunTerminal) {
     throw new Error(
       `Summary status ${summary.status} does not match final run event ${lastEvent.kind}`,
+    );
+  }
+  const terminalMetadata = RunTerminalPayloadSchema.parse(lastEvent.payload);
+  const summaryTerminalMetadata = RunTerminalPayloadSchema.parse(summary);
+  if (
+    canonicalJson(terminalMetadata) !== canonicalJson(summaryTerminalMetadata)
+  ) {
+    throw new Error(
+      "Summary terminal metadata does not match the final run event",
     );
   }
   const countsByKind = countKinds(events);

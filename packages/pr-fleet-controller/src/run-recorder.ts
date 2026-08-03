@@ -401,21 +401,28 @@ export class RunRecorder implements FleetTelemetry {
       return readRunSummary(this.paths.runDirectory);
     }
     const kind = status === "completed" ? "run.completed" : "run.failed";
-    this.record(
-      kind,
-      error === null ? { status } : { status, error: errorDetails(error) },
+    const finishedAt = this.#now();
+    const durationMs = Math.max(
+      0,
+      finishedAt.getTime() - this.#createdAt.getTime(),
     );
+    const details = error === null ? null : errorDetails(error);
+    const redactedError = redactSummaryError(details, this.#secretValues);
+    this.record(kind, {
+      status,
+      finishedAt: finishedAt.toISOString(),
+      durationMs,
+      error: redactedError,
+    });
     this.#eventsFile.close();
     this.#closed = true;
     const countsByKind = Object.fromEntries(this.#counts);
-    const finishedAt = this.#now();
-    const details = error === null ? null : errorDetails(error);
     const summary = RunSummarySchema.parse({
       schemaVersion: RUN_BUNDLE_SCHEMA_VERSION,
       runId: this.runId,
       status,
       finishedAt: finishedAt.toISOString(),
-      durationMs: Math.max(0, finishedAt.getTime() - this.#createdAt.getTime()),
+      durationMs,
       eventCount: this.#sequence,
       lastHash: this.#lastHash,
       countsByKind,
@@ -423,7 +430,7 @@ export class RunRecorder implements FleetTelemetry {
         finalSnapshot === null
           ? null
           : redactFleetSnapshot(finalSnapshot, this.#secretValues),
-      error: redactSummaryError(details, this.#secretValues),
+      error: redactedError,
     });
     await secureWriteJson(this.paths.summary, summary);
     await this.secureRunArtifacts();

@@ -267,7 +267,10 @@ repository checkout.
   event sink with synchronous write-and-fsync plus partial-write rollback, and
   restoring the bootstrap manifest when its initialization binding cannot be
   captured.
-- Passed focused typecheck, 143 controller tests, 42 observability tests, lint,
+- Addressed two subsequent exact-head findings by binding error and timing
+  fields from the final summary into terminal run telemetry and requiring each
+  tick's ordered fleet-change events to exactly match its completed report.
+- Passed focused typecheck, 145 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

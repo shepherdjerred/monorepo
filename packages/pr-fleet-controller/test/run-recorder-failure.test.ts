@@ -10,6 +10,15 @@ import { RunRecorder } from "@shepherdjerred/pr-fleet-controller/src/run-recorde
 import { writeFileSinkSynchronously } from "@shepherdjerred/pr-fleet-controller/src/synchronous-file-sink.ts";
 
 let stateDirectory: string | undefined;
+const snapshot = {
+  open: 0,
+  green: 0,
+  active: 0,
+  queued: 0,
+  pending: 0,
+  paused: 0,
+  prs: [],
+};
 
 afterEach(async () => {
   if (stateDirectory !== undefined) {
@@ -76,4 +85,84 @@ test("initialization capture failure restores replayable bootstrap provenance", 
       allowVersionMismatch: false,
     }),
   ).not.toThrow();
+});
+
+test("replay binds every mutable terminal summary field", async () => {
+  stateDirectory = await mkdtemp(path.join(tmpdir(), "pr-fleet-run-"));
+  const recorder = await RunRecorder.create({
+    stateDirectory,
+    controllerVersion: "0.1.0",
+    controllerCommit: "a".repeat(40),
+    controllerSourceDirty: false,
+    controllerSourceFingerprint: "b".repeat(64),
+    model: "openai/gpt-5.6-terra",
+    repository: "example/repository",
+    checkout: "/repo",
+    worktreeRoot: "/repo/worktrees",
+    maxWorkers: 2,
+  });
+  recorder.record("run.started", { phase: "startup" });
+  await recorder.finalize("failed", null, new Error("provider failed"));
+  const bundle = await loadRunBundle(recorder.paths.runDirectory);
+  const laterFinishedAt = new Date(
+    Date.parse(bundle.summary.finishedAt) + 1000,
+  ).toISOString();
+  const tamperedSummaries = [
+    { ...bundle.summary, finishedAt: laterFinishedAt },
+    { ...bundle.summary, durationMs: bundle.summary.durationMs + 1 },
+    { ...bundle.summary, error: { message: "different failure" } },
+  ];
+
+  for (const summary of tamperedSummaries) {
+    expect(() =>
+      replayRunBundle(
+        { ...bundle, summary },
+        { currentControllerVersion: "0.1.0", allowVersionMismatch: false },
+      ),
+    ).toThrow("Summary terminal metadata does not match the final run event");
+  }
+});
+
+test("replay reconciles emitted fleet changes with the tick report", async () => {
+  stateDirectory = await mkdtemp(path.join(tmpdir(), "pr-fleet-run-"));
+  const recorder = await RunRecorder.create({
+    stateDirectory,
+    controllerVersion: "0.1.0",
+    controllerCommit: "a".repeat(40),
+    controllerSourceDirty: false,
+    controllerSourceFingerprint: "b".repeat(64),
+    model: "openai/gpt-5.6-terra",
+    repository: "example/repository",
+    checkout: "/repo",
+    worktreeRoot: "/repo/worktrees",
+    maxWorkers: 2,
+  });
+  const tickId = recorder.newId("tick");
+  recorder.record("run.started", { phase: "startup" });
+  recorder.record("tick.started", { trigger: "startup" }, { tickId });
+  recorder.record("fleet.snapshot", { snapshot }, { tickId });
+  recorder.record("fleet.change", { change: "recorded" }, { tickId });
+  recorder.record(
+    "tick.completed",
+    {
+      report: {
+        trigger: "startup",
+        snapshot,
+        changes: ["different"],
+        nextHeartbeatSeconds: 600,
+      },
+    },
+    { tickId },
+  );
+  recorder.record("shutdown.started", { activeWorkers: 0 });
+  recorder.record("shutdown.completed", { snapshot });
+  await recorder.finalize("completed", snapshot);
+  const bundle = await loadRunBundle(recorder.paths.runDirectory);
+
+  expect(() =>
+    replayRunBundle(bundle, {
+      currentControllerVersion: "0.1.0",
+      allowVersionMismatch: false,
+    }),
+  ).toThrow(`Tick ${tickId} completed with changes not emitted by that tick`);
 });

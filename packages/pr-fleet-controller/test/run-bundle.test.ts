@@ -314,6 +314,7 @@ async function recordSyntheticWorkerRun(recorder: RunRecorder): Promise<void> {
   recorder.record("tick.started", { trigger: "startup" }, { tickId });
   recorder.record("fleet.snapshot", { snapshot }, { tickId });
   recorder.record("worker.started", { runtimeAgent: "pr-42-g3" }, correlation);
+  recorder.record("fleet.change", { change: "started pr-42-g3" }, { tickId });
   recorder.record(
     "tick.completed",
     {
@@ -767,6 +768,7 @@ describe("run bundle replay", () => {
       { runtimeAgent: "pr-42-g3" },
       correlation,
     );
+    recorder.record("fleet.change", { change: "started pr-42-g3" }, { tickId });
     recorder.record(
       "tick.completed",
       {
@@ -1332,6 +1334,7 @@ describe("shutdown boundary replay", () => {
       { runtimeAgent: "pr-42-g3" },
       correlation,
     );
+    recorder.record("fleet.change", { change: "started pr-42-g3" }, { tickId });
     recorder.record(
       "tick.completed",
       {

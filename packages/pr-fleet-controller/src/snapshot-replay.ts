@@ -9,6 +9,7 @@ import {
 
 const TickCompletedPayloadSchema = z.object({ report: FleetTickReportSchema });
 const SnapshotPayloadSchema = z.object({ snapshot: FleetSnapshotSchema });
+const ChangePayloadSchema = z.object({ change: z.string() });
 const ACTIVE_STATUSES = new Set([
   "diagnosing",
   "editing",
@@ -45,11 +46,63 @@ function verifySnapshot(snapshot: FleetSnapshot): void {
   }
 }
 
+function collectFleetChange(
+  event: RecordedRunEvent,
+  activeTickIds: Set<string>,
+  tickChanges: Map<string, string[]>,
+): void {
+  const tickId = event.correlation.tickId;
+  if (tickId === undefined || !activeTickIds.has(tickId)) {
+    throw new Error(
+      `fleet.change references a nonexistent or inactive tick: ${tickId ?? "missing"}`,
+    );
+  }
+  const changes = tickChanges.get(tickId);
+  if (changes === undefined) {
+    throw new Error(`fleet.change has no change history for tick: ${tickId}`);
+  }
+  changes.push(ChangePayloadSchema.parse(event.payload).change);
+}
+
+function completeTick(
+  event: RecordedRunEvent,
+  activeTickIds: Set<string>,
+  tickSnapshots: Map<string, FleetSnapshot>,
+  tickChanges: Map<string, string[]>,
+): void {
+  const report = TickCompletedPayloadSchema.parse(event.payload).report;
+  const tickId = event.correlation.tickId;
+  const recorded = tickId === undefined ? undefined : tickSnapshots.get(tickId);
+  if (
+    recorded === undefined ||
+    canonicalJson(recorded) !== canonicalJson(report.snapshot)
+  ) {
+    throw new Error(
+      `Tick ${tickId ?? "without-id"} completed with a snapshot not emitted by that tick`,
+    );
+  }
+  const changes = tickId === undefined ? undefined : tickChanges.get(tickId);
+  if (
+    changes === undefined ||
+    canonicalJson(changes) !== canonicalJson(report.changes)
+  ) {
+    throw new Error(
+      `Tick ${tickId ?? "without-id"} completed with changes not emitted by that tick`,
+    );
+  }
+  if (tickId !== undefined) {
+    tickSnapshots.delete(tickId);
+    tickChanges.delete(tickId);
+    activeTickIds.delete(tickId);
+  }
+}
+
 export function replaySnapshots(
   events: RecordedRunEvent[],
   summary: RunSummary,
 ): FleetSnapshot | null {
   const tickSnapshots = new Map<string, FleetSnapshot>();
+  const tickChanges = new Map<string, string[]>();
   const activeTickIds = new Set<string>();
   let finalSnapshot: FleetSnapshot | null = null;
   for (const event of events) {
@@ -57,7 +110,11 @@ export function replaySnapshots(
       const tickId = event.correlation.tickId;
       if (tickId !== undefined) {
         activeTickIds.add(tickId);
+        tickChanges.set(tickId, []);
       }
+    }
+    if (event.kind === "fleet.change") {
+      collectFleetChange(event, activeTickIds, tickChanges);
     }
     if (event.kind === "fleet.snapshot") {
       const tickId = event.correlation.tickId;
@@ -72,29 +129,14 @@ export function replaySnapshots(
       tickSnapshots.set(tickId, parsed);
     }
     if (event.kind === "tick.completed") {
-      const report = TickCompletedPayloadSchema.parse(event.payload).report;
-      const recorded =
-        event.correlation.tickId === undefined
-          ? undefined
-          : tickSnapshots.get(event.correlation.tickId);
-      if (
-        recorded === undefined ||
-        canonicalJson(recorded) !== canonicalJson(report.snapshot)
-      ) {
-        throw new Error(
-          `Tick ${event.correlation.tickId ?? "without-id"} completed with a snapshot not emitted by that tick`,
-        );
-      }
-      if (event.correlation.tickId !== undefined) {
-        tickSnapshots.delete(event.correlation.tickId);
-        activeTickIds.delete(event.correlation.tickId);
-      }
+      completeTick(event, activeTickIds, tickSnapshots, tickChanges);
     }
     if (
       event.kind === "tick.failed" &&
       event.correlation.tickId !== undefined
     ) {
       tickSnapshots.delete(event.correlation.tickId);
+      tickChanges.delete(event.correlation.tickId);
       activeTickIds.delete(event.correlation.tickId);
     }
     if (
