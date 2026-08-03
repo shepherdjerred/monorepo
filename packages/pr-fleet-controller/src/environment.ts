@@ -22,6 +22,7 @@ import type {
   CommandResult,
   FleetEnvironment,
 } from "./ports.ts";
+import { runCommand } from "./process-runner.ts";
 import type {
   CheckEvidence,
   PrIdentity,
@@ -64,32 +65,7 @@ export class CommandFleetEnvironment implements FleetEnvironment {
   }
 
   async runLocalCommand(request: CommandRequest): Promise<CommandResult> {
-    const baseOptions = {
-      cwd: request.cwd,
-      stdout: "pipe" as const,
-      stderr: "pipe" as const,
-      env: request.env ?? Bun.env,
-    };
-    const subprocess =
-      request.signal === undefined
-        ? Bun.spawn([request.executable, ...request.args], baseOptions)
-        : Bun.spawn([request.executable, ...request.args], {
-            ...baseOptions,
-            signal: request.signal,
-          });
-    const timer = setTimeout(() => {
-      subprocess.kill();
-    }, request.timeoutMs);
-    try {
-      const [exitCode, stdout, stderr] = await Promise.all([
-        subprocess.exited,
-        new Response(subprocess.stdout).text(),
-        new Response(subprocess.stderr).text(),
-      ]);
-      return { exitCode, stdout, stderr };
-    } finally {
-      clearTimeout(timer);
-    }
+    return runCommand(request);
   }
 
   async #mustRun(

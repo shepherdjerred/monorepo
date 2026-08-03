@@ -1,6 +1,7 @@
 import { realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import type { ReviewProvider } from "@shepherdjerred/code-review";
+import { z } from "zod";
 import { parseHeadSha, splitRepo } from "./evidence-parsers.ts";
 import type { CommandRequest, CommandResult } from "./ports.ts";
 import type { PrState } from "./schemas.ts";
@@ -16,6 +17,33 @@ type GitOperationsDependencies = {
     options?: { timeoutMs?: number; signal?: AbortSignal | undefined },
   ) => Promise<string>;
 };
+
+const SystemErrorSchema = z.object({ code: z.string() });
+
+function isMissingPath(error: unknown): boolean {
+  const parsed = SystemErrorSchema.safeParse(error);
+  return parsed.success && parsed.data.code === "ENOENT";
+}
+
+async function nearestExistingAncestor(target: string): Promise<string> {
+  try {
+    await stat(target);
+    return target;
+  } catch (error) {
+    if (!isMissingPath(error)) {
+      throw error instanceof Error
+        ? error
+        : new Error("Failed to inspect publication path", { cause: error });
+    }
+    const parent = path.dirname(target);
+    if (parent === target) {
+      throw new Error(`No existing ancestor for publication path: ${target}`, {
+        cause: error,
+      });
+    }
+    return nearestExistingAncestor(parent);
+  }
+}
 
 export class GitOperations {
   readonly #repo: string;
@@ -41,9 +69,18 @@ export class GitOperations {
         throw new Error(`Unsafe publication path: ${requestedPath}`);
       }
       const absolute = path.resolve(canonicalRoot, requestedPath);
-      const canonicalParent = await realpath(path.dirname(absolute));
-      const relativeParent = path.relative(canonicalRoot, canonicalParent);
-      if (relativeParent.startsWith("..") || path.isAbsolute(relativeParent)) {
+      // A deletion may remove its whole parent directory. Resolve the nearest
+      // ancestor that still exists, which supports that legitimate pathspec
+      // while still detecting a surviving symlink that escapes the worktree.
+      const existingAncestor = await nearestExistingAncestor(
+        path.dirname(absolute),
+      );
+      const canonicalAncestor = await realpath(existingAncestor);
+      const relativeAncestor = path.relative(canonicalRoot, canonicalAncestor);
+      if (
+        relativeAncestor.startsWith("..") ||
+        path.isAbsolute(relativeAncestor)
+      ) {
         throw new Error(`Publication path escapes worktree: ${requestedPath}`);
       }
       // Reject directory pathspecs. `git add -- .` or a package directory would
@@ -53,11 +90,7 @@ export class GitOperations {
       // (an explicit deletion). A path resolving to an existing directory — or
       // any other non-regular-file — is rejected.
       const stats = await stat(absolute).catch((error: unknown) => {
-        if (
-          error instanceof Error &&
-          "code" in error &&
-          error.code === "ENOENT"
-        ) {
+        if (isMissingPath(error)) {
           // Missing path: an explicit file deletion is a valid publication entry.
           return null;
         }
