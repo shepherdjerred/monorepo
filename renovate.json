@@ -163,8 +163,7 @@
       "description": "Playwright client packages are promoted atomically with the tested ci-playwright image digest; Renovate owns only the official Dockerfile source pin.",
       "matchManagers": ["npm"],
       "matchPackageNames": ["playwright", "@playwright/test"],
-      "enabled": false,
-      "minimumReleaseAge": false
+      "enabled": false
     },
     {
       "groupName": "cdk8s",
