@@ -145,27 +145,47 @@ const POLL = `(() => {
     pc.getStats().then((report) => {
       const out = { pageAtMs: Date.now(), video: null, pairRttMs: null };
       let selectedPairId = null;
+      // A connection can carry several inbound video streams (other cameras,
+      // extra screen shares, a retained track after an SSRC/quality switch).
+      // Pick the one actually receiving now — freshest lastPacketReceivedTimestamp,
+      // then most framesReceived — so an idle/stale track can't win by being
+      // visited last.
+      let bestRank = null;
       report.forEach((s) => {
         if (s.type === "inbound-rtp" && s.kind === "video") {
-          out.video = {
-            framesReceived: s.framesReceived ?? null,
-            framesDecoded: s.framesDecoded ?? null,
-            framesDropped: s.framesDropped ?? null,
-            framesPerSecond: s.framesPerSecond ?? null,
-            freezeCount: s.freezeCount ?? null,
-            totalFreezesDuration: s.totalFreezesDuration ?? null,
-            pauseCount: s.pauseCount ?? null,
-            totalPausesDuration: s.totalPausesDuration ?? null,
-            jitter: s.jitter ?? null,
-            jitterBufferDelay: s.jitterBufferDelay ?? null,
-            jitterBufferEmittedCount: s.jitterBufferEmittedCount ?? null,
-            packetsReceived: s.packetsReceived ?? null,
-            packetsLost: s.packetsLost ?? null,
-            nackCount: s.nackCount ?? null,
-            totalDecodeTime: s.totalDecodeTime ?? null,
-            estimatedPlayoutTimestamp: s.estimatedPlayoutTimestamp ?? null,
-            lastPacketReceivedTimestamp: s.lastPacketReceivedTimestamp ?? null,
-          };
+          const rank = [
+            typeof s.lastPacketReceivedTimestamp === "number"
+              ? s.lastPacketReceivedTimestamp
+              : -1,
+            typeof s.framesReceived === "number" ? s.framesReceived : -1,
+          ];
+          if (
+            bestRank === null ||
+            rank[0] > bestRank[0] ||
+            (rank[0] === bestRank[0] && rank[1] > bestRank[1])
+          ) {
+            bestRank = rank;
+            out.video = {
+              ssrc: s.ssrc ?? null,
+              framesReceived: s.framesReceived ?? null,
+              framesDecoded: s.framesDecoded ?? null,
+              framesDropped: s.framesDropped ?? null,
+              framesPerSecond: s.framesPerSecond ?? null,
+              freezeCount: s.freezeCount ?? null,
+              totalFreezesDuration: s.totalFreezesDuration ?? null,
+              pauseCount: s.pauseCount ?? null,
+              totalPausesDuration: s.totalPausesDuration ?? null,
+              jitter: s.jitter ?? null,
+              jitterBufferDelay: s.jitterBufferDelay ?? null,
+              jitterBufferEmittedCount: s.jitterBufferEmittedCount ?? null,
+              packetsReceived: s.packetsReceived ?? null,
+              packetsLost: s.packetsLost ?? null,
+              nackCount: s.nackCount ?? null,
+              totalDecodeTime: s.totalDecodeTime ?? null,
+              estimatedPlayoutTimestamp: s.estimatedPlayoutTimestamp ?? null,
+              lastPacketReceivedTimestamp: s.lastPacketReceivedTimestamp ?? null,
+            };
+          }
         }
         if (
           s.type === "transport" &&
@@ -211,6 +231,7 @@ const POLL = `(() => {
 })()`;
 
 const VideoStatsSchema = z.object({
+  ssrc: z.number().nullable(),
   framesReceived: z.number().nullable(),
   framesDecoded: z.number().nullable(),
   framesDropped: z.number().nullable(),
@@ -302,35 +323,69 @@ const last = samples.at(-1);
 if (first === undefined || last === undefined) {
   throw new Error("unreachable: samples is non-empty");
 }
-// Counters are per-RTCPeerConnection; a stream restart mid-window swaps the
-// peer and resets them, so a delta across that boundary is meaningless.
+// Counters are per-RTCPeerConnection and per-SSRC; a stream restart or peer
+// switch mid-window resets them (or swaps to a different track), so a
+// first-to-last delta across that boundary is meaningless. Detect both a
+// backwards jump in decoded frames and a change in the selected SSRC.
 const decodeCounts: number[] = [];
 for (const s of samples) {
   const decoded = s.video?.framesDecoded;
   if (typeof decoded === "number") decodeCounts.push(decoded);
 }
-const wentBackwards = decodeCounts.some(
+const countersWentBackwards = decodeCounts.some(
   (v, i) => i > 0 && v < (decodeCounts[i - 1] ?? 0),
 );
-if (wentBackwards) {
-  console.error(
-    "WARNING: inbound counters reset mid-window (peer switch / stream restart) — " +
-      "window deltas span two connections and must not be compared",
+const ssrcs = new Set<number>();
+for (const s of samples) {
+  const ssrc = s.video?.ssrc;
+  if (typeof ssrc === "number") ssrcs.add(ssrc);
+}
+if (countersWentBackwards || ssrcs.size > 1) {
+  // Refuse to emit misleading cross-connection deltas. Persist the raw samples
+  // for inspection, then fail so a caller can't mistake spliced counters for a
+  // valid experiment result.
+  const reasons: string[] = [];
+  if (countersWentBackwards) reasons.push("framesDecoded went backwards");
+  if (ssrcs.size > 1) reasons.push(`${String(ssrcs.size)} distinct SSRCs`);
+  await Bun.write(
+    OUT,
+    JSON.stringify(
+      {
+        summary: {
+          note: `aborted: inbound counters reset mid-window (${reasons.join("; ")})`,
+        },
+        samples,
+      },
+      null,
+      1,
+    ),
+  );
+  throw new Error(
+    `inbound counters reset mid-window (${reasons.join("; ")}); refusing to emit ` +
+      `cross-connection window deltas. Re-run without a mid-run stream restart / ` +
+      `peer switch. Raw samples written to ${OUT}.`,
   );
 }
 const v0 = first.video;
 const v1 = last.video;
+// A counter present at one endpoint but absent at the other cannot yield a real
+// delta; coercing null→0 would fake a zero (or manufacture a negative delta).
+// Return null for such a delta instead.
+const delta = (a: number | null, b: number | null): number | null =>
+  a !== null && b !== null ? b - a : null;
 const summary =
   v0 === null || v1 === null
     ? { note: "no inbound video stats present" }
     : {
         spanS: (last.pageAtMs - first.pageAtMs) / 1000,
-        framesDecodedDelta: (v1.framesDecoded ?? 0) - (v0.framesDecoded ?? 0),
-        freezeCountDelta: (v1.freezeCount ?? 0) - (v0.freezeCount ?? 0),
-        freezeDurationDeltaS:
-          (v1.totalFreezesDuration ?? 0) - (v0.totalFreezesDuration ?? 0),
-        packetsLostDelta: (v1.packetsLost ?? 0) - (v0.packetsLost ?? 0),
-        nackDelta: (v1.nackCount ?? 0) - (v0.nackCount ?? 0),
+        framesDecodedDelta: delta(v0.framesDecoded, v1.framesDecoded),
+        freezeCountDelta: delta(v0.freezeCount, v1.freezeCount),
+        freezeDurationDeltaS: delta(
+          v0.totalFreezesDuration,
+          v1.totalFreezesDuration,
+        ),
+        packetsLostDelta: delta(v0.packetsLost, v1.packetsLost),
+        nackDelta: delta(v0.nackCount, v1.nackCount),
         // Mean time a frame sat in the jitter buffer over the window (W3C:
         // cumulative seconds / cumulative emitted frames).
         meanJitterBufferMs:
