@@ -165,7 +165,10 @@ repository checkout.
 - Addressed the next exact-head review by making every overlapping CLI shutdown
   caller await the same in-flight operation and making replay reject missing,
   mismatched, inactive, or prematurely closed correlation parents.
-- Passed focused typecheck, 79 controller tests, 40 observability tests, lint,
+- Prevented `gh auth token` output and related failure details from entering
+  command telemetry while retaining the credential only for the in-memory API
+  call that needs it.
+- Passed focused typecheck, 80 controller tests, 40 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

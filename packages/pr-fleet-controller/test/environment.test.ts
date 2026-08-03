@@ -153,3 +153,31 @@ test("command events inherit their worker tool and model correlation", async () 
   expect(telemetry.events[1]?.payload["termination"]).toBe("exit");
   expect(telemetry.events[1]?.payload["stdout"]).toBe("captured input");
 });
+
+test("sensitive command output is returned but never recorded", async () => {
+  const telemetry = new RecordingTelemetry();
+  const environment = new CommandFleetEnvironment({
+    repo: "shepherdjerred/monorepo",
+    checkout: "/tmp/repo",
+    worktreeRoot: "/tmp/worktrees",
+    provider: codexProvider,
+    telemetry,
+  });
+  const result = await environment.runLocalCommand({
+    executable: process.execPath,
+    args: [
+      "-e",
+      "const input = await Bun.stdin.text(); process.stdout.write(input)",
+    ],
+    cwd: tmpdir(),
+    timeoutMs: 30_000,
+    stdin: "credential-value",
+    sensitiveOutput: true,
+  });
+
+  expect(result.stdout).toBe("credential-value");
+  expect(telemetry.events[0]?.payload["sensitiveOutput"]).toBe(true);
+  expect(telemetry.events[1]?.payload["stdout"]).toBe("[REDACTED]");
+  expect(telemetry.events[1]?.payload["stderr"]).toBe("[REDACTED]");
+  expect(JSON.stringify(telemetry.events)).not.toContain("credential-value");
+});

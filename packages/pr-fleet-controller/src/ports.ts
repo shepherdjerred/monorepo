@@ -17,6 +17,8 @@ export type CommandRequest = {
   signal?: AbortSignal | undefined;
   /** UTF-8 input written to the child before waiting for completion. */
   stdin?: string;
+  /** Return output to the caller but replace it in telemetry and errors. */
+  sensitiveOutput?: boolean | undefined;
   /**
    * Environment for the subprocess. Defaults to the controller's own
    * environment; model-driven worker commands pass a credential-scrubbed

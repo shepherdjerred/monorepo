@@ -1,9 +1,4 @@
-import {
-  reviewGateSkipReasonForAuthor,
-  type ReviewProvider,
-} from "@shepherdjerred/code-review";
-import { resolveReviewState } from "@shepherdjerred/code-review/github";
-import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
+import type { ReviewProvider } from "@shepherdjerred/code-review";
 import { commandEventCorrelation } from "./command-correlation.ts";
 import {
   checksWithBuildkiteSoftFailure,
@@ -18,6 +13,7 @@ import {
   type RawReviewThread,
 } from "./evidence-parsers.ts";
 import { GitOperations } from "./git-operations.ts";
+import { resolveHostedReviewCompletion } from "./hosted-review.ts";
 import type {
   CommandRequest,
   CommandResult,
@@ -87,6 +83,7 @@ export class CommandFleetEnvironment implements FleetEnvironment {
         cwd: request.cwd,
         timeoutMs: request.timeoutMs,
         hasStdin: request.stdin !== undefined,
+        sensitiveOutput: request.sensitiveOutput === true,
         environmentNames: Object.keys(request.env ?? {}).sort(),
       },
       correlation,
@@ -98,8 +95,10 @@ export class CommandFleetEnvironment implements FleetEnvironment {
         {
           executable: request.executable,
           exitCode: result.exitCode,
-          stdout: result.stdout,
-          stderr: result.stderr,
+          stdout:
+            request.sensitiveOutput === true ? "[REDACTED]" : result.stdout,
+          stderr:
+            request.sensitiveOutput === true ? "[REDACTED]" : result.stderr,
           termination: result.termination,
           durationMs: Math.round(performance.now() - startedAt),
         },
@@ -124,7 +123,11 @@ export class CommandFleetEnvironment implements FleetEnvironment {
     executable: string,
     args: string[],
     cwd = this.#checkout,
-    options: { timeoutMs?: number; signal?: AbortSignal | undefined } = {},
+    options: {
+      timeoutMs?: number;
+      signal?: AbortSignal | undefined;
+      sensitiveOutput?: boolean | undefined;
+    } = {},
   ): Promise<string> {
     const result = await this.runLocalCommand({
       executable,
@@ -132,10 +135,15 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       cwd,
       timeoutMs: options.timeoutMs ?? 120_000,
       signal: options.signal,
+      sensitiveOutput: options.sensitiveOutput,
     });
     if (result.exitCode !== 0) {
+      const detail =
+        options.sensitiveOutput === true
+          ? "sensitive output omitted"
+          : result.stderr.trim();
       throw new Error(
-        `${executable} ${args.join(" ")} failed (${String(result.exitCode)}): ${result.stderr.trim()}`,
+        `${executable} ${args.join(" ")} failed (${String(result.exitCode)}): ${detail}`,
       );
     }
     return result.stdout;
@@ -255,44 +263,15 @@ export class CommandFleetEnvironment implements FleetEnvironment {
   }
 
   async #hostedReviewComplete(pr: PrIdentity): Promise<boolean> {
-    // Honor the provider's bot-author skip policy, exactly as the canonical
-    // Buildkite gate does. A provider like Codex declares
-    // botAuthoredPullRequestPolicy: "skip" and emits NO completion signal for
-    // bot-authored PRs (Renovate, release automation), so resolving review
-    // state would leave those PRs pending forever. When the skip applies, treat
-    // hosted review as complete.
-    if (
-      reviewGateSkipReasonForAuthor({
-        author: { login: pr.author, type: pr.authorType },
-        provider: this.#provider,
-      }) !== null
-    ) {
-      return true;
-    }
-
-    // Completion is resolved with the canonical provider strategy: a
-    // review-at-head OR a head-bound 👍 clean-review reaction. Codex leaves NO
-    // review object on a clean PR — only a 👍 — so keying completion off review
-    // objects alone would leave every cleanly-reviewed PR pending forever.
-    // Binding the commit-less reaction to the current head requires the
-    // head-push time.
-    const tokenOutput = await this.#mustRun("gh", ["auth", "token"]);
-    const token = tokenOutput.trim();
-    const headPushedAt = await fetchHeadPushedAt({
+    return resolveHostedReviewCompletion({
       repo: this.#repo,
-      sha: pr.headSha,
-      prNumber: pr.number,
-      token,
-    });
-    const reviewState = await resolveReviewState({
       provider: this.#provider,
-      repo: this.#repo,
-      head: pr.headSha,
-      prNumber: pr.number,
-      token,
-      headPushedAt,
+      pr,
+      readToken: () =>
+        this.#mustRun("gh", ["auth", "token"], this.#checkout, {
+          sensitiveOutput: true,
+        }),
     });
-    return reviewState.state === "reviewed";
   }
 
   async #conflict(pr: PrIdentity): Promise<boolean> {
