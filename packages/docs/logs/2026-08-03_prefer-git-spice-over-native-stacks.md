@@ -82,6 +82,15 @@ init`/a "native GitHub stack." Updated both to the git-spice equivalent
   PR with `gh pr create`" and step 2B said "merge from main." Routed both
   through git-spice (`git-spice branch submit`; `git-spice repo sync
 --restack` + `git-spice rebase continue` on conflict).
+- `packages/dotfiles/dot_agents/skills/worktree-workflow/SKILL.md` — the
+  revert had deleted the monorepo's stack-registration block (previously
+  `gh stack init`) and the "Generic worktree automation reference" separator
+  without replacing either, so the file's remaining plain scripts (`gh pr
+create`, raw merge/rebase) now read as the monorepo's actual guidance.
+  Restored both sections with git-spice equivalents: `git-spice branch track
+feature/<slug> --base main` under "Monorepo-Specific," and the "Generic
+  worktree automation reference" separator pointing at git-spice instead of
+  the removed dual-tool wording.
 
 ## Verified
 
